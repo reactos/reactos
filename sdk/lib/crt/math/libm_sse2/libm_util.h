@@ -32,6 +32,14 @@
 #include <float.h>
 
 
+#define MULTIPLIER_SP 24
+#define MULTIPLIER_DP 53
+
+static const double VAL_2PMULTIPLIER_DP = 9007199254740992.0;
+static const double VAL_2PMMULTIPLIER_DP = 1.1102230246251565404236316680908e-16;
+static const float VAL_2PMULTIPLIER_SP = 16777216.0F;
+static const float VAL_2PMMULTIPLIER_SP = 5.9604645e-8F;
+
 /* Definitions for double functions on 64 bit machines */
 #define SIGNBIT_DP64      0x8000000000000000
 #define EXPBITS_DP64      0x7ff0000000000000

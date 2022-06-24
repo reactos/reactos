@@ -25,9 +25,17 @@
  *
  */
 
-#include "fn_macros.h"
-#include "libm_util_amd.h"
-#include "libm_special.h"
+#include "libm.h"
+#include "libm_util.h"
+#include "libm_new.h"
+
+#define FN_PROTOTYPE_REF FN_PROTOTYPE
+#define __amd_handle_errorf _handle_errorf
+#define __amd_ldexp OP_LDEXP
+
+//#include "fn_macros.h"
+//#include "libm_util_amd.h"
+//#include "libm_special.h"
 
 float FN_PROTOTYPE_REF(ldexpf)(float x, int n)
 {
