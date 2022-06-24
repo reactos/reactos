@@ -1,5 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Chan Chilung 2020 - 2021 (eason066@gmail.com) */
+/* 
+ * PROJECT:     ReactOS DiskPart
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2020-2022 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -10,72 +16,72 @@ BEGIN
     IDS_APP_USAGE "\n磁碟分區實用工具\n\n\
 Usage: DISKPART [/S 檔名] [/T 逾時] [/?]\n\n\
 /S <檔名>\t執行指定的指令碼。\n\
-/T <逾時>\t逾時秒數，防止 DiskPart 使用重疊。\n\
-/?\t\t顯示此說明訊息。\n\n"
+/T <逾時>\t逾時秒數，防止 DiskPart 在使用時發生交疊。\n\
+/?\t\t顯示這個說明訊息。\n\n"
     IDS_APP_LICENSE "根據 GNU GPLv2 許可\n"
     IDS_APP_CURR_COMPUTER "在電腦: %s\n\n"
-    IDS_APP_LEAVING "\n正在退出 DiskPart ...\n"
+    IDS_APP_LEAVING "\n正在退出 DiskPart...\n"
     IDS_APP_PROMPT "DISKPART> "
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
-    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
-    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+    IDS_ACTIVE_FAIL "\nDiskPart 無法把標記磁碟分割為使用中。\n請確認磁碟分割是有效的。\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為使用中。\n"
+    IDS_ACTIVE_ALREADY "\n目前的磁碟分割已經標記為使用中。\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
-    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+    IDS_CLEAN_FAIL "\nDiskPart 無法清理磁碟。\n這個磁碟上的資料可能是無法恢復的。\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart 成功清理磁碟。\n"
+    IDS_CLEAN_SYSTEM "\n已選擇的磁碟是您的電腦操作所必要的，所以無法清理。\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
-    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart 無法建立指定的磁碟分割。\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart 成功建立指定的磁碟分割。\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
-    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart 無法刪除指定的磁碟分割。\n請確認已選擇的磁碟分割能夠正確地刪除。\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart 成功刪除指定的磁碟分割。\n"
 END
 
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "磁碟識別碼: %08lx\n"
     IDS_DETAIL_INFO_TYPE "類型"
     IDS_DETAIL_INFO_STATUS "狀態"
-    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
-    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
-    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
+    IDS_DETAIL_INFO_PATH   "路徑      : %hu\n"
+    IDS_DETAIL_INFO_TARGET "目標      : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun 識別碼: %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "位置路徑"
-    IDS_DETAIL_INFO_CURR_RO_STATE "當前的唯讀狀態"
+    IDS_DETAIL_INFO_CURR_RO_STATE "目前的唯讀狀態"
     IDS_DETAIL_INFO_RO "唯讀模式"
     IDS_DETAIL_INFO_BOOT_DSK "啟動磁碟"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "頁面檔案磁碟"
     IDS_DETAIL_INFO_HIBER_FILE_DSK "休眠檔案磁碟"
     IDS_DETAIL_INFO_CRASH_DSK "損毀傾印磁碟"
     IDS_DETAIL_INFO_CLST_DSK "叢集磁碟"
-    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
-    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
-    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
-    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
-    IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
-    IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
+    IDS_DETAIL_PARTITION_NUMBER "磁碟分割 %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "類型          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "已隱藏        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "使用中        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "位移 (位元組) : %I64u\n"
+    IDS_DETAIL_NO_DISKS "\n沒有磁碟附加到這個磁碟區。\n"
+    IDS_DETAIL_NO_VOLUME "\n沒有磁碟區與這個磁碟分割有關聯。\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
-    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+    IDS_FILESYSTEMS_CURRENT "目前的檔案系統\n"
+    IDS_FILESYSTEMS_FORMATTING "可用於格式化的檔案系統\n"
+    IDS_FILESYSTEMS_TYPE "類型    : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "叢集大小: %lu\n"
 END
 
 STRINGTABLE
@@ -85,9 +91,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
-    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
-    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+    IDS_INACTIVE_FAIL "\nDiskPart 無法把磁碟分割標記為非使用中。\n請確認磁碟分割是有效的。\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為非使用中。\n"
+    IDS_INACTIVE_ALREADY "\n目前的磁碟分割已經標記為非使用中。\n"
 END
 
 /* Detail header titles */
@@ -100,9 +106,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c 磁碟分割 %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n沒有可列出分區的磁碟。\n請選擇一個磁碟，再試一次。\n\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤         FS     類型        大小     狀態     資訊\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "%c 磁碟區 %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -116,23 +122,23 @@ END
 STRINGTABLE
 BEGIN
     IDS_SELECT_NO_DISK "\n目前沒有選擇磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_DISK "\n磁碟 %lu 現在是所選的磁碟。\n\n"
+    IDS_SELECT_DISK "\n磁碟 %lu 現在是所選擇的磁碟。\n\n"
     IDS_SELECT_DISK_INVALID "\n無效的磁碟。\n\n"
     IDS_SELECT_NO_PARTITION "\n目前選擇的磁碟沒有磁碟分割。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_PARTITION "\n磁碟分割 %lu 現在是所選的磁碟分割。\n\n"
+    IDS_SELECT_PARTITION "\n磁碟分割 %lu 現在是所選擇的磁碟分割。\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\n沒有選擇要設定磁碟分割的磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
     IDS_SELECT_PARTITION_INVALID "\n無效的磁碟分割。\n\n"
     IDS_SELECT_NO_VOLUME "\n目前沒有選擇磁碟區。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_VOLUME "\n磁碟區 %lu 現在是所選的磁碟區。\n\n"
-    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+    IDS_SELECT_VOLUME "\n磁碟區 %lu 現在是所選擇的磁碟區。\n\n"
+    IDS_SELECT_VOLUME_INVALID "\n無效的磁碟區。\n\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
-    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
-    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
-    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+    IDS_SETID_FAIL "\nDiskPart 無法更改磁碟類型。\n"
+    IDS_SETID_SUCCESS "\n成功更改磁碟類型。\n"
+    IDS_SETID_INVALID_FORMAT "\n磁碟類型的格式是無效的。\n"
+    IDS_SETID_INVALID_TYPE "\n無效的磁碟類型。\n"
 END
 
 /* Disk Status */
@@ -151,90 +157,90 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "為此命令指定的參數是無效的。\n有關命令類型的詳細資訊:"
+    IDS_MSG_ARG_SYNTAX_ERROR "您為這個命令指定的引數是無效的。\n有關命令類型的詳細資訊:"
 END
 
 /* Help Command Descripions */
 STRINGTABLE
 BEGIN
-    IDS_HELP_ACTIVE                    "所選將磁碟分割標記為活動。\n"
-    IDS_HELP_ADD                       "將映象添加到一個簡單磁碟區。\n"
-    IDS_HELP_ASSIGN                    "為所選的磁碟區分配一個代號或裝入點。\n"
+    IDS_HELP_ACTIVE                    "將所選的磁碟分割標記為使用中。\n"
+    IDS_HELP_ADD                       "新增一個鏡像到一個簡單磁碟區。\n"
+    IDS_HELP_ASSIGN                    "分配一個磁碟機代號或掛接點到所選的磁碟區。\n"
     IDS_HELP_ATTACH                    "附加的虛擬磁碟檔案。\n"
     IDS_HELP_ATTRIBUTES                "操縱磁碟區或磁碟的屬性。\n"
     IDS_HELP_AUTOMOUNT                 "啟用和停用基本磁碟區的自動裝入。\n"
     IDS_HELP_BREAK                     "中斷一個鏡像組。\n"
-    IDS_HELP_CLEAN                     "清除配置資訊或所有資訊，關閉\n            磁碟。\n"
+    IDS_HELP_CLEAN                     "清除磁碟上的設定資訊或所有資訊。\n"
     IDS_HELP_COMPACT                   "嘗試減少檔案的物理大小。\n"
-    IDS_HELP_CONVERT                   "不同的磁碟格式之間進行轉換。\n"
+    IDS_HELP_CONVERT                   "轉換不同的磁碟格式。\n"
 
-    IDS_HELP_CREATE                    "新增磁碟區、 分區或虛擬磁碟。\n"
-    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
-    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
-    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
-    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
-    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
-    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
-    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
-    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+    IDS_HELP_CREATE                    "建立一個磁碟區、磁碟分割或虛擬磁碟。\n"
+    IDS_HELP_CREATE_PARTITION          "建立一個磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "建立一個 EFI 系統磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "建立一個延伸磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "建立一個邏輯磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "建立一個 MSR 磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "建立一個主要磁碟分割。\n"
+    IDS_HELP_CREATE_VOLUME             "建立一個磁碟區。\n"
+    IDS_HELP_CREATE_VDISK              "建立一個虛擬磁碟檔案。\n"
 
-    IDS_HELP_DELETE                    "刪除物件。\n"
-    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
-    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
-    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+    IDS_HELP_DELETE                    "刪除一個物件。\n"
+    IDS_HELP_DELETE_DISK               "刪除一個磁碟。\n"
+    IDS_HELP_DELETE_PARTITION          "刪除一個磁碟分割。\n"
+    IDS_HELP_DELETE_VOLUME             "刪除一個磁碟區。\n"
 
-    IDS_HELP_DETACH                    "分離一個虛擬磁碟檔案。\n"
+    IDS_HELP_DETACH                    "中斷連結虛擬磁碟檔案。\n"
 
-    IDS_HELP_DETAIL                    "提供物件的詳細資訊。\n"
-    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
-    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
-    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+    IDS_HELP_DETAIL                    "提供一個物件的詳細資訊。\n"
+    IDS_HELP_DETAIL_DISK               "列印磁碟的詳細資訊。\n"
+    IDS_HELP_DETAIL_PARTITION          "列印磁碟分割的詳細資訊。\n"
+    IDS_HELP_DETAIL_VOLUME             "列印出磁碟區的詳細資訊。\n"
 
-    IDS_HELP_EXIT                      "退出 DiskPart。\n"
-    IDS_HELP_EXPAND                    "擴充虛擬磁碟上的最大可用空間。\n"
-    IDS_HELP_EXTEND                    "擴展磁碟區。\n"
-    IDS_HELP_FILESYSTEMS               "顯示磁碟區上目前及受支援的檔案系統。\n"
+    IDS_HELP_EXIT                      "結束 DiskPart。\n"
+    IDS_HELP_EXPAND                    "延伸虛擬磁碟上的最大可用空間。\n"
+    IDS_HELP_EXTEND                    "延伸一個磁碟區。\n"
+    IDS_HELP_FILESYSTEMS               "顯示磁碟區上目前及支援的檔案系統。\n"
     IDS_HELP_FORMAT                    "格式化所選的磁碟區或磁碟分割。\n"
-    IDS_HELP_GPT                       "將屬性分配給所選的 GPT 分區。\n"
-    IDS_HELP_HELP                      "顯示命令的列表。\n"
-    IDS_HELP_IMPORT                    "匯入磁碟組。\n"
-    IDS_HELP_INACTIVE                  "將所選磁碟分割標記為非活動狀態。\n"
+    IDS_HELP_GPT                       "分配屬性給所選的 GPT 磁碟分割。\n"
+    IDS_HELP_HELP                      "顯示命令列表。\n"
+    IDS_HELP_IMPORT                    "匯入磁碟群組。\n"
+    IDS_HELP_INACTIVE                  "將所選的磁碟分割標記為非使用中。\n"
 
     IDS_HELP_LIST                      "顯示物件的列表。\n"
-    IDS_HELP_LIST_DISK                 "List disks.\n"
-    IDS_HELP_LIST_PARTITION            "List partitions.\n"
-    IDS_HELP_LIST_VOLUME               "List volumes.\n"
-    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+    IDS_HELP_LIST_DISK                 "列出磁碟。\n"
+    IDS_HELP_LIST_PARTITION            "列出磁碟分割。\n"
+    IDS_HELP_LIST_VOLUME               "列出磁碟區。\n"
+    IDS_HELP_LIST_VDISK                "列出虛擬磁碟檔案。\n"
 
     IDS_HELP_MERGE                     "合併子磁碟與其父系。\n"
-    IDS_HELP_OFFLINE                   "把目前標記為連線的物件設成離線。\n"
-    IDS_HELP_ONLINE                    "把目前標記為離線的物件設成連線。\n"
-    IDS_HELP_RECOVER                   "重新整理選取封裝中所有磁碟的狀態，\n              嘗試在無效封裝中的磁碟復原，並重新同步具有過時網狀\n              磁碟區或同位檢查資料的鏡像磁碟區與 RAID5 磁碟區。\n"
-    IDS_HELP_REM                       "無反應。這用來註解指令碼。\n"
-    IDS_HELP_REMOVE                    "刪除磁碟區代號或裝載點指派。\n"
-    IDS_HELP_REPAIR                    "修復失敗的成員與 RAID 5 磁碟區。\n"
+    IDS_HELP_OFFLINE                   "把目前標記為連線的物件設為離線。\n"
+    IDS_HELP_ONLINE                    "把目前標記為離線的物件設為連線。\n"
+    IDS_HELP_RECOVER                   "重新整理所選封裝中所有磁碟的狀態，\n              嘗試復原在無效封裝中的磁碟，並重新同步具有過時網狀\n              磁碟區或同位檢查資料的鏡像磁碟區和 RAID5 磁碟區。\n"
+    IDS_HELP_REM                       "不做任何事。這是用來註解指令碼。\n"
+    IDS_HELP_REMOVE                    "移除磁碟區代號或掛接點的分配。\n"
+    IDS_HELP_REPAIR                    "以失敗的成員修復 RAID 5 磁碟區。\n"
     IDS_HELP_RESCAN                    "重新掃描電腦，查找磁碟和磁碟區。\n"
     IDS_HELP_RETAIN                    "在簡單磁碟區下放置一個保存磁碟分割。\n"
-    IDS_HELP_SAN                       "顯示或設定當前引導 OS 的 SAN 策略。\n"
+    IDS_HELP_SAN                       "顯示或設定目前開機 OS 的 SAN 原則。\n"
 
-    IDS_HELP_SELECT                    "轉移重點到另一個物件。\n"
-    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
-    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
-    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
-    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+    IDS_HELP_SELECT                    "轉移焦點到另一個物件。\n"
+    IDS_HELP_SELECT_DISK               "轉移焦點到磁碟。\n"
+    IDS_HELP_SELECT_PARTITION          "轉移焦點到磁碟分割。\n"
+    IDS_HELP_SELECT_VOLUME             "轉移焦點到磁碟區。\n"
+    IDS_HELP_SELECT_VDISK              "轉移焦點到虛擬磁碟。\n"
 
-    IDS_HELP_SETID                     "更改分區類型。\n"
-    IDS_HELP_SHRINK                    "減小所選磁碟區的大小。\n"
+    IDS_HELP_SETID                     "更改磁碟分割類型。\n"
+    IDS_HELP_SHRINK                    "縮小所選磁碟區的大小。\n"
 
-    IDS_HELP_UNIQUEID                  "顯示或設定 GUID 分區表 (GPT) 的標識符\n              或主開機記錄 (MBR) 磁碟的簽名。\n"
-    IDS_HELP_UNIQUEID_DISK             "顯示或設定 GUID 分區表 (GPT) 的標識符\n              或主開機記錄 (MBR) 磁碟的簽名。\n"
+    IDS_HELP_UNIQUEID                  "顯示或設定 GUID 分割表格 (GPT) 的識別碼\n              或磁碟的主開機記錄 (MBR) 簽章。\n"
+    IDS_HELP_UNIQUEID_DISK             "顯示或設定 GUID 分割表格 (GPT) 的識別碼\n              或磁碟的主開機記錄 (MBR) 簽章。\n"
 END
 
 /* Common Error Messages */
 STRINGTABLE
 BEGIN
-    IDS_ERROR_MSG_NO_SCRIPT "錯誤開始的指令碼: %s\n"
-    IDS_ERROR_MSG_BAD_ARG "錯誤處理參數: %s\n"
+    IDS_ERROR_MSG_NO_SCRIPT "開啟指令碼時發生錯誤: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "處理引數時發生錯誤: %s\n"
     IDS_ERROR_INVALID_ARGS "無效的參數\n"
-    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
+    IDS_ERROR_NO_MEDIUM "沒有媒體在裝置中。\n"
 END
