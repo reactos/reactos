@@ -6,6 +6,7 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/abs.c
     math/div.c
     math/labs.c
+    math/sincos.c
 )
 
 if(ARCH STREQUAL "i386")
