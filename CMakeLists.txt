@@ -221,10 +221,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         add_definitions(-DKDBG)
     endif()
 
-    if(_WINKD_)
-        add_definitions(-D_WINKD_)
-    endif()
-
     if(ENABLE_CCACHE)
         message(WARNING "-- Disabling precompiled headers support (ccache).")
         option(PCH "Whether to use precompiled headers" OFF)
