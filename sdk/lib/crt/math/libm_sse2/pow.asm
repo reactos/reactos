@@ -1219,7 +1219,7 @@ Lpow_sse2_near_one:
     movsd       xmm3, QWORD PTR [r9+r8*8]
     addsd       xmm3, QWORD PTR [rdx+r8*8]
     mulsd       xmm4, xmm3
-    andpd       xmm4, QWORD PTR __real_fffffffff8000000
+    andpd       xmm4, XMMWORD PTR __real_fffffffff8000000
     movsd       xmm5, xmm4 ; r1
     mulsd       xmm4, xmm0
     subsd       xmm1, xmm4
@@ -2028,7 +2028,7 @@ Lpow_fma3_near_one:
     vmovsd       xmm3, QWORD PTR [r9+r8*8]
     vaddsd       xmm3, xmm3, QWORD PTR [rdx+r8*8]
     vmulsd       xmm4, xmm4, xmm3         ; xmm4 <-- r = f*inv
-    vandpd       xmm4, xmm4, QWORD PTR __real_fffffffff8000000 ; r1
+    vandpd       xmm4, xmm4, XMMWORD PTR __real_fffffffff8000000 ; r1
     vmovapd      xmm5, xmm4               ; xmm5 <-- copy of r1
 ;   mulsd        xmm4, xmm0               ; xmm4 <-- F*r1
 ;   subsd        xmm1, xmm4               ; xmm1 <-- f - F*r1

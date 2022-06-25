@@ -391,11 +391,11 @@ Llog_fma3:
     xor          rax,rax
     vpsrlq       xmm3,xmm0,52
     vmovq        rax,xmm0
-    vpsubq       xmm3,xmm3,QWORD PTR __mask_1023
+    vpsubq       xmm3,xmm3,XMMWORD PTR __mask_1023
     vcvtdq2pd    xmm6,xmm3 ; xexp
 
     ;  NaN or inf
-    vpand        xmm5,xmm0,QWORD PTR __real_inf
+    vpand        xmm5,xmm0,XMMWORD PTR __real_inf
     vcomisd      xmm5,QWORD PTR __real_inf
     je           Llog_fma3_x_is_inf_or_nan
 
@@ -404,7 +404,7 @@ Llog_fma3:
     vcomisd      xmm0,xmm5
     jbe          Llog_fma3_x_is_zero_or_neg
 
-    vpand        xmm2,xmm0,QWORD PTR __real_mant
+    vpand        xmm2,xmm0,XMMWORD PTR __real_mant
     vsubsd       xmm4,xmm0,QWORD PTR __real_one
 
     vcomisd      xmm6,QWORD PTR __mask_1023_f
@@ -412,21 +412,21 @@ Llog_fma3:
 
 Llog_fma3_continue_common:
     ; compute index into the log tables
-    vpand        xmm1,xmm0,QWORD PTR __mask_mant_all8
-    vpand        xmm3,xmm0,QWORD PTR __mask_mant9
+    vpand        xmm1,xmm0,XMMWORD PTR __mask_mant_all8
+    vpand        xmm3,xmm0,XMMWORD PTR __mask_mant9
     vpsllq       xmm3,xmm3,1
     vpaddq       xmm1,xmm3,xmm1
     vmovq        rax,xmm1
 
     ; near one codepath
-    vpand        xmm4,xmm4,QWORD PTR __real_notsign
+    vpand        xmm4,xmm4,XMMWORD PTR __real_notsign
     vcomisd      xmm4,QWORD PTR __real_threshold
     jb           Llog_fma3_near_one
 
     ; F,Y
     shr          rax,44
-    vpor         xmm2,xmm2,QWORD PTR __real_half
-    vpor         xmm1,xmm1,QWORD PTR __real_half
+    vpor         xmm2,xmm2,XMMWORD PTR __real_half
+    vpor         xmm1,xmm1,XMMWORD PTR __real_half
     lea          r9,QWORD PTR __log_F_inv_qword
 
     ; f = F - Y,r = f * inv
@@ -501,10 +501,10 @@ Llog_fma3_near_one:
 
 
 Llog_fma3_denormal_adjust:
-    vpor         xmm2,xmm2,QWORD PTR __real_one
+    vpor         xmm2,xmm2,XMMWORD PTR __real_one
     vsubsd       xmm2,xmm2,QWORD PTR __real_one
     vpsrlq       xmm5,xmm2,52
-    vpand        xmm2,xmm2,QWORD PTR __real_mant
+    vpand        xmm2,xmm2,XMMWORD PTR __real_mant
     vmovapd      xmm0,xmm2
     vpsubd       xmm5,xmm5,XMMWORD PTR __mask_2045
     vcvtdq2pd    xmm6,xmm5

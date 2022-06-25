@@ -382,7 +382,7 @@ Llog10_fma3:
     xor          rax,rax
     vpsrlq       xmm3,xmm0,52
     vmovq        rax,xmm0
-    vpsubq       xmm3,xmm3,QWORD PTR __int_1023
+    vpsubq       xmm3,xmm3,XMMWORD PTR __int_1023
     vcvtdq2pd    xmm6,xmm3                ; xmm6 <-- (double)xexp
 
     ;  NaN or Inf?
@@ -404,21 +404,21 @@ Llog10_fma3:
 
 Llog10_fma3_continue_common:
     ; compute index into the log tables
-    vpand        xmm1,xmm0,DWORD PTR __mask_mant_top8
-    vpand        xmm3,xmm0,DWORD PTR __mask_mant9
+    vpand        xmm1,xmm0,XMMWORD PTR __mask_mant_top8
+    vpand        xmm3,xmm0,XMMWORD PTR __mask_mant9
     vpsllq       xmm3,xmm3,1
     vpaddq       xmm1,xmm3,xmm1
     vmovq        rax,xmm1
 
     ; near one codepath
-    vpand        xmm4,xmm4,DWORD PTR __real_notsign
+    vpand        xmm4,xmm4,XMMWORD PTR __real_notsign
     vcomisd      xmm4,QWORD PTR __real_threshold
     jb           Llog10_fma3_near_one
 
     ; F,Y
     shr          rax,44
-    vpor         xmm2,xmm2,DWORD PTR __real_half
-    vpor         xmm1,xmm1,DWORD PTR __real_half
+    vpor         xmm2,xmm2,XMMWORD PTR __real_half
+    vpor         xmm1,xmm1,XMMWORD PTR __real_half
     lea          r9,DWORD PTR __log_F_inv_qword
 
     ; f = F - Y,r = f * inv
@@ -486,7 +486,7 @@ Llog10_fma3_near_one:
     vmulsd       xmm5,xmm5,xmm2
     vaddsd       xmm4,xmm4,xmm5
     vsubsd       xmm4,xmm4,xmm6
-    vpand        xmm3,xmm0,QWORD PTR __mask_lower
+    vpand        xmm3,xmm0,XMMWORD PTR __mask_lower
     vsubsd       xmm0,xmm0,xmm3
     vaddsd       xmm4,xmm4,xmm0
 
@@ -505,12 +505,12 @@ Llog10_fma3_near_one:
 
 
 Llog10_fma3_denormal_adjust:
-    vpor         xmm2,xmm2,QWORD PTR __real_one
+    vpor         xmm2,xmm2,XMMWORD PTR __real_one
     vsubsd       xmm2,xmm2,QWORD PTR __real_one
     vpsrlq       xmm5,xmm2,52
-    vpand        xmm2,xmm2,QWORD PTR __mask_mant
+    vpand        xmm2,xmm2,XMMWORD PTR __mask_mant
     vmovapd      xmm0,xmm2
-    vpsubd       xmm5,xmm5,DWORD PTR __mask_2045
+    vpsubd       xmm5,xmm5,XMMWORD PTR __mask_2045
     vcvtdq2pd    xmm6,xmm5
     jmp          Llog10_fma3_continue_common
 
