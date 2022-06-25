@@ -90,12 +90,12 @@ fmodf		PROC	FRAME
 		fnclex				; clear exception flags
 							; in preparation for fprem
 
-@@:
+@again:
 		DB	0d9h, 0f8h		; fprem
 
 		DB	9bh, 0dfh, 0e0h 	; fstsw	ax
 		test	ax, 00400h
-		jnz	@b			; do it again in case of partial result
+		jnz	@again			; do it again in case of partial result
 
 		DB	0d9h, 1ch, 24h		; fstp	DWORD PTR [rsp]
 		movss	xmm0, DWORD PTR [rsp]	; result
@@ -133,14 +133,14 @@ fmodf		PROC	FRAME
 @raise:
 		mov	eax, INVALID		; raise exception
 		mov	r8d, FPIND
-		jmp	@f
+		jmp	@fail
 
 @error:
 		xor	eax, eax		; no exception
 		movd	r8d, xmm0
-		jmp	@f
+		jmp	@fail
 
-@@:
+@fail:
 		lea	rcx, [@fmodfz]		; fname
 		mov	edx, FPCODEFMOD		; opcode
 ;		mov	r8d, [rsp]		; value
