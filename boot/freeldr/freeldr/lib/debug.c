@@ -194,6 +194,13 @@ Done:
         if (!Rs232PortInitialize(ComPort, BaudRate))
             DebugPort &= ~RS232;
     }
+
+    {
+        LOADER_PARAMETER_BLOCK LoaderBlock = {0};
+        LoaderBlock.LoadOptions = (PCHAR)CmdLineGetDebugString();
+        KdDebuggerInitialize0(&LoaderBlock);
+        KdDebuggerInitialize1(&LoaderBlock);
+    }
 }
 
 VOID DebugPrintChar(UCHAR Character)
@@ -218,12 +225,32 @@ VOID DebugPrintChar(UCHAR Character)
     }
 }
 
+VOID
+DbgPrintString(
+    _In_ PCHAR Buffer,
+    _In_ ULONG Length)
+{
+    DBGKD_DEBUG_IO DebugIo = {0};
+    STRING MessageHeader;
+    STRING MessageData;
+
+    /* Prepare packet to send to debugger */
+    DebugIo.ApiNumber = DbgKdPrintStringApi;
+    DebugIo.u.PrintString.LengthOfString = Length;
+    MessageHeader.Buffer = (PCHAR)&DebugIo;
+    MessageHeader.Length = sizeof(DebugIo);
+    MessageData.Buffer = Buffer;
+    MessageData.Length = Length;
+
+    /* Send packet to debugger */
+    KdSendPacket(PACKET_TYPE_KD_DEBUG_IO, &MessageHeader, &MessageData, NULL);
+}
+
 ULONG
 DbgPrint(const char *Format, ...)
 {
     va_list ap;
     int Length;
-    char* ptr;
     CHAR Buffer[512];
 
     va_start(ap, Format);
@@ -240,9 +267,7 @@ DbgPrint(const char *Format, ...)
         Length = sizeof(Buffer);
     }
 
-    ptr = Buffer;
-    while (Length--)
-        DebugPrintChar(*ptr++);
+    DbgPrintString(Buffer, Length);
 
     return 0;
 }
@@ -252,7 +277,7 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
 {
     va_list ap;
     char Buffer[2096];
-    char *ptr = Buffer;
+    int Length;
 
     /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS))
@@ -285,13 +310,10 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     }
 
     va_start(ap, Format);
-    vsprintf(Buffer, Format, ap);
+    Length = vsprintf(Buffer, Format, ap);
     va_end(ap);
 
-    while (*ptr)
-    {
-        DebugPrintChar(*ptr++);
-    }
+    DbgPrintString(Buffer, Length);
 }
 
 VOID

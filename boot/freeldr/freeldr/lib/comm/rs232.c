@@ -121,13 +121,11 @@ BOOLEAN Rs232PortGetByte(PUCHAR ByteReceived)
     return (CpGetByte(&Rs232ComPortInfo, ByteReceived, TRUE, FALSE) == CP_GET_SUCCESS);
 }
 
-/*
 BOOLEAN Rs232PortPollByte(PUCHAR ByteReceived)
 {
     if (Rs232ComPort == 0) return FALSE;
     return (CpGetByte(&Rs232ComPortInfo, ByteReceived, FALSE, FALSE) == CP_GET_SUCCESS);
 }
-*/
 
 VOID Rs232PortPutByte(UCHAR ByteToSend)
 {
