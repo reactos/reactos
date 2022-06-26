@@ -97,7 +97,7 @@ ChangeNtProductType(DWORD NtProductType)
     Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
                            0,
-                           KEY_QUERY_VALUE,
+                           KEY_ALL_ACCESS,
                            &Key);
     if (Result != ERROR_SUCCESS)
     {
@@ -120,7 +120,7 @@ ChangeNtProductType(DWORD NtProductType)
     }
 
     RegCloseKey(Key);
-    return FALSE;
+    return TRUE;
 }
 
 START_TEST(RtlGetNtProductType)
@@ -153,15 +153,15 @@ START_TEST(RtlGetNtProductType)
     /* Change product type in the registry */
     ok_char(ChangeNtProductType(NtProductWinNt), TRUE);
     ok_char(RtlGetNtProductType(&ProductType2), TRUE);
-    ok_long(ProductType2, NtProductWinNt);
+    ok_long(ProductType2, ProductType);
 
     ok_char(ChangeNtProductType(NtProductLanManNt), TRUE);
     ok_char(RtlGetNtProductType(&ProductType2), TRUE);
-    ok_long(ProductType2, NtProductLanManNt);
+    ok_long(ProductType2, ProductType);
 
     ok_char(ChangeNtProductType(NtProductServer), TRUE);
     ok_char(RtlGetNtProductType(&ProductType2), TRUE);
-    ok_long(ProductType2, NtProductServer);
+    ok_long(ProductType2, ProductType);
 
     ok_char(ChangeNtProductType(ProductType), TRUE);
 }
