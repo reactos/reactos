@@ -2,6 +2,7 @@
 add_subdirectory(beep)
 add_subdirectory(bootvid)
 add_subdirectory(condrv)
+add_subdirectory(kdstub)
 
 if(_WINKD_)
     if(GDB)
