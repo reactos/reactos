@@ -14,6 +14,7 @@ if(_WINKD_)
 else()
     add_subdirectory(kdrosdbg)
 endif()
+add_subdirectory(kdstub)
 
 if(NOT ARCH STREQUAL "arm")
 add_subdirectory(nmidebug)
