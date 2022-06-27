@@ -25,7 +25,10 @@ HKR, , Installer32,     0, "NetCfgx.dll,NetClassInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","",0x00010000,""
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 DisplayClassName = "Network Adapters"
 
 [Strings.0404]
@@ -41,7 +44,6 @@ DisplayClassName = "Netzwerkadapter"
 DisplayClassName = "Προσαρμογείς δικτύου"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 DisplayClassName = "Adaptadores de red"
 
 [Strings.040C]
@@ -51,36 +53,30 @@ DisplayClassName = "Cartes réseau"
 DisplayClassName = "ネットワーク アダプタ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 DisplayClassName = "Karty sieciowe"
 
 [Strings.0416]
 DisplayClassName = "Adaptadores de rede"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 DisplayClassName = "Adaptoare de rețea"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Сетевые адаптеры"
 
 [Strings.041B]
 DisplayClassName = "Sieťové adaptéry"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 DisplayClassName = "Ağ Bağdaştırıcıları"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Мережеві адаптери"
 
 [Strings.0427]
 DisplayClassName = "Tinklo adapteriai"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 DisplayClassName = "Adaptadores de rede"
 
 [Strings.0C04]

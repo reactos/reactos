@@ -116,7 +116,10 @@ LoadOrderGroup = Base
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 USBClassName = "USB Controllers"
 
 GenericMfg = "(Generic USB devices)"
@@ -164,7 +167,6 @@ PCI\CC_0C0320.DeviceDesc = "EHCI USB-Controller"
 USB\ROOT_HUB.DeviceDesc = "Root Hub"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 USBClassName = "Controladores USB"
 
 GenericMfg = "(Dispositivo USB estándar)"
@@ -200,7 +202,6 @@ PCI\CC_0C0320.DeviceDesc = "EHCI USB コントローラ"
 USB\ROOT_HUB.DeviceDesc = "ルート ハブ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 USBClassName = "Kontrolery USB"
 
 GenericMfg = "(Standardowe urządzenia USB)"
@@ -227,19 +228,19 @@ PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 USBClassName = "Dispozitive de control USB"
+
 GenericMfg = "(dispozitive generice de control USB)"
 PCI\CC_0C0300.DeviceDesc = "Dispozitive de control USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Dispozitive de control USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Dispozitive de control USB EHCI"
 USB\ROOT_HUB.DeviceDesc = "Cuplator rădăcină"
+
 IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Dispozitiv de control USB Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Dispozitiv de contorl USB Intel 82371AB/EB/MB PIIX4"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 USBClassName = "Контроллеры USB"
 
 GenericMfg = "(Стандартные устройства USB)"
@@ -276,7 +277,6 @@ PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB valdiklis"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB valdiklis"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 USBClassName = "USB Denetleyicileri"
 
 GenericMfg = "(Genel USB Aygıtları)"
@@ -290,7 +290,6 @@ PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB Denetleyic
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB Denetleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 USBClassName = "Контроллери USB"
 
 GenericMfg = "(Стандартні пристрої USB)"
@@ -313,7 +312,6 @@ PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 USBClassName = "Controladores de barramento série universal (USB)"
 
 GenericMfg = "(Dispositivo USB padrão)"

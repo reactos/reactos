@@ -58,8 +58,10 @@ AddService = , 0x00000002
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+; Localizable
 FloppyClassName = "Floppy disk drives"
 GenericMfg = "(Generic floppy disk drives)"
 Floppy.DeviceDesc = "Generic floppy disk drive"
@@ -70,42 +72,32 @@ GenericMfg = "（標準軟碟機）"
 Floppy.DeviceDesc = "標準軟碟機"
 
 [Strings.0405]
-ReactOS = "ReactOS Team"
-
 FloppyClassName = "Disketové jednotky"
 GenericMfg = "(Obecné disketové jednotky)"
 Floppy.DeviceDesc = "Obecná disketová jednotka"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 FloppyClassName = "Disqueteras"
 GenericMfg = "(Disqueteras genéricas)"
 Floppy.DeviceDesc = "Disquetera genérica"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 FloppyClassName = "Stacje dyskietek"
 GenericMfg = "(Standardowe stacje dyskietek)"
 Floppy.DeviceDesc = "Standardowa stacja dyskietek"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 FloppyClassName = "Unitate de disc flexibil"
 GenericMfg = "(unități generice de disc flexibil)"
 Floppy.DeviceDesc = "Unitate de disc flexibil"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 FloppyClassName = "Дисководы гибких дисков"
 GenericMfg = "(Универсальные дисководы гибких дисков)"
 Floppy.DeviceDesc = "Универсальный дисковод гибких дисков"
 
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 FloppyClassName = "Disket Sürücüleri"
 GenericMfg = "(Genel Disket Sürücüleri)"
 Floppy.DeviceDesc = "Genel Disket Sürücüsü"
@@ -115,8 +107,6 @@ GenericMfg = "（通用软盘驱动器）"
 Floppy.DeviceDesc = "通用软盘驱动器"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
-
 FloppyClassName = "Controlador disquete"
 GenericMfg = "(Controlador disquete Genérico)"
 Floppy.DeviceDesc = "Controlador disquete Genérico"

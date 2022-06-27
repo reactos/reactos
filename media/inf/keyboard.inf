@@ -99,7 +99,10 @@ LoadOrderGroup = Keyboard Class
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 KeyboardClassName = "Keyboards"
 HID.KeyboardDevice    = "HID-Keyboard"
 StdMfg = "(Standard keyboards)"
@@ -132,7 +135,6 @@ StdMfg = "(Πρότυπα πληκτρολόγια)"
 *PNP0303.DeviceDesc = "IBM PC/AT πληκτρολόγιο"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 KeyboardClassName = "Teclados"
 StdMfg = "(Teclado estándar)"
 LocationOverride = "se conecta al puerto de teclado"
@@ -150,7 +152,6 @@ StdMfg = "(スタンダード キーボード)"
 *PNP0303.DeviceDesc = "IBM PC/AT キーボード"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 KeyboardClassName = "Klawiatury"
 HID.KeyboardDevice    = "Klawiatura HID"
 StdMfg = "(Klawiatury standardowe)"
@@ -163,7 +164,6 @@ StdMfg = "(Teclado padrão)"
 *PNP0303.DeviceDesc = "Teclado IBM PC/AT"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 KeyboardClassName = "Tastaturi"
 HID.KeyboardDevice = "Tastatură-dispozitiv de interfațare umană"
 StdMfg = "(tastatură standard)"
@@ -171,7 +171,6 @@ LocationOverride = "conectat la portul de tastatură"
 *PNP0303.DeviceDesc = "Tastatură IBM PC/AT"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 KeyboardClassName = "Клавиатуры"
 HID.KeyboardDevice    = "Клавиатура HID"
 StdMfg = "(Стандартные клавиатуры)"
@@ -184,7 +183,6 @@ StdMfg = "(Štandardné klávesnice)"
 *PNP0303.DeviceDesc = "Klávesnica IBM PC/AT"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 KeyboardClassName = "Klavyeler"
 HID.KeyboardDevice    = "HID Klavyeler"
 StdMfg = "(Standart Klavyeler)"
@@ -192,7 +190,6 @@ LocationOverride = "klavye girişine takılı"
 *PNP0303.DeviceDesc = "IBM PC/AT Klavye"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 KeyboardClassName = "Клавіатури"
 HID.KeyboardDevice    = "HID-Клавіатура"
 StdMfg = "(Стандартні клавіатури)"
@@ -210,7 +207,6 @@ StdMfg = "(标准键盘)"
 *PNP0303.DeviceDesc = "IBM PC/AT 键盘"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 KeyboardClassName = "Teclados"
 StdMfg = "(Teclado padrão)"
 *PNP0303.DeviceDesc = "Teclado IBM PC/AT"

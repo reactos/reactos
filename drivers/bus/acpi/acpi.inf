@@ -41,8 +41,10 @@ LoadOrderGroup = Boot Bus Extender
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+; Localizable
 GenericMfg = "(Generic system devices)"
 *PNP0C08.DeviceDesc = "ACPI hardware"
 
@@ -58,8 +60,6 @@ GenericMfg = "(Generische Systemgeräte)"
 *PNP0C08.DeviceDesc = "ACPI Hardware"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 GenericMfg = "(Dispositivos del sistema estándar)"
 *PNP0C08.DeviceDesc = "Hardware ACPI"
 
@@ -71,8 +71,6 @@ GenericMfg = "(標準システム デバイス)"
 *PNP0C08.DeviceDesc = "ACPI ハードウェア"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0C08.DeviceDesc = "Sprzęt ACPI"
 
@@ -81,14 +79,10 @@ GenericMfg = "(Dispositivos de sistema padrão)"
 *PNP0C08.DeviceDesc = "Hardware ACPI"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
-
 GenericMfg = "(dispozitiv de sistem generic)"
 *PNP0C08.DeviceDesc = "Dispozitive ACPI"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 GenericMfg = "(Стандартные системные устройства)"
 *PNP0C08.DeviceDesc = "Устройства ACPI"
 
@@ -97,14 +91,10 @@ GenericMfg = "(Generické systémové zariadenia)"
 *PNP0C08.DeviceDesc = "ACPI hardvér"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 GenericMfg = "(Genel Sistem Aygıtları)"
 *PNP0C08.DeviceDesc = "ACPI Donanım"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
-
 GenericMfg = "(Стандартні системні пристрої)"
 *PNP0C08.DeviceDesc = "Пристрої ACPI"
 

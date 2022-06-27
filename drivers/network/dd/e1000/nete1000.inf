@@ -79,10 +79,12 @@ LoadOrderGroup = NDIS
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
 IntelMfg = "Intel"
 
+; Localizable
 IntelE1000_1000.DeviceDesc = "Intel 82542-based PCI Ethernet Adapter"
 IntelE1000_1001.DeviceDesc = "Intel 82543GC Fiber PCI Ethernet Adapter"
 IntelE1000_1004.DeviceDesc = "Intel 82543GC Copper PCI Ethernet Adapter"
@@ -122,8 +124,6 @@ IntelE1000_1099.DeviceDesc = "Intel 82546GB Quad Copper PCI Ethernet Adapter"
 IntelE1000_10B5.DeviceDesc = "Intel 82546GB Quad Copper KSP3 PCI-X Ethernet Adapter"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 IntelE1000_1000.DeviceDesc = "Karta Intel 82542-based PCI Ethernet Adapter"
 IntelE1000_1001.DeviceDesc = "Karta Intel 82543GC Fiber PCI Ethernet Adapter"
 IntelE1000_1004.DeviceDesc = "Karta Intel 82543GC Copper PCI Ethernet Adapter"
@@ -163,9 +163,6 @@ IntelE1000_1099.DeviceDesc = "Karta Intel 82546GB Quad Copper PCI Ethernet Adapt
 IntelE1000_10B5.DeviceDesc = "Karta Intel 82546GB Quad Copper KSP3 PCI-X Ethernet Adapter"
 
 [Strings.0a]
-
-ReactOS = "Equipo de ReactOS"
-
 IntelE1000_1000.DeviceDesc = "Adaptador de Ethernet 82542-based PCI"
 IntelE1000_1001.DeviceDesc = "Adaptador de Ethernet 82543GC Fiber PCI"
 IntelE1000_1004.DeviceDesc = "Adaptador de Ethernet 82543GC Copper PCI"

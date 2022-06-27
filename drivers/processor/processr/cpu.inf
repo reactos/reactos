@@ -120,7 +120,10 @@ LoadOrderGroup = Extended Base
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 ProcessorClassName = "Processors"
 
 CyrixMfg = "Cyrix"
@@ -268,7 +271,6 @@ IntelProcessor.DeviceDesc = "Intel プロセッサ"
 Standard = "スタンダードプロセッサ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 ProcessorClassName = "Procesory"
 
 Processor.DeviceDesc = "Procesor"
@@ -307,7 +309,6 @@ IntelProcessor.DeviceDesc = "Procesador Intel"
 Standard = "Processador padrão"
 
 [Strings.0418]
-ReactOS = "Fundația ReactOS"
 ProcessorClassName = "Procesoare"
 
 Processor.DeviceDesc = "Procesor"
@@ -340,7 +341,6 @@ ViaNANOProcessor.DeviceDesc = "Procesor VIA Nano"
 ViaProcessor.DeviceDesc = "Procesor VIA"
 
 [Strings.0419]
-ReactOS = "Фонд ReactOS"
 ProcessorClassName = "Процессоры"
 
 Processor.DeviceDesc = "Процессор"
@@ -379,7 +379,6 @@ IntelProcessor.DeviceDesc = "Intel procesor"
 Standard = "Štandardný procesor"
 
 [Strings.041f]
-ReactOS = "ReactOS Vakfı"
 ProcessorClassName = "İşlemciler"
 
 Processor.DeviceDesc = "İşlemci"
@@ -412,7 +411,6 @@ ViaNANOProcessor.DeviceDesc = "VIA Nano İşlemci"
 ViaProcessor.DeviceDesc = "VIA İşlemci"
 
 [Strings.0422]
-ReactOS = "Фонд ReactOS"
 ProcessorClassName = "Процесори"
 
 Processor.DeviceDesc = "Процесор"
@@ -481,7 +479,6 @@ ViaNANOProcessor.DeviceDesc = "VIA Nano 处理器"
 ViaProcessor.DeviceDesc = "VIA 处理器"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 ProcessorClassName = "Procesadores"
 
 Processor.DeviceDesc = "Procesador"

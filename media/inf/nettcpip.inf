@@ -293,7 +293,10 @@ HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dnsrslvr.dll"
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 MS_TCPIP.DisplayName = "Internet Protocol Version 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "DNS Client"
 DNSCLIENT_DESC = "Service that caches local DNS queries"
@@ -309,11 +312,7 @@ DHCPCLIENT_NAME = "DHCP 用戶端"
 DHCPCLIENT_DESC = "嘗試從可用的 DHCP 伺服器中自動取得網路設定"
 TCPIP_DEF = "傳輸控制協議 / 互聯網協議"
 
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 [Strings.040c]
-ReactOS = "Équipe ReactOS"
 MS_TCPIP.DisplayName = "Protocole Internet Version 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "Client DNS"
 DNSCLIENT_DESC = "Service de mise en cache de requêtes DNS locales"
@@ -322,7 +321,6 @@ DHCPCLIENT_DESC = "Obtient les paramètres réseau automatiquement depuis un ser
 TCPIP_DEF = "Transmission Control Protocol/Internet Protocol"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 MS_TCPIP.DisplayName = "Protokół internetowy w wersji 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "Klient DNS"
 DNSCLIENT_DESC = "Usługa buforująca lokalne zapytania DNS"
@@ -330,11 +328,7 @@ DHCPCLIENT_NAME = "Klient DHCP"
 DHCPCLIENT_DESC = "Próbuje uzyskać ustawienia sieciowe automatycznie z dostępnego serwera DHCP"
 TCPIP_DEF = "Protokół kontroli transmisji/Protokół internetowy (TCP/IP)"
 
-[Strings.0418]
-ReactOS = "Echipa ReactOS"
-
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 MS_TCPIP.DisplayName = "Протокол Интернета версии 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "Клиент DNS"
 DNSCLIENT_DESC = "Служба кэширования локальных DNS запросов"
@@ -343,7 +337,6 @@ DHCPCLIENT_DESC = "Автоматически получает настройк�
 TCPIP_DEF = "Протокол контроля передачи/Протокол Интернета (TCP/IP)"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 MS_TCPIP.DisplayName = "Genel Ağ Protokolü Sürüm 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "DNS İstemcisi"
 DNSCLIENT_DESC = "Yerel DNS sorgularını önbelleğe alan hizmet"
@@ -351,11 +344,7 @@ DHCPCLIENT_NAME = "DHCP İstemcisi"
 DHCPCLIENT_DESC = "Kullanılabilir bir DHCP sunucusundan otomatik olarak ağ ayarlarını almayı dener"
 TCPIP_DEF = "Aktarım Denetim Protokolü/Genel Ağ Protokolü"
 
-[Strings.0422]
-ReactOS = "Команда ReactOS"
-
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 MS_TCPIP.DisplayName = "Internet Protocol Version 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "DNS Client"
 DNSCLIENT_DESC = "Serviço que armazena em cache consultas DNS locais"
