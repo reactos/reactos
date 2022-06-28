@@ -192,7 +192,7 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
-    if (pszValueName == NULL)
+    if (!pszValueName)
         pszValueName = ppszNames[0];
 
     for(i = 0; i < c; i++)
