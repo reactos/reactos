@@ -4503,7 +4503,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     PETHREAD CurrentThread = PsGetCurrentThread();
     KAPC_STATE ApcState;
     ULONG ProtectionMask, QuotaCharge = 0, QuotaFree = 0;
-    BOOLEAN Attached = FALSE, ChangeProtection = FALSE;
+    BOOLEAN Attached = FALSE, ChangeProtection = FALSE, QuotaCharged = FALSE;
     MMPTE TempPte;
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
@@ -4763,6 +4763,16 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             StartingAddress = (ULONG_PTR)PBaseAddress;
         }
 
+        // Charge quotas for the VAD
+        Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Quota exceeded.\n");
+            goto FailPathNoLock;
+        }
+
+        QuotaCharged = TRUE;
+
         //
         // Allocate and initialize the VAD
         //
@@ -4792,15 +4802,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the VAD!\n");
-            ExFreePoolWithTag(Vad, 'SdaV');
-            goto FailPathNoLock;
-        }
-
-        // Charge quotas for the VAD
-        Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Quota exceeded.\n");
             ExFreePoolWithTag(Vad, 'SdaV');
             goto FailPathNoLock;
         }
@@ -5206,6 +5207,10 @@ FailPathNoLock:
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
+    }
+    else if (QuotaCharged)
+    {
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
     }
 
     return Status;
