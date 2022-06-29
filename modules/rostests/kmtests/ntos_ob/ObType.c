@@ -93,8 +93,8 @@ CloseProc(
     IN PEPROCESS Process,
     IN PVOID Object,
     IN ACCESS_MASK GrantedAccess,
-    IN ULONG ProcessHandleCount,
-    IN ULONG SystemHandleCount)
+    IN ULONG_PTR ProcessHandleCount,
+    IN ULONG_PTR SystemHandleCount)
 {
     DPRINT("CloseProc() 0x%p, ProcessHandleCount %lu, SystemHandleCount %lu, AccessMask 0x%lX\n",
         Object, ProcessHandleCount, SystemHandleCount, GrantedAccess);

@@ -202,8 +202,8 @@ typedef VOID
     _In_opt_ PEPROCESS Process,
     _In_ PVOID Object,
     _In_ ACCESS_MASK GrantedAccess,
-    _In_ ULONG ProcessHandleCount,
-    _In_ ULONG SystemHandleCount
+    _In_ ULONG_PTR ProcessHandleCount,
+    _In_ ULONG_PTR SystemHandleCount
 );
 
 typedef VOID
