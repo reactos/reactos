@@ -2176,8 +2176,8 @@ NTAPI
 IopCloseFile(IN PEPROCESS Process OPTIONAL,
              IN PVOID ObjectBody,
              IN ACCESS_MASK GrantedAccess,
-             IN ULONG HandleCount,
-             IN ULONG SystemHandleCount)
+             IN ULONG_PTR HandleCount,
+             IN ULONG_PTR SystemHandleCount)
 {
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     KEVENT Event;
