@@ -814,7 +814,14 @@ UINT WINAPI PrivateExtractIconExW (
 	TRACE("%s %d %p %p %d\n",
 	debugstr_w(lpwstrFile),nIndex,phIconLarge, phIconSmall, nIcons);
 
-	if (nIndex == -1)
+        /*
+         * https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticonexa
+         * "If this value is –1 and phiconLarge and phiconSmall are **both** NULL, the function returns the total number of icons in the specified file.
+         * If the file is an executable file or DLL, the return value is the number of RT_GROUP_ICON resources."
+         *
+         * BUT apparently it doesn't matter what number is stored in nIndex as long as neither of the icon pointers are valid.
+         */
+	if (nIndex == -1 || !(phIconLarge || phIconSmall))
 	  /* get the number of icons */
 	  return ICO_ExtractIconExW(lpwstrFile, NULL, 0, 0, 0, 0, NULL, LR_DEFAULTCOLOR);
 
@@ -841,14 +848,15 @@ UINT WINAPI PrivateExtractIconExW (
 	  ret = ICO_ExtractIconExW(lpwstrFile, phIconSmall, nIndex, nIcons, cxsmicon,
 	                           cysmicon, NULL, LR_DEFAULTCOLOR);
 	}
-       if (phIconLarge)
+        if (phIconLarge)
 	{
 	  /* extract n large icons */
 	  cxicon = GetSystemMetrics(SM_CXICON);
 	  cyicon = GetSystemMetrics(SM_CYICON);
-         ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
+          ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
 	                           cyicon, NULL, LR_DEFAULTCOLOR);
 	}
+
 	return ret;
 }
 
