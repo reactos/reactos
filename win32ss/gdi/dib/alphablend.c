@@ -43,7 +43,7 @@ DIB_XXBPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
   EXLATEOBJ exloSrcRGB, exloDstRGB, exloRGBSrc;
   PFN_DIB_PutPixel pfnDibPutPixel = DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel;
 
-  DPRINT("DIB_16BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+  DPRINT("DIB_XXBPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
     SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
     DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
