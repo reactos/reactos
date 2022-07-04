@@ -26,38 +26,38 @@ OnInitDialog(
     PPAGE_DATA pPageData,
     HWND hwndDlg)
 {
-    TCHAR szBuffer[256];
-    MIXERLINE mxln;
-    MIXERCONTROL mxc;
-    MIXERLINECONTROLS mxlctrl;
+    WCHAR szBuffer[256];
+    MIXERLINEW mxln;
+    MIXERCONTROLW mxc;
+    MIXERLINECONTROLSW mxlctrl;
     MIXERCONTROLDETAILS mxcd;
     INT i, j;
 
     /* Open the mixer */
     if (mixerOpen(&pPageData->hMixer, 0, PtrToUlong(hwndDlg), 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
     {
-        MessageBox(hwndDlg, _T("Cannot open mixer"), NULL, MB_OK);
+        MessageBoxW(hwndDlg, L"Cannot open mixer", NULL, MB_OK);
         return FALSE;
     }
 
     /* Retrieve the mixer information */
-    mxln.cbStruct = sizeof(MIXERLINE);
+    mxln.cbStruct = sizeof(MIXERLINEW);
     mxln.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
 
-    if (mixerGetLineInfo((HMIXEROBJ)pPageData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE) != MMSYSERR_NOERROR)
+    if (mixerGetLineInfoW((HMIXEROBJ)pPageData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE) != MMSYSERR_NOERROR)
         return FALSE;
 
     pPageData->volumeChannels = mxln.cChannels;
 
     /* Retrieve the line information */
-    mxlctrl.cbStruct = sizeof(MIXERLINECONTROLS);
+    mxlctrl.cbStruct = sizeof(MIXERLINECONTROLSW);
     mxlctrl.dwLineID = mxln.dwLineID;
     mxlctrl.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
     mxlctrl.cControls = 1;
-    mxlctrl.cbmxctrl = sizeof(MIXERCONTROL);
+    mxlctrl.cbmxctrl = sizeof(MIXERCONTROLW);
     mxlctrl.pamxctrl = &mxc;
 
-    if (mixerGetLineControls((HMIXEROBJ)pPageData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE) != MMSYSERR_NOERROR)
+    if (mixerGetLineControlsW((HMIXEROBJ)pPageData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE) != MMSYSERR_NOERROR)
         return FALSE;
 
     pPageData->volumeControlID = mxc.dwControlID;
@@ -80,7 +80,7 @@ OnInitDialog(
     mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
     mxcd.paDetails = pPageData->volumeValues;
 
-    if (mixerGetControlDetails((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
+    if (mixerGetControlDetailsW((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
         return FALSE;
 
     /* Initialize the channels */
@@ -89,14 +89,14 @@ OnInitDialog(
         j = i * 4;
 
         /* Set the channel name */
-        LoadString(hApplet, IDS_SPEAKER_LEFT + i, szBuffer, _countof(szBuffer));
-        SetWindowText(GetDlgItem(hwndDlg, 9472 + j), szBuffer);
+        LoadStringW(hApplet, IDS_SPEAKER_LEFT + i, szBuffer, _countof(szBuffer));
+        SetWindowTextW(GetDlgItem(hwndDlg, 9472 + j), szBuffer);
 
         /* Initialize the channel trackbar */
-        SendDlgItemMessage(hwndDlg, 9475 + j, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
-        SendDlgItemMessage(hwndDlg, 9475 + j, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
-        SendDlgItemMessage(hwndDlg, 9475 + j, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
-        SendDlgItemMessage(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);
     }
 
     /* Hide the unused controls */
@@ -130,14 +130,14 @@ OnMixerControlChange(
     mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
     mxcd.paDetails = pPageData->volumeValues;
 
-    if (mixerGetControlDetails((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
+    if (mixerGetControlDetailsW((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
         return;
 
     for (i = 0; i < pPageData->volumeChannels; i++)
     {
         j = i * 4;
 
-        SendDlgItemMessage(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);
     }
 }
 
@@ -154,14 +154,14 @@ OnHScroll(
     DWORD dwValue, dwPosition;
     INT id, idx, i, j;
 
-    id = (INT)GetWindowLongPtr((HWND)lParam, GWLP_ID);
+    id = (INT)GetWindowLongPtrW((HWND)lParam, GWLP_ID);
     if (id < 9475 || id > 9503)
         return;
 
     if ((id - 9475) % 4 != 0)
         return;
 
-    dwPosition = (DWORD)SendDlgItemMessage(hwndDlg, id, TBM_GETPOS, 0, 0);
+    dwPosition = (DWORD)SendDlgItemMessageW(hwndDlg, id, TBM_GETPOS, 0, 0);
 
     if (dwPosition == VOLUME_MIN)
         dwValue = pPageData->volumeMinimum;
@@ -176,7 +176,7 @@ OnHScroll(
         {
             j = 9475 + (i * 4);
             if (j != id)
-                SendDlgItemMessage(hwndDlg, j, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
+                SendDlgItemMessageW(hwndDlg, j, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
 
             pPageData->volumeValues[i].dwValue = dwValue;
         }
@@ -237,13 +237,13 @@ SpeakerVolumeDlgProc(
 
     UNREFERENCED_PARAMETER(wParam);
 
-    pPageData = (PPAGE_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pPageData = (PPAGE_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
             pPageData = (PPAGE_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PAGE_DATA));
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pPageData);
+            SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pPageData);
 
             if (pPageData)
             {
@@ -262,7 +262,7 @@ SpeakerVolumeDlgProc(
 
                 HeapFree(GetProcessHeap(), 0, pPageData);
                 pPageData = NULL;
-                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
+                SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
             }
             break;
 
@@ -279,7 +279,7 @@ SpeakerVolumeDlgProc(
             {
                 case 9504:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        pPageData->volumeSync = (SendDlgItemMessage(hwndDlg, 9504, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                        pPageData->volumeSync = (SendDlgItemMessageW(hwndDlg, 9504, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     break;
 
                 case 9505:
@@ -306,16 +306,16 @@ INT_PTR
 SpeakerVolume(
     HWND hwndDlg)
 {
-    PROPSHEETPAGE psp[1];
-    PROPSHEETHEADER psh;
+    PROPSHEETPAGEW psp[1];
+    PROPSHEETHEADERW psh;
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
     psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.pszCaption = MAKEINTRESOURCE(IDS_SPEAKER_VOLUME);
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGEW);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
@@ -324,5 +324,5 @@ SpeakerVolume(
     psp[0].hInstance = hApplet;
     psp[0].pszTitle = MAKEINTRESOURCE(IDS_SPEAKER_VOLUME);
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    return (LONG)(PropertySheetW(&psh) != -1);
 }

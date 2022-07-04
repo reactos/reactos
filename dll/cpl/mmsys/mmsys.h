@@ -14,7 +14,6 @@
 #include <winuser.h>
 #include <mmsystem.h>
 #include <cpl.h>
-#include <tchar.h>
 #include <setupapi.h>
 #include <stdlib.h>
 
@@ -46,7 +45,7 @@ extern HINSTANCE hApplet;
 
 VOID
 InitPropSheetPage(
-    PROPSHEETPAGE *psp,
+    PROPSHEETPAGEW *psp,
     WORD idDlg,
     DLGPROC DlgProc);
 

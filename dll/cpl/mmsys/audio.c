@@ -26,15 +26,15 @@ VOID
 InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 {
     WAVEOUTCAPSW waveOutputPaps;
-    WAVEINCAPS waveInputPaps;
-    MIDIOUTCAPS midiOutCaps;
-    TCHAR szNoDevices[256];
+    WAVEINCAPSW waveInputPaps;
+    MIDIOUTCAPSW midiOutCaps;
+    WCHAR szNoDevices[256];
     UINT DevsNum;
     UINT uIndex;
     HWND hCB;
     LRESULT Res;
 
-    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
+    LoadStringW(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
     // Init sound playback devices list
     hCB = GetDlgItem(hwnd, IDC_DEVICE_PLAY_LIST);
@@ -42,8 +42,8 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     DevsNum = waveOutGetNumDevs();
     if (DevsNum < 1)
     {
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
         pGlobalData->bNoAudioOut = TRUE;
     }
     else
@@ -69,12 +69,12 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 
             if (CB_ERR != Res)
             {
-                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
                 if (!wcsicmp(waveOutputPaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init sound recording devices list
@@ -83,8 +83,8 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     DevsNum = waveInGetNumDevs();
     if (DevsNum < 1)
     {
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
         pGlobalData->bNoAudioIn = TRUE;
     }
     else
@@ -104,19 +104,19 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
-            if (waveInGetDevCaps(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
+            if (waveInGetDevCapsW(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
                 continue;
 
-            Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
 
             if (CB_ERR != Res)
             {
-                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
                 if (!wcsicmp(waveInputPaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init MIDI devices list
@@ -125,8 +125,8 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     DevsNum = midiOutGetNumDevs();
     if (DevsNum < 1)
     {
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
         pGlobalData->bNoMIDIOut = TRUE;
     }
     else
@@ -145,19 +145,19 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
-            if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
+            if (midiOutGetDevCapsW(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
                 continue;
 
-            Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
 
             if (CB_ERR != Res)
             {
-                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
                 if (!wcsicmp(midiOutCaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 }
 
@@ -165,7 +165,7 @@ VOID
 UpdateRegistryString(HWND hwnd, INT ctrl, LPWSTR key, LPWSTR value)
 {
     HWND hwndCombo = GetDlgItem(hwnd, ctrl);
-    INT CurSel = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+    INT CurSel = SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
     UINT TextLen;
     WCHAR SelectedDevice[MAX_PATH] = {0};
     HKEY hKey;
@@ -221,12 +221,12 @@ GetDevNum(HWND hControl, DWORD Id)
     int iCurSel;
     UINT DevNum;
 
-    iCurSel = SendMessage(hControl, CB_GETCURSEL, 0, 0);
+    iCurSel = SendMessageW(hControl, CB_GETCURSEL, 0, 0);
 
     if (iCurSel == CB_ERR)
         return 0;
 
-    DevNum = (UINT) SendMessage(hControl, CB_GETITEMDATA, iCurSel, 0);
+    DevNum = (UINT) SendMessageW(hControl, CB_GETITEMDATA, iCurSel, 0);
     if (DevNum == (UINT) CB_ERR)
         return 0;
 
@@ -245,7 +245,7 @@ AudioDlgProc(HWND hwndDlg,
 {
     PGLOBAL_DATA pGlobalData;
 
-    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
@@ -254,7 +254,7 @@ AudioDlgProc(HWND hwndDlg,
             UINT NumWavOut = waveOutGetNumDevs();
 
             pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+            SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
             if (!pGlobalData)
                 break;
@@ -319,7 +319,7 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcess(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
                 }
                 break;
 
@@ -339,7 +339,7 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcess(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
                 }
                 break;
 
@@ -359,7 +359,7 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcess(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
                 }
                 break;
 
