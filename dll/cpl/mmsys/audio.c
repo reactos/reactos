@@ -43,7 +43,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     if (DevsNum < 1)
     {
         Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)Res, 0);
         pGlobalData->bNoAudioOut = TRUE;
     }
     else
@@ -56,7 +56,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
         if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             RegQueryValueExW(hKey, L"Playback", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
-            DefaultDevice[MAX_PATH-1] = L'\0';
+            DefaultDevice[_countof(DefaultDevice) - 1] = UNICODE_NULL;
             RegCloseKey(hKey);
         }
 
@@ -65,16 +65,16 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
             if (waveOutGetDevCapsW(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
                 continue;
 
-            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)waveOutputPaps.szPname);
 
             if (CB_ERR != Res)
             {
-                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                if (!wcsicmp(waveOutputPaps.szPname, DefaultDevice))
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM)uIndex);
+                if (!_wcsicmp(waveOutputPaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)DefaultIndex, 0);
     }
 
     // Init sound recording devices list
@@ -84,7 +84,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     if (DevsNum < 1)
     {
         Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)Res, 0);
         pGlobalData->bNoAudioIn = TRUE;
     }
     else
@@ -97,7 +97,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
         if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             RegQueryValueExW(hKey, L"Record", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
-            DefaultDevice[MAX_PATH-1] = L'\0';
+            DefaultDevice[_countof(DefaultDevice) - 1] = UNICODE_NULL;
             RegCloseKey(hKey);
         }
 
@@ -107,16 +107,16 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
             if (waveInGetDevCapsW(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
                 continue;
 
-            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)waveInputPaps.szPname);
 
             if (CB_ERR != Res)
             {
-                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                if (!wcsicmp(waveInputPaps.szPname, DefaultDevice))
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM)uIndex);
+                if (!_wcsicmp(waveInputPaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)DefaultIndex, 0);
     }
 
     // Init MIDI devices list
@@ -126,7 +126,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
     if (DevsNum < 1)
     {
         Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)Res, 0);
         pGlobalData->bNoMIDIOut = TRUE;
     }
     else
@@ -139,7 +139,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
         if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             RegQueryValueExW(hKey, L"szPname", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
-            DefaultDevice[MAX_PATH-1] = L'\0';
+            DefaultDevice[_countof(DefaultDevice) - 1] = UNICODE_NULL;
             RegCloseKey(hKey);
         }
 
@@ -148,16 +148,16 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
             if (midiOutGetDevCapsW(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
                 continue;
 
-            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM)midiOutCaps.szPname);
 
             if (CB_ERR != Res)
             {
-                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                if (!wcsicmp(midiOutCaps.szPname, DefaultDevice))
+                SendMessageW(hCB, CB_SETITEMDATA, Res, (LPARAM)uIndex);
+                if (!_wcsicmp(midiOutCaps.szPname, DefaultDevice))
                     DefaultIndex = Res;
             }
         }
-        SendMessageW(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+        SendMessageW(hCB, CB_SETCURSEL, (WPARAM)DefaultIndex, 0);
     }
 }
 
@@ -183,7 +183,7 @@ UpdateRegistryString(HWND hwnd, INT ctrl, LPWSTR key, LPWSTR value)
     if (RegCreateKeyExW(HKEY_CURRENT_USER, key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
 
-    RegSetValueExW(hKey, value, 0, REG_SZ, (BYTE *)SelectedDevice, (wcslen(SelectedDevice) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, value, 0, REG_SZ, (BYTE*)SelectedDevice, (wcslen(SelectedDevice) + 1) * sizeof(WCHAR));
     RegCloseKey(hKey);
 }
 
@@ -226,7 +226,7 @@ GetDevNum(HWND hControl, DWORD Id)
     if (iCurSel == CB_ERR)
         return 0;
 
-    DevNum = (UINT) SendMessageW(hControl, CB_GETITEMDATA, iCurSel, 0);
+    DevNum = (UINT)SendMessageW(hControl, CB_GETITEMDATA, iCurSel, 0);
     if (DevNum == (UINT) CB_ERR)
         return 0;
 
@@ -247,7 +247,7 @@ AudioDlgProc(HWND hwndDlg,
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
         {
@@ -300,14 +300,14 @@ AudioDlgProc(HWND hwndDlg,
 
         case WM_COMMAND:
         {
-            STARTUPINFO si;
+            STARTUPINFOW si;
             PROCESS_INFORMATION pi;
             WCHAR szPath[MAX_PATH];
 
             if (!pGlobalData)
                 break;
 
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_VOLUME1_BTN:
                 {

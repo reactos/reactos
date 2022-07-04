@@ -235,11 +235,9 @@ SpeakerVolumeDlgProc(
 {
     PPAGE_DATA pPageData;
 
-    UNREFERENCED_PARAMETER(wParam);
-
     pPageData = (PPAGE_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             pPageData = (PPAGE_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PAGE_DATA));
@@ -315,7 +313,7 @@ SpeakerVolume(
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.pszCaption = MAKEINTRESOURCE(IDS_SPEAKER_VOLUME);
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGEW);
+    psh.nPages = _countof(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 

@@ -79,7 +79,7 @@ LPWSTR MakeFilter(LPWSTR psz)
     return psz;
 }
 
-PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, WCHAR * szName)
+PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, WCHAR *szName)
 {
     PLABEL_MAP pMap = pGlobalData->pLabelMap;
 
@@ -188,7 +188,7 @@ FreeAppMap(PGLOBAL_DATA pGlobalData)
     }
 }
 
-PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, WCHAR * AppName, WCHAR * LabelName)
+PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, WCHAR *AppName, WCHAR *LabelName)
 {
     PLABEL_CONTEXT pLabelContext;
 
@@ -214,7 +214,7 @@ PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT 
     pLabelContext->LabelMap = FindLabel(pGlobalData, pLabelContext->AppMap, LabelName);
     ASSERT(pLabelContext->AppMap);
     ASSERT(pLabelContext->LabelMap);
-    pLabelContext->szValue[0] = L'\0';
+    pLabelContext->szValue[0] = UNICODE_NULL;
     pLabelContext->Next = pSoundScheme->LabelContext;
     pSoundScheme->LabelContext = pLabelContext;
 
@@ -223,7 +223,7 @@ PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT 
 
 
 BOOL
-LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, WCHAR * szSubKey)
+LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, WCHAR *szSubKey)
 {
     HKEY hSubKey;
     DWORD cbValue;
@@ -232,21 +232,21 @@ LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, WCHAR * szSubKey)
     PLABEL_MAP pMap;
 
     if (RegOpenKeyExW(hKey,
-                     szSubKey,
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      szSubKey,
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
     cbValue = sizeof(szDesc);
     if (RegQueryValueExW(hSubKey,
-                      NULL,
-                      NULL,
-                      NULL,
-                      (LPBYTE)szDesc,
-                      &cbValue) != ERROR_SUCCESS)
+                         NULL,
+                         NULL,
+                         NULL,
+                         (LPBYTE)szDesc,
+                         &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         return FALSE;
@@ -254,11 +254,11 @@ LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, WCHAR * szSubKey)
 
     cbValue = sizeof(szData);
     if (RegQueryValueExW(hSubKey,
-                        L"DispFileName",
-                        NULL,
-                        NULL,
-                        (LPBYTE)szData,
-                        &cbValue) != ERROR_SUCCESS)
+                         L"DispFileName",
+                         NULL,
+                         NULL,
+                         (LPBYTE)szData,
+                         &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         return FALSE;
@@ -298,10 +298,10 @@ LoadEventLabels(PGLOBAL_DATA pGlobalData)
     DWORD dwResult;
     DWORD dwCount;
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                     L"AppEvents\\EventLabels",
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      L"AppEvents\\EventLabels",
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -312,13 +312,13 @@ LoadEventLabels(PGLOBAL_DATA pGlobalData)
     {
         dwName = _countof(szName);
         dwResult = RegEnumKeyExW(hSubKey,
-                                dwCurKey,
-                                szName,
-                                &dwName,
-                                NULL,
-                                NULL,
-                                NULL,
-                                NULL);
+                                 dwCurKey,
+                                 szName,
+                                 &dwName,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL);
 
         if (dwResult == ERROR_SUCCESS)
         {
@@ -337,7 +337,7 @@ LoadEventLabels(PGLOBAL_DATA pGlobalData)
 
 
 BOOL
-AddSoundProfile(HWND hwndDlg, HKEY hKey, WCHAR * szSubKey, BOOL SetDefault)
+AddSoundProfile(HWND hwndDlg, HKEY hKey, WCHAR *szSubKey, BOOL SetDefault)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -346,21 +346,21 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, WCHAR * szSubKey, BOOL SetDefault)
     PSOUND_SCHEME_CONTEXT pScheme;
 
     if (RegOpenKeyExW(hKey,
-                     szSubKey,
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      szSubKey,
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
     cbValue = sizeof(szValue);
     dwResult = RegQueryValueExW(hSubKey,
-                               NULL,
-                               NULL,
-                               NULL,
-                               (LPBYTE)szValue,
-                               &cbValue);
+                                NULL,
+                                NULL,
+                                NULL,
+                                (LPBYTE)szValue,
+                                &cbValue);
     RegCloseKey(hSubKey);
 
     if (dwResult != ERROR_SUCCESS)
@@ -406,20 +406,20 @@ EnumerateSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
 
     cbDefault = sizeof(pGlobalData->szDefault);
     if (RegQueryValueExW(hKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        (LPBYTE)pGlobalData->szDefault,
-                        &cbDefault) != ERROR_SUCCESS)
+                         NULL,
+                         NULL,
+                         NULL,
+                         (LPBYTE)pGlobalData->szDefault,
+                         &cbDefault) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
     if (RegOpenKeyExW(hKey,
-                     L"Names",
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      L"Names",
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -430,13 +430,13 @@ EnumerateSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
     {
         dwName = _countof(szName);
         dwResult = RegEnumKeyExW(hSubKey,
-                                dwCurKey,
-                                szName,
-                                &dwName,
-                                NULL,
-                                NULL,
-                                NULL,
-                                NULL);
+                                 dwCurKey,
+                                 szName,
+                                 &dwName,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL);
 
         if (dwResult == ERROR_SUCCESS)
         {
@@ -454,7 +454,7 @@ EnumerateSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
 }
 
 
-PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, WCHAR * szName)
+PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, WCHAR *szName)
 {
     LRESULT lCount, lIndex, lResult;
     PSOUND_SCHEME_CONTEXT pScheme;
@@ -520,7 +520,7 @@ FreeSoundProfiles(HWND hwndDlg)
 }
 
 BOOL
-ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szProfile, WCHAR * szLabelName, WCHAR * szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
+ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szProfile, WCHAR *szLabelName, WCHAR *szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -530,27 +530,25 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szPr
     PLABEL_CONTEXT pLabelContext;
     BOOL bCurrentProfile, bActiveProfile;
 
-    //MessageBoxW(hwndDlg, szProfile, szLabelName, MB_OK);
-
     bCurrentProfile = !_wcsicmp(szProfile, L".Current");
     bActiveProfile = !_wcsicmp(szProfile, pGlobalData->szDefault);
 
     if (RegOpenKeyExW(hKey,
-                     szProfile,
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      szProfile,
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
     cbValue = sizeof(szValue);
     if (RegQueryValueExW(hSubKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        (LPBYTE)szValue,
-                        &cbValue) != ERROR_SUCCESS)
+                         NULL,
+                         NULL,
+                         NULL,
+                         (LPBYTE)szValue,
+                         &cbValue) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -562,7 +560,6 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szPr
 
     if (!pScheme)
     {
-        //MessageBoxW(hwndDlg, szProfile, L"no profile!!", MB_OK);
         return FALSE;
     }
     pLabelContext = FindLabelContext(pGlobalData, pScheme, AppMap->szName, LabelMap->szName);
@@ -584,7 +581,7 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szPr
 
 
 DWORD
-ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szLabelName, WCHAR * szAppName, PAPP_MAP pAppMap)
+ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szLabelName, WCHAR *szAppName, PAPP_MAP pAppMap)
 {
     HKEY hSubKey;
     DWORD dwNumProfiles;
@@ -595,10 +592,10 @@ ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szLa
     PLABEL_MAP pLabel;
 
     if (RegOpenKeyExW(hKey,
-                     szLabelName,
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      szLabelName,
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -617,13 +614,13 @@ ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szLa
     {
         dwProfile = _countof(szProfile);
         dwResult = RegEnumKeyExW(hSubKey,
-                                dwCurKey,
-                                szProfile,
-                                &dwProfile,
-                                NULL,
-                                NULL,
-                                NULL,
-                                NULL);
+                                 dwCurKey,
+                                 szProfile,
+                                 &dwProfile,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL);
 
         if (dwResult == ERROR_SUCCESS)
         {
@@ -643,7 +640,7 @@ ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szLa
 
 
 DWORD
-ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szAppName)
+ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szAppName)
 {
     HKEY hSubKey;
     WCHAR szDefault[MAX_PATH];
@@ -656,17 +653,15 @@ ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szAp
     WCHAR szIcon[MAX_PATH];
     PAPP_MAP AppMap;
 
-    //MessageBoxW(hwndDlg, szAppName, L"Importing...\n", MB_OK);
-
     AppMap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APP_MAP));
     if (!AppMap)
         return 0;
 
     if (RegOpenKeyExW(hKey,
-                     szAppName,
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      szAppName,
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, AppMap);
         return 0;
@@ -674,11 +669,11 @@ ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szAp
 
     cbValue = sizeof(szDefault);
     if (RegQueryValueExW(hSubKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        (LPBYTE)szDefault,
-                        &cbValue) != ERROR_SUCCESS)
+                         NULL,
+                         NULL,
+                         NULL,
+                         (LPBYTE)szDefault,
+                         &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         HeapFree(GetProcessHeap(), 0, AppMap);
@@ -687,13 +682,13 @@ ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szAp
 
     cbValue = sizeof(szIcon);
     if (RegQueryValueExW(hSubKey,
-                        L"DispFileName",
-                        NULL,
-                        NULL,
-                        (LPBYTE)szIcon,
-                        &cbValue) != ERROR_SUCCESS)
+                         L"DispFileName",
+                         NULL,
+                         NULL,
+                         (LPBYTE)szIcon,
+                         &cbValue) != ERROR_SUCCESS)
     {
-        szIcon[0] = L'\0';
+        szIcon[0] = UNICODE_NULL;
     }
 
     /* initialize app map */
@@ -711,13 +706,13 @@ ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR * szAp
     {
         dwName = _countof(szName);
         dwResult = RegEnumKeyExW(hSubKey,
-                              dwCurKey,
-                              szName,
-                              &dwName,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL);
+                                 dwCurKey,
+                                 szName,
+                                 &dwName,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL);
         if (dwResult == ERROR_SUCCESS)
         {
             if (ImportSoundEntry(pGlobalData, hwndDlg, hSubKey, szName, szAppName, AppMap))
@@ -743,10 +738,10 @@ ImportSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
     HKEY hSubKey;
 
     if (RegOpenKeyExW(hKey,
-                     L"Apps",
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      L"Apps",
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -756,9 +751,9 @@ ImportSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
     do
     {
         dwResult = RegEnumKeyW(hSubKey,
-                              dwCurKey,
-                              szName,
-                              _countof(szName));
+                               dwCurKey,
+                               szName,
+                               _countof(szName));
 
         if (dwResult == ERROR_SUCCESS)
         {
@@ -783,10 +778,10 @@ LoadSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
     DWORD dwNumSchemes;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                     L"AppEvents\\Schemes",
-                     0,
-                     KEY_READ,
-                     &hSubKey) != ERROR_SUCCESS)
+                      L"AppEvents\\Schemes",
+                      0,
+                      KEY_READ,
+                      &hSubKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -796,7 +791,6 @@ LoadSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
 
     if (dwNumSchemes)
     {
-        //MessageBoxW(hwndDlg, L"importing sound profiles...", NULL, MB_OK);
         ImportSoundProfiles(pGlobalData, hwndDlg, hSubKey);
     }
 
@@ -810,7 +804,7 @@ LoadSoundFiles(HWND hwndDlg)
 {
     WCHAR szList[256];
     WCHAR szPath[MAX_PATH];
-    WCHAR * ptr;
+    WCHAR *ptr;
     WIN32_FIND_DATAW FileData;
     HANDLE hFile;
     LRESULT lResult;
@@ -819,17 +813,17 @@ LoadSoundFiles(HWND hwndDlg)
     /* Add no sound listview item */
     if (LoadStringW(hApplet, IDS_NO_SOUND, szList, _countof(szList)))
     {
-        szList[_countof(szList) - 1] = L'\0';
+        szList[_countof(szList) - 1] = UNICODE_NULL;
         ComboBox_AddString(GetDlgItem(hwndDlg, IDC_SOUND_LIST), szList);
     }
 
     /* Load sound files */
-    length = GetWindowsDirectoryW(szPath, MAX_PATH);
-    if (length == 0 || length >= MAX_PATH - 9)
+    length = GetWindowsDirectoryW(szPath, _countof(szPath));
+    if (length == 0 || length >= _countof(szPath) - 9)
     {
         return FALSE;
     }
-    if (szPath[length-1] != L'\\')
+    if (szPath[length - 1] != L'\\')
     {
         szPath[length] = L'\\';
         length++;
@@ -857,10 +851,10 @@ LoadSoundFiles(HWND hwndDlg)
         {
             ptr = FileData.cFileName;
         }
-        lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)ptr);
+        lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, 0, (LPARAM)ptr);
         if (lResult != CB_ERR)
         {
-            wcscpy(&szPath[length-1], FileData.cFileName);
+            wcscpy(&szPath[length - 1], FileData.cFileName);
             SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(szPath));
         }
     } while (FindNextFileW(hFile, &FileData) != 0);
@@ -890,13 +884,13 @@ ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
         TreeView_SetImageList(hList, pGlobalData->hSoundsImageList, TVSIL_NORMAL);
     }
 
-    lIndex = SendMessageW(hDlgCtrl, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+    lIndex = SendMessageW(hDlgCtrl, CB_GETCURSEL, 0, 0);
     if (lIndex == CB_ERR)
     {
         return FALSE;
     }
 
-    lIndex = SendMessageW(hDlgCtrl, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+    lIndex = SendMessageW(hDlgCtrl, CB_GETITEMDATA, (WPARAM)lIndex, 0);
     if (lIndex == CB_ERR)
     {
         return FALSE;
@@ -969,13 +963,13 @@ ApplyChanges(HWND hwndDlg)
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SOUND_SCHEME);
 
-    lIndex = SendMessageW(hDlgCtrl, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+    lIndex = SendMessageW(hDlgCtrl, CB_GETCURSEL, 0, 0);
     if (lIndex == CB_ERR)
     {
         return FALSE;
     }
 
-    lIndex = SendMessageW(hDlgCtrl, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+    lIndex = SendMessageW(hDlgCtrl, CB_GETITEMDATA, (WPARAM)lIndex, 0);
     if (lIndex == CB_ERR)
     {
         return FALSE;
@@ -983,22 +977,22 @@ ApplyChanges(HWND hwndDlg)
     pScheme = (PSOUND_SCHEME_CONTEXT)lIndex;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                     L"AppEvents\\Schemes",
-                     0,
-                     KEY_WRITE,
-                     &hKey) != ERROR_SUCCESS)
+                      L"AppEvents\\Schemes",
+                      0,
+                      KEY_WRITE,
+                      &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pScheme->szName, (wcslen(pScheme->szName) +1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pScheme->szName, (wcslen(pScheme->szName) + 1) * sizeof(WCHAR));
     RegCloseKey(hKey);
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                     L"AppEvents\\Schemes\\Apps",
-                     0,
-                     KEY_WRITE,
-                     &hKey) != ERROR_SUCCESS)
+                      L"AppEvents\\Schemes\\Apps",
+                      0,
+                      KEY_WRITE,
+                      &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -1011,7 +1005,7 @@ ApplyChanges(HWND hwndDlg)
 
         if (RegOpenKeyExW(hKey, Buffer, 0, KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hSubKey, NULL, 0, REG_EXPAND_SZ, (LPBYTE)pLabelContext->szValue, (wcslen(pLabelContext->szValue) +1) * sizeof(WCHAR));
+            RegSetValueExW(hSubKey, NULL, 0, REG_EXPAND_SZ, (LPBYTE)pLabelContext->szValue, (wcslen(pLabelContext->szValue) + 1) * sizeof(WCHAR));
             RegCloseKey(hSubKey);
         }
 
@@ -1113,8 +1107,8 @@ SoundsDlgProc(HWND hwndDlg,
             pGlobalData->NumWavOut = waveOutGetNumDevs();
 
             SendMessageW(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
-                        BM_SETIMAGE,(WPARAM)IMAGE_ICON,
-                        (LPARAM)(HANDLE)LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_PLAY_ICON)));
+                         BM_SETIMAGE, (WPARAM)IMAGE_ICON,
+                         (LPARAM)(HANDLE)LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_PLAY_ICON)));
 
             pGlobalData->hSoundsImageList = InitImageList(IDI_SOUND_SECTION,
                                                           IDI_SOUND_ASSIGNED,
@@ -1142,7 +1136,7 @@ SoundsDlgProc(HWND hwndDlg,
                     ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = hwndDlg;
                     ofn.lpstrFile = filename;
-                    ofn.lpstrFile[0] = L'\0';
+                    ofn.lpstrFile[0] = UNICODE_NULL;
                     ofn.nMaxFile = _countof(filename);
                     LoadStringW(hApplet, IDS_WAVE_FILES_FILTER, szFilter, _countof(szFilter));
                     ofn.lpstrFilter = MakeFilter(szFilter);
@@ -1152,7 +1146,7 @@ SoundsDlgProc(HWND hwndDlg,
                     ofn.lpstrInitialDir = L"%SystemRoot%\\Media";
                     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
-                    if (GetOpenFileNameW(&ofn) != FALSE)
+                    if (GetOpenFileNameW(&ofn))
                     {
                         // FIXME search if list already contains that sound
 
@@ -1162,12 +1156,12 @@ SoundsDlgProc(HWND hwndDlg,
                         pFileName++;
 
                         // add to list
-                        lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)pFileName);
+                        lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, 0, (LPARAM)pFileName);
                         if (lResult != CB_ERR)
                         {
                             // add path and select item
                             SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(filename));
-                            SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
+                            SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)lResult, 0);
                         }
                     }
                     break;
@@ -1192,7 +1186,7 @@ SoundsDlgProc(HWND hwndDlg,
                 {
                     if (HIWORD(wParam) == CBN_SELENDOK)
                     {
-                        (void)TreeView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
+                        TreeView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
                         ShowSoundScheme(pGlobalData, hwndDlg);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), FALSE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), FALSE);
@@ -1247,7 +1241,7 @@ SoundsDlgProc(HWND hwndDlg,
                                     EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
                                 }
 
-                                pLabelContext->szValue[0] = L'\0';
+                                pLabelContext->szValue[0] = UNICODE_NULL;
 
                                 break;
                             }
@@ -1296,11 +1290,11 @@ SoundsDlgProc(HWND hwndDlg,
         case WM_NOTIFY:
         {
             PLABEL_CONTEXT pLabelContext;
-            WCHAR * ptr;
+            WCHAR *ptr;
 
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
-            switch(lpnm->code)
+            switch (lpnm->code)
             {
                 case PSN_APPLY:
                 {

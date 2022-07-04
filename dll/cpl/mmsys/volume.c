@@ -52,11 +52,11 @@ InitImageInfo(PIMGINFO ImgInfo)
     ZeroMemory(ImgInfo, sizeof(*ImgInfo));
 
     ImgInfo->hBitmap = LoadImageW(hApplet,
-                                 MAKEINTRESOURCEW(IDB_SPEAKIMG),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
+                                  MAKEINTRESOURCEW(IDB_SPEAKIMG),
+                                  IMAGE_BITMAP,
+                                  0,
+                                  0,
+                                  LR_DEFAULTCOLOR);
 
     if (ImgInfo->hBitmap != NULL)
     {
@@ -82,7 +82,8 @@ GetMuteControl(PGLOBAL_DATA pGlobalData)
     mxln.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
 
     if (mixerGetLineInfoW((HMIXEROBJ)pGlobalData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE)
-        != MMSYSERR_NOERROR) return;
+        != MMSYSERR_NOERROR)
+        return;
 
     mxlctrl.cbStruct = sizeof(MIXERLINECONTROLSW);
     mxlctrl.dwLineID = mxln.dwLineID;
@@ -92,7 +93,8 @@ GetMuteControl(PGLOBAL_DATA pGlobalData)
     mxlctrl.pamxctrl = &mxc;
 
     if (mixerGetLineControlsW((HMIXEROBJ)pGlobalData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
-        != MMSYSERR_NOERROR) return;
+        != MMSYSERR_NOERROR)
+        return;
 
     pGlobalData->muteControlID = mxc.dwControlID;
 }
@@ -259,7 +261,7 @@ SetVolumeValue(PGLOBAL_DATA pGlobalData,
         else
         {
             pGlobalData->volumeCurrentValues[i].dwValue =
-                pGlobalData->volumePreviousValues[i].dwValue * dwVolume / pGlobalData-> maxVolume;
+                pGlobalData->volumePreviousValues[i].dwValue * dwVolume / pGlobalData->maxVolume;
         }
     }
 
@@ -377,12 +379,12 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     GetMuteState(pGlobalData);
     if (pGlobalData->muteVal)
     {
-        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
         SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
     }
     else
     {
-        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
         SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
     }
 
@@ -421,24 +423,22 @@ VolumeDlgProc(HWND hwndDlg,
 {
     static IMGINFO ImgInfo;
     PGLOBAL_DATA pGlobalData;
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case MM_MIXM_LINE_CHANGE:
         {
             GetMuteState(pGlobalData);
             if (pGlobalData->muteVal)
             {
-                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                 SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
             }
             else
             {
-                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                 SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
             }
             break;
@@ -451,7 +451,7 @@ VolumeDlgProc(HWND hwndDlg,
         }
         case WM_INITDIALOG:
         {
-            pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (PGLOBAL_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
             SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
             pGlobalData->hIconUnMuted = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
@@ -466,8 +466,8 @@ VolumeDlgProc(HWND hwndDlg,
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-            if(lpDrawItem->CtlID == IDC_SPEAKIMG)
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
+            if (lpDrawItem->CtlID == IDC_SPEAKIMG)
             {
                 HDC hdcMem;
                 LONG left;

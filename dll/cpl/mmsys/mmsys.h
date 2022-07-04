@@ -23,18 +23,18 @@
 
 typedef struct _APPLET
 {
-  UINT idIcon;
-  UINT idName;
-  UINT idDescription;
-  APPLET_PROC AppletProc;
+    UINT idIcon;
+    UINT idName;
+    UINT idDescription;
+    APPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
 
 
 #define DRVM_MAPPER 0x2000
-#define DRVM_MAPPER_PREFERRED_GET (DRVM_MAPPER+21)
-#define DRVM_MAPPER_PREFERRED_SET (DRVM_MAPPER+22)
+#define DRVM_MAPPER_PREFERRED_GET (DRVM_MAPPER + 21)
+#define DRVM_MAPPER_PREFERRED_SET (DRVM_MAPPER + 22)
 
 #define VOLUME_MIN        0
 #define VOLUME_MAX      500
@@ -60,17 +60,17 @@ MmSysApplet(HWND hwnd,
 INT_PTR
 CALLBACK
 SoundsDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam);
+	          UINT uMsg,
+	          WPARAM wParam,
+	          LPARAM lParam);
 
 /* volume.c */
 
 INT_PTR CALLBACK
 VolumeDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam);
+	          UINT uMsg,
+	          WPARAM wParam,
+	          LPARAM lParam);
 
 /* voice.c */
 
