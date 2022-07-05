@@ -950,6 +950,7 @@ BOOL
 ApplyChanges(HWND hwndDlg)
 {
     HKEY hKey, hSubKey;
+    DWORD dwType;
     LRESULT lIndex;
     PSOUND_SCHEME_CONTEXT pScheme;
     HWND hDlgCtrl;
@@ -1000,7 +1001,8 @@ ApplyChanges(HWND hwndDlg)
 
         if (RegOpenKeyExW(hKey, Buffer, 0, KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hSubKey, NULL, 0, REG_EXPAND_SZ, (LPBYTE)pLabelContext->szValue, (wcslen(pLabelContext->szValue) + 1) * sizeof(WCHAR));
+            dwType = (wcschr(pLabelContext->szValue, L'%') ? REG_EXPAND_SZ : REG_SZ);
+            RegSetValueExW(hSubKey, NULL, 0, dwType, (LPBYTE)pLabelContext->szValue, (wcslen(pLabelContext->szValue) + 1) * sizeof(WCHAR));
             RegCloseKey(hSubKey);
         }
 
