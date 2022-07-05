@@ -153,6 +153,16 @@ FreeLabelMap(PGLOBAL_DATA pGlobalData)
     while (pGlobalData->pLabelMap)
     {
         pCurMap = pGlobalData->pLabelMap->Next;
+
+        /* Prevent double freeing (for "FindLabel") */
+        if (pGlobalData->pLabelMap->szName != pGlobalData->pLabelMap->szDesc)
+        {
+            free(pGlobalData->pLabelMap->szName);
+        }
+
+        free(pGlobalData->pLabelMap->szDesc);
+        free(pGlobalData->pLabelMap->szIcon);
+
         HeapFree(GetProcessHeap(), 0, pGlobalData->pLabelMap);
         pGlobalData->pLabelMap = pCurMap;
     }
@@ -858,6 +868,32 @@ LoadSoundFiles(HWND hwndDlg)
     return TRUE;
 }
 
+static
+VOID
+FreeSoundFiles(HWND hwndDlg)
+{
+    LRESULT lCount, lIndex, lResult;
+    WCHAR *pSoundPath;
+    HWND hwndComboBox;
+
+    hwndComboBox = GetDlgItem(hwndDlg, IDC_SOUND_LIST);
+    lCount = ComboBox_GetCount(hwndComboBox);
+    if (lCount == CB_ERR)
+        return;
+
+    for (lIndex = 0; lIndex < lCount; lIndex++)
+    {
+        lResult = ComboBox_GetItemData(hwndComboBox, lIndex);
+        if (lResult == CB_ERR)
+        {
+            continue;
+        }
+
+        pSoundPath = (WCHAR*)lResult;
+        
+        free(pSoundPath);
+    }
+}
 
 BOOL
 ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
@@ -1276,6 +1312,7 @@ SoundsDlgProc(HWND hwndDlg,
         }
         case WM_DESTROY:
         {
+            FreeSoundFiles(hwndDlg);
             FreeSoundProfiles(hwndDlg);
             FreeAppMap(pGlobalData);
             FreeLabelMap(pGlobalData);
