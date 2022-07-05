@@ -210,7 +210,7 @@ InstallSystemSoundLabels(HKEY hKey)
         if (RegCreateKeyExW(hKey, EventLabels[i].LabelName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
         {
             RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)EventLabels[i].DefaultName, (wcslen(EventLabels[i].DefaultName) + 1) * sizeof(WCHAR));
-            swprintf(Buffer, L"@mmsys.cpl,-%u", EventLabels[i].LocalizedResId);
+            StringCchPrintfW(Buffer, _countof(Buffer), L"@mmsys.cpl,-%u", EventLabels[i].LocalizedResId);
             RegSetValueExW(hSubKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
 
             RegCloseKey(hSubKey);
@@ -247,7 +247,7 @@ InstallDefaultSystemSoundScheme(HKEY hRootKey)
         return;
 
     RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[0].DefaultName, (wcslen(SystemSchemes[0].DefaultName) + 1) * sizeof(WCHAR));
-    swprintf(Path, L"@mmsys.cpl,-%u", SystemSchemes[0].IconId);
+    StringCchPrintfW(Path, _countof(Path), L"@mmsys.cpl,-%u", SystemSchemes[0].IconId);
     RegSetValueExW(hKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Path, (wcslen(Path) + 1) * sizeof(WCHAR));
 
     do
@@ -256,7 +256,7 @@ InstallDefaultSystemSoundScheme(HKEY hRootKey)
         {
             HKEY hScheme;
 
-            swprintf(Path, L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
+            StringCchPrintfW(Path, _countof(Path), L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
             if (RegCreateKeyExW(hSubKey, L".Current", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
                 RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path) + 1) * sizeof(WCHAR));
@@ -444,7 +444,6 @@ DWORD
 MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 {
     UINT Length;
-    LPWSTR pBuffer;
     WCHAR szBuffer[MAX_PATH];
     HINF hInf;
     PVOID Context;
@@ -465,13 +464,8 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         return ERROR_GEN_FAILURE;
     }
 
-    pBuffer = PathAddBackslashW(szBuffer);
-    if (!pBuffer)
-    {
-        return ERROR_GEN_FAILURE;
-    }
-
-    wcscpy(pBuffer, L"inf\\audio.inf");
+    //PathCchAppend(szBuffer, _countof(szBuffer), L"inf\\audio.inf");
+    StringCchCatW(szBuffer, _countof(szBuffer), L"\\inf\\audio.inf");
 
     hInf = SetupOpenInfFileW(szBuffer,
                              NULL,
@@ -515,18 +509,14 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     if (!IsSoftwareBusPnpEnumeratorInstalled())
     {
         Length = GetWindowsDirectoryW(szBuffer, _countof(szBuffer));
-        if (!Length || Length >= _countof(szBuffer) - 14)
+        if (!Length || Length >= _countof(szBuffer) - 16)
         {
             return ERROR_GEN_FAILURE;
         }
 
-        pBuffer = PathAddBackslashW(szBuffer);
-        if (!pBuffer)
-        {
-            return ERROR_GEN_FAILURE;
-        }
+        //PathCchAppend(szBuffer, _countof(szBuffer), L"inf\\machine.inf");
+        StringCchCatW(szBuffer, _countof(szBuffer), L"\\inf\\machine.inf");
 
-        wcscpy(pBuffer, L"inf\\machine.inf");
         InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM\0");
     }
 
@@ -549,13 +539,19 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
-        szBuffer[Length] = UNICODE_NULL;
-        pBuffer = PathAddBackslashW(szBuffer);
-        wcscpy(pBuffer, L"system32\\wdmaud.drv");
+        Length = GetSystemDirectoryW(szBuffer, _countof(szBuffer));
+        if (!Length || Length >= _countof(szBuffer) - 11)
+        {
+            RegCloseKey(hKey);
+            return ERROR_DI_DO_DEFAULT;
+        }
+
+        //PathCchAppend(szBuffer, _countof(szBuffer), L"wdmaud.drv");
+        StringCchCatW(szBuffer, _countof(szBuffer), L"\\wdmaud.drv");
 
         for (Index = 1; Index <= 4; Index++)
         {
-            swprintf(WaveName, L"wave%u", Index);
+            StringCchPrintfW(WaveName, _countof(WaveName), L"wave%u", Index);
             if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
             {
                 /* Store new audio driver entry */

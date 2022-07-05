@@ -13,7 +13,6 @@
 
 #include <commdlg.h>
 #include <windowsx.h>
-#include <strsafe.h>
 
 #include <debug.h>
 
@@ -380,8 +379,8 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, WCHAR *szSubKey, BOOL SetDefault)
         return FALSE;
     }
 
-    StringCchCopyW(pScheme->szDesc, MAX_PATH, szValue);
-    StringCchCopyW(pScheme->szName, MAX_PATH, szSubKey);
+    StringCchCopyW(pScheme->szDesc, _countof(pScheme->szDesc), szValue);
+    StringCchCopyW(pScheme->szName, _countof(pScheme->szName), szSubKey);
 
     /* Associate the value with the item in the combobox */
     ComboBox_SetItemData(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME), lResult, pScheme);
@@ -572,9 +571,9 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szPro
     }
 
     if (bCurrentProfile)
-        wcscpy(pLabelContext->szValue, szBuffer);
+        StringCchCopyW(pLabelContext->szValue, _countof(pLabelContext->szValue), szBuffer);
     else if (!bActiveProfile)
-        wcscpy(pLabelContext->szValue, szBuffer);
+        StringCchCopyW(pLabelContext->szValue, _countof(pLabelContext->szValue), szBuffer);
 
     return TRUE;
 }
@@ -692,9 +691,9 @@ ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szApp
     }
 
     /* initialize app map */
-    wcscpy(AppMap->szName, szAppName);
-    wcscpy(AppMap->szDesc, szDefault);
-    wcscpy(AppMap->szIcon, szIcon);
+    StringCchCopyW(AppMap->szName, _countof(AppMap->szName), szAppName);
+    StringCchCopyW(AppMap->szDesc, _countof(AppMap->szDesc), szDefault);
+    StringCchCopyW(AppMap->szIcon, _countof(AppMap->szIcon), szIcon);
 
     AppMap->Next = pGlobalData->pAppMap;
     pGlobalData->pAppMap = AppMap;
@@ -819,17 +818,13 @@ LoadSoundFiles(HWND hwndDlg)
 
     /* Load sound files */
     length = GetWindowsDirectoryW(szPath, _countof(szPath));
-    if (length == 0 || length >= _countof(szPath) - 9)
+    if (length == 0 || length >= _countof(szPath) - 8)
     {
         return FALSE;
     }
-    if (szPath[length - 1] != L'\\')
-    {
-        szPath[length] = L'\\';
-        length++;
-    }
-    wcscpy(&szPath[length], L"media\\*");
-    length += 7;
+
+    //PathCchAppend(szPath, _countof(szPath), L"media\\*");
+    StringCchCatW(szPath, _countof(szPath), L"\\media\\*");
 
     hFile = FindFirstFileW(szPath, &FileData);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -854,7 +849,7 @@ LoadSoundFiles(HWND hwndDlg)
         lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, 0, (LPARAM)ptr);
         if (lResult != CB_ERR)
         {
-            wcscpy(&szPath[length - 1], FileData.cFileName);
+            StringCchCopyW(szPath + (length + 7), _countof(szPath) - (length + 7), FileData.cFileName);
             SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(szPath));
         }
     } while (FindNextFileW(hFile, &FileData) != 0);
@@ -897,7 +892,7 @@ ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
     }
     pScheme = (PSOUND_SCHEME_CONTEXT)lIndex;
 
-    wcscpy(pGlobalData->szDefault, pScheme->szName);
+    StringCchCopyW(pGlobalData->szDefault, _countof(pGlobalData->szDefault), pScheme->szName);
 
     pAppMap = pGlobalData->pAppMap;
     while (pAppMap)
@@ -1001,7 +996,7 @@ ApplyChanges(HWND hwndDlg)
 
     while (pLabelContext)
     {
-        swprintf(Buffer, L"%s\\%s\\.Current", pLabelContext->AppMap->szName, pLabelContext->LabelMap->szName);
+        StringCchPrintfW(Buffer, _countof(Buffer), L"%s\\%s\\.Current", pLabelContext->AppMap->szName, pLabelContext->LabelMap->szName);
 
         if (RegOpenKeyExW(hKey, Buffer, 0, KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
         {
@@ -1259,7 +1254,7 @@ SoundsDlgProc(HWND hwndDlg,
                                 ///
                                 /// Should store in current member
                                 ///
-                                wcscpy(pLabelContext->szValue, (WCHAR*)lResult);
+                                StringCchCopyW(pLabelContext->szValue, _countof(pLabelContext->szValue), (WCHAR*)lResult);
                             }
 
                             if (wcslen((WCHAR*)lResult) && lIndex != 0 && pGlobalData->NumWavOut != 0)
