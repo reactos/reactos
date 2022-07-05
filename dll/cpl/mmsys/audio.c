@@ -319,7 +319,11 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                    {
+                        CloseHandle(pi.hProcess);
+                        CloseHandle(pi.hThread);
+                    }
                 }
                 break;
 
@@ -339,7 +343,11 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                    {
+                        CloseHandle(pi.hProcess);
+                        CloseHandle(pi.hThread);
+                    }
                 }
                 break;
 
@@ -359,7 +367,11 @@ AudioDlgProc(HWND hwndDlg,
                     si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
-                    CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+                    if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                    {
+                        CloseHandle(pi.hProcess);
+                        CloseHandle(pi.hThread);
+                    }
                 }
                 break;
 
