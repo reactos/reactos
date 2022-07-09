@@ -26,20 +26,22 @@ INT_PTR CALLBACK CustomizeNotifyIconsProc(HWND hwnd, UINT Message, WPARAM wParam
     {
         case WM_INITDIALOG:
 
-        return TRUE;
+            return TRUE;
         case WM_COMMAND:
-           switch(LOWORD(wParam))
-           {
-               case IDOK:
-                   EndDialog(hwnd, IDOK);
-               break;
-               case IDCANCEL:
-                   EndDialog(hwnd, IDCANCEL);
-               break;
-           }
-       break;
-       default:
-           return FALSE;
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwnd, IDOK);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
     }
     return TRUE;
 }
