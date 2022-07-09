@@ -114,7 +114,7 @@ BEGIN
     LTEXT            "System ReactOS wyświetla ikony dla powiadomień aktywnych i ważnych oraz ukrywa ikony powiadomień nieaktywnych. Możesz zmienić to zachowanie dla elementów wyświetlonych na poniższej liście.", IDC_STATIC, 6, 6, 220, 32
     LTEXT            "Zaznacz element, a następnie wybierz zachowanie powiadomienia:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
-    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 83, 178, 100, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "&Przywróć domyślne", IDC_TASKBARPROP_NOTIREST, 156, 188, 70, 14
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Anuluj", IDCANCEL, 176, 220, 50, 14
@@ -206,4 +206,16 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Paska zadań i menu Start"
     IDS_RESTORE_ALL "&Pokaż otwarte okna"
+END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIFY_HIDEINACTIVE "Hide when inactive"
+    IDS_NOTIFY_HIDEALWAYS "Hide always"
+    IDS_NOTIFY_SHOWALWAYS "Show always"
+
+    IDS_NOTIFY_COLUMN1 "Icon"
+    IDS_NOTIFY_COLUMN2 "Behavior"
 END

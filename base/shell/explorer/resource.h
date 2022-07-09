@@ -102,6 +102,11 @@
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
 #define IDS_RESTORE_ALL                    811
+#define IDS_NOTIFY_HIDEINACTIVE            812
+#define IDS_NOTIFY_HIDEALWAYS              813
+#define IDS_NOTIFY_SHOWALWAYS              814
+#define IDS_NOTIFY_COLUMN1                 815
+#define IDS_NOTIFY_COLUMN2                 816
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

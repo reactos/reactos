@@ -105,7 +105,7 @@ BEGIN
     LTEXT            "ReactOS afișează pictograme pentru notificări active și urgente și le ascunde pe cele inactive. Puteți altera acest comportament pentru elementele din lista de mai jos.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Selectați un element apoi alegeți comportamentul de notificare:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
-    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 83, 178, 100, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "&Valori implicite", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "Con&firmă", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "A&nulează", IDCANCEL, 176, 220, 50, 14
@@ -197,4 +197,16 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
     IDS_RESTORE_ALL "&Afișează ferestrele deschise"
+END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIFY_HIDEINACTIVE "Hide when inactive"
+    IDS_NOTIFY_HIDEALWAYS "Hide always"
+    IDS_NOTIFY_SHOWALWAYS "Show always"
+
+    IDS_NOTIFY_COLUMN1 "Icon"
+    IDS_NOTIFY_COLUMN2 "Behavior"
 END

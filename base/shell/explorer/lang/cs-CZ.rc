@@ -109,7 +109,7 @@ BEGIN
     LTEXT            "ReactOS zobrazuje ikony aktivních a důležitých upozornění a skrývá neaktivní. Toto chování je možné změnit pro položky z následujícího seznamu.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Vyberte položku a poté její chování:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
-    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 83, 178, 100, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "&Obnovit výchozí", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Storno", IDCANCEL, 176, 220, 50, 14
@@ -201,4 +201,16 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Vlastnosti hlavního panelu a Start menu"
     IDS_RESTORE_ALL "&Show Open Windows"
+END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIFY_HIDEINACTIVE "Hide when inactive"
+    IDS_NOTIFY_HIDEALWAYS "Hide always"
+    IDS_NOTIFY_SHOWALWAYS "Show always"
+
+    IDS_NOTIFY_COLUMN1 "Icon"
+    IDS_NOTIFY_COLUMN2 "Behavior"
 END

@@ -103,7 +103,7 @@ BEGIN
     LTEXT            "ReactOS は、アクティブで緊急な通知に対してアイコンを表示し、非アクティブなものを隠します。以下のリストの中の項目に対してこの動作を変更できます。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "項目を選択し、通知の動作を選んで下さい:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
-    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 83, 178, 100, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "規定値に戻す(&R)", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "キャンセル", IDCANCEL, 176, 220, 50, 14
@@ -195,4 +195,16 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "タスクバーとスタートメニュー"
     IDS_RESTORE_ALL "開いているウィンドウを表示(&S)"
+END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIFY_HIDEINACTIVE "Hide when inactive"
+    IDS_NOTIFY_HIDEALWAYS "Hide always"
+    IDS_NOTIFY_SHOWALWAYS "Show always"
+
+    IDS_NOTIFY_COLUMN1 "Icon"
+    IDS_NOTIFY_COLUMN2 "Behavior"
 END
