@@ -15,6 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef KdDebuggerInitialize0
+#undef KdDebuggerInitialize1
+#undef KdSendPacket
+#undef KdReceivePacket
+
 /* GLOBALS *******************************************************************/
 
 #define KdpBufferSize  (1024 * 512)
@@ -573,7 +578,7 @@ extern STRING KdbPromptString;
 
 VOID
 NTAPI
-KdSendPacket(
+KdpSendPacket(
     IN ULONG PacketType,
     IN PSTRING MessageHeader,
     IN PSTRING MessageData,
@@ -669,7 +674,7 @@ KdSendPacket(
 
 KDSTATUS
 NTAPI
-KdReceivePacket(
+KdpReceivePacket(
     IN ULONG PacketType,
     OUT PSTRING MessageHeader,
     OUT PSTRING MessageData,

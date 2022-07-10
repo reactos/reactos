@@ -11,6 +11,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef KdDebuggerInitialize0
+#undef KdDebuggerInitialize1
+#undef KdSendPacket
+#undef KdReceivePacket
+
 /* VARIABLES ***************************************************************/
 
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
@@ -82,7 +87,7 @@ KdpGetDebugMode(PCHAR Currentp2)
 
 NTSTATUS
 NTAPI
-KdDebuggerInitialize0(
+KdpDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     ULONG i;
@@ -137,7 +142,7 @@ KdDebuggerInitialize0(
 
 NTSTATUS
 NTAPI
-KdDebuggerInitialize1(
+KdpDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     PLIST_ENTRY CurrentEntry;
