@@ -9,14 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NOEXTAPI
-#include <ntifs.h>
-#include <halfuncs.h>
-#include <stdio.h>
-#include <arc/arc.h>
-#include <windbgkd.h>
-#include <kddll.h>
-
+#include "kdrosdbg.h"
 #define NDEBUG
 #include <debug.h>
 
