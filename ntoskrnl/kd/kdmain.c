@@ -102,10 +102,8 @@ KdpDebuggerInitialize0(
             /* Upcase it */
             _strupr(CommandLine);
 
-#ifdef KDBG
             /* Get the KDBG Settings */
             KdbpGetCommandLineSettings(CommandLine);
-#endif
 
             /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");

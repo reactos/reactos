@@ -406,6 +406,8 @@ if(NOT _WINKD_)
 
     if(KDBG)
         list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_cli.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_expr.c
@@ -413,11 +415,6 @@ if(NOT _WINKD_)
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_serial.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_symbols.c)
     endif()
-
-    list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
-
 else()
     add_definitions(-D_WINKD_)
 endif()
