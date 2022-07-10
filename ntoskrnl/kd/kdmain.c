@@ -135,7 +135,7 @@ KdpDebuggerInitialize0(
         InitRoutines[i](&DispatchTable[i], 0);
     }
 
-    return STATUS_SUCCESS;
+    return KdDebuggerInitialize0(LoaderBlock);
 }
 
 NTSTATUS
@@ -164,7 +164,7 @@ KdpDebuggerInitialize1(
 
     NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
 
-    return STATUS_SUCCESS;
+    return KdDebuggerInitialize1(LoaderBlock);
 }
 
  /* EOF */

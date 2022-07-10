@@ -584,6 +584,8 @@ KdpSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT Context)
 {
+    KdSendPacket(PacketType, MessageHeader, MessageData, Context);
+
     if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
     {
         PSTRING Output = MessageData;
@@ -680,6 +682,11 @@ KdpReceivePacket(
     ULONG DummyScanCode;
     CHAR MessageBuffer[100];
     STRING ResponseString;
+    KDSTATUS Status;
+
+    Status = KdReceivePacket(PacketType, MessageHeader, MessageData, DataLength, Context);
+    if (Status != KdPacketTimedOut)
+        return Status;
 
     if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
     {
