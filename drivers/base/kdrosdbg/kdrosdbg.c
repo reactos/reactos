@@ -30,7 +30,7 @@ NTAPI
 KdDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -41,7 +41,7 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -93,8 +93,6 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    return;
 }
 
 /*
@@ -109,8 +107,20 @@ KdReceivePacket(
     OUT PULONG DataLength,
     IN OUT PKD_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    return 0;
+#ifndef KDBG
+    if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        /* Let's say that everything went fine every time. */
+        PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        RtlZeroMemory(MessageHeader->Buffer, MessageHeader->MaximumLength);
+        ManipulateState->ApiNumber = DbgKdContinueApi;
+        ManipulateState->u.Continue.ContinueStatus = STATUS_SUCCESS;
+        MessageHeader->Length = sizeof(*ManipulateState);
+        return KdPacketReceived;
+    }
+#endif
+
+    return KdPacketTimedOut;
 }
 
 /* EOF */

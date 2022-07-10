@@ -6,6 +6,10 @@ list(APPEND SOURCE
     kdrosdbg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
+if(KDBG)
+    add_definitions(-DKDBG)
+endif()
+
 add_library(kdcom MODULE ${SOURCE})
 set_module_type(kdcom kerneldll ENTRYPOINT 0)
 add_importlibs(kdcom ntoskrnl hal)
