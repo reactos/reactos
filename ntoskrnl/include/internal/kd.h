@@ -53,6 +53,17 @@ VOID
 
 /* INIT ROUTINES *************************************************************/
 
+KIRQL
+NTAPI
+KdbpAcquireLock(
+    _In_ PKSPIN_LOCK SpinLock);
+
+VOID
+NTAPI
+KdbpReleaseLock(
+    _In_ PKSPIN_LOCK SpinLock,
+    _In_ KIRQL OldIrql);
+
 VOID
 KdpScreenAcquire(VOID);
 
