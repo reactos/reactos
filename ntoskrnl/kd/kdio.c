@@ -42,14 +42,6 @@ CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
 static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
-const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
-PCHAR KdpDmesgBuffer = NULL;
-volatile ULONG KdpDmesgCurrentPosition = 0;
-volatile ULONG KdpDmesgFreeBytes = 0;
-volatile ULONG KdbDmesgTotalWritten = 0;
-volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
-static KSPIN_LOCK KdpDmesgLogSpinLock;
-
 KDP_DEBUG_MODE KdpDebugMode;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
@@ -410,20 +402,12 @@ KdpScreenRelease(VOID)
     }
 }
 
-/*
- * Screen debug logger function KdpScreenPrint() writes text strings into
- * KdpDmesgBuffer, using it as a circular buffer. KdpDmesgBuffer contents could
- * be later (re)viewed using dmesg command of kdbg. KdpScreenPrint() protects
- * KdpDmesgBuffer from simultaneous writes by use of KdpDmesgLogSpinLock.
- */
 static VOID
 NTAPI
 KdpScreenPrint(PCHAR String,
                ULONG Length)
 {
     PCHAR pch = String;
-    KIRQL OldIrql;
-    ULONG beg, end, num;
 
     while (pch < String + Length && *pch)
     {
@@ -467,47 +451,6 @@ KdpScreenPrint(PCHAR String,
         HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
         KdpScreenLineBufferPos = KdpScreenLineLength;
     }
-
-    /* Dmesg: store the string in the buffer to show it later */
-    if (KdbpIsInDmesgMode)
-       return;
-
-    if (KdpDmesgBuffer == NULL)
-      return;
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpDmesgLogSpinLock);
-
-    /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
-     * set num to min(KdpDmesgFreeBytes, Length).
-     */
-    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes;
-    beg = KdpDmesgCurrentPosition;
-    if (num != 0)
-    {
-        end = (beg + num) % KdpDmesgBufferSize;
-        if (end > beg)
-        {
-            RtlCopyMemory(KdpDmesgBuffer + beg, String, Length);
-        }
-        else
-        {
-            RtlCopyMemory(KdpDmesgBuffer + beg, String, KdpDmesgBufferSize - beg);
-            RtlCopyMemory(KdpDmesgBuffer, String + (KdpDmesgBufferSize - beg), end);
-        }
-        KdpDmesgCurrentPosition = end;
-
-        /* Counting the total bytes written */
-        KdbDmesgTotalWritten += num;
-    }
-
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpDmesgLogSpinLock, OldIrql);
-
-    /* Optional step(?): find out a way to notify about buffer exhaustion,
-     * and possibly fall into kbd to use dmesg command: user will read
-     * debug strings before they will be wiped over by next writes.
-     */
 }
 
 VOID
@@ -528,21 +471,8 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 1)
     {
-        /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
-         * see kdbp_cli.c:KdbpCmdDmesg()/2
-         */
-        KdpDmesgBuffer = ExAllocatePoolZero(NonPagedPool,
-                                            KdpDmesgBufferSize + 1,
-                                            TAG_KDBG);
-        /* Ignore failure if KdpDmesgBuffer is NULL */
-        KdpDmesgFreeBytes = KdpDmesgBufferSize;
-        KdbDmesgTotalWritten = 0;
-
         /* Take control of the display */
         KdpScreenAcquire();
-
-        /* Initialize spinlock */
-        KeInitializeSpinLock(&KdpDmesgLogSpinLock);
 
         HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
     }
