@@ -23,8 +23,6 @@
 /* GLOBALS *******************************************************************/
 
 #define KdpBufferSize  (1024 * 512)
-static BOOLEAN KdpLoggingEnabled = FALSE;
-static BOOLEAN KdpLoggingStarting = FALSE;
 static PCHAR KdpDebugBuffer = NULL;
 static volatile ULONG KdpCurrentPosition = 0;
 static volatile ULONG KdpFreeBytes = 0;
@@ -37,10 +35,6 @@ extern ULONG ExpInitializationPhase;
 static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
 CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
-
-#define KdpScreenLineLengthDefault 80
-static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
-static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
 KDP_DEBUG_MODE KdpDebugMode;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
@@ -114,8 +108,6 @@ KdpLoggerThread(PVOID Context)
 
     ASSERT(ExGetPreviousMode() == KernelMode);
 
-    KdpLoggingEnabled = TRUE;
-
     while (TRUE)
     {
         KeWaitForSingleObject(&KdpLoggerThreadEvent, Executive, KernelMode, FALSE, NULL);
@@ -159,53 +151,6 @@ NTAPI
 KdpPrintToLogFile(PCHAR String,
                   ULONG Length)
 {
-    KIRQL OldIrql;
-    ULONG beg, end, num;
-    BOOLEAN DoReinit = FALSE;
-
-    if (KdpDebugBuffer == NULL) return;
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpDebugLogSpinLock);
-
-    beg = KdpCurrentPosition;
-    num = KdpFreeBytes;
-    if (Length < num)
-        num = Length;
-
-    if (num != 0)
-    {
-        end = (beg + num) % KdpBufferSize;
-        KdpCurrentPosition = end;
-        KdpFreeBytes -= num;
-
-        if (end > beg)
-        {
-            RtlCopyMemory(KdpDebugBuffer + beg, String, num);
-        }
-        else
-        {
-            RtlCopyMemory(KdpDebugBuffer + beg, String, KdpBufferSize - beg);
-            RtlCopyMemory(KdpDebugBuffer, String + KdpBufferSize - beg, end);
-        }
-    }
-
-    /* Release the spinlock */
-    if (OldIrql == PASSIVE_LEVEL && !KdpLoggingStarting && !KdpLoggingEnabled && ExpInitializationPhase >= 2)
-    {
-        DoReinit = TRUE;
-    }
-    KdpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
-
-    if (DoReinit)
-    {
-        KdpLoggingStarting = TRUE;
-        KdpDebugLogInit(NULL, 3);
-    }
-
-    /* Signal the logger thread */
-    if (OldIrql <= DISPATCH_LEVEL && KdpLoggingEnabled)
-        KeSetEvent(&KdpLoggerThreadEvent, IO_NO_INCREMENT, FALSE);
 }
 
 VOID
@@ -315,25 +260,6 @@ NTAPI
 KdpSerialPrint(PCHAR String,
                ULONG Length)
 {
-    PCHAR pch = String;
-    KIRQL OldIrql;
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
-
-    /* Output the string */
-    while (pch < String + Length && *pch)
-    {
-        if (*pch == '\n')
-        {
-            KdPortPutByteEx(&SerialPortInfo, '\r');
-        }
-        KdPortPutByteEx(&SerialPortInfo, *pch);
-        pch++;
-    }
-
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
 }
 
 VOID
@@ -407,50 +333,6 @@ NTAPI
 KdpScreenPrint(PCHAR String,
                ULONG Length)
 {
-    PCHAR pch = String;
-
-    while (pch < String + Length && *pch)
-    {
-        if (*pch == '\b')
-        {
-            /* HalDisplayString does not support '\b'. Workaround it and use '\r' */
-            if (KdpScreenLineLength > 0)
-            {
-                /* Remove last character from buffer */
-                KdpScreenLineBuffer[--KdpScreenLineLength] = '\0';
-                KdpScreenLineBufferPos = KdpScreenLineLength;
-
-                /* Clear row and print line again */
-                HalDisplayString("\r");
-                HalDisplayString(KdpScreenLineBuffer);
-            }
-        }
-        else
-        {
-            KdpScreenLineBuffer[KdpScreenLineLength++] = *pch;
-            KdpScreenLineBuffer[KdpScreenLineLength] = '\0';
-        }
-
-        if (*pch == '\n' || KdpScreenLineLength == KdpScreenLineLengthDefault)
-        {
-            /* Print buffered characters */
-            if (KdpScreenLineBufferPos != KdpScreenLineLength)
-                HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
-
-            /* Clear line buffer */
-            KdpScreenLineBuffer[0] = '\0';
-            KdpScreenLineLength = KdpScreenLineBufferPos = 0;
-        }
-
-        ++pch;
-    }
-
-    /* Print buffered characters */
-    if (KdpScreenLineBufferPos != KdpScreenLineLength)
-    {
-        HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
-        KdpScreenLineBufferPos = KdpScreenLineLength;
-    }
 }
 
 VOID

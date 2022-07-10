@@ -63,6 +63,10 @@ typedef struct _KDP_DEBUG_MODE
 ULONG KdbDebugState = 0; /* KDBG Settings (NOECHO, KDSERIAL) */
 KDP_DEBUG_MODE KdpDebugMode;
 
+#define KdpScreenLineLengthDefault 80
+static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
+static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
+
 /* Port Information for the Serial Native Mode */
 ULONG  SerialPortNumber;
 CPPORT SerialPortInfo;
@@ -166,6 +170,57 @@ KdpGetDebugMode(PCHAR Currentp2)
 /* SCREEN FUNCTIONS **********************************************************/
 
 static VOID
+NTAPI
+KdpScreenDebugPrint(PCHAR String,
+                    ULONG Length)
+{
+    PCHAR pch = String;
+
+    while (pch < String + Length && *pch)
+    {
+        if (*pch == '\b')
+        {
+            /* HalDisplayString does not support '\b'. Workaround it and use '\r' */
+            if (KdpScreenLineLength > 0)
+            {
+                /* Remove last character from buffer */
+                KdpScreenLineBuffer[--KdpScreenLineLength] = '\0';
+                KdpScreenLineBufferPos = KdpScreenLineLength;
+
+                /* Clear row and print line again */
+                HalDisplayString("\r");
+                HalDisplayString(KdpScreenLineBuffer);
+            }
+        }
+        else
+        {
+            KdpScreenLineBuffer[KdpScreenLineLength++] = *pch;
+            KdpScreenLineBuffer[KdpScreenLineLength] = '\0';
+        }
+
+        if (*pch == '\n' || KdpScreenLineLength == KdpScreenLineLengthDefault)
+        {
+            /* Print buffered characters */
+            if (KdpScreenLineBufferPos != KdpScreenLineLength)
+                HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
+
+            /* Clear line buffer */
+            KdpScreenLineBuffer[0] = '\0';
+            KdpScreenLineLength = KdpScreenLineBufferPos = 0;
+        }
+
+        ++pch;
+    }
+
+    /* Print buffered characters */
+    if (KdpScreenLineBufferPos != KdpScreenLineLength)
+    {
+        HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
+        KdpScreenLineBufferPos = KdpScreenLineLength;
+    }
+}
+
+static VOID
 KdpScreenAcquire(VOID)
 {
     if (InbvIsBootDriverInstalled() /* &&
@@ -201,6 +256,25 @@ KdpScreenInit(ULONG BootPhase)
 }
 
 /* SERIAL FUNCTIONS **********************************************************/
+
+static VOID
+NTAPI
+KdpSerialDebugPrint(PCHAR String,
+                    ULONG Length)
+{
+    PCHAR pch = String;
+
+    /* Output the message */
+    while (pch < String + Length && *pch != '\0')
+    {
+        if (*pch == '\n')
+        {
+            CpPutByte(&SerialPortInfo, '\r');
+        }
+        CpPutByte(&SerialPortInfo, *pch);
+        pch++;
+    }
+}
 
 static BOOLEAN
 NTAPI
@@ -265,6 +339,10 @@ KdpSerialInit(ULONG BootPhase)
 
 static VOID
 NTAPI
+KdpFileInit(ULONG BootPhase);
+
+static VOID
+NTAPI
 KdpLoggerThread(PVOID Context)
 {
     ULONG beg, end, num;
@@ -308,6 +386,52 @@ KdpLoggerThread(PVOID Context)
 
         (VOID)InterlockedExchangeAdd((LONG*)&KdpFreeBytes, num);
     }
+}
+
+static VOID
+NTAPI
+KdpFileDebugPrint(PCHAR String,
+                  ULONG Length)
+
+{
+    ULONG beg, end, num;
+
+    if (KdpDebugBuffer == NULL)
+        return;
+
+    if (!KdpLogFileHandle)
+    {
+        KIRQL OldIrql = KeGetCurrentIrql();
+        KeLowerIrql(PASSIVE_LEVEL);
+        KdpFileInit(3);
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    }
+
+    beg = KdpCurrentPosition;
+    num = KdpFreeBytes;
+    if (Length < num)
+        num = Length;
+
+    if (num != 0)
+    {
+        end = (beg + num) % KdpBufferSize;
+        KdpCurrentPosition = end;
+        KdpFreeBytes -= num;
+
+        if (end > beg)
+        {
+            RtlCopyMemory(KdpDebugBuffer + beg, String, num);
+        }
+        else
+        {
+            RtlCopyMemory(KdpDebugBuffer + beg, String, KdpBufferSize - beg);
+            RtlCopyMemory(KdpDebugBuffer, String + KdpBufferSize - beg, end);
+        }
+    }
+
+    /* Signal the logger thread */
+    if (KdpLogFileHandle)
+        KeSetEvent(&KdpLoggerThreadEvent, IO_NO_INCREMENT, FALSE);
 }
 
 static VOID
@@ -405,6 +529,18 @@ KdpFileInit(ULONG BootPhase)
 
         ZwClose(ThreadHandle);
     }
+}
+
+static VOID
+KdpPrintString(
+    _In_ PSTRING Output)
+{
+    if (KdpDebugMode.Screen)
+        KdpScreenDebugPrint(Output->Buffer, Output->Length);
+    if (KdpDebugMode.Serial)
+        KdpSerialDebugPrint(Output->Buffer, Output->Length);
+    if (KdpDebugMode.File)
+        KdpFileDebugPrint(Output->Buffer, Output->Length);
 }
 
 /* FUNCTIONS ****************************************************************/
@@ -534,6 +670,11 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT Context)
 {
+    if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+    {
+        KdpPrintString(MessageData);
+        return;
+    }
 }
 
 /*
