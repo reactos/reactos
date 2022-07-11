@@ -12,9 +12,10 @@ if /I "%1" == "help" goto help
 if /I "%1" == "/?" (
 :help
     echo Help for configure script
-    echo Syntax: path\to\source\configure.cmd [script-options] [Cmake-options]
-    echo Available script-options: Codeblocks, Eclipse, Makefiles, clang, VSSolution
-    echo Cmake-options: -DVARIABLE:TYPE=VALUE
+    echo Syntax: path\to\source\configure.cmd [Script-Options] [CMake-Options]
+    echo Available Script-Options: Codeblocks, Eclipse, Makefiles, clang, VSSolution
+    echo Available CMake-Options: -DVARIABLE:TYPE=VALUE
+
     goto quit
 )
 
@@ -28,6 +29,7 @@ if %ERRORLEVEL% == 0 (
     echo   This will cause problems with building.
     echo   Please rename your folders so there are no spaces in the source path,
     echo   or move your source to a different folder.
+
     goto quit
 )
 
@@ -41,10 +43,10 @@ cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 REM Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
     echo Detected RosBE for %ROS_ARCH%
+
     set BUILD_ENVIRONMENT=MinGW
     set ARCH=%ROS_ARCH%
     set MINGW_TOOCHAIN_FILE=toolchain-gcc.cmake
-
 ) else if defined VCINSTALLDIR (
     REM VS command prompt does not put this in environment vars
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
@@ -55,21 +57,26 @@ if defined ROS_ARCH (
     cl 2>&1 | findstr /R /c:"19\.1.\." > NUL && set VS_VERSION=15
     cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
     cl 2>&1 | findstr /R /c:"19\.3.\." > NUL && set VS_VERSION=17
+
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old ^(before 14 ^(2015^)^) or version detection failed.
         goto quit
     )
+
     set BUILD_ENVIRONMENT=VS
     set VS_SOLUTION=0
-    echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
+
+    echo Detected Visual Studio !VS_VERSION! ^(!ARCH!^)
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
+
     goto quit
 )
 
 REM Checkpoint
 if not defined ARCH (
     echo Unknown build architecture
+
     goto quit
 )
 
@@ -85,12 +92,14 @@ REM Parse command line parameters
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="MinGW Makefiles"
         ) else if /I "%1" == "VSSolution" (
-            echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
+            echo. && echo Error: Creation of Visual Studio solution files is not supported in a MinGW environment.
             echo Please run this command in a [Developer] Command Prompt for Visual Studio.
+
             goto quit
         ) else if /I "%1" NEQ "" (
             echo.%1| find /I "-D" >nul 2>&1
-            if not errorlevel 1 (
+            
+	    if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
                 Shift
@@ -111,12 +120,15 @@ REM Parse command line parameters
             set USE_CLANG_CL=1
         ) else if /I "%1" == "VSSolution" (
             set VS_SOLUTION=1
-            REM explicitly set VS version for project generator
+            
+	    REM explicitly set VS version for project generator
             if /I "%2" == "-VS_VER" (
                 set VS_VERSION=%3
-                echo Visual Studio Environment set to !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
+                echo Visual Studio version set to !VS_VERSION! ^(!ARCH!^)
             )
+
             set CMAKE_GENERATOR="Visual Studio !VS_VERSION!"
+
             if "!ARCH!" == "i386" (
                 set CMAKE_ARCH=-A Win32
             ) else if "!ARCH!" == "amd64" (
@@ -128,6 +140,7 @@ REM Parse command line parameters
             )
         ) else if /I "%1" NEQ "" (
             echo.%1| find /I "-D" >nul 2>&1
+
             if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
@@ -142,6 +155,7 @@ REM Parse command line parameters
 
     REM Go to next parameter
     SHIFT
+
     goto repeat
 :continue
 
@@ -159,42 +173,46 @@ if "%VS_SOLUTION%" == "1" (
 
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     set CD_SAME_AS_SOURCE=1
-    echo Creating directories in %REACTOS_OUTPUT_PATH%
 
-    if not exist %REACTOS_OUTPUT_PATH% (
+    if not exist "%REACTOS_OUTPUT_PATH%" (
+        echo Creating directories...
+
         mkdir %REACTOS_OUTPUT_PATH%
     )
+
     cd %REACTOS_OUTPUT_PATH%
 )
 
 if "%VS_SOLUTION%" == "1" (
+    if exist "REACTOS.sln" (
+        echo.
+	echo Error: This directory has already been configured for Visual Studio, delete the contents of this folder, then try again.
 
-    if exist build.ninja (
-        echo. && echo Error: This directory has already been configured for ninja.
-        echo An output folder configured for ninja can't be reconfigured for VSSolution.
-        echo Use an empty folder or delete the contents of this folder, then try again.
         goto quit
     )
-) else if exist REACTOS.sln (
-    echo. && echo Error: This directory has already been configured for Visual Studio.
-    echo An output folder configured for VSSolution can't be reconfigured for ninja.
-    echo Use an empty folder or delete the contents of this folder, then try again. && echo.
-    goto quit
+) else (
+    if exist "build.ninja" (
+        echo.
+	echo Error: This directory has already been configured for ninja, delete the contents of this folder, then try again.
+
+        goto quit
+    )
 )
 
 echo Preparing reactos...
 
-if EXIST CMakeCache.txt (
+if exist "CMakeCache.txt" (
     del CMakeCache.txt /q
 )
 
-
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
-) else if %USE_CLANG_CL% == 1 (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
+    if "%USE_CLANG_CL%" == "1" (
+	cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* -S "%REACTOS_SOURCE_DIR%"
+    ) else (
+	cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
+    )
 )
 
 if %ERRORLEVEL% NEQ 0 (
@@ -206,9 +224,9 @@ if "%CD_SAME_AS_SOURCE%" == "1" (
 )
 
 if "%VS_SOLUTION%" == "1" (
-    set ENDV= You can now use msbuild or open REACTOS.sln%ENDV%.
+    set ENDV= You can use the msbuild command or open the REACTOS.sln solution %ENDV% directory in Visual Studio.
 ) else (
-    set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%
+    set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%.
 )
 
 echo. && echo Configure script complete^^!%ENDV%
