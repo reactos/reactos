@@ -1,4 +1,5 @@
 /* Korean translation by manatails007 - Seungju Kim */
+/* Improved by Luke Luo <njlyf2011@hotmail.com> */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -7,16 +8,16 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "날짜/시간 조정(&A)", ID_SHELL_CMD_ADJUST_DAT
         MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
         MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "바탕 화면 보기(&S)", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "작업 관리자", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "작업 표시줄 잠그기(&L)", ID_LOCKTASKBAR
         MENUITEM "속성(&R)", ID_SHELL_CMD_PROPERTIES
@@ -66,7 +67,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Taskbar"
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Taskbar appearance", IDC_STATIC, 6, 6, 240, 104
+    GROUPBOX "작업 표시줄 모양", IDC_STATIC, 6, 6, 240, 104
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Lock the taskbar", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "A&uto-hide the taskbar", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
@@ -84,11 +85,11 @@ END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Start Menu"
+CAPTION "시작 메뉴"
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "&Start menu", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    AUTORADIOBUTsTON "시작 메뉴(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Customize...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Classic Start &menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
@@ -99,7 +100,7 @@ END
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Customize Notifications"
+CAPTION "알림 사용자 지정"
 FONT 9, "굴림"
 BEGIN
     LTEXT            "ReactOS displays icons for active and urgent notifications, and hides inactive ones. You can change this behavior for items in the list below.", IDC_STATIC, 6, 6, 220, 30
@@ -107,50 +108,50 @@ BEGIN
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "&Restore Defaults", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
-    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
-    PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
+    DEFPUSHBUTTON    "확인", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "취소", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Customize Classic Start Menu"
+CAPTION "클래식 시작 메뉴 사용자 지정"
 FONT 9, "굴림"
 BEGIN
-    GROUPBOX         "Start menu", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "시작 메뉴", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "You can customize your Start menu by adding or removing items.", IDC_STATIC, 48, 17, 108, 39
-    PUSHBUTTON       "A&dd...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
-    PUSHBUTTON       "&Remove...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
-    PUSHBUTTON       "Ad&vanced", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
-    PUSHBUTTON       "&Sort", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    LTEXT            "항목을 추가하거나 제거하여 시작 메뉴를 사용자 정의할 수 있습니다.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "추가(&D)...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "제거(&R)...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "고급(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "정렬(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
     LTEXT            "To remove records of recently accessed documents, programs, and Web sites, click Clear.", IDC_STATIC, 49, 85, 108, 33
-    PUSHBUTTON       "&Clear", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "Advanced S&tart menu options:", IDC_STATIC, 8, 129, 150, 8
+    PUSHBUTTON       "지우기(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "시작 메뉴 고급 옵션(&T):", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
-    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
-    PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
+    DEFPUSHBUTTON    "확인", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "취소", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "File Name Warning"
+CAPTION "파일 이름 경고"
 FONT 9, "굴림"
 BEGIN
-    DEFPUSHBUTTON    "&Ignore", IDIGNORE, 215, 60, 50, 14
-    PUSHBUTTON       "&Rename", IDC_FILE_RENAME, 159, 60, 50, 14
+    DEFPUSHBUTTON    "무시(&I)", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "이름 바꾸기(&R)", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "&Don't perform this check at startup", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "시작할 때 확인 안 함(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "There is a file or folder on your computer called %s which could cause certain applications to not function correctly.  Renaming it to %s would solve this problem.  Would you like to rename it now?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
-CAPTION "Advanced"
+CAPTION "고급"
 FONT 9, "굴림"
 BEGIN
-    GROUPBOX         "Start menu settings ", IDC_STATIC, 7, 7, 238, 42
+    GROUPBOX         "시작 메뉴 설정", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Open submenus when I pause on them with my mouse", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Highlight &newly installed programs", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "Start &menu items:", IDC_STATIC, 7, 53, 238, 8
@@ -169,8 +170,8 @@ BEGIN
     GROUPBOX         "Select an icon size for programs ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
-    AUTORADIOBUTTON  "&Large icons", IDC_CHOOSELARGE, 43, 25, 53, 10
-    AUTORADIOBUTTON  "&Small icons", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON  "큰 아이콘(&L)", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "작은 아이콘(&S)", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programs ", IDC_STATIC, 7, 49, 238, 70
     LTEXT            "The Start menu contains shortcuts to the programs you use most often.  Clearing the list of shortcuts does not delete the programs.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "&Number of programs on Start menu:", IDC_STATIC, 14, 86, 112, 8
@@ -188,13 +189,13 @@ STRINGTABLE
 BEGIN
     IDS_START "시작"
     IDS_PROPERTIES "속성(&R)"
-    IDS_OPEN_ALL_USERS "열기 - All Users(&P)"
-    IDS_EXPLORE_ALL_USERS "탐색 - All Users(&X)"
+    IDS_OPEN_ALL_USERS "열기 - 모든 사용자(&P)"
+    IDS_EXPLORE_ALL_USERS "탐색 - 모든 사용자(&X)"
     IDS_STARTUP_ERROR "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar and Start Menu"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "작업 표시줄 및 시작 메뉴"
+    IDS_RESTORE_ALL "열린 창 보기(&S)"
 END
