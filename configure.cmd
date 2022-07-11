@@ -186,14 +186,14 @@ if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
 if "%VS_SOLUTION%" == "1" (
     if exist "REACTOS.sln" (
         echo.
-	echo Error: This directory has already been configured for Visual Studio, delete the contents of this folder, then try again.
+		echo Error: This directory has already been configured for Visual Studio, delete the contents of this folder, then try again.
 
         goto quit
     )
 ) else (
     if exist "build.ninja" (
         echo.
-	echo Error: This directory has already been configured for ninja, delete the contents of this folder, then try again.
+		echo Error: This directory has already been configured for ninja, delete the contents of this folder, then try again.
 
         goto quit
     )
@@ -209,9 +209,9 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
 ) else (
     if "%USE_CLANG_CL%" == "1" (
-	cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* -S "%REACTOS_SOURCE_DIR%"
+		cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* -S "%REACTOS_SOURCE_DIR%"
     ) else (
-	cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
+		cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
     )
 )
 
