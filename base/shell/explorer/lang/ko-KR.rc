@@ -1,5 +1,10 @@
-/* Korean translation by manatails007 - Seungju Kim */
-/* Improved by Luke Luo <njlyf2011@hotmail.com> */
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Korean resource file
+ * TRANSLATORS: Copyright 2008 Seungju Kim aka manatails007 <admin@manateeshome.com>
+ *              Copyright 2022 Luke Luo <njlyf2011@hotmail.com>
+ */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -89,7 +94,7 @@ CAPTION "시작 메뉴"
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTsTON "시작 메뉴(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    AUTORADIOBUTTON "시작 메뉴(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Customize...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Classic Start &menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
