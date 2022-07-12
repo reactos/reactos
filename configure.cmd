@@ -220,7 +220,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 if "%CD_SAME_AS_SOURCE%" == "1" (
-    set ENDV= from %REACTOS_OUTPUT_PATH%
+    set ENDV=from %REACTOS_OUTPUT_PATH%
 )
 
 if "%VS_SOLUTION%" == "1" (
