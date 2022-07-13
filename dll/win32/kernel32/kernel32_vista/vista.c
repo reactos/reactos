@@ -31,9 +31,9 @@ QueryFullProcessImageNameW(HANDLE hProcess,
                            LPWSTR lpExeName,
                            PDWORD pdwSize)
 {
-    BYTE Buffer[sizeof(UNICODE_STRING) + MAX_PATH * sizeof(WCHAR)];
-    UNICODE_STRING *DynamicBuffer = NULL;
-    UNICODE_STRING *Result = NULL;
+    BYTE Buffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
+    PUNICODE_STRING DynamicBuffer = NULL;
+    PUNICODE_STRING Result = NULL;
     NTSTATUS Status;
     DWORD Needed;
 
@@ -58,11 +58,17 @@ QueryFullProcessImageNameW(HANDLE hProcess,
                                            &Needed);
         Result = DynamicBuffer;
     }
-    else Result = (PUNICODE_STRING)Buffer;
+    else
+    {
+        Result = (PUNICODE_STRING)Buffer;
+    }
 
-    if (!NT_SUCCESS(Status)) goto Cleanup;
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
 
-    if (Result->Length / sizeof(WCHAR) + 1 > *pdwSize)
+    if ((Result->Length / sizeof(WCHAR)) + 1 > *pdwSize)
     {
         Status = STATUS_BUFFER_TOO_SMALL;
         goto Cleanup;
@@ -70,7 +76,7 @@ QueryFullProcessImageNameW(HANDLE hProcess,
 
     *pdwSize = Result->Length / sizeof(WCHAR);
     memcpy(lpExeName, Result->Buffer, Result->Length);
-    lpExeName[*pdwSize] = 0;
+    lpExeName[*pdwSize] = UNICODE_NULL;
 
 Cleanup:
     RtlFreeHeap(RtlGetProcessHeap(), 0, DynamicBuffer);
