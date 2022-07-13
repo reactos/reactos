@@ -543,7 +543,9 @@ FUNC KiXmmException
     jge KiXmmExit
 
     /* Dispatch the exception */
-    DispatchException eax, 3, 0, 0, 0
+    DispatchException eax, 2, 0, [rbp+KTRAP_FRAME_MxCsr], 0
+
+    // FIXME: STATUS_FLOAT_MULTIPLE_TRAPS / STATUS_FLOAT_MULTIPLE_FAULTS
 
 KiXmmExit:
     /* Return */
