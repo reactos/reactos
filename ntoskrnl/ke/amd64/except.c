@@ -672,7 +672,49 @@ NTAPI
 KiXmmExceptionHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
-    return -1;
+    ULONG ExceptionCode;
+
+    if ((TrapFrame->MxCsr & _MM_EXCEPT_INVALID) &&
+        !(TrapFrame->MxCsr & _MM_MASK_INVALID))
+    {
+        /* Invalid operation */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DENORM) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DENORM))
+    {
+        /* Denormalized operand. Yes, this is what Windows returns. */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DIV_ZERO) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DIV_ZERO))
+    {
+        /* Divide by zero */
+        ExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_OVERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_OVERFLOW))
+    {
+        /* Overflow */
+        ExceptionCode = STATUS_FLOAT_OVERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_UNDERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_UNDERFLOW))
+    {
+        /* Underflow */
+        ExceptionCode = STATUS_FLOAT_UNDERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_INEXACT) &&
+             !(TrapFrame->MxCsr & _MM_MASK_INEXACT))
+    {
+        /* Precision */
+        ExceptionCode = STATUS_FLOAT_INEXACT_RESULT;
+    }
+    else
+    {
+        /* Should not happen */
+        ASSERT(FALSE);
+    }
+    
+    return ExceptionCode;
 }
