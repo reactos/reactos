@@ -115,10 +115,12 @@ DevicePathToDosPathU(
  */
 BOOL
 WINAPI
-QueryFullProcessImageNameW(HANDLE hProcess,
-                           DWORD dwFlags,
-                           LPWSTR lpExeName,
-                           PDWORD pdwSize)
+QueryFullProcessImageNameW(
+    _In_ HANDLE hProcess,
+    _In_ DWORD dwFlags,
+    _Out_z_cap_post_count_(*pdwSize, *pdwSize + 1)
+        LPWSTR lpExeName,
+    _Inout_ PDWORD pdwSize)
 {
     PROCESSINFOCLASS ProcessInfoClass;
     BYTE Buffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
@@ -239,10 +241,12 @@ Cleanup:
  */
 BOOL
 WINAPI
-QueryFullProcessImageNameA(HANDLE hProcess,
-                           DWORD dwFlags,
-                           LPSTR lpExeName,
-                           PDWORD pdwSize)
+QueryFullProcessImageNameA(
+    _In_ HANDLE hProcess,
+    _In_ DWORD dwFlags,
+    _Out_z_cap_post_count_(*pdwSize, *pdwSize + 1)
+        LPSTR lpExeName,
+    _Inout_ PDWORD pdwSize)
 {
     DWORD pdwSizeW = *pdwSize;
     BOOL Result;
