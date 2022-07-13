@@ -91,7 +91,7 @@ REM Parse command line parameters
             goto quit
         ) else if /I "%1" NEQ "" (
             echo.%1| find /I "-D" >nul 2>&1
-			if not errorlevel 1 (
+            if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
                 Shift
@@ -112,7 +112,7 @@ REM Parse command line parameters
             set USE_CLANG_CL=1
         ) else if /I "%1" == "VSSolution" (
             set VS_SOLUTION=1
-			REM explicitly set VS version for project generator
+            REM explicitly set VS version for project generator
             if /I "%2" == "-VS_VER" (
                 set VS_VERSION=%3
                 echo Visual Studio version set to !VS_VERSION! ^(!ARCH!^).
@@ -195,9 +195,9 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
 ) else (
     if "%USE_CLANG_CL%" == "1" (
-		cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* -S "%REACTOS_SOURCE_DIR%"
+        cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* -S "%REACTOS_SOURCE_DIR%"
     ) else (
-		cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
+        cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* -S "%REACTOS_SOURCE_DIR%"
     )
 )
 
