@@ -64,14 +64,12 @@ if defined ROS_ARCH (
     echo Detected Visual Studio !VS_VERSION! ^(!ARCH!^).
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
-
     goto quit
 )
 
 REM Checkpoint
 if not defined ARCH (
     echo Unknown build architecture.
-
     goto quit
 )
 
@@ -92,7 +90,7 @@ REM Parse command line parameters
 
             goto quit
         ) else if /I "%1" NEQ "" (
-            echo.%1| find /I "-D" >nul 2>&1         
+            echo.%1| find /I "-D" >nul 2>&1
 			if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
@@ -113,7 +111,7 @@ REM Parse command line parameters
         ) else if /I "%1" == "clang" (
             set USE_CLANG_CL=1
         ) else if /I "%1" == "VSSolution" (
-            set VS_SOLUTION=1            
+            set VS_SOLUTION=1
 			REM explicitly set VS version for project generator
             if /I "%2" == "-VS_VER" (
                 set VS_VERSION=%3
@@ -131,7 +129,6 @@ REM Parse command line parameters
             )
         ) else if /I "%1" NEQ "" (
             echo.%1| find /I "-D" >nul 2>&1
-
             if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
@@ -146,7 +143,6 @@ REM Parse command line parameters
 
     REM Go to next parameter
     SHIFT
-
     goto repeat
 :continue
 
