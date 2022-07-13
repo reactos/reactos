@@ -172,14 +172,14 @@ if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
 if "%VS_SOLUTION%" == "1" (
     if exist "REACTOS.sln" (
         echo.
-		echo Error: This directory has already been configured for Visual Studio, delete the contents of this folder, then try again.
+        echo Error: This directory has already been configured for Visual Studio, delete the contents of this folder, then try again.
 
         goto quit
     )
 ) else (
     if exist "build.ninja" (
         echo.
-		echo Error: This directory has already been configured for ninja, delete the contents of this folder, then try again.
+        echo Error: This directory has already been configured for ninja, delete the contents of this folder, then try again.
 
         goto quit
     )
