@@ -17,6 +17,8 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
+#include <ntstrsafe.h>
+
 /* CSRSS Headers */
 #include <win/base.h>
 

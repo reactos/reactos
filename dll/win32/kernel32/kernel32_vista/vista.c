@@ -19,6 +19,95 @@
 #define NDEBUG
 #include <debug.h>
 
+/* INTERNAL FUNCTIONS *********************************************************/
+
+/**
+ * @brief
+ * Maps an NT "\Device\..." path to its Win32 "DOS" equivalent.
+ *
+ * @param[in]   DevicePath
+ * The NT device path to convert.
+ *
+ * @param[out]  DosPath
+ * Pointer to the newly allocated and initialized Unicode string.
+ * Receives the converted Win32 path.
+ *
+ * @return
+ * Returns NTSTATUS error codes.
+ *
+ * @remarks
+ * The caller is responsible for freeing the destination string,
+ * by calling RtlFreeUnicodeString.
+ **/
+static
+NTSTATUS
+DevicePathToDosPathU(
+    _In_ PCUNICODE_STRING DevicePath,
+    _Out_ PUNICODE_STRING DosPath)
+{
+    UNICODE_STRING DevicePathPrefix = RTL_CONSTANT_STRING(L"\\Device\\");
+    LPWSTR pszDevicePath;
+    LPWSTR pszDosPath = NULL;
+    DWORD dwDosPathLength;
+    WCHAR szDrive[3] = L"?:";
+    WCHAR szDeviceName[MAX_PATH];
+    NTSTATUS Status = STATUS_NOT_FOUND;
+
+    /* Check if DevicePath is a device path */
+    if (!RtlPrefixUnicodeString(&DevicePathPrefix, DevicePath, TRUE))
+    {
+        return STATUS_OBJECT_PATH_INVALID;
+    }
+
+    pszDevicePath = RtlAllocateHeap(RtlGetProcessHeap(), 0, DevicePath->Length + sizeof(WCHAR));
+
+    if (!pszDevicePath)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    RtlStringCbCopyNW(pszDevicePath, DevicePath->Length + sizeof(WCHAR), DevicePath->Buffer, DevicePath->Length);
+
+    for (szDrive[0] = L'A'; szDrive[0] <= L'`'; szDrive[0]++)
+    {
+        if (QueryDosDeviceW(szDrive, szDeviceName, _countof(szDeviceName)) != 0)
+        {
+            size_t len = wcslen(szDeviceName);
+
+            if (_wcsnicmp(pszDevicePath, szDeviceName, len) == 0)
+            {
+                /* Get required length, including the NULL terminator */
+                dwDosPathLength = _countof(szDrive) + wcslen(pszDevicePath + len);
+
+                pszDosPath = RtlAllocateHeap(RtlGetProcessHeap(), 0, dwDosPathLength * sizeof(WCHAR));
+
+                if (!pszDosPath)
+                {
+                    Status = STATUS_NO_MEMORY;
+                    break;
+                }
+
+                RtlStringCchPrintfW(pszDosPath, dwDosPathLength, L"%s%s",
+                                    szDrive, pszDevicePath + len);
+
+                if (!RtlCreateUnicodeString(DosPath, pszDosPath))
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                Status = STATUS_SUCCESS;
+                break;
+            }
+        }
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pszDosPath);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pszDevicePath);
+
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -31,14 +120,43 @@ QueryFullProcessImageNameW(HANDLE hProcess,
                            LPWSTR lpExeName,
                            PDWORD pdwSize)
 {
+    PROCESSINFOCLASS ProcessInfoClass;
     BYTE Buffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
-    PUNICODE_STRING DynamicBuffer = NULL;
-    PUNICODE_STRING Result = NULL;
+    PVOID DynamicBuffer = NULL;
+    PUNICODE_STRING Result;
     NTSTATUS Status;
-    DWORD Needed;
+    ULONG Needed;
+
+#if 0
+    if (dwFlags == 0)
+    {
+        /* The name should use the Win32 path format */
+        ProcessInfoClass = ProcessImageFileNameWin32;
+    }
+    else if (dwFlags == PROCESS_NAME_NATIVE)
+    {
+        /* The name should use the native system path format */
+        ProcessInfoClass = ProcessImageFileName;
+    }
+    else
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+#else
+    UNICODE_STRING ResultWin32 = { 0 };
+
+    ProcessInfoClass = ProcessImageFileName;
+
+    if (dwFlags != 0 && dwFlags != PROCESS_NAME_NATIVE)
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+#endif
 
     Status = NtQueryInformationProcess(hProcess,
-                                       ProcessImageFileName,
+                                       ProcessInfoClass,
                                        Buffer,
                                        sizeof(Buffer) - sizeof(WCHAR),
                                        &Needed);
@@ -52,8 +170,8 @@ QueryFullProcessImageNameW(HANDLE hProcess,
         }
 
         Status = NtQueryInformationProcess(hProcess,
-                                           ProcessImageFileName,
-                                           (LPBYTE)DynamicBuffer,
+                                           ProcessInfoClass,
+                                           DynamicBuffer,
                                            Needed,
                                            &Needed);
         Result = DynamicBuffer;
@@ -68,17 +186,43 @@ QueryFullProcessImageNameW(HANDLE hProcess,
         goto Cleanup;
     }
 
+#if 1
+    /* HACK: Convert device path format into Win32 path format    
+     * Use ProcessImageFileNameWin32 instead if the kernel
+     * supports it */
+    if (dwFlags == 0)
+    {
+        Status = DevicePathToDosPathU(Result, &ResultWin32);
+
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+
+        Result = &ResultWin32;
+    }
+#endif
+
+    /* Verify that the given buffer size can count a NULL terminator */
     if ((Result->Length / sizeof(WCHAR)) + 1 > *pdwSize)
     {
         Status = STATUS_BUFFER_TOO_SMALL;
         goto Cleanup;
     }
 
+    RtlStringCbCopyNW(lpExeName, (*pdwSize) * sizeof(WCHAR), Result->Buffer, Result->Length);
+    
+    /* Return the written length, not including the NULL terminator */
     *pdwSize = Result->Length / sizeof(WCHAR);
-    memcpy(lpExeName, Result->Buffer, Result->Length);
-    lpExeName[*pdwSize] = UNICODE_NULL;
 
 Cleanup:
+#if 1
+    if (dwFlags == 0)
+    {
+        RtlFreeUnicodeString(&ResultWin32);
+    }
+#endif
+
     RtlFreeHeap(RtlGetProcessHeap(), 0, DynamicBuffer);
 
     if (!NT_SUCCESS(Status))
