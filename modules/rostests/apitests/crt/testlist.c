@@ -18,6 +18,7 @@ extern void func___64tof(void);
 #if defined(TEST_NTDLL)
 extern void func__vscwprintf(void);
 #endif
+extern void func_fpcontrol(void);
 extern void func_fabs(void);
 extern void func_fputc(void);
 extern void func_fputwc(void);
@@ -61,6 +62,9 @@ const struct test winetest_testlist[] =
     // ...
 #endif
 #if defined(TEST_STATIC_CRT) || defined(TEST_MSVCRT)
+#ifdef _M_AMD64 // x86 / arm need fixing
+    { "fpcontrol", func_fpcontrol },
+#endif
     { "fabs", func_fabs },
 #if defined(_M_ARM)
     { "__rt_div", func___rt_div },
