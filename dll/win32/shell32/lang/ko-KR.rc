@@ -365,7 +365,7 @@ END
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "다음 계정으로 실행"
-FONT 9, "굴림", 0, 0, 0x0
+FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
     CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
