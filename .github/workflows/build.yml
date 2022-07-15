@@ -225,7 +225,7 @@ jobs:
       run: choco install -y ninja
     - name: Install LLVM
       run: |
-        choco install -y llvm --version 13.0.1
+        choco install -y --allow-downgrade llvm --version 13.0.1
         echo "LLVM_PATH=${env:PROGRAMFILES}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Install Flex & Bison
       run: |
