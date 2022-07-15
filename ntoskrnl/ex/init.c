@@ -1099,8 +1099,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
+    /* Reserve shadow memory */
+    MiReserveShadowMemory();
+
     /* Initialize the memory manager at phase 0 */
     if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
+
+    /* Map shadow memory */
+    MiInitializeShadowMemory();
 
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);
@@ -1643,7 +1649,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Failed to create the system root link */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
-
+    
     /* Set up Region Maps, Sections and the Paging File */
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 

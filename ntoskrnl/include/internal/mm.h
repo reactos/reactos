@@ -1065,6 +1065,13 @@ MmZeroPageThread(
     VOID
 );
 
+/* kasan.c *****************************************************************/
+VOID
+MiReserveShadowMemory();
+
+NTSTATUS
+MiInitializeShadowMemory(VOID);
+
 /* hypermap.c *****************************************************************/
 PVOID
 NTAPI
