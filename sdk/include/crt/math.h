@@ -275,6 +275,8 @@ _Check_return_ long lrintf(_In_ float x);
 _Check_return_ long lrintl(_In_ long double x);
 #pragma function(lrint, lrintf, lrintl)
 #endif
+
+#ifndef _CRTBLD
 _Check_return_ __CRT_INLINE double round(_In_ double x) { return (x < 0) ? ceil(x - 0.5f) : floor(x + 0.5); }
 _Check_return_ __CRT_INLINE float roundf(_In_ float x) { return (x < 0) ? ceilf(x - 0.5f) : floorf(x + 0.5); }
 _Check_return_ __CRT_INLINE long double roundl(_In_ long double x) { return (x < 0) ? ceill(x - 0.5f) : floorl(x + 0.5); }
@@ -294,6 +296,7 @@ _Check_return_ __CRT_INLINE long long llrint(_In_ double x) { return (long long)
 _Check_return_ __CRT_INLINE long long llrintf(_In_ float x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
+#endif /* !_CRTBLD */
 
 #ifndef NO_OLDNAMES /* !__STDC__ */
 

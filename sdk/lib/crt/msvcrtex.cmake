@@ -13,6 +13,8 @@ list(APPEND MSVCRTEX_SOURCE
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang performs some optimizations requiring those funtions
     list(APPEND MSVCRTEX_SOURCE
+        math/round.c
+        math/roundf.c
         math/exp2.c
         math/exp2f.c
         )
