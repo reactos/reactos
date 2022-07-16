@@ -2228,8 +2228,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
 
-    if (FontGDI->OriginalWeight != FW_DONTCARE &&
-        FontGDI->OriginalWeight != FW_NORMAL)
+    if (FontGDI->OriginalWeight != FW_DONTCARE)
     {
         TM->tmWeight = FontGDI->OriginalWeight;
     }
