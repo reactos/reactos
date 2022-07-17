@@ -217,7 +217,7 @@ BEGIN
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
     CHECKBOX "Run in seperate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "확인", IDOK, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "중단하다", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "중단", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
