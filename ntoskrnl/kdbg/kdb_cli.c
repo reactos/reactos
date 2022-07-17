@@ -564,10 +564,14 @@ KdbpPrintStructInternal
         KdbpPrint("%s%p+%x: %s", Indent, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size, Member->Name ? Member->Name : "<anoymous>");
         if (DoRead) {
             if (!strcmp(Member->Type, "_UNICODE_STRING")) {
-                KdbpPrint("\"%wZ\"\n", ((PCHAR)BaseAddress) + Member->BaseOffset);
+                KdbpPrint("\"");
+                KdbpPrintUnicodeString(((PCHAR)BaseAddress) + Member->BaseOffset);
+                KdbpPrint("\"\n");
                 continue;
             } else if (!strcmp(Member->Type, "PUNICODE_STRING")) {
-                KdbpPrint("\"%wZ\"\n", *(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                KdbpPrint("\"");
+                KdbpPrintUnicodeString(*(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                KdbpPrint("\"\n");
                 continue;
             }
             switch (Member->Size) {
@@ -2109,7 +2113,9 @@ KdbpCmdMod(
     KdbpPrint("  Base      Size      Name\n");
     for (;;)
     {
-        KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
+        KdbpPrint("  %p  %08x  ", LdrEntry->DllBase, LdrEntry->SizeOfImage);
+        KdbpPrintUnicodeString(&LdrEntry->BaseDllName);
+        KdbpPrint("\n");
 
         if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, i++, &LdrEntry))
             break;
@@ -3035,6 +3041,24 @@ KdbpPrint(
     }
 }
 
+VOID
+KdbpPrintUnicodeString(
+    _In_ PCUNICODE_STRING String)
+{
+    ULONG i;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+    {
+        KdbpPrint("<NULL>");
+        return;
+    }
+
+    for (i = 0; i < String->Length / sizeof(WCHAR); i++)
+    {
+        KdbpPrint("%c", (CHAR)String->Buffer[i]);
+    }
+}
+
 /** memrchr(), explicitly defined, since was absent in MinGW of RosBE. */
 /*
  * Reverse memchr()
@@ -3863,7 +3887,9 @@ KdbpCliModuleLoaded(
     if (!KdbBreakOnModuleLoad)
         return;
 
-    KdbpPrint("Module %wZ loaded.\n", Name);
+    KdbpPrint("Module ");
+    KdbpPrintUnicodeString(Name);
+    KdbpPrint(" loaded.\n");
     DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 }
 

@@ -107,6 +107,10 @@ KdbpPrint(
    IN PCHAR Format,
    IN ...  OPTIONAL);
 
+VOID
+KdbpPrintUnicodeString(
+    _In_ PCUNICODE_STRING String);
+
 BOOLEAN
 NTAPI
 KdbpGetHexNumber(
