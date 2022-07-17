@@ -1,5 +1,6 @@
 
 add_definitions(
+    -D_BLDR_
     -D_NTSYSTEM_
     -DNASSERT)
 
