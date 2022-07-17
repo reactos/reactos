@@ -635,7 +635,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "아이콘 변경"
 FONT 9, "굴림", 400, 0, 0x1
 BEGIN
-    LTEXT "파일에서 이 아이콘 찾기(&L):", -1, 7, 7, 179, 10
+    LTEXT "파일에서 아이콘 찾기(&L):", -1, 7, 7, 179, 10
     PUSHBUTTON "찾아보기(&B)...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "아래 목록에서 아이콘 선:", -1, 7, 36, 179, 10
