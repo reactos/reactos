@@ -172,8 +172,6 @@
     #include <ntdef.h>
     #include <ntifs.h>
     #include <bugcodes.h>
-    #undef PAGED_CODE
-    #define PAGED_CODE()
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_
