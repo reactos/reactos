@@ -75,7 +75,7 @@ BEGIN
         MENUITEM "복사(&C)", IDM_COPY
         MENUITEM "붙여넣기", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "연결 만들기(&L)", IDM_CREATELINK
+        MENUITEM "바로 가기 만들기(&L)", IDM_CREATELINK
         MENUITEM "&Delete", IDM_DELETE
         MENUITEM "&Rename", IDM_RENAME
         MENUITEM SEPARATOR
