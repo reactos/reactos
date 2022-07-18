@@ -2687,6 +2687,7 @@ ChangePos:
             {
                 CComPtr<IContextMenu> ctxMenu;
                 CStartMenuBtnCtxMenu_CreateInstance(this, m_hWnd, &ctxMenu);
+                ctxMenu->AddRef();
                 TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
