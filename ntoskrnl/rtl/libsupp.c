@@ -825,8 +825,6 @@ RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
 
 #ifdef _M_AMD64
 
-typedef PVOID PRUNTIME_FUNCTION, PUNWIND_HISTORY_TABLE;
-
 PRUNTIME_FUNCTION
 NTAPI
 RtlpLookupDynamicFunctionEntry(
