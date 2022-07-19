@@ -12,6 +12,7 @@
 #define IDI_MOUSE_SPEED        205
 #define IDI_MOUSE_BUTTON       206
 #define IDI_MOUSE_TRAILS       207
+#define IDI_MOUSE_HIDE         208
 #define IDI_FONTS_FOLDER       400
 #define IDI_ADMIN_TOOLS_FOLDER 500
 #define IDI_MOUSE_POINTER      600
