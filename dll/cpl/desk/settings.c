@@ -933,6 +933,10 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                     Current = Current->Flink;
                 OnDisplayDeviceChanged(hwndDlg, pData, Current);
             }
+            else if (lpnm->code == PSN_SETACTIVE)
+            {
+                SetFocus(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION));
+            }
             break;
         }
 
