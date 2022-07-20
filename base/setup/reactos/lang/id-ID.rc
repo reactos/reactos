@@ -16,7 +16,7 @@ CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Pasang ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    LTEXT "Pasang salinan baru ReactOS. Pilihan ini tidak menjaga berkas, pengaturan dan program Anda. Anda bisa membuat perubahan pada disk dan partisi.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "Perbarui atau perbaiki ReactOS", IDC_UPDATE, 7, 50, 277, 10
     LTEXT "Perbarui atau perbaiki salinan terpasang dari ReactOS. Pilihan ini tetap menyimpan berkas, Pengaturan dan program. Pilihan ini hanya tersedia jika ReactOS telah terpasang di komputer ini.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "Klik lanjut untuk meneruskan.", IDC_STATIC, 7, 128, 297, 8

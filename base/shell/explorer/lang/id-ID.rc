@@ -11,7 +11,7 @@ BEGIN
         MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "Tampilkan De&sktop", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Urungkan", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Manajer Tugas", ID_SHELL_CMD_OPEN_TASKMGR
