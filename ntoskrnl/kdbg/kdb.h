@@ -96,10 +96,6 @@ KdbpCliMainLoop(
    IN BOOLEAN EnteredOnSingleStep);
 
 VOID
-KdbpCliModuleLoaded(
-   IN PUNICODE_STRING Name);
-
-VOID
 KdbpCliInterpretInitFile(VOID);
 
 VOID
@@ -267,16 +263,7 @@ CHAR
 KdbpTryGetCharSerial(ULONG Retry);
 
 VOID
-KdbEnter(VOID);
-VOID
-DbgRDebugInit(VOID);
-VOID
-DbgShowFiles(VOID);
-VOID
-DbgEnableFile(PCH Filename);
-VOID
-DbgDisableFile(PCH Filename);
-VOID
 KbdDisableMouse(VOID);
+
 VOID
 KbdEnableMouse(VOID);
