@@ -3876,23 +3876,6 @@ KdbpCliMainLoop(
     while (Continue);
 }
 
-/*!\brief Called when a module is loaded.
- *
- * \param Name  Filename of the module which was loaded.
- */
-VOID
-KdbpCliModuleLoaded(
-    IN PUNICODE_STRING Name)
-{
-    if (!KdbBreakOnModuleLoad)
-        return;
-
-    KdbpPrint("Module ");
-    KdbpPrintUnicodeString(Name);
-    KdbpPrint(" loaded.\n");
-    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-}
-
 /*!\brief This function is called by KdbEnterDebuggerException...
  *
  * Used to interpret the init file in a context with a trapframe setup
