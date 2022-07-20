@@ -384,11 +384,46 @@ static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
+// Win: ImeBroadCastMsg
+static BOOL ImeWnd_BroadcastMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PWND pWnd;
+    HWND hWnd, *phwndList, *phwnd;
+
+    phwndList = WIN_ListChildren(NULL);
+    if (!phwndList)
+        return FALSE;
+
+    for (phwnd = phwndList; ; ++phwnd)
+    {
+        hWnd = *phwnd;
+        if (!hWnd)
+            break;
+
+        pWnd = ValidateHandleNoErr(hWnd, TYPE_WINDOW);
+        if (!pWnd || pWnd->fnid != FNID_IME)
+            continue;
+
+        if (uMsg == WM_DESTROY)
+            DestroyWindow(hWnd);
+        else
+            SendMessageW(hWnd, uMsg, wParam, lParam);
+    }
+
+    HeapFree(GetProcessHeap(), 0, phwndList);
+    return TRUE;
+}
+
 // Win: ImeSelectHandler
 static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
-    HWND hwndUI, hwndIMC = pimeui->hwndIMC;
+    HWND hwndUI, hwndIMC;
+
+    if (pimeui->fDefault)
+        ImeWnd_BroadcastMessage(pimeui, WM_IME_SELECT, wParam, lParam);
+
+    hwndIMC = pimeui->hwndIMC;
 
     if (wParam)
     {
