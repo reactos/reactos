@@ -111,6 +111,7 @@ EngAlphaBlend(
 
     if (!IntEngEnter(&EnterLeaveDest, psoDest, &OutputRect, FALSE, &Translate, &OutputObj))
     {
+        IntEngLeave(&EnterLeaveSource);
         return FALSE;
     }
     OutputRect.left += Translate.x;

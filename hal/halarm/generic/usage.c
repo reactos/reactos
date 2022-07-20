@@ -54,7 +54,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN KINTERRUPT_MODE Mode)
 {
     /* Register the routine */
-    ((PKIPCR)KeGetPcr())->InterruptRoutine[Irql] = Handler;
+    KeGetPcr()->InterruptRoutine[Irql] = Handler;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

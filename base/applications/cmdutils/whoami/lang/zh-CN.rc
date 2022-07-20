@@ -31,20 +31,20 @@ BEGIN
     IDS_UNKNOWN_DESCRIPTION "???"
     IDS_STATE_ENABLED "已启用"
     IDS_STATE_DISABLED "已禁用"
-    IDS_ERROR_UPN "错误: 无法获取用户主体名称 (UPN) 因为当前登录的用户\n不是域用户。\n"
-    IDS_ERROR_FQDN "错误: 无法获取完全限定名 (FQDN)，因为\n当前登录的用户不是域用户。\n"
-    IDS_ERROR_VALUEXPECTED "错误: 无效语法。值的预期 '/fo'。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_ERROR_VALUENOTALLOWED "错误: 无效语法。'/fo' 选项不允许带值 '%s'。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_ERROR_1TIMES "错误: 无效语法。'%s' 选项不允许出现超过 '1' 的次数。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_ERROR_INVALIDSYNTAX "错误: 无效语法。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_ERROR_INVALIDARG "错误: 无效的参数/选项 - '%s'。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_ERROR_NH_LIST "错误: /NH 开关不能与 LIST 格式同用。\n输入 ""WHOAMI /?"" 以了解用法。\n"
-    IDS_HELP "描述:\n\
+    IDS_ERROR_UPN "错误：无法获取用户主体名称（UPN） 因为当前登录的用户\n不是域用户。\n"
+    IDS_ERROR_FQDN "错误：无法获取完全限定名（FQDN），因为\n当前登录的用户不是域用户。\n"
+    IDS_ERROR_VALUEXPECTED "错误：无效语法。值的预期“/fo”。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_VALUENOTALLOWED "错误：无效语法。“/fo”选项不允许带值“%s”。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_1TIMES "错误：无效语法。“%s”选项不允许出现超过“1”次。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_INVALIDSYNTAX "错误：无效语法。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_INVALIDARG "错误：无效的参数/选项 - “%s”。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_NH_LIST "错误：/NH 开关不能与 LIST 格式同用。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_HELP "描述：\n\
   显示在本地登录的用户的用户、组和权限信息。\n\
   如果不提供任何参数，显示当前的域和用户名称。\n\
 \n\
-  可用的输出格式为 '/fo' 选项是 'csv', 'list' 和 'table'.\n\
-  使用 '/nh' 要隐藏页眉。 默认情况下数据显示在表中。\n\
+  “/fo”选项可用的输出格式为“csv”，“list”和“table”。\n\
+  使用“/nh”来隐藏页眉。默认情况下数据显示在表格中。\n\
 \n\
 语法:\n\
   whoami [/upn | /fqdn | /logonid]\n\

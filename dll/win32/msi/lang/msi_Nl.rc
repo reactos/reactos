@@ -31,6 +31,7 @@ STRINGTABLE
     13 "De netwerkschijf met de feature ontbreekt"
     14 "Feature van:"
     15 "Kies de map die %s bevat"
+    100 "New Folder"
 }
 
 /* Error messages */

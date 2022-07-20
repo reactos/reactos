@@ -25,7 +25,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
     fileName.Length = 0;
     fileName.MaximumLength = sizeof(DEFAULT_LOG_FILE_NAME) + sizeof(UNICODE_NULL);
     fileName.Buffer = ExAllocatePool(PagedPool,
-                                        fileName.MaximumLength);
+                                     fileName.MaximumLength);
     if (!fileName.Buffer)
     {
         return FALSE;
@@ -37,7 +37,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 
 	InitializeObjectAttributes (&objectAttributes,
 								(PUNICODE_STRING)&fileName,
-								OBJ_CASE_INSENSITIVE,
+								OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
 								NULL,
 								NULL );
 

@@ -23,6 +23,9 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Innhold"
     IDS_INDEX        "I&ndeks"
     IDS_SEARCH       "&Søk"

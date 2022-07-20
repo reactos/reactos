@@ -1219,7 +1219,7 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
         if (pPrinterHandle->hSPLFile == INVALID_HANDLE_VALUE)
         {
             dwErrorCode = GetLastError();
-            ERR("CreateFileW failed with error %lu for \"%S\"!", dwErrorCode, wszFullPath);
+            ERR("CreateFileW failed with error %lu for \"%S\"!\n", dwErrorCode, wszFullPath);
             goto Failure;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present, Yann Collet, Facebook, Inc.
+ * Copyright (c) 2016-2020, Yann Collet, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under both the BSD-style license (found in the
@@ -15,13 +15,15 @@
 *  Compiler specifics
 *********************************************************/
 /* force inlining */
-#if defined (__GNUC__) || defined(__cplusplus) || defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L   /* C99 */
+
+#if !defined(ZSTD_NO_INLINE)
+#if (defined(__GNUC__) && !defined(__STRICT_ANSI__)) || defined(__cplusplus) || defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L   /* C99 */
 #  define INLINE_KEYWORD inline
 #else
 #  define INLINE_KEYWORD
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__ICCARM__)
 #  define FORCE_INLINE_ATTR __attribute__((always_inline))
 #elif defined(_MSC_VER)
 #  define FORCE_INLINE_ATTR __forceinline
@@ -29,9 +31,16 @@
 #  define FORCE_INLINE_ATTR
 #endif
 
+#else
+
+#define INLINE_KEYWORD
+#define FORCE_INLINE_ATTR
+
+#endif
+
 /**
  * FORCE_INLINE_TEMPLATE is used to define C "templates", which take constant
- * parameters. They must be inlined for the compiler to elimininate the constant
+ * parameters. They must be inlined for the compiler to eliminate the constant
  * branches.
  */
 #define FORCE_INLINE_TEMPLATE static INLINE_KEYWORD FORCE_INLINE_ATTR
@@ -52,11 +61,18 @@
 #  define HINT_INLINE static INLINE_KEYWORD FORCE_INLINE_ATTR
 #endif
 
+/* UNUSED_ATTR tells the compiler it is okay if the function is unused. */
+#if defined(__GNUC__)
+#  define UNUSED_ATTR __attribute__((unused))
+#else
+#  define UNUSED_ATTR
+#endif
+
 /* force no inlining */
 #ifdef _MSC_VER
 #  define FORCE_NOINLINE static __declspec(noinline)
 #else
-#  ifdef __GNUC__
+#  if defined(__GNUC__) || defined(__ICCARM__)
 #    define FORCE_NOINLINE static __attribute__((__noinline__))
 #  else
 #    define FORCE_NOINLINE static
@@ -67,7 +83,7 @@
 #ifndef __has_attribute
   #define __has_attribute(x) 0  /* Compatibility with non-clang compilers. */
 #endif
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__ICCARM__)
 #  define TARGET_ATTRIBUTE(target) __attribute__((__target__(target)))
 #else
 #  define TARGET_ATTRIBUTE(target)
@@ -89,23 +105,24 @@
 #endif
 
 /* prefetch
- * can be disabled, by declaring NO_PREFETCH macro
- * All prefetch invocations use a single default locality 2,
- * generating instruction prefetcht1,
- * which, according to Intel, means "load data into L2 cache".
- * This is a good enough "middle ground" for the time being,
- * though in theory, it would be better to specialize locality depending on data being prefetched.
- * Tests could not determine any sensible difference based on locality value. */
+ * can be disabled, by declaring NO_PREFETCH build macro */
 #if defined(NO_PREFETCH)
-#  define PREFETCH(ptr)     (void)(ptr)  /* disabled */
+#  define PREFETCH_L1(ptr)  (void)(ptr)  /* disabled */
+#  define PREFETCH_L2(ptr)  (void)(ptr)  /* disabled */
 #else
 #  if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_I86))  /* _mm_prefetch() is not defined outside of x86/x64 */
 #    include <mmintrin.h>   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
-#    define PREFETCH(ptr)   _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
+#    define PREFETCH_L1(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
+#    define PREFETCH_L2(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
+#    elif defined(__aarch64__)
+#     define PREFETCH_L1(ptr)  __asm__ __volatile__("prfm pldl1keep, %0" ::"Q"(*(ptr)))
+#     define PREFETCH_L2(ptr)  __asm__ __volatile__("prfm pldl2keep, %0" ::"Q"(*(ptr)))
 #  elif defined(__GNUC__) && ( (__GNUC__ >= 4) || ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) )
-#    define PREFETCH(ptr)   __builtin_prefetch((ptr), 0 /* rw==read */, 2 /* locality */)
+#    define PREFETCH_L1(ptr)  __builtin_prefetch((ptr), 0 /* rw==read */, 3 /* locality */)
+#    define PREFETCH_L2(ptr)  __builtin_prefetch((ptr), 0 /* rw==read */, 2 /* locality */)
 #  else
-#    define PREFETCH(ptr)   (void)(ptr)  /* disabled */
+#    define PREFETCH_L1(ptr) (void)(ptr)  /* disabled */
+#    define PREFETCH_L2(ptr) (void)(ptr)  /* disabled */
 #  endif
 #endif  /* NO_PREFETCH */
 
@@ -116,9 +133,34 @@
     size_t const _size = (size_t)(s);     \
     size_t _pos;                          \
     for (_pos=0; _pos<_size; _pos+=CACHELINE_SIZE) {  \
-        PREFETCH(_ptr + _pos);            \
+        PREFETCH_L2(_ptr + _pos);         \
     }                                     \
 }
+
+/* vectorization
+ * older GCC (pre gcc-4.3 picked as the cutoff) uses a different syntax */
+#if !defined(__INTEL_COMPILER) && !defined(__clang__) && defined(__GNUC__)
+#  if (__GNUC__ == 4 && __GNUC_MINOR__ > 3) || (__GNUC__ >= 5)
+#    define DONT_VECTORIZE __attribute__((optimize("no-tree-vectorize")))
+#  else
+#    define DONT_VECTORIZE _Pragma("GCC optimize(\"no-tree-vectorize\")")
+#  endif
+#else
+#  define DONT_VECTORIZE
+#endif
+
+/* Tell the compiler that a branch is likely or unlikely.
+ * Only use these macros if it causes the compiler to generate better code.
+ * If you can remove a LIKELY/UNLIKELY annotation without speed changes in gcc
+ * and clang, please do.
+ */
+#if defined(__GNUC__)
+#define LIKELY(x) (__builtin_expect((x), 1))
+#define UNLIKELY(x) (__builtin_expect((x), 0))
+#else
+#define LIKELY(x) (x)
+#define UNLIKELY(x) (x)
+#endif
 
 /* disable warnings */
 #ifdef _MSC_VER    /* Visual Studio */

@@ -35,7 +35,7 @@ set_target_properties(spoolsv
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(spoolsv PRIVATE "-Wno-cast-calling-convention")
 endif()
 

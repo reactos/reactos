@@ -36,7 +36,6 @@
 #include "msidefs.h"
 #include "msipriv.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -47,7 +46,7 @@ static BOOL check_language(DWORD lang1, LPCWSTR lang2, DWORD attributes)
     if (!lang2 || lang2[0]==0)
         return TRUE;
 
-    langdword = atoiW(lang2);
+    langdword = wcstol(lang2, NULL, 10);
 
     if (attributes & msidbUpgradeAttributesLanguagesExclusive)
         return (lang1 != langdword);
@@ -55,45 +54,59 @@ static BOOL check_language(DWORD lang1, LPCWSTR lang2, DWORD attributes)
         return (lang1 == langdword);
 }
 
-static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
-                               LPCWSTR productid)
+static BOOL find_product( const WCHAR *list, const WCHAR *product )
 {
-    LPWSTR prop;
-    LPWSTR newprop;
-    DWORD len;
+    const WCHAR *p = list, *q;
+
+    if (!list) return FALSE;
+    for (;;)
+    {
+        while (*p && *p != '{') p++;
+        if (*p != '{') return FALSE;
+        q = p;
+        while (*q && *q != '}') q++;
+        if (*q != '}') return FALSE;
+        q++;
+        if (q - p < lstrlenW( product )) return FALSE;
+        if (!memcmp( p, product, (q - p) * sizeof(WCHAR) )) return TRUE;
+        p = q + 1;
+        while (*p && *p != ';') p++;
+        if (*p != ';') break;
+    }
+
+    return FALSE;
+}
+
+static void append_productcode( MSIPACKAGE *package, const WCHAR *action_prop, const WCHAR *product )
+{
+    WCHAR *prop, *newprop;
+    DWORD len = 0;
     UINT r;
 
-    prop = msi_dup_property(package->db, action_property );
-    if (prop)
-        len = strlenW(prop);
-    else
-        len = 0;
+    prop = msi_dup_property( package->db, action_prop );
+    if (find_product( prop, product ))
+    {
+        TRACE( "related product property %s already contains %s\n", debugstr_w(action_prop), debugstr_w(product) );
+        msi_free( prop );
+        return;
+    }
 
-    /*separator*/
-    len ++;
-
-    len += strlenW(productid);
-
-    /*null*/
-    len++;
-
-    newprop = msi_alloc( len*sizeof(WCHAR) );
-
+    if (prop) len += lstrlenW( prop );
+    len += lstrlenW( product ) + 2;
+    if (!(newprop = msi_alloc( len * sizeof(WCHAR) ))) return;
     if (prop)
     {
-        strcpyW(newprop,prop);
-        strcatW(newprop,szSemiColon);
+        lstrcpyW( newprop, prop );
+        lstrcatW( newprop, L";" );
     }
-    else
-        newprop[0] = 0;
-    strcatW(newprop,productid);
+    else newprop[0] = 0;
+    lstrcatW( newprop, product );
 
-    r = msi_set_property( package->db, action_property, newprop, -1 );
-    if (r == ERROR_SUCCESS && !strcmpW( action_property, szSourceDir ))
-        msi_reset_folders( package, TRUE );
+    r = msi_set_property( package->db, action_prop, newprop, -1 );
+    if (r == ERROR_SUCCESS && !wcscmp( action_prop, L"SourceDir" ))
+        msi_reset_source_folders( package );
 
-    TRACE("Found Related Product... %s now %s\n",
-          debugstr_w(action_property), debugstr_w(newprop));
+    TRACE( "related product property %s now %s\n", debugstr_w(action_prop), debugstr_w(newprop) );
 
     msi_free( prop );
     msi_free( newprop );
@@ -103,7 +116,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 {
     MSIPACKAGE *package = param;
     WCHAR product[SQUASHED_GUID_SIZE];
-    DWORD index = 0, attributes = 0, sz = sizeof(product)/sizeof(product[0]);
+    DWORD index = 0, attributes = 0, sz = ARRAY_SIZE(product);
     LPCWSTR upgrade_code;
     HKEY hkey = 0;
     UINT rc = ERROR_SUCCESS;
@@ -129,7 +142,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             HKEY hukey;
             INT r;
 
-            TRACE("Looking at index %u product %s\n", index, debugstr_w(product));
+            TRACE( "looking at index %lu product %s\n", index, debugstr_w(product) );
 
             unsquash_guid(product, productid);
             if (MSIREG_OpenProductKey(productid, NULL, MSIINSTALLCONTEXT_USERMANAGED, &hukey, FALSE) &&
@@ -197,35 +210,32 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
     }
     RegCloseKey(hkey);
     msiobj_release( &uirow->hdr);
-    
+
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','U','p','g','r','a','d','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    if (msi_get_property_int(package->db, szInstalled, 0))
+    if (msi_get_property_int(package->db, L"Installed", 0))
     {
         TRACE("Skipping FindRelatedProducts action: product already installed\n");
         return ERROR_SUCCESS;
     }
-    if (msi_action_is_unique(package, szFindRelatedProducts))
+    if (msi_action_is_unique(package, L"FindRelatedProducts"))
     {
         TRACE("Skipping FindRelatedProducts action: already done in UI sequence\n");
         return ERROR_SUCCESS;
     }
     else
-        msi_register_unique_action(package, szFindRelatedProducts);
+        msi_register_unique_action(package, L"FindRelatedProducts");
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `Upgrade`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
-    
+
     rc = MSI_IterateRecords(view, NULL, ITERATE_FindRelatedProducts, package);
     msiobj_release(&view->hdr);
     return rc;

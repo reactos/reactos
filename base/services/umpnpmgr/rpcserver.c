@@ -38,6 +38,7 @@
 
 static WCHAR szRootDeviceInstanceID[] = L"HTREE\\ROOT\\0";
 
+LIST_ENTRY NotificationListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -50,6 +51,8 @@ RpcServerThread(LPVOID lpParameter)
     UNREFERENCED_PARAMETER(lpParameter);
 
     DPRINT("RpcServerThread() called\n");
+
+    InitializeListHead(&NotificationListHead);
 
 #if 0
     /* 2k/XP/2k3-compatible protocol sequence/endpoint */
@@ -411,6 +414,17 @@ IsRootDeviceInstanceID(
 
 
 static
+BOOL
+IsPresentDeviceInstanceID(
+    _In_ LPWSTR pszDeviceInstanceID)
+{
+    DWORD ulStatus, ulProblem;
+
+    return (GetDeviceStatus(pszDeviceInstanceID, &ulStatus, &ulProblem) == CR_SUCCESS);
+}
+
+
+static
 CONFIGRET
 OpenConfigurationKey(
     _In_ LPCWSTR pszDeviceID,
@@ -532,6 +546,15 @@ GetConfigurationData(
     }
 
     return CR_SUCCESS;
+}
+
+
+VOID
+__RPC_USER
+PNP_NOTIFY_HANDLE_rundown(
+    PNP_NOTIFY_HANDLE pHandle)
+{
+    DPRINT1("PNP_NOTIFY_HANDLE_rundown(%p)\n", pHandle);
 }
 
 
@@ -768,6 +791,33 @@ PNP_GetRelatedDeviceInstance(
 
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
+
+    if (ulRelationship == PNP_GET_PARENT_DEVICE_INSTANCE)
+    {
+        /* The root device does not have a parent */
+        if (IsRootDeviceInstanceID(pDeviceID))
+            return CR_NO_SUCH_DEVINST;
+
+        /* Return the root device for non existing devices */
+        if (!IsPresentDeviceInstanceID(pDeviceID))
+        {
+            if ((wcslen(szRootDeviceInstanceID) + 1) > *pulLength)
+            {
+                *pulLength = wcslen(szRootDeviceInstanceID) + 1;
+                return CR_BUFFER_SMALL;
+            }
+
+            wcscpy(pRelatedDeviceId, szRootDeviceInstanceID);
+            *pulLength = wcslen(szRootDeviceInstanceID) + 1;
+            return CR_SUCCESS;
+        }
+    }
+    else if (ulRelationship == PNP_GET_SIBLING_DEVICE_INSTANCE)
+    {
+        /* The root device does not have siblings */
+        if (IsRootDeviceInstanceID(pDeviceID))
+            return CR_NO_SUCH_DEVINST;
+    }
 
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
                          pDeviceID);
@@ -2827,8 +2877,11 @@ done:
 }
 
 
-static CONFIGRET
-CreateDeviceInstance(LPWSTR pszDeviceID)
+static
+CONFIGRET
+CreateDeviceInstance(
+    _In_ LPWSTR pszDeviceID,
+    _In_ BOOL bPhantomDevice)
 {
     WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
     WCHAR szDevice[MAX_DEVICE_ID_LEN];
@@ -2912,6 +2965,17 @@ CreateDeviceInstance(LPWSTR pszDeviceID)
         return CR_REGISTRY_ERROR;
     }
 
+    if (bPhantomDevice)
+    {
+        DWORD dwPhantomValue = 1;
+        RegSetValueExW(hKeyInstance,
+                       L"Phantom",
+                       0,
+                       REG_DWORD,
+                       (PBYTE)&dwPhantomValue,
+                       sizeof(dwPhantomValue));
+    }
+
     /* Create the 'Control' sub key */
     lError = RegCreateKeyExW(hKeyInstance,
                              L"Control",
@@ -2933,6 +2997,55 @@ CreateDeviceInstance(LPWSTR pszDeviceID)
 }
 
 
+static
+CONFIGRET
+GenerateDeviceID(
+    _Inout_ LPWSTR pszDeviceID,
+    _In_ PNP_RPC_STRING_LEN ulLength)
+{
+    WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
+    HKEY hKey;
+    DWORD dwInstanceNumber;
+    DWORD dwError = ERROR_SUCCESS;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Fail, if the device name contains backslashes */
+    if (wcschr(pszDeviceID, L'\\') != NULL)
+        return CR_INVALID_DEVICE_ID;
+
+    /* Generated ID is: Root\<Device ID>\<Instance number> */
+    dwInstanceNumber = 0;
+    while (dwError == ERROR_SUCCESS)
+    {
+        if (dwInstanceNumber >= 10000)
+            return CR_FAILURE;
+
+        swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
+                 pszDeviceID, dwInstanceNumber);
+
+        /* Try to open the enum key of the device instance */
+        dwError = RegOpenKeyEx(hEnumKey, szGeneratedInstance, 0, KEY_QUERY_VALUE, &hKey);
+        if (dwError == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            dwInstanceNumber++;
+        }
+    }
+
+    /* pszDeviceID is an out parameter too for generated IDs */
+    if (wcslen(szGeneratedInstance) > ulLength)
+    {
+        ret = CR_BUFFER_SMALL;
+    }
+    else
+    {
+        wcscpy(pszDeviceID, szGeneratedInstance);
+    }
+
+    return ret;
+}
+
+
 /* Function 28 */
 DWORD
 WINAPI
@@ -2943,6 +3056,10 @@ PNP_CreateDevInst(
     PNP_RPC_STRING_LEN ulLength,
     DWORD ulFlags)
 {
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
+    HKEY hKey = NULL;
+    DWORD dwSize, dwPhantom;
+    NTSTATUS Status;
     CONFIGRET ret = CR_SUCCESS;
 
     DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
@@ -2960,41 +3077,72 @@ PNP_CreateDevInst(
 
     if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
     {
-        WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
-        DWORD dwInstanceNumber;
+        ret = GenerateDeviceID(pszDeviceID,
+                               ulLength);
+        if (ret != CR_SUCCESS)
+            return ret;
+    }
 
-        /* Generated ID is: Root\<Device ID>\<Instance number> */
-        dwInstanceNumber = 0;
-        do
+    /* Try to open the device instance key */
+    RegOpenKeyEx(hEnumKey, pszDeviceID, 0, KEY_READ | KEY_WRITE, &hKey);
+
+    if (ulFlags & CM_CREATE_DEVNODE_PHANTOM)
+    {
+        /* Fail, if the device already exists */
+        if (hKey != NULL)
         {
-            swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
-                     pszDeviceID, dwInstanceNumber);
-
-            /* Try to create a device instance with this ID */
-            ret = CreateDeviceInstance(szGeneratedInstance);
-
-            dwInstanceNumber++;
+            ret = CR_ALREADY_SUCH_DEVINST;
+            goto done;
         }
-        while (ret == CR_ALREADY_SUCH_DEVINST);
 
-        if (ret == CR_SUCCESS)
-        {
-            /* pszDeviceID is an out parameter too for generated IDs */
-            if (wcslen(szGeneratedInstance) > ulLength)
-            {
-                ret = CR_BUFFER_SMALL;
-            }
-            else
-            {
-                wcscpy(pszDeviceID, szGeneratedInstance);
-            }
-        }
+        /* Create the phantom device instance */
+        ret = CreateDeviceInstance(pszDeviceID, TRUE);
     }
     else
     {
-        /* Create the device instance */
-        ret = CreateDeviceInstance(pszDeviceID);
+        /* Fail, if the device exists and is present */
+        if ((hKey != NULL) && (IsPresentDeviceInstanceID(pszDeviceID)))
+        {
+            ret = CR_ALREADY_SUCH_DEVINST;
+            goto done;
+        }
+
+        /* If it does not already exist ... */
+        if (hKey == NULL)
+        {
+            /* Create the device instance */
+            ret = CreateDeviceInstance(pszDeviceID, FALSE);
+
+            /* Open the device instance key */
+            RegOpenKeyEx(hEnumKey, pszDeviceID, 0, KEY_READ | KEY_WRITE, &hKey);
+        }
+
+        /* Create a device node for the device */
+        RtlInitUnicodeString(&ControlData.DeviceInstance, pszDeviceID);
+        Status = NtPlugPlayControl(PlugPlayControlInitializeDevice,
+                                   &ControlData,
+                                   sizeof(ControlData));
+        if (!NT_SUCCESS(Status))
+        {
+            ret = CR_FAILURE;
+            goto done;
+        }
+
+        /* If the device is a phantom device, turn it into a normal device */
+        if (hKey != NULL)
+        {
+            dwPhantom = 0;
+            dwSize = sizeof(DWORD);
+            RegQueryValueEx(hKey, L"Phantom", NULL, NULL, (PBYTE)&dwPhantom, &dwSize);
+
+            if (dwPhantom != 0)
+                RegDeleteValue(hKey, L"Phantom");
+        }
     }
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
 
     DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
@@ -4461,22 +4609,24 @@ PNP_RegisterNotification(
     BYTE *pNotificationFilter,
     DWORD ulNotificationFilterSize,
     DWORD ulFlags,
-    DWORD *pulNotify,
+    PNP_NOTIFY_HANDLE *pNotifyHandle,
     DWORD ulUnknown8,
     DWORD *pulUnknown9)
 {
     PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
     PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
-#if 0
-    PNOTIFY_DATA pNotifyData;
-#endif
+    PNOTIFY_ENTRY pNotifyData = NULL;
 
     DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
            hBinding, ulUnknown2, pszName, pNotificationFilter,
-           ulNotificationFilterSize, ulFlags, pulNotify, ulUnknown8, pulUnknown9);
+           ulNotificationFilterSize, ulFlags, pNotifyHandle, ulUnknown8, pulUnknown9);
+
+    if (pNotifyHandle == NULL)
+        return CR_INVALID_POINTER;
+
+    *pNotifyHandle = NULL;
 
     if (pNotificationFilter == NULL ||
-        pulNotify == NULL ||
         pulUnknown9 == NULL)
         return CR_INVALID_POINTER;
 
@@ -4495,6 +4645,28 @@ PNP_RegisterNotification(
         if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) ||
             (pBroadcastDeviceInterface->dbcc_size < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)))
             return CR_INVALID_DATA;
+
+        pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_ENTRY));
+        if (pNotifyData == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        if (pszName != NULL)
+        {
+            pNotifyData->pszName = RtlAllocateHeap(GetProcessHeap(),
+                                                   HEAP_ZERO_MEMORY,
+                                                   (wcslen(pszName) + 1) * sizeof(WCHAR));
+            if (pNotifyData->pszName == NULL)
+            {
+                RtlFreeHeap(GetProcessHeap(), 0, pNotifyData);
+                return CR_OUT_OF_MEMORY;
+            }
+        }
+
+        /* Add the entry to the notification list */
+        InsertTailList(&NotificationListHead, &pNotifyData->ListEntry);
+
+        DPRINT("pNotifyData: %p\n", pNotifyData);
+        *pNotifyHandle = (PNP_NOTIFY_HANDLE)pNotifyData;
     }
     else if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_HANDLE)
     {
@@ -4514,17 +4686,6 @@ PNP_RegisterNotification(
         return CR_INVALID_DATA;
     }
 
-
-#if 0
-    pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));
-    if (pNotifyData == NULL)
-        return CR_OUT_OF_MEMORY;
-
-    *pulNotify = (DWORD)pNotifyData;
-#endif
-
-    *pulNotify = 1;
-
     return CR_SUCCESS;
 }
 
@@ -4534,15 +4695,22 @@ DWORD
 WINAPI
 PNP_UnregisterNotification(
     handle_t hBinding,
-    DWORD ulNotify)
+    PNP_NOTIFY_HANDLE *pNotifyHandle)
 {
-    DPRINT1("PNP_UnregisterNotification(%p 0x%lx)\n",
-           hBinding, ulNotify);
+    PNOTIFY_ENTRY pEntry;
 
-#if 0
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
-#endif
+    DPRINT1("PNP_UnregisterNotification(%p %p)\n",
+           hBinding, pNotifyHandle);
+
+    pEntry = (PNOTIFY_ENTRY)*pNotifyHandle;
+    if (pEntry == NULL)
+        return CR_INVALID_DATA;
+
+    RemoveEntryList(&pEntry->ListEntry);
+    if (pEntry->pszName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry->pszName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry);
+    *pNotifyHandle = NULL;
 
     return CR_SUCCESS;
 }

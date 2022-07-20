@@ -361,7 +361,7 @@ NtGdiSelectBitmap(
     }
 
     /* Must be a memory dc to select a bitmap */
-    if (pdc->dctype != DC_TYPE_MEMORY)
+    if (pdc->dctype != DCTYPE_MEMORY)
     {
         DC_UnlockDc(pdc);
         return NULL;
@@ -462,7 +462,7 @@ NtGdiSelectBitmap(
 
     /* Mark the DC brushes and the RAO region invalid */
     pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
-    pdc->fs |= DC_FLAG_DIRTY_RAO;
+    pdc->fs |= DC_DIRTY_RAO;
 
     /* Update the system region */
     REGION_SetRectRgn(pdc->prgnVis,
@@ -733,7 +733,7 @@ NtGdiGetRandomRgn(
             break;
 
         case APIRGN:
-            if (pdc->fs & DC_FLAG_DIRTY_RAO)
+            if (pdc->fs & DC_DIRTY_RAO)
                 CLIPPING_UpdateGCRegion(pdc);
             if (pdc->prgnAPI)
             {

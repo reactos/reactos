@@ -36,14 +36,11 @@ static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCON
                                            LPCSTR, LPSTR, DWORD * );
 static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
                                           LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
-static const WCHAR msifileW[] =
-    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','i',0};
-static const WCHAR mspfileW[] =
-    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','p',0};
+static const WCHAR msifileW[] = L"winetest-patch.msi";
+static const WCHAR mspfileW[] = L"winetest-patch.msp";
 
 static char CURR_DIR[MAX_PATH];
 static char PROG_FILES_DIR[MAX_PATH];
@@ -74,7 +71,8 @@ static const char file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
     "File\tFile\n"
-    "patch.txt\tpatch\tpatch.txt\t1000\t\t\t0\t1\n";
+    "patch.txt\tpatch\tpatch.txt\t1000\t\t\t0\t1\n"
+    "disable.txt\tdisable\tdisable.txt\t1000\t\t\t0\t1\n";
 
 static const char directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -88,19 +86,22 @@ static const char component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
-    "patch\t{4B79D87E-6D28-4FD3-92D6-CD9B26AF64F1}\tMSITESTDIR\t0\t\tpatch.txt\n";
+    "patch\t{4B79D87E-6D28-4FD3-92D6-CD9B26AF64F1}\tMSITESTDIR\t0\t\tpatch.txt\n"
+    "disable\t{BDDBA0EE-0031-4591-ADC0-33308175AC19}\tMSITESTDIR\t0\t\tdisable.txt\n";
 
 static const char feature_dat[] =
     "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
     "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
     "Feature\tFeature\n"
-    "patch\t\t\tpatch feature\t1\t1\tMSITESTDIR\t0\n";
+    "patch\t\t\tpatch feature\t1\t1\tMSITESTDIR\t0\n"
+    "disable\t\t\tdisabled feature\t1\t1\tMSITESTDIR\t0\n";
 
 static const char feature_comp_dat[] =
     "Feature_\tComponent_\n"
     "s38\ts72\n"
     "FeatureComponents\tFeature_\tComponent_\n"
-    "patch\tpatch\n";
+    "patch\tpatch\n"
+    "disable\tdisable\n";
 
 static const char install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -119,7 +120,14 @@ static const char install_exec_seq_dat[] =
     "RegisterProduct\t\t3100\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
+    "UnpublishFeatures\t\t5300\n"
     "InstallFinalize\t\t6000\n";
+
+static const char condition_dat[] =
+    "Feature_\tLevel\tCondition\n"
+    "s38\ti2\tS255\n"
+    "Condition\tFeature_\tLevel\n"
+    "disable\t0\tDISABLE_FEATURE\n";
 
 struct msi_table
 {
@@ -139,13 +147,13 @@ static const struct msi_table tables[] =
     ADD_TABLE( feature_comp ),
     ADD_TABLE( property ),
     ADD_TABLE( install_exec_seq ),
-    ADD_TABLE( media )
+    ADD_TABLE( media ),
+    ADD_TABLE( condition )
 };
 
 static void init_function_pointers( void )
 {
     HMODULE hmsi = GetModuleHandleA( "msi.dll" );
-    HMODULE hadvapi32 = GetModuleHandleA( "advapi32.dll" );
 
 #define GET_PROC( mod, func ) \
     p ## func = (void *)GetProcAddress( mod, #func ); \
@@ -156,7 +164,6 @@ static void init_function_pointers( void )
     GET_PROC( hmsi, MsiGetPatchInfoExA );
     GET_PROC( hmsi, MsiEnumPatchesExA );
 
-    GET_PROC( hadvapi32, OpenProcessToken );
 #undef GET_PROC
 }
 
@@ -164,9 +171,7 @@ static BOOL is_process_limited(void)
 {
     HANDLE token;
 
-    if (!pOpenProcessToken) return FALSE;
-
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -316,7 +321,7 @@ static void create_database( const char *filename, const struct msi_table *table
     int len;
 
     len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
-    if (!(filenameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return;
+    if (!(filenameW = malloc( len * sizeof(WCHAR) ))) return;
     MultiByteToWideChar( CP_ACP, 0, filename, -1, filenameW, len );
 
     r = MsiOpenDatabaseW( filenameW, MSIDBOPEN_CREATE, &hdb );
@@ -340,7 +345,7 @@ static void create_database( const char *filename, const struct msi_table *table
 
     MsiCloseHandle( hdb );
     set_suminfo( filenameW );
-    HeapFree( GetProcessHeap(), 0, filenameW );
+    free( filenameW );
 }
 
 /* data for generating a patch */
@@ -384,20 +389,20 @@ static const WCHAR p_data3[] = { /* _StringPool */
     32,  1,     /* string 7 '913B8D18FBB64CACA239C74C11E3FA74' */
 };
 static const char p_data4[] = { /* CAB_msitest */
-    0x4d, 0x53, 0x43, 0x46, 0x00, 0x00, 0x00, 0x00, 0x98, 0x00, 0x00,
+    0x4d, 0x53, 0x43, 0x46, 0x00, 0x00, 0x00, 0x00, 0x94, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x9e,
-    0x03, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x12,
+    0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x5f, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00,
     0xea, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87,
-    0x3c, 0xd4, 0x80, 0x20, 0x00, 0x70, 0x61, 0x74, 0x63, 0x68, 0x2e,
-    0x74, 0x78, 0x74, 0x00, 0x0b, 0x3c, 0xd6, 0xc1, 0x4a, 0x00, 0xea,
-    0x03, 0x5b, 0x80, 0x80, 0x8d, 0x00, 0x10, 0xa1, 0x3e, 0x00, 0x00,
-    0x00, 0x00, 0x03, 0x00, 0x40, 0x30, 0x0c, 0x43, 0xf8, 0xb4, 0x85,
-    0x4d, 0x96, 0x08, 0x0a, 0x92, 0xf0, 0x52, 0xfb, 0xbb, 0x82, 0xf9,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x0e, 0x31, 0x7d,
-    0x56, 0xdf, 0xf7, 0x48, 0x7c, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x41, 0x80, 0xdf, 0xf7, 0xd8, 0x72, 0xbf, 0xb9, 0x63,
-    0x91, 0x0e, 0x57, 0x1f, 0xfa, 0x1a, 0x66, 0x54, 0x55
+    0x3c, 0xd4, 0xb8, 0x20, 0x00, 0x70, 0x61, 0x74, 0x63, 0x68, 0x2e,
+    0x74, 0x78, 0x74, 0x00, 0xe8, 0x03, 0x00, 0x00, 0xea, 0x03, 0x00,
+    0x00, 0x00, 0x00, 0xcb, 0x50, 0x17, 0x7e, 0x20, 0x00, 0x66, 0x69,
+    0x6c, 0x65, 0x2e, 0x74, 0x78, 0x74, 0x00, 0xb0, 0xb2, 0xb2, 0x25,
+    0x2d, 0x00, 0xd2, 0x07, 0x43, 0x4b, 0xcb, 0x2d, 0xce, 0x2c, 0x49,
+    0x2d, 0x2e, 0x89, 0x29, 0x48, 0x2c, 0x49, 0xce, 0x48, 0x4d, 0xd1,
+    0x2b, 0xa9, 0x28, 0x51, 0x18, 0x05, 0xa3, 0x60, 0x14, 0x0c, 0x37,
+    0x90, 0x8b, 0x9c, 0xd3, 0x41, 0xf9, 0x9c, 0x61, 0x14, 0x8c, 0x82,
+    0x51, 0x30, 0xdc, 0x00, 0x00
 };
 static const WCHAR p_data5[] = { /* MsiPatchSequence */
     0x0007, 0x0000, 0x0006, 0x8000
@@ -445,8 +450,6 @@ static const struct table_data table_patch_data[] = {
     { p_name5, p_data5, sizeof p_data5 },
     { p_name6, p_data6, sizeof p_data6 }
 };
-
-#define NUM_PATCH_TABLES (sizeof table_patch_data/sizeof table_patch_data[0])
 
 static const WCHAR t1_name0[] = { 0x4840, 0x430f, 0x422f, 0 }; /* File */
 static const WCHAR t1_name1[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3b6a, 0x45e4, 0x4824, 0 }; /* _StringData */
@@ -519,8 +522,6 @@ static const struct table_data table_transform1_data[] = {
     { t1_name3, t1_data3, sizeof t1_data3 }
 };
 
-#define NUM_TRANSFORM1_TABLES (sizeof table_transform1_data/sizeof table_transform1_data[0])
-
 static const WCHAR t2_name0[] = { 0x4840, 0x430f, 0x422f, 0 }; /* File */
 static const WCHAR t2_name1[] = { 0x4840, 0x4216, 0x4327, 0x4824, 0 }; /* Media */
 static const WCHAR t2_name2[] = { 0x4840, 0x3b3f, 0x43f2, 0x4438, 0x45b1, 0 }; /* _Columns */
@@ -534,63 +535,75 @@ static const WCHAR t2_name8[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3e6a, 0x44b2
 static const WCHAR t2_name9[] = { 0x0005, 0x0053, 0x0075, 0x006d, 0x006d, 0x0061, 0x0072,
                                   0x0079, 0x0049, 0x006e, 0x0066, 0x006f, 0x0072, 0x006d,
                                   0x0061, 0x0074, 0x0069, 0x006f, 0x006e, 0 }; /* SummaryInformation */
+static const WCHAR t2_name10[] = { 0x4840, 0x420f, 0x45e4, 0x4578, 0x3b28, 0x4432, 0x44b3,
+                                   0x4231, 0x45f1, 0x4836, 0 }; /* FeatureComponents */
+static const WCHAR t2_name11[] = { 0x4840, 0x448c, 0x44f0, 0x4472, 0x4468, 0x4837, 0 }; /* Component */
+static const WCHAR t2_name12[] = { 0x4840, 0x420f, 0x45e4, 0x4578, 0x4828, 0 }; /* Feature */
 
 static const WCHAR t2_data0[] = { /* File */
-    0x00c0, 0x0001, 0x9000, 0x83e8
+    0x00c0, 0x0001, 0x9000, 0x83e8, 0x0801, 0x0002, 0x0003, 0x0002,
+    0x03e8, 0x8000, 0x0000, 0x0000, 0x9000, 0x83e9
 };
 static const WCHAR t2_data1[] = { /* Media */
-    0x0601, 0x8002, 0x03e9, 0x8000, 0x0000, 0x0007, 0x0000, 0x0008
+    0x0601, 0x8002, 0x03e9, 0x8000, 0x0000, 0x000d, 0x0000, 0x000e
 };
 static const WCHAR t2_data2[] = { /* _Columns */
-    0x0401, 0x0009, 0x0000, 0x000a, 0xad48, 0x0401, 0x0009, 0x0000, /* 0x0401 = add row (1), 4 shorts */
-    0x000b, 0xa502, 0x0401, 0x0009, 0x0000, 0x000c, 0x8104, 0x0401,
-    0x0009, 0x0000, 0x000d, 0x8502, 0x0401, 0x0009, 0x0000, 0x000e,
-    0x9900, 0x0401, 0x0009, 0x0000, 0x000f, 0x9d48, 0x0401, 0x0010,
-    0x0000, 0x0011, 0xad26, 0x0401, 0x0010, 0x0000, 0x0012, 0x8502,
-    0x0401, 0x0014, 0x0000, 0x0015, 0xad26, 0x0401, 0x0014, 0x0000,
-    0x000e, 0x8900
+    0x0401, 0x000f, 0x0000, 0x0010, 0xad48, 0x0401, 0x000f, 0x0000, /* 0x0401 = add row (1), 4 shorts */
+    0x0011, 0xa502, 0x0401, 0x000f, 0x0000, 0x0012, 0x8104, 0x0401,
+    0x000f, 0x0000, 0x0013, 0x8502, 0x0401, 0x000f, 0x0000, 0x0014,
+    0x9900, 0x0401, 0x000f, 0x0000, 0x0015, 0x9d48, 0x0401, 0x0016,
+    0x0000, 0x0017, 0xad26, 0x0401, 0x0016, 0x0000, 0x0018, 0x8502,
+    0x0401, 0x001a, 0x0000, 0x001b, 0xad26, 0x0401, 0x001a, 0x0000,
+    0x0014, 0x8900
 };
 static const WCHAR t2_data3[] = { /* _Tables */
-    0x0101, 0x0009, 0x0101, 0x0010, 0x0101, 0x0014
+    0x0101, 0x000f, 0x0101, 0x0016, 0x0101, 0x001a
 };
 static const WCHAR t2_data4[] = { /* Property */
-    0x0201, 0x0002, 0x0003, 0x0201, 0x0004, 0x0005
+    0x0002, 0x0008, 0x0009, 0x0201, 0x000a, 0x000b
 };
 static const WCHAR t2_data5[] = { /* PatchPackage */
-    0x0201, 0x0013, 0x8002
+    0x0201, 0x0019, 0x8002
 };
 static const WCHAR t2_data6[] = { /* InstallExecuteSequence */
-    0x0301, 0x0006, 0x0000, 0x87d1
+    0x0301, 0x000c, 0x0000, 0x87d1
 };
 static const char t2_data7[] = { /* _StringData */
-    "patch.txtPATCHNEWSUMMARYSUBJECTInstallation DatabasePATCHNEWPACKAGECODE{42A14A82-12F8-4E6D-970E-1B4EE7BE28B0}"
-    "PatchFiles#CAB_msitestpropPatchFile_SequencePatchSizeAttributesHeaderStreamRef_PatchPackagePatchIdMedia_"
+    "patch.txtfile.txtfile{327d9640-674f-4b9f-8b8a-547a0f6f8518}MSITESTDIRnewnew featurePATCHNEWSUMMARYSUBJECT"
+    "Installation DatabasePATCHNEWPACKAGECODE{42A14A82-12F8-4E6D-970E-1B4EE7BE28B0}PatchFiles#CAB_msitestprop"
+    "PatchFile_SequencePatchSizeAttributesHeaderStreamRef_PatchPackagePatchIdMedia_"
     "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}MsiPatchHeadersStreamRef"
 };
 static const WCHAR t2_data8[] = { /* _StringPool */
 /* len, refs */
      0,  0,     /* string 0 '' */
      9,  1,     /* string 1 'patch.txt' */
-    22,  1,     /* string 2 'PATCHNEWSUMMARYSUBJECT' */
-    21,  1,     /* string 3 'Installation Database' */
-    19,  1,     /* string 4 'PATCHNEWPACKAGECODE' */
-    38,  1,     /* string 5 '{42A14A82-12F8-4E6D-970E-1B4EE7BE28B0}' */
-    10,  1,     /* string 6 'PatchFiles' */
-    12,  1,     /* string 7 '#CAB_msitest' */
-     4,  1,     /* string 8 'prop' */
-     5,  7,     /* string 9 'Patch' */
-     5,  1,     /* string 10 'File_' */
-     8,  1,     /* string 11 'Sequence' */
-     9,  1,     /* string 12 'PatchSize' */
-    10,  1,     /* string 13 'Attributes' */
-     6,  2,     /* string 14 'Header' */
-    10,  1,     /* string 15 'StreamRef_' */
-    12,  3,     /* string 16 'PatchPackage' */
-     7,  1,     /* string 17 'PatchId' */
-     6,  1,     /* string 18 'Media_' */
-    38,  1,     /* string 19 '{0F96CDC0-4CDF-4304-B283-7B9264889EF7}' */
-    15,  3,     /* string 20 'MsiPatchHeaders' */
-     9,  1      /* string 21 'StreamRef' */
+     8,  3,     /* string 2 'file.txt' */
+     4,  3,     /* string 3 'file' */
+    38,  1,     /* string 4 '{327d9640-674f-4b9f-8b8a-547a0f6f8518}' */
+    10,  2,     /* string 5 'MSITESTDIR' */
+     3,  2,     /* string 6 'new' */
+    11,  1,     /* string 7 'new feature' */
+    22,  1,     /* string 8 'PATCHNEWSUMMARYSUBJECT' */
+    21,  1,     /* string 9 'Installation Database' */
+    19,  1,     /* string 10 'PATCHNEWPACKAGECODE' */
+    38,  1,     /* string 11 '{42A14A82-12F8-4E6D-970E-1B4EE7BE28B0}' */
+    10,  1,     /* string 12 'PatchFiles' */
+    12,  1,     /* string 13 '#CAB_msitest' */
+     4,  1,     /* string 14 'prop' */
+     5,  7,     /* string 15 'Patch' */
+     5,  1,     /* string 16 'File_' */
+     8,  1,     /* string 17 'Sequence' */
+     9,  1,     /* string 18 'PatchSize' */
+    10,  1,     /* string 19 'Attributes' */
+     6,  2,     /* string 20 'Header' */
+    10,  1,     /* string 21 'StreamRef_' */
+    12,  3,     /* string 22 'PatchPackage' */
+     7,  1,     /* string 23 'PatchId' */
+     6,  1,     /* string 24 'Media_' */
+    38,  1,     /* string 25 '{0F96CDC0-4CDF-4304-B283-7B9264889EF7}' */
+    15,  3,     /* string 26 'MsiPatchHeaders' */
+     9,  1      /* string 27 'StreamRef' */
 };
 static const char t2_data9[] = { /* SummaryInformation */
     0xfe, 0xff, 0x00, 0x00, 0x05, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00,
@@ -630,6 +643,16 @@ static const char t2_data9[] = { /* SummaryInformation */
     0x46, 0x34, 0x33, 0x7d, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x2d,
     0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x17, 0x00, 0x27, 0x09
 };
+static const WCHAR t2_data10[] = { /* FeatureComponents */
+    0x0201, 0x0006, 0x0003
+};
+static const WCHAR t2_data11[] = { /* Component */
+    0x0601, 0x0003, 0x0004, 0x0005, 0x8000, 0x0000, 0x0002
+};
+static const WCHAR t2_data12[] = { /* Feature */
+    0x0801, 0x0006, 0x0000, 0x0000, 0x0007, 0x8001, 0x8001, 0x0005,
+    0x8000
+};
 
 static const struct table_data table_transform2_data[] = {
     { t2_name0, t2_data0, sizeof t2_data0 },
@@ -641,10 +664,11 @@ static const struct table_data table_transform2_data[] = {
     { t2_name6, t2_data6, sizeof t2_data6 },
     { t2_name7, t2_data7, sizeof t2_data7 - 1 },
     { t2_name8, t2_data8, sizeof t2_data8 },
-    { t2_name9, t2_data9, sizeof t2_data9 }
+    { t2_name9, t2_data9, sizeof t2_data9 },
+    { t2_name10, t2_data10, sizeof t2_data10 },
+    { t2_name11, t2_data11, sizeof t2_data11 },
+    { t2_name12, t2_data12, sizeof t2_data12 },
 };
-
-#define NUM_TRANSFORM2_TABLES (sizeof table_transform2_data/sizeof table_transform2_data[0])
 
 static void write_tables( IStorage *stg, const struct table_data *tables, UINT num_tables )
 {
@@ -657,7 +681,7 @@ static void write_tables( IStorage *stg, const struct table_data *tables, UINT n
         r = IStorage_CreateStream( stg, tables[i].name, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stm );
         if (FAILED( r ))
         {
-            ok( 0, "failed to create stream 0x%08x\n", r );
+            ok( 0, "failed to create stream %#lx\n", r );
             continue;
         }
 
@@ -680,36 +704,36 @@ static void create_patch( const char *filename )
     const CLSID CLSID_MsiTransform = {0xc1082, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
 
     len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
-    filenameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    filenameW = malloc( len * sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, filename, -1, filenameW, len );
 
     r = StgCreateDocfile( filenameW, mode, 0, &stg );
-    HeapFree( GetProcessHeap(), 0, filenameW );
-    ok( r == S_OK, "failed to create storage 0x%08x\n", r );
+    free( filenameW );
+    ok( r == S_OK, "failed to create storage %#lx\n", r );
     if (!stg)
         return;
 
     r = IStorage_SetClass( stg, &CLSID_MsiPatch );
-    ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
+    ok( r == S_OK, "failed to set storage type %#lx\n", r );
 
-    write_tables( stg, table_patch_data, NUM_PATCH_TABLES );
+    write_tables( stg, table_patch_data, ARRAY_SIZE( table_patch_data ));
 
     r = IStorage_CreateStorage( stg, p_name7, mode, 0, 0, &stg1 );
-    ok( r == S_OK, "failed to create substorage 0x%08x\n", r );
+    ok( r == S_OK, "failed to create substorage %#lx\n", r );
 
     r = IStorage_SetClass( stg1, &CLSID_MsiTransform );
-    ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
+    ok( r == S_OK, "failed to set storage type %#lx\n", r );
 
-    write_tables( stg1, table_transform1_data, NUM_TRANSFORM1_TABLES );
+    write_tables( stg1, table_transform1_data, ARRAY_SIZE( table_transform1_data ));
     IStorage_Release( stg1 );
 
     r = IStorage_CreateStorage( stg, p_name8, mode, 0, 0, &stg2 );
-    ok( r == S_OK, "failed to create substorage 0x%08x\n", r );
+    ok( r == S_OK, "failed to create substorage %#lx\n", r );
 
     r = IStorage_SetClass( stg2, &CLSID_MsiTransform );
-    ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
+    ok( r == S_OK, "failed to set storage type %#lx\n", r );
 
-    write_tables( stg2, table_transform2_data, NUM_TRANSFORM2_TABLES );
+    write_tables( stg2, table_transform2_data, ARRAY_SIZE( table_transform2_data ));
     IStorage_Release( stg2 );
     IStorage_Release( stg );
 }
@@ -737,12 +761,12 @@ static void test_simple_patch( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %u\n", r);
@@ -750,7 +774,7 @@ static void test_simple_patch( void )
     }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
-    ok( size == 1000, "expected 1000, got %u\n", size );
+    ok( size == 1000, "expected 1000, got %lu\n", size );
 
     size = sizeof(install_source);
     r = MsiGetProductInfoA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
@@ -816,7 +840,9 @@ static void test_simple_patch( void )
     }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
-    ok( size == 1002, "expected 1002, got %u\n", size );
+    ok( size == 1002, "expected 1002, got %lu\n", size );
+    size = get_pf_file_size( "msitest\\file.txt" );
+    ok( size == 1000, "expected 1000, got %lu\n", size );
 
     /* show that MsiOpenPackage applies registered patches */
     r = MsiOpenPackageA( path, &hpackage );
@@ -898,6 +924,7 @@ uninstall:
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     ok( !delete_pf( "msitest\\patch.txt", TRUE ), "file not removed\n" );
+    ok( !delete_pf( "msitest\\file.txt", TRUE ), "file not removed\n" );
     ok( !delete_pf( "msitest", FALSE ), "directory not removed\n" );
 
 cleanup:
@@ -935,7 +962,7 @@ static void test_MsiOpenDatabase( void )
     MsiCloseHandle( hdb );
     DeleteFileA( mspfile );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
@@ -972,14 +999,11 @@ static UINT find_entry( MSIHANDLE hdb, const char *table, const char *entry )
 
 static UINT find_entryW( MSIHANDLE hdb, const WCHAR *table, const WCHAR *entry )
 {
-    static const WCHAR fmt[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','%','s','`',' ',
-         'W','H','E','R','E',' ','`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0};
     WCHAR query[0x100];
     MSIHANDLE hview, hrec;
     UINT r;
 
-    wsprintfW( query, fmt, table, entry );
+    wsprintfW( query, L"SELECT * FROM `%s` WHERE `Name` = '%s'", table, entry );
     r = MsiDatabaseOpenViewW( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
@@ -1040,7 +1064,7 @@ static char *get_string( MSIHANDLE hdb, UINT field, const char *query)
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     if (r == ERROR_SUCCESS)
     {
-        UINT size = MAX_PATH;
+        DWORD size = MAX_PATH;
         r = MsiRecordGetStringA( hrec, field, ret, &size );
         ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
         MsiCloseHandle( hrec );
@@ -1057,8 +1081,6 @@ static char *get_string( MSIHANDLE hdb, UINT field, const char *query)
 static void test_system_tables( void )
 {
     static const char patchsource[] = "MSPSRC0F96CDC04CDF4304B2837B9264889EF7";
-    static const WCHAR streamsW[] = {'_','S','t','r','e','a','m','s',0};
-    static const WCHAR CAB_msitest_encodedW[] = {0x3a8c,0x47cb,0x45b0,0x45ec,0x45a8,0x4837,0};
     UINT r;
     char *cr;
     const char *query;
@@ -1078,12 +1100,12 @@ static void test_system_tables( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %d\n", r);
@@ -1164,7 +1186,7 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Streams", "\5SummaryInformation" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
-    r = find_entryW( hdb, streamsW, CAB_msitest_encodedW );
+    r = find_entryW( hdb, L"_Streams", L"\x3a8c\x47cb\x45b0\x45ec\x45a8\x4837" );
     ok( r == ERROR_NO_MORE_ITEMS, "failed to find entry %u\n", r );
 
     query = "SELECT * FROM `_Storages`";
@@ -1220,7 +1242,7 @@ static void test_system_tables( void )
     todo_wine ok( r == 100, "Got %u\n", r );
 
     r = get_integer( hdb, 2, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
-    todo_wine ok( r == 10000, "Got %u\n", r );
+    todo_wine ok( r == 10001, "Got %u\n", r );
 
     r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `VolumeLabel`=\'DISK1\'");
     ok( r == 1, "Got %u\n", r );
@@ -1250,7 +1272,8 @@ cleanup:
 
 static void test_patch_registration( void )
 {
-    UINT r, size;
+    UINT r;
+    DWORD size;
     char buffer[MAX_PATH], patch_code[39];
 
     if (!pMsiApplyPatchA || !pMsiGetPatchInfoExA || !pMsiEnumPatchesExA)
@@ -1267,12 +1290,12 @@ static void test_patch_registration( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %d\n", r);

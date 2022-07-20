@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Russian resource file
  * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
- *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
+ *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -67,7 +67,7 @@ BEGIN
     LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "При установке будет создан профиль пользователя с именем Administrator. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "При установке будет создан профиль пользователя с именем Администратор. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Введите пароль администратора (не более 127 символов).", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -119,9 +119,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Регистрация компонентов", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Установка элементов меню ""Пуск""", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Сохранение параметров настройки", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Удаление временных файлов", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -187,8 +190,8 @@ BEGIN
     IDS_LAYOUTTEXT "Ваш язык и метод ввода текста по умолчанию: %s раскладка клавиатуры"
     IDS_DATETIMETITLE "Дата и время"
     IDS_DATETIMESUBTITLE "Установите правильную дату и время на вашем компьютере."
-    IDS_PROCESSTITLE "Процесс установки"
-    IDS_PROCESSSUBTITLE "Установка ReactOS на ваш компьютер."
+    IDS_PROCESSTITLE "Завершение установки"
+    IDS_PROCESSSUBTITLE "Подождите, пока программа установки выполнит последние шаги."
     IDS_THEMESELECTIONTITLE "Внешний вид"
     IDS_THEMESELECTIONSUBTITLE "Выберите тему, которую вы предпочитаете"
 END
@@ -197,7 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Установка ReactOS"
     IDS_UNKNOWN_ERROR "Неизвестная ошибка"
-    IDS_REGISTERING_COMPONENTS "Регистрация компонентов..."
     IDS_LOADLIBRARY_FAILED "Ошибка LoadLibrary: "
     IDS_GETPROCADDR_FAILED "Ошибка GetProcAddr: "
     IDS_REGSVR_FAILED "Ошибка DllRegisterServer: "
@@ -210,7 +212,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Администратор"
     IDS_MACHINE_OWNER_NAME "Владелец"
 END
 

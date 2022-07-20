@@ -61,7 +61,7 @@ NtGdiAlphaBlend(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -239,7 +239,7 @@ NtGdiTransparentBlt(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -401,7 +401,7 @@ NtGdiMaskBlt(
         return FALSE;
     }
 
-    if (DCDest->dctype == DC_TYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
         DC_UnlockDc(DCDest);
@@ -413,7 +413,7 @@ NtGdiMaskBlt(
     if (UsesSource)
     {
         ASSERT(DCSrc);
-        if (DCSrc->dctype == DC_TYPE_INFO)
+        if (DCSrc->dctype == DCTYPE_INFO)
         {
             DC_UnlockDc(DCDest);
             DC_UnlockDc(DCSrc);
@@ -624,7 +624,7 @@ GreStretchBltMask(
     DCSrc = apObj[1];
     DCMask = apObj[2];
 
-    if (DCDest->dctype == DC_TYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO)
     {
         if(DCSrc) GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         if(DCMask) GDIOBJ_vUnlockObject(&DCMask->BaseObject);
@@ -635,7 +635,7 @@ GreStretchBltMask(
 
     if (UsesSource)
     {
-        if (DCSrc->dctype == DC_TYPE_INFO)
+        if (DCSrc->dctype == DCTYPE_INFO)
         {
             GDIOBJ_vUnlockObject(&DCDest->BaseObject);
             GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
@@ -941,7 +941,7 @@ IntGdiPolyPatBlt(
         return FALSE;
     }
 
-    if (pdc->dctype == DC_TYPE_INFO)
+    if (pdc->dctype == DCTYPE_INFO)
     {
         DC_UnlockDc(pdc);
         /* Yes, Windows really returns TRUE in this case */

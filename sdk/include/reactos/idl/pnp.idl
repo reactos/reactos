@@ -4,6 +4,9 @@
 
 #include <ms-dtyp.idl>
 
+typedef [context_handle] void *PNP_NOTIFY_HANDLE;
+typedef PNP_NOTIFY_HANDLE *PPNP_NOTIFY_HANDLE;
+
 const unsigned long PNP_MAX_STRING_LEN = 32767;
 const unsigned long PNP_MAX_DEVICE_ID_LEN = 200;
 const unsigned long PNP_MAX_GUID_STRING_LEN = 39;
@@ -880,7 +883,7 @@ interface pnp
         [in, size_is(ulNotificationFilterSize)] BYTE *pNotificationFilter,
         [in] DWORD ulNotificationFilterSize,
         [in] DWORD ulFlags,
-        [out] DWORD *pulNotifyData,
+        [out] PPNP_NOTIFY_HANDLE pNotifyHandle,
         [in] DWORD ulProcessId,
         [in] DWORD *pulUnknown9);
 
@@ -889,7 +892,7 @@ interface pnp
     __stdcall
     PNP_UnregisterNotification(
         [in] handle_t hBinding,
-        [in] DWORD ulNotifyData);
+        [in, out] PPNP_NOTIFY_HANDLE pNotifyHandle);
 
 cpp_quote("#if _WIN32_WINNT >= 0x0501")
 

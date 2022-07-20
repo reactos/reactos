@@ -765,6 +765,24 @@ typedef struct _ACCESS_DENIED_ACE {
   $ULONG SidStart;
 } ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
 
+typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  $ULONG Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  $ULONG SidStart;
+} ACCESS_ALLOWED_OBJECT_ACE, *PACCESS_ALLOWED_OBJECT_ACE;
+
+typedef struct _ACCESS_DENIED_OBJECT_ACE {
+  ACE_HEADER  Header;
+  ACCESS_MASK Mask;
+  $ULONG Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  $ULONG SidStart;
+} ACCESS_DENIED_OBJECT_ACE, *PACCESS_DENIED_OBJECT_ACE;
+
 typedef struct _SYSTEM_AUDIT_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;

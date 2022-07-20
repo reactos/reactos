@@ -199,3 +199,9 @@ SceInfAuthUsers = "Utilizadores autenticados"
 SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Convidado"
 SceInfUsers = "Utilizadores"
+
+[Strings.0c04]
+SceInfAuthUsers = "經過身份驗證的使用者"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "來賓"
+SceInfUsers = "使用者"

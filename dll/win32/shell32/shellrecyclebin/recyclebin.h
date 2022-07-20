@@ -131,6 +131,13 @@ EnumerateRecycleBinW(
 #define EnumerateRecycleBin EnumerateRecycleBinA
 #endif
 
+BOOL WINAPI
+GetDeletedFileTypeNameW(
+    IN HANDLE hDeletedFile,
+    OUT LPWSTR pTypeName,
+    IN DWORD BufferSize,
+    OUT LPDWORD RequiredSize OPTIONAL);
+
 /* Gets details about a deleted file
  * hDeletedFile: handle of the deleted file to get details about
  * BufferSize: size of the 'FileDetails' buffer, in bytes
@@ -179,9 +186,7 @@ RestoreFile(
 
 /* COM interface */
 
-#undef INTERFACE
 #define INTERFACE IRecycleBinFile
-
 DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
 {
     BEGIN_INTERFACE
@@ -198,15 +203,15 @@ DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
     STDMETHOD(GetPhysicalFileSize)(THIS_ ULARGE_INTEGER *pPhysicalFileSize) PURE;
     STDMETHOD(GetAttributes)(THIS_ DWORD *pAttributes) PURE;
     STDMETHOD(GetFileName)(THIS_ SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) PURE;
+    STDMETHOD(GetTypeName)(THIS_ SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) PURE;
     STDMETHOD(Delete)(THIS) PURE;
     STDMETHOD(Restore)(THIS) PURE;
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBinEnumList
 
+#define INTERFACE IRecycleBinEnumList
 DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
 {
     BEGIN_INTERFACE
@@ -223,10 +228,9 @@ DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBin
 
+#define INTERFACE IRecycleBin
 DECLARE_INTERFACE_(IRecycleBin, IUnknown)
 {
     BEGIN_INTERFACE
@@ -243,6 +247,7 @@ DECLARE_INTERFACE_(IRecycleBin, IUnknown)
 
     END_INTERFACE
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRecycleBinFile;
 EXTERN_C const IID IID_IRecycleBinEnumList;
@@ -267,6 +272,8 @@ EXTERN_C const IID IID_IRecycleBin;
     (This)->lpVtbl->GetAttributes(This, pAttributes)
 #define IRecycleBinFile_GetFileName(This, BufferSize, Buffer, RequiredSize) \
     (This)->lpVtbl->GetFileName(This, BufferSize, Buffer, RequiredSize)
+#define IRecycleBinFile_GetTypeName(This, BufferSize, Buffer, RequiredSize) \
+    (This)->lpVtbl->GetTypeName(This, BufferSize, Buffer, RequiredSize)
 #define IRecycleBinFile_Delete(This) \
     (This)->lpVtbl->Delete(This)
 #define IRecycleBinFile_Restore(This) \

@@ -9,6 +9,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
+#include "shell32_apitest_sub.h"
 
 #define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
 
@@ -66,6 +67,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
 {
     SHELLEXECUTEINFOW ShellExecInfo;
     BOOL Result;
+
     ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
     ShellExecInfo.cbSize = sizeof(ShellExecInfo);
     ShellExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
@@ -73,6 +75,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     ShellExecInfo.nShow = SW_SHOWNORMAL;
     ShellExecInfo.lpFile = Name;
     ShellExecInfo.lpDirectory = NULL;
+
     Result = ShellExecuteExW(&ShellExecInfo);
     ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %lu\n", wine_dbgstr_w(Name), GetLastError());
     if (ShellExecInfo.hProcess)
@@ -208,6 +211,27 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void CleanupNewlyCreatedWindows(void)
+{
+    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
+    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
+    {
+        BOOL bFound = FALSE;
+        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
+        {
+            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
+            {
+                bFound = TRUE;
+                break;
+            }
+        }
+        if (!bFound)
+            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
+    }
+    free(s_wi1.phwnd);
+    ZeroMemory(&s_wi1, sizeof(s_wi1));
+}
+
 static VOID DoTestEntry(const TEST_ENTRY *pEntry)
 {
     SHELLEXECUTEINFOA info = { sizeof(info) };
@@ -237,26 +261,13 @@ static VOID DoTestEntry(const TEST_ENTRY *pEntry)
 
     WaitForInputIdle(info.hProcess, INFINITE);
 
-    // close newly opened windows
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
-    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
-    {
-        BOOL bFound = FALSE;
-        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
-        {
-            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
-            {
-                bFound = TRUE;
-                break;
-            }
-        }
-        if (!bFound)
-            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
-    }
-    free(s_wi1.phwnd);
-    ZeroMemory(&s_wi1, sizeof(s_wi1));
+    CleanupNewlyCreatedWindows();
 
-    WaitForSingleObject(info.hProcess, INFINITE);
+    if (WaitForSingleObject(info.hProcess, 10 * 1000) == WAIT_TIMEOUT)
+    {
+        TerminateProcess(info.hProcess, 11);
+        ok(0, "Process %s did not quit!\n", pEntry->file);
+    }
     CloseHandle(info.hProcess);
 }
 
@@ -364,8 +375,104 @@ static void DoTestEntries(void)
     free(s_wi0.phwnd);
 }
 
+WCHAR* ExeName = NULL;
+
+BOOL CALLBACK EnumProc(_In_ HWND hwnd, _In_ LPARAM lParam)
+{
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (pid == GetCurrentProcessId() &&
+        IsWindowVisible(hwnd))
+    {
+        WCHAR Buffer[512] = {0};
+
+        GetWindowTextW(hwnd, Buffer, _countof(Buffer) - 1);
+        if (Buffer[0] && StrStrIW(Buffer, ExeName))
+        {
+            HWND* pHwnd = (HWND*)lParam;
+            *pHwnd = hwnd;
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+BOOL WaitAndCloseWindow()
+{
+    HWND hWnd = NULL;
+    for (int n = 0; n < 100; ++n)
+    {
+        Sleep(50);
+
+        EnumWindows(EnumProc, (LPARAM)&hWnd);
+
+        if (hWnd)
+        {
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+            return TRUE;
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static void test_properties()
+{
+    WCHAR Buffer[MAX_PATH * 4];
+
+    CoInitialize(NULL);
+
+    GetModuleFileNameW(NULL, Buffer, _countof(Buffer));
+    SHELLEXECUTEINFOW info = { 0 };
+
+    info.cbSize = sizeof(SHELLEXECUTEINFOW);
+    info.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_FLAG_NO_UI;
+    info.lpVerb = L"properties";
+    info.lpFile = Buffer;
+    info.lpParameters = L"";
+    info.nShow = SW_SHOW;
+
+    BOOL bRet = ShellExecuteExW(&info);
+    ok(bRet, "Failed! (GetLastError(): %d)\n", (int)GetLastError());
+    ok_ptr(info.hInstApp, (HINSTANCE)42);
+
+    ExeName = PathFindFileNameW(Buffer);
+    WCHAR* Extension = PathFindExtensionW(Buffer);
+    if (Extension)
+    {
+        // The inclusion of this depends on the file display settings!
+        *Extension = UNICODE_NULL;
+    }
+
+    if (bRet)
+    {
+        ok(WaitAndCloseWindow(), "Could not find properties window!\n");
+    }
+
+    // Now retry it with the extension cut off
+    bRet = ShellExecuteExW(&info);
+    ok(bRet, "Failed! (GetLastError(): %d)\n", (int)GetLastError());
+    ok_ptr(info.hInstApp, (HINSTANCE)42);
+
+    if (bRet)
+    {
+        ok(WaitAndCloseWindow(), "Could not find properties window!\n");
+    }
+
+    info.lpFile = L"complete garbage, cannot run this!";
+
+    // Now retry it with complete garabage
+    bRet = ShellExecuteExW(&info);
+    ok(bRet == 0, "Succeeded!\n");
+    ok_ptr(info.hInstApp, (HINSTANCE)2);
+}
+
 START_TEST(ShellExecuteEx)
 {
     DoAppPathTest();
     DoTestEntries();
+    test_properties();
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    Sleep(100);
 }

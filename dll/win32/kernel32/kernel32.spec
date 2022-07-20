@@ -688,7 +688,7 @@
 @ stdcall HeapAlloc(long long long) ntdll.RtlAllocateHeap
 @ stdcall HeapCompact(long long)
 @ stdcall HeapCreate(long long long)
-@ stdcall -version=0x351-0x502 HeapCreateTagsW(long long wstr wstr)
+@ stdcall -version=0x351-0x502 HeapCreateTagsW(ptr long wstr wstr)
 @ stdcall HeapDestroy(long)
 @ stdcall -version=0x351-0x502 HeapExtend(long long ptr long)
 @ stdcall HeapFree(long long long) ntdll.RtlFreeHeap
@@ -1224,15 +1224,15 @@
 @ stdcall WriteProfileStringW(wstr wstr wstr)
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall ZombifyActCtx(ptr)
-@ stdcall -arch=x86_64 __C_specific_handler() ntdll.__C_specific_handler
-@ stdcall -arch=x86_64 __chkstk() ntdll.__chkstk
+@ stdcall -arch=x86_64,arm64 __C_specific_handler() ntdll.__C_specific_handler
+@ stdcall -arch=x86_64,arm64 __chkstk() ntdll.__chkstk
 ;@ stdcall -arch=x86_64 __misaligned_access() ntdll.__misaligned_access
 @ stdcall _hread(long ptr long)
 @ stdcall _hwrite(long ptr long)
 @ stdcall _lclose(long)
 @ stdcall _lcreat(str long)
 @ stdcall _llseek(long long long)
-@ stdcall -arch=x86_64 _local_unwind() ntdll._local_unwind
+@ stdcall -arch=x86_64,arm64 _local_unwind() ntdll._local_unwind
 @ stdcall _lopen(str long)
 @ stdcall _lread(long ptr long) _hread
 @ stdcall _lwrite(long ptr long) _hwrite

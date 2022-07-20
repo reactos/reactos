@@ -137,6 +137,9 @@ BEGIN
             MENUITEM "N&iedrig", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "&Zugehörigkeit festlegen...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "&Eigenschaften", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "Übergeordneten Ordner ö&ffnen", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 

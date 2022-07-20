@@ -5,6 +5,8 @@
 
 #define COBJMACROS
 
+#include <shlobj.h>
+
 #include "recyclebin.h"
 #include "recyclebin_v5.h"
 

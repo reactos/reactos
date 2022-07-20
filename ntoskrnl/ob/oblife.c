@@ -110,13 +110,12 @@ ObpDeallocateObject(IN PVOID Object)
             }
 
             /* Return the quota */
-            DPRINT("FIXME: Should return quotas: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
-#if 0
-            PsReturnSharedPoolQuota(ObjectHeader->QuotaBlockCharged,
-                                    PagedPoolCharge,
-                                    NonPagedPoolCharge);
-#endif
-
+            if (Header->QuotaBlockCharged != OBP_SYSTEM_PROCESS_QUOTA)
+            {
+                PsReturnSharedPoolQuota(Header->QuotaBlockCharged,
+                                        PagedPoolCharge,
+                                        NonPagedPoolCharge);
+            }
         }
     }
 

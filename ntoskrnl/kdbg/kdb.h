@@ -1,12 +1,6 @@
 #pragma once
 #include "internal/kd.h"
 
-/* DEFINES *******************************************************************/
-
-/* formerly located in kdbg/kdb_symbols.c */
-#define TAG_KDBS 'SBDK'
-#define TAG_KDBG 'GBDK'
-
 /* TYPES *********************************************************************/
 
 /* from kdb.c */

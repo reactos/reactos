@@ -90,12 +90,12 @@ NtQueryInformationProcess(
     Status = DefaultQueryInfoBufferCheck(ProcessInformationClass,
                                          PsProcessInfoClass,
                                          RTL_NUMBER_OF(PsProcessInfoClass),
+                                         ICIF_PROBE_READ,
                                          ProcessInformation,
                                          ProcessInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         FALSE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtQueryInformationProcess(): Information verification class failed! (Status -> 0x%lx, ProcessInformationClass -> %lx)\n", Status, ProcessInformationClass);
@@ -210,11 +210,11 @@ NtQueryInformationProcess(
                 {
                     /* Get limits from non-default quota block */
                     QuotaLimits->PagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[PagedPool].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsPagedPool].Limit;
                     QuotaLimits->NonPagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[NonPagedPool].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsNonPagedPool].Limit;
                     QuotaLimits->PagefileLimit =
-                        Process->QuotaBlock->QuotaEntry[2].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsPageFile].Limit;
                 }
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2643,12 +2643,12 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     Status = DefaultQueryInfoBufferCheck(ThreadInformationClass,
                                          PsThreadInfoClass,
                                          RTL_NUMBER_OF(PsThreadInfoClass),
+                                         ICIF_PROBE_READ,
                                          ThreadInformation,
                                          ThreadInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         FALSE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtQueryInformationThread(): Information verification class failed! (Status -> 0x%lx , ThreadInformationClass -> %lx)\n", Status, ThreadInformationClass);

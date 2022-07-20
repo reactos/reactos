@@ -845,7 +845,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         HvMarkCellDirty(Context->ChildHive.KeyHive, ChildCell, FALSE);
 
         /* Get the key node */
-        KeyNode = HvGetCell(Context->ChildHive.KeyHive, ChildCell);
+        KeyNode = (PCM_KEY_NODE)HvGetCell(Context->ChildHive.KeyHive, ChildCell);
         if (!KeyNode)
         {
             /* Fail */
@@ -862,7 +862,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         KeyNode->Flags |= KEY_HIVE_ENTRY | KEY_NO_DELETE;
 
         /* Get the link node */
-        KeyNode = HvGetCell(Hive, LinkCell);
+        KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, LinkCell);
         if (!KeyNode)
         {
             /* Fail */
@@ -895,7 +895,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         HvReleaseCell(Hive, LinkCell);
 
         /* Get the parent node */
-        KeyNode = HvGetCell(Hive, Cell);
+        KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
         if (!KeyNode)
         {
             /* Fail */
@@ -1183,7 +1183,7 @@ CmpParseKey(IN PVOID ParseObject,
                     /* Get the new node */
                     Cell = NextCell;
                     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
-                    if (!Node) ASSERT(FALSE);
+                    ASSERT(Node);
 
                     /* Check if this was the last key */
                     if (Last)

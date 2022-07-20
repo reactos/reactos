@@ -1,6 +1,5 @@
 /*
  * Copyright 2005 Dmitry Timoshkov
- * Copyright 2016 Henry Tang Ih
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -33,5 +35,5 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 {
     IDS_NAME "MS-CRAM"
-    IDS_DESCRIPTION "Wine 視頻 1 視頻編解碼器"
+    IDS_DESCRIPTION "Wine 視訊 1 視訊編碼解碼器"
 }

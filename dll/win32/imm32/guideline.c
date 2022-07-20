@@ -9,6 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+// Win: ImmGetGuideLineWorker
 DWORD APIENTRY
 ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsi)
 {

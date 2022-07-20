@@ -1,0 +1,205 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Doitu data eta ordua", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Pertsonalizatu jakinarazpenak...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "&Leihoak teilakatuta", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Leihoak lauza moduan &horizontalki", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Leihoak lauza moduan &bertikalki", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "E&rakutsi mahaigaina", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "Dese&gin", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Ata&za-kudeatzailea", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "Blo&keatu ataza-barra", ID_LOCKTASKBAR
+        MENUITEM "Pr&opietateak", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Programak", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Gogokoak", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "D&okumentoak", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "E&zarpenak", IDM_SETTINGS
+        BEGIN
+            MENUITEM "K&ontrol panela", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Segurtasuna...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Sare Konexioak", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Imprimagailuak eta faxak", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Ataza-barra eta Hasi menua", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        MENUITEM "&Bilatu", IDM_SEARCH, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Laguntza eta zerbitzua", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "E&xekutatu...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "Si&nkronizatu", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Amaitu %s saioa...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Des&konektatu...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Desatrakatu ordenagailua", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Itzali ordenagailua...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Ataza-barra"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Ataza-barraren itxura ", IDC_STATIC, 6,6,240,104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
+    AUTOCHECKBOX "B&lokeatu ataza-barra", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX "Aut&omatikoki ezkutatu ataza-barra", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX "&Eduki ataza-barra beste leihoen gainean", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX "Elkart&u ataza-barrako antzeko botoiak", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX "Era&kutsi abiarazte bizkorra", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    GROUPBOX "Jakinarazpen-area", IDC_STATIC, 6, 114, 240, 98
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
+    AUTOCHECKBOX "Er&lojua", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
+    AUTOCHECKBOX "Erakutsi segunduak", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    LTEXT "Jakinarazpen-area txukun edukitzeko, ezkutatu azkenaldian erabili ez dituzun ikonoak.", IDC_STATIC, 13, 169, 223, 16
+    AUTOCHECKBOX "E&zkutatu ikono inaktiboak", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
+    PUSHBUTTON "&Pertsonalizatu...", IDC_TASKBARPROP_ICONCUST, 184, 191, 50, 14
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Hasi menua"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    AUTORADIOBUTTON "&Hasi menua", IDC_TASKBARPROP_STARTMENU, 7,135,105,10
+    LTEXT "Hautatu menu-estilo hau Interneten, posta elektronikoan, eta programa gogokoetan erraz sartzeko.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20,145,150,24
+    PUSHBUTTON "&Pertsonalizatu...", IDC_TASKBARPROP_STARTMENUCUST, 192,132,53,14
+    AUTORADIOBUTTON "&Hasi Menu klasikoa", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,175,105,10
+    LTEXT "Hautatu aukera hau Windows-en aurreko bertsioetako menu-estiloa erabiltzeko.",IDC_TASKBARPROP_STARTMENUCLASSICTEXT,20,185,150,24
+    PUSHBUTTON "&Pertsonalizatu...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,172,53,14
+END
+
+IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Pertsonalizatu jakinarazpenak"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT            "ReactOS-ek jakinarazpen aktibo eta presazkoen ikonoak bistaratzen ditu, eta inaktiboenak ezkutatu. Jokabide hori aldatzeko aukera dago beheko zerrendako elementuentzat.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Hautatu elementua, eta jakinarazteko modua:", IDC_STATIC, 6, 40, 220, 10
+    CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    PUSHBUTTON       "&Berrezarri lehenetsiak", IDC_TASKBARPROP_NOTIREST, 150, 188, 78, 14
+    DEFPUSHBUTTON    "Ados", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Utzi", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Pertsonalizatu Hasi menu klasikoa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Hasi menua", IDC_STATIC, 8, 7, 218, 114
+    ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
+    LTEXT            "Hasi' menua pertsonaliza dezakezu, elementuak gehitu edo kenduz.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "G&ehitu...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "&Kendu...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "&Aurreratua", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "&Ordenatu", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
+    LTEXT            "Azkenaldian erabilitako dokumentu, programa eta web orrien erregistroak kentzeko, egin klik 'Garbitu'n.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON       "&Garbitu", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "&Hasi' menuko aukera aurreratuak:", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "Hasi-menuko &aukerak", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON    "Ados", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Utzi", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Fitxategi-izenaren abisua"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON    "Alde batera &utzi", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "&Izena aldatu", IDC_FILE_RENAME, 159, 60, 50, 14
+    LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
+    AUTOCHECKBOX     "&Ez egin egiaztapen hau abioan", IDC_NOTCHECK, 7, 62, 139, 10
+    ICON             32515, IDC_STATIC, 7, 7, 21, 20
+    LTEXT            "Badago %s izeneko fitxategi edo karpeta bat ordenagailuan, hainbat aplikazio ondo ez ibiltzea eragin dezakeena. Izena aldatu eta %s jartzeak arazoa konponduko luke. Orain aldatu nahi diozu izena?", IDC_STATIC, 34, 7, 224, 37
+END
+
+IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+CAPTION "Aurreratua"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Hasi-menuko ezarpenak ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Ireki azpimenuak sagua gainean pausatzen dudanean", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "&Nabarmendu azkenaldian instalatutako programak", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT            "H&asi-menuko elementuak:", IDC_STATIC, 7, 53, 238, 8
+    CONTROL          "Hasi-menuko &aukerak", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    GROUPBOX         "Azken dokumentuak ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT            "Hautatu aukera hau azkenaldian irekitako dokumentuetara bizkor joateko. Zerrenda garbitu arren dokumentuak ez dira ezabatuko.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX     "&Zerrendatu azkenaldian irekitako dokumentuak", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON       "&Ezabatu zerrenda", IDC_CLEAR, 182, 168, 55, 14
+END
+
+IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Orokorra"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Hautatu ikono-tamaina bat programentzat", IDC_STATIC, 7, 7, 238, 37
+    ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
+    ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
+    AUTORADIOBUTTON  "Ikono &handiak", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "Ikono &txikiak", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    GROUPBOX         "Programak ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT            "Hasi' menuan gehien erabilitako programetarako lasterbideak daude. Lasterbide-zerrenda garbituz gero programak ez dira ezabatuko.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "Hasi' &menuko programa-kopurua:", IDC_STATIC, 14, 86, 112, 8
+    EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
+    CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
+    PUSHBUTTON       "&Ezabatu zerrenda", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX         "Erakutsi Hasi menuan", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    AUTOCHECKBOX     "&Posta elektronikoa:", IDC_SHOWEMAIL, 14, 157, 37, 10
+    COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "Hasi"
+    IDS_PROPERTIES "Pr&opietateak"
+    IDS_OPEN_ALL_USERS "Ireki &erabiltzaile guztiak"
+    IDS_EXPLORE_ALL_USERS "&Arakatu erabiltzaile guztiak"
+    IDS_STARTUP_ERROR "Sistema ez du exploradorea hasi erregistro ustela dago-eta edo ez dago erabilgarri."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Ataza-barra eta Hasi menuaren propietateak"
+    IDS_RESTORE_ALL "E&rakutsi irekitako leihoak"
+END

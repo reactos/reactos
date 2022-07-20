@@ -3,7 +3,7 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin_v5.c
  * PURPOSE:     Deals with recycle bins of Windows 2000/XP/2003
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "recyclebin_private.h"
@@ -234,7 +234,7 @@ RecycleBin5_RecycleBin5_DeleteFile(
         return HRESULT_FROM_WIN32(ERROR_INVALID_NAME);
     }
 
-    hFile = CreateFileW(szFullName, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
+    hFile = CreateFileW(szFullName, 0, 0, NULL, OPEN_EXISTING, (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_FLAG_BACKUP_SEMANTICS : 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
@@ -500,7 +500,7 @@ RecycleBin5_RecycleBin5_Restore(
         {
             /* Restore file */
             ZeroMemory(&op, sizeof(op));
-            op.wFunc = FO_COPY;
+            op.wFunc = FO_MOVE;
             op.pFrom = pDeletedFileName;
             op.pTo = pDeletedFile->FileNameW;
 

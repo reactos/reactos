@@ -59,7 +59,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         /* Allocate it */
         DebugEvent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(DEBUG_EVENT),
-                                           'EgbD');
+                                           TAG_DEBUG_EVENT);
         if (!DebugEvent) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Set flags */
@@ -192,7 +192,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
             ObDereferenceObject(Process);
 
             /* Free the debug event */
-            ExFreePoolWithTag(DebugEvent, 'EgbD');
+            ExFreePoolWithTag(DebugEvent, TAG_DEBUG_EVENT);
         }
     }
 
@@ -418,7 +418,7 @@ DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
     /* Dereference process and thread and free the event */
     ObDereferenceObject(DebugEvent->Process);
     ObDereferenceObject(DebugEvent->Thread);
-    ExFreePoolWithTag(DebugEvent, 'EgbD');
+    ExFreePoolWithTag(DebugEvent, TAG_DEBUG_EVENT);
 }
 
 VOID

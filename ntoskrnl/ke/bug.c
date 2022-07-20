@@ -28,7 +28,6 @@ ULONG_PTR KiBugCheckData[5];
 
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
-#define TAG_KNMI 'IMNK'
 
 /* Bugzilla Reporting */
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
@@ -612,7 +611,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                     IN PCHAR HardErrMessage OPTIONAL,
                     IN PCHAR Message)
 {
-    CHAR AnsiName[75];
+    CHAR AnsiName[107];
 
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
@@ -677,13 +676,14 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
 
     /* Show the technical Data */
-    sprintf(AnsiName,
-            "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
-            (ULONG)KiBugCheckData[0],
-            (PVOID)KiBugCheckData[1],
-            (PVOID)KiBugCheckData[2],
-            (PVOID)KiBugCheckData[3],
-            (PVOID)KiBugCheckData[4]);
+    RtlStringCbPrintfA(AnsiName,
+                       sizeof(AnsiName),
+                       "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
+                       (ULONG)KiBugCheckData[0],
+                       (PVOID)KiBugCheckData[1],
+                       (PVOID)KiBugCheckData[2],
+                       (PVOID)KiBugCheckData[3],
+                       (PVOID)KiBugCheckData[4]);
     InbvDisplayString(AnsiName);
 
     /* Check if we have a driver*/

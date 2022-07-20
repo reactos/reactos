@@ -703,13 +703,18 @@ NTSTATUS zstd_decompress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32
     output.size = outlen;
     output.pos = 0;
 
-    read = ZSTD_decompressStream(stream, &output, &input);
+    do {
+        read = ZSTD_decompressStream(stream, &output, &input);
 
-    if (ZSTD_isError(read)) {
-        ERR("ZSTD_decompressStream failed: %s\n", ZSTD_getErrorName(read));
-        Status = STATUS_INTERNAL_ERROR;
-        goto end;
-    }
+        if (ZSTD_isError(read)) {
+            ERR("ZSTD_decompressStream failed: %s\n", ZSTD_getErrorName(read));
+            Status = STATUS_INTERNAL_ERROR;
+            goto end;
+        }
+
+        if (output.pos == output.size)
+            break;
+    } while (read != 0);
 
     Status = STATUS_SUCCESS;
 
@@ -726,9 +731,6 @@ NTSTATUS lzo_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t 
     uint8_t* comp_data;
     lzo_stream stream;
     uint32_t* out_size;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif // __REACTOS__
 
     num_pages = (unsigned int)sector_align(inlen, LZO_PAGE_SIZE) / LZO_PAGE_SIZE;
 
@@ -759,11 +761,7 @@ NTSTATUS lzo_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t 
     stream.in = inbuf;
     stream.out = comp_data + (2 * sizeof(uint32_t));
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < num_pages; i++) {
-#else
-    for (i = 0; i < num_pages; i++) {
-#endif // __REACTOS__
         uint32_t* pagelen = (uint32_t*)(stream.out - sizeof(uint32_t));
 
         stream.inlen = (uint32_t)min(LZO_PAGE_SIZE, outlen - (i * LZO_PAGE_SIZE));
@@ -886,10 +884,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
     LIST_ENTRY* le;
     uint64_t address, extaddr;
     void* csum = NULL;
-#ifdef __REACTOS__
-    int32_t i2;
-    uint32_t i3, j;
-#endif // __REACTOS__
 
     if (fcb->Vcb->options.compress_type != 0 && fcb->prop_compression == PropCompression_None)
         type = fcb->Vcb->options.compress_type;
@@ -929,11 +923,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (!NT_SUCCESS(Status)) {
             ERR("add_calc_job_comp returned %08lx\n", Status);
 
-#ifndef __REACTOS__
             for (unsigned int j = 0; j < i; j++) {
-#else
-            for (j = 0; j < i; j++) {
-#endif // __REACTOS__
                 KeWaitForSingleObject(&parts[j].cj->event, Executive, KernelMode, false, NULL);
                 ExFreePool(parts[j].cj);
             }
@@ -945,7 +935,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
 
     Status = STATUS_SUCCESS;
 
-#ifndef __REACTOS__
     for (int i = num_parts - 1; i >= 0; i--) {
         calc_thread_main(fcb->Vcb, parts[i].cj);
 
@@ -954,35 +943,18 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (!NT_SUCCESS(parts[i].cj->Status))
             Status = parts[i].cj->Status;
     }
-#else
-    for (i2 = num_parts - 1; i2 >= 0; i2--) {
-        calc_thread_main(fcb->Vcb, parts[i].cj);
-
-        KeWaitForSingleObject(&parts[i2].cj->event, Executive, KernelMode, false, NULL);
-
-        if (!NT_SUCCESS(parts[i2].cj->Status))
-            Status = parts[i2].cj->Status;
-    }
-#endif // __REACTOS__
 
     if (!NT_SUCCESS(Status)) {
         ERR("calc job returned %08lx\n", Status);
 
-#ifndef __REACTOS__
         for (unsigned int i = 0; i < num_parts; i++) {
             ExFreePool(parts[i].cj);
         }
-#else
-        for (i3 = 0; i3 < num_parts; i3++) {
-            ExFreePool(parts[i3].cj);
-        }
-#endif // __REACTOS__
 
         ExFreePool(parts);
         return Status;
     }
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < num_parts; i++) {
         if (parts[i].cj->space_left >= fcb->Vcb->superblock.sector_size) {
             parts[i].compression_type = type;
@@ -993,7 +965,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
             else if (type == BTRFS_COMPRESSION_ZSTD)
                 fcb->Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD;
 
-            if ((parts[i].outlen % fcb->Vcb->superblock.sector_size) != 0) {
+            if ((parts[i].outlen & (fcb->Vcb->superblock.sector_size - 1)) != 0) {
                 unsigned int newlen = (unsigned int)sector_align(parts[i].outlen, fcb->Vcb->superblock.sector_size);
 
                 RtlZeroMemory(parts[i].buf + parts[i].outlen, newlen - parts[i].outlen);
@@ -1008,33 +980,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         buflen += parts[i].outlen;
         ExFreePool(parts[i].cj);
     }
-#else
-    for (i3 = 0; i3 < num_parts; i3++) {
-        if (parts[i3].cj->space_left >= fcb->Vcb->superblock.sector_size) {
-            parts[i3].compression_type = type;
-            parts[i3].outlen = parts[i3].inlen - parts[i3].cj->space_left;
-
-            if (type == BTRFS_COMPRESSION_LZO)
-                fcb->Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO;
-            else if (type == BTRFS_COMPRESSION_ZSTD)
-                fcb->Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD;
-
-            if ((parts[i3].outlen % fcb->Vcb->superblock.sector_size) != 0) {
-                unsigned int newlen = (unsigned int)sector_align(parts[i3].outlen, fcb->Vcb->superblock.sector_size);
-
-                RtlZeroMemory(parts[i3].buf + parts[i3].outlen, newlen - parts[i3].outlen);
-
-                parts[i3].outlen = newlen;
-            }
-        } else {
-            parts[i3].compression_type = BTRFS_COMPRESSION_NONE;
-            parts[i3].outlen = (unsigned int)sector_align(parts[i3].inlen, fcb->Vcb->superblock.sector_size);
-        }
-
-        buflen += parts[i3].outlen;
-        ExFreePool(parts[i3].cj);
-    }
-#endif // __REACTOS__
 
     // check if first 128 KB of file is incompressible
 
@@ -1083,7 +1028,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
                 if (find_data_address_in_chunk(fcb->Vcb, c2, buflen, &address)) {
                     c = c2;
                     c->used += buflen;
-                    space_list_subtract(c, false, address, buflen, rollback);
+                    space_list_subtract(c, address, buflen, rollback);
                     release_chunk_lock(c2, fcb->Vcb);
                     break;
                 }
@@ -1118,7 +1063,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (find_data_address_in_chunk(fcb->Vcb, c2, buflen, &address)) {
             c = c2;
             c->used += buflen;
-            space_list_subtract(c, false, address, buflen, rollback);
+            space_list_subtract(c, address, buflen, rollback);
         }
 
         release_chunk_lock(c2, fcb->Vcb);
@@ -1149,7 +1094,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
     // calculate csums if necessary
 
     if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-        unsigned int sl = buflen / fcb->Vcb->superblock.sector_size;
+        unsigned int sl = buflen >> fcb->Vcb->sector_shift;
 
         csum = ExAllocatePoolWithTag(PagedPool, sl * fcb->Vcb->csum_size, ALLOC_TAG);
         if (!csum) {
@@ -1198,7 +1143,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         ed2->num_bytes = parts[i].inlen;
 
         if (csum) {
-            csum2 = ExAllocatePoolWithTag(PagedPool, parts[i].outlen * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size, ALLOC_TAG);
+            csum2 = ExAllocatePoolWithTag(PagedPool, (parts[i].outlen * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift, ALLOC_TAG);
             if (!csum2) {
                 ERR("out of memory\n");
                 ExFreePool(ed);
@@ -1207,8 +1152,8 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            RtlCopyMemory(csum2, (uint8_t*)csum + ((extaddr - address) * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size),
-                          parts[i].outlen * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size);
+            RtlCopyMemory(csum2, (uint8_t*)csum + (((extaddr - address) * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift),
+                          (parts[i].outlen * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift);
         } else
             csum2 = NULL;
 

@@ -4,7 +4,7 @@
  * Copyright 1999, 2000 Juergen Schmied <juergen.schmied@debitel.net>
  * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
  * Copyright 2006 Robert Reif
- * Copyright 2006 Hervé Poussineau
+ * Copyright 2006 HervÃ© Poussineau
  *
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/advapi32/wine/security.c
@@ -3475,25 +3475,99 @@ ConvertSidToStringSidA(PSID Sid,
 /*
  * @unimplemented
  */
-BOOL WINAPI
-CreateProcessWithLogonW(LPCWSTR lpUsername,
-                        LPCWSTR lpDomain,
-                        LPCWSTR lpPassword,
-                        DWORD dwLogonFlags,
-                        LPCWSTR lpApplicationName,
-                        LPWSTR lpCommandLine,
-                        DWORD dwCreationFlags,
-                        LPVOID lpEnvironment,
-                        LPCWSTR lpCurrentDirectory,
-                        LPSTARTUPINFOW lpStartupInfo,
-                        LPPROCESS_INFORMATION lpProcessInformation)
+BOOL
+WINAPI
+CreateProcessWithLogonW(
+    _In_ LPCWSTR lpUsername,
+    _In_opt_ LPCWSTR lpDomain,
+    _In_ LPCWSTR lpPassword,
+    _In_ DWORD dwLogonFlags,
+    _In_opt_ LPCWSTR lpApplicationName,
+    _Inout_opt_ LPWSTR lpCommandLine,
+    _In_ DWORD dwCreationFlags,
+    _In_opt_ LPVOID lpEnvironment,
+    _In_opt_ LPCWSTR lpCurrentDirectory,
+    _In_ LPSTARTUPINFOW lpStartupInfo,
+    _Out_ LPPROCESS_INFORMATION lpProcessInformation)
 {
-    FIXME("%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p stub\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
+    LPWSTR pszStringBinding = NULL;
+    handle_t hBinding = NULL;
+    SECL_REQUEST Request;
+    SECL_RESPONSE Response;
+    RPC_STATUS Status;
+
+    TRACE("CreateProcessWithLogonW(%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p)\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
     debugstr_w(lpPassword), dwLogonFlags, debugstr_w(lpApplicationName),
     debugstr_w(lpCommandLine), dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory),
     lpStartupInfo, lpProcessInformation);
 
-    return FALSE;
+    Status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\seclogon",
+                                      NULL,
+                                      &pszStringBinding);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcStringBindingCompose returned 0x%x\n", Status);
+        SetLastError(Status);
+        return FALSE;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    Status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcBindingFromStringBinding returned 0x%x\n", Status);
+    }
+
+    Status = RpcStringFreeW(&pszStringBinding);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcStringFree returned 0x%x\n", Status);
+    }
+
+    Request.Username = (LPWSTR)lpUsername;
+    Request.Domain = (LPWSTR)lpDomain;
+    Request.Password = (LPWSTR)lpPassword;
+    Request.ApplicationName = (LPWSTR)lpApplicationName;
+    Request.CommandLine = (LPWSTR)lpCommandLine;
+    Request.CurrentDirectory = (LPWSTR)lpCurrentDirectory;
+
+    Request.dwLogonFlags = dwLogonFlags;
+    Request.dwCreationFlags = dwCreationFlags;
+
+    Response.ulError = ERROR_SUCCESS;
+
+    RpcTryExcept
+    {
+        SeclCreateProcessWithLogonW(hBinding, &Request, &Response);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        WARN("Exception: %lx\n", RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (hBinding)
+    {
+        Status = RpcBindingFree(&hBinding);
+        if (Status != RPC_S_OK)
+        {
+            WARN("RpcBindingFree returned 0x%x\n", Status);
+        }
+
+        hBinding = NULL;
+    }
+
+    TRACE("Response.ulError %lu\n", Response.ulError);
+    if (Response.ulError != ERROR_SUCCESS)
+        SetLastError(Response.ulError);
+
+    TRACE("CreateProcessWithLogonW() done\n");
+
+    return (Response.ulError == ERROR_SUCCESS);
 }
 
 BOOL WINAPI CreateProcessWithTokenW(HANDLE token, DWORD logon_flags, LPCWSTR application_name, LPWSTR command_line,

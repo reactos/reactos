@@ -36,6 +36,243 @@ DWORD PipeSend( HANDLE CommPipe, COMM_DHCP_REPLY *Reply ) {
     return Success ? Written : -1;
 }
 
+/**
+ * @brief
+ * Creates a security descriptor for the DHCP pipe
+ * service.
+ *
+ * @param[out] SecurityDescriptor
+ * A pointer to an allocated security descriptor
+ * for the DHCP pipe.
+ *
+ * @return
+ * ERROR_SUCCESS is returned if the function has
+ * successfully created the descriptor otherwise
+ * a Win32 error code is returned.
+ *
+ * @remarks
+ * Both admins and local system are given full power
+ * over the DHCP pipe whereas authenticated users
+ * and network operators can only read over this pipe.
+ * They can also execute it.
+ */
+DWORD CreateDhcpPipeSecurity( PSECURITY_DESCRIPTOR *SecurityDescriptor ) {
+    DWORD ErrCode;
+    PACL Dacl;
+    ULONG DaclSize, RelSDSize = 0;
+    PSECURITY_DESCRIPTOR AbsSD = NULL, RelSD = NULL;
+    PSID AuthenticatedUsersSid = NULL, NetworkOpsSid = NULL, AdminsSid = NULL, SystemSid = NULL;
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_AUTHENTICATED_USER_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &AuthenticatedUsersSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to create Authenticated Users SID (error code %d)\n", GetLastError());
+        return GetLastError();
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &NetworkOpsSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to create Network Ops SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &AdminsSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to create Admins SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &SystemSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to create Local System SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    AbsSD = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SECURITY_DESCRIPTOR));
+    if (!AbsSD)
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to allocate absolute security descriptor!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!InitializeSecurityDescriptor(AbsSD, SECURITY_DESCRIPTOR_REVISION))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to initialize absolute security descriptor (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AuthenticatedUsersSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(NetworkOpsSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid);
+
+    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
+    if (!Dacl)
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to allocate DACL!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to initialize DACL (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_READ | GENERIC_EXECUTE,
+                             AuthenticatedUsersSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up ACE for Authenticated Users SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_READ | GENERIC_EXECUTE,
+                             NetworkOpsSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up ACE for Network Ops SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             AdminsSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up ACE for Admins SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             SystemSid))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up ACE for Local System SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorDacl(AbsSD, TRUE, Dacl, FALSE))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up DACL to absolute security descriptor (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorOwner(AbsSD, AdminsSid, FALSE))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up owner to absolute security descriptor (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorGroup(AbsSD, SystemSid, FALSE))
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to set up group to absolute security descriptor (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(AbsSD, NULL, &RelSDSize) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Unexpected error code (error code %d -- must be ERROR_INSUFFICIENT_BUFFER)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    RelSD = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RelSDSize);
+    if (RelSD == NULL)
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to allocate relative SD!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(AbsSD, RelSD, &RelSDSize) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        DPRINT1("CreateDhcpPipeSecurity(): Failed to allocate relative SD, buffer too smal (expected size %lu)\n", RelSDSize);
+        ErrCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Quit;
+    }
+
+    *SecurityDescriptor = RelSD;
+    ErrCode = ERROR_SUCCESS;
+
+Quit:
+    if (ErrCode != ERROR_SUCCESS)
+    {
+        if (RelSD)
+        {
+            HeapFree(GetProcessHeap(), 0, RelSD);
+        }
+    }
+
+    if (AuthenticatedUsersSid)
+    {
+        FreeSid(AuthenticatedUsersSid);
+    }
+
+    if (NetworkOpsSid)
+    {
+        FreeSid(NetworkOpsSid);
+    }
+
+    if (AdminsSid)
+    {
+        FreeSid(AdminsSid);
+    }
+
+    if (SystemSid)
+    {
+        FreeSid(SystemSid);
+    }
+
+    if (Dacl)
+    {
+        HeapFree(GetProcessHeap(), 0, Dacl);
+    }
+
+    if (AbsSD)
+    {
+        HeapFree(GetProcessHeap(), 0, AbsSD);
+    }
+
+    return ErrCode;
+}
+
 DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
     DWORD BytesRead;
     COMM_DHCP_REQ Req;
@@ -45,8 +282,21 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
     HANDLE CommPipe;
     OVERLAPPED Overlapped = {0};
     DWORD dwError;
+    SECURITY_ATTRIBUTES SecurityAttributes;
+    PSECURITY_DESCRIPTOR DhcpPipeSD = NULL;
 
     DPRINT("PipeThreadProc(%p)\n", Parameter);
+
+    dwError = CreateDhcpPipeSecurity(&DhcpPipeSD);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DbgPrint("DHCP: Could not create security descriptor for pipe\n");
+        return FALSE;
+    }
+
+    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    SecurityAttributes.lpSecurityDescriptor = DhcpPipeSD;
+    SecurityAttributes.bInheritHandle = FALSE;
 
     CommPipe = CreateNamedPipeW
         ( DHCP_PIPE_NAME,
@@ -56,7 +306,8 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
           COMM_PIPE_OUTPUT_BUFFER,
           COMM_PIPE_INPUT_BUFFER,
           COMM_PIPE_DEFAULT_TIMEOUT,
-          NULL );
+          &SecurityAttributes );
+    HeapFree(GetProcessHeap(), 0, DhcpPipeSD);
     if (CommPipe == INVALID_HANDLE_VALUE)
     {
         DbgPrint("DHCP: Could not create named pipe\n");

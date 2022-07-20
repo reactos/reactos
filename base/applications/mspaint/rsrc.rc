@@ -10,8 +10,9 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <commctrl.h>
 
-#include "definitions.h"
+#include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Paint"
 #define REACTOS_STR_INTERNAL_NAME     "mspaint"
@@ -127,6 +128,9 @@ IDI_VERTSKEW ICON "icons/vertskew.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

@@ -14,6 +14,8 @@ $include(ppc/ke.h)
 $include(mips/ke.h)
 #elif defined(_M_ARM)
 $include(arm/ke.h)
+#elif defined(_M_ARM64)
+$include(arm64/ke.h)
 #else
 #error Unknown Architecture
 #endif

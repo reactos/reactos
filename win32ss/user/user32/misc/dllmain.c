@@ -223,8 +223,8 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallOBMFromKernel,
     User32CallLPKFromKernel,
     User32CallUMPDFromKernel,
+    User32CallImmProcessKeyFromKernel,
 };
-
 
 
 VOID
@@ -550,7 +550,7 @@ DllMain(
                 {
                     WCHAR szImmFile[MAX_PATH];
                     InitializeImmEntryTable();
-                    GetImmFileName(szImmFile, _countof(szImmFile));
+                    User32GetImmFileName(szImmFile, _countof(szImmFile));
                     hImm32 = GetModuleHandleW(szImmFile);
                 }
 
@@ -711,4 +711,17 @@ NTSTATUS WINAPI User32CallUMPDFromKernel(PVOID Arguments, ULONG ArgumentLength)
        Status = STATUS_NO_MEMORY;   
     }
     return ZwCallbackReturn( pktOut, cbSize, Status );
+}
+
+NTSTATUS WINAPI
+User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    PIMMPROCESSKEY_CALLBACK_ARGUMENTS Common = Arguments;
+    DWORD Result = IMM_FN(ImmProcessKey)(Common->hWnd,
+                                         Common->hKL,
+                                         Common->vKey,
+                                         Common->lParam,
+                                         Common->dwHotKeyID);
+
+    return ZwCallbackReturn(&Result, sizeof(DWORD), STATUS_SUCCESS);
 }

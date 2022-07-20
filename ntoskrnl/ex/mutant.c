@@ -239,12 +239,12 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                          ExMutantInfoClass,
                                          sizeof(ExMutantInfoClass) /
                                          sizeof(ExMutantInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          MutantInformation,
                                          MutantInformationLength,
                                          ResultLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if(!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);

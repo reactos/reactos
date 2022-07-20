@@ -17,7 +17,10 @@ HKR, , Icon,           0, "-18"
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 UnknownClassName = "Other Devices"
 
 [Strings.0404]
@@ -30,37 +33,31 @@ UnknownClassName = "Ostatní zařízení"
 UnknownClassName = "Andere Geräte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 UnknownClassName = "Otros dispositivos"
 
 [Strings.040D]
-ReactOS = "צוות ReactOS"
 UnknownClassName = "התקנים אחרים"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 UnknownClassName = "Nieznane urządzenie"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 UnknownClassName = "Alte dispozitive"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 UnknownClassName = "Другие устройства"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 UnknownClassName = "Diğer Aygıtlar"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 UnknownClassName = "Інші пристрої"
 
 [Strings.0804]
-ReactOS = "ReactOS Team"
 UnknownClassName = "其它设备"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 UnknownClassName = "Outros dispositivos"
+
+[Strings.0C04]
+UnknownClassName = "其他裝置"

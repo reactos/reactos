@@ -37,6 +37,7 @@
 #define FSCTL_BTRFS_READ_SEND_BUFFER CTL_CODE(FILE_DEVICE_UNKNOWN, 0x847, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 #define FSCTL_BTRFS_RESIZE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x848, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_BTRFS_UNLOAD CTL_CODE(FILE_DEVICE_UNKNOWN, 0x849, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define FSCTL_BTRFS_GET_CSUM_INFO CTL_CODE(FILE_DEVICE_UNKNOWN, 0x84a, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 typedef struct {
     uint64_t subvol;
@@ -279,3 +280,10 @@ typedef struct {
     uint64_t device;
     uint64_t size;
 } btrfs_resize;
+
+typedef struct {
+    uint8_t csum_type;
+    uint8_t csum_length;
+    uint64_t num_sectors;
+    uint8_t data[1];
+} btrfs_csum_info;

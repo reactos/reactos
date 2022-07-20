@@ -11,6 +11,7 @@ list(APPEND SOURCE
     rpcserver.c
     sas.c
     screensaver.c
+    security.c
     setup.c
     shutdown.c
     winlogon.c

@@ -13,8 +13,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 BOOL
@@ -38,7 +36,6 @@ zoomTo(int newZoom, int mouseX, int mouseY)
 
     toolsModel.SetZoom(newZoom);
 
-    selectionWindow.ShowWindow(SW_HIDE);
     imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
@@ -54,7 +51,7 @@ void CMainWindow::alignChildrenToMainWindow()
     RECT clientRect;
     GetClientRect(&clientRect);
 
-    if (toolBoxContainer.IsWindowVisible())
+    if (::IsWindowVisible(toolBoxContainer))
     {
         x = 56;
         w = clientRect.right - 56;
@@ -64,7 +61,7 @@ void CMainWindow::alignChildrenToMainWindow()
         x = 0;
         w = clientRect.right;
     }
-    if (paletteWindow.IsWindowVisible())
+    if (::IsWindowVisible(paletteWindow))
     {
         y = 49;
         h = clientRect.bottom - 49;
@@ -76,17 +73,24 @@ void CMainWindow::alignChildrenToMainWindow()
     }
 
     RECT statusBarRect0;
-    SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
     int statusBarBorders[3];
-    SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
+        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    }
     int statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
 
-    scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
-    paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
+    if (scrollboxWindow.IsWindow())
+        scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
+    if (paletteWindow.IsWindow())
+        paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
 }
 
 void CMainWindow::saveImage(BOOL overwrite)
 {
+    imageArea.finishDrawing();
+
     if (isAFile && overwrite)
     {
         imageModel.SaveImage(filepathname);
@@ -94,7 +98,7 @@ void CMainWindow::saveImage(BOOL overwrite)
     else if (GetSaveFileName(&sfn) != 0)
     {
         imageModel.SaveImage(sfn.lpstrFile);
-        _tcsncpy(filepathname, sfn.lpstrFile, SIZEOF(filepathname));
+        _tcsncpy(filepathname, sfn.lpstrFile, _countof(filepathname));
         CString strTitle;
         strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
         SetWindowText(strTitle);
@@ -118,8 +122,8 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
             TCHAR programname[20];
             TCHAR shouldEnlargePromptText[100];
 
-            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, SIZEOF(shouldEnlargePromptText));
+            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, _countof(programname));
+            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
 
             switch (MessageBox(shouldEnlargePromptText, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
             {
@@ -154,7 +158,57 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
     placeSelWin();
     selectionWindow.ShowWindow(SW_SHOW);
-    ForceRefreshSelectionContents();
+    selectionWindow.ForceRefreshSelectionContents();
+}
+
+LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    INT zDelta = (SHORT)HIWORD(wParam);
+
+    if (::GetAsyncKeyState(VK_CONTROL) < 0)
+    {
+        if (zDelta < 0)
+        {
+            if (toolsModel.GetZoom() > MIN_ZOOM)
+                zoomTo(toolsModel.GetZoom() / 2, 0, 0);
+        }
+        else if (zDelta > 0)
+        {
+            if (toolsModel.GetZoom() < MAX_ZOOM)
+                zoomTo(toolsModel.GetZoom() * 2, 0, 0);
+        }
+    }
+    else
+    {
+        UINT nCount = 3;
+        if (::GetAsyncKeyState(VK_SHIFT) < 0)
+        {
+#ifndef SPI_GETWHEELSCROLLCHARS
+    #define SPI_GETWHEELSCROLLCHARS 0x006C  // Needed for pre-NT6 PSDK
+#endif
+            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+            for (UINT i = 0; i < nCount; ++i)
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+        }
+        else
+        {
+            SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
+            for (UINT i = 0; i < nCount; ++i)
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+        }
+    }
+
+    return 0;
 }
 
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -162,7 +216,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     TCHAR droppedfile[MAX_PATH];
 
     HDROP hDrop = (HDROP)wParam;
-    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
+    DragQueryFile(hDrop, 0, droppedfile, _countof(droppedfile));
     DragFinish(hDrop);
 
     ConfirmSave() && DoLoadImageFile(m_hWnd, droppedfile, TRUE);
@@ -186,6 +240,8 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 BOOL CMainWindow::ConfirmSave()
 {
+    imageArea.finishDrawing();
+
     if (imageModel.IsImageSaved())
         return TRUE;
 
@@ -221,7 +277,9 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = GetMenu();
-    BOOL trueSelection = (selectionWindow.IsWindowVisible() && ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL trueSelection =
+        (::IsWindowVisible(selectionWindow) &&
+         ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     switch (lParam)
     {
         case 0: /* File menu */
@@ -273,17 +331,17 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             CloseClipboard();
             break;
         case 2: /* View menu */
-                CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(toolBoxContainer.IsWindowVisible()));
-                CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(paletteWindow.IsWindowVisible()));
-                CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
-                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(textEditWindow.IsWindowVisible()));
-                EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
+            CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
+            CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(::IsWindowVisible(paletteWindow)));
+            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
+            CheckMenuItem(menu, IDM_FORMATICONBAR, CHECKED_IF(::IsWindowVisible(fontsDialog)));
+            EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
-                CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
-                CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
+            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
+            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
             break;
         case 3: /* Image menu */
-            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionWindow.IsWindowVisible()));
+            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(::IsWindowVisible(selectionWindow)));
             CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
             break;
     }
@@ -296,16 +354,19 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(toolsModel.GetZoom() == 4000));
     CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(toolsModel.GetZoom() == 8000));
 
-    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == 1));
-    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == 2));
+    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == PAL_MODERN));
+    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
     return 0;
 }
 
 LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
-    SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
+        ::SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    }
     alignChildrenToMainWindow();
     Invalidate(TRUE);
     return 0;
@@ -350,12 +411,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         else
         {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    imageArea.SendMessage(nMsg, wParam, lParam);
-                    break;
-            }
+            imageArea.SendMessage(nMsg, wParam, lParam);
         }
     }
     return 0;
@@ -371,6 +427,13 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // Disable commands while dragging mouse
+    if (imageArea.drawing && ::GetCapture())
+    {
+        ATLTRACE("locking!\n");
+        return 0;
+    }
+
     switch (LOWORD(wParam))
     {
         case IDM_HELPINFO:
@@ -378,8 +441,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
             TCHAR infotitle[100];
             TCHAR infotext[200];
-            LoadString(hProgInstance, IDS_INFOTITLE, infotitle, SIZEOF(infotitle));
-            LoadString(hProgInstance, IDS_INFOTEXT, infotext, SIZEOF(infotext));
+            LoadString(hProgInstance, IDS_INFOTITLE, infotitle, _countof(infotitle));
+            LoadString(hProgInstance, IDS_INFOTEXT, infotext, _countof(infotext));
             ShellAbout(m_hWnd, infotitle, infotext, paintIcon);
             DeleteObject(paintIcon);
             break;
@@ -470,17 +533,40 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+                break;
+            if (selectionWindow.IsWindowVisible())
+            {
+                if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
+                    toolsModel.GetActiveTool() == TOOL_FREESEL)
+                {
+                    imageArea.cancelDrawing();
+                    break;
+                }
+            }
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.cancelDrawing();
+                break;
+            }
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+                break;
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.finishDrawing();
+                break;
+            }
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
             OpenClipboard();
             EmptyClipboard();
-            SetClipboardData(CF_BITMAP, CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
             CloseClipboard();
             break;
         case IDM_EDITCUT:
@@ -499,19 +585,32 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITDELETESELECTION:
         {
-            /* remove selection window and already painted content using undo */
-            imageModel.Undo();
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_FREESEL:
+                case TOOL_RECTSEL:
+                    imageModel.DeleteSelection();
+                    break;
+
+                case TOOL_TEXT:
+                    imageArea.cancelDrawing();
+                    break;
+                default:
+                    break;
+            }
             break;
         }
         case IDM_EDITSELECTALL:
         {
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            {
+                textEditWindow.SendMessage(EM_SETSEL, 0, -1);
+                break;
+            }
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
-            toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
-            //TODO: do this properly
-            startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            whilePaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            endPaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.selectAll();
+            imageArea.Invalidate(TRUE);
             break;
         }
         case IDM_EDITCOPYTO:
@@ -534,10 +633,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 paletteModel.SetFgColor(choosecolor.rgbResult);
             break;
         case IDM_COLORSMODERNPALETTE:
-            paletteModel.SelectPalette(1);
+            paletteModel.SelectPalette(PAL_MODERN);
             break;
         case IDM_COLORSOLDPALETTE:
-            paletteModel.SelectPalette(2);
+            paletteModel.SelectPalette(PAL_OLDTYPE);
             break;
         case IDM_IMAGEINVERTCOLORS:
         {
@@ -553,26 +652,34 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.FlipHorizontally();
                     else
                         imageModel.FlipHorizontally();
                     break;
                 case 2: /* flip vertically */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.FlipVertically();
                     else
                         imageModel.FlipVertically();
                     break;
                 case 3: /* rotate 90 degrees */
+                    if (::IsWindowVisible(selectionWindow))
+                        selectionModel.RotateNTimes90Degrees(1);
+                    else
+                        imageModel.RotateNTimes90Degrees(1);
                     break;
                 case 4: /* rotate 180 degrees */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.RotateNTimes90Degrees(2);
                     else
                         imageModel.RotateNTimes90Degrees(2);
                     break;
                 case 5: /* rotate 270 degrees */
+                    if (::IsWindowVisible(selectionWindow))
+                        selectionModel.RotateNTimes90Degrees(3);
+                    else
+                        imageModel.RotateNTimes90Degrees(3);
                     break;
             }
             break;
@@ -588,8 +695,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
-                imageModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
-                                       stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                if (::IsWindowVisible(selectionWindow))
+                {
+                    selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                               stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                }
+                else
+                {
+                    imageModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                           stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                }
             }
             break;
         }
@@ -597,15 +712,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.Insert((HBITMAP) CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            imageModel.Insert(CopyDIBImage(selectionModel.GetBitmap()));
             break;
 
         case IDM_VIEWTOOLBOX:
-            toolBoxContainer.ShowWindow(toolBoxContainer.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            toolBoxContainer.ShowWindow(::IsWindowVisible(toolBoxContainer) ? SW_HIDE : SW_SHOW);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWCOLORPALETTE:
-            paletteWindow.ShowWindow(paletteWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            paletteWindow.ShowWindow(::IsWindowVisible(paletteWindow) ? SW_HIDE : SW_SHOW);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWSTATUSBAR:
@@ -613,7 +728,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_FORMATICONBAR:
-            textEditWindow.ShowWindow(textEditWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            if (toolsModel.GetActiveTool() == TOOL_TEXT)
+            {
+                if (!fontsDialog.IsWindow())
+                {
+                    fontsDialog.Create(mainWindow);
+                }
+                registrySettings.ShowTextTool = !::IsWindowVisible(fontsDialog);
+                fontsDialog.ShowWindow(registrySettings.ShowTextTool ? SW_SHOW : SW_HIDE);
+                fontsDialog.SendMessage(DM_REPOSITION, 0, 0);
+            }
             break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;

@@ -61,7 +61,8 @@ UpdateScrollbox()
     scrollboxWindow.GetWindowRect(&tempRect);
     sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
 
-    imageArea.GetClientRect(&tempRect);
+    if (imageArea.IsWindow())
+        imageArea.GetClientRect(&tempRect);
     sizeImageArea = CSize(tempRect.Width(), tempRect.Height());
     sizeImageArea += CSize(GRIP_SIZE * 2, GRIP_SIZE * 2);
 
@@ -87,14 +88,17 @@ UpdateScrollbox()
     si.nPage  = sizeScrollBox.cy;
     scrollboxWindow.SetScrollInfo(SB_VERT, &si);
 
-    scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                                -scrollboxWindow.GetScrollPos(SB_VERT),
-                                sizeImageArea.cx, sizeImageArea.cy, TRUE);
+    if (scrlClientWindow.IsWindow())
+    {
+        scrlClientWindow.MoveWindow(
+            -scrollboxWindow.GetScrollPos(SB_HORZ), -scrollboxWindow.GetScrollPos(SB_VERT),
+            sizeImageArea.cx, sizeImageArea.cy, TRUE);
+    }
 }
 
 LRESULT CScrollboxWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (m_hWnd == scrollboxWindow.m_hWnd)
+    if (m_hWnd && m_hWnd == scrollboxWindow.m_hWnd)
     {
         UpdateScrollbox();
     }
@@ -176,6 +180,27 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    pointSP = 0;    // resets the point-buffer of the polygon and bezier functions
+
+    switch (toolsModel.GetActiveTool())
+    {
+        case TOOL_BEZIER:
+        case TOOL_SHAPE:
+            if (ToolBase::pointSP != 0)
+            {
+                toolsModel.OnCancelDraw();
+                imageArea.Invalidate();
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions
     return 0;
+}
+
+LRESULT CScrollboxWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }

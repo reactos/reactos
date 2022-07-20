@@ -6,8 +6,8 @@
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
-#include "rapps.h"
 
+#include "rapps.h"
 #include "misc.h"
 
 static HANDLE hLog = NULL;
@@ -197,7 +197,7 @@ VOID InitLogs()
     }
 
     dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
-        EVENTLOG_INFORMATION_TYPE;
+             EVENTLOG_INFORMATION_TYPE;
 
     if ((key.SetStringValue(L"EventMessageFile",
                             szPath,
@@ -215,7 +215,6 @@ VOID InitLogs()
     }
 }
 
-
 VOID FreeLogs()
 {
     if (hLog)
@@ -223,7 +222,6 @@ VOID FreeLogs()
         DeregisterEventSource(hLog);
     }
 }
-
 
 BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
@@ -249,7 +247,7 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
     BOOL bHasSucceded = FALSE;
     ATL::CRegKey key;
     ATL::CStringW szVersion;
-    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%ls") + szRegName;
+    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + szRegName;
 
     if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                  szPath.GetString(),

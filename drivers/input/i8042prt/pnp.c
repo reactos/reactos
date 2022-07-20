@@ -676,6 +676,7 @@ i8042Pnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PFDO_DEVICE_EXTENSION FdoExtension;
     PIO_STACK_LOCATION Stack;
     ULONG MinorFunction;
     I8042_DEVICE_TYPE DeviceType;
@@ -684,7 +685,8 @@ i8042Pnp(
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     MinorFunction = Stack->MinorFunction;
-    DeviceType = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Type;
+    FdoExtension = DeviceObject->DeviceExtension;
+    DeviceType = FdoExtension->Type;
 
     switch (MinorFunction)
     {
@@ -695,12 +697,19 @@ i8042Pnp(
             /* Call lower driver (if any) */
             if (DeviceType != PhysicalDeviceObject)
             {
-                Status = ForwardIrpAndWait(DeviceObject, Irp);
-                if (NT_SUCCESS(Status))
-                    Status = i8042PnpStartDevice(
-                        DeviceObject,
-                        Stack->Parameters.StartDevice.AllocatedResources,
-                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = STATUS_UNSUCCESSFUL;
+
+                if (IoForwardIrpSynchronously(FdoExtension->LowerDevice, Irp))
+                {
+                    Status = Irp->IoStatus.Status;
+                    if (NT_SUCCESS(Status))
+                    {
+                        Status = i8042PnpStartDevice(
+                            DeviceObject,
+                            Stack->Parameters.StartDevice.AllocatedResources,
+                            Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                    }
+                }
             }
             else
                 Status = STATUS_SUCCESS;

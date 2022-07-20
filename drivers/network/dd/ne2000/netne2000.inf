@@ -62,14 +62,21 @@ LoadOrderGroup = NDIS
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+RealtekMfg = "Realtek Semiconductor Co., Ltd."
+
+; Localizable
 GenericMfg = "(Generic network cards)"
 *PNP80D6.DeviceDesc = "NE2000-compatible Ethernet Adapter"
 
-RealtekMfg = "Realtek Semiconductor Co., Ltd."
 *RTL8019.DeviceDesc = "Realtek RTL8019AS ISA Ethernet Adapter"
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 PCI Ethernet Adapter"
+
+[Strings.0404]
+GenericMfg = "（標準網路卡）"
+*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網路卡"
 
 [Strings.0405]
 GenericMfg = "(Generické síťové karty)"
@@ -80,8 +87,6 @@ GenericMfg = "(Generische Netzwerkkarten)"
 *PNP80D6.DeviceDesc = "NE2000 kompatible Netzwerkkarte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 GenericMfg = "(Tarjeta de red estándar)"
 *PNP80D6.DeviceDesc = "Compatible con NE2000"
 
@@ -94,8 +99,6 @@ GenericMfg = "(標準 ネットワーク カード)"
 *PNP80D6.DeviceDesc = "NE2000 互換"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 GenericMfg = "(Standardowe karty sieciowe)"
 *PNP80D6.DeviceDesc = "Karta sieciowa kompatybilna z NE2000"
 
@@ -107,14 +110,11 @@ GenericMfg = "(Adaptadores de rede padrão)"
 *PNP80D6.DeviceDesc = "Compatível com NE2000"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 
 GenericMfg = "(placă de rețea generică)"
 *PNP80D6.DeviceDesc = "Compatibile cu NE2000"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 GenericMfg = "(Стандартные сетевые адаптеры)"
 *PNP80D6.DeviceDesc = "NE2000-совместимый сетевой адаптер"
 
@@ -123,14 +123,10 @@ GenericMfg = "(Generické sieťové karty)"
 *PNP80D6.DeviceDesc = "NE2000 kompatibilná sieťová karta"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 GenericMfg = "(Genel Ağ Kartları)"
 *PNP80D6.DeviceDesc = "NE2000 Uyumlu"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
-
 GenericMfg = "(Стандартні мережеві адаптери)"
 *PNP80D6.DeviceDesc = "NE2000-сумісний мережевий адаптер"
 
@@ -139,5 +135,9 @@ GenericMfg = "(Standartinės tinklo plokštės)"
 *PNP80D6.DeviceDesc = "Su NE2000 suderinama tinklo plokštė"
 
 [Strings.0804]
-GenericMfg = "(通用网卡)"
-*PNP80D6.DeviceDesc = "NE2000 兼容"
+GenericMfg = "（通用网卡）"
+*PNP80D6.DeviceDesc = "与 NE2000 兼容的以太网适配器"
+
+[Strings.0c04]
+GenericMfg = "（標準網絡卡）"
+*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網絡卡"

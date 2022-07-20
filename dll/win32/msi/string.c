@@ -29,7 +29,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -78,7 +77,7 @@ static string_table *init_stringtable( int entries, UINT codepage )
 
     st = msi_alloc( sizeof (string_table) );
     if( !st )
-        return NULL;    
+        return NULL;
     if( entries < 1 )
         entries = 1;
 
@@ -86,7 +85,7 @@ static string_table *init_stringtable( int entries, UINT codepage )
     if( !st->strings )
     {
         msi_free( st );
-        return NULL;    
+        return NULL;
     }
 
     st->sorted = msi_alloc( sizeof (UINT) * entries );
@@ -140,13 +139,11 @@ static int st_find_free_entry( string_table *st )
             return i;
 
     /* dynamically resize */
-    sz = st->maxcount + 1 + st->maxcount/2;
-    p = msi_realloc_zero( st->strings, sz * sizeof(struct msistring) );
-    if( !p )
-        return -1;
+    sz = st->maxcount + 1 + st->maxcount / 2;
+    if (!(p = msi_realloc( st->strings, sz * sizeof(*p) ))) return -1;
+    memset( p + st->maxcount, 0, (sz - st->maxcount) * sizeof(*p) );
 
-    s = msi_realloc( st->sorted, sz*sizeof(UINT) );
-    if( !s )
+    if (!(s = msi_realloc( st->sorted, sz * sizeof(*s) )))
     {
         msi_free( p );
         return -1;
@@ -209,9 +206,9 @@ static void insert_string_sorted( string_table *st, UINT string_id )
 }
 
 static void set_st_entry( string_table *st, UINT n, WCHAR *str, int len, USHORT refcount,
-                          enum StringPersistence persistence )
+                          BOOL persistent )
 {
-    if (persistence == StringPersistent)
+    if (persistent)
     {
         st->strings[n].persistent_refcount = refcount;
         st->strings[n].nonpersistent_refcount = 0;
@@ -233,7 +230,7 @@ static void set_st_entry( string_table *st, UINT n, WCHAR *str, int len, USHORT 
 
 static UINT string2id( const string_table *st, const char *buffer, UINT *id )
 {
-    DWORD sz;
+    int sz;
     UINT r = ERROR_INVALID_PARAMETER;
     LPWSTR str;
 
@@ -245,8 +242,7 @@ static UINT string2id( const string_table *st, const char *buffer, UINT *id )
         return ERROR_SUCCESS;
     }
 
-    sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
-    if( sz <= 0 )
+    if (!(sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 )))
         return r;
     str = msi_alloc( sz*sizeof(WCHAR) );
     if( !str )
@@ -258,7 +254,7 @@ static UINT string2id( const string_table *st, const char *buffer, UINT *id )
     return r;
 }
 
-static int add_string( string_table *st, UINT n, const char *data, UINT len, USHORT refcount, enum StringPersistence persistence )
+static int add_string( string_table *st, UINT n, const char *data, UINT len, USHORT refcount, BOOL persistent )
 {
     LPWSTR str;
     int sz;
@@ -275,7 +271,7 @@ static int add_string( string_table *st, UINT n, const char *data, UINT len, USH
     {
         if (string2id( st, data, &n ) == ERROR_SUCCESS)
         {
-            if (persistence == StringPersistent)
+            if (persistent)
                 st->strings[n].persistent_refcount += refcount;
             else
                 st->strings[n].nonpersistent_refcount += refcount;
@@ -300,11 +296,11 @@ static int add_string( string_table *st, UINT n, const char *data, UINT len, USH
     MultiByteToWideChar( st->codepage, 0, data, len, str, sz );
     str[sz] = 0;
 
-    set_st_entry( st, n, str, sz, refcount, persistence );
+    set_st_entry( st, n, str, sz, refcount, persistent );
     return n;
 }
 
-int msi_add_string( string_table *st, const WCHAR *data, int len, enum StringPersistence persistence )
+int msi_add_string( string_table *st, const WCHAR *data, int len, BOOL persistent )
 {
     UINT n;
     LPWSTR str;
@@ -312,14 +308,14 @@ int msi_add_string( string_table *st, const WCHAR *data, int len, enum StringPer
     if( !data )
         return 0;
 
-    if (len < 0) len = strlenW( data );
+    if (len < 0) len = lstrlenW( data );
 
     if( !data[0] && !len )
         return 0;
 
     if (msi_string2id( st, data, len, &n) == ERROR_SUCCESS )
     {
-        if (persistence == StringPersistent)
+        if (persistent)
             st->strings[n].persistent_refcount++;
         else
             st->strings[n].nonpersistent_refcount++;
@@ -339,7 +335,7 @@ int msi_add_string( string_table *st, const WCHAR *data, int len, enum StringPer
     memcpy( str, data, len*sizeof(WCHAR) );
     str[len] = 0;
 
-    set_st_entry( st, n, str, len, 1, persistence );
+    set_st_entry( st, n, str, len, 1, persistent );
     return n;
 }
 
@@ -349,7 +345,7 @@ const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len )
     if( id == 0 )
     {
         if (len) *len = 0;
-        return szEmpty;
+        return L"";
     }
     if( id >= st->maxcount )
         return NULL;
@@ -405,7 +401,7 @@ UINT msi_string2id( const string_table *st, const WCHAR *str, int len, UINT *id 
 {
     int i, c, low = 0, high = st->sortcount - 1;
 
-    if (len < 0) len = strlenW( str );
+    if (len < 0) len = lstrlenW( str );
 
     while (low <= high)
     {
@@ -467,12 +463,12 @@ HRESULT msi_init_string_table( IStorage *stg )
     UINT ret;
 
     /* create the StringPool stream... add the zero string to it*/
-    ret = write_stream_data(stg, szStringPool, zero, sizeof zero, TRUE);
+    ret = write_stream_data(stg, L"_StringPool", zero, sizeof zero, TRUE);
     if (ret != ERROR_SUCCESS)
         return E_FAIL;
 
     /* create the StringData stream... make it zero length */
-    ret = write_stream_data(stg, szStringData, NULL, 0, TRUE);
+    ret = write_stream_data(stg, L"_StringData", NULL, 0, TRUE);
     if (ret != ERROR_SUCCESS)
         return E_FAIL;
 
@@ -487,10 +483,10 @@ string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref )
     UINT r, datasize = 0, poolsize = 0, codepage;
     DWORD i, count, offset, len, n, refs;
 
-    r = read_stream_data( stg, szStringPool, TRUE, (BYTE **)&pool, &poolsize );
+    r = read_stream_data( stg, L"_StringPool", TRUE, (BYTE **)&pool, &poolsize );
     if( r != ERROR_SUCCESS)
         goto end;
-    r = read_stream_data( stg, szStringData, TRUE, (BYTE **)&data, &datasize );
+    r = read_stream_data( stg, L"_StringData", TRUE, (BYTE **)&data, &datasize );
     if( r != ERROR_SUCCESS)
         goto end;
 
@@ -546,17 +542,17 @@ string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref )
             break;
         }
 
-        r = add_string( st, n, data+offset, len, refs, StringPersistent );
+        r = add_string( st, n, data+offset, len, refs, TRUE );
         if( r != n )
-            ERR("Failed to add string %d\n", n );
+            ERR( "Failed to add string %lu\n", n );
         n++;
         offset += len;
     }
 
     if ( datasize != offset )
-        ERR("string table load failed! (%08x != %08x), please report\n", datasize, offset );
+        ERR( "string table load failed! (%u != %lu), please report\n", datasize, offset );
 
-    TRACE("Loaded %d strings\n", count);
+    TRACE( "loaded %lu strings\n", count );
 
 end:
     msi_free( pool );
@@ -654,11 +650,11 @@ UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *byt
     }
 
     /* write the streams */
-    r = write_stream_data( storage, szStringData, data, datasize, TRUE );
+    r = write_stream_data( storage, L"_StringData", data, datasize, TRUE );
     TRACE("Wrote StringData r=%08x\n", r);
     if( r )
         goto err;
-    r = write_stream_data( storage, szStringPool, pool, poolsize, TRUE );
+    r = write_stream_data( storage, L"_StringPool", pool, poolsize, TRUE );
     TRACE("Wrote StringPool r=%08x\n", r);
     if( r )
         goto err;

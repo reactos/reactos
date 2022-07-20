@@ -38,7 +38,7 @@ list(APPEND SOURCE
 add_library(fastfat MODULE ${SOURCE} fastfat.rc)
 set_module_type(fastfat kernelmodedriver)
 target_link_libraries(fastfat ${PSEH_LIB} memcmp)
-if(GDB AND NOT CLANG)
+if(GDB AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(fastfat PRIVATE -O0)
 endif()
 add_importlibs(fastfat ntoskrnl hal)

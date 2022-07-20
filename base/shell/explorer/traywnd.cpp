@@ -200,8 +200,10 @@ public:
 
     VOID Initialize()
     {
-        // HACK & FIXME: CORE-17505
-        SubclassWindow(m_hWnd);
+        // HACK & FIXME: CORE-18016
+        HWND hWnd = m_hWnd;
+        m_hWnd = NULL;
+        SubclassWindow(hWnd);
 
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
@@ -216,8 +218,6 @@ public:
         UpdateSize();
     }
 
-    // Hack:
-    // Use DECLARE_WND_SUPERCLASS instead!
     HWND Create(HWND hwndParent)
     {
         WCHAR szStartCaption[32];
@@ -231,6 +231,7 @@ public:
 
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_LEFT | BS_VCENTER;
 
+        // HACK & FIXME: CORE-18016
         m_hWnd = CreateWindowEx(
             0,
             WC_BUTTON,
@@ -2686,6 +2687,7 @@ ChangePos:
             {
                 CComPtr<IContextMenu> ctxMenu;
                 CStartMenuBtnCtxMenu_CreateInstance(this, m_hWnd, &ctxMenu);
+                ctxMenu->AddRef();
                 TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
@@ -3327,6 +3329,7 @@ public:
 
         if (TrayWnd->m_TrayBandSite != NULL)
         {
+            pcm.Release();
             if (FAILED(TrayWnd->m_TrayBandSite->AddContextMenus(
                 hPopup,
                 indexMenu,
@@ -3336,7 +3339,7 @@ public:
                 &pcm)))
             {
                 WARN("AddContextMenus failed.\n");
-                pcm = NULL;
+                pcm.Release();
             }
         }
 

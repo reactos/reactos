@@ -3,8 +3,9 @@
  * PROJECT:         FreeLoader
  * FILE:            boot/freeldr/freeldr/ui/noui.c
  * PURPOSE:         No Text UI interface
- * PROGRAMMERS:     Hervé Poussineau
+ * PROGRAMMERS:     HervÃ© Poussineau
  */
+
 #ifndef _M_ARM
 #include <freeldr.h>
 
@@ -33,16 +34,39 @@ VOID NoUiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertSty
 {
 }
 
-VOID NoUiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
+VOID
+NoUiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
+    printf("%s\n", Text);
 }
 
-VOID NoUiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+VOID
+NoUiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
+    if (MaxNumChars == 0)
+        MaxNumChars = (ULONG)strlen(Text);
+    printf("%*s\n", MaxNumChars, Text);
 }
 
-VOID NoUiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
+VOID
+NoUiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
+    printf("%s\n", TextString);
 }
 
 VOID NoUiDrawStatusText(PCSTR StatusText)
@@ -76,13 +100,36 @@ VOID NoUiMessageBoxCritical(PCSTR MessageText)
     MachConsGetCh();
 }
 
-VOID NoUiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+/* Loading Progress-Bar Functions ********************************************/
+
+VOID
+NoUiSetProgressBarText(
+    _In_ PCSTR ProgressText)
 {
 }
 
-VOID NoUiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+NoUiTickProgressBar(
+    _In_ ULONG SubPercentTimes100)
 {
 }
+
+VOID
+NoUiDrawProgressBarCenter(
+    _In_ PCSTR ProgressText)
+{
+}
+
+VOID
+NoUiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText)
+{
+}
+
 
 BOOLEAN NoUiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
@@ -131,7 +178,10 @@ NoUiDisplayMenu(
     return TRUE;
 }
 
-VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo)
+VOID
+NoUiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
 }
-#endif
+
+#endif // _M_ARM

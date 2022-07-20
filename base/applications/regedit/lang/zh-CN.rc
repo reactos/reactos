@@ -1,4 +1,12 @@
-/* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
+/*
+ * PROJECT:     ReactOS Registry Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2007 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
+ *              Copyright 2014 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Li Keqing <forucial@icloud.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -161,9 +169,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑字符串"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N)：", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V)：", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", IDOK, 142, 64, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 196, 64, 50, 14
@@ -174,9 +182,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑多字符串"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N)：", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V)：", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "确定", IDOK, 142, 154, 50, 14
@@ -188,9 +196,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑二进制数值"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N)：", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V)：", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
     DEFPUSHBUTTON "确定", IDOK, 142, 154, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 196, 154, 50, 14
@@ -201,9 +209,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑 DWORD 值"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N)：", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V)：", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "基数", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "十六进制(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
@@ -228,19 +236,19 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "资源"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
+    LTEXT "DMA：", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "中断:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "中断：", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "内存:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "内存：", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "端口:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "端口：", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "设备特定的数据:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "设备特定的数据：", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "用法", IDC_STATIC, 10, 219, 125, 39
@@ -248,13 +256,13 @@ BEGIN
     LTEXT "共享", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
     LTEXT "专用设备", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
     LTEXT "专用的驱动程序", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "接口类型:", IDC_STATIC, 144, 220, 58, 8
+    RTEXT "接口类型：", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "总线编号:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "总线编号：", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "版本:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "版本：", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "修订版本:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "修订版本：", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "确定", IDOK, 92, 263, 40, 14
     PUSHBUTTON "数据...(&D)", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
@@ -323,19 +331,19 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "错误"
     IDS_WARNING "警告"
-    IDS_BAD_KEY "不能查询键 '%s'"
-    IDS_BAD_VALUE "不能查询值 '%s'"
-    IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键 (%ld)"
-    IDS_TOO_BIG_VALUE "数值过大 (%ld)"
+    IDS_BAD_KEY "不能查询键“%s”"
+    IDS_BAD_VALUE "不能查询值“%s”"
+    IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键（%ld）"
+    IDS_TOO_BIG_VALUE "数值过大（%ld）"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\n注册表编辑器将删除找到得空字符串。"
-    IDS_QUERY_DELETE_KEY_ONE "确实要删除这个键吗?"
-    IDS_QUERY_DELETE_KEY_MORE "确实要删除这些键吗?"
+    IDS_QUERY_DELETE_KEY_ONE "确实要删除这个键吗？"
+    IDS_QUERY_DELETE_KEY_MORE "确实要删除这些键吗？"
     IDS_QUERY_DELETE_KEY_CONFIRM "确认删除键"
-    IDS_QUERY_DELETE_ONE "确实要删除此值吗?"
-    IDS_QUERY_DELETE_MORE "确实要删除这些值吗?"
+    IDS_QUERY_DELETE_ONE "确实要删除此值吗？"
+    IDS_QUERY_DELETE_MORE "确实要删除这些值吗？"
     IDS_QUERY_DELETE_CONFIRM "确认删除值"
     IDS_ERR_DELVAL_CAPTION "删除值时出错。"
-    IDS_ERR_DELETEVALUE "无法删除所有指定的值!"
+    IDS_ERR_DELETEVALUE "无法删除所有指定的值！"
     IDS_ERR_RENVAL_CAPTION "重命名值时产生错误"
     IDS_ERR_RENVAL_TOEMPTY "注册表编辑器无法重命名 %s。指定的值名为空。请输入其他名称，再试一次。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "确认恢复键"
@@ -346,16 +354,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY "(零长度的二进位值)"
-    IDS_DEFAULT_VALUE_NAME "(默认)"
-    IDS_VALUE_NOT_SET "(值未设置)"
-    IDS_UNKNOWN_TYPE "未知类型: (0x%lx)"
+    IDS_BINARY_EMPTY "（零长度的二进位值）"
+    IDS_DEFAULT_VALUE_NAME "（默认）"
+    IDS_VALUE_NOT_SET "（值未设置）"
+    IDS_UNKNOWN_TYPE "未知类型：（0x%lx）"
     IDS_MY_COMPUTER "我的计算机"
     IDS_IMPORT_REG_FILE "导入注册表文件"
     IDS_EXPORT_REG_FILE "导出注册表文件"
     IDS_LOAD_HIVE "加载配置单元"
     IDS_UNLOAD_HIVE "卸载配置单元"
-    IDS_INVALID_DWORD "(无效的 DWORD 值)"
+    IDS_INVALID_DWORD "（无效的 DWORD 值）"
 END
 
 STRINGTABLE
@@ -398,16 +406,16 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "展开"
     IDS_COLLAPSE "折叠"
-    IDS_GOTO_SUGGESTED_KEY "转到(&G)'%s'"
+    IDS_GOTO_SUGGESTED_KEY "转到(&G)“%s”"
     IDS_FINISHEDFIND "注册表搜索完毕。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任 '%s' 中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续?"
-    IDS_IMPORT_OK "'%s' 中包含的键和值已经被成功添加到注册表中。"
-    IDS_IMPORT_ERROR "无法导入 '%s' ： 打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
-    IDS_EXPORT_ERROR "无法导出 '%s' ： 创建或写入文件时出错。可能磁盘或文件系统有错误。"
+    IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任“%s”中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续？"
+    IDS_IMPORT_OK "“%s”中包含的键和值已经被成功添加到注册表中。"
+    IDS_IMPORT_ERROR "无法导入“%s”：打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
+    IDS_EXPORT_ERROR "无法导出“%s”：创建或写入文件时出错。可能磁盘或文件系统有错误。"
 END
 
 STRINGTABLE
@@ -458,9 +466,9 @@ BEGIN
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
     IDS_BUS_PROCESSORINTERNAL "处理器内部"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
-    IDS_BUS_PNPISABUS "PnP-ISA Bus"
-    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_INTERNALPOWERBUS "内部电源总线"
+    IDS_BUS_PNPISABUS "即插即用 ISA 总线"
+    IDS_BUS_PNPBUS "即插即用总线"
     IDS_BUS_UNKNOWNTYPE "未知的接口类型"
 END
 
@@ -496,7 +504,7 @@ FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 129, 7, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 129, 24, 50, 14
-    LTEXT "收藏名(&F):", IDC_STATIC, 7, 7, 70, 10
+    LTEXT "收藏名(&F)：", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
@@ -509,7 +517,7 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 7, 114, 50, 14
     CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "选择收藏(&S):", IDC_STATIC, 7, 7, 99, 12
+    LTEXT "选择收藏(&S)：", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 275, 82
@@ -520,7 +528,7 @@ BEGIN
     DEFPUSHBUTTON "查找下一个(&F)", IDOK, 205, 7, 55, 14
     PUSHBUTTON "取消", IDCANCEL, 205, 24, 55, 14
     GROUPBOX "查看", IDC_STATIC, 7, 25, 63, 51
-    LTEXT "查找目标(&N):", IDC_STATIC, 7, 8, 50, 10
+    LTEXT "查找目标(&N)：", IDC_STATIC, 7, 8, 50, 10
     EDITTEXT IDC_FINDWHAT, 55, 7, 142, 13, ES_AUTOHSCROLL
     CONTROL "键(&K)", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8

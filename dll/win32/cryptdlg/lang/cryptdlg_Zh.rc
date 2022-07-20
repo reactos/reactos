@@ -1,8 +1,7 @@
 /*
- * cryptdlg dll resources
+ * cryptdlg dll Chinese resources
  *
  * Copyright 2008 Juan Lang
- * Copyright 2016 Henry Tang Ih
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -44,14 +46,14 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 {
     IDS_CERT_POLICY "憑證原則"
-    IDS_POLICY_ID "策略識別碼: "
-    IDS_POLICY_QUALIFIER_INFO "政策限定詞資訊"
-    IDS_POLICY_QUALIFIER_ID "政策限定詞 ID="
+    IDS_POLICY_ID "原則識別碼： "
+    IDS_POLICY_QUALIFIER_INFO "原則限定元資訊"
+    IDS_POLICY_QUALIFIER_ID "原則限定元識別碼="
     IDS_CPS "CPS"/*認證做法說明 */
     IDS_USER_NOTICE "使用者通知"
-    IDS_QUALIFIER "限定詞"
-    IDS_NOTICE_REF "請注意參考"
+    IDS_QUALIFIER "限定元"
+    IDS_NOTICE_REF "通知參考"
     IDS_ORGANIZATION "組織="
-    IDS_NOTICE_NUM "注意到人數="
-    IDS_NOTICE_TEXT "請注意文本="
+    IDS_NOTICE_NUM "通知數字="
+    IDS_NOTICE_TEXT "通知文字="
 }

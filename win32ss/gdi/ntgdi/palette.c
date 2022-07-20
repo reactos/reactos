@@ -615,7 +615,7 @@ NtGdiResizePalette(
     XLATEOBJ *NewXlateObj = (int*) HeapReAlloc(GetProcessHeap(), 0, XlateObj, cEntries * sizeof(int));
     if(NewXlateObj == NULL)
     {
-      ERR("Can not resize logicalToSystem -- out of memory!");
+      ERR("Can not resize logicalToSystem -- out of memory!\n");
       GDI_ReleaseObj( hPal );
       return FALSE;
     }
@@ -770,7 +770,7 @@ IntGdiRealizePalette(HDC hDC)
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
     DPRINT1("RealizePalette unimplemented for %s\n", 
-            (pdc->dctype == DC_TYPE_MEMORY ? "memory managed DCs" : "device DCs"));
+            (pdc->dctype == DCTYPE_MEMORY ? "memory managed DCs" : "device DCs"));
 
 cleanup:
     DC_UnlockDc(pdc);

@@ -15,7 +15,6 @@ DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 #define _SCSIPORT_
 
-#include <ntddk.h>
 #include <srb.h>
 #include <scsi.h>
 #include <ntddscsi.h>
@@ -1653,7 +1652,7 @@ LoadBootDeviceDriver(VOID)
     Success = PeLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
     if (!Success)
     {
-        /* That's OK. File simply doesn't exist */
+        /* That's OK, file simply doesn't exist */
         return ESUCCESS;
     }
 
@@ -1661,7 +1660,11 @@ LoadBootDeviceDriver(VOID)
     Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
                                           "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Success)
+    {
+        /* Cleanup and bail out */
+        MmFreeMemory(ImageBase);
         return EIO;
+    }
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains ScsiPort* exports, imported by ntbootdd.sys */
@@ -1669,19 +1672,26 @@ LoadBootDeviceDriver(VOID)
                                           "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Success)
     {
-        RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
+        /* Cleanup and bail out */
+        PeLdrFreeDataTableEntry(BootDdDTE);
+        MmFreeMemory(ImageBase);
         return EIO;
     }
 
     /* Fix imports */
     Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        PeLdrFreeDataTableEntry(FreeldrDTE);
+        PeLdrFreeDataTableEntry(BootDdDTE);
+        MmFreeMemory(ImageBase);
+        return EIO;
+    }
 
-    /* Now unlinkt the DTEs, they won't be valid later */
+    /* Now unlink the DTEs, they won't be valid later */
     RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
     RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
-
-    if (!Success)
-        return EIO;
 
     /* Change imports to PA */
     ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(BootDdDTE->DllBase),
@@ -1705,7 +1715,7 @@ LoadBootDeviceDriver(VOID)
                                                 NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
                                                 "FreeLdr",
                                                 TRUE,
-                                                TRUE, /* in case of conflict still return success */
+                                                TRUE, /* In case of conflict still return success */
                                                 FALSE);
     if (!Success)
         return EIO;

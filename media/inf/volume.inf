@@ -39,18 +39,35 @@ HKR, , SilentInstall,   0, "1"
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 VolumeClassName = "Storage volumes"
 GenericMfg = "(Generic storage volumes)"
 STORAGE\Volume.DeviceDesc = "Storage volume"
 
 [Strings.0404]
-VolumeClassName = "儲存磁碟區"
-GenericMfg = "(標準儲存磁碟區)"
-STORAGE\Volume.DeviceDesc = "儲存磁碟區"
+VolumeClassName = "存放磁碟區"
+GenericMfg = "（標準存放磁碟區）"
+STORAGE\Volume.DeviceDesc = "存放磁碟區"
+
+[Strings.0419]
+VolumeClassName = "Тома хранения"
+GenericMfg = "(Стандартные тома хранения)"
+STORAGE\Volume.DeviceDesc = "Том хранения"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 VolumeClassName = "Volumes de armazenamento"
 GenericMfg = "(Volumes de armazenamento genérico)"
 STORAGE\Volume.DeviceDesc = "Volume de armazenamento"
+
+[Strings.0804]
+VolumeClassName = "存储卷"
+GenericMfg = "（通用存储卷）"
+STORAGE\Volume.DeviceDesc = "存储卷"
+
+[Strings.0c04]
+VolumeClassName = "存放磁碟區"
+GenericMfg = "（標準存放磁碟區）"
+STORAGE\Volume.DeviceDesc = "存放磁碟區"

@@ -160,16 +160,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Visualização", -1, 7, 6, 237, 105, WS_GROUP
-    LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45
-    LTEXT "Definição do valor ppp:", -1, 14, 65, 222, 9
-    COMBOBOX IDC_FONTSIZE_COMBO, 14, 75, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 91, 223, 12
-    GROUPBOX "Compatibilidade", -1, 7, 115, 237, 100
-     LTEXT "Alguns programas podem não funcionar correctamente se não reiniciar o computador após alterar as definições de visualização.\n\nApós alterar as definições de visualização:", -1, 12, 130, 228, 34
-    AUTORADIOBUTTON "&Reiniciar o computador antes de aplicar as novas definições", IDC_RESTART_RB, 14, 165, 228, 10
-    AUTORADIOBUTTON "&Aplicar as novas definições sem reiniciar", IDC_WITHOUTREBOOT_RB, 14, 180, 228, 10
-    AUTORADIOBUTTON "&Perguntar antes de aplicar as novas definições de visualização", IDC_ASKME_RB, 14, 195, 228, 10
+    GROUPBOX "Visualização", -1, 7, 6, 237, 56, WS_GROUP
+    //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45
+    LTEXT "Definição do valor ppp:", -1, 14, 20, 222, 9
+    COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
+    GROUPBOX "Compatibilidade", -1, 7, 67, 237, 100
+    LTEXT "Alguns programas podem não funcionar correctamente se não reiniciar o computador após alterar as definições de visualização.\n\nApós alterar as definições de visualização:", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Reiniciar o computador antes de aplicar as novas definições", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "&Aplicar as novas definições sem reiniciar", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "&Perguntar antes de aplicar as novas definições de visualização", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57

@@ -153,6 +153,7 @@ SerenumFdoPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	PFDO_DEVICE_EXTENSION FdoExtension;
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
@@ -181,9 +182,18 @@ SerenumFdoPnp(
 		{
 			TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			/* Call lower driver */
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
-			if (NT_SUCCESS(Status))
-				Status = SerenumFdoStartDevice(DeviceObject, Irp);
+			FdoExtension = DeviceObject->DeviceExtension;
+			Status = STATUS_UNSUCCESSFUL;
+
+			if (IoForwardIrpSynchronously(FdoExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+				if (NT_SUCCESS(Status))
+				{
+					Status = SerenumFdoStartDevice(DeviceObject, Irp);
+				}
+			}
+				
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x7 */

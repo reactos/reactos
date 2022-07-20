@@ -894,20 +894,20 @@ PathCreateFromUrlW(
 
 HRESULT WINAPI PathCreateFromUrlAlloc(_In_ LPCWSTR pszUrl, _Outptr_ LPWSTR* pszPath, DWORD dwReserved);
 
-BOOL WINAPI PathFileExistsA(_In_ LPCSTR);
-BOOL WINAPI PathFileExistsW(_In_ LPCWSTR);
+BOOL WINAPI PathFileExistsA(_In_ LPCSTR pszPath);
+BOOL WINAPI PathFileExistsW(_In_ LPCWSTR pszPath);
 #define PathFileExists WINELIB_NAME_AW(PathFileExists)
 
-BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR,DWORD*);
-BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR,DWORD*);
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath,DWORD* dwAttr);
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath,DWORD* dwAttr);
 #define PathFileExistsAndAttributes WINELIB_NAME_AW(PathFileExistsAndAttributes)
 
-LPSTR  WINAPI PathFindExtensionA(_In_ LPCSTR);
-LPWSTR WINAPI PathFindExtensionW(_In_ LPCWSTR);
+LPSTR  WINAPI PathFindExtensionA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathFindExtensionW(_In_ LPCWSTR pszPath);
 #define PathFindExtension WINELIB_NAME_AW(PathFindExtension)
 
-LPSTR  WINAPI PathFindFileNameA(_In_ LPCSTR);
-LPWSTR WINAPI PathFindFileNameW(_In_ LPCWSTR);
+LPSTR  WINAPI PathFindFileNameA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathFindFileNameW(_In_ LPCWSTR pszPath);
 #define PathFindFileName WINELIB_NAME_AW(PathFindFileName)
 
 LPSTR  WINAPI PathFindNextComponentA(_In_ LPCSTR);
@@ -918,12 +918,12 @@ BOOL WINAPI PathFindOnPathA(_Inout_updates_(MAX_PATH) LPSTR, _In_opt_ LPCSTR*);
 BOOL WINAPI PathFindOnPathW(_Inout_updates_(MAX_PATH) LPWSTR, _In_opt_ LPCWSTR*);
 #define PathFindOnPath WINELIB_NAME_AW(PathFindOnPath)
 
-LPSTR  WINAPI PathGetArgsA(_In_ LPCSTR);
-LPWSTR WINAPI PathGetArgsW(_In_ LPCWSTR);
+LPSTR  WINAPI PathGetArgsA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathGetArgsW(_In_ LPCWSTR pszPath);
 #define PathGetArgs WINELIB_NAME_AW(PathGetArgs)
 
-UINT WINAPI PathGetCharTypeA(_In_ UCHAR);
-UINT WINAPI PathGetCharTypeW(_In_ WCHAR);
+UINT WINAPI PathGetCharTypeA(_In_ UCHAR ch);
+UINT WINAPI PathGetCharTypeW(_In_ WCHAR ch);
 #define PathGetCharType WINELIB_NAME_AW(PathGetCharType)
 
 int WINAPI PathGetDriveNumberA(_In_ LPCSTR);
@@ -1632,16 +1632,16 @@ LPSTR  WINAPI StrRStrIA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ LPCSTR);
 LPWSTR WINAPI StrRStrIW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 #define StrRStrI WINELIB_NAME_AW(StrRStrI)
 
-int WINAPI StrSpnA(_In_ LPCSTR, _In_ LPCSTR);
-int WINAPI StrSpnW(_In_ LPCWSTR, _In_ LPCWSTR);
+int WINAPI StrSpnA(_In_ LPCSTR psz, _In_ LPCSTR pszSet);
+int WINAPI StrSpnW(_In_ LPCWSTR psz, _In_ LPCWSTR pszSet);
 #define StrSpn WINELIB_NAME_AW(StrSpn)
 
-LPSTR  WINAPI StrStrA(_In_ LPCSTR, _In_ LPCSTR);
-LPWSTR WINAPI StrStrW(_In_ LPCWSTR, _In_ LPCWSTR);
+LPSTR  WINAPI StrStrA(_In_ LPCSTR pszFirst, _In_ LPCSTR pszSrch);
+LPWSTR WINAPI StrStrW(_In_ LPCWSTR pszFirst, _In_ LPCWSTR pszSrch);
 #define StrStr WINELIB_NAME_AW(StrStr)
 
-LPSTR  WINAPI StrStrIA(_In_ LPCSTR, _In_ LPCSTR);
-LPWSTR WINAPI StrStrIW(_In_ LPCWSTR, _In_ LPCWSTR);
+LPSTR  WINAPI StrStrIA(_In_ LPCSTR pszFirst, _In_ LPCSTR pszSrch);
+LPWSTR WINAPI StrStrIW(_In_ LPCWSTR pszFirst, _In_ LPCWSTR pszSrch);
 #define StrStrI WINELIB_NAME_AW(StrStrI)
 
 LPWSTR WINAPI StrStrNW(_In_ LPCWSTR, _In_ LPCWSTR, UINT);
@@ -1941,10 +1941,10 @@ HRESULT WINAPI SHReleaseThreadRef(void);
 BOOL
 WINAPI
 SHCreateThread(
-  _In_ LPTHREAD_START_ROUTINE,
-  _In_opt_ void*,
-  _In_ DWORD,
-  _In_opt_ LPTHREAD_START_ROUTINE);
+  _In_ LPTHREAD_START_ROUTINE pfnThreadProc,
+  _In_opt_ void* pData,
+  _In_ DWORD flags,
+  _In_opt_ LPTHREAD_START_ROUTINE pfnCallback);
 
 BOOL WINAPI SHSkipJunction(_In_opt_ struct IBindCtx*, _In_ const CLSID*);
 

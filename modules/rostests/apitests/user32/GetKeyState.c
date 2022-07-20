@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-HHOOK hKbdHook, hKbdLLHook;
+static HHOOK hKbdHook, hKbdLLHook;
 
 LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam,  LPARAM lParam)
 {

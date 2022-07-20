@@ -67,35 +67,9 @@ typedef struct tagCONSOLE_CURSOR_INFO
 #define BACKGROUND_RED                  0x0040
 #define BACKGROUND_INTENSITY            0x0080
 
-typedef struct _CFHEADER
-{
-    ULONG Signature;        // File signature 'MSCF' (CAB_SIGNATURE)
-    ULONG Reserved1;        // Reserved field
-    ULONG CabinetSize;      // Cabinet file size
-    ULONG Reserved2;        // Reserved field
-    ULONG FileTableOffset;  // Offset of first CFFILE
-    ULONG Reserved3;        // Reserved field
-    USHORT Version;          // Cabinet version (CAB_VERSION)
-    USHORT FolderCount;      // Number of folders
-    USHORT FileCount;        // Number of files
-    USHORT Flags;            // Cabinet flags (CAB_FLAG_*)
-    USHORT SetID;            // Cabinet set id
-    USHORT CabinetNumber;    // Zero-based cabinet number
-} CFHEADER, *PCFHEADER;
-
-typedef struct _CFFILE
-{
-    ULONG FileSize;         // Uncompressed file size in bytes
-    ULONG FileOffset;       // Uncompressed offset of file in the folder
-    USHORT FileControlID;    // File control ID (CAB_FILE_*)
-    USHORT FileDate;         // File date stamp, as used by DOS
-    USHORT FileTime;         // File time stamp, as used by DOS
-    USHORT Attributes;       // File attributes (CAB_ATTRIB_*)
-    /* After this is the NULL terminated filename */
-} CFFILE, *PCFFILE;
-
-#define CAB_SIGNATURE      0x4643534D // "MSCF"
-
+/*
+ * VGA registers
+ */
 #define VIDMEM_BASE        0xb8000
 #define BITPLANE_BASE      0xa0000
 
@@ -144,7 +118,6 @@ typedef struct _CFFILE
 #define PELINDEX     (PUCHAR)0x3c8
 #define PELDATA      (PUCHAR)0x3c9
 
-VOID ScrLoadFontTable(_In_ ULONG CodePage);
 VOID ScrSetFont(_In_ PUCHAR FontBitfield);
 
 #endif /* _BLUE_PCH_ */

@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Chinese (Simplified) resource translation
- * COPYRIGHT:   Copyright 2018 Li Keqing (auroracloud4096@gmail.com)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -16,7 +17,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "浏览...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "密码",IDC_PASSWORD,189,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,86,114,80,8
+    LTEXT           "单击“下一步”开始解压。",IDC_STATUSTEXT,86,114,80,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
@@ -48,15 +49,15 @@ END
 
 IDD_PASSWORD DIALOGEX 0, 0, 243, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Password needed"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+CAPTION "需要密码"
+FONT 9, "宋体", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    DEFPUSHBUTTON   "确定",IDOK,186,6,50,14
+    PUSHBUTTON      "跳过此文件",IDSKIP,186,24,50,14
+    PUSHBUTTON      "取消",IDCANCEL,186,42,50,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Password:",IDC_STATIC,24,44,44,8
+    LTEXT           "密码：",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -70,15 +71,15 @@ BEGIN
     IDS_COL_DATE_MOD "修改日期"
     IDS_YES "是"
     IDS_NO "否"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
+    IDS_ERRORTITLE "压缩文件夹错误"
+    IDS_CANTSTARTTHREAD "无法启动压缩线程。"
+    IDS_NOFILES "指定的目录“%s”为空，压缩文件夹无法将其添加到归档内。"
+    IDS_CANTCREATEZIP "无法创建压缩文件夹“%s”（错误码：%d）。"
+    IDS_CANTREADFILE "无法读取文件“%s”。"
     IDS_EXTRACTING "正在解压..."
-    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
-    IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTEXTRACTFILE "无法提取文件“%1”。"
+    IDS_DECOMPRESSERROR "不支持的压缩方式 %d 。您想要继续吗？"
+    IDS_UNKNOWNERROR "未知错误 0x%08x."
 
     IDS_WIZ_TITLE "解压向导"
     IDS_WIZ_DEST_TITLE "选择一个目标文件夹"
@@ -88,8 +89,8 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "选择您想要解压指定项目到的地方。"
 
     IDS_OVERWRITEFILE_TEXT "这个文件夹中已经包含一个叫 %1 的文件。\n您想要替换它吗？"
-    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
-    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_PASSWORD_FILE_TEXT "文件“%1”有密码保护。请输入密码。"
+    IDS_PASSWORD_ZIP_TEXT "请指定用于解压该 ZIP 归档时使用的密码。"
 
     IDS_MENUITEM "解压全部(&A)..."
     IDS_HELPTEXT "解压文件夹内容"

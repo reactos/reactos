@@ -150,7 +150,7 @@ GraphCtrl_AddPoint(PTM_GRAPH_CONTROL inst, BYTE val0, BYTE val1)
     t = inst->PointBuffer;
     Prev0 = *(t + inst->CurrIndex);
     Prev1 = *(t + inst->CurrIndex + inst->NumberOfPoints);
-    if (inst->CurrIndex < inst->NumberOfPoints)
+    if (inst->CurrIndex < inst->NumberOfPoints - 1)
     {
         inst->CurrIndex++;
     }

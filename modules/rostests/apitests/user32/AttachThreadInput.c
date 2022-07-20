@@ -19,10 +19,9 @@ typedef struct {
     MSG_CACHE cache;
 } THREAD_DATA;
 
-DWORD tidMouseMove;
-THREAD_DATA data[6];
-HHOOK hMouseHookLL = NULL;
-HHOOK hKbdHookLL = NULL;
+static THREAD_DATA data[6];
+static HHOOK hMouseHookLL = NULL;
+static HHOOK hKbdHookLL = NULL;
 
 
 #define EXPECT_FOREGROUND(expected) ok(GetForegroundWindow() == expected, \

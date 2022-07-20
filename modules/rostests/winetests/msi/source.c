@@ -31,12 +31,11 @@
 #include <objbase.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static BOOL is_wow64;
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
-static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static UINT (WINAPI *pMsiSourceListAddMediaDiskA)
@@ -50,6 +49,8 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListGetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
+static UINT (WINAPI *pMsiSourceListGetInfoW)
+    (LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, DWORD, LPCWSTR, LPWSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListSetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT,  DWORD,LPCSTR,  LPCSTR);
 static UINT (WINAPI *pMsiSourceListAddSourceA)
@@ -60,7 +61,6 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
 #define GET_PROC(dll, func) \
     p ## func = (void *)GetProcAddress(dll, #func); \
@@ -72,13 +72,12 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListEnumMediaDisksA)
     GET_PROC(hmsi, MsiSourceListEnumSourcesA)
     GET_PROC(hmsi, MsiSourceListGetInfoA)
+    GET_PROC(hmsi, MsiSourceListGetInfoW)
     GET_PROC(hmsi, MsiSourceListSetInfoA)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA)
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
-    GET_PROC(hsecur32, GetUserNameExA)
 
 #undef GET_PROC
 }
@@ -125,10 +124,10 @@ static void create_test_guid(LPSTR prodcode, LPSTR squashed)
     int size;
 
     hr = CoCreateGuid(&guid);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     size = StringFromGUID2(&guid, guidW, MAX_PATH);
-    ok(size == 39, "Expected 39, got %d\n", hr);
+    ok(size == 39, "Expected 39, got %#lx\n", hr);
 
     WideCharToMultiByte(CP_ACP, 0, guidW, size, prodcode, MAX_PATH, NULL, NULL);
     squash_guid(guidW, squashedW);
@@ -142,18 +141,13 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
-    user = HeapAlloc(GetProcessHeap(), 0, size);
+    user = malloc(size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
-    HeapFree(GetProcessHeap(), 0, user);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
+    free(user);
 
     CloseHandle(token);
     return usersid;
@@ -189,14 +183,21 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
 #define CHECK_REG_STR(prodkey, name, expected) \
     check_reg_str(prodkey, name, expected, TRUE, __LINE__);
 
+static inline WCHAR *strdupAW( const char *str )
+{
+    int len;
+    WCHAR *ret;
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    if (!(ret = malloc( len * sizeof(WCHAR) ))) return NULL;
+    MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    return ret;
+}
+
 static void test_MsiSourceListGetInfo(void)
 {
-    CHAR prodcode[MAX_PATH];
-    CHAR prod_squashed[MAX_PATH];
-    CHAR keypath[MAX_PATH*2];
-    CHAR value[MAX_PATH];
-    LPSTR usersid;
-    LPCSTR data;
+    char prodcode[MAX_PATH], prod_squashed[MAX_PATH], keypath[MAX_PATH * 2], value[MAX_PATH], *usersid;
+    WCHAR valueW[MAX_PATH], *usersidW, *prodcodeW;
+    const char *data;
     LONG res;
     UINT r;
     HKEY userkey, hkey, media;
@@ -296,7 +297,7 @@ static void test_MsiSourceListGetInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     size = MAX_PATH;
@@ -307,7 +308,7 @@ static void test_MsiSourceListGetInfo(void)
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     res = RegCreateKeyA(userkey, "SourceList", &hkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     size = MAX_PATH;
@@ -315,12 +316,12 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
 
     data = "msitest.msi";
     res = RegSetValueExA(hkey, "PackageName", 0, REG_SZ, (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* PackageName value exists */
     size = 0xdeadbeef;
@@ -328,7 +329,7 @@ static void test_MsiSourceListGetInfo(void)
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAMEA, NULL, &size);
     ok(r == ERROR_SUCCESS || r == ERROR_INVALID_PARAMETER,
 	   "Expected ERROR_SUCCESS or ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(size == 11 || r != ERROR_SUCCESS, "Expected 11, got %d\n", size);
+    ok(size == 11 || r != ERROR_SUCCESS, "Expected 11, got %lu\n", size);
 
     /* read the value, don't change size */
 	size = 11;
@@ -337,7 +338,7 @@ static void test_MsiSourceListGetInfo(void)
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected 'aaa', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     /* read the value, fix size */
     size++;
@@ -345,7 +346,7 @@ static void test_MsiSourceListGetInfo(void)
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "msitest.msi"), "Expected 'msitest.msi', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     /* empty property now that product key exists */
     size = MAX_PATH;
@@ -353,7 +354,7 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, "", value, &size);
     ok(r == ERROR_UNKNOWN_PROPERTY, "Expected ERROR_UNKNOWN_PROPERTY, got %d\n", r);
-    ok(size == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, size);
+    ok(size == MAX_PATH, "Expected %d, got %lu\n", MAX_PATH, size);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     /* nonexistent property now that product key exists */
@@ -362,12 +363,12 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, "nonexistent", value, &size);
     ok(r == ERROR_UNKNOWN_PROPERTY, "Expected ERROR_UNKNOWN_PROPERTY, got %d\n", r);
-    ok(size == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, size);
+    ok(size == MAX_PATH, "Expected %d, got %lu\n", MAX_PATH, size);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     data = "tester";
     res = RegSetValueExA(hkey, "nonexistent", 0, REG_SZ, (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* nonexistent property now that nonexistent value exists */
     size = MAX_PATH;
@@ -375,7 +376,7 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, "nonexistent", value, &size);
     ok(r == ERROR_UNKNOWN_PROPERTY, "Expected ERROR_UNKNOWN_PROPERTY, got %d\n", r);
-    ok(size == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, size);
+    ok(size == MAX_PATH, "Expected %d, got %lu\n", MAX_PATH, size);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     /* invalid option now that product key exists */
@@ -383,7 +384,7 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               4, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     /* INSTALLPROPERTY_MEDIAPACKAGEPATH, media key does not exist */
     size = MAX_PATH;
@@ -393,15 +394,15 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     res = RegCreateKeyA(hkey, "Media", &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     data = "path";
     res = RegSetValueExA(media, "MediaPackage", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_MEDIAPACKAGEPATH */
     size = MAX_PATH;
@@ -410,13 +411,13 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "path"), "Expected \"path\", got \"%s\"\n", value);
-    ok(size == 4, "Expected 4, got %d\n", size);
+    ok(size == 4, "Expected 4, got %lu\n", size);
 
     /* INSTALLPROPERTY_DISKPROMPT */
     data = "prompt";
     res = RegSetValueExA(media, "DiskPrompt", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     size = MAX_PATH;
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
@@ -424,12 +425,36 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "prompt"), "Expected \"prompt\", got \"%s\"\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
+
+    /* LastUsedSource value doesn't exist */
+    RegDeleteValueA(hkey, "LastUsedSource");
+    size = MAX_PATH;
+    memset(value, 0x55, sizeof(value));
+    r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEA,
+                               value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
+    ok(size == 0, "Expected 0, got %lu\n", size);
+
+    size = MAX_PATH;
+    usersidW = strdupAW(usersid);
+    prodcodeW = strdupAW(prodcode);
+    memset(valueW, 0x55, sizeof(valueW));
+    r = pMsiSourceListGetInfoW(prodcodeW, usersidW, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEW,
+                               valueW, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(!valueW[0], "Expected \"\"");
+    ok(size == 0, "Expected 0, got %lu\n", size);
+    free(usersidW);
+    free(prodcodeW);
 
     data = "";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE, source is empty */
     size = MAX_PATH;
@@ -438,12 +463,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     data = "source";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE */
     size = MAX_PATH;
@@ -452,7 +477,7 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "source"), "Expected \"source\", got \"%s\"\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE, size is too short */
     size = 4;
@@ -462,7 +487,7 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got \"%s\"\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE, size is exactly 6 */
     size = 6;
@@ -472,12 +497,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got \"%s\"\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     data = "a;source";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE, one semi-colon */
     size = MAX_PATH;
@@ -486,12 +511,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "source"), "Expected \"source\", got \"%s\"\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     data = "a:source";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDSOURCE, one colon */
     size = MAX_PATH;
@@ -500,7 +525,7 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "a:source"), "Expected \"a:source\", got \"%s\"\n", value);
-    ok(size == 8, "Expected 8, got %d\n", size);
+    ok(size == 8, "Expected 8, got %lu\n", size);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE, invalid source format */
     size = MAX_PATH;
@@ -509,12 +534,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     data = "x;y;z";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE, invalid source format */
     size = MAX_PATH;
@@ -523,12 +548,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     data = "n;y;z";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE */
     size = MAX_PATH;
@@ -537,12 +562,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "n"), "Expected \"n\", got \"%s\"\n", value);
-    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(size == 1, "Expected 1, got %lu\n", size);
 
     data = "negatory";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE */
     size = MAX_PATH;
@@ -551,12 +576,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "n"), "Expected \"n\", got \"%s\"\n", value);
-    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(size == 1, "Expected 1, got %lu\n", size);
 
     data = "megatron";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE */
     size = MAX_PATH;
@@ -565,12 +590,12 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "m"), "Expected \"m\", got \"%s\"\n", value);
-    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(size == 1, "Expected 1, got %lu\n", size);
 
     data = "useless";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
                          (const BYTE *)data, lstrlenA(data) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* INSTALLPROPERTY_LASTUSEDTYPE */
     size = MAX_PATH;
@@ -579,7 +604,7 @@ static void test_MsiSourceListGetInfo(void)
                                value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "u"), "Expected \"u\", got \"%s\"\n", value);
-    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(size == 1, "Expected 1, got %lu\n", size);
 
     RegDeleteValueA(media, "MediaPackage");
     RegDeleteValueA(media, "DiskPrompt");
@@ -598,14 +623,14 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PATCH, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_UNKNOWN_PATCH, "Expected ERROR_UNKNOWN_PATCH, got %d\n", r);
-    ok(size == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, size);
+    ok(size == MAX_PATH, "Expected %d, got %lu\n", MAX_PATH, size);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Patches\\");
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* patch key exists
      * NOTE: using prodcode guid, but it really doesn't matter
@@ -615,11 +640,11 @@ static void test_MsiSourceListGetInfo(void)
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PATCH, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
-    ok(size == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, size);
+    ok(size == MAX_PATH, "Expected %d, got %lu\n", MAX_PATH, size);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
 
     res = RegCreateKeyA(userkey, "SourceList", &hkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     size = MAX_PATH;
@@ -628,7 +653,7 @@ static void test_MsiSourceListGetInfo(void)
                               MSICODE_PATCH, INSTALLPROPERTY_PACKAGENAMEA, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     RegDeleteKeyA(hkey, "");
     RegDeleteKeyA(userkey, "");
@@ -660,6 +685,11 @@ static void test_MsiSourceListAddSourceEx(void)
     if (!pMsiSourceListAddSourceExA)
     {
         win_skip("Skipping MsiSourceListAddSourceExA tests\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -713,7 +743,7 @@ static void test_MsiSourceListAddSourceEx(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -722,7 +752,7 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyA(userkey, "SourceList", &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     RegCloseKey(url);
 
     /* SourceList key exists */
@@ -732,13 +762,13 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     res = RegOpenKeyA(userkey, "SourceList\\URL", &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     /* add another source, index 0 */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -748,15 +778,15 @@ static void test_MsiSourceListAddSourceEx(void)
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "another/"), "Expected 'another/', got %s\n", value);
-    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(size == 9, "Expected 9, got %lu\n", size);
 
     /* add another source, index 1 */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -766,21 +796,21 @@ static void test_MsiSourceListAddSourceEx(void)
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "third/"), "Expected 'third/', got %s\n", value);
-    ok(size == 7, "Expected 7, got %d\n", size);
+    ok(size == 7, "Expected 7, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "3", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "another/"), "Expected 'another/', got %s\n", value);
-    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(size == 9, "Expected 9, got %lu\n", size);
 
     /* add another source, index > N */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -790,27 +820,27 @@ static void test_MsiSourceListAddSourceEx(void)
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "third/"), "Expected 'third/', got %s\n", value);
-    ok(size == 7, "Expected 7, got %d\n", size);
+    ok(size == 7, "Expected 7, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "3", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "another/"), "Expected 'another/', got %s\n", value);
-    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(size == 9, "Expected 9, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "4", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "last/"), "Expected 'last/', got %s\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     /* just MSISOURCETYPE_NETWORK */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -819,13 +849,13 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     res = RegOpenKeyA(userkey, "SourceList\\Net", &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     size = MAX_PATH;
     res = RegQueryValueExA(net, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "source\\"), "Expected 'source\\', got %s\n", value);
-    ok(size == 8, "Expected 8, got %d\n", size);
+    ok(size == 8, "Expected 8, got %lu\n", size);
 
     /* just MSISOURCETYPE_URL */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -835,33 +865,33 @@ static void test_MsiSourceListAddSourceEx(void)
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "third/"), "Expected 'third/', got %s\n", value);
-    ok(size == 7, "Expected 7, got %d\n", size);
+    ok(size == 7, "Expected 7, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "3", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "another/"), "Expected 'another/', got %s\n", value);
-    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(size == 9, "Expected 9, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "4", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "last/"), "Expected 'last/', got %s\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "5", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "source/"), "Expected 'source/', got %s\n", value);
-    ok(size == 8, "Expected 8, got %d\n", size);
+    ok(size == 8, "Expected 8, got %lu\n", size);
 
     /* NULL szUserSid */
     r = pMsiSourceListAddSourceExA(prodcode, NULL,
@@ -871,15 +901,15 @@ static void test_MsiSourceListAddSourceEx(void)
 
     size = MAX_PATH;
     res = RegQueryValueExA(net, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "source\\"), "Expected 'source\\', got %s\n", value);
-    ok(size == 8, "Expected 8, got %d\n", size);
+    ok(size == 8, "Expected 8, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(net, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "nousersid\\"), "Expected 'nousersid\\', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     /* invalid options, must have source type */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -919,7 +949,7 @@ static void test_MsiSourceListAddSourceEx(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -930,7 +960,7 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &hkey, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     RegCloseKey(hkey);
 
     /* SourceList exists */
@@ -940,13 +970,13 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     RegCloseKey(url);
 
@@ -958,19 +988,19 @@ static void test_MsiSourceListAddSourceEx(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-    ok(size == 11, "Expected 11, got %d\n", size);
+    ok(size == 11, "Expected 11, got %lu\n", size);
 
     size = MAX_PATH;
     res = RegQueryValueExA(url, "2", NULL, NULL, (LPBYTE)value, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     ok(!lstrcmpA(value, "another/"), "Expected 'another/', got %s\n", value);
-    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(size == 9, "Expected 9, got %lu\n", size);
 
     RegCloseKey(url);
     RegCloseKey(prodkey);
@@ -995,7 +1025,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -1007,7 +1037,7 @@ machine_tests:
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &hkey, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     RegCloseKey(hkey);
 
     /* SourceList exists */
@@ -1021,13 +1051,13 @@ machine_tests:
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
         res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
         size = MAX_PATH;
         res = RegQueryValueExA(url, "1", NULL, NULL, (LPBYTE)value, &size);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
         ok(!lstrcmpA(value, "C:\\source/"), "Expected 'C:\\source/', got %s\n", value);
-        ok(size == 11, "Expected 11, got %d\n", size);
+        ok(size == 11, "Expected 11, got %lu\n", size);
 
         RegCloseKey(url);
         RegCloseKey(prodkey);
@@ -1072,21 +1102,21 @@ static void test_MsiSourceListEnumSources(void)
     r = pMsiSourceListEnumSourcesA(NULL, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", size);
+    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", size);
 
     /* empty szProductCodeOrPatchCode */
     size = 0xdeadbeef;
     r = pMsiSourceListEnumSourcesA("", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", size);
+    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", size);
 
     /* garbage szProductCodeOrPatchCode */
     size = 0xdeadbeef;
     r = pMsiSourceListEnumSourcesA("garbage", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", size);
+    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", size);
 
     /* guid without brackets */
     size = 0xdeadbeef;
@@ -1094,7 +1124,7 @@ static void test_MsiSourceListEnumSources(void)
                                    usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", size);
+    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", size);
 
     /* guid with brackets */
     size = 0xdeadbeef;
@@ -1102,7 +1132,7 @@ static void test_MsiSourceListEnumSources(void)
                                    usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
-    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", size);
+    ok(size == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", size);
 
     /* MSIINSTALLCONTEXT_USERUNMANAGED */
 
@@ -1113,13 +1143,13 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     size = MAX_PATH;
@@ -1129,10 +1159,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyA(userkey, "SourceList", &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     size = MAX_PATH;
@@ -1142,10 +1172,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyA(source, "URL", &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* URL key exists */
     size = MAX_PATH;
@@ -1155,16 +1185,16 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(url, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     res = RegSetValueExA(url, "2", 0, REG_SZ, (LPBYTE)"second", 7);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     res = RegSetValueExA(url, "4", 0, REG_SZ, (LPBYTE)"fourth", 7);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1174,7 +1204,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* try index 0 again */
     size = MAX_PATH;
@@ -1184,7 +1214,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* both szSource and pcchSource are NULL, index 0 */
     r = pMsiSourceListEnumSourcesA(prodcode, usersid,
@@ -1206,7 +1236,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* szSource is non-NULL while pcchSource is NULL */
     lstrcpyA(value, "aaa");
@@ -1225,7 +1255,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* reset the enumeration */
     size = MAX_PATH;
@@ -1235,7 +1265,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* try index 1 */
     size = MAX_PATH;
@@ -1245,7 +1275,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 1, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "second"), "Expected \"second\", got %s\n", value);
-    ok(size == 6, "Expected 6, got %d\n", size);
+    ok(size == 6, "Expected 6, got %lu\n", size);
 
     /* try index 1 again */
     size = MAX_PATH;
@@ -1256,7 +1286,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* try index 2 */
     size = MAX_PATH;
@@ -1266,7 +1296,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 2, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* try index < 0 */
     size = MAX_PATH;
@@ -1277,7 +1307,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* NULL szUserSid */
     size = MAX_PATH;
@@ -1287,7 +1317,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* invalid dwOptions, must be one of MSICODE_ and MSISOURCETYPE_ */
     size = MAX_PATH;
@@ -1297,7 +1327,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* invalid dwOptions, must be one of MSICODE_ and MSISOURCETYPE_ */
     size = MAX_PATH;
@@ -1307,7 +1337,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PATCH, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* invalid dwOptions, must be one of MSICODE_ and MSISOURCETYPE_ */
     size = MAX_PATH;
@@ -1318,7 +1348,7 @@ static void test_MsiSourceListEnumSources(void)
                                    0, value, &size);
     ok(r == ERROR_UNKNOWN_PATCH, "Expected ERROR_UNKNOWN_PATCH, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* invalid dwOptions, must be one of MSICODE_ and MSISOURCETYPE_ */
     size = MAX_PATH;
@@ -1329,7 +1359,7 @@ static void test_MsiSourceListEnumSources(void)
                                    0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     RegDeleteValueA(url, "1");
     RegDeleteValueA(url, "2");
@@ -1345,10 +1375,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyA(source, "Net", &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Net key exists */
     size = MAX_PATH;
@@ -1358,10 +1388,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(net, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1371,7 +1401,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     RegDeleteValueA(net, "1");
     RegDeleteKeyA(net, "");
@@ -1390,7 +1420,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\");
     lstrcatA(keypath, usersid);
@@ -1400,7 +1430,7 @@ static void test_MsiSourceListEnumSources(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -1412,10 +1442,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     size = MAX_PATH;
@@ -1425,10 +1455,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(source, "URL", 0, NULL, 0, access, NULL, &url, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* URL key exists */
     size = MAX_PATH;
@@ -1438,10 +1468,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(url, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1451,7 +1481,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* NULL szUserSid */
     size = MAX_PATH;
@@ -1461,7 +1491,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     RegDeleteValueA(url, "1");
     delete_key(url, "", access);
@@ -1475,10 +1505,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(source, "Net", 0, NULL, 0, access, NULL, &net, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Net key exists */
     size = MAX_PATH;
@@ -1488,10 +1518,10 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(net, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1501,7 +1531,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     RegDeleteValueA(net, "1");
     delete_key(net, "", access);
@@ -1522,7 +1552,7 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     /* szUserSid is NULL */
     size = MAX_PATH;
@@ -1532,7 +1562,7 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
@@ -1540,7 +1570,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -1553,10 +1583,10 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     size = MAX_PATH;
@@ -1566,10 +1596,10 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(source, "URL", 0, NULL, 0, access, NULL, &url, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* URL key exists */
     size = MAX_PATH;
@@ -1579,10 +1609,10 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(url, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1592,7 +1622,7 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     /* NULL szUserSid */
     size = MAX_PATH;
@@ -1602,7 +1632,7 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_URL, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     RegDeleteValueA(url, "1");
     delete_key(url, "", access);
@@ -1616,10 +1646,10 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegCreateKeyExA(source, "Net", 0, NULL, 0, access, NULL, &net, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Net key exists */
     size = MAX_PATH;
@@ -1629,10 +1659,10 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
-    ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
+    ok(size == MAX_PATH, "Expected MAX_PATH, got %lu\n", size);
 
     res = RegSetValueExA(net, "1", 0, REG_SZ, (LPBYTE)"first", 6);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* sources exist */
     size = MAX_PATH;
@@ -1642,7 +1672,7 @@ machine_tests:
                                    MSICODE_PRODUCT | MSISOURCETYPE_NETWORK, 0, value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "first"), "Expected \"first\", got %s\n", value);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     RegDeleteValueA(net, "1");
     delete_key(net, "", access);
@@ -1669,6 +1699,11 @@ static void test_MsiSourceListSetInfo(void)
     if (!pMsiSourceListSetInfoA)
     {
         win_skip("MsiSourceListSetInfoA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -1773,7 +1808,7 @@ static void test_MsiSourceListSetInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -1783,7 +1818,7 @@ static void test_MsiSourceListSetInfo(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyA(userkey, "SourceList", &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists, no source type */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -1793,7 +1828,7 @@ static void test_MsiSourceListSetInfo(void)
 
     /* Media key is created by MsiSourceListSetInfo */
     res = RegOpenKeyA(source, "Media", &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     CHECK_REG_STR(media, "MediaPackage", "path");
 
     /* set the info again */
@@ -1886,7 +1921,7 @@ static void test_MsiSourceListSetInfo(void)
 
     /* Net key is created by MsiSourceListSetInfo */
     res = RegOpenKeyA(source, "Net", &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     CHECK_REG_STR(net, "1", "source\\")
     CHECK_REG_STR(source, "LastUsedSource", "n;1;source");
 
@@ -1909,7 +1944,7 @@ static void test_MsiSourceListSetInfo(void)
 
     /* URL key is created by MsiSourceListSetInfo */
     res = RegOpenKeyA(source, "URL", &url);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     CHECK_REG_STR(url, "1", "source/");
     CHECK_REG_STR(source, "LastUsedSource", "u;1;source");
 
@@ -1994,7 +2029,7 @@ static void test_MsiSourceListSetInfo(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -2006,7 +2041,7 @@ static void test_MsiSourceListSetInfo(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists, no source type */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -2016,7 +2051,7 @@ static void test_MsiSourceListSetInfo(void)
 
     /* Media key is created by MsiSourceListSetInfo */
     res = RegOpenKeyExA(source, "Media", 0, access, &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     CHECK_REG_STR(media, "MediaPackage", "path");
 
     RegDeleteValueA(media, "MediaPackage");
@@ -2036,7 +2071,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -2049,7 +2084,7 @@ machine_tests:
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists, no source type */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -2064,7 +2099,7 @@ machine_tests:
 
     /* Media key is created by MsiSourceListSetInfo */
     res = RegOpenKeyExA(source, "Media", 0, access, &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     CHECK_REG_STR(media, "MediaPackage", "path");
 
     /* szUserSid is non-NULL */
@@ -2100,6 +2135,11 @@ static void test_MsiSourceListAddMediaDisk(void)
     if (!pMsiSourceListAddMediaDiskA)
     {
         win_skip("MsiSourceListAddMediaDiskA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -2177,7 +2217,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
@@ -2187,7 +2227,7 @@ static void test_MsiSourceListAddMediaDisk(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyA(userkey, "SourceList", &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
@@ -2197,7 +2237,7 @@ static void test_MsiSourceListAddMediaDisk(void)
 
     /* Media subkey is created by MsiSourceListAddMediaDisk */
     res = RegOpenKeyA(source, "Media", &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(media, "1", "label;prompt");
 
@@ -2310,7 +2350,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -2322,7 +2362,7 @@ static void test_MsiSourceListAddMediaDisk(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
@@ -2332,7 +2372,7 @@ static void test_MsiSourceListAddMediaDisk(void)
 
     /* Media subkey is created by MsiSourceListAddMediaDisk */
     res = RegOpenKeyExA(source, "Media", 0, access, &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(media, "1", "label;prompt");
 
@@ -2353,7 +2393,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -2366,7 +2406,7 @@ machine_tests:
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, NULL,
@@ -2381,7 +2421,7 @@ machine_tests:
 
     /* Media subkey is created by MsiSourceListAddMediaDisk */
     res = RegOpenKeyExA(source, "Media", 0, access, &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(media, "1", "label;prompt");
 
@@ -2517,7 +2557,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* user product key exists */
     labelsz = sizeof(label);
@@ -2529,7 +2569,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyA(userkey, "SourceList", &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     id = 0xbeef;
@@ -2542,14 +2582,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegCreateKeyA(source, "Media", &media);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Media key exists */
     id = 0xbeef;
@@ -2562,14 +2602,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "1", 0, REG_SZ, (LPBYTE)"label;prompt", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* disk exists */
     id = 0;
@@ -2581,14 +2621,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "2", 0, REG_SZ, (LPBYTE)"one;two", 8);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* now disk 2 exists, get the sizes */
     id = 0;
@@ -2601,9 +2641,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
       "Expected ERROR_SUCCESS or ERROR_INVALID_PARAMETER, got %d\n", r);
     if (r == ERROR_SUCCESS)
     {
-        ok(id == 2, "Expected 2, got %d\n", id);
-        ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
-        ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
+        ok(id == 2, "Expected 2, got %lu\n", id);
+        ok(labelsz == 3, "Expected 3, got %lu\n", labelsz);
+        ok(promptsz == 3, "Expected 3, got %lu\n", promptsz);
     }
 
     /* now fill in the values */
@@ -2619,23 +2659,23 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_SUCCESS or ERROR_INVALID_PARAMETER, got %d\n", r);
     if (r == ERROR_SUCCESS)
     {
-        ok(id == 2, "Expected 2, got %d\n", id);
+        ok(id == 2, "Expected 2, got %lu\n", id);
         ok(!lstrcmpA(label, "one"), "Expected \"one\", got \"%s\"\n", label);
-        ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
+        ok(labelsz == 3, "Expected 3, got %lu\n", labelsz);
         ok(!lstrcmpA(prompt, "two"), "Expected \"two\", got \"%s\"\n", prompt);
-        ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
+        ok(promptsz == 3, "Expected 3, got %lu\n", promptsz);
     }
     else if (r == ERROR_INVALID_PARAMETER)
     {
-        ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+        ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
         ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-        ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+        ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
         ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-        ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
+        ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", promptsz);
     }
 
     res = RegSetValueExA(media, "4", 0, REG_SZ, (LPBYTE)"three;four", 11);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* disks 1, 2, 4 exist, reset the enumeration */
     id = 0;
@@ -2647,11 +2687,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* disks 1, 2, 4 exist, index 1 */
     id = 0;
@@ -2663,11 +2703,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 1, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 2, "Expected 2, got %d\n", id);
+    ok(id == 2, "Expected 2, got %lu\n", id);
     ok(!lstrcmpA(label, "one"), "Expected \"one\", got \"%s\"\n", label);
-    ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
+    ok(labelsz == 3, "Expected 3, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "two"), "Expected \"two\", got \"%s\"\n", prompt);
-    ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
+    ok(promptsz == 3, "Expected 3, got %lu\n", promptsz);
 
     /* disks 1, 2, 4 exist, index 2 */
     id = 0;
@@ -2679,11 +2719,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 2, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 4, "Expected 4, got %d\n", id);
+    ok(id == 4, "Expected 4, got %lu\n", id);
     ok(!lstrcmpA(label, "three"), "Expected \"three\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "four"), "Expected \"four\", got \"%s\"\n", prompt);
-    ok(promptsz == 4, "Expected 4, got %d\n", promptsz);
+    ok(promptsz == 4, "Expected 4, got %lu\n", promptsz);
 
     /* disks 1, 2, 4 exist, index 3, invalid */
     id = 0xbeef;
@@ -2696,11 +2736,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
+    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", promptsz);
 
     /* disks 1, 2, 4 exist, reset the enumeration */
     id = 0;
@@ -2712,11 +2752,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* try index 0 again */
     id = 0;
@@ -2728,11 +2768,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* jump to index 2 */
     id = 0xbeef;
@@ -2744,11 +2784,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 2, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
+    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", promptsz);
 
     /* after error, try index 1 */
     id = 0xbeef;
@@ -2760,11 +2800,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 1, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 2, "Expected 2, got %d\n", id);
+    ok(id == 2, "Expected 2, got %lu\n", id);
     ok(!lstrcmpA(label, "one"), "Expected \"one\", got \"%s\"\n", label);
-    ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
+    ok(labelsz == 3, "Expected 3, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "two"), "Expected \"two\", got \"%s\"\n", prompt);
-    ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
+    ok(promptsz == 3, "Expected 3, got %lu\n", promptsz);
 
     /* try index 1 again */
     id = 0xbeef;
@@ -2776,11 +2816,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 1, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
+    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", promptsz);
 
     /* NULL pdwDiskId */
     lstrcpyA(label, "aaa");
@@ -2792,9 +2832,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* szVolumeLabel is NULL */
     id = 0;
@@ -2808,10 +2848,10 @@ static void test_MsiSourceListEnumMediaDisks(void)
       "Expected ERROR_SUCCESS or ERROR_INVALID_PARAMETER, got %d\n", r);
     if (r == ERROR_SUCCESS)
     {
-        ok(id == 1, "Expected 1, got %d\n", id);
-        ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+        ok(id == 1, "Expected 1, got %lu\n", id);
+        ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
         ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-        ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+        ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
     }
 
     /* szVolumeLabel and pcchVolumeLabel are NULL */
@@ -2822,9 +2862,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, NULL, NULL,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* szVolumeLabel is non-NULL while pcchVolumeLabel is NULL */
     id = 0xbeef;
@@ -2838,10 +2878,10 @@ static void test_MsiSourceListEnumMediaDisks(void)
       "Expected ERROR_SUCCESS or ERROR_INVALID_PARAMETER, got %d\n", r);
     if (r == ERROR_SUCCESS)
     {
-        ok(id == 1, "Expected 1, got %d\n", id);
+        ok(id == 1, "Expected 1, got %lu\n", id);
         ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
         ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-        ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+        ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
     }
 
     /* szDiskPrompt is NULL */
@@ -2855,10 +2895,10 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(r == ERROR_SUCCESS || r == ERROR_INVALID_PARAMETER, "Expected ERROR_SUCCESS, got %d\n", r);
     if (r == ERROR_SUCCESS)
     {
-        ok(id == 1, "Expected 1, got %d\n", id);
+        ok(id == 1, "Expected 1, got %lu\n", id);
         ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-        ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
-        ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+        ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
+        ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
     }
 
     /* szDiskPrompt and pcchDiskPrompt are NULL */
@@ -2869,9 +2909,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       NULL, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
 
     /* szDiskPrompt is non-NULL while pcchDiskPrompt is NULL */
     id = 0xbeef;
@@ -2883,9 +2923,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, NULL);
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
 
     /* pcchVolumeLabel, szDiskPrompt and pcchDiskPrompt are NULL */
@@ -2896,7 +2936,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       NULL, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
 
     /* szVolumeLabel, pcchVolumeLabel, szDiskPrompt and pcchDiskPrompt are NULL */
     id = 0;
@@ -2904,7 +2944,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, NULL, NULL,
                                       NULL, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
 
     /* pcchVolumeLabel is exactly 5 */
     lstrcpyA(label, "aaa");
@@ -2916,9 +2956,9 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* pcchDiskPrompt is exactly 6 */
     lstrcpyA(label, "aaa");
@@ -2930,12 +2970,12 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "1", 0, REG_SZ, (LPBYTE)"label", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* no semicolon */
     id = 0;
@@ -2947,14 +2987,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "label"), "Expected \"label\", got \"%s\"\n", prompt);
-    ok(promptsz == 5, "Expected 5, got %d\n", promptsz);
+    ok(promptsz == 5, "Expected 5, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "1", 0, REG_SZ, (LPBYTE)"label;", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* semicolon, no disk prompt */
     id = 0;
@@ -2966,14 +3006,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, ""), "Expected \"\", got \"%s\"\n", prompt);
-    ok(promptsz == 0, "Expected 0, got %d\n", promptsz);
+    ok(promptsz == 0, "Expected 0, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "1", 0, REG_SZ, (LPBYTE)";prompt", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* semicolon, label doesn't exist */
     id = 0;
@@ -2985,14 +3025,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, ""), "Expected \"\", got \"%s\"\n", label);
-    ok(labelsz == 0, "Expected 0, got %d\n", labelsz);
+    ok(labelsz == 0, "Expected 0, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "1", 0, REG_SZ, (LPBYTE)";", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* semicolon, neither label nor disk prompt exist */
     id = 0;
@@ -3004,15 +3044,15 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, ""), "Expected \"\", got \"%s\"\n", label);
-    ok(labelsz == 0, "Expected 0, got %d\n", labelsz);
+    ok(labelsz == 0, "Expected 0, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, ""), "Expected \"\", got \"%s\"\n", prompt);
-    ok(promptsz == 0, "Expected 0, got %d\n", promptsz);
+    ok(promptsz == 0, "Expected 0, got %lu\n", promptsz);
 
     val = 42;
     res = RegSetValueExA(media, "1", 0, REG_DWORD, (LPBYTE)&val, sizeof(DWORD));
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* type is REG_DWORD */
     id = 0;
@@ -3024,11 +3064,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 1, "Expected 1, got %d\n", id);
+    ok(id == 1, "Expected 1, got %lu\n", id);
     ok(!lstrcmpA(label, "#42"), "Expected \"#42\", got \"%s\"\n", label);
-    ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
+    ok(labelsz == 3, "Expected 3, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "#42"), "Expected \"#42\", got \"%s\"\n", prompt);
-    ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
+    ok(promptsz == 3, "Expected 3, got %lu\n", promptsz);
 
     RegDeleteValueA(media, "1");
     RegDeleteValueA(media, "2");
@@ -3050,7 +3090,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -3062,7 +3102,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     id = 0xbeef;
@@ -3075,14 +3115,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegCreateKeyExA(source, "Media", 0, NULL, 0, access, NULL, &media, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Media key exists */
     id = 0xbeef;
@@ -3095,14 +3135,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "2", 0, REG_SZ, (LPBYTE)"label;prompt", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* disk exists, but no id 1 */
     id = 0;
@@ -3114,11 +3154,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 2, "Expected 2, got %d\n", id);
+    ok(id == 2, "Expected 2, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     RegDeleteValueA(media, "2");
     delete_key(media, "", access);
@@ -3137,7 +3177,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -3150,7 +3190,7 @@ machine_tests:
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     id = 0xbeef;
@@ -3163,14 +3203,14 @@ machine_tests:
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegCreateKeyExA(source, "Media", 0, NULL, 0, access, NULL, &media, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Media key exists */
     id = 0xbeef;
@@ -3183,14 +3223,14 @@ machine_tests:
                                       prompt, &promptsz);
     ok(r == ERROR_NO_MORE_ITEMS,
        "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", labelsz);
+    ok(labelsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
+    ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", promptsz);
 
     res = RegSetValueExA(media, "2", 0, REG_SZ, (LPBYTE)"label;prompt", 13);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* disk exists, but no id 1 */
     id = 0;
@@ -3202,11 +3242,11 @@ machine_tests:
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(id == 2, "Expected 2, got %d\n", id);
+    ok(id == 2, "Expected 2, got %lu\n", id);
     ok(!lstrcmpA(label, "label"), "Expected \"label\", got \"%s\"\n", label);
-    ok(labelsz == 5, "Expected 5, got %d\n", labelsz);
+    ok(labelsz == 5, "Expected 5, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "prompt"), "Expected \"prompt\", got \"%s\"\n", prompt);
-    ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
+    ok(promptsz == 6, "Expected 6, got %lu\n", promptsz);
 
     /* szUserSid is non-NULL */
     id = 0xbeef;
@@ -3219,11 +3259,11 @@ machine_tests:
                                       prompt, &promptsz);
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-    ok(id == 0xbeef, "Expected 0xbeef, got %d\n", id);
+    ok(id == 0xbeef, "Expected 0xbeef, got %lu\n", id);
     ok(!lstrcmpA(label, "aaa"), "Expected \"aaa\", got \"%s\"\n", label);
-    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %d\n", labelsz);
+    ok(labelsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", labelsz);
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
-    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
+    ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %lu\n", promptsz);
 
     RegDeleteValueA(media, "2");
     delete_key(media, "", access);
@@ -3241,7 +3281,7 @@ static void test_MsiSourceListAddSource(void)
     CHAR prod_squashed[MAX_PATH];
     CHAR keypath[MAX_PATH*2];
     CHAR username[MAX_PATH];
-    LPSTR usersid, ptr;
+    LPSTR usersid;
     LONG res;
     UINT r;
     HKEY prodkey, userkey, net, source;
@@ -3251,6 +3291,11 @@ static void test_MsiSourceListAddSource(void)
     if (!pMsiSourceListAddSourceA)
     {
         win_skip("Skipping MsiSourceListAddSourceA tests\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -3263,16 +3308,7 @@ static void test_MsiSourceListAddSource(void)
 
     /* MACHINENAME\username */
     size = MAX_PATH;
-    if (pGetUserNameExA != NULL)
-        pGetUserNameExA(NameSamCompatible, username, &size);
-    else
-    {
-        GetComputerNameA(username, &size);
-        lstrcatA(username, "\\");
-        ptr = username + lstrlenA(username);
-        size = MAX_PATH - (ptr - username);
-        GetUserNameA(ptr, &size);
-    }
+    GetUserNameExA(NameSamCompatible, username, &size);
     trace("username: %s\n", username);
 
     if (is_wow64)
@@ -3325,7 +3361,7 @@ static void test_MsiSourceListAddSource(void)
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto userunmanaged_tests;
     }
 
@@ -3334,7 +3370,7 @@ static void test_MsiSourceListAddSource(void)
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
@@ -3342,11 +3378,11 @@ static void test_MsiSourceListAddSource(void)
 
     /* Net key is created */
     res = RegOpenKeyExA(source, "Net", 0, access, &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* LastUsedSource does not exist and it is not created */
     res = RegQueryValueExA(source, "LastUsedSource", 0, NULL, NULL, NULL);
-    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %ld\n", res);
 
     CHECK_REG_STR(net, "1", "source\\");
 
@@ -3355,7 +3391,7 @@ static void test_MsiSourceListAddSource(void)
     RegCloseKey(net);
 
     res = RegSetValueExA(source, "LastUsedSource", 0, REG_SZ, (LPBYTE)"blah", 5);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* LastUsedSource value exists */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
@@ -3363,7 +3399,7 @@ static void test_MsiSourceListAddSource(void)
 
     /* Net key is created */
     res = RegOpenKeyExA(source, "Net", 0, access, &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(source, "LastUsedSource", "blah");
     CHECK_REG_STR(net, "1", "source\\");
@@ -3373,7 +3409,7 @@ static void test_MsiSourceListAddSource(void)
     RegCloseKey(net);
 
     res = RegSetValueExA(source, "LastUsedSource", 0, REG_SZ, (LPBYTE)"5", 2);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* LastUsedSource is an integer */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
@@ -3381,7 +3417,7 @@ static void test_MsiSourceListAddSource(void)
 
     /* Net key is created */
     res = RegOpenKeyExA(source, "Net", 0, access, &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(source, "LastUsedSource", "5");
     CHECK_REG_STR(net, "1", "source\\");
@@ -3395,7 +3431,7 @@ static void test_MsiSourceListAddSource(void)
     CHECK_REG_STR(net, "2", "another\\");
 
     res = RegSetValueExA(source, "LastUsedSource", 0, REG_SZ, (LPBYTE)"2", 2);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* LastUsedSource is in the source list */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "third/");
@@ -3428,7 +3464,7 @@ userunmanaged_tests:
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         goto machine_tests;
     }
 
@@ -3437,7 +3473,7 @@ userunmanaged_tests:
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyA(userkey, "SourceList", &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
@@ -3445,7 +3481,7 @@ userunmanaged_tests:
 
     /* Net key is created */
     res = RegOpenKeyA(source, "Net", &net);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(net, "1", "source\\");
 
@@ -3469,7 +3505,7 @@ machine_tests:
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
     if (res != ERROR_SUCCESS)
     {
-        skip("Product key creation failed with error code %u\n", res);
+        skip("Product key creation failed with error code %ld\n", res);
         LocalFree(usersid);
         return;
     }
@@ -3479,7 +3515,7 @@ machine_tests:
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
     res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* SourceList key exists */
     r = pMsiSourceListAddSourceA(prodcode, NULL, 0, "source");
@@ -3492,7 +3528,7 @@ machine_tests:
         skip("MsiSourceListAddSource (insufficient privileges)\n");
         goto done;
     }
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     CHECK_REG_STR(net, "1", "source\\");
 

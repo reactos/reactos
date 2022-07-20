@@ -1,0 +1,84 @@
+/*
+ * PROJECT:      ReactOS On-Screen Keyboard
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Hong Kong) resource file
+ * TRANSLATORS:  Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:   Chinese (Traditional) resource file
+ *               Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDR_OSK_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "檔案"
+    BEGIN
+        MENUITEM "結束(&E)", IDM_EXIT
+    END
+
+    POPUP "鍵盤"
+    BEGIN
+        MENUITEM "增強型鍵盤", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "標準鍵盤", IDM_STANDARD_KB
+        MENUITEM SEPARATOR
+        MENUITEM "標準配置", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "區塊配置", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "101 鍵", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 鍵", IDM_102_KEYS, GRAYED
+        MENUITEM "106 鍵", IDM_106_KEYS, GRAYED
+    END
+
+    POPUP "設定"
+    BEGIN
+        MENUITEM "總是顯示在最上層", IDM_ON_TOP, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "使用按鍵音效(&U)", IDM_CLICK_SOUND
+        MENUITEM SEPARATOR
+        MENUITEM "輸入模式(&T)...", IDM_TYPE_MODE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "字型(&F)...", IDM_FONT, GRAYED
+    END
+
+    POPUP "説明"
+    BEGIN
+        MENUITEM "説明主題(&H)", IDM_HELP_TOPICS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "關於螢幕鍵盤(&A)...", IDM_ABOUT
+    END
+END
+
+IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "螢幕鍵盤"
+FONT 9, "新細明體", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "確定", IDOK, 193, 76, 50, 14
+    ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "螢幕小鍵盤是為行動不便的使用者提供基本的輔助功能。行動不便的使用者大多需要一個功能較強的協助工具應用程式作日常工作。", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "不再顯示這個訊息", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OSK "螢幕鍵盤"
+    IDS_AUTHORS "Denis Robert 版權所有"
+    IDS_NUMLOCK "Num"
+    IDS_CAPSLOCK "Caps"
+    IDS_SCROLLLOCK "Scroll"
+    /* Make sure the text fits onto the buttons */
+    IDS_ESCAPE "Esc"
+    IDS_PRN "Prn"
+    IDS_STOP "Stop"
+    IDS_ATTN "Attn"
+    IDS_INSERT "ins"
+    IDS_NUMLOCKKEY "nlk"
+    IDS_DELETE "del"
+    IDS_END "end"
+    IDS_CTRL "ctrl"
+    IDS_LEFTALT "alt"
+    IDS_RIGHTALT "alt"
+END
+
+/* EOF */

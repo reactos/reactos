@@ -32,6 +32,16 @@ public:
     CString strFile3;
     CString strFile4;
 
+    CString strFontName;
+    DWORD PointSize;
+    DWORD Bold;
+    DWORD Italic;
+    DWORD Underline;
+    DWORD CharSet;
+    DWORD FontsPositionX;
+    DWORD FontsPositionY;
+    DWORD ShowTextTool;
+
     enum WallpaperStyle {
         TILED,
         CENTERED,

@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <xmmintrin.h>
+
 /* GLOBALS *******************************************************************/
 
 /* The TSS to use for Double Fault Traps (INT 0x9) */
@@ -24,7 +26,7 @@ UCHAR KiNMITSS[KTSS_IO_MAPS];
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
 ULONG KiFastSystemCallDisable = 0;
-ULONG KeI386NpxPresent = 0;
+ULONG KeI386NpxPresent = TRUE;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
 ULONG KeI386XMMIPresent = 0;
@@ -60,6 +62,24 @@ static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
 static const CHAR CmpCentaurID[]     = "CentaurHauls";
 static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
+typedef union _CPU_SIGNATURE
+{
+    struct
+    {
+        ULONG Step : 4;
+        ULONG Model : 4;
+        ULONG Family : 4;
+        ULONG Unused : 4;
+        ULONG ExtendedModel : 4;
+        ULONG ExtendedFamily : 8;
+        ULONG Unused2 : 4;
+    };
+    ULONG AsULONG;
+} CPU_SIGNATURE;
+
+/* FX area alignment size */
+#define FXSAVE_ALIGN 15
+
 /* SUPPORT ROUTINES FOR MSVC COMPATIBILITY ***********************************/
 
 /* NSC/Cyrix CPU configuration register index */
@@ -82,75 +102,7 @@ setCx86(UCHAR reg, UCHAR data)
     WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23, data);
 }
 
-
 /* FUNCTIONS *****************************************************************/
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-KiSetProcessorType(VOID)
-{
-    ULONG EFlags, NewEFlags;
-    CPU_INFO CpuInfo;
-    ULONG Stepping, Type;
-
-    /* Start by assuming no CPUID data */
-    KeGetCurrentPrcb()->CpuID = 0;
-
-    /* Save EFlags */
-    EFlags = __readeflags();
-
-    /* XOR out the ID bit and update EFlags */
-    NewEFlags = EFlags ^ EFLAGS_ID;
-    __writeeflags(NewEFlags);
-
-    /* Get them back and see if they were modified */
-    NewEFlags = __readeflags();
-    if (NewEFlags != EFlags)
-    {
-        /* The modification worked, so CPUID exists. Set the ID Bit again. */
-        EFlags |= EFLAGS_ID;
-        __writeeflags(EFlags);
-
-        /* Peform CPUID 0 to see if CPUID 1 is supported */
-        KiCpuId(&CpuInfo, 0);
-        if (CpuInfo.Eax > 0)
-        {
-            /* Do CPUID 1 now */
-            KiCpuId(&CpuInfo, 1);
-
-            /*
-             * Get the Stepping and Type. The stepping contains both the
-             * Model and the Step, while the Type contains the returned Type.
-             * We ignore the family.
-             *
-             * For the stepping, we convert this: zzzzzzxy into this: x0y
-             */
-            Stepping = CpuInfo.Eax & 0xF0;
-            Stepping <<= 4;
-            Stepping += (CpuInfo.Eax & 0xFF);
-            Stepping &= 0xF0F;
-            Type = CpuInfo.Eax & 0xF00;
-            Type >>= 8;
-
-            /* Save them in the PRCB */
-            KeGetCurrentPrcb()->CpuID = TRUE;
-            KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-            KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
-        }
-        else
-        {
-            DPRINT1("CPUID Support lacking\n");
-        }
-    }
-    else
-    {
-        DPRINT1("CPUID Support lacking\n");
-    }
-
-    /* Restore EFLAGS */
-    __writeeflags(EFlags);
-}
 
 CODE_SEG("INIT")
 ULONG
@@ -159,10 +111,6 @@ KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     CPU_INFO CpuInfo;
-
-    /* Assume no Vendor ID and fail if no CPUID Support. */
-    Prcb->VendorString[0] = 0;
-    if (!Prcb->CpuID) return 0;
 
     /* Get the Vendor ID */
     KiCpuId(&CpuInfo, 0);
@@ -206,6 +154,58 @@ KiGetCpuVendor(VOID)
     /* Unknown CPU */
     DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
     return CPU_UNKNOWN;
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiSetProcessorType(VOID)
+{
+    CPU_INFO CpuInfo;
+    CPU_SIGNATURE CpuSignature;
+    BOOLEAN ExtendModel;
+    ULONG Stepping, Type;
+
+    /* Do CPUID 1 now */
+    KiCpuId(&CpuInfo, 1);
+
+    /*
+     * Get the Stepping and Type. The stepping contains both the
+     * Model and the Step, while the Type contains the returned Family.
+     *
+     * For the stepping, we convert this: zzzzzzxy into this: x0y
+     */
+    CpuSignature.AsULONG = CpuInfo.Eax;
+    Stepping = CpuSignature.Model;
+    ExtendModel = (CpuSignature.Family == 15);
+#if ( (NTDDI_VERSION >= NTDDI_WINXPSP2) && (NTDDI_VERSION < NTDDI_WS03) ) || (NTDDI_VERSION >= NTDDI_WS03SP1)
+    if (CpuSignature.Family == 6)
+    {
+        ULONG Vendor = KiGetCpuVendor();
+        ExtendModel |= (Vendor == CPU_INTEL);
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+        ExtendModel |= (Vendor == CPU_CENTAUR);
+#endif
+    }
+#endif
+    if (ExtendModel)
+    {
+        /* Add ExtendedModel to distinguish from non-extended values. */
+        Stepping |= (CpuSignature.ExtendedModel << 4);
+    }
+    Stepping = (Stepping << 8) | CpuSignature.Step;
+    Type = CpuSignature.Family;
+    if (CpuSignature.Family == 15)
+    {
+        /* Add ExtendedFamily to distinguish from non-extended values.
+         * It must not be larger than 0xF0 to avoid overflow. */
+        Type += min(CpuSignature.ExtendedFamily, 0xF0);
+    }
+
+    /* Save them in the PRCB */
+    KeGetCurrentPrcb()->CpuID = TRUE;
+    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
+    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 }
 
 CODE_SEG("INIT")
@@ -465,7 +465,6 @@ NTAPI
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    ULONG Vendor;
     CPU_INFO CpuInfo;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
@@ -476,12 +475,8 @@ KiGetCacheInformation(VOID)
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
 
-    /* Get the Vendor ID and make sure we support CPUID */
-    Vendor = KiGetCpuVendor();
-    if (!Vendor) return;
-
     /* Check the Vendor ID */
-    switch (Vendor)
+    switch (KiGetCpuVendor())
     {
         /* Handle Intel case */
         case CPU_INTEL:
@@ -1161,55 +1156,14 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
-KiIsNpxPresent(VOID)
-{
-    ULONG Cr0;
-    USHORT Magic;
-
-    /* Set magic */
-    Magic = 0xFFFF;
-
-    /* Read CR0 and mask out FPU flags */
-    Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
-
-    /* Store on FPU stack */
-#ifdef _MSC_VER
-    __asm fninit;
-    __asm fnstsw Magic;
-#else
-    asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
-#endif
-
-    /* Magic should now be cleared */
-    if (Magic & 0xFF)
-    {
-        /* You don't have an FPU -- enable emulation for now */
-        __writecr0(Cr0 | CR0_EM | CR0_TS);
-        return FALSE;
-    }
-
-    /* You have an FPU, enable it */
-    Cr0 |= CR0_ET;
-
-    /* Enable INT 16 on 486 and higher */
-    if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
-
-    /* Set FPU state */
-    __writecr0(Cr0 | CR0_EM | CR0_TS);
-    return TRUE;
-}
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
 KiIsNpxErrataPresent(VOID)
 {
     static double Value1 = 4195835.0, Value2 = 3145727.0;
     INT ErrataPresent;
     ULONG Cr0;
 
-    /* Disable interrupts */
-    _disable();
+    /* Interrupts have to be disabled here. */
+    ASSERT(!(__readeflags() & EFLAGS_INTERRUPT_MASK));
 
     /* Read CR0 and remove FPU flags */
     Cr0 = __readcr0();
@@ -1246,9 +1200,6 @@ KiIsNpxErrataPresent(VOID)
 
     /* Restore CR0 */
     __writecr0(Cr0);
-
-    /* Enable interrupts */
-    _enable();
 
     /* Return if there's an errata */
     return ErrataPresent != 0;
@@ -1359,62 +1310,230 @@ KiCoprocessorError(VOID)
     __writecr0(__readcr0() | CR0_TS);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Saves the current floating point unit state
+ * context of the current calling thread.
+ *
+ * @param[out] Save
+ * The saved floating point context given to the
+ * caller at the end of function's operations.
+ * The structure whose data contents are opaque
+ * to the calling thread.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has
+ * successfully completed its operations.
+ * STATUS_INSUFFICIENT_RESOURCES is returned
+ * if the function couldn't allocate memory
+ * for FPU state information.
+ *
+ * @remarks
+ * The function performs a FPU state save
+ * in two ways. A normal FPU save (FNSAVE)
+ * is performed if the system doesn't have
+ * SSE/SSE2, otherwise the function performs
+ * a save of FPU, MMX and SSE states save (FXSAVE).
  */
+#if defined(__clang__)
+__attribute__((__target__("sse")))
+#endif
 NTSTATUS
 NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE Save)
 {
-    PFNSAVE_FORMAT FpState;
+    PFLOATING_SAVE_CONTEXT FsContext;
+    PFX_SAVE_AREA FxSaveAreaFrame;
+    PKPRCB CurrentPrcb;
+
+    /* Sanity checks */
+    ASSERT(Save);
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-    UNIMPLEMENTED_ONCE;
+    ASSERT(KeI386NpxPresent);
 
-    /* check if we are doing software emulation */
-    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
-
-    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
-    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
-
-    *((PVOID *) Save) = FpState;
-#ifdef __GNUC__
-    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
-#else
-    __asm
+    /* Initialize the floating point context */
+    FsContext = ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(FLOATING_SAVE_CONTEXT),
+                                      TAG_FLOATING_POINT_CONTEXT);
+    if (!FsContext)
     {
-        mov eax, [FpState]
-        fnsave [eax]
-    };
-#endif
+        /* Bail out if we failed */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-    KeGetCurrentThread()->Header.NpxIrql = KeGetCurrentIrql();
+    /*
+     * Allocate some memory pool for the buffer. The size
+     * of this allocated buffer is the FX area plus the
+     * alignment requirement needed for FXSAVE as a 16-byte
+     * aligned pointer is compulsory in order to save the
+     * FPU state.
+     */
+    FsContext->Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                              sizeof(FX_SAVE_AREA) + FXSAVE_ALIGN,
+                                              TAG_FLOATING_POINT_FX);
+    if (!FsContext->Buffer)
+    {
+        /* Bail out if we failed */
+        ExFreePoolWithTag(FsContext, TAG_FLOATING_POINT_CONTEXT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /*
+     * Now cache the allocated buffer into the save area
+     * and align the said area to a 16-byte boundary. Why
+     * do we have to do this is because of ExAllocate function.
+     * We gave the necessary alignment requirement in the pool
+     * allocation size although the function will always return
+     * a 8-byte aligned pointer. Aligning the given pointer directly
+     * can cause issues when freeing it from memory afterwards. With
+     * that said, we have to cache the buffer to the area so that we
+     * do not touch or mess the allocated buffer any further.
+     */
+    FsContext->PfxSaveArea = ALIGN_UP_POINTER_BY(FsContext->Buffer, 16);
+
+    /* Disable interrupts and get the current processor control region */
+    _disable();
+    CurrentPrcb = KeGetCurrentPrcb();
+
+    /* Store the current thread to context */
+    FsContext->CurrentThread = KeGetCurrentThread();
+
+    /*
+     * Save the previous NPX thread state registers (aka Numeric
+     * Processor eXtension) into the current context so that
+     * we are informing the scheduler the current FPU state
+     * belongs to this thread.
+     */
+    if (FsContext->CurrentThread != CurrentPrcb->NpxThread)
+    {
+        if ((CurrentPrcb->NpxThread != NULL) &&
+            (CurrentPrcb->NpxThread->NpxState == NPX_STATE_LOADED))
+        {
+            /* Get the FX frame */
+            FxSaveAreaFrame = KiGetThreadNpxArea(CurrentPrcb->NpxThread);
+
+            /* Save the FPU state */
+            Ke386SaveFpuState(FxSaveAreaFrame);
+
+            /* NPX thread has lost its state */
+            CurrentPrcb->NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+            FxSaveAreaFrame->NpxSavedCpu = 0;
+        }
+
+        /* The new NPX thread is the current thread */
+        CurrentPrcb->NpxThread = FsContext->CurrentThread;
+    }
+
+    /* Perform the save */
+    Ke386SaveFpuState(FsContext->PfxSaveArea);
+
+    /* Store the NPX IRQL */
+    FsContext->OldNpxIrql = FsContext->CurrentThread->Header.NpxIrql;
+
+    /* Set the current IRQL to NPX */
+    FsContext->CurrentThread->Header.NpxIrql = KeGetCurrentIrql();
+
+    /* Initialize the FPU */
+    Ke386FnInit();
+
+    /* Enable interrupts back */
+    _enable();
+
+    /* Give the saved FPU context to the caller */
+    *((PVOID *) Save) = FsContext;
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Restores the original FPU state context that has
+ * been saved by a API call of KeSaveFloatingPointState.
+ * Callers are expected to restore the floating point
+ * state by calling this function when they've finished
+ * doing FPU operations.
+ *
+ * @param[in] Save
+ * The saved floating point context that is to be given
+ * to the function to restore the FPU state.
+ *
+ * @return
+ * Returns STATUS_SUCCESS indicating the function
+ * has fully completed its operations.
  */
+#if defined(__clang__)
+__attribute__((__target__("sse")))
+#endif
 NTSTATUS
 NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE Save)
 {
-    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
-    ASSERT(KeGetCurrentThread()->Header.NpxIrql == KeGetCurrentIrql());
-    UNIMPLEMENTED_ONCE;
+    PFLOATING_SAVE_CONTEXT FsContext;
 
-#ifdef __GNUC__
-    asm volatile("fnclex\n\t");
-    asm volatile("frstor %0\n\t" : "=m" (*FpState));
-#else
-    __asm
+    /* Sanity checks */
+    ASSERT(Save);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    ASSERT(KeI386NpxPresent);
+
+    /* Cache the saved FS context */
+    FsContext = *((PVOID *) Save);
+
+    /*
+     * We have to restore the regular saved FPU
+     * state. For this we must first do some
+     * validation checks so that we are sure
+     * ourselves the state context is saved
+     * properly. Check if we are in the same
+     * calling thread.
+     */
+    if (FsContext->CurrentThread != KeGetCurrentThread())
     {
-        fnclex
-        mov eax, [FpState]
-        frstor [eax]
-    };
-#endif
+        /*
+         * This isn't the thread that saved the
+         * FPU state context, crash the system!
+         */
+        KeBugCheckEx(INVALID_FLOATING_POINT_STATE,
+                     0x2,
+                     (ULONG_PTR)FsContext->CurrentThread,
+                     (ULONG_PTR)KeGetCurrentThread(),
+                     0);
+    }
 
-    ExFreePool(FpState);
+    /* Are we under the same NPX interrupt level? */
+    if (FsContext->CurrentThread->Header.NpxIrql != KeGetCurrentIrql())
+    {
+        /* The interrupt level has changed, crash the system! */
+        KeBugCheckEx(INVALID_FLOATING_POINT_STATE,
+                     0x1,
+                     (ULONG_PTR)FsContext->CurrentThread->Header.NpxIrql,
+                     (ULONG_PTR)KeGetCurrentIrql(),
+                     0);
+    }
+
+    /* Disable interrupts */
+    _disable();
+
+    /*
+     * The saved FPU state context is valid,
+     * it's time to restore the state. First,
+     * clear FPU exceptions now.
+     */
+    Ke386ClearFpExceptions();
+
+    /* Restore the state */
+    Ke386RestoreFpuState(FsContext->PfxSaveArea);
+
+    /* Give the saved NPX IRQL back to the NPX thread */
+    FsContext->CurrentThread->Header.NpxIrql = FsContext->OldNpxIrql;
+
+    /* Enable interrupts back */
+    _enable();
+
+    /* We're done, free the allocated area and context */
+    ExFreePoolWithTag(FsContext->Buffer, TAG_FLOATING_POINT_FX);
+    ExFreePoolWithTag(FsContext, TAG_FLOATING_POINT_CONTEXT);
+
     return STATUS_SUCCESS;
 }
 

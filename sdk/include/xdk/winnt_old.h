@@ -2192,39 +2192,39 @@ typedef struct _CONTEXT {
 
     DWORD Cpsr;
     union {
-	struct {
-        	DWORD64 X0;
-                DWORD64 X1;
-                DWORD64 X2;
-                DWORD64 X3;
-                DWORD64 X4;
-                DWORD64 X5;
-                DWORD64 X6;
-                DWORD64 X7;
-        	DWORD64 X8;
-                DWORD64 X9;
-                DWORD64 X10;
-                DWORD64 X11;
-                DWORD64 X12;
-                DWORD64 X13;
-                DWORD64 X14;
-                DWORD64 X15;
-                DWORD64 X16;
-                DWORD64 X17;
-                DWORD64 X18;
-                DWORD64 X19;
-                DWORD64 X20;
-                DWORD64 X21;
-                DWORD64 X22;
-                DWORD64 X23;
-                DWORD64 X24;
-                DWORD64 X25;
-                DWORD64 X26;
-                DWORD64 X27;
-                DWORD64 X28;
-    		DWORD64 Fp;
-		DWORD64 Lr;
-	} DUMMYSTRUCTNAME;
+        struct {
+            DWORD64 X0;
+            DWORD64 X1;
+            DWORD64 X2;
+            DWORD64 X3;
+            DWORD64 X4;
+            DWORD64 X5;
+            DWORD64 X6;
+            DWORD64 X7;
+            DWORD64 X8;
+            DWORD64 X9;
+            DWORD64 X10;
+            DWORD64 X11;
+            DWORD64 X12;
+            DWORD64 X13;
+            DWORD64 X14;
+            DWORD64 X15;
+            DWORD64 X16;
+            DWORD64 X17;
+            DWORD64 X18;
+            DWORD64 X19;
+            DWORD64 X20;
+            DWORD64 X21;
+            DWORD64 X22;
+            DWORD64 X23;
+            DWORD64 X24;
+            DWORD64 X25;
+            DWORD64 X26;
+            DWORD64 X27;
+            DWORD64 X28;
+            DWORD64 Fp;
+            DWORD64 Lr;
+        } DUMMYSTRUCTNAME;
         DWORD64 X[31];
     } DUMMYUNIONNAME;
 
@@ -2425,24 +2425,6 @@ typedef struct _SECURITY_ATTRIBUTES {
 #define SECURITY_MIN_SID_SIZE (sizeof(SID))
 
 $include(setypes.h)
-
-typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_ALLOWED_OBJECT_ACE,*PACCESS_ALLOWED_OBJECT_ACE;
-
-typedef struct _ACCESS_DENIED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_DENIED_OBJECT_ACE,*PACCESS_DENIED_OBJECT_ACE;
 
 typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
   ACE_HEADER Header;
@@ -4401,6 +4383,17 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
   #endif
 }
+#elif defined (_M_ARM64)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    //UNIMPLEMENTED;
+    return 0;
+}
+FORCEINLINE PVOID GetCurrentFiber(VOID)
+{
+    //UNIMPLEMENTED;
+    return 0;
+}
 #elif defined(_M_PPC)
 FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
 {
@@ -4440,6 +4433,8 @@ FORCEINLINE PVOID GetFiberData(void)
 #define PreFetchCacheLine(l, a)
 #elif defined(_M_ARM)
 #define PreFetchCacheLine(l, a)
+#elif defined(_M_ARM64)
+#define PreFetchCacheLine(l, a)
 #else
 #error Unknown architecture
 #endif
@@ -4470,6 +4465,8 @@ MemoryBarrier(VOID)
 #define MemoryBarrier()
 #elif defined(_M_ARM)
 #define MemoryBarrier()
+#elif defined(_M_ARM64)
+#define MemoryBarrier()
 #else
 #error Unknown architecture
 #endif
@@ -4491,6 +4488,8 @@ DbgRaiseAssertionFailure(VOID)
 #elif defined(_M_MIPS)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_ARM)
+#define YieldProcessor __yield
+#elif defined(_M_ARM64)
 #define YieldProcessor __yield
 #else
 #error Unknown architecture

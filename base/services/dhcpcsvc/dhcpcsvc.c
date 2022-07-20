@@ -343,7 +343,7 @@ DhcpRosGetAdapterInfo(DWORD AdapterIndex,
 static VOID
 UpdateServiceStatus(DWORD dwState)
 {
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwServiceType = SERVICE_WIN32_SHARE_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
 
     if (dwState == SERVICE_RUNNING)

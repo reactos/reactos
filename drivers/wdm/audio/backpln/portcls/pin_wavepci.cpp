@@ -14,29 +14,11 @@
 
 #include <debug.h>
 
-class CPortPinWavePci : public IPortPinWavePci,
-                        public IServiceSink,
-                        public IPortWavePciStream
+class CPortPinWavePci : public CUnknownImpl<IPortPinWavePci, IServiceSink, IPortWavePciStream>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinWavePci;
     IMP_IServiceSink;
     IMP_IPortWavePciStream;
@@ -73,8 +55,6 @@ protected:
     SUBDEVICE_DESCRIPTOR m_Descriptor;
 
     KSALLOCATOR_FRAMING m_AllocatorFraming;
-
-    LONG m_Ref;
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
@@ -549,12 +529,9 @@ CPortPinWavePci::HandleKsStream(
 {
     NTSTATUS Status;
     ULONG Data = 0;
-    BOOLEAN bFailed;
     InterlockedIncrement((PLONG)&m_TotalPackets);
 
     DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
-
-    bFailed = m_IrpQueue->HasLastMappingFailed();
 
     Status = m_IrpQueue->AddMapping(Irp, &Data);
 
@@ -565,7 +542,7 @@ CPortPinWavePci::HandleKsStream(
         else
             m_Position.PlayOffset += Data;
 
-        if (bFailed)
+        if (m_State == KSSTATE_RUN)
         {
             // notify stream of new mapping
             m_Stream->MappingAvailable();

@@ -720,8 +720,9 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
             else
                 dwKey = MK_SHIFT;
         }
-        else {
-            ERR("No drop effect obtained");
+        else
+        {
+            ERR("No drop effect obtained\n");
         }
         GlobalUnlock(medium2.hGlobal);
     }
@@ -778,7 +779,8 @@ HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    SHSimulateDrop(pDT, m_pDataObj, 0, NULL, NULL);
+    DWORD grfKeyState = (lpcmi->fMask & CMIC_MASK_SHIFT_DOWN) ? MK_SHIFT : 0;
+    SHSimulateDrop(pDT, m_pDataObj, grfKeyState, NULL, NULL);
 
     return S_OK;
 }
@@ -836,15 +838,21 @@ HRESULT
 CDefaultContextMenu::DoProperties(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
+    HRESULT hr = _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
 
-    return S_OK;
+    // We are asked to run the default property sheet
+    if (hr == S_FALSE)
+    {
+        return Shell_DefaultContextMenuCallBack(m_psf, m_pDataObj);
+    }
+
+    return hr;
 }
 
 HRESULT
 CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    ERR("TODO: Undo");
+    ERR("TODO: Undo\n");
     return E_NOTIMPL;
 }
 

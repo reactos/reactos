@@ -381,8 +381,12 @@ PspDeleteProcess(IN PVOID ObjectBody)
     /* Dereference the Device Map */
     ObDereferenceDeviceMap(Process);
 
-    /* Destroy the Quota Block */
-    PspDestroyQuotaBlock(Process);
+    /*
+     * Dereference the quota block, the function
+     * will invoke a quota block cleanup if the
+     * block itself is no longer used by anybody.
+     */
+    PspDereferenceQuotaBlock(Process, Process->QuotaBlock);
 }
 
 VOID

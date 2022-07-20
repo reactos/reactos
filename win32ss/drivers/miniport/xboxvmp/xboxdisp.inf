@@ -47,38 +47,32 @@ HKR,,InstalledDisplayDrivers,0x00010000,framebuf
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+; Localizable
 nVidiaMfg = "nVidia Corporation"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Graphics Processing Unit"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Unidad de procesamiento de gráficos de Xbox NV2A"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Procesor graficzny Xbox NV2A"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 nVidiaMfg = "Corporația nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Unitate de procesare grafică Xbox NV2A"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 nVidiaMfg = "Корпорация nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Графический процессор NV2A Xbox"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 nVidiaMfg = "nVidia Ortaklığı"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Çizge İşleme Birimi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 nVidiaMfg = "Корпорація nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Графічний процесор NV2A Xbox"
 

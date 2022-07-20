@@ -26,7 +26,7 @@ target_link_libraries(cmipci stdunk libcntpr uuid)
 set_module_type(cmipci wdmdriver UNICODE)
 add_importlibs(cmipci portcls hal ntoskrnl)
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(cmipci PRIVATE -Wno-write-strings -Wno-switch)
 endif()
 

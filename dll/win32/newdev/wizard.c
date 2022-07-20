@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,13 @@ CenterWindow(
 
     GetWindowRect(hWndParent, &rcParent);
     GetWindowRect(hWnd, &rcWindow);
+
+    /* Check if the child window fits inside the parent window */
+    if (rcWindow.left < rcParent.left || rcWindow.top < rcParent.top ||
+        rcWindow.right > rcParent.right || rcWindow.bottom > rcParent.bottom)
+    {
+        return;
+    }
 
     SetWindowPos(
         hWnd,
@@ -248,11 +255,13 @@ FindDriverProc(
     }
     else
     {
-        /* Update device configuration */
-        SetFailedInstall(DevInstData->hDevInfo,
-                         &DevInstData->devInfoData,
-                         TRUE);
-
+        if (!DevInstData->bUpdate)
+        {
+            /* Update device configuration */
+            SetFailedInstall(DevInstData->hDevInfo,
+                             &DevInstData->devInfoData,
+                             TRUE);
+        }
         PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
     }
     return 0;
@@ -511,9 +520,12 @@ WelcomeDlgProc(
                 (WPARAM)TRUE,
                 (LPARAM)0);
 
-            SetFailedInstall(DevInstData->hDevInfo,
-                             &DevInstData->devInfoData,
-                             TRUE);
+            if (!DevInstData->bUpdate)
+            {
+                SetFailedInstall(DevInstData->hDevInfo,
+                                 &DevInstData->devInfoData,
+                                 TRUE);
+            }
             break;
         }
 
@@ -641,9 +653,12 @@ CHSourceDlgProc(
                 {
                     BROWSEINFO bi = { 0 };
                     LPITEMIDLIST pidl;
+                    WCHAR Title[MAX_PATH];
+                    LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
 
                     bi.hwndOwner = hwndDlg;
-                    bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
+                    bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
+                    bi.lpszTitle = Title;
                     pidl = SHBrowseForFolder(&bi);
                     if (pidl)
                     {

@@ -32,6 +32,7 @@ STRINGTABLE
     13 "lecteur réseau pour la fonctionnalité manquante"
     14 "fonctionnalité depuis :"
     15 "sélectionnez le dossier contenant %s"
+    100 "New Folder"
 }
 
 /* Error messages */

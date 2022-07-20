@@ -29,12 +29,6 @@
 #define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
 #define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
-/* temporary */
-#define SC_13 0xde
-#define SC_27 0xc0
-#define SC_40 0xbb
-#define SC_41 0xba
-
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
@@ -42,28 +36,29 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, SC_13,    VK_BACK,
+  VK_OEM_MINUS, VK_OEM_7,     VK_BACK,
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
   'I',          'O',          'P',
-  SC_27,     VK_OEM_4,     VK_RETURN,
+  VK_OEM_3,     VK_OEM_4,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          SC_40,      SC_41,     VK_EMPTY,
+  'L',          VK_OEM_PLUS,  VK_OEM_1,     VK_KANJI | KBDSPECIAL,
   VK_LSHIFT,    VK_OEM_6,
   /* - 2c - */
   /* Third letters row */
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2, VK_RSHIFT,
+  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
   /* - 37 - */
   /* Bottom Row */
-  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
+  VK_MULTIPLY | KBDMULTIVK,
+                VK_LMENU,     VK_SPACE,     VK_OEM_ATTN | KBDSPECIAL,
 
   /* - 3b - */
   /* F-Keys */
@@ -94,16 +89,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
   VK_F21, VK_F22, VK_F23,
   /* - 6f - */
-  /* Not sure who uses these codes */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY,
+  VK_EMPTY, VK_OEM_COPY | KBDSPECIAL, VK_EMPTY,
   /* - 72 - */
   VK_EMPTY, VK_OEM_102, VK_EMPTY, VK_EMPTY,
   /* - 76 - */
   /* One more f-key */
   VK_F24,
   /* - 77 - */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  VK_EMPTY, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
+  VK_EMPTY, VK_EMPTY, VK_CONVERT | KBDSPECIAL, VK_EMPTY,
+  VK_NONCONVERT | KBDSPECIAL, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
   VK_EMPTY,
   /* - 80 - */
   0
@@ -211,20 +205,13 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '7',         0, {'7', '\''} },
   { '8',         0, {'8', '('} },
   { '9',         0, {'9', ')'} },
-  { '0',         0, {'0', 0xff} },
+  { '0',         0, {'0', WCH_NONE} },
 
   /*Japanese Keys*/
-  { SC_13,  0, { '^','~'} },
-  { SC_27,  0, { '@','`'} },
-  { SC_40,  0, { ';','+'} },
-  { SC_41,  0, { ':','*'} },
-
-  /* Specials */
-  /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,0, {';', '+'} },
-  { VK_OEM_1       ,0, {';', ':'} },
-  { VK_OEM_7       ,0, {'\'','\"'} },
-  { VK_OEM_3       ,0, {'`', '~'} },
+  { VK_OEM_7,     0, { '^','~'} },
+  { VK_OEM_3,     0, { '@','`'} },
+  { VK_OEM_PLUS,  0, { ';','+'} },
+  { VK_OEM_1,     0, { ':','*'} },
   { VK_OEM_COMMA   ,0, {',', '<'} },
   { VK_OEM_PERIOD  ,0, {'.', '>'} },
   { VK_OEM_2       ,0, {'/', '?'} },
@@ -292,12 +279,13 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x0f, L"Tab" },
   { 0x1c, L"Enter" },
   { 0x1d, L"Ctrl" },
+  { 0x29, L"\u534A\u89D2/\u5168\u89D2" }, /* Hankaku/Zenkaku */
   { 0x2a, L"Shift" },
   { 0x36, L"Right Shift" },
   { 0x37, L"Num *" },
   { 0x38, L"Alt" },
   { 0x39, L"Space" },
-  { 0x3a, L"CAPLOK Lock" },
+  { 0x3a, L"Caps Lock" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -326,6 +314,9 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x54, L"Sys Req" },
   { 0x57, L"F11" },
   { 0x58, L"F12" },
+  { 0x70, L"\u3072\u3089\u304C\u306A" },    /* Hiragana */
+  { 0x79, L"\u5909\u63DB" },                /* Henkan (Convert) */
+  { 0x7b, L"\u7121\u5909\u63DB" },          /* Mu-Henkan (Non-Convert) */
   { 0x7c, L"F13" },
   { 0x7d, L"F14" },
   { 0x7e, L"F15" },
@@ -338,12 +329,14 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x85, L"F22" },
   { 0x86, L"F23" },
   { 0x87, L"F24" },
+  { 0xf1, L"ImeOff" },
+  { 0xf2, L"ImeOn" },
   { 0, NULL },
 };
 
 ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x1c, L"Num Enter" },
-  { 0x1d, L"Right Ctrl" },
+  { 0x1d, L"Right Control" },
   { 0x35, L"Num /" },
   { 0x37, L"Prnt Scrn" },
   { 0x38, L"Right Alt" },
@@ -352,8 +345,8 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x47, L"Home" },
   { 0x48, L"Up" },
   { 0x49, L"Page Up" },
-  { 0x4a, L"Left" },
-  { 0x4c, L"Center" },
+  { 0x4a, L"-" },
+  { 0x4b, L"Left" },
   { 0x4d, L"Right" },
   { 0x4f, L"End" },
   { 0x50, L"Down" },
@@ -361,9 +354,9 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
   { 0x54, L"<ReactOS>" },
-  { 0x55, L"Help" },
-  { 0x56, L"Left Windows" },
-  { 0x5b, L"Right Windows" },
+  { 0x5b, L"Left <ReactOS>" },
+  { 0x5c, L"Right <ReactOS>" },
+  { 0x5d, L"Application" },
   { 0, NULL },
 };
 

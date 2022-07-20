@@ -12,8 +12,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 void
@@ -70,6 +68,8 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 
 LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (!IsWindow() || !sizeboxLeftTop.IsWindow())
+        return 0;
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
     sizeboxLeftTop.MoveWindow(
@@ -102,10 +102,28 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
+LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    HDC hdc = (HDC)wParam;
+
+    if (toolsModel.GetActiveTool() == TOOL_TEXT && !toolsModel.IsBackgroundTransparent() &&
+        ::IsWindowVisible(textEditWindow))
+    {
+        // Do clipping
+        HWND hChild = textEditWindow;
+        RECT rcChild;
+        ::GetWindowRect(hChild, &rcChild);
+        ::MapWindowPoints(NULL, m_hWnd, (LPPOINT)&rcChild, 2);
+        ExcludeClipRect(hdc, rcChild.left, rcChild.top, rcChild.right, rcChild.bottom);
+    }
+
+    return DefWindowProc(nMsg, wParam, lParam);
+}
+
 LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    DefWindowProc(WM_PAINT, wParam, lParam);
-    HDC hdc = GetDC();
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(&ps);
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
     StretchBlt(hdc, 0, 0, Zoomed(imgXRes), Zoomed(imgYRes), imageModel.GetDC(), 0, 0, imgXRes,
@@ -126,9 +144,13 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         }
         DeleteObject(SelectObject(hdc, oldPen));
     }
-    ReleaseDC(hdc);
-    selectionWindow.Invalidate(FALSE);
-    miniature.Invalidate(FALSE);
+    EndPaint(&ps);
+    if (selectionWindow.IsWindow())
+        selectionWindow.Invalidate(FALSE);
+    if (miniature.IsWindow())
+        miniature.Invalidate(FALSE);
+    if (textEditWindow.IsWindow())
+        textEditWindow.Invalidate(FALSE);
     return 0;
 }
 
@@ -159,41 +181,43 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if ((!drawing) || (toolsModel.GetActiveTool() == TOOL_COLOR))
-    {
-        SetCapture();
-        drawing = TRUE;
-        startPaintingL(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)),
-                       paletteModel.GetFgColor(), paletteModel.GetBgColor());
-    }
-    else
-    {
-        SendMessage(WM_LBUTTONUP, wParam, lParam);
-        imageModel.Undo();
-    }
+    drawing = TRUE;
+    SetCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), FALSE);
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() < 8000))
-        zoomTo(toolsModel.GetZoom() * 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
+    Invalidate(FALSE);
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if ((!drawing) || (toolsModel.GetActiveTool() == TOOL_COLOR))
-    {
-        SetCapture();
-        drawing = TRUE;
-        startPaintingR(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)),
-                       paletteModel.GetFgColor(), paletteModel.GetBgColor());
-    }
-    else
-    {
-        SendMessage(WM_RBUTTONUP, wParam, lParam);
-        imageModel.Undo();
-    }
+    drawing = TRUE;
+    SetCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() > 125))
-        zoomTo(toolsModel.GetZoom() / 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
+    Invalidate(FALSE);
     return 0;
 }
 
@@ -201,62 +225,27 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingL(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
-                     paletteModel.GetBgColor());
+        drawing = FALSE;
+        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+        toolsModel.OnButtonUp(TRUE, UnZoomed(x), UnZoomed(y));
         Invalidate(FALSE);
-        if (toolsModel.GetActiveTool() == TOOL_COLOR)
-        {
-            COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)));
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetFgColor(tempColor);
-        }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
-    drawing = FALSE;
     ReleaseCapture();
     return 0;
 }
 
 void CImgAreaWindow::cancelDrawing()
 {
-    POINT pt;
-    switch (toolsModel.GetActiveTool())
-    {
-        case TOOL_FREESEL: case TOOL_RECTSEL:
-        case TOOL_TEXT: case TOOL_ZOOM: case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            selectionModel.ResetPtStack();
-            pointSP = 0;
-            Invalidate(FALSE);
-            break;
-        default:
-            GetCursorPos(&pt);
-            ScreenToClient(&pt);
-            // FIXME: dirty hack
-            if (GetKeyState(VK_LBUTTON) < 0)
-            {
-                endPaintingL(imageModel.GetDC(), UnZoomed(pt.x), UnZoomed(pt.y), paletteModel.GetFgColor(),
-                             paletteModel.GetBgColor());
-            }
-            else if (GetKeyState(VK_RBUTTON) < 0)
-            {
-                endPaintingR(imageModel.GetDC(), UnZoomed(pt.x), UnZoomed(pt.y), paletteModel.GetFgColor(),
-                             paletteModel.GetBgColor());
-            }
-            imageModel.Undo();
-            pointSP = 0;
-            selectionModel.ResetPtStack();
-    }
+    drawing = FALSE;
+    toolsModel.OnCancelDraw();
+    Invalidate(FALSE);
 }
 
 LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (drawing)
-    {
         cancelDrawing();
-        drawing = FALSE;
-    }
     return 0;
 }
 
@@ -270,12 +259,8 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    cancelDrawing();
-                    break;
-            }
+            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
+                cancelDrawing();
         }
     }
     return 0;
@@ -285,19 +270,12 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingR(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
-                     paletteModel.GetBgColor());
+        drawing = FALSE;
+        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+        toolsModel.OnButtonUp(FALSE, UnZoomed(x), UnZoomed(y));
         Invalidate(FALSE);
-        if (toolsModel.GetActiveTool() == TOOL_COLOR)
-        {
-            COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)));
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetBgColor(tempColor);
-        }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
-    drawing = FALSE;
     ReleaseCapture();
     return 0;
 }
@@ -369,10 +347,12 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
+            default:
+                break;
         }
-        if ((wParam & MK_LBUTTON) != 0)
+        if (wParam & MK_LBUTTON)
         {
-            whilePaintingL(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.OnMouseMove(TRUE, xNow, yNow);
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
@@ -383,9 +363,9 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
-        if ((wParam & MK_RBUTTON) != 0)
+        if (wParam & MK_RBUTTON)
         {
-            whilePaintingR(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.OnMouseMove(FALSE, xNow, yNow);
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {
@@ -418,4 +398,23 @@ LRESULT CImgAreaWindow::OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARA
 {
     Invalidate(FALSE);
     return 0;
+}
+
+LRESULT CImgAreaWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
+
+LRESULT CImgAreaWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    HDC hdc = (HDC)wParam;
+    SetBkMode(hdc, TRANSPARENT);
+    return (LRESULT)GetStockObject(NULL_BRUSH);
+}
+
+void CImgAreaWindow::finishDrawing()
+{
+    toolsModel.OnFinishDraw();
+    drawing = FALSE;
+    Invalidate(FALSE);
 }

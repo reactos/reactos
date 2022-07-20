@@ -510,7 +510,9 @@ HalpBiosDisplayReset(VOID)
 
     /* Restore previous flags */
     __writeeflags(OldEflags);
-#endif
     return TRUE;
+#else
+    /* This x64 HAL does NOT currently handle display reset (TODO) */
+    return FALSE;
+#endif
 }
-

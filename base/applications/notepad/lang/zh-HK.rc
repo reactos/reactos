@@ -1,0 +1,180 @@
+/*
+ * PROJECT:     ReactOS Notepad
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "開新檔案(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "開新視窗(&W)\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "開啟舊檔(&O)...\tCtrl+O", CMD_OPEN
+        MENUITEM "儲存檔案(&S)\tCtrl+S", CMD_SAVE
+        MENUITEM "另存新檔(&A)...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "版面設定(&T)...", CMD_PAGE_SETUP
+        MENUITEM "列印(&P)...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&X)", CMD_EXIT
+    END
+    POPUP "編輯(&E)"
+    BEGIN
+        MENUITEM "復原(&U)\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)\tCtrl+X", CMD_CUT
+        MENUITEM "複製(&C)\tCtrl+C", CMD_COPY
+        MENUITEM "貼上(&P)\tCtrl+V", CMD_PASTE
+        MENUITEM "刪除(&D)\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "搜尋(&F)...\tCtrl+F", CMD_SEARCH
+        MENUITEM "找下一個(&N)\tF3", CMD_SEARCH_NEXT
+        MENUITEM "取代(&R)...\tCtrl+H", CMD_REPLACE
+        MENUITEM "跳到(&G)...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "全選(&A)\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "插入時間／日期(&T)\tF5", CMD_TIME_DATE
+    END
+    POPUP "格式(&O)"
+    BEGIN
+        MENUITEM "自動換行(&W)", CMD_WRAP
+        MENUITEM "字型(&F)...", CMD_FONT
+    END
+    POPUP "檢視(&V)"
+    BEGIN
+        MENUITEM "狀態列(&S)", CMD_STATUSBAR
+    END
+    POPUP "説明(&H)"
+    BEGIN
+        MENUITEM "內容(&C)", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "關於記事本(&A)", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 9, "新細明體"
+CAPTION "版面設定"
+BEGIN
+    GROUPBOX "預覽", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "紙張", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "大小(&S)：", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "紙匣(&T)：", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "列印方向", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "直印(&P)", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "橫印(&L)", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "邊界", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "左(&E)：", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "右(&R)：", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "上(&O)：", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "下(&B)：", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "頁首(&H)：", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "頁尾(&F)：", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "説明", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "確定", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "取消", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "印表機(&R)...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 9, "新細明體"
+CAPTION "編碼"
+BEGIN
+    COMBOBOX ID_ENCODING, 124, 0, 125, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "編碼：", 0x155, 65, 2, 41, 12
+    COMBOBOX ID_EOLN, 124, 18, 125, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "換行格式：", 0x156, 65, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 9, "新細明體"
+CAPTION "跳到行數"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "行數(&L)：", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "確定", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "取消", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "第 &s 頁" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "記事本"
+    STRING_ERROR "錯誤"
+    STRING_WARNING "警告"
+    STRING_INFO "資訊"
+    STRING_UNTITLED "未命名"
+    STRING_ALL_FILES "所有檔案 (*.*)"
+    STRING_TEXT_FILES_TXT "純文字檔案 (*.txt)"
+    STRING_TOOLARGE "檔案「%s」過大。\n\
+請使用其他編輯器。"
+    STRING_NOTEXT "沒有輸入文字。\n\
+請輸入文字後再試一次。"
+    STRING_DOESNOTEXIST "檔案「%s」不存在。\n\
+是否要開新檔案？"
+    STRING_NOTSAVED "檔案「%s」已被修改。\n\
+是否要儲存這些變更？"
+    STRING_NOTFOUND "找不到檔案「%s」"
+    STRING_OUT_OF_MEMORY "沒有足夠記憶體進行這個操作。\n\
+請關閉一些程式來增加可用記憶體，然後再試一次。"
+    STRING_CANNOTFIND "找不到「%s」"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode（大端序）"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "第 %d 行，第 %d 字元"
+    STRING_PRINTERROR "檔案「%s」列印失敗。\n\
+請檢查印表機是否已經開機及正確設定。"
+
+    STRING_TEXT_DOCUMENT "純文字檔案"
+    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
+END

@@ -33,6 +33,7 @@ STRINGTABLE
     13 "faltando drive de rede para característica"
     14 "origem da característica:"
     15 "escolha a pasta que contém %s"
+    100 "New Folder"
 }
 
 /* Error messages */

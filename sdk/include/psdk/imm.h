@@ -209,9 +209,6 @@ typedef struct tagCANDIDATEINFO {
     DWORD               dwPrivateOffset;
 } CANDIDATEINFO, *LPCANDIDATEINFO;
 
-#define IMMGWL_IMC                      0
-#define IMMGWL_PRIVATE                  (sizeof(LONG))
-
 /* IME Property bits */
 #define IME_PROP_END_UNLOAD             0x0001
 #define IME_PROP_KBD_CHAR_FIRST         0x0002
@@ -580,11 +577,10 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IME_REGWORD_STYLE_USER_FIRST    0x80000000
 #define IME_REGWORD_STYLE_USER_LAST     0xFFFFFFFF
 
-
 /* dwFlags for ImmAssociateContextEx */
-#define IACE_CHILDREN			0x0001
-#define IACE_DEFAULT			0x0010
-#define IACE_IGNORENOCONTEXT		0x0020
+#define IACE_CHILDREN           0x0001
+#define IACE_DEFAULT            0x0010
+#define IACE_IGNORENOCONTEXT    0x0020
 
 /* dwFlags for ImmGetImeMenuItems */
 #define IGIMIF_RIGHTMENU		0x0001

@@ -9,13 +9,13 @@ list(APPEND SOURCE
     heap.c
     locale.c
     misc.c
-    printf.c
     scanf.c
     signal.c
     string.c
     time.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    printf.c    # _CRT_NON_CONFORMING_SWPRINTFS
     testlist.c)
 
 add_executable(msvcrt_winetest
@@ -27,11 +27,8 @@ target_compile_definitions(msvcrt_winetest PRIVATE
     _CRT_NONSTDC_NO_DEPRECATE
     __msvcrt_ulong=ULONG)
 
-if ((NOT MSVC) OR USE_CLANG_CL)
-    if (NOT USE_CLANG_CL)
-        target_compile_options(msvcrt_winetest PRIVATE -Wno-stringop-truncation)
-    endif()
-    target_compile_options(msvcrt_winetest PRIVATE -Wno-format)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(msvcrt_winetest PRIVATE -Wno-format -Wno-stringop-truncation)
 endif()
 
 set_module_type(msvcrt_winetest win32cui)

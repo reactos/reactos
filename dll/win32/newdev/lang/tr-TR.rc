@@ -95,4 +95,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Sürücü Arama ve Kurma Seçeneklerini Seç"
     IDS_SEARCHDRV_TITLE "Arıyor..."
     IDS_INSTALLDRV_TITLE "Kuruyor..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END

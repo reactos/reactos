@@ -826,7 +826,7 @@ BiEnumerateSubKeys (
         }
 
         /* Get the cell data for it */
-        Node = HvGetCell(Hive, CellIndex);
+        Node = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
         if (!Node)
         {
             Status = STATUS_REGISTRY_CORRUPT;

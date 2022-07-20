@@ -38,8 +38,7 @@ HKR, , Installer32,     0, "desk.cpl,DisplayClassInstaller"
 CopyFiles = VGA.Miniport_CopyFiles.NT, VGA.Display_CopyFiles.NT
 
 [VGA.Miniport_CopyFiles.NT]
-vgamp.sys
-vbemp.sys
+vgapnp.sys
 
 [VGA.Display_CopyFiles.NT]
 vgaddi.dll
@@ -47,36 +46,31 @@ framebuf.dll
 
 [VGA_Inst.NT.Services]
 AddService = , 0x00000002
-;AddService = VGA, , VGA_Service_Inst
-AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
-
-[VGA_Service_Inst]
-ServiceType   = 1
-StartType     = 1
-ErrorControl  = 0
-ServiceBinary = %12%\vgamp.sys
-LoadOrderGroup = Video Save
+AddService = vga, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
 
 [VBE_Service_Inst]
 ServiceType   = 1
 StartType     = 1
 ErrorControl  = 0
-ServiceBinary = %12%\vbemp.sys
+ServiceBinary = %12%\vgapnp.sys
 LoadOrderGroup = Video Save
 
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 DisplayClassName = "Display Adapters"
 
 StdMfg = "(Standard display adapters)"
 VGA.DeviceDesc = "VGA-compatible graphics card"
 
 [Strings.0404]
-DisplayClassName = "顯示配接器"
+DisplayClassName = "顯示介面卡"
 
-StdMfg = "(標準顯示配接器)"
+StdMfg = "（標準顯示介面卡）"
 VGA.DeviceDesc = "VGA 相容顯示卡"
 
 [Strings.0405]
@@ -98,7 +92,6 @@ StdMfg = "(Πρότυποι προσαρμογείς οθόνης)"
 VGA.DeviceDesc = "VGA-συμβατή κάρτα γραφικών"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 DisplayClassName = "Adaptadores de pantalla"
 
 StdMfg = "(Adaptador de pantalla estándar)"
@@ -117,8 +110,8 @@ StdMfg = "(標準ディスプレイ アダプタ)"
 VGA.DeviceDesc = "VGA互換 グラフィックカード"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 DisplayClassName = "Karty graficzne"
+
 StdMfg = "(Standardowe karty graficzne)"
 VGA.DeviceDesc = "Karta graficzna kompatybilna z VGA"
 
@@ -129,13 +122,12 @@ StdMfg = "(Adaptador de vídeo padrão)"
 VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 DisplayClassName = "Adaptoare grafice"
+
 StdMfg = "(adaptoare grafice standard)"
 VGA.DeviceDesc = "Placă grafică compatibilă VGA"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Графические адаптеры"
 
 StdMfg = "(Стандартные графические адаптеры)"
@@ -148,14 +140,12 @@ StdMfg = "(Štandardné grafické karty)"
 VGA.DeviceDesc = "VGA kompatibilná grafická karta"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 DisplayClassName = "Görüntü Bağdaştırıcıları"
 
 StdMfg = "(Standart Görüntü Bağdaştırıcıları)"
 VGA.DeviceDesc = "VGA Uyumlu Grafik Kartı"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Графічні адаптери"
 
 StdMfg = "(Стандартні графічні адаптери)"
@@ -168,12 +158,17 @@ StdMfg = "(Standartinis vaizdo adapteris)"
 VGA.DeviceDesc = "Su VGA suderinama vaizdo plokštė"
 
 [Strings.0804]
-StdMfg = "(标准显示适配器)"
+StdMfg = "（标准显示适配器）"
 VGA.DeviceDesc = "VGA 兼容显示卡"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 DisplayClassName = "Adaptadores de vídeo"
 
 StdMfg = "(Adaptador de vídeo padrão)"
 VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
+
+[Strings.0C04]
+DisplayClassName = "顯示介面卡"
+
+StdMfg = "（標準顯示介面卡）"
+VGA.DeviceDesc = "VGA 相容顯示卡"

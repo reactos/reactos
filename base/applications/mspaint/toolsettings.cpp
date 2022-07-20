@@ -33,12 +33,11 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HDC hdc = GetDC();
+    PAINTSTRUCT ps;
     RECT rect1 = { 0, 0, 42, 66 };
     RECT rect2 = { 0, 70, 42, 136 };
 
-    DefWindowProc(WM_PAINT, wParam, lParam);
-
+    HDC hdc = BeginPaint(&ps);
     DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (toolsModel.GetActiveTool() == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
     DrawEdge(hdc, &rect2, (toolsModel.GetActiveTool() >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
     switch (toolsModel.GetActiveTool())
@@ -175,8 +174,13 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             DeleteObject(SelectObject(hdc, oldPen));
             break;
         }
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_PEN:
+            break;
     }
-    ReleaseDC(hdc);
+    EndPaint(&ps);
     return 0;
 }
 
@@ -233,6 +237,11 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             if ((y >= 70) && (y <= 132))
                 toolsModel.SetLineWidth((y - 72) / 12 + 1);
             break;
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_PEN:
+            break;
     }
     return 0;
 }
@@ -255,7 +264,7 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
     int tbPos = 0;
     int tempZoom = toolsModel.GetZoom();
 
-    while (tempZoom > 125)
+    while (tempZoom > MIN_ZOOM)
     {
         tbPos++;
         tempZoom = tempZoom >> 1;

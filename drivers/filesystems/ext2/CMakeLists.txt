@@ -88,26 +88,21 @@ list(APPEND SOURCE
 
 add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
 
-if(MSVC)
-    if (NOT CLANG)
-        # Disable warning C4101: 'i': unreferenced local variable
-        # Disable warning C4189: 'sbi': local variable is initialized but not referenced
-        # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
-        target_compile_options(ext2fs PRIVATE /wd4101 /wd4189 /wd4267)
-    endif()
-else()
-    target_compile_options(ext2fs PRIVATE
-        -Wno-pointer-sign -Wno-unused-function
-        -Wno-unused-variable -Wno-missing-braces)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    # Disable warning C4101: 'i': unreferenced local variable
+    # Disable warning C4189: 'sbi': local variable is initialized but not referenced
+    # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+    target_compile_options(ext2fs PRIVATE /wd4101 /wd4189 /wd4267)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(ext2fs PRIVATE
+        -Wno-pointer-sign -Wno-unused-function -Wno-unused-variable -Wno-missing-braces -Wno-unused-but-set-variable)
 endif()
 
-if(CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ext2fs PRIVATE
-        -Wno-unused-value -Wno-parentheses-equality
+        -Wno-parentheses-equality
         -Wno-incompatible-pointer-types-discards-qualifiers
         "-Wno-#pragma-messages;-Wno-cast-calling-convention")
 endif()
@@ -120,3 +115,4 @@ set_property(TARGET ext2fs PROPERTY C_STANDARD 90)
 add_pch(ext2fs inc/ext2fs.h SOURCE)
 
 add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers FOR all)
+add_registry_inf(ext2fs_reg.inf)

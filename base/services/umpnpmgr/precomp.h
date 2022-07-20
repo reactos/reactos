@@ -4,7 +4,7 @@
  * FILE:             base/services/umpnpmgr/install.c
  * PURPOSE:          Device installer
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -38,6 +38,12 @@ typedef struct
     LIST_ENTRY ListEntry;
     WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
+
+typedef struct
+{
+    LIST_ENTRY ListEntry;
+    PWSTR pszName;
+} NOTIFY_ENTRY, *PNOTIFY_ENTRY;
 
 /* install.c */
 

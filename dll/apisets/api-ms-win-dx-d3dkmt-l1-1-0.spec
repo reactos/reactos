@@ -14,7 +14,7 @@
 @ stub D3DKMTCreateAllocation
 @ stub D3DKMTCreateAllocation2
 @ stub D3DKMTCreateContext
-@ stdcall D3DKMTCreateDCFromMemory() gdi32.D3DKMTCreateDCFromMemory
+@ stdcall D3DKMTCreateDCFromMemory() gdi32_vista.D3DKMTCreateDCFromMemory
 @ stub D3DKMTCreateDevice
 @ stub D3DKMTCreateKeyedMutex
 @ stub D3DKMTCreateKeyedMutex2
@@ -24,7 +24,7 @@
 @ stub D3DKMTCreateSynchronizationObject2
 @ stub D3DKMTDestroyAllocation
 @ stub D3DKMTDestroyContext
-@ stdcall D3DKMTDestroyDCFromMemory() gdi32.D3DKMTDestroyDCFromMemory
+@ stdcall D3DKMTDestroyDCFromMemory() gdi32_vista.D3DKMTDestroyDCFromMemory
 @ stub D3DKMTDestroyDevice
 @ stub D3DKMTDestroyKeyedMutex
 @ stub D3DKMTDestroyOutputDupl

@@ -27,8 +27,6 @@
 #define BROKEN_TO_CLOSE_PENDING     0x800
 #define BROKEN_ANY                  (BROKEN_TO_LEVEL_2 | BROKEN_TO_NONE  | BROKEN_TO_NONE_FROM_LEVEL_2 | BROKEN_TO_CLOSE_PENDING)
 
-#define TAG_OPLOCK 'orSF'
-
 typedef struct _INTERNAL_OPLOCK
 {
     /* Level I IRP */

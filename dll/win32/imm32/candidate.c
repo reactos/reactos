@@ -9,6 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+// Win: InternalGetCandidateListWtoA
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
@@ -78,6 +79,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, D
     return dwBufLen;
 }
 
+// Win: InternalGetCandidateListAtoW
 DWORD APIENTRY
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage)
@@ -146,6 +148,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     return dwBufLen;
 }
 
+// Win: ImmGetCandidateListWorker
 static DWORD APIENTRY
 ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen,
                       BOOL bAnsi)
@@ -227,6 +230,7 @@ Quit:
     return ret;
 }
 
+// Win: ImmGetCandidateListCountWorker
 DWORD APIENTRY
 ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
 {
@@ -400,7 +404,7 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 
     ImmUnlockIMC(hIMC);
 
-    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
-                      IMN_SETCANDIDATEPOS, (1 << (BYTE)lpCandidate->dwIndex));
+    Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
+                       IMN_SETCANDIDATEPOS, (1 << (BYTE)lpCandidate->dwIndex));
     return TRUE;
 }

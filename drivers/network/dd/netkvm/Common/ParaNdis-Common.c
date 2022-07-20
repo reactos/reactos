@@ -2209,7 +2209,7 @@ void ParaNdis_ReportLinkStatus(PARANDIS_ADAPTER *pContext, BOOLEAN bForce)
     ParaNdis_IndicateConnect(pContext, bConnected, bForce);
 }
 
-static BOOLEAN RestartQueueSynchronously(tSynchronizedContext *SyncContext)
+static BOOLEAN NTAPI RestartQueueSynchronously(tSynchronizedContext *SyncContext)
 {
     struct virtqueue * _vq = (struct virtqueue *) SyncContext->Parameter;
     bool res = true;

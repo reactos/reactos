@@ -153,9 +153,20 @@ BOOLEAN
 );
 
 //
-// Hal Private dispatch Table
+// HAL Private dispatch Table
 //
+// See Version table at:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/hal/hal_private_dispatch.htm
+//
+#if (NTDDI_VERSION < NTDDI_WINXP)
+#define HAL_PRIVATE_DISPATCH_VERSION        1
+#elif (NTDDI_VERSION < NTDDI_LONGHORN)
 #define HAL_PRIVATE_DISPATCH_VERSION        2
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define HAL_PRIVATE_DISPATCH_VERSION        5
+#else
+/* Not yet defined */
+#endif
 typedef struct _HAL_PRIVATE_DISPATCH
 {
     ULONG Version;
@@ -257,7 +268,7 @@ typedef struct _BUS_HANDLER
 //
 // Kernel Exports
 //
-#if (defined(_NTDRIVER_) || defined(_NTHAL_)) && !defined(_BLDR_)
+#if !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_))
 extern NTSYSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #define HALPRIVATEDISPATCH ((PHAL_PRIVATE_DISPATCH)&HalPrivateDispatchTable)
 #else
@@ -268,7 +279,7 @@ extern NTSYSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 //
 // HAL Exports
 //
-extern PUCHAR NTHALAPI KdComPortInUse;
+extern NTHALAPI PUCHAR KdComPortInUse;
 
 //
 // HAL Constants

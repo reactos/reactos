@@ -16,23 +16,25 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef _M_ARM
+
 #include <freeldr.h>
 
-#define TAG_TUI_SCREENBUFFER 'SiuT'
-#define TAG_TAG_TUI_PALETTE 'PiuT'
-
+#ifndef _M_ARM
 PVOID TextVideoBuffer = NULL;
-extern UCHAR MachDefaultTextColor;
+#endif
+
+/* GENERIC TUI UTILS *********************************************************/
 
 /*
  * TuiPrintf()
- * Prints formatted text to the screen
+ * Prints formatted text to the screen.
  */
-int TuiPrintf(const char *Format, ...)
+INT
+TuiPrintf(
+    _In_ PCSTR Format, ...)
 {
-    int i;
-    int Length;
+    INT i;
+    INT Length;
     va_list ap;
     CHAR Buffer[512];
 
@@ -40,7 +42,8 @@ int TuiPrintf(const char *Format, ...)
     Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
     va_end(ap);
 
-    if (Length == -1) Length = sizeof(Buffer);
+    if (Length == -1)
+        Length = (INT)sizeof(Buffer);
 
     for (i = 0; i < Length; i++)
     {
@@ -49,6 +52,156 @@ int TuiPrintf(const char *Format, ...)
 
     return Length;
 }
+
+VOID
+TuiTruncateStringEllipsis(
+    _Inout_z_ PSTR StringText,
+    _In_ ULONG MaxChars)
+{
+    /* If it's too large, just add some ellipsis past the maximum */
+    if (strlen(StringText) > MaxChars)
+        strcpy(&StringText[MaxChars - 3], "...");
+}
+
+/*
+ * DrawText()
+ * Displays a string on a single screen line.
+ * This function assumes coordinates are zero-based.
+ */
+VOID
+TuiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
+{
+    TuiDrawText2(X, Y, 0 /*(ULONG)strlen(Text)*/, Text, Attr);
+}
+
+/*
+ * DrawText2()
+ * Displays a string on a single screen line.
+ * This function assumes coordinates are zero-based.
+ * MaxNumChars is the maximum number of characters to display.
+ * If MaxNumChars == 0, then display the whole string.
+ */
+VOID
+TuiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
+{
+#ifndef _M_ARM
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+#endif
+    ULONG i, j;
+
+    /* Don't display anything if we are out of the screen */
+    if ((X >= UiScreenWidth) || (Y >= UiScreenHeight))
+        return;
+
+    /* Draw the text, not exceeding the width */
+    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
+    {
+#ifndef _M_ARM
+        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)]   = (UCHAR)Text[j];
+        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
+#else
+        /* Write the character */
+        MachVideoPutChar(Text[j], Attr, i, Y);
+#endif
+    }
+}
+
+VOID
+TuiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
+{
+    SIZE_T TextLength;
+    SIZE_T Index, LastIndex;
+    ULONG  LineBreakCount;
+    ULONG  BoxWidth, BoxHeight;
+    ULONG  RealLeft, RealTop;
+    ULONG  X, Y;
+    CHAR   Temp[2];
+
+    /* Query text length */
+    TextLength = strlen(TextString);
+
+    /* Count the new lines and the box width */
+    LineBreakCount = 0;
+    BoxWidth = 0;
+    LastIndex = 0;
+    for (Index = 0; Index < TextLength; Index++)
+    {
+        /* Scan for new lines */
+        if (TextString[Index] == '\n')
+        {
+            /* Remember the new line */
+            LastIndex = Index;
+            LineBreakCount++;
+        }
+        else
+        {
+            /* Check for new larger box width */
+            if ((Index - LastIndex) > BoxWidth)
+            {
+                /* Update it */
+                BoxWidth = (ULONG)(Index - LastIndex);
+            }
+        }
+    }
+
+    /* Base the box height on the number of lines */
+    BoxHeight = LineBreakCount + 1;
+
+    /*
+     * Create the centered coordinates.
+     * Here, the Left/Top/Right/Bottom rectangle is a hint, around
+     * which we center the "real" text rectangle RealLeft/RealTop.
+     */
+    RealLeft = (Left + Right - BoxWidth + 1) / 2;
+    RealTop  = (Top + Bottom - BoxHeight + 1) / 2;
+
+    /* Now go for a second scan */
+    LastIndex = 0;
+    for (Index = 0; Index < TextLength; Index++)
+    {
+        /* Look for new lines again */
+        if (TextString[Index] == '\n')
+        {
+            /* Update where the text should start */
+            RealTop++;
+            LastIndex = 0;
+        }
+        else
+        {
+            /* We've got a line of text to print, do it */
+            X = (ULONG)(RealLeft + LastIndex);
+            Y = RealTop;
+            LastIndex++;
+            Temp[0] = TextString[Index];
+            Temp[1] = 0;
+            TuiDrawText(X, Y, Temp, Attr);
+        }
+    }
+}
+
+/* FULL TUI THEME ************************************************************/
+
+#ifndef _M_ARM
+
+#define TAG_TUI_SCREENBUFFER 'SiuT'
+#define TAG_TUI_PALETTE      'PiuT'
+
+extern UCHAR MachDefaultTextColor;
 
 BOOLEAN TuiInitialize(VOID)
 {
@@ -62,11 +215,46 @@ BOOLEAN TuiInitialize(VOID)
         return FALSE;
     }
 
+    /* Load default settings with "Full" TUI Theme */
+
+    UiStatusBarFgColor    = COLOR_BLACK;
+    UiStatusBarBgColor    = COLOR_CYAN;
+    UiBackdropFgColor     = COLOR_WHITE;
+    UiBackdropBgColor     = COLOR_BLUE;
+    UiBackdropFillStyle   = MEDIUM_FILL;
+    UiTitleBoxFgColor     = COLOR_WHITE;
+    UiTitleBoxBgColor     = COLOR_RED;
+    UiMessageBoxFgColor   = COLOR_WHITE;
+    UiMessageBoxBgColor   = COLOR_BLUE;
+    UiMenuFgColor         = COLOR_WHITE;
+    UiMenuBgColor         = COLOR_BLUE;
+    UiTextColor           = COLOR_YELLOW;
+    UiSelectedTextColor   = COLOR_BLACK;
+    UiSelectedTextBgColor = COLOR_GRAY;
+    UiEditBoxTextColor    = COLOR_WHITE;
+    UiEditBoxBgColor      = COLOR_BLACK;
+
+    UiShowTime          = TRUE;
+    UiMenuBox           = TRUE;
+    UiCenterMenu        = TRUE;
+    UiUseSpecialEffects = FALSE;
+
+    // TODO: Have a boolean to show/hide title box?
+    RtlStringCbCopyA(UiTitleBoxTitleText, sizeof(UiTitleBoxTitleText),
+                     "Boot Menu");
+
+    RtlStringCbCopyA(UiTimeText, sizeof(UiTimeText),
+                     "[Time Remaining: %d]");
+
     return TRUE;
 }
 
 VOID TuiUnInitialize(VOID)
 {
+    /* Do nothing if already uninitialized */
+    if (!TextVideoBuffer)
+        return;
+
     if (UiUseSpecialEffects)
     {
         TuiFadeOut();
@@ -76,6 +264,9 @@ VOID TuiUnInitialize(VOID)
         MachVideoSetDisplayMode(NULL, FALSE);
     }
 
+    VideoFreeOffScreenBuffer();
+    TextVideoBuffer = NULL;
+
     MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
     MachVideoSetTextCursorPosition(0, 0);
     MachVideoHideShowTextCursor(TRUE);
@@ -83,67 +274,54 @@ VOID TuiUnInitialize(VOID)
 
 VOID TuiDrawBackdrop(VOID)
 {
-    //
-    // Fill in the background (excluding title box & status bar)
-    //
+    /* Fill in the background (excluding title box & status bar) */
     TuiFillArea(0,
-            TUI_TITLE_BOX_CHAR_HEIGHT,
-            UiScreenWidth - 1,
-            UiScreenHeight - 2,
-            UiBackdropFillStyle,
-            ATTR(UiBackdropFgColor, UiBackdropBgColor));
+                TUI_TITLE_BOX_CHAR_HEIGHT,
+                UiScreenWidth - 1,
+                UiScreenHeight - 2,
+                UiBackdropFillStyle,
+                ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
-    //
-    // Draw the title box
-    //
+    /* Draw the title box */
     TuiDrawBox(0,
-            0,
-            UiScreenWidth - 1,
-            TUI_TITLE_BOX_CHAR_HEIGHT - 1,
-            D_VERT,
-            D_HORZ,
-            TRUE,
-            FALSE,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+               0,
+               UiScreenWidth - 1,
+               TUI_TITLE_BOX_CHAR_HEIGHT - 1,
+               D_VERT,
+               D_HORZ,
+               TRUE,
+               FALSE,
+               ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw version text
-    //
+    /* Draw version text */
     TuiDrawText(2,
-            1,
-            FrLdrVersionString,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                1,
+                FrLdrVersionString,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw copyright
-    //
+    /* Draw copyright */
     TuiDrawText(2,
-            2,
-            BY_AUTHOR,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                2,
+                BY_AUTHOR,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
     TuiDrawText(2,
-            3,
-            AUTHOR_EMAIL,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                3,
+                AUTHOR_EMAIL,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw help text
-    //
-    TuiDrawText(UiScreenWidth - 16, 3, /*"F1 for Help"*/"F8 for Options", ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+    /* Draw help text */
+    TuiDrawText(UiScreenWidth - 16, 3,
+                /*"F1 for Help"*/ "F8 for Options",
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw title text
-    //
+    /* Draw title text */
     TuiDrawText((UiScreenWidth - (ULONG)strlen(UiTitleBoxTitleText)) / 2,
-            2,
-            UiTitleBoxTitleText,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                2,
+                UiTitleBoxTitleText,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Update the date & time
-    //
+    /* Update the date & time */
     TuiUpdateDateTime();
-
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -153,28 +331,23 @@ VOID TuiDrawBackdrop(VOID)
  */
 VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  i, j;
 
-    // Clip the area to the screen
+    /* Clip the area to the screen */
     if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
     {
         return;
     }
     if (Right >= UiScreenWidth)
-    {
         Right = UiScreenWidth - 1;
-    }
     if (Bottom >= UiScreenHeight)
-    {
         Bottom = UiScreenHeight - 1;
-    }
 
-    // Loop through each line and fill it in
-    for (i=Top; i<=Bottom; i++)
+    /* Loop through each line and column and fill it in */
+    for (i = Top; i <= Bottom; ++i)
     {
-        // Loop through each character (column) in the line and fill it in
-        for (j=Left; j<=Right; j++)
+        for (j = Left; j <= Right; ++j)
         {
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)] = (UCHAR)FillChar;
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)+1] = Attr;
@@ -188,28 +361,24 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
  */
 VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    Idx;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  Idx;
 
-    // Shade the bottom of the area
+    /* Shade the bottom of the area */
     if (Bottom < (UiScreenHeight - 1))
     {
         if (UiScreenHeight < 34)
-        {
-            Idx=Left + 2;
-        }
+            Idx = Left + 2;
         else
-        {
-            Idx=Left + 1;
-        }
+            Idx = Left + 1;
 
-        for (; Idx<=Right; Idx++)
+        for (; Idx <= Right; ++Idx)
         {
             ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+(Idx*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
 
-    // Shade the right of the area
+    /* Shade the right of the area */
     if (Right < (UiScreenWidth - 1))
     {
         for (Idx=Top+1; Idx<=Bottom; Idx++)
@@ -228,7 +397,7 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
         }
     }
 
-    // Shade the bottom right corner
+    /* Shade the bottom right corner */
     if ((Right < (UiScreenWidth - 1)) && (Bottom < (UiScreenHeight - 1)))
     {
         ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
@@ -246,26 +415,29 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
  * DrawBox()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
+VOID
+TuiDrawBoxTopLine(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr)
 {
-    UCHAR    ULCorner, URCorner, LLCorner, LRCorner;
+    UCHAR ULCorner, URCorner;
 
-    // Calculate the corner values
+    /* Calculate the corner values */
     if (HorzStyle == HORZ)
     {
         if (VertStyle == VERT)
         {
             ULCorner = UL;
             URCorner = UR;
-            LLCorner = LL;
-            LRCorner = LR;
         }
         else // VertStyle == D_VERT
         {
             ULCorner = VD_UL;
             URCorner = VD_UR;
-            LLCorner = VD_LL;
-            LRCorner = VD_LR;
         }
     }
     else // HorzStyle == D_HORZ
@@ -274,141 +446,92 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
         {
             ULCorner = HD_UL;
             URCorner = HD_UR;
-            LLCorner = HD_LL;
-            LRCorner = HD_LR;
         }
         else // VertStyle == D_VERT
         {
             ULCorner = D_UL;
             URCorner = D_UR;
+        }
+    }
+
+    TuiFillArea(Left, Top, Left, Top, ULCorner, Attr);
+    TuiFillArea(Left+1, Top, Right-1, Top, HorzStyle, Attr);
+    TuiFillArea(Right, Top, Right, Top, URCorner, Attr);
+}
+
+VOID
+TuiDrawBoxBottomLine(
+    _In_ ULONG Left,
+    _In_ ULONG Bottom,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr)
+{
+    UCHAR LLCorner, LRCorner;
+
+    /* Calculate the corner values */
+    if (HorzStyle == HORZ)
+    {
+        if (VertStyle == VERT)
+        {
+            LLCorner = LL;
+            LRCorner = LR;
+        }
+        else // VertStyle == D_VERT
+        {
+            LLCorner = VD_LL;
+            LRCorner = VD_LR;
+        }
+    }
+    else // HorzStyle == D_HORZ
+    {
+        if (VertStyle == VERT)
+        {
+            LLCorner = HD_LL;
+            LRCorner = HD_LR;
+        }
+        else // VertStyle == D_VERT
+        {
             LLCorner = D_LL;
             LRCorner = D_LR;
         }
     }
 
-    // Fill in box background
-    if (Fill)
-    {
-        TuiFillArea(Left, Top, Right, Bottom, ' ', Attr);
-    }
-
-    // Fill in corners
-    TuiFillArea(Left, Top, Left, Top, ULCorner, Attr);
-    TuiFillArea(Right, Top, Right, Top, URCorner, Attr);
     TuiFillArea(Left, Bottom, Left, Bottom, LLCorner, Attr);
-    TuiFillArea(Right, Bottom, Right, Bottom, LRCorner, Attr);
-
-    // Fill in left line
-    TuiFillArea(Left, Top+1, Left, Bottom-1, VertStyle, Attr);
-    // Fill in top line
-    TuiFillArea(Left+1, Top, Right-1, Top, HorzStyle, Attr);
-    // Fill in right line
-    TuiFillArea(Right, Top+1, Right, Bottom-1, VertStyle, Attr);
-    // Fill in bottom line
     TuiFillArea(Left+1, Bottom, Right-1, Bottom, HorzStyle, Attr);
+    TuiFillArea(Right, Bottom, Right, Bottom, LRCorner, Attr);
+}
 
-    // Draw the shadow
+VOID
+TuiDrawBox(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ BOOLEAN Fill,
+    _In_ BOOLEAN Shadow,
+    _In_ UCHAR Attr)
+{
+    /* Fill in the box background */
+    if (Fill)
+        TuiFillArea(Left, Top, Right, Bottom, ' ', Attr);
+
+    /* Fill in the top horizontal line */
+    TuiDrawBoxTopLine(Left, Top, Right, VertStyle, HorzStyle, Attr);
+
+    /* Fill in the vertical left and right lines */
+    TuiFillArea(Left, Top+1, Left, Bottom-1, VertStyle, Attr);
+    TuiFillArea(Right, Top+1, Right, Bottom-1, VertStyle, Attr);
+
+    /* Fill in the bottom horizontal line */
+    TuiDrawBoxBottomLine(Left, Bottom, Right, VertStyle, HorzStyle, Attr);
+
+    /* Draw the shadow */
     if (Shadow)
-    {
         TuiDrawShadow(Left, Top, Right, Bottom);
-    }
-}
-
-/*
- * DrawText()
- * This function assumes coordinates are zero-based
- */
-VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
-{
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
-
-    // Draw the text
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
-    {
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
-    }
-}
-
-/*
- * DrawText2()
- * This function assumes coordinates are zero-based.
- * MaxNumChars is the maximum number of characters to display.
- * If MaxNumChars == 0, then display the whole string.
- */
-VOID TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
-{
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
-
-    // Draw the text
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
-    {
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
-    }
-}
-
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
-{
-    SIZE_T    TextLength;
-    ULONG    BoxWidth;
-    ULONG    BoxHeight;
-    ULONG    LineBreakCount;
-    SIZE_T    Index;
-    SIZE_T    LastIndex;
-    ULONG    RealLeft;
-    ULONG    RealTop;
-    ULONG    X;
-    ULONG    Y;
-    CHAR    Temp[2];
-
-    TextLength = strlen(TextString);
-
-    // Count the new lines and the box width
-    LineBreakCount = 0;
-    BoxWidth = 0;
-    LastIndex = 0;
-    for (Index=0; Index<TextLength; Index++)
-    {
-        if (TextString[Index] == '\n')
-        {
-            LastIndex = Index;
-            LineBreakCount++;
-        }
-        else
-        {
-            if ((Index - LastIndex) > BoxWidth)
-            {
-                BoxWidth = (ULONG)(Index - LastIndex);
-            }
-        }
-    }
-
-    BoxHeight = LineBreakCount + 1;
-
-    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
-
-    LastIndex = 0;
-    for (Index=0; Index<TextLength; Index++)
-    {
-        if (TextString[Index] == '\n')
-        {
-            RealTop++;
-            LastIndex = 0;
-        }
-        else
-        {
-            X = (ULONG)(RealLeft + LastIndex);
-            Y = RealTop;
-            LastIndex++;
-            Temp[0] = TextString[Index];
-            Temp[1] = 0;
-            TuiDrawText(X, Y, Temp, Attr);
-        }
-    }
 }
 
 VOID TuiDrawStatusText(PCSTR StatusText)
@@ -428,14 +551,13 @@ VOID TuiDrawStatusText(PCSTR StatusText)
 
 VOID TuiUpdateDateTime(VOID)
 {
-    TIMEINFO*    TimeInfo;
-    char    DateString[40];
-    CHAR    TimeString[40];
-    CHAR    TempString[20];
-    BOOLEAN    PMHour = FALSE;
+    TIMEINFO* TimeInfo;
+    PCSTR   DayPostfix;
+    BOOLEAN PMHour = FALSE;
+    CHAR Buffer[40];
 
     /* Don't draw the time if this has been disabled */
-    if (!UiDrawTime) return;
+    if (!UiShowTime) return;
 
     TimeInfo = ArcGetTime();
     if (TimeInfo->Year < 1 || 9999 < TimeInfo->Year ||
@@ -445,43 +567,33 @@ VOID TuiUpdateDateTime(VOID)
         59 < TimeInfo->Minute ||
         59 < TimeInfo->Second)
     {
-        /* This happens on QEmu sometimes. We just skip updating */
+        /* This happens on QEmu sometimes. We just skip updating. */
         return;
     }
-    // Get the month name
-    strcpy(DateString, UiMonthNames[TimeInfo->Month - 1]);
-    // Get the day
-    _itoa(TimeInfo->Day, TempString, 10);
-    // Get the day postfix
+
+    /* Get the day postfix */
     if (1 == TimeInfo->Day || 21 == TimeInfo->Day || 31 == TimeInfo->Day)
-    {
-        strcat(TempString, "st");
-    }
+        DayPostfix = "st";
     else if (2 == TimeInfo->Day || 22 == TimeInfo->Day)
-    {
-        strcat(TempString, "nd");
-    }
+        DayPostfix = "nd";
     else if (3 == TimeInfo->Day || 23 == TimeInfo->Day)
-    {
-        strcat(TempString, "rd");
-    }
+        DayPostfix = "rd";
     else
-    {
-        strcat(TempString, "th");
-    }
+        DayPostfix = "th";
 
-    // Add the day to the date
-    strcat(DateString, TempString);
-    strcat(DateString, " ");
+    /* Build the date string in format: "MMMM dx yyyy" */
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                       "%s %d%s %d",
+                       UiMonthNames[TimeInfo->Month - 1],
+                       TimeInfo->Day,
+                       DayPostfix,
+                       TimeInfo->Year);
 
-    // Get the year and add it to the date
-    _itoa(TimeInfo->Year, TempString, 10);
-    strcat(DateString, TempString);
+    /* Draw the date */
+    TuiDrawText(UiScreenWidth - (ULONG)strlen(Buffer) - 2, 1,
+                Buffer, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    // Draw the date
-    TuiDrawText(UiScreenWidth-(ULONG)strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
-
-    // Get the hour and change from 24-hour mode to 12-hour
+    /* Get the hour and change from 24-hour mode to 12-hour */
     if (TimeInfo->Hour > 12)
     {
         TimeInfo->Hour -= 12;
@@ -491,34 +603,18 @@ VOID TuiUpdateDateTime(VOID)
     {
         TimeInfo->Hour = 12;
     }
-    _itoa(TimeInfo->Hour, TempString, 10);
-    strcpy(TimeString, "    ");
-    strcat(TimeString, TempString);
-    strcat(TimeString, ":");
-    _itoa(TimeInfo->Minute, TempString, 10);
-    if (TimeInfo->Minute < 10)
-    {
-        strcat(TimeString, "0");
-    }
-    strcat(TimeString, TempString);
-    strcat(TimeString, ":");
-    _itoa(TimeInfo->Second, TempString, 10);
-    if (TimeInfo->Second < 10)
-    {
-        strcat(TimeString, "0");
-    }
-    strcat(TimeString, TempString);
-    if (PMHour)
-    {
-        strcat(TimeString, " PM");
-    }
-    else
-    {
-        strcat(TimeString, " AM");
-    }
 
-    // Draw the time
-    TuiDrawText(UiScreenWidth-(ULONG)strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+    /* Build the time string in format: "h:mm:ss tt" */
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                       "    %d:%02d:%02d %s",
+                       TimeInfo->Hour,
+                       TimeInfo->Minute,
+                       TimeInfo->Second,
+                       PMHour ? "PM" : "AM");
+
+    /* Draw the time */
+    TuiDrawText(UiScreenWidth - (ULONG)strlen(Buffer) - 2, 2,
+                Buffer, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 }
 
 VOID TuiSaveScreen(PUCHAR Buffer)
@@ -646,56 +742,124 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
     }
 }
 
-VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+static VOID
+TuiSetProgressBarText(
+    _In_ PCSTR ProgressText)
 {
-    ULONG    Left, Top, Right, Bottom;
-    ULONG    Width = 50; // Allow for 50 "bars"
-    ULONG    Height = 2;
+    ULONG ProgressBarWidth;
+    CHAR ProgressString[256];
 
-    Left = (UiScreenWidth - Width - 4) / 2;
-    Right = Left + Width + 3;
-    Top = (UiScreenHeight - Height - 2) / 2;
-    Top += 2;
-    Bottom = Top + Height + 1;
+    /* Make sure the progress bar is enabled */
+    ASSERT(UiProgressBar.Show);
 
-    TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = UiProgressBar.Right - UiProgressBar.Left + 1;
+
+    /* First make sure the progress bar text fits */
+    RtlStringCbCopyA(ProgressString, sizeof(ProgressString), ProgressText);
+    TuiTruncateStringEllipsis(ProgressString, ProgressBarWidth);
+
+    /* Clear the text area */
+    TuiFillArea(UiProgressBar.Left, UiProgressBar.Top,
+                UiProgressBar.Right, UiProgressBar.Bottom - 1,
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
+
+    /* Draw the "Loading..." text */
+    TuiDrawCenteredText(UiProgressBar.Left, UiProgressBar.Top,
+                        UiProgressBar.Right, UiProgressBar.Bottom - 1,
+                        ProgressString, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+static VOID
+TuiTickProgressBar(
+    _In_ ULONG SubPercentTimes100)
 {
-    ULONG    i;
-    ULONG    ProgressBarWidth = (Right - Left) - 3;
+    ULONG ProgressBarWidth;
+    ULONG FillCount;
 
-    // First make sure the progress bar text fits
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+    /* Make sure the progress bar is enabled */
+    ASSERT(UiProgressBar.Show);
 
-    if (Position > Range)
+    ASSERT(SubPercentTimes100 <= (100 * 100));
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = UiProgressBar.Right - UiProgressBar.Left + 1;
+
+    /* Compute fill count */
+    // FillCount = (ProgressBarWidth * Position) / Range;
+    FillCount = ProgressBarWidth * SubPercentTimes100 / (100 * 100);
+
+    /* Fill the progress bar */
+    /* Draw the percent complete -- Use the fill character */
+    if (FillCount > 0)
     {
-        Position = Range;
+        TuiFillArea(UiProgressBar.Left, UiProgressBar.Bottom,
+                    UiProgressBar.Left + FillCount - 1, UiProgressBar.Bottom,
+                    '\xDB', ATTR(UiTextColor, UiMenuBgColor));
     }
+    /* Fill the remaining with shadow blanks */
+    TuiFillArea(UiProgressBar.Left + FillCount, UiProgressBar.Bottom,
+                UiProgressBar.Right, UiProgressBar.Bottom,
+                '\xB2', ATTR(UiTextColor, UiMenuBgColor));
 
-    // Draw the box
-    TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
-
-    //
-    //  Draw the "Loading..." text
-    //
-    TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
-
-    // Draw the percent complete
-    for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
-    {
-        TuiDrawText(Left+2+i, Top+2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
-    }
-
-    // Draw the shadow
-    for (; i<ProgressBarWidth; i++)
-    {
-        TuiDrawText(Left+2+i, Top+2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
-    }
-
+#ifndef _M_ARM
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
+#endif
+}
+
+static VOID
+TuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText);
+
+static VOID
+TuiDrawProgressBarCenter(
+    _In_ PCSTR ProgressText)
+{
+    ULONG Left, Top, Right, Bottom, Width, Height;
+
+    /* Build the coordinates and sizes */
+    Height = 2;
+    Width  = 50; // Allow for 50 "bars"
+    Left = (UiScreenWidth - Width) / 2;
+    Top  = (UiScreenHeight - Height + 4) / 2;
+    Right  = Left + Width - 1;
+    Bottom = Top + Height - 1;
+
+    /* Inflate to include the box margins */
+    Left -= 2;
+    Right += 2;
+    Top -= 1;
+    Bottom += 1;
+
+    /* Draw the progress bar */
+    TuiDrawProgressBar(Left, Top, Right, Bottom, ProgressText);
+}
+
+static VOID
+TuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText)
+{
+    /* Draw the box */
+    TuiDrawBox(Left, Top, Right, Bottom,
+               VERT, HORZ, TRUE, TRUE,
+               ATTR(UiMenuFgColor, UiMenuBgColor));
+
+    /* Exclude the box margins */
+    Left += 2;
+    Right -= 2;
+    Top += 1;
+    Bottom -= 1;
+
+    UiInitProgressBar(Left, Top, Right, Bottom, ProgressText);
 }
 
 UCHAR TuiTextToColor(PCSTR ColorText)
@@ -728,7 +892,7 @@ UCHAR TuiTextToColor(PCSTR ColorText)
     if (_stricmp(ColorText, "Default") == 0)
         return MachDefaultTextColor;
 
-    for (i = 0; i < sizeof(Colors)/sizeof(Colors[0]); ++i)
+    for (i = 0; i < RTL_NUMBER_OF(Colors); ++i)
     {
         if (_stricmp(ColorText, Colors[i].ColorName) == 0)
             return Colors[i].ColorValue;
@@ -745,13 +909,14 @@ UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
         UCHAR FillStyleValue;
     } FillStyles[] =
     {
+        {"None"  , ' '},
         {"Light" , LIGHT_FILL },
         {"Medium", MEDIUM_FILL},
         {"Dark"  , DARK_FILL  },
     };
     ULONG i;
 
-    for (i = 0; i < sizeof(FillStyles)/sizeof(FillStyles[0]); ++i)
+    for (i = 0; i < RTL_NUMBER_OF(FillStyles); ++i)
     {
         if (_stricmp(FillStyleText, FillStyles[i].FillStyleName) == 0)
             return FillStyles[i].FillStyleValue;
@@ -767,7 +932,7 @@ VOID TuiFadeInBackdrop(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
     {
         TuiFadePalette = (PPALETTE_ENTRY)FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * 64,
-                                                        TAG_TAG_TUI_PALETTE);
+                                                        TAG_TUI_PALETTE);
 
         if (TuiFadePalette != NULL)
         {
@@ -782,7 +947,7 @@ VOID TuiFadeInBackdrop(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
     {
         VideoFadeIn(TuiFadePalette, 64);
-        FrLdrTempFree(TuiFadePalette, TAG_TAG_TUI_PALETTE);
+        FrLdrTempFree(TuiFadePalette, TAG_TUI_PALETTE);
     }
 }
 
@@ -793,7 +958,7 @@ VOID TuiFadeOut(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
     {
         TuiFadePalette = (PPALETTE_ENTRY)FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * 64,
-                                                        TAG_TAG_TUI_PALETTE);
+                                                        TAG_TUI_PALETTE);
 
         if (TuiFadePalette != NULL)
         {
@@ -811,7 +976,7 @@ VOID TuiFadeOut(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
     {
         VideoRestorePaletteState(TuiFadePalette, 64);
-        FrLdrTempFree(TuiFadePalette, TAG_TAG_TUI_PALETTE);
+        FrLdrTempFree(TuiFadePalette, TAG_TUI_PALETTE);
     }
 
 }
@@ -1066,6 +1231,8 @@ const UIVTBL TuiVtbl =
     TuiMessageBoxCritical,
     TuiDrawProgressBarCenter,
     TuiDrawProgressBar,
+    TuiSetProgressBarText,
+    TuiTickProgressBar,
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,
@@ -1074,4 +1241,5 @@ const UIVTBL TuiVtbl =
     TuiDisplayMenu,
     TuiDrawMenu,
 };
-#endif
+
+#endif // _M_ARM

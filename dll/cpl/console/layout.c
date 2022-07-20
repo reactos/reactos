@@ -390,8 +390,8 @@ WinPrev_OnDraw(
 
     /* Draw the console background */
     hBrush = CreateSolidBrush(pConInfo->ColorTable[BkgdAttribFromAttrib(pConInfo->ScreenAttributes)]);
-    FillRect(hDC, &rcWin, hBrush);
-    DeleteObject(hBrush);
+    FillRect(hDC, &rcWin, hBrush ? hBrush : GetStockObject(BLACK_BRUSH));
+    if (hBrush) DeleteObject(hBrush);
 }
 
 static LRESULT CALLBACK
@@ -489,20 +489,21 @@ PaintText(
     nbkColor = pConInfo->ColorTable[BkgdAttribFromAttrib(CurrentAttrib)];
     ntColor  = pConInfo->ColorTable[TextAttribFromAttrib(CurrentAttrib)];
 
+    /* Draw the console background */
     hBrush = CreateSolidBrush(nbkColor);
-    if (!hBrush) return;
+    FillRect(drawItem->hDC, &drawItem->rcItem, hBrush ? hBrush : GetStockObject(BLACK_BRUSH));
+    if (hBrush) DeleteObject(hBrush);
 
+    /* Refresh the font preview, getting a new font if necessary */
     if (FontPreview.hFont == NULL)
         RefreshFontPreview(&FontPreview, pConInfo);
+    /* Recheck hFont since RefreshFontPreview() may not have updated it */
+    if (FontPreview.hFont == NULL)
+        return;
 
+    /* Draw the preview text using the current font */
     hOldFont = SelectObject(drawItem->hDC, FontPreview.hFont);
-    //if (hOldFont == NULL)
-    //{
-    //    DeleteObject(hBrush);
-    //    return;
-    //}
-
-    FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+    // if (!hOldFont) return;
 
     /* Add a few space between the preview window border and the text sample */
     InflateRect(&drawItem->rcItem, -2, -2);
@@ -514,7 +515,6 @@ PaintText(
     SetBkColor(drawItem->hDC, pbkColor);
 
     SelectObject(drawItem->hDC, hOldFont);
-    DeleteObject(hBrush);
 }
 
 

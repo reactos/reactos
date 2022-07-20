@@ -339,7 +339,7 @@ IntSetupDeviceSettingsKey(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = ZwOpenKey(&SourceKeyHandle, KEY_WRITE, &ObjectAttributes);
+    Status = ZwOpenKey(&SourceKeyHandle, KEY_READ, &ObjectAttributes);
     if (Status != STATUS_SUCCESS)
     {
         ERR_(VIDEOPRT, "ZwOpenKey failed for settings key: status 0x%lx\n", Status);
@@ -564,7 +564,7 @@ IntCreateNewRegistryPath(
                                    OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
-        Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
+        Status = ZwOpenKey(&NewKey, KEY_WRITE, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
@@ -668,7 +668,12 @@ IntCreateRegistryPath(
         }
     }
 
-    if (Valid)
+    if (!VideoPortUseNewKey)
+    {
+        INFO_(VIDEOPRT, "Using old registry key as 'UseNewKey' is FALSE\n");
+        Valid = FALSE;
+    }
+    else if (Valid)
     {
         DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2)
                                           + DeviceNumberString.Length;

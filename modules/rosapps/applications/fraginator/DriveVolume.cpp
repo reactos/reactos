@@ -1,11 +1,11 @@
 #include "DriveVolume.h"
 
 
-DriveVolume::DriveVolume ()
+DriveVolume::DriveVolume()
 {
     Handle = INVALID_HANDLE_VALUE;
     BitmapDetail = NULL;
-    return;
+    ZeroMemory(&Geometry, sizeof(Geometry));
 }
 
 
@@ -28,7 +28,7 @@ void DriveVolume::Close (void)
 
     if (BitmapDetail != NULL)
     {
-        free (BitmapDetail);
+        HeapFree(GetProcessHeap(), 0, BitmapDetail);
         BitmapDetail = NULL;
     }
 
@@ -185,7 +185,7 @@ bool DriveVolume::GetBitmap (void)
     // then correctly allocate based off that
     // I suppose this won't work if your drive has only 40 clusters on it or so :)
     BitmapSize = sizeof (VOLUME_BITMAP_BUFFER) + 4;
-    Bitmap = (VOLUME_BITMAP_BUFFER *) malloc (BitmapSize);
+    Bitmap = (VOLUME_BITMAP_BUFFER *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BitmapSize);
 
     Result = DeviceIoControl
     (
@@ -200,16 +200,27 @@ bool DriveVolume::GetBitmap (void)
     );
 
     // Bad result?
-    if (Result == FALSE  &&  GetLastError () != ERROR_MORE_DATA)
+    if (Result == FALSE && GetLastError() != ERROR_MORE_DATA)
     {
         //wprintf ("\nDeviceIoControl returned false, GetLastError() was not ERROR_MORE_DATA\n");
-        free (Bitmap);
+        HeapFree(GetProcessHeap(), 0, Bitmap);
         return (false);
     }
 
     // Otherwise, we're good
     BitmapSize = sizeof (VOLUME_BITMAP_BUFFER) + (Bitmap->BitmapSize.QuadPart / 8) + 1;
-    Bitmap = (VOLUME_BITMAP_BUFFER *) realloc (Bitmap, BitmapSize);
+
+    void *reallBitmap = HeapReAlloc(GetProcessHeap(), 0, Bitmap, BitmapSize);
+
+    if (reallBitmap == NULL)
+    {
+        // Fail "miserably"
+        wprintf(L"\nNot enough memory to read volume bitmap\n");
+        HeapFree(GetProcessHeap(), 0, Bitmap);
+        return (false);
+    }
+
+    Bitmap = (VOLUME_BITMAP_BUFFER *)reallBitmap;
     Result = DeviceIoControl
     (
         Handle,
@@ -227,7 +238,7 @@ bool DriveVolume::GetBitmap (void)
     if (Result == FALSE)
     {
         wprintf (L"\nCouldn't properly read volume bitmap\n");
-        free (Bitmap);
+        HeapFree(GetProcessHeap(), 0, Bitmap);
         return (false);
     }
 
@@ -237,9 +248,9 @@ bool DriveVolume::GetBitmap (void)
     VolInfo.ClusterCount = Bitmap->BitmapSize.QuadPart;
 
     if (BitmapDetail != NULL)
-        free (BitmapDetail);
+        HeapFree(GetProcessHeap(), 0, BitmapDetail);
 
-    BitmapDetail = (uint32 *) malloc (sizeof(uint32) * (1 + (VolInfo.ClusterCount / 32)));
+    BitmapDetail = (uint32 *) HeapAlloc(GetProcessHeap(), 0, sizeof(uint32) * (1 + (VolInfo.ClusterCount / 32)));
     memcpy (BitmapDetail, Bitmap->Buffer, sizeof(uint32) * (1 + (VolInfo.ClusterCount / 32)));
 
     /*
@@ -253,7 +264,7 @@ bool DriveVolume::GetBitmap (void)
     }
     */
 
-    free (Bitmap);
+    HeapFree(GetProcessHeap(), 0, Bitmap);
     return (true);
 }
 

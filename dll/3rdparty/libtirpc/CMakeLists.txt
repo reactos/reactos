@@ -97,7 +97,7 @@ if(MSVC)
     # Disable warning C4273: 'strtok_s': inconsistent dll linkage
     # Disable warning C4313: 'fprintf': '%x' in format string conflicts with argument 2 of type 'HANDLE'
     target_compile_options(libtirpc PRIVATE /wd4273 /wd4313)
-    if (NOT USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(libtirpc PRIVATE /wd4101 /wd4133 /wd4473 /wd4477)
     endif()
 else()

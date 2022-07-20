@@ -13,28 +13,58 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static
-ULONGLONG
-RoundingDivide(
-   IN ULONGLONG Dividend,
-   IN ULONGLONG Divisor)
-{
-    return (Dividend + Divisor / 2) / Divisor;
-}
-
-
-static
 VOID
-ListDisk(VOID)
+PrintDisk(
+    _In_ PDISKENTRY DiskEntry)
 {
-    PLIST_ENTRY Entry;
-    PDISKENTRY DiskEntry;
     ULONGLONG DiskSize;
     ULONGLONG FreeSize;
     LPWSTR lpSizeUnit;
     LPWSTR lpFreeUnit;
 
+    DiskSize = DiskEntry->SectorCount.QuadPart *
+               (ULONGLONG)DiskEntry->BytesPerSector;
+
+    if (DiskSize >= 10737418240) /* 10 GB */
+    {
+        DiskSize = RoundingDivide(DiskSize, 1073741824);
+        lpSizeUnit = L"GB";
+    }
+    else
+    {
+        DiskSize = RoundingDivide(DiskSize, 1048576);
+        if (DiskSize == 0)
+            DiskSize = 1;
+        lpSizeUnit = L"MB";
+    }
+
+    /* FIXME */
+    FreeSize = 0;
+    lpFreeUnit = L"B";
+
+    ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
+                 (CurrentDisk == DiskEntry) ? L'*' : L' ',
+                 DiskEntry->DiskNumber,
+                 L"Online",
+                 DiskSize,
+                 lpSizeUnit,
+                 FreeSize,
+                 lpFreeUnit,
+                 L" ",
+                 L" ");
+}
+
+
+BOOL
+ListDisk(
+    INT argc,
+    PWSTR *argv)
+{
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+
     /* Header labels */
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, IDS_LIST_DISK_HEAD);
     ConResPuts(StdOut, IDS_LIST_DISK_LINE);
 
@@ -43,46 +73,21 @@ ListDisk(VOID)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        DiskSize = DiskEntry->SectorCount.QuadPart *
-                   (ULONGLONG)DiskEntry->BytesPerSector;
-
-        if (DiskSize >= 10737418240) /* 10 GB */
-        {
-             DiskSize = RoundingDivide(DiskSize, 1073741824);
-             lpSizeUnit = L"GB";
-        }
-        else
-        {
-             DiskSize = RoundingDivide(DiskSize, 1048576);
-             if (DiskSize == 0)
-                 DiskSize = 1;
-             lpSizeUnit = L"MB";
-        }
-
-        /* FIXME */
-        FreeSize = 0;
-        lpFreeUnit = L"B";
-
-        ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
-                     (CurrentDisk == DiskEntry) ? L'*': ' ',
-                     DiskEntry->DiskNumber,
-                     L"Online",
-                     DiskSize,
-                     lpSizeUnit,
-                     FreeSize,
-                     lpFreeUnit,
-                     L" ",
-                     L" ");
+        PrintDisk(DiskEntry);
 
         Entry = Entry->Flink;
     }
 
     ConPuts(StdOut, L"\n\n");
+
+    return TRUE;
 }
 
-static
-VOID
-ListPartition(VOID)
+
+BOOL
+ListPartition(
+    INT argc,
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -95,10 +100,11 @@ ListPartition(VOID)
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_LIST_PARTITION_NO_DISK);
-        return;
+        return TRUE;
     }
 
     /* Header labels */
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, IDS_LIST_PARTITION_HEAD);
     ConResPuts(StdOut, IDS_LIST_PARTITION_LINE);
 
@@ -146,7 +152,7 @@ ListPartition(VOID)
             }
 
             ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
-                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         (CurrentPartition == PartEntry) ? L'*' : L' ',
                          PartNumber++,
                          IsContainerPartition(PartEntry->PartitionType) ? L"Extended" : L"Primary",
                          PartSize,
@@ -202,7 +208,7 @@ ListPartition(VOID)
             }
 
             ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
-                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         (CurrentPartition == PartEntry) ? L'*' : L' ',
                          PartNumber++,
                          L"Logical",
                          PartSize,
@@ -215,45 +221,96 @@ ListPartition(VOID)
     }
 
     ConPuts(StdOut, L"\n");
+
+    return TRUE;
 }
 
-static
+
 VOID
-ListVolume(VOID)
+PrintVolume(
+    _In_ PVOLENTRY VolumeEntry)
 {
-    ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
-}
+    ULONGLONG VolumeSize;
+    PWSTR pszSizeUnit;
+    PWSTR pszVolumeType;
 
-static
-VOID
-ListVdisk(VOID)
-{
-    ConPuts(StdOut, L"List VDisk!!\n");
-}
-
-BOOL
-list_main(
-    INT argc,
-    LPWSTR *argv)
-{
-    /* gets the first word from the string */
-    if (argc == 1)
+    VolumeSize = VolumeEntry->Size.QuadPart;
+    if (VolumeSize >= 10737418240) /* 10 GB */
     {
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
-        return TRUE;
+        VolumeSize = RoundingDivide(VolumeSize, 1073741824);
+        pszSizeUnit = L"GB";
+    }
+    else if (VolumeSize >= 10485760) /* 10 MB */
+    {
+        VolumeSize = RoundingDivide(VolumeSize, 1048576);
+        pszSizeUnit = L"MB";
+    }
+    else
+    {
+        VolumeSize = RoundingDivide(VolumeSize, 1024);
+        pszSizeUnit = L"KB";
+    }
+    switch (VolumeEntry->VolumeType)
+    {
+        case VOLUME_TYPE_CDROM:
+            pszVolumeType = L"DVD";
+            break;
+        case VOLUME_TYPE_PARTITION:
+            pszVolumeType = L"Partition";
+            break;
+        case VOLUME_TYPE_REMOVABLE:
+            pszVolumeType = L"Removable";
+            break;
+        case VOLUME_TYPE_UNKNOWN:
+        default:
+            pszVolumeType = L"Unknown";
+            break;
     }
 
-    /* determines which to list (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        ListDisk();
-    else if (!wcsicmp(argv[1], L"partition"))
-        ListPartition();
-    else if (!wcsicmp(argv[1], L"volume"))
-        ListVolume();
-    else if (!wcsicmp(argv[1], L"vdisk"))
-        ListVdisk();
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
+    ConResPrintf(StdOut, IDS_LIST_VOLUME_FORMAT,
+                 (CurrentVolume == VolumeEntry) ? L'*' : L' ',
+                 VolumeEntry->VolumeNumber,
+                 VolumeEntry->DriveLetter,
+                 (VolumeEntry->pszLabel) ? VolumeEntry->pszLabel : L"",
+                 (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
+                 pszVolumeType,
+                 VolumeSize, pszSizeUnit);
+}
 
+
+BOOL
+ListVolume(
+    INT argc,
+    PWSTR *argv)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+
+    ConPuts(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
+    ConResPuts(StdOut, IDS_LIST_VOLUME_LINE);
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        PrintVolume(VolumeEntry);
+
+        Entry = Entry->Flink;
+    }
+
+    ConPuts(StdOut, L"\n");
+
+    return TRUE;
+}
+
+
+BOOL
+ListVirtualDisk(
+    INT argc,
+    PWSTR *argv)
+{
+    ConPuts(StdOut, L"ListVirtualDisk()!\n");
     return TRUE;
 }

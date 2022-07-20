@@ -266,7 +266,9 @@ enum alg_id
     ALG_ID_SHA1,
     ALG_ID_SHA256,
     ALG_ID_SHA384,
-    ALG_ID_SHA512
+    ALG_ID_SHA512,
+    ALG_ID_ECDSA_P256,
+    ALG_ID_ECDSA_P384,
 };
 
 static const struct {
@@ -278,7 +280,9 @@ static const struct {
     /* ALG_ID_SHA1   */ { 20, BCRYPT_SHA1_ALGORITHM },
     /* ALG_ID_SHA256 */ { 32, BCRYPT_SHA256_ALGORITHM },
     /* ALG_ID_SHA384 */ { 48, BCRYPT_SHA384_ALGORITHM },
-    /* ALG_ID_SHA512 */ { 64, BCRYPT_SHA512_ALGORITHM }
+    /* ALG_ID_SHA512 */ { 64, BCRYPT_SHA512_ALGORITHM },
+    /* ALG_ID_ECDSA_P256 */ { 0, BCRYPT_ECDSA_P256_ALGORITHM },
+    /* ALG_ID_ECDSA_P384 */ { 0, BCRYPT_ECDSA_P384_ALGORITHM },
 };
 
 struct algorithm
@@ -351,6 +355,8 @@ NTSTATUS WINAPI BCryptOpenAlgorithmProvider( BCRYPT_ALG_HANDLE *handle, LPCWSTR 
     else if (!strcmpW( id, BCRYPT_SHA256_ALGORITHM )) alg_id = ALG_ID_SHA256;
     else if (!strcmpW( id, BCRYPT_SHA384_ALGORITHM )) alg_id = ALG_ID_SHA384;
     else if (!strcmpW( id, BCRYPT_SHA512_ALGORITHM )) alg_id = ALG_ID_SHA512;
+    else if (!strcmpW( id, BCRYPT_ECDSA_P256_ALGORITHM )) alg_id = ALG_ID_ECDSA_P256;
+    else if (!strcmpW( id, BCRYPT_ECDSA_P384_ALGORITHM )) alg_id = ALG_ID_ECDSA_P384;
     else
     {
         FIXME( "algorithm %s not supported\n", debugstr_w(id) );

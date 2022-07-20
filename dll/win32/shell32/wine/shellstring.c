@@ -244,8 +244,6 @@ VOID WINAPI CheckEscapesA(
     LocalFree(wString);
 }
 
-static const WCHAR strEscapedChars[] = {' ','"',',',';','^',0};
-
 /*************************************************************************
  * CheckEscapesW             [SHELL32.@]
  *
@@ -260,7 +258,7 @@ VOID WINAPI CheckEscapesW(
 
 	TRACE("(%s %d) stub\n", debugstr_w(string), len);
 
-	if (StrPBrkW(string, strEscapedChars) && size + 2 <= len)
+	if (StrPBrkW(string, L" \",;^") && size + 2 <= len)
 	{
 	  s = &string[size - 1];
 	  d = &string[size + 2];

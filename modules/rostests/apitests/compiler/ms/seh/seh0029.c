@@ -10,7 +10,6 @@
 #define finish()
 
 char test[] = "SEH0029.c";
-int perfect;
 
 void AccessViolation(PLONG BlackHole, PLONG BadAddress) {
   *BlackHole += *BadAddress;

@@ -659,32 +659,26 @@ static int SIC_LoadOverlayIcon(int icon_idx)
     LPCWSTR iconPath;
     int iconIdx;
 
-    static const WCHAR wszShellIcons[] = {
-        'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-        'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-        'E','x','p','l','o','r','e','r','\\','S','h','e','l','l',' ','I','c','o','n','s',0
-    };
-    static const WCHAR wszNumFmt[] = {'%','d',0};
-
     iconPath = swShell32Name;    /* default: load icon from shell32.dll */
     iconIdx = icon_idx;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszShellIcons, 0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
+                      0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
     {
         DWORD count = sizeof(buffer);
 
-        swprintf(wszIdx, wszNumFmt, icon_idx);
+        swprintf(wszIdx, L"%d", icon_idx);
 
         /* read icon path and index */
         if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
         {
-        LPWSTR p = wcschr(buffer, ',');
+            LPWSTR p = wcschr(buffer, ',');
 
-        if (p)
-            *p++ = 0;
+            if (p)
+                *p++ = 0;
 
-        iconPath = buffer;
-        iconIdx = _wtoi(p);
+            iconPath = buffer;
+            iconIdx = _wtoi(p);
         }
 
         RegCloseKey(hKeyShellIcons);

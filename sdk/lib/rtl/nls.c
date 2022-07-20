@@ -251,7 +251,9 @@ RtlMultiByteToUnicodeN(OUT PWCHAR UnicodeString,
             *ResultSize = Size * sizeof(WCHAR);
 
         for (i = 0; i < Size; i++)
+        {
             UnicodeString[i] = NlsAnsiToUnicodeTable[(UCHAR)MbString[i]];
+        }
     }
     else
     {
@@ -331,7 +333,7 @@ RtlMultiByteToUnicodeSize(OUT PULONG UnicodeSize,
     if (!NlsMbCodePageTag)
     {
         /* single-byte code page */
-        *UnicodeSize = MbSize * sizeof (WCHAR);
+        *UnicodeSize = MbSize * sizeof(WCHAR);
     }
     else
     {
@@ -535,8 +537,8 @@ RtlUnicodeToMultiByteN(OUT PCHAR MbString,
     if (!NlsMbCodePageTag)
     {
         /* single-byte code page */
-        Size =  (UnicodeSize > (MbSize * sizeof (WCHAR)))
-                 ? MbSize : (UnicodeSize / sizeof (WCHAR));
+        Size = (UnicodeSize > (MbSize * sizeof(WCHAR)))
+                ? MbSize : (UnicodeSize / sizeof(WCHAR));
 
         if (ResultSize)
             *ResultSize = Size;
@@ -829,8 +831,6 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
     ULONG i;
 
     PAGED_CODE_RTL();
-
-    ASSERT(NlsUnicodeToOemTable != NULL);
 
     if (!NlsMbOemCodePageTag)
     {

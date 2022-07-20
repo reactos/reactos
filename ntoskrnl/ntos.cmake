@@ -9,10 +9,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 add_definitions(
-    -D__NTOSKRNL__
     -D_NTOSKRNL_
     -D_NTSYSTEM_
-    -D_IN_KERNEL_
     -DNTDDI_VERSION=0x05020400)
 
 if(NOT DEFINED NEWCC)
@@ -124,6 +122,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/fstubex.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/halstub.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/translate.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/bootanim.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbvport.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/adapter.c
@@ -151,7 +150,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/symlink.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/util.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/volume.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbs.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbiters.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/devaction.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/devnode.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/plugplay.c
@@ -276,13 +275,19 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/accesschk.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/acl.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/audit.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/client.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/objtype.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/priv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sd.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/semgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sqos.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/srm.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/subject.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/token.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/tokenadj.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/tokencls.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/tokenlif.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/vf/driver.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/guidobj.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/smbios.c

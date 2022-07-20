@@ -44,5 +44,5 @@ BEGIN
     IDS_SYSTEM_PROCESS          "系統進程"
     IDS_UNKNOWN_SOFTWARE_EXCEPT "不明的軟體例外錯誤"
     IDS_OK_TERMINATE_PROGRAM    "按［確定］來結束程式。"
-    IDS_CANCEL_DEBUG_PROGRAM    "按［取消］對程式進行偵錯。"
+    IDS_CANCEL_DEBUG_PROGRAM    "按［取消］對程式進行除錯。"
 END

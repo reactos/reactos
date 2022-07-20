@@ -11,6 +11,11 @@
 HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 
+static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
+{
+    return (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
+}
+
 int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
@@ -22,3 +27,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 void ShowFileLoadError(LPCTSTR name);
 
 HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);
+
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight);
+
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);

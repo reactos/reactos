@@ -286,8 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Willkommen", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Dieser Assistent hilft ihnen Zertifikate, Zertifikatssperrlisten und Zertifikatsvertrauenslisten aus einer Datei zu importieren.\n\nEin Zertifikat dient zur Identifikation von Ihnen oder ihrem Computer. Es kann auch für die Authentifizierung und zum Unterzeichnen genutzt werden. Zertifikatsspeicher sind Sammlungen von Zertifikaten, Zertifikatssperrlisten und Zertifikatsvertrauenslisten.\n\n\
-Klicken Sie Weiter um fortzufahren.",
+  LTEXT "Dieser Assistent hilft ihnen Zertifikate, -Sperrlisten und -Vertrauenslisten aus einer Datei zu importieren.\n\nEin Zertifikat dient Computern zur gegenseitigen Identifikation und kann auch zum Signieren verwendet werden.",
     -1, 115,40,195,120
 END
 
@@ -381,8 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Willkommen", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Dieser Assistent hilft ihnen, Zertifikate, Zertifikatssperrlisten und Zertifikatsvertrauenslisten in eine Datei zu exportieren.\n\nEin Zertifikat dient zur Identifikation von Ihnen oder ihrem Computer. Es kann auch für die Authentifizierung und zum Unterzeichnen genutzt werden. Zertifikatsspeicher sind Sammlungen von Zertifikaten, Zertifikatssperrlisten und Zertifikatsvertrauenslisten.\n\n\
-Klicken Sie auf Weiter, um fortzufahren.",
+  LTEXT "Dieser Assistent hilft ihnen Zertifikate, -Sperrlisten und -Vertrauenslisten in eine Datei zu exportieren.\n\nEin Zertifikat dient Computern zur gegenseitigen Identifikation und kann auch zum Signieren verwendet werden.",
     -1, 115,40,195,120
 END
 

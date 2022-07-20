@@ -12,11 +12,12 @@
 #define WIN32_NO_STATUS
 #define WIN32_LEAN_AND_MEAN
 
-#include <rpc.h>
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/kdtypes.h>
 #include <dpfilter.h>
 
+#include <rpc.h>
 #include <svc.h>
 
 //
@@ -38,8 +39,9 @@
 //
 typedef VOID
 (WINAPI *PSVCHOST_INIT_GLOBALS) (
-    _In_ PSVCHOST_GLOBALS Globals
+    _In_ PSVCHOST_GLOBAL_DATA Globals
 );
+
 //
 // Initialization Stages
 //
@@ -138,7 +140,7 @@ RpcpStopRpcServerEx (
 NTSTATUS
 NTAPI
 RpcpStartRpcServer (
-    _In_ LPCWSTR IfName,
+    _In_ PCWSTR IfName,
     _In_ RPC_IF_HANDLE IfSpec
 );
 
@@ -188,7 +190,7 @@ SvcNetBiosInit (
 VOID
 WINAPI
 SvcNetBiosClose (
-VOID
+    VOID
 );
 
 VOID
@@ -242,14 +244,14 @@ RegQueryStringA (
 DWORD
 WINAPI
 SvcRegisterStopCallback (
-    _In_ PHANDLE phNewWaitObject,
-    _In_ LPCWSTR ServiceName,
+    _Out_ PHANDLE phNewWaitObject,
+    _In_ PCWSTR ServiceName,
     _In_ HANDLE hObject,
     _In_ PSVCHOST_STOP_CALLBACK pfnStopCallback,
     _In_ PVOID pContext,
     _In_ ULONG dwFlags
 );
 
-extern PSVCHOST_GLOBALS g_pSvchostSharedGlobals;
+extern PSVCHOST_GLOBAL_DATA g_pSvchostSharedGlobals;
 
 #endif /* _SVCHOST_PCH_ */

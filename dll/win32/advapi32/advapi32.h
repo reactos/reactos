@@ -36,6 +36,7 @@
 #include <ntsecapi.h>
 
 #include <services/services.h>
+#include <seclogon_c.h>
 #include <svcctl_c.h>
 #include <winreg_c.h>
 

@@ -43,6 +43,10 @@ typedef struct _ACCESS_RANGE {
     BOOLEAN RangeInMemory;
 }ACCESS_RANGE, *PACCESS_RANGE;
 
+#ifdef __REACTOS__
+#pragma pack(push, 4)
+#endif
+
 //
 // Configuration information structure.  Contains the information necessary
 // to initialize the adapter. NOTE: This structure's must be a multiple of
@@ -124,6 +128,10 @@ typedef struct _PORT_CONFIGURATION_INFORMATION_2K {
     // Supports WMI?
     BOOLEAN WmiDataProvider;
 } PORT_CONFIGURATION_INFORMATION_2K, *PPORT_CONFIGURATION_INFORMATION_2K;
+
+#ifdef __REACTOS__
+#pragma pack(pop)
+#endif
 
 typedef struct _PORT_CONFIGURATION_INFORMATION_COMMON {
     PORT_CONFIGURATION_INFORMATION     comm;

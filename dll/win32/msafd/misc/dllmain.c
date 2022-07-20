@@ -649,7 +649,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     if(!NT_SUCCESS(Status))
     {
-        ERR("NtCreateEvent failed: 0x%08x", Status);
+        ERR("NtCreateEvent failed: 0x%08x\n", Status);
         return SOCKET_ERROR;
     }
 
@@ -664,7 +664,7 @@ WSPCloseSocket(IN SOCKET Handle,
         if (Status)
         {
             if (lpErrno) *lpErrno = Status;
-            ERR("WSHNotify failed. Error 0x%#x", Status);
+            ERR("WSHNotify failed. Error 0x%#x\n", Status);
             NtClose(SockEvent);
             return SOCKET_ERROR;
         }

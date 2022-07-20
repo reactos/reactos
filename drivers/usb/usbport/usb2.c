@@ -644,7 +644,7 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     TransferType = TtEndpoint->TtEndpointParams.TransferType;
 
     if (Rebalance->RebalanceEndpoint[Num] &&
-        TtEndpoint->TtEndpointParams.EndpointMoved == TRUE &&
+        TtEndpoint->TtEndpointParams.EndpointMoved &&
         ((TransferType != USBPORT_TRANSFER_TYPE_INTERRUPT) || BusTime >= 0))
     {
         DPRINT("USB2_MoveTtEndpoint: result - FALSE\n");
@@ -668,7 +668,7 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
         *OutResult = FALSE;
     }
 
-    TtEndpoint->TtEndpointParams.EndpointMoved = TRUE;
+    TtEndpoint->TtEndpointParams.EndpointMoved = 1;
 
     if (Rebalance->RebalanceEndpoint[Num] == NULL)
     {

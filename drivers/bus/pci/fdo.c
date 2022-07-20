@@ -14,46 +14,6 @@
 
 /*** PRIVATE *****************************************************************/
 
-static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
-
-static NTSTATUS NTAPI
-ForwardIrpAndWaitCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-    if (Irp->PendingReturned)
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS NTAPI
-ForwardIrpAndWait(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-    PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Ldo;
-    ASSERT(LowerDevice);
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(LowerDevice, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        if (NT_SUCCESS(Status))
-            Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
 static NTSTATUS
 FdoLocateChildDevice(
     PPCI_DEVICE *Device,
@@ -89,6 +49,30 @@ FdoLocateChildDevice(
     return STATUS_UNSUCCESSFUL;
 }
 
+static
+BOOLEAN
+PciIsDebuggingDevice(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER SlotNumber)
+{
+    ULONG i;
+
+    if (!HasDebuggingDevice)
+        return FALSE;
+
+    for (i = 0; i < RTL_NUMBER_OF(PciDebuggingDevice); ++i)
+    {
+        if (PciDebuggingDevice[i].InUse &&
+            PciDebuggingDevice[i].BusNumber == Bus &&
+            PciDebuggingDevice[i].DeviceNumber == SlotNumber.u.bits.DeviceNumber &&
+            PciDebuggingDevice[i].FunctionNumber == SlotNumber.u.bits.FunctionNumber)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
 
 static NTSTATUS
 FdoEnumerateDevices(
@@ -132,7 +116,9 @@ FdoEnumerateDevices(
                                  &PciConfig,
                                  PCI_COMMON_HDR_LENGTH);
             DPRINT("Size %lu\n", Size);
-            if (Size < PCI_COMMON_HDR_LENGTH)
+            if (Size != PCI_COMMON_HDR_LENGTH ||
+                PciConfig.VendorID == PCI_INVALID_VENDORID ||
+                PciConfig.VendorID == 0)
             {
                 if (FunctionNumber == 0)
                 {
@@ -151,12 +137,6 @@ FdoEnumerateDevices(
                    PciConfig.VendorID,
                    PciConfig.DeviceID);
 
-            if (PciConfig.VendorID == 0 && PciConfig.DeviceID == 0)
-            {
-                DPRINT("Filter out devices with null vendor and device ID\n");
-                continue;
-            }
-
             Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
             if (!NT_SUCCESS(Status))
             {
@@ -171,6 +151,27 @@ FdoEnumerateDevices(
                               sizeof(PCI_DEVICE));
 
                 Device->BusNumber = DeviceExtension->BusNumber;
+
+                if (PciIsDebuggingDevice(DeviceExtension->BusNumber, SlotNumber))
+                {
+                    Device->IsDebuggingDevice = TRUE;
+
+                    /*
+                     * ReactOS-specific: apply a hack
+                     * to prevent driver installation for the debugging device.
+                     * NOTE: Nothing to do for IEEE 1394 devices; NT5.1 and NT5.2
+                     * support IEEE 1394 debugging.
+                     *
+                     * FIXME: We should set the device problem code
+                     * CM_PROB_USED_BY_DEBUGGER instead.
+                     */
+                    if (PciConfig.BaseClass != PCI_CLASS_SERIAL_BUS_CTLR ||
+                        PciConfig.SubClass != PCI_SUBCLASS_SB_IEEE1394)
+                    {
+                        PciConfig.VendorID = 0xDEAD;
+                        PciConfig.DeviceID = 0xBEEF;
+                    }
+                }
 
                 RtlCopyMemory(&Device->SlotNumber,
                               &SlotNumber,
@@ -524,9 +525,16 @@ FdoPnpControl(
 #endif
         case IRP_MN_START_DEVICE:
             DPRINT("IRP_MN_START_DEVICE received\n");
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
-                Status = FdoStartDevice(DeviceObject, Irp);
+            Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(DeviceExtension->Ldo, Irp))
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = FdoStartDevice(DeviceObject, Irp);
+                }
+            }
 
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);

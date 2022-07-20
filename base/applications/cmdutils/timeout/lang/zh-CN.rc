@@ -15,16 +15,16 @@ TIMEOUT [/?] [/T] delay [/NOBREAK]\n\
 \n\
     /T delay  指定等待的秒数（-1 到 99999）。\n\
               值 -1 表示程序将永远处于等待状态直到有按键被按下。\n\
-              注意 ""/T"" 表述是可选的，您可以直接表明延时的值而\n\
+              注意 “/T” 表述是可选的，您可以直接表明延时的值而\n\
               不用输入它。\n\
 \n\
     /NOBREAK  忽略所有除 Ctrl+C 以外所有键盘输入。\n\
 "
-    IDS_ERROR_OUT_OF_RANGE "错误: 计时器值必须在范围内 (-1 到 99999)。\n"
-    IDS_ERROR_INVALID_HANDLE_VALUE "错误: 无法获得终端的标准句柄 (错误 %lu)。\n"
-    IDS_ERROR_READ_INPUT "错误: 无法读取终端输入 (错误 %lu)。\n"
-    IDS_ERROR_NO_TIMER_VALUE "错误: 必须设置计时器值 (-1 到 99999)。\n"
-    IDS_ERROR_ONE_TIME "错误: 只需要一个计时器值。\n"
+    IDS_ERROR_OUT_OF_RANGE "错误：计时器值必须在范围内（-1 到 99999）。\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "错误：无法获得终端的标准句柄（错误 %lu）。\n"
+    IDS_ERROR_READ_INPUT "错误：无法读取终端输入（错误 %lu）。\n"
+    IDS_ERROR_NO_TIMER_VALUE "错误：必须设置计时器值（-1 到 99999）。\n"
+    IDS_ERROR_ONE_TIME "错误：只需要一个计时器值。\n"
     IDS_NOBREAK_INPUT "按 Ctrl+C 退出..."
     IDS_USER_INPUT "按任意键继续..."
     IDS_NOBREAK_INPUT_COUNT "正在等待 %d 秒，按 Ctrl+C 退出..."

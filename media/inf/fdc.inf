@@ -58,7 +58,10 @@ AddService = , 0x00000002
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 FDCClassName = "Floppy disk controllers"
 
 GenericMfg = "(Generic floppy disk controllers)"
@@ -89,7 +92,6 @@ GenericMfg = "(Γενικοί ελεγκτές δισκέτας)"
 *PNP0700.DeviceDesc = "Γενικός ελεγκτής δισκέτας"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 FDCClassName = "Controladores de disquete"
 
 GenericMfg = "(Controlador estándar de disquetes)"
@@ -108,8 +110,8 @@ GenericMfg = "(標準フロッピー ディスク コントローラ)"
 *PNP0700.DeviceDesc = "標準フロッピー ディスク コントローラ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 FDCClassName = "Kontrolery stacji dyskietek"
+
 GenericMfg = "(Standardowowe kontrolery stacji dyskietek)"
 *PNP0700.DeviceDesc = "Standardowy kontroler stacji dyskietek"
 
@@ -120,13 +122,12 @@ GenericMfg = "(Unidades de disquete padrão)"
 *PNP0700.DeviceDesc = "Controlador padrão de disquete"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 FDCClassName = "Dispozitive de control disc flexibil"
+
 GenericMfg = "(dispozitiv generic de control disc flexibil)"
 *PNP0700.DeviceDesc = "Dispozitiv generic de control disc flexibil"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллеры гибких дисков"
 
 GenericMfg = "(Стандартные контроллеры гибких дисков)"
@@ -139,14 +140,12 @@ GenericMfg = "(Generické radiče disketových mechaník)"
 *PNP0700.DeviceDesc = "Generický radič disketovej mechaniky"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 FDCClassName = "Disket Denetleyicileri"
 
 GenericMfg = "(Genel Disket Denetleyicileri)"
 *PNP0700.DeviceDesc = "Genel Disket Denetleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллери гнучких дисків"
 
 GenericMfg = "(Стандартні контроллери гнучких дисків)"
@@ -163,7 +162,13 @@ GenericMfg = "(通用软盘控制器)"
 *PNP0700.DeviceDesc = "通用软盘控制器"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 FDCClassName = "Unidades de disquete"
+
 GenericMfg = "(Unidades de disquete padrão)"
 *PNP0700.DeviceDesc = "Controlador de disquete padrão"
+
+[Strings.0C04]
+FDCClassName = "軟碟控制器"
+
+GenericMfg = "(標準軟碟控制器)"
+*PNP0700.DeviceDesc = "標準軟碟控制器"

@@ -59,6 +59,11 @@
 #define ObpAccessProtectCloseBit 0x02000000L
 
 //
+// System Process Quota Block
+//
+#define OBP_SYSTEM_PROCESS_QUOTA ((PEPROCESS_QUOTA_BLOCK)(ULONG_PTR)1)
+
+//
 // Identifies a Kernel Handle
 //
 #ifdef _WIN64

@@ -63,6 +63,9 @@ IDI_CALC ICON DISCARDABLE "res/calc.ico"
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
@@ -113,6 +116,9 @@ IDI_CALC ICON DISCARDABLE "res/calc.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

@@ -47,32 +47,6 @@ extern HANDLE gpidLogon;
 extern HWND hwndSAS;
 extern UNICODE_STRING gustrWindowStationsDir;
 
-#define WINSTA_READ       STANDARD_RIGHTS_READ     | \
-                          WINSTA_ENUMDESKTOPS      | \
-                          WINSTA_ENUMERATE         | \
-                          WINSTA_READATTRIBUTES    | \
-                          WINSTA_READSCREEN
-
-#define WINSTA_WRITE      STANDARD_RIGHTS_WRITE    | \
-                          WINSTA_ACCESSCLIPBOARD   | \
-                          WINSTA_CREATEDESKTOP     | \
-                          WINSTA_WRITEATTRIBUTES
-
-#define WINSTA_EXECUTE    STANDARD_RIGHTS_EXECUTE  | \
-                          WINSTA_ACCESSGLOBALATOMS | \
-                          WINSTA_EXITWINDOWS
-
-#define WINSTA_ACCESS_ALL STANDARD_RIGHTS_REQUIRED | \
-                          WINSTA_ACCESSCLIPBOARD   | \
-                          WINSTA_ACCESSGLOBALATOMS | \
-                          WINSTA_CREATEDESKTOP     | \
-                          WINSTA_ENUMDESKTOPS      | \
-                          WINSTA_ENUMERATE         | \
-                          WINSTA_EXITWINDOWS       | \
-                          WINSTA_READATTRIBUTES    | \
-                          WINSTA_READSCREEN        | \
-                          WINSTA_WRITEATTRIBUTES
-
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -125,4 +99,5 @@ BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL IntEndDesktopGraphics(VOID);
 BOOL FASTCALL CheckWinstaAttributeAccess(ACCESS_MASK);
+
 /* EOF */

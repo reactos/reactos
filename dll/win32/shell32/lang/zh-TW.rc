@@ -1,11 +1,10 @@
 /*
- * PROJECT:    ReactOS Shell32
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       dll/win32/shell32/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language Resources
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- *             Luo Yufan <njlyf2011@hotmail.com>
- *             Chan Chilung <eason066@gmail.com>
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2019 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -149,7 +148,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "此版本授權予：", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "這個版本授權予：", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -163,7 +162,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "帶給您 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "給您帶來 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -215,9 +214,9 @@ CAPTION "進階內容"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "為這個捷徑選擇所需的高級內容。", -1, 5, 30, 210, 10
+    LTEXT "為這個捷徑選擇所需的進階內容。", -1, 5, 30, 210, 10
     CHECKBOX "以不同的身分執行", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "此選項允許您以其他用戶身份執行此捷徑，或者在保護電腦和數據免受未經授權的程式活動的同時繼續自行執行。", -1, 50, 60, 175, 40
+    LTEXT "這個選項允許您以其他用戶身份執行這個捷徑，或在保護電腦和數據免受未經授權的程式活動的同時繼續自行執行。", -1, 50, 60, 175, 40
     CHECKBOX "在獨立的記憶體空間中執行", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "確定", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "取消", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
@@ -320,7 +319,7 @@ BEGIN
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "已使用的空間：", -1, 25, 69, 80, 10
+    LTEXT "已使用空間：", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
@@ -370,15 +369,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "執行身分"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    LTEXT "您要使用哪個使用者帳戶來運行此程式？", -1, 10, 20, 220, 20
-    CHECKBOX "當前使用者為 %s", 14000, 10, 45, 150, 10
+    LTEXT "您要使用哪個使用者帳戶來執行這個程式？", -1, 10, 20, 220, 20
+    CHECKBOX "目前使用者為 %s", 14000, 10, 45, 150, 10
     LTEXT "保護我的電腦和數據不受未經授權程式的破壞", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "此選項可以防止電腦病毒損害您的電腦或個人數據，但選擇它可能會導致程式無法正常運行。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "這個選項可以防止電腦病毒損害您的電腦或個人數據，但選擇它可能會導致程式無法正常執行。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "以下使用者：", 14002, 10, 100, 90, 10
     LTEXT "使用者名稱：", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
-    LTEXT "密碼:", -1, 20, 143, 53, 10
+    LTEXT "密碼：", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
     PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
     PUSHBUTTON "確定", 14007, 57, 170, 60, 14, WS_TABSTOP
@@ -394,7 +393,7 @@ BEGIN
     GROUPBOX "所選位置的設定", -1, 10, 72, 220, 70
     RADIOBUTTON "自訂大小(&C)：", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "最大大小(&A)(MB)：", -1, 20, 105, 70, 10
+    LTEXT "最大大小（MB）(&A)：", -1, 20, 105, 70, 10
     RADIOBUTTON "不要將檔案移動到資源回收筒，而是徹底刪除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "顯示確認刪除對話方塊(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
@@ -444,7 +443,7 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "資料夾檢視", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "您可以將用於此資料夾的視圖（例如「詳細資料」或「並排」）應用於所有資料夾。", -1, 60, 20, 180, 20
+    LTEXT "您可以將用於這個資料夾的視圖（例如「詳細資料」或「並排」）應用於所有資料夾。", -1, 60, 20, 180, 20
     PUSHBUTTON "套用到所有資料夾(&L)", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重設所有資料夾(&R)", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "進階設定：", -1, 7, 80, 100, 10
@@ -461,7 +460,7 @@ BEGIN
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
     PUSHBUTTON "新增(&N)", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
     PUSHBUTTON "刪除(&D)", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
-    GROUPBOX "副檔名 '%s' 的詳細資訊", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
+    GROUPBOX "副檔名「%s」的詳細資訊", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
     LTEXT "開啟檔案：", -1, 12, 180, 40, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
     LTEXT "應用程式名稱", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
@@ -480,14 +479,14 @@ BEGIN
     PUSHBUTTON "否(&N)", IDNO, 150, 122, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "此資料夾已包含名為「%2」的檔案。", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "此資料夾已包含名為「%2」的唯讀檔案。", 12292, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "此資料夾已包含名為「%2」的系統檔案。", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "這個資料夾已包含名為「%2」的檔案。", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "這個資料夾已包含名為「%2」的唯讀檔案。", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "這個資料夾已包含名為「%2」的系統檔案。", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "您是否想要取代已存在的檔案？", -1, 44, 35, 228, 10, SS_NOPREFIX
-    LTEXT "(未知日期和大小)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+    LTEXT "（不明日期和大小）", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "換成這個嗎？", -1, 44, 75, 228, 10, SS_NOPREFIX
-    LTEXT "(未知日期和大小)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+    LTEXT "（不明日期和大小）", 12303, 79, 91, 198, 20, SS_NOPREFIX
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
@@ -532,7 +531,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "自動播放"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "選擇內容類型，然後選擇 ReactOS 在此裝置中使用該類型時自動執行的動作(&S)：", 1000, 7, 7, 215, 20
+    LTEXT "選擇內容類型，然後選擇 ReactOS 在這個裝置中使用該類型時自動執行的動作(&S)：", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "動作", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "選擇要執行的動作(&P)：", 1005, 14, 54, 202, 10, WS_GROUP
@@ -547,7 +546,7 @@ CAPTION "混合内容"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "此磁碟或裝置包含多種類型的內容。", 1001, 32, 7, 191, 20
+    LTEXT "這個磁碟或裝置包含多種類型的內容。", 1001, 32, 7, 191, 20
     LTEXT "您希望 ReactOS 做什麼？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "確定", IDOK, 96, 186, 60, 14
@@ -560,7 +559,7 @@ CAPTION "混合內容"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "每次插入磁碟或使用此類文件連接裝置時，ReactOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
+    LTEXT "每次插入磁碟或連接有這類檔案的裝置時，ReactOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "您希望 ReactOS 做什麼？", 1002, 32, 41, 190, 8
@@ -653,8 +652,8 @@ CAPTION "警告"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "此檔案可由操作系統或其他應用程式所使用。\n修改此文件可能會導致您的系統損毀，\n或者使它的功能變弱。\n\n\
-您是否仍要開啟此檔案？", IDC_STATIC, 35, 5, 230, 60
+    LTEXT "這個檔案可由操作系統或其他應用程式所使用。\n修改這個文件可能會導致您的系統損毀，\n或者使它的功能失效。\n\n\
+您是否仍要開啟這個檔案？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
 END
@@ -714,12 +713,12 @@ CAPTION "自訂"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "您想要什麼種類的資料夾?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "將此資料夾類型設定成範本(&F)：", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "您想要什麼種類的資料夾？", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "將這個資料夾類型設定成範本(&F)：", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "將此範本套用到所有子資料夾(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    AUTOCHECKBOX "將這個範本套用到所有子資料夾(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
     GROUPBOX "資料夾圖片", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "對於縮圖檢視，您可以在此資料夾上放置圖片以提醒您內容。", IDC_STATIC, 15, 87, 115, 33
+    LTEXT "對於縮圖檢視，您可以在這個資料夾上放置圖片以提醒您內容。", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "選擇圖片(&P)...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "還原成預設值(&R)", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
     LTEXT "檢視:", IDC_STATIC, 139, 85, 81, 11
@@ -727,7 +726,7 @@ BEGIN
     GROUPBOX "資料夾圖示", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
     LTEXT "對於除縮圖以外的所有檢視，您可以將標準「資料夾」圖示更改為另一個圖示。", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "變更圖示...(&I)", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "變更圖示(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -737,7 +736,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
     LTEXT "這個捷徑指向的項目「%s」已經變更或移到它處，所以這個捷徑無法再正常執行。", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "按照名稱、類型、大小以及日期，最符合的是:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "按照名稱、類型、大小以及日期，最符合的是：", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "您要修正這個捷徑，讓它指向這個目標或者只想刪除它？", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "修正(&F)", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDYES, 120, 120, 60, 15
@@ -813,8 +812,8 @@ BEGIN
     IDS_COPYERRORSAME "無法複製「%s」：來源及目的地的檔案名稱相同。"
     IDS_MOVEERRORSUBFOLDER "無法移動「%s」：目的資料夾是來源資料夾的子資料夾。"
     IDS_COPYERRORSUBFOLDER "無法複製「%s」：目的資料夾是來源資料夾的子資料夾。"
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "無法移動「%s」：%s"
+    IDS_COPYERROR "無法複製「%s」：%s"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾「%1」"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
@@ -824,7 +823,7 @@ BEGIN
     IDS_DELETEMULTIPLE_TEXT "您確定要刪除 %1 個項目嗎?"
     IDS_DELETESELECTED_TEXT "您確定要刪除所選項目嗎?"
     IDS_TRASHITEM_TEXT "您確定要將「%1」傳送到資源回收筒嗎?"
-    IDS_TRASHFOLDER_TEXT "您確定要將「%1」 和它的所有內容傳送到資源回收筒嗎?"
+    IDS_TRASHFOLDER_TEXT "您確定要將「%1」和它的所有內容傳送到資源回收筒嗎?"
     IDS_TRASHMULTIPLE_TEXT "您確定要將這「%1」項傳送到資源回收筒嗎?"
     IDS_CANTTRASH_TEXT "項目「%1」無法傳送到資源回收筒。您要徹底刪除它嗎？"
     IDS_OVERWRITEFILE_TEXT "這個資料夾已包含名為「%1」的檔案。\n\n您想要取代它嗎？"
@@ -846,7 +845,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本機磁碟"
-    IDS_FORMAT_WARNING "警告：格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟, 請按［確定］。若想退出，請按［返回］。"
+    IDS_FORMAT_WARNING "警告：格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟，請按［確定］。若想退出，請按［返回］。"
     IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Warning format system drive dialog strings */
@@ -897,7 +896,7 @@ BEGIN
     IDS_DRIVE_CDROM "CD 光碟機"
     IDS_DRIVE_NETWORK "網路磁碟"
     IDS_DRIVE_FLOPPY "3.5-吋磁片"
-    IDS_DRIVE_REMOVABLE "抽取式磁碟"
+    IDS_DRIVE_REMOVABLE "卸除式磁碟"
     IDS_FS_UNKNOWN "未知"
 
     /* Open With */
@@ -907,7 +906,7 @@ BEGIN
     IDS_OPEN_WITH_OTHER "其它程式:"
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
-    IDS_SHELL_ABOUT_BACK "< 返回(&B)"
+    IDS_SHELL_ABOUT_BACK "< 上一步(&B)"
     FCIDM_SHVIEW_NEW "新增"
     FCIDM_SHVIEW_NEWFOLDER "新增資料夾(&F)"
     FCIDM_SHVIEW_NEWLINK "新增捷徑(&L)"
@@ -959,11 +958,11 @@ BEGIN
     IDS_EXPLORE_VERB "檔案總管"
     IDS_RUNAS_VERB "執行身分..."
     IDS_EDIT_VERB "編輯"
-    IDS_FIND_VERB "搜索"
+    IDS_FIND_VERB "搜尋"
     IDS_PRINT_VERB "列印"
-    IDS_CMD_VERB "在此開啟命令提示字元"
+    IDS_CMD_VERB "在這裡開啟命令提示字元"
 
-    IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
+    IDS_FILE_FOLDER "%u 個檔案，%u 個資料夾"
     IDS_PRINTERS "印表機"
     IDS_FONTS "字型"
     IDS_INSTALLNEWFONT "安裝新字型..."
@@ -973,7 +972,7 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "沒有為 ReactOS 設定關聯的程式以開啟這種類型的檔案。"
 
-    IDS_FILE_DETAILS "有關副檔名「%s」的詳細資料"
+    IDS_FILE_DETAILS "副檔名「%s」的詳細資料"
     IDS_FILE_DETAILSADV "副檔名為「%s」的檔案屬於類型「%s」。如果要變更影響所有「%s」檔案的設定值，請按一下［進階］。"
     IDS_FILE_TYPES "檔案類型"
     IDS_COLUMN_EXTENSION "副檔名"
@@ -1024,15 +1023,15 @@ BEGIN
     IDS_ACTION_EXISTS "這個檔案類型的執行動作「%s」已被登錄過。請輸入不同的名稱後重試一次。"
     IDS_EXE_FILTER "Programs\0*.exe\0所有檔案\0*.*\0"
     IDS_EDITING_ACTION "編輯這種類型的動作："
-    IDS_NO_ICONS "檔案 '%s' 沒有圖示。\n\n請指定其他檔案或從清單中選擇一個圖示。"
+    IDS_NO_ICONS "檔案「%s」沒有圖示。\n\n請指定其他檔案或從清單中選擇一個圖示。"
     IDS_FILE_NOT_FOUND "找不到檔案「%s」。"
     IDS_LINK_INVALID "這個捷徑所參照的項目「%s」已被刪除或移動，因此無法再正常執行。"
     IDS_COPYTOMENU "複製到資料夾(&F)..."
-    IDS_COPYTOTITLE "選取想要複製「%s」的位置，然後按一下［複製］按鈕。"
+    IDS_COPYTOTITLE "選取「%s」要複製的位置，然後按一下［複製］按鈕。"
     IDS_COPYITEMS "複製項目"
     IDS_COPYBUTTON "複製"
     IDS_MOVETOMENU "移到資料夾(&V)..."
-    IDS_MOVETOTITLE "選取想要移動「%s」的位置，然後按一下［移動］按鈕。"
+    IDS_MOVETOTITLE "選取「%s」要移動的位置，然後按一下［移動］按鈕。"
     IDS_MOVEITEMS "移動項目"
     IDS_MOVEBUTTON "移動"
 
@@ -1040,7 +1039,7 @@ BEGIN
 
     /* For IDD_LOG_OFF_FANCY */
     IDS_LOG_OFF_DESC "關閉您的程式，並結束目前的工作階段。"
-    IDS_SWITCH_USER_DESC "允許其他使用者登入到系統上，同時保持您的程式和檔案開啟。\r\n\r\n(您亦可使用 Windows 鍵 + L 來切換使用者。)"
+    IDS_SWITCH_USER_DESC "允許其他使用者登入到系統上，同時保持您的程式和檔案開啟。\r\n\r\n（您亦可使用 Windows 鍵 + L 來切換使用者。）"
     IDS_LOG_OFF_TITLE "登出"
     IDS_SWITCH_USER_TITLE "切換使用者"
 END

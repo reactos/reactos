@@ -97,7 +97,7 @@ HRESULT __stdcall BtrfsVolPropSheet::Initialize(PCIDLIST_ABSOLUTE pidlFolder, ID
         return E_FAIL;
     }
 
-    if (DragQueryFileW((HDROP)stgm.hGlobal, 0, fnbuf, sizeof(fnbuf) / sizeof(MAX_PATH))) {
+    if (DragQueryFileW((HDROP)stgm.hGlobal, 0, fnbuf, sizeof(fnbuf) / sizeof(WCHAR))) {
         fn = fnbuf;
 
         win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
@@ -567,10 +567,10 @@ static INT_PTR CALLBACK stub_UsageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
     BtrfsVolPropSheet* bvps;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bvps = (BtrfsVolPropSheet*)lParam;
     } else {
-        bvps = (BtrfsVolPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bvps = (BtrfsVolPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bvps)
@@ -943,10 +943,10 @@ static INT_PTR CALLBACK stub_StatsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
     BtrfsVolPropSheet* bvps;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bvps = (BtrfsVolPropSheet*)lParam;
     } else {
-        bvps = (BtrfsVolPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bvps = (BtrfsVolPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bvps)
@@ -1250,10 +1250,10 @@ static INT_PTR CALLBACK stub_DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
     BtrfsVolPropSheet* bvps;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bvps = (BtrfsVolPropSheet*)lParam;
     } else {
-        bvps = (BtrfsVolPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bvps = (BtrfsVolPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bvps)
@@ -1331,13 +1331,13 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         switch (uMsg) {
             case WM_INITDIALOG:
             {
-                PROPSHEETPAGE* psp = (PROPSHEETPAGE*)lParam;
+                PROPSHEETPAGEW* psp = (PROPSHEETPAGEW*)lParam;
                 BtrfsVolPropSheet* bps = (BtrfsVolPropSheet*)psp->lParam;
                 btrfs_device* bd;
 
                 EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
 
-                SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
+                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
 
                 bps->readonly = true;
                 bd = bps->devices;
@@ -1386,7 +1386,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
             case WM_COMMAND:
             {
-                BtrfsVolPropSheet* bps = (BtrfsVolPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+                BtrfsVolPropSheet* bps = (BtrfsVolPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
                 if (bps) {
                     switch (HIWORD(wParam)) {
@@ -1428,7 +1428,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
 HRESULT __stdcall BtrfsVolPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) {
     try {
-        PROPSHEETPAGE psp;
+        PROPSHEETPAGEW psp;
         HPROPSHEETPAGE hPage;
         INITCOMMONCONTROLSEX icex;
 
@@ -1444,15 +1444,15 @@ HRESULT __stdcall BtrfsVolPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, L
         psp.dwSize = sizeof(psp);
         psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE;
         psp.hInstance = module;
-        psp.pszTemplate = MAKEINTRESOURCE(IDD_VOL_PROP_SHEET);
+        psp.pszTemplate = MAKEINTRESOURCEW(IDD_VOL_PROP_SHEET);
         psp.hIcon = 0;
-        psp.pszTitle = MAKEINTRESOURCE(IDS_VOL_PROP_SHEET_TITLE);
+        psp.pszTitle = MAKEINTRESOURCEW(IDS_VOL_PROP_SHEET_TITLE);
         psp.pfnDlgProc = (DLGPROC)PropSheetDlgProc;
         psp.pcRefParent = (UINT*)&objs_loaded;
         psp.pfnCallback = nullptr;
         psp.lParam = (LPARAM)this;
 
-        hPage = CreatePropertySheetPage(&psp);
+        hPage = CreatePropertySheetPageW(&psp);
 
         if (hPage) {
             if (pfnAddPage(hPage, lParam)) {
@@ -1476,7 +1476,7 @@ HRESULT __stdcall BtrfsVolPropSheet::ReplacePage(UINT uPageID, LPFNADDPROPSHEETP
 void BtrfsChangeDriveLetter::do_change(HWND hwndDlg) {
     unsigned int sel = (unsigned int)SendDlgItemMessageW(hwndDlg, IDC_DRIVE_LETTER_COMBO, CB_GETCURSEL, 0, 0);
 
-    if (sel >= 0 && sel < letters.size()) {
+    if (sel < letters.size()) {
         wstring dd;
 
         if (fn.length() == 3 && fn[1] == L':' && fn[2] == L'\\') {
@@ -1590,37 +1590,20 @@ INT_PTR BtrfsChangeDriveLetter::DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
     return false;
 }
 
-#ifdef __REACTOS__
-INT_PTR CALLBACK VolPropSheetDlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+static INT_PTR __stdcall dlg_proc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     BtrfsChangeDriveLetter* bcdl;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bcdl = (BtrfsChangeDriveLetter*)lParam;
     } else
-        bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
 }
-#endif
 
 void BtrfsChangeDriveLetter::show() {
-#ifndef __REACTOS__
-    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, [](HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-        BtrfsChangeDriveLetter* bcdl;
-
-        if (uMsg == WM_INITDIALOG) {
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
-            bcdl = (BtrfsChangeDriveLetter*)lParam;
-        } else
-            bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
-
-        return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
-    }, (LPARAM)this);
-#else
-    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, VolPropSheetDlgproc, (LPARAM)this);
-#endif
+    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, dlg_proc, (LPARAM)this);
 }
 
 #ifdef __cplusplus

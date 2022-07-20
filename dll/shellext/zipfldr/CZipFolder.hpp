@@ -5,10 +5,6 @@
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
-
-EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
-
-
 struct FolderViewColumns
 {
     int iResource;

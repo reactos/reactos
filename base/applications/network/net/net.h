@@ -38,6 +38,10 @@ PrintPadding(
     WCHAR chr,
     INT nPaddedLength);
 
+DWORD
+TranslateAppMessage(
+    DWORD dwMessage);
+
 VOID
 PrintMessageString(
     DWORD dwMessage);

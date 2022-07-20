@@ -26,6 +26,9 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Conteúdos"
     IDS_INDEX        "&Índice"
     IDS_SEARCH       "&Pesquisar"

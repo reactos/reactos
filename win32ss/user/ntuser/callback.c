@@ -1247,4 +1247,29 @@ co_UserCBClientPrinterThunk( PVOID pkt, INT InSize, PVOID pvOutData, INT OutSize
    return 0;
 }
 
+// Win: ClientImmProcessKey
+DWORD
+APIENTRY
+co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
+{
+    DWORD ret = 0;
+    NTSTATUS Status;
+    ULONG ResultLength = sizeof(DWORD);
+    PVOID ResultPointer = NULL;
+    IMMPROCESSKEY_CALLBACK_ARGUMENTS Common = { hWnd, hKL, vKey, lParam, dwHotKeyID };
+
+    UserLeaveCo();
+    Status = KeUserModeCallback(USER32_CALLBACK_IMMPROCESSKEY,
+                                &Common,
+                                sizeof(Common),
+                                &ResultPointer,
+                                &ResultLength);
+    UserEnterCo();
+
+    if (NT_SUCCESS(Status))
+        ret = *(LPDWORD)ResultPointer;
+
+    return ret;
+}
+
 /* EOF */

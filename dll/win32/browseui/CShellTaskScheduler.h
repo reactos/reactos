@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS browseui
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     IShellTaskScheduler implementation
- * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 #pragma once

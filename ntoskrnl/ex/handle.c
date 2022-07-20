@@ -102,6 +102,7 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
                           IN SIZE_T Size)
 {
     PVOID Buffer;
+    NTSTATUS Status;
 
     /* Do the allocation */
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
@@ -113,7 +114,13 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
         /* Check if we have a process to charge quota */
         if (Process)
         {
-            /* FIXME: Charge quota */
+            /* Charge quota */
+            Status = PsChargeProcessPagedPoolQuota(Process, Size);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
+                return NULL;
+            }
         }
     }
 
@@ -127,6 +134,7 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
                                 IN SIZE_T Size)
 {
     PVOID Buffer;
+    NTSTATUS Status;
 
     /* Do the allocation */
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
@@ -135,7 +143,13 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
         /* Check if we have a process to charge quota */
         if (Process)
         {
-            /* FIXME: Charge quota */
+            /* Charge quota */
+            Status = PsChargeProcessPagedPoolQuota(Process, Size);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
+                return NULL;
+            }
         }
     }
 
@@ -153,7 +167,8 @@ ExpFreeTablePagedPool(IN PEPROCESS Process OPTIONAL,
     ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
     if (Process)
     {
-        /* FIXME: Release quota */
+        /* Release quota */
+        PsReturnProcessPagedPoolQuota(Process, Size);
     }
 }
 
@@ -248,7 +263,8 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
     if (Process)
     {
-        /* FIXME: TODO */
+        /* Release the quota it was taking up */
+        PsReturnProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
     }
 }
 
@@ -312,6 +328,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     PHANDLE_TABLE HandleTable;
     PHANDLE_TABLE_ENTRY HandleTableTable, HandleEntry;
     ULONG i;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Allocate the table */
@@ -323,7 +340,13 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     /* Check if we have a process */
     if (Process)
     {
-        /* FIXME: Charge quota */
+        /* Charge quota */
+        Status = PsChargeProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
+            return NULL;
+        }
     }
 
     /* Clear the table */
@@ -335,6 +358,13 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     {
         /* Failed, free the table */
         ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
+
+        /* Return the quota it was taking up */
+        if (Process)
+        {
+            PsReturnProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
+        }
+
         return NULL;
     }
 

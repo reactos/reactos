@@ -515,7 +515,7 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
 
         case NM_DBLCLK:
         {
-            m_DeviceView->DisplayPropertySheet();
+            Ret = m_DeviceView->OnDoubleClick(NmHdr);
             break;
         }
 

@@ -11,8 +11,10 @@
 BOOL rescan_main(INT argc, LPWSTR *argv)
 {
     ConResPuts(StdOut, IDS_RESCAN_START);
+    DestroyVolumeList();
     DestroyPartitionList();
     CreatePartitionList();
+    CreateVolumeList();
     ConResPuts(StdOut, IDS_RESCAN_END);
 
     return TRUE;

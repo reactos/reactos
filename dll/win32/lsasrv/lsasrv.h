@@ -436,6 +436,12 @@ NTSTATUS
 LsapCreateSecretSd(PSECURITY_DESCRIPTOR *SecretSd,
                    PULONG SecretSdSize);
 
+NTSTATUS
+LsapCreateTokenSd(
+    _In_ const TOKEN_USER *User,
+    _Outptr_ PSECURITY_DESCRIPTOR *TokenSd,
+    _Out_ PULONG TokenSdSize);
+
 /* session.c */
 VOID
 LsapInitLogonSessions(VOID);

@@ -5,7 +5,7 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
-if (GCC)
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
 endif()
@@ -38,10 +38,10 @@ list(APPEND SOURCE
     heapuser.c
     image.c
     interlck.c
-    memstream.c
-    message.c
     largeint.c
     luid.c
+    memstream.c
+    message.c
     network.c
     nls.c
     path.c
@@ -58,14 +58,14 @@ list(APPEND SOURCE
     rxact.c
     sd.c
     security.c
-    slist.c
     sid.c
+    slist.c
     splaytree.c
     sysvol.c
     thread.c
     time.c
-    timezone.c
     timerqueue.c
+    timezone.c
     trace.c
     unicode.c
     unicodeprefix.c
@@ -94,6 +94,7 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE
         bitmap64.c
         byteswap.c
+        amd64/dynfntbl.c
         amd64/except.c
         amd64/unwind.c
         amd64/stubs.c
@@ -116,7 +117,7 @@ list(APPEND SOURCE_VISTA
     condvar.c
     runonce.c
     srw.c
-)
+    utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
 add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)

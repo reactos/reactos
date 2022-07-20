@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT 'TotA' /* Atom table */
-#define TAG_RTHL 'LHtR' /* Heap Lock */
-
 extern ULONG NtGlobalFlag;
 
 typedef struct _RTL_RANGE_ENTRY
@@ -114,10 +111,6 @@ RtlpAllocateMemory(ULONG Bytes,
                                  Tag);
 }
 
-
-#define TAG_USTR        'RTSU'
-#define TAG_ASTR        'RTSA'
-#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,
@@ -829,5 +822,22 @@ RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
     /* No vectored continue handlers either in kernel mode */
     return;
 }
+
+#ifdef _M_AMD64
+
+typedef PVOID PRUNTIME_FUNCTION, PUNWIND_HISTORY_TABLE;
+
+PRUNTIME_FUNCTION
+NTAPI
+RtlpLookupDynamicFunctionEntry(
+    _In_ DWORD64 ControlPc,
+    _Out_ PDWORD64 ImageBase,
+    _In_ PUNWIND_HISTORY_TABLE HistoryTable)
+{
+    /* No support for dynamic function tables in the kernel */
+    return NULL;
+}
+
+#endif
 
 /* EOF */

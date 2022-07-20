@@ -1,7 +1,7 @@
 
 #include <string.h>
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1910 || !defined(_WIN64))
 #pragma function(memchr)
 #endif /* _MSC_VER */
 

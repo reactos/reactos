@@ -42,11 +42,6 @@ static FolderViewColumns g_ColumnDefs[] =
 };
 
 
-
-// Should fix our headers..
-EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
-
-
 // Helper functions to translate a guid to a readable name
 bool GetInterfaceName(const WCHAR* InterfaceString, WCHAR* buf, size_t size)
 {

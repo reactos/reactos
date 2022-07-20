@@ -338,7 +338,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     StackEntry * entry = NULL;
     if (IsTrackedWindow(child, &entry) == S_OK)
     {
-        TRACE("MouseMove");
+        TRACE("MouseMove\n");
     }
 
     BOOL isTracking = FALSE;
@@ -577,6 +577,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
             break;
 
         case WM_NCLBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
         case WM_LBUTTONDOWN:
             isLButton = TRUE;
             TRACE("LB\n");

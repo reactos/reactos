@@ -14,27 +14,11 @@
 
 #include <debug.h>
 
-class CPortPinWaveRT : public IPortPinWaveRT
+class CPortPinWaveRT : public CUnknownImpl<IPortPinWaveRT>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinWaveRT;
     CPortPinWaveRT(IUnknown *OuterUnknown){}
     virtual ~CPortPinWaveRT(){}
@@ -67,8 +51,6 @@ protected:
 
     MEMORY_CACHING_TYPE m_CacheType;
     PMDL m_Mdl;
-
-    LONG m_Ref;
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);

@@ -32,6 +32,11 @@ void Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG sty
 
 void RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);
 
-void SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, DWORD system_selection_color);
+void SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF system_selection_color);
 
 void Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style);
+
+extern BOOL
+ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
+                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
+                  DWORD dwRop, COLORREF keyColor);

@@ -22,60 +22,74 @@ AllocateAndInitLPB(
     OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock);
 
 static VOID
-SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
+SetupLdrLoadNlsData(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ HINF InfHandle,
+    _In_ PCSTR SearchPath)
 {
+    BOOLEAN Success;
     INFCONTEXT InfContext;
-    PCSTR AnsiName, OemName, LangName;
+    PCSTR AnsiData;
+    UNICODE_STRING AnsiFileName = {0};
+    UNICODE_STRING OemFileName = {0};
+    UNICODE_STRING LangFileName = {0}; // CaseTable
+    UNICODE_STRING OemHalFileName = {0};
 
     /* Get ANSI codepage file */
-    if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
+    if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&AnsiFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &AnsiName))
-    {
-        ERR("Failed to get load options\n");
+        ERR("Failed to find or get 'NLS/AnsiCodepage'\n");
         return;
     }
 
     /* Get OEM codepage file */
-    if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext))
+    if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&OemFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &OemName))
-    {
-        ERR("Failed to get load options\n");
-        return;
+        ERR("Failed to find or get 'NLS/OemCodepage'\n");
+        goto Quit;
     }
 
-    if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext))
+    /* Get the Unicode case table file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&LangFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &LangName))
-    {
-        ERR("Failed to get load options\n");
-        return;
+        ERR("Failed to find or get 'NLS/UnicodeCasetable'\n");
+        goto Quit;
     }
 
-    TRACE("NLS data '%s' '%s' '%s'\n", AnsiName, OemName, LangName);
-
-#if DBG
+    /* Get OEM HAL font file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "OemHalFont", &InfContext) ||
+        !InfGetData(&InfContext, NULL, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&OemHalFileName, AnsiData))
     {
-        BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-        (VOID)Success;
-        TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+        WARN("Failed to find or get 'NLS/OemHalFont'\n");
+        /* Ignore, this is an optional file */
+        RtlInitEmptyUnicodeString(&OemHalFileName, NULL, 0);
     }
-#else
-    WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-#endif
 
-    /* TODO: Load OEM HAL font */
-    // Value "OemHalFont"
+    TRACE("NLS data: '%wZ' '%wZ' '%wZ' '%wZ'\n",
+          &AnsiFileName, &OemFileName, &LangFileName, &OemHalFileName);
+
+    /* Load NLS data */
+    Success = WinLdrLoadNLSData(LoaderBlock,
+                                SearchPath,
+                                &AnsiFileName,
+                                &OemFileName,
+                                &LangFileName,
+                                &OemHalFileName);
+    TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+    (VOID)Success;
+
+Quit:
+    RtlFreeUnicodeString(&OemHalFileName);
+    RtlFreeUnicodeString(&LangFileName);
+    RtlFreeUnicodeString(&OemFileName);
+    RtlFreeUnicodeString(&AnsiFileName);
 }
 
 static
@@ -121,17 +135,22 @@ SetupLdrInitErrataInf(
 }
 
 static VOID
-SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR SearchPath)
+SetupLdrScanBootDrivers(
+    _Inout_ PLIST_ENTRY BootDriverListHead,
+    _In_ HINF InfHandle,
+    _In_ PCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
-    BOOLEAN Success;
     PCSTR Media, DriverName, dirIndex, ImagePath;
-    WCHAR ServiceName[256];
-    WCHAR ImagePathW[256];
+    BOOLEAN Success;
+    WCHAR ImagePathW[MAX_PATH];
+    WCHAR DriverNameW[256];
 
-    /* Open inf section */
+    UNREFERENCED_PARAMETER(SearchPath);
+
+    /* Open INF section */
     if (!InfFindFirstLine(InfHandle, "SourceDisksFiles", NULL, &InfContext))
-        return;
+        goto Quit;
 
     /* Load all listed boot drivers */
     do
@@ -144,30 +163,51 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR Se
                 InfFindFirstLine(InfHandle, "Directories", dirIndex, &dirContext) &&
                 InfGetDataField(&dirContext, 1, &ImagePath))
             {
-                /* Convert name to widechar */
-                swprintf(ServiceName, L"%S", DriverName);
-
                 /* Prepare image path */
-                swprintf(ImagePathW, L"%S", ImagePath);
-                wcscat(ImagePathW, L"\\");
-                wcscat(ImagePathW, ServiceName);
+                RtlStringCbPrintfW(ImagePathW, sizeof(ImagePathW),
+                                   L"%S\\%S", ImagePath, DriverName);
 
-                /* Remove .sys extension */
-                ServiceName[wcslen(ServiceName) - 4] = 0;
+                /* Convert name to unicode and remove .sys extension */
+                RtlStringCbPrintfW(DriverNameW, sizeof(DriverNameW),
+                                   L"%S", DriverName);
+                DriverNameW[wcslen(DriverNameW) - 4] = UNICODE_NULL;
 
                 /* Add it to the list */
                 Success = WinLdrAddDriverToList(BootDriverListHead,
-                                                L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                FALSE,
+                                                DriverNameW,
                                                 ImagePathW,
-                                                ServiceName);
+                                                NULL,
+                                                SERVICE_ERROR_NORMAL,
+                                                -1);
                 if (!Success)
                 {
-                    ERR("Could not add boot driver '%s', '%s'\n", SearchPath, DriverName);
-                    return;
+                    ERR("Could not add boot driver '%s'\n", DriverName);
+                    /* Ignore and continue adding other drivers */
                 }
             }
         }
     } while (InfFindNextLine(&InfContext, &InfContext));
+
+Quit:
+    /* Finally, add the boot filesystem driver to the list */
+    if (BootFileSystem)
+    {
+        TRACE("Adding filesystem driver %S\n", BootFileSystem);
+        Success = WinLdrAddDriverToList(BootDriverListHead,
+                                        FALSE,
+                                        BootFileSystem,
+                                        NULL,
+                                        L"Boot File System",
+                                        SERVICE_ERROR_CRITICAL,
+                                        -1);
+        if (!Success)
+            ERR("Failed to add filesystem driver %S\n", BootFileSystem);
+    }
+    else
+    {
+        TRACE("No required filesystem driver\n");
+    }
 }
 
 
@@ -490,10 +530,10 @@ LoadReactOSSetup(
         return EINVAL;
     }
 
-    UiDrawStatusText("Setup is loading...");
-
+    /* Let the user know we started loading */
     UiDrawBackdrop();
-    UiDrawProgressBarCenter(1, 100, "Loading ReactOS Setup...");
+    UiDrawStatusText("Setup is loading...");
+    UiDrawProgressBarCenter("Loading ReactOS Setup...");
 
     /* Retrieve the system path */
     *BootPath = ANSI_NULL;
@@ -727,6 +767,11 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
+    /* Handle the SOS option */
+    SosEnabled = !!NtLdrGetOption(BootOptions, "SOS");
+    if (SosEnabled)
+        UiResetForSOS();
+
     /* Allocate and minimally-initialize the Loader Parameter Block */
     AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
 
@@ -738,8 +783,7 @@ LoadReactOSSetup(
     SetupBlock->Flags = SETUPLDR_TEXT_MODE;
 
     /* Load the "setupreg.hiv" setup system hive */
-    UiDrawBackdrop();
-    UiDrawProgressBarCenter(15, 100, "Loading setup system hive...");
+    UiUpdateProgressBar(15, "Loading setup system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, TRUE);
     TRACE("Setup SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */

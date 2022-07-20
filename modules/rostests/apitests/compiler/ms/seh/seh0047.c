@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0047.c";
-int perfect;
 
 int main() {
   ULONG Index1;

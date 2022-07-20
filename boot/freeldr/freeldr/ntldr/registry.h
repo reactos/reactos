@@ -21,16 +21,23 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
+#include <cmlib.h>
+
 typedef HANDLE HKEY, *PHKEY;
+
+#define HKEY_TO_HCI(hKey)               ((HCELL_INDEX)(ULONG_PTR)(hKey))
 
 BOOLEAN
 RegImportBinaryHive(
     _In_ PVOID ChunkBase,
     _In_ ULONG ChunkSize);
 
-LONG
+BOOLEAN
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood);
+
+extern PHHIVE SystemHive;
+extern HKEY CurrentControlSetKey;
 
 /*
  * LONG
@@ -39,6 +46,7 @@ RegInitCurrentControlSet(
  */
 #define RegCloseKey(hKey)   (ERROR_SUCCESS)
 
+#if 0
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -46,6 +54,7 @@ RegEnumKey(
     _Out_ PWCHAR Name,
     _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey);
+#endif
 
 LONG
 RegOpenKey(

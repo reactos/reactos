@@ -407,6 +407,9 @@ IntVideoPortDispatchOpen(
     {
         Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
+
+        /* Query children, now that device is opened */
+        VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
     }
     else
     {
@@ -627,6 +630,8 @@ VideoPortInitWin32kCallbacks(
     _In_ ULONG BufferLength,
     _Out_ PULONG_PTR Information)
 {
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
     *Information = sizeof(VIDEO_WIN32K_CALLBACKS);
     if (BufferLength < sizeof(VIDEO_WIN32K_CALLBACKS))
     {
@@ -640,7 +645,7 @@ VideoPortInitWin32kCallbacks(
 
     /* Return reasonable values to Win32k */
     Win32kCallbacks->bACPI = FALSE;
-    Win32kCallbacks->pPhysDeviceObject = DeviceObject;
+    Win32kCallbacks->pPhysDeviceObject = DeviceExtension->PhysicalDeviceObject;
     Win32kCallbacks->DualviewFlags = 0;
 
     return STATUS_SUCCESS;
@@ -782,6 +787,11 @@ IntVideoPortDispatchDeviceControl(
         case IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS:
         case IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS:
             WARN_(VIDEOPRT, "- IOCTL_VIDEO_*_BRIGHTNESS are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_VIDEO_ENUM_MONITOR_PDO:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_ENUM_MONITOR_PDO is UNIMPLEMENTED!\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
@@ -938,6 +948,18 @@ IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
     ULONG i;
     PLIST_ENTRY CurrentEntry;
+    NTSTATUS Status;
+
+    if (InterlockedCompareExchange((PLONG)&DeviceExtension->DeviceOpened, 0, 0) == 0)
+    {
+        /* Device not opened. Don't enumerate children yet */
+        WARN_(VIDEOPRT, "Skipping child enumeration because device is not opened");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    /* Query children of the device. */
+    Status = IntVideoPortEnumerateChildren(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Count the children */
     i = 0;

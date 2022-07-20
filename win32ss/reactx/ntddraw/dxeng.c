@@ -4,7 +4,7 @@
  * FILE:             win32ss/reactx/ntddraw/dxeng.c
  * PURPOSE:          Implementation of DxEng functions
  * PROGRAMMERS:      Magnus Olsen (magnus@greatlord.com)
- *                   Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ *                   Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 #include <win32k.h>
@@ -461,7 +461,7 @@ DxEngGetDCState(HDC hDC,
         switch (type)
         {
             case 1:
-                retVal = (DWORD_PTR) pDC->fs & DC_FLAG_FULLSCREEN;
+                retVal = (DWORD_PTR) pDC->fs & DC_FULLSCREEN;
                 break;
             case 2:
                 /* Return the complexity of the visible region. */
@@ -587,7 +587,7 @@ BOOLEAN
 APIENTRY
 DxEngReferenceHdev(HDEV hDev)
 {
-    IntGdiReferencePdev((PPDEVOBJ) hDev);
+    PDEVOBJ_vReference((PPDEVOBJ)hDev);
     /* ALWAYS return true */
     return TRUE;
 }
@@ -656,7 +656,7 @@ HDC
 APIENTRY
 DxEngCreateMemoryDC(HDEV hDev)
 {
-    return IntGdiCreateDisplayDC(hDev, DC_TYPE_MEMORY, FALSE);
+    return IntGdiCreateDisplayDC(hDev, DCTYPE_MEMORY, FALSE);
 }
 
 /************************************************************************/
@@ -689,7 +689,7 @@ BOOLEAN
 APIENTRY
 DxEngUnreferenceHdev(HDEV hDev)
 {
-    IntGdiUnreferencePdev((PPDEVOBJ) hDev, 0);
+    PDEVOBJ_vRelease((PPDEVOBJ)hDev);
     return TRUE; // Always true.
 }
 
@@ -748,9 +748,9 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
       if (SetType == 1)
       {
         if ( Set )
-            pDC->fs |= DC_FLAG_FULLSCREEN;
+            pDC->fs |= DC_FULLSCREEN;
         else
-            pDC->fs &= ~DC_FLAG_FULLSCREEN;
+            pDC->fs &= ~DC_FULLSCREEN;
         Ret = TRUE;
       }
       DC_UnlockDc(pDC);
@@ -762,28 +762,31 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
 /************************************************************************/
 /* DxEngSelectBitmap                                                    */
 /************************************************************************/
-DWORD APIENTRY DxEngSelectBitmap(DWORD x1, DWORD x2)
+HBITMAP APIENTRY DxEngSelectBitmap(HDC hdc, HBITMAP hbmp)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    DPRINT1("ReactX Calling : DxEngSelectBitmap \n");
+
+    return NtGdiSelectBitmap(hdc, hbmp);
 }
 
 /************************************************************************/
 /* DxEngSetBitmapOwner                                                  */
 /************************************************************************/
-DWORD APIENTRY DxEngSetBitmapOwner(DWORD x1, DWORD x2)
+BOOLEAN APIENTRY DxEngSetBitmapOwner(HBITMAP hbmp, ULONG ulOwner)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    DPRINT1("ReactX Calling : DxEngSetBitmapOwner \n");
+
+    return GreSetBitmapOwner(hbmp, ulOwner);
 }
 
 /************************************************************************/
 /* DxEngDeleteSurface                                                   */
 /************************************************************************/
-DWORD APIENTRY DxEngDeleteSurface(DWORD x1)
+BOOLEAN APIENTRY DxEngDeleteSurface(HSURF hsurf)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    DPRINT1("ReactX Calling : DxEngDeleteSurface \n");
+
+    return EngDeleteSurface(hsurf);
 }
 
 /************************************************************************/
@@ -798,10 +801,11 @@ DWORD APIENTRY DxEngGetSurfaceData(DWORD x1, DWORD x2)
 /************************************************************************/
 /* DxEngAltLockSurface                                                  */
 /************************************************************************/
-DWORD APIENTRY DxEngAltLockSurface(DWORD x1)
+SURFOBJ * APIENTRY DxEngAltLockSurface(HSURF hsurf)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    DPRINT1("ReactX Calling : DxEngAltLockSurface \n");
+
+    return EngLockSurface(hsurf);
 }
 
 /************************************************************************/

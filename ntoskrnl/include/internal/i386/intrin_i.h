@@ -45,7 +45,6 @@ Ke386FxSave(IN PFX_SAVE_AREA SaveArea)
     asm volatile ("fxsave (%0)" : : "r"(SaveArea));
 }
 
-
 FORCEINLINE
 VOID
 Ke386FnSave(IN PFLOATING_SAVE_AREA SaveArea)
@@ -66,6 +65,28 @@ Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
     {
         __asm__ __volatile__ ("fnsave %0\n wait\n" : : "m"(*SaveArea));
     }
+}
+
+FORCEINLINE
+VOID
+Ke386RestoreFpuState(_In_ PFX_SAVE_AREA SaveArea)
+{
+    extern ULONG KeI386FxsrPresent;
+    if (KeI386FxsrPresent)
+    {
+        __asm__ __volatile__ ("fxrstor %0\n" : : "m"(*SaveArea));
+    }
+    else
+    {
+        __asm__ __volatile__ ("frstor %0\n\t" : "=m" (*SaveArea));
+    }
+}
+
+FORCEINLINE
+VOID
+Ke386ClearFpExceptions(VOID)
+{
+    __asm__ __volatile__ ("fnclex");
 }
 
 FORCEINLINE
@@ -161,6 +182,14 @@ __fxrstor(IN PFX_SAVE_AREA SaveArea)
 {
     __asm mov eax, SaveArea
     __asm fxrstor [eax]
+}
+
+FORCEINLINE
+VOID
+__frstor(_In_ PFX_SAVE_AREA SaveArea)
+{
+    __asm mov eax, SaveArea
+    __asm frstor [eax]
 }
 
 FORCEINLINE
@@ -314,16 +343,35 @@ Ke386SaveFpuState(IN PVOID SaveArea)
     }
 }
 
+FORCEINLINE
+VOID
+Ke386RestoreFpuState(_In_ PVOID SaveArea)
+{
+    if (KeI386FxsrPresent)
+    {
+        __fxrstor((PFX_SAVE_AREA)SaveArea);
+    }
+    else
+    {
+        __frstor((PFX_SAVE_AREA)SaveArea);
+    }
+}
+
+FORCEINLINE
+VOID
+Ke386ClearFpExceptions(VOID)
+{
+    __asm fnclex;
+}
+
 #define Ke386FnSave __fnsave
 #define Ke386FxSave __fxsave
 // The name suggest, that the original author didn't understand what frstor means
 #define Ke386FxStore __fxrstor
 
-
 #else
 #error Unknown compiler for inline assembler
 #endif
-
 
 #define Ke386GetGlobalDescriptorTable __sgdt
 #define Ke386SetGlobalDescriptorTable __lgdt
@@ -332,6 +380,5 @@ Ke386SaveFpuState(IN PVOID SaveArea)
 #ifdef __cplusplus
 } // extern "C"
 #endif
-
 
 /* EOF */

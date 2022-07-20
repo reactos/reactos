@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Setup Wizard
+ * PROJECT:     ReactOS GUI first stage setup application
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Chinese (Traditional) Language Resources
- * TRANSLATORS: 2016 Henry Tang Ih (henrytang2@hotmail.com)
- *              2018 - 2019 Luo Yufan (njlyf2011@hotmail.com)
- *              2020 - 2021 Chan Chilung (eason066@gmail.com)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018-2019 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -15,7 +15,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您不能直接從此 CD 安裝 ReactOS！ 請重新開機並從 CD 啟動您的電腦以便安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "您目前不能直接從這個 CD 安裝 ReactOS！請重新開機並從 CD 啟動您的電腦以便安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "按［完成］退出安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -64,7 +64,7 @@ BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "建立(&C)", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "刪除(&D)", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "驅動程式(&r)", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "驅動程式(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
     PUSHBUTTON "進階選項(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 15
     // LTEXT "點選下一步檢查安裝概要。", IDC_STATIC, 10, 180, 277, 20
 END
@@ -162,7 +162,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查"
-    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在退出安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定退出嗎？"
+    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
     IDS_CAPTION "ReactOS 安裝程式"

@@ -38,6 +38,7 @@ BOOLEAN VpNoVesa = FALSE;
 
 PKPROCESS CsrProcess = NULL;
 static ULONG VideoPortMaxObjectNumber = -1;
+BOOLEAN VideoPortUseNewKey = FALSE;
 KMUTEX VideoPortInt10Mutex;
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
@@ -58,6 +59,7 @@ NTSTATUS
 IntVideoPortAddDeviceMapLink(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
 {
+    PUNICODE_STRING RegistryPath;
     WCHAR DeviceBuffer[20];
     UNICODE_STRING DeviceName;
     WCHAR SymlinkBuffer[20];
@@ -69,16 +71,21 @@ IntVideoPortAddDeviceMapLink(
     DeviceNumber = DeviceExtension->DeviceNumber;
     swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
 
+    if (VideoPortUseNewKey)
+        RegistryPath = &DeviceExtension->NewRegistryPath;
+    else
+        RegistryPath = &DeviceExtension->RegistryPath;
+
     /* Add entry to DEVICEMAP\VIDEO key in registry. */
     Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
                                    L"VIDEO",
                                    DeviceBuffer,
                                    REG_SZ,
-                                   DeviceExtension->NewRegistryPath.Buffer,
-                                   DeviceExtension->NewRegistryPath.Length + sizeof(UNICODE_NULL));
+                                   RegistryPath->Buffer,
+                                   RegistryPath->Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
-        ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
+        ERR_(VIDEOPRT, "Failed to create DEVICEMAP registry entry: 0x%X\n", Status);
         return Status;
     }
 
@@ -474,9 +481,6 @@ IntVideoPortFindAdapter(
                                     &HwResetAdaptersLock);
     }
 
-    /* Query children of the device. */
-    VideoPortEnumerateChildren(&DeviceExtension->MiniPortDeviceExtension, NULL);
-
     INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
     return STATUS_SUCCESS;
 
@@ -519,11 +523,27 @@ IntLoadRegistryParameters(VOID)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
-    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
+    UNICODE_STRING UseNewKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
+    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     ULONG Length, NewLength;
+
+    /* Check if we need to use new registry */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UseNewKeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       GENERIC_READ | GENERIC_WRITE,
+                       &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        VideoPortUseNewKey = TRUE;
+        ZwClose(KeyHandle);
+    }
 
     /* Initialize object attributes with the path we want */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -617,7 +637,7 @@ IntLoadRegistryParameters(VOID)
                                    NULL);
 
         Status = ZwCreateKey(&KeyHandle,
-                             KEY_WRITE,
+                             READ_CONTROL, // Non-0 placeholder: no use for this handle.
                              &ObjectAttributes,
                              0,
                              NULL,
@@ -772,6 +792,14 @@ VideoPortInitialize(
             }
 
             RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
+
+            /* There is a bug in Spice guest agent, which searches 'System' case-sensitively.
+             * Replace 'SYSTEM' by 'System' to fix that.
+             * Probably for similar reason, Windows also replaces 'MACHINE' by 'Machine'.
+             */
+            wcsncpy(wcsstr(DriverExtension->RegistryPath.Buffer, L"\\SYSTEM\\"), L"\\System\\", ARRAYSIZE(L"\\SYSTEM\\") - 1);
+            wcsncpy(wcsstr(DriverExtension->RegistryPath.Buffer, L"\\MACHINE\\"), L"\\Machine\\", ARRAYSIZE(L"\\MACHINE\\") - 1);
+
             INFO_(VIDEOPRT, "RegistryPath: %wZ\n", &DriverExtension->RegistryPath);
         }
         else
@@ -1170,11 +1198,10 @@ VideoPortSynchronizeExecution(
 /*
  * @implemented
  */
-VP_STATUS
-NTAPI
-VideoPortEnumerateChildren(
-    IN PVOID HwDeviceExtension,
-    IN PVOID Reserved)
+NTSTATUS NTAPI
+IntVideoPortEnumerateChildren(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     ULONG Status;
@@ -1187,17 +1214,17 @@ VideoPortEnumerateChildren(
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
 
     INFO_(VIDEOPRT, "Starting child device probe\n");
-    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    DeviceExtension = DeviceObject->DeviceExtension;
     if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
     {
         WARN_(VIDEOPRT, "Miniport's HwGetVideoChildDescriptor is NULL!\n");
-        return NO_ERROR;
+        return STATUS_SUCCESS;
     }
 
     if (!IsListEmpty(&DeviceExtension->ChildDeviceList))
     {
         ERR_(VIDEOPRT, "FIXME: Support calling VideoPortEnumerateChildren again!\n");
-        return NO_ERROR;
+        return STATUS_SUCCESS;
     }
 
     /* Enumerate the children */
@@ -1239,7 +1266,7 @@ VideoPortEnumerateChildren(
 
         INFO_(VIDEOPRT, "Probing child: %d\n", ChildEnumInfo.ChildIndex);
         Status = DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor(
-                     HwDeviceExtension,
+                     DeviceExtension->MiniPortDeviceExtension,
                      &ChildEnumInfo,
                      &ChildExtension->ChildType,
                      ChildExtension->ChildDescriptor,
@@ -1331,8 +1358,25 @@ VideoPortEnumerateChildren(
                        &ChildExtension->ListEntry);
     }
 
-    /* Trigger reenumeration by the PnP manager */
-    IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, BusRelations);
+    return STATUS_SUCCESS;
+}
+
+VP_STATUS
+NTAPI
+VideoPortEnumerateChildren(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Reserved)
+{
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    ASSERT(DeviceExtension);
+
+    if (DeviceExtension->PhysicalDeviceObject)
+    {
+        /* Trigger reenumeration by the PnP manager */
+        IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, BusRelations);
+    }
 
     return NO_ERROR;
 }

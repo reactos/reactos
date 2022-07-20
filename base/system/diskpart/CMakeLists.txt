@@ -17,6 +17,7 @@ list(APPEND SOURCE
     detach.c
     detail.c
     diskpart.c
+    dump.c
     expand.c
     extend.c
     filesystems.c
@@ -28,6 +29,7 @@ list(APPEND SOURCE
     interpreter.c
     list.c
     merge.c
+    misc.c
     offline.c
     online.c
     partlist.c
@@ -44,6 +46,10 @@ list(APPEND SOURCE
     diskpart.h)
 
 add_executable(diskpart ${SOURCE} diskpart.rc)
+add_pch(diskpart diskpart.h SOURCE)
+add_message_headers(UNICODE diskpart_msg.mc)
+add_dependencies(diskpart diskpart_msg)
+
 set_module_type(diskpart win32cui UNICODE)
 target_link_libraries(diskpart conutils ${PSEH_LIB})
 add_importlibs(diskpart advapi32 msvcrt kernel32 ntdll)
@@ -52,5 +58,4 @@ if(MSVC)
     add_importlibs(diskpart ntdll)
 endif()
 
-add_pch(diskpart diskpart.h SOURCE)
 add_cd_file(TARGET diskpart DESTINATION reactos/system32 FOR all)

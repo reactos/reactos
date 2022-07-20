@@ -50,7 +50,7 @@ CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
     IDS_ABBR_NONE "N"
     IDS_ALLOW ""
     IDS_DENY "(DENY)"
-    IDS_SPECIAL_ACCESS "(special access:)"
+    IDS_SPECIAL_ACCESS "(特殊存取:)"
     IDS_GENERIC_READ "GENERIC_READ"
     IDS_GENERIC_WRITE "GENERIC_WRITE"
     IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"

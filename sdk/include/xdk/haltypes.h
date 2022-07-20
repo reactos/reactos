@@ -269,16 +269,27 @@ typedef struct {
 #endif
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#ifdef _NTSYSTEM_
-extern HAL_DISPATCH HalDispatchTable;
-#define HALDISPATCH (&HalDispatchTable)
-#else
+#if !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_))
 __CREATE_NTOS_DATA_IMPORT_ALIAS(HalDispatchTable)
-extern PHAL_DISPATCH HalDispatchTable;
-#define HALDISPATCH HalDispatchTable
+extern  PHAL_DISPATCH   HalDispatchTable;
+#define HALDISPATCH     HalDispatchTable
+#else
+extern  HAL_DISPATCH    HalDispatchTable;
+#define HALDISPATCH     (&HalDispatchTable)
 #endif
 
-#define HAL_DISPATCH_VERSION            3 /* FIXME: when to use 4? */
+// See Version table at:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/hal/hal_dispatch.htm
+#if (NTDDI_VERSION < NTDDI_WIN2K)
+#define HAL_DISPATCH_VERSION            1
+#elif (NTDDI_VERSION < NTDDI_WINXP)
+#define HAL_DISPATCH_VERSION            2
+#elif (NTDDI_VERSION < NTDDI_WIN7)
+#define HAL_DISPATCH_VERSION            3
+#else
+#define HAL_DISPATCH_VERSION            4
+#endif
+
 #define HalDispatchTableVersion         HALDISPATCH->Version
 #define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
 #define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation

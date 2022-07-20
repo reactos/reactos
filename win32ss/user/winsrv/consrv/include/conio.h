@@ -250,8 +250,10 @@ typedef struct _TERMINAL_VTBL
     BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
-    INT   (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
-                                   BOOL Show);
+    BOOL (NTAPI *SetCodePage)(IN OUT PTERMINAL This,
+                              UINT CodePage);
+    INT  (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
+                                  BOOL Show);
 
 #if 0 // Possible future terminal interface
     BOOL (NTAPI *GetTerminalProperty)(IN OUT PTERMINAL This,
@@ -317,6 +319,12 @@ ConDrvUnpause(PCONSOLE Console);
 
 #define GetConsoleInputBufferMode(Console)  \
     (Console)->InputBuffer.Mode
+
+#define CON_SET_OUTPUT_CP(Console, CodePage)\
+do { \
+    (Console)->OutputCodePage = (CodePage); \
+    (Console)->IsCJK = IsCJKCodePage((Console)->OutputCodePage); \
+} while (0)
 
 
 /* conoutput.c */

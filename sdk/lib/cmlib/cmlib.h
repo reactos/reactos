@@ -122,7 +122,7 @@
         IN PRTL_BITMAP BitMapHeader);
 
     #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
-    #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+    #define UNREFERENCED_PARAMETER(P) ((void)(P))
 
     #define PKTHREAD PVOID
     #define PKGUARDED_MUTEX PVOID
@@ -152,7 +152,9 @@
     #undef PAGED_CODE
     #define PAGED_CODE()
     #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
+
 #else
+
     //
     // Debug/Tracing support
     //
@@ -214,17 +216,13 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H) // || defined(_BLDR_)
+/* Forward declarations */
+typedef struct _CM_KEY_SECURITY_CACHE_ENTRY *PCM_KEY_SECURITY_CACHE_ENTRY;
+typedef struct _CM_KEY_CONTROL_BLOCK *PCM_KEY_CONTROL_BLOCK;
+typedef struct _CM_CELL_REMAP_BLOCK *PCM_CELL_REMAP_BLOCK;
 
-#define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
-#define PCM_KEY_CONTROL_BLOCK           PVOID
-#define PCM_CELL_REMAP_BLOCK            PVOID
-
-// See also ntoskrnl/include/internal/cm.h
-#define CMP_SECURITY_HASH_LISTS         64
-
-// #endif // Commented out until one finds a way to properly include
-          // this header in freeldr and in ntoskrnl.
+// See ntoskrnl/include/internal/cm.h
+#define CMP_SECURITY_HASH_LISTS     64
 
 //
 // Use Count Log and Entry
@@ -291,8 +289,6 @@ typedef struct _CMHIVE
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
 
-#endif // See comment above
-
 typedef struct _HV_HIVE_CELL_PAIR
 {
     PHHIVE Hive;
@@ -312,9 +308,9 @@ typedef struct _HV_TRACK_CELL_REF
 extern ULONG CmlibTraceLevel;
 
 //
-// Hack since bigkeys are not yet supported
+// Hack since big keys are not yet supported
 //
-#define ASSERT_VALUE_BIG(h, s)                          \
+#define ASSERT_VALUE_BIG(h, s)  \
     ASSERTMSG("Big keys not supported!\n", !CmpIsKeyValueBig(h, s));
 
 //
@@ -384,15 +380,13 @@ VOID CMAPI
 HvFree(
    PHHIVE RegistryHive);
 
-PVOID CMAPI
-HvGetCell(
-   PHHIVE RegistryHive,
-   HCELL_INDEX CellOffset);
+#define HvGetCell(Hive, Cell)   \
+    (Hive)->GetCellRoutine(Hive, Cell)
 
-#define HvReleaseCell(h, c)             \
-do {                                    \
-    if ((h)->ReleaseCellRoutine)        \
-        (h)->ReleaseCellRoutine(h, c);  \
+#define HvReleaseCell(Hive, Cell)               \
+do {                                            \
+    if ((Hive)->ReleaseCellRoutine)             \
+        (Hive)->ReleaseCellRoutine(Hive, Cell); \
 } while(0)
 
 LONG CMAPI
@@ -467,6 +461,11 @@ HvReleaseFreeCellRefArray(
 /*
  * Private functions.
  */
+
+PCELL_DATA CMAPI
+HvpGetCellData(
+    _In_ PHHIVE Hive,
+    _In_ HCELL_INDEX CellIndex);
 
 PHBIN CMAPI
 HvpAddBin(
@@ -564,7 +563,7 @@ USHORT
 NTAPI
 CmpNameSize(
     IN PHHIVE Hive,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 USHORT
@@ -579,7 +578,7 @@ NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
     OUT PWCHAR Destination,
-    IN PUNICODE_STRING Source
+    IN PCUNICODE_STRING Source
 );
 
 VOID
@@ -596,7 +595,7 @@ NTAPI
 CmpFindNameInList(
     IN PHHIVE Hive,
     IN PCHILD_LIST ChildList,
-    IN PUNICODE_STRING Name,
+    IN PCUNICODE_STRING Name,
     OUT PULONG ChildIndex OPTIONAL,
     OUT PHCELL_INDEX CellIndex
 );
@@ -610,7 +609,7 @@ NTAPI
 CmpFindValueByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE KeyNode,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 PCELL_DATA

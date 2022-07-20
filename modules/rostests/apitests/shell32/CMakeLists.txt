@@ -20,6 +20,7 @@ list(APPEND SOURCE
     SHAppBarMessage.cpp
     SHChangeNotify.cpp
     SHCreateDataObject.cpp
+    SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp

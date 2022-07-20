@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* 
+ * PROJECT:     New device installer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -8,10 +14,10 @@ CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎", IDC_WELCOMETITLE, 120, 8, 195, 24
-    LTEXT "此嚮導將安裝新的裝置驅動程式:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "單擊下一步繼續。", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "未知的裝置", IDC_DEVICE, 148, 36, 147, 17
-    LTEXT "警告! 安裝自訂的裝置可能會凍結您的電腦或使其無法啟動!", IDC_STATIC, 120, 59, 195, 16
+    LTEXT "這個精靈將安裝新的裝置驅動程式：", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "請按［下一步］繼續。", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "不明的裝置", IDC_DEVICE, 148, 36, 147, 17
+    LTEXT "警告！安裝自訂的裝置可能會導致您的電腦當機，\n甚至無法啟動！", IDC_STATIC, 120, 59, 195, 16
     CONTROL "自動安裝驅動程式", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "從特定位置安裝驅動程式", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
@@ -22,9 +28,9 @@ CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "安裝失敗", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "因為找不到驅動程式，因此無法安裝該裝置。", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "如果你有一個驅動程式磁碟或知道該驅動程式的路徑，單擊後退。", IDC_STATIC, 120, 98, 195, 16
-    CONTROL "再也不顯示此對話方塊", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
+    LTEXT "由於無法找到驅動程式，因此無法安裝該裝置。", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "如果你有驅動程式磁碟或知道該驅動程式的路徑，\n請按［上一步］。", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "以後不再顯示這個對話方塊", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -33,8 +39,8 @@ CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "安裝失敗", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "因為發生意外的錯誤，無法安裝該裝置。", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "未知的裝置", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "由於發生意外的錯誤，因此無法安裝該裝置。", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "不明的裝置", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -42,10 +48,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "在這些位置中搜索", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
+    CONTROL "在這些位置中搜尋", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "手動選擇驅動程式", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "搜索可移動媒體", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
-    CONTROL "包含此路徑", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    CONTROL "搜尋卸除式媒體", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "包含這個路徑", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
     PUSHBUTTON "瀏覽", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
@@ -55,7 +61,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "未知的裝置", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "不明的裝置", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
@@ -63,7 +69,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "未知的裝置", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "不明的裝置", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
@@ -72,9 +78,9 @@ CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "安裝完成", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "您需要重新啟動才能完成安裝:", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "單擊完成關閉嚮導。", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "未知的裝置", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "您需要重新啟動才能完成安裝裝置：", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "請按［完成］關閉精靈。", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "不明的裝置", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -83,17 +89,17 @@ CAPTION "裝置安裝"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "安裝完成", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "嚮導已完成安裝的驅動程式:", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "單擊完成關閉嚮導。", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "未知的裝置", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "精靈已完成安裝以下裝置的驅動程式：", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "請按［完成］關閉精靈。", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "不明的裝置", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "新的硬體嚮導"
-    IDS_UPDATEWIZARDTITLE "更新驅動程式嚮導"
-    IDS_CHSOURCE_TITLE "選擇搜索和安裝選項"
-    IDS_SEARCHDRV_TITLE "正在搜索..."
+    IDS_INSTALLWIZARDTITLE "新增硬體精靈"
+    IDS_UPDATEWIZARDTITLE "更新驅動程式精靈"
+    IDS_CHSOURCE_TITLE "選擇搜尋和安裝選項"
+    IDS_SEARCHDRV_TITLE "正在搜尋..."
     IDS_INSTALLDRV_TITLE "正在安裝..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END
-

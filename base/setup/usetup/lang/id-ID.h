@@ -12,7 +12,7 @@ static MUI_ENTRY idIDSetupInitPageEntries[] =
     {
         0,
         20,
-        "Harap tunggu sementara Penyetelan ReactOS menginisialisasi",
+        "Harap tunggu saat Penyetelan ReactOS menginisialisasi",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -57,7 +57,7 @@ static MUI_ENTRY idIDLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Mohon pilih bahasa yang digunakan pada proses pemasangan.",
+        "\x07  Mohon pilih bahasa yang digunakan pada proses instalasi.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -102,7 +102,7 @@ static MUI_ENTRY idIDWelcomePageEntries[] =
     {
         6,
         8,
-        "Selamat datang di Penyetelan Reactos",
+        "Selamat datang di Penyetelan ReactOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -130,8 +130,8 @@ static MUI_ENTRY idIDWelcomePageEntries[] =
     {
         8,
         17,
-     // "\x07  Tekan R untuk memperbaiki pemasangan ReactOS menggunakan Konsol Pemulihan.",
-        "\x07  Tekan R untuk memperbaiki pemasangan ReactOS.",
+     // "\x07  Tekan R untuk memperbaiki instalasi ReactOS menggunakan Konsol Pemulihan.",
+        "\x07  Tekan R untuk memperbaiki instalasi ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -225,7 +225,7 @@ static MUI_ENTRY idIDIntroPageEntries[] =
     {
         6,
         16,
-        "berkenan untuk menjalankan ReactOS pada perangkat keras yang asli.",
+        "berkenan untuk menjalankan ReactOS pada perangkat keras murni.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -593,14 +593,14 @@ static MUI_ENTRY idIDUpgradePageEntries[] =
     {
         6,
         8,
-        "Penyetelan ReactOS dapat meningkatkan salah satu dari pemasangan",
+        "Penyetelan ReactOS dapat meningkatkan salah satu dari instalasi",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "ReactOS yang tersedia di bawah ini, atau, jika pemasangan ReactOS",
+        "ReactOS yang tersedia di bawah ini, atau, jika instalasi ReactOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -621,21 +621,21 @@ static MUI_ENTRY idIDUpgradePageEntries[] =
     {
         8,
         15,
-        "\x07  Tekan ATAS atau BAWAH untuk memilih pemasangan OS.",
+        "\x07  Tekan ATAS atau BAWAH untuk memilih instalasi OS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Tekan U untuk meningkatkan pemasangan OS terpilih.",
+        "\x07  Tekan U untuk meningkatkan instalasi OS terpilih.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Tekan ESC untuk lanjut dengan pemasangan yang baru.",
+        "\x07  Tekan ESC untuk lanjut dengan instalasi yang baru.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -791,7 +791,7 @@ static MUI_ENTRY idIDQuitPageEntries[] =
     {
         10,
         9,
-        "semua CD-ROM dari CD-Drive.",
+        "semua CD-ROM dari Drive CD.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1094,7 +1094,7 @@ static MUI_ENTRY idIDChangeSystemPartition[] =
     {
         6,
         18,
-        "Agar pemasangan ReactOS berhasil, program Penyetelan harus",
+        "Agar instalasi ReactOS berhasil, program Penyetelan harus",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1438,7 +1438,7 @@ static MUI_ENTRY idIDFileCopyEntries[] =
     {
         0,
         13,
-        "folder pemasangan ReactOS Anda.",
+        "folder instalasi ReactOS Anda.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1483,14 +1483,14 @@ static MUI_ENTRY idIDBootLoaderEntries[] =
     {
         8,
         12,
-        "Pasang bootloader pada harddisk (MBR dan VBR).",
+        "Pasang bootloader pada cakram keras (MBR dan VBR).",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Pasang bootloader pada harddisk (hanya VBR).",
+        "Pasang bootloader pada cakram keras (hanya VBR).",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1504,7 +1504,7 @@ static MUI_ENTRY idIDBootLoaderEntries[] =
     {
         8,
         15,
-        "Lewati pemasangan bootloader.",
+        "Lewati instalasi bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1528,14 +1528,14 @@ static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Memasang bootloader pada media, harap tunggu...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1848,17 +1848,17 @@ MUI_ERROR idIDErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Gagal membangun jalur pemasangan untuk direktori pemasangan ReactOS!\n"
+        "Gagal membangun jalur instalasi untuk direktori instalasi ReactOS!\n"
         "ENTER = Mulai ulang komputer"
     },
     {
         // ERROR_SOURCE_PATH
-        "Anda tidak dapat menghapus partisi yang memuat sumber pemasangan!\n"
+        "Anda tidak dapat menghapus partisi yang memuat sumber instalasi!\n"
         "ENTER = Mulai ulang komputer"
     },
     {
         // ERROR_SOURCE_DIR
-        "Anda tidak dapat memasang ReactOS yang di dalamnya berisi direktori sumber pemasangan!\n"
+        "Anda tidak dapat memasang ReactOS yang di dalamnya berisi direktori sumber instalasi!\n"
         "ENTER = Mulai ulang komputer"
     },
     {
@@ -1932,14 +1932,14 @@ MUI_ERROR idIDErrorEntries[] =
         "Anda tidak dapat membuat partisi baru di dalam\n"
         "partisi yang sudah ada!\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut.",
+        "  * Tekan tombol apapun untuk lanjut.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
         "Anda tidak dapat menghapus ukuran cakram yang belum dipartisi!\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut.",
+        "  * Tekan tombol apapun untuk lanjut.",
         NULL
     },
     {
@@ -2004,7 +2004,7 @@ MUI_ERROR idIDErrorEntries[] =
     },
     {
         // ERROR_CREATE_DIR,
-        "Penyetelan tidak dapat membuat direktori pemasangan.",
+        "Penyetelan tidak dapat membuat direktori instalasi.",
         "ENTER = Mulai ulang komputer"
     },
     {
@@ -2021,7 +2021,7 @@ MUI_ERROR idIDErrorEntries[] =
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "Penyetelan tidak dapat membuat direktori pemasangan.",
+        "Penyetelan tidak dapat membuat direktori instalasi.",
         "ENTER = Mulai ulang komputer"
     },
     {
@@ -2053,14 +2053,14 @@ MUI_ERROR idIDErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nama direktori tidak sah.\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut."
+        "  * Tekan tombol apapun untuk lanjut."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partisi yang dipilih tidak cukup besar untuk memasang ReactOS.\n"
-        "Partisi pemasangan harus memiliki ukuran setidaknya %lu MB.\n"
+        "Partisi instalasi harus memiliki ukuran setidaknya %lu MB.\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut.",
+        "  * Tekan tombol apapun untuk lanjut.",
         NULL
     },
     {
@@ -2068,13 +2068,13 @@ MUI_ERROR idIDErrorEntries[] =
         "Anda tidak dapat membuat partisi primary atau extended baru di\n"
         "tabel partisi cakram ini karena tabel partisi ini penuh.\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut."
+        "  * Tekan tombol apapun untuk lanjut."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
         "Anda tidak dapat membuat lebih dari satu partisi extended per satu cakram.\n"
         "\n"
-        "  * Tekan apa saja untuk lanjut."
+        "  * Tekan tombol apapun untuk lanjut."
     },
     {
         // ERROR_FORMATTING_PARTITION,

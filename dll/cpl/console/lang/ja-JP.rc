@@ -150,5 +150,5 @@ BEGIN
     IDS_CPLDESCRIPTION "コンソールプロパティを設定します。"
     IDS_APPLY_SHORTCUT_ALL "このウィンドウを開始したショートカットを編集します(&S)"
     IDS_RASTERFONTS "ラスターフォント"
-    IDS_GROUPBOX_FONT_NAME "Selected Font: "
+    IDS_GROUPBOX_FONT_NAME "選択中のフォント: "
 END

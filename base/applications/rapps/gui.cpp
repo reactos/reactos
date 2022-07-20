@@ -25,7 +25,7 @@
 #include <atlwin.h>
 #include <wininet.h>
 #include <shellutils.h>
-#include <rosctrls.h>
+#include <ui/rosctrls.h>
 #include <gdiplus.h>
 #include <math.h>
 
@@ -706,6 +706,14 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
     m_ApplicationView->SetRedraw(TRUE);
     m_ApplicationView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
     UpdateStatusBarText();
+
+    CStringW text;
+    if (m_ApplicationView->GetItemCount() == 0 && !szSearchPattern.IsEmpty())
+    {
+        text.LoadString(IDS_NO_SEARCH_RESULTS);
+    }
+    m_ApplicationView->SetWatermark(text);
+
     bUpdating = FALSE;
 }
 

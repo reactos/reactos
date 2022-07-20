@@ -131,7 +131,6 @@ HDA_PdoPnp(
         if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
         {
             /* handle target device relations */
-            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
             ASSERT(Irp->IoStatus.Information == 0);
 
             /* allocate device relation */
@@ -155,6 +154,10 @@ HDA_PdoPnp(
                 /* no memory */
                 Status = STATUS_INSUFFICIENT_RESOURCES;
             }
+        }
+        else
+        {
+            Status = Irp->IoStatus.Status;
         }
         break;
     case IRP_MN_QUERY_CAPABILITIES:

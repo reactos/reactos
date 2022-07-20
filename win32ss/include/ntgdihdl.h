@@ -119,28 +119,6 @@
 #define GDI_OBJ_HMGR_RESTRICTED 0x80000022 /* Restricted? */
 
 
-/* DC OBJ Types */
-#define DC_TYPE_DIRECT 0  /* normal device context */
-#define DC_TYPE_MEMORY 1  /* memory device context */
-#define DC_TYPE_INFO   2  /* information context */
-
-/* DC OBJ Flags */
-#define DC_FLAG_DISPLAY            0x0001
-#define DC_FLAG_DIRECT             0x0002
-#define DC_FLAG_CANCELLED          0x0004
-#define DC_FLAG_PERMANENT          0x0008
-#define DC_FLAG_DIRTY_RAO          0x0010
-#define DC_FLAG_ACCUM_WMGR         0x0020
-#define DC_FLAG_ACCUM_APP          0x0040
-#define DC_FLAG_RESET              0x0080
-#define DC_FLAG_SYNCHRONIZEACCESS  0x0100
-#define DC_FLAG_EPSPRINTINGESCAPE  0x0200
-#define DC_FLAG_TEMPINFODC         0x0400
-#define DC_FLAG_FULLSCREEN         0x0800
-#define DC_FLAG_IN_CLONEPDEV       0x1000
-#define DC_FLAG_REDIRECTION        0x2000
-#define DC_FLAG_SHAREACCESS        0x4000
-
 /* DC_ATTR Dirty Flags */
 #define DIRTY_FILL                          0x00000001
 #define DIRTY_LINE                          0x00000002

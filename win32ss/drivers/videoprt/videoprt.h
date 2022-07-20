@@ -249,6 +249,7 @@ IntVideoPortMapPhysicalMemory(
 
 extern PKPROCESS CsrProcess;
 extern ULONG VideoPortDeviceNumber;
+extern BOOLEAN VideoPortUseNewKey;
 extern KMUTEX VideoPortInt10Mutex;
 extern KSPIN_LOCK HwResetAdaptersLock;
 extern LIST_ENTRY HwResetAdaptersList;
@@ -278,6 +279,11 @@ PVOID NTAPI
 IntVideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName);
+
+NTSTATUS NTAPI
+IntVideoPortEnumerateChildren(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 /* int10.c */
 

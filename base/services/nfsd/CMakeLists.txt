@@ -48,7 +48,7 @@ list(APPEND SOURCE
 
 add_executable(nfsd ${SOURCE} nfsd.rc)
 
-if(MSVC AND (NOT USE_CLANG_CL))
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # Disable warning C4477 (printf format warnings)
     target_compile_options(nfsd PRIVATE /wd4477)
 else()
@@ -59,6 +59,8 @@ endif()
 set_module_type(nfsd win32cui)
 add_importlibs(nfsd advapi32 iphlpapi kernel32_vista libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
 add_pch(nfsd precomp.h SOURCE)
+
 add_cd_file(TARGET nfsd DESTINATION reactos/system32 FOR all)
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/netconfig" DESTINATION reactos/system32/drivers/etc FOR all)
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/ms-nfs41-idmap.conf" DESTINATION reactos/system32/drivers/etc FOR all)
+add_registry_inf(nfsd_reg.inf)

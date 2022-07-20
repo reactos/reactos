@@ -109,11 +109,11 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effektusok"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Az alábbi áttünés &effektet használja menükhöz és eszköztippekhez",
+    CONTROL "Az alábbi áttűnés &effektet használja menükhöz és eszköztippekhez",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Az alábbi módszert használja a képernyőn megjelenő &betűtípusok simítására.", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Az alábbi módszert használja a képernyőn megjelenő &betűtípusok simítására", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Mozgassa a monitor ikonokat úgy, hogy megegyezzen a monitorjai fizikai elrendezésével.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&Képernyő", 1820, 3, 107, 70, 9
+    LTEXT "&Képernyő:", 1820, 3, 107, 70, 9
     LTEXT "<nincs>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "Ké&pméret", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 53, 17
@@ -158,7 +158,7 @@ CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Képernyő", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Betűméret", -1, 14, 20, 222, 9
+    LTEXT "Betűméret:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilitás", -1, 7, 67, 237, 97

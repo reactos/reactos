@@ -630,7 +630,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
     if ((ScmGetSetupInProgress() == 0) &&
         (dwCurrentControlSet == dwLastKnownGoodControlSet))
     {
-        DPRINT("First boot after setup!\n");
+        DPRINT("First boot after setup\n");
 
         /* Search for a new control set number */
         for (dwNewControlSet = 1; dwNewControlSet < 1000; dwNewControlSet++)
@@ -645,7 +645,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
         /* Fail if we did not find an unused control set!*/
         if (dwNewControlSet >= 1000)
         {
-            DPRINT1("Too many control sets!\n");
+            DPRINT1("Too many control sets\n");
             return ERROR_NO_MORE_ITEMS;
         }
 
@@ -683,7 +683,7 @@ ScmAcceptBoot(VOID)
 
     if (bBootAccepted)
     {
-        DPRINT1("Boot has alread been accepted!\n");
+        DPRINT1("Boot has already been accepted\n");
         return ERROR_BOOT_ALREADY_ACCEPTED;
     }
 
@@ -708,7 +708,7 @@ ScmAcceptBoot(VOID)
     /* Fail if we did not find an unused control set!*/
     if (dwNewControlSet >= 1000)
     {
-        DPRINT1("Too many control sets!\n");
+        DPRINT1("Too many control sets\n");
         return ERROR_NO_MORE_ITEMS;
     }
 
@@ -744,7 +744,7 @@ ScmRunLastKnownGood(VOID)
 
     if (bBootAccepted)
     {
-        DPRINT1("Boot has alread been accepted!\n");
+        DPRINT1("Boot has already been accepted\n");
         return ERROR_BOOT_ALREADY_ACCEPTED;
     }
 

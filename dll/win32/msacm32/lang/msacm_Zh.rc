@@ -1,7 +1,7 @@
 /*
  * MS ACM (Simplified and Traditional Chinese Resources)
  *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Copyright 2000 Eric Pouech
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -66,7 +69,7 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "儲存為(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "另存新檔(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
     PUSHBUTTON      "刪除(&R)", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
 
     LTEXT           "格式(&F):", -1, 5, 56, 44, 8, NOT WS_GROUP

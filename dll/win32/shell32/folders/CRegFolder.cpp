@@ -141,14 +141,9 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         return E_FAIL;
 
     /* my computer and other shell extensions */
-    static const WCHAR fmt[] = { 'C', 'L', 'S', 'I', 'D', '\\',
-                                 '{', '%', '0', '8', 'l', 'x', '-', '%', '0', '4', 'x', '-', '%', '0', '4', 'x', '-',
-                                 '%', '0', '2', 'x', '%', '0', '2', 'x', '-', '%', '0', '2', 'x', '%', '0', '2', 'x',
-                                 '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '}', 0
-                               };
     WCHAR xriid[50];
 
-    swprintf(xriid, fmt,
+    swprintf(xriid, L"CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
              riid->Data1, riid->Data2, riid->Data3,
              riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
              riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
@@ -156,8 +151,6 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     const WCHAR* iconname = NULL;
     if (_ILIsBitBucket(pidl))
     {
-        static const WCHAR szFull[] = {'F','u','l','l',0};
-        static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
         CComPtr<IEnumIDList> EnumIDList;
         CoInitialize(NULL);
 
@@ -175,9 +168,9 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
         {
             CoTaskMemFree(pidl);
-            iconname = szFull;
+            iconname = L"Full";
         } else {
-            iconname = szEmpty;
+            iconname = L"Empty";
         }
     }
 
@@ -225,12 +218,13 @@ CRegFolderEnum::~CRegFolderEnum()
 HRESULT CRegFolderEnum::Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags)
 {
     WCHAR KeyName[MAX_PATH];
-    static const WCHAR KeyNameFormat[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace";
 
     if (!(dwFlags & SHCONTF_FOLDERS))
         return S_OK;
 
-    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH, KeyNameFormat, lpszEnumKeyName);
+    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH,
+                                  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace",
+                                  lpszEnumKeyName);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -748,19 +742,13 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         return E_INVALIDARG;
     }
 
-    if (iColumn >= 3)
-    {
-        /* Return an empty string when we area asked for a column we don't support.
-           Only  the regfolder is supposed to do this as it supports less columns compared to other folder
-           and its contents are supposed to be presented alongside items that support more columns. */
-        return SHSetStrRet(&psd->str, "");
-    }
-
     switch(iColumn)
     {
         case 0:        /* name */
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* comments */
+        case 1:        /* type */
+            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        case 4:        /* comments */
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
                 return SHSetStrRet(&psd->str, "");
@@ -770,8 +758,11 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
             RegCloseKey(hKey);
             return S_OK;
-        case 2:        /* type */
-            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        default:
+            /* Return an empty string when we area asked for a column we don't support.
+               Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+               and its contents are supposed to be presented alongside items that support more columns. */
+            return SHSetStrRet(&psd->str, "");
     }
     return E_FAIL;
 }

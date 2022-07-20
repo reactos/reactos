@@ -8,7 +8,7 @@
 // NOTE: This test program closes the Explorer windows before tests.
 
 #include "shelltest.h"
-#include "SHChangeNotify.h"
+#include "shell32_apitest_sub.h"
 #include <time.h>
 #include <process.h>
 #include <versionhelpers.h>
@@ -31,31 +31,6 @@ static HWND s_hwnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
 static HANDLE s_hThread = NULL;
 static HANDLE s_hEvent = NULL;
-
-static HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL bForce)
-{
-    HWND hwnd = NULL;
-    for (INT i = 0; i < 50; ++i)
-    {
-        hwnd = FindWindowW(clsname, text);
-        if (bClosing)
-        {
-            if (!hwnd)
-                break;
-
-            if (bForce)
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
-        }
-        else
-        {
-            if (hwnd)
-                break;
-        }
-
-        Sleep(1);
-    }
-    return hwnd;
-}
 
 static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
 {
@@ -930,11 +905,12 @@ static unsigned __stdcall TestThreadProc(void *)
 
 START_TEST(SHChangeNotify)
 {
-#ifdef DISABLE_THIS_TESTCASE
-    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
-#endif
 #ifdef TOTAL_TICK
     DWORD dwOldTick = GetTickCount();
+#endif
+#ifdef DISABLE_THIS_TESTCASE
+    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
+    return;
 #endif
 
     trace("Please don't operate your PC while testing...\n");
@@ -961,4 +937,7 @@ START_TEST(SHChangeNotify)
     DWORD dwTick = dwNewTick - dwOldTick;
     trace("SHChangeNotify: Total %lu.%lu sec\n", (dwTick / 1000), (dwTick / 100 % 10));
 #endif
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    Sleep(100);
 }

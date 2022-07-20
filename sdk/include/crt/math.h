@@ -169,7 +169,9 @@ _Check_return_ __CRT_INLINE float __CRTDECL ldexpf(_In_ float x, _In_ int y) { r
 _Check_return_ __CRT_INLINE long double __CRTDECL tanl(_In_ long double x) { return (tan((double)x)); }
 #endif
 
-#if defined(__ia64__) || defined(_M_IA64) || \
+#if defined(_CRTBLD)
+_Check_return_ float __cdecl fabsf(_In_ float x);
+#elif defined(__ia64__) || defined(_M_IA64) || \
     defined(__arm__) || defined(_M_ARM)  || \
     defined(__arm64__) || defined(_M_ARM64)
 _Check_return_ _CRT_JIT_INTRINSIC _CRTIMP float __cdecl fabsf(_In_ float x);
@@ -202,9 +204,9 @@ _Check_return_ float __cdecl tanhf(_In_ float x);
 
 #if defined(_MSC_VER)
 /* Make sure intrinsics don't get in our way */
-#if defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
 #pragma function(acosf,asinf,atanf,atan2f,ceilf,cosf,coshf,expf,floorf,fmodf,logf,log10f,powf,sinf,sinhf,sqrtf,tanf,tanhf)
-#endif /* defined(_M_AMD64) || defined(_M_ARM) */
+#endif /* defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64) */
 #if (_MSC_VER >= 1920)
 #pragma function(_hypotf)
 #endif
@@ -273,6 +275,8 @@ _Check_return_ long lrintf(_In_ float x);
 _Check_return_ long lrintl(_In_ long double x);
 #pragma function(lrint, lrintf, lrintl)
 #endif
+
+#ifndef _CRTBLD
 _Check_return_ __CRT_INLINE double round(_In_ double x) { return (x < 0) ? ceil(x - 0.5f) : floor(x + 0.5); }
 _Check_return_ __CRT_INLINE float roundf(_In_ float x) { return (x < 0) ? ceilf(x - 0.5f) : floorf(x + 0.5); }
 _Check_return_ __CRT_INLINE long double roundl(_In_ long double x) { return (x < 0) ? ceill(x - 0.5f) : floorl(x + 0.5); }
@@ -292,6 +296,7 @@ _Check_return_ __CRT_INLINE long long llrint(_In_ double x) { return (long long)
 _Check_return_ __CRT_INLINE long long llrintf(_In_ float x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
+#endif /* !_CRTBLD */
 
 #ifndef NO_OLDNAMES /* !__STDC__ */
 

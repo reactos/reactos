@@ -83,16 +83,16 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","Service",0x00000000,"mouhid"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0303","Service",0x00000000,"i8042prt"
@@ -129,7 +129,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot","AlternateShell",2,"cmd.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\AppMgmt","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Base","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot Bus Extender","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot file system","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot File System","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\CryptSvc","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\DcomLaunch","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\dmadmin","",0x00000000,"Service"
@@ -173,7 +173,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\AFD","",0x00000000,"Serv
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\AppMgmt","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Base","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot Bus Extender","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot file system","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot File System","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Browser","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\CryptSvc","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\DcomLaunch","",0x00000000,"Service"
@@ -252,12 +252,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{745A17A0-74D3-11D0-B6FE
 
 ; ReactOS specific - required to load in Safe Mode and for debugging in Safe Mode (until vga.sys and vgasave.sys are implemented)
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vgamp.sys","",0x00000000,"Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vbemp.sys","",0x00000000,"Driver"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vgamp.sys","",0x00000000,"Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vbemp.sys","",0x00000000,"Driver"
 
 ; Other
 HKLM,"SYSTEM\CurrentControlSet\Control\Arbiters",,0x00000012
@@ -379,6 +375,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E967-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E967-E325-11CE-BFC1-08002BE10318}","SilentInstall",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E967-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"partmgr"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Display adapters"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Display"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"desk.cpl,DisplayClassInstaller"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Keyboard"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Keyboard"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-3"
@@ -417,6 +418,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}",,0x00000000,"System Devices"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"System"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-27"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{745A17A0-74D3-11D0-B6FE-00A0C90F57DA}",,0x00000000,"Human Interface Devices"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{745A17A0-74D3-11D0-B6FE-00A0C90F57DA}","Class",0x00000000,"HIDClass"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{745A17A0-74D3-11D0-B6FE-00A0C90F57DA}","Icon",0x00000000,"-24"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{745A17A0-74D3-11D0-B6FE-00A0C90F57DA}","NoInstallClass",0x00000000,"1"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}",,0x00000000,"Ramdisk"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
@@ -1460,17 +1466,16 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "SpoolerGroup", \
  "AudioGroup", \
  "SmartCardGroup", \
- "NetworkProvider" \
+ "NetworkProvider", \
  "RemoteValidation", \
  "NetDDEGroup", \
  "Parallel arbitrator", \
- "Extended Base" \
+ "Extended Base", \
  "PCI Configuration", \
  "MS Transactions"
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
-HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\UseNewKey",,0x00000012
 
 ; Group order, the first DWORD is the count of entries,
 ; the following dwords are the tag entries for the load order.
@@ -1574,7 +1579,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"AudioGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
@@ -1650,7 +1655,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager"
 
 ; Filesystem recognizer driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot file system"
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32\drivers\fs_rec.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
@@ -1669,7 +1674,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,%WORKSTATION_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,%WORKSTATION_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"NetworkProvider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x00000002
@@ -1679,7 +1684,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDl
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
@@ -1700,7 +1705,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; NTFS filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000003
@@ -2050,6 +2055,19 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\schedsvc.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceMain",0x00000000,"SchedServiceMain"
 
+; Secondary Logon service
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DependOnService",0x00010000,"RPCSS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Description",0x00000000,%SECLOGON_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DisplayName",0x00000000,%SECLOGON_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Group",0x00000000,"SchedulerGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\seclogon.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon\Parameters","ServiceMain",0x00000000,"SvcEntry_Seclogon"
+
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,%SPOOLER_SERVICE_DESCRIPTION%
@@ -2162,55 +2180,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch\Parameters","ServiceDll",0x00
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
 
 ; Virtual FAT filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ImagePath",0x00020000,"system32\drivers\ramdisk.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
-
-; EXT2 Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2fs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CodePage",0x00000000,"default"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","WritingSupport",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CheckingBitmap",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","Ext3ForceWriting",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","AutoMount",0x00010001,0x00000001
-
-; BTRFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\drivers\btrfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
-
-; NFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ImagePath",0x00020000,"system32\drivers\nfs41_driver.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","DeviceName",0x00000000,\Device\nfs41_driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","Name",0x00000000,"NFS41 Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","ProviderPath",0x00000000,System32\nfs41_np.dll
-
-; NFS daemon
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","DisplayName",0x00000000,"NFSv4.1 Client"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ImagePath",0x00020000,"%SystemRoot%\system32\nfsd.exe --noldap"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000001
 
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
@@ -2284,6 +2264,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 
 SCHEDULE_SERVICE="Scheduler service"
 SCHEDULE_SERVICE_DESCRIPTION="Allows starting of programs at specific times."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Supports sharing for file, printers and resources on the network."
@@ -2401,466 +2384,6 @@ US_INTERNATIONAL = "US International"
 UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
 VIETNAMESE = "Vietnamese"
 
-
-; LANG_POLISH SUBLANG_NEUTRAL
-[Strings.0015]
-
-; Services names and descriptions
-AUDIO_SERVICE="Usługa Audio"
-AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
-
-BITS_SERVICE="Usługa inteligentnego transferu w tle"
-BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
-
-BROWSER_SERVICE="Przeglądarka komputera"
-BROWSER_SERVICE_DESCRIPTION="Utrzymuje aktualną listę komputerów w sieci i dostarcza ją do komputerów wyznaczonych jako przeglądarki."
-
-DCOMLAUNCH_SERVICE="Usługa DcomLaunch"
-DCOMLAUNCH_SERVICE_DESCRIPTION="Namiastka usługi DcomLaunch"
-
-EVENTLOG_SERVICE="Dziennik zdarzeń"
-EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
-
-MSISERVER_SERVICE="Instalator ReactOS"
-MSISERVER_SERVICE_DESCRIPTION="Dodaje, modyfikuje i usuwa aplikacje dostarczane jako pakiet MSI (Windows Installer)."
-
-NETLOGON_SERVICE="Logowanie do sieci"
-NETLOGON_SERVICE_DESCRIPTION="Obsługuje uwierzytelnienie przekazjące zdarzeż logowania na konta w komputerach domeny."
-
-PLUGPLAY_SERVICE="Plug and Play"
-PLUGPLAY_SERVICE_DESCRIPTION="Wykrywa zmiany w sprzęcie i instaluje potrzebne oprogramowanie, jeśli to możliwe."
-
-RPCSS_SERVICE="Zdalne wykonywanie procedur"
-RPCSS_SERVICE_DESCRIPTION="Podsystem RPC, który jest odpowiedzialny za zdalne wykonywanie procedur na tym komputerze."
-
-SAMSS_SERVICE="Menedżer kont zabezpieczeń"
-SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że Menedżer kont zabezpieczeń jest gotowy do akceptowania żądań. Wyłączenie tej usługi spowoduje, że inne usługi w systemie nie będą powiadamiane o gotowości Menedżera kont zabezpieczeń, przez co te usługi mogą być uruchamiane nieprawidłowo. Tej usługi nie należy wyłączać."
-
-SCHEDULE_SERVICE="Usługa Harmonogram"
-SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."
-
-SERVER_SERVICE="Serwer"
-SERVER_SERVICE_DESCRIPTION="Oferuje udostępnianie w sieci plików, drukarek i potoków dla tego komputera."
-
-SPOOLER_SERVICE="Bufor wydruku"
-SPOOLER_SERVICE_DESCRIPTION="Ładuje pliki do pamięci w celu późniejszego wydrukowania."
-
-TCPSVCS_SERVICE="Podstawowe usługi TCP/IP"
-TCPSVCS_SERVICE_DECRIPTION="Oferuje następujące usługi TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
-
-TELNETD_SERVICE="Usługa ReactOS Telnet"
-TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
-
-THEMES_SERVICE="Motywy"
-THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów."
-
-WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
-WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."
-
-WLANSVC_SERVICE="Usługa WLAN"
-WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
-
-WORKSTATION_SERVICE="Stacja robocza"
-WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
-
-WUAUSERV_SERVICE="Aktualizacje automatyczne"
-WUAUSERV_SERVICE_DESCRIPTION="Namiastka usługi Aktualizacje automatyczne."
-
-; Keyboard layouts
-ALBANIAN = "Albański"
-ARABIC_101 = "Arabski (101)"
-ARABIC_102 = "Arabski (102)"
-ARABIC_102_AZERTY = "Arabski (102, AZERTY)"
-ARMENIAN_EASTERN = "Armeński wschodni"
-ARMENIAN_WESTERN = "Armeński zachodni"
-ASSAMESE = "ASSAMESE - INSCRIPT"
-AZERI_CYRILLIC = "Azerski (Cyrylica)"
-AZERI_LATIN = "Azerski (Latin)"
-BELARUSIAN = "Białoruski"
-BELGIAN_DUTCH = "Belgijski (Period)"
-BELGIAN_FRENCH = "Belgijski Francuski"
-BENGALI = "Bengalski"
-BENGALI_INSCRIPT = "Bengalski - INSCRIPT"
-BULGARIAN_BDS = "Bułgarski BDS 5237-1978"
-BULGARIAN_PHONETIC = "Bułgarski (Fonetyczny)"
-BULGARIAN_PHONETIC_BDS = "Bułgarski (Fonetyczny, BDS)"
-BURMESE = "Burmański"
-CANADIAN_FRENCH = "Kanadyjski francuski (Legacy)"
-CANADIAN_MULTILINGUAL = "Kanadyjski wielojęzykowy"
-CROATIAN = "Chorwacki"
-CZECH = "Czeski"
-CZECH_QWERTY = "Czeski (QWERTY)"
-DANISH = "Duński"
-DEVANAGARI = "Devanagari - INSCRIPT"
-DUTCH = "Holenderski"
-ESPERANTO = "Esperanto"
-ESTONIAN = "Estoński"
-GERMAN_ERGO = "Niemiecki (de_ergo)"
-GERMAN_NEO = "Niemiecki (NEO-1.1)"
-GERMAN_RISTOME = "Niemiecki (RISTOME)"
-GERMAN = "Niemiecki"
-GREEK = "Grecki"
-GUJARATI = "Gujarati"
-IRISH = "Irlandzki"
-FAEROESE = "Faeroese"
-FINNISH = "Fiński"
-FRENCH = "Francuski"
-GEORGIAN = "Gruziński"
-HEBREW = "Hebrajski"
-HUNGARIAN = "Węgierski"
-ICELANDIC = "Islandzki"
-ITALIAN = "Włoski"
-JAPANESE = "Japoński"
-KAZAKH = "Kazachski"
-KOREAN = "Koreański"
-LATIN_AMERICAN = "Latynoamerykański"
-LATVIAN = "Łotewski"
-LATVIAN_QWERTY = "Łotewski (QWERTY)"
-LITHUANIAN = "Litewski"
-MACEDONIAN = "Macedoński (FYRO)"
-MALAYALAM = "Malajalam"
-NORWEGIAN = "Norweski"
-POLISH_214 = "Polski (214)"
-POLISH_PROGRAMMERS = "Polski (Programisty)"
-PORTUGESE = "Portugalski"
-PORTUGESE_BRAZILIAN = "Portugalski (Brazylijski ABNT2)"
-ROMANIAN_LEGACY = "Rumuński (Legacy)"
-ROMANIAN_STANDARD = "Rumuński (Standard)"
-RUSSIAN = "Rosyjski"
-RUSSIAN_TYPEWRITER = "Rosyjski (Maszynisty)"
-SERBIAN_CYRILLIC = "Serbski (Cyrylica)"
-SERBIAN_LATIN = "Serbski (Latin)"
-SLOVAK = "Słowacki"
-SLOVAK_QWERTY = "Słowacki (QWERTY)"
-SPANISH = "Hiszpański"
-SWEDISH = "Szwedzki"
-SWISS_FRENCH = "Szwajcarski Francuski"
-SWISS_GERMAN = "Szwajcarski Niemiecki"
-TATAR = "Tatarski"
-THAI_KEDMANEE = "Tajski Kedmanee"
-THAI_KEDMANEE_NON_SHIFTLOCK = "Tajski (Kedmanee, bez ShiftLock)"
-THAI_PATTACHOTE = "Tajski Pattachote"
-THAI_PATTACHOTE_NON_SHIFTLOCK = "Tajski (Pattachote bez ShiftLock)"
-TURKISH_Q = "Turecki Q"
-TURKISH_F = "Turecki F"
-UK = "Angielski (Wielka Brytania)"
-UKRAINIAN = "Ukraiński"
-UKRAINIAN_STUDENT = "Ukraiński (Student)"
-US = "Angielski (USA)"
-US_ARABIC = "Tablica Angielska (US) dla Arabskiego (IBM 238_L)"
-US_DVORAK = "Angielski (US-Dvorak)"
-US_DVORAK_LEFT = "Angielski (Dvoraka dla leworęcznych)"
-US_DVORAK_RIGHT = "Angielski (Dvoraka dla praworęcznych)"
-US_INTERNATIONAL = "Międzynarodowy (USA)"
-UZBEK_CYRILLIC = "Uzbecki (Cyrylica)"
-VIETNAMESE = "Wietnamski"
-
-
-; LANG_ROMANIAN SUBLANG_NEUTRAL
-[Strings.0018]
-
-; Services names and descriptions
-AUDIO_SERVICE="Serviciu audio"
-AUDIO_SERVICE_DESCRIPTION="Oferă aplicațiilor funcționalități audio."
-
-BITS_SERVICE="Serviciu de transfer inteligent în fundal"
-BITS_SERVICE_DESCRIPTION="Transferă fișiere în fundal utilizând lățimea de bandă nefolosită a rețelei."
-
-DCOMLAUNCH_SERVICE="DcomLaunch service"
-DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
-
-EVENTLOG_SERVICE="Jurnal de evenimente"
-EVENTLOG_SERVICE_DESCRIPTION="Jurnalizează mesajele sau evenimentele transmise de sistemul de operare într-o bază de date accesibilă cu instrumentul „observator de evenimente”."
-
-MSISERVER_SERVICE="Instalare ReactOS"
-MSISERVER_SERVICE_DESCRIPTION="Controlează instalarea, mentenanța, și eliminarea de programe de instalare MSI (Windows Installer)."
-
-NETLOGON_SERVICE="Autentificare în rețea"
-NETLOGON_SERVICE_DESCRIPTION="Stabilește un canal securizat către un controlor de domentiu pentru autentificarea domeniului."
-
-PLUGPLAY_SERVICE="Plug and Play"
-PLUGPLAY_SERVICE_DESCRIPTION="Detectează schimbările în configurația fizică și instalează programele necesare dacă este posibil."
-
-RPCSS_SERVICE="Apel procedural la distanță"
-RPCSS_SERVICE_DESCRIPTION="Subsistemul responsabil pentru apel procedural la distanță în calculatorul local."
-
-SAMSS_SERVICE="Security Accounts Manager"
-SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
-
-SCHEDULE_SERVICE="Serviciu de planificare"
-SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
-
-SERVER_SERVICE="Server"
-SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
-
-SPOOLER_SERVICE="Coadă de imprimare"
-SPOOLER_SERVICE_DESCRIPTION="Încarcă fișierele în memorie pentru imprimare ulterioară."
-
-TCPSVCS_SERVICE="Servicii TCP/IP simple"
-TCPSVCS_SERVICE_DECRIPTION="Permite următoarele servicii (protocoale) TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
-
-TELNETD_SERVICE="Serviciu Telnet"
-TELNETD_SERVICE_DESCRIPTION="Serviciul Telnet al ReactOS."
-
-THEMES_SERVICE="Teme"
-THEMES_SERVICE_DESCRIPTION="Permite teme pentru interfața grafică de utilizare."
-
-WINMGMT_SERVICE="Infrastructură de gestiune"
-WINMGMT_SERVICE_DESCRIPTION="Furnizează interfața pentru informațiile de gestiune ale sistemului."
-
-WLANSVC_SERVICE="Serviciu WLAN"
-WLANSVC_SERVICE_DESCRIPTION="Serviciu pentru rețele locale fără fir."
-
-WORKSTATION_SERVICE="Stație de lucru"
-WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și menținerea conexiunilor la servere în rețea."
-
-WUAUSERV_SERVICE="Automatic Updates"
-WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
-
-; Keyboard layouts
-ALBANIAN = "Albaneză"
-ARABIC_101 = "Arabă (101)"
-ARABIC_102 = "Arabă (102)"
-ARABIC_102_AZERTY = "Arabă (102) AZERTY"
-ARMENIAN_EASTERN = "Armeană Estică"
-ARMENIAN_WESTERN = "Armeană Vestică"
-ASSAMESE = "Assameză - INSCRIPT"
-AZERI_CYRILLIC = "Azeră alfabet chirilic"
-AZERI_LATIN = "Azeră alfabet latin"
-BELARUSIAN = "Belarusă"
-BELGIAN_DUTCH = "Belgiană (Olandeză)"
-BELGIAN_FRENCH = "Belgiană (Franceză)"
-BENGALI = "Bengaleză"
-BENGALI_INSCRIPT = "Bengaleză - INSCRIPT"
-BULGARIAN_BDS = "Bulgară BDS 5237-1978"
-BULGARIAN_PHONETIC = "Bulgară, fonetică clasică"
-BULGARIAN_PHONETIC_BDS = "Bulgară, fonetică BDS 5237-2006"
-BURMESE = "Birmană"
-CANADIAN_FRENCH = "Canadiană Franceză (moștenire)"
-CANADIAN_MULTILINGUAL = "Canadiană Multilingvă Standard"
-CROATIAN = "Croată"
-CZECH = "Cehă"
-CZECH_QWERTY = "Cehă (QWERTY)"
-DANISH = "Daneză"
-DEVANAGARI = "Devanagari - INSCRIPT"
-DUTCH = "Olandeză"
-ESPERANTO = "Esperanto"
-ESTONIAN = "Estonă"
-GERMAN_ERGO = "Germană (de_ergo)"
-GERMAN_NEO = "Germană (NEO-1.1)"
-GERMAN_RISTOME = "Germană (RISTOME)"
-GERMAN = "Germană"
-GREEK = "Greacă"
-GUJARATI = "Gujarati"
-IRISH = "Irlandeză"
-FAEROESE = "Faeroese"
-FINNISH = "Finlandeză"
-FRENCH = "Franceză"
-GEORGIAN = "Georgiană"
-HEBREW = "Abraică"
-HUNGARIAN = "Maghiară"
-ICELANDIC = "Islandeză"
-ITALIAN = "Italiană"
-JAPANESE = "Japoneză"
-KAZAKH = "Kazahă"
-KOREAN = "Coreeană"
-LATIN_AMERICAN = "Iberoamericană"
-LATVIAN = "Letonă"
-LATVIAN_QWERTY = "Letonă (QWERTY)"
-LITHUANIAN = "Lituaniană"
-MACEDONIAN = "Macedonă (FYRO)"
-MALAYALAM = "Malayalam"
-NORWEGIAN = "Norvegiană"
-POLISH_214 = "Poloneză (214)"
-POLISH_PROGRAMMERS = "Poloneză (programatori)"
-PORTUGESE = "Portugheză (Portugalia)"
-PORTUGESE_BRAZILIAN = "Portugheză (Braziliană ABNT2)"
-ROMANIAN_LEGACY = "Română (moștenire)"
-ROMANIAN_STANDARD = "Română (standard)"
-RUSSIAN = "Rusă"
-RUSSIAN_TYPEWRITER = "Rusă (dactilografiere)"
-SERBIAN_CYRILLIC = "Sârbă (alfabet chirilic)"
-SERBIAN_LATIN = "Sârbă (alfabet latin)"
-SLOVAK = "Slovacă"
-SLOVAK_QWERTY = "Slovacă (QWERTY)"
-SPANISH = "Spaniolă"
-SWEDISH = "Suedeză"
-SWISS_FRENCH = "Elvețiană (Franceză)"
-SWISS_GERMAN = "Elvețiană (Germană)"
-TATAR = "Tatară"
-THAI_KEDMANEE = "Thai Kedmanee"
-THAI_KEDMANEE_NON_SHIFTLOCK = "Thai Kedmanee (non-ShiftLock)"
-THAI_PATTACHOTE = "Thai Pattachote"
-THAI_PATTACHOTE_NON_SHIFTLOCK = "Thai Pattachote (non-ShiftLock)"
-TURKISH_Q = "Turcă Q"
-TURKISH_F = "Turcă F"
-UK = "Britanică"
-UKRAINIAN = "Ukraineană"
-UKRAINIAN_STUDENT = "Ukraineană (studențească)"
-US = "Statele Unite"
-US_ARABIC = "Engleză SUA (IBM Arabic 238_L)"
-US_DVORAK = "Dvorak SUA"
-US_DVORAK_LEFT = "Dvorak SUA pentru mâna stângă"
-US_DVORAK_RIGHT = "Dvorak SUA pentru mâna dreaptă"
-US_INTERNATIONAL = "SUA internațională"
-UZBEK_CYRILLIC = "Uzbecă (alfabet chirilic)"
-VIETNAMESE = "Vietnameză"
-
-
-; LANG_RUSSIAN SUBLANG_NEUTRAL
-[Strings.0019]
-
-; Services names and descriptions
-AUDIO_SERVICE="Звук и аудио"
-AUDIO_SERVICE_DESCRIPTION="Обеспечивает звуковыми устройствами программы."
-
-BITS_SERVICE="Фоновая интеллектуальная служба передачи (BITS)"
-BITS_SERVICE_DESCRIPTION="Обеспечивает передачу данных между клиентами и серверами в фоновом режиме с использованием пропускной способности простаивающей сети."
-
-BROWSER_SERVICE="Обозреватель компьютеров"
-BROWSER_SERVICE_DESCRIPTION="Обслуживает список компьютеров в сети и выдает его программам по запросу."
-
-DCOMLAUNCH_SERVICE="DcomLaunch service"
-DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
-
-EVENTLOG_SERVICE="Журнал событий"
-EVENTLOG_SERVICE_DESCRIPTION="Регистрирует события или сообщения, отправленные операционной системой в базе данных, доступной через средство просмотра журнала событий."
-
-MSISERVER_SERVICE="Установщик ReactOS"
-MSISERVER_SERVICE_DESCRIPTION="Управляет установкой, изменением и удалением программ, упакованных в MSI (установщик Windows)."
-
-NETLOGON_SERVICE="Сетевой вход в систему"
-NETLOGON_SERVICE_DESCRIPTION="Устанавливает безопасный канал связи с контроллером домена для проверки его подлинности."
-
-PLUGPLAY_SERVICE="Plug and Play"
-PLUGPLAY_SERVICE_DESCRIPTION="Обнаруживает изменения оборудования и по возможности устанавливает необходимое программное обеспечение."
-
-RPCSS_SERVICE="Удаленный вызов процедур (RPC)"
-RPCSS_SERVICE_DESCRIPTION="Подсистема для вызова удаленных процедур на локальной машине."
-
-SAMSS_SERVICE="Security Accounts Manager"
-SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
-
-SCHEDULE_SERVICE="Планировщик заданий"
-SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
-
-SERVER_SERVICE="Сервер"
-SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."
-
-SPOOLER_SERVICE="Диспетчер очереди печати"
-SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память для последующей печати."
-
-TCPSVCS_SERVICE="Простые службы TCP/IP"
-TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
-
-TELNETD_SERVICE="ReactOS Telnet Service"
-TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
-
-THEMES_SERVICE="Темы"
-THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
-
-WINMGMT_SERVICE="Инструментарий управления ReactOS"
-WINMGMT_SERVICE_DESCRIPTION="Предоставляет общий интерфейс для доступа к информации об управлении операционной системой."
-
-WLANSVC_SERVICE="Беспроводная локальная сеть (WLAN)"
-WLANSVC_SERVICE_DESCRIPTION="Обеспечивает поддержку беспроводной сети."
-
-WORKSTATION_SERVICE="Рабочая станция"
-WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку сетевых подключений и связь."
-
-WUAUSERV_SERVICE="Automatic Updates"
-WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
-
-; Keyboard layouts
-ALBANIAN = "Албанская"
-ARABIC_101 = "Арабская (101)"
-ARABIC_102 = "Арабская (102)"
-ARABIC_102_AZERTY = "Арабская (102) AZERTY"
-ARMENIAN_EASTERN = "Армянская восточная"
-ARMENIAN_WESTERN = "Армянская западная"
-ASSAMESE = "Ассамская - инскрипт"
-AZERI_CYRILLIC = "Азербайджанская (кир)"
-AZERI_LATIN = "Азербайджанская (лат)"
-BELARUSIAN = "Белорусская"
-BELGIAN_DUTCH = "Бельгийская (голландская)"
-BELGIAN_FRENCH = "Бельгийская (французская)"
-BENGALI = "Бенгальская"
-BENGALI_INSCRIPT = "Бенгальская - инскрипт"
-BULGARIAN_BDS = "Болгарская (BDS 5237-1978)"
-BULGARIAN_PHONETIC = "Болгарская фонетическая (классическая)"
-BULGARIAN_PHONETIC_BDS = "Болгарская фонетическая (BDS 5237-2006)"
-BURMESE = "Бирманская"
-CANADIAN_FRENCH = "Канадская (французская традиционная)"
-CANADIAN_MULTILINGUAL = "Канадская стандартная (многоязычная)"
-CROATIAN = "Хорватская"
-CZECH = "Чешская"
-CZECH_QWERTY = "Чешская (QWERTY)"
-DANISH = "Датская"
-DEVANAGARI = "Деванагари - инскрипт"
-DUTCH = "Голландская"
-ESPERANTO = "Эсперанто"
-ESTONIAN = "Эстонская"
-GERMAN_ERGO = "Немецкая (de_ergo)"
-GERMAN_NEO = "Немецкая (NEO-1.1)"
-GERMAN_RISTOME = "Немецкая (RISTOME)"
-GERMAN = "Немецкая"
-GREEK = "Греческая"
-GUJARATI = "Гуджарати"
-IRISH = "Ирландская"
-FAEROESE = "Фарерская"
-FINNISH = "Финская"
-FRENCH = "Французская"
-GEORGIAN = "Грузинская"
-HEBREW = "Иврит"
-HUNGARIAN = "Венгерская"
-ICELANDIC = "Исландская"
-ITALIAN = "Итальянская"
-JAPANESE = "Японская"
-KAZAKH = "Казахская"
-KOREAN = "Корейская"
-LATIN_AMERICAN = "Латиноамериканская"
-LATVIAN = "Латышская"
-LATVIAN_QWERTY = "Латышская (QWERTY)"
-LITHUANIAN = "Литовская"
-MACEDONIAN = "Македонская (FYROM)"
-MALAYALAM = "Малаялам"
-NORWEGIAN = "Норвежская"
-POLISH_214 = "Польская (214)"
-POLISH_PROGRAMMERS = "Польская (программистская)"
-PORTUGESE = "Португальская (Португалия)"
-PORTUGESE_BRAZILIAN = "Португальская (Бразилия ABNT2)"
-ROMANIAN_LEGACY = "Румынская (традиционная)"
-ROMANIAN_STANDARD = "Румынская (стандартная)"
-RUSSIAN = "Русская"
-RUSSIAN_TYPEWRITER = "Русская (машинопись)"
-SERBIAN_CYRILLIC = "Сербская (кириллица)"
-SERBIAN_LATIN = "Сербская (латиница)"
-SLOVAK = "Словацкая"
-SLOVAK_QWERTY = "Словацкая (QWERTY)"
-SPANISH = "Испанская"
-SWEDISH = "Шведская"
-SWISS_FRENCH = "Швейцарская французская"
-SWISS_GERMAN = "Швейцарская немецкая"
-TATAR = "Татарская"
-THAI_KEDMANEE = "Тайская Кедмани"
-THAI_KEDMANEE_NON_SHIFTLOCK = "Тайская Кедмани (без ShiftLock)"
-THAI_PATTACHOTE = "Тайская Паташот"
-THAI_PATTACHOTE_NON_SHIFTLOCK = "Тайская Паташот (без ShiftLock)"
-TURKISH_Q = "Турецкая Q"
-TURKISH_F = "Турецкая F"
-UK = "Британская"
-UKRAINIAN = "Украинская"
-UKRAINIAN_STUDENT = "Украинская (студенческая)"
-US = "США"
-US_ARABIC = "США английская табличная для IBM арабского 238_L"
-US_DVORAK = "США - по Двораку"
-US_DVORAK_LEFT = "США - по Двораку для левой руки"
-US_DVORAK_RIGHT = "США - по Двораку для правой руки"
-US_INTERNATIONAL = "США - международная"
-UZBEK_CYRILLIC = "Узбекская кириллица"
-VIETNAMESE = "Вьетнамская"
-
-
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
 
@@ -2897,6 +2420,9 @@ SAMSS_SERVICE_DESCRIPTION="El arranque de este servicio señala a otros servicio
 
 SCHEDULE_SERVICE="Programador de tareas"
 SCHEDULE_SERVICE_DESCRIPTION="Permite iniciar programas automáticamente en unas horas o instantes específicos."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Servidor"
 SERVER_SERVICE_DESCRIPTION="Ofrece compatibilidad para archivos, impresoras y recursos en la red."
@@ -3014,6 +2540,627 @@ US_INTERNATIONAL = "EEUU Internacional"
 UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
 VIETNAMESE = "Vietnamita"
 
+; LANG_POLISH SUBLANG_NEUTRAL
+[Strings.0015]
+
+; Services names and descriptions
+AUDIO_SERVICE="Usługa Audio"
+AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
+
+BITS_SERVICE="Usługa inteligentnego transferu w tle"
+BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
+
+BROWSER_SERVICE="Przeglądarka komputera"
+BROWSER_SERVICE_DESCRIPTION="Utrzymuje aktualną listę komputerów w sieci i dostarcza ją do komputerów wyznaczonych jako przeglądarki."
+
+DCOMLAUNCH_SERVICE="Usługa DcomLaunch"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Namiastka usługi DcomLaunch"
+
+EVENTLOG_SERVICE="Dziennik zdarzeń"
+EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
+
+MSISERVER_SERVICE="Instalator ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Dodaje, modyfikuje i usuwa aplikacje dostarczane jako pakiet MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Logowanie do sieci"
+NETLOGON_SERVICE_DESCRIPTION="Obsługuje uwierzytelnienie przekazjące zdarzeż logowania na konta w komputerach domeny."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Wykrywa zmiany w sprzęcie i instaluje potrzebne oprogramowanie, jeśli to możliwe."
+
+RPCSS_SERVICE="Zdalne wykonywanie procedur"
+RPCSS_SERVICE_DESCRIPTION="Podsystem RPC, który jest odpowiedzialny za zdalne wykonywanie procedur na tym komputerze."
+
+SAMSS_SERVICE="Menedżer kont zabezpieczeń"
+SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że Menedżer kont zabezpieczeń jest gotowy do akceptowania żądań. Wyłączenie tej usługi spowoduje, że inne usługi w systemie nie będą powiadamiane o gotowości Menedżera kont zabezpieczeń, przez co te usługi mogą być uruchamiane nieprawidłowo. Tej usługi nie należy wyłączać."
+
+SCHEDULE_SERVICE="Usługa Harmonogram"
+SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
+SERVER_SERVICE="Serwer"
+SERVER_SERVICE_DESCRIPTION="Oferuje udostępnianie w sieci plików, drukarek i potoków dla tego komputera."
+
+SPOOLER_SERVICE="Bufor wydruku"
+SPOOLER_SERVICE_DESCRIPTION="Ładuje pliki do pamięci w celu późniejszego wydrukowania."
+
+TCPSVCS_SERVICE="Podstawowe usługi TCP/IP"
+TCPSVCS_SERVICE_DECRIPTION="Oferuje następujące usługi TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Usługa ReactOS Telnet"
+TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
+
+THEMES_SERVICE="Motywy"
+THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów."
+
+WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."
+
+WLANSVC_SERVICE="Usługa WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
+
+WORKSTATION_SERVICE="Stacja robocza"
+WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
+
+WUAUSERV_SERVICE="Aktualizacje automatyczne"
+WUAUSERV_SERVICE_DESCRIPTION="Namiastka usługi Aktualizacje automatyczne."
+
+; Keyboard layouts
+ALBANIAN = "Albański"
+ARABIC_101 = "Arabski (101)"
+ARABIC_102 = "Arabski (102)"
+ARABIC_102_AZERTY = "Arabski (102, AZERTY)"
+ARMENIAN_EASTERN = "Armeński wschodni"
+ARMENIAN_WESTERN = "Armeński zachodni"
+ASSAMESE = "ASSAMESE - INSCRIPT"
+AZERI_CYRILLIC = "Azerski (Cyrylica)"
+AZERI_LATIN = "Azerski (Latin)"
+BELARUSIAN = "Białoruski"
+BELGIAN_DUTCH = "Belgijski (Period)"
+BELGIAN_FRENCH = "Belgijski Francuski"
+BENGALI = "Bengalski"
+BENGALI_INSCRIPT = "Bengalski - INSCRIPT"
+BULGARIAN_BDS = "Bułgarski BDS 5237-1978"
+BULGARIAN_PHONETIC = "Bułgarski (Fonetyczny)"
+BULGARIAN_PHONETIC_BDS = "Bułgarski (Fonetyczny, BDS)"
+BURMESE = "Burmański"
+CANADIAN_FRENCH = "Kanadyjski francuski (Legacy)"
+CANADIAN_MULTILINGUAL = "Kanadyjski wielojęzykowy"
+CROATIAN = "Chorwacki"
+CZECH = "Czeski"
+CZECH_QWERTY = "Czeski (QWERTY)"
+DANISH = "Duński"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Holenderski"
+ESPERANTO = "Esperanto"
+ESTONIAN = "Estoński"
+GERMAN_ERGO = "Niemiecki (de_ergo)"
+GERMAN_NEO = "Niemiecki (NEO-1.1)"
+GERMAN_RISTOME = "Niemiecki (RISTOME)"
+GERMAN = "Niemiecki"
+GREEK = "Grecki"
+GUJARATI = "Gujarati"
+IRISH = "Irlandzki"
+FAEROESE = "Faeroese"
+FINNISH = "Fiński"
+FRENCH = "Francuski"
+GEORGIAN = "Gruziński"
+HEBREW = "Hebrajski"
+HUNGARIAN = "Węgierski"
+ICELANDIC = "Islandzki"
+ITALIAN = "Włoski"
+JAPANESE = "Japoński"
+KAZAKH = "Kazachski"
+KOREAN = "Koreański"
+LATIN_AMERICAN = "Latynoamerykański"
+LATVIAN = "Łotewski"
+LATVIAN_QWERTY = "Łotewski (QWERTY)"
+LITHUANIAN = "Litewski"
+MACEDONIAN = "Macedoński (FYRO)"
+MALAYALAM = "Malajalam"
+NORWEGIAN = "Norweski"
+POLISH_214 = "Polski (214)"
+POLISH_PROGRAMMERS = "Polski (Programisty)"
+PORTUGESE = "Portugalski"
+PORTUGESE_BRAZILIAN = "Portugalski (Brazylijski ABNT2)"
+ROMANIAN_LEGACY = "Rumuński (Legacy)"
+ROMANIAN_STANDARD = "Rumuński (Standard)"
+RUSSIAN = "Rosyjski"
+RUSSIAN_TYPEWRITER = "Rosyjski (Maszynisty)"
+SERBIAN_CYRILLIC = "Serbski (Cyrylica)"
+SERBIAN_LATIN = "Serbski (Latin)"
+SLOVAK = "Słowacki"
+SLOVAK_QWERTY = "Słowacki (QWERTY)"
+SPANISH = "Hiszpański"
+SWEDISH = "Szwedzki"
+SWISS_FRENCH = "Szwajcarski Francuski"
+SWISS_GERMAN = "Szwajcarski Niemiecki"
+TATAR = "Tatarski"
+THAI_KEDMANEE = "Tajski Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Tajski (Kedmanee, bez ShiftLock)"
+THAI_PATTACHOTE = "Tajski Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Tajski (Pattachote bez ShiftLock)"
+TURKISH_Q = "Turecki Q"
+TURKISH_F = "Turecki F"
+UK = "Angielski (Wielka Brytania)"
+UKRAINIAN = "Ukraiński"
+UKRAINIAN_STUDENT = "Ukraiński (Student)"
+US = "Angielski (USA)"
+US_ARABIC = "Tablica Angielska (US) dla Arabskiego (IBM 238_L)"
+US_DVORAK = "Angielski (US-Dvorak)"
+US_DVORAK_LEFT = "Angielski (Dvoraka dla leworęcznych)"
+US_DVORAK_RIGHT = "Angielski (Dvoraka dla praworęcznych)"
+US_INTERNATIONAL = "Międzynarodowy (USA)"
+UZBEK_CYRILLIC = "Uzbecki (Cyrylica)"
+VIETNAMESE = "Wietnamski"
+
+; LANG_PORTUGUESE SUBLANG_NEUTRAL
+[Strings.0016]
+
+; Services names and descriptions
+AUDIO_SERVICE="Serviços de Audio do ReactOS"
+AUDIO_SERVICE_DESCRIPTION="Fornece recursos de áudio para aplicações"
+
+BITS_SERVICE="Serviço de transferência inteligente em segundo plano"
+BITS_SERVICE_DESCRIPTION="Transfere dados entre clientes e servidores em segundo plano."
+
+BROWSER_SERVICE="Navegador de computador"
+BROWSER_SERVICE_DESCRIPTION="Mantém uma lista actualizada de computadores na rede e fornece essa lista aos computadores designados como navegadores."
+
+DCOMLAUNCH_SERVICE="DCOM - Lançador de processo de servidor"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Fornece funcionalidades de lançamento para serviços DCOM."
+
+EVENTLOG_SERVICE="Registo de Eventos"
+EVENTLOG_SERVICE_DESCRIPTION="Regista eventos ou mensagens enviadas pelo sistema operativo num banco de dados acessíveis através do visualizador de eventos."
+
+MSISERVER_SERVICE="Instalador do ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Controla a instalação, manutenção e remoção de software empacotado como um MSI (Instalador do Windows)."
+
+NETLOGON_SERVICE="Inicio de sessão de rede"
+NETLOGON_SERVICE_DESCRIPTION="Suporta a autenticação pass-through dos eventos de início de sessão de conta para os computadores num domínio."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Permite que o computador identifique e se adapte a alterações de hardware com pouca ou nenhuma intervenção do utilizador."
+
+RPCSS_SERVICE="Chamada de procedimento remoto (RPC)"
+RPCSS_SERVICE_DESCRIPTION="Fornece um mapeador de pontos finais e outros serviços RPC."
+
+SAMSS_SERVICE="Gestor de contas de segurança"
+SAMSS_SERVICE_DESCRIPTION="A iniciação deste serviço sinaliza a outros serviços que o Gestor de contas de segurança (SAM) está pronto para aceitar solicitações. A desactivação deste serviço impedirá que outros serviços no sistema sejam notificados quando o SAM estiver pronto, o que provocará a incorrecta iniciação desses serviços. Este serviço não deve ser desactivado."
+
+SCHEDULE_SERVICE="Programador de tarefas"
+SCHEDULE_SERVICE_DESCRIPTION="Permite ao utilizador configurar e agendar tarefas automatizadas neste computador. Se este serviço estiver parado, estas tarefas não serão executadas nas horas agendadas."
+
+SECLOGON_SERVICE="Inicio de sessão secundário"
+SECLOGON_SERVICE_DESCRIPTION="Activa processos de início sob credenciais alternativas."
+
+SERVER_SERVICE="Servidor"
+SERVER_SERVICE_DESCRIPTION="Suporta a partilha de ficheiros, impressoras e recursos de rede."
+
+SPOOLER_SERVICE="Spooler de impressão"
+SPOOLER_SERVICE_DESCRIPTION="Carrega ficheiros na memória para impressão posterior."
+
+TCPSVCS_SERVICE="Serviços TCP/IP simples"
+TCPSVCS_SERVICE_DECRIPTION="Soporta os seguintes serviços TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Serviço Telnet do ReactOS"
+TELNETD_SERVICE_DESCRIPTION="Permite que um utilizador remoto inicie sessão e execute programas neste computador."
+
+THEMES_SERVICE="Temas"
+THEMES_SERVICE_DESCRIPTION="Fornece a gestão de temas por parte dos utilizadores.."
+
+WINMGMT_SERVICE="Infra-estrutura de gestão do ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Fornece interface para informações de gestão do sistema."
+
+WLANSVC_SERVICE="Serviço WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Serviço de redes inalámbricas WLAN."
+
+WORKSTATION_SERVICE="Estação de trabalho"
+WORKSTATION_SERVICE_DESCRIPTION="Cria e mantém cliente de ligações de rede a servidores remotos."
+
+WUAUSERV_SERVICE="Actualizações automáticas"
+WUAUSERV_SERVICE_DESCRIPTION="Permite a transferência e instalação de actualizações do ReactOS."
+
+; Keyboard layouts
+ALBANIAN = "Albanês"
+ARABIC_101 = "Árabe (101)"
+ARABIC_102 = "Árabe (102)"
+ARABIC_102_AZERTY = "Árabe (102) AZERTY"
+ARMENIAN_EASTERN = "Arménio oriental"
+ARMENIAN_WESTERN = "Arménio ocidental"
+ASSAMESE = "Asamês"
+AZERI_CYRILLIC = "Azerí cirílico"
+AZERI_LATIN = "Azerí latino"
+BELARUSIAN = "Bielorrusso"
+BELGIAN_DUTCH = "Belga (Holandês)"
+BELGIAN_FRENCH = "Belga (Francês)"
+BENGALI = "Bengalí"
+BENGALI_INSCRIPT = "Bengalí - INSCRIPT"
+BULGARIAN_BDS = "Búlgaro BDS 5237-1978"
+BULGARIAN_PHONETIC = "Búlgaro fonético clássico"
+BULGARIAN_PHONETIC_BDS = "Búlgaro fonético BDS 5237-2006"
+BURMESE = "Birmano"
+CANADIAN_FRENCH = "Francês canadense (Herdado)"
+CANADIAN_MULTILINGUAL = "Canadense estandarte multilingüe"
+CROATIAN = "Croata"
+CZECH = "Checo"
+CZECH_QWERTY = "Checo (QWERTY)"
+DANISH = "Danês"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Holandês"
+ESPERANTO = "Esperanto"
+ESTONIAN = "Estonio"
+GERMAN_ERGO = "Alemão (de_ergo)"
+GERMAN_NEO = "Alemão (NEO-1.1)"
+GERMAN_RISTOME = "Alemão (RISTOME)"
+GERMAN = "Alemão"
+GREEK = "Grêgo"
+GUJARATI = "Gujarati"
+IRISH = "Irlandês"
+FAEROESE = "Faeroese"
+FINNISH = "Finês"
+FRENCH = "Francês"
+GEORGIAN = "Georgiano"
+HEBREW = "Hebreu"
+HUNGARIAN = "Húngaro"
+ICELANDIC = "Islandês"
+ITALIAN = "Italiano"
+JAPANESE = "Japonês"
+KAZAKH = "Kazajo"
+KOREAN = "Coreano"
+LATIN_AMERICAN = "Espanhol (America Latina)"
+LATVIAN = "Letão"
+LATVIAN_QWERTY = "Letão (QWERTY)"
+LITHUANIAN = "Lituano"
+MACEDONIAN = "Macedonia (FYRO)"
+MALAYALAM = "Malabari"
+NORWEGIAN = "Norueguês"
+POLISH_214 = "Polaco (214)"
+POLISH_PROGRAMMERS = "Polaco (Programmers)"
+PORTUGESE = "Português (Portugal)"
+PORTUGESE_BRAZILIAN = "Português (Brasil ABNT2)"
+ROMANIAN_LEGACY = "Romano (Legacy)"
+ROMANIAN_STANDARD = "Romano (Standard)"
+RUSSIAN = "Russo"
+RUSSIAN_TYPEWRITER = "Russo (Máquina de escrever)"
+SERBIAN_CYRILLIC = "Sérvio (Cirílico)"
+SERBIAN_LATIN = "Sérvio (Latin)"
+SLOVAK = "Eslovaco"
+SLOVAK_QWERTY = "Eslovaco (QWERTY)"
+SPANISH = "Espanhol"
+SWEDISH = "Sueco"
+SWISS_FRENCH = "Suiço (Francês)"
+SWISS_GERMAN = "Suiço (Alemão)"
+TATAR = "Tártaro"
+THAI_KEDMANEE = "Tailandês Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Tailandês Kedmanee (sin-BloqMayus)"
+THAI_PATTACHOTE = "Tailandês Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Tailandês Pattachote (sin-BloqMayus)"
+TURKISH_Q = "Turco Q"
+TURKISH_F = "Turco F"
+UK = "Reino Unido"
+UKRAINIAN = "Ucraniano"
+UKRAINIAN_STUDENT = "Ucraniano (Estudantil)"
+US = "Estados Unidos"
+US_ARABIC = "Inglês EEUU (IBM Arabic 238_L)"
+US_DVORAK = "EEUU-Dvorak"
+US_DVORAK_LEFT = "EEUU Dvorak para surdos"
+US_DVORAK_RIGHT = "EEUU Dvorak para destros"
+US_INTERNATIONAL = "EEUU Internacional"
+UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
+VIETNAMESE = "Vietnamita"
+
+; LANG_ROMANIAN SUBLANG_NEUTRAL
+[Strings.0018]
+
+; Services names and descriptions
+AUDIO_SERVICE="Serviciu audio"
+AUDIO_SERVICE_DESCRIPTION="Oferă aplicațiilor funcționalități audio."
+
+BITS_SERVICE="Serviciu de transfer inteligent în fundal"
+BITS_SERVICE_DESCRIPTION="Transferă fișiere în fundal utilizând lățimea de bandă nefolosită a rețelei."
+
+DCOMLAUNCH_SERVICE="DcomLaunch service"
+DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
+
+EVENTLOG_SERVICE="Jurnal de evenimente"
+EVENTLOG_SERVICE_DESCRIPTION="Jurnalizează mesajele sau evenimentele transmise de sistemul de operare într-o bază de date accesibilă cu instrumentul „observator de evenimente”."
+
+MSISERVER_SERVICE="Instalare ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Controlează instalarea, mentenanța, și eliminarea de programe de instalare MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Autentificare în rețea"
+NETLOGON_SERVICE_DESCRIPTION="Stabilește un canal securizat către un controlor de domentiu pentru autentificarea domeniului."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Detectează schimbările în configurația fizică și instalează programele necesare dacă este posibil."
+
+RPCSS_SERVICE="Apel procedural la distanță"
+RPCSS_SERVICE_DESCRIPTION="Subsistemul responsabil pentru apel procedural la distanță în calculatorul local."
+
+SAMSS_SERVICE="Security Accounts Manager"
+SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
+
+SCHEDULE_SERVICE="Serviciu de planificare"
+SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
+SERVER_SERVICE="Server"
+SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
+
+SPOOLER_SERVICE="Coadă de imprimare"
+SPOOLER_SERVICE_DESCRIPTION="Încarcă fișierele în memorie pentru imprimare ulterioară."
+
+TCPSVCS_SERVICE="Servicii TCP/IP simple"
+TCPSVCS_SERVICE_DECRIPTION="Permite următoarele servicii (protocoale) TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Serviciu Telnet"
+TELNETD_SERVICE_DESCRIPTION="Serviciul Telnet al ReactOS."
+
+THEMES_SERVICE="Teme"
+THEMES_SERVICE_DESCRIPTION="Permite teme pentru interfața grafică de utilizare."
+
+WINMGMT_SERVICE="Infrastructură de gestiune"
+WINMGMT_SERVICE_DESCRIPTION="Furnizează interfața pentru informațiile de gestiune ale sistemului."
+
+WLANSVC_SERVICE="Serviciu WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Serviciu pentru rețele locale fără fir."
+
+WORKSTATION_SERVICE="Stație de lucru"
+WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și menținerea conexiunilor la servere în rețea."
+
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+
+; Keyboard layouts
+ALBANIAN = "Albaneză"
+ARABIC_101 = "Arabă (101)"
+ARABIC_102 = "Arabă (102)"
+ARABIC_102_AZERTY = "Arabă (102) AZERTY"
+ARMENIAN_EASTERN = "Armeană Estică"
+ARMENIAN_WESTERN = "Armeană Vestică"
+ASSAMESE = "Assameză - INSCRIPT"
+AZERI_CYRILLIC = "Azeră alfabet chirilic"
+AZERI_LATIN = "Azeră alfabet latin"
+BELARUSIAN = "Belarusă"
+BELGIAN_DUTCH = "Belgiană (Olandeză)"
+BELGIAN_FRENCH = "Belgiană (Franceză)"
+BENGALI = "Bengaleză"
+BENGALI_INSCRIPT = "Bengaleză - INSCRIPT"
+BULGARIAN_BDS = "Bulgară BDS 5237-1978"
+BULGARIAN_PHONETIC = "Bulgară, fonetică clasică"
+BULGARIAN_PHONETIC_BDS = "Bulgară, fonetică BDS 5237-2006"
+BURMESE = "Birmană"
+CANADIAN_FRENCH = "Canadiană Franceză (moștenire)"
+CANADIAN_MULTILINGUAL = "Canadiană Multilingvă Standard"
+CROATIAN = "Croată"
+CZECH = "Cehă"
+CZECH_QWERTY = "Cehă (QWERTY)"
+DANISH = "Daneză"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Olandeză"
+ESPERANTO = "Esperanto"
+ESTONIAN = "Estonă"
+GERMAN_ERGO = "Germană (de_ergo)"
+GERMAN_NEO = "Germană (NEO-1.1)"
+GERMAN_RISTOME = "Germană (RISTOME)"
+GERMAN = "Germană"
+GREEK = "Greacă"
+GUJARATI = "Gujarati"
+IRISH = "Irlandeză"
+FAEROESE = "Faeroese"
+FINNISH = "Finlandeză"
+FRENCH = "Franceză"
+GEORGIAN = "Georgiană"
+HEBREW = "Abraică"
+HUNGARIAN = "Maghiară"
+ICELANDIC = "Islandeză"
+ITALIAN = "Italiană"
+JAPANESE = "Japoneză"
+KAZAKH = "Kazahă"
+KOREAN = "Coreeană"
+LATIN_AMERICAN = "Iberoamericană"
+LATVIAN = "Letonă"
+LATVIAN_QWERTY = "Letonă (QWERTY)"
+LITHUANIAN = "Lituaniană"
+MACEDONIAN = "Macedonă (FYRO)"
+MALAYALAM = "Malayalam"
+NORWEGIAN = "Norvegiană"
+POLISH_214 = "Poloneză (214)"
+POLISH_PROGRAMMERS = "Poloneză (programatori)"
+PORTUGESE = "Portugheză (Portugalia)"
+PORTUGESE_BRAZILIAN = "Portugheză (Braziliană ABNT2)"
+ROMANIAN_LEGACY = "Română (moștenire)"
+ROMANIAN_STANDARD = "Română (standard)"
+RUSSIAN = "Rusă"
+RUSSIAN_TYPEWRITER = "Rusă (dactilografiere)"
+SERBIAN_CYRILLIC = "Sârbă (alfabet chirilic)"
+SERBIAN_LATIN = "Sârbă (alfabet latin)"
+SLOVAK = "Slovacă"
+SLOVAK_QWERTY = "Slovacă (QWERTY)"
+SPANISH = "Spaniolă"
+SWEDISH = "Suedeză"
+SWISS_FRENCH = "Elvețiană (Franceză)"
+SWISS_GERMAN = "Elvețiană (Germană)"
+TATAR = "Tatară"
+THAI_KEDMANEE = "Thai Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Thai Kedmanee (non-ShiftLock)"
+THAI_PATTACHOTE = "Thai Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Thai Pattachote (non-ShiftLock)"
+TURKISH_Q = "Turcă Q"
+TURKISH_F = "Turcă F"
+UK = "Britanică"
+UKRAINIAN = "Ukraineană"
+UKRAINIAN_STUDENT = "Ukraineană (studențească)"
+US = "Statele Unite"
+US_ARABIC = "Engleză SUA (IBM Arabic 238_L)"
+US_DVORAK = "Dvorak SUA"
+US_DVORAK_LEFT = "Dvorak SUA pentru mâna stângă"
+US_DVORAK_RIGHT = "Dvorak SUA pentru mâna dreaptă"
+US_INTERNATIONAL = "SUA internațională"
+UZBEK_CYRILLIC = "Uzbecă (alfabet chirilic)"
+VIETNAMESE = "Vietnameză"
+
+; LANG_RUSSIAN SUBLANG_NEUTRAL
+[Strings.0019]
+
+; Services names and descriptions
+AUDIO_SERVICE="Звук и аудио"
+AUDIO_SERVICE_DESCRIPTION="Обеспечивает звуковыми устройствами программы."
+
+BITS_SERVICE="Фоновая интеллектуальная служба передачи (BITS)"
+BITS_SERVICE_DESCRIPTION="Обеспечивает передачу данных между клиентами и серверами в фоновом режиме с использованием пропускной способности простаивающей сети."
+
+BROWSER_SERVICE="Обозреватель компьютеров"
+BROWSER_SERVICE_DESCRIPTION="Обслуживает список компьютеров в сети и выдает его программам по запросу."
+
+DCOMLAUNCH_SERVICE="DcomLaunch service"
+DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
+
+EVENTLOG_SERVICE="Журнал событий"
+EVENTLOG_SERVICE_DESCRIPTION="Регистрирует события или сообщения, отправленные операционной системой в базе данных, доступной через средство просмотра журнала событий."
+
+MSISERVER_SERVICE="Установщик ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Управляет установкой, изменением и удалением программ, упакованных в MSI (установщик Windows)."
+
+NETLOGON_SERVICE="Сетевой вход в систему"
+NETLOGON_SERVICE_DESCRIPTION="Устанавливает безопасный канал связи с контроллером домена для проверки его подлинности."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Обнаруживает изменения оборудования и по возможности устанавливает необходимое программное обеспечение."
+
+RPCSS_SERVICE="Удаленный вызов процедур (RPC)"
+RPCSS_SERVICE_DESCRIPTION="Подсистема для вызова удаленных процедур на локальной машине."
+
+SAMSS_SERVICE="Security Accounts Manager"
+SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
+
+SCHEDULE_SERVICE="Планировщик заданий"
+SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
+
+SECLOGON_SERVICE="Вторичный вход в систему"
+SECLOGON_SERVICE_DESCRIPTION="Позволяет запускать процессы под другими учётными данными."
+
+SERVER_SERVICE="Сервер"
+SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."
+
+SPOOLER_SERVICE="Диспетчер очереди печати"
+SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память для последующей печати."
+
+TCPSVCS_SERVICE="Простые службы TCP/IP"
+TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="ReactOS Telnet Service"
+TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
+
+THEMES_SERVICE="Темы"
+THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
+
+WINMGMT_SERVICE="Инструментарий управления ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Предоставляет общий интерфейс для доступа к информации об управлении операционной системой."
+
+WLANSVC_SERVICE="Беспроводная локальная сеть (WLAN)"
+WLANSVC_SERVICE_DESCRIPTION="Обеспечивает поддержку беспроводной сети."
+
+WORKSTATION_SERVICE="Рабочая станция"
+WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку сетевых подключений и связь."
+
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+
+; Keyboard layouts
+ALBANIAN = "Албанская"
+ARABIC_101 = "Арабская (101)"
+ARABIC_102 = "Арабская (102)"
+ARABIC_102_AZERTY = "Арабская (102) AZERTY"
+ARMENIAN_EASTERN = "Армянская восточная"
+ARMENIAN_WESTERN = "Армянская западная"
+ASSAMESE = "Ассамская - инскрипт"
+AZERI_CYRILLIC = "Азербайджанская (кир)"
+AZERI_LATIN = "Азербайджанская (лат)"
+BELARUSIAN = "Белорусская"
+BELGIAN_DUTCH = "Бельгийская (голландская)"
+BELGIAN_FRENCH = "Бельгийская (французская)"
+BENGALI = "Бенгальская"
+BENGALI_INSCRIPT = "Бенгальская - инскрипт"
+BULGARIAN_BDS = "Болгарская (BDS 5237-1978)"
+BULGARIAN_PHONETIC = "Болгарская фонетическая (классическая)"
+BULGARIAN_PHONETIC_BDS = "Болгарская фонетическая (BDS 5237-2006)"
+BURMESE = "Бирманская"
+CANADIAN_FRENCH = "Канадская (французская традиционная)"
+CANADIAN_MULTILINGUAL = "Канадская стандартная (многоязычная)"
+CROATIAN = "Хорватская"
+CZECH = "Чешская"
+CZECH_QWERTY = "Чешская (QWERTY)"
+DANISH = "Датская"
+DEVANAGARI = "Деванагари - инскрипт"
+DUTCH = "Голландская"
+ESPERANTO = "Эсперанто"
+ESTONIAN = "Эстонская"
+GERMAN_ERGO = "Немецкая (de_ergo)"
+GERMAN_NEO = "Немецкая (NEO-1.1)"
+GERMAN_RISTOME = "Немецкая (RISTOME)"
+GERMAN = "Немецкая"
+GREEK = "Греческая"
+GUJARATI = "Гуджарати"
+IRISH = "Ирландская"
+FAEROESE = "Фарерская"
+FINNISH = "Финская"
+FRENCH = "Французская"
+GEORGIAN = "Грузинская"
+HEBREW = "Иврит"
+HUNGARIAN = "Венгерская"
+ICELANDIC = "Исландская"
+ITALIAN = "Итальянская"
+JAPANESE = "Японская"
+KAZAKH = "Казахская"
+KOREAN = "Корейская"
+LATIN_AMERICAN = "Латиноамериканская"
+LATVIAN = "Латышская"
+LATVIAN_QWERTY = "Латышская (QWERTY)"
+LITHUANIAN = "Литовская"
+MACEDONIAN = "Македонская (FYROM)"
+MALAYALAM = "Малаялам"
+NORWEGIAN = "Норвежская"
+POLISH_214 = "Польская (214)"
+POLISH_PROGRAMMERS = "Польская (программистская)"
+PORTUGESE = "Португальская (Португалия)"
+PORTUGESE_BRAZILIAN = "Португальская (Бразилия ABNT2)"
+ROMANIAN_LEGACY = "Румынская (традиционная)"
+ROMANIAN_STANDARD = "Румынская (стандартная)"
+RUSSIAN = "Русская"
+RUSSIAN_TYPEWRITER = "Русская (машинопись)"
+SERBIAN_CYRILLIC = "Сербская (кириллица)"
+SERBIAN_LATIN = "Сербская (латиница)"
+SLOVAK = "Словацкая"
+SLOVAK_QWERTY = "Словацкая (QWERTY)"
+SPANISH = "Испанская"
+SWEDISH = "Шведская"
+SWISS_FRENCH = "Швейцарская французская"
+SWISS_GERMAN = "Швейцарская немецкая"
+TATAR = "Татарская"
+THAI_KEDMANEE = "Тайская Кедмани"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Тайская Кедмани (без ShiftLock)"
+THAI_PATTACHOTE = "Тайская Паташот"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Тайская Паташот (без ShiftLock)"
+TURKISH_Q = "Турецкая Q"
+TURKISH_F = "Турецкая F"
+UK = "Британская"
+UKRAINIAN = "Украинская"
+UKRAINIAN_STUDENT = "Украинская (студенческая)"
+US = "США"
+US_ARABIC = "США английская табличная для IBM арабского 238_L"
+US_DVORAK = "США - по Двораку"
+US_DVORAK_LEFT = "США - по Двораку для левой руки"
+US_DVORAK_RIGHT = "США - по Двораку для правой руки"
+US_INTERNATIONAL = "США - международная"
+UZBEK_CYRILLIC = "Узбекская кириллица"
+VIETNAMESE = "Вьетнамская"
+
 ; LANG_TURKISH SUBLANG_NEUTRAL
 [Strings.041F]
 
@@ -3050,6 +3197,9 @@ SAMSS_SERVICE_DESCRIPTION="Bu hizmetin başlaması, diğer hizmetlere Güvenlik 
 
 SCHEDULE_SERVICE="Zamanlayıcı hizmeti"
 SCHEDULE_SERVICE_DESCRIPTION="Programların belirli zamanlarda başlatılmasını sağlar."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Sunucu"
 SERVER_SERVICE_DESCRIPTION="Ağda dosya, yazıcı ve kaynakların paylaşımını destekler."

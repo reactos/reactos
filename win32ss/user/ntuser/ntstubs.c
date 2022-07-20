@@ -9,14 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-DWORD
-APIENTRY
-NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
-{
-    STUB
-    return 0;
-}
-
 //
 // Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
 //
@@ -49,14 +41,6 @@ NtUserBitBltSysBmp(
 
    UserLeave();
    return Ret;
-}
-
-NTSTATUS
-APIENTRY
-NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
-{
-    STUB;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD
@@ -348,18 +332,6 @@ NtUserSetSysColors(
 
 DWORD
 APIENTRY
-NtUserUpdateInputContext(
-    HIMC hIMC,
-    DWORD Unknown1,
-    LPVOID pClientImc)
-{
-   STUB
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserUpdateInstance(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -414,14 +386,6 @@ NtUserYieldTask(VOID)
    STUB
 
    return 0;
-}
-
-HIMC
-APIENTRY
-NtUserCreateInputContext(PCLIENTIMC pClientImc)
-{
-    STUB;
-    return NULL;
 }
 
 DWORD
@@ -645,16 +609,6 @@ NtUserQueryInformationThread(IN HANDLE ThreadHandle,
 Quit:
     UserLeave();
     return Status;
-}
-
-DWORD
-APIENTRY
-NtUserQueryInputContext(
-    HIMC hIMC,
-    DWORD dwUnknown2)
-{
-    TRACE("NtUserQueryInputContext(%p, 0x%lX)\n", hIMC, dwUnknown2);
-    return 0;
 }
 
 BOOL
@@ -884,14 +838,6 @@ Quit:
     return Status;
 }
 
-DWORD
-APIENTRY
-NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
-{
-    STUB;
-    return 0;
-}
-
 BOOL
 APIENTRY
 NtUserSoundSentry(VOID)
@@ -1022,6 +968,5 @@ NtDxEngGetRedirectionBitmap(
     STUB;
     return 0;
 }
-
 
 /* EOF */

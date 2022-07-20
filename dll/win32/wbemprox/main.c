@@ -35,6 +35,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 static HINSTANCE instance;
 
+struct list *table_list;
+
 typedef HRESULT (*fnCreateInstance)( LPVOID *ppObj );
 
 typedef struct

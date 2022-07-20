@@ -23,6 +23,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&İçindekiler"
     IDS_INDEX        "&Dizin"
     IDS_SEARCH       "&Ara"

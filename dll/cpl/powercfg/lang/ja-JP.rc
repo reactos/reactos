@@ -127,13 +127,13 @@ END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
-FONT 8, "MS Shell Dlg"
+CAPTION "設定の保存"
+FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 104, 8
+    LTEXT "この電源設定を次の名前で保存:", -1, 7, 7, 104, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "なし"
     IDS_DEL_SCHEME "この電源設定を削除しますか: ""%s""?"
     IDS_DEL_SCHEME_TITLE "電源設定の削除"
-    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "電源設定を削除できません"
 END

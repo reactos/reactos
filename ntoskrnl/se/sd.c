@@ -1066,6 +1066,15 @@ SeValidSecurityDescriptor(
         return FALSE;
     }
 
+    /* Ensure the Owner SID is within the bounds of the security descriptor */
+    if ((SecurityDescriptor->Owner > Length) ||
+        (Length - SecurityDescriptor->Owner < sizeof(SID)))
+    {
+        DPRINT1("Owner SID not within bounds\n");
+        return FALSE;
+    }
+
+    /* Reference it */
     Sid = (PISID)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Owner);
     if (Sid->Revision != SID_REVISION)
     {
@@ -1073,6 +1082,7 @@ SeValidSecurityDescriptor(
         return FALSE;
     }
 
+    // NOTE: Same as SeLengthSid(Sid); but doesn't use hardcoded values.
     SdLength += (sizeof(SID) + (Sid->SubAuthorityCount - 1) * sizeof(ULONG));
     if (Length < SdLength)
     {
@@ -1089,6 +1099,15 @@ SeValidSecurityDescriptor(
             return FALSE;
         }
 
+        /* Ensure the Group SID is within the bounds of the security descriptor */
+        if ((SecurityDescriptor->Group > Length) ||
+            (Length - SecurityDescriptor->Group < sizeof(SID)))
+        {
+            DPRINT1("Group SID not within bounds\n");
+            return FALSE;
+        }
+
+        /* Reference it */
         Sid = (PSID)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Group);
         if (Sid->Revision != SID_REVISION)
         {
@@ -1096,6 +1115,7 @@ SeValidSecurityDescriptor(
             return FALSE;
         }
 
+        // NOTE: Same as SeLengthSid(Sid); but doesn't use hardcoded values.
         SdLength += (sizeof(SID) + (Sid->SubAuthorityCount - 1) * sizeof(ULONG));
         if (Length < SdLength)
         {
@@ -1113,18 +1133,27 @@ SeValidSecurityDescriptor(
             return FALSE;
         }
 
-        Acl = (PACL)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Dacl);
-        if ((Acl->AclRevision < MIN_ACL_REVISION) ||
-            (Acl->AclRevision > MAX_ACL_REVISION))
+        /* Ensure the DACL is within the bounds of the security descriptor */
+        if ((SecurityDescriptor->Dacl > Length) ||
+            (Length - SecurityDescriptor->Dacl < sizeof(ACL)))
         {
-            DPRINT1("Invalid DACL revision\n");
+            DPRINT1("DACL not within bounds\n");
             return FALSE;
         }
+
+        /* Reference it */
+        Acl = (PACL)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Dacl);
 
         SdLength += Acl->AclSize;
         if (Length < SdLength)
         {
             DPRINT1("Invalid DACL size\n");
+            return FALSE;
+        }
+
+        if (!RtlValidAcl(Acl))
+        {
+            DPRINT1("Invalid DACL\n");
             return FALSE;
         }
     }
@@ -1138,18 +1167,27 @@ SeValidSecurityDescriptor(
             return FALSE;
         }
 
-        Acl = (PACL)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Sacl);
-        if ((Acl->AclRevision < MIN_ACL_REVISION) ||
-            (Acl->AclRevision > MAX_ACL_REVISION))
+        /* Ensure the SACL is within the bounds of the security descriptor */
+        if ((SecurityDescriptor->Sacl > Length) ||
+            (Length - SecurityDescriptor->Sacl < sizeof(ACL)))
         {
-            DPRINT1("Invalid SACL revision\n");
+            DPRINT1("SACL not within bounds\n");
             return FALSE;
         }
+
+        /* Reference it */
+        Acl = (PACL)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Sacl);
 
         SdLength += Acl->AclSize;
         if (Length < SdLength)
         {
             DPRINT1("Invalid SACL size\n");
+            return FALSE;
+        }
+
+        if (!RtlValidAcl(Acl))
+        {
+            DPRINT1("Invalid SACL\n");
             return FALSE;
         }
     }

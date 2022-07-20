@@ -140,11 +140,9 @@ class CRecyclerDropTarget :
         }
 
         HRESULT WINAPI Drop(IDataObject *pDataObject,
-                                       DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+                            DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
         {
             TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
-
-            /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
 
             FORMATETC fmt;
             TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
@@ -155,7 +153,7 @@ class CRecyclerDropTarget :
             {
                 DWORD fMask = 0;
 
-                if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
+                if ((grfKeyState & MK_SHIFT) == MK_SHIFT)
                     fMask |= CMIC_MASK_SHIFT_DOWN;
 
                 _DoDeleteAsync(pDataObject, fMask);

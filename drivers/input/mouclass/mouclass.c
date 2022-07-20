@@ -812,7 +812,15 @@ ClassPnp(
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
-		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			if (NT_SUCCESS(Status))
 			{
 				InitializeObjectAttributes(&ObjectAttributes,

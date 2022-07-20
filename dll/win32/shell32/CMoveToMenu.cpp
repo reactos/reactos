@@ -100,6 +100,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
         }
         case BFFM_SELCHANGED:
         {
+            if (!this_)
+                break;
+
             WCHAR szPath[MAX_PATH];
             LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
 

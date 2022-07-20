@@ -92,7 +92,7 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
 VOID
 HalpInitializeInterrupts(VOID)
 {
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
 
     /* Fill out the IRQL mappings */
     RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
@@ -187,7 +187,7 @@ FASTCALL
 KfRaiseIrql(IN KIRQL NewIrql)
 {
     ARM_STATUS_REGISTER Flags;
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
     KIRQL CurrentIrql;
     ULONG InterruptMask;
 
@@ -232,7 +232,7 @@ FASTCALL
 KfLowerIrql(IN KIRQL NewIrql)
 {
     ARM_STATUS_REGISTER Flags;
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
     ULONG InterruptMask;
 
     /* Disableinterrupts */

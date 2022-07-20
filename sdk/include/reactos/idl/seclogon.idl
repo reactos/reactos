@@ -1,0 +1,49 @@
+/*
+ * Secondary Logon service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef struct _SECL_REQUEST
+{
+    [string] WCHAR *Username;
+    [string] WCHAR *Domain;
+    [string] WCHAR *Password;
+    [string] WCHAR *ApplicationName;
+    [string] WCHAR *CommandLine;
+    [string] WCHAR *CurrentDirectory;
+    DWORD dwLogonFlags;
+    DWORD dwCreationFlags;
+} SECL_REQUEST, *PSECL_REQUEST;
+
+typedef struct _SECL_RESPONSE
+{
+    ULONG ulError;
+} SECL_RESPONSE, *PSECL_RESPONSE;
+
+[
+    uuid(12b81e99-f207-4a4c-85d3-77b42f76fd14),
+    version(1.0),
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\seclogon]")
+]
+interface ISeclogon
+{
+    /* Function 0 */
+    void
+    __stdcall
+    SeclCreateProcessWithLogonW(
+        [in] handle_t hBinding,
+        [in, ref] SECL_REQUEST *pRequest,
+        [out, ref] SECL_RESPONSE *pResponse);
+
+    /* Function 1 */
+/*
+    void
+    __stdcall
+    SeclCreateProcessWithLogonExW(
+        [in] handle_t hBinding,
+        [in, ref] SECL_REQUEST *pRequest,
+        [out, ref] SECL_RESPONSE *pResponse);
+*/
+}

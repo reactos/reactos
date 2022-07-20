@@ -16,7 +16,7 @@
 #define COBJMACROS
 #include <shlobj.h>
 
-
+#include "../concfg/font.h"
 #include <alias.h>
 #include <history.h>
 #include "procinit.h"
@@ -2014,10 +2014,66 @@ CSR_API(SrvSetConsoleNlsMode)
 }
 
 /* API_NUMBER: ConsolepGetLangId */
-CSR_API(SrvGetConsoleLangId)
+CON_API(SrvGetConsoleLangId,
+        CONSOLE_GETLANGID, LangIdRequest)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    /*
+     * Quoting MS Terminal, see function GetConsoleLangId() at
+     * https://github.com/microsoft/terminal/blob/main/src/host/srvinit.cpp#L655
+     * "Only attempt to return the Lang ID if the Windows ACP on console
+     * launch was an East Asian Code Page."
+     *
+     * The underlying logic is as follows:
+     *
+     * - When the current user's UI language is *not* CJK, the user expects
+     *   to not see any CJK output to the console by default, even if its
+     *   output has been set to a CJK code page (this is possible when CJK
+     *   fonts are installed on the system). That is, of course, unless if
+     *   the attached console program chooses to actually output CJK text.
+     *   Whatever current language of the running program's thread should
+     *   be kept: STATUS_NOT_SUPPORTED is returned.
+     *
+     * - When the current user's UI language *is* CJK, the user expects to
+     *   see CJK output to the console by default when its code page is CJK.
+     *   A valid LangId is returned in this case to ensure this.
+     *   However, if the console code page is not CJK, then it is evident
+     *   that CJK text will not be able to be correctly shown, and therefore
+     *   we should fall back to a standard language that can be shown, namely
+     *   en-US english, instead of keeping the current language.
+     */
+
+    BYTE UserCharSet = CodePageToCharSet(GetACP());
+    if (!IsCJKCharSet(UserCharSet))
+        return STATUS_NOT_SUPPORTED;
+
+    /* Return a "best-suited" language ID corresponding
+     * to the active console output code page. */
+    switch (Console->OutputCodePage)
+    {
+/** ReactOS-specific: do nothing if the code page is UTF-8. This will allow
+ ** programs to naturally output in whatever current language they are. **/
+    case CP_UTF8:
+        return STATUS_NOT_SUPPORTED;
+/** End ReactOS-specific **/
+    case CP_JAPANESE:
+        LangIdRequest->LangId = MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT);
+        break;
+    case CP_KOREAN:
+        LangIdRequest->LangId = MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN);
+        break;
+    case CP_CHINESE_SIMPLIFIED:
+        LangIdRequest->LangId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+        break;
+    case CP_CHINESE_TRADITIONAL:
+        LangIdRequest->LangId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+        break;
+    default:
+        /* Default to en-US english otherwise */
+        LangIdRequest->LangId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+        break;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -333,7 +333,7 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
         case 0:        /* name */
             result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
-        case 1:        /* comment */
+        case 4:        /* comment */
             result = wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
@@ -581,7 +581,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
         {
             case 0:        /* name */
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
-            case 1:        /* comment */
+            case 4:        /* comment */
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
         }
     }
@@ -623,10 +623,9 @@ HRESULT WINAPI CControlPanelFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 
     /* Create the inner reg folder */
     HRESULT hr;
-    static const WCHAR* pszCPanelPath = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}";
     hr = CRegFolder_CreateInstance(&CLSID_ControlPanel,
                                    pidlRoot,
-                                   pszCPanelPath,
+                                   L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
                                    L"ControlPanel",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))

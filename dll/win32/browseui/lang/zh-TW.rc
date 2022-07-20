@@ -1,8 +1,5 @@
 /*
- * Traditional Chinese resource of browseui
- * translator: Henry Tang Ih 2016 (henrytang2@hotmail.com)
- *             Luo Yufan 2018 (njlyf2011@hotmail.com)
- *             Aobi Chan CL 2020 (eason066@gmail.com)
+ * Chinese (Traditional) resource of browseui
  *
  * Copyright 2009 Andrew Hill
  *
@@ -19,6 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -63,7 +64,7 @@ BEGIN
             MENUITEM "搜尋(&S)\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "我的最愛(&F)\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "媒體(&M)", IDM_EXPLORERBAR_MEDIA
-            MENUITEM "歷史(&H)\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "歷程記錄(&H)\tCtrl+H", IDM_EXPLORERBAR_HISTORY
             MENUITEM "資料夾(&O)", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
@@ -149,9 +150,9 @@ IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
-    LTEXT "文字選項(&X):", -1, 4, 2, 48, 15
+    LTEXT "文字選項(&X)：", -1, 4, 2, 48, 15
     COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "圖示選項(&N):", -1, 4, 20, 48, 15
+    LTEXT "圖示選項(&N)：", -1, 4, 20, 48, 15
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -161,13 +162,13 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "通過以下任何或所有條件搜尋。", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "部分或整個檔案名稱(&O):", -1, 10, 25, 500, 10
+    LTEXT "部分或整個檔案名稱(&O)：", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "檔案名稱的關鍵字(&W):", -1, 10, 50, 500, 10
+    LTEXT "檔案名稱的關鍵字(&W)：", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "在以下資料夾搜尋(&L):", -1, 10, 75, 500, 10
+    LTEXT "在以下資料夾搜尋(&L)：", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
     DEFPUSHBUTTON "搜尋(&R)", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
@@ -229,7 +230,7 @@ END
 
 STRINGTABLE
 BEGIN
-    1056 "包含顯示幫助的命令。"
+    1056 "包含顯示說明的命令。"
 END
 
 STRINGTABLE
@@ -246,8 +247,8 @@ END
 
 STRINGTABLE
 BEGIN
-    9250 "顯示程式資訊、版本號和版權資訊。"
-    9252 "顯示偵錯資訊。"
+    9250 "顯示程式資訊、版本號和著作權資訊。"
+    9252 "顯示除錯資訊。"
 END
 
 STRINGTABLE
@@ -261,7 +262,7 @@ END
 STRINGTABLE
 BEGIN
     9362 "開啟我的最愛資料夾。"
-    9363 "將當前頁添加到您的我的最愛列表。"
+    9363 "將目前頁面新增到您的我的最愛列表。"
 END
 
 STRINGTABLE
@@ -284,7 +285,7 @@ BEGIN
     9552 "顯示或隱藏一個瀏覽器列。"
     9553 "顯示搜索欄。"
     9554 "顯示我的最愛列。"
-    9555 "顯示歷史記錄列。"
+    9555 "顯示歷程記錄列。"
     9557 "顯示資料夾列。"
     9559 "顯示媒體欄。"
 END
@@ -305,7 +306,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL "|移至||"
-    IDS_GOBUTTONTIPTEMPLATE "移至 ""%s"""
+    IDS_GOBUTTONTIPTEMPLATE "移至「%s」"
 END
 
 STRINGTABLE
@@ -321,7 +322,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT "歷史(&H)\tCtrl+H"
+    IDS_HISTORYTEXT "歷程記錄(&H)\tCtrl+H"
 END
 
 STRINGTABLE
@@ -338,7 +339,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|上一頁|下一頁|上移|搜尋|資料夾|移動到|複製到|刪除|撤銷|檢視|停止|重新整理|首頁|連接磁碟|斷開連線|我的最愛|歷史|全螢幕|內容|剪下|複製|貼上|資料夾選項||"
+    IDS_STANDARD_TOOLBAR, "|上一頁|下一頁|上移|搜尋|資料夾|移動到|複製到|刪除|撤銷|檢視|停止|重新整理|首頁|連接磁碟|斷開連線|我的最愛|歷程記錄|全螢幕|內容|剪下|複製|貼上|資料夾選項||"
 END
 
 STRINGTABLE
@@ -351,7 +352,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_RESULTS "搜尋結果"
-    IDS_SEARCHINVALID "'%1' 不是一個有效的資料夾。"
+    IDS_SEARCHINVALID "「%1」不是一個有效的資料夾。"
     IDS_SEARCH_FOLDER "正在搜尋 %s"
     IDS_SEARCH_FILES_FOUND "找到 %u 個檔案"
     IDS_SEARCH_OPEN_FOLDER "開啟所屬資料夾(&F)"
@@ -363,5 +364,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS 檔案總管"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 檔案總管找不到 '%1'。請檢查拼寫並再試一次。"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 檔案總管找不到「%1」。請檢查拼寫並再試一次。"
 END

@@ -4,6 +4,11 @@
 
 #include "resource.h"
 
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Task Manager"
+#define REACTOS_STR_INTERNAL_NAME     "taskmgr"
+#define REACTOS_STR_ORIGINAL_FILENAME "taskmgr.exe"
+#include <reactos/version.rc>
+
 IDI_TASKMANAGER ICON "res/taskmgr.ico"
 IDI_WINDOW ICON "res/window.ico"
 IDI_WINDOWSM ICON "res/windowsm.ico"
@@ -98,6 +103,9 @@ IDB_TRAYICON BITMAP "res/trayicon.bmp"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

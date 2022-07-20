@@ -500,7 +500,7 @@ typedef struct _tagSynchronizedContext
     PVOID               Parameter;
 }tSynchronizedContext;
 
-typedef BOOLEAN (*tSynchronizedProcedure)(tSynchronizedContext *context);
+typedef BOOLEAN (NTAPI *tSynchronizedProcedure)(tSynchronizedContext *context);
 
 /**********************************************************
 LAZY release procedure returns buffers to VirtIO
