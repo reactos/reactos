@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Shell32
- * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Korean resource file
- * TRANSLATORS: Luke Luo <njlyf2011@hotmail.com>
+ * TRANSLATORS: Copyright 2022 Luke Luo <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
