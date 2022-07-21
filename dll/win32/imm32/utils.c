@@ -146,8 +146,8 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
         return FALSE;
 
     hDC = CreateCompatibleDC(NULL);
+
     ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, NULL, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
-    DeleteDC(hDC);
 
     if (ret)
     {
@@ -160,8 +160,10 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
         CopyMemory(pb, &bmci.bmciColors, cColors * sizeof(RGBTRIPLE));
         pb += cColors * sizeof(RGBTRIPLE);
 
-        CopyMemory(pb, bm.bmBits, bm.bmWidthBytes * bm.bmHeight);
+        ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
     }
+
+    DeleteDC(hDC);
 
     return ret;
 }
