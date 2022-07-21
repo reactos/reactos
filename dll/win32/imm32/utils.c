@@ -61,7 +61,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
     HBITMAP hbm = NULL;
     const BITMAPCOREINFO256 *pbmci;
     LPVOID pvBits;
-    DWORD ib = 0, cbBytes, cColors = 0;
+    DWORD ib, cbBytes, cColors;
     BITMAP bm;
 
     cbBytes = *(const DWORD *)pb;
