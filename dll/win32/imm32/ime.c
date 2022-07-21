@@ -355,12 +355,14 @@ Quit:
     return ret;
 }
 
-#define MAX_IMEMENU_BITMAP_BYTES 0x1200
+#define MAX_IMEMENU_BITMAP_BYTES 0x1000
 
 typedef struct tagIMEMENUITEM
 {
     IMEMENUITEMINFOW Info;
-    BYTE abBitmap[MAX_IMEMENU_BITMAP_BYTES]; // FIXME: Bitmaps
+    BYTE abChecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abUnchecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abItem[MAX_IMEMENU_BITMAP_BYTES];
 } IMEMENUITEM, *PIMEMENUITEM;
 
 typedef struct tagIMEMENU
@@ -372,6 +374,18 @@ typedef struct tagIMEMENU
     IMEMENUITEMINFOW Parent;
     IMEMENUITEM Items[ANYSIZE_ARRAY];
 } IMEMENU, *PIMEMENU;
+
+HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
+{
+    FIXME("\n");
+    return NULL;
+}
+
+BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb)
+{
+    FIXME("\n");
+    return FALSE;
+}
 
 /***********************************************************************
  *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
@@ -409,20 +423,35 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 
     cItems = ImmGetImeMenuItemsW(hIMC, pView->dwFlags, pView->dwType, pParent, pItems, cbItems);
     pView->dwItemCount = cItems;
+    if (cItems == 0)
+        goto Quit;
 
-    if (cItems > 0)
+    if (pItems)
     {
-        if (pItems)
+        for (i = 0; i < cItems; ++i)
         {
-            // FIXME: Bitmaps
-            for (i = 0; i < cItems; ++i)
+            pView->Items[i].Info = pItems[i];
+
+            // store bitmaps to bytes
+            if (pItems[i].hbmpChecked)
             {
-                pView->Items[i].Info = pItems[i];
+                Imm32StoreBitmapToBytes(pItems[i].hbmpChecked, pView->Items[i].abChecked);
+                DeleteObject(pItems[i].hbmpChecked);
+            }
+            if (pItems[i].hbmpUnchecked)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpUnchecked, pView->Items[i].abUnchecked);
+                DeleteObject(pItems[i].hbmpUnchecked);
+            }
+            if (pItems[i].hbmpItem)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpItem, pView->Items[i].abItem);
+                DeleteObject(pItems[i].hbmpItem);
             }
         }
-
-        ret = TRUE;
     }
+
+    ret = TRUE;
 
 Quit:
     if (pItems)
@@ -444,6 +473,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     PIMEMENU pView;
     DWORD i, cbView, dwItemCount;
     HWND hImeWnd;
+    PIMEMENUITEM pGotItem;
 
     hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
     if (!hImeWnd || !IsWindow(hImeWnd))
@@ -486,12 +516,27 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     if (lpImeParentMenu)
         *(LPIMEMENUITEMINFOW)lpImeParentMenu = pView->Parent;
 
-    if (lpImeMenu)
+    if (!lpImeMenu)
+        goto Quit;
+
+    for (i = 0; i < ret; ++i)
     {
-        // FIXME: Bitmaps
-        for (i = 0; i < ret; ++i)
+        pGotItem = &(pView->Items[i]);
+
+        ((LPIMEMENUITEMINFOW)lpImeMenu)[i] = pGotItem->Info;
+
+        // load bitmaps from bytes
+        if (pGotItem->Info.hbmpChecked)
         {
-            ((LPIMEMENUITEMINFOW)lpImeMenu)[i] = pView->Items[i].Info;
+            pGotItem->Info.hbmpChecked = Imm32LoadBitmapFromBytes(pGotItem->abChecked);
+        }
+        if (pGotItem->Info.hbmpUnchecked)
+        {
+            pGotItem->Info.hbmpUnchecked = Imm32LoadBitmapFromBytes(pGotItem->abUnchecked);
+        }
+        if (pGotItem->Info.hbmpItem)
+        {
+            pGotItem->Info.hbmpItem = Imm32LoadBitmapFromBytes(pGotItem->abItem);
         }
     }
 
