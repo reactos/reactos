@@ -501,9 +501,6 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
 
     ret = pView->dwItemCount;
 
-    if (lpImeParentMenu)
-        *(LPIMEMENUITEMINFOW)lpImeParentMenu = pView->Parent;
-
     if (!lpImeMenu)
         goto Quit;
 
