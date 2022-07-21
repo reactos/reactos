@@ -458,7 +458,6 @@ DWORD APIENTRY
 Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
 {
-    DWORD ret = 0;
     HANDLE hMapping;
     PIMEMENU pView;
     DWORD i, cbView, dwItemCount;
