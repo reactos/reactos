@@ -106,13 +106,14 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
     return hbm;
 }
 
-BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
+BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
 {
     HDC hDC;
     BITMAP bm;
     DWORD cbBytes, cColors;
     BITMAPCOREINFO256 bmci;
     BOOL ret;
+    LPBYTE pb = pbData;
 
     *(LPDWORD)pb = 0;
 
@@ -142,7 +143,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
     cbBytes += sizeof(BITMAPCOREHEADER);
     cbBytes += cColors * sizeof(RGBTRIPLE);
     cbBytes += bm.bmWidthBytes * bm.bmHeight;
-    if (cbBytes > cbMax)
+    if (cbBytes > cbDataMax)
         return FALSE;
 
     hDC = CreateCompatibleDC(NULL);
@@ -161,6 +162,8 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
         pb += cColors * sizeof(RGBTRIPLE);
 
         ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
+        if (!ret)
+            *(LPDWORD)pbData = 0;
     }
 
     DeleteDC(hDC);

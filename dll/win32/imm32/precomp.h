@@ -167,4 +167,4 @@ static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
 }
 
 HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
-BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax);
+BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
