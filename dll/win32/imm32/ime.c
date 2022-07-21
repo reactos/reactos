@@ -402,6 +402,7 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
         if (!pItems)
         {
             ERR("!pItems\n");
+            pView->dwItemCount = 0;
             goto Quit;
         }
     }
