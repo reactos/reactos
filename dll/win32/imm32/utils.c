@@ -110,7 +110,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
 {
     HDC hDC;
     BITMAP bm;
-    DWORD cbBytes, cColors = 0;
+    DWORD cbBytes, cColors;
     BITMAPCOREINFO256 bmci;
     BOOL ret;
 
