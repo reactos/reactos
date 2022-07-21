@@ -381,7 +381,7 @@ typedef struct tagIMEMENU
 LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 {
     LRESULT ret = FALSE;
-    HANDLE hMapping = NULL;
+    HANDLE hMapping;
     PIMEMENU pView = NULL;
     LPIMEMENUITEMINFOW pParent = NULL, pItems = NULL;
     DWORD i, cItems, cbItems = 0;
