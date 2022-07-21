@@ -355,7 +355,7 @@ Quit:
     return ret;
 }
 
-#define MAX_IMEMENU_BITMAP_BYTES 0x1800
+#define MAX_IMEMENU_BITMAP_BYTES 0x1200
 
 typedef struct tagIMEMENUITEM
 {
