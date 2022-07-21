@@ -460,7 +460,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
 {
     HANDLE hMapping;
     PIMEMENU pView;
-    DWORD i, cbView, dwItemCount;
+    DWORD i, cbView, dwItemCount, ret = 0;
     HWND hImeWnd;
     PIMEMENUITEM pGotItem;
     LPIMEMENUITEMINFOW pSetInfo;
