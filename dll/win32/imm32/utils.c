@@ -138,7 +138,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
             return FALSE;
     }
 
-    cbBytes += sizeof(DWORD);
+    cbBytes = sizeof(DWORD);
     cbBytes += sizeof(BITMAPCOREHEADER);
     cbBytes += cColors * sizeof(RGBTRIPLE);
     cbBytes += bm.bmWidthBytes * bm.bmHeight;
