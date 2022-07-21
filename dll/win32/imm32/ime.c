@@ -382,7 +382,7 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 {
     LRESULT ret = FALSE;
     HANDLE hMapping;
-    PIMEMENU pView = NULL;
+    PIMEMENU pView;
     LPIMEMENUITEMINFOW pParent = NULL, pItems = NULL;
     DWORD i, cItems, cbItems = 0;
 
