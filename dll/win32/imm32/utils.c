@@ -78,13 +78,15 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
 
     switch (pbmci->bmciHeader.bcBitCount)
     {
-    case 1: cColors = 2; break;
-    case 4: cColors = 16; break;
-    case 8: cColors = 256; break;
-    case 24: cColors = 0; break;
-    default:
-        DeleteObject(hbm);
-        return NULL;
+        case 1: cColors = 2; break;
+        case 4: cColors = 16; break;
+        case 8: cColors = 256; break;
+        case 24: case 32:
+            cColors = 0;
+            break;
+        default:
+            DeleteObject(hbm);
+            return NULL;
     }
 
     ib += sizeof(BITMAPCOREHEADER);
@@ -126,12 +128,14 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
 
     switch (bm.bmBitsPixel)
     {
-    case 1: cColors = 2; break;
-    case 4: cColors = 16; break;
-    case 8: cColors = 256; break;
-    case 24: cColors = 0; break;
-    default:
-        return FALSE;
+        case 1: cColors = 2; break;
+        case 4: cColors = 16; break;
+        case 8: cColors = 256; break;
+        case 24: case 32:
+            cColors = 0;
+            break;
+        default:
+            return FALSE;
     }
 
     cbBytes += sizeof(DWORD);
