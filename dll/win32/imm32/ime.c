@@ -475,7 +475,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     }
 
     dwItemCount = (lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0);
-    cbView = sizeof(IMEMENU) + (dwItemCount - 1) * sizeof(IMEMENUITEM);
+    cbView = sizeof(IMEMENU) + ((size_t)dwItemCount - 1) * sizeof(IMEMENUITEM);
 
     RtlEnterCriticalSection(&gcsImeDpi);
 
