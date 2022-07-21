@@ -50,6 +50,118 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
 }
 
+typedef struct tagBITMAPCOREINFO256
+{
+    BITMAPCOREHEADER bmciHeader;
+    RGBTRIPLE bmciColors[256];
+} BITMAPCOREINFO256, *PBITMAPCOREINFO256;
+
+HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
+{
+    HBITMAP hbm = NULL;
+    const BITMAPCOREINFO256 *pbmci;
+    LPVOID pvBits;
+    DWORD ib = 0, cbBytes, cColors = 0;
+    BITMAP bm;
+
+    cbBytes = *(const DWORD *)pb;
+    if (cbBytes == 0)
+        return NULL;
+
+    pb += sizeof(DWORD);
+    ib += sizeof(DWORD);
+
+    pbmci = (const BITMAPCOREINFO256 *)pb;
+    hbm = CreateDIBSection(NULL, (LPBITMAPINFO)pbmci, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    if (!hbm || !GetObject(hbm, sizeof(BITMAP), &bm))
+        return NULL;
+
+    switch (pbmci->bmciHeader.bcBitCount)
+    {
+    case 1: cColors = 2; break;
+    case 4: cColors = 16; break;
+    case 8: cColors = 256; break;
+    case 24: cColors = 0; break;
+    default:
+        DeleteObject(hbm);
+        return NULL;
+    }
+
+    ib += sizeof(BITMAPCOREHEADER);
+    pb += sizeof(BITMAPCOREHEADER);
+
+    ib += cColors * sizeof(RGBTRIPLE);
+    pb += cColors * sizeof(RGBTRIPLE);
+
+    ib += bm.bmWidthBytes * bm.bmHeight;
+    if (ib > cbBytes)
+    {
+        DeleteObject(hbm);
+        return NULL;
+    }
+    CopyMemory(pvBits, pb, bm.bmWidthBytes * bm.bmHeight);
+
+    return hbm;
+}
+
+BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
+{
+    HDC hDC;
+    BITMAP bm;
+    DWORD cbBytes, cColors = 0;
+    BITMAPCOREINFO256 bmci;
+    BOOL ret;
+
+    *(LPDWORD)pb = 0;
+
+    if (!GetObject(hbm, sizeof(BITMAP), &bm))
+        return FALSE;
+
+    ZeroMemory(&bmci, sizeof(bmci));
+    bmci.bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
+    bmci.bmciHeader.bcWidth = bm.bmWidth;
+    bmci.bmciHeader.bcHeight = bm.bmHeight;
+    bmci.bmciHeader.bcPlanes = 1;
+    bmci.bmciHeader.bcBitCount = bm.bmBitsPixel;
+
+    switch (bm.bmBitsPixel)
+    {
+    case 1: cColors = 2; break;
+    case 4: cColors = 16; break;
+    case 8: cColors = 256; break;
+    case 24: cColors = 0; break;
+    default:
+        return FALSE;
+    }
+
+    cbBytes += sizeof(DWORD);
+    cbBytes += sizeof(BITMAPCOREHEADER);
+    cbBytes += cColors * sizeof(RGBTRIPLE);
+    cbBytes += bm.bmWidthBytes * bm.bmHeight;
+    if (cbBytes > cbMax)
+        return FALSE;
+
+    hDC = CreateCompatibleDC(NULL);
+    ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, bm.bmBits, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
+    DeleteDC(hDC);
+
+    if (ret)
+    {
+        *(LPDWORD)pb = cbBytes;
+        pb += sizeof(DWORD);
+
+        CopyMemory(pb, &bmci.bmciHeader, sizeof(BITMAPCOREHEADER));
+        pb += sizeof(BITMAPCOREHEADER);
+
+        CopyMemory(pb, &bmci.bmciColors, cColors * sizeof(RGBTRIPLE));
+        pb += cColors * sizeof(RGBTRIPLE);
+
+        CopyMemory(pb, bm.bmBits, bm.bmWidthBytes * bm.bmHeight);
+    }
+
+    return ret;
+}
+
 // Win: IsAnsiIMC
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {

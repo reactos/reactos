@@ -375,18 +375,6 @@ typedef struct tagIMEMENU
     IMEMENUITEM Items[ANYSIZE_ARRAY];
 } IMEMENU, *PIMEMENU;
 
-HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
-{
-    FIXME("\n");
-    return NULL;
-}
-
-BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb)
-{
-    FIXME("\n");
-    return FALSE;
-}
-
 /***********************************************************************
  *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
  */
@@ -435,17 +423,20 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
             // store bitmaps to bytes
             if (pItems[i].hbmpChecked)
             {
-                Imm32StoreBitmapToBytes(pItems[i].hbmpChecked, pView->Items[i].abChecked);
+                Imm32StoreBitmapToBytes(pItems[i].hbmpChecked, pView->Items[i].abChecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
                 DeleteObject(pItems[i].hbmpChecked);
             }
             if (pItems[i].hbmpUnchecked)
             {
-                Imm32StoreBitmapToBytes(pItems[i].hbmpUnchecked, pView->Items[i].abUnchecked);
+                Imm32StoreBitmapToBytes(pItems[i].hbmpUnchecked, pView->Items[i].abUnchecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
                 DeleteObject(pItems[i].hbmpUnchecked);
             }
             if (pItems[i].hbmpItem)
             {
-                Imm32StoreBitmapToBytes(pItems[i].hbmpItem, pView->Items[i].abItem);
+                Imm32StoreBitmapToBytes(pItems[i].hbmpItem, pView->Items[i].abItem,
+                                        MAX_IMEMENU_BITMAP_BYTES);
                 DeleteObject(pItems[i].hbmpItem);
             }
         }

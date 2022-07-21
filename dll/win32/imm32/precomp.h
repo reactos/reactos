@@ -165,3 +165,6 @@ static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
         NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
     return NtCurrentTeb()->Win32ThreadInfo;
 }
+
+HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
+BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax);
