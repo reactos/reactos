@@ -470,15 +470,11 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
     if (!hImeWnd || !IsWindow(hImeWnd))
     {
-        ERR("hImeWnd: %p (invalid)\n", hImeWnd);
+        ERR("hImeWnd %p\n", hImeWnd);
         return 0;
     }
 
-    if (lpImeMenu)
-        dwItemCount = dwSize / sizeof(IMEMENUITEMINFOW);
-    else
-        dwItemCount = 0;
-
+    dwItemCount = (lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0);
     cbView = sizeof(IMEMENU) + (dwItemCount - 1) * sizeof(IMEMENUITEM);
 
     RtlEnterCriticalSection(&gcsImeDpi);
@@ -515,6 +511,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     {
         pGotItem = &(pView->Items[i]);
         pSetInfo = &((LPIMEMENUITEMINFOW)lpImeMenu)[i];
+
         *pSetInfo = pGotItem->Info;
 
         // load bitmaps from bytes
