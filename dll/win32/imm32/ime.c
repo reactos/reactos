@@ -465,6 +465,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     DWORD i, cbView, dwItemCount;
     HWND hImeWnd;
     PIMEMENUITEM pGotItem;
+    LPIMEMENUITEMINFOW pSetInfo;
 
     hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
     if (!hImeWnd || !IsWindow(hImeWnd))
@@ -513,21 +514,21 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     for (i = 0; i < ret; ++i)
     {
         pGotItem = &(pView->Items[i]);
-
-        ((LPIMEMENUITEMINFOW)lpImeMenu)[i] = pGotItem->Info;
+        pSetInfo = &((LPIMEMENUITEMINFOW)lpImeMenu)[i];
+        *pSetInfo = pGotItem->Info;
 
         // load bitmaps from bytes
-        if (pGotItem->Info.hbmpChecked)
+        if (pSetInfo->hbmpChecked)
         {
-            pGotItem->Info.hbmpChecked = Imm32LoadBitmapFromBytes(pGotItem->abChecked);
+            pSetInfo->hbmpChecked = Imm32LoadBitmapFromBytes(pGotItem->abChecked);
         }
-        if (pGotItem->Info.hbmpUnchecked)
+        if (pSetInfo->hbmpUnchecked)
         {
-            pGotItem->Info.hbmpUnchecked = Imm32LoadBitmapFromBytes(pGotItem->abUnchecked);
+            pSetInfo->hbmpUnchecked = Imm32LoadBitmapFromBytes(pGotItem->abUnchecked);
         }
-        if (pGotItem->Info.hbmpItem)
+        if (pSetInfo->hbmpItem)
         {
-            pGotItem->Info.hbmpItem = Imm32LoadBitmapFromBytes(pGotItem->abItem);
+            pSetInfo->hbmpItem = Imm32LoadBitmapFromBytes(pGotItem->abItem);
         }
     }
 
