@@ -355,7 +355,10 @@ Quit:
     return ret;
 }
 
-#define MAX_IMEMENU_BITMAP_BYTES 0x1000
+// We will transport the IME menu items by using a flat memory block via
+// a file mapping object beyond the boundary of a process.
+
+#define MAX_IMEMENU_BITMAP_BYTES 0xF00
 
 typedef struct tagIMEMENUITEM
 {
@@ -377,6 +380,10 @@ typedef struct tagIMEMENU
 
 /***********************************************************************
  *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
+ *
+ * Called from user32.dll to transport the IME menu items by using a
+ * file mapping object. This function is provided for WM_IME_SYSTEM:IMS_GETIMEMENU
+ * handling.
  */
 LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 {
@@ -455,7 +462,7 @@ Quit:
 
 // Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
-Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
 {
     HANDLE hMapping;
@@ -560,7 +567,7 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
     {
         if (bTargetIsAnsi)
             return 0;
-        return Imm32GetImeMenuItemWCrossProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
+        return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
                                                 lpImeMenu, dwSize);
     }
 
