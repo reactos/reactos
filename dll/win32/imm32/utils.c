@@ -142,7 +142,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pb, DWORD cbMax)
         return FALSE;
 
     hDC = CreateCompatibleDC(NULL);
-    ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, bm.bmBits, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
+    ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, NULL, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);
     DeleteDC(hDC);
 
     if (ret)
