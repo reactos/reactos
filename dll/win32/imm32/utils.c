@@ -69,7 +69,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
         return NULL;
 
     pb += sizeof(DWORD);
-    ib += sizeof(DWORD);
+    ib = sizeof(DWORD);
 
     pbmci = (const BITMAPCOREINFO256 *)pb;
     hbm = CreateDIBSection(NULL, (LPBITMAPINFO)pbmci, DIB_RGB_COLORS, &pvBits, NULL, 0);
