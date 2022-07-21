@@ -678,7 +678,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             ret = IMM_FN(ImmActivateLayout)((HKL)lParam);
             break;
 
-        case 0x1C:
+        case IMS_GETIMEMENU:
             ret = IMM_FN(ImmPutImeMenuItemsIntoMappedFile)((HIMC)lParam);
             break;
 

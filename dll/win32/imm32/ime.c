@@ -355,13 +355,152 @@ Quit:
     return ret;
 }
 
+#define MAX_IMEMENU_BITMAP_BYTES 0x1800
+
+typedef struct tagIMEMENUITEM
+{
+    IMEMENUITEMINFOW Info;
+    BYTE abBitmap[MAX_IMEMENU_BITMAP_BYTES]; // FIXME: Bitmaps
+} IMEMENUITEM, *PIMEMENUITEM;
+
+typedef struct tagIMEMENU
+{
+    DWORD dwVersion;
+    DWORD dwFlags;
+    DWORD dwType;
+    DWORD dwItemCount;
+    IMEMENUITEMINFOW Parent;
+    IMEMENUITEM Items[ANYSIZE_ARRAY];
+} IMEMENU, *PIMEMENU;
+
+/***********************************************************************
+ *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
+ */
+LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
+{
+    LRESULT ret = FALSE;
+    HANDLE hMapping = NULL;
+    PIMEMENU pView = NULL;
+    LPIMEMENUITEMINFOW pParent = NULL, pItems = NULL;
+    DWORD i, cItems, cbItems = 0;
+
+    hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    if (!pView || pView->dwVersion != 1)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    if (pView->Parent.cbSize > 0)
+        pParent = &pView->Parent;
+
+    if (pView->dwItemCount > 0)
+    {
+        cbItems = pView->dwItemCount * sizeof(IMEMENUITEMINFOW);
+        pItems = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbItems);
+        if (!pItems)
+        {
+            ERR("!pItems\n");
+            goto Quit;
+        }
+    }
+
+    cItems = ImmGetImeMenuItemsW(hIMC, pView->dwFlags, pView->dwType, pParent, pItems, cbItems);
+    pView->dwItemCount = cItems;
+
+    if (cItems > 0)
+    {
+        if (pItems)
+        {
+            // FIXME: Bitmaps
+            for (i = 0; i < cItems; ++i)
+            {
+                pView->Items[i].Info = pItems[i];
+            }
+        }
+
+        ret = TRUE;
+    }
+
+Quit:
+    if (pItems)
+        ImmLocalFree(pItems);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
+}
+
 // Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
 Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
 {
-    FIXME("We have to do something\n");
-    return 0;
+    DWORD ret = 0;
+    HANDLE hMapping;
+    PIMEMENU pView;
+    DWORD i, cbView, dwItemCount;
+    HWND hImeWnd;
+
+    hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
+    if (!hImeWnd || !IsWindow(hImeWnd))
+    {
+        ERR("hImeWnd: %p (invalid)\n", hImeWnd);
+        return 0;
+    }
+
+    if (lpImeMenu)
+        dwItemCount = dwSize / sizeof(IMEMENUITEMINFOW);
+    else
+        dwItemCount = 0;
+
+    cbView = sizeof(IMEMENU) + (dwItemCount - 1) * sizeof(IMEMENUITEM);
+
+    RtlEnterCriticalSection(&gcsImeDpi);
+
+    // create a file mapping
+    hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                  0, cbView, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+    if (!pView)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    ZeroMemory(pView, cbView);
+    pView->dwVersion = 1;
+    pView->dwFlags = dwFlags;
+    pView->dwType = dwType;
+    pView->dwItemCount = dwItemCount;
+    pView->Parent.cbSize = (lpImeParentMenu ? sizeof(IMEMENUITEMINFOW) : 0);
+
+    if (!SendMessageW(hImeWnd, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
+        goto Quit;
+
+    ret = pView->dwItemCount;
+
+    if (lpImeParentMenu)
+        *(LPIMEMENUITEMINFOW)lpImeParentMenu = pView->Parent;
+
+    if (lpImeMenu)
+    {
+        // FIXME: Bitmaps
+        for (i = 0; i < ret; ++i)
+        {
+            ((LPIMEMENUITEMINFOW)lpImeMenu)[i] = pView->Items[i].Info;
+        }
+    }
+
+Quit:
+    RtlLeaveCriticalSection(&gcsImeDpi);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
 }
 
 // Win: ImmGetImeMenuItemsWorker

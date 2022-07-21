@@ -81,7 +81,7 @@
 @ stdcall ImmNotifyIME(ptr long long long)
 @ stub ImmPenAuxInput
 @ stdcall ImmProcessKey(ptr long long long long)
-@ stdcall -stub ImmPutImeMenuItemsIntoMappedFile(ptr)
+@ stdcall ImmPutImeMenuItemsIntoMappedFile(ptr)
 @ stdcall ImmReSizeIMCC(ptr long)
 @ stdcall ImmRegisterClient(ptr ptr)
 @ stdcall ImmRegisterWordA(long str long str)
