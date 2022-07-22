@@ -28,6 +28,7 @@ extern "C" {
 #define IMS_IMEACTIVATE         0x17
 #define IMS_IMEDEACTIVATE       0x18
 #define IMS_ACTIVATELAYOUT      0x19
+#define IMS_GETIMEMENU          0x1C
 
 #define IMMGWL_IMC       0
 #define IMMGWL_PRIVATE   (sizeof(LONG))

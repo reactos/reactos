@@ -355,13 +355,189 @@ Quit:
     return ret;
 }
 
+// We will transport the IME menu items by using a flat memory block via
+// a file mapping object beyond the boundary of a process.
+
+#define MAX_IMEMENU_BITMAP_BYTES 0xF00
+
+typedef struct tagIMEMENUITEM
+{
+    IMEMENUITEMINFOW Info;
+    BYTE abChecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abUnchecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abItem[MAX_IMEMENU_BITMAP_BYTES];
+} IMEMENUITEM, *PIMEMENUITEM;
+
+typedef struct tagIMEMENU
+{
+    DWORD dwVersion;
+    DWORD dwFlags;
+    DWORD dwType;
+    DWORD dwItemCount;
+    IMEMENUITEMINFOW Parent;
+    IMEMENUITEM Items[ANYSIZE_ARRAY];
+} IMEMENU, *PIMEMENU;
+
+/***********************************************************************
+ *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
+ *
+ * Called from user32.dll to transport the IME menu items by using a
+ * file mapping object. This function is provided for WM_IME_SYSTEM:IMS_GETIMEMENU
+ * handling.
+ */
+LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
+{
+    LRESULT ret = FALSE;
+    HANDLE hMapping;
+    PIMEMENU pView;
+    LPIMEMENUITEMINFOW pParent = NULL, pItems = NULL;
+    DWORD i, cItems, cbItems = 0;
+
+    hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    if (!pView || pView->dwVersion != 1)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    if (pView->Parent.cbSize > 0)
+        pParent = &pView->Parent;
+
+    if (pView->dwItemCount > 0)
+    {
+        cbItems = pView->dwItemCount * sizeof(IMEMENUITEMINFOW);
+        pItems = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbItems);
+        if (!pItems)
+        {
+            ERR("!pItems\n");
+            goto Quit;
+        }
+    }
+
+    cItems = ImmGetImeMenuItemsW(hIMC, pView->dwFlags, pView->dwType, pParent, pItems, cbItems);
+    pView->dwItemCount = cItems;
+    if (cItems == 0)
+        goto Quit;
+
+    if (pItems)
+    {
+        for (i = 0; i < cItems; ++i)
+        {
+            pView->Items[i].Info = pItems[i];
+
+            // store bitmaps to bytes
+            if (pItems[i].hbmpChecked)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpChecked, pView->Items[i].abChecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpChecked);
+            }
+            if (pItems[i].hbmpUnchecked)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpUnchecked, pView->Items[i].abUnchecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpUnchecked);
+            }
+            if (pItems[i].hbmpItem)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpItem, pView->Items[i].abItem,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpItem);
+            }
+        }
+    }
+
+    ret = TRUE;
+
+Quit:
+    if (pItems)
+        ImmLocalFree(pItems);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
+}
+
 // Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
-Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
 {
-    FIXME("We have to do something\n");
-    return 0;
+    HANDLE hMapping;
+    PIMEMENU pView;
+    DWORD i, cbView, dwItemCount, ret = 0;
+    HWND hImeWnd;
+    PIMEMENUITEM pGotItem;
+    LPIMEMENUITEMINFOW pSetInfo;
+
+    hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
+    if (!hImeWnd || !IsWindow(hImeWnd))
+    {
+        ERR("hImeWnd %p\n", hImeWnd);
+        return 0;
+    }
+
+    dwItemCount = (lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0);
+    cbView = sizeof(IMEMENU) + ((size_t)dwItemCount - 1) * sizeof(IMEMENUITEM);
+
+    RtlEnterCriticalSection(&gcsImeDpi);
+
+    // create a file mapping
+    hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                  0, cbView, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+    if (!pView)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    ZeroMemory(pView, cbView);
+    pView->dwVersion = 1;
+    pView->dwFlags = dwFlags;
+    pView->dwType = dwType;
+    pView->dwItemCount = dwItemCount;
+    pView->Parent.cbSize = (lpImeParentMenu ? sizeof(IMEMENUITEMINFOW) : 0);
+
+    if (!SendMessageW(hImeWnd, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
+        goto Quit;
+
+    ret = pView->dwItemCount;
+
+    if (!lpImeMenu)
+        goto Quit;
+
+    for (i = 0; i < ret; ++i)
+    {
+        pGotItem = &(pView->Items[i]);
+        pSetInfo = &((LPIMEMENUITEMINFOW)lpImeMenu)[i];
+
+        *pSetInfo = pGotItem->Info;
+
+        // load bitmaps from bytes
+        if (pSetInfo->hbmpChecked)
+        {
+            pSetInfo->hbmpChecked = Imm32LoadBitmapFromBytes(pGotItem->abChecked);
+        }
+        if (pSetInfo->hbmpUnchecked)
+        {
+            pSetInfo->hbmpUnchecked = Imm32LoadBitmapFromBytes(pGotItem->abUnchecked);
+        }
+        if (pSetInfo->hbmpItem)
+        {
+            pSetInfo->hbmpItem = Imm32LoadBitmapFromBytes(pGotItem->abItem);
+        }
+    }
+
+Quit:
+    RtlLeaveCriticalSection(&gcsImeDpi);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
 }
 
 // Win: ImmGetImeMenuItemsWorker
@@ -391,7 +567,7 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
     {
         if (bTargetIsAnsi)
             return 0;
-        return Imm32GetImeMenuItemWCrossProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
+        return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
                                                 lpImeMenu, dwSize);
     }
 
