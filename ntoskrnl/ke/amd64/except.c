@@ -119,6 +119,9 @@ KiDispatchExceptionToUser(
     /* Get pointer to the usermode context, exception record and machine frame */
     UserStack = (PKUSER_EXCEPTION_STACK)UserRsp;
 
+    /* Enable interrupts */
+    _enable();
+
     /* Set up the user-stack */
     _SEH2_TRY
     {
@@ -143,6 +146,7 @@ KiDispatchExceptionToUser(
         // FIXME: handle stack overflow
 
         /* Nothing we can do here */
+        _disable();
         _SEH2_YIELD(return);
     }
     _SEH2_END;
@@ -164,6 +168,8 @@ KiDispatchExceptionToUser(
 
     /* Set RIP to the User-mode Dispatcher */
     TrapFrame->Rip = (ULONG64)KeUserExceptionDispatcher;
+
+    _disable();
 
     /* Exit to usermode */
     KiServiceExit2(TrapFrame);
@@ -202,6 +208,9 @@ KiPrepareUserDebugData(void)
     Teb = KeGetCurrentThread()->Teb;
     if (!Teb) return;
 
+    /* Enable interrupts */
+    _enable();
+
     _SEH2_TRY
     {
         /* Get a pointer to the loader data */
@@ -230,6 +239,8 @@ KiPrepareUserDebugData(void)
     {
     }
     _SEH2_END;
+
+    _disable();
 }
 
 VOID
