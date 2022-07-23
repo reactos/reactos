@@ -14,6 +14,8 @@
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
+#define MM_KASAN_SHADOW_MEMORY                         0x90000000
+#define MM_KASAN_SHADOW_MEMORY_END                     0xA0000000
 #ifndef _X86PAE_
 #define HYPER_SPACE                                    0xC0400000
 #define HYPER_SPACE_END                                0xC07FFFFF
@@ -125,7 +127,7 @@
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
 
 /*  Translating virtual addresses to physical addresses
-        (See: "Intel® 64 and IA-32 Architectures Software Developer’s Manual
+        (See: "IntelÂ® 64 and IA-32 Architectures Software Developerâ€™s Manual
               Volume 3A: System Programming Guide, Part 1, CHAPTER 4 PAGING")
     Page directory (PD) and Page table (PT) definitions
     Page directory entry (PDE) and Page table entry (PTE) definitions

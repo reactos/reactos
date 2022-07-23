@@ -1099,14 +1099,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-    /* Reserve shadow memory */
-    MiReserveShadowMemory();
-
     /* Initialize the memory manager at phase 0 */
     if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
-
-    /* Map shadow memory */
-    MiInitializeShadowMemory();
 
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);

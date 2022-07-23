@@ -62,8 +62,8 @@ MiInitializeShadowMemory(VOID)
             Pfn = MxGetNextPage(1);
             if (!Pfn)
                 return STATUS_NO_MEMORY;
-            MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, MappingPde, MM_READWRITE, Pfn);
-            MI_WRITE_VALID_PDE(MappingPte, TempPte);
+            MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, MappingPte, MM_READWRITE, Pfn);
+            MI_WRITE_VALID_PDE(MappingPde, TempPte);
 
             // Zero out the page table
             RtlZeroMemory(MiPdeToPte(MappingPte), PAGE_SIZE);

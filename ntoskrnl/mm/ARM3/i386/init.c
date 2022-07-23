@@ -446,6 +446,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
            MiAddressToPte(MmNonPagedPoolExpansionStart));
 
+    /* Initialize the KASAN shadow memory */
+    MiInitializeShadowMemory();
+
     /* Now go ahead and initialize the nonpaged pool */
     MiInitializeNonPagedPool();
     MiInitializeNonPagedPoolThresholds();
