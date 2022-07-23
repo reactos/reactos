@@ -104,7 +104,7 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
     if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
         ExceptionRecord->NumberParameters == 2)
     {
-        DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
+        DbgPrint("Faulting Address: %p\n", (PVOID)ExceptionRecord->ExceptionInformation[1]);
     }
 
     /* Trace the wine special error and show the modulename and functionname */
