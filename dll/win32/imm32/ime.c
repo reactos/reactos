@@ -499,7 +499,11 @@ Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     pView->dwFlags = dwFlags;
     pView->dwType = dwType;
     pView->dwItemCount = dwItemCount;
-    pView->Parent.cbSize = (lpImeParentMenu ? sizeof(IMEMENUITEMINFOW) : 0);
+    if (lpImeParentMenu)
+    {
+        pView->Parent = *(LPIMEMENUITEMINFOW)lpImeParentMenu;
+        pView->Parent.cbSize = sizeof(IMEMENUITEMINFOW);
+    }
 
     if (!SendMessageW(hImeWnd, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
         goto Quit;
