@@ -316,6 +316,10 @@ ENDFUNC
 
 PUBLIC KiDoubleFaultAbort
 FUNC KiDoubleFaultAbort
+
+    /* Hack for VBox, which "forgets" to push an error code on the stack! */
+    and rsp, HEX(FFFFFFFFFFFFFFF0)
+
     /* A zero error code is pushed */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
