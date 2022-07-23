@@ -23,7 +23,7 @@ NTAPI
 RtlInitializeContext(
     _Reserved_ HANDLE ProcessHandle,
     _Out_ PCONTEXT ThreadContext,
-    _In_ PVOID ThreadStartParam  OPTIONAL,
+    _In_opt_ PVOID ThreadStartParam,
     _In_ PTHREAD_START_ROUTINE ThreadStartAddress,
     _In_ PINITIAL_TEB StackBase)
 {
@@ -66,10 +66,13 @@ RtlInitializeContext(
         ThreadContext->SegSs = KGDT64_R3_DATA |  RPL_MASK;
     }
 
+    ThreadContext->MxCsr = INITIAL_MXCSR;
+
     /* Only the basic Context is initialized */
     ThreadContext->ContextFlags = CONTEXT_CONTROL |
                                   CONTEXT_INTEGER |
-                                  CONTEXT_SEGMENTS;
+                                  CONTEXT_SEGMENTS |
+                                  CONTEXT_FLOATING_POINT;
 
     return;
 }
