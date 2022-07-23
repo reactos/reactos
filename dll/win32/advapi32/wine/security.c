@@ -3538,7 +3538,14 @@ CreateProcessWithLogonW(
     Request.dwLogonFlags = dwLogonFlags;
     Request.dwCreationFlags = dwCreationFlags;
 
-    Response.ulError = ERROR_SUCCESS;
+    Request.dwProcessId = GetCurrentProcessId();
+    TRACE("Request.dwProcessId %lu\n", Request.dwProcessId);
+
+    Response.hProcess = 0;
+    Response.hThread = 0;
+    Response.dwProcessId = 0;
+    Response.dwThreadId = 0;
+    Response.dwError = ERROR_SUCCESS;
 
     RpcTryExcept
     {
@@ -3561,13 +3568,17 @@ CreateProcessWithLogonW(
         hBinding = NULL;
     }
 
-    TRACE("Response.ulError %lu\n", Response.ulError);
-    if (Response.ulError != ERROR_SUCCESS)
-        SetLastError(Response.ulError);
+    TRACE("Response.hProcess %p\n", Response.hProcess);
+    TRACE("Response.hThread %p\n", Response.hThread);
+    TRACE("Response.dwProcessId %lu\n", Response.dwProcessId);
+    TRACE("Response.dwThreadId %lu\n", Response.dwThreadId);
+    TRACE("Response.dwError %lu\n", Response.dwError);
+    if (Response.dwError != ERROR_SUCCESS)
+        SetLastError(Response.dwError);
 
     TRACE("CreateProcessWithLogonW() done\n");
 
-    return (Response.ulError == ERROR_SUCCESS);
+    return (Response.dwError == ERROR_SUCCESS);
 }
 
 BOOL WINAPI CreateProcessWithTokenW(HANDLE token, DWORD logon_flags, LPCWSTR application_name, LPWSTR command_line,

@@ -64,6 +64,7 @@ SeclCreateProcessWithLogonW(
 
     PROFILEINFOW ProfileInfo;
     HANDLE hToken = NULL;
+    HANDLE hTargetProcessHandle = NULL;
 
     ULONG dwError = ERROR_SUCCESS;
     BOOL rc;
@@ -80,6 +81,17 @@ SeclCreateProcessWithLogonW(
         TRACE("CurrentDirectory: '%S'\n", pRequest->CurrentDirectory);
         TRACE("LogonFlags: 0x%lx\n", pRequest->dwLogonFlags);
         TRACE("CreationFlags: 0x%lx\n", pRequest->dwCreationFlags);
+        TRACE("ProcessId: %lu\n", pRequest->dwProcessId);
+    }
+
+    hTargetProcessHandle = OpenProcess(PROCESS_DUP_HANDLE,
+                                       FALSE,
+                                       pRequest->dwProcessId);
+    if (hTargetProcessHandle == NULL)
+    {
+        dwError = GetLastError();
+        WARN("OpenProcess() failed with Error %lu\n", dwError);
+        goto done;
     }
 
     ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
@@ -140,9 +152,33 @@ SeclCreateProcessWithLogonW(
         goto done;
     }
 
-    /* FIXME: Pass process info to the caller */
+    /* Return process info to the caller */
+    if (pResponse != NULL)
+    {
+        DuplicateHandle(GetCurrentProcess(),
+                        ProcessInfo.hProcess,
+                        hTargetProcessHandle,
+                        (PHANDLE)&pResponse->hProcess,
+                        0,
+                        FALSE,
+                        DUPLICATE_SAME_ACCESS);
+
+        DuplicateHandle(GetCurrentProcess(),
+                        ProcessInfo.hThread,
+                        hTargetProcessHandle,
+                        (PHANDLE)&pResponse->hThread,
+                        0,
+                        FALSE,
+                        DUPLICATE_SAME_ACCESS);
+
+        pResponse->dwProcessId = ProcessInfo.dwProcessId;
+        pResponse->dwThreadId = ProcessInfo.dwThreadId;
+    }
 
 done:
+    if (hTargetProcessHandle)
+        CloseHandle(hTargetProcessHandle);
+
     if (ProcessInfo.hThread)
         CloseHandle(ProcessInfo.hThread);
 
@@ -156,5 +192,5 @@ done:
         CloseHandle(hToken);
 
     if (pResponse != NULL)
-        pResponse->ulError = dwError;
+        pResponse->dwError = dwError;
 }
