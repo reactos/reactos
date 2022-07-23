@@ -361,9 +361,10 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
-            /* Forward exception to user mode (does not return) */
+            /* Forward exception to user mode (does not return, if successful) */
             KiDispatchExceptionToUser(TrapFrame, &Context, ExceptionRecord);
-            NT_ASSERT(FALSE);
+
+            /* Failed to dispatch, fall through for second chance handling */
         }
 
         /* Try second chance */
