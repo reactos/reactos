@@ -321,9 +321,15 @@ ValidatePort(
         case 0x3C9: return (Size == 1);
         case 0x3DA: return (Size == 1) && !IsWrite;
 
-        // CHECKME!
+        // OVMF debug messages used by VBox / QEMU
+        // https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/EFI/Firmware/OvmfPkg/README
+        case 0x402: return (Size == 1) && IsWrite;
+
+        // BOCHS VBE: https://forum.osdev.org/viewtopic.php?f=1&t=14639
         case 0x1CE: return (Size == 1) && IsWrite;
         case 0x1CF: return (Size == 1);
+
+        // CHECKME!
         case 0x3B6: return (Size <= 2);
     }
 
