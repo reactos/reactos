@@ -428,6 +428,10 @@ FUNC KiPageFault
     /* Save page fault address */
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
+    
+    /* If interrupts are off, treat this as an access violation */
+    test dword ptr [rbp + KTRAP_FRAME_EFlags], EFLAGS_IF_MASK
+    jz AccessViolation
 
     /* Enable interrupts for the page fault handler */
     sti
