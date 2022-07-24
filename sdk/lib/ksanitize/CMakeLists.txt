@@ -4,6 +4,7 @@ list(APPEND SOURCE
 
 add_library(ksanitize ${SOURCE})
 target_compile_definitions(ksanitize PUBLIC LIBSAN_KMODE)
+#target_compile_options(ksanitize PUBLIC /fsanitize=address)
 add_importlibs(ksanitize ntoskrnl)
 
 add_library(ksanitize_w32k ${SOURCE})

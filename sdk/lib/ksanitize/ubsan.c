@@ -54,8 +54,14 @@
 #include <ntdef.h>
 #include <ntddk.h>
 
+#ifdef _MSC_VER
+#define __printflike(n,m)
+#define __unreachable() __assume(0)
+#define __sync_val_compare_and_swap(p, old, new) _InterlockedCompareExchange(p, new, old)
+#else
 #define __printflike(n,m) __attribute__((format(printf,n,m)))
 #define __unreachable __builtin_unreachable
+#endif
 #define __arraycount(a) (sizeof(a)/sizeof(a[0]))
 
 #ifndef __BIT
