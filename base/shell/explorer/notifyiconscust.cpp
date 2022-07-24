@@ -235,6 +235,9 @@ BOOL TrayIconView::InsertItem(LPWSTR data, INT iSubItem, INT id)
 
 VOID TrayIconView::UpdateIcon(USHORT iItem, USHORT Preference)
 {
+    HWND m_hwndPager = FindWindowHandleByPath(L"Shell_TrayWnd/TrayNotifyWnd/SysPager");
+    NOTIFYICONDATAW *pIcon = &m_TrayIconData[iItem];
+    SendMessage(m_hwndPager, TNWM_RESIZETRAYICON, Preference, (LPARAM)pIcon);
 }
 
 VOID TrayIconView::BuildIconList()

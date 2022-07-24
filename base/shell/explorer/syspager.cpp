@@ -21,6 +21,10 @@
 
 #include "precomp.h"
 
+#define HIDE_INACTIVE 0
+#define ALWAYS_HIDE   1
+#define ALWAYS_SHOW   2
+
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -178,6 +182,8 @@ public:
     END_MSG_MAP()
 
     void Initialize(HWND hWndParent, CBalloonQueue * queue);
+    void IncVisibleButtons(){m_VisibleButtonCount++;}
+    void DecVisibleButtons(){m_VisibleButtonCount--;}
 };
 
 
@@ -212,6 +218,7 @@ public:
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnResizeTrayIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
 
@@ -251,6 +258,7 @@ public:
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
+        MESSAGE_HANDLER(TNWM_RESIZETRAYICON, OnResizeTrayIcon)
         NOTIFY_CODE_HANDLER(TTN_POP, OnBalloonPop)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
@@ -1397,6 +1405,7 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT columns = 0;
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
+
     int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
     if (IsHorizontal)
@@ -1565,6 +1574,47 @@ LRESULT CSysPagerWnd::OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 {
     GetSize((BOOL)wParam, (PSIZE)lParam);
     return 0;
+}
+
+LRESULT CSysPagerWnd::OnResizeTrayIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NOTIFYICONDATA *pIcon = (NOTIFYICONDATA*)lParam;
+    InternalIconData * notifyItem;
+    TBBUTTONINFO tbbi = { 0 };
+
+    tbbi.cbSize = sizeof(tbbi);
+    tbbi.dwMask = TBIF_STATE;
+    tbbi.fsState = TBSTATE_ENABLED;
+
+    int index = Toolbar.FindItem(pIcon->hWnd, pIcon->uID, &notifyItem);
+    if (pIcon)
+    {
+        pIcon->dwStateMask = NIS_HIDDEN;
+        switch (wParam)
+        {
+            case HIDE_INACTIVE:
+                return S_OK;
+
+            case ALWAYS_HIDE:
+                tbbi.fsState |= TBSTATE_HIDDEN;
+                pIcon->dwState |= NIS_HIDDEN;
+                Toolbar.DecVisibleButtons();
+                break;
+
+            case ALWAYS_SHOW:
+                tbbi.fsState &= ~TBSTATE_HIDDEN;
+                pIcon->dwState &= ~NIS_HIDDEN;
+                Toolbar.IncVisibleButtons();
+                break;
+        }
+
+        Toolbar.SetButtonInfo(index, &tbbi);
+
+        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
+
+    }
+    return S_OK;
 }
 
 HRESULT CSysPagerWnd::Initialize(IN HWND hWndParent)
