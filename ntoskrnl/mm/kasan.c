@@ -52,31 +52,38 @@ MiInitializeShadowMemory(VOID)
     PVOID ShadowStart = (PVOID) MM_KASAN_SHADOW_MEMORY;
     PVOID ShadowEnd = Add2Ptr(ShadowStart, MM_KASAN_SHADOW_SIZE);
 
-    for (MappingPte = MiAddressToPte(ShadowStart); MappingPte < MiAddressToPte(ShadowEnd); MappingPte++)
+    /* First map all PDEs */
+    for (MappingPde = MiAddressToPde(ShadowStart);
+         MappingPde < MiAddressToPde(ShadowEnd);
+         MappingPde++)
     {
-        // Check if the PDE is mapped
-        MappingPde = MiPteToPde(MappingPte);
-        if (MappingPde->u.Hard.Valid == 0)
-        {
-            // Map the PDE
-            Pfn = MxGetNextPage(1);
-            if (!Pfn)
-                return STATUS_NO_MEMORY;
-            MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, MappingPte, MM_READWRITE, Pfn);
-            MI_WRITE_VALID_PDE(MappingPde, TempPte);
+        ASSERT(MappingPde->u.Long == 0);
 
-            // Zero out the page table
-            RtlZeroMemory(MiPdeToPte(MappingPte), PAGE_SIZE);
-        }
-
-        // Map the PTE
+        /* Get a page */
         Pfn = MxGetNextPage(1);
         if (!Pfn)
             return STATUS_NO_MEMORY;
+
+        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, MiPdeToPte(MappingPde), MM_READWRITE, Pfn);
+        MI_WRITE_VALID_PDE(MappingPde, TempPte);
+
+        /* Zero out the page table */
+        RtlZeroMemory(MiPdeToPte(MappingPde), PAGE_SIZE);
+    }
+
+    for (MappingPte = MiAddressToPte(ShadowStart);
+         MappingPte < MiAddressToPte(ShadowEnd);
+         MappingPte++)
+    {
+        /* Get a page */
+        Pfn = MxGetNextPage(1);
+        if (!Pfn)
+            return STATUS_NO_MEMORY;
+
         MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, MappingPte, MM_READWRITE, Pfn);
         MI_WRITE_VALID_PTE(MappingPte, TempPte);
 
-        // Zero out the page
+        /* Zero out the page */
         RtlZeroMemory(MiPteToAddress(MappingPte), PAGE_SIZE);
     }
 
