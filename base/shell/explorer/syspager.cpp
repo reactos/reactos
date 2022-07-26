@@ -744,6 +744,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
 
     notifyItem->hWnd = iconData->hWnd;
     notifyItem->uID = iconData->uID;
+    notifyItem->uFlags = iconData->uFlags;
 
     tbBtn.fsState = TBSTATE_ENABLED;
     tbBtn.fsStyle = BTNS_NOPREFIX;

@@ -251,7 +251,7 @@ VOID TrayIconView::BuildIconList()
     {
         ::SendMessageW(hToolbar, TB_GETBUTTON, idx, (LPARAM)&tb);
         NOTIFYICONDATAW* idata = (NOTIFYICONDATAW*)tb.dwData;
-  ///      if (idata->uFlags & NIF_ICON)
+        if (idata->uFlags & NIF_ICON)
         {
             ImageList_AddIcon(hImageList, idata->hIcon);
         }
@@ -261,7 +261,7 @@ VOID TrayIconView::BuildIconList()
         CStringW szNotification;
         szNotification.LoadString(IDS_NOTIFY_HIDEINACTIVE);
 
-   ///     if (idata->uFlags & NIF_TIP)
+        if (idata->uFlags & NIF_TIP)
         {
             InsertItem(idata->szTip, 0, idx);
         }
