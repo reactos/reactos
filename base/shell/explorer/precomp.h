@@ -333,6 +333,8 @@ HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)
 #define TNWM_CHANGETRAYPOS  (WM_USER + 0x104)
 #define TNWM_RESIZETRAYICON (WM_USER + 0x105)
+#define TNWM_ENABLEAUTOTRAY (WM_USER + 0x106)
+#define TNWM_AUTOTRAY       (WM_USER + 0x107)
 
 #define NTNWM_REALIGN   (0x1)
 

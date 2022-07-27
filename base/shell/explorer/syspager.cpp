@@ -25,6 +25,9 @@
 #define ALWAYS_HIDE   1
 #define ALWAYS_SHOW   2
 
+#define IDI_TRAY_EXPAND 250
+#define IDI_TRAY_COLAPSE 251
+
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -200,6 +203,9 @@ class CSysPagerWnd :
     CTooltips m_Balloons;
     CBalloonQueue m_BalloonQueue;
 
+    BOOL bExpanded;
+    BOOL bAutoTrayEnabled;
+
 public:
     CSysPagerWnd();
     virtual ~CSysPagerWnd();
@@ -219,6 +225,8 @@ public:
     LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnResizeTrayIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnEnableAutoTray(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnTrayExpand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
 
@@ -259,12 +267,15 @@ public:
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TNWM_RESIZETRAYICON, OnResizeTrayIcon)
+        MESSAGE_HANDLER(TNWM_ENABLEAUTOTRAY, OnEnableAutoTray)
+        MESSAGE_HANDLER(TNWM_AUTOTRAY, OnTrayExpand)
         NOTIFY_CODE_HANDLER(TTN_POP, OnBalloonPop)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
 
     HRESULT Initialize(IN HWND hWndParent);
+    VOID AutoTray(BOOL expand);
 };
 
 /*
@@ -1274,7 +1285,10 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
  * SysPagerWnd
  */
 
-CSysPagerWnd::CSysPagerWnd() {}
+CSysPagerWnd::CSysPagerWnd():
+    bExpanded(FALSE),
+    bAutoTrayEnabled(FALSE)
+{}
 
 CSysPagerWnd::~CSysPagerWnd() {}
 
@@ -1406,7 +1420,6 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT columns = 0;
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
-
     int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
     if (IsHorizontal)
@@ -1560,6 +1573,53 @@ LRESULT CSysPagerWnd::OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     }
 
     return FALSE;
+}
+
+VOID CSysPagerWnd::AutoTray(BOOL expand)
+{
+
+    bExpanded = expand;
+
+}
+
+LRESULT CSysPagerWnd::OnTrayExpand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    switch (lParam)
+    {
+        case WM_LBUTTONUP:
+        {
+            AutoTray(TRUE);
+            break;
+        }
+    }
+    return S_OK;
+}
+
+LRESULT CSysPagerWnd::OnEnableAutoTray(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    HINSTANCE hInst = (HINSTANCE)GetModuleHandle(NULL);
+ 
+    NOTIFYICONDATA iData;
+    iData.cbSize = sizeof(iData);
+    iData.hWnd = m_hWnd;
+    iData.uID = IDI_TRAY_EXPAND;
+    iData.uFlags = NIF_ICON | NIF_MESSAGE;
+    iData.uCallbackMessage = TNWM_AUTOTRAY;
+    iData.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TRAY_EXPAND));
+    if (wParam)
+    {
+        NotifyIcon(NIM_ADD, &iData);
+    }
+    else
+    {
+        NotifyIcon(NIM_DELETE, &iData);
+        return S_OK;
+    }
+    INT ButtonCount = Toolbar.GetVisibleButtonCount() - 1;
+    Toolbar.MoveButton(ButtonCount, 0);
+    AutoTray(FALSE);
+
+    return S_OK;
 }
 
 LRESULT CSysPagerWnd::OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

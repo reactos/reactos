@@ -3370,6 +3370,13 @@ HandleTrayContextMenu:
             SetWindowPos(hWndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
 
+        if (newSettings->bHideInactiveIcons != g_TaskbarSettings.bHideInactiveIcons)
+        {
+            g_TaskbarSettings.bHideInactiveIcons = newSettings->bHideInactiveIcons;
+            HWND hwnd = FindWindowEx(m_TrayNotify, NULL, L"SysPager", L"");
+            SendMessage(hwnd, TNWM_ENABLEAUTOTRAY, g_TaskbarSettings.bHideInactiveIcons, 0);
+        }
+
         g_TaskbarSettings.Save();
         return 0;
     }
