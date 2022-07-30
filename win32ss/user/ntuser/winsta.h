@@ -20,7 +20,7 @@ typedef struct _WINSTATION_OBJECT
     PRTL_ATOM_TABLE AtomTable;
 
     ULONG          Flags;
-    struct tagKL  *spklList;
+    struct tagKL*  spklList;
     PTHREADINFO    ptiClipLock;
     PTHREADINFO    ptiDrawingClipboard;
     PWND           spwndClipOpen;
