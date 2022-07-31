@@ -6,6 +6,7 @@
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
  *                  Copyright 2011 Rafal Harabien
+ *                  Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
@@ -17,15 +18,59 @@
 
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
-PKL gspklBaseLayout = NULL;
+PKL gspklBaseLayout = NULL; // FIXME: Please move this to pWinSta->spklList
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
-
 /* PRIVATE FUNCTIONS ******************************************************/
+
+// Win: _GetKeyboardLayoutList
+static UINT APIENTRY
+IntGetKeyboardLayoutList(PWINSTATION_OBJECT pWinSta, ULONG nBuff, HKL *pHklBuff)
+{
+    UINT ret = 0;
+    PKL pKL, pFirstKL;
+
+    pFirstKL = gspklBaseLayout; // FIXME: Use pWinSta->spklList instead
+    if (!pWinSta || !pFirstKL)
+        return 0;
+
+    pKL = pFirstKL;
+
+    if (nBuff == 0)
+    {
+        // Count the effective PKLs
+        do
+        {
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                ++ret;
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+    else
+    {
+        // Copy the effective HKLs to pHklBuff
+        do
+        {
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            {
+                if (nBuff == 0)
+                    break;
+
+                *pHklBuff = pKL->hkl;
+                ++pHklBuff;
+                ++ret;
+                --nBuff;
+            }
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+
+    return ret;
+}
 
 #if 0 && DBG
 
@@ -550,54 +595,37 @@ NtUserGetKeyboardLayoutList(
     ULONG nBuff,
     HKL *pHklBuff)
 {
-    UINT uRet = 0;
-    PKL pKl;
+    UINT ret = 0;
+    PWINSTATION_OBJECT pWinSta;
 
     if (!pHklBuff)
         nBuff = 0;
 
     UserEnterShared();
 
-    if (!gspklBaseLayout)
+    if (nBuff > MAXULONG / sizeof(HKL))
     {
-        UserLeave();
-        return 0;
-    }
-    pKl = gspklBaseLayout;
-
-    if (nBuff == 0)
-    {
-        do
-        {
-            uRet++;
-            pKl = pKl->pklNext;
-        } while (pKl != gspklBaseLayout);
-    }
-    else
-    {
-        _SEH2_TRY
-        {
-            ProbeForWrite(pHklBuff, nBuff*sizeof(HKL), 4);
-
-            while (uRet < nBuff)
-            {
-                pHklBuff[uRet] = pKl->hkl;
-                uRet++;
-                pKl = pKl->pklNext;
-                if (pKl == gspklBaseLayout)
-                    break;
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            SetLastNtError(_SEH2_GetExceptionCode());
-            uRet = 0;
-        }
-        _SEH2_END;
+        SetLastNtError(ERROR_INVALID_PARAMETER);
+        goto Quit;
     }
 
+    _SEH2_TRY
+    {
+        ProbeForWrite(pHklBuff, nBuff * sizeof(HKL), 1);
+        pWinSta = IntGetProcessWindowStation(NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        goto Quit;
+    }
+    _SEH2_END;
+
+    ret = IntGetKeyboardLayoutList(pWinSta, nBuff, pHklBuff);
+
+Quit:
     UserLeave();
-    return uRet;
+    return ret;
 }
 
 /*
