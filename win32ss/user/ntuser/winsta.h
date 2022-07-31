@@ -106,12 +106,11 @@ IntCreateWindowStation(
     DWORD Unknown5,
     DWORD Unknown6);
 
+PWINSTATION_OBJECT FASTCALL IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL);
 BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL IntEndDesktopGraphics(VOID);
 BOOL FASTCALL CheckWinstaAttributeAccess(ACCESS_MASK);
-
-PWINSTATION_OBJECT FASTCALL IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL);
 
 /* EOF */
