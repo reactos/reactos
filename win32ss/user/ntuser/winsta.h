@@ -11,18 +11,16 @@
 #define WSS_DYING         (16)
 #define WSS_REALSHUTDOWN  (32)
 
+// See also: https://reactos.org/wiki/Techwiki:Win32k/WINDOWSTATION
 typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
-    HANDLE ShellWindow;
-    HANDLE ShellListView;
 
-    ULONG Flags;
-    struct _DESKTOP* ActiveDesktop;
-
+    ULONG          Flags;
+    struct tagKL*  spklList;
     PTHREADINFO    ptiClipLock;
     PTHREADINFO    ptiDrawingClipboard;
     PWND           spwndClipOpen;
@@ -40,7 +38,21 @@ typedef struct _WINSTATION_OBJECT
     LUID           luidUser;
     PVOID          psidUser;
 
+    /* ReactOS-specific */
+    struct _DESKTOP* ActiveDesktop;
+    HANDLE         ShellWindow;
+    HANDLE         ShellListView;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
+
+#ifndef _WIN64
+C_ASSERT(offsetof(WINSTATION_OBJECT, Flags) == 0x10);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spklList) == 0x14);
+C_ASSERT(offsetof(WINSTATION_OBJECT, ptiClipLock) == 0x18);
+C_ASSERT(offsetof(WINSTATION_OBJECT, ptiDrawingClipboard) == 0x1c);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipOpen) == 0x20);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipViewer) == 0x24);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipOwner) == 0x28);
+#endif
 
 extern WINSTATION_OBJECT *InputWindowStation;
 extern HANDLE gpidLogon;
