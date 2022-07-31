@@ -28,6 +28,11 @@
 #define IDI_TRAY_EXPAND 250
 #define IDI_TRAY_COLAPSE 251
 
+#define POWER_SERVICE_FLAG    0x00000001
+#define HOTPLUG_SERVICE_FLAG  0x00000002
+#define VOLUME_SERVICE_FLAG   0x00000004
+
+
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -38,15 +43,15 @@ struct IconWatcherData
 {
     HANDLE hProcess;
     DWORD ProcessId;
+    PWSTR pszExeName;
+    DWORD dwPreference;
     NOTIFYICONDATA IconData;
 
     IconWatcherData(CONST NOTIFYICONDATA *iconData) :
-        hProcess(NULL), ProcessId(0)
+        hProcess(NULL), ProcessId(0), pszExeName(NULL), dwPreference(0)
     {
+        CopyMemory(&IconData, iconData, sizeof(NOTIFYICONDATA));
         IconData.cbSize = sizeof(NOTIFYICONDATA);
-        IconData.hWnd = iconData->hWnd;
-        IconData.uID = iconData->uID;
-        IconData.guidItem = iconData->guidItem;
     }
 
     ~IconWatcherData()
@@ -68,6 +73,7 @@ class CIconWatcher
     bool m_Loop;
 
 public:
+
     CIconWatcher();
 
     virtual ~CIconWatcher();
@@ -77,6 +83,7 @@ public:
 
     bool AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData);
     bool RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData);
+    CAtlList<IconWatcherData *>*GetIconList(){return &m_WatcherList;}
 
     IconWatcherData* GetListEntry(_In_opt_ CONST NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove);
 
@@ -176,10 +183,16 @@ private:
     VOID SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam);
     LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTooltipShow(INT uCode, LPNMHDR hdr, BOOL& bHandled);
+    LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        SendMessage(GetParent(), WM_MOUSELEAVE, 0, 0);
+        return 0;
+    }
 
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
+        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
         MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
         NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
     END_MSG_MAP()
@@ -199,12 +212,13 @@ class CSysPagerWnd :
     public IOleWindow,
     public CIconWatcher
 {
+    friend BOOL EnumProc(IconWatcherData *pIcon, CSysPagerWnd *obj, BOOL);
     CNotifyToolbar Toolbar;
     CTooltips m_Balloons;
     CBalloonQueue m_BalloonQueue;
-
     BOOL bExpanded;
     BOOL bAutoTrayEnabled;
+    DWORD dwServicesEnabled;
 
 public:
     CSysPagerWnd();
@@ -227,6 +241,7 @@ public:
     LRESULT OnResizeTrayIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEnableAutoTray(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTrayExpand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
 
@@ -263,6 +278,7 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
@@ -276,6 +292,10 @@ public:
 
     HRESULT Initialize(IN HWND hWndParent);
     VOID AutoTray(BOOL expand);
+    BOOL EnumIcons(BOOL (*Func)(IconWatcherData*, CSysPagerWnd *obj, BOOL Exp), LPARAM lParam, BOOL Expand);
+    VOID PullServicesEnabled();
+    DWORD GetServiceEnabled(){return dwServicesEnabled;}
+    LRESULT IsActive(IconWatcherData *pIcon);
 };
 
 /*
@@ -1287,7 +1307,8 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 
 CSysPagerWnd::CSysPagerWnd():
     bExpanded(FALSE),
-    bAutoTrayEnabled(FALSE)
+    bAutoTrayEnabled(FALSE),
+    dwServicesEnabled(0)
 {}
 
 CSysPagerWnd::~CSysPagerWnd() {}
@@ -1575,11 +1596,105 @@ LRESULT CSysPagerWnd::OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     return FALSE;
 }
 
+BOOL CSysPagerWnd::EnumIcons(BOOL (*Operation)(IconWatcherData*, CSysPagerWnd *obj, BOOL Exp), LPARAM lParam, BOOL Expand)
+{
+    if (Operation == NULL || lParam == 0)
+        return FALSE;
+    
+    CAtlList<IconWatcherData *> *IconList = reinterpret_cast<CAtlList<IconWatcherData *> *>(lParam);
+
+    IconWatcherData *Entry = NULL;
+    POSITION NextPosition;
+
+    for (NextPosition = IconList->GetHeadPosition(); NextPosition != NULL;)
+    {
+        Entry = IconList->GetNext(NextPosition);
+        if (Entry && !Operation(Entry, this, Expand))
+        {
+            return TRUE;
+        }
+    }
+
+    return TRUE;
+}
+
+LRESULT CSysPagerWnd::IsActive(IconWatcherData *pIcon)
+{ MESSAGE("\nUID %d %s\n", pIcon->IconData.uID, debugstr_w(pIcon->IconData.szTip));
+    /**
+     For now, we force Volume and Remove hardware inactive by simulation
+    */
+    if (pIcon->IconData.uID == 33996 || pIcon->IconData.uID == 33997)
+        return FALSE;
+    return TRUE;
+}
+
+BOOL EnumProc(IconWatcherData *pIcon, CSysPagerWnd *obj, BOOL Expand)
+{
+    TBBUTTONINFO tbbi = { 0 };
+
+    tbbi.cbSize = sizeof(tbbi);
+    tbbi.dwMask = TBIF_STATE;
+    tbbi.fsState = TBSTATE_ENABLED;
+
+    int index = obj->Toolbar.FindItem(pIcon->IconData.hWnd, pIcon->IconData.uID, NULL);
+
+    if (!obj->IsActive(pIcon))
+    {
+        if (Expand)
+        {
+            pIcon->IconData.dwState &= ~NIS_HIDDEN;
+            tbbi.fsState &= ~TBSTATE_HIDDEN;
+            obj->Toolbar.IncVisibleButtons();
+        }
+        else
+        {
+            pIcon->IconData.dwState |= NIS_HIDDEN;
+            tbbi.fsState |= TBSTATE_HIDDEN;
+            obj->Toolbar.DecVisibleButtons();
+        }
+    }
+    obj->Toolbar.SetButtonInfo(index, &tbbi);
+
+    return TRUE;
+}
+
+LRESULT CSysPagerWnd::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (bExpanded)
+    {
+        AutoTray(FALSE);
+        bExpanded = FALSE;
+    }
+    return 0;
+}
+
 VOID CSysPagerWnd::AutoTray(BOOL expand)
 {
 
+    PullServicesEnabled();
+    EnumIcons(EnumProc, reinterpret_cast<LPARAM>(GetIconList()), expand);
     bExpanded = expand;
 
+    HINSTANCE hInst = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+ 
+    NOTIFYICONDATA iData;
+    iData.cbSize = sizeof(iData);
+    iData.hWnd = m_hWnd;
+    iData.uID = IDI_TRAY_EXPAND;
+    iData.uFlags = NIF_ICON | NIF_MESSAGE;
+    iData.uCallbackMessage = TNWM_AUTOTRAY;
+    if (expand)
+    {
+        iData.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TRAY_COLAPSE));
+    }
+    else
+    {
+        iData.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TRAY_EXPAND));
+    }
+    NotifyIcon(NIM_MODIFY, &iData);
+
+    NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+    GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
 }
 
 LRESULT CSysPagerWnd::OnTrayExpand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1640,20 +1755,24 @@ LRESULT CSysPagerWnd::OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 LRESULT CSysPagerWnd::OnResizeTrayIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     NOTIFYICONDATA *pIcon = (NOTIFYICONDATA*)lParam;
-    InternalIconData * notifyItem;
     TBBUTTONINFO tbbi = { 0 };
 
     tbbi.cbSize = sizeof(tbbi);
     tbbi.dwMask = TBIF_STATE;
     tbbi.fsState = TBSTATE_ENABLED;
 
-    int index = Toolbar.FindItem(pIcon->hWnd, pIcon->uID, &notifyItem);
+    IconWatcherData* Entry = GetListEntry(pIcon, NULL, FALSE);
+    Entry->dwPreference = wParam;
+
     if (pIcon)
     {
-        pIcon->dwStateMask = NIS_HIDDEN;
+        pIcon->dwStateMask = NIS_HIDDEN | NIS_SHAREDICON;
+        int index = Toolbar.FindItem(pIcon->hWnd, pIcon->uID, NULL);
+
         switch (wParam)
         {
             case HIDE_INACTIVE:
+                AutoTray(FALSE);
                 return S_OK;
 
             case ALWAYS_HIDE:
@@ -1690,6 +1809,33 @@ HRESULT CSysPagerWnd::Initialize(IN HWND hWndParent)
     SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
     return S_OK;
+}
+
+VOID CSysPagerWnd::PullServicesEnabled()
+{
+    HKEY hKey;
+    DWORD dwSize;
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER,
+                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\SysTray",
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ,
+                        NULL,
+                        &hKey,
+                        NULL) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(DWORD);
+        RegQueryValueExW(hKey,
+                         L"Services",
+                         NULL,
+                         NULL,
+                         (LPBYTE)&this->dwServicesEnabled,
+                         &dwSize);
+
+        RegCloseKey(hKey);
+    }
 }
 
 HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv)
