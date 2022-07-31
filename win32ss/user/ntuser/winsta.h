@@ -112,17 +112,6 @@ BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL IntEndDesktopGraphics(VOID);
 BOOL FASTCALL CheckWinstaAttributeAccess(ACCESS_MASK);
 
-// Win: _GetProcessWindowStation
-static inline PWINSTATION_OBJECT
-IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
-{
-    PWINSTATION_OBJECT pWinSta;
-    PPROCESSINFO ppi = GetW32ProcessInfo();
-    HWINSTA hWinSta = ppi->hwinsta;
-    if (phWinSta)
-        *phWinSta = hWinSta;
-    IntValidateWindowStationHandle(hWinSta, UserMode, 0, &pWinSta, 0);
-    return pWinSta;
-}
+PWINSTATION_OBJECT FASTCALL IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL);
 
 /* EOF */
