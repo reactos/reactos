@@ -29,7 +29,10 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 // Win: _GetKeyboardLayoutList
 static UINT APIENTRY
-IntGetKeyboardLayoutList(PWINSTATION_OBJECT pWinSta, ULONG nBuff, HKL *pHklBuff)
+IntGetKeyboardLayoutList(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _In_ ULONG nBuff,
+    _Out_ HKL *pHklBuff)
 {
     UINT ret = 0;
     PKL pKL, pFirstKL;
