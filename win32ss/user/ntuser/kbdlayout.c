@@ -60,13 +60,13 @@ IntGetKeyboardLayoutList(
         {
             if (!(pKL->dwKL_Flags & KLF_UNLOAD))
             {
-                if (nBuff == 0)
-                    break;
-
                 *pHklBuff = pKL->hkl;
                 ++pHklBuff;
                 ++ret;
                 --nBuff;
+
+                if (nBuff == 0)
+                    break;
             }
             pKL = pKL->pklNext;
         } while (pKL != pFirstKL);
