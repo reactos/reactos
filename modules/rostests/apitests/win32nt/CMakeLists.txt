@@ -54,6 +54,7 @@ list(APPEND SOURCE
     ntuser/NtUserFindExistingCursorIcon.c
     ntuser/NtUserGetClassInfo.c
 #    ntuser/NtUserGetIconInfo.c
+    ntuser/NtUserGetKeyboardLayoutName.c
     ntuser/NtUserGetThreadState.c
     ntuser/NtUserGetTitleBarInfo.c
     ntuser/NtUserProcessConnect.c
