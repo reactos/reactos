@@ -42,7 +42,7 @@ IntGetKeyboardLayoutList(PWINSTATION_OBJECT pWinSta, ULONG nBuff, HKL *pHklBuff)
 
     if (nBuff == 0)
     {
-        // Count the effective PKLs
+        /* Count the effective PKLs */
         do
         {
             if (!(pKL->dwKL_Flags & KLF_UNLOAD))
@@ -52,7 +52,7 @@ IntGetKeyboardLayoutList(PWINSTATION_OBJECT pWinSta, ULONG nBuff, HKL *pHklBuff)
     }
     else
     {
-        // Copy the effective HKLs to pHklBuff
+        /* Copy the effective HKLs to pHklBuff */
         do
         {
             if (!(pKL->dwKL_Flags & KLF_UNLOAD))
