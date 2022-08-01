@@ -615,7 +615,6 @@ NtUserGetKeyboardLayoutList(
     _SEH2_TRY
     {
         ProbeForWrite(pHklBuff, nBuff * sizeof(HKL), 1);
-        pWinSta = IntGetProcessWindowStation(NULL);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -624,7 +623,18 @@ NtUserGetKeyboardLayoutList(
     }
     _SEH2_END;
 
-    ret = IntGetKeyboardLayoutList(pWinSta, nBuff, pHklBuff);
+    pWinSta = IntGetProcessWindowStation(NULL);
+
+    _SEH2_TRY
+    {
+        ret = IntGetKeyboardLayoutList(pWinSta, nBuff, pHklBuff);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        goto Quit;
+    }
+    _SEH2_END;
 
 Quit:
     UserLeave();
