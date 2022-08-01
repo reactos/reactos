@@ -18,7 +18,7 @@
 
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
-PKL gspklBaseLayout = NULL; // FIXME: Please move this to pWinSta->spklList
+PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
@@ -37,7 +37,7 @@ IntGetKeyboardLayoutList(
     UINT ret = 0;
     PKL pKL, pFirstKL;
 
-    pFirstKL = gspklBaseLayout; // FIXME: Use pWinSta->spklList instead
+    pFirstKL = gspklBaseLayout; /* FIXME: Use pWinSta->spklList instead */
     if (!pWinSta || !pFirstKL)
         return 0;
 
