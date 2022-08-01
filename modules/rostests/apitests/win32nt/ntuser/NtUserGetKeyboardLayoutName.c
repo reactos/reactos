@@ -6,6 +6,7 @@
  */
 
 #include <win32nt.h>
+#include <pseh/pseh2.h>
 
 typedef BOOL (APIENTRY *FN_NtUserGetKeyboardLayoutName)(PVOID);
 
