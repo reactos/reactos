@@ -41,7 +41,7 @@ START_TEST(NtUserGetKeyboardLayoutName)
     RtlZeroMemory(szBuff, sizeof(szBuff));
     ustr.Buffer = szBuff;
     ustr.Length = 0;
-    ustr.MaximumLength = RTL_NUMBER_OF(szBuff);
+    ustr.MaximumLength = RTL_NUMBER_OF(szBuff) * sizeof(WCHAR);
     ret = bHung = FALSE;
     _SEH2_TRY
     {
@@ -56,4 +56,5 @@ START_TEST(NtUserGetKeyboardLayoutName)
     ok_int(bHung, FALSE);
     ok_int(ret, TRUE);
     ok(szBuff[0] != 0, "szBuff[0] was %d\n", szBuff[0]);
+    trace("szBuff: %S\n", szBuff);
 }
