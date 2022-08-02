@@ -128,6 +128,8 @@ IntWinStaObjectDelete(
 
     RtlDestroyAtomTable(WinSta->AtomTable);
 
+    UserAssignmentUnlock((PVOID*)&WinSta->spklList);
+
     return STATUS_SUCCESS;
 }
 
