@@ -15,17 +15,17 @@ START_TEST(NtUserGetKeyboardLayoutName)
     FN_NtUserGetKeyboardLayoutName fn = (FN_NtUserGetKeyboardLayoutName)NtUserGetKeyboardLayoutName;
     UNICODE_STRING ustr;
     WCHAR szBuff[MAX_PATH];
-    BOOL bHung;
+    BOOL bHung, ret;
 
     /* Try NULL */
-    ok_int(fn(NULL), 0);
+    ok_int(fn(NULL), FALSE);
 
     /* Try szBuff */
-    bHung = FALSE;
-    szBuff[0] = 0;
+    ret = bHung = FALSE;
+    RtlZeroMemory(szBuff, sizeof(szBuff));
     _SEH2_TRY
     {
-        fn(szBuff);
+        ret = fn(szBuff);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -34,17 +34,18 @@ START_TEST(NtUserGetKeyboardLayoutName)
     _SEH2_END;
 
     ok_int(bHung, FALSE);
+    //ok_int(ret, FALSE); // XP:TRUE, 2k3:FALSE
     ok(szBuff[0] == 0, "szBuff[0] was %d\n", szBuff[0]);
 
     /* Try ustr */
-    szBuff[0] = 0;
+    RtlZeroMemory(szBuff, sizeof(szBuff));
     ustr.Buffer = szBuff;
     ustr.Length = 0;
     ustr.MaximumLength = RTL_NUMBER_OF(szBuff);
-    bHung = FALSE;
+    ret = bHung = FALSE;
     _SEH2_TRY
     {
-        fn(&ustr);
+        ret = fn(&ustr);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -53,5 +54,6 @@ START_TEST(NtUserGetKeyboardLayoutName)
     _SEH2_END;
 
     ok_int(bHung, FALSE);
+    ok_int(ret, TRUE);
     ok(szBuff[0] != 0, "szBuff[0] was %d\n", szBuff[0]);
 }
