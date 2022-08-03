@@ -395,6 +395,18 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
     return TRUE;
 }
 
+// Win: _GetProcessWindowStation
+PWINSTATION_OBJECT FASTCALL
+IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
+{
+    PWINSTATION_OBJECT pWinSta;
+    PPROCESSINFO ppi = GetW32ProcessInfo();
+    HWINSTA hWinSta = ppi->hwinsta;
+    if (phWinSta)
+        *phWinSta = hWinSta;
+    IntValidateWindowStationHandle(hWinSta, UserMode, 0, &pWinSta, 0);
+    return pWinSta;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
