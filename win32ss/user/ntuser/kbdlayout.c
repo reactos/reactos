@@ -615,7 +615,6 @@ NtUserGetKeyboardLayoutName(
     PKL pKl;
     PTHREADINFO pti;
     UNICODE_STRING ustrTemp;
-    /*NTSTATUS Status;*/
 
     UserEnterShared();
 
