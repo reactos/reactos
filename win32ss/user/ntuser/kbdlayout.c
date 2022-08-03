@@ -644,14 +644,6 @@ NtUserGetKeyboardLayoutName(
 #if 1
             RtlInitUnicodeString(&ustrTemp, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
             RtlCopyUnicodeString(pustrName, &ustrTemp);
-#else
-            Status = RtlIntegerToUnicodeString(/* pKl->(offset 64) */, 16, pustrName);
-            if (!NT_SUCCESS(Status))
-            {
-                EngSetLastError(ERROR_INVALID_PARAMETER);
-                goto cleanup;
-            }
-#endif
         }
 
         bRet = TRUE;
