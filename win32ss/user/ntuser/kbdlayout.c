@@ -641,7 +641,6 @@ NtUserGetKeyboardLayoutName(
                 EngSetLastError(ERROR_INVALID_PARAMETER);
                 goto cleanup;
             }
-#if 1
             RtlInitUnicodeString(&ustrTemp, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
             RtlCopyUnicodeString(pustrName, &ustrTemp);
         }
