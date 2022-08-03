@@ -2431,7 +2431,7 @@ NtUserGetKeyboardLayoutList(
 BOOL
 NTAPI
 NtUserGetKeyboardLayoutName(
-    PUNICODE_STRING pustrName);
+    _Out_ PUNICODE_STRING pustrName);
 
 DWORD
 NTAPI
