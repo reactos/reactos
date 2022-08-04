@@ -609,7 +609,7 @@ NtUserGetKeyboardLayoutList(
 BOOL
 APIENTRY
 NtUserGetKeyboardLayoutName(
-    _Out_ PUNICODE_STRING pustrName)
+    _Inout_ PUNICODE_STRING pustrName)
 {
     BOOL bRet = FALSE;
     PKL pKl;
