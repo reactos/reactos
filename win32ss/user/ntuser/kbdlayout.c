@@ -649,11 +649,12 @@ Quit:
 BOOL
 APIENTRY
 NtUserGetKeyboardLayoutName(
-    LPWSTR pwszName)
+    _Inout_ PUNICODE_STRING pustrName)
 {
     BOOL bRet = FALSE;
     PKL pKl;
     PTHREADINFO pti;
+    UNICODE_STRING ustrTemp;
 
     UserEnterShared();
 
@@ -665,8 +666,24 @@ NtUserGetKeyboardLayoutName(
 
     _SEH2_TRY
     {
-        ProbeForWrite(pwszName, KL_NAMELENGTH*sizeof(WCHAR), 1);
-        wcscpy(pwszName, pKl->spkf->awchKF);
+        ProbeForWriteUnicodeString(pustrName);
+        ProbeForWrite(pustrName->Buffer, pustrName->MaximumLength, 1);
+
+        if (IS_IME_HKL(pKl->hkl))
+        {
+            RtlIntegerToUnicodeString((ULONG)(ULONG_PTR)pKl->hkl, 16, pustrName);
+        }
+        else
+        {
+            if (pustrName->MaximumLength < KL_NAMELENGTH * sizeof(WCHAR))
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                goto cleanup;
+            }
+            RtlInitUnicodeString(&ustrTemp, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
+            RtlCopyUnicodeString(pustrName, &ustrTemp);
+        }
+
         bRet = TRUE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

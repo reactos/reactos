@@ -584,7 +584,13 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
 BOOL WINAPI
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
-    return NtUserGetKeyboardLayoutName(pwszKLID);
+    UNICODE_STRING Name;
+
+    RtlInitEmptyUnicodeString(&Name,
+                              pwszKLID,
+                              KL_NAMELENGTH * sizeof(WCHAR));
+
+    return NtUserGetKeyboardLayoutName(&Name);
 }
 
 /*
