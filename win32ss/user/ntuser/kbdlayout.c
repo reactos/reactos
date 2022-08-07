@@ -654,7 +654,7 @@ NtUserGetKeyboardLayoutName(
     BOOL bRet = FALSE;
     PKL pKl;
     PTHREADINFO pti;
-    UNICODE_STRING ustrTemp, ustrNameSafe;
+    UNICODE_STRING ustrNameSafe;
 
     UserEnterShared();
 
