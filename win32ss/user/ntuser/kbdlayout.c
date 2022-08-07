@@ -683,8 +683,10 @@ NtUserGetKeyboardLayoutName(
                 EngSetLastError(ERROR_INVALID_PARAMETER);
                 goto cleanup;
             }
+
+            /* FIXME: Do not use awchKF */
             ustrNameSafe.Length = 0;
-            Status = RtlAppendUnicodeToString(&ustrNameSafe, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
+            Status = RtlAppendUnicodeToString(&ustrNameSafe, pKl->spkf->awchKF);
         }
 
         if (NT_SUCCESS(Status))
