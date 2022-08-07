@@ -655,6 +655,7 @@ NtUserGetKeyboardLayoutName(
     PKL pKl;
     PTHREADINFO pti;
     UNICODE_STRING ustrNameSafe;
+    NTSTATUS Status;
 
     UserEnterShared();
 
@@ -673,7 +674,7 @@ NtUserGetKeyboardLayoutName(
 
         if (IS_IME_HKL(pKl->hkl))
         {
-            RtlIntegerToUnicodeString((ULONG)(ULONG_PTR)pKl->hkl, 16, &ustrNameSafe);
+            Status = RtlIntegerToUnicodeString((ULONG)(ULONG_PTR)pKl->hkl, 16, &ustrNameSafe);
         }
         else
         {
@@ -682,13 +683,15 @@ NtUserGetKeyboardLayoutName(
                 EngSetLastError(ERROR_INVALID_PARAMETER);
                 goto cleanup;
             }
-            RtlInitUnicodeString(&ustrTemp, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
-            RtlCopyUnicodeString(&ustrNameSafe, &ustrTemp);
+            ustrNameSafe.Length = 0;
+            Status = RtlAppendUnicodeToString(&ustrNameSafe, pKl->spkf->awchKF); /* FIXME: Do not use awchKF */
         }
 
-        *pustrName = ustrNameSafe;
-
-        bRet = TRUE;
+        if (NT_SUCCESS(Status))
+        {
+            *pustrName = ustrNameSafe;
+            bRet = TRUE;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
