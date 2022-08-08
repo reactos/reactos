@@ -169,10 +169,11 @@ VOID KmtFinishThread(IN PKTHREAD Thread OPTIONAL, IN PKEVENT Event OPTIONAL);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
-VOID KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
+DWORD KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
 VOID KmtUnloadDriver(VOID);
-VOID KmtOpenDriver(VOID);
+DWORD KmtOpenDriver(VOID);
 VOID KmtCloseDriver(VOID);
+DWORD KmtLoadAndOpenDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
 
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);

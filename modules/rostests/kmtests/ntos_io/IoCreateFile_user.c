@@ -18,8 +18,10 @@ START_TEST(IoCreateFile)
 
     KmtRunKernelTest("IoCreateFile");
 
-    KmtLoadDriver(L"IoCreateFile", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"IoCreateFile", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     Error = KmtSendStringToDriver(IOCTL_CALL_CREATE, NonSymlinkedFileName);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);

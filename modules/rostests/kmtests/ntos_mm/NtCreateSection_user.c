@@ -19,9 +19,12 @@ START_TEST(NtCreateSection)
     UNICODE_STRING InitOnCreate = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InitOnCreate");
     UNICODE_STRING InitOnRW = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InitOnRW");
     UNICODE_STRING InvalidInit = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InvalidInit");
+    DWORD Error;
 
-    KmtLoadDriver(L"NtCreateSection", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"NtCreateSection", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     /* Test 0 */
     InitializeObjectAttributes(&ObjectAttributes, &InvalidInit, OBJ_CASE_INSENSITIVE, NULL, NULL);

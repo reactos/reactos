@@ -15,8 +15,10 @@ START_TEST(CcSetFileSizes)
     DWORD Ret;
     ULONG TestId;
 
-    KmtLoadDriver(L"CcSetFileSizes", FALSE);
-    KmtOpenDriver();
+    Ret = KmtLoadAndOpenDriver(L"CcSetFileSizes", FALSE);
+    ok_eq_int(Ret, ERROR_SUCCESS);
+    if (Ret)
+        return;
 
     /* 0: mapped data - only FS
      * 1: copy read - only FS

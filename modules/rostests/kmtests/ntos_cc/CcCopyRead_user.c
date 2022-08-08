@@ -20,9 +20,12 @@ START_TEST(CcCopyRead)
     UNICODE_STRING ReallySmallAlignmentTest = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\ReallySmallAlignmentTest");
     UNICODE_STRING FileBig = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\FileBig");
     UNICODE_STRING BehaviourTestFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\BehaviourTestFile");
+    DWORD Error;
 
-    KmtLoadDriver(L"CcCopyRead", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"CcCopyRead", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     InitializeObjectAttributes(&ObjectAttributes, &SmallAlignmentTest, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenFile(&Handle, FILE_ALL_ACCESS, &ObjectAttributes, &IoStatusBlock, 0, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);

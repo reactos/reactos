@@ -15,8 +15,10 @@ START_TEST(CcPinRead)
     DWORD Ret;
     ULONG TestId;
 
-    KmtLoadDriver(L"CcPinRead", FALSE);
-    KmtOpenDriver();
+    Ret = KmtLoadAndOpenDriver(L"CcPinRead", FALSE);
+    ok_eq_int(Ret, ERROR_SUCCESS);
+    if (Ret)
+        return;
 
     /* 3 tests for offset
      * 1 test for BCB
