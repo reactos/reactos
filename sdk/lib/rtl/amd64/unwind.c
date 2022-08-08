@@ -1053,29 +1053,37 @@ RtlpCaptureNonVolatileContextPointers(
 
     do
     {
+        /* Make sure nothing fishy is going on. Currently this is for kernel mode only. */
+        ASSERT((LONG64)Context.Rip < 0);
+        ASSERT((LONG64)Context.Rsp < 0);
+
         /* Look up the function entry */
         FunctionEntry = RtlLookupFunctionEntry(Context.Rip, &ImageBase, NULL);
-        ASSERT(FunctionEntry != NULL);
+        if (FunctionEntry != NULL)
+        {
+            /* Do a virtual unwind to the caller and capture saved non-volatiles */
+            RtlVirtualUnwind(UNW_FLAG_EHANDLER,
+                             ImageBase,
+                             Context.Rip,
+                             FunctionEntry,
+                             &Context,
+                             &HandlerData,
+                             &EstablisherFrame,
+                             NonvolatileContextPointers);
 
-        /* Do a virtual unwind to the caller and capture saved non-volatiles */
-        RtlVirtualUnwind(UNW_FLAG_EHANDLER,
-                         ImageBase,
-                         Context.Rip,
-                         FunctionEntry,
-                         &Context,
-                         &HandlerData,
-                         &EstablisherFrame,
-                         NonvolatileContextPointers);
+            ASSERT(EstablisherFrame != 0);
+        }
+        else
+        {
+            Context.Rip = *(PULONG64)Context.Rsp;
+            Context.Rsp += 8;
+        }
 
-        /* Make sure nothing fishy is going on. Currently this is for kernel mode only. */
-        ASSERT(EstablisherFrame != 0);
-        ASSERT((LONG64)Context.Rip < 0);
+        /* Continue until we reach user mode */
+    } while ((LONG64)Context.Rip < 0);
 
-        /* Continue until we reached the target frame or user mode */
-    } while (EstablisherFrame < TargetFrame);
-
-    /* If the caller did the right thing, we should get exactly the target frame */
-    ASSERT(EstablisherFrame == TargetFrame);
+    /* If the caller did the right thing, we should get past the target frame */
+    ASSERT(EstablisherFrame >= TargetFrame);
 }
 
 VOID
