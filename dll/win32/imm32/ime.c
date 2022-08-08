@@ -2004,6 +2004,8 @@ BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
     HWND hImeWnd;
     BOOL bImeWnd, ret;
 
+    TRACE("(%p, %d)\n", hWnd, enable);
+
     if (!Imm32IsSystemJapaneseOrKorean())
     {
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
