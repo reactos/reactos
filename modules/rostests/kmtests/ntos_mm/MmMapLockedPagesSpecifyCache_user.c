@@ -86,9 +86,12 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     SYSTEM_BASIC_INFORMATION BasicInfo;
     NTSTATUS Status;
     ULONG_PTR HighestAddress;
+    DWORD Error;
 
-    KmtLoadDriver(L"MmMapLockedPagesSpecifyCache", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"MmMapLockedPagesSpecifyCache", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     // Less than a page
     SET_BUFFER_LENGTH(BufferLength, 2048);

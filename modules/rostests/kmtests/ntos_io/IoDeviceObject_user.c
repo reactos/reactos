@@ -9,12 +9,20 @@
 
 START_TEST(IoDeviceObject)
 {
+    DWORD Error;
+
     /* make sure IoHelper has an existing service key, but is not started */
-    KmtLoadDriver(L"IoHelper", FALSE);
+    Error = KmtLoadDriver(L"IoHelper", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
     KmtUnloadDriver();
 
-    KmtLoadDriver(L"IoDeviceObject", TRUE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"IoDeviceObject", TRUE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
+
     KmtCloseDriver();
     KmtUnloadDriver();
 }

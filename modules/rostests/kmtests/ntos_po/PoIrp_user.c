@@ -10,6 +10,8 @@
 
 START_TEST(PoIrp)
 {
+    DWORD Error;
+
 #if defined(_M_AMD64)
     if (TRUE)
     {
@@ -18,8 +20,11 @@ START_TEST(PoIrp)
     }
 #endif
 
-    KmtLoadDriver(L"PoIrp", TRUE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"PoIrp", TRUE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
+
     KmtSendToDriver(IOCTL_RUN_TEST);
     KmtCloseDriver();
     KmtUnloadDriver();

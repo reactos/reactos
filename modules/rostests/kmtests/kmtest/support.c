@@ -124,12 +124,11 @@ static HANDLE TestDeviceHandle;
  * @param RestartIfRunning
  *        TRUE to stop and restart the service if it is already running
  */
-VOID
+DWORD
 KmtLoadDriver(
     IN PCWSTR ServiceName,
     IN BOOLEAN RestartIfRunning)
 {
-    DWORD Error = ERROR_SUCCESS;
     WCHAR ServicePath[MAX_PATH];
 
     StringCbCopyW(ServicePath, sizeof(ServicePath), ServiceName);
@@ -138,13 +137,7 @@ KmtLoadDriver(
     StringCbCopyW(TestServiceName, sizeof(TestServiceName), L"Kmtest-");
     StringCbCatW(TestServiceName, sizeof(TestServiceName), ServiceName);
 
-    Error = KmtCreateAndStartService(TestServiceName, ServicePath, NULL, &TestServiceHandle, RestartIfRunning);
-
-    if (Error)
-    {
-        // TODO
-        __debugbreak();
-    }
+    return KmtCreateAndStartService(TestServiceName, ServicePath, NULL, &TestServiceHandle, RestartIfRunning);
 }
 
 /**
@@ -177,7 +170,7 @@ KmtUnloadDriver(VOID)
  *
  * Open special-purpose driver (acquire a device handle)
  */
-VOID
+DWORD
 KmtOpenDriver(VOID)
 {
     DWORD Error = ERROR_SUCCESS;
@@ -190,12 +183,30 @@ KmtOpenDriver(VOID)
     if (TestDeviceHandle == INVALID_HANDLE_VALUE)
         error(Error);
 
-    if (Error)
-    {
-        // TODO
-        __debugbreak();
-    }
+    return Error;
+}
 
+/**
+ * @name KmtOpenDriver
+ *
+ * Load and open special-purpose driver (acquire a device handle)
+ */
+DWORD
+KmtLoadAndOpenDriver(
+    IN PCWSTR ServiceName,
+    IN BOOLEAN RestartIfRunning)
+{
+    DWORD Error;
+
+    Error = KmtLoadDriver(ServiceName, RestartIfRunning);
+    if (Error)
+        return Error;
+
+    Error = KmtOpenDriver();
+    if (Error)
+        return Error;
+
+    return ERROR_SUCCESS;
 }
 
 /**
@@ -213,8 +224,7 @@ KmtCloseDriver(VOID)
 
     if (Error)
     {
-        // TODO
-        __debugbreak();
+        DPRINT1("CloseHandle failed: 0x%lx\n", Error);
     }
 }
 
