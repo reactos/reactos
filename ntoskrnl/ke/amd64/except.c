@@ -215,7 +215,7 @@ KiPrepareUserDebugData(void)
     {
         /* Get a pointer to the loader data */
         PebLdr = Teb->ProcessEnvironmentBlock->Ldr;
-        if (!PebLdr) _SEH2_YIELD(return);
+        if (!PebLdr) _SEH2_LEAVE;
 
         /* Now loop all entries in the module list */
         for (ListEntry = PebLdr->InLoadOrderModuleList.Flink;
