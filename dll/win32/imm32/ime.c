@@ -2003,7 +2003,7 @@ BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
     PCLIENTIMC pClientImc;
     HWND hImeWnd;
     BOOL bImeWnd, ret;
-  
+
     if (!Imm32IsSystemJapaneseOrKorean())
     {
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
