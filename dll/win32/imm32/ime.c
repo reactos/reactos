@@ -1993,3 +1993,55 @@ ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
     return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize, FALSE);
 }
+
+/***********************************************************************
+ *		ImmWINNLSEnableIME (IMM32.@)
+ */
+BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
+{
+    HIMC hIMC;
+    PCLIENTIMC pClientImc;
+    HWND hImeWnd;
+    BOOL bImeWnd, ret;
+  
+    if (!Imm32IsSystemJapaneseOrKorean())
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
+    if (!hIMC)
+        return FALSE;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (!pClientImc)
+        return FALSE;
+
+    ret = !(pClientImc->dwFlags & CLIENTIMC_DISABLEIME);
+    if (!!enable == ret)
+    {
+        ImmUnlockClientImc(pClientImc);
+        return ret;
+    }
+
+    if (!IsWindow(hWnd))
+        hWnd = GetFocus();
+
+    hImeWnd = ImmGetDefaultIMEWnd(hWnd);
+    bImeWnd = IsWindow(hImeWnd);
+    if (bImeWnd)
+        ImmSetActiveContext(hWnd, (enable ? NULL : hIMC), FALSE);
+
+    if (enable)
+        pClientImc->dwFlags &= ~CLIENTIMC_DISABLEIME;
+    else
+        pClientImc->dwFlags |= CLIENTIMC_DISABLEIME;
+
+    ImmUnlockClientImc(pClientImc);
+
+    if (bImeWnd)
+        ImmSetActiveContext(hWnd, (enable ? hIMC : NULL), TRUE);
+
+    return ret;
+}
