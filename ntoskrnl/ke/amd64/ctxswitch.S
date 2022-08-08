@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ksamd64.inc>
+#include <trapamd64.inc>
 
 /*
  * BOOLEAN
@@ -70,10 +71,7 @@ PUBLIC KiThreadStartup
      * mov [rsp + SfP3Home], r8
      * mov [rsp + SfP4Home], r9
      */
-
-    /* Terminate the unwind chain, by setting rbp as frame pointer,
-       which contains 0 */
-    .setframe rbp, 0
+    .allocstack (5 * 8)
     .endprolog
 
     /* Clear all the non-volatile registers, so the thread won't be tempted to
@@ -101,21 +99,50 @@ PUBLIC KiThreadStartup
     mov r8, [rsp + SfP3Home]  /* ? */
     call qword ptr [rsp + SfP4Home]     /* SystemRoutine */
 
-    /* The thread returned. If it was a user-thread, we have a return address
-       and all is well, otherwise this is very bad. */
-    mov rcx, [rsp + SfReturn]
-    or rcx, rcx
-    jnz .leave
+    /* Return to the exit code */
+    add rsp, 5 * 8
+    ret
+.ENDP
 
-    /* A system thread returned...this is very bad! */
-    int 3
+PUBLIC KiInvalidSystemThreadStartupExit
+.PROC KiInvalidSystemThreadStartupExit
+    .endprolog
 
-.leave:
-    /* It was a user thread, set our trapframe for the System Call Exit Dispatcher */
-    lea rcx, [rsp + 6 * 8 + KEXCEPTION_FRAME_LENGTH]
+    /* This is invalid! */
+    int HEX(2C)
+    nop
+.ENDP
+
+PUBLIC KiUserThreadStartupExit
+.PROC KiUserThreadStartupExit
+    .allocstack (KEXCEPTION_FRAME_LENGTH - 8)
+    .savereg rbp, ExRbp
+    .savereg rbx, ExRbx
+    .savereg rdi, ExRdi
+    .savereg rsi, ExRsi
+    .savereg r12, ExR12
+    .savereg r13, ExR13
+    .savereg r14, ExR14
+    .savereg r15, ExR15
+    .savexmm128 xmm6, ExXmm6
+    .savexmm128 xmm7, ExXmm7
+    .savexmm128 xmm8, ExXmm8
+    .savexmm128 xmm9, ExXmm9
+    .savexmm128 xmm10, ExXmm10
+    .savexmm128 xmm11, ExXmm11
+    .savexmm128 xmm12, ExXmm12
+    .savexmm128 xmm13, ExXmm13
+    .savexmm128 xmm14, ExXmm14
+    .savexmm128 xmm15, ExXmm15
+    .endprolog
+
+    /* Restore the exception frame */
+    RESTORE_EXCEPTION_STATE
+
+    /* Point rcx to the trap frame */
+    lea rcx, [rsp + 8]
 
     /* Return to the trap exit code */
-    add rsp, 5 * 8
     ret
 .ENDP
 
