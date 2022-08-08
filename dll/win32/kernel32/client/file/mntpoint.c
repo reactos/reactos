@@ -206,7 +206,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
             /* Make a string of it, to easy the checks */
             SymbolicLink.Length = MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameLength;
             SymbolicLink.MaximumLength = SymbolicLink.Length;
-            SymbolicLink.Buffer = (PVOID)((ULONG_PTR)&MountPoints->MountPoints[CurrentMntPt] + MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameOffset);
+            SymbolicLink.Buffer = (PVOID)((ULONG_PTR)MountPoints + MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameOffset);
             /* If that's a NT volume name (GUID form), keep it! */
             if (MOUNTMGR_IS_NT_VOLUME_NAME(&SymbolicLink))
             {
