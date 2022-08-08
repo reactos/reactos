@@ -40,7 +40,7 @@ add_library(stlport
     src/cxa.c
     src/c_locale.c)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(stlport PRIVATE -Wno-missing-braces -Wno-unused-local-typedef)
     target_compile_options(stlport PRIVATE -Wno-infinite-recursion -Wno-deprecated-register)
     target_compile_options(stlport PRIVATE -Wno-tautological-unsigned-zero-compare)

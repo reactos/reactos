@@ -491,7 +491,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
 
 static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
 {
-    FIXME("We have to do something\n");
+    TRACE("We have to do something\n");
 }
 
 /***********************************************************************
@@ -509,7 +509,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
     if (!IS_IMM_MODE())
         return NULL;
 
-    pWnd = ValidateHwndNoErr(hWnd);
+    pWnd = ValidateHwnd(hWnd);
     if (!pWnd)
         return NULL;
 
@@ -555,7 +555,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
         return FALSE;
 
     hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
-    pFocusWnd = ValidateHwndNoErr(hwndFocus);
+    pFocusWnd = ValidateHwnd(hwndFocus);
     if (pFocusWnd)
         hOldIMC = pFocusWnd->hImc;
 
@@ -566,7 +566,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
             return TRUE;
 
         case 1:
-            pFocusWnd = ValidateHwndNoErr(hwndFocus);
+            pFocusWnd = ValidateHwnd(hwndFocus);
             if (pFocusWnd)
             {
                 hIMC = pFocusWnd->hImc;
@@ -647,7 +647,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     if (!hIMC || !IS_IMM_MODE())
         return FALSE;
 
-    pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
     {
         ERR("invalid pIMC: %p\n", pIMC);
@@ -830,7 +830,13 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     RtlEnterCriticalSection(&pClientImc->cs);
 
     if (pClientImc->hInputContext)
-        goto Finish;
+    {
+        pIC = LocalLock(pClientImc->hInputContext);
+        if (pIC)
+            goto Success;
+        else
+            goto Failure;
+    }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
@@ -847,14 +853,14 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
-        goto Quit;
+        goto Failure;
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
     if (!pIC)
     {
         LocalFree(hIC);
-        goto Quit;
+        goto Failure;
     }
     pClientImc->hInputContext = hIC;
 
@@ -862,17 +868,17 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
     {
         pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
-        goto Quit;
+        goto Failure;
     }
 
-Finish:
+Success:
     CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
     InterlockedIncrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
     return pIC;
 
-Quit:
+Failure:
     RtlLeaveCriticalSection(&pClientImc->cs);
     ImmUnlockClientImc(pClientImc);
     return NULL;
@@ -910,7 +916,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     if (!hImc)
         return NULL;
 
-    pIMC = ValidateHandleNoErr(hImc, TYPE_INPUTCONTEXT);
+    pIMC = ValidateHandle(hImc, TYPE_INPUTCONTEXT);
     if (!pIMC || !Imm32CheckImcProcess(pIMC))
         return NULL;
 
@@ -980,7 +986,7 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
         goto Quit;
     }
 
-    pWnd = ValidateHwndNoErr(hWnd);
+    pWnd = ValidateHwnd(hWnd);
     if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
         return NULL;
 
@@ -1243,6 +1249,7 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
+// Win: ImmDllInitialize
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;

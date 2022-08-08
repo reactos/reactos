@@ -1,22 +1,30 @@
 
 #include <asm.inc>
 
+#include <ksamd64.inc>
+
 .code64
 
 PUBLIC KdbpStackSwitchAndCall
 KdbpStackSwitchAndCall:
-    push rbp
-    mov rbp, rsp    /* Old stack - frame */
 
-    /* Switch stack */
+    /* Save old stack */
+    mov rax, rsp
+
+    /* Set new stack */
     mov rsp, rcx
+
+    /* Save old stack on new stack */
+    push rax
 
     /* Call function */
     call rdx
 
-    /* Switch back to old stack */
-    pop rsp
+    /* Restore old stack */
+    pop rax
+    mov rsp, rax
 
-    ret 8
+    /* Return */
+    ret
 
 END

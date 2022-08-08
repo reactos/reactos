@@ -1917,6 +1917,17 @@ BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
+BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
+{
+    IID *iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n", pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_ControlPanel);
+    return FALSE;
+}
+
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {
     REFIID iid = _ILGetGUIDPointer(pidl);

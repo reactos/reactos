@@ -30,7 +30,7 @@ list(APPEND SOURCE
 
 add_executable(usetup ${SOURCE} usetup.rc)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(usetup PRIVATE "-Wno-invalid-source-encoding")
 endif()
 

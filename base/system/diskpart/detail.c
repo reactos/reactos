@@ -14,23 +14,77 @@
 /* FUNCTIONS ******************************************************************/
 
 static
-VOID
-DetailDisk(
-    INT argc,
-    LPWSTR *argv)
+BOOL
+IsDiskInVolume(
+    _In_ PVOLENTRY VolumeEntry,
+    _In_ PDISKENTRY DiskEntry)
 {
+    ULONG i;
+
+    if ((VolumeEntry == NULL) ||
+        (VolumeEntry->pExtents == NULL) ||
+        (DiskEntry == NULL))
+        return FALSE;
+
+    for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+    {
+        if (VolumeEntry->pExtents->Extents[i].DiskNumber == DiskEntry->DiskNumber)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static
+BOOL
+IsPartitionInVolume(
+    _In_ PVOLENTRY VolumeEntry,
+    _In_ PPARTENTRY PartEntry)
+{
+    ULONG i;
+
+    if ((VolumeEntry == NULL) ||
+        (VolumeEntry->pExtents == NULL) ||
+        (PartEntry == NULL) ||
+        (PartEntry->DiskEntry == NULL))
+        return FALSE;
+
+    for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+    {
+        if (VolumeEntry->pExtents->Extents[i].DiskNumber == PartEntry->DiskEntry->DiskNumber)
+        {
+            if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
+BOOL
+DetailDisk(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    BOOL bPrintHeader = TRUE;
+
     DPRINT("DetailDisk()\n");
 
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return;
+        return TRUE;
     }
 
     /* TODO: Print more disk details */
@@ -39,37 +93,63 @@ DetailDisk(
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (IsDiskInVolume(VolumeEntry, CurrentDisk))
+        {
+            if (bPrintHeader)
+            {
+                ConPuts(StdOut, L"\n");
+                ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
+                ConResPuts(StdOut, IDS_LIST_VOLUME_LINE);
+                bPrintHeader = FALSE;
+            }
+
+            PrintVolume(VolumeEntry);
+        }
+
+        Entry = Entry->Flink;
+    }
+
     ConPuts(StdOut, L"\n");
+
+    return TRUE;
 }
 
 
-static
-VOID
+BOOL
 DetailPartition(
-    INT argc,
-    LPWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PPARTENTRY PartEntry;
     ULONGLONG PartOffset;
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    BOOL bVolumeFound = FALSE, bPrintHeader = TRUE;
 
     DPRINT("DetailPartition()\n");
 
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_PARTITION_NO_DISK);
-        return;
+        return TRUE;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return;
+        return TRUE;
     }
 
     PartEntry = CurrentPartition;
@@ -82,56 +162,90 @@ DetailPartition(
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->BootIndicator ? L"Yes" : L"No");
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_OFFSET, PartOffset);
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (IsPartitionInVolume(VolumeEntry, CurrentPartition))
+        {
+            if (bPrintHeader)
+            {
+                ConPuts(StdOut, L"\n");
+                ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
+                ConResPuts(StdOut, IDS_LIST_VOLUME_LINE);
+                bPrintHeader = FALSE;
+            }
+
+            PrintVolume(VolumeEntry);
+            bVolumeFound = TRUE;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    if (bVolumeFound == FALSE)
+        ConResPuts(StdOut, IDS_DETAIL_NO_VOLUME);
+
     ConPuts(StdOut, L"\n");
+
+    return TRUE;
 }
 
 
-static
-VOID
+BOOL
 DetailVolume(
-    INT argc,
-    LPWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
+    PDISKENTRY DiskEntry;
+    PLIST_ENTRY Entry;
+    BOOL bDiskFound = FALSE, bPrintHeader = TRUE;
+
     DPRINT("DetailVolume()\n");
 
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (CurrentVolume == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
-        return;
-    }
-
-    /* TODO: Print volume details */
-
-}
-
-
-BOOL
-detail_main(
-    INT argc,
-    LPWSTR *argv)
-{
-    /* gets the first word from the string */
-    if (argc == 1)
-    {
-        ConResPuts(StdOut, IDS_HELP_CMD_DETAIL);
         return TRUE;
     }
 
-    /* determines which details to print (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        DetailDisk(argc, argv);
-    else if (!wcsicmp(argv[1], L"partition"))
-        DetailPartition(argc, argv);
-    else if (!wcsicmp(argv[1], L"volume"))
-        DetailVolume(argc, argv);
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_DETAIL);
+
+    Entry = DiskListHead.Flink;
+    while (Entry != &DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        if (IsDiskInVolume(CurrentVolume, DiskEntry))
+        {
+            if (bPrintHeader)
+            {
+                ConPuts(StdOut, L"\n");
+                ConResPuts(StdOut, IDS_LIST_DISK_HEAD);
+                ConResPuts(StdOut, IDS_LIST_DISK_LINE);
+                bPrintHeader = FALSE;
+            }
+
+            PrintDisk(DiskEntry);
+            bDiskFound = TRUE;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    if (bDiskFound == FALSE)
+        ConResPuts(StdOut, IDS_DETAIL_NO_DISKS);
+
+    /* TODO: Print more volume details */
+
+    ConPuts(StdOut, L"\n");
 
     return TRUE;
 }

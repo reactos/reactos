@@ -51,9 +51,9 @@ public:
 
     // IShellIconOverlayIdentifier
 
-    virtual HRESULT __stdcall GetOverlayInfo(PWSTR pwszIconFile, int cchMax, int* pIndex, DWORD* pdwFlags);
-    virtual HRESULT __stdcall GetPriority(int *pPriority);
-    virtual HRESULT __stdcall IsMemberOf(PCWSTR pwszPath, DWORD dwAttrib);
+    virtual HRESULT __stdcall GetOverlayInfo(PWSTR pwszIconFile, int cchMax, int* pIndex, DWORD* pdwFlags) noexcept;
+    virtual HRESULT __stdcall GetPriority(int *pPriority) noexcept;
+    virtual HRESULT __stdcall IsMemberOf(PCWSTR pwszPath, DWORD dwAttrib) noexcept;
 
 private:
     LONG refcount;

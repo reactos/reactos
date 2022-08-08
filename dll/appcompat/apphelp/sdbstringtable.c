@@ -157,7 +157,7 @@ static BOOL HashAddString(struct SdbStringHashTable* table, struct SdbHashEntry*
     entry = (*position) = SdbAlloc(size);
     if (!entry)
     {
-        SHIM_ERR("Failed to allocate %u bytes.", size);
+        SHIM_ERR("Failed to allocate %u bytes.\n", size);
         return FALSE;
     }
     entry->Tagid = tagid;

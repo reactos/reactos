@@ -15,7 +15,6 @@ DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 #define _SCSIPORT_
 
-#include <ntddk.h>
 #include <srb.h>
 #include <scsi.h>
 #include <ntddscsi.h>

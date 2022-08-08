@@ -7,7 +7,6 @@
 #include "seh.h"
 
 char test[] = "SEH0023.c";
-int perfect;
 
 int main() {
   jmp_buf JumpBuffer;

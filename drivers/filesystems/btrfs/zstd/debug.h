@@ -1,35 +1,15 @@
 /* ******************************************************************
-   debug
-   Part of FSE library
-   Copyright (C) 2013-present, Yann Collet.
-
-   BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
-
-   Redistribution and use in source and binary forms, with or without
-   modification, are permitted provided that the following conditions are
-   met:
-
-       * Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-       * Redistributions in binary form must reproduce the above
-   copyright notice, this list of conditions and the following disclaimer
-   in the documentation and/or other materials provided with the
-   distribution.
-
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-   You can contact the author at :
-   - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
+ * debug
+ * Part of FSE library
+ * Copyright (c) 2013-2020, Yann Collet, Facebook, Inc.
+ *
+ * You can contact the author at :
+ * - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
+ *
+ * This source code is licensed under both the BSD-style license (found in the
+ * LICENSE file in the root directory of this source tree) and the GPLv2 (found
+ * in the COPYING file in the root directory of this source tree).
+ * You may select, at your option, one of the above-listed licenses.
 ****************************************************************** */
 
 
@@ -57,9 +37,9 @@ extern "C" {
 #endif
 
 
-/* static assert is triggered at compile time, leaving no runtime artefact,
- * but can only work with compile-time constants.
- * This variant can only be used inside a function. */
+/* static assert is triggered at compile time, leaving no runtime artefact.
+ * static assert only works with compile-time constants.
+ * Also, this variant can only be used inside a function. */
 #define DEBUG_STATIC_ASSERT(c) (void)sizeof(char[(c) ? 1 : -1])
 
 
@@ -70,9 +50,19 @@ extern "C" {
 #  define DEBUGLEVEL 0
 #endif
 
+
+/* DEBUGFILE can be defined externally,
+ * typically through compiler command line.
+ * note : currently useless.
+ * Value must be stderr or stdout */
+#ifndef DEBUGFILE
+#  define DEBUGFILE stderr
+#endif
+
+
 /* recommended values for DEBUGLEVEL :
- * 0 : no debug, all run-time functions disabled
- * 1 : no display, enables assert() only
+ * 0 : release mode, no debug, all run-time checks disabled
+ * 1 : enables assert() only, no display
  * 2 : reserved, for currently active debug path
  * 3 : events once per object lifetime (CCtx, CDict, etc.)
  * 4 : events once per frame
@@ -81,7 +71,7 @@ extern "C" {
  * 7+: events at every position (*very* verbose)
  *
  * It's generally inconvenient to output traces > 5.
- * In which case, it's possible to selectively enable higher verbosity levels
+ * In which case, it's possible to selectively trigger high verbosity levels
  * by modifying g_debug_level.
  */
 
@@ -95,11 +85,12 @@ extern "C" {
 
 #if (DEBUGLEVEL>=2)
 #  include <stdio.h>
-extern int g_debuglevel; /* here, this variable is only declared,
-                           it actually lives in debug.c,
-                           and is shared by the whole process.
-                           It's typically used to enable very verbose levels
-                           on selective conditions (such as position in src) */
+extern int g_debuglevel; /* the variable is only declared,
+                            it actually lives in debug.c,
+                            and is shared by the whole process.
+                            It's not thread-safe.
+                            It's useful when enabling very verbose levels
+                            on selective conditions (such as position in src) */
 
 #  define RAWLOG(l, ...) {                                      \
                 if (l<=g_debuglevel) {                          \

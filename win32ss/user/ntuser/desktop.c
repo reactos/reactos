@@ -128,6 +128,14 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                             (PVOID*)&Desktop);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Assign security to the desktop we have created */
+    Status = IntAssignDesktopSecurityOnParse(WinStaObject, Desktop, AccessState);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(Desktop);
+        return Status;
+    }
+
     /* Initialize the desktop */
     Status = UserInitializeDesktop(Desktop, RemainingName, WinStaObject);
     if (!NT_SUCCESS(Status))
@@ -555,6 +563,7 @@ IntResolveDesktop(
     LUID ProcessLuid;
     USHORT StrSize;
     SIZE_T MemSize;
+    PSECURITY_DESCRIPTOR ServiceSD;
     POBJECT_ATTRIBUTES ObjectAttributes = NULL;
     PUNICODE_STRING ObjectName;
     UNICODE_STRING WinStaName, DesktopName;
@@ -1013,15 +1022,27 @@ IntResolveDesktop(
             ObjectName->Length = (USHORT)(wcslen(ObjectName->Buffer) * sizeof(WCHAR));
 
             /*
+             * Set up a security descriptor for the new service's window station.
+             * A service has an associated window station and desktop. The newly
+             * created window station and desktop will get this security descriptor
+             * if such objects weren't created before.
+             */
+            Status = IntCreateServiceSecurity(&ServiceSD);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to create a security descriptor for service window station, Status 0x%08lx\n", Status);
+                goto Quit;
+            }
+
+            /*
              * Create or open the non-interactive window station.
              * NOTE: The non-interactive window station handle is never inheritable.
              */
-            // FIXME: Set security!
             InitializeObjectAttributes(ObjectAttributes,
                                        ObjectName,
                                        OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
                                        NULL,
-                                       NULL);
+                                       ServiceSD);
 
             Status = IntCreateWindowStation(&hWinSta,
                                             ObjectAttributes,
@@ -1029,6 +1050,9 @@ IntResolveDesktop(
                                             KernelMode,
                                             MAXIMUM_ALLOWED,
                                             0, 0, 0, 0, 0);
+
+            IntFreeSecurityBuffer(ServiceSD);
+
             if (!NT_SUCCESS(Status))
             {
                 ASSERT(hWinSta == NULL);
@@ -1054,8 +1078,11 @@ IntResolveDesktop(
             }
             ObjectName->Length = (USHORT)(wcslen(ObjectName->Buffer) * sizeof(WCHAR));
 
-            /* NOTE: The non-interactive desktop handle is never inheritable. */
-            // FIXME: Set security!
+            /*
+             * NOTE: The non-interactive desktop handle is never inheritable.
+             * The security descriptor is inherited from the newly created
+             * window station for the desktop.
+             */
             InitializeObjectAttributes(ObjectAttributes,
                                        ObjectName,
                                        OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
@@ -1344,7 +1371,6 @@ PWND FASTCALL co_GetDesktopWindow(PWND pWnd)
     return NULL;
 }
 
-// Win: _GetDesktopWindow
 HWND FASTCALL IntGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1356,6 +1382,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
     return pdo->DesktopWindow;
 }
 
+// Win: _GetDesktopWindow
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1369,7 +1396,6 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
     return UserGetWindowObject(pdo->DesktopWindow);
 }
 
-// Win: _GetMessageWindow
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1382,6 +1408,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
     return pdo->spwndMessage->head.h;
 }
 
+// Win: _GetMessageWindow
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();

@@ -102,6 +102,8 @@ add_cd_file(TARGET mbedtls DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
     target_compile_options(mbedtls PRIVATE -Wno-pointer-sign -Wno-unused-function)
-elseif(USE_CLANG_CL)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(mbedtls PRIVATE -Wno-tautological-constant-compare)
 endif()

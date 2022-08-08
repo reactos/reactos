@@ -4,7 +4,7 @@
  * FILE:       dll/shellext/netshell/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
- *             2018 Luo Yufan <njlyf2011@hotmail.com>
+ *             2018 Luke Luo <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

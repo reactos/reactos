@@ -110,7 +110,7 @@ SECURITY_STATUS SEC_ENTRY ntlm_DeleteSecurityContext(PCtxtHandle) DECLSPEC_HIDDE
 SECURITY_STATUS SEC_ENTRY ntlm_MakeSignature(PCtxtHandle, ULONG, PSecBufferDesc, ULONG) DECLSPEC_HIDDEN;
 SECURITY_STATUS SEC_ENTRY ntlm_VerifySignature(PCtxtHandle, PSecBufferDesc, ULONG, PULONG) DECLSPEC_HIDDEN;
 
-SecPkgInfoW *ntlm_package_infoW DECLSPEC_HIDDEN;
-SecPkgInfoA *ntlm_package_infoA DECLSPEC_HIDDEN;
+extern SecPkgInfoW *ntlm_package_infoW DECLSPEC_HIDDEN;
+extern SecPkgInfoA *ntlm_package_infoA DECLSPEC_HIDDEN;
 
 #endif /* __WINE_NTLM_H__ */

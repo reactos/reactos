@@ -38,6 +38,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_shader);
 
+void (WINE_GLAPI *glDisableWINE)(GLenum cap);
+void (WINE_GLAPI *glEnableWINE)(GLenum cap);
+
 ULONG CDECL wined3d_blend_state_incref(struct wined3d_blend_state *state)
 {
     ULONG refcount = InterlockedIncrement(&state->refcount);

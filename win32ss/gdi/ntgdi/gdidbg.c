@@ -87,6 +87,7 @@ DBG_CHANNEL DbgChannels[DbgChCount] = {
     {L"UserProcess", DbgChUserProcess},
     {L"UserProp", DbgChUserProp},
     {L"UserScrollbar", DbgChUserScrollbar},
+    {L"UserSecurity", DbgChUserSecurity},
     {L"UserShutdown", DbgChUserShutdown},
     {L"UserSysparams", DbgChUserSysparams},
     {L"UserTimer", DbgChUserTimer},

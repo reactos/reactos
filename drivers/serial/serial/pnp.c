@@ -296,7 +296,7 @@ SerialPnpStartDevice(
 	/* Write an entry value under HKLM\HARDWARE\DeviceMap\SERIALCOMM */
 	/* This step is not mandatory, so don't exit in case of error */
 	RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\SERIALCOMM");
-	InitializeObjectAttributes(&objectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+	InitializeObjectAttributes(&objectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 	Status = ZwCreateKey(&hKey, KEY_SET_VALUE, &objectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
 	if (NT_SUCCESS(Status))
 	{

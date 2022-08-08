@@ -145,7 +145,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
   HANDLE hHeap;
   NTSTATUS Status;
 
-  Status = NtUserBuildHwndList ( NULL, hWndparent, FALSE, 0, 0, NULL, &dwCount );
+  Status = NtUserBuildHwndList(NULL, hWndparent, FALSE, 0, dwCount, NULL, &dwCount);
 
   if ( !NT_SUCCESS( Status ) )
     return 0;
@@ -161,7 +161,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
     }
 
   /* now call kernel again to fill the buffer this time */
-  Status = NtUserBuildHwndList (NULL, hWndparent, FALSE, 0, 0, pHwnd, &dwCount );
+  Status = NtUserBuildHwndList(NULL, hWndparent, FALSE, 0, dwCount, pHwnd, &dwCount);
 
   if ( !NT_SUCCESS( Status ) )
     {

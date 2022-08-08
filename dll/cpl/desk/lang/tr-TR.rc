@@ -158,7 +158,7 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Yazı Tipi Boyutu", -1, 14, 20, 222, 9
+    LTEXT "Yazı Tipi Boyutu:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97

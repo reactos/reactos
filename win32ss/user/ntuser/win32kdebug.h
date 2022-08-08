@@ -108,6 +108,7 @@
         DbgChUserProcess,
         DbgChUserProp,
         DbgChUserScrollbar,
+        DbgChUserSecurity,
         DbgChUserShutdown,
         DbgChUserSysparams,
         DbgChUserThread,

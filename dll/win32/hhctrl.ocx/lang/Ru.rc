@@ -26,6 +26,9 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Содержание"
     IDS_INDEX        "&Оглавление"
     IDS_SEARCH       "&Поиск"

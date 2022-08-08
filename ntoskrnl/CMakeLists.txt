@@ -1,17 +1,12 @@
 
 PROJECT(NTOS)
 
-if (GCC)
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
 endif()
 
 include(ntos.cmake)
-
-if(NOT MSVC)
-    # Make sure we don't duplicate some symbols
-    add_compile_options(-fno-common)
-endif()
 
 set(NTOSKRNL_SOURCE ${SOURCE})
 set(NTOSKRNL_ASM_SOURCE ${ASM_SOURCE})
@@ -51,6 +46,10 @@ target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib r
 # dynamic analysis switches
 if(STACK_PROTECTOR)
     target_sources(ntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+endif()
+
+if (SANITIZE_UB)
+#    target_link_libraries(ntoskrnl ksanitize)
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)

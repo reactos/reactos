@@ -13,18 +13,6 @@
 
 PDC defaultDCstate = NULL;
 
-VOID FASTCALL
-IntGdiReferencePdev(PPDEVOBJ ppdev)
-{
-    UNIMPLEMENTED;
-}
-
-VOID FASTCALL
-IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
-{
-    UNIMPLEMENTED;
-}
-
 BOOL FASTCALL
 IntCreatePrimarySurface(VOID)
 {

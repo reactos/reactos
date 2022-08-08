@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0019.c";
-int perfect;
 
 void fret(PLONG Counter) {
   try {

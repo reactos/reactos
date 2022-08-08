@@ -237,7 +237,9 @@ UserEnumDisplayDevices(
     DWORD dwFlags)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
-    ULONG cbSize;
+    PDEVICE_OBJECT pdo;
+    PWCHAR pHardwareId;
+    ULONG cbSize, dwLength;
     HKEY hkey;
     NTSTATUS Status;
 
@@ -252,7 +254,10 @@ UserEnumDisplayDevices(
     if (!pGraphicsDevice)
     {
         /* No device found */
-        ERR("No GRAPHICS_DEVICE found for '%wZ', iDevNum %lu\n", pustrDevice, iDevNum);
+        if (iDevNum == 0)
+            ERR("No GRAPHICS_DEVICE found for '%wZ', iDevNum %lu\n", pustrDevice, iDevNum);
+        else
+            TRACE("No GRAPHICS_DEVICE found for '%wZ', iDevNum %lu\n", pustrDevice, iDevNum);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -280,8 +285,77 @@ UserEnumDisplayDevices(
     RtlStringCbCopyW(pdispdev->DeviceName, sizeof(pdispdev->DeviceName), pGraphicsDevice->szWinDeviceName);
     RtlStringCbCopyW(pdispdev->DeviceString, sizeof(pdispdev->DeviceString), pGraphicsDevice->pwszDescription);
     pdispdev->StateFlags = pGraphicsDevice->StateFlags;
-    // FIXME: fill in DEVICE ID
     pdispdev->DeviceID[0] = UNICODE_NULL;
+
+    /* Fill in DeviceID */
+    if (!pustrDevice)
+        pdo = pGraphicsDevice->PhysDeviceHandle;
+    else
+#if 0
+        pdo = pGraphicsDevice->pvMonDev[iDevNum].pdo;
+#else
+        /* FIXME: pvMonDev not initialized, see EngpRegisterGraphicsDevice */
+        pdo = NULL;
+#endif
+
+    if (pdo != NULL)
+    {
+        Status = IoGetDeviceProperty(pdo,
+                                     DevicePropertyHardwareID,
+                                     0,
+                                     NULL,
+                                     &dwLength);
+
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            pHardwareId = ExAllocatePoolWithTag(PagedPool,
+                                                dwLength,
+                                                USERTAG_DISPLAYINFO);
+            if (!pHardwareId)
+            {
+                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Status = IoGetDeviceProperty(pdo,
+                                         DevicePropertyHardwareID,
+                                         dwLength,
+                                         pHardwareId,
+                                         &dwLength);
+
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+            }
+            else
+            {
+                /* For video adapters it should be the first Hardware ID
+                 * which usually is the longest one and unique enough */
+                RtlStringCbCopyW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
+
+                if (pustrDevice)
+                {
+                    /* For monitors it should be the first Hardware ID,
+                     * which we already have obtained above,
+                     * concatenated with the unique driver registry key */
+
+                    RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), L"\\");
+
+                    /* FIXME: DevicePropertyDriverKeyName string should be appended */
+                    pHardwareId[0] = UNICODE_NULL;
+                    RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
+                }
+
+                TRACE("Hardware ID: %ls\n", pdispdev->DeviceID);
+            }
+
+            ExFreePoolWithTag(pHardwareId, USERTAG_DISPLAYINFO);
+        }
+        else
+        {
+            ERR("IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+        }
+    }
 
     return STATUS_SUCCESS;
 }

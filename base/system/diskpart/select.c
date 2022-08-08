@@ -13,11 +13,10 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static
-VOID
+BOOL
 SelectDisk(
     INT argc,
-    LPWSTR *argv)
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
@@ -28,7 +27,7 @@ SelectDisk(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (argc == 2)
@@ -37,20 +36,20 @@ SelectDisk(
             ConResPuts(StdOut, IDS_SELECT_NO_DISK);
         else
             ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-        return;
+        return TRUE;
     }
 
     if (!IsDecString(argv[2]))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     ulValue = wcstoul(argv[2], NULL, 10);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     CurrentDisk = NULL;
@@ -65,21 +64,21 @@ SelectDisk(
             CurrentDisk = DiskEntry;
             CurrentPartition = NULL;
             ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-            return;
+            return TRUE;
         }
 
         Entry = Entry->Flink;
     }
 
     ConResPuts(StdErr, IDS_SELECT_DISK_INVALID);
+    return TRUE;
 }
 
 
-static
-VOID
+BOOL
 SelectPartition(
     INT argc,
-    LPWSTR *argv)
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -91,13 +90,13 @@ SelectPartition(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_PARTITION_NO_DISK);
-        return;
+        return TRUE;
     }
 
     if (argc == 2)
@@ -106,20 +105,20 @@ SelectPartition(
             ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
         else
             ConResPrintf(StdOut, IDS_SELECT_PARTITION, CurrentPartition);
-        return;
+        return TRUE;
     }
 
     if (!IsDecString(argv[2]))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     ulValue = wcstoul(argv[2], NULL, 10);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     Entry = CurrentDisk->PrimaryPartListHead.Flink;
@@ -133,7 +132,7 @@ SelectPartition(
             {
                 CurrentPartition = PartEntry;
                 ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return;
+                return TRUE;
             }
 
             PartNumber++;
@@ -153,7 +152,7 @@ SelectPartition(
             {
                 CurrentPartition = PartEntry;
                 ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return;
+                return TRUE;
             }
 
             PartNumber++;
@@ -162,14 +161,14 @@ SelectPartition(
     }
 
     ConResPuts(StdErr, IDS_SELECT_PARTITION_INVALID);
+    return TRUE;
 }
 
 
-static
-VOID
+BOOL
 SelectVolume(
     INT argc,
-    LPWSTR *argv)
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
@@ -180,7 +179,7 @@ SelectVolume(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     if (argc == 2)
@@ -189,20 +188,20 @@ SelectVolume(
             ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
         else
             ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
-        return;
+        return TRUE;
     }
 
     if (!IsDecString(argv[2]))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     ulValue = wcstoul(argv[2], NULL, 10);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     CurrentVolume = NULL;
@@ -216,37 +215,12 @@ SelectVolume(
         {
             CurrentVolume = VolumeEntry;
             ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
-            return;
+            return TRUE;
         }
 
         Entry = Entry->Flink;
     }
 
     ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
-}
-
-
-BOOL
-select_main(
-    INT argc,
-    LPWSTR *argv)
-{
-    /* gets the first word from the string */
-    if (argc == 1)
-    {
-        ConResPuts(StdOut, IDS_HELP_CMD_SELECT);
-        return TRUE;
-    }
-
-    /* determines which to list (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        SelectDisk(argc, argv);
-    else if (!wcsicmp(argv[1], L"partition"))
-        SelectPartition(argc, argv);
-    else if (!wcsicmp(argv[1], L"volume"))
-        SelectVolume(argc, argv);
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_SELECT);
-
     return TRUE;
 }

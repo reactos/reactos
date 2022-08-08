@@ -274,7 +274,7 @@ FindProductName(
 
 
     /* initialize key attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF, NULL, NULL);
 
     /* open the key */
     Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
@@ -324,7 +324,7 @@ FindProductName(
         RtlInitUnicodeString(&SubKeyName, SubKey);
 
         /* initialize key attributes */
-        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
+        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF, hKey, NULL);
 
         /* open the sub key */
         Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);

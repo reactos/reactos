@@ -41,7 +41,7 @@ target_compile_definitions(classpnp PRIVATE
     CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
     CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
 
-if(GCC)
+if(NOT MSVC)
     target_compile_options(classpnp PRIVATE -Wno-pointer-to-int-cast -Wno-switch)
 endif()
 

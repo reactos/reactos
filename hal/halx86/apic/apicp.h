@@ -170,7 +170,7 @@ typedef enum _APIC_RRS
 } APIC_RRS;
 
 /* Timer Constants */
-enum _TIMER_DV
+typedef enum _TIMER_DV
 {
     TIMER_DV_DivideBy2 = 0,
     TIMER_DV_DivideBy4 = 1,
@@ -277,20 +277,14 @@ typedef union _LVT_REGISTER
 } LVT_REGISTER;
 
 /* IOAPIC offsets */
-enum
-{
-    IOAPIC_IOREGSEL = 0x00,
-    IOAPIC_IOWIN    = 0x10
-};
+#define IOAPIC_IOREGSEL 0x00
+#define IOAPIC_IOWIN    0x10
 
 /* IOAPIC Constants */
-enum
-{
-    IOAPIC_ID  = 0x00,
-    IOAPIC_VER = 0x01,
-    IOAPIC_ARB = 0x02,
-    IOAPIC_REDTBL = 0x10
-};
+#define IOAPIC_ID     0x00
+#define IOAPIC_VER    0x01
+#define IOAPIC_ARB    0x02
+#define IOAPIC_REDTBL 0x10
 
 typedef union _IOAPIC_REDIRECTION_REGISTER
 {

@@ -1,5 +1,5 @@
 
-if (NOT (GCC AND (ARCH STREQUAL "amd64")))
+if (MSVC OR ARCH STREQUAL "i386")
     #FIXME _setjmp definitions in CRT headers is wrong
     add_subdirectory(ms)
     list(APPEND SOURCE ms_seh.c)
@@ -12,7 +12,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(compiler_apitest ${SOURCE})
-if (NOT (GCC AND (ARCH STREQUAL "amd64")))
+if (MSVC OR ARCH STREQUAL "i386")
     target_link_libraries(compiler_apitest ms_seh_test)
 endif()
 target_link_libraries(compiler_apitest wine ${PSEH_LIB})

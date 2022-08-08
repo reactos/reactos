@@ -122,7 +122,7 @@
         IN PRTL_BITMAP BitMapHeader);
 
     #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
-    #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+    #define UNREFERENCED_PARAMETER(P) ((void)(P))
 
     #define PKTHREAD PVOID
     #define PKGUARDED_MUTEX PVOID
@@ -152,7 +152,9 @@
     #undef PAGED_CODE
     #define PAGED_CODE()
     #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
+
 #else
+
     //
     // Debug/Tracing support
     //
@@ -170,8 +172,6 @@
     #include <ntdef.h>
     #include <ntifs.h>
     #include <bugcodes.h>
-    #undef PAGED_CODE
-    #define PAGED_CODE()
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_
@@ -214,17 +214,13 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(_BLDR_)
+/* Forward declarations */
+typedef struct _CM_KEY_SECURITY_CACHE_ENTRY *PCM_KEY_SECURITY_CACHE_ENTRY;
+typedef struct _CM_KEY_CONTROL_BLOCK *PCM_KEY_CONTROL_BLOCK;
+typedef struct _CM_CELL_REMAP_BLOCK *PCM_CELL_REMAP_BLOCK;
 
-#define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
-#define PCM_KEY_CONTROL_BLOCK           PVOID
-#define PCM_CELL_REMAP_BLOCK            PVOID
-
-// See also ntoskrnl/include/internal/cm.h
-#define CMP_SECURITY_HASH_LISTS         64
-
-// #endif // Commented out until one finds a way to properly include
-          // this header in the bootloader and in ntoskrnl.
+// See ntoskrnl/include/internal/cm.h
+#define CMP_SECURITY_HASH_LISTS     64
 
 //
 // Use Count Log and Entry
@@ -291,8 +287,6 @@ typedef struct _CMHIVE
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
 
-#endif // See comment above
-
 typedef struct _HV_HIVE_CELL_PAIR
 {
     PHHIVE Hive;
@@ -312,9 +306,9 @@ typedef struct _HV_TRACK_CELL_REF
 extern ULONG CmlibTraceLevel;
 
 //
-// Hack since bigkeys are not yet supported
+// Hack since big keys are not yet supported
 //
-#define ASSERT_VALUE_BIG(h, s)                          \
+#define ASSERT_VALUE_BIG(h, s)  \
     ASSERTMSG("Big keys not supported!\n", !CmpIsKeyValueBig(h, s));
 
 //

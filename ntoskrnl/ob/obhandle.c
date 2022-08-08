@@ -447,7 +447,8 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
         if (ObjectQuota)
         {
             /* We have a quota, get the charges */
-            PagedPoolCharge = ObjectQuota->PagedPoolCharge;
+            PagedPoolCharge = ObjectQuota->PagedPoolCharge +
+                              ObjectQuota->SecurityDescriptorCharge;
             NonPagedPoolCharge = ObjectQuota->NonPagedPoolCharge;
         }
         else

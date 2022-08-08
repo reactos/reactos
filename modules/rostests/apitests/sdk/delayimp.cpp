@@ -369,7 +369,7 @@ LONG ExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo, ULONG ExceptionCode)
 so that we can check that both fallback and registration work*/
 extern "C"
 {
-    PfnDliHook __pfnDliNotifyHook2 = DliHook;
+    extern PfnDliHook __pfnDliNotifyHook2;
     //PfnDliHook __pfnDliFailureHook2 = DliFailHook;
 }
 
@@ -401,6 +401,7 @@ unsigned g_imagehlp[] = { dliStartProcessing, dliNotePreLoadLibrary, dliFailLoad
 //#define DELAYLOAD_SUPPORTS_UNLOADING
 START_TEST(delayimp)
 {
+    __pfnDliNotifyHook2 = DliHook;
     /* Verify that both scenario's work */
     ok(__pfnDliNotifyHook2 == DliHook, "Expected __pfnDliNotifyHook2 to be DliHook(%p), but was: %p\n",
         DliHook, __pfnDliNotifyHook2);

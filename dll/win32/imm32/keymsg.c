@@ -574,7 +574,7 @@ LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BO
 
     hWnd = pIC->hWnd;
     if (hWnd)
-        pWnd = ValidateHwndNoErr(hWnd);
+        pWnd = ValidateHwnd(hWnd);
 
     if (pWnd && pWnd->head.pti == Imm32CurrentPti())
         ret = Imm32ProcessRequest(hIMC, pWnd, (DWORD)wParam, (LPVOID)lParam, bAnsi);

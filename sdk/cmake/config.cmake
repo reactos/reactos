@@ -75,25 +75,6 @@ else()
 "Whether to compile for debugging.")
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    set(GCC TRUE CACHE BOOL "The compiler is GCC")
-    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
-elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    # We can use LLVM Clang mimicking CL or GCC. Account for this
-    if (MSVC)
-        set(GCC FALSE CACHE BOOL "The compiler is GCC")
-    else()
-        set(GCC TRUE CACHE BOOL "The compiler is GCC")
-    endif()
-    set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
-elseif(MSVC) # aka CMAKE_C_COMPILER_ID STREQUAL "MSVC"
-    set(GCC FALSE CACHE BOOL "The compiler is GCC")
-    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
-    # MSVC variable is already set by cmake
-else()
-    message("WARNING: the compiler has not been recognized")
-endif()
-
 if(MSVC)
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
@@ -102,7 +83,6 @@ if(MSVC)
     else()
         set(_WINKD_ TRUE CACHE BOOL "Whether to compile with the KD protocol.")
     endif()
-
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
         set(KDBG FALSE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
@@ -120,7 +100,7 @@ cmake_dependent_option(ISAPNP_ENABLE "Whether to enable the ISA PnP support." ON
 set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a GraphML dependency graph of DLLs.")
 
-if(MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     option(_PREFAST_ "Whether to enable PREFAST while compiling." OFF)
     option(_VS_ANALYZE_ "Whether to enable static analysis while compiling." OFF)
     # RTC are incompatible with compiler optimizations.
@@ -128,7 +108,7 @@ if(MSVC)
                            "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)
 endif()
 
-if(GCC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     option(STACK_PROTECTOR "Whether to enable the GCC stack checker while compiling" OFF)
     option(SANITIZE_UB "Enable -fsanitize=undefined for GCC builds" OFF)
 endif()

@@ -43,8 +43,10 @@ ServiceBinary = %12%\usbstor.sys
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+; Localizable
 GenericMfg = "(Generic USB devices)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Storage device"
 
@@ -61,8 +63,6 @@ GenericMfg = "(Generische USB-Geräte)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Datenträger-Geräte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 GenericMfg = "(Dispositivo USB estándar)"
 GenericBulkOnlyTransport.DeviceDesc = "Dispositivo de almacenamiento USB"
 
@@ -75,7 +75,6 @@ GenericMfg = "(標準 USB デバイス)"
 GenericBulkOnlyTransport.DeviceDesc = "USB ストレージ デバイス"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe urządzenia USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Urządzenie pamięci masowej USB"
 
@@ -84,12 +83,10 @@ GenericMfg = "(Dispositivo USB padrão)"
 GenericBulkOnlyTransport.DeviceDesc = "Dispositivo de armazenamento USB"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 GenericMfg = "(dispozitive generice USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Dispozitiv USB de stocare"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные устройства USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Запоминающее устройство USB"
 
@@ -98,13 +95,10 @@ GenericMfg = "(Generické USB zariadenia)"
 GenericBulkOnlyTransport.DeviceDesc = "USB úložné zariadenie"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 GenericMfg = "(Genel USB Aygıtları)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Depolama Aygıtı"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні пристрої USB)"
 GenericBulkOnlyTransport.DeviceDesc = "USB-накопичувач"
 

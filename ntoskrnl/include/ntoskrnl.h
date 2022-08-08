@@ -58,9 +58,13 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/sefuncs.h>
 #include <ndk/vftypes.h>
+
 #undef TEXT
 #define TEXT(s) L##s
+
+#define _IN_KERNEL_
 #include <regstr.h>
+
 #include <ntstrsafe.h>
 #include <ntpoapi.h>
 #define ENABLE_INTSAFE_SIGNED_FUNCTIONS

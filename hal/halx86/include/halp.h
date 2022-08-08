@@ -516,6 +516,8 @@ CODE_SEG("INIT")
 VOID
 NTAPI
 HalpDebugPciDumpBus(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER PciSlot,
     IN ULONG i,
     IN ULONG j,
     IN ULONG k,

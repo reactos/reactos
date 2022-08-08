@@ -61,7 +61,7 @@ typedef struct _GRAPHICS_DEVICE
     struct _GRAPHICS_DEVICE * pNextGraphicsDevice;
     struct _GRAPHICS_DEVICE * pVgaDevice;
     PDEVICE_OBJECT   DeviceObject;
-    PVOID            pDeviceHandle;
+    PDEVICE_OBJECT   PhysDeviceHandle;
     DWORD            hkClassDriverConfig;
     DWORD            StateFlags;                     /* See DISPLAY_DEVICE_* */
     ULONG            cbdevmodeInfo;

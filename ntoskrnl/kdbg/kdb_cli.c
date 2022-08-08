@@ -21,7 +21,7 @@
  * FILE:            ntoskrnl/kdbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  * UPDATE HISTORY:
  *                  Created 16/01/2005
  */
@@ -100,6 +100,8 @@ BOOLEAN ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtDefWrites(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtIrpFind(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[]);
+
+extern char __ImageBase;
 
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
@@ -364,7 +366,9 @@ static const struct
     /* Data */
     { NULL, NULL, "Data", NULL },
     { "?", "? expression", "Evaluate expression.", KdbpCmdEvalExpression },
+#ifdef _M_IX86 // FIXME: this is broken on x64
     { "disasm", "disasm [address] [L count]", "Disassemble count instructions at address.", KdbpCmdDisassembleX },
+#endif // _M_IX86
     { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
@@ -373,7 +377,6 @@ static const struct
 #ifdef __ROS_DWARF__
     { "dt", "dt [mod] [type] [addr]", "Print a struct. The address is optional.", KdbpCmdPrintStruct },
 #endif
-
     /* Flow control */
     { NULL, NULL, "Flow control", NULL },
     { "cont", "cont", "Continue execution (leave debugger).", KdbpCmdContinue },
@@ -485,7 +488,8 @@ KdbpCmdEvalExpression(
     ULONG Argc,
     PCHAR Argv[])
 {
-    ULONG i, len;
+    ULONG i;
+    SIZE_T len;
     ULONGLONG Result = 0;
     ULONG ul;
     LONG l = 0;
@@ -560,10 +564,14 @@ KdbpPrintStructInternal
         KdbpPrint("%s%p+%x: %s", Indent, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size, Member->Name ? Member->Name : "<anoymous>");
         if (DoRead) {
             if (!strcmp(Member->Type, "_UNICODE_STRING")) {
-                KdbpPrint("\"%wZ\"\n", ((PCHAR)BaseAddress) + Member->BaseOffset);
+                KdbpPrint("\"");
+                KdbpPrintUnicodeString(((PCHAR)BaseAddress) + Member->BaseOffset);
+                KdbpPrint("\"\n");
                 continue;
             } else if (!strcmp(Member->Type, "PUNICODE_STRING")) {
-                KdbpPrint("\"%wZ\"\n", *(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                KdbpPrint("\"");
+                KdbpPrintUnicodeString(*(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                KdbpPrint("\"\n");
                 continue;
             }
             switch (Member->Size) {
@@ -882,7 +890,7 @@ KdbpCmdDisassembleX(
         while (Count > 0)
         {
             if (!KdbSymPrintAddress((PVOID)Address, NULL))
-                KdbpPrint("<%08x>:", Address);
+                KdbpPrint("<%p>:", (PVOID)Address);
             else
                 KdbpPrint(":");
 
@@ -1085,6 +1093,10 @@ KdbpIsNestedTss(
     if (!Tss)
         return FALSE;
 
+#ifdef _M_AMD64
+    // HACK
+    return FALSE;
+#else
     /* Retrieve the TSS Backlink */
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
                                        (PVOID)&Tss->Backlink,
@@ -1092,6 +1104,7 @@ KdbpIsNestedTss(
     {
         return FALSE;
     }
+#endif
 
     return (Backlink != 0 && Backlink != TssSelector);
 }
@@ -1107,6 +1120,10 @@ KdbpContextFromPrevTss(
     USHORT Backlink;
     PKTSS Tss = *pTss;
 
+#ifdef _M_AMD64
+    // HACK
+    return FALSE;
+#else
     /* Retrieve the TSS Backlink */
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
                                        (PVOID)&Tss->Backlink,
@@ -1139,10 +1156,103 @@ KdbpContextFromPrevTss(
     *pTss = Tss;
     Context->Eip = Eip;
     Context->Ebp = Ebp;
+#endif
     return TRUE;
 }
 #endif
 
+#ifdef _M_AMD64
+
+static
+BOOLEAN
+GetNextFrame(
+    _Inout_ PCONTEXT Context)
+{
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG64 ImageBase, EstablisherFrame;
+    PVOID HandlerData;
+
+    _SEH2_TRY
+    {
+        /* Lookup the FunctionEntry for the current RIP */
+        FunctionEntry = RtlLookupFunctionEntry(Context->Rip, &ImageBase, NULL);
+        if (FunctionEntry == NULL)
+        {
+            /* No function entry, so this must be a leaf function. Pop the return address from the stack.
+            Note: this can happen after the first frame as the result of an exception */
+            Context->Rip = *(DWORD64*)Context->Rsp;
+            Context->Rsp += sizeof(DWORD64);
+            return TRUE;
+        }
+        else
+        {
+            RtlVirtualUnwind(UNW_FLAG_NHANDLER,
+                             ImageBase,
+                             Context->Rip,
+                             FunctionEntry,
+                             Context,
+                             &HandlerData,
+                             &EstablisherFrame,
+                             NULL);
+        }
+    }
+    _SEH2_EXCEPT(1)
+    {
+        return FALSE;
+    }
+    _SEH2_END
+
+    return TRUE;
+}
+
+static BOOLEAN
+KdbpCmdBackTrace(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    CONTEXT Context = *KdbCurrentTrapFrame;
+    ULONG64 CurrentRsp, CurrentRip;
+
+    KdbpPrint("Rip:\n");
+    if (!KdbSymPrintAddress((PVOID)KeGetContextPc(&Context), &Context))
+        KdbpPrint("<%p>\n", KeGetContextPc(&Context));
+    else
+        KdbpPrint("\n");
+
+    /* Walk through the frames */
+    KdbpPrint("Frames:\n");
+    for (;;)
+    {
+        CurrentRip = Context.Rip;
+        CurrentRsp = Context.Rsp;
+
+        BOOLEAN GotNextFrame = GetNextFrame(&Context);
+
+        KdbpPrint("[%p] ", (PVOID)CurrentRsp);
+        Context.Rsp = Context.Rsp;
+
+        /* Print the location afrer the call instruction */
+        if (!KdbSymPrintAddress((PVOID)CurrentRip, &Context))
+            KdbpPrint("<%p>", (PVOID)Context.Rip);
+
+        KdbpPrint(" (stack: 0x%Ix)\n", Context.Rsp - CurrentRsp);
+
+        if (KdbOutputAborted)
+            break;
+
+        if (Context.Rsp == 0)
+            break;
+
+        if (!GotNextFrame)
+        {
+            KdbpPrint("Couldn't access memory at 0x%p!\n", (PVOID)Context.Rsp);
+            break;
+        }
+    }
+
+    return TRUE;
+}
+#else
 /*!\brief Displays a backtrace.
  */
 static BOOLEAN
@@ -1316,6 +1426,8 @@ CheckForParentTSS:
     return TRUE;
 }
 
+#endif // M_AMD64
+
 /*!\brief Continues execution of the system/leaves KDB.
  */
 static BOOLEAN
@@ -1410,7 +1522,7 @@ KdbpCmdBreakPointList(
         else
         {
             GlobalOrLocal = Buffer;
-            sprintf(Buffer, "  PID 0x%lx",
+            sprintf(Buffer, "  PID 0x%Ix",
                     (ULONG_PTR)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
         }
 
@@ -1989,9 +2101,9 @@ KdbpCmdMod(
     {
         if (!KdbpSymFindModule(NULL, 0, &LdrEntry))
         {
-            ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
+            ULONG_PTR ntoskrnlBase = (ULONG_PTR)__ImageBase;
             KdbpPrint("  Base      Size      Name\n");
-            KdbpPrint("  %08x  %08x  %s\n", ntoskrnlBase, 0, "ntoskrnl.exe");
+            KdbpPrint("  %p  %08x  %s\n", (PVOID)ntoskrnlBase, 0, "ntoskrnl.exe");
             return TRUE;
         }
 
@@ -2001,7 +2113,9 @@ KdbpCmdMod(
     KdbpPrint("  Base      Size      Name\n");
     for (;;)
     {
-        KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
+        KdbpPrint("  %p  %08x  ", LdrEntry->DllBase, LdrEntry->SizeOfImage);
+        KdbpPrintUnicodeString(&LdrEntry->BaseDllName);
+        KdbpPrint("\n");
 
         if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, i++, &LdrEntry))
             break;
@@ -2239,6 +2353,7 @@ KdbpCmdPcr(
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
     KdbpPrint("Current PCR is at 0x%p.\n", Pcr);
+#ifdef _M_IX86
     KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
               "  Tib.StackBase:             0x%08x\n"
               "  Tib.StackLimit:            0x%08x\n"
@@ -2246,75 +2361,59 @@ KdbpCmdPcr(
               "  Tib.FiberData/Version:     0x%08x\n"
               "  Tib.ArbitraryUserPointer:  0x%08x\n"
               "  Tib.Self:                  0x%08x\n"
-#ifdef _M_IX86
               "  SelfPcr:                   0x%08x\n"
-#else
-              "  Self:                      0x%p\n"
-#endif
               "  PCRCB:                     0x%08x\n"
               "  Irql:                      0x%02x\n"
-#ifdef _M_IX86
               "  IRR:                       0x%08x\n"
               "  IrrActive:                 0x%08x\n"
               "  IDR:                       0x%08x\n"
-#endif
               "  KdVersionBlock:            0x%08x\n"
-#ifdef _M_IX86
               "  IDT:                       0x%08x\n"
               "  GDT:                       0x%08x\n"
               "  TSS:                       0x%08x\n"
-#endif
               "  MajorVersion:              0x%04x\n"
               "  MinorVersion:              0x%04x\n"
-#ifdef _M_IX86
               "  SetMember:                 0x%08x\n"
-#endif
               "  StallScaleFactor:          0x%08x\n"
-#ifdef _M_IX86
               "  Number:                    0x%02x\n"
-#endif
               "  L2CacheAssociativity:      0x%02x\n"
-#ifdef _M_IX86
               "  VdmAlert:                  0x%08x\n"
-#endif
               "  L2CacheSize:               0x%08x\n"
-#ifdef _M_IX86
               "  InterruptMode:             0x%08x\n"
-#endif
               , Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
               Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
               Pcr->NtTib.Self
-#ifdef _M_IX86
               , Pcr->SelfPcr
-#else
-              , Pcr->Self
-#endif
               , Pcr->Prcb, Pcr->Irql
-#ifdef _M_IX86
               , Pcr->IRR, Pcr->IrrActive , Pcr->IDR
-#endif
               , Pcr->KdVersionBlock
-#ifdef _M_IX86
               , Pcr->IDT, Pcr->GDT, Pcr->TSS
-#endif
               , Pcr->MajorVersion, Pcr->MinorVersion
-#ifdef _M_IX86
               , Pcr->SetMember
-#endif
               , Pcr->StallScaleFactor
-#ifdef _M_IX86
               , Pcr->Number
-#endif
               , Pcr->SecondLevelCacheAssociativity
-#ifdef _M_IX86
               , Pcr->VdmAlert
-#endif
               , Pcr->SecondLevelCacheSize
-#ifdef _M_IX86
-              , Pcr->InterruptMode
+              , Pcr->InterruptMode);
+#else
+    KdbpPrint("  GdtBase:                       0x%p\n", Pcr->GdtBase);
+    KdbpPrint("  TssBase:                       0x%p\n", Pcr->TssBase);
+    KdbpPrint("  UserRsp:                       0x%p\n", (PVOID)Pcr->UserRsp);
+    KdbpPrint("  Self:                          0x%p\n", Pcr->Self);
+    KdbpPrint("  CurrentPrcb:                   0x%p\n", Pcr->CurrentPrcb);
+    KdbpPrint("  LockArray:                     0x%p\n", Pcr->LockArray);
+    KdbpPrint("  Used_Self:                     0x%p\n", Pcr->Used_Self);
+    KdbpPrint("  IdtBase:                       0x%p\n", Pcr->IdtBase);
+    KdbpPrint("  Irql:                          %u\n", Pcr->Irql);
+    KdbpPrint("  SecondLevelCacheAssociativity: 0x%u\n", Pcr->SecondLevelCacheAssociativity);
+    KdbpPrint("  ObsoleteNumber:                %u\n", Pcr->ObsoleteNumber);
+    KdbpPrint("  MajorVersion:                  0x%x\n", Pcr->MajorVersion);
+    KdbpPrint("  MinorVersion:                  0x%x\n", Pcr->MinorVersion);
+    KdbpPrint("  StallScaleFactor:              0x%lx\n", Pcr->StallScaleFactor);
+    KdbpPrint("  SecondLevelCacheSize:          0x%lx\n", Pcr->SecondLevelCacheSize);
+    KdbpPrint("  KdVersionBlock:                0x%p\n", Pcr->KdVersionBlock);
 #endif
-              );
-
 
     return TRUE;
 }
@@ -2417,7 +2516,7 @@ KdbpCmdTss(
 
     return TRUE;
 }
-#endif
+#endif // _M_IX86
 
 /*!\brief Bugchecks the system.
  */
@@ -2724,7 +2823,7 @@ KdbpPrint(
     CHAR c = '\0';
     PCHAR p, p2;
     ULONG Length;
-    ULONG i, j;
+    SIZE_T i, j;
     LONG RowsPrintedByTerminal;
     ULONG ScanCode;
     va_list ap;
@@ -2942,6 +3041,24 @@ KdbpPrint(
     }
 }
 
+VOID
+KdbpPrintUnicodeString(
+    _In_ PCUNICODE_STRING String)
+{
+    ULONG i;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+    {
+        KdbpPrint("<NULL>");
+        return;
+    }
+
+    for (i = 0; i < String->Length / sizeof(WCHAR); i++)
+    {
+        KdbpPrint("%c", (CHAR)String->Buffer[i]);
+    }
+}
+
 /** memrchr(), explicitly defined, since was absent in MinGW of RosBE. */
 /*
  * Reverse memchr()
@@ -3039,7 +3156,7 @@ KdbpPager(
     CHAR c = '\0';
     PCHAR p, p2;
     ULONG Length;
-    ULONG i, j;
+    SIZE_T i, j;
     LONG RowsPrintedByTerminal;
     ULONG ScanCode;
 
@@ -3298,8 +3415,8 @@ static VOID
 KdbpCommandHistoryAppend(
     IN PCHAR Command)
 {
-    ULONG Length1 = strlen(Command) + 1;
-    ULONG Length2 = 0;
+    SIZE_T Length1 = strlen(Command) + 1;
+    SIZE_T Length2 = 0;
     INT i;
     PCHAR Buffer;
 
@@ -3380,7 +3497,7 @@ KdbpReadCommand(
     static CHAR LastCommand[1024];
     static CHAR NextKey = '\0';
     INT CmdHistIndex = -1;
-    INT i;
+    INT_PTR i;
 
     EchoOn = !((KdbDebugState & KD_DEBUG_KDNOECHO) != 0);
 
@@ -3644,7 +3761,7 @@ static BOOLEAN
 KdbpDoCommand(
     IN PCHAR Command)
 {
-    ULONG i;
+    SIZE_T i;
     PCHAR p;
     ULONG Argc;
     // FIXME: for what do we need a 1024 characters command line and 256 tokens?
@@ -3759,21 +3876,6 @@ KdbpCliMainLoop(
     while (Continue);
 }
 
-/*!\brief Called when a module is loaded.
- *
- * \param Name  Filename of the module which was loaded.
- */
-VOID
-KdbpCliModuleLoaded(
-    IN PUNICODE_STRING Name)
-{
-    if (!KdbBreakOnModuleLoad)
-        return;
-
-    KdbpPrint("Module %wZ loaded.\n", Name);
-    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-}
-
 /*!\brief This function is called by KdbEnterDebuggerException...
  *
  * Used to interpret the init file in a context with a trapframe setup
@@ -3784,7 +3886,7 @@ VOID
 KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
-    INT i;
+    INT_PTR i;
     CHAR c;
 
     /* Execute the commands in the init file */

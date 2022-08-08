@@ -161,7 +161,7 @@ CSR_API(BaseSrvNlsCreateSection)
     ULONG LocaleId;
     UNICODE_STRING NlsSectionName;
     PWCHAR NlsFileName;
-    UCHAR SecurityDescriptor[52];
+    PSECURITY_DESCRIPTOR NlsSd;
     OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR FileNameBuffer[32];
     WCHAR NlsSectionNameBuffer[32];
@@ -271,9 +271,9 @@ CSR_API(BaseSrvNlsCreateSection)
     }
 
     /* Create an SD for the section object */
-    Status = pCreateNlsSecurityDescriptor(&SecurityDescriptor,
-                                          sizeof(SecurityDescriptor),
-                                          0x80000000);
+    Status = pCreateNlsSecurityDescriptor(&NlsSd,
+                                          sizeof(SECURITY_DESCRIPTOR),
+                                          SECTION_MAP_READ);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NLS: CreateNlsSecurityDescriptor FAILED!: %lx\n", Status);
@@ -286,7 +286,7 @@ CSR_API(BaseSrvNlsCreateSection)
                                &NlsSectionName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT | OBJ_OPENIF,
                                NULL,
-                               &SecurityDescriptor);
+                               NlsSd);
     Status = NtCreateSection(&SectionHandle,
                              SECTION_MAP_READ,
                              &ObjectAttributes,
@@ -295,6 +295,7 @@ CSR_API(BaseSrvNlsCreateSection)
                              SEC_COMMIT,
                              FileHandle);
     NtClose(FileHandle);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NlsSd);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NLS: Failed to create section! %lx\n", Status);

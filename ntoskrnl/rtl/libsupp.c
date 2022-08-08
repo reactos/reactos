@@ -823,4 +823,19 @@ RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
     return;
 }
 
+#ifdef _M_AMD64
+
+PRUNTIME_FUNCTION
+NTAPI
+RtlpLookupDynamicFunctionEntry(
+    _In_ DWORD64 ControlPc,
+    _Out_ PDWORD64 ImageBase,
+    _In_ PUNWIND_HISTORY_TABLE HistoryTable)
+{
+    /* No support for dynamic function tables in the kernel */
+    return NULL;
+}
+
+#endif
+
 /* EOF */

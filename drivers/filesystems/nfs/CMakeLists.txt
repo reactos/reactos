@@ -14,12 +14,15 @@ set_module_type(nfs41_driver kernelmodedriver)
 target_link_libraries(nfs41_driver ntoskrnl_vista rdbsslib rxce copysup memcmp ${PSEH_LIB})
 add_importlibs(nfs41_driver ntoskrnl hal)
 
-if(GCC OR CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(nfs41_driver PRIVATE "-Wno-switch")
-    if(CLANG)
-        target_compile_options(nfs41_driver PRIVATE "-Wno-unused-value")
-    endif()
 endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(nfs41_driver PRIVATE "-Wno-unused-value")
+endif()
+
 set_property(TARGET nfs41_driver PROPERTY C_STANDARD 90)
 
 add_cd_file(TARGET nfs41_driver DESTINATION reactos/system32/drivers FOR all)
+add_registry_inf(nfs41_reg.inf)

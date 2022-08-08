@@ -344,7 +344,9 @@ HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-0
 
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
 KSSTRING_Clock="{53172480-4791-11D0-A5D6-28DB04C10000}"
 KSSTRING_Quality="{97EBAACB-95BD-11D0-A3EA-00A0C9223196}"
 KSSTRING_Server="{3C0D501A-140B-11D1-B40F-00A0C9223196}"
@@ -951,7 +953,6 @@ AudFName.Video="Video"
 AudFName.Peakmeter="Peakmeter"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 StreamingClass="Dispositivos y filtros de streaming"
 Proxy.FilterDesc="Proxy de filtrado WDM genérico"
 Category_CaptureDevices="Dispositivos de captura de streaming WDM"
@@ -1103,7 +1104,6 @@ AudFName.VideoMute="Silenciar vídeo"
 AudFName.Video="Vídeo"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 StreamingClass="Urządzenia/filtry strumieniowe"
 Proxy.FilterDesc="Standardowy filtr WDM"
 Category_CaptureDevices="Urządzenia nagrywania strumieniowego WDM"
@@ -1256,7 +1256,6 @@ AudFName.Video="Video"
 AudFName.Peakmeter="Analizator"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 StreamingClass="Filtre/dispozitive de redare în flux"
 Proxy.FilterDesc="Proxy filtru WDM generic"
 Category_CaptureDevices="Dispozitive de captură flux WDM"
@@ -1408,8 +1407,6 @@ AudFName.Peakmeter="Vârf-metru"
 
 ; Turkish
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 StreamingClass="Akış Aygıtları/Süzgeçleri"
 Proxy.FilterDesc="Genel WDM Süzgeç Vekil Sunucusu"
 Category_CaptureDevices="WDM Akış Yakalama Aygıtları"
@@ -1562,7 +1559,6 @@ AudFName.Video="Video"
 AudFName.Peakmeter="Tepe Noktası Ölçücüsü"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 StreamingClass="Потокові пристрої/фільтри"
 Proxy.FilterDesc="Стандартний проксі фільтру WDM"
 Category_CaptureDevices="Пристрої захоплення потоку WDM"
@@ -1705,7 +1701,6 @@ AudFName.Video="Відео"
 AudFName.Peakmeter="Замір рівнів"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 StreamingClass="Dispositivos e filtros de streaming"
 Proxy.FilterDesc="Proxy de filtro WDM genérico"
 Category_CaptureDevices="Dispositivos de captura de WDM Streaming"

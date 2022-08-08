@@ -29,6 +29,8 @@ static NTSTATUS NTAPI PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 /*** PUBLIC ******************************************************************/
 
 PPCI_DRIVER_EXTENSION DriverExtension = NULL;
+BOOLEAN HasDebuggingDevice = FALSE;
+PCI_TYPE1_CFG_CYCLE_BITS PciDebuggingDevice[2] = {0};
 
 /*** PRIVATE *****************************************************************/
 
@@ -194,6 +196,54 @@ PciUnload(
     UNREFERENCED_PARAMETER(DriverObject);
 }
 
+static
+CODE_SEG("INIT")
+VOID
+PciLocateKdDevices(VOID)
+{
+    ULONG i;
+    NTSTATUS Status;
+    WCHAR KeyNameBuffer[16];
+    ULONG BusNumber, SlotNumber;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[0].Name = L"Bus";
+    QueryTable[0].EntryContext = &BusNumber;
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[1].Name = L"Slot";
+    QueryTable[1].EntryContext = &SlotNumber;
+
+    for (i = 0; i < RTL_NUMBER_OF(PciDebuggingDevice); ++i)
+    {
+        PCI_SLOT_NUMBER PciSlot;
+
+        RtlStringCbPrintfW(KeyNameBuffer, sizeof(KeyNameBuffer), L"PCI\\Debug\\%d", i);
+
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+                                        KeyNameBuffer,
+                                        QueryTable,
+                                        NULL,
+                                        NULL);
+        if (!NT_SUCCESS(Status))
+            return;
+
+        HasDebuggingDevice = TRUE;
+
+        PciSlot.u.AsULONG = SlotNumber;
+        PciDebuggingDevice[i].DeviceNumber = PciSlot.u.bits.DeviceNumber;
+        PciDebuggingDevice[i].FunctionNumber = PciSlot.u.bits.FunctionNumber;
+        PciDebuggingDevice[i].BusNumber = BusNumber;
+        PciDebuggingDevice[i].InUse = TRUE;
+
+        DPRINT1("PCI debugging device %02x:%02x.%x\n",
+                BusNumber,
+                PciSlot.u.bits.DeviceNumber,
+                PciSlot.u.bits.FunctionNumber);
+    }
+}
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -223,6 +273,8 @@ DriverEntry(
 
     InitializeListHead(&DriverExtension->BusListHead);
     KeInitializeSpinLock(&DriverExtension->BusListLock);
+
+    PciLocateKdDevices();
 
     return STATUS_SUCCESS;
 }

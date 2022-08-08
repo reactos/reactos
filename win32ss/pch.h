@@ -25,6 +25,7 @@
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
+#include <ndk/sefuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
 #include <ntintsafe.h>

@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/io/pnpmgr/pnpmgr.c
  * PURPOSE:         Initializes the PnP manager
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ *                  Copyright 2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -2411,4 +2411,17 @@ IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                                   BusAddress,
                                   AddressSpace,
                                   TranslatedAddress);
+}
+
+VOID
+NTAPI
+IoInvalidateDeviceState(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    if (!IopIsValidPhysicalDeviceObject(DeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG_PTR)DeviceObject, 0, 0);
+    }
+
+    PiQueueDeviceAction(DeviceObject, PiActionQueryState, NULL, NULL);
 }

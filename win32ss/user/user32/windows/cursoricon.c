@@ -2474,7 +2474,7 @@ HICON WINAPI CreateIconFromResourceEx(
             /* Check we were given the right type of resource */
             if((fIcon && pCurIconDir->idType == 2) || (!fIcon && pCurIconDir->idType == 1))
             {
-                WARN("Got a %s directory pointer, but called for a %s", fIcon ? "cursor" : "icon", fIcon ? "icon" : "cursor");
+                WARN("Got a %s directory pointer, but called for a %s\n", fIcon ? "cursor" : "icon", fIcon ? "icon" : "cursor");
                 return NULL;
             }
 

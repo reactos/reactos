@@ -1,6 +1,7 @@
-; Cdfs (ISO96660) filesystem driver
+; Cdfs (ISO96660) Filesystem driver
 [AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","DependOnGroup",0x00010000,"SCSI CDROM Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000003

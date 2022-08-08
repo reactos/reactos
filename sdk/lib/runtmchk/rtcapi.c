@@ -9,7 +9,7 @@
 
 #if defined(_M_IX86)
 #pragma comment(linker, "/alternatename:__CRT_RTC_INITW=__CRT_RTC_INITW0")
-#elif defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
+#elif defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
 #pragma comment(linker, "/alternatename:_CRT_RTC_INITW=_CRT_RTC_INITW0")
 #else
 #error Unsupported platform

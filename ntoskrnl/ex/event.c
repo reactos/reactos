@@ -329,12 +329,12 @@ NtQueryEvent(IN HANDLE EventHandle,
                                          ExEventInfoClass,
                                          sizeof(ExEventInfoClass) /
                                          sizeof(ExEventInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          EventInformation,
                                          EventInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if(!NT_SUCCESS(Status))
     {
         /* Invalid buffers */

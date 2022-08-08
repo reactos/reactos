@@ -2426,24 +2426,6 @@ typedef struct _SECURITY_ATTRIBUTES {
 
 $include(setypes.h)
 
-typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_ALLOWED_OBJECT_ACE,*PACCESS_ALLOWED_OBJECT_ACE;
-
-typedef struct _ACCESS_DENIED_OBJECT_ACE {
-  ACE_HEADER Header;
-  ACCESS_MASK Mask;
-  DWORD Flags;
-  GUID ObjectType;
-  GUID InheritedObjectType;
-  DWORD SidStart;
-} ACCESS_DENIED_OBJECT_ACE,*PACCESS_DENIED_OBJECT_ACE;
-
 typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
@@ -4401,6 +4383,17 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
   #endif
 }
+#elif defined (_M_ARM64)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    //UNIMPLEMENTED;
+    return 0;
+}
+FORCEINLINE PVOID GetCurrentFiber(VOID)
+{
+    //UNIMPLEMENTED;
+    return 0;
+}
 #elif defined(_M_PPC)
 FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
 {
@@ -4495,6 +4488,8 @@ DbgRaiseAssertionFailure(VOID)
 #elif defined(_M_MIPS)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_ARM)
+#define YieldProcessor __yield
+#elif defined(_M_ARM64)
 #define YieldProcessor __yield
 #else
 #error Unknown architecture

@@ -73,7 +73,7 @@ MDEVOBJ_Create(
         pdm ? pdm->dmBitsPerPel : 0,
         pdm ? pdm->dmDisplayFrequency : 0);
 
-    pmdev = ExAllocatePoolZero(PagedPool, sizeof(MDEVOBJ), GDITAG_MDEV);
+    pmdev = ExAllocatePoolZero(PagedPool, sizeof(MDEVOBJ) + sizeof(MDEVDISPLAY), GDITAG_MDEV);
     if (!pmdev)
     {
         ERR("Failed to allocate memory for MDEV\n");
@@ -99,63 +99,13 @@ MDEVOBJ_Create(
 
         if (!pdm)
         {
-            /* No settings requested. Read default settings from registry to dmDefault */
-            HKEY hKey;
-            WCHAR DeviceKey[128];
-            ULONG cbSize;
-            NTSTATUS Status;
-            DWORD dwValue;
-
+            /* No settings requested. Provide nothing and LDEVOBJ_bProbeAndCaptureDevmode
+             * will read default settings from registry */
             RtlZeroMemory(&dmDefault, sizeof(dmDefault));
             dmDefault.dmSize = sizeof(dmDefault);
-
-            Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open VIDEO key: status 0x%08x\n", Status);
-                continue;
-            }
-            cbSize = sizeof(DeviceKey);
-            Status = RegQueryValue(hKey,
-                                   pGraphicsDevice->szNtDeviceName,
-                                   REG_SZ,
-                                   DeviceKey,
-                                   &cbSize);
-            ZwClose(hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open get device key for '%S': status 0x%08x\n", pGraphicsDevice->szNtDeviceName, Status);
-                continue;
-            }
-            Status = RegOpenKey(DeviceKey, &hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open open device key '%S' for '%S': status 0x%08x\n", DeviceKey, pGraphicsDevice->szNtDeviceName, Status);
-                continue;
-            }
-#define READ(field, str, flag) \
-    if (RegReadDWORD(hKey, L##str, &dwValue)) \
-    { \
-        dmDefault.field = dwValue; \
-        dmDefault.dmFields |= flag; \
-    }
-            READ(dmBitsPerPel, "DefaultSettings.BitsPerPel", DM_BITSPERPEL);
-            READ(dmPelsWidth, "DefaultSettings.XResolution", DM_PELSWIDTH);
-            READ(dmPelsHeight, "DefaultSettings.YResolution", DM_PELSHEIGHT);
-            READ(dmDisplayFlags, "DefaultSettings.Flags", DM_DISPLAYFLAGS);
-            READ(dmDisplayFrequency, "DefaultSettings.VRefresh", DM_DISPLAYFREQUENCY);
-            READ(dmPanningWidth, "DefaultSettings.XPanning", DM_PANNINGWIDTH);
-            READ(dmPanningHeight, "DefaultSettings.YPanning", DM_PANNINGHEIGHT);
-            READ(dmDisplayOrientation, "DefaultSettings.Orientation", DM_DISPLAYORIENTATION);
-            READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput", DM_DISPLAYFIXEDOUTPUT);
-            READ(dmPosition.x, "Attach.RelativeX", DM_POSITION);
-            READ(dmPosition.y, "Attach.RelativeY", DM_POSITION);
-            RegReadDWORD(hKey, L"Acceleration.Level", &dwAccelerationLevel);
-            ZwClose(hKey);
         }
+
+        dwAccelerationLevel = EngpGetDisplayDriverAccelerationLevel(pGraphicsDevice);
 
         /* Get or create a PDEV for these settings */
         if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdm ? pdm : &dmDefault, &localPdm, !pdm))
@@ -170,6 +120,24 @@ MDEVOBJ_Create(
         if (ppdev)
         {
             /* Great. We have a found a matching PDEV. Store it in MDEV */
+            if (pmdev->cDev >= 1)
+            {
+                /* We have to reallocate MDEV to add space for the new display */
+                PMDEVOBJ pmdevBigger = ExAllocatePoolZero(PagedPool, sizeof(MDEVOBJ) + (pmdev->cDev + 1) * sizeof(MDEVDISPLAY), GDITAG_MDEV);
+                if (!pmdevBigger)
+                {
+                    WARN("Failed to allocate memory for MDEV. Skipping display '%S'\n", pGraphicsDevice->szWinDeviceName);
+                    continue;
+                }
+                else
+                {
+                    /* Copy existing data */
+                    RtlCopyMemory(pmdevBigger, pmdev, sizeof(MDEVOBJ) + pmdev->cDev * sizeof(MDEVDISPLAY));
+                    ExFreePoolWithTag(pmdev, GDITAG_MDEV);
+                    pmdev = pmdevBigger;
+                }
+            }
+
             TRACE("Adding '%S' to MDEV %p\n", pGraphicsDevice->szWinDeviceName, pmdev);
             PDEVOBJ_vReference(ppdev);
             pmdev->dev[pmdev->cDev].ppdev = ppdev;

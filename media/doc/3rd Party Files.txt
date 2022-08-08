@@ -77,7 +77,7 @@ Title: WinBtrfs
 Path: dll/shellext/shellbtrfs
 Path: drivers/filesystems/btrfs
 Path: sdk/lib/fslib/btrfslib
-Used Version: 1.7.2
+Used Version: 1.8.0
 License: LGPL-3.0-or-later (https://spdx.org/licenses/LGPL-3.0-or-later.html)
 URL: https://github.com/maharmstone/btrfs
 
@@ -147,9 +147,9 @@ URL: http://alter.org.ua/soft/win/uni_ata/
 
 Title: Miniport driver for the Buslogic BT 958 SCSI Controller
 Path: drivers/storage/port/buslogic
-Used Version: ???
+Used Version: v1.2.0.2 (2005-08-17)
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.vmware.com/download/open_sources.html
+URL: https://customerconnect.vmware.com/downloads/details?productId=23&downloadGroup=SERVER-SCSI-OS
 
 Title: AC97 Sample Driver
 Path: drivers/wdm/audio/drivers/ac97

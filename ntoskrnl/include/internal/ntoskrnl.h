@@ -104,7 +104,11 @@
 #endif
 
 #ifdef __SANITIZE_UB__
+#ifdef _MSC_VER
+#define NO_SANITIZE __declspec(no_sanitize_address)
+#else
 #define NO_SANITIZE __attribute__ ((no_sanitize("undefined")))
+#endif
 #else
 #define NO_SANITIZE
 #endif

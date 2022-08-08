@@ -212,7 +212,7 @@ MempAllocatePageTables(VOID)
     if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
         PhysicalPageTablesBuffer)
     {
-        TRACE("There was a problem allocating two adjacent blocks of memory!");
+        TRACE("There was a problem allocating two adjacent blocks of memory!\n");
     }
 
     if (Buffer == NULL || PhysicalPageTablesBuffer == NULL)

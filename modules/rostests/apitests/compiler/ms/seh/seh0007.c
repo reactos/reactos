@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0007.c";
-int perfect;
 
 int main() {
   PLONG BadAddress;

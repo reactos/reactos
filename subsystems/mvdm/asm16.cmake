@@ -100,7 +100,7 @@ function(add_asm16_bin _target _binary_file _base_address)
     ##
     ## All this part is the same as CreateBootSectorTarget
     ##
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")

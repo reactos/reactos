@@ -84,10 +84,10 @@ HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
     {
       KeSetCurrentIrql (DISPATCH_LEVEL);
       APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
-      DpcRequested = __readfsbyte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]));
+      DpcRequested = __readfsbyte(FIELD_OFFSET(KPCR, HalReserved[HAL_DPC_REQUEST]));
       if (FromHalEndSystemInterrupt || DpcRequested)
         {
-          __writefsbyte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 0);
+          __writefsbyte(FIELD_OFFSET(KPCR, HalReserved[HAL_DPC_REQUEST]), 0);
           _enable();
           KiDispatchInterrupt();
           if (!(Flags & EFLAGS_INTERRUPT_MASK))
@@ -338,11 +338,11 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
   switch (Request)
   {
     case APC_LEVEL:
-      __writefsbyte(FIELD_OFFSET(KIPCR, HalReserved[HAL_APC_REQUEST]), 1);
+      __writefsbyte(FIELD_OFFSET(KPCR, HalReserved[HAL_APC_REQUEST]), 1);
       break;
 
     case DISPATCH_LEVEL:
-      __writefsbyte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 1);
+      __writefsbyte(FIELD_OFFSET(KPCR, HalReserved[HAL_DPC_REQUEST]), 1);
       break;
 
     default:

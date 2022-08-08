@@ -23,6 +23,9 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Indhold"
     IDS_INDEX        "I&ndeks"
     IDS_SEARCH       "&Søg"

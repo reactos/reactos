@@ -58,7 +58,10 @@ fbtusb.sys
 ;---------------------------------------------------------------;
 
 [Strings]
-ReactOS="ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 BTUSB.DeviceDesc="Generic USB Bluetooth Radio"
 BluetoothClassName="Bluetooth Radios"
 
@@ -75,27 +78,22 @@ BTUSB.DeviceDesc="USB-Treiber für Bluetooth-Funkgerät"
 BluetoothClassName="Bluetooth Funkgeräte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB genérica"
 BluetoothClassName="Radios Bluetooth"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 BTUSB.DeviceDesc="Standardowy odbiornik radiowy Bluetooth na USB"
 BluetoothClassName="Odbiorniki radiowe Bluetooth"
 
 [Strings.0418]
-ReactOS="Echipa ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB generic"
 BluetoothClassName="Radiouri Bluetooth"
 
 [Strings.0419]
-ReactOS="Команда ReactOS"
 BTUSB.DeviceDesc="Стандартный USB Bluetooth радиомодуль"
 BluetoothClassName="Радиомодули Bluetooth"
 
 [Strings.041f]
-ReactOS="ReactOS Takımı"
 BTUSB.DeviceDesc="Genel USB Bluetooth Radyo"
 BluetoothClassName="Bluetooth Radyoları"
 
@@ -103,7 +101,6 @@ BluetoothClassName="Bluetooth Radyoları"
 BTUSB.DeviceDesc="通用 USB 蓝牙无线电"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 BTUSB.DeviceDesc="Rádio Bluetooth USB genérico"
 BluetoothClassName="Rádios Bluetooth"
 

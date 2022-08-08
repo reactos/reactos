@@ -33,14 +33,14 @@ endif()
 add_definitions(/D__STDC__=1)
 
 # Ignore any "standard" include paths, and do not use any default CRT library.
-if(NOT USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
 endif()
 
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
 
@@ -48,16 +48,11 @@ endif()
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
     # Clang's IA32 means i386, which doesn't have cmpxchg8b
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-march=${OARCH})
     else()
         add_compile_options(/arch:IA32)
     endif()
-endif()
-
-# CLang default to -fno-common from version 11 onward. We are not ready for this now
-if (USE_CLANG_CL)
-    add_compile_options(-fcommon)
 endif()
 
 # VS 12+ requires /FS when used in parallel compilations
@@ -98,7 +93,7 @@ if (MSVC_IDE)
 endif()
 
 # On x86 Debug builds, if it's not Clang-CL or msbuild, treat all warnings as errors
-if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (NOT USE_CLANG_CL) AND (NOT MSVC_IDE))
+if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "MSVC") AND (NOT MSVC_IDE))
     set(TREAT_ALL_WARNINGS_AS_ERRORS=TRUE)
 endif()
 
@@ -145,7 +140,7 @@ endif()
 # - C4115: named type definition in parentheses
 add_compile_options(/w14115)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
 endif()
 
@@ -157,7 +152,7 @@ add_compile_definitions($<$<CONFIG:Release>:NDEBUG>)
 
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
-    if(NOT USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         add_compile_options(/hotpatch)
     endif()
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
@@ -169,7 +164,9 @@ if(MSVC_IDE AND (NOT DEFINED USE_FOLDER_STRUCTURE))
     set(USE_FOLDER_STRUCTURE TRUE)
 endif()
 
-if(RUNTIME_CHECKS)
+if (SANITIZE_UB)
+    #add_compile_options(/fsanitize=address)
+elseif(RUNTIME_CHECKS)
     add_definitions(-D__RUNTIME_CHECKS__)
     add_compile_options(/RTC1)
 endif()
@@ -257,7 +254,7 @@ function(set_subsystem MODULE SUBSYSTEM)
     elseif(ARCH STREQUAL "arm")
         target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},6.02")
     elseif(ARCH STREQUAL "arm64")
-        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},6.04")
+        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},6.02")
     else()
         target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},5.01")
     endif()
@@ -414,10 +411,14 @@ set(PSEH_LIB "pseh")
 # Use a full path for the x86 version of ml when using x64 VS.
 # It's not a problem when using the DDK/WDK because, in x64 mode,
 # both the x86 and x64 versions of ml are available.
-if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCToolsInstallDir}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
-elseif((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+if(ARCH STREQUAL "amd64")
+    if((MSVC_VERSION LESS_EQUAL 1900) AND (DEFINED ENV{VCINSTALLDIR}))
+        set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+    elseif(DEFINED ENV{VCToolsInstallDir})
+        set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
+    else()
+        set(CMAKE_ASM16_COMPILER ml.exe)
+    endif()
 elseif(ARCH STREQUAL "arm")
     set(CMAKE_ASM16_COMPILER armasm.exe)
 elseif(ARCH STREQUAL "arm64")
@@ -433,7 +434,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
     get_defines(_defines)
     get_includes(_includes)
 
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")
@@ -520,7 +521,7 @@ function(add_linker_script _target _linker_script_file)
 
     # Create the additional linker response file.
     set(_generated_file "${_generated_file_path_prefix}.rsp")
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")

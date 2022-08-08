@@ -113,7 +113,7 @@ END
 
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Time"
+CAPTION "時刻"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "表示例", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
@@ -213,5 +213,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "input.dllを開始できません"
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Unicodeをサポートしていないプログラムのための新しい言語をインストールできません。"
 END

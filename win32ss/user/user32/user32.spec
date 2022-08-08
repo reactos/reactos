@@ -252,8 +252,8 @@
 251 stdcall GetClassInfoExW(long wstr ptr)
 252 stdcall GetClassInfoW(long wstr ptr)
 253 stdcall GetClassLongA(long long)
-@ stdcall -arch=x86_64 GetClassLongPtrA(ptr long)
-@ stdcall -arch=x86_64 GetClassLongPtrW(ptr long)
+@ stdcall -arch=x86_64,arm64 GetClassLongPtrA(ptr long)
+@ stdcall -arch=x86_64,arm64 GetClassLongPtrW(ptr long)
 254 stdcall GetClassLongW(long long)
 255 stdcall GetClassNameA(long ptr long)
 256 stdcall GetClassNameW(long ptr long)
@@ -372,8 +372,8 @@
 369 stdcall GetWindowDC(long) NtUserGetWindowDC
 370 stdcall GetWindowInfo(long ptr)
 371 stdcall GetWindowLongA(long long)
-@ stdcall -arch=x86_64 GetWindowLongPtrA(ptr long)
-@ stdcall -arch=x86_64 GetWindowLongPtrW(ptr long)
+@ stdcall -arch=x86_64,arm64 GetWindowLongPtrA(ptr long)
+@ stdcall -arch=x86_64,arm64 GetWindowLongPtrW(ptr long)
 372 stdcall GetWindowLongW(long long)
 373 stdcall GetWindowModuleFileName(long ptr long) GetWindowModuleFileNameA
 374 stdcall GetWindowModuleFileNameA(long ptr long)
@@ -654,8 +654,8 @@
 647 stdcall SetWinEventHook(long long long ptr long long long)
 648 stdcall SetWindowContextHelpId(long long)
 649 stdcall SetWindowLongA(long long long)
-@ stdcall -arch=x86_64 SetWindowLongPtrA(ptr long ptr)
-@ stdcall -arch=x86_64 SetWindowLongPtrW(ptr long ptr)
+@ stdcall -arch=x86_64,arm64 SetWindowLongPtrA(ptr long ptr)
+@ stdcall -arch=x86_64,arm64 SetWindowLongPtrW(ptr long ptr)
 650 stdcall SetWindowLongW(long long long)
 651 stdcall SetWindowPlacement(long ptr) NtUserSetWindowPlacement
 652 stdcall SetWindowPos(long long long long long long long) NtUserSetWindowPos
@@ -703,7 +703,7 @@
 694 stdcall UnhookWindowsHook(long ptr)
 695 stdcall UnhookWindowsHookEx(long) NtUserUnhookWindowsHookEx
 696 stdcall UnionRect(ptr ptr ptr)
-697 stdcall UnloadKeyboardLayout(long) NtUserUnloadKeyboardLayout
+697 stdcall UnloadKeyboardLayout(ptr)
 698 stdcall UnlockWindowStation(long) NtUserUnlockWindowStation
 699 stdcall UnpackDDElParam(long long ptr ptr)
 700 stdcall UnregisterClassA(str long)

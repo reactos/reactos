@@ -881,7 +881,7 @@
 @ stdcall RtlGetFrame()
 @ stdcall RtlGetFullPathName_U(wstr long ptr ptr)
 @ stdcall RtlGetFullPathName_UstrEx(ptr ptr ptr ptr ptr ptr ptr ptr)
-@ stub -version=0x600+ -arch=x86_64 RtlGetFunctionTableListHead
+@ stdcall -arch=x86_64 RtlGetFunctionTableListHead()
 @ stdcall RtlGetGroupSecurityDescriptor(ptr ptr ptr)
 @ stub -version=0x600+ RtlGetIntegerAtom
 @ stdcall RtlGetLastNtStatus()
@@ -1756,8 +1756,8 @@
 @ cdecl -arch=i386 _CIpow()
 @ cdecl -arch=i386 _CIsin()
 @ cdecl -arch=i386 _CIsqrt()
-@ cdecl -arch=x86_64,arm __C_specific_handler(ptr long ptr ptr)
-@ cdecl -arch=x86_64,arm __chkstk()
+@ cdecl -arch=x86_64,arm,arm64 __C_specific_handler(ptr long ptr ptr)
+@ cdecl -arch=x86_64,arm,arm64 __chkstk()
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)

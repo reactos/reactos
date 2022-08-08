@@ -445,12 +445,12 @@ BasepSxsCloseHandles(IN PBASE_MSG_SXS_HANDLES Handles)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 WINAPI
-BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
+BaseProcessStartup(
+    _In_ PPROCESS_START_ROUTINE lpStartAddress)
 {
-    DPRINT("BaseProcessStartup(..) - setting up exception frame.\n");
-
     _SEH2_TRY
     {
         /* Set our Start Address */

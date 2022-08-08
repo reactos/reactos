@@ -26,6 +26,9 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "内容(&C)"
     IDS_INDEX        "索引(&N)"
     IDS_SEARCH       "搜索(&S)"

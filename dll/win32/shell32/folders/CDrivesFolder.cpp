@@ -528,10 +528,10 @@ class CDrivesFolderEnum :
 
 static const shvheader MyComputerSFHeader[] = {
     {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_DISK_CAPACITY, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_DISK_AVAILABLE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
 };
 
 #define MYCOMPUTERSHELLVIEWCOLUMNS 5
@@ -729,16 +729,13 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }
-        case 1:        /* comments */
-            hres = MAKE_COMPARE_HRESULT(0);
-            break;
-        case 2:        /* Type */
+        case 1:        /* Type */
         {
             /* We want to return immediately because SHELL32_CompareDetails also compares children. */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
         }
-        case 3:       /* Size */
-        case 4:       /* Size Available */
+        case 2:       /* Size */
+        case 3:       /* Size Available */
         {
             ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
 
@@ -761,6 +758,9 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
             hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
             break;
         }
+        case 4:        /* comments */
+            hres = MAKE_COMPARE_HRESULT(0);
+            break;
         default:
             return E_INVALIDARG;
     }
@@ -817,17 +817,6 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
-}
-
-static BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
-{
-    GUID *guid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (guid)
-        return IsEqualIID(*guid, CLSID_ControlPanel);
-    return FALSE;
 }
 
 /**************************************************************************
@@ -1126,28 +1115,28 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
             case 0:        /* name */
                 hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
-            case 1:                /* FIXME: comments */
-                hr = SHSetStrRet(&psd->str, "");
-                break;
-            case 2:        /* type */
+            case 1:        /* type */
                 if (DriveType == DRIVE_REMOVABLE && !IsDriveFloppyA(pszDrive))
                     hr = SHSetStrRet(&psd->str, IDS_DRIVE_REMOVABLE);
                 else
                     hr = SHSetStrRet(&psd->str, iDriveTypeIds[DriveType]);
                 break;
-            case 3:        /* total size */
-            case 4:        /* free size */
+            case 2:        /* total size */
+            case 3:        /* free size */
                 psd->str.cStr[0] = 0x00;
                 psd->str.uType = STRRET_CSTR;
                 if (GetVolumeInformationA(pszDrive, NULL, 0, NULL, NULL, NULL, NULL, 0))
                 {
                     GetDiskFreeSpaceExA(pszDrive, &ulFreeBytes, &ulTotalBytes, NULL);
-                    if (iColumn == 3)
+                    if (iColumn == 2)
                         StrFormatByteSize64A(ulTotalBytes.QuadPart, psd->str.cStr, MAX_PATH);
                     else
                         StrFormatByteSize64A(ulFreeBytes.QuadPart, psd->str.cStr, MAX_PATH);
                 }
                 hr = S_OK;
+                break;
+            case 4:                /* FIXME: comments */
+                hr = SHSetStrRet(&psd->str, "");
                 break;
         }
     }

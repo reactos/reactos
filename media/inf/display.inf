@@ -58,7 +58,10 @@ LoadOrderGroup = Video Save
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 DisplayClassName = "Display Adapters"
 
 StdMfg = "(Standard display adapters)"
@@ -89,7 +92,6 @@ StdMfg = "(Πρότυποι προσαρμογείς οθόνης)"
 VGA.DeviceDesc = "VGA-συμβατή κάρτα γραφικών"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 DisplayClassName = "Adaptadores de pantalla"
 
 StdMfg = "(Adaptador de pantalla estándar)"
@@ -108,8 +110,8 @@ StdMfg = "(標準ディスプレイ アダプタ)"
 VGA.DeviceDesc = "VGA互換 グラフィックカード"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 DisplayClassName = "Karty graficzne"
+
 StdMfg = "(Standardowe karty graficzne)"
 VGA.DeviceDesc = "Karta graficzna kompatybilna z VGA"
 
@@ -120,13 +122,12 @@ StdMfg = "(Adaptador de vídeo padrão)"
 VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 DisplayClassName = "Adaptoare grafice"
+
 StdMfg = "(adaptoare grafice standard)"
 VGA.DeviceDesc = "Placă grafică compatibilă VGA"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Графические адаптеры"
 
 StdMfg = "(Стандартные графические адаптеры)"
@@ -139,14 +140,12 @@ StdMfg = "(Štandardné grafické karty)"
 VGA.DeviceDesc = "VGA kompatibilná grafická karta"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 DisplayClassName = "Görüntü Bağdaştırıcıları"
 
 StdMfg = "(Standart Görüntü Bağdaştırıcıları)"
 VGA.DeviceDesc = "VGA Uyumlu Grafik Kartı"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 DisplayClassName = "Графічні адаптери"
 
 StdMfg = "(Стандартні графічні адаптери)"
@@ -163,7 +162,6 @@ StdMfg = "（标准显示适配器）"
 VGA.DeviceDesc = "VGA 兼容显示卡"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 DisplayClassName = "Adaptadores de vídeo"
 
 StdMfg = "(Adaptador de vídeo padrão)"

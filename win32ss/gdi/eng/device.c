@@ -124,6 +124,124 @@ EngpUpdateGraphicsDeviceList(VOID)
     return STATUS_SUCCESS;
 }
 
+/* Open display settings registry key
+ * Returns NULL in case of error. */
+static HKEY
+EngpGetRegistryHandleFromDeviceMap(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
+    HKEY hKey;
+    WCHAR szDeviceKey[256];
+    ULONG cbSize;
+    NTSTATUS Status;
+
+    /* Open the device map registry key */
+    Status = RegOpenKey(KEY_VIDEO, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key: status 0x%08x\n", Status);
+        return NULL;
+    }
+
+    /* Query the registry path */
+    cbSize = sizeof(szDeviceKey);
+    RegQueryValue(hKey,
+                  pGraphicsDevice->szNtDeviceName,
+                  REG_SZ,
+                  szDeviceKey,
+                  &cbSize);
+    ZwClose(hKey);
+
+    /* Open the registry key */
+    Status = RegOpenKey(szDeviceKey, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open registry key '%S': status 0x%08x\n", szDeviceKey, Status);
+        return NULL;
+    }
+
+    return hKey;
+}
+
+NTSTATUS
+EngpGetDisplayDriverParameters(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _Out_ PDEVMODEW pdm)
+{
+    HKEY hKey;
+    NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+#define READ(field, str) \
+        { \
+            NULL, \
+            RTL_QUERY_REGISTRY_DIRECT, \
+            L ##str, \
+            &pdm->field, \
+            REG_NONE, NULL, 0 \
+        },
+    READ(dmBitsPerPel, "DefaultSettings.BitsPerPel")
+    READ(dmPelsWidth, "DefaultSettings.XResolution")
+    READ(dmPelsHeight, "DefaultSettings.YResolution")
+    READ(dmDisplayFlags, "DefaultSettings.Flags")
+    READ(dmDisplayFrequency, "DefaultSettings.VRefresh")
+    READ(dmPanningWidth, "DefaultSettings.XPanning")
+    READ(dmPanningHeight, "DefaultSettings.YPanning")
+    READ(dmDisplayOrientation, "DefaultSettings.Orientation")
+    READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput")
+    READ(dmPosition.x, "Attach.RelativeX")
+    READ(dmPosition.y, "Attach.RelativeY")
+#undef READ
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return STATUS_UNSUCCESSFUL;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)hKey,
+                                    DisplaySettingsTable,
+                                    NULL,
+                                    NULL);
+
+    ZwClose(hKey);
+    return Status;
+}
+
+DWORD
+EngpGetDisplayDriverAccelerationLevel(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    HKEY hKey;
+    DWORD dwAccelerationLevel = 0;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"Acceleration.Level",
+            &dwAccelerationLevel,
+            REG_NONE, NULL, 0
+        },
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return 0;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                           (PWSTR)hKey,
+                           DisplaySettingsTable,
+                           NULL,
+                           NULL);
+    ZwClose(hKey);
+
+    return dwAccelerationLevel;
+}
+
 extern VOID
 UserRefreshDisplay(IN PPDEVOBJ ppdev);
 
@@ -254,7 +372,20 @@ EngpRegisterGraphicsDevice(
     // TODO: Set flags according to the results.
     // if (Win32kCallbacks.bACPI)
     // if (Win32kCallbacks.DualviewFlags & ???)
-    // Win32kCallbacks.pPhysDeviceObject;
+    pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
+
+    /* FIXME: Enumerate children monitor devices for this video adapter
+     *
+     * - Force the adapter to re-enumerate its monitors:
+     *   IoSynchronousInvalidateDeviceRelations(pdo, BusRelations)
+     *
+     * - Retrieve all monitor PDOs from VideoPrt:
+     *   EngDeviceIoControl(0x%p, IOCTL_VIDEO_ENUM_MONITOR_PDO)
+     *
+     * - Initialize these fields and structures accordingly:
+     *   pGraphicsDevice->dwMonCnt
+     *   pGraphicsDevice->pvMonDev[0..dwMonCnt-1]
+     */
 
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
@@ -350,7 +481,7 @@ EngpFindGraphicsDevice(
 
     if (pustrDevice && pustrDevice->Buffer)
     {
-        /* Loop through the list of devices */
+        /* Find specified video adapter by name */
         for (pGraphicsDevice = gpGraphicsDeviceFirst;
              pGraphicsDevice;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
@@ -362,10 +493,21 @@ EngpFindGraphicsDevice(
                 break;
             }
         }
+
+        if (pGraphicsDevice)
+        {
+            /* Validate selected monitor number */
+#if 0
+            if (iDevNum >= pGraphicsDevice->dwMonCnt)
+                pGraphicsDevice = NULL;
+#else
+            /* FIXME: dwMonCnt not initialized, see EngpRegisterGraphicsDevice */
+#endif
+        }
     }
     else
     {
-        /* Loop through the list of devices */
+        /* Select video adapter by device number */
         for (pGraphicsDevice = gpGraphicsDeviceFirst, i = 0;
              pGraphicsDevice && i < iDevNum;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice, i++);

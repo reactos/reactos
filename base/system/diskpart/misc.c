@@ -57,9 +57,17 @@ IsHexString(
 BOOL
 HasPrefix(
     _In_ PWSTR pszString,
-    _In_ PWSTR pszPrefix)
+    _In_ PWSTR pszPrefix,
+    _Out_opt_ PWSTR *ppszSuffix)
 {
-    return (_wcsnicmp(pszString, pszPrefix, wcslen(pszPrefix)) == 0);
+    INT nPrefixLength, ret;
+
+    nPrefixLength = wcslen(pszPrefix);
+    ret = _wcsnicmp(pszString, pszPrefix, nPrefixLength);
+    if ((ret == 0) && (ppszSuffix != NULL))
+        *ppszSuffix = &pszString[nPrefixLength];
+
+    return (ret == 0);
 }
 
 
@@ -69,4 +77,72 @@ RoundingDivide(
     _In_ ULONGLONG Divisor)
 {
     return (Dividend + Divisor / 2) / Divisor;
+}
+
+
+PWSTR
+DuplicateQuotedString(
+    _In_ PWSTR pszInString)
+{
+    PWSTR pszOutString = NULL;
+    PWSTR pStart, pEnd;
+    INT nLength;
+
+    if ((pszInString == NULL) || (pszInString[0] == UNICODE_NULL))
+        return NULL;
+
+    if (pszInString[0] == L'"')
+    {
+        if (pszInString[1] == UNICODE_NULL)
+            return NULL;
+
+        pStart = &pszInString[1];
+        pEnd = wcschr(pStart, '"');
+        if (pEnd == NULL)
+        {
+            nLength = wcslen(pStart);
+        }
+        else
+        {
+            nLength = (pEnd - pStart);
+        }
+    }
+    else
+    {
+        pStart = pszInString;
+        nLength = wcslen(pStart);
+    }
+
+    pszOutString = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   (nLength + 1) * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    wcsncpy(pszOutString, pStart, nLength);
+
+    return pszOutString;
+}
+
+
+PWSTR
+DuplicateString(
+    _In_ PWSTR pszInString)
+{
+    PWSTR pszOutString = NULL;
+    INT nLength;
+
+    if ((pszInString == NULL) || (pszInString[0] == UNICODE_NULL))
+        return NULL;
+
+    nLength = wcslen(pszInString);
+    pszOutString = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   (nLength + 1) * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    wcscpy(pszOutString, pszInString);
+
+    return pszOutString;
 }

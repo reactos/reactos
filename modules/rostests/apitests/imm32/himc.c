@@ -173,7 +173,7 @@ static void Test2(void)
         LPCSTR pszClass = apszClasses[i];
         hwnd = CreateWindowA(pszClass, NULL, WS_VISIBLE, 0, 0, 0, 0, NULL, NULL,
                              GetModuleHandle(NULL), NULL);
-        ok(hwnd != NULL, "CreateWindow failed\n");
+        ok(hwnd != NULL, "CreateWindow(%s) failed\n", pszClass);
 
         hIMC = ImmGetContext(hwnd);
 

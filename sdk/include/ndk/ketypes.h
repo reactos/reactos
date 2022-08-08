@@ -820,7 +820,6 @@ typedef struct _PP_LOOKASIDE_LIST
 //
 // Kernel Memory Node
 //
-#include <pshpack1.h>
 typedef struct _KNODE
 {
     SLIST_HEADER DeadStackList;
@@ -834,10 +833,9 @@ typedef struct _KNODE
         UCHAR Fill : 7;
     } Flags;
     ULONG MmShiftedColor;
-    ULONG FreeCount[2];
+    ULONG_PTR FreeCount[2];
     struct _SINGLE_LIST_ENTRY *PfnDeferredList;
 } KNODE, *PKNODE;
-#include <poppack.h>
 
 //
 // Structure for Get/SetContext APC
@@ -1213,7 +1211,7 @@ typedef struct _KTHREAD
         };
     };
     KSPIN_LOCK ApcQueueLock;
-#ifndef _M_AMD64 // [
+#if !defined(_M_AMD64) && !defined(_M_ARM64) // [
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
@@ -1263,7 +1261,7 @@ typedef struct _KTHREAD
         SINGLE_LIST_ENTRY SwapListEntry;
     };
     PKQUEUE Queue;
-#ifndef _M_AMD64 // [
+#if !defined(_M_AMD64) && !defined(_M_ARM64) // [
     ULONG WaitTime;
     union
     {

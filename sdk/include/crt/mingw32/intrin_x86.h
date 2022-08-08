@@ -111,15 +111,6 @@ __INTRIN_INLINE void _mm_lfence(void)
 }
 #endif
 
-#if !HAS_BUILTIN(_mm_sfence)
-__INTRIN_INLINE void _mm_sfence(void)
-{
-	_WriteBarrier();
-	__asm__ __volatile__("sfence");
-	_WriteBarrier();
-}
-#endif
-
 #if defined(__x86_64__) && !HAS_BUILTIN(__faststorefence)
 __INTRIN_INLINE void __faststorefence(void)
 {

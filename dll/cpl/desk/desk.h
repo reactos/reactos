@@ -122,6 +122,9 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+BOOL
+SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTINGS_ENTRY seNew, OUT PLONG rc);
+
 LONG
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,

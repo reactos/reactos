@@ -25,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,2,0
- PRODUCTVERSION 1,7,2,0
+ FILEVERSION 1,8,0,0
+ PRODUCTVERSION 1,8,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +68,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "WinBtrfs"
-            VALUE "FileVersion", "1.7.2"
+            VALUE "FileVersion", "1.8.0"
             VALUE "InternalName", "btrfs"
-            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-20"
+            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-22"
             VALUE "OriginalFilename", "btrfs.sys"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "1.7.2"
+            VALUE "ProductVersion", "1.8.0"
         END
     END
     BLOCK "VarFileInfo"

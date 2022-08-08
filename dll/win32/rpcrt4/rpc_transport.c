@@ -107,23 +107,263 @@ static void release_np_event(RpcConnection_np *connection, HANDLE event)
         CloseHandle(event);
 }
 
+#ifdef __REACTOS__
+/**
+ * @brief
+ * Creates a security descriptor for RPC4 pipe
+ *
+ * @param[out] SecDesc
+ * A pointer to an allocated security descriptor.
+ *
+ * @return
+ * ERROR_SUCCESS is returned if the function has
+ * successfully created the security descriptor,
+ * otherwise a Win32 error code is returned.
+ *
+ * @remarks
+ * Everyone (aka World SID) and anonynous users
+ * are given a subset of rights to access the pipe,
+ * whereas admins are given full power.
+ */
+static DWORD rpcrt4_create_pipe_security(PSECURITY_DESCRIPTOR *SecDesc)
+{
+    DWORD ErrCode;
+    PACL Dacl;
+    ULONG DaclSize, RelSDSize = 0;
+    PSID EveryoneSid = NULL, AnonymousSid = NULL, AdminsSid = NULL;
+    PSECURITY_DESCRIPTOR AbsSD = NULL, RelSD = NULL;
+    static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    if (!AllocateAndInitializeSid(&WorldAuthority,
+                                  1,
+                                  SECURITY_WORLD_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &EveryoneSid))
+    {
+       ERR("rpcrt4_create_pipe_security(): Failed to allocate Everyone SID (error code %d)\n", GetLastError());
+       return GetLastError();
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_ANONYMOUS_LOGON_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &AnonymousSid))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate Anonymous SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &AdminsSid))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate Admins SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    AbsSD = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SECURITY_DESCRIPTOR));
+    if (AbsSD == NULL)
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate absolute SD!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!InitializeSecurityDescriptor(AbsSD, SECURITY_DESCRIPTOR_REVISION))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to create absolute SD (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(EveryoneSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(AnonymousSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(AdminsSid);
+
+
+    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
+    if (Dacl == NULL)
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate DACL!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to create DACL (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE | READ_CONTROL,
+                             EveryoneSid))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set up ACE for Everyone SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE | READ_CONTROL,
+                             AnonymousSid))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set up ACE for Anonymous SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             AdminsSid))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set up ACE for Admins SID (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorDacl(AbsSD, TRUE, Dacl, FALSE))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set DACL to absolute SD (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorOwner(AbsSD, AdminsSid, FALSE))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set SD owner (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorGroup(AbsSD, AdminsSid, FALSE))
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to set SD group (error code %d)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(AbsSD, NULL, &RelSDSize) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        ERR("rpcrt4_create_pipe_security(): Unexpected error code (error code %d -- must be ERROR_INSUFFICIENT_BUFFER)\n", GetLastError());
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    RelSD = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RelSDSize);
+    if (RelSD == NULL)
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate relative SD!\n");
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(AbsSD, RelSD, &RelSDSize) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        ERR("rpcrt4_create_pipe_security(): Failed to allocate relative SD, buffer too smal (expected size %lu)\n", RelSDSize);
+        ErrCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Quit;
+    }
+
+    TRACE("rpcrt4_create_pipe_security(): Success!\n");
+    *SecDesc = RelSD;
+    ErrCode = ERROR_SUCCESS;
+
+Quit:
+    if (ErrCode != ERROR_SUCCESS)
+    {
+        if (RelSD != NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, RelSD);
+        }
+    }
+
+    if (EveryoneSid != NULL)
+    {
+        FreeSid(EveryoneSid);
+    }
+
+    if (AnonymousSid != NULL)
+    {
+        FreeSid(AnonymousSid);
+    }
+
+    if (AdminsSid != NULL)
+    {
+        FreeSid(AdminsSid);
+    }
+
+    if (Dacl != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, Dacl);
+    }
+
+    if (AbsSD != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, AbsSD);
+    }
+
+    return ErrCode;
+}
+#endif
+
 static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *conn)
 {
     RpcConnection_np *connection = (RpcConnection_np *) conn;
+#ifdef __REACTOS__
+    DWORD ErrCode;
+    SECURITY_ATTRIBUTES SecurityAttributes;
+    PSECURITY_DESCRIPTOR PipeSecDesc;
+#endif
 
     TRACE("listening on %s\n", connection->listen_pipe);
+
+#ifdef __REACTOS__
+    ErrCode = rpcrt4_create_pipe_security(&PipeSecDesc);
+    if (ErrCode != ERROR_SUCCESS)
+    {
+        ERR("rpcrt4_conn_create_pipe(): Pipe security descriptor creation failed!\n");
+        return RPC_S_CANT_CREATE_ENDPOINT;
+    }
+
+    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    SecurityAttributes.lpSecurityDescriptor = PipeSecDesc;
+    SecurityAttributes.bInheritHandle = FALSE;
 
     connection->pipe = CreateNamedPipeA(connection->listen_pipe, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                                         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
                                         PIPE_UNLIMITED_INSTANCES,
+                                        RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, &SecurityAttributes);
+    HeapFree(GetProcessHeap(), 0, PipeSecDesc);
+#else
+    connection->pipe = CreateNamedPipeA(connection->listen_pipe, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                                        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
+                                        PIPE_UNLIMITED_INSTANCES,
                                         RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
+#endif
     if (connection->pipe == INVALID_HANDLE_VALUE)
     {
         WARN("CreateNamedPipe failed with error %d\n", GetLastError());
         if (GetLastError() == ERROR_FILE_EXISTS)
+        {
             return RPC_S_DUPLICATE_ENDPOINT;
+        }
         else
+        {
             return RPC_S_CANT_CREATE_ENDPOINT;
+        }
     }
 
     return RPC_S_OK;

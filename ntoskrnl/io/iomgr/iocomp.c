@@ -395,12 +395,12 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
                                          IoCompletionInfoClass,
                                          sizeof(IoCompletionInfoClass) /
                                          sizeof(IoCompletionInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          IoCompletionInformation,
                                          IoCompletionInformationLength,
                                          ResultLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the Object */

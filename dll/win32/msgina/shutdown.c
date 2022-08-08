@@ -1408,7 +1408,7 @@ ShellShutdownDialog(
     /* Help file is called directly here */
     else if (dlgValue == IDHELP)
     {
-        FIXME("Help is not implemented yet.");
+        FIXME("Help is not implemented yet.\n");
         MessageBoxW(hParent, L"Help is not implemented yet.", L"Message", MB_OK | MB_ICONEXCLAMATION);
     }
     else if (dlgValue == -1)

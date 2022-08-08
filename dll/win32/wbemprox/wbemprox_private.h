@@ -25,8 +25,8 @@
 #include <winnls.h>
 #endif
 
-IClientSecurity client_security DECLSPEC_HIDDEN;
-struct list *table_list DECLSPEC_HIDDEN;
+extern IClientSecurity client_security DECLSPEC_HIDDEN;
+extern struct list *table_list DECLSPEC_HIDDEN;
 
 enum param_direction
 {

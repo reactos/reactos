@@ -68,11 +68,66 @@ ReturnNtProduct(PDWORD ProductNtType)
     return FALSE;
 }
 
+static
+BOOLEAN
+ChangeNtProductType(DWORD NtProductType)
+{
+    PWSTR ProductTypeString;
+    LONG Result;
+    HKEY Key;
+    DWORD dwSize;
+
+    if (NtProductType == NtProductWinNt)
+    {
+        ProductTypeString = L"WinNT";
+    }
+    else if (NtProductType == NtProductLanManNt)
+    {
+        ProductTypeString = L"LanmanNT";
+    }
+    else if (NtProductType == NtProductServer)
+    {
+        ProductTypeString = L"ServerNT";
+    }
+    else
+    {
+        ok(FALSE, "Passed invalid product type to CHangeNtProduct: %lu", NtProductType);
+    }
+
+    Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
+                           0,
+                           KEY_ALL_ACCESS,
+                           &Key);
+    if (Result != ERROR_SUCCESS)
+    {
+        ok(FALSE, "RegOpenKeyExW failed with 0x%lx\n", Result);
+        return FALSE;
+    }
+ 
+    dwSize = ((DWORD)wcslen(ProductTypeString) + 1) * sizeof(WCHAR);
+    Result = RegSetValueExW(Key,
+                            L"ProductType",
+                            0,
+                            REG_SZ,
+                            (PBYTE)ProductTypeString,
+                            dwSize);
+    if (Result != ERROR_SUCCESS)
+    {
+        ok(FALSE, "RegSetValueExW failed with 0x%lx\n", Result);
+        RegCloseKey(Key);
+        return FALSE;
+    }
+
+    RegCloseKey(Key);
+    return TRUE;
+}
+
 START_TEST(RtlGetNtProductType)
 {
     BOOLEAN Ret;
     DWORD ProductNtType;
-    NT_PRODUCT_TYPE ProductType = NtProductWinNt;
+    NT_PRODUCT_TYPE ProductType = NtProductWinNt, ProductType2;
 
     /*
      * Wrap the call in SEH. This ensures the testcase won't crash but also
@@ -94,4 +149,19 @@ START_TEST(RtlGetNtProductType)
     Ret = RtlGetNtProductType(&ProductType);
     ok(Ret == TRUE, "Expected a valid product type value (and TRUE as returned success code) but got %u as status.\n", Ret);
     ok(ProductNtType == ProductType, "Expected the product type value to be the same but got %lu (original value pointed by RtlGetNtProductType() is %d).\n", ProductNtType, ProductType);
+
+    /* Change product type in the registry */
+    ok_char(ChangeNtProductType(NtProductWinNt), TRUE);
+    ok_char(RtlGetNtProductType(&ProductType2), TRUE);
+    ok_long(ProductType2, ProductType);
+
+    ok_char(ChangeNtProductType(NtProductLanManNt), TRUE);
+    ok_char(RtlGetNtProductType(&ProductType2), TRUE);
+    ok_long(ProductType2, ProductType);
+
+    ok_char(ChangeNtProductType(NtProductServer), TRUE);
+    ok_char(RtlGetNtProductType(&ProductType2), TRUE);
+    ok_long(ProductType2, ProductType);
+
+    ok_char(ChangeNtProductType(ProductType), TRUE);
 }

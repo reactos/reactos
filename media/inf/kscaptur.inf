@@ -245,7 +245,9 @@ HKLM,%RunOnce%,"STREAMIP0",,"rundll32.exe streamci,StreamingDeviceSetup %StreamI
 HKLM,%RunOnce%,"NDISIP0",,"rundll32.exe streamci,StreamingDeviceSetup %NdisIP.DeviceId%,NDISIP,%NdisIP.GUID.BDANetInterface%,%17%\ndisip.inf,NdisIP.Reg"
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
 ActiveMovieCategories="CLSID\{da4e3da0-d07d-11d0-bd50-00a0c911ce86}\Instance"
 GUID.TvTuner="{A799A800-A46D-11d0-A18C-00A02401DCD4}"
 GUID.Crossbar="{A799A801-A46D-11d0-A18C-00A02401DCD4}"
@@ -384,7 +386,6 @@ Plugin_ISelector="WDM Streaming-ISelector-Schnittstellenhandler"
 Plugin_PropertyObject="Knotenschnittstellen-Aggregierungshandler"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 VfWWDMDriverDesc="Dispositivo de captura de vídeo por WDM"
 
 Filter_TVAudio="Audio de TV por WDM"
@@ -407,7 +408,6 @@ Node.Encoder="Codificador"
 Node.Multiplexer="Multiplexador"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 Category_CrossbarDevices="Urządzenia strumieniowe Crossbar WDM"
 Category_TvTunerDevices="Urządzenia strumieniowe odbiornika TV WDM"
 Category_TvAudioDevices="Urządzenia strumieniowe TV Audio WDM"
@@ -456,7 +456,6 @@ Plugin_ISelector="Wtyczka do interfejsu strumienia ISelectorWDM"
 Plugin_PropertyObject="Node Interfaces-Aggregate handler"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 Category_CrossbarDevices="Dispozitive „crossbar” de flux WDM"
 Category_TvTunerDevices="Dispozitive receptoare TV de flux WDM"
 Category_TvAudioDevices="Dispozitive audio TV de flux WDM"
@@ -505,7 +504,6 @@ Plugin_ISelector="Rutină interfață flux WDM selector intrare"
 Plugin_PropertyObject="Rutină interfețe nod agregate"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 Category_CrossbarDevices="WDM Akış-Çubuk-Aygıt"
 Category_TvTunerDevices="WDM Akış-TV-Alıcı Aygıtlar"
 Category_TvAudioDevices="WDM Akış-TV-Ses Aygıtları"
@@ -554,7 +552,6 @@ Plugin_ISelector="WDM Akış-ISelector-Arayüz İşleyicisi"
 Plugin_PropertyObject="Bileşen Arayüzler-Öbeklenme İşleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 Category_CrossbarDevices="Потоково-Перехресний Пристрій WDM"
 Category_TvTunerDevices="Потокові TV-Приймальні Пристрої WDM"
 Category_TvAudioDevices="Потокові TV-Аудіо Пристрої WDM"

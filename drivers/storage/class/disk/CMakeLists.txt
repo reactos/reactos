@@ -16,11 +16,8 @@ target_compile_definitions(disk PUBLIC
     _WIN32_WINNT=0x602
     NTDDI_VERSION=0x06020000) # NTDDI_WIN8
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(disk PRIVATE -Wno-format -Wno-pointer-sign)
-endif()
-
-if(GCC)
     target_compile_options(disk PRIVATE -Wno-pointer-to-int-cast -Wno-switch)
 endif()
 

@@ -406,7 +406,7 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
     RtlInitUnicodeString(&DestinationString, KeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&Handle,
@@ -427,7 +427,8 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
                              NULL,
                              0,
                              &ResultLength);
-    if (!ResultLength) return Status;
+    if (!ResultLength)
+        goto Quit;
 
     /* Allocate the buffer for the partial info structure and our integer data */
     ResultLength += sizeof(ULONG);
@@ -435,7 +436,7 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
     if (!*Buffer)
     {
         SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC GetRegistryValueBuffer: failed allocation\n");
-        return Status;
+        goto Quit;
     }
 
     /* Now read the data */
@@ -452,8 +453,10 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
         SacFreePool(*Buffer);
     }
 
-    /* Return the result */
-    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SetRegistryValue: Exiting.\n");
+Quit:
+    /* Close the handle and exit */
+    ZwClose(Handle);
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC GetRegistryValueBuffer: Exiting.\n");
     return Status;
 }
 
@@ -478,7 +481,7 @@ SetRegistryValue(IN PCWSTR KeyName,
     RtlInitUnicodeString(&DestinationString, KeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&Handle,
@@ -501,7 +504,7 @@ SetRegistryValue(IN PCWSTR KeyName,
     }
 
     /* Close the handle and exit */
-    NtClose(Handle);
+    ZwClose(Handle);
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SetRegistryValue: Exiting.\n");
     return Status;
 }
