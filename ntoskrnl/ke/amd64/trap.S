@@ -930,16 +930,27 @@ PUBLIC KiServiceExit2
 .PROC KiServiceExit2
     .ENDPROLOG
 
+    // FIXME: this should probably also restore an exception frame
+
+    mov rsp, rcx
+.ENDP
+
+PUBLIC KiServiceExit3
+.PROC KiServiceExit3
+    .PUSHFRAME
+    .ALLOCSTACK (KTRAP_FRAME_LENGTH - MachineFrameLength)
+    .ENDPROLOG
+
 #if DBG
     /* Get the current IRQL and compare it to the trap frame */
     mov rax, cr8
-    cmp byte ptr [rcx + KTRAP_FRAME_PreviousIrql], al
+    cmp byte ptr [rsp + KTRAP_FRAME_PreviousIrql], al
     je KiServiceExit2_ok1
     int HEX(2C)
 
 KiServiceExit2_ok1:
     /* Check if this is a user mode exit */
-    mov ah, byte ptr [rcx + KTRAP_FRAME_SegCs]
+    mov ah, byte ptr [rsp + KTRAP_FRAME_SegCs]
     test ah, 1
     jz KiServiceExit2_kernel
 
@@ -951,10 +962,8 @@ KiServiceExit2_ok1:
 KiServiceExit2_kernel:
 #endif
 
-    mov rbp, rcx
-    mov rsp, rcx
-
     /* Return */
+    mov rbp, rsp
     ExitTrap TF_SAVE_ALL
 .ENDP
 
