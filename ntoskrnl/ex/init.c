@@ -649,6 +649,7 @@ ExpInitSystemPhase0(VOID)
     /* Initialize the Firmware Table resource and listhead */
     InitializeListHead(&ExpFirmwareTableProviderListHead);
     ExInitializeResourceLite(&ExpFirmwareTableResource);
+    ExInitializeResourceLite(&ExpTimeRefreshLock);
 
     /* Set the suite mask to maximum and return */
     ExSuiteMask = 0xFFFFFFFF;
