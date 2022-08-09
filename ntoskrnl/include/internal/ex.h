@@ -16,6 +16,7 @@ extern POBJECT_TYPE ExEventPairObjectType;
 extern POBJECT_TYPE _ExEventObjectType, _ExSemaphoreObjectType;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
+extern ERESOURCE ExpTimeRefreshLock;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
 extern LIST_ENTRY ExpSystemResourcesList;
