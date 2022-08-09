@@ -114,6 +114,6 @@
 @ stdcall ImmUnlockImeDpi(ptr)
 @ stdcall ImmUnregisterWordA(long str long str)
 @ stdcall ImmUnregisterWordW(long wstr long wstr)
-@ stdcall -stub ImmWINNLSEnableIME(ptr long)
+@ stdcall ImmWINNLSEnableIME(ptr long)
 @ stdcall ImmWINNLSGetEnableStatus(ptr)
 @ stdcall ImmWINNLSGetIMEHotkey(ptr)

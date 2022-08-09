@@ -998,7 +998,7 @@ Quit:
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
         return NULL;
-    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
+    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_DISABLEIME))
         hIMC = NULL;
     ImmUnlockClientImc(pClientImc);
     return hIMC;
