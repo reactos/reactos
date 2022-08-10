@@ -444,15 +444,6 @@ BOOL WINAPI IsServerSideWindow(HWND wnd)
 /*
  * @unimplemented
  */
-HKL WINAPI LoadKeyboardLayoutEx(DWORD unknown,LPCWSTR pwszKLID,UINT Flags) //1st parameter unknown
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 VOID WINAPI AllowForegroundActivation(VOID)
 {
   UNIMPLEMENTED;
