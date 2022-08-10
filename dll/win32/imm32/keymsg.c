@@ -179,7 +179,7 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
-// Win: HotKeyIDDispatcher
+/* Win: HotKeyIDDispatcher */
 BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     PIMEDPI pImeDpi;
@@ -236,7 +236,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     return ret;
 }
 
-// Win: ImmIsUIMessageWorker
+/* Win: ImmIsUIMessageWorker */
 static BOOL APIENTRY
 ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
@@ -261,36 +261,39 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
     return TRUE;
 }
 
-typedef struct IMM_UNKNOWN_PROCESS1
+typedef struct IMM_DELAY_SET_LANG_BAND
 {
     HWND hWnd;
     BOOL fFlag;
-} IMM_UNKNOWN_PROCESS1, *PIMM_UNKNOWN_PROCESS1;
+} IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
 
-static DWORD WINAPI Imm32UnknownProcess1Proc(LPVOID arg)
+/* Win: DelaySetLangBand */
+static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
 {
     HWND hwndDefIME;
     UINT uValue;
     DWORD_PTR lResult;
-    PIMM_UNKNOWN_PROCESS1 pUnknown = arg;
+    PIMM_DELAY_SET_LANG_BAND pSetBand = arg;
 
-    Sleep(3000);
-    hwndDefIME = ImmGetDefaultIMEWnd(pUnknown->hWnd);
+    Sleep(3000); /* Delay 3 seconds! */
+
+    hwndDefIME = ImmGetDefaultIMEWnd(pSetBand->hWnd);
     if (hwndDefIME)
     {
-        uValue = (pUnknown->fFlag ? 0x23 : 0x24);
-        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pUnknown->hWnd,
+        uValue = (pSetBand->fFlag ? 0x23 : 0x24);
+        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pSetBand->hWnd,
                             SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
     }
-    ImmLocalFree(pUnknown);
+    ImmLocalFree(pSetBand);
     return FALSE;
 }
 
-LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
+/* Win: CtfImmSetLangBand */
+LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fFlag)
 {
     HANDLE hThread;
     PWND pWnd = NULL;
-    PIMM_UNKNOWN_PROCESS1 pUnknown1;
+    PIMM_DELAY_SET_LANG_BAND pSetBand;
     DWORD_PTR lResult = 0;
 
     if (hWnd && gpsi)
@@ -305,20 +308,21 @@ LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
         return lResult;
     }
 
-    pUnknown1 = ImmLocalAlloc(0, sizeof(IMM_UNKNOWN_PROCESS1));
-    if (!pUnknown1)
+    pSetBand = ImmLocalAlloc(0, sizeof(IMM_DELAY_SET_LANG_BAND));
+    if (!pSetBand)
         return 0;
 
-    pUnknown1->hWnd = hWnd;
-    pUnknown1->fFlag = fFlag;
+    pSetBand->hWnd = hWnd;
+    pSetBand->fFlag = fFlag;
 
-    hThread = CreateThread(NULL, 0, Imm32UnknownProcess1Proc, pUnknown1, 0, NULL);
+    hThread = CreateThread(NULL, 0, Imm32DelaySetLangBandProc, pSetBand, 0, NULL);
     if (hThread)
         CloseHandle(hThread);
     return 0;
 }
 
-static BOOL CALLBACK Imm32SendChangeProc(HIMC hIMC, LPARAM lParam)
+/* Win: SendNotificationProc */
+static BOOL CALLBACK Imm32SendNotificationProc(HIMC hIMC, LPARAM lParam)
 {
     HWND hWnd;
     LPINPUTCONTEXTDX pIC;
@@ -345,9 +349,10 @@ Quit:
     return TRUE;
 }
 
-BOOL APIENTRY Imm32SendChange(BOOL bProcess)
+/* Win: ImmSendNotification */
+BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
 {
-    return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendChangeProc, 0);
+    return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
 }
 
 VOID APIENTRY Imm32RequestError(DWORD dwError)
@@ -557,7 +562,7 @@ Quit:
     return ret;
 }
 
-// Win: ImmRequestMessageWorker
+/* Win: ImmRequestMessageWorker */
 LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
     LRESULT ret = 0;
@@ -758,7 +763,7 @@ LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
     switch (wParam)
     {
         case 0x1f:
-            Imm32SendChange((BOOL)lParam);
+            Imm32SendNotification((BOOL)lParam);
             return 0;
 
         case 0x20:
@@ -766,7 +771,7 @@ LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case 0x23: case 0x24:
-            return Imm32UnknownProcess1((HWND)lParam, (wParam == 0x23));
+            return CtfImmSetLangBand((HWND)lParam, (wParam == 0x23));
 
         default:
             return 0;
