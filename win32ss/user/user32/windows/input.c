@@ -721,6 +721,9 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     return IntLoadKeyboardLayout(0, pwszKLID, 0, Flags, 0);
 }
 
+/*
+ * @unimplemented
+ */
 HKL WINAPI
 LoadKeyboardLayoutEx(DWORD unknown,
                      LPCWSTR pwszKLID,
