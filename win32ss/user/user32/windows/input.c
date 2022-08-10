@@ -717,6 +717,7 @@ HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                     UINT Flags)
 {
+    TRACE("(%s, 0x%X)", debugstr_w(pwszKLID), Flags);
     return IntLoadKeyboardLayout(0, pwszKLID, 0, Flags, 0);
 }
 
@@ -725,6 +726,7 @@ LoadKeyboardLayoutEx(DWORD unknown,
                      LPCWSTR pwszKLID,
                      UINT Flags)
 {
+    TRACE("(0x%X, %s, 0x%X)", unknown, debugstr_w(pwszKLID), Flags);
     if (!unknown)
         return NULL;
     return IntLoadKeyboardLayout(unknown, pwszKLID, 0, Flags, 0);
