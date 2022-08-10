@@ -726,7 +726,7 @@ LoadKeyboardLayoutEx(DWORD unknown,
                      LPCWSTR pwszKLID,
                      UINT Flags)
 {
-    TRACE("(0x%X, %s, 0x%X)", unknown, debugstr_w(pwszKLID), Flags);
+    FIXME("(0x%X, %s, 0x%X)", unknown, debugstr_w(pwszKLID), Flags);
     if (!unknown)
         return NULL;
     return IntLoadKeyboardLayout(unknown, pwszKLID, 0, Flags, 0);
