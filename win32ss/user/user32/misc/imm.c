@@ -570,10 +570,11 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 
     /* Is there an IME help file? */
     ret = IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_QUERY_SUPPORT, &dwEsc);
+    if (!ret || !lParam)
+        return ret;
 
     /* Get the help filename */
-    if (ret && lParam &&
-        IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_GETHELPFILENAME, szHelpFile))
+    if (IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_GETHELPFILENAME, szHelpFile))
     {
         /* Check filename extension */
         cch = wcslen(szHelpFile);
