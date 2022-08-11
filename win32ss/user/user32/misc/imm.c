@@ -579,7 +579,7 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     {
         /* Check filename extension */
         cch = wcslen(szHelpFile);
-        if (cch > 4 && _wcsicmp(&szHelpFile[cch - 4], L".hlp") == 0)
+        if (cch > 4 && _wcsicmp(&szHelpFile[cch - 4], L".HLP") == 0)
         {
             /* Open the old-style help */
             WinHelpW(NULL, szHelpFile, HELP_FINDER, 0);
