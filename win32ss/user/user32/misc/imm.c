@@ -552,6 +552,45 @@ static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
     IMM_FN(ImmReleaseContext)(hWnd, hIMC);
 }
 
+// Win: CtfLoadThreadLayout
+VOID FASTCALL CtfLoadThreadLayout(PIMEUI pimeui)
+{
+    IMM_FN(CtfImmTIMActivate)(pimeui->hKL);
+    pimeui->hKL = GetWin32ClientInfo()->hKL;
+    IMM_FN(ImmLoadIME)(pimeui->hKL);
+    pimeui->hwndUI = NULL;
+}
+
+static LRESULT FASTCALL
+User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
+{
+    WCHAR szHelpFile[MAX_PATH];
+    DWORD ret, dwEsc = IME_ESC_GETHELPFILENAME;
+    size_t cch;
+
+    /* Is there an IME help file? */
+    ret = IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_QUERY_SUPPORT, &dwEsc);
+
+    /* Get the help filename */
+    if (ret && lParam &&
+        IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_GETHELPFILENAME, szHelpFile))
+    {
+        /* Check filename extension */
+        cch = wcslen(szHelpFile);
+        if (cch > 4 && _wcsicmp(&szHelpFile[cch - 4], L".hlp") == 0)
+        {
+            WinHelpW(NULL, szHelpFile, HELP_FINDER, 0);
+        }
+        else
+        {
+            FIXME("(%p, %p, %p)\n", pimeui, wParam, lParam);
+            ret = FALSE;
+        }
+    }
+
+    return ret;
+}
+
 // Win: ImeSystemHandler
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
@@ -663,8 +702,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x15:
-            // TODO:
-            break;
+            return User32DoImeHelp(pimeui, wParam, lParam);
 
         case IMS_IMEACTIVATE:
             User32SetImeActivenessOfWindow((HWND)lParam, TRUE);
@@ -692,7 +730,13 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 
         case 0x1F:
         case 0x20:
+        case 0x23:
+        case 0x24:
             ret = IMM_FN(ImmSystemHandler)(hIMC, wParam, lParam);
+            break;
+
+        case 0x21:
+            CtfLoadThreadLayout(pimeui);
             break;
 
         default:
