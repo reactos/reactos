@@ -650,7 +650,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             }
             break;
 
-        case 0x09:
+        case IMS_SETCANDFORM:
             pIC = IMM_FN(ImmLockIMC)(hIMC);
             if (!pIC)
                 break;
@@ -660,7 +660,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             IMM_FN(ImmUnlockIMC)(hIMC);
             break;
 
-        case 0x0A:
+        case IMS_SETCOMPFONT:
             pIC = IMM_FN(ImmLockIMC)(hIMC);
             if (!pIC)
                 break;
@@ -680,16 +680,16 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             IMM_FN(ImmUnlockIMC)(hIMC);
             break;
 
-        case 0x0D:
+        case IMS_CONFIGURE:
             IMM_FN(ImmConfigureIMEW)((HKL)lParam, pimeui->hwndIMC, IME_CONFIG_GENERAL, NULL);
             break;
 
-        case 0x0F:
+        case IMS_SETOPENSTATUS:
             if (hIMC)
                 IMM_FN(ImmSetOpenStatus)(hIMC, (BOOL)lParam);
             break;
 
-        case 0x11:
+        case IMS_FREELAYOUT:
             ret = IMM_FN(ImmFreeLayout)((DWORD)lParam);
             break;
 
@@ -697,12 +697,12 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             // TODO:
             break;
 
-        case 0x14:
+        case IMS_GETCONVERSION:
             IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence);
             ret = dwConversion;
             break;
 
-        case 0x15:
+        case IMS_IMEHELP:
             return User32DoImeHelp(pimeui, wParam, lParam);
 
         case IMS_IMEACTIVATE:
@@ -725,7 +725,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             // TODO:
             break;
 
-        case 0x1E:
+        case IMS_GETCONTEXT:
             ret = (ULONG_PTR)IMM_FN(ImmGetContext)((HWND)lParam);
             break;
 
@@ -736,7 +736,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             ret = IMM_FN(ImmSystemHandler)(hIMC, wParam, lParam);
             break;
 
-        case 0x21:
+        case IMS_LOADTHREADLAYOUT:
             CtfLoadThreadLayout(pimeui);
             break;
 

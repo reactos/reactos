@@ -25,10 +25,19 @@ extern "C" {
 #define IMC_SETSOFTKBDPOS               0x0014
 
 /* wParam for WM_IME_SYSTEM */
+#define IMS_SETCANDFORM         0x09
+#define IMS_SETCOMPFONT         0x0A
+#define IMS_CONFIGURE           0x0D
+#define IMS_SETOPENSTATUS       0x0F
+#define IMS_FREELAYOUT          0x11
+#define IMS_GETCONVERSION       0x14
+#define IMS_IMEHELP             0x15
 #define IMS_IMEACTIVATE         0x17
 #define IMS_IMEDEACTIVATE       0x18
 #define IMS_ACTIVATELAYOUT      0x19
 #define IMS_GETIMEMENU          0x1C
+#define IMS_GETCONTEXT          0x1E
+#define IMS_LOADTHREADLAYOUT    0x21
 
 #define IMMGWL_IMC       0
 #define IMMGWL_PRIVATE   (sizeof(LONG))
