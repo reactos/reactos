@@ -669,7 +669,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             IMM_FN(ImmUnlockIMC)(hIMC);
             break;
 
-        case 0x0B:
+        case IMS_SETCOMPFORM:
             pIC = IMM_FN(ImmLockIMC)(hIMC);
             if (!pIC)
                 break;
