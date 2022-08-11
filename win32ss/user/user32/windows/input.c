@@ -725,7 +725,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                     UINT Flags)
 {
     TRACE("(%s, 0x%X)", debugstr_w(pwszKLID), Flags);
-    return IntLoadKeyboardLayout(NULL, pwszKLID, 0, Flags, 0);
+    return IntLoadKeyboardLayout(NULL, pwszKLID, 0, Flags, FALSE);
 }
 
 /*
@@ -739,7 +739,7 @@ LoadKeyboardLayoutEx(HKL hklUnload,
     FIXME("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
     if (!unknown)
         return NULL;
-    return IntLoadKeyboardLayout(hklUnload, pwszKLID, 0, Flags, 0);
+    return IntLoadKeyboardLayout(hklUnload, pwszKLID, 0, Flags, FALSE);
 }
 
 /*
