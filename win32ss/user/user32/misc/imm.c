@@ -582,12 +582,13 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         if (cch > 4 && _wcsicmp(&szHelpFile[cch - 4], L".HLP") == 0)
         {
             /* Open the old-style help */
+            TRACE("szHelpFile: %s\n", debugstr_w(szHelpFile));
             WinHelpW(NULL, szHelpFile, HELP_FINDER, 0);
         }
         else
         {
             /* Open the new-style help */
-            FIXME("(%p, %p, %p)\n", pimeui, wParam, lParam);
+            FIXME("(%p, %p, %p): %s\n", pimeui, wParam, lParam, debugstr_w(szHelpFile));
             ret = FALSE;
         }
     }
