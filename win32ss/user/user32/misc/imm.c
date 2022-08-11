@@ -552,7 +552,7 @@ static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
     IMM_FN(ImmReleaseContext)(hWnd, hIMC);
 }
 
-// Win: CtfLoadThreadLayout
+/* Win: CtfLoadThreadLayout */
 VOID FASTCALL CtfLoadThreadLayout(PIMEUI pimeui)
 {
     IMM_FN(CtfImmTIMActivate)(pimeui->hKL);
@@ -595,7 +595,7 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
-// Win: ImeSystemHandler
+/* Win: ImeSystemHandler */
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
