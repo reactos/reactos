@@ -638,10 +638,17 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
     return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
+/*
+ * @unimplemented
+ */
 /* Win: LoadKeyboardLayoutWorker */
 HKL APIENTRY
-IntLoadKeyboardLayout(DWORD unknown1, LPCWSTR pwszKLID, LPCWSTR unknown3, UINT Flags,
-                      DWORD unknown5)
+IntLoadKeyboardLayout(
+    _In_    HKL     hklUnload,
+    _In_z_  LPCWSTR pwszKLID,
+    _In_    LANGID  dwLangID,
+    _In_    UINT    Flags,
+    _In_    BOOL    unknown5)
 {
     DWORD dwhkl, dwType, dwSize;
     UNICODE_STRING ustrKbdName;
