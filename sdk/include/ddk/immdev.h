@@ -32,7 +32,7 @@ extern "C" {
 #define IMS_CONFIGURE           0x0D
 #define IMS_SETOPENSTATUS       0x0F
 #define IMS_FREELAYOUT          0x11
-#define IMS_GETCONVERSION       0x14
+#define IMS_GETCONVSTATUS       0x14
 #define IMS_IMEHELP             0x15
 #define IMS_IMEACTIVATE         0x17
 #define IMS_IMEDEACTIVATE       0x18
