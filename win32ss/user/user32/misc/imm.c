@@ -611,7 +611,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 
     switch (wParam)
     {
-        case 0x05:
+        case IMS_NOTIFYSHOW:
             if (User32GetImeShowStatus() == !lParam)
             {
                 hImeWnd = UserHMGetHandle(pimeui->spwnd);
