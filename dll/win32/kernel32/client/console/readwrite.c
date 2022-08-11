@@ -682,7 +682,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Retrieve the results */
+    /* Retrieve the results. NOTE: lpNumberOfCharsWritten optional since Vista+ */
     if (Success && lpNumberOfCharsWritten)
     {
         _SEH2_TRY
