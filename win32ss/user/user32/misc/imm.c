@@ -561,6 +561,7 @@ VOID FASTCALL CtfLoadThreadLayout(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
+/* Open the IME help or check the existence of the IME help. */
 static LRESULT FASTCALL
 User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
@@ -568,7 +569,7 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     DWORD ret, dwEsc = IME_ESC_GETHELPFILENAME;
     size_t cch;
 
-    /* Is there an IME help file? */
+    /* Is there any IME help file? */
     ret = IMM_FN(ImmEscapeW)(pimeui->hKL, pimeui->hIMC, IME_ESC_QUERY_SUPPORT, &dwEsc);
     if (!ret || !lParam)
         return ret;
@@ -580,10 +581,12 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         cch = wcslen(szHelpFile);
         if (cch > 4 && _wcsicmp(&szHelpFile[cch - 4], L".hlp") == 0)
         {
+            /* Open the old-style help */
             WinHelpW(NULL, szHelpFile, HELP_FINDER, 0);
         }
         else
         {
+            /* Open the new-style help */
             FIXME("(%p, %p, %p)\n", pimeui, wParam, lParam);
             ret = FALSE;
         }
