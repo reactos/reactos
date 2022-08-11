@@ -737,7 +737,7 @@ LoadKeyboardLayoutEx(HKL hklUnload,
                      UINT Flags)
 {
     FIXME("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
-    if (!unknown)
+    if (!hklUnload)
         return NULL;
     return IntLoadKeyboardLayout(hklUnload, pwszKLID, 0, Flags, FALSE);
 }
