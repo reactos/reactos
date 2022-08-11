@@ -26,6 +26,7 @@ extern "C" {
 
 /* wParam for WM_IME_SYSTEM */
 #define IMS_NOTIFYIMESHOW       0x05
+#define IMS_UPDATEIMEUI         0x06
 #define IMS_SETCANDFORM         0x09
 #define IMS_SETCOMPFONT         0x0A
 #define IMS_SETCOMPFORM         0x0B

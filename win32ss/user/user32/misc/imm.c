@@ -622,7 +622,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             }
             break;
 
-        case 0x06:
+        case IMS_UPDATEIMEUI:
             if (!hIMC)
                 break;
 
