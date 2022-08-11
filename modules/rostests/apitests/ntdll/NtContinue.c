@@ -14,11 +14,6 @@
 #pragma runtime_checks("s", off)
 #endif
 
-#define ok_eq_print(value, expected, spec)  ok((value) == (expected), #value " = " spec ", expected " spec "\n", value, expected)
-#define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "%lx")
-#define ok_eq_hex64(value, expected)        ok_eq_print(value, expected, "%I64x")
-#define ok_eq_xmm(value, expected)          ok((value).Low == (expected).Low, #value " = %I64x'%08I64x, expected %I64x'%08I64x\n", (value).Low, (value).High, (expected).Low, (expected).High)
-
 #ifdef _M_IX86
 #define NTC_SEGMENT_BITS (0xFFFF)
 #define NTC_EFLAGS_BITS  (0x3C0CD5)
