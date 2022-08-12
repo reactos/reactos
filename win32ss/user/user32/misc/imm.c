@@ -707,7 +707,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x13:
-            // TODO:
+            FIXME("\n");
             break;
 
         case IMS_GETCONVSTATUS:
@@ -735,7 +735,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x1D:
-            // TODO:
+            FIXME("\n");
             break;
 
         case IMS_GETCONTEXT:
