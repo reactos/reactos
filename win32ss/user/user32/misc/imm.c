@@ -733,10 +733,10 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             ret = (ULONG_PTR)IMM_FN(ImmGetContext)((HWND)lParam);
             break;
 
-        case 0x1F:
-        case 0x20:
-        case 0x23:
-        case 0x24:
+        case IMS_SENDNOTIFICATION:
+        case IDS_COMPLETECOMPSTR:
+        case IDS_SETLANGBAND:
+        case IDS_UNSETLANGBAND:
             ret = IMM_FN(ImmSystemHandler)(hIMC, wParam, lParam);
             break;
 
