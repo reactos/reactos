@@ -743,9 +743,9 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case IMS_SENDNOTIFICATION:
-        case IDS_COMPLETECOMPSTR:
-        case IDS_SETLANGBAND:
-        case IDS_UNSETLANGBAND:
+        case IMS_COMPLETECOMPSTR:
+        case IMS_SETLANGBAND:
+        case IMS_UNSETLANGBAND:
             ret = IMM_FN(ImmSystemHandler)(hIMC, wParam, lParam);
             break;
 

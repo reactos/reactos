@@ -41,10 +41,10 @@ extern "C" {
 #define IMS_GETIMEMENU          0x1C
 #define IMS_GETCONTEXT          0x1E
 #define IMS_SENDNOTIFICATION    0x1F
-#define IDS_COMPLETECOMPSTR     0x20
+#define IMS_COMPLETECOMPSTR     0x20
 #define IMS_LOADTHREADLAYOUT    0x21
-#define IDS_SETLANGBAND         0x23
-#define IDS_UNSETLANGBAND       0x24
+#define IMS_SETLANGBAND         0x23
+#define IMS_UNSETLANGBAND       0x24
 
 #define IMMGWL_IMC       0
 #define IMMGWL_PRIVATE   (sizeof(LONG))

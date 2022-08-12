@@ -267,11 +267,12 @@ typedef struct IMM_DELAY_SET_LANG_BAND
     BOOL fSet;
 } IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
 
+/* Sends a message to set the language band with delay. */
 /* Win: DelaySetLangBand */
 static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
 {
     HWND hwndDefIME;
-    UINT uValue;
+    WPARAM wParam;
     DWORD_PTR lResult;
     PIMM_DELAY_SET_LANG_BAND pSetBand = arg;
 
@@ -280,14 +281,15 @@ static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
     hwndDefIME = ImmGetDefaultIMEWnd(pSetBand->hWnd);
     if (hwndDefIME)
     {
-        uValue = (pSetBand->fSet ? IDS_SETLANGBAND : IDS_UNSETLANGBAND);
-        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pSetBand->hWnd,
+        wParam = (pSetBand->fSet ? IMS_SETLANGBAND : IMS_UNSETLANGBAND);
+        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, wParam, (LPARAM)pSetBand->hWnd,
                             SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
     }
     ImmLocalFree(pSetBand);
     return FALSE;
 }
 
+/* Updates the language band. */
 /* Win: CtfImmSetLangBand */
 LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
 {
@@ -766,13 +768,13 @@ LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
             Imm32SendNotification((BOOL)lParam);
             return 0;
 
-        case IDS_COMPLETECOMPSTR:
+        case IMS_COMPLETECOMPSTR:
             ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
             return 0;
 
-        case IDS_SETLANGBAND:
-        case IDS_UNSETLANGBAND:
-            return CtfImmSetLangBand((HWND)lParam, (wParam == IDS_SETLANGBAND));
+        case IMS_SETLANGBAND:
+        case IMS_UNSETLANGBAND:
+            return CtfImmSetLangBand((HWND)lParam, (wParam == IMS_SETLANGBAND));
 
         default:
             return 0;
