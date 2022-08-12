@@ -639,11 +639,16 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-HKL WINAPI
-LoadKeyboardLayoutW(LPCWSTR pwszKLID,
-                    UINT Flags)
+/* Win: LoadKeyboardLayoutWorker */
+HKL APIENTRY
+IntLoadKeyboardLayout(
+    _In_    HKL     hklUnload,
+    _In_z_  LPCWSTR pwszKLID,
+    _In_    LANGID  wLangID,
+    _In_    UINT    Flags,
+    _In_    BOOL    unknown5)
 {
     DWORD dwhkl, dwType, dwSize;
     UNICODE_STRING ustrKbdName;
@@ -710,6 +715,31 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
                                       NULL, &ustrKLID,
                                       dwhkl, Flags);
+}
+
+/*
+ * @implemented
+ */
+HKL WINAPI
+LoadKeyboardLayoutW(LPCWSTR pwszKLID,
+                    UINT Flags)
+{
+    TRACE("(%s, 0x%X)", debugstr_w(pwszKLID), Flags);
+    return IntLoadKeyboardLayout(NULL, pwszKLID, 0, Flags, FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+HKL WINAPI
+LoadKeyboardLayoutEx(HKL hklUnload,
+                     LPCWSTR pwszKLID,
+                     UINT Flags)
+{
+    FIXME("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
+    if (!hklUnload)
+        return NULL;
+    return IntLoadKeyboardLayout(hklUnload, pwszKLID, 0, Flags, FALSE);
 }
 
 /*
