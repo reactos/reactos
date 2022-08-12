@@ -164,7 +164,8 @@ static BOOL User32GetImeShowStatus(VOID)
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_GETIMESHOWSTATUS);
 }
 
-// Win: SendMessageToUI(pimeui, uMsg, wParam, lParam, !unicode)
+/* Sends a message to the IME UI window. */
+/* Win: SendMessageToUI(pimeui, uMsg, wParam, lParam, !unicode) */
 static LRESULT
 User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -240,7 +241,8 @@ static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
         User32SetImeWindowOfImc(hNewIMC, hImeWnd);
 }
 
-// Win: ImeNotifyHandler
+/* Handles WM_IME_NOTIFY message of the default IME window. */
+/* Win: ImeNotifyHandler */
 static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -290,7 +292,8 @@ static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
-// Win: CreateIMEUI
+/* Creates the IME UI window. */
+/* Win: CreateIMEUI */
 static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
 {
     IMEINFOEX ImeInfoEx;
@@ -335,7 +338,8 @@ Quit:
     return hwndUI;
 }
 
-// Win: ImeWndCreateHandler
+/* Initialize the default IME window. */
+/* Win: ImeWndCreateHandler */
 static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
     PWND pParentWnd, pWnd = pimeui->spwnd;
@@ -369,7 +373,8 @@ static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
     return TRUE;
 }
 
-// Win: DestroyIMEUI
+/* Destroys the default IME window. */
+/* Win: DestroyIMEUI */
 static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 {
     HWND hwndUI = pimeui->hwndUI;
@@ -384,7 +389,8 @@ static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
-// Win: ImeSelectHandler
+/* Handles WM_IME_SELECT message of the default IME window. */
+/* Win: ImeSelectHandler */
 static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
@@ -414,7 +420,8 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     }
 }
 
-// Win: ImeControlHandler(pimeui, wParam, lParam, !unicode)
+/* Handles WM_IME_CONTROL message of the default IME window. */
+/* Win: ImeControlHandler(pimeui, wParam, lParam, !unicode) */
 static LRESULT
 ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -536,7 +543,8 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     return 0;
 }
 
-// Win: FocusSetIMCContext
+/* Modify the IME activation status. */
+/* Win: FocusSetIMCContext */
 static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
 {
     HIMC hIMC;
@@ -596,6 +604,7 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+/* Handles WM_IME_SYSTEM message of the default IME window. */
 /* Win: ImeSystemHandler */
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
@@ -751,7 +760,8 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
-// Win: ImeSetContextHandler
+/* Handles WM_IME_SETCONTEXT message of the default IME window. */
+/* Win: ImeSetContextHandler */
 LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
@@ -905,7 +915,8 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
-// Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode)
+/* The window procedure of the default IME window */
+/* Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
 ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
