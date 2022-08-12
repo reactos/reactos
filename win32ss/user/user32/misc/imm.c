@@ -338,7 +338,7 @@ Quit:
     return hwndUI;
 }
 
-/* Initialize the default IME window. */
+/* Initializes the default IME window. */
 /* Win: ImeWndCreateHandler */
 static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
@@ -373,7 +373,7 @@ static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
     return TRUE;
 }
 
-/* Destroys the default IME window. */
+/* Destroys the IME UI window. */
 /* Win: DestroyIMEUI */
 static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 {
