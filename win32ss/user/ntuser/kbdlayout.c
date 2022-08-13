@@ -31,11 +31,13 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 /* Win: HKLtoPKL */
 PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 {
-    PKL pklFirst, pKL;
+    PKL pFirstKL, pKL;
 
-    pklFirst = pKL = pti->KeyboardLayout;
-    if (!pklFirst)
+    pFirstKL = pti->KeyboardLayout;
+    if (!pFirstKL)
         return NULL;
+
+    pKL = pFirstKL;
 
     if (hKL == (HKL)(ULONG_PTR)HKL_NEXT) /* Looking forward */
     {
@@ -44,7 +46,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
             pKL = pKL->pklNext;
             if (!(pKL->dwKL_Flags & KLF_UNLOAD))
                 return pKL;
-        } while (pKL != pklFirst);
+        } while (pKL != pFirstKL);
     }
     else if (hKL == (HKL)(ULONG_PTR)HKL_PREV) /* Looking backward */
     {
@@ -53,7 +55,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
             pKL = pKL->pklPrev;
             if (!(pKL->dwKL_Flags & KLF_UNLOAD))
                 return pKL;
-        } while (pKL != pklFirst);
+        } while (pKL != pFirstKL);
     }
     else if (HIWORD(hKL) == 0) /* Language only specified */
     {
@@ -64,7 +66,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
 
             pKL = pKL->pklNext;
-        } while (pKL != pklFirst);
+        } while (pKL != pFirstKL);
     }
     else /* Full input locale identifier */
     {
@@ -75,7 +77,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
 
             pKL = pKL->pklNext;
-        } while (pKL != pklFirst);
+        } while (pKL != pFirstKL);
     }
 
     return NULL;
