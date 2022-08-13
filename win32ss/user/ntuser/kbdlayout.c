@@ -27,7 +27,58 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
-// Win: _GetKeyboardLayoutList
+/* Win: HKLtoPKL */
+PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
+{
+    PKL pklFirst, pKL;
+
+    pklFirst = pKL = pti->KeyboardLayout;
+    if (!pklFirst)
+        return NULL;
+
+    if (hKL == (HKL)(ULONG_PTR)HKL_NEXT) /* Looking forward */
+    {
+        do
+        {
+            pKL = pKL->pklNext;
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                return pKL;
+        } while (pKL != pklFirst);
+    }
+    else if (hKL == (HKL)(ULONG_PTR)HKL_PREV) /* Looking backward */
+    {
+        do
+        {
+            pKL = pKL->pklPrev;
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                return pKL;
+        } while (pKL != pklFirst);
+    }
+    else if (HIWORD(hKL) == 0) /* Non-IME keyboard layout */
+    {
+        do
+        {
+            if (LOWORD(pKL->hkl) == LOWORD(hKL))
+                return pKL;
+
+            pKL = pKL->pklNext;
+        } while (pKL != pklFirst);
+    }
+    else /* IME keyboard layout */
+    {
+        do
+        {
+            if (pKL->hkl == hKL)
+                return pKL;
+
+            pKL = pKL->pklNext;
+        } while (pKL != pklFirst);
+    }
+
+    return NULL;
+}
+
+/* Win: _GetKeyboardLayoutList */
 static UINT APIENTRY
 IntGetKeyboardLayoutList(
     _Inout_ PWINSTATION_OBJECT pWinSta,
@@ -543,6 +594,57 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     return pklPrev;
 }
 
+/* Win: xxxInternalActivateKeyboardLayout */
+HKL APIENTRY
+UserActivateKeyboardLayout(
+    _Inout_ PKL pKL,
+    _In_ ULONG uFlags,
+    PWND pWnd)
+{
+    HKL hOldKL = pKL->hkl;
+    PTHREADINFO pti = gptiCurrent;
+
+    if (pKL != pti->KeyboardLayout)
+    {
+        /* Activate layout for current thread */
+        co_UserActivateKbl(pti, pKL, uFlags);
+
+        /* Send shell message */
+        if (!(uFlags & KLF_NOTELLSHELL))
+            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hOldKL);
+    }
+
+    // FIXME
+
+    return hOldKL;
+}
+
+/* Win: xxxActivateKeyboardLayout */
+HKL APIENTRY
+IntActivateKeyboardLayout(
+    _In_ PWINSTATION_OBJECT pWinSta,
+    _In_ HKL hKL,
+    _In_ ULONG uFlags,
+    PWND pWnd)
+{
+    HKL hOldKL;
+    PKL pKL;
+    PTHREADINFO pti = gptiCurrent;
+
+    pKL = IntHKLtoPKL(pti, hKL);
+    if (!pKL)
+    {
+        ERR("Invalid HKL %p!\n", hKL);
+        return NULL;
+    }
+
+    if (uFlags & KLF_REORDER)
+        gspklBaseLayout = pKL;
+
+    hOldKL = UserActivateKeyboardLayout(pKL, uFlags, pWnd);
+    return hOldKL;
+}
+
 /* EXPORTS *******************************************************************/
 
 /*
@@ -821,62 +923,20 @@ cleanup:
  * Activates specified layout for thread or process
  */
 HKL
-APIENTRY
+NTAPI
 NtUserActivateKeyboardLayout(
-    HKL hKl,
+    HKL hKL,
     ULONG Flags)
 {
-    PKL pKl = NULL;
-    HKL hkl = NULL;
-    PTHREADINFO pti;
+    PWINSTATION_OBJECT pWinSta;
+    HKL hOldKL;
 
     UserEnterExclusive();
-
-    pti = PsGetCurrentThreadWin32Thread();
-
-    /* hKl can have special value HKL_NEXT or HKL_PREV */
-    if (hKl == (HKL)HKL_NEXT)
-    {
-        /* Get next keyboard layout starting with current */
-        if (pti->KeyboardLayout)
-            pKl = pti->KeyboardLayout->pklNext;
-    }
-    else if (hKl == (HKL)HKL_PREV)
-    {
-        /* Get previous keyboard layout starting with current */
-        if (pti->KeyboardLayout)
-            pKl = pti->KeyboardLayout->pklPrev;
-    }
-    else
-        pKl = UserHklToKbl(hKl);
-
-    if (!pKl)
-    {
-        ERR("Invalid HKL %p!\n", hKl);
-        goto cleanup;
-    }
-
-    hkl = pKl->hkl;
-
-    /* FIXME: KLF_RESET
-              KLF_SHIFTLOCK */
-
-    if (Flags & KLF_REORDER)
-        gspklBaseLayout = pKl;
-
-    if (pKl != pti->KeyboardLayout)
-    {
-        /* Activate layout for current thread */
-        pKl = co_UserActivateKbl(pti, pKl, Flags);
-
-        /* Send shell message */
-        if (!(Flags & KLF_NOTELLSHELL))
-            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hkl);
-    }
-
-cleanup:
+    pWinSta = IntGetProcessWindowStation(NULL);
+    hOldKL = IntActivateKeyboardLayout(pWinSta, hKL, Flags, NULL);
     UserLeave();
-    return hkl;
+
+    return hOldKL;
 }
 
 /*

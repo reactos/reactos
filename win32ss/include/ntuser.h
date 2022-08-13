@@ -1515,7 +1515,7 @@ NtUserTrackPopupMenuEx(
 HKL
 NTAPI
 NtUserActivateKeyboardLayout(
-    HKL hKl,
+    HKL hKL,
     ULONG Flags);
 
 DWORD
