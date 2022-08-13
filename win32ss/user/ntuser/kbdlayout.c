@@ -54,8 +54,9 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
         } while (pKL != pklFirst);
     }
-    else if (HIWORD(hKL) == 0) /* Non-IME keyboard layout */
+    else if (HIWORD(hKL) == 0) /* Language only specified */
     {
+        /* No KLF_UNLOAD check */
         do
         {
             if (LOWORD(pKL->hkl) == LOWORD(hKL))
@@ -64,8 +65,9 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
             pKL = pKL->pklNext;
         } while (pKL != pklFirst);
     }
-    else /* IME keyboard layout */
+    else /* Full input locale identifier */
     {
+        /* No KLF_UNLOAD check */
         do
         {
             if (pKL->hkl == hKL)
