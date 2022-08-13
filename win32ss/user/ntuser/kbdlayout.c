@@ -627,7 +627,8 @@ co_UserActivateKeyboardLayout(
             co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hKL);
     }
 
-    /* FIXME */
+    /* FIXME: KLF_RESET
+              KLF_SHIFTLOCK */
 
     return hKL;
 }
