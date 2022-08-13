@@ -57,23 +57,23 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
         } while (pKL != pFirstKL);
     }
-    else if (HIWORD(hKL) == 0) /* Language only specified */
-    {
-        /* No KLF_UNLOAD check */
-        do
-        {
-            if (LOWORD(pKL->hkl) == LOWORD(hKL))
-                return pKL;
-
-            pKL = pKL->pklNext;
-        } while (pKL != pFirstKL);
-    }
-    else /* Full input locale identifier */
+    else if (HIWORD(hKL)) /* It's a full input locale identifier */
     {
         /* No KLF_UNLOAD check */
         do
         {
             if (pKL->hkl == hKL)
+                return pKL;
+
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+    else  /* Language only specified */
+    {
+        /* No KLF_UNLOAD check */
+        do
+        {
+            if (LOWORD(pKL->hkl) == LOWORD(hKL)) /* Low word is language ID */
                 return pKL;
 
             pKL = pKL->pklNext;
