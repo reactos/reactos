@@ -27,6 +27,7 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
+/* Retrieves a PKL by an input locale identifier (HKL). */
 /* Win: HKLtoPKL */
 PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 {
