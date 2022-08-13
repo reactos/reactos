@@ -932,6 +932,9 @@ NtUserActivateKeyboardLayout(
     HKL hOldKL;
 
     UserEnterExclusive();
+
+    /* FIXME */
+
     pWinSta = IntGetProcessWindowStation(NULL);
     hOldKL = IntActivateKeyboardLayout(pWinSta, hKL, Flags, NULL);
     UserLeave();
