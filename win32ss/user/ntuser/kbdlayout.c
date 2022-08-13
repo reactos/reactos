@@ -601,8 +601,8 @@ UserActivateKeyboardLayout(
     _In_ ULONG uFlags,
     PWND pWnd)
 {
-    HKL hOldKL = pKL->hkl;
-    PTHREADINFO pti = gptiCurrent;
+    HKL hKL = pKL->hkl;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (pKL != pti->KeyboardLayout)
     {
@@ -611,12 +611,12 @@ UserActivateKeyboardLayout(
 
         /* Send shell message */
         if (!(uFlags & KLF_NOTELLSHELL))
-            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hOldKL);
+            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hKL);
     }
 
     // FIXME
 
-    return hOldKL;
+    return hKL;
 }
 
 /* Win: xxxActivateKeyboardLayout */
@@ -629,7 +629,7 @@ IntActivateKeyboardLayout(
 {
     HKL hOldKL;
     PKL pKL;
-    PTHREADINFO pti = gptiCurrent;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     pKL = IntHKLtoPKL(pti, hKL);
     if (!pKL)
