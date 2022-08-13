@@ -597,9 +597,9 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
 /* Win: xxxInternalActivateKeyboardLayout */
 HKL APIENTRY
 UserActivateKeyboardLayout(
-    _Inout_ PKL pKL,
-    _In_ ULONG uFlags,
-    PWND pWnd)
+    _Inout_ PKL     pKL,
+    _In_    ULONG   uFlags,
+    _Inout_ PWND    pWnd)
 {
     HKL hKL = pKL->hkl;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -614,18 +614,28 @@ UserActivateKeyboardLayout(
             co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hKL);
     }
 
-    // FIXME
+    /* FIXME */
 
     return hKL;
+}
+
+// Win: ReorderKeyboardLayouts
+VOID FASTCALL
+IntReorderKeyboardLayouts(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PKL pKL)
+{
+    /* FIXME */
+    gspklBaseLayout = pKL;
 }
 
 /* Win: xxxActivateKeyboardLayout */
 HKL APIENTRY
 IntActivateKeyboardLayout(
-    _In_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PWINSTATION_OBJECT pWinSta,
     _In_ HKL hKL,
     _In_ ULONG uFlags,
-    PWND pWnd)
+    _Inout_ PWND pWnd)
 {
     HKL hOldKL;
     PKL pKL;
@@ -639,7 +649,7 @@ IntActivateKeyboardLayout(
     }
 
     if (uFlags & KLF_REORDER)
-        gspklBaseLayout = pKL;
+        IntReorderKeyboardLayouts(pWinSta, pKL);
 
     hOldKL = UserActivateKeyboardLayout(pKL, uFlags, pWnd);
     return hOldKL;
