@@ -637,7 +637,6 @@ IntActivateKeyboardLayout(
     _In_ ULONG uFlags,
     _Inout_ PWND pWnd)
 {
-    HKL hOldKL;
     PKL pKL;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
@@ -651,8 +650,7 @@ IntActivateKeyboardLayout(
     if (uFlags & KLF_REORDER)
         IntReorderKeyboardLayouts(pWinSta, pKL);
 
-    hOldKL = UserActivateKeyboardLayout(pKL, uFlags, pWnd);
-    return hOldKL;
+    return UserActivateKeyboardLayout(pKL, uFlags, pWnd);
 }
 
 /* EXPORTS *******************************************************************/
