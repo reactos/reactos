@@ -42,6 +42,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 
     pKL = pFirstKL;
 
+    /* hKL can have special value HKL_NEXT or HKL_PREV */
     if (hKL == (HKL)(ULONG_PTR)HKL_NEXT) /* Looking forward */
     {
         do
