@@ -27,8 +27,11 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
-/* Retrieves a PKL by an input locale identifier (HKL). */
-/* Win: HKLtoPKL */
+/*
+ * Retrieves a PKL by an input locale identifier (HKL).
+ * @implemented
+ * Win: HKLtoPKL
+ */
 PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 {
     PKL pFirstKL, pKL;
@@ -57,7 +60,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
         } while (pKL != pFirstKL);
     }
-    else if (HIWORD(hKL)) /* It's a full input locale identifier */
+    else if (HIWORD(hKL)) /* hKL is a full input locale identifier */
     {
         /* No KLF_UNLOAD check */
         do
@@ -83,7 +86,11 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
     return NULL;
 }
 
-/* Win: _GetKeyboardLayoutList */
+/*
+ * A helper function for NtUserGetKeyboardLayoutList.
+ * @implemented
+ * Win: _GetKeyboardLayoutList
+ */
 static UINT APIENTRY
 IntGetKeyboardLayoutList(
     _Inout_ PWINSTATION_OBJECT pWinSta,
