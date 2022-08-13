@@ -596,7 +596,7 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
 
 /* Win: xxxInternalActivateKeyboardLayout */
 HKL APIENTRY
-UserActivateKeyboardLayout(
+co_UserActivateKeyboardLayout(
     _Inout_ PKL     pKL,
     _In_    ULONG   uFlags,
     _Inout_ PWND    pWnd)
@@ -631,7 +631,7 @@ IntReorderKeyboardLayouts(
 
 /* Win: xxxActivateKeyboardLayout */
 HKL APIENTRY
-IntActivateKeyboardLayout(
+co_IntActivateKeyboardLayout(
     _Inout_ PWINSTATION_OBJECT pWinSta,
     _In_ HKL hKL,
     _In_ ULONG uFlags,
@@ -650,7 +650,7 @@ IntActivateKeyboardLayout(
     if (uFlags & KLF_REORDER)
         IntReorderKeyboardLayouts(pWinSta, pKL);
 
-    return UserActivateKeyboardLayout(pKL, uFlags, pWnd);
+    return co_UserActivateKeyboardLayout(pKL, uFlags, pWnd);
 }
 
 /* EXPORTS *******************************************************************/
@@ -944,7 +944,7 @@ NtUserActivateKeyboardLayout(
     /* FIXME */
 
     pWinSta = IntGetProcessWindowStation(NULL);
-    hOldKL = IntActivateKeyboardLayout(pWinSta, hKL, Flags, NULL);
+    hOldKL = co_IntActivateKeyboardLayout(pWinSta, hKL, Flags, NULL);
     UserLeave();
 
     return hOldKL;
