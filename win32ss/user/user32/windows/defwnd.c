@@ -996,13 +996,30 @@ RealDefWindowProcA(HWND hWnd,
             break;
         }
 
+        case WM_IME_SYSTEM:
+        {
+            if (wParam == 4)
+                return 0;
+
+            if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
+                return 0;
+
+            /* FALL THROUGH */
+        }
+
         case WM_IME_SETCONTEXT:
         {
-            HWND hwndIME;
+            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                return 0;
 
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
+                break;
+            }
+
+            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
@@ -1181,13 +1198,30 @@ RealDefWindowProcW(HWND hWnd,
             break;
         }
 
+        case WM_IME_SYSTEM:
+        {
+            if (wParam == 4)
+                return 0;
+
+            if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
+                return 0;
+
+            /* FALL THROUGH */
+        }
+
         case WM_IME_SETCONTEXT:
         {
-            HWND hwndIME;
+            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                return 0;
 
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
+                break;
+            }
+
+            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
