@@ -1006,6 +1006,13 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
+                break;
+            }
+
             if (hwndIME)
                 Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
@@ -1196,6 +1203,13 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
+                break;
+            }
+
             if (hwndIME)
                 Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
