@@ -982,10 +982,21 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_CONTROL:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                break;
+
             if (hwndIME == hWnd)
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
                 break;
+            }
+
+            /* Validate hIMC */
+            {
+                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
+                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
+                if (!pimeui || pimeui->hIMC != hIMC)
+                    break;
             }
 
             Result = SendMessageA(hwndIME, Msg, wParam, lParam);
@@ -1004,25 +1015,24 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                break;
+
             if (hwndIME == hWnd)
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
                 break;
             }
 
-            if (hwndIME)
+            if (Msg == WM_IME_SYSTEM) /* Validate hIMC */
             {
-                /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
-                BOOL bDiffer = (!pimeui || pimeui->hIMC != hIMC);
-                IMM_FN(ImmReleaseContext)(hWnd, hIMC);
-
-                if (bDiffer)
+                if (!pimeui || pimeui->hIMC != hIMC)
                     break;
-
-                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             }
+
+            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
@@ -1184,14 +1194,24 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_CONTROL:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                break;
+
             if (hwndIME == hWnd)
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
                 break;
             }
 
-            if (hwndIME)
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            /* Validate hIMC */
+            {
+                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
+                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
+                if (!pimeui || pimeui->hIMC != hIMC)
+                    break;
+            }
+
+            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
@@ -1207,25 +1227,24 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+                break;
+
             if (hwndIME == hWnd)
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
                 break;
             }
 
-            if (hwndIME)
+            if (Msg == WM_IME_SYSTEM) /* Validate hIMC */
             {
-                /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
-                BOOL bDiffer = (!pimeui || pimeui->hIMC != hIMC);
-                IMM_FN(ImmReleaseContext)(hWnd, hIMC);
-
-                if (bDiffer)
+                if (!pimeui || pimeui->hIMC != hIMC)
                     break;
-
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             }
+
+            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
