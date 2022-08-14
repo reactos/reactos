@@ -1013,7 +1013,7 @@ RealDefWindowProcA(HWND hWnd,
             if (!hwndIME)
                 break;
 
-            if (hwndIME == hWnd)
+            if (hwndIME == hWnd) /* Optimize speed */
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
                 break;
@@ -1215,7 +1215,7 @@ RealDefWindowProcW(HWND hWnd,
             if (!hwndIME)
                 break;
 
-            if (hwndIME == hWnd)
+            if (hwndIME == hWnd) /* Optimize speed */
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
                 break;
