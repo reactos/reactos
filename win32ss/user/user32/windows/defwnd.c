@@ -986,11 +986,17 @@ NormalImeMsgHandling:
             HWND hwndIME;
 
             if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
                 break;
+            }
 
             hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
                 break;
+            }
 
             if (hwndIME == hWnd)
             {
@@ -1179,11 +1185,17 @@ NormalImeMsgHandling:
             HWND hwndIME;
 
             if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
                 break;
+            }
 
             hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
                 break;
+            }
 
             if (hwndIME == hWnd)
             {
