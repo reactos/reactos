@@ -2050,22 +2050,25 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    /* Create the IME window for pWnd */
    if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
    {
+      HWND hImeWnd;
       PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
       UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
 
-      if (pwndDefaultIme && (pti->pClientInfo->CI_flags & CI_IMMACTIVATE))
+      if (pwndDefaultIme)
       {
-         USER_REFERENCE_ENTRY Ref;
-         HKL hKL;
+         UserReferenceObject(pwndDefaultIme);
+         hImeWnd = UserHMGetHandle(pwndDefaultIme);
 
-         UserRefObjectCo(pwndDefaultIme, &Ref);
+         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_LOADTHREADLAYOUT, 0);
 
-         hKL = pti->KeyboardLayout->hkl;
-         co_IntSendMessage(UserHMGetHandle(pwndDefaultIme), WM_IME_SYSTEM,
-                           IMS_ACTIVATELAYOUT, (LPARAM)hKL);
-         pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
+         if (pti->pClientInfo->CI_flags & CI_IMMACTIVATE)
+         {
+            HKL hKL = pti->KeyboardLayout->hkl;
+            co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)hKL);
+            pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
+         }
 
-         UserDerefObjectCo(pwndDefaultIme);
+         UserDereferenceObject(pwndDefaultIme);
       }
    }
 
