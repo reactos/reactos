@@ -656,6 +656,7 @@ IntLoadKeyboardLayout(
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
     WCHAR wszLayoutId[10], wszNewKLID[10];
     HKEY hKey;
+    HKL hNewKL;
 
     /* LOWORD of dwhkl is Locale Identifier */
     dwhkl = LOWORD(wcstoul(pwszKLID, NULL, 16));
@@ -712,9 +713,11 @@ IntLoadKeyboardLayout(
 
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
-                                      NULL, &ustrKLID,
-                                      dwhkl, Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
+                                        NULL, &ustrKLID,
+                                        dwhkl, Flags);
+    CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
+    return hNewKL;
 }
 
 /*
