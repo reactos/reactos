@@ -994,7 +994,7 @@ RealDefWindowProcA(HWND hWnd,
             /* Validate hIMC */
             {
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
-                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
+                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
                 if (!pimeui || pimeui->hIMC != hIMC)
                     break;
             }
