@@ -2050,13 +2050,15 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    /* Create the IME window for pWnd */
    if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
    {
-      HWND hImeWnd;
       PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
       UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
 
       if (pwndDefaultIme)
       {
-         UserReferenceObject(pwndDefaultIme);
+         HWND hImeWnd;
+         USER_REFERENCE_ENTRY Ref;
+         UserRefObjectCo(pwndDefaultIme, &Ref);
+
          hImeWnd = UserHMGetHandle(pwndDefaultIme);
 
          co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_LOADTHREADLAYOUT, 0);
@@ -2068,7 +2070,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
             pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
          }
 
-         UserDereferenceObject(pwndDefaultIme);
+         UserDerefObjectCo(pwndDefaultIme);
       }
    }
 
