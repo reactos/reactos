@@ -412,12 +412,8 @@ x86BiosCall(
     _In_ ULONG InterruptNumber,
     _Inout_ PX86_BIOS_REGISTERS Registers)
 {
+    const ULONG StackBase = 0x2000;
     FAST486_STATE EmulatorContext;
-    struct
-    {
-        USHORT Ip;
-        USHORT SegCs;
-    } *Ivt;
     ULONG FlatIp;
     PUCHAR InstructionPointer;
 
@@ -431,8 +427,6 @@ x86BiosCall(
                       x86IntAck,
                       NULL,  // FpuCallback,
                       NULL); // Tlb
-
-//RegisterBop(BOP_UNSIMULATE, CpuUnsimulateBop);
 
     /* Copy the registers */
     EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long = Registers->Eax;
@@ -449,36 +443,41 @@ x86BiosCall(
     EmulatorContext.Flags.AlwaysSet = 1;
     EmulatorContext.Flags.If = 1;
 
-    /* Set the stack pointer */
-    Fast486SetStack(&EmulatorContext, 0, 0x2000 - 2); // FIXME
+    /* Set up the INT stub */
+    FlatIp = StackBase - 4;
+    InstructionPointer = x86BiosMemoryMapping + FlatIp;
+    InstructionPointer[0] = 0xCD; // INT instruction
+    InstructionPointer[1] = (UCHAR)InterruptNumber;
+    InstructionPointer[2] = 0x90; // NOP. We will stop at this address.
 
-    /* Set CS:EIP from the IVT entry */
-    Ivt = (PVOID)x86BiosMemoryMapping;
-    Fast486ExecuteAt(&EmulatorContext,
-                     Ivt[InterruptNumber].SegCs,
-                     Ivt[InterruptNumber].Ip);
+    /* Set the stack pointer */
+    Fast486SetStack(&EmulatorContext, 0, StackBase - 8);
+
+    /* Start execution at the INT stub */
+    Fast486ExecuteAt(&EmulatorContext, 0x00, FlatIp);
 
     while (TRUE)
     {
-        /* Step one instruction */
-        Fast486StepInto(&EmulatorContext);
-
-        /* Check for iret */
+        /* Get the current flat IP */
         FlatIp = (EmulatorContext.SegmentRegs[FAST486_REG_CS].Selector << 4) +
                  EmulatorContext.InstPtr.Long;
+
+        /* Make sure we haven't left the allowed memory range */
         if (FlatIp >= 0x100000)
         {
             DPRINT1("x86BiosCall: invalid IP (0x%lx) during BIOS execution", FlatIp);
             return FALSE;
         }
 
-        /* Read the next instruction and check if it's IRET */
-        InstructionPointer = x86BiosMemoryMapping + FlatIp;
-        if (*InstructionPointer == 0xCF)
+        /* Check if we returned from our int stub */
+        if (FlatIp == (StackBase - 2))
         {
             /* We are done! */
             break;
         }
+
+        /* Emulate one instruction */
+        Fast486StepInto(&EmulatorContext);
     }
 
     /* Copy the registers back */
