@@ -980,6 +980,8 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
+        case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
@@ -991,10 +993,11 @@ RealDefWindowProcA(HWND hWnd,
                 break;
             }
 
-            /* Validate hIMC */
+            if (Msg != WM_IME_SETCONTEXT) /* Validate hIMC unless WM_IME_SETCONTEXT */
             {
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
+                /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
                 if (!pimeui || pimeui->hIMC != hIMC)
                     break;
             }
@@ -1010,33 +1013,8 @@ RealDefWindowProcA(HWND hWnd,
             if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
                 break;
 
-            /* FALL THROUGH */
+            goto NormalImeMsgHandling;
 
-        case WM_IME_SETCONTEXT:
-        {
-            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (!hwndIME)
-                break;
-
-            if (hwndIME == hWnd)
-            {
-                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
-                break;
-            }
-
-            if (Msg == WM_IME_SYSTEM) /* Validate hIMC */
-            {
-                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
-                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
-                if (!pimeui || pimeui->hIMC != hIMC)
-                    break;
-            }
-
-            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
-            break;
-        }
-
-        /* fall through */
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
     }
@@ -1192,6 +1170,8 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
+        case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
@@ -1203,10 +1183,11 @@ RealDefWindowProcW(HWND hWnd,
                 break;
             }
 
-            /* Validate hIMC */
+            if (Msg != WM_IME_SETCONTEXT) /* Validate hIMC unless WM_IME_SETCONTEXT */
             {
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
+                /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
                 if (!pimeui || pimeui->hIMC != hIMC)
                     break;
             }
@@ -1222,31 +1203,7 @@ RealDefWindowProcW(HWND hWnd,
             if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
                 break;
 
-            /* FALL THROUGH */
-
-        case WM_IME_SETCONTEXT:
-        {
-            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (!hwndIME)
-                break;
-
-            if (hwndIME == hWnd)
-            {
-                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
-                break;
-            }
-
-            if (Msg == WM_IME_SYSTEM) /* Validate hIMC */
-            {
-                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
-                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
-                if (!pimeui || pimeui->hIMC != hIMC)
-                    break;
-            }
-
-            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
-            break;
-        }
+            goto NormalImeMsgHandling;
 
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
