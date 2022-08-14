@@ -999,10 +999,10 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SYSTEM:
         {
             if (wParam == 4)
-                return 0;
+                break;
 
             if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
-                return 0;
+                break;
 
             /* FALL THROUGH */
         }
@@ -1011,7 +1011,7 @@ RealDefWindowProcA(HWND hWnd,
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
-                return 0;
+                break;
 
             if (hwndIME == hWnd)
             {
@@ -1201,10 +1201,10 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SYSTEM:
         {
             if (wParam == 4)
-                return 0;
+                break;
 
             if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
-                return 0;
+                break;
 
             /* FALL THROUGH */
         }
@@ -1213,7 +1213,7 @@ RealDefWindowProcW(HWND hWnd,
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
-                return 0;
+                break;
 
             if (hwndIME == hWnd)
             {
