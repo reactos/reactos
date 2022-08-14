@@ -983,7 +983,12 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SETCONTEXT:
 NormalImeMsgHandling:
         {
-            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            HWND hwndIME;
+
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+                break;
+
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
                 break;
 
@@ -993,8 +998,9 @@ NormalImeMsgHandling:
                 break;
             }
 
-            if (Msg != WM_IME_SETCONTEXT) /* Validate hIMC unless WM_IME_SETCONTEXT */
+            if (Msg != WM_IME_SETCONTEXT && (Msg != WM_IME_SYSTEM || wParam == 3))
             {
+                /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
                 /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
@@ -1008,9 +1014,6 @@ NormalImeMsgHandling:
 
         case WM_IME_SYSTEM:
             if (wParam == 4)
-                break;
-
-            if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
                 break;
 
             goto NormalImeMsgHandling;
@@ -1173,7 +1176,12 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SETCONTEXT:
 NormalImeMsgHandling:
         {
-            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            HWND hwndIME;
+
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+                break;
+
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (!hwndIME)
                 break;
 
@@ -1183,8 +1191,9 @@ NormalImeMsgHandling:
                 break;
             }
 
-            if (Msg != WM_IME_SETCONTEXT) /* Validate hIMC unless WM_IME_SETCONTEXT */
+            if (Msg != WM_IME_SETCONTEXT && (Msg != WM_IME_SYSTEM || wParam == 3))
             {
+                /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
                 /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
@@ -1198,9 +1207,6 @@ NormalImeMsgHandling:
 
         case WM_IME_SYSTEM:
             if (wParam == 4)
-                break;
-
-            if (wParam == 3 && (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME))
                 break;
 
             goto NormalImeMsgHandling;
