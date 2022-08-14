@@ -988,16 +988,13 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
         {
-            HWND hwndIME;
-
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
                 Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
         case WM_IME_SYSTEM:
-        {
             if (wParam == 4)
                 break;
 
@@ -1005,21 +1002,12 @@ RealDefWindowProcA(HWND hWnd,
                 break;
 
             /* FALL THROUGH */
-        }
 
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (!hwndIME)
-                break;
-
-            if (hwndIME == hWnd) /* Optimize speed */
-            {
-                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
-                break;
-            }
-
-            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            if (hwndIME)
+                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
@@ -1190,16 +1178,13 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
         {
-            HWND hwndIME;
-
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
                 Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
         case WM_IME_SYSTEM:
-        {
             if (wParam == 4)
                 break;
 
@@ -1207,21 +1192,12 @@ RealDefWindowProcW(HWND hWnd,
                 break;
 
             /* FALL THROUGH */
-        }
 
         case WM_IME_SETCONTEXT:
         {
             HWND hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (!hwndIME)
-                break;
-
-            if (hwndIME == hWnd) /* Optimize speed */
-            {
-                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
-                break;
-            }
-
-            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            if (hwndIME)
+                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
