@@ -1009,7 +1009,7 @@ NormalImeMsgHandling:
                 /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
-                /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
+                /* IMM_FN(ImmReleaseContext)(hWnd, hIMC); */ /* NOP */
                 if (!pimeui || pimeui->hIMC != hIMC)
                     break;
             }
@@ -1208,7 +1208,7 @@ NormalImeMsgHandling:
                 /* Validate hIMC */
                 HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
                 PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
-                /* IMM_FN(ImmReleaseContext)(hWnd); */ /* NOP */
+                /* IMM_FN(ImmReleaseContext)(hWnd, hIMC); */ /* NOP */
                 if (!pimeui || pimeui->hIMC != hIMC)
                     break;
             }
