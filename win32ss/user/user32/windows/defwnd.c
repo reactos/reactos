@@ -10,6 +10,7 @@
  */
 
 #include <user32.h>
+#include <ddk/immdev.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -1010,7 +1011,18 @@ RealDefWindowProcA(HWND hWnd,
             }
 
             if (hwndIME)
+            {
+                /* Validate hIMC */
+                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
+                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
+                BOOL bDiffer = (!pimeui || pimeui->hIMC != hIMC);
+                IMM_FN(ImmReleaseContext)(hWnd, hIMC);
+
+                if (bDiffer)
+                    break;
+
                 Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            }
             break;
         }
 
@@ -1202,7 +1214,18 @@ RealDefWindowProcW(HWND hWnd,
             }
 
             if (hwndIME)
+            {
+                /* Validate hIMC */
+                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
+                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
+                BOOL bDiffer = (!pimeui || pimeui->hIMC != hIMC);
+                IMM_FN(ImmReleaseContext)(hWnd, hIMC);
+
+                if (bDiffer)
+                    break;
+
                 Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            }
             break;
         }
 
