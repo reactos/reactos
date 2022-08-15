@@ -10,6 +10,7 @@
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 
 // Was included only because of CP_ACP and required  the
 // definition of SYSTEMTIME in ndk\rtltypes.h
@@ -607,6 +608,31 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     return pklPrev;
 }
 
+// Win: xxxImmActivateLayout
+VOID APIENTRY
+IntImmActivateLayout(
+    _Inout_ PTHREADINFO pti,
+    _Inout_ PKL pKL)
+{
+    PWND pImeWnd;
+    HWND hImeWnd;
+    USER_REFERENCE_ENTRY Ref;
+
+    if (pti->KeyboardLayout == pKL)
+        return;
+
+    pImeWnd = pti->spwndDefaultIme;
+    if (pImeWnd)
+    {
+        UserRefObjectCo(pImeWnd, &Ref);
+        hImeWnd = UserHMGetHandle(pImeWnd);
+        co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)pKL->hkl);
+        UserDerefObjectCo(pImeWnd);
+    }
+
+    UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+}
+
 /* Win: xxxInternalActivateKeyboardLayout */
 HKL APIENTRY
 co_UserActivateKeyboardLayout(
@@ -614,23 +640,104 @@ co_UserActivateKeyboardLayout(
     _In_    ULONG   uFlags,
     _Inout_ PWND    pWnd)
 {
-    HKL hKL = pKL->hkl;
-    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    HKL hOldKL = NULL;
+    PKL pOldKL = NULL;
+    PTHREADINFO pti = GetW32ThreadInfo();
+    PWND pTargetWnd, pImeWnd;
+    HWND hTargetWnd, hImeWnd;
+    USER_REFERENCE_ENTRY Ref1, Ref2;
+    PCLIENTINFO ClientInfo = pti->pClientInfo;
 
-    if (pKL != pti->KeyboardLayout)
+    if (pti->KeyboardLayout)
     {
-        /* Activate layout for current thread */
-        co_UserActivateKbl(pti, pKL, uFlags);
-
-        /* Send shell message */
-        if (!(uFlags & KLF_NOTELLSHELL))
-            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hKL);
+        pOldKL = pti->KeyboardLayout;
+        if (pOldKL)
+            hOldKL = pOldKL->hkl;
     }
 
-    /* FIXME: KLF_RESET
-              KLF_SHIFTLOCK */
+    if (uFlags & KLF_RESET)
+    {
+        /* FIXME */
+    }
 
-    return hKL;
+    if (!(uFlags & KLF_SETFORPROCESS) && pKL == pti->KeyboardLayout)
+        return hOldKL;
+
+    pKL->wchDiacritic = 0;
+
+    if (pOldKL)
+        UserRefObjectCo(pOldKL, &Ref1);
+
+    if (pti->TIF_flags & TIF_CSRSSTHREAD)
+    {
+        UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+        ClientInfo->CodePage = pKL->CodePage;
+    }
+    else if (uFlags & KLF_SETFORPROCESS)
+    {
+        /* FIXME */
+    }
+    else
+    {
+        if (IS_IMM_MODE())
+            IntImmActivateLayout(pti, pKL);
+        else
+            UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+
+        if (!(pti->TIF_flags & TIF_INCLEANUP))
+        {
+            ClientInfo->CodePage = pKL->CodePage;
+            ClientInfo->hKL = pKL->hkl;
+        }
+    }
+
+    if (gptiForeground && (gptiForeground->ppi == pti->ppi))
+    {
+        /* Send shell message */
+        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+    }
+
+    if (pti->MessageQueue)
+    {
+        /* Determine the target window */
+        pTargetWnd = pti->MessageQueue->spwndFocus;
+        if (!pTargetWnd)
+        {
+            pTargetWnd = pti->MessageQueue->spwndActive;
+            if (!pTargetWnd)
+                pTargetWnd = pWnd;
+        }
+
+        /* Send WM_INPUTLANGCHANGE message */
+        if (pTargetWnd)
+        {
+            UserRefObjectCo(pTargetWnd, &Ref2);
+            hTargetWnd = UserHMGetHandle(pTargetWnd);
+            co_IntSendMessage(hTargetWnd, WM_INPUTLANGCHANGE, pKL->iBaseCharset, (LPARAM)pKL->hkl);
+            UserDerefObjectCo(pTargetWnd);
+        }
+    }
+
+    /* Send WM_IME_SYSTEM:IMS_SENDNOTIFICATION message if necessary */
+    if (pti && !(pti->TIF_flags & TIF_CSRSSTHREAD))
+    {
+        if (IS_IME_HKL(pKL->hkl) || (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        {
+            pImeWnd = pti->spwndDefaultIme;
+            if (pImeWnd)
+            {
+                UserRefObjectCo(pImeWnd, &Ref2);
+                BOOL bProcess = !!(pti->TIF_flags & KLF_SETFORPROCESS);
+                hImeWnd = UserHMGetHandle(pImeWnd);
+                co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bProcess);
+                UserDerefObjectCo(pImeWnd);
+            }
+        }
+    }
+
+    if (pOldKL)
+        UserDerefObjectCo(pOldKL);
+    return hOldKL;
 }
 
 // Win: ReorderKeyboardLayouts
