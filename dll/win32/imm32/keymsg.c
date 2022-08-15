@@ -313,7 +313,8 @@ LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
 
     if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
     {
-        SendMessageTimeoutW(hWnd, 0x505, 0, fSet, 3, 5000, &lResult);
+        SendMessageTimeoutW(hWnd, WM_USER + 0x105, 0, fSet, SMTO_BLOCK | SMTO_ABORTIFHUNG,
+                            5000, &lResult);
         return lResult;
     }
 
