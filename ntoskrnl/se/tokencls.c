@@ -1227,6 +1227,7 @@ NtSetInformationToken(
                 if (TokenInformationLength >= sizeof(TOKEN_PRIMARY_GROUP))
                 {
                     PTOKEN_PRIMARY_GROUP tpg = (PTOKEN_PRIMARY_GROUP)TokenInformation;
+                    ULONG AclSize;
                     ULONG_PTR PrimaryGroup;
                     PSID InputSid = NULL, CapturedSid;
                     ULONG PrimaryGroupIndex, NewDynamicLength;
@@ -1309,9 +1310,15 @@ NtSetInformationToken(
                                 /* Take away available space from the dynamic area */
                                 Token->DynamicAvailable -= RtlLengthSid(Token->UserAndGroups[PrimaryGroupIndex].Sid);
 
-                                /* And assign the primary group */
-                                PrimaryGroup = (ULONG_PTR)(Token->DynamicPart) + Token->DefaultDacl ?
-                                               Token->DefaultDacl->AclSize : 0;
+                                /*
+                                 * And assign the new primary group. For that
+                                 * we have to make sure where the primary group
+                                 * is going to stay in memory, so if this token
+                                 * has a default DACL then add up its size with
+                                 * the address of the dynamic part.
+                                 */
+                                AclSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+                                PrimaryGroup = (ULONG_PTR)(Token->DynamicPart) + AclSize;
                                 RtlCopySid(RtlLengthSid(Token->UserAndGroups[PrimaryGroupIndex].Sid),
                                            (PVOID)PrimaryGroup,
                                            Token->UserAndGroups[PrimaryGroupIndex].Sid);
