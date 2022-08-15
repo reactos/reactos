@@ -10,6 +10,7 @@
  */
 
 #include <user32.h>
+#include <ddk/immdev.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -830,7 +831,6 @@ RealDefWindowProcA(HWND hWnd,
     switch (Msg)
     {
         case WM_NCCREATE:
-        {
             if ( Wnd &&
                  Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
             {
@@ -854,7 +854,6 @@ RealDefWindowProcA(HWND hWnd,
                 Result = 1;
             }
             break;
-        }
 
         case WM_GETTEXTLENGTH:
         {
@@ -926,24 +925,18 @@ RealDefWindowProcA(HWND hWnd,
         }
 
         case WM_IME_KEYDOWN:
-        {
             Result = PostMessageA(hWnd, WM_KEYDOWN, wParam, lParam);
             break;
-        }
 
         case WM_IME_KEYUP:
-        {
             Result = PostMessageA(hWnd, WM_KEYUP, wParam, lParam);
             break;
-        }
 
         case WM_IME_CHAR:
-        {
             if (HIBYTE(wParam))
                 PostMessageA(hWnd, WM_CHAR, HIBYTE(wParam), lParam);
             PostMessageA(hWnd, WM_CHAR, LOBYTE(wParam), lParam);
             break;
-        }
 
         case WM_IME_COMPOSITION:
         if (lParam & GCS_RESULTSTR)
@@ -987,26 +980,40 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
-        {
-            HWND hwndIME;
-
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
-            break;
-        }
-
         case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME;
 
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
+                break;
+            }
+
             hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
+                break;
+            }
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
+                break;
+            }
+
+            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
-        /* fall through */
+        case WM_IME_SYSTEM:
+            if (wParam == 4)
+                break;
+
+            goto NormalImeMsgHandling;
+
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
     }
@@ -1038,7 +1045,6 @@ RealDefWindowProcW(HWND hWnd,
     switch (Msg)
     {
         case WM_NCCREATE:
-        {
             if ( Wnd &&
                  Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
             {
@@ -1064,7 +1070,6 @@ RealDefWindowProcW(HWND hWnd,
                 Result = 1;
             }
             break;
-        }
 
         case WM_GETTEXTLENGTH:
         {
@@ -1117,33 +1122,25 @@ RealDefWindowProcW(HWND hWnd,
         }
 
         case WM_SETTEXT:
-        {
             DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
                 UserPaintCaption(Wnd, DC_TEXT);
             Result = 1;
             break;
-        }
 
         case WM_IME_CHAR:
-        {
             PostMessageW(hWnd, WM_CHAR, wParam, lParam);
             Result = 0;
             break;
-        }
 
         case WM_IME_KEYDOWN:
-        {
             Result = PostMessageW(hWnd, WM_KEYDOWN, wParam, lParam);
             break;
-        }
 
         case WM_IME_KEYUP:
-        {
             Result = PostMessageW(hWnd, WM_KEYUP, wParam, lParam);
             break;
-        }
 
         case WM_IME_COMPOSITION:
         if (lParam & GCS_RESULTSTR)
@@ -1172,24 +1169,39 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
-        {
-            HWND hwndIME;
-
-            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
-            break;
-        }
-
         case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME;
 
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
+                break;
+            }
+
             hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
-            if (hwndIME)
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
+                break;
+            }
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
+                break;
+            }
+
+            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
+
+        case WM_IME_SYSTEM:
+            if (wParam == 4)
+                break;
+
+            goto NormalImeMsgHandling;
 
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
