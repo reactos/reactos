@@ -331,7 +331,7 @@ static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
     }
 
     if (hwndUI)
-        NtUserSetWindowLong(hwndUI, IMMGWL_IMC, (LONG_PTR)pimeui->hIMC, FALSE);
+        NtUserSetWindowLong(hwndUI, IMMGWLP_IMC, (LONG_PTR)pimeui->hIMC, FALSE);
 
 Quit:
     IMM_FN(ImmUnlockImeDpi)(pImeDpi);
@@ -935,9 +935,8 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
              return DefWindowProcA(hwnd, msg, wParam, lParam);
           }
           NtUserSetWindowFNID(hwnd, FNID_IME);
-          pimeui = HeapAlloc( GetProcessHeap(), 0, sizeof(IMEUI) );
+          pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
           pimeui->spwnd = pWnd;
-          SetWindowLongPtrW(hwnd, IMMGWLP_IMC, (LONG_PTR)pimeui);
        }
        else
        {
@@ -1004,7 +1003,6 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
 
         case WM_NCDESTROY:
             HeapFree(GetProcessHeap(), 0, pimeui);
-            SetWindowLongPtrW(hwnd, IMMGWLP_IMC, 0);
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             break;
 

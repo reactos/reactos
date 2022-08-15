@@ -1004,16 +1004,6 @@ NormalImeMsgHandling:
                 break;
             }
 
-            if (Msg != WM_IME_SETCONTEXT && (Msg != WM_IME_SYSTEM || wParam == 3))
-            {
-                /* Validate hIMC */
-                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
-                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrA(hwndIME, IMMGWLP_IMC);
-                /* IMM_FN(ImmReleaseContext)(hWnd, hIMC); */ /* NOP */
-                if (!pimeui || pimeui->hIMC != hIMC)
-                    break;
-            }
-
             Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
@@ -1201,16 +1191,6 @@ NormalImeMsgHandling:
             {
                 ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
                 break;
-            }
-
-            if (Msg != WM_IME_SETCONTEXT && (Msg != WM_IME_SYSTEM || wParam == 3))
-            {
-                /* Validate hIMC */
-                HIMC hIMC = IMM_FN(ImmGetContext)(hWnd);
-                PIMEUI pimeui = (PIMEUI)GetWindowLongPtrW(hwndIME, IMMGWLP_IMC);
-                /* IMM_FN(ImmReleaseContext)(hWnd, hIMC); */ /* NOP */
-                if (!pimeui || pimeui->hIMC != hIMC)
-                    break;
             }
 
             Result = SendMessageW(hwndIME, Msg, wParam, lParam);
