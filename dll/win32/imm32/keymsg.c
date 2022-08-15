@@ -13,6 +13,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+/* Win: CIMENonIMEToggle */
 BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
@@ -44,6 +45,7 @@ BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
     return TRUE;
 }
 
+/* Win: TShapeToggle */
 BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
@@ -74,6 +76,7 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: CSymbolToggle */
 BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
@@ -104,6 +107,7 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: JCloseOpen */
 BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
@@ -119,6 +123,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: KShapeToggle */
 BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
@@ -141,6 +146,7 @@ BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
     return TRUE;
 }
 
+/* Win: KHanjaConvert */
 BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
@@ -158,6 +164,7 @@ BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     return TRUE;
 }
 
+/* Win: KEnglishHangul */
 BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
