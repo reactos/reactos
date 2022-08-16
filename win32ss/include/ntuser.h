@@ -3366,8 +3366,11 @@ NtUserSetWindowLongPtr(
     LONG_PTR NewValue,
     BOOL Ansi);
 #else
-#define NtUserSetWindowLongPtr(hWnd, Index, NewValue, Ansi) \
-    ((LONG_PTR)NtUserSetWindowLong((hWnd), (Index), (LONG)(NewValue), (Ansi)))
+static inline LONG_PTR NTAPI
+NtUserSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi)
+{
+    return NtUserSetWindowLong(hWnd, Index, (LONG)NewValue, Ansi);
+}
 #endif // _WIN64
 
 BOOL
