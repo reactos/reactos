@@ -1259,8 +1259,8 @@ NtSetInformationToken(
                          * to do so. Exceeding this boundary and we're
                          * busted out.
                          */
-                        NewDynamicLength = RtlLengthSid(CapturedSid) +
-                                           Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+                        AclSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+                        NewDynamicLength = RtlLengthSid(CapturedSid) + AclSize;
                         if (NewDynamicLength > Token->DynamicCharged)
                         {
                             SepReleaseTokenLock(Token);
@@ -1317,7 +1317,6 @@ NtSetInformationToken(
                                  * has a default DACL then add up its size with
                                  * the address of the dynamic part.
                                  */
-                                AclSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
                                 PrimaryGroup = (ULONG_PTR)(Token->DynamicPart) + AclSize;
                                 RtlCopySid(RtlLengthSid(Token->UserAndGroups[PrimaryGroupIndex].Sid),
                                            (PVOID)PrimaryGroup,
