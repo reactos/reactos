@@ -831,6 +831,7 @@ RealDefWindowProcA(HWND hWnd,
     switch (Msg)
     {
         case WM_NCCREATE:
+        {
             if ( Wnd &&
                  Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
             {
@@ -854,6 +855,7 @@ RealDefWindowProcA(HWND hWnd,
                 Result = 1;
             }
             break;
+        }
 
         case WM_GETTEXTLENGTH:
         {
@@ -925,18 +927,24 @@ RealDefWindowProcA(HWND hWnd,
         }
 
         case WM_IME_KEYDOWN:
+        {
             Result = PostMessageA(hWnd, WM_KEYDOWN, wParam, lParam);
             break;
+        }
 
         case WM_IME_KEYUP:
+        {
             Result = PostMessageA(hWnd, WM_KEYUP, wParam, lParam);
             break;
+        }
 
         case WM_IME_CHAR:
+        {
             if (HIBYTE(wParam))
                 PostMessageA(hWnd, WM_CHAR, HIBYTE(wParam), lParam);
             PostMessageA(hWnd, WM_CHAR, LOBYTE(wParam), lParam);
             break;
+        }
 
         case WM_IME_COMPOSITION:
         if (lParam & GCS_RESULTSTR)
@@ -1009,10 +1017,12 @@ NormalImeMsgHandling:
         }
 
         case WM_IME_SYSTEM:
+        {
             if (wParam == 4)
                 break;
 
             goto NormalImeMsgHandling;
+        }
 
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
@@ -1045,6 +1055,7 @@ RealDefWindowProcW(HWND hWnd,
     switch (Msg)
     {
         case WM_NCCREATE:
+        {
             if ( Wnd &&
                  Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
             {
@@ -1070,6 +1081,7 @@ RealDefWindowProcW(HWND hWnd,
                 Result = 1;
             }
             break;
+        }
 
         case WM_GETTEXTLENGTH:
         {
@@ -1122,25 +1134,33 @@ RealDefWindowProcW(HWND hWnd,
         }
 
         case WM_SETTEXT:
+        {
             DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
                 UserPaintCaption(Wnd, DC_TEXT);
             Result = 1;
             break;
+        }
 
         case WM_IME_CHAR:
+        {
             PostMessageW(hWnd, WM_CHAR, wParam, lParam);
             Result = 0;
             break;
+        }
 
         case WM_IME_KEYDOWN:
+        {
             Result = PostMessageW(hWnd, WM_KEYDOWN, wParam, lParam);
             break;
+        }
 
         case WM_IME_KEYUP:
+        {
             Result = PostMessageW(hWnd, WM_KEYUP, wParam, lParam);
             break;
+        }
 
         case WM_IME_COMPOSITION:
         if (lParam & GCS_RESULTSTR)
@@ -1198,10 +1218,12 @@ NormalImeMsgHandling:
         }
 
         case WM_IME_SYSTEM:
+        {
             if (wParam == 4)
                 break;
 
             goto NormalImeMsgHandling;
+        }
 
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
