@@ -398,7 +398,7 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         pimeui->hKL = hKL = (HKL)lParam;
 
         if (!pimeui->fActivate)
-            return 0;
+            return;
 
         pimeui->hwndUI = hwndUI = User32CreateImeUIWindow(pimeui, hKL);
         if (hwndUI)
