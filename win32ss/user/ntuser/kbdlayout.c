@@ -774,6 +774,68 @@ co_IntActivateKeyboardLayout(
     return co_UserActivateKeyboardLayout(pKL, uFlags, pWnd);
 }
 
+// Win: xxxInternalUnloadKeyboardLayout
+static BOOL APIENTRY
+co_IntUnloadKeyboardLayoutEx(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PKL pKL,
+    _In_ DWORD dwFlags)
+{
+    PKL pNextKL;
+    USER_REFERENCE_ENTRY Ref1, Ref2;
+    PTHREADINFO pti = gptiCurrent;
+
+    if (pKL == gspklBaseLayout && !(dwFlags & 0x80000000))
+        return FALSE;
+
+    UserRefObjectCo(pKL, &Ref1); /* Add reference */
+
+    /* Regard as unloaded */
+    UserMarkObjectDestroy(pKL);
+    pKL->dwKL_Flags |= KLF_UNLOAD;
+
+    if (!(dwFlags & 0x80000000) && pti->KeyboardLayout == pKL)
+    {
+        pNextKL = IntHKLtoPKL(pti, (HKL)(ULONG_PTR)HKL_NEXT);
+        if (pNextKL)
+        {
+            UserRefObjectCo(pNextKL, &Ref2); /* Add reference */
+            co_UserActivateKeyboardLayout(pNextKL, dwFlags, NULL);
+            UserDerefObjectCo(pNextKL); /* Release reference */
+        }
+    }
+
+    if (gspklBaseLayout == pKL && pKL != pKL->pklNext)
+    {
+        /* Set next layout as default (FIXME: Use UserAssignmentLock?) */
+        gspklBaseLayout = pKL->pklNext;
+    }
+
+    UserDerefObjectCo(pKL); /* Release reference */
+
+    if (pti->pDeskInfo->fsHooks)
+    {
+        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
+
+        /* FIXME */
+    }
+
+    return TRUE;
+}
+
+// Win: xxxUnloadKeyboardLayout
+static BOOL APIENTRY
+IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
+{
+    PKL pKL = IntHKLtoPKL(gptiCurrent, hKL);
+    if (!pKL)
+    {
+        ERR("Invalid HKL %p!\n", hKL);
+        return FALSE;
+    }
+    return co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0);
+}
+
 /* EXPORTS *******************************************************************/
 
 /*
@@ -1081,19 +1143,16 @@ APIENTRY
 NtUserUnloadKeyboardLayout(
     HKL hKl)
 {
-    PKL pKl;
-    BOOL bRet = FALSE;
+    BOOL ret;
+    PWINSTATION_OBJECT pWinSta;
 
     UserEnterExclusive();
 
-    pKl = UserHklToKbl(hKl);
-    if (pKl)
-        bRet = UserUnloadKbl(pKl);
-    else
-        ERR("Invalid HKL %p!\n", hKl);
+    pWinSta = IntGetProcessWindowStation(NULL);
+    ret = IntUnloadKeyboardLayout(pWinSta, hKl);
 
     UserLeave();
-    return bRet;
+    return ret;
 }
 
 /* EOF */
