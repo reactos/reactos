@@ -1829,7 +1829,7 @@ SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
         }
         break;
     }
-    return NtUserSetWindowLong( hWnd, nIndex, wNewWord, FALSE );
+    return (WORD)NtUserSetWindowLongPtr(hWnd, nIndex, wNewWord, FALSE);
 }
 
 /*
@@ -1843,7 +1843,7 @@ SetWindowLongA(
   int nIndex,
   LONG dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, TRUE);
+    return (LONG)NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, TRUE);
 }
 
 /*
@@ -1856,7 +1856,7 @@ SetWindowLongW(
   int nIndex,
   LONG dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
+    return (LONG)NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, FALSE);
 }
 
 #ifdef _WIN64

@@ -331,7 +331,7 @@ static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
     }
 
     if (hwndUI)
-        NtUserSetWindowLong(hwndUI, IMMGWLP_IMC, (LONG_PTR)pimeui->hIMC, FALSE);
+        NtUserSetWindowLongPtr(hwndUI, IMMGWLP_IMC, (LONG_PTR)pimeui->hIMC, FALSE);
 
 Quit:
     IMM_FN(ImmUnlockImeDpi)(pImeDpi);
