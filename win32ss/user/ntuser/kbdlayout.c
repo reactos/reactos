@@ -23,6 +23,7 @@ PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
+DWORD gLCIDSentToShell = 0; /* Win: gLCIDSentToShell */
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
@@ -816,8 +817,7 @@ co_IntUnloadKeyboardLayoutEx(
     if (pti->pDeskInfo->fsHooks)
     {
         co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
-
-        /* FIXME */
+        gLCIDSentToShell = 0;
     }
 
     return TRUE;
