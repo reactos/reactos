@@ -340,13 +340,13 @@ Quit:
 
 /* Initializes the default IME window. */
 /* Win: ImeWndCreateHandler */
-static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
+static INT ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
     PWND pParentWnd, pWnd = pimeui->spwnd;
     HIMC hIMC = NULL;
 
     if (!pWnd || (pWnd->style & (WS_DISABLED | WS_POPUP)) != (WS_DISABLED | WS_POPUP))
-        return FALSE;
+        return -1;
 
     pParentWnd = ValidateHwnd(lpCS->hwndParent);
     if (pParentWnd)
@@ -365,12 +365,9 @@ static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
     pimeui->hwndIMC = NULL;
     pimeui->hKL = GetWin32ClientInfo()->hKL;
     pimeui->fCtrlShowStatus = TRUE;
+    pimeui->dwLastStatus = 0;
 
-    IMM_FN(ImmLoadIME)(pimeui->hKL);
-
-    pimeui->hwndUI = NULL;
-
-    return TRUE;
+    return 0;
 }
 
 /* Destroys the IME UI window. */
@@ -399,6 +396,10 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     if (wParam)
     {
         pimeui->hKL = hKL = (HKL)lParam;
+
+        if (!pimeui->fActivate)
+            return;
+
         pimeui->hwndUI = hwndUI = User32CreateImeUIWindow(pimeui, hKL);
         if (hwndUI)
             User32SendImeUIMessage(pimeui, WM_IME_SELECT, wParam, lParam, TRUE);
@@ -428,6 +429,19 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     HIMC hIMC = pimeui->hIMC;
     DWORD dwConversion, dwSentence;
     POINT pt;
+
+    if (IS_CICERO_MODE())
+    {
+        if (wParam == IMC_OPENSTATUSWINDOW)
+        {
+            IMM_FN(CtfImmRestoreToolbarWnd)(pimeui->dwLastStatus);
+            pimeui->dwLastStatus = 0;
+        }
+        else if (wParam == IMC_CLOSESTATUSWINDOW)
+        {
+            pimeui->dwLastStatus = IMM_FN(CtfImmHideToolbarWnd)();
+        }
+    }
 
     if (!hIMC)
         return 0;
@@ -922,10 +936,18 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
 {
     PWND pWnd;
     PIMEUI pimeui;
+    LRESULT ret;
 
     pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
+        if (IS_CICERO_MODE())
+        {
+            ret = IMM_FN(CtfImmDispatchDefImeMessage)(hwnd, msg, wParam, lParam);
+            if (ret)
+                return ret;
+        }
+
        if (!pWnd->fnid)
        {
           if (msg != WM_NCCREATE)
@@ -961,7 +983,6 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             case WM_IME_CHAR:
             case WM_IME_COMPOSITIONFULL:
             case WM_IME_CONTROL:
-            case WM_IME_NOTIFY:
             case WM_IME_REQUEST:
             case WM_IME_SELECT:
             case WM_IME_SETCONTEXT:
@@ -969,6 +990,11 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             case WM_IME_COMPOSITION:
             case WM_IME_ENDCOMPOSITION:
                 return 0;
+
+            case WM_IME_NOTIFY:
+                if (wParam < IMN_PRIVATE || IS_IME_HKL(pimeui->hKL) || !IS_CICERO_MODE())
+                    return 0;
+                break;
 
             case WM_IME_SYSTEM:
                 switch (wParam)
@@ -995,7 +1021,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
     switch (msg)
     {
         case WM_CREATE:
-            return (ImeWnd_OnCreate(pimeui, (LPCREATESTRUCT)lParam) ? 0 : -1);
+            return ImeWnd_OnCreate(pimeui, (LPCREATESTRUCT)lParam);
 
         case WM_DESTROY:
             User32DestroyImeUIWindow(pimeui);

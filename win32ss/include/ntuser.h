@@ -1201,6 +1201,7 @@ typedef enum IMEINFOEXCLASS
 } IMEINFOEXCLASS;
 
 #define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+#define IS_CICERO_MODE() (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED)
 
 typedef struct tagIMEUI
 {
@@ -1219,6 +1220,7 @@ typedef struct tagIMEUI
         UINT fCtrlShowStatus:1;
         UINT fFreeActiveEvent:1;
     };
+    DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
 /* Window Extra data container. */
