@@ -18,6 +18,7 @@
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50
+#define ID_SYSUPTIME_UPDATE_TIMER 1
 
 typedef struct _IMGINFO
 {
@@ -28,8 +29,13 @@ typedef struct _IMGINFO
     INT iBits;
 } IMGINFO, *PIMGINFO;
 
+typedef ULONGLONG (WINAPI *PFGETTICKCOUNT64)(VOID);
+
 static PIMGINFO pImgInfo;
 static const BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+static HMODULE hKernel32Vista = NULL;
+static PFGETTICKCOUNT64 pGetTickCount64 = NULL;
+static WCHAR szUptimeFormat[64];
 
 VOID ShowLastWin32Error(HWND hWndOwner)
 {
@@ -598,73 +604,85 @@ static VOID GetSystemVersion(HWND hwnd)
     HeapFree(GetProcessHeap(), 0, pwszStr);
 }
 
-ULONGLONG GetSecondsQPC(VOID)
+/**
+ * @brief
+ * An equivalent of GetTickCount64, implemented using QueryPerformanceCounter.
+ *
+ * @return
+ * The number of milliseconds that have elapsed since the system was started.
+ **/
+static ULONGLONG GetTickCountQPC(VOID)
 {
     LARGE_INTEGER Counter, Frequency;
 
     QueryPerformanceCounter(&Counter);
     QueryPerformanceFrequency(&Frequency);
 
-    return Counter.QuadPart / Frequency.QuadPart;
+    return (Counter.QuadPart * 1000) / Frequency.QuadPart;
 }
 
-ULONGLONG GetSeconds(VOID)
+static VOID GetSystemUptime(HWND hwndDlg)
 {
-    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
-    ULONGLONG Ticks64;
-    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+    HWND hUptimeLabel;
+    ULONGLONG cMilliseconds;
+    ULONG cSeconds;
+    WCHAR szBuf[64];
 
-    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
-    if (pGetTickCount64)
+    hUptimeLabel = GetDlgItem(hwndDlg, IDC_UPTIME);
+    if (!hUptimeLabel)
     {
-        return pGetTickCount64() / 1000;
+        return;
     }
-
-    hModule = LoadLibraryW(L"kernel32_vista.dll");
-
-    if (!hModule)
-    {
-        return GetSecondsQPC();
-    }
-
-    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
 
     if (pGetTickCount64)
     {
-        Ticks64 = pGetTickCount64() / 1000;
+        cMilliseconds = pGetTickCount64();
     }
     else
     {
-        Ticks64 = GetSecondsQPC();
+        cMilliseconds = GetTickCountQPC();
     }
+    
+    cSeconds = cMilliseconds / 1000;
+    StringCchPrintfW(szBuf, _countof(szBuf), szUptimeFormat,
+                     cSeconds / (60*60*24),     // Days
+                     (cSeconds / (60*60)) % 24, // Hours
+                     (cSeconds / 60) % 60,      // Minutes
+                     cSeconds % 60);            // Seconds
+                     
+    SetWindowTextW(hUptimeLabel, szBuf);
 
-    FreeLibrary(hModule);
-    return Ticks64;
+    /* Set update timer (reset timeout if the timer exists) */
+    SetTimer(hwndDlg, ID_SYSUPTIME_UPDATE_TIMER, 1000 - (cMilliseconds % 1000), NULL);
 }
 
-VOID GetSystemUptime(HWND hwnd)
+static VOID InitSystemUptime(HWND hwndDlg)
 {
-    HWND hRosUptime;
-    WCHAR szBuf[64], szStr[64];
-    ULONG cSeconds;
+    HMODULE hKernel32;
 
-    hRosUptime = GetDlgItem(hwnd, IDC_UPTIME);
-    if (!hRosUptime)
+    /* Load time format string */
+    if (LoadStringW(hApplet, IDS_UPTIME_FORMAT, szUptimeFormat, _countof(szUptimeFormat)) == 0)
     {
         return;
     }
-    if (!LoadStringW(hApplet, IDS_UPTIME_FORMAT, szStr, _countof(szStr)))
-    {
-        return;
-    }
-    cSeconds = GetSeconds();
-    StringCchPrintfW(szBuf, _countof(szBuf), szStr,
-                     cSeconds / (60*60*24),
-                     (cSeconds / (60*60)) % 24,
-                     (cSeconds / 60) % 60,
-                     cSeconds % 60);
 
-    SetWindowTextW(hRosUptime, szBuf);
+    /* Load required DLLs */
+    hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    if (hKernel32)
+    {
+        pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32, "GetTickCount64");
+        if (!pGetTickCount64)
+        {
+            hKernel32Vista = LoadLibraryW(L"kernel32_vista.dll");
+            if (hKernel32Vista)
+            {
+                pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32Vista, "GetTickCount64");
+            }
+        }
+    }
+
+    /* Show system uptime and set update timer */
+    GetSystemUptime(hwndDlg);
 }
 
 /* Property page dialog callback */
@@ -687,12 +705,30 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
             GetSystemVersion(hwndDlg);
-            GetSystemUptime(hwndDlg);
+            InitSystemUptime(hwndDlg);
             break;
 
         case WM_DESTROY:
+            KillTimer(hwndDlg, ID_SYSUPTIME_UPDATE_TIMER);
+
+            if (hKernel32Vista)
+            {
+                FreeLibrary(hKernel32Vista);
+            }
+
             HeapFree(GetProcessHeap(), 0, pImgInfo);
             break;
+
+        case WM_TIMER:
+        {
+            if (wParam == ID_SYSUPTIME_UPDATE_TIMER)
+            {
+                /* Update system uptime */
+                GetSystemUptime(hwndDlg);
+            }
+
+            break;
+        }
 
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_LICENCE)
