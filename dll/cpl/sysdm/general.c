@@ -694,6 +694,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             pImgInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMGINFO));
             if (pImgInfo == NULL)
             {
@@ -707,8 +708,10 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             GetSystemVersion(hwndDlg);
             InitSystemUptime(hwndDlg);
             break;
+        }
 
         case WM_DESTROY:
+        {
             KillTimer(hwndDlg, ID_SYSUPTIME_UPDATE_TIMER);
 
             if (hKernel32Vista)
@@ -718,6 +721,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
             HeapFree(GetProcessHeap(), 0, pImgInfo);
             break;
+        }
 
         case WM_TIMER:
         {
@@ -731,6 +735,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         }
 
         case WM_COMMAND:
+        {
             if (LOWORD(wParam) == IDC_LICENCE)
             {
                 DialogBox(hApplet, MAKEINTRESOURCE(IDD_LICENCE), hwndDlg, LicenceDlgProc);
@@ -738,6 +743,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 return TRUE;
             }
             break;
+        }
 
         case WM_DRAWITEM:
         {
