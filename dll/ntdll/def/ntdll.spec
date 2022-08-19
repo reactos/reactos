@@ -1111,7 +1111,7 @@
 @ stdcall -stub -version=0x600+ RtlReleaseSRWLockExclusive(ptr)
 @ stdcall -stub -version=0x600+ RtlReleaseSRWLockShared(ptr)
 @ stdcall RtlRemoteCall(ptr ptr ptr long ptr long long)
-@ stub -version=0x600+ RtlRemovePrivileges
+@ stdcall -version=0x600+ RtlRemovePrivileges(ptr ptr long)
 @ stdcall RtlRemoveVectoredContinueHandler(ptr)
 @ stdcall RtlRemoveVectoredExceptionHandler(ptr)
 @ stub -version=0x600+ RtlReportException

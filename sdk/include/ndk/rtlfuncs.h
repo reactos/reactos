@@ -1568,6 +1568,19 @@ RtlReleasePrivilege(
     _In_ PVOID ReturnedState
 );
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRemovePrivileges(
+    _In_ HANDLE TokenHandle,
+    _In_reads_opt_(PrivilegeCount) _When_(PrivilegeCount != 0, _Notnull_) PULONG PrivilegesToKeep,
+    _In_ ULONG PrivilegeCount
+);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
 NTSTATUS
