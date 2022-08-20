@@ -52,7 +52,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Неизвестная"
     IDS_INETTIMESUCSYNC "Время было успешно синхронизировано с %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Следующая синхронизация через: %s в %s"
-    IDS_INETTIMESYNCING "Подождите, пока РеактОС синхронизирует время с %s"
+    IDS_INETTIMESYNCING "Подождите, пока ReactOS синхронизирует время с %s"
     IDS_INETTIMEERROR "Возникла ошибка во время синхронизации с %s"
     IDS_INETTIMESUCFILL "Пожалуйста введите имя NTP сервера для синхронизации времени"
     IDS_INETTIMEWELCOME "Выберите NTP сервер из списка, либо введите имя NTP сервера для синхронизации времени компьютера"
