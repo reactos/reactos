@@ -23,7 +23,7 @@ PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
-DWORD gLCIDSentToShell = 0; /* Win: gLCIDSentToShell */
+DWORD gLCIDSentToShell = 0;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
