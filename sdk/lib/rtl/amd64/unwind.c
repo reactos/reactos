@@ -693,7 +693,7 @@ RtlpUnwindInternal(
     UnwindContext = *ContextRecord;
 
     /* Set up the constant fields of the dispatcher context */
-    DispatcherContext.ContextRecord = ContextRecord;
+    DispatcherContext.ContextRecord = &UnwindContext;
     DispatcherContext.HistoryTable = HistoryTable;
     DispatcherContext.TargetIp = (ULONG64)TargetIp;
 
@@ -778,7 +778,7 @@ RtlpUnwindInternal(
                 /* Call the language specific handler */
                 Disposition = ExceptionRoutine(ExceptionRecord,
                                                (PVOID)EstablisherFrame,
-                                               &UnwindContext,
+                                               ContextRecord,
                                                &DispatcherContext);
 
                 /* Clear exception flags for the next iteration */
@@ -991,7 +991,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             }
 
             /* Check, if we have left our stack */
-            if ((Context.Rsp < StackLow) || (Context.Rsp > StackHigh))
+            if ((Context.Rsp <= StackLow) || (Context.Rsp >= StackHigh))
             {
                 break;
             }
