@@ -1874,7 +1874,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 #define PARTITION_SIZE_INPUT_FIELD_LENGTH 9
 /* Restriction for MaxSize */
-#define PARTITION_MAXSIZE (pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1)
+/* #define PARTITION_MAXSIZE(pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1)*/
+#define PARTITION_MAXSIZE 99999999
 
 static VOID
 ShowPartitionSizeInputBox(SHORT Left,
