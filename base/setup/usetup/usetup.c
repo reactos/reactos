@@ -1874,6 +1874,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 #define PARTITION_SIZE_INPUT_FIELD_LENGTH 9
 /* Restriction for MaxSize */
+/*
+ * Below is a patch for CORE-18310, and is not a real fix.
+ * It replaces the expression with a constant value, in order to get correct max size.
+ * After pow functions for all the ports are implemented, please restore the code below.
+ */
 // #define PARTITION_MAXSIZE (pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1)
 #define PARTITION_MAXSIZE 99999999UL
 
