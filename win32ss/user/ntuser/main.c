@@ -532,9 +532,7 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    ptiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
-    if (ptiCurrent->KeyboardLayout)
-        UserReferenceObject(ptiCurrent->KeyboardLayout);
+    UserAssignmentLock((PVOID*)&(ptiCurrent->KeyboardLayout), W32kGetDefaultKeyLayout());
 
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
 
@@ -829,8 +827,7 @@ ExitThreadCallback(PETHREAD Thread)
     /* Remove it from the list */
     *ppti = ptiCurrent->ptiSibling;
 
-    if (ptiCurrent->KeyboardLayout)
-        UserDereferenceObject(ptiCurrent->KeyboardLayout);
+    UserAssignmentUnlock((PVOID*)&(ptiCurrent->KeyboardLayout));
 
     if (gptiForeground == ptiCurrent)
     {

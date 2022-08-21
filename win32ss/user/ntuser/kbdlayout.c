@@ -583,12 +583,10 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     PWND pWnd;
 
     pklPrev = pti->KeyboardLayout;
-    if (pklPrev)
-        UserDereferenceObject(pklPrev);
 
-    pti->KeyboardLayout = pKl;
+    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKl);
+
     pti->pClientInfo->hKL = pKl->hkl;
-    UserReferenceObject(pKl);
 
     if (Flags & KLF_SETFORPROCESS)
     {
@@ -631,7 +629,7 @@ IntImmActivateLayout(
         UserDerefObjectCo(pImeWnd);
     }
 
-    UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
 }
 
 /* Win: xxxInternalActivateKeyboardLayout */
