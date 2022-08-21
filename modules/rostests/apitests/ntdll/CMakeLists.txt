@@ -100,6 +100,8 @@ list(APPEND SOURCE
 
 if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
+elseif(ARCH STREQUAL "amd64")
+    add_asm_files(ntdll_apitest_asm amd64/NtContinue.S)
 endif()
 
 list(APPEND PCH_SKIP_SOURCE
