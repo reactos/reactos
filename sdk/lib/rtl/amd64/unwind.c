@@ -891,6 +891,13 @@ RtlUnwindEx(
         ExceptionRecord = &LocalExceptionRecord;
     }
 
+    /* Set unwind flags */
+    ExceptionRecord->ExceptionFlags = EXCEPTION_UNWINDING;
+    if (TargetFrame == NULL)
+    {
+        ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
+    }
+
     /* Call the internal function */
     RtlpUnwindInternal(TargetFrame,
                        TargetIp,
