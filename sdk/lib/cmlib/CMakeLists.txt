@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D_BLDR_
     -D_NTSYSTEM_
     -DNASSERT)
 
@@ -19,10 +18,18 @@ list(APPEND SOURCE
     cmlib.h)
 
 if(CMAKE_CROSSCOMPILING)
+    # CMLIB for NT bootloader
+    add_library(blcmlib ${SOURCE})
+    target_compile_definitions(blcmlib PRIVATE _BLDR_)
+    add_dependencies(blcmlib bugcodes xdk)
+    add_pch(blcmlib cmlib.h SOURCE)
+
+    # CMLIB for NT kernel
     add_library(cmlib ${SOURCE})
     add_dependencies(cmlib bugcodes xdk)
     add_pch(cmlib cmlib.h SOURCE)
 else()
+    # CMLIB for host-tools
     add_definitions(
         -D__NO_CTYPE_INLINES
         -DCMLIB_HOST)
