@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Välkommen"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Välkommen till ReactOS Operating System.\n\nKlicka på ett avsnitt till vänster."
+    IDS_DEFAULT_TOPIC_DESC "Välkommen till ReactOS.\n\nKlicka på ett avsnitt till vänster."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "&Avsluta"

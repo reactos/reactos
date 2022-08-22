@@ -12,7 +12,7 @@ static MUI_ENTRY bnBDSetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Please wait while ReactOS Setup initializes itself",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -109,7 +109,7 @@ static MUI_ENTRY bnBDWelcomePageEntries[] =
     {
         6,
         11,
-        "This part of the setup copies the ReactOS Operating System to your",
+        "This part of the setup copies the ReactOS to your",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

@@ -109,7 +109,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         6,
         11,
-        "This part of the setup copies the ReactOS Operating System to your",
+        "This part of the setup copies the ReactOS to your",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

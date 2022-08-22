@@ -29,9 +29,9 @@
 //
 #ifndef VER_PRODUCTNAME_STR
 #ifdef RC_INVOKED
-#define VER_PRODUCTNAME_STR L"ReactOS Operating System"
+#define VER_PRODUCTNAME_STR L"ReactOS"
 #else
-#define VER_PRODUCTNAME_STR "ReactOS Operating System"
+#define VER_PRODUCTNAME_STR "ReactOS"
 #endif
 #endif
 
