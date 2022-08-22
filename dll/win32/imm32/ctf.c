@@ -13,7 +13,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * NOTE: Microsoft CTF protocol has vulnerability.
  *       If insecure, we don't follow the dangerous design.
  *
- * See also:
  * https://www.zdnet.com/article/vulnerability-in-microsoft-ctf-protocol-goes-back-to-windows-xp/
  */
 
