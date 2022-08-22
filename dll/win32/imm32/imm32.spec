@@ -4,6 +4,8 @@
 @ stdcall CtfImmRestoreToolbarWnd(long)
 @ stdcall CtfImmHideToolbarWnd()
 @ stdcall CtfImmDispatchDefImeMessage(ptr long ptr ptr)
+@ stdcall CtfImmIsGuidMapEnable(ptr)
+@ stdcall CtfImmGetGuidAtom(ptr long ptr)
 @ stdcall ImmActivateLayout(ptr)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)
