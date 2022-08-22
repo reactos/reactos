@@ -911,13 +911,19 @@ RtlUnwindEx(
 VOID
 NTAPI
 RtlUnwind(
-  IN PVOID TargetFrame,
-  IN PVOID TargetIp,
-  IN PEXCEPTION_RECORD ExceptionRecord,
-  IN PVOID ReturnValue)
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue)
 {
-    UNIMPLEMENTED;
-    return;
+    CONTEXT Context;
+
+    RtlUnwindEx(TargetFrame,
+                TargetIp,
+                ExceptionRecord,
+                ReturnValue,
+                &Context,
+                NULL);
 }
 
 ULONG
