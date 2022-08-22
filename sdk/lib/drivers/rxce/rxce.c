@@ -8972,7 +8972,7 @@ _RxFreePoolWithTag(
 NTSTATUS
 __RxAcquireFcb(
     _Inout_ PFCB Fcb,
-    _Inout_opt_ PRX_CONTEXT RxContext OPTIONAL,
+    _Inout_opt_ PRX_CONTEXT RxContext,
     _In_ ULONG Mode
 #ifdef RDBSS_TRACKER
     ,
