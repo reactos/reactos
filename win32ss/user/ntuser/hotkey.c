@@ -211,7 +211,9 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         if (IsModifier)
         {
             /* Modifier key up -- modifier-only keys are triggered here */
-            pHotKey = IsHotKey(gfsModOnlyCandidate, 0);
+            pHotKey = IsHotKey(gfsModOnlyCandidate, wVk);
+            if (!pHotKey)
+                pHotKey = IsHotKey(gfsModOnlyCandidate, 0);
             gfsModOnlyCandidate = 0;
         }
         else

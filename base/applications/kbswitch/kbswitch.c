@@ -4,6 +4,7 @@
  * PURPOSE:         Switching Keyboard Layouts
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck (mail@colinfinck.de)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "kbswitch.h"
@@ -13,7 +14,7 @@
 PKBSWITCHSETHOOKS KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
 UINT ShellHookMessage = 0;
-
+DWORD dwAltShiftHotKeyId, dwShiftAltHotKeyId;
 
 static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength);
@@ -414,6 +415,22 @@ UpdateLanguageDisplayCurrent(HWND hwnd, WPARAM wParam)
     return UpdateLanguageDisplay(hwnd, GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)));
 }
 
+VOID DoRegisterAltShiftHotKeys(HWND hwnd)
+{
+    dwAltShiftHotKeyId = GlobalAddAtom(TEXT("ReactOS Alt+Shift"));
+    dwShiftAltHotKeyId = GlobalAddAtom(TEXT("ReactOS Shift+Alt"));
+
+    RegisterHotKey(hwnd, dwAltShiftHotKeyId, MOD_ALT | MOD_SHIFT, VK_SHIFT);
+    RegisterHotKey(hwnd, dwShiftAltHotKeyId, MOD_ALT | MOD_SHIFT, VK_MENU);
+}
+
+VOID DoUnuegisterAltShiftHotKeys(HWND hwnd)
+{
+    UnregisterHotKey(hwnd, dwAltShiftHotKeyId);
+    UnregisterHotKey(hwnd, dwShiftAltHotKeyId);
+    dwAltShiftHotKeyId = dwShiftAltHotKeyId = 0;
+}
+
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -431,6 +448,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
+            DoRegisterAltShiftHotKeys(hwnd);
             return 0;
         }
 
@@ -439,10 +457,19 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             return UpdateLanguageDisplay(hwnd, (HKL)lParam);
         }
 
+        case WM_HOTKEY:
+        {
+            if (wParam != dwAltShiftHotKeyId && wParam != dwShiftAltHotKeyId)
+                break;
+
+            /* FALL THROUGH */
+        }
+
         case WM_LOAD_LAYOUT:
         {
-            ActivateLayout(hwnd, GetNextLayout());
-
+            ULONG uNextNum = GetNextLayout();
+            if (ulCurrentLayoutNum != uNextNum)
+                ActivateLayout(hwnd, uNextNum);
             return 0;
         }
 
@@ -526,6 +553,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
+            DoUnuegisterAltShiftHotKeys(hwnd);
             DeleteHooks();
             DestroyMenu(hRightPopupMenu);
             DelTrayIcon(hwnd);
