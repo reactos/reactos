@@ -1121,7 +1121,7 @@ SecMakeSPNEx(
     _In_opt_ PUNICODE_STRING Referrer,
     _In_opt_ PUNICODE_STRING TargetInfo,
     _Inout_ PUNICODE_STRING Spn,
-    _Out_ PULONG Length OPTIONAL,
+    _Out_opt_ PULONG Length,
     _In_ BOOLEAN Allocate);
 
 KSECDDDECLSPEC
@@ -1131,7 +1131,7 @@ SecLookupAccountSid(
     _In_ PSID Sid,
     _Out_ PULONG NameSize,
     _Inout_ PUNICODE_STRING NameBuffer,
-    _Out_ PULONG DomainSize OPTIONAL,
+    _Out_opt_ PULONG DomainSize, // WDK says _Out_ only + ... OPTIONAL
     _Out_opt_ PUNICODE_STRING DomainBuffer,
     _Out_ PSID_NAME_USE NameUse);
 

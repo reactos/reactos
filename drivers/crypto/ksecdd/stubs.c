@@ -348,7 +348,7 @@ SecLookupAccountSid(
     _In_ PSID Sid,
     _Out_ PULONG NameSize,
     _Inout_ PUNICODE_STRING NameBuffer,
-    _Out_ PULONG DomainSize OPTIONAL,
+    _Out_opt_ PULONG DomainSize,
     _Out_opt_ PUNICODE_STRING DomainBuffer,
     _Out_ PSID_NAME_USE NameUse)
 {

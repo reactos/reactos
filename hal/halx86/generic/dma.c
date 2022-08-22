@@ -110,7 +110,7 @@ HalCalculateScatterGatherListSize(
     IN PVOID CurrentVa,
     IN ULONG Length,
     OUT PULONG ScatterGatherListSize,
-    OUT PULONG pNumberOfMapRegisters);
+    OUT PULONG pNumberOfMapRegisters OPTIONAL);
 
 NTSTATUS
 NTAPI
@@ -1160,7 +1160,7 @@ HalCalculateScatterGatherListSize(
     IN PVOID CurrentVa,
     IN ULONG Length,
     OUT PULONG ScatterGatherListSize,
-    OUT PULONG pNumberOfMapRegisters)
+    OUT PULONG pNumberOfMapRegisters OPTIONAL)
 {
     ULONG NumberOfMapRegisters;
     ULONG SgSize;

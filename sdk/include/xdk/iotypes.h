@@ -2400,7 +2400,7 @@ typedef NTSTATUS
   _In_ PVOID CurrentVa,
   _In_ ULONG Length,
   _Out_ PULONG ScatterGatherListSize,
-  _Out_ OPTIONAL PULONG pNumberOfMapRegisters);
+  _Out_opt_ PULONG pNumberOfMapRegisters);
 
 typedef NTSTATUS
 (NTAPI *PBUILD_SCATTER_GATHER_LIST)(
