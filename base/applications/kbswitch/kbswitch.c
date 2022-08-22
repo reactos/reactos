@@ -424,7 +424,7 @@ VOID DoRegisterAltShiftHotKeys(HWND hwnd)
     RegisterHotKey(hwnd, dwShiftAltHotKeyId, MOD_ALT | MOD_SHIFT, VK_MENU);
 }
 
-VOID DoUnuegisterAltShiftHotKeys(HWND hwnd)
+VOID DoUnregisterAltShiftHotKeys(HWND hwnd)
 {
     UnregisterHotKey(hwnd, dwAltShiftHotKeyId);
     UnregisterHotKey(hwnd, dwShiftAltHotKeyId);
@@ -553,7 +553,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
-            DoUnuegisterAltShiftHotKeys(hwnd);
+            DoUnregisterAltShiftHotKeys(hwnd);
             DeleteHooks();
             DestroyMenu(hRightPopupMenu);
             DelTrayIcon(hwnd);
