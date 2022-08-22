@@ -10,8 +10,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 /*
- * NOTE: Microsoft CTF protocol (ctfmon.exe and CTF clients) has massive vulnerability.
- *       We don't follow the design of some parts of Microsoft's CTF protocol if insecure.
+ * NOTE: Microsoft CTF protocol has vulnerability.
+ *       If insecure, we don't follow the design of some Microsoft's CTF components.
  *
  * See also:
  * https://www.zdnet.com/article/vulnerability-in-microsoft-ctf-protocol-goes-back-to-windows-xp/
