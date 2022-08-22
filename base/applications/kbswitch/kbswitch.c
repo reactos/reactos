@@ -14,7 +14,7 @@
 PKBSWITCHSETHOOKS KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
 UINT ShellHookMessage = 0;
-DWORD dwAltShiftHotKeyId, dwShiftAltHotKeyId;
+DWORD dwAltShiftHotKeyId = 0, dwShiftAltHotKeyId = 0;
 
 static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength);
