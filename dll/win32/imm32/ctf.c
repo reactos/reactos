@@ -14,6 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  *       If insecure, we don't follow the dangerous design.
  *
  * https://www.zdnet.com/article/vulnerability-in-microsoft-ctf-protocol-goes-back-to-windows-xp/
+ * https://googleprojectzero.blogspot.com/2019/08/down-rabbit-hole.html
  */
 
 // Win: LoadCtfIme
