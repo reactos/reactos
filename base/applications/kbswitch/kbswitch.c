@@ -428,6 +428,9 @@ VOID DoUnregisterAltShiftHotKeys(HWND hwnd)
 {
     UnregisterHotKey(hwnd, dwAltShiftHotKeyId);
     UnregisterHotKey(hwnd, dwShiftAltHotKeyId);
+
+    GlobalDeleteAtom(dwAltShiftHotKeyId);
+    GlobalDeleteAtom(dwShiftAltHotKeyId);
     dwAltShiftHotKeyId = dwShiftAltHotKeyId = 0;
 }
 
