@@ -138,7 +138,7 @@ HRESULT WINAPI CtfImmGetGuidAtom(HIMC hIMC, DWORD dwUnknown, LPDWORD pdwGuidAtom
     DWORD dwThreadId;
     HKL hKL;
 
-    TRACE("(%p, 0x%08lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
+    TRACE("(%p, 0xlX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
 
     *pdwGuidAtom = 0;
 
