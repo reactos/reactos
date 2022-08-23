@@ -948,32 +948,36 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
                 return ret;
         }
 
-       if (!pWnd->fnid)
-       {
-          if (msg != WM_NCCREATE)
-          {
-             if (unicode)
-                return DefWindowProcW(hwnd, msg, wParam, lParam);
-             return DefWindowProcA(hwnd, msg, wParam, lParam);
-          }
-          NtUserSetWindowFNID(hwnd, FNID_IME);
-          pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
-          pimeui->spwnd = pWnd;
+        if (!pWnd->fnid)
+        {
+            if (msg != WM_NCCREATE)
+            {
+                if (unicode)
+                    return DefWindowProcW(hwnd, msg, wParam, lParam);
+                return DefWindowProcA(hwnd, msg, wParam, lParam);
+            }
+
+            NtUserSetWindowFNID(hwnd, FNID_IME);
+
+            pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
+            pimeui->spwnd = pWnd;
+            SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
        }
        else
        {
-          if (pWnd->fnid != FNID_IME)
-          {
-             ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
-             return 0;
-          }
-          pimeui = ((PIMEWND)pWnd)->pimeui;
-          if (pimeui == NULL)
-          {
-             ERR("Window is not set to IME!\n");
-             return 0;
-          }
-       }
+            if (pWnd->fnid != FNID_IME)
+            {
+                ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
+                return 0;
+            }
+
+            pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
+            if (pimeui == NULL)
+            {
+                ERR("Window is not set to IME!\n");
+                return 0;
+            }
+        }
     }
 
     if (pimeui->nCntInIMEProc > 0)
