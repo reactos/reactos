@@ -829,7 +829,8 @@ ExitThreadCallback(PETHREAD Thread)
     /* Remove it from the list */
     *ppti = ptiCurrent->ptiSibling;
 
-    UserAssignmentUnlock((PVOID*)&(ptiCurrent->KeyboardLayout));
+    if (!UserAssignmentUnlock((PVOID*)&(ptiCurrent->KeyboardLayout)))
+        ptiCurrent->pClientInfo->hKL = NULL;
 
     if (gptiForeground == ptiCurrent)
     {
