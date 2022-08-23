@@ -533,6 +533,7 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
         pti->hklPrev = hOldKL;
 
     UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pNewKL);
+    pti->pClientInfo->hKL = pNewKL->hkl;
 
 Quit:
     UserLeave();
