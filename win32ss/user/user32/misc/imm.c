@@ -962,9 +962,9 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
             pimeui->spwnd = pWnd;
             SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
-       }
-       else
-       {
+        }
+        else
+        {
             if (pWnd->fnid != FNID_IME)
             {
                 ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
