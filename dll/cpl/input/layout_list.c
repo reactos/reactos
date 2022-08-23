@@ -85,7 +85,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
 {
     WCHAR szBuffer[MAX_PATH], szFilePath[MAX_PATH], szDllPath[MAX_PATH];
     INT iIndex, iLength = 0;
-    DWORD dwSize, dwSpecialId;
+    DWORD dwSize, dwSpecialId, dwLayoutId = DWORDfromString(szLayoutId);
     HINSTANCE hDllInst;
 
     dwSize = sizeof(szBuffer);
@@ -101,7 +101,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
     if (GetFileAttributesW(szFilePath) == INVALID_FILE_ATTRIBUTES)
         return FALSE;
 
-    dwSpecialId  =0;
+    dwSpecialId = 0;
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Id", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
@@ -118,7 +118,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         WCHAR *pIndex;
 
         /* Move to the position after the character "@" */
-        pBuffer = &szBuffer[1];
+        pBuffer = szBuffer + 1;
 
         /* Get a pointer to the beginning ",-" */
         pIndex = wcsstr(pBuffer, L",-");
@@ -128,7 +128,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
             /* Convert the number in the string after the ",-" */
             iIndex = _wtoi(pIndex + 2);
 
-            pIndex[0] = 0; /* Cut */
+            *pIndex = 0; /* Cut the string */
 
             if (ExpandEnvironmentStringsW(pBuffer, szDllPath, ARRAYSIZE(szDllPath)) != 0)
             {
@@ -140,7 +140,6 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
 
                     if (iLength > 0)
                     {
-                        DWORD dwLayoutId = DWORDfromString(szLayoutId);
                         LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
                         return TRUE;
                     }
@@ -155,7 +154,6 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         if (RegQueryValueExW(hLayoutKey, L"Layout Text", NULL, NULL,
                              (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
         {
-            DWORD dwLayoutId = DWORDfromString(szLayoutId);
             LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
             return TRUE;
         }
