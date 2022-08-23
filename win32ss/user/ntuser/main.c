@@ -462,6 +462,7 @@ InitThreadCallback(PETHREAD Thread)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+    PKL pDefKL;
 
     Process = Thread->ThreadsProcess;
 
@@ -532,7 +533,8 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    UserAssignmentLock((PVOID*)&(ptiCurrent->KeyboardLayout), W32kGetDefaultKeyLayout());
+    pDefKL = W32kGetDefaultKeyLayout();
+    UserAssignmentLock((PVOID*)&(ptiCurrent->KeyboardLayout), pDefKL);
 
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
 
@@ -548,10 +550,10 @@ InitThreadCallback(PETHREAD Thread)
     pci->ppi = ptiCurrent->ppi;
     pci->fsHooks = ptiCurrent->fsHooks;
     pci->dwTIFlags = ptiCurrent->TIF_flags;
-    if (ptiCurrent->KeyboardLayout)
+    if (pDefKL)
     {
-        pci->hKL = ptiCurrent->KeyboardLayout->hkl;
-        pci->CodePage = ptiCurrent->KeyboardLayout->CodePage;
+        pci->hKL = pDefKL->hkl;
+        pci->CodePage = pDefKL->CodePage;
     }
 
     /* Need to pass the user Startup Information to the current process. */
