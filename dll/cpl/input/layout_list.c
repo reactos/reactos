@@ -163,7 +163,7 @@ LayoutList_Create(VOID)
 {
     WCHAR szSystemDirectory[MAX_PATH];
     WCHAR szLayoutId[MAX_PATH];
-    DWORD dwSize, dwIndex = 0;
+    DWORD dwSize, dwIndex;
     HKEY hKey, hLayoutKey;
 
     if (!GetSystemDirectoryW(szSystemDirectory, ARRAYSIZE(szSystemDirectory)))
@@ -175,7 +175,7 @@ LayoutList_Create(VOID)
         return;
     }
 
-    for (;; ++dwIndex)
+    for (dwIndex = 0; ; ++dwIndex)
     {
         dwSize = ARRAYSIZE(szLayoutId);
         if (RegEnumKeyExW(hKey, dwIndex, szLayoutId, &dwSize, NULL, NULL,
