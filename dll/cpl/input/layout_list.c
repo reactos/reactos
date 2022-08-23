@@ -92,15 +92,16 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
     if (RegQueryValueExW(hLayoutKey, L"Layout File", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) != ERROR_SUCCESS)
     {
-        return FALSE;
+        return FALSE; /* No "Layout File" value */
     }
 
     StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath),
                      L"%s\\%s", szSystemDirectory, szBuffer);
 
     if (GetFileAttributesW(szFilePath) == INVALID_FILE_ATTRIBUTES)
-        return FALSE;
+        return FALSE; /* No layout file found */
 
+    /* Get the special ID */
     dwSpecialId = 0;
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Id", NULL, NULL,
@@ -109,6 +110,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         dwSpecialId = DWORDfromString(szBuffer);
     }
 
+    /* If there is a valid "Layout Display Name", then use it as the entry name */
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Display Name", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS &&
@@ -150,6 +152,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
 
     if (iLength == 0)
     {
+        /* Otherwise, use "Layout Text" value as the entry name */
         dwSize = sizeof(szBuffer);
         if (RegQueryValueExW(hLayoutKey, L"Layout Text", NULL, NULL,
                              (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
