@@ -150,16 +150,13 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         }
     }
 
-    if (iLength == 0)
+    /* Otherwise, use "Layout Text" value as the entry name */
+    dwSize = sizeof(szBuffer);
+    if (RegQueryValueExW(hLayoutKey, L"Layout Text", NULL, NULL,
+                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
     {
-        /* Otherwise, use "Layout Text" value as the entry name */
-        dwSize = sizeof(szBuffer);
-        if (RegQueryValueExW(hLayoutKey, L"Layout Text", NULL, NULL,
-                             (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
-        {
-            LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
-            return TRUE;
-        }
+        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+        return TRUE;
     }
 
     return FALSE;
