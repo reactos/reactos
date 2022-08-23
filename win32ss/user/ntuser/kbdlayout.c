@@ -585,12 +585,11 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     pklPrev = pti->KeyboardLayout;
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKl);
-
     pti->pClientInfo->hKL = pKl->hkl;
 
     if (Flags & KLF_SETFORPROCESS)
     {
-        // FIXME
+        FIXME("KLF_SETFORPROCESS\n");
     }
 
     if (!(pWnd = pti->MessageQueue->spwndFocus))
@@ -657,7 +656,7 @@ co_UserActivateKeyboardLayout(
 
     if (uFlags & KLF_RESET)
     {
-        /* FIXME */
+        FIXME("KLF_RESET\n");
     }
 
     if (!(uFlags & KLF_SETFORPROCESS) && pKL == pti->KeyboardLayout)
@@ -671,12 +670,8 @@ co_UserActivateKeyboardLayout(
     if (pti->TIF_flags & TIF_CSRSSTHREAD)
     {
         UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
-
-        if (!(pti->TIF_flags & TIF_INCLEANUP))
-        {
-            ClientInfo->CodePage = pKL->CodePage;
-            ClientInfo->hKL = pKL->hkl;
-        }
+        ClientInfo->CodePage = pKL->CodePage;
+        ClientInfo->hKL = pKL->hkl;
     }
     else if (uFlags & KLF_SETFORPROCESS)
     {
@@ -689,11 +684,8 @@ co_UserActivateKeyboardLayout(
         else
             UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
 
-        if (!(pti->TIF_flags & TIF_INCLEANUP))
-        {
-            ClientInfo->CodePage = pKL->CodePage;
-            ClientInfo->hKL = pKL->hkl;
-        }
+        ClientInfo->CodePage = pKL->CodePage;
+        ClientInfo->hKL = pKL->hkl;
     }
 
     if (gptiForeground && (gptiForeground->ppi == pti->ppi))
