@@ -68,6 +68,7 @@ X87XAM_BAD	EQU	MASK X87SW_E AND NOT 2
 
 ; double fmod [double, double] ----------------------------------
 
+PUBLIC fmod
 fmod		PROC	FRAME
 
 		sub	rsp, 40 + 32
