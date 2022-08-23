@@ -630,6 +630,7 @@ IntImmActivateLayout(
     }
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
+    pti->pClientInfo->hKL = pKL->hkl;
 }
 
 /* Win: xxxInternalActivateKeyboardLayout */
