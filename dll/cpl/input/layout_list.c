@@ -95,8 +95,8 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         return FALSE; /* No "Layout File" value */
     }
 
+    /* Build the "Layout File" full path and check existence */
     StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath), L"%s\\%s", szSystemDirectory, szBuffer);
-
     if (GetFileAttributesW(szFilePath) == INVALID_FILE_ATTRIBUTES)
         return FALSE; /* No layout file found */
 
@@ -161,8 +161,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
 VOID
 LayoutList_Create(VOID)
 {
-    WCHAR szSystemDirectory[MAX_PATH];
-    WCHAR szLayoutId[MAX_PATH];
+    WCHAR szSystemDirectory[MAX_PATH], szLayoutId[MAX_PATH];
     DWORD dwSize, dwIndex;
     HKEY hKey, hLayoutKey;
 
