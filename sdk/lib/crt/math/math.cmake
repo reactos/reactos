@@ -1,9 +1,9 @@
 
 list(APPEND LIBCNTPR_MATH_SOURCE
+    math/_invoke_matherr.c
     math/abs.c
     math/div.c
     math/labs.c
-    math/usermatherr.c
 )
 
 if(ARCH STREQUAL "i386")

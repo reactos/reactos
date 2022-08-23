@@ -1,11 +1,9 @@
 /*
  * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Implementation of __setusermatherr and _invoke_user_matherr
+ * PURPOSE:     Implementation of _invoke_matherr and __setusermatherr
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
-
-// DO NOT SYNC WITH WINE OR MINGW32
 
 #include <math.h>
 
@@ -23,11 +21,22 @@ __setusermatherr(_UserMathErrorFunctionPointer func)
 
 int
 __cdecl
-_invoke_user_matherr(struct _exception *e)
+_invoke_matherr(
+    int type,
+    char* name,
+    double arg1,
+    double arg2,
+    double retval)
 {
     if (user_matherr != NULL)
     {
-        return user_matherr(e);
+        struct _exception excpt;
+        excpt.type = type;
+        excpt.name = name;
+        excpt.arg1 = arg1;
+        excpt.arg2 = arg2;
+        excpt.retval = retval;
+        return user_matherr(&excpt);
     }
     else
     {
