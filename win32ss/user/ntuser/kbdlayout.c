@@ -670,11 +670,16 @@ co_UserActivateKeyboardLayout(
     if (pti->TIF_flags & TIF_CSRSSTHREAD)
     {
         UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
-        ClientInfo->CodePage = pKL->CodePage;
+
+        if (!(pti->TIF_flags & TIF_INCLEANUP))
+        {
+            ClientInfo->CodePage = pKL->CodePage;
+            ClientInfo->hKL = pKL->hkl;
+        }
     }
     else if (uFlags & KLF_SETFORPROCESS)
     {
-        /* FIXME */
+        FIXME("KLF_SETFORPROCESS\n");
     }
     else
     {

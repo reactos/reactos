@@ -517,6 +517,7 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
     PTHREADINFO pti;
     PKL pOldKL, pNewKL;
+    PCLIENTINFO ClientInfo;
 
     UserEnterExclusive();
 
@@ -533,6 +534,9 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
         pti->hklPrev = hOldKL;
 
     UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pNewKL);
+
+    ClientInfo = pti->pClientInfo;
+    ClientInfo->hKL = pNewKL->hkl;
 
 Quit:
     UserLeave();
