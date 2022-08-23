@@ -112,9 +112,10 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
     /* If there is a valid "Layout Display Name", then use it as the entry name */
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Display Name", NULL, NULL,
-                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS &&
-        szBuffer[0] == L'@')
+                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS && szBuffer[0] == L'@')
     {
+        /* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it had fully implemented */
+
         /* Move to the position after the character "@" */
         WCHAR *pBuffer = szBuffer + 1;
 
