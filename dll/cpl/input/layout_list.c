@@ -95,8 +95,7 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
         return FALSE; /* No "Layout File" value */
     }
 
-    StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath),
-                     L"%s\\%s", szSystemDirectory, szBuffer);
+    StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath), L"%s\\%s", szSystemDirectory, szBuffer);
 
     if (GetFileAttributesW(szFilePath) == INVALID_FILE_ATTRIBUTES)
         return FALSE; /* No layout file found */
@@ -116,14 +115,11 @@ LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSyste
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS &&
         szBuffer[0] == L'@')
     {
-        WCHAR *pBuffer;
-        WCHAR *pIndex;
-
         /* Move to the position after the character "@" */
-        pBuffer = szBuffer + 1;
+        WCHAR *pBuffer = szBuffer + 1;
 
         /* Get a pointer to the beginning ",-" */
-        pIndex = wcsstr(pBuffer, L",-");
+        WCHAR *pIndex = wcsstr(pBuffer, L",-");
 
         if (pIndex)
         {
@@ -171,9 +167,7 @@ LayoutList_Create(VOID)
     HKEY hKey, hLayoutKey;
 
     if (!GetSystemDirectoryW(szSystemDirectory, ARRAYSIZE(szSystemDirectory)))
-    {
         return;
-    }
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
                       0, KEY_ENUMERATE_SUB_KEYS, &hKey) != ERROR_SUCCESS)
@@ -184,8 +178,8 @@ LayoutList_Create(VOID)
     for (;; ++dwIndex)
     {
         dwSize = ARRAYSIZE(szLayoutId);
-        if (RegEnumKeyExW(hKey, dwIndex, szLayoutId, &dwSize,
-                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        if (RegEnumKeyExW(hKey, dwIndex, szLayoutId, &dwSize, NULL, NULL,
+                          NULL, NULL) != ERROR_SUCCESS)
         {
             break;
         }
