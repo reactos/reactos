@@ -333,7 +333,7 @@ BEGIN
     IDS_PETABYTE "PB RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Days, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu Days, %02lu:%02lu:%02lu"
     IDS_VARIABLE "可変"
     IDS_VALUE "値"
     IDS_NO_DUMP "(なし)"

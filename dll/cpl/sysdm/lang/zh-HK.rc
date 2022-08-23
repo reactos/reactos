@@ -341,7 +341,7 @@ BEGIN
     IDS_PETABYTE "PB 記憶體"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u 日， %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu 日， %02lu:%02lu:%02lu"
     IDS_VARIABLE "變量"
     IDS_VALUE "值"
     IDS_NO_DUMP "（無）"

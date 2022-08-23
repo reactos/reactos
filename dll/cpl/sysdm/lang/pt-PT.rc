@@ -337,7 +337,7 @@ BEGIN
     IDS_PETABYTE "PB de RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Dias, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu Dias, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Variável"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Nenhum)"
