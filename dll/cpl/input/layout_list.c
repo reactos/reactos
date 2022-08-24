@@ -81,7 +81,7 @@ LayoutList_Destroy(VOID)
 }
 
 static BOOL
-LayoutList_ReadLayoutRegKey(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirectory)
+LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirectory)
 {
     WCHAR szBuffer[MAX_PATH], szFilePath[MAX_PATH], szDllPath[MAX_PATH];
     INT iIndex, iLength = 0;
@@ -186,7 +186,7 @@ LayoutList_Create(VOID)
 
         if (RegOpenKeyExW(hKey, szLayoutId, 0, KEY_QUERY_VALUE, &hLayoutKey) == ERROR_SUCCESS)
         {
-            LayoutList_ReadLayoutRegKey(hLayoutKey, szLayoutId, szSystemDirectory);
+            LayoutList_ReadLayout(hLayoutKey, szLayoutId, szSystemDirectory);
             RegCloseKey(hLayoutKey);
         }
     }
