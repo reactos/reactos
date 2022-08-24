@@ -308,23 +308,21 @@ SpeakerVolume(
 {
     PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh;
-    TCHAR Caption[256];
-
-    LoadString(hApplet, IDS_SPEAKER_VOLUME, Caption, _countof(Caption));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCE(IDS_SPEAKER_VOLUME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
     InitPropSheetPage(&psp[0], IDD_MULTICHANNEL, SpeakerVolumeDlgProc);
     psp[0].dwFlags |= PSP_USETITLE;
-    psp[0].pszTitle = Caption;
+    psp[0].hInstance = hApplet;
+    psp[0].pszTitle = MAKEINTRESOURCE(IDS_SPEAKER_VOLUME);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
