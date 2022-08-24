@@ -28,6 +28,7 @@ HINSTANCE hInst;
 HANDLE    hProcessHeap;
 HMODULE   hDllLib;
 ULONG     ulCurrentLayoutNum = 1;
+HICON     g_hNotifyIcon = NULL;
 
 static HICON
 CreateTrayIcon(LPTSTR szLCID)
@@ -98,55 +99,50 @@ CreateTrayIcon(LPTSTR szLCID)
 static VOID
 AddTrayIcon(HWND hwnd)
 {
-    NOTIFYICONDATA tnid;
+    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
     TCHAR szName[MAX_PATH];
 
     GetLayoutID(_T("1"), szLCID, ARRAYSIZE(szLCID));
     GetLayoutName(_T("1"), szName, ARRAYSIZE(szName));
 
-    memset(&tnid, 0, sizeof(tnid));
-    tnid.cbSize = sizeof(NOTIFYICONDATA);
-    tnid.hWnd = hwnd;
-    tnid.uID = 1;
-    tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
-
     StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
+
+    if (g_hNotifyIcon)
+        DestroyIcon(g_hNotifyIcon);
+    g_hNotifyIcon = tnid.hIcon;
 }
 
 static VOID
-DelTrayIcon(HWND hwnd)
+DeleteTrayIcon(HWND hwnd)
 {
-    NOTIFYICONDATA tnid;
-
-    memset(&tnid, 0, sizeof(tnid));
-    tnid.cbSize = sizeof(NOTIFYICONDATA);
-    tnid.hWnd = hwnd;
-    tnid.uID = 1;
-
+    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1 };
     Shell_NotifyIcon(NIM_DELETE, &tnid);
+
+    if (g_hNotifyIcon)
+    {
+        DestroyIcon(g_hNotifyIcon);
+        g_hNotifyIcon = NULL;
+    }
 }
 
 static VOID
 UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 {
-    NOTIFYICONDATA tnid;
-
-    memset(&tnid, 0, sizeof(tnid));
-    tnid.cbSize = sizeof(NOTIFYICONDATA);
-    tnid.hWnd = hwnd;
-    tnid.uID = 1;
-    tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
-
     StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
+
+    if (g_hNotifyIcon)
+        DestroyIcon(g_hNotifyIcon);
+    g_hNotifyIcon = tnid.hIcon;
 }
 
 static BOOL
@@ -560,7 +556,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             DoUnregisterAltShiftHotKeys(hwnd);
             DeleteHooks();
             DestroyMenu(s_hMenu);
-            DelTrayIcon(hwnd);
+            DeleteTrayIcon(hwnd);
             PostQuitMessage(0);
             break;
         }
