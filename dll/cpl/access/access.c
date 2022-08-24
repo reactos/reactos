@@ -189,14 +189,11 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     PGLOBAL_DATA pGlobalData;
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;
-    TCHAR Caption[1024];
     INT nPage = 0;
     INT ret;
 
     if (uMsg == CPL_STARTWPARMSW && lParam != 0)
         nPage = _wtoi((PWSTR)lParam);
-
-    LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
     if (pGlobalData == NULL)
@@ -214,7 +211,7 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLACCESS);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLSYSTEMNAME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
