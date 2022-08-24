@@ -168,7 +168,6 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
-    TCHAR Caption[BUFFERSIZE];
     PROPSHEETPAGE psp[3];
     PROPSHEETHEADER psh;
     PGLOBALDATA pGlobalData;
@@ -190,15 +189,13 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     pGlobalData->SystemLCID = GetSystemDefaultLCID();
     pGlobalData->bIsUserAdmin = IsUserAdmin();
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.ppsp = psp;
