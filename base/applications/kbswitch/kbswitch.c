@@ -10,6 +10,8 @@
 #include "kbswitch.h"
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
+#define CX_ICON 16
+#define CY_ICON 16
 
 PKBSWITCHSETHOOKS KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
@@ -30,70 +32,65 @@ ULONG     ulCurrentLayoutNum = 1;
 static HICON
 CreateTrayIcon(LPTSTR szLCID)
 {
-    LANGID lId;
+    LANGID LangID;
     TCHAR szBuf[3];
-    HDC hdc, hdcsrc;
-    HBITMAP hBitmap, hBmpNew, hBmpOld;
+    HDC hdc;
+    HBITMAP hbmColor, hbmMono, hBmpOld;
     RECT rect;
     HFONT hFontOld, hFont = NULL;
     ICONINFO IconInfo;
     HICON hIcon = NULL;
+    LOGFONT lf;
 
-    lId = (LANGID)_tcstoul(szLCID, NULL, 16);
-    if (GetLocaleInfo(lId,
-                      LOCALE_SISO639LANGNAME,
-                      szBuf,
-                      ARRAYSIZE(szBuf)) == 0)
+    /* Getting "EN", "FR", etc. from English, French, ... */
+    LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
+    if (!GetLocaleInfo(LangID, LOCALE_SISO639LANGNAME, szBuf, ARRAYSIZE(szBuf)))
     {
         StringCchCopy(szBuf, ARRAYSIZE(szBuf), _T("??"));
     }
+    CharUpper(szBuf);
 
-    hdcsrc = GetDC(NULL);
-    hdc = CreateCompatibleDC(hdcsrc);
-    hBitmap = CreateCompatibleBitmap(hdcsrc, 16, 16);
-    ReleaseDC(NULL, hdcsrc);
+    /* Create hdc, hbmColor and hbmMono */
+    hdc = CreateCompatibleDC(NULL);
+    hbmColor = CreateCompatibleBitmap(hdc, CX_ICON, CY_ICON);
+    hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
 
-    if (hdc && hBitmap)
-    {
-        hBmpNew = CreateBitmap(16, 16, 1, 1, NULL);
-        if (hBmpNew)
-        {
-            hBmpOld = SelectObject(hdc, hBitmap);
-            rect.right = 16;
-            rect.left = 0;
-            rect.bottom = 16;
-            rect.top = 0;
+    /* Create a font */
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfHeight = -11;
+    lf.lfCharSet = ANSI_CHARSET;
+    lstrcpyn(lf.lfFaceName, _T("Tahoma"), ARRAYSIZE(lf.lfFaceName));
+    hFont = CreateFontIndirect(&lf);
 
-            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+    SetRect(&rect, 0, 0, CX_ICON, CY_ICON);
 
-            ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
+    /* Draw hbmColor */
+    hBmpOld = SelectObject(hdc, hbmColor);
+    SetDCBrushColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+    FillRect(hdc, &rect, (HBRUSH)GetStockObject(DC_BRUSH));
+    hFontOld = SelectObject(hdc, hFont);
+    SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+    SetBkMode(hdc, TRANSPARENT);
+    DrawText(hdc, szBuf, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    SelectObject(hdc, hFontOld);
+    SelectObject(hdc, hBmpOld);
 
-            hFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                               DEFAULT_QUALITY, FF_DONTCARE, _T("Tahoma"));
+    /* Fill hbmMono by black */
+    hBmpOld = SelectObject(hdc, hbmMono);
+    PatBlt(hdc, 0, 0, CX_ICON, CY_ICON, BLACKNESS);
+    SelectObject(hdc, hBmpOld);
 
-            hFontOld = SelectObject(hdc, hFont);
-            DrawText(hdc, _tcsupr(szBuf), 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
-            SelectObject(hdc, hBmpNew);
-            PatBlt(hdc, 0, 0, 16, 16, BLACKNESS);
-            SelectObject(hdc, hBmpOld);
-            SelectObject(hdc, hFontOld);
+    /* Create an icon from hbmColor and hbmMono */
+    IconInfo.hbmColor = hbmColor;
+    IconInfo.hbmMask = hbmMono;
+    IconInfo.fIcon = TRUE;
+    hIcon = CreateIconIndirect(&IconInfo);
 
-            IconInfo.hbmColor = hBitmap;
-            IconInfo.hbmMask = hBmpNew;
-            IconInfo.fIcon = TRUE;
-
-            hIcon = CreateIconIndirect(&IconInfo);
-
-            DeleteObject(hBmpNew);
-            DeleteObject(hBmpOld);
-            DeleteObject(hFont);
-        }
-    }
-
+    /* Clean up */
+    DeleteObject(hbmColor);
+    DeleteObject(hbmMono);
+    DeleteObject(hFont);
     DeleteDC(hdc);
-    DeleteObject(hBitmap);
 
     return hIcon;
 }
