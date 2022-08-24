@@ -92,7 +92,6 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     HPROPSHEETPAGE hpsp[MAX_POWER_PAGES];
     PROPSHEETHEADER psh;
     HPSXA hpsxa = NULL;
-    TCHAR Caption[1024];
     SYSTEM_POWER_CAPABILITIES spc;
     LONG ret;
 
@@ -100,16 +99,13 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    memset(Caption, 0x0, sizeof(Caption));
-    LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
-
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON_1);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME_1);
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
