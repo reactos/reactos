@@ -278,7 +278,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLCID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
     LANGID LangID;
 
-    if (uLayoutNum == (ULONG)-1 || uLayoutNum > 0xFF) /* Invalid */
+    if (uLayoutNum == 0 || uLayoutNum > 0xFF) /* Invalid */
         return;
 
     _ultot(uLayoutNum, szLayoutNum, 10);
