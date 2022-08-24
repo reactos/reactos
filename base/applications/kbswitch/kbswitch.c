@@ -437,6 +437,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     static HMENU s_hMenu;
     static HMENU s_hRightPopupMenu;
     static UINT s_uTaskbarRestart;
+    POINT pt;
+    HMENU hLeftPopupMenu;
 
     switch (Message)
     {
@@ -452,7 +454,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
             DoRegisterAltShiftHotKeys(hwnd);
-            return 0;
+            break;
         }
 
         case WM_LANG_CHANGED:
@@ -473,7 +475,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             ULONG uNextNum = GetNextLayout();
             if (ulCurrentLayoutNum != uNextNum)
                 ActivateLayout(hwnd, uNextNum);
-            return 0;
+            break;
         }
 
         case WM_WINDOW_ACTIVATE:
@@ -482,19 +484,17 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_NOTIFYICONMSG:
+        {
             switch (lParam)
             {
                 case WM_RBUTTONUP:
                 case WM_LBUTTONUP:
                 {
-                    POINT pt;
-
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 
                     if (lParam == WM_LBUTTONUP)
                     {
-                        HMENU hLeftPopupMenu;
                         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
                         hLeftPopupMenu = BuildLeftPopupMenu();
                         TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
@@ -506,38 +506,39 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
 
                     PostMessage(hwnd, WM_NULL, 0, 0);
-
-                    return 0;
+                    break;
                 }
             }
             break;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case ID_EXIT:
+                {
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
-                    return 0;
+                    break;
+                }
 
                 case ID_PREFERENCES:
                 {
-                    SHELLEXECUTEINFO shInputDll = {0};
-
-                    shInputDll.cbSize = sizeof(shInputDll);
+                    SHELLEXECUTEINFO shInputDll = { sizeof(shInputDll) };
                     shInputDll.hwnd = hwnd;
                     shInputDll.lpVerb = _T("open");
                     shInputDll.lpFile = _T("rundll32.exe");
                     shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL input.dll");
-
                     if (!ShellExecuteEx(&shInputDll))
                         MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
 
-                    return 0;
+                    break;
                 }
 
                 default:
+                {
                     ActivateLayout(hwnd, LOWORD(wParam));
-                    return 0;
+                    break;
+                }
             }
             break;
 
@@ -561,23 +562,26 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             DestroyMenu(s_hMenu);
             DelTrayIcon(hwnd);
             PostQuitMessage(0);
-
-            return 0;
+            break;
         }
 
         default:
-            if(Message == s_uTaskbarRestart)
+        {
+            if (Message == s_uTaskbarRestart)
+            {
                 AddTrayIcon(hwnd);
-            break;
+                break;
+            }
+            else if (Message == ShellHookMessage && wParam == HSHELL_LANGUAGE)
+            {
+                PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
+                break;
+            }
+            return DefWindowProc(hwnd, Message, wParam, lParam);
+        }
     }
 
-    if (Message == ShellHookMessage && wParam == HSHELL_LANGUAGE)
-    {
-        PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
-        return 0;
-    }
-
-    return DefWindowProc(hwnd, Message, wParam, lParam);
+    return 0;
 }
 
 INT WINAPI
