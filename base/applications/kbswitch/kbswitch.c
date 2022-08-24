@@ -13,22 +13,136 @@
 #define CX_ICON 16
 #define CY_ICON 16
 
-PKBSWITCHSETHOOKS KbSwitchSetHooks    = NULL;
+PKBSWITCHSETHOOKS    KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
 UINT ShellHookMessage = 0;
 DWORD dwAltShiftHotKeyId = 0, dwShiftAltHotKeyId = 0;
 
-static BOOL
-GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength);
-
-static BOOL
-GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength);
-
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
-HMODULE   hDllLib;
+HMODULE   g_hHookDLL = NULL;
 ULONG     ulCurrentLayoutNum = 1;
-HICON     g_hNotifyIcon = NULL;
+HICON     g_hTrayIcon = NULL;
+
+static BOOL
+GetLayoutID(LPCTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength)
+{
+    DWORD dwBufLen, dwRes;
+    HKEY hKey;
+    TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
+
+    /* Get the Layout ID */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE,
+                     &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+        dwRes = RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
+        if (dwRes != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    /* Look for a substitute of this layout */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0,
+                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+        if (RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
+        {
+            /* No substitute found, then use the old LCID */
+            StringCchCopy(szLCID, LCIDLength, szTempLCID);
+        }
+
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        /* Substitutes key couldn't be opened, so use the old LCID */
+        StringCchCopy(szLCID, LCIDLength, szTempLCID);
+    }
+
+    return TRUE;
+}
+
+static BOOL
+GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
+{
+    HKEY hKey;
+    DWORD dwBufLen;
+    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
+    TCHAR szLCID[CCH_LAYOUT_ID + 1];
+    HANDLE hLib;
+    UINT i, j, k;
+
+    if (!GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID)))
+        return FALSE;
+
+    StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
+                    _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    /* Use "Layout Display Name" value as an entry name if possible */
+    dwBufLen = sizeof(szDispName);
+    if (RegQueryValueEx(hKey, _T("Layout Display Name"), NULL, NULL,
+                        (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+    {
+        /* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it was implemented */
+        if (szDispName[0] == '@')
+        {
+            size_t len = _tcslen(szDispName);
+
+            for (i = 0; i < len; i++)
+            {
+                if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
+                {
+                    for (j = i + 2, k = 0; j < _tcslen(szDispName)+1; j++, k++)
+                    {
+                        szIndex[k] = szDispName[j];
+                    }
+                    szDispName[i - 1] = '\0';
+                    break;
+                }
+                else szDispName[i] = szDispName[i + 1];
+            }
+
+            if (ExpandEnvironmentStrings(szDispName, szPath, ARRAYSIZE(szPath)))
+            {
+                hLib = LoadLibrary(szPath);
+                if (hLib)
+                {
+                    if (LoadString(hLib, _ttoi(szIndex), szPath, ARRAYSIZE(szPath)))
+                    {
+                        StringCchCopy(szName, NameLength, szPath);
+                        RegCloseKey(hKey);
+                        FreeLibrary(hLib);
+                        return TRUE;
+                    }
+                    FreeLibrary(hLib);
+                }
+            }
+        }
+    }
+
+    /* Otherwise, use "Layout Text" value as an entry name */
+    dwBufLen = NameLength * sizeof(TCHAR);
+    if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL,
+                        (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    RegCloseKey(hKey);
+    return FALSE;
+}
 
 static HICON
 CreateTrayIcon(LPTSTR szLCID)
@@ -38,9 +152,9 @@ CreateTrayIcon(LPTSTR szLCID)
     HDC hdc;
     HBITMAP hbmColor, hbmMono, hBmpOld;
     RECT rect;
-    HFONT hFontOld, hFont = NULL;
+    HFONT hFontOld, hFont;
     ICONINFO IconInfo;
-    HICON hIcon = NULL;
+    HICON hIcon;
     LOGFONT lf;
 
     /* Getting "EN", "FR", etc. from English, French, ... */
@@ -100,8 +214,7 @@ static VOID
 AddTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
-    TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    TCHAR szName[MAX_PATH];
+    TCHAR szLCID[CCH_LAYOUT_ID + 1], szName[MAX_PATH];
 
     GetLayoutID(_T("1"), szLCID, ARRAYSIZE(szLCID));
     GetLayoutName(_T("1"), szName, ARRAYSIZE(szName));
@@ -112,9 +225,9 @@ AddTrayIcon(HWND hwnd)
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
 
-    if (g_hNotifyIcon)
-        DestroyIcon(g_hNotifyIcon);
-    g_hNotifyIcon = tnid.hIcon;
+    if (g_hTrayIcon)
+        DestroyIcon(g_hTrayIcon);
+    g_hTrayIcon = tnid.hIcon;
 }
 
 static VOID
@@ -123,10 +236,10 @@ DeleteTrayIcon(HWND hwnd)
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1 };
     Shell_NotifyIcon(NIM_DELETE, &tnid);
 
-    if (g_hNotifyIcon)
+    if (g_hTrayIcon)
     {
-        DestroyIcon(g_hNotifyIcon);
-        g_hNotifyIcon = NULL;
+        DestroyIcon(g_hTrayIcon);
+        g_hTrayIcon = NULL;
     }
 }
 
@@ -140,138 +253,18 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 
-    if (g_hNotifyIcon)
-        DestroyIcon(g_hNotifyIcon);
-    g_hNotifyIcon = tnid.hIcon;
+    if (g_hTrayIcon)
+        DestroyIcon(g_hTrayIcon);
+    g_hTrayIcon = tnid.hIcon;
 }
 
-static BOOL
-GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength)
-{
-    DWORD dwBufLen;
-    DWORD dwRes;
-    HKEY hKey;
-    TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
-
-    // Get the Layout ID
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        dwBufLen = sizeof(szTempLCID);
-        dwRes = RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
-
-        if (dwRes != ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        RegCloseKey(hKey);
-    }
-
-    // Look for a substitute of this layout
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        dwBufLen = sizeof(szTempLCID);
-
-        if (RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
-        {
-            // No substitute found, then use the old LCID
-            StringCchCopy(szLCID, LCIDLength, szTempLCID);
-        }
-
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        // Substitutes key couldn't be opened, so use the old LCID
-        StringCchCopy(szLCID, LCIDLength, szTempLCID);
-    }
-
-    return TRUE;
-}
-
-VOID
+static VOID
 GetLayoutIDByHkl(HKL hKl, LPTSTR szLayoutID, SIZE_T LayoutIDLength)
 {
-    /*
-        FIXME!!! This way of getting layout ID incorrect!
-                 This will not work correctly for 0001040a, 00010410, etc
-    */
-    StringCchPrintf(szLayoutID, LayoutIDLength, _T("%08x"), LOWORD(hKl));
+    StringCchPrintf(szLayoutID, LayoutIDLength, _T("%08lx"), (DWORD)(DWORD_PTR)(hKl));
 }
 
-static BOOL
-GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
-{
-    HKEY hKey;
-    DWORD dwBufLen;
-    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
-    TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    HANDLE hLib;
-    UINT i, j, k;
-
-    if (!GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID)))
-        return FALSE;
-
-    StringCchPrintf(szBuf, ARRAYSIZE(szBuf), _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        dwBufLen = sizeof(szDispName);
-
-        if (RegQueryValueEx(hKey, _T("Layout Display Name"), NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
-        {
-            if (szDispName[0] == '@')
-            {
-                size_t len = _tcslen(szDispName);
-
-                for (i = 0; i < len; i++)
-                {
-                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
-                    {
-                        for (j = i + 2, k = 0; j < _tcslen(szDispName)+1; j++, k++)
-                        {
-                            szIndex[k] = szDispName[j];
-                        }
-                        szDispName[i - 1] = '\0';
-                        break;
-                    }
-                    else szDispName[i] = szDispName[i + 1];
-                }
-
-                if (ExpandEnvironmentStrings(szDispName, szPath, ARRAYSIZE(szPath)))
-                {
-                    hLib = LoadLibrary(szPath);
-                    if (hLib)
-                    {
-                        if (LoadString(hLib, _ttoi(szIndex), szPath, ARRAYSIZE(szPath)) != 0)
-                        {
-                            StringCchCopy(szName, NameLength, szPath);
-                            RegCloseKey(hKey);
-                            FreeLibrary(hLib);
-                            return TRUE;
-                        }
-                        FreeLibrary(hLib);
-                    }
-                }
-            }
-        }
-
-        dwBufLen = NameLength * sizeof(TCHAR);
-
-        if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return TRUE;
-        }
-
-        RegCloseKey(hKey);
-    }
-
-    return FALSE;
-}
-
-BOOL CALLBACK
+static BOOL CALLBACK
 EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
@@ -282,18 +275,22 @@ static VOID
 ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 {
     HKL hKl;
-    TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
-    TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    TCHAR szLangName[MAX_PATH];
+    TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLCID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
+    LANGID LangID;
+
+    if (uLayoutNum == (ULONG)-1 || uLayoutNum > 0xFF) /* Invalid */
+        return;
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID));
+    LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
 
-    // Switch to the new keyboard layout
-    GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, ARRAYSIZE(szLangName));
+    /* Switch to the new keyboard layout */
+    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
 
+    /* Post WM_INPUTLANGCHANGEREQUEST to every top-level window */
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);
 
     ulCurrentLayoutNum = uLayoutNum;
@@ -302,22 +299,23 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 static HMENU
 BuildLeftPopupMenu(VOID)
 {
-    HMENU hMenu;
+    HMENU hMenu = CreatePopupMenu();
     HKEY hKey;
     DWORD dwIndex, dwSize;
-    TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
-    TCHAR szName[MAX_PATH];
+    TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szName[MAX_PATH];
 
-    hMenu = CreatePopupMenu();
-
-    // Add the keyboard layouts to the popup menu
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    /* Add the keyboard layouts to the popup menu */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
+                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         for (dwIndex = 0; ; dwIndex++)
         {
             dwSize = sizeof(szLayoutNum);
-            if (RegEnumValue(hKey, dwIndex, szLayoutNum, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+            if (RegEnumValue(hKey, dwIndex, szLayoutNum, &dwSize, NULL, NULL,
+                             NULL, NULL) != ERROR_SUCCESS)
+            {
                 break;
+            }
 
             if (!GetLayoutName(szLayoutNum, szName, ARRAYSIZE(szName)))
                 break;
@@ -336,14 +334,14 @@ BuildLeftPopupMenu(VOID)
 BOOL
 SetHooks(VOID)
 {
-    hDllLib = LoadLibrary(_T("kbsdll.dll"));
-    if (!hDllLib)
+    g_hHookDLL = LoadLibrary(_T("kbsdll.dll"));
+    if (!g_hHookDLL)
     {
         return FALSE;
     }
 
-    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(hDllLib, "KbSwitchSetHooks");
-    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(hDllLib, "KbSwitchDeleteHooks");
+    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchSetHooks");
+    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchDeleteHooks");
 
     if (KbSwitchSetHooks == NULL || KbSwitchDeleteHooks == NULL)
     {
@@ -357,7 +355,7 @@ VOID
 DeleteHooks(VOID)
 {
     if (KbSwitchDeleteHooks) KbSwitchDeleteHooks();
-    if (hDllLib) FreeLibrary(hDllLib);
+    if (g_hHookDLL) FreeLibrary(g_hHookDLL);
 }
 
 ULONG
@@ -378,14 +376,10 @@ GetNextLayout(VOID)
     {
         return (Ret + 1);
     }
-    else
-    {
-        _ultot(Ret - 1, szLayoutNum, 10);
-        if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
-            return (Ret - 1);
-        else
-            return -1;
-    }
+
+    _ultot(Ret - 1, szLayoutNum, 10);
+    if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
+        return (Ret - 1);
 
     return -1;
 }
@@ -393,10 +387,12 @@ GetNextLayout(VOID)
 LRESULT
 UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 {
-    static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
+    TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
+    LANGID LangID;
 
     GetLayoutIDByHkl(hKl, szLCID, ARRAYSIZE(szLCID));
-    GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, ARRAYSIZE(szLangName));
+    LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
+    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
 
     return 0;
@@ -405,7 +401,9 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 LRESULT
 UpdateLanguageDisplayCurrent(HWND hwnd, WPARAM wParam)
 {
-    return UpdateLanguageDisplay(hwnd, GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)));
+    DWORD dwThreadID = GetWindowThreadProcessId((HWND)wParam, 0);
+    HKL hKL = GetKeyboardLayout(dwThreadID);
+    return UpdateLanguageDisplay(hwnd, hKL);
 }
 
 VOID DoRegisterAltShiftHotKeys(HWND hwnd)
@@ -430,8 +428,7 @@ VOID DoUnregisterAltShiftHotKeys(HWND hwnd)
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    static HMENU s_hMenu;
-    static HMENU s_hRightPopupMenu;
+    static HMENU s_hMenu = NULL, s_hRightPopupMenu = NULL;
     static UINT s_uTaskbarRestart;
     POINT pt;
     HMENU hLeftPopupMenu;
@@ -440,11 +437,10 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
-            SetHooks();
-            AddTrayIcon(hwnd);
+            if (!SetHooks())
+                return -1;
 
-            s_hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP));
-            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
+            AddTrayIcon(hwnd);
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -498,6 +494,11 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
+                        if (!s_hRightPopupMenu)
+                        {
+                            s_hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP));
+                            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
+                        }
                         TrackPopupMenu(s_hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
                     }
 
@@ -583,7 +584,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 INT WINAPI
 _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 {
-    WNDCLASS WndClass = {0};
+    WNDCLASS WndClass;
     MSG msg;
     HANDLE hMutex;
     HWND hwnd;
@@ -610,17 +611,11 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     hInst = hInstance;
     hProcessHeap = GetProcessHeap();
 
-    WndClass.style = 0;
+    ZeroMemory(&WndClass, sizeof(WndClass));
     WndClass.lpfnWndProc   = WndProc;
-    WndClass.cbClsExtra    = 0;
-    WndClass.cbWndExtra    = 0;
     WndClass.hInstance     = hInstance;
-    WndClass.hIcon         = NULL;
-    WndClass.hCursor       = NULL;
-    WndClass.hbrBackground = NULL;
-    WndClass.lpszMenuName  = NULL;
+    WndClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
     WndClass.lpszClassName = szKbSwitcherName;
-
     if (!RegisterClass(&WndClass))
     {
         CloseHandle(hMutex);
@@ -631,13 +626,12 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
     RegisterShellHookWindow(hwnd);
 
-    while(GetMessage(&msg,NULL,0,0))
+    while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
     CloseHandle(hMutex);
-
     return 0;
 }
