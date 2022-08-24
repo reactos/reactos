@@ -338,7 +338,7 @@ GetMaxLayoutNum(VOID)
     ULONG dwIndex, dwSize, uLayoutNum, uMaxLayoutNum = 0;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLayoutID[CCH_LAYOUT_ID + 1];
 
-    /* Add the keyboard layouts to the popup menu */
+    /* Get the maximum layout number in the Preload key */
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
                      KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
