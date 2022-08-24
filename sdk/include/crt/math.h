@@ -295,6 +295,9 @@ _Check_return_ __CRT_INLINE long lrintl(_In_ long double x) { return (long)((x <
 _Check_return_ __CRT_INLINE long long llrint(_In_ double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintf(_In_ float x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
+#ifdef _MSC_VER
+#define log2 _log2 // nasty hack, see CORE-18255
+#endif
 _Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
 #endif /* !_CRTBLD */
 
