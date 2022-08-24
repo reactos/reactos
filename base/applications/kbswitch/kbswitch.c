@@ -437,7 +437,8 @@ VOID DoUnregisterAltShiftHotKeys(HWND hwnd)
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    static HMENU hRightPopupMenu;
+    static HMENU s_hMenu;
+    static HMENU s_hRightPopupMenu;
     static UINT s_uTaskbarRestart;
 
     switch (Message)
@@ -446,7 +447,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             SetHooks();
             AddTrayIcon(hwnd);
-            hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
+
+            s_hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP));
+            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -502,7 +505,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
-                        TrackPopupMenu(hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                        TrackPopupMenu(s_hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
                     }
 
                     PostMessage(hwnd, WM_NULL, 0, 0);
@@ -558,7 +561,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             DoUnregisterAltShiftHotKeys(hwnd);
             DeleteHooks();
-            DestroyMenu(hRightPopupMenu);
+            DestroyMenu(s_hMenu);
             DelTrayIcon(hwnd);
             PostQuitMessage(0);
 
