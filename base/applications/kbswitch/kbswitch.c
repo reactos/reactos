@@ -59,7 +59,7 @@ CreateTrayIcon(LPTSTR szLCID)
     ZeroMemory(&lf, sizeof(lf));
     lf.lfHeight = -11;
     lf.lfCharSet = ANSI_CHARSET;
-    lstrcpyn(lf.lfFaceName, _T("Tahoma"), ARRAYSIZE(lf.lfFaceName));
+    StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), _T("Tahoma"));
     hFont = CreateFontIndirect(&lf);
 
     SetRect(&rect, 0, 0, CX_ICON, CY_ICON);
