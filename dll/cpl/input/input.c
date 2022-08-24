@@ -58,9 +58,6 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     PROPSHEETPAGEW page[2];
     PROPSHEETHEADERW header;
-    WCHAR szCaption[MAX_STR_LEN];
-
-    LoadStringW(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
 
     ZeroMemory(&header, sizeof(header));
 
@@ -69,7 +66,7 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     header.hwndParent  = hwnd;
     header.hInstance   = hApplet;
     header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
-    header.pszCaption  = szCaption;
+    header.pszCaption  = MAKEINTRESOURCEW(IDS_CPLSYSTEMNAME);
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
     header.ppsp        = page;
