@@ -959,6 +959,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
           NtUserSetWindowFNID(hwnd, FNID_IME);
           pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
           pimeui->spwnd = pWnd;
+          SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
        }
        else
        {
@@ -967,7 +968,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
              ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
              return 0;
           }
-          pimeui = ((PIMEWND)pWnd)->pimeui;
+          pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
           if (pimeui == NULL)
           {
              ERR("Window is not set to IME!\n");
