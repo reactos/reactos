@@ -169,13 +169,31 @@ CreateTrayIcon(LPTSTR szLCID)
     hdc = CreateCompatibleDC(NULL);
     hbmColor = CreateCompatibleBitmap(hdc, CX_ICON, CY_ICON);
     hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
+    if (!hdc || !hbmColor || !hbmMono)
+    {
+        if (hdc)
+            DeleteDC(hdc);
+        if (hbmColor)
+            DeleteObject(hbmColor);
+        if (hbmMono)
+            DeleteObject(hbmMono);
+        return NULL;
+    }
 
     /* Create a font */
     ZeroMemory(&lf, sizeof(lf));
     lf.lfHeight = -11;
     lf.lfCharSet = ANSI_CHARSET;
+    lf.lfWeight = FW_NORMAL;
     StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), _T("Tahoma"));
     hFont = CreateFontIndirect(&lf);
+    if (!hFont)
+    {
+        DeleteDC(hdc);
+        DeleteObject(hbmColor);
+        DeleteObject(hbmMono);
+        return NULL;
+    }
 
     SetRect(&rect, 0, 0, CX_ICON, CY_ICON);
 
