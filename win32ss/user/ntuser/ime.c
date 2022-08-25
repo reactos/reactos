@@ -991,18 +991,12 @@ UserGetImeInfoEx(
     {
         do
         {
-            if (_wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
+            if (pkl->piiex &&
+                _wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
                           RTL_NUMBER_OF(pkl->piiex->wszImeFile)) == 0)
             {
-                if (pkl->piiex)
-                {
-                    *pInfoEx = *pkl->piiex;
-                    return TRUE;
-                }
-                else
-                {
-                    ERR("!pkl->piiex at %p\n", pkl->hkl);
-                }
+                *pInfoEx = *pkl->piiex;
+                return TRUE;
             }
 
             pkl = pkl->pklNext;
@@ -1010,7 +1004,7 @@ UserGetImeInfoEx(
     }
     else
     {
-        /* Do nothing */
+        ERR("SearchType: %d\n", SearchType);
     }
 
     return FALSE;
