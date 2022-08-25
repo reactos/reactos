@@ -954,11 +954,15 @@ Quit:
 }
 
 // Win: GetImeInfoEx
-BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
+BOOL FASTCALL
+UserGetImeInfoEx(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PIMEINFOEX pInfoEx,
+    _In_ IMEINFOEXCLASS SearchType)
 {
     PKL pkl, pklHead;
 
-    if (!gspklBaseLayout)
+    if (!pWinSta || !gspklBaseLayout)
         return FALSE;
 
     pkl = pklHead = gspklBaseLayout;
@@ -971,7 +975,10 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
             if (pInfoEx->hkl == pkl->hkl)
             {
                 if (!pkl->piiex)
+                {
+                    ERR("!pkl->piiex at %p\n", pkl->hkl);
                     break;
+                }
 
                 *pInfoEx = *pkl->piiex;
                 return TRUE;
@@ -984,12 +991,18 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
     {
         do
         {
-            if (pkl->piiex &&
-                _wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
+            if (_wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
                           RTL_NUMBER_OF(pkl->piiex->wszImeFile)) == 0)
             {
-                *pInfoEx = *pkl->piiex;
-                return TRUE;
+                if (pkl->piiex)
+                {
+                    *pInfoEx = *pkl->piiex;
+                    return TRUE;
+                }
+                else
+                {
+                    ERR("!pkl->piiex at %p\n", pkl->hkl);
+                }
             }
 
             pkl = pkl->pklNext;
@@ -1011,6 +1024,7 @@ NtUserGetImeInfoEx(
 {
     IMEINFOEX ImeInfoEx;
     BOOL ret = FALSE;
+    PWINSTATION_OBJECT pWinSta;
 
     UserEnterShared();
 
@@ -1031,7 +1045,8 @@ NtUserGetImeInfoEx(
     }
     _SEH2_END;
 
-    ret = UserGetImeInfoEx(NULL, &ImeInfoEx, SearchType);
+    pWinSta = IntGetProcessWindowStation(NULL);
+    ret = UserGetImeInfoEx(pWinSta, &ImeInfoEx, SearchType);
     if (!ret)
         goto Quit;
 
@@ -1081,9 +1096,15 @@ Quit:
 }
 
 // Win: SetImeInfoEx
-BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
+BOOL FASTCALL
+UserSetImeInfoEx(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PIMEINFOEX pImeInfoEx)
 {
     PKL pklHead, pkl;
+
+    if (!pWinSta || !gspklBaseLayout)
+        return FALSE;
 
     pkl = pklHead = gspklBaseLayout;
 
@@ -1096,7 +1117,10 @@ BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
         }
 
         if (!pkl->piiex)
+        {
+            ERR("!pkl->piiex at %p\n", pkl->hkl);
             return FALSE;
+        }
 
         if (!pkl->piiex->fLoadFlag)
             *pkl->piiex = *pImeInfoEx;
@@ -1113,6 +1137,7 @@ NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
 {
     BOOL ret = FALSE;
     IMEINFOEX ImeInfoEx;
+    PWINSTATION_OBJECT pWinSta;
 
     UserEnterExclusive();
 
@@ -1133,7 +1158,8 @@ NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
     }
     _SEH2_END;
 
-    ret = UserSetImeInfoEx(NULL, &ImeInfoEx);
+    pWinSta = IntGetProcessWindowStation(NULL);
+    ret = UserSetImeInfoEx(pWinSta, &ImeInfoEx);
 
 Quit:
     UserLeave();
