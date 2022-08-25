@@ -245,7 +245,6 @@ public:
     }
 
     BEGIN_MSG_MAP(CDownloaderProgress)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnPaint)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
     END_MSG_MAP()
