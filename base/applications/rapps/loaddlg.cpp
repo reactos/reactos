@@ -212,7 +212,7 @@ public:
                        &myRect,
                        DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
                        GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DSHADOW),
+                       GetSysColor(COLOR_3DDKSHADOW),
                        1, 1);
 
         /* transfer the off-screen DC to the screen */
