@@ -224,10 +224,22 @@ public:
 
     LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        if (lParam)
+        PCWSTR pszText = (PCWSTR)lParam;
+        if (pszText)
         {
-            m_szProgressText = (PCWSTR) lParam;
-            InvalidateRect(NULL, TRUE);
+            if (m_szProgressText != pszText)
+            {
+                m_szProgressText = pszText;
+                InvalidateRect(NULL, TRUE);
+            }
+        }
+        else
+        {
+            if (!m_szProgressText.IsEmpty())
+            {
+                m_szProgressText.Empty();
+                InvalidateRect(NULL, TRUE);
+            }
         }
         return 0;
     }
