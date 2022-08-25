@@ -19,43 +19,47 @@
 
 typedef struct _WL_PLAYSOUND_DATA
 {
-    WL_SYSTEM_SOUND Sound;
     PWLSESSION Session;
+    LPWSTR pszSound;
 } WL_PLAYSOUND_DATA, *PWL_PLAYSOUND_DATA;
 
 /* FUNCTIONS ****************************************************************/
 
+static inline
+BOOL
+SpeakerBeep(VOID)
+{
+    return Beep(440, 125);
+}
+
 static
 BOOL
 PlaySoundRoutine(
-    IN LPCWSTR lpFileName,
-    IN BOOL bLogon,
-    IN DWORD dwFlags)
+    _In_ LPCWSTR lpFileName,
+    _In_ BOOL bLogon,
+    _In_ DWORD dwFlags)
 {
     typedef BOOL (WINAPI *PFPLAYSOUNDW)(LPCWSTR, HMODULE, DWORD);
     typedef UINT (WINAPI *PFWAVEOUTGETNUMDEVS)(VOID);
 
+    HMODULE hLibrary;
     PFPLAYSOUNDW _PlaySoundW;
     PFWAVEOUTGETNUMDEVS _waveOutGetNumDevs;
     UINT uNumDevs;
-    HMODULE hLibrary;
     BOOL bRet = FALSE;
 
     hLibrary = LoadLibraryW(L"winmm.dll");
-
     if (hLibrary)
     {
         _waveOutGetNumDevs = (PFWAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
-        
         if (_waveOutGetNumDevs)
         {
             uNumDevs = _waveOutGetNumDevs();
-
             if (uNumDevs == 0)
             {
                 if (!bLogon)
                 {
-                    Beep(440, 125);
+                    SpeakerBeep();
                 }
 
                 FreeLibrary(hLibrary);
@@ -65,7 +69,6 @@ PlaySoundRoutine(
         }
 
         _PlaySoundW = (PFPLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
-
         if (_PlaySoundW)
         {
             bRet = _PlaySoundW(lpFileName, NULL, dwFlags);
@@ -81,19 +84,21 @@ static
 DWORD
 WINAPI
 PlaySystemSoundThread(
-    IN LPVOID lpParameter)
+    _In_ LPVOID lpParameter)
 {
     PWL_PLAYSOUND_DATA PSData;
     BOOL bLogon;
-    LPWSTR pszSndKey;
-    HKEY hUserKey, hSndKey;
-    DWORD dwType, dwSize;
-    LONG lError;
-    LPWSTR pszValue = NULL;
-    LPWSTR pszSndPath = NULL;
 
     PSData = (PWL_PLAYSOUND_DATA)lpParameter;
-    bLogon = (PSData->Sound == SYSTEMSND_LOGON);
+
+    /* If sound name is NULL, play beep sound */
+    if (!PSData->pszSound)
+    {
+        SpeakerBeep();
+        goto Cleanup;
+    }
+
+    bLogon = (_wcsicmp(PSData->pszSound, L"WindowsLogon") == 0);
 
     if (bLogon)
     {
@@ -157,124 +162,15 @@ PlaySystemSoundThread(
         goto Cleanup;
     }
 
-    /* Open user's HKCU */
-    lError = RegOpenCurrentUser(KEY_READ, &hUserKey);
+    /* Play sound */
+    PlaySoundRoutine(PSData->pszSound, bLogon, SND_ALIAS | SND_NODEFAULT);
 
+    /* End impersonation */
     RevertToSelf();
 
-    if (lError != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
-
-    switch (PSData->Sound)
-    {
-        case SYSTEMSND_LOGON:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current";
-            break;
-
-        case SYSTEMSND_LOGOFF:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff\\.Current";
-            break;
-
-        case SYSTEMSND_ASTERISK:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemAsterisk\\.Current";
-            break;
-
-        case SYSTEMSND_EXCLAMATION:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemExclamation\\.Current";
-            break;
-
-        case SYSTEMSND_CRITICAL_STOP:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemHand\\.Current";
-            break;
-
-        case SYSTEMSND_QUESTION:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemQuestion\\.Current";
-            break;
-
-        default:
-            pszSndKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault\\.Current";
-    }
-
-    /* Open sound key */
-    lError = RegOpenKeyExW(hUserKey, pszSndKey, 0, KEY_READ, &hSndKey);
-
-    RegCloseKey(hUserKey);
-
-    if (lError != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
-
-    /* Get the value size */
-    lError = RegQueryValueExW(hSndKey, NULL, NULL, &dwType, NULL, &dwSize);
-    if (lError != ERROR_SUCCESS)
-    {
-        RegCloseKey(hSndKey);
-        goto Cleanup;
-    }
-
-    /* Allocate a buffer for the value */
-    pszValue = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (!pszValue)
-    {
-        RegCloseKey(hSndKey);
-        goto Cleanup;
-    }
-
-    /* Get the value */
-    lError = RegQueryValueExW(hSndKey, NULL, NULL, &dwType, (LPBYTE)pszValue, &dwSize);
-
-    RegCloseKey(hSndKey);
-
-    if (lError != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
-
-    if (dwType == REG_EXPAND_SZ)
-    {
-        /* Get full path length, including the NULL terminator */
-        dwSize = ExpandEnvironmentStringsW(pszValue, NULL, 0);
-        if (dwSize == 0)
-        {
-            goto Cleanup;
-        }
-
-        /* Allocate a buffer for the path */
-        pszSndPath = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-        if (!pszSndPath)
-        {
-            goto Cleanup;
-        }
-
-        /* Get the path */
-        if (ExpandEnvironmentStringsW(pszValue, pszSndPath, dwSize) == 0)
-        {
-            goto Cleanup;
-        }
-    }
-    else if (dwType == REG_SZ)
-    {
-        /* The type is REG_SZ, no need to expand */
-        pszSndPath = pszValue;
-    }
-    else
-    {
-        /* Invalid type */
-        goto Cleanup;
-    }
-
-    /* Play sound */
-    TRACE("Playing system sound: %ls\n", pszSndPath);
-    PlaySoundRoutine(pszSndPath, bLogon, SND_FILENAME | SND_NODEFAULT);
-
 Cleanup:
-    HeapFree(GetProcessHeap(), 0, pszSndPath);
-    HeapFree(GetProcessHeap(), 0, pszValue);
-
     /* Free play sound data */
+    HeapFree(GetProcessHeap(), 0, PSData->pszSound);
     HeapFree(GetProcessHeap(), 0, PSData);
 
     return 0;
@@ -282,10 +178,11 @@ Cleanup:
 
 BOOL
 PlaySystemSound(
-    IN PWLSESSION Session,
-    IN WL_SYSTEM_SOUND Sound)
+    _In_ PWLSESSION Session,
+    _In_ LPCWSTR lpSound)
 {
     PWL_PLAYSOUND_DATA PSData;
+    SIZE_T NameLength;
     HANDLE hThread;
 
     if (!(Session && Session->UserToken))
@@ -293,19 +190,42 @@ PlaySystemSound(
         return FALSE;
     }
 
+    /* Allocate memory for play sound data structure */
     PSData = HeapAlloc(GetProcessHeap(), 0, sizeof(WL_PLAYSOUND_DATA));
     if (!PSData)
     {
         return FALSE;
     }
 
-    PSData->Sound = Sound;
     PSData->Session = Session;
 
+    if (lpSound)
+    {
+        /* Get sound name length, including the NULL terminator */
+        NameLength = wcslen(lpSound) + 1;
+
+        /* Allocate memory for sound name */
+        PSData->pszSound = HeapAlloc(GetProcessHeap(), 0, NameLength * sizeof(WCHAR));
+        if (!PSData->pszSound)
+        {
+            HeapFree(GetProcessHeap(), 0, PSData);
+            return FALSE;
+        }
+
+        /* Copy sound name */
+        StringCchCopyW(PSData->pszSound, NameLength, lpSound);
+    }
+    else
+    {
+        PSData->pszSound = NULL;
+    }
+
+    /* Create play sound thread */
     hThread = CreateThread(NULL, 0, PlaySystemSoundThread, PSData, 0, NULL);
     if (!hThread)
     {
         /* Error, free play sound data */
+        HeapFree(GetProcessHeap(), 0, PSData->pszSound);
         HeapFree(GetProcessHeap(), 0, PSData);
 
         return FALSE;

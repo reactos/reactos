@@ -386,7 +386,7 @@ HandleLogon(
     Session->hProfileInfo = ProfileInfo.hProfile;
 
     /* Logon has succeeded. Play sound. */
-    PlaySystemSound(Session, SYSTEMSND_LOGON);
+    PlaySystemSound(Session, L"WindowsLogon");
 
     ret = TRUE;
 
@@ -682,7 +682,7 @@ HandleLogoff(
     SwitchDesktop(Session->WinlogonDesktop);
 
     /* Play logoff sound */
-    PlaySystemSound(Session, SYSTEMSND_LOGOFF);
+    PlaySystemSound(Session, L"WindowsLogoff");
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1079,42 +1079,43 @@ UnregisterHotKeys(
 static
 BOOL
 HandleMessageBeep(
-    IN PWLSESSION Session,
-    IN UINT uType)
+    _In_ PWLSESSION Session,
+    _In_ UINT uType)
 {
-    WL_SYSTEM_SOUND Sound;
+    LPWSTR EventName;
 
     switch (uType)
     {
         case 0xFFFFFFFF:
-            return Beep(440, 125);
+            EventName = NULL;
+            break;
 
         case MB_OK:
-            Sound = SYSTEMSND_DEFAULT;
+            EventName = L"SystemDefault";
             break;
 
         case MB_ICONASTERISK:
-            Sound = SYSTEMSND_ASTERISK;
+            EventName = L"SystemAsterisk";
             break;
 
         case MB_ICONEXCLAMATION:
-            Sound = SYSTEMSND_EXCLAMATION;
+            EventName = L"SystemExclamation";
             break;
 
         case MB_ICONHAND:
-            Sound = SYSTEMSND_CRITICAL_STOP;
+            EventName = L"SystemHand";
             break;
 
         case MB_ICONQUESTION:
-            Sound = SYSTEMSND_QUESTION;
+            EventName = L"SystemQuestion";
             break;
 
         default:
             WARN("Unhandled type %d\n", uType);
-            Sound = SYSTEMSND_DEFAULT;
+            EventName = L"SystemDefault";
     }
 
-    return PlaySystemSound(Session, Sound);
+    return PlaySystemSound(Session, EventName);
 }
 
 static
