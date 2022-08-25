@@ -174,7 +174,7 @@ public:
 
         /* and finally display it */
         if (!IsWindow()) return;
-        SendMessage(WM_SETTEXT, 0, (LPARAM) ProgressText.GetString());
+        SetWindowText(ProgressText.GetString());
     }
 
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -524,7 +524,7 @@ VOID CDownloadManager::UpdateProgress(
         }
 
         /* paste it into our dialog and don't do it again in this instance */
-        SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetString());
+        ::SetWindowText(Item, buf.GetString());
         UrlHasBeenCopied = TRUE;
     }
 }
@@ -597,7 +597,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (Item)
         {
             ProgressBar.SetMarquee(FALSE);
-            ProgressBar.SendMessage(WM_SETTEXT, 0, (LPARAM) L"");
+            ProgressBar.SetWindowText(L"");
             ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
         }
 
@@ -919,7 +919,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (!IsWindow(hDlg)) goto end;
             SetWindowTextW(hDlg, szMsgText.GetString());
-            SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
+            ::SetDlgItemText(hDlg, IDC_DOWNLOAD_STATUS, Path.GetString());
 
             // this may take a while, depending on the file size
             if (!VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path.GetString()))
