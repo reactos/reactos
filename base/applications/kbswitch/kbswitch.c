@@ -296,7 +296,8 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLCID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
     LANGID LangID;
 
-    if (uLayoutNum == (ULONG)-1 || uLayoutNum > 0xFF) /* Invalid */
+    /* The layout number starts from one. Zero is invalid */
+    if (uLayoutNum == 0 || uLayoutNum > 0xFF) /* Invalid */
         return;
 
     _ultot(uLayoutNum, szLayoutNum, 10);
@@ -349,6 +350,40 @@ BuildLeftPopupMenu(VOID)
     return hMenu;
 }
 
+static ULONG
+GetMaxLayoutNum(VOID)
+{
+    HKEY hKey;
+    ULONG dwIndex, dwSize, uLayoutNum, uMaxLayoutNum = 0;
+    TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLayoutID[CCH_LAYOUT_ID + 1];
+
+    /* Get the maximum layout number in the Preload key */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
+                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        for (dwIndex = 0; ; dwIndex++)
+        {
+            dwSize = sizeof(szLayoutNum);
+            if (RegEnumValue(hKey, dwIndex, szLayoutNum, &dwSize, NULL, NULL,
+                             NULL, NULL) != ERROR_SUCCESS)
+            {
+                break;
+            }
+
+            if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
+            {
+                uLayoutNum = _ttoi(szLayoutNum);
+                if (uMaxLayoutNum < uLayoutNum)
+                    uMaxLayoutNum = uLayoutNum;
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return uMaxLayoutNum;
+}
+
 BOOL
 SetHooks(VOID)
 {
@@ -380,26 +415,21 @@ ULONG
 GetNextLayout(VOID)
 {
     TCHAR szLayoutNum[3 + 1], szLayoutID[CCH_LAYOUT_ID + 1];
-    ULONG Ret = ulCurrentLayoutNum;
+    ULONG uLayoutNum, uMaxNum = GetMaxLayoutNum();
 
-    _ultot(ulCurrentLayoutNum, szLayoutNum, 10);
-    if (!GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
+    for (uLayoutNum = ulCurrentLayoutNum + 1; ; ++uLayoutNum)
     {
-        return -1;
+        if (uLayoutNum > uMaxNum)
+            uLayoutNum = 1;
+        if (uLayoutNum == ulCurrentLayoutNum)
+            break;
+
+        _ultot(uLayoutNum, szLayoutNum, 10);
+        if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
+            return uLayoutNum;
     }
 
-    _ultot(Ret + 1, szLayoutNum, 10);
-
-    if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
-    {
-        return (Ret + 1);
-    }
-
-    _ultot(Ret - 1, szLayoutNum, 10);
-    if (GetLayoutID(szLayoutNum, szLayoutID, ARRAYSIZE(szLayoutID)))
-        return (Ret - 1);
-
-    return -1;
+    return ulCurrentLayoutNum;
 }
 
 LRESULT
