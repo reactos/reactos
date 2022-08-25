@@ -177,6 +177,11 @@ public:
         SetWindowText(ProgressText.GetString());
     }
 
+    LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        return TRUE;
+    }
+
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
         PAINTSTRUCT  ps;
@@ -207,7 +212,7 @@ public:
                        &myRect,
                        DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
                        GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DSHADOW),
+                       GetSysColor(COLOR_3DDKSHADOW),
                        1, 1);
 
         /* transfer the off-screen DC to the screen */
@@ -224,15 +229,28 @@ public:
 
     LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        if (lParam)
+        PCWSTR pszText = (PCWSTR)lParam;
+        if (pszText)
         {
-            m_szProgressText = (PCWSTR) lParam;
+            if (m_szProgressText != pszText)
+            {
+                m_szProgressText = pszText;
+                InvalidateRect(NULL, TRUE);
+            }
         }
-        return 0;
+        else
+        {
+            if (!m_szProgressText.IsEmpty())
+            {
+                m_szProgressText.Empty();
+                InvalidateRect(NULL, TRUE);
+            }
+        }
+        return TRUE;
     }
 
     BEGIN_MSG_MAP(CDownloaderProgress)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnPaint)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
     END_MSG_MAP()
@@ -431,6 +449,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
             ProgressBar.SubclassWindow(Item);
             ProgressBar.SendMessage(PBM_SETRANGE, 0, MAKELPARAM(0, 100));
             ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
+            if (AppsDownloadList.GetSize() > 0)
+                ProgressBar.SetProgress(0, AppsDownloadList[0].SizeInBytes);
         }
 
         // Add a ListView
@@ -474,6 +494,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         return FALSE;
 
     case WM_CLOSE:
+        if (ProgressBar)
+            ProgressBar.UnsubclassWindow(TRUE);
         if (CDownloadManager::bModal)
         {
             ::EndDialog(Dlg, 0);
@@ -597,8 +619,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (Item)
         {
             ProgressBar.SetMarquee(FALSE);
-            ProgressBar.SetWindowText(L"");
             ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
+            ProgressBar.SetProgress(0, InfoArray[iAppId].SizeInBytes);
         }
 
         // is this URL an update package for RAPPS? if so store it in a different place
