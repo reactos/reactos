@@ -278,6 +278,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLCID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
     LANGID LangID;
 
+    /* The layout number starts from one. Zero is invalid */
     if (uLayoutNum == 0 || uLayoutNum > 0xFF) /* Invalid */
         return;
 
