@@ -179,7 +179,7 @@ public:
 
     LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        return 1;
+        return TRUE;
     }
 
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -224,7 +224,7 @@ public:
         DeleteDC(hdcMem);
 
         EndPaint(&ps);
-        return TRUE;
+        return 0;
     }
 
     LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
