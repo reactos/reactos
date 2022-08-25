@@ -224,7 +224,7 @@ public:
         DeleteDC(hdcMem);
 
         EndPaint(&ps);
-        return 0;
+        return TRUE;
     }
 
     LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -246,7 +246,7 @@ public:
                 InvalidateRect(NULL, TRUE);
             }
         }
-        return 0;
+        return TRUE;
     }
 
     BEGIN_MSG_MAP(CDownloaderProgress)
