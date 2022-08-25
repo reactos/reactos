@@ -681,7 +681,7 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    /* Play logoff sound! */
+    /* Play logoff sound */
     PlaySystemSound(Session, SYSTEMSND_LOGOFF);
 
     SetWindowStationUser(Session->InteractiveWindowStation,

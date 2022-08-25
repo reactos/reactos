@@ -1030,55 +1030,37 @@ static void TRASH_PlayEmptyRecycleBinSound()
     lError = regKey.Open(HKEY_CURRENT_USER,
                          _T("AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current"),
                          KEY_READ);
-
     if (lError != ERROR_SUCCESS)
-    {
         return;
-    }
 
     /* Get the value size */
     lError = regKey.QueryValue(NULL, &dwType, NULL, &dwSize);
-
     if (lError != ERROR_SUCCESS)
-    {
         return;
-    }
 
     /* Allocate a buffer for the value */
     if (!pszValue.AllocateBytes(dwSize))
-    {
         return;
-    }
 
     /* Get the value */
     lError = regKey.QueryValue(NULL, &dwType, pszValue, &dwSize);
-
     if (lError != ERROR_SUCCESS)
-    {
         return;
-    }
 
     if (dwType == REG_EXPAND_SZ)
     {
         /* Get full path length, including the NULL terminator */
         dwSize = ExpandEnvironmentStrings(pszValue, NULL, 0);
-
         if (dwSize == 0)
-        {
             return;
-        }
 
         /* Allocate a buffer for the path */
         if (!pszSndPath.Allocate(dwSize))
-        {
             return;
-        }
 
         /* Get the path */
         if (ExpandEnvironmentStrings(pszValue, pszSndPath, dwSize) == 0)
-        {
             return;
-        }
     }
     else if (dwType == REG_SZ)
     {

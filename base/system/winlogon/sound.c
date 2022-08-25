@@ -104,7 +104,6 @@ PlaySystemSoundThread(
 
         /* Open the service manager */
         hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
-
         if (!hSCManager)
         {
             ERR("OpenSCManagerW failed (%x)\n", GetLastError());
@@ -113,7 +112,6 @@ PlaySystemSoundThread(
 
         /* Open the wdmaud service */
         hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
-
         if (!hService)
         {
             /* The service is not installed */
@@ -211,7 +209,6 @@ PlaySystemSoundThread(
 
     /* Get the value size */
     lError = RegQueryValueExW(hSndKey, NULL, NULL, &dwType, NULL, &dwSize);
-
     if (lError != ERROR_SUCCESS)
     {
         RegCloseKey(hSndKey);
@@ -220,7 +217,6 @@ PlaySystemSoundThread(
 
     /* Allocate a buffer for the value */
     pszValue = HeapAlloc(GetProcessHeap(), 0, dwSize);
-
     if (!pszValue)
     {
         RegCloseKey(hSndKey);
@@ -241,7 +237,6 @@ PlaySystemSoundThread(
     {
         /* Get full path length, including the NULL terminator */
         dwSize = ExpandEnvironmentStringsW(pszValue, NULL, 0);
-
         if (dwSize == 0)
         {
             goto Cleanup;
@@ -249,7 +244,6 @@ PlaySystemSoundThread(
 
         /* Allocate a buffer for the path */
         pszSndPath = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-
         if (!pszSndPath)
         {
             goto Cleanup;
@@ -300,7 +294,6 @@ PlaySystemSound(
     }
 
     PSData = HeapAlloc(GetProcessHeap(), 0, sizeof(WL_PLAYSOUND_DATA));
-
     if (!PSData)
     {
         return FALSE;
@@ -310,7 +303,6 @@ PlaySystemSound(
     PSData->Session = Session;
 
     hThread = CreateThread(NULL, 0, PlaySystemSoundThread, PSData, 0, NULL);
-
     if (!hThread)
     {
         /* Error, free play sound data */
