@@ -77,7 +77,9 @@ MiInitSystemMemoryAreas(VOID)
     MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
 
     // KASAN shadow memory
+#ifdef KASAN_ENABLED
     MiCreateArm3StaticMemoryArea((PVOID)MM_KASAN_SHADOW_MEMORY, MM_KASAN_SHADOW_MEMORY_END - MM_KASAN_SHADOW_MEMORY, FALSE);
+#endif
 
     // The PTE base
     MiCreateArm3StaticMemoryArea((PVOID)PTE_BASE, PTE_TOP - PTE_BASE + 1, FALSE);
@@ -135,10 +137,14 @@ MiDbgDumpAddressSpace(VOID)
             KSEG0_BASE,
             (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
             "Boot Loaded Image");
+
+#ifdef KASAN_ENABLED
     DPRINT1("          0x%p - 0x%p\t%s\n",
             (PVOID) MM_KASAN_SHADOW_MEMORY,
             (PVOID) MM_KASAN_SHADOW_MEMORY_END,
             "KASAN Shadow Memory");
+#endif
+
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
             (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),

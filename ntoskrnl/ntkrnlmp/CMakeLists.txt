@@ -27,6 +27,16 @@ if(STACK_PROTECTOR)
     target_sources(ntkrnlmp PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
+# Kernel Address Sanitizer
+if(KASAN_ENABLED)
+    target_compile_definitions(ntoskrnl PRIVATE KASAN_ENABLED)
+    
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(ntoskrnl PRIVATE -fsanitize=address)
+    endif()
+## Note: if different syntax for GCC, add a suitable elseif clause.
+endif()
+
 target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 add_importlibs(ntkrnlmp hal kdcom bootvid)
 add_pch(ntkrnlmp ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${NTKRNLMP_PCH_SKIP_SOURCE}")

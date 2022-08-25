@@ -22,25 +22,6 @@
 
 /* FUNCTIONS *********************************************************/
 
-/* Steal from mminit.c to allocate shadow memory
-*  This function is not in mm.h- is there a better way to pull it in here?
-*/
-CODE_SEG("INIT")
-VOID NTAPI
-MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable);
-
-//
-// Helper function to create initial memory areas.
-// The created area is always read/write.
-//
-CODE_SEG("INIT")
-VOID
-MiReserveShadowMemory(VOID)
-{
-    MiCreateArm3StaticMemoryArea(
-        (PVOID) MM_KASAN_SHADOW_MEMORY, MM_KASAN_SHADOW_SIZE, FALSE);
-}
-
 CODE_SEG("INIT")
 NTSTATUS
 MiInitializeShadowMemory(VOID)

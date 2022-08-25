@@ -49,7 +49,16 @@ if(STACK_PROTECTOR)
 endif()
 
 if (SANITIZE_UB)
-#    target_link_libraries(ntoskrnl ksanitize)
+#    target_link_libraries(ntoskrnl ksanitize)  
+endif()
+
+if(KASAN_ENABLED)
+    target_compile_definitions(ntoskrnl PRIVATE KASAN_ENABLED) ## Note: Needs also a similar one in ntkrnlmp cmake.
+
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(ntoskrnl PRIVATE -fsanitize=address)
+    endif()
+## Note: if different syntax for GCC, add a suitable elseif clause.
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)

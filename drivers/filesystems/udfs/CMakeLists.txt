@@ -45,8 +45,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable -Wno-stringop-overflow)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable -Wno-stringop-overflow)
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(udfs PRIVATE -Wno-extern-c-compat -Wno-unused-value)
     target_compile_options(udfs PRIVATE -Wno-tautological-constant-out-of-range-compare)
