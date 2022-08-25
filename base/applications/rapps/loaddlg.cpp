@@ -227,6 +227,7 @@ public:
         if (lParam)
         {
             m_szProgressText = (PCWSTR) lParam;
+            InvalidateRect(NULL, TRUE);
         }
         return 0;
     }
@@ -431,6 +432,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
             ProgressBar.SubclassWindow(Item);
             ProgressBar.SendMessage(PBM_SETRANGE, 0, MAKELPARAM(0, 100));
             ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
+            if (AppsDownloadList.GetSize() > 0)
+                ProgressBar.SetProgress(0, AppsDownloadList[0].SizeInBytes);
         }
 
         // Add a ListView
@@ -474,6 +477,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         return FALSE;
 
     case WM_CLOSE:
+        if (ProgressBar)
+            ProgressBar.UnsubclassWindow(TRUE);
         if (CDownloadManager::bModal)
         {
             ::EndDialog(Dlg, 0);
@@ -597,8 +602,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (Item)
         {
             ProgressBar.SetMarquee(FALSE);
-            ProgressBar.SetWindowText(L"");
             ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
+            ProgressBar.SetProgress(0, InfoArray[iAppId].SizeInBytes);
         }
 
         // is this URL an update package for RAPPS? if so store it in a different place
