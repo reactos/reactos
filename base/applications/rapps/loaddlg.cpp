@@ -177,6 +177,11 @@ public:
         SetWindowText(ProgressText.GetString());
     }
 
+    LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        return 1;
+    }
+
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
         PAINTSTRUCT  ps;
@@ -245,6 +250,7 @@ public:
     }
 
     BEGIN_MSG_MAP(CDownloaderProgress)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
     END_MSG_MAP()
