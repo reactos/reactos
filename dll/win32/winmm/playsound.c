@@ -63,7 +63,7 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     WCHAR	str[128];
     LPWSTR	ptr, pszSnd;
     HMMIO  	hmmio;
-    HKEY        hRegSnd, hRegApp, hScheme, hSnd;
+    HKEY        hUserKey, hRegSnd, hRegApp, hScheme, hSnd;
     DWORD       err, type, count;
 
     static const WCHAR  wszSounds[] = {'S','o','u','n','d','s',0};
@@ -92,7 +92,19 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
      *      HKCU\AppEvents\Schemes\Apps\.Default
      *      HKCU\AppEvents\Schemes\Apps\<AppName>
      */
-    if (RegOpenKeyW(HKEY_CURRENT_USER, wszKey, &hRegSnd) != 0) goto none;
+    err = RegOpenCurrentUser(KEY_READ, &hUserKey);
+    if (err == ERROR_SUCCESS)
+    {
+        err = RegOpenKeyW(hUserKey, wszKey, &hRegSnd);
+        
+        RegCloseKey(hUserKey);
+    }
+
+    if (err != ERROR_SUCCESS)
+    {
+        goto none;
+    }
+
     if (uFlags & SND_APPLICATION)
     {
         DWORD len;
