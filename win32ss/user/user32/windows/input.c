@@ -640,6 +640,8 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
 
 /*
  * @unimplemented
+ *
+ * NOTE: We adopt a different design from Microsoft's one for security reason.
  */
 /* Win: LoadKeyboardLayoutWorker */
 HKL APIENTRY
@@ -650,16 +652,25 @@ IntLoadKeyboardLayout(
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
 {
-    DWORD dwhkl, dwType, dwSize;
+    DWORD dwHKL, dwType, dwSize;
+    WORD wKeybdLangID, wLayoutID;
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
-    WCHAR wszLayoutId[10], wszNewKLID[10];
+    WCHAR wszLayoutId[10], wszNewKLID[10], szImeFileName[80];
+    WCHAR *endptr;
     HKEY hKey;
-    HKL hNewKL;
+    HKL hInputKL, hNewKL;
 
-    /* LOWORD of dwhkl is Locale Identifier */
-    dwhkl = LOWORD(wcstoul(pwszKLID, NULL, 16));
+    hInputKL = (HKL)UlongToHandle(wcstoul(pwszKLID, &endptr, 16));
+    if ((endptr - pwszKLID) != 8)
+    {
+        ERR("pwszKLID: '%S'\n", pwszKLID);
+        return NULL;
+    }
+
+    wKeybdLangID = LOWORD(hInputKL); /* language identifier */
+    wLayoutID = HIWORD(hInputKL); /* layout identifier */
 
     if (Flags & KLF_SUBSTITUTE_OK)
     {
@@ -683,19 +694,32 @@ IntLoadKeyboardLayout(
     StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
 
     /* Open layout registry key for read */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
-                      KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
+        /* Check "Layout Id" value */
         dwSize = sizeof(wszLayoutId);
         if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId, &dwSize) == ERROR_SUCCESS)
         {
             /* If Layout Id is specified, use this value | f000 as HIWORD */
             /* FIXME: Microsoft Office expects this value to be something specific
              * for Japanese and Korean Windows with an IME the value is 0xe001
-             * We should probably check to see if an IME exists and if so then
-             * set this word properly.
              */
-            dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+            wLayoutID = 0xF000 | LOWORD(wcstol(wszLayoutId, NULL, 16));
+        }
+
+        if (IS_IME_HKL(hInputKL)) /* IME? */
+        {
+            /* Check "IME File" value */
+            dwSize = sizeof(szImeFileName);
+            if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
+                                 &dwSize) != ERROR_SUCCESS)
+            {
+                /*
+                 * FIXME: We should probably check to see if an IME exists and if so then
+                 *        set this word properly.
+                 */
+                wLayoutID = 0;
+            }
         }
 
         /* Close the key now */
@@ -707,15 +731,20 @@ IntLoadKeyboardLayout(
         return NULL;
     }
 
-    /* If Layout Id is not given HIWORD == LOWORD (for dwhkl) */
-    if (!HIWORD(dwhkl))
-        dwhkl |= dwhkl << 16;
+    if (IS_IME_HKL(hInputKL) && wLayoutID) /* IME? */
+    {
+        dwHKL = HandleToUlong(hInputKL);
+    }
+    else
+    {
+        if (!wLayoutID)
+            wLayoutID = wKeybdLangID;
+        dwHKL = MAKELONG(wKeybdLangID, wLayoutID);
+    }
 
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
-                                        NULL, &ustrKLID,
-                                        dwhkl, Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwHKL, Flags);
     CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
     return hNewKL;
 }
