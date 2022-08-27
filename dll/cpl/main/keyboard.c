@@ -305,7 +305,6 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     HPROPSHEETPAGE hpsp[MAX_CPL_PAGES];
     PROPSHEETHEADER psh;
     HPSXA hpsxa;
-    TCHAR szCaption[256];
     INT nPage = 0;
     LONG ret;
 
@@ -317,15 +316,13 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     if (uMsg == CPL_STARTWPARMSW && lParam != 0)
         nPage = _wtoi((PWSTR)lParam);
 
-    LoadString(hApplet, IDS_CPLNAME_2, szCaption, sizeof(szCaption) / sizeof(TCHAR));
-
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCE(IDC_CPLICON_2);
-    psh.pszCaption = szCaption;
+    psh.pszCaption = MAKEINTRESOURCE(IDS_CPLNAME_2);
     psh.nStartPage = 0;
     psh.phpage = hpsp;
     psh.pfnCallback = PropSheetProc;

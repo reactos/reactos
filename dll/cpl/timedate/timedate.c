@@ -89,7 +89,6 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETHEADER psh;
     PROPSHEETPAGEW psp[3];
-    WCHAR Caption[256];
     LONG Ret = 0;
 
     UNREFERENCED_PARAMETER(uMsg);
@@ -99,15 +98,13 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     if (RegisterMonthCalControl(hApplet) &&
         RegisterClockControl())
     {
-        LoadStringW(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(WCHAR));
-
         ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
         psh.dwSize = sizeof(PROPSHEETHEADERW);
         psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
         psh.hwndParent = hwnd;
         psh.hInstance = hApplet;
         psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
-        psh.pszCaption = Caption;
+        psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
         psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGEW);
         psh.nStartPage = 0;
         psh.ppsp = psp;

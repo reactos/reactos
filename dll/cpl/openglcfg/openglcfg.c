@@ -25,9 +25,6 @@ LONG CALLBACK AppletInit(HWND hWnd)
 {
     PROPSHEETPAGEW psp;
     PROPSHEETHEADERW psh;
-    WCHAR szCaption[1024];
-
-    LoadStringW(hApplet, IDS_CPLNAME, szCaption, sizeof(szCaption) / sizeof(WCHAR));
 
     ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
     psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -42,7 +39,7 @@ LONG CALLBACK AppletInit(HWND hWnd)
     psh.hwndParent = hWnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = szCaption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = &psp;

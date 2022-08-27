@@ -696,7 +696,6 @@ MmSysApplet(HWND hwnd,
 {
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh; // = { 0 };
-    TCHAR Caption[256];
     INT nPage = 0;
 
     UNREFERENCED_PARAMETER(lParam);
@@ -706,14 +705,12 @@ MmSysApplet(HWND hwnd,
     if (uMsg == CPL_STARTWPARMSW && lParam != 0)
         nPage = _wtoi((PWSTR)lParam);
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
-
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
@@ -797,18 +794,15 @@ ShowAudioPropertySheet(HWND hwnd,
 {
     PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh;
-    TCHAR Caption[256];
 
     DPRINT("ShowAudioPropertySheet()\n");
-
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
@@ -827,18 +821,15 @@ ShowFullControlPanel(HWND hwnd,
 {
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;
-    TCHAR Caption[256];
 
     DPRINT("ShowFullControlPanel()\n");
-
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
