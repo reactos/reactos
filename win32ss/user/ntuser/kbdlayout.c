@@ -999,8 +999,6 @@ cleanup:
  * NtUserLoadKeyboardLayoutEx
  *
  * Loads keyboard layout with given locale id
- *
- * NOTE: We adopt a different design from Microsoft's one for security reason.
  */
 HKL
 APIENTRY
