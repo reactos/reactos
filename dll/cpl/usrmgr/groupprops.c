@@ -174,8 +174,6 @@ AddSelectedUsersToGroup(HWND hwndDlg,
                                  szUserName,
                                  UNLEN + 1);
 
-            DebugPrintf(_TEXT("Selected user: %s"), szUserName);
-
             memberInfo.lgrmi3_domainandname = szUserName;
 
             status = NetLocalGroupAddMembers(NULL, pGroupData->szGroupName, 3,
