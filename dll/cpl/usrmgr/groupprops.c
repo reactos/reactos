@@ -9,6 +9,8 @@
 
 #include "usrmgr.h"
 
+#include <debug.h>
+
 typedef struct _GENERAL_GROUP_DATA
 {
     TCHAR szGroupName[1];
@@ -173,7 +175,8 @@ AddSelectedUsersToGroup(HWND hwndDlg,
                                  nItem, 0,
                                  szUserName,
                                  UNLEN + 1);
-
+			DPRINT("Selected user: %s", szUserName);
+			
             memberInfo.lgrmi3_domainandname = szUserName;
 
             status = NetLocalGroupAddMembers(NULL, pGroupData->szGroupName, 3,
@@ -514,7 +517,7 @@ SetGeneralGroupData(HWND hwndDlg,
     status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
+        DPRINT("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
     if (pszComment)

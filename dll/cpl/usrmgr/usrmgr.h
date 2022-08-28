@@ -36,8 +36,6 @@ BOOL
 GroupProperties(HWND hwndDlg);
 
 /* misc.c */
-VOID
-DebugPrintf(LPTSTR szFormat, ...);
 
 BOOL
 CheckAccountName(HWND hwndDlg,
