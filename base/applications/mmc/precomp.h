@@ -32,6 +32,11 @@ INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID);
 
+static INT
+AllocAndLoadString(OUT LPTSTR *lpTarget,
+                   IN HINSTANCE hInst,
+                   IN UINT uID);
+
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
                     IN UINT uID,
