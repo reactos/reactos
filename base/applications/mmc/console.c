@@ -117,7 +117,7 @@ FrameOnCreate(HWND hwnd,
     PCONSOLE_MAINFRAME_WND Info;
     CLIENTCREATESTRUCT ccs;
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
-	LPTSTR lpTitle;
+    LPTSTR lpTitle;
 
     Info = HeapAlloc(hAppHeap,
                      HEAP_ZERO_MEMORY,
@@ -346,9 +346,11 @@ FrameOnCommand(HWND hwnd,
             break;
 
         case IDM_HELP_ABOUT:
-            AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE);
-            ShellAbout(NULL, lpTitle, NULL, NULL);
-            LocalFree(lpTitle);
+            if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
+            {
+                ShellAbout(NULL, lpTitle, NULL, NULL);
+                LocalFree(lpTitle);
+            }
             break;
 
         default:
