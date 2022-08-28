@@ -610,7 +610,7 @@ static VOID GetSystemVersion(HWND hwnd)
  *
  * @return
  * The number of milliseconds that have elapsed since the system was started.
- **/
+ */
 static ULONGLONG GetTickCountQPC(VOID)
 {
     LARGE_INTEGER Counter, Frequency;
