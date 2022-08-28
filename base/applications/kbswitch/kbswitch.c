@@ -16,7 +16,6 @@
 PKBSWITCHSETHOOKS    KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
 UINT ShellHookMessage = 0;
-DWORD dwAltShiftHotKeyId = 0, dwShiftAltHotKeyId = 0;
 
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
@@ -451,25 +450,6 @@ UpdateLanguageDisplayCurrent(HWND hwnd, WPARAM wParam)
     return UpdateLanguageDisplay(hwnd, hKL);
 }
 
-VOID DoRegisterAltShiftHotKeys(HWND hwnd)
-{
-    dwAltShiftHotKeyId = GlobalAddAtom(TEXT("ReactOS Alt+Shift"));
-    dwShiftAltHotKeyId = GlobalAddAtom(TEXT("ReactOS Shift+Alt"));
-
-    RegisterHotKey(hwnd, dwAltShiftHotKeyId, MOD_ALT | MOD_SHIFT, VK_SHIFT);
-    RegisterHotKey(hwnd, dwShiftAltHotKeyId, MOD_ALT | MOD_SHIFT, VK_MENU);
-}
-
-VOID DoUnregisterAltShiftHotKeys(HWND hwnd)
-{
-    UnregisterHotKey(hwnd, dwAltShiftHotKeyId);
-    UnregisterHotKey(hwnd, dwShiftAltHotKeyId);
-
-    GlobalDeleteAtom(dwAltShiftHotKeyId);
-    GlobalDeleteAtom(dwShiftAltHotKeyId);
-    dwAltShiftHotKeyId = dwShiftAltHotKeyId = 0;
-}
-
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -489,22 +469,12 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
-
-            DoRegisterAltShiftHotKeys(hwnd);
             break;
         }
 
         case WM_LANG_CHANGED:
         {
             return UpdateLanguageDisplay(hwnd, (HKL)lParam);
-        }
-
-        case WM_HOTKEY:
-        {
-            if (wParam != dwAltShiftHotKeyId && wParam != dwShiftAltHotKeyId)
-                break;
-
-            /* FALL THROUGH */
         }
 
         case WM_LOAD_LAYOUT:
@@ -599,7 +569,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
-            DoUnregisterAltShiftHotKeys(hwnd);
             DeleteHooks();
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
