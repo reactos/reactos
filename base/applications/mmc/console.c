@@ -22,6 +22,7 @@
 #include <strsafe.h>
 
 #include "resource.h"
+#include "shellapi.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -116,6 +117,7 @@ FrameOnCreate(HWND hwnd,
     PCONSOLE_MAINFRAME_WND Info;
     CLIENTCREATESTRUCT ccs;
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+	LPTSTR lpTitle;
 
     Info = HeapAlloc(hAppHeap,
                      HEAP_ZERO_MEMORY,
@@ -150,7 +152,16 @@ FrameOnCreate(HWND hwnd,
     SetMenu(Info->hwnd,
             Info->hMenuConsoleSmall);
 
-    SetWindowText(Info->hwnd, TEXT("ReactOS Management Console"));
+    if (LoadAndFormatString(hAppInstance,
+                            IDS_APPTITLE,
+                            &lpTitle))
+	{
+		SetWindowText(Info->hwnd, lpTitle);		
+	}
+	else
+	{
+		SetWindowText(Info->hwnd, TEXT("ReactOS Management Console"));
+	}
 
     ccs.hWindowMenu = GetSubMenu(Info->hMenuConsoleLarge, 1);
     ccs.idFirstChild = IDM_MDI_FIRSTCHILD;
@@ -311,6 +322,7 @@ FrameOnCommand(HWND hwnd,
 {
     PCONSOLE_MAINFRAME_WND Info;
     HWND hChild;
+	LPTSTR lpTitle;
 
     Info = (PCONSOLE_MAINFRAME_WND)GetWindowLongPtr(hwnd, 0);
 
@@ -332,6 +344,12 @@ FrameOnCommand(HWND hwnd,
 
         case IDM_FILE_EXIT:
             PostMessage(hwnd, WM_CLOSE, 0, 0);
+            break;
+			
+		case IDM_HELP_ABOUT:		
+			LoadAndFormatString(hAppInstance, IDS_APPTITLE, &lpTitle);
+			//HICON icon = LoadImageW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_MAINAPP), IMAGE_ICON, 48, 48, LR_SHARED);
+			ShellAbout(NULL, lpTitle, NULL, NULL);
             break;
 
         default:
