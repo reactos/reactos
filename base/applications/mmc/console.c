@@ -22,7 +22,7 @@
 #include <strsafe.h>
 
 #include "resource.h"
-#include "shellapi.h"
+#include <shellapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -155,6 +155,7 @@ FrameOnCreate(HWND hwnd,
     if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
     {
         SetWindowText(Info->hwnd, lpTitle);
+        LocalFree(lpTitle);
     }
     else
     {
@@ -347,6 +348,7 @@ FrameOnCommand(HWND hwnd,
         case IDM_HELP_ABOUT:
             AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE);
             ShellAbout(NULL, lpTitle, NULL, NULL);
+            LocalFree(lpTitle);
             break;
 
         default:

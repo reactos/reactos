@@ -32,7 +32,7 @@ INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID);
 
-static INT
+INT
 AllocAndLoadString(OUT LPTSTR *lpTarget,
                    IN HINSTANCE hInst,
                    IN UINT uID);
