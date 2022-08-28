@@ -9,7 +9,9 @@
 
 #include "usrmgr.h"
 
-#include <debug.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+WINE_DEFAULT_DEBUG_CHANNEL(usrmgr);
 
 typedef struct _GENERAL_USER_DATA
 {
@@ -169,7 +171,7 @@ SetUserProfileData(HWND hwndDlg,
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        DPRINT("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
     if (pszProfilePath)
@@ -478,7 +480,7 @@ AddSelectedGroupsToUser(HWND hwndDlg,
                                                  (LPBYTE)&memberInfo, 1);
                 if (status == NERR_Success)
                 {
-                    DPRINT("Selected group: %s", szGroupName);
+                    TRACE("Selected group: %s", szGroupName);
                     bResult = TRUE;
                 }
                 else
@@ -786,7 +788,7 @@ SetUserGeneralData(HWND hwndDlg,
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        DPRINT("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
     if (pszFullName)

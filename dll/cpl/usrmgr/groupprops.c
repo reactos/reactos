@@ -9,7 +9,9 @@
 
 #include "usrmgr.h"
 
-#include <debug.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+WINE_DEFAULT_DEBUG_CHANNEL(usrmgr);
 
 typedef struct _GENERAL_GROUP_DATA
 {
@@ -175,7 +177,7 @@ AddSelectedUsersToGroup(HWND hwndDlg,
                                  nItem, 0,
                                  szUserName,
                                  UNLEN + 1);
-            DPRINT("Selected user: %s", szUserName);
+            TRACE("Selected user: %s", szUserName);
 
             memberInfo.lgrmi3_domainandname = szUserName;
 
@@ -517,7 +519,7 @@ SetGeneralGroupData(HWND hwndDlg,
     status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        DPRINT("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        ERR("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
     if (pszComment)
