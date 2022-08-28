@@ -333,7 +333,7 @@ BEGIN
     IDS_PETABYTE "Пб ОЗУ"
     IDS_MEGAHERTZ "МГц"
     IDS_GIGAHERTZ "ГГц"
-    IDS_UPTIME_FORMAT "%u дней, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu дней, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
     IDS_NO_DUMP "(Нет)"
