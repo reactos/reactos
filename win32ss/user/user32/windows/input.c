@@ -711,7 +711,7 @@ IntLoadKeyboardLayout(
             if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
                                  &dwSize) != ERROR_SUCCESS)
             {
-                FIXME("Check IME file existence in system32\n")
+                FIXME("Check IME file existence in system32\n");
                 bIsIME = FALSE;
                 dwhkl = LOWORD(dwhkl);
             }
