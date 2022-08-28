@@ -704,12 +704,17 @@ IntLoadKeyboardLayout(
                 dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
         }
 
-        /* Check "IME File" value */
-        dwSize = sizeof(szImeFileName);
-        if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
-                             &dwSize) != ERROR_SUCCESS)
+        if (bIsIME)
         {
-            dwhkl = LOWORD(dwhkl);
+            /* Check "IME File" value */
+            dwSize = sizeof(szImeFileName);
+            if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
+                                 &dwSize) != ERROR_SUCCESS)
+            {
+                FIXME("Check IME file existence in system32\n")
+                bIsIME = FALSE;
+                dwhkl = LOWORD(dwhkl);
+            }
         }
 
         /* Close the key now */
