@@ -9,10 +9,6 @@
 
 #include "usrmgr.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
-WINE_DEFAULT_DEBUG_CHANNEL(usrmgr);
-
 typedef struct _GENERAL_USER_DATA
 {
     DWORD dwFlags;
