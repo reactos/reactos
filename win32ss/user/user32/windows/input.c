@@ -658,21 +658,12 @@ IntLoadKeyboardLayout(
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
     WCHAR wszLayoutId[10], wszNewKLID[10], szImeFileName[80];
     HKL hNewKL;
+    HKEY hKey;
     BOOL bIsIME;
 
     dwhkl = wcstoul(pwszKLID, NULL, 16);
     bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
-    if (bIsIME) /* IME? */
-    {
-        /* Check "IME File" value */
-        dwSize = sizeof(szImeFileName);
-        if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
-                             &dwSize) != ERROR_SUCCESS)
-        {
-            dwhkl = LOWORD(dwhkl);
-        }
-    }
-    else
+    if (!bIsIME) /* Not IME? */
     {
         dwhkl = LOWORD(dwhkl); /* LOWORD of dwhkl is language identifier */
     }
@@ -711,6 +702,14 @@ IntLoadKeyboardLayout(
              */
             if (!bIsIME)
                 dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+        }
+
+        /* Check "IME File" value */
+        dwSize = sizeof(szImeFileName);
+        if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
+                             &dwSize) != ERROR_SUCCESS)
+        {
+            dwhkl = LOWORD(dwhkl);
         }
 
         /* Close the key now */
