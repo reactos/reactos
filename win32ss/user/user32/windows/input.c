@@ -640,6 +640,8 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
 
 /*
  * @unimplemented
+ *
+ * NOTE: We adopt a different design from Microsoft's one for security reason.
  */
 /* Win: LoadKeyboardLayoutWorker */
 HKL APIENTRY
@@ -654,12 +656,27 @@ IntLoadKeyboardLayout(
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
-    WCHAR wszLayoutId[10], wszNewKLID[10];
+    WCHAR wszLayoutId[10], wszNewKLID[10], szImeFileName[80];
     HKEY hKey;
     HKL hNewKL;
+    BOOL bIsIME;
 
-    /* LOWORD of dwhkl is Locale Identifier */
-    dwhkl = LOWORD(wcstoul(pwszKLID, NULL, 16));
+    dwhkl = wcstoul(pwszKLID, NULL, 16);
+    bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
+    if (bIsIME) /* IME? */
+    {
+        /* Check "IME File" value */
+        dwSize = sizeof(szImeFileName);
+        if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
+                             &dwSize) != ERROR_SUCCESS)
+        {
+            dwhkl = LOWORD(dwhkl);
+        }
+    }
+    else
+    {
+        dwhkl = LOWORD(dwhkl); /* LOWORD of dwhkl is language identifier */
+    }
 
     if (Flags & KLF_SUBSTITUTE_OK)
     {
@@ -692,10 +709,9 @@ IntLoadKeyboardLayout(
             /* If Layout Id is specified, use this value | f000 as HIWORD */
             /* FIXME: Microsoft Office expects this value to be something specific
              * for Japanese and Korean Windows with an IME the value is 0xe001
-             * We should probably check to see if an IME exists and if so then
-             * set this word properly.
              */
-            dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+            if (!bIsIME)
+                dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
         }
 
         /* Close the key now */
@@ -713,9 +729,7 @@ IntLoadKeyboardLayout(
 
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
-                                        NULL, &ustrKLID,
-                                        dwhkl, Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwhkl, Flags);
     CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
     return hNewKL;
 }
