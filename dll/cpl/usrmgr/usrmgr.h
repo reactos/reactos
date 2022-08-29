@@ -1,8 +1,8 @@
 #ifndef _USRMGR_H
 #define _USRMGR_H
 
-#include <wine/debug.h>
 #include <stdarg.h>
+#include <wine/debug.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
