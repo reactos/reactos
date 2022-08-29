@@ -9,7 +9,6 @@
 
 #include "usrmgr.h"
 
-
 BOOL
 CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,
