@@ -21,6 +21,15 @@ extern ATOM AtomQOS;
 extern ATOM AtomImeLevel;
 extern ERESOURCE UserLock;
 
+typedef VOID (*TL_FN_FREE)(PVOID);
+
+typedef struct _TL
+{
+    struct _TL* next;
+    PVOID pobj;
+    TL_FN_FREE pfnFree;
+} TL, *PTL;
+
 CODE_SEG("INIT") NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);
 VOID FASTCALL UserEnterShared(VOID);
