@@ -185,7 +185,7 @@ public:
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (uiCmdId != 0)
         {
-            if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId <= ID_SHELL_CMD_LAST))
+            if ((uiCmdId < ID_SHELL_CMD_PROPERTIES ) || (uiCmdId > ID_SHELL_CMD_RESTORE_ALL))
             {
                 CMINVOKECOMMANDINFO cmici = { 0 };
                 CHAR szDir[MAX_PATH];
