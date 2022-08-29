@@ -37,7 +37,6 @@ BOOL
 GroupProperties(HWND hwndDlg);
 
 /* misc.c */
-
 BOOL
 CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,
