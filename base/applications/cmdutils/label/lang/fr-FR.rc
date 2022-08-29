@@ -4,17 +4,16 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-//    STRING_LABEL_HELP "Affiche ou change le nom de volume du disque.\n\nLABEL [disque:][nomdevolume]\n"
-    STRING_LABEL_HELP "Crée, modifie ou supprime l'étiquette du volume d'un disque.\n\n\
-LABEL [drive:][label]\n\n\
-  drive:          Specifie la lettre du disque.\n\
-  label           Specifie l'étiquette du disque."
+    STRING_LABEL_HELP "Crée, modifie ou supprime le nom de volume d'un disque.\n\n\
+LABEL [disque:][nom_volume]\n\n\
+  disque:          Specifie la lettre du disque.\n\
+  nom_volume       Specifie le nom du volume."
     STRING_LABEL_TEXT1 "Le nom de volume du disque %c: est %s\n"
     STRING_LABEL_TEXT2 "Le disque %c: n'a pas de nom de volume\n"
-    STRING_LABEL_TEXT3 "Le numéro de serie du volume est %04X-%04X\n"
-    STRING_LABEL_TEXT4 "Nom de volume (32 Caractères, ENTREE si aucun) ? "
-    STRING_LABEL_PROMPT "Supprimer l'étiquette actuelle (Y/N)? "
-    STRING_LABEL_OPTIONS "YN"
+    STRING_LABEL_TEXT3 "Le numéro de série du volume est %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Nom de volume (32 caractères, ENTREE si aucun) ? "
+    STRING_LABEL_PROMPT "Supprimer le nom actuel (O/N)? "
+    STRING_LABEL_OPTIONS "ON"
     STRING_ERROR_INVALID_DRIVE "Lecteur spécifié introuvable\n"
-    STRING_ERROR_INVALID_LABEL "Etiquette invalide\n"
+    STRING_ERROR_INVALID_LABEL "Nom de volume invalide\n"
 END

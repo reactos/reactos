@@ -599,7 +599,7 @@ BEGIN
     IDS_PRESSURE_KILOPASCALS "Kilopascals"
     IDS_PRESSURE_MM_OF_MERCURY "Millimètres de mercure"
     IDS_PRESSURE_PASCALS "Pascals"
-    IDS_PRESSURE_PSI "Livres par pouce-carrés"
+    IDS_PRESSURE_PSI "Livre-force par pouce-carrés"
 END
 
 /* Temperatures */

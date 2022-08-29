@@ -197,13 +197,13 @@ END
 
 IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "Avancé"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Les propriétés suivantes sont disponibles pour votre carte réseau. Clickez sur la propriété que vous souhaitez changer à gauche, puis choisissez sa valeur à droite.", -1, 7, 7, 218, 24, WS_GROUP
-    LTEXT "&Propriété:", -1, 7, 37, 60, 8, WS_GROUP
+    LTEXT "Les propriétés suivantes sont disponibles pour cette carte réseau. Cliquez sur la propriété que vous souhaitez changer à gauche, puis choisissez sa valeur à droite.", -1, 7, 7, 218, 24, WS_GROUP
+    LTEXT "&Propriété :", -1, 7, 37, 60, 8, WS_GROUP
     LISTBOX IDC_PROPERTY_NAME, 7, 48, 124, 124, LBS_STANDARD | WS_TABSTOP
-    LTEXT "&Valeur:", -1, 151, 37, 60, 8, WS_GROUP
+    LTEXT "&Valeur :", -1, 151, 37, 60, 8, WS_GROUP
     EDITTEXT IDC_PROPERTY_VALUE_EDIT, 153, 48, 92, 14, ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
     CONTROL "", IDC_PROPERTY_VALUE_UPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_BORDER, 232, 48, 12, 12
     COMBOBOX IDC_PROPERTY_VALUE_LIST, 153, 48, 92, 64, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP

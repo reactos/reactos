@@ -179,7 +179,7 @@ BEGIN
     IDS_LOCALETITLE "Options régionales"
     IDS_LOCALESUBTITLE "Vous pouvez modifier ReactOS pour différentes régions et langues."
     IDS_LOCALETEXT "Les standards et formats sont définis à %s, et la localisation à %s."
-    IDS_LAYOUTTEXT "Vote langugage par défaut est: agencement clavier %s"
+    IDS_LAYOUTTEXT "Votre langage par défaut est : agencement clavier %s"
     IDS_DATETIMETITLE "Date et Heure"
     IDS_DATETIMESUBTITLE "Configurez la date et l'heure correcte pour votre ordinateur."
     IDS_PROCESSTITLE "Finalisation de l'installation"
@@ -204,7 +204,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrateur"
+    IDS_ADMINISTRATOR_NAME "Administrator"
     IDS_MACHINE_OWNER_NAME "Propriétaire"
 END
 

@@ -119,17 +119,17 @@ BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
     LTEXT "Ces paramètres peuvent être utilisés pour des ajustements fins de l'audio.", -1, 44, 7, 200, 32
     GROUPBOX "Contrôles du ton", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
-    LTEXT "Ces paramètres contrôles la tonalité de l'audio.", -1, 17, 48, 200, 14
-    LTEXT "&Basse:", -1, 17, 62, 50, 8
+    LTEXT "Ces paramètres contrôlent la tonalité de l'audio.", -1, 17, 48, 200, 14
+    LTEXT "&Basses :", -1, 17, 62, 50, 8
     LTEXT "Bas", IDC_ADV_BASS_LOW, 77, 62, 20, 8
     LTEXT "Haut", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
-    LTEXT "&Aigus:", -1, 17, 90, 50, 8
+    LTEXT "&Aigus :", -1, 17, 90, 50, 8
     LTEXT "Bas", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
     LTEXT "Haut", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
     GROUPBOX "Autres contrôles", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "Ces paramètres font d'autres modifications sur l'audio. Consultez la documentation du matériel pour détails.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    LTEXT "Ces paramètres apportent d'autres modifications sur l'audio. Consultez la documentation du matériel pour plus de détails.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
     DEFPUSHBUTTON "Fermer", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
