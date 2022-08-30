@@ -730,7 +730,7 @@ User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength)
 NTSTATUS WINAPI
 User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-    PIMMPROCESSKEY_CALLBACK_ARGUMENTS Common = Arguments;
+    PIMMLOADLAYOUT_CALLBACK_ARGUMENTS Common = Arguments;
     IMMLOADLAYOUT_CALLBACK_OUTPUT Result;
     ERR("Common->hKL: %p\n", Common->hKL);
     Result.ret = IMM_FN(ImmLoadLayout)(Common->hKL, &Result.iiex);
