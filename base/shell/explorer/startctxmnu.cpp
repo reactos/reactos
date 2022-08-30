@@ -32,7 +32,7 @@ class CStartMenuBtnCtxMenu :
     CComPtr<ITrayWindow>  m_TrayWnd;
     CComPtr<IContextMenu> m_Inner;
     CComPtr<IShellFolder> m_Folder;
-    UINT m_idCmdCmFirst;
+    UINT m_idCmdCmLast;
 
     HWND m_Owner;
     LPITEMIDLIST m_FolderPidl;
