@@ -224,6 +224,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallLPKFromKernel,
     User32CallUMPDFromKernel,
     User32CallImmProcessKeyFromKernel,
+    User32CallImmLoadLayoutFromKernel,
 };
 
 
@@ -724,4 +725,13 @@ User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength)
                                          Common->dwHotKeyID);
 
     return ZwCallbackReturn(&Result, sizeof(DWORD), STATUS_SUCCESS);
+}
+
+NTSTATUS WINAPI
+User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    PIMMPROCESSKEY_CALLBACK_ARGUMENTS Common = Arguments;
+    IMMLOADLAYOUT_CALLBACK_OUTPUT Result;
+    Result.ret = IMM_FN(ImmLoadLayout)(Common->hKL, &Result.iiex);
+    return ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
 }

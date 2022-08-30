@@ -64,33 +64,34 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     {
         Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
 
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, 0, KEY_READ,
+                              &hLayoutsKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
 
-        error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
+        error = RegOpenKeyExW(hLayoutsKey, szLayout, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             RegCloseKey(hLayoutsKey);
             return FALSE;
         }
     }
     else
     {
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
     }
 
     cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, NULL, // FIXME: Why failed at here?
                              (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
     pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
 

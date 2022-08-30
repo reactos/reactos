@@ -65,4 +65,26 @@ InitDisplayDriver(
     IN PWSTR pwszDeviceName,
     IN PWSTR pwszRegKey);
 
+inline VOID APIENTRY PushW32ThreadLock(PVOID pobj, PTL ptl, PVOID pfnFree)
+{
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    ptl->next = pti->ptlW32;
+    pti->ptlW32 = ptl;
+    ptl->pobj = pobj;
+    ptl->pfnFree = pfnFree;
+}
+
+inline VOID APIENTRY PopW32ThreadLock(PTL ptl)
+{
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    pti->ptlW32 = ptl->next;
+}
+
+inline VOID APIENTRY PopAndFreeAlwaysW32ThreadLock(PTL ptl)
+{
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    pti->ptlW32 = ptl->next;
+    ptl->pfnFree(ptl->pobj);
+}
+
 /* EOF */

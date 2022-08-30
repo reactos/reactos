@@ -995,6 +995,40 @@ cleanup:
     return bRet;
 }
 
+static VOID IntFreePoolImeObject(PVOID pobj)
+{
+    ExFreePoolWithTag(pobj, USERTAG_IME);
+}
+
+// Win: xxxImmLoadLayout
+PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
+{
+    PIMEINFOEX piiex;
+    TL tl;
+ 
+    if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
+        return NULL;
+
+    piiex = ExAllocatePoolWithTag(PagedPool, sizeof(IMEINFOEX), USERTAG_IME);
+    if (!piiex)
+    {
+        ERR("Allocation failed\n");
+        return NULL;
+    }
+
+    PushW32ThreadLock(piiex, &tl, IntFreePoolImeObject);
+
+    if (!co_ClientImmLoadLayout(hKL, piiex))
+    {
+        ERR("!co_ClientImmLoadLayout\n");
+        PopAndFreeAlwaysW32ThreadLock(&tl);
+        return NULL;
+    }
+
+    PopW32ThreadLock(&tl);
+    return piiex;
+}
+
 /*
  * NtUserLoadKeyboardLayoutEx
  *
@@ -1082,6 +1116,8 @@ NtUserLoadKeyboardLayoutEx(
             pKl->pklPrev = pKl;
             gspklBaseLayout = pKl;
         }
+
+        pKl->piiex = co_UserImmLoadLayout(UlongToHandle(hkl));
     }
 
     /* If this layout was prepared to unload, undo it */

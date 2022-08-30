@@ -1272,4 +1272,43 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
     return ret;
 }
 
+// Win: ClientImmLoadLayout
+BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+{
+    NTSTATUS Status;
+    IMMLOADLAYOUT_CALLBACK_ARGUMENTS Common = { hKL };
+    ULONG ResultLength = sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT);
+    PVOID ResultPointer = NULL;
+    PIMMLOADLAYOUT_CALLBACK_OUTPUT Output;
+
+    RtlZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
+
+    UserLeaveCo();
+    Status = KeUserModeCallback(USER32_CALLBACK_IMMLOADLAYOUT, &Common, sizeof(Common),
+                                &ResultPointer, &ResultLength);
+    UserEnterCo();
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("!NT_SUCCESS\n");
+        return FALSE;
+    }
+
+    if (ResultLength != sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT))
+    {
+        ERR("ResultLength\n");
+        return FALSE;
+    }
+
+    Output = ResultPointer;
+    if (!Output->ret)
+    {
+        ERR("!ret\n");
+        return FALSE;
+    }
+
+    RtlCopyMemory(pImeInfoEx, &Output->iiex, sizeof(IMEINFOEX));
+    return TRUE;
+}
+
 /* EOF */
