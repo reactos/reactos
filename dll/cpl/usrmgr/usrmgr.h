@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(usrmgr);
 
 #define WIN32_NO_STATUS
 #include <windef.h>
