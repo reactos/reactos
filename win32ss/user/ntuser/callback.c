@@ -1281,6 +1281,8 @@ BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     PVOID ResultPointer = NULL;
     PIMMLOADLAYOUT_CALLBACK_OUTPUT Output;
 
+    ERR("hKL: %p\n", hKL);
+
     RtlZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
 
     UserLeaveCo();

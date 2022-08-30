@@ -54,34 +54,28 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
-    HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
+    HKEY hLayoutKey = NULL;
     LONG error;
     WCHAR szLayout[MAX_PATH];
 
-    TRACE("(%p, %p)\n", hKL, pImeInfoEx);
+    ERR("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
-        Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
+        ERR("hKL: %p\n", hKL);
+        StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
+                         REGKEY_KEYBOARD_LAYOUTS, (DWORD)(DWORD_PTR)hKL);
 
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, 0, KEY_READ,
-                              &hLayoutsKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
             ERR("RegOpenKeyExW: 0x%08lX\n", error);
-            return FALSE;
-        }
-
-        error = RegOpenKeyExW(hLayoutsKey, szLayout, 0, KEY_READ, &hLayoutKey);
-        if (error)
-        {
-            ERR("RegOpenKeyExW: 0x%08lX\n", error);
-            RegCloseKey(hLayoutsKey);
             return FALSE;
         }
     }
     else
     {
+        ERR("hKL: %p\n", hKL);
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
@@ -96,8 +90,6 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
 
     RegCloseKey(hLayoutKey);
-    if (hLayoutsKey)
-        RegCloseKey(hLayoutsKey);
 
     pImeInfoEx->fLoadFlag = 0;
 

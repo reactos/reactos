@@ -1005,7 +1005,9 @@ PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
 {
     PIMEINFOEX piiex;
     TL tl;
- 
+
+    ERR("hKL: %p\n", hKL);
+
     if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
         return NULL;
 
@@ -1051,6 +1053,8 @@ NtUserLoadKeyboardLayoutEx(
     PKL pKl = NULL, pklLast;
     WCHAR Buffer[9];
     UNICODE_STRING ustrSafeKLID;
+
+    ERR("hkl: %08lX\n", hkl);
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
