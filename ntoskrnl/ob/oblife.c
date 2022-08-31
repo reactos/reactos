@@ -1035,6 +1035,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
         /* Release the Capture Info, we don't need it */
         ObpFreeObjectCreateInformation(ObjectCreateInfo);
         if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
+        return Status;
     }
 
     /* We failed, so release the Buffer */
