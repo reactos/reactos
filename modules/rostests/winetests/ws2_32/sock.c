@@ -4694,6 +4694,7 @@ static void test_gethostbyname(void)
     he = gethostbyname(name);
     ok(he != NULL, "gethostbyname(\"%s\") failed: %d\n", name, WSAGetLastError());
 #ifdef __REACTOS__ /* ROSTESTS-233 */
+    count = 0;
     if (he != NULL)
     {
 #endif
