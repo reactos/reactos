@@ -72,10 +72,11 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 {
     WINDOWPOSBACKUPDATA wposdata;
     RECT rcWindow;
-    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
+    HWND hDesk = GetDesktopWindow();
+    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && (hwnd != hDesk))
     {
         wposdata.hwnd = hwnd;
-        GetWindowRect(hwnd, &rcWindow);
+        ::GetWindowRect(hwnd, &rcWindow);
         wposdata.x = rcWindow.left;
         wposdata.y = rcWindow.top;
         wposdata.cx = rcWindow.right - rcWindow.left;
