@@ -74,7 +74,6 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     }
     else
     {
-        ERR("hKL: %p\n", hKL);
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
