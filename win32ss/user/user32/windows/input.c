@@ -662,7 +662,6 @@ IntLoadKeyboardLayout(
     HKEY hKey;
     BOOL bIsIME;
 
-
     dwhkl = wcstoul(pwszKLID, &endptr, 16);
     if (endptr - pwszKLID != 8)
     {

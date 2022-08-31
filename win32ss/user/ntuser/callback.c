@@ -1289,9 +1289,10 @@ BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
                                 &ResultPointer, &ResultLength);
     UserEnterExclusive();
 
-    if (!NT_SUCCESS(Status) || ResultLength != sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT))
+    if (!NT_SUCCESS(Status) || !ResultPointer ||
+        ResultLength != sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT))
     {
-        ERR("0x%lX, %lu\n", Status, ResultLength);
+        ERR("0x%lX, %p, %lu\n", Status, ResultPointer, ResultLength);
         return FALSE;
     }
 

@@ -995,10 +995,6 @@ cleanup:
     return bRet;
 }
 
-static VOID IntFreePoolImeObject(PVOID pobj)
-{
-}
-
 /* Win: xxxImmLoadLayout */
 PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
 {
@@ -1026,7 +1022,7 @@ PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
  * Loads keyboard layout with given locale id
  *
  * NOTE: We adopt a different design from Microsoft's one for security reason.
- *       We don't use the 1st and 3rd paramters of NtUserLoadKeyboardLayoutEx.
+ *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
  */
 HKL
 APIENTRY
