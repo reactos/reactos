@@ -662,11 +662,13 @@ IntLoadKeyboardLayout(
     HKEY hKey;
     BOOL bIsIME;
 
-    ERR("pwszKLID: %s\n", debugstr_w(pwszKLID));
 
     dwhkl = wcstoul(pwszKLID, &endptr, 16);
     if (endptr - pwszKLID != 8)
+    {
+        ERR("pwszKLID: '%s'\n", debugstr_w(pwszKLID));
         return NULL;
+    }
 
     bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
     if (!bIsIME) /* Not IME? */
@@ -694,7 +696,6 @@ IntLoadKeyboardLayout(
 
     /* Append KLID at the end of registry key */
     StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
-    ERR("wszRegKey: %s\n", debugstr_w(wszRegKey));
 
     /* Open layout registry key for read */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -736,8 +737,6 @@ IntLoadKeyboardLayout(
     if (!HIWORD(dwhkl))
         dwhkl |= dwhkl << 16;
 
-    ERR("dwhkl: 0x%08lX\n", dwhkl);
-
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
     hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwhkl, Flags);
@@ -752,7 +751,7 @@ HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                     UINT Flags)
 {
-    ERR("(%s, 0x%X)\n", debugstr_w(pwszKLID), Flags);
+    TRACE("(%s, 0x%X)\n", debugstr_w(pwszKLID), Flags);
     return IntLoadKeyboardLayout(NULL, pwszKLID, 0, Flags, FALSE);
 }
 

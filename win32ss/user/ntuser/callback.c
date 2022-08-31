@@ -1272,7 +1272,7 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
     return ret;
 }
 
-// Win: ClientImmLoadLayout
+/* Win: ClientImmLoadLayout */
 BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     NTSTATUS Status;

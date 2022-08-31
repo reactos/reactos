@@ -732,7 +732,6 @@ User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
     PIMMLOADLAYOUT_CALLBACK_ARGUMENTS Common = Arguments;
     IMMLOADLAYOUT_CALLBACK_OUTPUT Result;
-    ERR("Common->hKL: %p\n", Common->hKL);
     Result.ret = IMM_FN(ImmLoadLayout)(Common->hKL, &Result.iiex);
     return ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
 }

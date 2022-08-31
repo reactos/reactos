@@ -1000,13 +1000,11 @@ static VOID IntFreePoolImeObject(PVOID pobj)
     ExFreePoolWithTag(pobj, USERTAG_IME);
 }
 
-// Win: xxxImmLoadLayout
+/* Win: xxxImmLoadLayout */
 PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
 {
     PIMEINFOEX piiex;
     TL tl;
-
-    ERR("hKL: %p\n", hKL);
 
     if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
         return NULL;
@@ -1034,6 +1032,7 @@ PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
  * Loads keyboard layout with given locale id
  *
  * NOTE: We adopt a different design from Microsoft's one for security reason.
+ *       We don't use the 1st and 3rd paramters of NtUserLoadKeyboardLayoutEx.
  */
 HKL
 APIENTRY
@@ -1050,8 +1049,6 @@ NtUserLoadKeyboardLayoutEx(
     PKL pKl = NULL, pklLast;
     WCHAR Buffer[9];
     UNICODE_STRING ustrSafeKLID;
-
-    ERR("hkl: %08lX\n", hkl);
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|

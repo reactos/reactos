@@ -58,7 +58,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     LONG error;
     WCHAR szLayout[MAX_PATH];
 
-    ERR("(%p, %p)\n", hKL, pImeInfoEx);
+    TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
