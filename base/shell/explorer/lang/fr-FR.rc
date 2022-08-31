@@ -194,5 +194,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barrre des tâches et menu démarrer"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "&Afficher les fenêtres ouvertes"
 END
