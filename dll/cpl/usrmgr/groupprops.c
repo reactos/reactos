@@ -173,7 +173,7 @@ AddSelectedUsersToGroup(HWND hwndDlg,
                                  nItem, 0,
                                  szUserName,
                                  UNLEN + 1);
-            TRACE("Selected user: %s", szUserName);
+            TRACE("Selected user: %s", dbgstrx(szUserName));
 
             memberInfo.lgrmi3_domainandname = szUserName;
 
