@@ -997,14 +997,12 @@ cleanup:
 
 static VOID IntFreePoolImeObject(PVOID pobj)
 {
-    ExFreePoolWithTag(pobj, USERTAG_IME);
 }
 
 /* Win: xxxImmLoadLayout */
 PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
 {
     PIMEINFOEX piiex;
-    TL tl;
 
     if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
         return NULL;
@@ -1013,16 +1011,12 @@ PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
     if (!piiex)
         return NULL;
 
-    /* Hold the piiex memory block */
-    PushW32ThreadLock(piiex, &tl, IntFreePoolImeObject);
-
     if (!co_ClientImmLoadLayout(hKL, piiex))
     {
-        PopAndFreeAlwaysW32ThreadLock(&tl); /* Unhold and free the memory block */
+        ExFreePoolWithTag(piiex, USERTAG_IME);
         return NULL;
     }
 
-    PopW32ThreadLock(&tl); /* Unhold the block */
     return piiex;
 }
 
