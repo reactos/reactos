@@ -307,6 +307,8 @@ class CTrayWindow :
     SIZE m_AutoHideOffset;
     TRACKMOUSEEVENT m_MouseTrackingInfo;
 
+    BOOL m_bTiled, m_bCascaded;
+
     HDPA m_ShellServices;
 
 public:
@@ -341,6 +343,8 @@ public:
         m_TrayPropertiesOwner(NULL),
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
+        m_bTiled(NULL),
+        m_bCascaded(NULL),
         m_ShellServices(NULL),
         Flags(0)
     {
@@ -607,6 +611,8 @@ public:
             break;
 
         case ID_SHELL_CMD_UNDO_ACTION:
+            m_bTiled = FALSE;
+            m_bCascaded = FALSE;
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
@@ -617,18 +623,24 @@ public:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            m_bTiled = TRUE;
+            m_bCascaded = FALSE;
             break;
 
         case ID_SHELL_CMD_TILE_WND_V:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            m_bTiled = TRUE;
+            m_bCascaded = FALSE;
             break;
 
         case ID_SHELL_CMD_CASCADE_WND:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            m_bTiled = FALSE;
+            m_bCascaded = TRUE;
             break;
 
         case ID_SHELL_CMD_CUST_NOTIF:
@@ -2991,14 +3003,30 @@ HandleTrayContextMenu:
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_ENABLED);
-            ::EnableMenuItem(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND | MF_ENABLED);
+            if (m_bTiled || m_bCascaded)
+            {
+                CStringW strCaption(MAKEINTRESOURCEW(m_bTiled?IDS_TRAYWND_UNDO_TILE:IDS_TRAYWND_UNDO_CASCADE));
+                MENUITEMINFOW mii = { sizeof(mii) };
+                GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
+                mii.fMask = MIIM_ID | MIIM_TYPE;
+                mii.wID = ID_SHELL_CMD_UNDO_ACTION;
+                mii.fType = MFT_STRING;
+                mii.dwTypeData = const_cast<LPWSTR>(&strCaption[0]);
+                SetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
+            }
+            else
+            {
+                DeleteMenu(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND);
+            }
         }
         else
         {
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_GRAYED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_GRAYED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_GRAYED);
-            ::EnableMenuItem(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND | MF_GRAYED);
+            DeleteMenu(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND);
+            m_bTiled = FALSE;
+            m_bCascaded = FALSE;
         }
         return 0;
     }
