@@ -58,6 +58,56 @@ void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam
 
 static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
+struct WINDOWPOSBACKUPDATA
+{
+    HWND hwnd;
+    UINT x;
+    UINT y;
+    UINT cx;
+    UINT cy;
+};
+CSimpleArray<WINDOWPOSBACKUPDATA>  g_WindowPosBackup;
+
+struct WINDOWPOSBACKUPDATA_INFO
+{
+    CSimpleArray<WINDOWPOSBACKUPDATA> *pWindowsPosBackup;
+};
+
+static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
+{
+    WINDOWPOSBACKUPDATA_INFO *info = (WINDOWPOSBACKUPDATA_INFO *)lParam;
+    WINDOWPOSBACKUPDATA wposdata;
+    RECT rcWindow;
+    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
+    {
+        wposdata.hwnd = hwnd;
+        GetWindowRect(hwnd, &rcWindow);
+        wposdata.x = rcWindow.left;
+        wposdata.y = rcWindow.top;
+        wposdata.cx = rcWindow.right - rcWindow.left;
+        wposdata.cy = rcWindow.bottom - rcWindow.top;
+        info->pWindowsPosBackup->Add(wposdata);
+    }
+
+    return TRUE;
+}
+
+VOID BackupWindowPos()
+{
+    WINDOWPOSBACKUPDATA_INFO info;
+    info.pWindowsPosBackup = &g_WindowPosBackup;
+    g_WindowPosBackup.RemoveAll();
+    EnumWindows(BackupWindowsPosProc, (LPARAM)&info);
+}
+
+VOID RestoreWindowPos()
+{
+    for (INT i = 0; i < g_WindowPosBackup.GetSize(); ++i)
+        {
+            SetWindowPos(g_WindowPosBackup[i].hwnd, NULL, g_WindowPosBackup[i].x, g_WindowPosBackup[i].y, g_WindowPosBackup[i].cx, g_WindowPosBackup[i].cy, SWP_SHOWWINDOW);
+        }
+}
+
 struct EFFECTIVE_INFO
 {
     HWND hwndFound;
@@ -613,6 +663,7 @@ public:
         case ID_SHELL_CMD_UNDO_ACTION:
             m_bTiled = FALSE;
             m_bCascaded = FALSE;
+            RestoreWindowPos();
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
@@ -621,6 +672,7 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_H:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (!m_bTiled && !m_bCascaded) BackupWindowPos();
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_bTiled = TRUE;
@@ -629,6 +681,7 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_V:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (!m_bTiled && !m_bCascaded) BackupWindowPos();
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_bTiled = TRUE;
@@ -637,6 +690,7 @@ public:
 
         case ID_SHELL_CMD_CASCADE_WND:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (!m_bTiled && !m_bCascaded) BackupWindowPos();
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_bTiled = FALSE;
