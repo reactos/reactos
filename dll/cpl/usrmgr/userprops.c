@@ -476,7 +476,7 @@ AddSelectedGroupsToUser(HWND hwndDlg,
                                                  (LPBYTE)&memberInfo, 1);
                 if (status == NERR_Success)
                 {
-                    TRACE("Selected group: %s", szGroupName);
+                    TRACE("Selected group: %s", dbgstrx(szGroupName));
                     bResult = TRUE;
                 }
                 else
