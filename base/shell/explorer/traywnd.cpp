@@ -68,14 +68,8 @@ struct WINDOWPOSBACKUPDATA
 };
 CSimpleArray<WINDOWPOSBACKUPDATA>  g_WindowPosBackup;
 
-struct WINDOWPOSBACKUPDATA_INFO
-{
-    CSimpleArray<WINDOWPOSBACKUPDATA> *pWindowsPosBackup;
-};
-
 static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 {
-    WINDOWPOSBACKUPDATA_INFO *info = (WINDOWPOSBACKUPDATA_INFO *)lParam;
     WINDOWPOSBACKUPDATA wposdata;
     RECT rcWindow;
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
@@ -86,7 +80,7 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
         wposdata.y = rcWindow.top;
         wposdata.cx = rcWindow.right - rcWindow.left;
         wposdata.cy = rcWindow.bottom - rcWindow.top;
-        info->pWindowsPosBackup->Add(wposdata);
+        g_WindowPosBackup.Add(wposdata);
     }
 
     return TRUE;
@@ -94,19 +88,23 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 
 VOID BackupWindowPos()
 {
-    WINDOWPOSBACKUPDATA_INFO info;
-    info.pWindowsPosBackup = &g_WindowPosBackup;
     g_WindowPosBackup.RemoveAll();
-    EnumWindows(BackupWindowsPosProc, (LPARAM)&info);
+    EnumWindows(BackupWindowsPosProc, NULL);
 }
 
 VOID RestoreWindowPos()
 {
-    for (INT i = 0; i < g_WindowPosBackup.GetSize(); ++i)
-        {
-            //FIXME: Always with SWP_SHOWWINDOW regardless of the initial flags. To be improved.
-            SetWindowPos(g_WindowPosBackup[i].hwnd, NULL, g_WindowPosBackup[i].x, g_WindowPosBackup[i].y, g_WindowPosBackup[i].cx, g_WindowPosBackup[i].cy, SWP_SHOWWINDOW);
-        }
+    HDWP hDWP = BeginDeferWindowPos(g_WindowPosBackup.GetSize());
+    if(hDWP==NULL) return;
+
+    for (INT i = g_WindowPosBackup.GetSize() - 1; i >= 0; --i)
+    {
+        //FIXME: Always with SWP_SHOWWINDOW regardless of the initial flags. To be improved.
+        hDWP = DeferWindowPos(hDWP, g_WindowPosBackup[i].hwnd, NULL, g_WindowPosBackup[i].x, g_WindowPosBackup[i].y, g_WindowPosBackup[i].cx, g_WindowPosBackup[i].cy, SWP_SHOWWINDOW);
+        if(hDWP==NULL) return;
+    }
+
+    EndDeferWindowPos(hDWP);
 }
 
 struct EFFECTIVE_INFO
@@ -394,8 +392,8 @@ public:
         m_TrayPropertiesOwner(NULL),
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
-        m_bTiled(NULL),
-        m_bCascaded(NULL),
+        m_bTiled(FALSE),
+        m_bCascaded(FALSE),
         m_ShellServices(NULL),
         Flags(0)
     {
