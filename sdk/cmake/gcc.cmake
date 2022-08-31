@@ -160,6 +160,7 @@ endif()
 
 # Other
 if(ARCH STREQUAL "amd64")
+    add_compile_options(-mcx16) # Generate CMPXCHG16
     add_definitions(-U_X86_ -UWIN32)
 elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)

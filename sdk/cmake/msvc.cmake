@@ -41,6 +41,9 @@ endif()
 add_compile_options(/GS-)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(ARCH STREQUAL "amd64")
+        add_compile_options(-mcx16) # Generate CMPXCHG16B
+    endif()
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
 
