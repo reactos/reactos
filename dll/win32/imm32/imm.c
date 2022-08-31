@@ -62,7 +62,6 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
-        ERR("hKL: %p\n", hKL);
         StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
                          REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
 
