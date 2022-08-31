@@ -53,7 +53,7 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
  */
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
-    DWORD cbData;
+    DWORD cbData, dwType;
     HKEY hLayoutKey = NULL;
     LONG error;
     WCHAR szLayout[MAX_PATH];
@@ -64,7 +64,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     {
         ERR("hKL: %p\n", hKL);
         StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
-                         REGKEY_KEYBOARD_LAYOUTS, (DWORD)(DWORD_PTR)hKL);
+                         REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
 
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
         if (error)
@@ -85,17 +85,17 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     }
 
     cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, NULL, // FIXME: Why failed at here?
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, &dwType,
                              (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
 
     RegCloseKey(hLayoutKey);
 
     pImeInfoEx->fLoadFlag = 0;
 
-    if (error)
+    if (error || dwType != REG_SZ)
     {
-        ERR("RegQueryValueExW: 0x%08lX\n", error);
+        ERR("RegQueryValueExW: 0x%lX, 0x%lX\n", error, dwType);
         pImeInfoEx->hkl = NULL;
         return FALSE;
     }

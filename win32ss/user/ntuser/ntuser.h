@@ -11,6 +11,7 @@
 
 typedef VOID (*TL_FN_FREE)(PVOID);
 
+// TL stands for Thread Lock
 typedef struct _TL
 {
     struct _TL* next;
@@ -65,6 +66,7 @@ InitDisplayDriver(
     IN PWSTR pwszDeviceName,
     IN PWSTR pwszRegKey);
 
+/* Hold the object pointer at the thread */
 inline VOID APIENTRY PushW32ThreadLock(PVOID pobj, PTL ptl, PVOID pfnFree)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -74,12 +76,14 @@ inline VOID APIENTRY PushW32ThreadLock(PVOID pobj, PTL ptl, PVOID pfnFree)
     ptl->pfnFree = pfnFree;
 }
 
+/* Unhold the object at the thread */
 inline VOID APIENTRY PopW32ThreadLock(PTL ptl)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     pti->ptlW32 = ptl->next;
 }
 
+/* Unhold and free the object at the thread */
 inline VOID APIENTRY PopAndFreeAlwaysW32ThreadLock(PTL ptl)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();

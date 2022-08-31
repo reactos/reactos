@@ -1013,21 +1013,18 @@ PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
 
     piiex = ExAllocatePoolWithTag(PagedPool, sizeof(IMEINFOEX), USERTAG_IME);
     if (!piiex)
-    {
-        ERR("Allocation failed\n");
         return NULL;
-    }
 
+    /* Hold the piiex memory block */
     PushW32ThreadLock(piiex, &tl, IntFreePoolImeObject);
 
     if (!co_ClientImmLoadLayout(hKL, piiex))
     {
-        ERR("!co_ClientImmLoadLayout\n");
-        PopAndFreeAlwaysW32ThreadLock(&tl);
+        PopAndFreeAlwaysW32ThreadLock(&tl); /* Unhold and free the memory block */
         return NULL;
     }
 
-    PopW32ThreadLock(&tl);
+    PopW32ThreadLock(&tl); /* Unhold the block */
     return piiex;
 }
 

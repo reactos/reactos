@@ -778,10 +778,8 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
     {
         hinstVersion = LoadLibraryW(szPath);
         if (!hinstVersion)
-        {
-            ERR("!hinstVersion\n");
             return FALSE;
-        }
+
         bLoaded = TRUE;
     }
 
@@ -799,17 +797,11 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
 
     cbVerInfo = s_fnGetFileVersionInfoSizeW(szPath, &dwHandle);
     if (!cbVerInfo)
-    {
-        ERR("!cbVerInfo\n");
         goto Quit;
-    }
 
     pVerInfo = ImmLocalAlloc(0, cbVerInfo);
     if (!pVerInfo)
-    {
-        ERR("!pVerInfo\n");
         goto Quit;
-    }
 
     /* Load the version info of the IME module */
     if (s_fnGetFileVersionInfoW(szPath, dwHandle, cbVerInfo, pVerInfo) &&
