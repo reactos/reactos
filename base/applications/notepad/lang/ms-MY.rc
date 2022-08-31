@@ -162,6 +162,7 @@ tugas ini.\nTutup satu atau lebih aplikasi untuk menambah jumlah\ningatan kosong
     STRING_UNICODE "Unikod"
     STRING_UNICODE_BE "Unikod (endian besar)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"

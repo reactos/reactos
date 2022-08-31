@@ -92,6 +92,7 @@
 #define STRING_UNICODE    0x17F
 #define STRING_UNICODE_BE 0x180
 #define STRING_UTF8       0x181
+#define STRING_UTF8_BOM   0x188
 
 #define STRING_CRLF 0x182
 #define STRING_LF   0x183

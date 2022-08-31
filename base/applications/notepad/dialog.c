@@ -497,6 +497,9 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(Globals.hInstance, STRING_UTF8, szText, ARRAY_SIZE(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
+            LoadString(Globals.hInstance, STRING_UTF8_BOM, szText, ARRAY_SIZE(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
             SendMessage(hCombo, CB_SETCURSEL, Globals.encFile, 0);
 
             hCombo = GetDlgItem(hDlg, ID_EOLN);
