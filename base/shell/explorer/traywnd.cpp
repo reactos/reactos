@@ -104,6 +104,7 @@ VOID RestoreWindowPos()
 {
     for (INT i = 0; i < g_WindowPosBackup.GetSize(); ++i)
         {
+            //FIXME: Always with SWP_SHOWWINDOW regardless of the initial flags. To be improved.
             SetWindowPos(g_WindowPosBackup[i].hwnd, NULL, g_WindowPosBackup[i].x, g_WindowPosBackup[i].y, g_WindowPosBackup[i].cx, g_WindowPosBackup[i].cy, SWP_SHOWWINDOW);
         }
 }
