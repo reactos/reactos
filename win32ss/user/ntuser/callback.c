@@ -1275,6 +1275,7 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
 /* Win: ClientImmLoadLayout */
 BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
+    BOOL ret;
     NTSTATUS Status;
     IMMLOADLAYOUT_CALLBACK_ARGUMENTS Common = { hKL };
     ULONG ResultLength = sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT);
@@ -1300,15 +1301,22 @@ BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
         return FALSE;
     }
 
-    Output = ResultPointer;
-    if (!Output->ret)
+    _SEH2_TRY
     {
-        ERR("!ret\n");
-        return FALSE;
+        ProbeForRead(ResultPointer, ResultLength, 1);
+        Output = ResultPointer;
+        ret = Output->ret;
+        if (ret)
+            RtlCopyMemory(pImeInfoEx, &Output->iiex, sizeof(IMEINFOEX));
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception\n");
+        ret = FALSE;
+    }
+    _SEH2_END;
 
-    RtlCopyMemory(pImeInfoEx, &Output->iiex, sizeof(IMEINFOEX));
-    return TRUE;
+    return ret;
 }
 
 /* EOF */
