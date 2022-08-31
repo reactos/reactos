@@ -1285,10 +1285,10 @@ BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     RtlZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
 
-    UserLeaveCo();
+    UserLeave();
     Status = KeUserModeCallback(USER32_CALLBACK_IMMLOADLAYOUT, &Common, sizeof(Common),
                                 &ResultPointer, &ResultLength);
-    UserEnterCo();
+    UserEnterExclusive();
 
     if (!NT_SUCCESS(Status))
     {
