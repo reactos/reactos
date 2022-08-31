@@ -54,7 +54,7 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData, dwType;
-    HKEY hLayoutKey = NULL;
+    HKEY hLayoutKey;
     LONG error;
     WCHAR szLayout[MAX_PATH];
 
@@ -91,7 +91,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     pImeInfoEx->fLoadFlag = 0;
 
-    if (error || dwType != REG_SZ)
+    if (error != ERROR_SUCCESS || dwType != REG_SZ)
     {
         ERR("RegQueryValueExW: 0x%lX, 0x%lX\n", error, dwType);
         pImeInfoEx->hkl = NULL;
