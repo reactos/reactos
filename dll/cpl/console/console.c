@@ -242,7 +242,9 @@ InitApplet(HANDLE hSectionOrWnd)
         psh.pszCaption = szTitle;
     }
     else
+    {
         psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
+    }
 
     if (pSharedInfo != NULL)
     {
