@@ -34,7 +34,6 @@ static CLIENT_ID MiBalancerThreadId;
 static HANDLE MiBalancerThreadHandle = NULL;
 static KEVENT MiBalancerEvent;
 static KTIMER MiBalancerTimer;
-//static ULONG MiPeakCommitment = 0;
 
 static LONG PageOutThreadActive;
 
