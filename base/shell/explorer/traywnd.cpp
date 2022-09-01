@@ -65,7 +65,7 @@ struct WINDOWPOSBACKUPDATA
     HWND hwnd;
     WINDOWPLACEMENT wplt;
 };
-CSimpleArray<WINDOWPOSBACKUPDATA>  g_WindowPosBackup;
+CSimpleArray<WINDOWPOSBACKUPDATA> g_WindowPosBackup;
 
 static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 {
