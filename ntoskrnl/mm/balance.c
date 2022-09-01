@@ -34,10 +34,17 @@ static CLIENT_ID MiBalancerThreadId;
 static HANDLE MiBalancerThreadHandle = NULL;
 static KEVENT MiBalancerEvent;
 static KTIMER MiBalancerTimer;
+//static ULONG MiPeakCommitment = 0;
 
 static LONG PageOutThreadActive;
 
 /* FUNCTIONS ****************************************************************/
+
+VOID UpdatePeakCommitment()
+{
+    ULONG uCurrent = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
+    if(uCurrent>MmPeakCommitment) MmPeakCommitment = uCurrent;
+}
 
 CODE_SEG("INIT")
 VOID
@@ -50,6 +57,8 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     MiMinimumAvailablePages = 256;
     MiMinimumPagesPerRun = 256;
     MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages / 2;
+    MmPeakCommitment = 0;
+    UpdatePeakCommitment();
 }
 
 CODE_SEG("INIT")
@@ -81,6 +90,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
     }
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+    UpdatePeakCommitment();
 
     OldIrql = MiAcquirePfnLock();
 
@@ -284,6 +294,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
     /* Update the target */
     InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+    UpdatePeakCommitment();
 
     /*
      * Actually allocate the page.
