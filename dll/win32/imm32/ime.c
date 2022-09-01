@@ -188,7 +188,6 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         if (fn) pImeDpi->name = (FN_##name)fn; \
         else if (!(optional)) { \
             ERR("'%s' not found in the IME module '%s'.\n", #name, debugstr_w(szPath)); \
-            pImeDpi->name = Dummy##name; \
             goto Failed; \
         } \
     } while (0);
