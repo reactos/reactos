@@ -39,10 +39,14 @@ static LONG PageOutThreadActive;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID UpdatePeakCommitment()
+static inline VOID UpdatePeakCommitment(VOID)
 {
-    ULONG uCurrent = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
-    if(uCurrent>MmPeakCommitment) MmPeakCommitment = uCurrent;
+    // HACK: MmTotalCommittedPages should be adjusted consistently with
+    // other counters at different places.
+    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
+
+    if (MmTotalCommittedPages > MmPeakCommitment)
+        MmPeakCommitment = MmTotalCommittedPages;
 }
 
 CODE_SEG("INIT")
