@@ -74,7 +74,7 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && (hwnd != hDesk))
     {
         wposdata.hwnd = hwnd;
-        wposdata.wplt.length = sizeof(WINDOWPLACEMENT);
+        wposdata.wplt.length = sizeof(wposdata.wplt);
         ::GetWindowPlacement(hwnd, &(wposdata.wplt));
         g_WindowPosBackup.Add(wposdata);
     }
