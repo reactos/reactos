@@ -93,7 +93,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
     }
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    UpdatePeakCommitment();
 
     OldIrql = MiAcquirePfnLock();
 
