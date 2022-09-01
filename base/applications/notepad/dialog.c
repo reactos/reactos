@@ -125,6 +125,24 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     SetWindowText(Globals.hMainWnd, szCaption);
 }
 
+VOID DIALOG_StatusBarAlignParts(VOID)
+{
+    static const int defaultWidths[] = {120, 120, 120};
+    RECT rcStatusBar;
+    int parts[3];
+
+    GetClientRect(Globals.hStatusBar, &rcStatusBar);
+
+    parts[0] = rcStatusBar.right - (defaultWidths[1] + defaultWidths[2]);
+    parts[1] = rcStatusBar.right - defaultWidths[2];
+    parts[2] = -1; // the right edge of the status bar
+
+    parts[0] = max(parts[0], defaultWidths[0]);
+    parts[1] = max(parts[1], defaultWidths[0] + defaultWidths[1]);
+
+    SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)_countof(parts), (LPARAM)parts);
+}
+
 static VOID DIALOG_StatusBarUpdateEoln(VOID)
 {
     WCHAR szText[128];
@@ -903,7 +921,6 @@ VOID DoCreateStatusBar(VOID)
     RECT rc;
     RECT rcstatus;
     BOOL bStatusBarVisible;
-    static const int parts[] = {200, 350, -1};
 
     /* Check if status bar object already exists. */
     if (Globals.hStatusBar == NULL)
@@ -922,9 +939,6 @@ VOID DoCreateStatusBar(VOID)
 
         /* Load the string for formatting column/row text output */
         LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH - 1);
-
-        /* Set the status bar for multiple-text output */
-        SendMessage(Globals.hStatusBar, SB_SETPARTS, (WPARAM)_countof(parts), (LPARAM)parts);
     }
 
     /* Set status bar visiblity according to the settings. */
@@ -972,6 +986,9 @@ VOID DoCreateStatusBar(VOID)
                    rc.bottom - rc.top,
                    TRUE);
     }
+
+    /* Set the status bar for multiple-text output */
+    DIALOG_StatusBarAlignParts();
 
     /* Update content with current row/column text */
     DIALOG_StatusBarUpdateCaretPos();

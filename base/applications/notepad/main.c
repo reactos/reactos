@@ -427,8 +427,13 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   LOWORD(wParam),
                                   SWP_NOZORDER);
 
-            if (hdwp != NULL)
-                EndDeferWindowPos(hdwp);
+            if (hdwp == NULL)
+                break;
+                
+            EndDeferWindowPos(hdwp);
+
+            /* Align status bar parts */
+            DIALOG_StatusBarAlignParts();
         }
         else
             SetWindowPos(Globals.hEdit,
