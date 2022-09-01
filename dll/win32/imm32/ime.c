@@ -149,6 +149,12 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
+/* Define dummy IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) \
+    type APIENTRY Dummy##name params { return (type)0; }
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
 // Win: LoadIME
 BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
@@ -172,12 +178,19 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     }
     pImeDpi->hInst = hIME;
 
+    /* Polulate the table by dummy IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Dummy##name;
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
+    /* Polulate the table by real IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
     do { \
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
         else if (!(optional)) { \
             ERR("'%s' not found in the IME module '%s'.\n", #name, debugstr_w(szPath)); \
+            pImeDpi->name = Dummy##name; \
             goto Failed; \
         } \
     } while (0);
