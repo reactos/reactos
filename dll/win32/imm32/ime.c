@@ -151,7 +151,10 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 
 /* Define dummy IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
-    type APIENTRY Dummy##name params { return (type)0; }
+    type APIENTRY Dummy##name params { \
+        FIXME("%s: Why dummy called?\n", #name); \
+        return (type)0; \
+    }
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
