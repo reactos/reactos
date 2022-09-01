@@ -89,6 +89,16 @@ static BOOLEAN MmSystemPageFileLocated = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+static inline VOID UpdatePeakCommitment(VOID)
+{
+    // HACK: MmTotalCommittedPages should be adjusted consistently with
+    // other counters at different places.
+    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
+
+    if (MmTotalCommittedPages > MmPeakCommitment)
+        MmPeakCommitment = MmTotalCommittedPages;
+}
+
 VOID
 NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
@@ -330,7 +340,7 @@ MmAllocSwapPage(VOID)
             MiUsedSwapPages++;
             MiFreeSwapPages--;
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
-
+            UpdatePeakCommitment();
             entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
             return(entry);
         }
