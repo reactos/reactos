@@ -3042,7 +3042,8 @@ HandleTrayContextMenu:
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_ENABLED);
             if (m_Arrangement != NONE)
             {
-                CStringW strCaption(MAKEINTRESOURCEW((m_Arrangement==TILED)?IDS_TRAYWND_UNDO_TILE:IDS_TRAYWND_UNDO_CASCADE));
+                CStringW strCaption((m_Arrangement == TILED) ? MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_TILE)
+                                                             : MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_CASCADE));
                 MENUITEMINFOW mii = { sizeof(mii) };
                 GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
                 mii.fMask = MIIM_ID | MIIM_TYPE;
