@@ -60,6 +60,8 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
+    ZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
+
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
         StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
@@ -89,6 +91,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     RegCloseKey(hLayoutKey);
 
+    pImeInfoEx->hkl = hKL;
     pImeInfoEx->fLoadFlag = 0;
 
     if (error != ERROR_SUCCESS || dwType != REG_SZ)
