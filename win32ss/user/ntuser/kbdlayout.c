@@ -497,6 +497,7 @@ UserUnloadKbl(PKL pKl)
     pKl->pklPrev->pklNext = pKl->pklNext;
     pKl->pklNext->pklPrev = pKl->pklPrev;
     UnloadKbdFile(pKl->spkf);
+    ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
     UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
     return TRUE;
 }
