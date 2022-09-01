@@ -512,14 +512,14 @@ void ApplicationPageUpdate(void)
     {
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
     }
-    /* Enable "Switch To" button only if one app is selected */
-    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
+    /* Enable "Switch To" button only if at least one app is selected */
+    if (ListView_GetSelectedCount(hApplicationPageListCtrl))
     {
         EnableWindow(hApplicationPageSwitchToButton, TRUE);
     }
     else
     {
-    EnableWindow(hApplicationPageSwitchToButton, FALSE);
+        EnableWindow(hApplicationPageSwitchToButton, FALSE);
     }
 
     /* If we are on the applications tab the windows menu will be */
