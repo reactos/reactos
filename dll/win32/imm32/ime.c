@@ -169,17 +169,12 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
         return FALSE;
 
-    hIME = GetModuleHandleW(szPath);
+    pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        hIME = LoadLibraryW(szPath);
-        if (hIME == NULL)
-        {
-            ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
-            return FALSE;
-        }
+        ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
+        return FALSE;
     }
-    pImeDpi->hInst = hIME;
 
     /* Polulate the table by dummy IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Dummy##name;
