@@ -1273,21 +1273,27 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
 }
 
 /* Win: ClientImmLoadLayout */
-BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+BOOL
+APIENTRY
+co_ClientImmLoadLayout(
+    _In_ HKL hKL,
+    _Inout_ PIMEINFOEX pImeInfoEx)
 {
     BOOL ret;
     NTSTATUS Status;
     IMMLOADLAYOUT_CALLBACK_ARGUMENTS Common = { hKL };
     ULONG ResultLength = sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT);
-    PVOID ResultPointer = NULL;
-    PIMMLOADLAYOUT_CALLBACK_OUTPUT Output;
+    PIMMLOADLAYOUT_CALLBACK_OUTPUT ResultPointer = NULL;
 
     RtlZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
 
-    UserLeave();
-    Status = KeUserModeCallback(USER32_CALLBACK_IMMLOADLAYOUT, &Common, sizeof(Common),
-                                &ResultPointer, &ResultLength);
-    UserEnterExclusive();
+    UserLeaveCo();
+    Status = KeUserModeCallback(USER32_CALLBACK_IMMLOADLAYOUT,
+                                &Common,
+                                sizeof(Common),
+                                (PVOID*)&ResultPointer,
+                                &ResultLength);
+    UserEnterCo();
 
     if (!NT_SUCCESS(Status) || !ResultPointer ||
         ResultLength != sizeof(IMMLOADLAYOUT_CALLBACK_OUTPUT))
@@ -1299,14 +1305,12 @@ BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     _SEH2_TRY
     {
         ProbeForRead(ResultPointer, ResultLength, 1);
-        Output = ResultPointer;
-        ret = Output->ret;
+        ret = ResultPointer->ret;
         if (ret)
-            RtlCopyMemory(pImeInfoEx, &Output->iiex, sizeof(IMEINFOEX));
+            RtlCopyMemory(pImeInfoEx, &ResultPointer->iiex, sizeof(IMEINFOEX));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception\n");
         ret = FALSE;
     }
     _SEH2_END;

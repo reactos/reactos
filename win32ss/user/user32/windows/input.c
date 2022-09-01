@@ -638,6 +638,11 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
     return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
+inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
+{
+    return pwszKLID != NULL && wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == 8;
+}
+
 /*
  * @unimplemented
  *
@@ -647,7 +652,7 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
 HKL APIENTRY
 IntLoadKeyboardLayout(
     _In_    HKL     hklUnload,
-    _In_z_  LPCWSTR pwszKLID,
+    _In_    LPCWSTR pwszKLID,
     _In_    LANGID  wLangID,
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
@@ -662,12 +667,13 @@ IntLoadKeyboardLayout(
     HKEY hKey;
     BOOL bIsIME;
 
-    dwhkl = wcstoul(pwszKLID, &endptr, 16);
-    if (endptr - pwszKLID != 8)
+    if (!IsValidKLID(pwszKLID))
     {
-        ERR("pwszKLID: '%s'\n", debugstr_w(pwszKLID));
+        ERR("pwszKLID: %s\n", debugstr_w(pwszKLID));
         return NULL;
     }
+
+    dwhkl = wcstoul(pwszKLID, &endptr, 16);
 
     bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
     if (!bIsIME) /* Not IME? */

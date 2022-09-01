@@ -81,4 +81,8 @@ DWORD
 APIENTRY
 co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID);
 
-BOOL APIENTRY co_ClientImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx);
+BOOL
+APIENTRY
+co_ClientImmLoadLayout(
+    _In_ HKL hKL,
+    _Inout_ PIMEINFOEX pImeInfoEx);

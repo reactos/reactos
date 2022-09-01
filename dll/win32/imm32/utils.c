@@ -734,10 +734,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     /* Getting the version info. See VerQueryValue */
     ret = s_fnVerQueryValueW(pVerInfo, L"\\VarFileInfo\\Translation", (LPVOID*)&pw, &cbData);
     if (!ret || !cbData)
-    {
-        ERR("%d %d\n", ret, cbData);
         return FALSE;
-    }
 
     if (pInfoEx->hkl == NULL)
         pInfoEx->hkl = (HKL)(DWORD_PTR)*pw; /* This is an invalid HKL */
