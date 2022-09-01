@@ -42,12 +42,20 @@ void CFolderItemVerb::Init(IContextMenu* menu, BSTR name)
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
