@@ -2110,7 +2110,7 @@ ChangePos:
 
     BOOL STDMETHODCALLTYPE IsSpecialHWND(IN HWND hWnd)
     {
-        return (m_hWnd == hWnd ||
+        return (m_hWnd == hWnd || hWnd == GetDesktopWindow() ||
                 (m_DesktopWnd != NULL && m_hWnd == m_DesktopWnd));
     }
 
