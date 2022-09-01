@@ -433,7 +433,7 @@ CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UIN
         if (SUCCEEDED(hr))
         {
             info.iIdCmdFirst = cIds;
-            info.NumIds = LOWORD(hr);
+            info.NumIds = HRESULT_CODE(hr);
             (*pIndexMenu) += info.NumIds;
 
             cIds += info.NumIds;
@@ -646,8 +646,9 @@ CDefaultContextMenu::QueryContextMenu(
     QCMINFO qcminfo = {hMenu, IndexMenu, idCmdNext, idCmdLast, NULL};
     if (SUCCEEDED(_DoCallback(DFM_MERGECONTEXTMENU, uFlags, &qcminfo)))
     {
-        cIds += qcminfo.idCmdFirst;
-        IndexMenu += qcminfo.idCmdFirst;
+        UINT added = idCmdNext - (idCmdFirst + cIds);
+        cIds += added;
+        IndexMenu += added;
         m_iIdCBFirst = m_iIdSHELast;
         m_iIdCBLast = cIds;
         idCmdNext = idCmdFirst + cIds;
