@@ -198,6 +198,6 @@ BEGIN
 END
 STRINGTABLE
 BEGIN
-    IDS_TRAYWND_UNDO_CASCADE "Ann&uler cascade"
-    IDS_TRAYWND_UNDO_TILE "Ann&uler mosaïque"
+    IDS_TRAYWND_UNDO_CASCADE "Annuler &cascade"
+    IDS_TRAYWND_UNDO_TILE "Annuler &mosaïque"
 END
