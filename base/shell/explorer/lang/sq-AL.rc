@@ -202,6 +202,6 @@ BEGIN
 END
 STRINGTABLE
 BEGIN
-    IDS_TRAYWND_UNDO_CASCADE "Undo cascade windows"
-    IDS_TRAYWND_UNDO_TILE "Undo tile windows"
+    IDS_TRAYWND_UNDO_CASCADE "Undo &cascade windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &tile windows"
 END
