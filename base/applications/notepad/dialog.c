@@ -33,6 +33,27 @@ static const TCHAR empty_str[] = _T("");
 static const TCHAR szDefaultExt[] = _T("txt");
 static const TCHAR txt_files[] = _T("*.txt");
 
+/* Status bar parts index */
+#define SBPART_CURPOS   0
+#define SBPART_EOLN     1
+#define SBPART_ENCODING 2
+
+/* Line endings - string resource ID mapping table */
+static UINT EolnToStrId[] = {
+    STRING_CRLF,
+    STRING_LF,
+    STRING_CR
+};
+
+/* Encoding - string resource ID mapping table */
+static UINT EncToStrId[] = {
+    STRING_ANSI,
+    STRING_UNICODE,
+    STRING_UNICODE_BE,
+    STRING_UTF8,
+    STRING_UTF8_BOM
+};
+
 static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
 VOID ShowLastError(VOID)
@@ -102,6 +123,29 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
                    (isModified ? _T("*") : _T("")), szFilename, szNotepad);
 
     SetWindowText(Globals.hMainWnd, szCaption);
+}
+
+static VOID DIALOG_StatusBarUpdateEoln(VOID)
+{
+    WCHAR szText[128];
+
+    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, _countof(szText));
+
+    SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_EOLN, (LPARAM)szText);
+}
+
+static VOID DIALOG_StatusBarUpdateEncoding(VOID)
+{
+    WCHAR szText[128];
+
+    szText[0] = UNICODE_NULL;
+
+    if (Globals.encFile != ENCODING_AUTO)
+    {
+        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, _countof(szText));
+    }
+
+    SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_ENCODING, (LPARAM)szText);
 }
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags)
@@ -403,6 +447,10 @@ VOID DoOpenFile(LPCTSTR szFileName)
     SetFileName(szFileName);
     UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
+
+    /* Update line endings and encoding on the status bar */
+    DIALOG_StatusBarUpdateEoln();
+    DIALOG_StatusBarUpdateEncoding();
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
@@ -565,6 +613,11 @@ BOOL DIALOG_FileSaveAs(VOID)
         if (DoSaveFile())
         {
             UpdateWindowCaption(TRUE);
+            
+            /* Update line endings and encoding on the status bar */
+            DIALOG_StatusBarUpdateEoln();
+            DIALOG_StatusBarUpdateEncoding();
+            
             return TRUE;
         }
         else
@@ -850,6 +903,7 @@ VOID DoCreateStatusBar(VOID)
     RECT rc;
     RECT rcstatus;
     BOOL bStatusBarVisible;
+    static const int parts[] = {200, 350, -1};
 
     /* Check if status bar object already exists. */
     if (Globals.hStatusBar == NULL)
@@ -869,8 +923,8 @@ VOID DoCreateStatusBar(VOID)
         /* Load the string for formatting column/row text output */
         LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH - 1);
 
-        /* Set the status bar for single-text output */
-        SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
+        /* Set the status bar for multiple-text output */
+        SendMessage(Globals.hStatusBar, SB_SETPARTS, (WPARAM)_countof(parts), (LPARAM)parts);
     }
 
     /* Set status bar visiblity according to the settings. */
@@ -921,6 +975,10 @@ VOID DoCreateStatusBar(VOID)
 
     /* Update content with current row/column text */
     DIALOG_StatusBarUpdateCaretPos();
+    
+    /* Update line endings and encoding on the status bar */
+    DIALOG_StatusBarUpdateEoln();
+    DIALOG_StatusBarUpdateEncoding();
 }
 
 VOID DoCreateEditWindow(VOID)
@@ -1198,7 +1256,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     col = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     _stprintf(buff, Globals.szStatusBarLineCol, line + 1, col + 1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SBPART_CURPOS, (LPARAM)buff);
 }
 
 VOID DIALOG_ViewStatusBar(VOID)
