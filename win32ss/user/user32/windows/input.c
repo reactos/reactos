@@ -652,7 +652,7 @@ inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
 HKL APIENTRY
 IntLoadKeyboardLayout(
     _In_    HKL     hklUnload,
-    _In_    LPCWSTR pwszKLID,
+    _In_z_  LPCWSTR pwszKLID,
     _In_    LANGID  wLangID,
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
