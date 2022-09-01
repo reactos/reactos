@@ -176,12 +176,12 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         return FALSE;
     }
 
-    /* Polulate the table by dummy IME functions */
+    /* Populate the table by dummy IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Dummy##name;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
-    /* Polulate the table by real IME functions */
+    /* Populate the table by real IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
     do { \
         fn = GetProcAddress(hIME, #name); \
