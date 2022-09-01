@@ -16,6 +16,7 @@
 #include <commdlg.h>
 #include <tchar.h>
 #include <malloc.h>
+#include <stdlib.h>
 
 #include "main.h"
 #include "dialog.h"
