@@ -11,7 +11,7 @@ add_library(framebuf MODULE
     ${SOURCE}
     framebuf.rc)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(framebuf ksanitize_w32k)
 endif()
 

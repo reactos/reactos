@@ -9,7 +9,7 @@ add_library(vgaddi MODULE
     ${SOURCE}
     vga_new.rc)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(vgaddi ksanitize_w32k)
 endif()
 

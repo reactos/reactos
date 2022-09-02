@@ -43,6 +43,10 @@ if(SANITIZE_UB)
     add_compile_definitions(__SANITIZE_UB__)
 endif()
 
+if(KASAN_ENABLED)
+    add_compile_definitions(KASAN_ENABLED)
+endif()
+
 # Compiler Core
 # note: -fno-common is default since GCC 10
 add_compile_options(-pipe -fms-extensions -fno-strict-aliasing -fno-common)
@@ -329,7 +333,7 @@ function(set_module_type_toolchain MODULE TYPE)
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
 
-        if(SANITIZE_UB)
+        if(SANITIZE_UB OR KASAN_ENABLED)
             # we have too many alignment warnings at the moment
             target_compile_options(${MODULE} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
 
@@ -338,6 +342,7 @@ function(set_module_type_toolchain MODULE TYPE)
                 target_link_libraries(${MODULE} ksanitize)
             endif()
         endif()
+
     endif()
 endfunction()
 

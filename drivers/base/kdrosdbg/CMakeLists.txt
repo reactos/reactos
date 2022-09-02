@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(kdcom MODULE ${SOURCE})
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(kdcom ksanitize)
 endif()
 

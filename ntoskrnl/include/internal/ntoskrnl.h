@@ -103,7 +103,7 @@
 
 #endif
 
-#ifdef __SANITIZE_UB__
+#ifdef __SANITIZE_UB__ || KASAN_ENABLED
 #ifdef _MSC_VER
 #define NO_SANITIZE __declspec(no_sanitize_address)
 #else

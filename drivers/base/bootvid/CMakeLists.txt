@@ -35,7 +35,7 @@ add_library(bootvid MODULE
     bootvid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(bootvid ksanitize)
 endif()
 

@@ -39,7 +39,7 @@ function(add_hal _halname)
         target_link_libraries(${_halname} -lgcc)
     endif()
 
-    if(SANITIZE_UB)
+    if(SANITIZE_UB OR KASAN_ENABLED)
         target_compile_options(${_halname} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
         target_link_libraries(${_halname} ksanitize)
     endif()
