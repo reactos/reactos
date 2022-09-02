@@ -172,7 +172,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
+        ERR("Imm32LoadIME: LoadLibraryW(%s) failed\n", debugstr_w(szPath));
         return FALSE;
     }
 
