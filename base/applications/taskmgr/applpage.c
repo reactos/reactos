@@ -513,14 +513,7 @@ void ApplicationPageUpdate(void)
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
     }
     /* Enable "Switch To" button only if only one app is selected */
-    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
-    {
-        EnableWindow(hApplicationPageSwitchToButton, TRUE);
-    }
-    else
-    {
-        EnableWindow(hApplicationPageSwitchToButton, FALSE);
-    }
+    EnableWindow(hApplicationPageSwitchToButton, (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1));
 
     /* If we are on the applications tab the windows menu will be */
     /* present on the menu bar so enable & disable the menu items */
