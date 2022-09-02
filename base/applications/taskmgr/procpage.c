@@ -58,7 +58,6 @@ void AddProcess(ULONG Index);
 void UpdateProcesses();
 void gethmsfromlargeint(LARGE_INTEGER largeint, DWORD *dwHours, DWORD *dwMinutes, DWORD *dwSeconds);
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
-void CommaSeparateNumberString(LPWSTR strNumber, ULONG nMaxCount);
 UINT SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount);
@@ -379,22 +378,6 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
 
     // GetNumberFormatW returns number of characters including UNICODE_NULL
     return cchResult - 1;
-}
-
-void CommaSeparateNumberString(LPWSTR strNumber, ULONG nMaxCount)
-{
-    WCHAR  temp[260];
-    UINT   i, j, k;
-
-    for (i=0,j=0; i<(wcslen(strNumber) % 3); i++, j++)
-        temp[j] = strNumber[i];
-    for (k=0; i<wcslen(strNumber); i++,j++,k++) {
-        if ((k % 3 == 0) && (j > 0))
-            temp[j++] = L',';
-        temp[j] = strNumber[i];
-    }
-    temp[j] = L'\0';
-    wcsncpy(strNumber, temp, nMaxCount);
 }
 
 void ProcessPageShowContextMenu(DWORD dwProcessId)
