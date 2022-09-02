@@ -658,7 +658,10 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_H:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE) BackupWindowPos();
+            if (m_Arrangement == NONE)
+            {
+               BackupWindowPos();
+            }
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_Arrangement = TILED;
@@ -666,7 +669,10 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_V:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE) BackupWindowPos();
+            if (m_Arrangement == NONE)
+            {
+               BackupWindowPos();
+            }
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_Arrangement = TILED;
@@ -674,7 +680,10 @@ public:
 
         case ID_SHELL_CMD_CASCADE_WND:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE) BackupWindowPos();
+            if (m_Arrangement == NONE)
+            {
+               BackupWindowPos();
+            }
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             m_Arrangement = CASCADED;
@@ -3046,8 +3055,7 @@ HandleTrayContextMenu:
                                                              : MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_CASCADE));
                 MENUITEMINFOW mii = { sizeof(mii) };
                 GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
-                mii.fMask = MIIM_ID | MIIM_TYPE;
-                mii.wID = ID_SHELL_CMD_UNDO_ACTION;
+                mii.fMask = MIIM_TYPE;
                 mii.fType = MFT_STRING;
                 mii.dwTypeData = const_cast<LPWSTR>(&strCaption[0]);
                 SetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
