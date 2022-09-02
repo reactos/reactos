@@ -217,6 +217,7 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
     IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_APP_DISPLAY_ERROR "View mode invalid or unimplemented"
 END
 
 STRINGTABLE

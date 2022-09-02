@@ -223,6 +223,7 @@ BEGIN
     IDS_APP_DISPLAY_LIST "列表"
     IDS_APP_DISPLAY_TILE "並排"
     IDS_NO_SEARCH_RESULTS "沒有搜尋結果"
+    IDS_APP_DISPLAY_ERROR "View mode invalid or unimplemented"
 END
 
 STRINGTABLE

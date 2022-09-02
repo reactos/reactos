@@ -218,6 +218,7 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Lista"
     IDS_APP_DISPLAY_TILE "Título"
     IDS_NO_SEARCH_RESULTS "Búsqueda sin resultados."
+    IDS_APP_DISPLAY_ERROR "View mode invalid or unimplemented"
 END
 
 STRINGTABLE
