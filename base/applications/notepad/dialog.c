@@ -143,7 +143,7 @@ VOID DIALOG_StatusBarAlignParts(VOID)
     SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)_countof(parts), (LPARAM)parts);
 }
 
-static VOID DIALOG_StatusBarUpdateEoln(VOID)
+static VOID DIALOG_StatusBarUpdateLineEndings(VOID)
 {
     WCHAR szText[128];
 
@@ -467,7 +467,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     NOTEPAD_EnableSearchMenu();
 
     /* Update line endings and encoding on the status bar */
-    DIALOG_StatusBarUpdateEoln();
+    DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
 done:
     if (hFile != INVALID_HANDLE_VALUE)
@@ -633,7 +633,7 @@ BOOL DIALOG_FileSaveAs(VOID)
             UpdateWindowCaption(TRUE);
             
             /* Update line endings and encoding on the status bar */
-            DIALOG_StatusBarUpdateEoln();
+            DIALOG_StatusBarUpdateLineEndings();
             DIALOG_StatusBarUpdateEncoding();
             
             return TRUE;
@@ -994,7 +994,7 @@ VOID DoCreateStatusBar(VOID)
     DIALOG_StatusBarUpdateCaretPos();
     
     /* Update line endings and encoding on the status bar */
-    DIALOG_StatusBarUpdateEoln();
+    DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
 }
 
