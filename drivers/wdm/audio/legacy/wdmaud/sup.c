@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 #define TAG_WDMAUD 'DMDW'
@@ -33,7 +33,7 @@ VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_WDMAUD);
 }
 
 
@@ -62,7 +62,6 @@ GetSysAudioDeviceCount(
     return Count;
 }
 
-
 NTSTATUS
 SetIrpIoStatus(
     IN PIRP Irp,
@@ -73,7 +72,6 @@ SetIrpIoStatus(
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
-
 }
 
 ULONG
@@ -364,17 +362,17 @@ GetSysAudioDevicePnpName(
     NTSTATUS Status;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-   /* first check if the device index is within bounds */
-   if (DeviceIndex >= GetSysAudioDeviceCount(DeviceObject))
-       return STATUS_INVALID_PARAMETER;
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* first check if the device index is within bounds */
+    if (DeviceIndex >= GetSysAudioDeviceCount(DeviceObject))
+        return STATUS_INVALID_PARAMETER;
 
     /* setup the query request */
     Pin.Property.Set = KSPROPSETID_Sysaudio;
     Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME;
     Pin.Property.Flags = KSPROPERTY_TYPE_GET;
     Pin.PinId = DeviceIndex;
-
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* query sysaudio for the device path */
     Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), NULL, 0, &BytesReturned);

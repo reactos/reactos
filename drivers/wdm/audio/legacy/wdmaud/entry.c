@@ -133,9 +133,6 @@ WdmaudAddDevice(
         return Status;
     }
 
-    /* initialize sysaudio device list */
-    InitializeListHead(&DeviceExtension->SysAudioDeviceList);
-
     /* initialize client context device list */
     InitializeListHead(&DeviceExtension->WdmAudClientList);
 

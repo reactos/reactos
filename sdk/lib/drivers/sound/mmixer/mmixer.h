@@ -208,6 +208,12 @@ MMixerOpenWave(
     OUT PHANDLE PinHandle);
 
 MIXER_STATUS
+MMixerGetWavePosition(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    OUT DWORD * Position);
+
+MIXER_STATUS
 MMixerSetWaveStatus(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE PinHandle,

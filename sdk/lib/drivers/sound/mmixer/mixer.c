@@ -555,8 +555,22 @@ MMixerSetControlDetails(
         case MIXERCONTROL_CONTROLTYPE_MUX:
             Status = MMixerSetGetMuxControlDetails(MixerContext, MixerInfo, NodeId, TRUE, Flags, MixerControl, MixerControlDetails, MixerLine);
             break;
+        case MIXERCONTROL_CONTROLTYPE_ONOFF:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_ONOFF\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_LOUDNESS:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_LOUDNESS\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_PEAKMETER:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_PEAKMETER\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_FADER:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_FADER\n");
+            break;
+
         default:
             Status = MM_STATUS_NOT_IMPLEMENTED;
+            DPRINT1("ControlType %lx not implemented\n", MixerControl->Control.dwControlType);
     }
 
     return Status;
@@ -601,7 +615,7 @@ MMixerGetControlDetails(
     MixerInfo = (LPMIXER_INFO)MixerHandle;
 
     /* get mixer control */
-     Status = MMixerGetMixerControlById(MixerInfo, MixerControlDetails->dwControlID, &MixerLine, &MixerControl, &NodeId);
+    Status = MMixerGetMixerControlById(MixerInfo, MixerControlDetails->dwControlID, &MixerLine, &MixerControl, &NodeId);
 
     /* check for success */
     if (Status != MM_STATUS_SUCCESS)
@@ -618,11 +632,20 @@ MMixerGetControlDetails(
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
             Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
             break;
+        case MIXERCONTROL_CONTROLTYPE_MUX:
+            Status = MMixerSetGetMuxControlDetails(MixerContext, MixerInfo, NodeId, FALSE, Flags, MixerControl, MixerControlDetails, MixerLine);
+            break;
         case MIXERCONTROL_CONTROLTYPE_ONOFF:
             DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_ONOFF\n");
             break;
-        case MIXERCONTROL_CONTROLTYPE_MUX:
-            Status = MMixerSetGetMuxControlDetails(MixerContext, MixerInfo, NodeId, FALSE, Flags, MixerControl, MixerControlDetails, MixerLine);
+        case MIXERCONTROL_CONTROLTYPE_LOUDNESS:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_LOUDNESS\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_PEAKMETER:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_PEAKMETER\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_FADER:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_FADER\n");
             break;
 
         default:

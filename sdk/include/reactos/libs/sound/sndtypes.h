@@ -25,16 +25,16 @@
 typedef enum
 {
     // The sound device types
-    WAVE_IN_DEVICE_TYPE     = 1,
-    WAVE_OUT_DEVICE_TYPE    = 2,
-    MIDI_IN_DEVICE_TYPE     = 3,
-    MIDI_OUT_DEVICE_TYPE    = 4,
-    AUX_DEVICE_TYPE         = 5,
-    MIXER_DEVICE_TYPE       = 6,
+    WAVE_IN_DEVICE_TYPE    = 0,
+    WAVE_OUT_DEVICE_TYPE   = 1,
+    MIDI_IN_DEVICE_TYPE    = 2,
+    MIDI_OUT_DEVICE_TYPE   = 3,
+    MIXER_DEVICE_TYPE      = 4,
+    AUX_DEVICE_TYPE        = 5,
 
     // Range of valid device type IDs
-    MIN_SOUND_DEVICE_TYPE   = 1,
-    MAX_SOUND_DEVICE_TYPE   = 6,
+    MIN_SOUND_DEVICE_TYPE   = 0,
+    MAX_SOUND_DEVICE_TYPE   = 5,
 
     // Number of sound device types
     SOUND_DEVICE_TYPES      = 6

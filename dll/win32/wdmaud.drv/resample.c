@@ -1,10 +1,9 @@
 /*
- * PROJECT:     ReactOS Sound System
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/wdmaud.drv/mixer.c
- *
- * PURPOSE:     WDM Audio Driver (User-mode part)
- * PROGRAMMERS: Johannes Anderwald
+ * PROJECT:     ReactOS Sound Subsystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     WDM Audio Driver resampling routines
+ * COPYRIGHT:   Copyright 2009-2010 Johannes Anderwald
+ *              Copyright 2022 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 #include "wdmaud.h"
@@ -12,11 +11,9 @@
 #include <samplerate.h>
 #include <float_cast.h>
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
-#include <mmebuddy_debug.h>
 
-extern HANDLE KernelHandle;
 
 DWORD
 PerformSampleRateConversion(
@@ -38,7 +35,7 @@ PerformSampleRateConversion(
     ULONG NumSamples;
     ULONG NewSamples;
 
-    //SND_TRACE(L"PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u\n", OldRate, NewRate, BytesPerSample, NumChannels);
+    DPRINT("PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u\n", OldRate, NewRate, BytesPerSample, NumChannels);
 
     ASSERT(BytesPerSample == 1 || BytesPerSample == 2 || BytesPerSample == 4);
 
@@ -151,7 +148,7 @@ PerformChannelConversion(
 
     Samples = BufferLength / (BitsPerSample / 8) / OldChannels;
 
-    SND_TRACE(L"PerformChannelConversion OldChannels %u NewChannels %u\n", OldChannels, NewChannels);
+    DPRINT("PerformChannelConversion OldChannels %u NewChannels %u\n", OldChannels, NewChannels);
 
     if (NewChannels > OldChannels)
     {
@@ -258,7 +255,6 @@ PerformChannelConversion(
     return ERROR_SUCCESS;
 }
 
-
 DWORD
 PerformQualityConversion(
     PUCHAR Buffer,
@@ -274,9 +270,9 @@ PerformQualityConversion(
     ASSERT(OldWidth != NewWidth);
 
     Samples = BufferLength / (OldWidth / 8);
-    //DPRINT("Samples %u BufferLength %u\n", Samples, BufferLength);
 
-    //SND_TRACE(L"PerformQualityConversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
+    DPRINT("PerformQualityConversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
+    DPRINT("Samples %u BufferLength %u\n", Samples, BufferLength);
 
     if (OldWidth == 8 && NewWidth == 16)
     {
@@ -406,79 +402,55 @@ PerformQualityConversion(
     return ERROR_SUCCESS;
 }
 
-VOID
-CALLBACK
-MixerCompletionRoutine(
-    IN  DWORD dwErrorCode,
-    IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped)
-{
-    PSOUND_OVERLAPPED Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
-
-    /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, PtrToUlong(Overlap->CompletionContext), lpOverlapped);
-}
 
 MMRESULT
-WriteFileEx_Remixer(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID OffsetPtr,
-    IN  DWORD Length,
-    IN  PSOUND_OVERLAPPED Overlap,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+WdmAudResampleStream(
+    _In_ PWDMAUD_DEVICE_INFO DeviceInfo,
+    _Inout_ PWAVEHDR WaveHeader)
 {
-    HANDLE Handle;
-    WDMAUD_DEVICE_INFO DeviceInfo;
     DWORD BufferLength, BufferLengthTemp;
     PVOID BufferOut, BufferOutTemp;
+    PWAVEFORMATEX WaveFormatEx;
     DWORD Status;
-    BOOL Result;
 
-    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
-    VALIDATE_MMSYS_PARAMETER( OffsetPtr );
-    VALIDATE_MMSYS_PARAMETER( Overlap );
-    VALIDATE_MMSYS_PARAMETER( CompletionRoutine );
+    VALIDATE_MMSYS_PARAMETER( DeviceInfo );
 
-    GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    /* Get wave format */
+    WaveFormatEx = (PWAVEFORMATEX)DeviceInfo->Buffer;
 
-    SND_ASSERT(Handle);
+    /* Get input data */
+    BufferOut = WaveHeader->lpData;
+    BufferLength = WaveHeader->dwBufferLength;
 
-    BufferOut = OffsetPtr;
-    BufferLength = Length;
-
-    if (SoundDeviceInstance->WaveFormatEx.wBitsPerSample != 16)
+    /* Do the resampling */
+    if (WaveFormatEx->wBitsPerSample > 16)
     {
-        Status = PerformQualityConversion(OffsetPtr,
-                                          Length,
-                                          SoundDeviceInstance->WaveFormatEx.wBitsPerSample,
+        Status = PerformQualityConversion((PUCHAR)WaveHeader->lpData,
+                                          WaveHeader->dwBufferLength,
+                                          WaveFormatEx->wBitsPerSample,
                                           16,
                                           &BufferOut,
                                           &BufferLength);
         if (Status)
         {
-            SND_TRACE(L"PerformQualityConversion failed\n");
+            DPRINT("PerformQualityConversion failed\n");
             return MMSYSERR_NOERROR;
         }
     }
 
-    if (SoundDeviceInstance->WaveFormatEx.nChannels != 2)
+    if (WaveFormatEx->nChannels > 2)
     {
         Status = PerformChannelConversion(BufferOut,
                                           BufferLength,
-                                          SoundDeviceInstance->WaveFormatEx.nChannels,
+                                          WaveFormatEx->nChannels,
                                           2,
                                           16,
                                           &BufferOutTemp,
                                           &BufferLengthTemp);
 
-        if (BufferOut != OffsetPtr)
-        {
-            HeapFree(GetProcessHeap(), 0, BufferOut);
-        }
-
         if (Status)
         {
-            SND_TRACE(L"PerformChannelConversion failed\n");
+            DPRINT("PerformChannelConversion failed\n");
             return MMSYSERR_NOERROR;
         }
 
@@ -486,25 +458,20 @@ WriteFileEx_Remixer(
         BufferLength = BufferLengthTemp;
     }
 
-    if (SoundDeviceInstance->WaveFormatEx.nSamplesPerSec != 44100)
+    if (WaveFormatEx->nSamplesPerSec > 48000)
     {
         Status = PerformSampleRateConversion(BufferOut,
                                              BufferLength,
-                                             SoundDeviceInstance->WaveFormatEx.nSamplesPerSec,
+                                             WaveFormatEx->nSamplesPerSec,
                                              44100,
                                              2,
                                              2,
                                              &BufferOutTemp,
                                              &BufferLengthTemp);
 
-        if (BufferOut != OffsetPtr)
-        {
-            HeapFree(GetProcessHeap(), 0, BufferOut);
-        }
-
         if (Status)
         {
-            SND_TRACE(L"PerformSampleRateConversion failed\n");
+            DPRINT("PerformSampleRateConversion failed\n");
             return MMSYSERR_NOERROR;
         }
 
@@ -512,42 +479,11 @@ WriteFileEx_Remixer(
         BufferLength = BufferLengthTemp;
     }
 
-    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
-    DeviceInfo.hDevice = Handle;
-    DeviceInfo.DeviceType = WAVE_OUT_DEVICE_TYPE; //FIXME
-    DeviceInfo.Header.FrameExtent = BufferLength;
-    DeviceInfo.Header.DataUsed = BufferLength;
-    DeviceInfo.Header.Data = BufferOut;
-    DeviceInfo.Header.Size = sizeof(KSSTREAM_HEADER);
-    DeviceInfo.Header.PresentationTime.Numerator = 1;
-    DeviceInfo.Header.PresentationTime.Denominator = 1;
+    DPRINT("OriginalLength %u NewLength %u\n", WaveHeader->dwBufferLength, BufferLength);
 
-    Overlap->CompletionContext = UlongToPtr(Length);
-    Overlap->OriginalCompletionRoutine = CompletionRoutine;
-
-    Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-
-    //SND_TRACE(L"OriginalLength %u NewLength %u\n", Length, BufferLength);
-
-#if 0
-    Result = WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
-#else
-    Result = WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, MixerCompletionRoutine);
-#endif
-
-    if ( ! Result )
-    {
-        SND_TRACE(L"WriteFileEx failed with %x\n", GetLastError());
-        return MMSYSERR_NOERROR;
-    }
-
-    WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
-
-#ifdef USERMODE_MIXER
-       // if (BufferOut != OffsetPtr)
-       //     HeapFree(GetProcessHeap(), 0, BufferOut);
-#endif
-
+    /* Set output data */
+    WaveHeader->lpData = BufferOut;
+    WaveHeader->dwBufferLength = BufferLength;
 
     return MMSYSERR_NOERROR;
 }

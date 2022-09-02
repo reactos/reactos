@@ -126,8 +126,8 @@ MMixerInitializeDataFormat(
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->WaveFormatEx.cbSize = WaveFormatEx->cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + WaveFormatEx->cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
@@ -160,6 +160,7 @@ MMixerGetAudioPinDataRanges(
     Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)NULL, 0, &BytesReturned);
     if (Status != MM_STATUS_MORE_ENTRIES)
     {
+        DPRINT1("MM Status %x\n", Status);
         return Status;
     }
 
@@ -174,6 +175,7 @@ MMixerGetAudioPinDataRanges(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed */
+        DPRINT1("MM Status %x\n", Status);
         MixerContext->Free(MultipleItem);
         return Status;
     }
@@ -265,7 +267,10 @@ MMixerOpenWavePin(
         if (Status == STATUS_SUCCESS)
             MixerStatus = MM_STATUS_SUCCESS;
         else
+        {
+            DPRINT1("KsCreatePin failed with status 0x%lx\n", Status);
             MixerStatus = MM_STATUS_UNSUCCESSFUL;
+        }
     }
 
     /* free create info */
@@ -459,9 +464,17 @@ MMixerOpenWave(
     /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
+    DPRINT1("wFormatTag requested: 0x%x\n", WaveFormat->wFormatTag);
+
     if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
+        WaveFormat->wFormatTag = WAVE_FORMAT_PCM;
+
+    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM &&
+        WaveFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE &&
+        WaveFormat->wFormatTag != WAVE_FORMAT_IEEE_FLOAT)
     {
         /* not implemented */
+        DPRINT1("Unsupported wFormatTag requested: 0x%x\n", WaveFormat->wFormatTag);
         return MM_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -470,6 +483,7 @@ MMixerOpenWave(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to find wave info */
+        DPRINT1("1\n");
         return MM_STATUS_INVALID_PARAMETER;
     }
 
@@ -539,6 +553,7 @@ MMixerWaveOutCapabilities(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* invalid context passed */
+        DPRINT1("1\n");
         return Status;
     }
 
@@ -550,6 +565,7 @@ MMixerWaveOutCapabilities(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to find wave info */
+        DPRINT1("2\n");
         return MM_STATUS_UNSUCCESSFUL;
     }
 
@@ -601,6 +617,38 @@ MMixerGetWaveOutCount(
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     return MixerList->WaveOutListCount;
+}
+
+MIXER_STATUS
+MMixerGetWavePosition(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    OUT DWORD * Position)
+{
+    KSAUDIO_POSITION AudioPosition;
+    KSPROPERTY Property;
+    MIXER_STATUS Status;
+    ULONG Length;
+
+    /* verify mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* invalid context passed */
+        return Status;
+    }
+
+    Property.Id = KSPROPERTY_AUDIO_POSITION;
+    Property.Set = KSPROPSETID_Audio;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY, &Property, sizeof(KSPROPERTY), &AudioPosition, sizeof(KSAUDIO_POSITION), &Length);
+    DPRINT1("Success %x\n", Status == MM_STATUS_SUCCESS);
+    /* Store audio position */
+    *Position = (DWORD)AudioPosition.PlayOffset;
+
+    return Status;
 }
 
 MIXER_STATUS
