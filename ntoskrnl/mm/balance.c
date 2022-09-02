@@ -43,7 +43,9 @@ static inline VOID UpdatePeakCommitment(VOID)
 {
     // HACK: MmTotalCommittedPages should be adjusted consistently with
     // other counters at different places.
-    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
+    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+                          MiMemoryConsumers[MC_USER].PagesUsed +
+                          MiUsedSwapPages;
 
     if (MmTotalCommittedPages > MmPeakCommitment)
         MmPeakCommitment = MmTotalCommittedPages;
@@ -60,8 +62,6 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     MiMinimumAvailablePages = 256;
     MiMinimumPagesPerRun = 256;
     MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages / 2;
-    MmPeakCommitment = 0;
-    UpdatePeakCommitment();
 }
 
 CODE_SEG("INIT")
