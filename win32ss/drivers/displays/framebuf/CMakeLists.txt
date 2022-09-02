@@ -11,8 +11,13 @@ add_library(framebuf MODULE
     ${SOURCE}
     framebuf.rc)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(framebuf ksanitize_w32k)
+endif()
+
+if(KASAN_ENABLED)
+    target_link_libraries(framebuf ksanitize)
+    target_compile_options(framebuf PRIVATE "-fsanitize=address")
 endif()
 
 set_module_type(framebuf kerneldll ENTRYPOINT DrvEnableDriver 12)

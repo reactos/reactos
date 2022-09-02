@@ -49,7 +49,7 @@ if(STACK_PROTECTOR)
     add_subdirectory(gcc_ssp)
 endif()
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     add_subdirectory(ksanitize)
 endif()
 

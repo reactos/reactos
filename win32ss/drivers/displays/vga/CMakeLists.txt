@@ -16,8 +16,12 @@ add_library(vgaddi MODULE
     ${SOURCE}
     vgaddi.rc)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(vgaddi ksanitize_w32k)
+endif()
+
+if(KASAN_ENABLED)
+    target_compile_options(vgaddi PRIVATE "-fsanitize=address")
 endif()
 
 set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)

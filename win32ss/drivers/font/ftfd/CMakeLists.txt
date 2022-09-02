@@ -17,7 +17,11 @@ add_library(ftfd MODULE
     freetype.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
+    target_link_libraries(ftfd ksanitize_w32k)
+endif()
+
+if(KASAN_ENABLED)
     target_link_libraries(ftfd ksanitize_w32k)
 endif()
 

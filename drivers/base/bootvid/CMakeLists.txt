@@ -35,8 +35,12 @@ add_library(bootvid MODULE
     bootvid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
 
-if(SANITIZE_UB)
+if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(bootvid ksanitize)
+endif()
+
+if(KASAN_ENABLED)
+    target_compile_options(bootvid PRIVATE "-fsanitize=address")
 endif()
 
 set_module_type(bootvid kerneldll ENTRYPOINT 0)
