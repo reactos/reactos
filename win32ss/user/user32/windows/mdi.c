@@ -2192,7 +2192,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         ++ret;
     }
 
-    NtUserEndDeferWindowPosEx(hDWP, TRUE);
+    EndDeferWindowPos(hDWP);
 
     if (hwndPrev)
         SetForegroundWindow(hwndPrev);
