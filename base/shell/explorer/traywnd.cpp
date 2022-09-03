@@ -3055,7 +3055,7 @@ HandleTrayContextMenu:
                                                              : MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_CASCADE));
                 MENUITEMINFOW mii = { sizeof(mii) };
                 GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
-                mii.fMask = MIIM_TYPE;
+                mii.fMask  = MIIM_TYPE; 
                 mii.fType = MFT_STRING;
                 mii.dwTypeData = const_cast<LPWSTR>(&strCaption[0]);
                 SetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
