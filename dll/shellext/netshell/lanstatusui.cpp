@@ -15,7 +15,6 @@ CLanStatus::CLanStatus() :
 {
 }
 
-
 VOID
 UpdateLanStatusUiDlg(
     HWND hwndDlg,
