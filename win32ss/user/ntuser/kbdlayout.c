@@ -997,7 +997,7 @@ cleanup:
 }
 
 /* Win: xxxImmLoadLayout */
-PIMEINFOEX APIENTRY co_UserImmLoadLayout(HKL hKL)
+PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 {
     PIMEINFOEX piiex;
 
