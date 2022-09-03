@@ -2,6 +2,15 @@
 #define _USRMGR_H
 
 #include <stdarg.h>
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(usrmgr);
+
+#ifdef UNICODE
+#define dbgstrx(x)      wine_dbgstr_w(x)
+#else
+#define dbgstrx(x)      (const char*)(x)
+#endif
 
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -36,9 +45,6 @@ BOOL
 GroupProperties(HWND hwndDlg);
 
 /* misc.c */
-VOID
-DebugPrintf(LPTSTR szFormat, ...);
-
 BOOL
 CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,
