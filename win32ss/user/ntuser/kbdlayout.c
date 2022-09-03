@@ -1038,7 +1038,7 @@ NtUserLoadKeyboardLayoutEx(
 {
     HKL hklRet = NULL;
     PKL pKl = NULL, pklLast;
-    WCHAR Buffer[9];
+    WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING ustrSafeKLID;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|

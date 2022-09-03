@@ -108,7 +108,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
  */
 BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
-    WCHAR szKBD[9];
+    WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
     HKL hOldKL, hNewKL, *pList;
     PIMEDPI pImeDpi;
