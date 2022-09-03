@@ -11,7 +11,7 @@
 
 typedef VOID (*TL_FN_FREE)(PVOID);
 
-/* TL stands for Thread Lock */
+/* Thread Lock structure */
 typedef struct _TL
 {
     struct _TL* next;
