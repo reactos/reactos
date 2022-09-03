@@ -634,8 +634,7 @@ KsStreamIo(
     IoStack = IoGetNextIrpStackLocation(Irp);
     /* setup stack parameters */
     IoStack->FileObject = FileObject;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = Length;
-    IoStack->Parameters.DeviceIoControl.Type3InputBuffer = StreamHeaders;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
     IoStack->Parameters.DeviceIoControl.IoControlCode = (Flags == KSSTREAM_READ ? IOCTL_KS_READ_STREAM : IOCTL_KS_WRITE_STREAM);
 
     if (CompletionRoutine)
