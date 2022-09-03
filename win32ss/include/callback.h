@@ -230,4 +230,5 @@ NTSTATUS WINAPI
 User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength);
+
 #endif /* __INCLUDE_USER32_CALLBACK_H */
