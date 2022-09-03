@@ -661,7 +661,7 @@ IntLoadKeyboardLayout(
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
-    WCHAR wszLayoutId[10], wszNewKLID[10], szImeFileName[80];
+    WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
     PWCHAR endptr;
     HKL hNewKL;
     HKEY hKey;
