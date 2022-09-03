@@ -149,10 +149,10 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
-/* Define dummy IME functions */
+/* Define stub IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
-    type APIENTRY Dummy##name params { \
-        FIXME("%s: Why dummy called?\n", #name); \
+    type APIENTRY Stub##name params { \
+        FIXME("%s: Why stub called?\n", #name); \
         return (type)0; \
     }
 #include "imetable.h"
@@ -176,8 +176,8 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         return FALSE;
     }
 
-    /* Populate the table by dummy IME functions */
-#define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Dummy##name;
+    /* Populate the table by stub IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Stub##name;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
