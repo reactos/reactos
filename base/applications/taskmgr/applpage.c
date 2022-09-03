@@ -512,15 +512,8 @@ void ApplicationPageUpdate(void)
     {
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
     }
-    /* Enable "Switch To" button only if one app is selected */
-    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
-    {
-        EnableWindow(hApplicationPageSwitchToButton, TRUE);
-    }
-    else
-    {
-    EnableWindow(hApplicationPageSwitchToButton, FALSE);
-    }
+    /* Enable "Switch To" button only if only one app is selected */
+    EnableWindow(hApplicationPageSwitchToButton, (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1));
 
     /* If we are on the applications tab the windows menu will be */
     /* present on the menu bar so enable & disable the menu items */
@@ -693,6 +686,7 @@ void ApplicationPageShowContextMenu2(void)
 
     if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1)
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_ENABLED);
@@ -702,6 +696,7 @@ void ApplicationPageShowContextMenu2(void)
     }
     else if (ListView_GetSelectedCount(hApplicationPageListCtrl) > 1)
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_ENABLED);
@@ -711,6 +706,7 @@ void ApplicationPageShowContextMenu2(void)
     }
     else
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
