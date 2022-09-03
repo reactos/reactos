@@ -39,8 +39,12 @@ static LONG PageOutThreadActive;
 
 /* FUNCTIONS ****************************************************************/
 
-static inline VOID UpdatePeakCommitment(VOID)
+static inline VOID UpdateTotalCommittedPages(VOID)
 {
+    /*
+     *   Add up all the used "Committed" memory + pagefile.
+     *   Not sure this is right. 8^\
+     */
     // HACK: MmTotalCommittedPages should be adjusted consistently with
     // other counters at different places.
     MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
@@ -296,7 +300,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
     /* Update the target */
     InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    UpdatePeakCommitment();
+    UpdateTotalCommittedPages();
 
     /*
      * Actually allocate the page.

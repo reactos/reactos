@@ -714,10 +714,7 @@ QSI_DEF(SystemPerformanceInformation)
     }
 
     Spi->AvailablePages = (ULONG)MmAvailablePages;
-    /*
-     *   Add up all the used "Committed" memory + pagefile.
-     *   Not sure this is right. 8^\
-     */
+
     Spi->CommittedPages = MmTotalCommittedPages;
     /*
      *  Add up the full system total + pagefile.

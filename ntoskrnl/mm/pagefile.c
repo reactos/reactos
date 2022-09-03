@@ -89,8 +89,12 @@ static BOOLEAN MmSystemPageFileLocated = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-static inline VOID UpdatePeakCommitment(VOID)
+static inline VOID UpdateTotalCommittedPages(VOID)
 {
+    /*
+     *   Add up all the used "Committed" memory + pagefile.
+     *   Not sure this is right. 8^\
+     */
     // HACK: MmTotalCommittedPages should be adjusted consistently with
     // other counters at different places.
     MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
@@ -340,7 +344,7 @@ MmAllocSwapPage(VOID)
             MiUsedSwapPages++;
             MiFreeSwapPages--;
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
-            UpdatePeakCommitment();
+            UpdateTotalCommittedPages();
             entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
             return(entry);
         }
