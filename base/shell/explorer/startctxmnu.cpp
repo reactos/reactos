@@ -136,7 +136,6 @@ public:
     {
         m_TrayWnd = pTrayWnd;
         m_Owner = hWndOwner;
-        m_idCmdCmLast = ID_SHELL_CMD_LAST;
         return S_OK;
     }
 
@@ -227,6 +226,7 @@ public:
 
     CStartMenuBtnCtxMenu()
     {
+        m_idCmdCmLast = ID_SHELL_CMD_LAST;
     }
 
     virtual ~CStartMenuBtnCtxMenu()
