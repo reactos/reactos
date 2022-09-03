@@ -15,6 +15,8 @@ CLanStatus::CLanStatus() :
 {
 }
 
+BOOL bFirst;
+
 VOID
 UpdateLanStatusUiDlg(
     HWND hwndDlg,
@@ -128,6 +130,17 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
         return;
+    }
+
+    if(bFirst)
+    {
+        /*
+        On first execution, pContext->dwIn{out}Octets will be null while IF data are already refreshed with non null data so a gap is normal
+        and does not corresponds to an effective packet tx or rx
+        */
+        pContext->dwInOctets = IfEntry.dwInOctets;
+        pContext->dwOutOctets = IfEntry.dwOutOctets;
+        bFirst = FALSE;
     }
 
     hIcon = NULL;
@@ -263,6 +276,7 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 
     /* update adapter info */
     pContext->Status = -1;
+    bFirst = TRUE;
     UpdateLanStatus(hwndDlg, pContext);
     NcFreeNetconProperties(pProperties);
 }
