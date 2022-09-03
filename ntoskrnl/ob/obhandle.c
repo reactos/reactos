@@ -60,11 +60,6 @@ ObGetProcessHandleCount(IN PEPROCESS Process)
 
     ASSERT(Process);
 
-    /* Idle Process shares the HandleTable with PsInitialSystemProcess so let's return these
-    Handle count for System only, not Idle.	*/
-    if(Process == PsIdleProcess )
-        return 0;
-
     /* Ensure the handle table doesn't go away while we use it */
     HandleTable = ObReferenceProcessHandleTable(Process);
 
