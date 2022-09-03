@@ -44,8 +44,8 @@ static inline VOID UpdatePeakCommitment(VOID)
     // HACK: MmTotalCommittedPages should be adjusted consistently with
     // other counters at different places.
     MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
-                          MiMemoryConsumers[MC_USER].PagesUsed +
-                          MiUsedSwapPages;
+                            MiMemoryConsumers[MC_USER].PagesUsed +
+                            MiUsedSwapPages;
 
     if (MmTotalCommittedPages > MmPeakCommitment)
         MmPeakCommitment = MmTotalCommittedPages;
