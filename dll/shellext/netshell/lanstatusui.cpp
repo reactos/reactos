@@ -133,9 +133,10 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     if (pContext->Status == (UINT)-1)
     {
         /*
-        On first execution, pContext->dwInOctets/dwInOctets will be at 0 while interface data is already refreshed with non-null data
-        so a gap is normal and does not correspond to an effective tx or rx packet
-        */
+         * On first execution, pContext->dw[In|Out]Octets will be zero while
+         * the interface info is already refreshed with non-null data, so a
+         * gap is normal and does not correspond to an effective TX or RX packet.
+         */
         pContext->dwInOctets = IfEntry.dwInOctets;
         pContext->dwOutOctets = IfEntry.dwOutOctets;
     }
