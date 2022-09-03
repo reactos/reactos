@@ -91,13 +91,11 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     RegCloseKey(hLayoutKey);
 
-    pImeInfoEx->hkl = hKL;
     pImeInfoEx->fLoadFlag = 0;
 
     if (error != ERROR_SUCCESS || dwType != REG_SZ)
     {
         ERR("RegQueryValueExW: 0x%lX, 0x%lX\n", error, dwType);
-        pImeInfoEx->hkl = NULL;
         return FALSE;
     }
 
