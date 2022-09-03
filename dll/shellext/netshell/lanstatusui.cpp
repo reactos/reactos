@@ -15,7 +15,6 @@ CLanStatus::CLanStatus() :
 {
 }
 
-BOOL bFirst;
 
 VOID
 UpdateLanStatusUiDlg(
@@ -132,7 +131,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         return;
     }
 
-    if(bFirst)
+    if(pContext->Status == (UINT)-1)
     {
         /*
         On first execution, pContext->dwIn{out}Octets will be null while IF data are already refreshed with non null data so a gap is normal
@@ -140,7 +139,6 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         */
         pContext->dwInOctets = IfEntry.dwInOctets;
         pContext->dwOutOctets = IfEntry.dwOutOctets;
-        bFirst = FALSE;
     }
 
     hIcon = NULL;
@@ -276,7 +274,6 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 
     /* update adapter info */
     pContext->Status = -1;
-    bFirst = TRUE;
     UpdateLanStatus(hwndDlg, pContext);
     NcFreeNetconProperties(pProperties);
 }
