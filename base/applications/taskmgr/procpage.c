@@ -622,7 +622,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             break;
 
         case COLUMN_PID:
-            wsprintfW(lpText, L"%lu", PerfDataGetProcessId(Index));
+            StringCchPrintfW(lpText, nMaxCount, L"%lu", PerfDataGetProcessId(Index));
             break;
 
         case COLUMN_USERNAME:
