@@ -343,8 +343,7 @@ SH_FormatInteger(
     /* Print the number in uniform mode */
     StringCchPrintfW(wszNumber, _countof(wszNumber), L"%I64u", Num);
 
-    // Get system strings for decimal and thousand separators.
-    WCHAR wszDecimalSep[8], wszThousandSep[8];
+    /* Get system strings for decimal and thousand separators */
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, wszDecimalSep, _countof(wszDecimalSep));
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, wszThousandSep, _countof(wszThousandSep));
 
