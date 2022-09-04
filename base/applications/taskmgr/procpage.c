@@ -686,7 +686,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             break;
 
         case COLUMN_BASEPRIORITY:
-            wsprintfW(lpText, L"%lu", PerfDataGetBasePriority(Index));
+            StringCchPrintfW(lpText, nMaxCount, L"%lu", PerfDataGetBasePriority(Index));
             break;
 
         case COLUMN_HANDLECOUNT:
