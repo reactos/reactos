@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "High Color (16 Bit)"
     IDS_24BPP "True Color (24 Bit)"
     IDS_32BPP "True Color (32 Bit)"
+    IDS_NOTAVAIL "Not Available"
 END

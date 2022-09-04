@@ -47,4 +47,5 @@ BEGIN
     IDS_16BPP "Color de alto contraste (16 bit)"
     IDS_24BPP "Color verdadero (24 bit)"
     IDS_32BPP "Color verdadero (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END

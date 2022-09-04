@@ -308,28 +308,48 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
         LocalFree((HLOCAL)lpAdapterName);
     }
 
+    WCHAR lpNA[64];
+     if (!LoadString(hInstance,
+                        IDS_NOTAVAIL,
+                        lpNA,
+                        sizeof(lpNA) / sizeof(lpNA[0])));
+
     if (This->DeskExtInterface != NULL)
     {
+        DPRINT1("Adapter found : CHIP : %s DAC : %s MEM: %s ADAPT %s BIOS : %s\n",
+                        This->DeskExtInterface->ChipType,
+                        This->DeskExtInterface->DacType,
+                        This->DeskExtInterface->MemorySize,
+                        This->DeskExtInterface->AdapterString,
+                        This->DeskExtInterface->BiosString);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_CHIPTYPE,
-                        This->DeskExtInterface->ChipType);
+                        wcslen(This->DeskExtInterface->ChipType) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_DACTYPE,
-                        This->DeskExtInterface->DacType);
+                        wcslen(This->DeskExtInterface->DacType) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_MEMORYSIZE,
-                        This->DeskExtInterface->MemorySize);
+                        wcslen(This->DeskExtInterface->MemorySize) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_ADAPTERSTRING,
-                        This->DeskExtInterface->AdapterString);
+                        wcslen(This->DeskExtInterface->AdapterString) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_BIOSINFORMATION,
-                        This->DeskExtInterface->BiosString);
+                        wcslen(This->DeskExtInterface->BiosString) ? This->DeskExtInterface->ChipType : lpNA);
 
         This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
     }
     else
+    {
+        DPRINT1("No adapter found.\n");
         This->lpDevModeOnInit = NULL;
+        SetDlgItemTextW(This->hwndDlg, IDC_CHIPTYPE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_DACTYPE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_ADAPTERSTRING, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_MEMORYSIZE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_BIOSINFORMATION, lpNA);
+    }
 
     This->lpSelDevMode = This->lpDevModeOnInit;
 }

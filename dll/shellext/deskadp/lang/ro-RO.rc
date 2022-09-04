@@ -53,4 +53,5 @@ BEGIN
     IDS_16BPP "Culoare de înaltă calitate (16 biți)"
     IDS_24BPP "Calitate fotografică (24 biți)"
     IDS_32BPP "Calitate fotografică (32 biți)"
+    IDS_NOTAVAIL "Not Available"
 END

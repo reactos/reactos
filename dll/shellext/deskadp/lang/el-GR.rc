@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Πολλά χρώματα (16 bit)"
     IDS_24BPP "Φυσικά χρώματα (24 bit)"
     IDS_32BPP "Φυσικά χρώματα (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END
