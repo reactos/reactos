@@ -682,7 +682,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
 
         case COLUMN_NONPAGEDPOOL:
             SH_FormatInteger(PerfDataGetNonPagedPoolUsagePages(Index) / 1024, lpText, nMaxCount);
-            wcscat(lpText, L" K");
+            StringCchCatW(lpText, nMaxCount, L" K");
             break;
 
         case COLUMN_BASEPRIORITY:
