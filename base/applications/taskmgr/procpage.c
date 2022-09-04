@@ -644,7 +644,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
         case COLUMN_CPUTIME:
             time = PerfDataGetCPUTime(Index);
             gethmsfromlargeint(time, &dwHours, &dwMinutes, &dwSeconds);
-            wsprintfW(lpText, L"%lu:%02lu:%02lu", dwHours, dwMinutes, dwSeconds);
+            StringCchPrintfW(lpText, nMaxCount, L"%lu:%02lu:%02lu", dwHours, dwMinutes, dwSeconds);
             break;
 
         case COLUMN_MEMORYUSAGE:
