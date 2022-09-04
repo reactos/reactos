@@ -130,17 +130,6 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         return;
     }
 
-    if (pContext->Status == (UINT)-1)
-    {
-        /*
-         * On first execution, pContext->dw[In|Out]Octets will be zero while
-         * the interface info is already refreshed with non-null data, so a
-         * gap is normal and does not correspond to an effective TX or RX packet.
-         */
-        pContext->dwInOctets = IfEntry.dwInOctets;
-        pContext->dwOutOctets = IfEntry.dwOutOctets;
-    }
-
     hIcon = NULL;
     if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED || IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
     {

@@ -429,8 +429,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute d'arc"
-    IDS_ANGLE_ARCSECONDS "Seconde d'arc"
+    IDS_ANGLE_ARCMINUTES "Minute of arc"
+    IDS_ANGLE_ARCSECONDS "Second of arc"
     IDS_ANGLE_DEGREES "Degrés"
     IDS_ANGLE_GRADIANS "Grades"
     IDS_ANGLE_RADIANS "Radians"
@@ -599,7 +599,7 @@ BEGIN
     IDS_PRESSURE_KILOPASCALS "Kilopascals"
     IDS_PRESSURE_MM_OF_MERCURY "Millimètres de mercure"
     IDS_PRESSURE_PASCALS "Pascals"
-    IDS_PRESSURE_PSI "Livre-force par pouce-carrés"
+    IDS_PRESSURE_PSI "Pounds-force per square inch"
 END
 
 /* Temperatures */

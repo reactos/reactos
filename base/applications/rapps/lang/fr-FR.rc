@@ -214,7 +214,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Détails"
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Tuile"
-    IDS_NO_SEARCH_RESULTS "Aucun résultat"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

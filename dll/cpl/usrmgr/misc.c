@@ -9,6 +9,20 @@
 
 #include "usrmgr.h"
 
+VOID
+DebugPrintf(LPTSTR szFormat, ...)
+{
+    TCHAR szOut[512];
+    va_list arg_ptr;
+
+
+    va_start (arg_ptr, szFormat);
+    _vstprintf (szOut, szFormat, arg_ptr);
+    va_end (arg_ptr);
+
+    MessageBox(NULL, szOut, _T("Debug"), MB_OK);
+}
+
 BOOL
 CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,

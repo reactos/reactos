@@ -167,7 +167,7 @@ SetUserProfileData(HWND hwndDlg,
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
 
     if (pszProfilePath)
@@ -476,7 +476,7 @@ AddSelectedGroupsToUser(HWND hwndDlg,
                                                  (LPBYTE)&memberInfo, 1);
                 if (status == NERR_Success)
                 {
-                    TRACE("Selected group: %s", dbgstrx(szGroupName));
+                    DebugPrintf(_TEXT("Selected group: %s"), szGroupName);
                     bResult = TRUE;
                 }
                 else
@@ -784,7 +784,7 @@ SetUserGeneralData(HWND hwndDlg,
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
 
     if (pszFullName)
