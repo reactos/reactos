@@ -1,9 +1,8 @@
 /*
- * PROJECT:     Solitaire
+ * PROJECT:     ReactOS Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/lang/en-US.rc
- * PURPOSE:     Croatian Language File for Solitaire
- * TRANSLATOR: Andrej Bartulin
+ * PURPOSE:     Croatian resource file
+ * TRANSLATOR:  Copyright 2022 Andrej Bartulin <andrej.bartulinvr@gmail.com>
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
