@@ -330,7 +330,7 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
                         *(This->DeskExtInterface->AdapterString) ? This->DeskExtInterface->AdapterString : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_BIOSINFORMATION,
-                        wcslen(This->DeskExtInterface->BiosString) ? This->DeskExtInterface->ChipType : lpNA);
+                        *(This->DeskExtInterface->BiosString) ? This->DeskExtInterface->BiosString : lpNA);
 
         This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
     }
