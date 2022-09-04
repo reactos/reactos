@@ -31,6 +31,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "mm.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -88,20 +89,6 @@ static BOOLEAN MmSwapSpaceMessage = FALSE;
 static BOOLEAN MmSystemPageFileLocated = FALSE;
 
 /* FUNCTIONS *****************************************************************/
-
-static inline VOID UpdateTotalCommittedPages(VOID)
-{
-    /*
-     *   Add up all the used "Committed" memory + pagefile.
-     *   Not sure this is right. 8^\
-     */
-    // HACK: MmTotalCommittedPages should be adjusted consistently with
-    // other counters at different places.
-    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed + MiMemoryConsumers[MC_USER].PagesUsed + MiUsedSwapPages;
-
-    if (MmTotalCommittedPages > MmPeakCommitment)
-        MmPeakCommitment = MmTotalCommittedPages;
-}
 
 VOID
 NTAPI
@@ -345,7 +332,7 @@ MmAllocSwapPage(VOID)
             MiUsedSwapPages++;
             MiFreeSwapPages--;
             UpdateTotalCommittedPages();
-			
+
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
             return(entry);
