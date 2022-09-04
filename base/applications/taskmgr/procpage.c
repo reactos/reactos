@@ -58,7 +58,6 @@ void AddProcess(ULONG Index);
 void UpdateProcesses();
 void gethmsfromlargeint(LARGE_INTEGER largeint, DWORD *dwHours, DWORD *dwMinutes, DWORD *dwSeconds);
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
-UINT SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
@@ -376,11 +375,11 @@ SH_FormatInteger(
 
     /* Format the number */
     cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
-                                0,
-                                wszNumber,
-                                &nf,
-                                pwszResult,
-                                cchResultMax);
+                                 0,
+                                 wszNumber,
+                                 &nf,
+                                 pwszResult,
+                                 cchResultMax);
     if (!cchResult)
         return 0;
 
@@ -610,10 +609,6 @@ void AddProcess(ULONG Index)
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount)
 {
     IO_COUNTERS iocounters;
-    LARGE_INTEGER time;
-    DWORD dwHours;
-    DWORD dwMinutes;
-    DWORD dwSeconds;
 
     switch (ColumnDataHints[ColumnIndex])
     {
@@ -642,10 +637,17 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             break;
 
         case COLUMN_CPUTIME:
+        {
+            LARGE_INTEGER time;
+            DWORD dwHours;
+            DWORD dwMinutes;
+            DWORD dwSeconds;
+
             time = PerfDataGetCPUTime(Index);
             gethmsfromlargeint(time, &dwHours, &dwMinutes, &dwSeconds);
             StringCchPrintfW(lpText, nMaxCount, L"%lu:%02lu:%02lu", dwHours, dwMinutes, dwSeconds);
             break;
+        }
 
         case COLUMN_MEMORYUSAGE:
             SH_FormatInteger(PerfDataGetWorkingSetSizeBytes(Index) / 1024, lpText, nMaxCount);
@@ -736,7 +738,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             break;
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 
