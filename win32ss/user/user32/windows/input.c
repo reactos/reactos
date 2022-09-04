@@ -640,7 +640,7 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
 
 inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
 {
-    return pwszKLID != NULL && wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == 8;
+    return (pwszKLID != NULL) && (wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == (KL_NAMELENGTH - 1));
 }
 
 #define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
