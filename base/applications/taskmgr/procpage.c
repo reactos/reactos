@@ -372,14 +372,13 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     else
         nf.Grouping *= 10;
 
-    // Format the number
-    INT cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
-                                    0,
-                                    wszNumber,
-                                    &nf,
-                                    pwszResult,
-                                    cchResultMax);
-
+    /* Format the number */
+    cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
+                                0,
+                                wszNumber,
+                                &nf,
+                                pwszResult,
+                                cchResultMax);
     if (!cchResult)
         return 0;
 
