@@ -63,5 +63,5 @@ BEGIN
     IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Lire"
-    IDS_DEFAULTMCIERRMSG "Aucune description pour cette erreur."
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

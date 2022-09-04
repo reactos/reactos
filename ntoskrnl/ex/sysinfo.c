@@ -1031,11 +1031,7 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->BasePriority = Process->Pcb.BasePriority;
                 SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
                 SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
-
-                /* PsIdleProcess shares its handle table with PsInitialSystemProcess,
-                 * so return the handle count for System only, not Idle one. */
-                SpiCurrent->HandleCount = (Process == PsIdleProcess) ? 0 : ObGetProcessHandleCount(Process);
-
+                SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
                 SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
                 SpiCurrent->VirtualSize = Process->VirtualSize;
                 SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;

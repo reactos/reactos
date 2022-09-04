@@ -237,14 +237,10 @@ InitApplet(HANDLE hSectionOrWnd)
     psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | /* PSH_USEHICON | */ PSH_USEICONID | PSH_NOAPPLYNOW | PSH_USECALLBACK;
 
     if (ConInfo->ConsoleTitle[0] != UNICODE_NULL)
-    {
         StringCchPrintfW(szTitle, ARRAYSIZE(szTitle), L"\"%s\"", ConInfo->ConsoleTitle);
-        psh.pszCaption = szTitle;
-    }
     else
-    {
-        psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
-    }
+        StringCchCopyW(szTitle, ARRAYSIZE(szTitle), L"ReactOS Console");
+    psh.pszCaption = szTitle;
 
     if (pSharedInfo != NULL)
     {

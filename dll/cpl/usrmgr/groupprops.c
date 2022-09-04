@@ -173,7 +173,8 @@ AddSelectedUsersToGroup(HWND hwndDlg,
                                  nItem, 0,
                                  szUserName,
                                  UNLEN + 1);
-            TRACE("Selected user: %s", dbgstrx(szUserName));
+
+            DebugPrintf(_TEXT("Selected user: %s"), szUserName);
 
             memberInfo.lgrmi3_domainandname = szUserName;
 
@@ -515,7 +516,7 @@ SetGeneralGroupData(HWND hwndDlg,
     status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
     if (status != NERR_Success)
     {
-        ERR("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
 
     if (pszComment)

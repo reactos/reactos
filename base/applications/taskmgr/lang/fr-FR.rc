@@ -294,19 +294,19 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 130, 177, 50, 14
     PUSHBUTTON "Annuler", IDCANCEL, 187, 177, 50, 14
     LTEXT "Sélectionnez les colonnes qui apparaîtront dans la page Processus du Gestionnaire des tâches", IDC_STATIC, 7, 7, 181, 17
-    CONTROL "&Nom de l'image", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 122, 10
-    CONTROL "&PID (Identificateur du Processus)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 122, 10
-    CONTROL "Utilisation de l'UC", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 122, 10
-    CONTROL "T&emps processeur", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 122, 10
-    CONTROL "Utilisation de la &mémoire", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 122, 10
-    CONTROL "Écart &d'utilisation de la mémoire", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 122, 10
-    CONTROL "Utilisation ma&ximale de la mémoire", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 122, 10
-    CONTROL "Erreurs de page", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 122, 10
-    CONTROL "Objets &USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 122, 10
-    CONTROL "Lectures E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 122, 10
-    CONTROL "Octets de lecture E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 122, 10
-    CONTROL "Identificateur de &session", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 122, 10
-    CONTROL "&Nom de l'utilisateur", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 122, 10
+    CONTROL "&Nom de l'image", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 123, 10
+    CONTROL "&PID (Identificateur du Processus)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 123, 10
+    CONTROL "Utilisation de l'UC", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 123, 10
+    CONTROL "T&emps processeur", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 123, 10
+    CONTROL "Utilisation de la &mémoire", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 123, 10
+    CONTROL "Écart &d'utilisation de la mémoire", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 123, 10
+    CONTROL "Utilisation ma&ximale de la mémoire", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 123, 10
+    CONTROL "Erreurs de page", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 123, 10
+    CONTROL "Objets &USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 123, 10
+    CONTROL "Lectures E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 123, 10
+    CONTROL "Octets de lecture E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 123, 10
+    CONTROL "Identificateur de &session", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 123, 10
+    CONTROL "&Nom de l'utilisateur", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 123, 10
     CONTROL "Éc&art d'erreurs de pagination", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 129, 28, 108, 10
     CONTROL "Taille de la mémoire &virtuelle", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 129, 39, 108, 10
     CONTROL "Réserve pa&ginée", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 129, 50, 108, 10
