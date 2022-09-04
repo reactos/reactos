@@ -270,7 +270,7 @@ BEGIN
     5851 "Menu démarrer"
     IDS_REACTOS_LOGOFF "Déconnexion ReactOS"
     IDS_REACTOS_LOGON "Connexion ReactOS"
-    5854 "ReactOS Explorer"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    5854 "Explorateur ReactOS"
+    IDS_BROWSE_FOR_SOUND "Chercher de nouveaux sons"
+    IDS_WAVE_FILES_FILTER "Fichiers Wave (*.wav)|*.wav|"
 END

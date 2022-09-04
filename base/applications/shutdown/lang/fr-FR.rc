@@ -30,7 +30,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS Shutdown Utility\n\
+    IDS_USAGE "Utilitaire d'arrêt du système ReactOS\n\
 \n\
 Utilisation : shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
               [/m \\\\ordinateur][/t xxx][/d [p|u:]xx:yy [/c ""commentaire""]]\n\
