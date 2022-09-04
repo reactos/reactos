@@ -709,7 +709,6 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadTransferCount); */
         SH_FormatInteger(iocounters.ReadTransferCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITEBYTES)
