@@ -97,6 +97,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
     }
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+    UpdateTotalCommittedPages();
 
     OldIrql = MiAcquirePfnLock();
 
