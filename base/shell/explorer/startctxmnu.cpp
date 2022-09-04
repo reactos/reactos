@@ -151,7 +151,6 @@ public:
         HRESULT hRet;
 
         psfDesktop = NULL;
-        m_Inner = NULL;
 
         pidlStart = SHCloneSpecialIDList(m_Owner, CSIDL_STARTMENU, TRUE);
 
@@ -169,7 +168,15 @@ public:
                     if (SUCCEEDED(hRet))
                     {
                         CreateContextMenuFromShellFolderPidl(hPopup);
-                        m_idCmdCmLast = ID_SHELL_CMD_FIRST + GetMenuItemCount(hPopup);
+
+                        m_idCmdCmLast = m_Inner->QueryContextMenu(
+                            hPopup,
+                            0,
+                            ID_SHELL_CMD_FIRST,
+                            ID_SHELL_CMD_LAST,
+                            CMF_VERBSONLY);
+                        if(!SUCCEEDED(m_idCmdCmLast))
+                            m_idCmdCmLast = ID_SHELL_CMD_LAST;
                         AddStartContextMenuItems(hPopup);
                     }
                 }
