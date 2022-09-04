@@ -309,10 +309,10 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
     }
 
     WCHAR lpNA[64];
-     if (!LoadString(hInstance,
-                        IDS_NOTAVAIL,
-                        lpNA,
-                        sizeof(lpNA) / sizeof(lpNA[0])));
+    LoadString(hInstance,
+               IDS_NOTAVAIL,
+               lpNA,
+               _countof(lpNA));
 
     if (This->DeskExtInterface != NULL)
     {
