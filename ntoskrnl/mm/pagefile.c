@@ -31,7 +31,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "mm.h"
+#include "../include/internal/mm.h"
 
 /* GLOBALS *******************************************************************/
 
