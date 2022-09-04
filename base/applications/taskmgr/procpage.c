@@ -354,8 +354,8 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
                                      wszGrouping,
                                      _countof(wszGrouping));
 
-    // Convert grouping specs from string to integer
-    for (INT i = 0; i < cchGrouping; i++)
+    /* Convert grouping specs from string to integer */
+    for (i = 0; i < cchGrouping; i++)
     {
         WCHAR wch = wszGrouping[i];
 
