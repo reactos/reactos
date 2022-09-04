@@ -615,7 +615,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     DWORD dwMinutes;
     DWORD dwSeconds;
 
-    switch(ColumnDataHints[ColumnIndex])
+    switch (ColumnDataHints[ColumnIndex])
     {
         case COLUMN_IMAGENAME:
             PerfDataGetImageName(Index, lpText, nMaxCount);
