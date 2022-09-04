@@ -327,8 +327,14 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 UINT
 SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
 {
-    // Print the number in uniform mode
+    NUMBERFMTW nf;
+    INT i;
+    INT cchGrouping, cchResult;
     WCHAR wszNumber[24];
+    WCHAR wszDecimalSep[8], wszThousandSep[8];
+    WCHAR wszGrouping[12];
+
+    /* Print the number in uniform mode */
     swprintf(wszNumber, L"%I64u", Num);
 
     // Get system strings for decimal and thousand separators.
