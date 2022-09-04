@@ -60,6 +60,8 @@ static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
 enum WndArrangement { NONE, TILED, CASCADED };
 
+enum WndArrangement g_Arrangement;
+
 struct WINDOWPOSBACKUPDATA
 {
     HWND hwnd;
@@ -345,8 +347,6 @@ class CTrayWindow :
     SIZE m_AutoHideOffset;
     TRACKMOUSEEVENT m_MouseTrackingInfo;
 
-    enum WndArrangement m_Arrangement;
-
     HDPA m_ShellServices;
 
 public:
@@ -381,7 +381,7 @@ public:
         m_TrayPropertiesOwner(NULL),
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
-        m_Arrangement(NONE),
+        g_Arrangement(NONE),
         m_ShellServices(NULL),
         Flags(0)
     {
@@ -648,7 +648,7 @@ public:
             break;
 
         case ID_SHELL_CMD_UNDO_ACTION:
-            m_Arrangement = NONE;
+            g_Arrangement = NONE;
             RestoreWindowPos();
             break;
 
@@ -658,35 +658,35 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_H:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE)
+            if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
-            m_Arrangement = TILED;
+            g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_TILE_WND_V:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE)
+            if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
-            m_Arrangement = TILED;
+            g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_CASCADE_WND:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
-            if (m_Arrangement == NONE)
+            if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
-            m_Arrangement = CASCADED;
+            g_Arrangement = CASCADED;
             break;
 
         case ID_SHELL_CMD_CUST_NOTIF:
@@ -3049,9 +3049,9 @@ HandleTrayContextMenu:
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_ENABLED);
-            if (m_Arrangement != NONE)
+            if (g_Arrangement != NONE)
             {
-                CStringW strCaption((m_Arrangement == TILED) ? MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_TILE)
+                CStringW strCaption((g_Arrangement == TILED) ? MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_TILE)
                                                              : MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_CASCADE));
                 MENUITEMINFOW mii = { sizeof(mii) };
                 GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
@@ -3071,7 +3071,7 @@ HandleTrayContextMenu:
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_GRAYED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_GRAYED);
             DeleteMenu(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND);
-            m_Arrangement = NONE;
+            g_Arrangement = NONE;
         }
         return 0;
     }
