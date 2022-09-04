@@ -335,7 +335,7 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     WCHAR wszGrouping[12];
 
     /* Print the number in uniform mode */
-    swprintf(wszNumber, L"%I64u", Num);
+    StringCchPrintfW(wszNumber, _countof(wszNumber), L"%I64u", Num);
 
     // Get system strings for decimal and thousand separators.
     WCHAR wszDecimalSep[8], wszThousandSep[8];
