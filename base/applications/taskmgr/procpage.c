@@ -654,7 +654,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
 
         case COLUMN_PEAKMEMORYUSAGE:
             SH_FormatInteger(PerfDataGetPeakWorkingSetSizeBytes(Index) / 1024, lpText, nMaxCount);
-            wcscat(lpText, L" K");
+            StringCchCatW(lpText, nMaxCount, L" K");
             break;
 
         case COLUMN_MEMORYUSAGEDELTA:
