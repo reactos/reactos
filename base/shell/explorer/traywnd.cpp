@@ -660,7 +660,7 @@ public:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             if (m_Arrangement == NONE)
             {
-               BackupWindowPos();
+                BackupWindowPos();
             }
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
