@@ -682,7 +682,7 @@ public:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             if (m_Arrangement == NONE)
             {
-               BackupWindowPos();
+                BackupWindowPos();
             }
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
