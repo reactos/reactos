@@ -324,33 +324,42 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
     }
 }
 
+/*
+ * Adapted from SH_FormatInteger in dll/win32/shell32/dialogs/filedefext.cpp.
+ */
 UINT
-SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
+SH_FormatInteger(
+    _In_ LONGLONG Num,
+    _Out_ LPWSTR pwszResult,
+    _In_ UINT cchResultMax)
 {
-    // Print the number in uniform mode
+    NUMBERFMTW nf;
+    INT i;
+    INT cchGrouping, cchResult;
     WCHAR wszNumber[24];
-    swprintf(wszNumber, L"%I64u", Num);
-
-    // Get system strings for decimal and thousand separators.
     WCHAR wszDecimalSep[8], wszThousandSep[8];
+    WCHAR wszGrouping[12];
+
+    /* Print the number in uniform mode */
+    StringCchPrintfW(wszNumber, _countof(wszNumber), L"%I64u", Num);
+
+    /* Get system strings for decimal and thousand separators */
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, wszDecimalSep, _countof(wszDecimalSep));
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, wszThousandSep, _countof(wszThousandSep));
 
-    // Initialize format for printing the number in bytes
-    NUMBERFMTW nf;
+    /* Initialize format for printing the number in bytes */
     ZeroMemory(&nf, sizeof(nf));
     nf.lpDecimalSep = wszDecimalSep;
     nf.lpThousandSep = wszThousandSep;
 
-    // Get system string for groups separator
-    WCHAR wszGrouping[12];
-    INT cchGrouping = GetLocaleInfoW(LOCALE_USER_DEFAULT,
-                                     LOCALE_SGROUPING,
-                                     wszGrouping,
-                                     _countof(wszGrouping));
+    /* Get system string for groups separator */
+    cchGrouping = GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                                 LOCALE_SGROUPING,
+                                 wszGrouping,
+                                 _countof(wszGrouping));
 
-    // Convert grouping specs from string to integer
-    for (INT i = 0; i < cchGrouping; i++)
+    /* Convert grouping specs from string to integer */
+    for (i = 0; i < cchGrouping; i++)
     {
         WCHAR wch = wszGrouping[i];
 
@@ -365,18 +374,17 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     else
         nf.Grouping *= 10;
 
-    // Format the number
-    INT cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
-                                    0,
-                                    wszNumber,
-                                    &nf,
-                                    pwszResult,
-                                    cchResultMax);
-
+    /* Format the number */
+    cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
+                                0,
+                                wszNumber,
+                                &nf,
+                                pwszResult,
+                                cchResultMax);
     if (!cchResult)
         return 0;
 
-    // GetNumberFormatW returns number of characters including UNICODE_NULL
+    /* GetNumberFormatW returns number of characters including UNICODE_NULL */
     return cchResult - 1;
 }
 
@@ -685,37 +693,31 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADS)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadOperationCount); */
         SH_FormatInteger(iocounters.ReadOperationCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteOperationCount); */
         SH_FormatInteger(iocounters.WriteOperationCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHER)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherOperationCount); */
         SH_FormatInteger(iocounters.OtherOperationCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadTransferCount); */
         SH_FormatInteger(iocounters.ReadTransferCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITEBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteTransferCount); */
         SH_FormatInteger(iocounters.WriteTransferCount, lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHERBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherTransferCount); */
         SH_FormatInteger(iocounters.OtherTransferCount, lpText, nMaxCount);
     }
 
