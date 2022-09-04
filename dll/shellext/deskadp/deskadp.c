@@ -291,7 +291,8 @@ static VOID
 InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
 {
     LPTSTR lpAdapterName;
-
+    TCHAR lpNA[64];
+    
     This->lpDeviceId = QueryDeskCplString(This->pdtobj,
                                           RegisterClipboardFormat(DESK_EXT_DISPLAYID));
     EnableWindow(GetDlgItem(This->hwndDlg,
@@ -308,7 +309,6 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
         LocalFree((HLOCAL)lpAdapterName);
     }
 
-    WCHAR lpNA[64];
     LoadString(hInstance,
                IDS_NOTAVAIL,
                lpNA,
@@ -316,12 +316,6 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
 
     if (This->DeskExtInterface != NULL)
     {
-        DPRINT1("Adapter found : CHIP : %s DAC : %s MEM: %s ADAPT %s BIOS : %s\n",
-                        This->DeskExtInterface->ChipType,
-                        This->DeskExtInterface->DacType,
-                        This->DeskExtInterface->MemorySize,
-                        This->DeskExtInterface->AdapterString,
-                        This->DeskExtInterface->BiosString);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_CHIPTYPE,
                         wcslen(This->DeskExtInterface->ChipType) ? This->DeskExtInterface->ChipType : lpNA);
@@ -342,7 +336,6 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
     }
     else
     {
-        DPRINT1("No adapter found.\n");
         This->lpDevModeOnInit = NULL;
         SetDlgItemTextW(This->hwndDlg, IDC_CHIPTYPE, lpNA);
         SetDlgItemTextW(This->hwndDlg, IDC_DACTYPE, lpNA);
