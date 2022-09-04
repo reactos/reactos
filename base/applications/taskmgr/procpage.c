@@ -614,27 +614,27 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     {
         case COLUMN_IMAGENAME:
             PerfDataGetImageName(Index, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_PID:
             StringCchPrintfW(lpText, nMaxCount, L"%lu", PerfDataGetProcessId(Index));
-            break;
+            return TRUE;
 
         case COLUMN_USERNAME:
             PerfDataGetUserName(Index, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_COMMANDLINE:
             PerfDataGetCommandLine(Index, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_SESSIONID:
             StringCchPrintfW(lpText, nMaxCount, L"%lu", PerfDataGetSessionId(Index));
-            break;
+            return TRUE;
 
         case COLUMN_CPUUSAGE:
             StringCchPrintfW(lpText, nMaxCount, L"%02lu", PerfDataGetCPUUsage(Index));
-            break;
+            return TRUE;
 
         case COLUMN_CPUTIME:
         {
@@ -646,99 +646,99 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             time = PerfDataGetCPUTime(Index);
             gethmsfromlargeint(time, &dwHours, &dwMinutes, &dwSeconds);
             StringCchPrintfW(lpText, nMaxCount, L"%lu:%02lu:%02lu", dwHours, dwMinutes, dwSeconds);
-            break;
+            return TRUE;
         }
 
         case COLUMN_MEMORYUSAGE:
             SH_FormatInteger(PerfDataGetWorkingSetSizeBytes(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_PEAKMEMORYUSAGE:
             SH_FormatInteger(PerfDataGetPeakWorkingSetSizeBytes(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_MEMORYUSAGEDELTA:
             SH_FormatInteger(PerfDataGetWorkingSetSizeDelta(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_PAGEFAULTS:
             SH_FormatInteger(PerfDataGetPageFaultCount(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_PAGEFAULTSDELTA:
             SH_FormatInteger(PerfDataGetPageFaultCountDelta(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_VIRTUALMEMORYSIZE:
             SH_FormatInteger(PerfDataGetVirtualMemorySizeBytes(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_PAGEDPOOL:
             SH_FormatInteger(PerfDataGetPagedPoolUsagePages(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_NONPAGEDPOOL:
             SH_FormatInteger(PerfDataGetNonPagedPoolUsagePages(Index) / 1024, lpText, nMaxCount);
             StringCchCatW(lpText, nMaxCount, L" K");
-            break;
+            return TRUE;
 
         case COLUMN_BASEPRIORITY:
             StringCchPrintfW(lpText, nMaxCount, L"%lu", PerfDataGetBasePriority(Index));
-            break;
+            return TRUE;
 
         case COLUMN_HANDLECOUNT:
             SH_FormatInteger(PerfDataGetHandleCount(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_THREADCOUNT:
             SH_FormatInteger(PerfDataGetThreadCount(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_USEROBJECTS:
             SH_FormatInteger(PerfDataGetUSERObjectCount(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_GDIOBJECTS:
             SH_FormatInteger(PerfDataGetGDIObjectCount(Index), lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOREADS:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.ReadOperationCount, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOWRITES:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.WriteOperationCount, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOOTHER:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.OtherOperationCount, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOREADBYTES:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.ReadTransferCount, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOWRITEBYTES:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.WriteTransferCount, lpText, nMaxCount);
-            break;
+            return TRUE;
 
         case COLUMN_IOOTHERBYTES:
             PerfDataGetIOCounters(Index, &iocounters);
             SH_FormatInteger(iocounters.OtherTransferCount, lpText, nMaxCount);
-            break;
+            return TRUE;
     }
 
-    return TRUE;
+    return FALSE;
 }
 
 
