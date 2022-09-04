@@ -329,7 +329,7 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 UINT
 SH_FormatInteger(
     _In_ LONGLONG Num,
-    _Out_ LPWSTR pwszResult,
+    _Out_writes_z_(cchResultMax) LPWSTR pwszResult,
     _In_ UINT cchResultMax)
 {
     NUMBERFMTW nf;
