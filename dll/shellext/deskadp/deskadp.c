@@ -321,7 +321,7 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
                         *(This->DeskExtInterface->ChipType) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_DACTYPE,
-                        wcslen(This->DeskExtInterface->DacType) ? This->DeskExtInterface->ChipType : lpNA);
+                        *(This->DeskExtInterface->DacType) ? This->DeskExtInterface->DacType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_MEMORYSIZE,
                         wcslen(This->DeskExtInterface->MemorySize) ? This->DeskExtInterface->ChipType : lpNA);
