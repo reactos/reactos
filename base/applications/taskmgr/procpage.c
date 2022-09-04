@@ -342,8 +342,7 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, wszDecimalSep, _countof(wszDecimalSep));
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, wszThousandSep, _countof(wszThousandSep));
 
-    // Initialize format for printing the number in bytes
-    NUMBERFMTW nf;
+    /* Initialize format for printing the number in bytes */
     ZeroMemory(&nf, sizeof(nf));
     nf.lpDecimalSep = wszDecimalSep;
     nf.lpThousandSep = wszThousandSep;
