@@ -117,7 +117,6 @@ FrameOnCreate(HWND hwnd,
     PCONSOLE_MAINFRAME_WND Info;
     CLIENTCREATESTRUCT ccs;
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
-    LPTSTR lpTitle;
 
     Info = HeapAlloc(hAppHeap,
                      HEAP_ZERO_MEMORY,
@@ -152,15 +151,7 @@ FrameOnCreate(HWND hwnd,
     SetMenu(Info->hwnd,
             Info->hMenuConsoleSmall);
 
-    if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
-    {
-        SetWindowText(Info->hwnd, lpTitle);
-        LocalFree(lpTitle);
-    }
-    else
-    {
-        SetWindowText(Info->hwnd, TEXT("ReactOS Management Console"));
-    }
+    SetWindowText(Info->hwnd, TEXT("ReactOS Management Console"));
 
     ccs.hWindowMenu = GetSubMenu(Info->hMenuConsoleLarge, 1);
     ccs.idFirstChild = IDM_MDI_FIRSTCHILD;
@@ -348,7 +339,9 @@ FrameOnCommand(HWND hwnd,
         case IDM_HELP_ABOUT:
             if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
             {
-                ShellAbout(NULL, lpTitle, NULL, NULL);
+                HICON hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
+                ShellAbout(NULL, lpTitle, NULL, hIcon);
+                DestroyIcon(hIcon);
                 LocalFree(lpTitle);
             }
             break;
