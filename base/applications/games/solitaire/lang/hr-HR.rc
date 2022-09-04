@@ -58,7 +58,7 @@ BEGIN
     IDS_SOL_QUIT "Napusti trenutnu igru?"
     IDS_SOL_WIN "Čestitke, pobijedili ste!"
     IDS_SOL_DEAL "Ponovi?"
-    IDS_SOL_SCORE "Rezluat: %d"
+    IDS_SOL_SCORE "Rezultat: %d"
     IDS_SOL_TIME "Vrijeme: %d"
 END
 
