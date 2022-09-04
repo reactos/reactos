@@ -382,7 +382,7 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     if (!cchResult)
         return 0;
 
-    // GetNumberFormatW returns number of characters including UNICODE_NULL
+    /* GetNumberFormatW returns number of characters including UNICODE_NULL */
     return cchResult - 1;
 }
 
