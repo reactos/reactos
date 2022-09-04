@@ -339,8 +339,8 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
         This->lpDevModeOnInit = NULL;
         SetDlgItemTextW(This->hwndDlg, IDC_CHIPTYPE, lpNA);
         SetDlgItemTextW(This->hwndDlg, IDC_DACTYPE, lpNA);
-        SetDlgItemTextW(This->hwndDlg, IDC_ADAPTERSTRING, lpNA);
         SetDlgItemTextW(This->hwndDlg, IDC_MEMORYSIZE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_ADAPTERSTRING, lpNA);
         SetDlgItemTextW(This->hwndDlg, IDC_BIOSINFORMATION, lpNA);
     }
 
