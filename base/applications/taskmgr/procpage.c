@@ -347,12 +347,11 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     nf.lpDecimalSep = wszDecimalSep;
     nf.lpThousandSep = wszThousandSep;
 
-    // Get system string for groups separator
-    WCHAR wszGrouping[12];
-    INT cchGrouping = GetLocaleInfoW(LOCALE_USER_DEFAULT,
-                                     LOCALE_SGROUPING,
-                                     wszGrouping,
-                                     _countof(wszGrouping));
+    /* Get system string for groups separator */
+    cchGrouping = GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                                 LOCALE_SGROUPING,
+                                 wszGrouping,
+                                 _countof(wszGrouping));
 
     /* Convert grouping specs from string to integer */
     for (i = 0; i < cchGrouping; i++)
