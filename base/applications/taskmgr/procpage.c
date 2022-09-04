@@ -638,7 +638,7 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
             break;
 
         case COLUMN_CPUUSAGE:
-            wsprintfW(lpText, L"%02lu", PerfDataGetCPUUsage(Index));
+            StringCchPrintfW(lpText, nMaxCount, L"%02lu", PerfDataGetCPUUsage(Index));
             break;
 
         case COLUMN_CPUTIME:
