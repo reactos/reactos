@@ -41,10 +41,10 @@ static LONG PageOutThreadActive;
 static inline VOID UpdateTotalCommittedPages(VOID)
 {
     /*
-     *   Add up all the used "Committed" memory + pagefile.
-     *   Not sure this is right. 8^\
-     *   MmTotalCommittedPages should be adjusted consistently with
-    *    other counters at different places.
+     * Add up all the used "Committed" memory + pagefile.
+     * Not sure this is right. 8^\
+     * MmTotalCommittedPages should be adjusted consistently with
+     * other counters at different places.
      */
 
     MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
