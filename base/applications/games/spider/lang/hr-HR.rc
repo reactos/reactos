@@ -1,9 +1,8 @@
 /*
- * PROJECT:    Spider Solitaire
- * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/en-US.rc
- * PURPOSE:    Croatian Language File for Spider Solitaire
- * TRANSLATOR: Andrej Bartulin
+ * PROJECT:     Spider Solitaire
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Croatian resource file
+ * TRANSLATOR:  Copyright 2022 Andrej Bartulin <andrej.bartulinvr@gmail.com>
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
