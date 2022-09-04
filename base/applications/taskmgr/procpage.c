@@ -328,7 +328,10 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
  * Adapted from SH_FormatInteger in dll/win32/shell32/dialogs/filedefext.cpp.
  */
 UINT
-SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
+SH_FormatInteger(
+    _In_ LONGLONG Num,
+    _Out_ LPWSTR pwszResult,
+    _In_ UINT cchResultMax)
 {
     NUMBERFMTW nf;
     INT i;
