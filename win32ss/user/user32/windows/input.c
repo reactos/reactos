@@ -643,6 +643,8 @@ inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
     return pwszKLID != NULL && wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == 8;
 }
 
+#define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+
 /*
  * @unimplemented
  *
@@ -670,7 +672,7 @@ IntLoadKeyboardLayout(
     if (!IsValidKLID(pwszKLID))
     {
         ERR("pwszKLID: %s\n", debugstr_w(pwszKLID));
-        return NULL;
+        return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
     }
 
     dwhkl = wcstoul(pwszKLID, &endptr, 16);
