@@ -776,6 +776,7 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
         hinstVersion = LoadLibraryW(szPath);
         if (!hinstVersion)
             return FALSE;
+
         bLoaded = TRUE;
     }
 

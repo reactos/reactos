@@ -53,57 +53,49 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
  */
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
-    DWORD cbData;
-    HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
+    DWORD cbData, dwType;
+    HKEY hLayoutKey;
     LONG error;
     WCHAR szLayout[MAX_PATH];
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
+    ZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
+
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
-        Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
+        StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
+                         REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
 
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
-            return FALSE;
-        }
-
-        error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
-        if (error)
-        {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
-            RegCloseKey(hLayoutsKey);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
     }
     else
     {
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
     }
 
     cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, &dwType,
                              (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
 
     RegCloseKey(hLayoutKey);
-    if (hLayoutsKey)
-        RegCloseKey(hLayoutsKey);
 
     pImeInfoEx->fLoadFlag = 0;
 
-    if (error)
+    if (error != ERROR_SUCCESS || dwType != REG_SZ)
     {
-        ERR("RegQueryValueExW: 0x%08lX\n", error);
-        pImeInfoEx->hkl = NULL;
+        ERR("RegQueryValueExW: 0x%lX, 0x%lX\n", error, dwType);
         return FALSE;
     }
 
@@ -116,7 +108,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
  */
 BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
-    WCHAR szKBD[9];
+    WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
     HKL hOldKL, hNewKL, *pList;
     PIMEDPI pImeDpi;

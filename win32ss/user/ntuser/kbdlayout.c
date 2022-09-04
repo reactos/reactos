@@ -497,6 +497,10 @@ UserUnloadKbl(PKL pKl)
     pKl->pklPrev->pklNext = pKl->pklNext;
     pKl->pklNext->pklPrev = pKl->pklPrev;
     UnloadKbdFile(pKl->spkf);
+    if (pKl->piiex)
+    {
+        ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
+    }
     UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
     return TRUE;
 }
@@ -995,12 +999,34 @@ cleanup:
     return bRet;
 }
 
+/* Win: xxxImmLoadLayout */
+PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
+{
+    PIMEINFOEX piiex;
+
+    if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
+        return NULL;
+
+    piiex = ExAllocatePoolWithTag(PagedPool, sizeof(IMEINFOEX), USERTAG_IME);
+    if (!piiex)
+        return NULL;
+
+    if (!co_ClientImmLoadLayout(hKL, piiex))
+    {
+        ExFreePoolWithTag(piiex, USERTAG_IME);
+        return NULL;
+    }
+
+    return piiex;
+}
+
 /*
  * NtUserLoadKeyboardLayoutEx
  *
  * Loads keyboard layout with given locale id
  *
  * NOTE: We adopt a different design from Microsoft's one for security reason.
+ *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
  */
 HKL
 APIENTRY
@@ -1015,7 +1041,7 @@ NtUserLoadKeyboardLayoutEx(
 {
     HKL hklRet = NULL;
     PKL pKl = NULL, pklLast;
-    WCHAR Buffer[9];
+    WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING ustrSafeKLID;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
@@ -1082,6 +1108,8 @@ NtUserLoadKeyboardLayoutEx(
             pKl->pklPrev = pKl;
             gspklBaseLayout = pKl;
         }
+
+        pKl->piiex = co_UserImmLoadLayout(UlongToHandle(hkl));
     }
 
     /* If this layout was prepared to unload, undo it */

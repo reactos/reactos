@@ -11,6 +11,7 @@
 
 typedef VOID (*TL_FN_FREE)(PVOID);
 
+/* Thread Lock structure */
 typedef struct _TL
 {
     struct _TL* next;
