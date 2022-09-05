@@ -160,6 +160,7 @@ BEGIN
     STRING_UNICODE "Юнікод"
     STRING_UNICODE_BE "Юнікод (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"

@@ -46,6 +46,7 @@ VOID DIALOG_GoTo(VOID);
 VOID DIALOG_SelectFont(VOID);
 
 VOID DIALOG_ViewStatusBar(VOID);
+VOID DIALOG_StatusBarAlignParts(VOID);
 VOID DIALOG_StatusBarUpdateCaretPos(VOID);
 
 VOID DIALOG_HelpContents(VOID);

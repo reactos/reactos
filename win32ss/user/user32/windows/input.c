@@ -638,6 +638,13 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
     return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
+inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
+{
+    return (pwszKLID != NULL) && (wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == (KL_NAMELENGTH - 1));
+}
+
+#define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+
 /*
  * @unimplemented
  *
@@ -656,12 +663,20 @@ IntLoadKeyboardLayout(
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
-    WCHAR wszLayoutId[10], wszNewKLID[10], szImeFileName[80];
+    WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
+    PWCHAR endptr;
     HKL hNewKL;
     HKEY hKey;
     BOOL bIsIME;
 
-    dwhkl = wcstoul(pwszKLID, NULL, 16);
+    if (!IsValidKLID(pwszKLID))
+    {
+        ERR("pwszKLID: %s\n", debugstr_w(pwszKLID));
+        return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
+    }
+
+    dwhkl = wcstoul(pwszKLID, &endptr, 16);
+
     bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
     if (!bIsIME) /* Not IME? */
     {
@@ -690,8 +705,7 @@ IntLoadKeyboardLayout(
     StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
 
     /* Open layout registry key for read */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
-                      KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(wszLayoutId);
         if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId, &dwSize) == ERROR_SUCCESS)
@@ -744,7 +758,7 @@ HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                     UINT Flags)
 {
-    TRACE("(%s, 0x%X)", debugstr_w(pwszKLID), Flags);
+    TRACE("(%s, 0x%X)\n", debugstr_w(pwszKLID), Flags);
     return IntLoadKeyboardLayout(NULL, pwszKLID, 0, Flags, FALSE);
 }
 

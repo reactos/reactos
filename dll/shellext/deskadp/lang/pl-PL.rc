@@ -54,4 +54,5 @@ BEGIN
     IDS_16BPP "64k kolorów (16 bitów)"
     IDS_24BPP "16m kolorów (24 bity)"
     IDS_32BPP "16m +kanał alfa (32 bity)"
+    IDS_NOTAVAIL "Not Available"
 END

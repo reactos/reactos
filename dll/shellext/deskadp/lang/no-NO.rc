@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Middels farger (16 bit)"
     IDS_24BPP "Høyest farger (24 bit)"
     IDS_32BPP "Høyest farger (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END

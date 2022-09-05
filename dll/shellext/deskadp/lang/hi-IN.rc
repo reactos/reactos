@@ -52,4 +52,5 @@ BEGIN
     IDS_16BPP "उच्च कलर (16 बिट)"
     IDS_24BPP "ट्रू कलर (24 बिट)"
     IDS_32BPP "ट्रू कलर (32 बिट)"
+    IDS_NOTAVAIL "Not Available"
 END

@@ -149,6 +149,15 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
+/* Define stub IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) \
+    type APIENTRY Stub##name params { \
+        FIXME("%s: Why stub called?\n", #name); \
+        return (type)0; \
+    }
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
 // Win: LoadIME
 BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
@@ -160,18 +169,19 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
         return FALSE;
 
-    hIME = GetModuleHandleW(szPath);
+    pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        hIME = LoadLibraryW(szPath);
-        if (hIME == NULL)
-        {
-            ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
-            return FALSE;
-        }
+        ERR("Imm32LoadIME: LoadLibraryW(%s) failed\n", debugstr_w(szPath));
+        return FALSE;
     }
-    pImeDpi->hInst = hIME;
 
+    /* Populate the table by stub IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Stub##name;
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
+    /* Populate the table by real IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
     do { \
         fn = GetProcAddress(hIME, #name); \

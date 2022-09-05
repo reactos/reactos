@@ -52,4 +52,5 @@ BEGIN
     IDS_16BPP "Veľa farieb (16 bit)"
     IDS_24BPP "Pravé farby (24 bit)"
     IDS_32BPP "Pravé farby (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END
