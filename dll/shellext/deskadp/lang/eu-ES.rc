@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Kontraste handiko kolorea (16 bit)"
     IDS_24BPP "Benetako kolorea (24 bit)"
     IDS_32BPP "Benetako kolorea (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END

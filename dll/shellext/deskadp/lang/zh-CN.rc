@@ -47,4 +47,5 @@ BEGIN
     IDS_16BPP "增强色（16 位）"
     IDS_24BPP "真彩色（24 位）"
     IDS_32BPP "真彩色（32 位）"
+    IDS_NOTAVAIL "Not Available"
 END

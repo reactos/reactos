@@ -47,4 +47,5 @@ BEGIN
     IDS_16BPP "Yüksek Renk (16 Bit)"
     IDS_24BPP "Gerçek Renk (24 Bit)"
     IDS_32BPP "Gerçek Renk (32 Bit)"
+    IDS_NOTAVAIL "Not Available"
 END

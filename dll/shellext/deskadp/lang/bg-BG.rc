@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Висока цветност (16 разряда)"
     IDS_24BPP "Истинска цветност (24 разряда)"
     IDS_32BPP "Истинска цветност (32 разряда)"
+    IDS_NOTAVAIL "Not Available"
 END

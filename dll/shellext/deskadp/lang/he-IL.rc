@@ -47,4 +47,5 @@ BEGIN
     IDS_16BPP "צבעים גבוהים (16 סיביות)"
     IDS_24BPP "צבעים מלאים (24 סיביות)"
     IDS_32BPP "צבעים מלאים (32 סיביות)"
+    IDS_NOTAVAIL "Not Available"
 END
