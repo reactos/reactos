@@ -15,6 +15,8 @@
 #include <debug.h>
 
 #include "ARM3/miarm.h"
+
+
 /* TYPES ********************************************************************/
 typedef struct _MM_ALLOCATION_REQUEST
 {
