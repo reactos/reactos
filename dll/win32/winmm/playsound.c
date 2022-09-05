@@ -121,15 +121,16 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     err = RegOpenKeyW(hRegApp, lpszName, &hScheme);
     RegCloseKey(hRegApp);
     if (err != 0) goto none;
-    /* what's the difference between .Current and .Default ? */
-    err = RegOpenKeyW(hScheme, wszDotDefault, &hSnd);
-    if (err != 0)
+    
+    err = RegOpenKeyW(hScheme, wszDotCurrent, &hSnd);
+
+    RegCloseKey(hScheme);
+
+    if (err != ERROR_SUCCESS)
     {
-        err = RegOpenKeyW(hScheme, wszDotCurrent, &hSnd);
-        RegCloseKey(hScheme);
-        if (err != 0)
-            goto none;
+        goto none;
     }
+
     count = sizeof(str);
     err = RegQueryValueExW(hSnd, NULL, 0, &type, (LPBYTE)str, &count);
     RegCloseKey(hSnd);
