@@ -212,11 +212,21 @@ LayoutList_GetByHkl(HKL hkl)
             }
         }
     }
+    else if (IS_IME_HKL(hkl))
+    {
+        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+        {
+            if (hkl == UlongToHandle(pCurrent->dwId))
+            {
+                return pCurrent;
+            }
+        }
+    }
     else
     {
         for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
-            if (HIWORD(hkl) == LOWORD(pCurrent->dwId))
+            if (LOWORD(hkl) == LOWORD(pCurrent->dwId))
             {
                 return pCurrent;
             }

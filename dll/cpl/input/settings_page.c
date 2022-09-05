@@ -147,7 +147,10 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     ZeroMemory(&item, sizeof(item));
 
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
-    item.pszText = pInputNode->pLocale->pszName;
+    if (IS_IME_HKL(pInputNode->hkl))
+        item.pszText = pInputNode->pLayout->pszName;
+    else
+        item.pszText = pInputNode->pLocale->pszName;
     item.iItem   = ListView_GetItemCount(hwndList) + 1;
     item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;

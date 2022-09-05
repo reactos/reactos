@@ -81,4 +81,6 @@ DWORDfromString(const WCHAR *pszString)
     return wcstoul(pszString, &pszEnd, 16);
 }
 
+#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+
 #endif /* _INPUT_H */

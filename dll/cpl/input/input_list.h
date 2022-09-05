@@ -47,3 +47,6 @@ InputList_Destroy(VOID);
 
 INPUT_LIST_NODE*
 InputList_GetFirst(VOID);
+
+VOID
+InputList_Dump(VOID);
