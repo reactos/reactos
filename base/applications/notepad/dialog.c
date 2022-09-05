@@ -925,7 +925,7 @@ VOID DoCreateStatusBar(VOID)
     if (Globals.hStatusBar == NULL)
     {
         /* Try to create the status bar */
-        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE,
+        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP,
                                                 NULL,
                                                 Globals.hMainWnd,
                                                 CMD_STATUSBAR_WND_ID);
