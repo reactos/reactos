@@ -4954,17 +4954,56 @@ MmCheckDirtySegment(
 
         if (FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT))
         {
+            PERESOURCE ResourceToRelease = NULL;
+            KIRQL OldIrql;
+
             /* We have to write it back to the file. Tell the FS driver who we are */
             if (PageOut)
-                IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
+            {
+                LARGE_INTEGER EndOffset = *Offset;
 
-            /* Go ahead and write the page */
-            DPRINT("Writing page at offset %I64d for file %wZ, Pageout: %s\n",
-                    Offset->QuadPart, &Segment->FileObject->FileName, PageOut ? "TRUE" : "FALSE");
-            Status = MiWritePage(Segment, Offset->QuadPart, Page);
+                ASSERT(IoGetTopLevelIrp() == NULL);
+
+                /* We need to disable all APCs */
+                KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+                EndOffset.QuadPart += PAGE_SIZE;
+                Status = FsRtlAcquireFileForModWriteEx(Segment->FileObject,
+                                                       &EndOffset,
+                                                       &ResourceToRelease);
+                if (NT_SUCCESS(Status))
+                {
+                    IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
+                }
+                else
+                {
+                    /* Make sure we will not try to release anything */
+                    ResourceToRelease = NULL;
+                }
+            }
+            else
+            {
+                /* We don't have to lock. Say this is success */
+                Status = STATUS_SUCCESS;
+            }
+
+            /* Go ahead and write the page, if previous locking succeeded */
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("Writing page at offset %I64d for file %wZ, Pageout: %s\n",
+                        Offset->QuadPart, &Segment->FileObject->FileName, PageOut ? "TRUE" : "FALSE");
+                Status = MiWritePage(Segment, Offset->QuadPart, Page);
+            }
 
             if (PageOut)
+            {
                 IoSetTopLevelIrp(NULL);
+                if (ResourceToRelease != NULL)
+                {
+                    FsRtlReleaseFileForModWrite(Segment->FileObject, ResourceToRelease);
+                }
+                KeLowerIrql(OldIrql);
+            }
         }
         else
         {
