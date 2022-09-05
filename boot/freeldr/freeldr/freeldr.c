@@ -51,8 +51,10 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
 
     TRACE("BootMain() called.\n");
 
+#ifndef UEFIBOOT
     /* Check if the CPU is new enough */
     FrLdrCheckCpuCompatibility(); // FIXME: Should be done inside MachInit!
+#endif
 
     /* UI pre-initialization */
     if (!UiInitialize(FALSE))

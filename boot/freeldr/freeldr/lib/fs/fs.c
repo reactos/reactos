@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *  Copyright (C) 2008-2009  Hervé Poussineau  <hpoussin@reactos.org>
+ *  Copyright (C) 2008-2009  HervÃ© Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -160,8 +160,10 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
 #endif
 #if defined(_M_IX86) || defined(_M_AMD64)
+#ifndef UEFIBOOT
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
+#endif
 #endif
                 if (!FileData[DeviceId].FileFuncTable)
                 {
