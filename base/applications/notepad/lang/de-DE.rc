@@ -162,6 +162,7 @@ um diese Funktion\nabzuschließen. Beenden Sie eine oder mehrere \
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (Big-Endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"

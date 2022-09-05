@@ -160,6 +160,7 @@ BEGIN
     STRING_UNICODE "Уникод"
     STRING_UNICODE_BE "Уникод (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Уьиндоуьс (CR + LF)"
     STRING_LF "Юникс (LF)"
     STRING_CR "Мак (CR)"

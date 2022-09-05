@@ -155,6 +155,7 @@ BEGIN
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 (มี BOM)"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"

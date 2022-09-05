@@ -33,6 +33,27 @@ static const TCHAR empty_str[] = _T("");
 static const TCHAR szDefaultExt[] = _T("txt");
 static const TCHAR txt_files[] = _T("*.txt");
 
+/* Status bar parts index */
+#define SBPART_CURPOS   0
+#define SBPART_EOLN     1
+#define SBPART_ENCODING 2
+
+/* Line endings - string resource ID mapping table */
+static UINT EolnToStrId[] = {
+    STRING_CRLF,
+    STRING_LF,
+    STRING_CR
+};
+
+/* Encoding - string resource ID mapping table */
+static UINT EncToStrId[] = {
+    STRING_ANSI,
+    STRING_UNICODE,
+    STRING_UNICODE_BE,
+    STRING_UTF8,
+    STRING_UTF8_BOM
+};
+
 static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
 VOID ShowLastError(VOID)
@@ -102,6 +123,45 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
                    (isModified ? _T("*") : _T("")), szFilename, szNotepad);
 
     SetWindowText(Globals.hMainWnd, szCaption);
+}
+
+VOID DIALOG_StatusBarAlignParts(VOID)
+{
+    static const int defaultWidths[] = {120, 120, 120};
+    RECT rcStatusBar;
+    int parts[3];
+
+    GetClientRect(Globals.hStatusBar, &rcStatusBar);
+
+    parts[0] = rcStatusBar.right - (defaultWidths[1] + defaultWidths[2]);
+    parts[1] = rcStatusBar.right - defaultWidths[2];
+    parts[2] = -1; // the right edge of the status bar
+
+    parts[0] = max(parts[0], defaultWidths[0]);
+    parts[1] = max(parts[1], defaultWidths[0] + defaultWidths[1]);
+
+    SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)ARRAY_SIZE(parts), (LPARAM)parts);
+}
+
+static VOID DIALOG_StatusBarUpdateLineEndings(VOID)
+{
+    WCHAR szText[128];
+
+    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, ARRAY_SIZE(szText));
+
+    SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_EOLN, (LPARAM)szText);
+}
+
+static VOID DIALOG_StatusBarUpdateEncoding(VOID)
+{
+    WCHAR szText[128] = L"";
+
+    if (Globals.encFile != ENCODING_AUTO)
+    {
+        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, ARRAY_SIZE(szText));
+    }
+
+    SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_ENCODING, (LPARAM)szText);
 }
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags)
@@ -403,6 +463,11 @@ VOID DoOpenFile(LPCTSTR szFileName)
     SetFileName(szFileName);
     UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
+
+    /* Update line endings and encoding on the status bar */
+    DIALOG_StatusBarUpdateLineEndings();
+    DIALOG_StatusBarUpdateEncoding();
+
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
@@ -497,6 +562,9 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(Globals.hInstance, STRING_UTF8, szText, ARRAY_SIZE(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
+            LoadString(Globals.hInstance, STRING_UTF8_BOM, szText, ARRAY_SIZE(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
             SendMessage(hCombo, CB_SETCURSEL, Globals.encFile, 0);
 
             hCombo = GetDlgItem(hDlg, ID_EOLN);
@@ -562,6 +630,11 @@ BOOL DIALOG_FileSaveAs(VOID)
         if (DoSaveFile())
         {
             UpdateWindowCaption(TRUE);
+            
+            /* Update line endings and encoding on the status bar */
+            DIALOG_StatusBarUpdateLineEndings();
+            DIALOG_StatusBarUpdateEncoding();
+            
             return TRUE;
         }
         else
@@ -852,7 +925,7 @@ VOID DoCreateStatusBar(VOID)
     if (Globals.hStatusBar == NULL)
     {
         /* Try to create the status bar */
-        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE,
+        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP,
                                                 NULL,
                                                 Globals.hMainWnd,
                                                 CMD_STATUSBAR_WND_ID);
@@ -865,9 +938,6 @@ VOID DoCreateStatusBar(VOID)
 
         /* Load the string for formatting column/row text output */
         LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH - 1);
-
-        /* Set the status bar for single-text output */
-        SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
     }
 
     /* Set status bar visiblity according to the settings. */
@@ -916,8 +986,15 @@ VOID DoCreateStatusBar(VOID)
                    TRUE);
     }
 
+    /* Set the status bar for multiple-text output */
+    DIALOG_StatusBarAlignParts();
+
     /* Update content with current row/column text */
     DIALOG_StatusBarUpdateCaretPos();
+    
+    /* Update line endings and encoding on the status bar */
+    DIALOG_StatusBarUpdateLineEndings();
+    DIALOG_StatusBarUpdateEncoding();
 }
 
 VOID DoCreateEditWindow(VOID)
@@ -1195,7 +1272,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     col = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     _stprintf(buff, Globals.szStatusBarLineCol, line + 1, col + 1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SBPART_CURPOS, (LPARAM)buff);
 }
 
 VOID DIALOG_ViewStatusBar(VOID)
