@@ -1795,20 +1795,69 @@ FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject)
     FsRtlExitFileSystem();
 }
 
-/*
-* @implemented
-*/
+/**
+ * @brief Get the resource to acquire when Mod Writer flushes data to disk
+ *
+ * @param FcbHeader - FCB header from the file object
+ * @param EndingOffset - The end offset of the write to be done
+ * @param ResourceToAcquire - Pointer receiving the resource to acquire before doing the write
+ *
+ * @return BOOLEAN specifying whether the resource must be acquired exclusively
+ */
+static
+BOOLEAN
+FsRtlpGetResourceForModWrite(_In_ PFSRTL_COMMON_FCB_HEADER FcbHeader,
+                             _In_ PLARGE_INTEGER EndingOffset,
+                             _Outptr_result_maybenull_ PERESOURCE* ResourceToAcquire)
+{
+    /*
+     * Decide on type of locking and type of resource based on
+     *  - Flags
+     *  - Whether we're extending ValidDataLength
+     */
+    if (FlagOn(FcbHeader->Flags, FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX))
+    {
+        /* Acquire main resource, exclusive */
+        *ResourceToAcquire = FcbHeader->Resource;
+        return TRUE;
+    }
+
+    /* We will acquire shared. Which one ? */
+    if (FlagOn(FcbHeader->Flags, FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH))
+    {
+        *ResourceToAcquire = FcbHeader->Resource;
+    }
+    else
+    {
+        *ResourceToAcquire = FcbHeader->PagingIoResource;
+    }
+
+    /* We force exclusive lock if this write modifies the valid data length */
+    return (EndingOffset->QuadPart > FcbHeader->ValidDataLength.QuadPart);
+}
+
+/**
+ * @brief Lock a file object before flushing pages to disk. 
+ *        To be called by the Modified Page Writer (MPW)
+ *
+ * @param FileObject - The file object to lock
+ * @param EndingOffset - The end offset of the write to be done
+ * @param ResourceToRelease - Pointer receiving the resource to release after the write
+ *
+ * @return Relevant NTSTATUS value
+ */
+_Check_return_
 NTSTATUS
 NTAPI
-FsRtlAcquireFileForModWriteEx(IN PFILE_OBJECT FileObject,
-                              IN PLARGE_INTEGER EndingOffset,
-                              IN PERESOURCE *ResourceToRelease)
+FsRtlAcquireFileForModWriteEx(_In_ PFILE_OBJECT FileObject,
+                              _In_ PLARGE_INTEGER EndingOffset,
+                              _Outptr_result_maybenull_ PERESOURCE *ResourceToRelease)
 {
     PFSRTL_COMMON_FCB_HEADER FcbHeader;
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
     PERESOURCE ResourceToAcquire = NULL;
-    BOOLEAN Exclusive = FALSE;
+    BOOLEAN Exclusive;
     BOOLEAN Result;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1837,133 +1886,89 @@ FsRtlAcquireFileForModWriteEx(IN PFILE_OBJECT FileObject,
         }
     }
 
-    Status = STATUS_SUCCESS;
+    /* Check what and how we should acquire */
+    Exclusive = FsRtlpGetResourceForModWrite(FcbHeader, EndingOffset, &ResourceToAcquire);
 
-    /* No FastIo handler, use algorithm from Nagar p.550. */
-    if (!FcbHeader->Resource)
-    {
-        *ResourceToRelease = NULL;
-        return STATUS_SUCCESS;
-    }
-
-    /* Default condition - shared acquiring of Paging IO Resource */
-    ResourceToAcquire = FcbHeader->PagingIoResource;
-
-    /* Decide on type of locking and type of resource based on historical magic
-       well explain by Nagar in p. 550-551 */
-    if ((EndingOffset->QuadPart > FcbHeader->ValidDataLength.QuadPart &&
-         FcbHeader->FileSize.QuadPart != FcbHeader->ValidDataLength.QuadPart) ||
-         (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX))
-    {
-        /* Either exclusive flag is set or write operation is extending
-           the valid data length. Prefer exclusive acquire then */
-        Exclusive = TRUE;
-        ResourceToAcquire = FcbHeader->Resource;
-    }
-    else if (!FcbHeader->PagingIoResource ||
-             (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH))
-    {
-        /* Acquire main resource shared if flag is specified or
-           if PagingIo resource is missing */
-        Exclusive = FALSE;
-        ResourceToAcquire = FcbHeader->Resource;
-    }
-
-    /* Acquire the resource in the loop, since the above code is unsafe */
+    /* Acquire the resource and loop until we're sure we got this right. */
     while (TRUE)
     {
-        Result = FALSE;
+        BOOLEAN OldExclusive;
+        PERESOURCE OldResourceToAcquire;
+
+        if (ResourceToAcquire == NULL)
+        {
+            /* 
+             * There's nothing to acquire, we can simply return success
+             */
+
+            break;
+        }
 
         if (Exclusive)
+        {
             Result = ExAcquireResourceExclusiveLite(ResourceToAcquire, FALSE);
+        }
         else
+        {
             Result = ExAcquireSharedWaitForExclusive(ResourceToAcquire, FALSE);
+        }
 
-        if (!Result) {
-            Status = STATUS_CANT_WAIT;
+        if (!Result)
+        {
+            return STATUS_CANT_WAIT;
+        }
+
+        /* Does this still hold true? */
+        OldExclusive = Exclusive;
+        OldResourceToAcquire = ResourceToAcquire;
+        Exclusive = FsRtlpGetResourceForModWrite(FcbHeader, EndingOffset, &ResourceToAcquire);
+
+        if ((OldExclusive == Exclusive) && (OldResourceToAcquire == ResourceToAcquire))
+        {
+            /* We're good */
             break;
         }
 
-        /* Do the magic ifs again */
-        if ((EndingOffset->QuadPart > FcbHeader->ValidDataLength.QuadPart) ||
-             (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX))
+        /* Can we fix this situation? */
+        if ((OldResourceToAcquire == ResourceToAcquire) && !Exclusive)
         {
-            /* Check what we have */
-            if (Exclusive)
-            {
-                /* Asked for exclusive, got exclusive! */
-                break;
-            }
-            else
-            {
-                /* Asked for exclusive, got shared. Release it and retry. */
-                ExReleaseResourceLite(ResourceToAcquire);
-                Exclusive = TRUE;
-                ResourceToAcquire = FcbHeader->Resource;
-            }
-        }
-        else if (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH)
-        {
-            if (Exclusive)
-            {
-                /* Asked for shared, got exclusive - convert */
-                ExConvertExclusiveToSharedLite(ResourceToAcquire);
-                break;
-            }
-            else if (ResourceToAcquire != FcbHeader->Resource)
-            {
-                /* Asked for main resource, got something else */
-                ExReleaseResourceLite(ResourceToAcquire);
-                ResourceToAcquire = FcbHeader->Resource;
-                Exclusive = TRUE;
-            }
-        }
-        else if (FcbHeader->PagingIoResource &&
-                 ResourceToAcquire != FcbHeader->PagingIoResource)
-        {
-            /* There is PagingIo resource, but other resource was acquired */
-            ResourceToAcquire = FcbHeader->PagingIoResource;
-            if (!ExAcquireSharedWaitForExclusive(ResourceToAcquire, FALSE))
-            {
-                Status = STATUS_CANT_WAIT;
-                ExReleaseResourceLite(FcbHeader->Resource);
-            }
-
-            break;
-        }
-        else if (Exclusive)
-        {
-            /* Asked for shared got exclusive - convert */
+            /* We can easily do so */
             ExConvertExclusiveToSharedLite(ResourceToAcquire);
             break;
         }
+
+        /* Things have changed since we acquired the lock. Start again */
+        ExReleaseResourceLite(OldResourceToAcquire);
     }
 
-    /* If the resource was acquired successfully - pass it to the caller */
-    if (NT_SUCCESS(Status))
-        *ResourceToRelease = ResourceToAcquire;
-
-    return Status;
+    /* If we're here, this means that we succeeded */
+    *ResourceToRelease = ResourceToAcquire;
+    return STATUS_SUCCESS;
 }
 
-/*
-* @implemented
-*/
+/**
+ * @brief Unlock a file object after flushing pages to disk. 
+ *        To be called by the Modified Page Writer (MPW) after a succesful call to
+ *        FsRtlAcquireFileForModWriteEx
+ *
+ * @param FileObject - The file object to unlock
+ * @param ResourceToRelease - The resource to release
+ */
 VOID
 NTAPI
-FsRtlReleaseFileForModWrite(IN PFILE_OBJECT FileObject,
-                            IN PERESOURCE ResourceToRelease)
+FsRtlReleaseFileForModWrite(_In_ PFILE_OBJECT FileObject,
+                            _In_ PERESOURCE ResourceToRelease)
 {
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
-    /* Check if Fast Calls are supported and check ReleaseFileForNtCreateSection */
+    /* Check if Fast Calls are supported and check ReleaseForModWrite */
     if (FastDispatch &&
         FastDispatch->ReleaseForModWrite)
     {
