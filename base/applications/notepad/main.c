@@ -432,7 +432,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 
             EndDeferWindowPos(hdwp);
 
-            /* Align status bar parts */
+            /* Align status bar parts, only if the status bar resize operation succeeds */
             DIALOG_StatusBarAlignParts();
         }
         else

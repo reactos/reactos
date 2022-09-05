@@ -140,27 +140,25 @@ VOID DIALOG_StatusBarAlignParts(VOID)
     parts[0] = max(parts[0], defaultWidths[0]);
     parts[1] = max(parts[1], defaultWidths[0] + defaultWidths[1]);
 
-    SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)_countof(parts), (LPARAM)parts);
+    SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)ARRAY_SIZE(parts), (LPARAM)parts);
 }
 
 static VOID DIALOG_StatusBarUpdateLineEndings(VOID)
 {
     WCHAR szText[128];
 
-    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, _countof(szText));
+    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, ARRAY_SIZE(szText));
 
     SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_EOLN, (LPARAM)szText);
 }
 
 static VOID DIALOG_StatusBarUpdateEncoding(VOID)
 {
-    WCHAR szText[128];
-
-    szText[0] = UNICODE_NULL;
+    WCHAR szText[128] = L"";
 
     if (Globals.encFile != ENCODING_AUTO)
     {
-        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, _countof(szText));
+        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, ARRAY_SIZE(szText));
     }
 
     SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_ENCODING, (LPARAM)szText);
@@ -469,6 +467,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     /* Update line endings and encoding on the status bar */
     DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
+
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
