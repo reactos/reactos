@@ -9,7 +9,6 @@
 
 #include <winsock.h>
 
-
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
     m_pHead(NULL)
