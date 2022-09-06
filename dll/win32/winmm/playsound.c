@@ -34,7 +34,6 @@ typedef struct tagWINE_PLAYSOUND
     LPCWSTR                     pszSound;
     HMODULE                     hMod;
     DWORD                       fdwSound;
-    HANDLE                      hThread;
     HWAVEOUT                    hWave;
     struct tagWINE_PLAYSOUND*   lpNext;
 } WINE_PLAYSOUND;
@@ -253,7 +252,6 @@ static void     PlaySound_Free(WINE_PLAYSOUND* wps)
     if (PlaySoundList == NULL) SetEvent(psLastEvent);
     LeaveCriticalSection(&WINMM_cs);
     if (wps->bAlloc) HeapFree(GetProcessHeap(), 0, (void*)wps->pszSound);
-    if (wps->hThread) CloseHandle(wps->hThread);
     HeapFree(GetProcessHeap(), 0, wps);
 }
 
@@ -300,9 +298,8 @@ static WINE_PLAYSOUND*  PlaySound_Alloc(const void* pszSound, HMODULE hmod,
     return NULL;
 }
 
-static DWORD WINAPI proc_PlaySound(LPVOID arg)
+static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 {
-    WINE_PLAYSOUND*     wps = arg;
     BOOL		bRet = FALSE;
     HMMIO		hmmio = 0;
     MMCKINFO		ckMainRIFF;
@@ -502,6 +499,34 @@ errCleanUp:
     return bRet;
 }
 
+static DWORD WINAPI PlaySoundAsyncThreadProc(LPVOID lpParameter)
+{
+    WINE_PLAYSOUND *wps = (WINE_PLAYSOUND*)lpParameter;
+
+    /* Play the sound */
+    proc_PlaySound(wps);
+
+    return 0;
+}
+
+static BOOL proc_PlaySoundAsync(WINE_PLAYSOUND *wps)
+{
+    HANDLE hThread;
+
+    /* Create a thread to play the sound asynchronously */
+    hThread = CreateThread(NULL, 0, PlaySoundAsyncThreadProc, wps, 0, NULL);
+    if (hThread)
+    {
+        SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
+        CloseHandle(hThread);
+        return TRUE;
+    }
+
+    /* Error cases */
+    PlaySound_Free(wps);
+    return FALSE;
+}
+
 static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSound, BOOL bUnicode)
 {
     WINE_PLAYSOUND*     wps = NULL;
@@ -549,20 +574,12 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
 
     if (fdwSound & SND_ASYNC)
     {
-        DWORD       id;
-        HANDLE      handle;
         wps->bLoop = (fdwSound & SND_LOOP) ? TRUE : FALSE;
-        if ((handle = CreateThread(NULL, 0, proc_PlaySound, wps, 0, &id)) != 0) {
-            wps->hThread = handle;
-            SetThreadPriority(handle, THREAD_PRIORITY_TIME_CRITICAL);
-            return TRUE;
-        }
+        
+        return proc_PlaySoundAsync(wps);
     }
-    else return proc_PlaySound(wps);
-
-    /* error cases */
-    PlaySound_Free(wps);
-    return FALSE;
+    
+    return proc_PlaySound(wps);
 }
 
 /**************************************************************************
