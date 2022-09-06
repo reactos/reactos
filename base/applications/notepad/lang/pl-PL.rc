@@ -161,6 +161,7 @@ BEGIN
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linia %d, kolumna %d"
     STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
+    STRING_DEFAULTFONT "Lucida Console"
 
     STRING_TEXT_DOCUMENT "Dokument tekstowy"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

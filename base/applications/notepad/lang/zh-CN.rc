@@ -174,6 +174,7 @@ BEGIN
     STRING_CR "Mac（CR）"
     STRING_LINE_COLUMN "行 %d，列 %d"
     STRING_PRINTERROR "无法打印文件“%s”。\n\n请确保打印机已打开，并且已正确配置。"
+    STRING_DEFAULTFONT "宋体"
 
     STRING_TEXT_DOCUMENT "文本文档"
     STRING_NOTEPAD_AUTHORS "版权所有 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

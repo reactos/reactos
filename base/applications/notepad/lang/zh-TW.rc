@@ -174,6 +174,7 @@ BEGIN
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "第 %d 行，第 %d 字元"
     STRING_PRINTERROR "檔案「%s」列印失敗。\n\n請檢查印表機是否已經開機和正確設定。"
+    STRING_DEFAULTFONT "新細明體"
 
     STRING_TEXT_DOCUMENT "純文字檔案"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
