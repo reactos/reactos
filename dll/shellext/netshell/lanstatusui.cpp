@@ -845,14 +845,11 @@ LANStatusDlg(
             return TRUE;
         case WM_TIMER:
             pContext = NULL;
-            if(!pContext)
+            /* Let's search in the global table */
+            for(INT i = 0; i< g_pContextArray.GetSize(); ++i)
             {
-                /* Let's search in the global table */
-                for(INT i = 0; i< g_pContextArray.GetSize(); ++i)
-                {
-                    if (wParam == (WPARAM)g_pContextArray[i]->nIDEvent)
-                       pContext = g_pContextArray[i];
-                }
+                if (wParam == (WPARAM)g_pContextArray[i]->nIDEvent)
+                   pContext = g_pContextArray[i];
             }
             if(pContext)
             {
