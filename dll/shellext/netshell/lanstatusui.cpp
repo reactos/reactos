@@ -9,6 +9,10 @@
 
 #include <winsock.h>
 
+#include <atlsimpcoll.h>
+
+CSimpleArray<LANSTATUSUI_CONTEXT *> g_pContextArray;
+
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
     m_pHead(NULL)
@@ -116,7 +120,7 @@ UpdateLanStatusUiDlg(
 }
 
 VOID
-UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
+UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     MIB_IFROW IfEntry;
     HICON hIcon, hOldIcon = NULL;
@@ -127,6 +131,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     IfEntry.dwIndex = pContext->dwAdapterIndex;
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
+        ERR("Invalid network adapter: %d\n",pContext->dwAdapterIndex);
         return;
     }
 
@@ -837,15 +842,24 @@ LANStatusDlg(
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pContext = (LANSTATUSUI_CONTEXT *)lParam;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
-            pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
             return TRUE;
         case WM_TIMER:
-            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (wParam == (WPARAM)pContext->nIDEvent)
+            pContext = NULL;
+            if(!pContext)
             {
-                UpdateLanStatus(pContext->hwndDlg, pContext);
+                /* Let's search in the global table */
+                for(INT i = 0; i< g_pContextArray.GetSize(); ++i)
+                {
+                    if (wParam == (WPARAM)g_pContextArray[i]->nIDEvent)
+                       pContext = g_pContextArray[i];
+                }
+            }
+            if(pContext)
+            {
+                if (wParam == (WPARAM)pContext->nIDEvent)
+                {
+                    UpdateLanStatus(pContext->hwndDlg, pContext);
+                }
             }
             break;
         case WM_SHOWSTATUSDLG:
@@ -957,6 +971,10 @@ CLanStatus::InitializeNetTaskbarNotifications()
             continue;
         }
 
+        /* update adapter info */
+        pContext->Status = -1;
+        pContext->dwAdapterIndex = Index;
+
         ZeroMemory(&nid, sizeof(nid));
         nid.cbSize = sizeof(nid);
         nid.uID = Index++;
@@ -989,6 +1007,8 @@ CLanStatus::InitializeNetTaskbarNotifications()
         pContext->hwndStatusDlg = hwndDlg;
         pItem->hwndDlg = hwndDlg;
 
+        pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
+
         if (Shell_NotifyIconW(NIM_ADD, &nid))
         {
             if (pLast)
@@ -1007,6 +1027,8 @@ CLanStatus::InitializeNetTaskbarNotifications()
 
         if (nid.uFlags & NIF_ICON)
             DestroyIcon(nid.hIcon);
+        
+        g_pContextArray.Add(pContext);
     }
 
     m_lpNetMan = pNetConMan;
