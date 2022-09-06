@@ -184,19 +184,21 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
 
         ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
         Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
-        Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
-        Globals.lfFont.lfEscapement = 0;
         LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
                    ARRAY_SIZE(Globals.lfFont.lfFaceName));
-        Globals.lfFont.lfItalic = FALSE;
-        Globals.lfFont.lfOrientation = 0;
-        Globals.lfFont.lfOutPrecision = OUT_STRING_PRECIS;
         Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
-        Globals.lfFont.lfQuality = PROOF_QUALITY;
-        Globals.lfFont.lfStrikeOut = FALSE;
-        Globals.lfFont.lfUnderline = FALSE;
         Globals.lfFont.lfWeight = FW_NORMAL;
         Globals.lfFont.lfHeight = HeightFromPointSize(100);
+
+        /* WORKAROUND: Far East Asian users may not have suitable fixed-pitch fonts. */
+        switch (PRIMARYLANGID(GetUserDefaultLangID()))
+        {
+            case LANG_CHINESE:
+            case LANG_JAPANESE:
+            case LANG_KOREAN:
+                Globals.lfFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+                break;
+        }
     }
 
     hFont = CreateFontIndirect(&Globals.lfFont);
