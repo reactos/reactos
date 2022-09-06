@@ -9,9 +9,6 @@
 
 #include <winsock.h>
 
-#include <atlsimpcoll.h>
-
-CSimpleArray<LANSTATUSUI_CONTEXT *> g_pContextArray;
 
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
@@ -842,15 +839,11 @@ LANStatusDlg(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            pContext = (LANSTATUSUI_CONTEXT *)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
             return TRUE;
         case WM_TIMER:
-            pContext = NULL;
-            /* Let's search in the global table */
-            for(INT i = 0; i< g_pContextArray.GetSize(); ++i)
-            {
-                if (wParam == (WPARAM)g_pContextArray[i]->nIDEvent)
-                   pContext = g_pContextArray[i];
-            }
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if(pContext)
             {
                 if (wParam == (WPARAM)pContext->nIDEvent)
@@ -1025,7 +1018,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
         if (nid.uFlags & NIF_ICON)
             DestroyIcon(nid.hIcon);
         
-        g_pContextArray.Add(pContext);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
     }
 
     m_lpNetMan = pNetConMan;
