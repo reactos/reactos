@@ -183,7 +183,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
                    ARRAY_SIZE(Globals.szFooter));
 
         ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
-        Globals.lfFont.lfCharSet = ANSI_CHARSET;
+        Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
         Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
         Globals.lfFont.lfEscapement = 0;
         LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
