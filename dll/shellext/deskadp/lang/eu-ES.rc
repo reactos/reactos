@@ -9,17 +9,17 @@ BEGIN
     ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Propietateak", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-    GROUPBOX "Adaptadorearen informazioa ", -1, 7, 56, 237, 75
-    LTEXT "Chip mota:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 90, 68, 150, 8, SS_NOPREFIX
-    LTEXT "DAC mota:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 90, 80, 150, 8, SS_NOPREFIX
-    LTEXT "Memoriaren neurria:", -1, 13, 92, 70, 8
-    LTEXT "", IDC_MEMORYSIZE, 90, 92, 150, 8, SS_NOPREFIX
-    LTEXT "Adaptadorearen izena:", -1, 13, 104, 80, 8
-    LTEXT "", IDC_ADAPTERSTRING, 90, 104, 150, 8, SS_NOPREFIX
-    LTEXT "BIOS-aren informazioa:", -1, 13, 116, 80, 8
-    LTEXT "", IDC_BIOSINFORMATION, 90, 116, 150, 8, SS_NOPREFIX
+    GROUPBOX "Adaptadorearen informazioa", -1, 7, 56, 237, 75
+    LTEXT "Chip mota:", -1, 13, 68, 76, 8
+    LTEXT "", IDC_CHIPTYPE, 95, 68, 146, 8, SS_NOPREFIX
+    LTEXT "DAC mota:", -1, 13, 80, 76, 8
+    LTEXT "", IDC_DACTYPE, 95, 80, 146, 8, SS_NOPREFIX
+    LTEXT "Memoriaren neurria:", -1, 13, 92, 76, 8
+    LTEXT "", IDC_MEMORYSIZE, 95, 92, 146, 8, SS_NOPREFIX
+    LTEXT "Adaptadorearen izena:", -1, 13, 104, 76, 8
+    LTEXT "", IDC_ADAPTERSTRING, 95, 104, 146, 8, SS_NOPREFIX
+    LTEXT "BIOS-aren informazioa:", -1, 13, 116, 76, 8
+    LTEXT "", IDC_BIOSINFORMATION, 95, 116, 146, 8, SS_NOPREFIX
     PUSHBUTTON "&Modu guztiak zerrendatu...", IDC_LISTALLMODES, 7, 139, 95, 14
 END
 

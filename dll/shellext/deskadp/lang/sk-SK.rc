@@ -17,16 +17,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "Vl&astnosti", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Informácie o adaptéri", -1, 7, 56, 237, 75
-    LTEXT "Typ čipu:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Typ konvertora:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Veľkosť pamäte:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Reťazec adaptéra:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "BIOS – informácie:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    LTEXT "Typ čipu:", -1, 13, 68, 61, 8
+    LTEXT "", IDC_CHIPTYPE, 80, 68, 161, 8, SS_NOPREFIX
+    LTEXT "Typ konvertora:", -1, 13, 80, 61, 8
+    LTEXT "", IDC_DACTYPE, 80, 80, 161, 8, SS_NOPREFIX
+    LTEXT "Veľkosť pamäte:", -1, 13, 92, 61, 8
+    LTEXT "", IDC_MEMORYSIZE, 80, 92, 161, 8, SS_NOPREFIX
+    LTEXT "Reťazec adaptéra:", -1, 13, 104, 61, 8
+    LTEXT "", IDC_ADAPTERSTRING, 80, 104, 161, 8, SS_NOPREFIX
+    LTEXT "BIOS – informácie:", -1, 13, 116, 61, 8
+    LTEXT "", IDC_BIOSINFORMATION, 80, 116, 161, 8, SS_NOPREFIX
     PUSHBUTTON "&Zoznam všetkých režimov...", IDC_LISTALLMODES, 7, 139, 100, 14
 END
 
