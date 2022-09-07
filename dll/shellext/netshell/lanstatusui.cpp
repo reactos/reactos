@@ -843,7 +843,7 @@ LANStatusDlg(
             return TRUE;
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if(pContext)
+            if (pContext)
             {
                 if (wParam == (WPARAM)pContext->nIDEvent)
                 {
