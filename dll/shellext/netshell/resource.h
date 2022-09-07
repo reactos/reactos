@@ -125,3 +125,6 @@
 #define IDS_WZD_DOMAIN_NAME          13457
 
 #define IDR_NETSHELL 20000
+
+#define NETTIMERID 0xFABC
+

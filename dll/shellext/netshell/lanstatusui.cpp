@@ -996,7 +996,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
         pContext->hwndStatusDlg = hwndDlg;
         pItem->hwndDlg = hwndDlg;
 
-        pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
+        pContext->nIDEvent = SetTimer(hwndDlg, NETTIMERID, 1000, NULL);
 
         if (Shell_NotifyIconW(NIM_ADD, &nid))
         {
