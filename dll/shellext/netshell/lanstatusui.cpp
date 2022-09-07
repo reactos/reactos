@@ -116,7 +116,7 @@ UpdateLanStatusUiDlg(
 }
 
 VOID
-UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
+UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
 {
     MIB_IFROW IfEntry;
     HICON hIcon, hOldIcon = NULL;
@@ -127,7 +127,6 @@ UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     IfEntry.dwIndex = pContext->dwAdapterIndex;
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
-        ERR("Invalid network adapter: %lu\n", pContext->dwAdapterIndex);
         return;
     }
 
@@ -840,15 +839,13 @@ LANStatusDlg(
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT *)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
+            pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
             return TRUE;
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (pContext)
+            if (wParam == (WPARAM)pContext->nIDEvent)
             {
-                if (wParam == (WPARAM)pContext->nIDEvent)
-                {
-                    UpdateLanStatus(pContext->hwndDlg, pContext);
-                }
+                UpdateLanStatus(pContext->hwndDlg, pContext);
             }
             break;
         case WM_SHOWSTATUSDLG:
@@ -949,6 +946,8 @@ CLanStatus::InitializeNetTaskbarNotifications()
         ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
         pContext->uID = Index;
         pContext->pNet = pNetCon;
+        pContext->Status = -1;
+        pContext->dwAdapterIndex = Index;
         pItem->uID = Index;
         pItem->pNext = NULL;
         pItem->pNet = pNetCon;
@@ -959,10 +958,6 @@ CLanStatus::InitializeNetTaskbarNotifications()
             ERR("CreateDialogParamW failed\n");
             continue;
         }
-
-        /* update adapter info */
-        pContext->Status = -1;
-        pContext->dwAdapterIndex = Index;
 
         ZeroMemory(&nid, sizeof(nid));
         nid.cbSize = sizeof(nid);
@@ -996,8 +991,6 @@ CLanStatus::InitializeNetTaskbarNotifications()
         pContext->hwndStatusDlg = hwndDlg;
         pItem->hwndDlg = hwndDlg;
 
-        pContext->nIDEvent = SetTimer(hwndDlg, NETTIMERID, 1000, NULL);
-
         if (Shell_NotifyIconW(NIM_ADD, &nid))
         {
             if (pLast)
@@ -1016,8 +1009,6 @@ CLanStatus::InitializeNetTaskbarNotifications()
 
         if (nid.uFlags & NIF_ICON)
             DestroyIcon(nid.hIcon);
-        
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
     }
 
     m_lpNetMan = pNetConMan;
