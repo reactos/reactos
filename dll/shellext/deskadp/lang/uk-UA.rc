@@ -18,16 +18,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "В&ластивості", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Відомості про адаптер", -1, 7, 56, 237, 75
-    LTEXT "Тип мікросхем:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 78, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Тип ЦАП:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 78, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Об'єм пам'яті:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 78, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Рядок контролера:", -1, 13, 104, 80, 8
-    LTEXT "", IDC_ADAPTERSTRING, 78, 104, 160, 8, SS_NOPREFIX
-    LTEXT "Відомості про BIOS:", -1, 13, 116, 80, 8
-    LTEXT "", IDC_BIOSINFORMATION, 78, 116, 160, 8, SS_NOPREFIX
+    LTEXT "Тип мікросхем:", -1, 13, 68, 67, 8
+    LTEXT "", IDC_CHIPTYPE, 86, 68, 155, 8, SS_NOPREFIX
+    LTEXT "Тип ЦАП:", -1, 13, 80, 67, 8
+    LTEXT "", IDC_DACTYPE, 86, 80, 155, 8, SS_NOPREFIX
+    LTEXT "Об'єм пам'яті:", -1, 13, 92, 67, 8
+    LTEXT "", IDC_MEMORYSIZE, 86, 92, 155, 8, SS_NOPREFIX
+    LTEXT "Рядок контролера:", -1, 13, 104, 67, 8
+    LTEXT "", IDC_ADAPTERSTRING, 86, 104, 155, 8, SS_NOPREFIX
+    LTEXT "Відомості про BIOS:", -1, 13, 116, 67, 8
+    LTEXT "", IDC_BIOSINFORMATION, 86, 116, 155, 8, SS_NOPREFIX
     PUSHBUTTON "&Список усіх режимів...", IDC_LISTALLMODES, 7, 139, 80, 14
 END
 

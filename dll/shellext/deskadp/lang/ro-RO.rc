@@ -18,16 +18,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Proprietăți…", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Despre adaptor", -1, 7, 56, 237, 75
-    LTEXT "Tipul de cip:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Tipul de DAC:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Memorie:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Șir adaptor:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "Informație BIOS:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 75, 116, 156, 8, SS_NOPREFIX
+    LTEXT "Tipul de cip:", -1, 13, 68, 56, 8
+    LTEXT "", IDC_CHIPTYPE, 75, 68, 166, 8, SS_NOPREFIX
+    LTEXT "Tipul de DAC:", -1, 13, 80, 56, 8
+    LTEXT "", IDC_DACTYPE, 75, 80, 166, 8, SS_NOPREFIX
+    LTEXT "Memorie:", -1, 13, 92, 56, 8
+    LTEXT "", IDC_MEMORYSIZE, 75, 92, 166, 8, SS_NOPREFIX
+    LTEXT "Șir adaptor:", -1, 13, 104, 56, 8
+    LTEXT "", IDC_ADAPTERSTRING, 75, 104, 166, 8, SS_NOPREFIX
+    LTEXT "Informație BIOS:", -1, 13, 116, 56, 8
+    LTEXT "", IDC_BIOSINFORMATION, 75, 116, 166, 8, SS_NOPREFIX
     PUSHBUTTON "&Enumerare moduri valide…", IDC_LISTALLMODES, 7, 139, 130, 14
 END
 
