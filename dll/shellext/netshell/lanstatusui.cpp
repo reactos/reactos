@@ -127,7 +127,7 @@ UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     IfEntry.dwIndex = pContext->dwAdapterIndex;
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
-        ERR("Invalid network adapter: %d\n",pContext->dwAdapterIndex);
+        ERR("Invalid network adapter: %lu\n", pContext->dwAdapterIndex);
         return;
     }
 
@@ -843,7 +843,7 @@ LANStatusDlg(
             return TRUE;
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if(pContext)
+            if (pContext)
             {
                 if (wParam == (WPARAM)pContext->nIDEvent)
                 {
