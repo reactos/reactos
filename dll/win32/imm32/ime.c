@@ -59,7 +59,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
             return FALSE;
     }
-    else if (Imm32IsCiceroMode() && pImeDpi->CtfImeInquireExW)
+    else if (IS_CICERO_MODE() && pImeDpi->CtfImeInquireExW)
     {
         if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
             return FALSE;
@@ -296,7 +296,7 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || Imm32Is16BitMode()))
         return NULL;
 
     pImeDpi = ImmLockImeDpi(hKL);
@@ -311,7 +311,7 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     if (IS_IME_HKL(hKL))
         return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
-    if (Imm32IsCiceroMode() && pImeDpi->CtfImeEscapeEx)
+    if (IS_CICERO_MODE() && pImeDpi->CtfImeEscapeEx)
         return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
 
     return 0;
@@ -886,7 +886,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
             if (!IS_IME_HKL(hKL))
             {
                 if (!CtfImmIsTextFrameServiceDisabled() ||
-                    !Imm32IsCiceroMode() || Imm32Is16BitMode())
+                    !IS_CICERO_MODE() || Imm32Is16BitMode())
                 {
                     return FALSE;
                 }
@@ -997,7 +997,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || Imm32Is16BitMode()))
         return FALSE;
 
     pImeDpi = Imm32FindImeDpi(hKL);
@@ -1825,7 +1825,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL) && Imm32IsCiceroMode() && !Imm32Is16BitMode())
+    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !Imm32Is16BitMode())
         fUseCicero = TRUE;
 
     if (Imm32IsCrossThreadAccess(hIMC))

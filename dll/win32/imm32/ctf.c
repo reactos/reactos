@@ -40,7 +40,7 @@ HRESULT APIENTRY Imm32CtfImeDestroyInputContext(HIMC hIMC)
 // Win: CtfImmTIMDestroyInputContext
 HRESULT APIENTRY CtfImmTIMDestroyInputContext(HIMC hIMC)
 {
-    if (!Imm32IsCiceroMode() || (GetWin32ClientInfo()->dwCompatFlags2 & 2))
+    if (!IS_CICERO_MODE() || (GetWin32ClientInfo()->dwCompatFlags2 & 2))
         return E_NOINTERFACE;
 
     return Imm32CtfImeDestroyInputContext(hIMC);
@@ -58,7 +58,7 @@ HRESULT APIENTRY CtfImmTIMCreateInputContext(HIMC hIMC)
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return Imm32IsCiceroMode();
+    return IS_CICERO_MODE();
 }
 
 /***********************************************************************
@@ -116,7 +116,7 @@ BOOL WINAPI CtfImmIsGuidMapEnable(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (!Imm32IsCiceroMode() || Imm32Is16BitMode())
+    if (!IS_CICERO_MODE() || Imm32Is16BitMode())
         return ret;
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
@@ -150,7 +150,7 @@ HRESULT WINAPI CtfImmGetGuidAtom(HIMC hIMC, DWORD dwUnknown, LPDWORD pdwGuidAtom
 
     *pdwGuidAtom = 0;
 
-    if (!Imm32IsCiceroMode() || Imm32Is16BitMode())
+    if (!IS_CICERO_MODE() || Imm32Is16BitMode())
         return hr;
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);

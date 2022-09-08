@@ -1201,7 +1201,8 @@ typedef enum IMEINFOEXCLASS
 } IMEINFOEXCLASS;
 
 #define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
-#define IS_CICERO_MODE() (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED)
+#define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+#define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 
 typedef struct tagIMEUI
 {
