@@ -296,7 +296,7 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
         return NULL;
 
     pImeDpi = ImmLockImeDpi(hKL);
@@ -886,7 +886,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
             if (!IS_IME_HKL(hKL))
             {
                 if (!CtfImmIsTextFrameServiceDisabled() ||
-                    !IS_CICERO_MODE() || Imm32Is16BitMode())
+                    !IS_CICERO_MODE() || IS_16BIT_MODE())
                 {
                     return FALSE;
                 }
@@ -997,7 +997,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
         return FALSE;
 
     pImeDpi = Imm32FindImeDpi(hKL);
@@ -1825,7 +1825,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !Imm32Is16BitMode())
+    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !IS_16BIT_MODE())
         fUseCicero = TRUE;
 
     if (Imm32IsCrossThreadAccess(hIMC))

@@ -114,7 +114,7 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
 #define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define Imm32Is16BitMode()          (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
+#define IS_16BIT_MODE()             (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,

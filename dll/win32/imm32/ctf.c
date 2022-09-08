@@ -116,7 +116,7 @@ BOOL WINAPI CtfImmIsGuidMapEnable(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (!IS_CICERO_MODE() || Imm32Is16BitMode())
+    if (!IS_CICERO_MODE() || IS_16BIT_MODE())
         return ret;
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
@@ -150,7 +150,7 @@ HRESULT WINAPI CtfImmGetGuidAtom(HIMC hIMC, DWORD dwUnknown, LPDWORD pdwGuidAtom
 
     *pdwGuidAtom = 0;
 
-    if (!IS_CICERO_MODE() || Imm32Is16BitMode())
+    if (!IS_CICERO_MODE() || IS_16BIT_MODE())
         return hr;
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
