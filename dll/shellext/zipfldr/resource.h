@@ -1,15 +1,15 @@
 #pragma once
 
+/* Icons */
+#define IDI_ZIPFLDR                    1
+
 /* Bitmaps */
 #define IDB_ZIPFLDR                    164
 #define IDB_HEADER                     200
 #define IDB_WATERMARK                  201
 
-/* Icons */
-#define IDI_ZIPFLDR 202
-
 /* registry stuff */
-#define IDR_ZIPFLDR                     8000
+#define IDR_ZIPFLDR                    8000
 
 
 /* Dialogs */
