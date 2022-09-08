@@ -745,10 +745,20 @@ co_UserActivateKeyboardLayout(
 VOID FASTCALL
 IntReorderKeyboardLayouts(
     _Inout_ PWINSTATION_OBJECT pWinSta,
-    _Inout_ PKL pKL)
+    _Inout_ PKL pNewKL)
 {
-    /* FIXME */
-    gspklBaseLayout = pKL;
+    PKL pOldKL = gspklBaseLayout;
+
+    if ((pWinSta->Flags & WSS_NOIO) || pNewKL == pOldKL)
+        return;
+
+    pNewKL->pklPrev->pklNext = pNewKL->pklNext;
+    pNewKL->pklNext->pklPrev = pNewKL->pklPrev;
+    pNewKL->pklNext = pOldKL;
+    pNewKL->pklPrev = pOldKL->pklPrev;
+    pOldKL->pklPrev->pklNext = pNewKL;
+    pOldKL->pklPrev = pNewKL;
+    gspklBaseLayout = pNewKL; /* Should we use UserAssignmentLock? */
 }
 
 /* Win: xxxActivateKeyboardLayout */
