@@ -59,7 +59,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
             return FALSE;
     }
-    else if (IS_CICERO_MODE() && pImeDpi->CtfImeInquireExW)
+    else if (IS_CICERO_MODE())
     {
         if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
             return FALSE;
@@ -311,7 +311,7 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     if (IS_IME_HKL(hKL))
         return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
-    if (IS_CICERO_MODE() && pImeDpi->CtfImeEscapeEx)
+    if (IS_CICERO_MODE())
         return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
 
     return 0;
@@ -603,9 +603,6 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
         ImmUnlockIMC(hIMC);
         return 0;
     }
-
-    if (pImeDpi->ImeGetImeMenuItems == NULL)
-        goto Quit;
 
     bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 

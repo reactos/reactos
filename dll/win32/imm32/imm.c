@@ -220,7 +220,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hOldKL))
                 pOldImeDpi->ImeSelect(hIMC, FALSE);
-            else if (IS_CICERO_MODE() && !IS_16BIT_MODE() && pOldImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pOldImeDpi->CtfImeSelectEx(hIMC, FALSE, hOldKL);
         }
         pClientImc->hKL = NULL;
@@ -242,7 +242,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hNewKL))
                 pNewImeDpi->ImeSelect(hIMC, TRUE);
-            else if (IS_CICERO_MODE() && !IS_16BIT_MODE() && pNewImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
 
             pClientImc->hKL = hNewKL;
@@ -389,7 +389,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hNewKL))
                 pNewImeDpi->ImeSelect(hIMC, TRUE);
-            else if (IS_CICERO_MODE() && !IS_16BIT_MODE() && pNewImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
 
             pClientImc->hKL = hNewKL;
@@ -781,7 +781,7 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
         {
             if (IS_IME_HKL(hKL))
                 pImeDpi->ImeSelect(hIMC, TRUE);
-            else if (IS_CICERO_MODE() && !IS_16BIT_MODE() && pImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pImeDpi->CtfImeSelectEx(hIMC, TRUE, hKL);
         }
 
