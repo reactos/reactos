@@ -229,7 +229,7 @@ Failed:
 }
 
 // Win: LoadImeDpi
-PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
+PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
     CHARSETINFO ci;
@@ -301,7 +301,7 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 
     pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi == NULL)
-        pImeDpi = Ime32LoadImeDpi(hKL, TRUE);
+        pImeDpi = Imm32LoadImeDpi(hKL, TRUE);
     return pImeDpi;
 }
 
@@ -999,7 +999,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
-        pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
+        pImeDpi = Imm32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
 }
 
