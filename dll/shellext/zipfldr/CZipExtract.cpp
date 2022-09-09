@@ -334,7 +334,7 @@ public:
     void runWizard()
     {
         PROPSHEETHEADERW psh = { sizeof(psh), 0 };
-        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER;
+        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER | PSH_USEICONID;
         psh.hInstance = _AtlBaseModule.GetResourceInstance();
 
         CExtractSettingsPage extractPage(this, &m_Password);
@@ -347,6 +347,7 @@ public:
 
         psh.phpage = hpsp;
         psh.nPages = _countof(hpsp);
+        psh.pszIcon = MAKEINTRESOURCE(IDI_ZIPFLDR);
         psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
         psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
