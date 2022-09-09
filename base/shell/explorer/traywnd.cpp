@@ -381,7 +381,6 @@ public:
         m_TrayPropertiesOwner(NULL),
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
-        g_Arrangement(NONE),
         m_ShellServices(NULL),
         Flags(0)
     {
