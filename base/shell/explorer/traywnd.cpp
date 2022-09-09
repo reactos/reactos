@@ -84,7 +84,6 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 
 VOID BackupWindowPos()
 {
-    g_WindowPosBackup.RemoveAll();
     EnumWindows(BackupWindowsPosProc, NULL);
 }
 
@@ -94,6 +93,7 @@ VOID RestoreWindowPos()
     {
         ::SetWindowPlacement(g_WindowPosBackup[i].hwnd, &(g_WindowPosBackup[i].wplt));
     }
+    g_WindowPosBackup.RemoveAll();
 }
 
 struct EFFECTIVE_INFO
