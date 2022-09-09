@@ -135,6 +135,7 @@ GetEntry:
         PFN_NUMBER MapPage;
         LARGE_INTEGER Offset;
         BOOLEAN Released;
+        BOOLEAN Unmapped;
 
         Offset.QuadPart = MemoryArea->SectionData.ViewOffset +
                  ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea));
@@ -158,10 +159,19 @@ GetEntry:
 
         /* Delete this virtual mapping in the process */
         MmDeleteRmap(Page, Process, Address);
-        MmDeleteVirtualMapping(Process, Address, &Dirty, &MapPage);
-
-        /* We checked this earlier */
-        ASSERT(MapPage == Page);
+        Unmapped = MmDeleteVirtualMapping(Process, Address, &Dirty, &MapPage);
+        if (!Unmapped || (MapPage != Page))
+        {
+            /*
+             * Something's corrupted, we got there because this process is
+             * supposed to be mapping this page there.
+             */
+            KeBugCheckEx(MEMORY_MANAGEMENT,
+                         (ULONG_PTR)Process,
+                         (ULONG_PTR)Address,
+                         (ULONG_PTR)__FILE__,
+                         __LINE__);
+        }
 
         if (Page != PFN_FROM_SSE(Entry))
         {
