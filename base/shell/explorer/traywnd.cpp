@@ -58,9 +58,7 @@ void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam
 
 static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
-enum WndArrangement { NONE, TILED, CASCADED };
-
-enum WndArrangement g_Arrangement;
+enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
 struct WINDOWPOSBACKUPDATA
 {
