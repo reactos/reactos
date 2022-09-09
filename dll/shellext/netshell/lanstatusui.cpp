@@ -9,6 +9,8 @@
 
 #include <winsock.h>
 
+#define NETTIMERID 0xFABC
+
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
     m_pHead(NULL)

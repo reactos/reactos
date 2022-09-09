@@ -126,5 +126,3 @@
 
 #define IDR_NETSHELL 20000
 
-#define NETTIMERID 0xFABC
-
