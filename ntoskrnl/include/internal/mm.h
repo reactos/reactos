@@ -884,9 +884,8 @@ inline VOID UpdateTotalCommittedPages(LONG Delta)
     /* Update Commitment */
     SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Delta) + Delta;
 
+    /* Update Peak = max(Peak, Total) in a lockless way */
     SIZE_T PeakCommitment = MmPeakCommitment;
-
-    /* Update Peak */
     while (TotalCommittedPages > PeakCommitment &&
            InterlockedCompareExchangeSizeT(&MmPeakCommitment, TotalCommittedPages, PeakCommitment) != PeakCommitment)
     {
