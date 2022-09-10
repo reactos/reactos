@@ -333,6 +333,7 @@ MmAllocSwapPage(VOID)
             UpdateTotalCommittedPages(1);
 
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
+
             entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
             return(entry);
         }
