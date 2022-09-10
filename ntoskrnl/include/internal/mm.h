@@ -868,21 +868,32 @@ MmDeleteKernelStack(PVOID Stack,
 
 /* balance.c / pagefile.c******************************************************/
 
-inline VOID UpdateTotalCommittedPages(VOID)
+inline VOID UpdateTotalCommittedPages(LONG Increase)
 {
     /*
      * Add up all the used "Committed" memory + pagefile.
      * Not sure this is right. 8^\
      * MmTotalCommittedPages should be adjusted consistently with
      * other counters at different places.
-     */
-
-    MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+         MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
                             MiMemoryConsumers[MC_USER].PagesUsed +
                             MiUsedSwapPages;
+     
+     */
+    
+    /* Update Commitment */
+    SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Increase) + Increase;
 
-    if (MmTotalCommittedPages > MmPeakCommitment)
-        MmPeakCommitment = MmTotalCommittedPages;
+    SIZE_T PeakCommitment = MmPeakCommitment;
+    
+    if (Increase < 0) return; //if we decrement, we exit here to optimize processing (peak not impacted)
+
+    /* Update Peak */
+    while (TotalCommittedPages > PeakCommitment &&
+           InterlockedCompareExchangeSizeT(&MmPeakCommitment, TotalCommittedPages, PeakCommitment) != PeakCommitment)
+    {
+        PeakCommitment = MmPeakCommitment;
+    }
 }
 
 /* balance.c *****************************************************************/

@@ -81,7 +81,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
     }
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    UpdateTotalCommittedPages();
+    UpdateTotalCommittedPages(-1);
 
     OldIrql = MiAcquirePfnLock();
 
@@ -285,7 +285,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
     /* Update the target */
     InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    UpdateTotalCommittedPages();
+    UpdateTotalCommittedPages(1);
 
     /*
      * Actually allocate the page.
