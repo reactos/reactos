@@ -875,10 +875,10 @@ inline VOID UpdateTotalCommittedPages(LONG Delta)
      * Not sure this is right. 8^\
      * MmTotalCommittedPages should be adjusted consistently with
      * other counters at different places.
-         MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
-                            MiMemoryConsumers[MC_USER].PagesUsed +
-                            MiUsedSwapPages;
-     
+     *
+       MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+                               MiMemoryConsumers[MC_USER].PagesUsed +
+                               MiUsedSwapPages;
      */
     
     /* Update Commitment */
