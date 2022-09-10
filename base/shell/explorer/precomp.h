@@ -9,10 +9,6 @@
 #define WIN7_COMPAT_MODE 1
 #endif
 
-#if DBG && !defined(_DEBUG)
-    #define _DEBUG     // CORE-17505
-#endif
-
 #include <stdio.h>
 #include <tchar.h>
 
