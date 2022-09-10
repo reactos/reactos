@@ -868,7 +868,7 @@ MmDeleteKernelStack(PVOID Stack,
 
 /* balance.c / pagefile.c******************************************************/
 
-inline VOID UpdateTotalCommittedPages(LONG Increase)
+inline VOID UpdateTotalCommittedPages(LONG Delta)
 {
     /*
      * Add up all the used "Committed" memory + pagefile.
@@ -882,11 +882,9 @@ inline VOID UpdateTotalCommittedPages(LONG Increase)
      */
     
     /* Update Commitment */
-    SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Increase) + Increase;
+    SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Delta) + Delta;
 
     SIZE_T PeakCommitment = MmPeakCommitment;
-    
-    if (Increase < 0) return; //if we decrement, we exit here to optimize processing (peak not impacted)
 
     /* Update Peak */
     while (TotalCommittedPages > PeakCommitment &&
