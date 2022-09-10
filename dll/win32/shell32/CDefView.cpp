@@ -1310,6 +1310,13 @@ HRESULT CDefView::FillFileMenu()
     if (!hFileMenu)
         return E_FAIL;
 
+    /* Release cached IContextMenu */
+    if (m_pCM)
+    {
+        IUnknown_SetSite(m_pCM, NULL);
+        m_pCM.Release();
+    }
+
     /* Cleanup the items added previously */
     for (int i = GetMenuItemCount(hFileMenu) - 1; i >= 0; i--)
     {
