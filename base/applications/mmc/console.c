@@ -313,6 +313,7 @@ FrameOnCommand(HWND hwnd,
     PCONSOLE_MAINFRAME_WND Info;
     HWND hChild;
     LPTSTR lpTitle;
+    HICON hIcon
 
     Info = (PCONSOLE_MAINFRAME_WND)GetWindowLongPtr(hwnd, 0);
 
@@ -339,7 +340,7 @@ FrameOnCommand(HWND hwnd,
         case IDM_HELP_ABOUT:
             if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
             {
-                HICON hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
+                hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
                 ShellAbout(NULL, lpTitle, NULL, hIcon);
                 DestroyIcon(hIcon);
                 LocalFree(lpTitle);
