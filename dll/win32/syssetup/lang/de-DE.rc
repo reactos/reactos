@@ -180,7 +180,7 @@ BEGIN
     IDS_LOCALETITLE "Regionale Einstellungen"
     IDS_LOCALESUBTITLE "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
     IDS_LOCALETEXT "Die Einstellung für Standards und Formate ist %s, und der Standort ist %s."
-    IDS_LAYOUTTEXT "Die Standard-Texteingabesprache und -methode ist: %s keyboard layout"
+    IDS_LAYOUTTEXT "Die Standard-Texteingabesprache und -methode ist: Tastaturlayout %s"
     IDS_DATETIMETITLE "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
     IDS_PROCESSTITLE "Abschliessen der Installation"
