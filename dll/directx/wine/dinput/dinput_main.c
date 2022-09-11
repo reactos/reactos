@@ -30,6 +30,7 @@
  * - Fallout : works great in X and DGA mode
  */
 
+#include "config.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
@@ -1908,9 +1909,7 @@ void check_dinput_events(void)
      * - some games only poll the device, and neither keyboard nor mouse
      *   (for example Civilization: Call to Power 2)
      */
-#ifndef __REACTOS__
     MsgWaitForMultipleObjectsEx(0, NULL, 0, QS_ALLINPUT, 0);
-#endif
 }
 
 BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved)
