@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Flere kanaler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Beskrivelse får du her.", 9506, 8, 4, 212, 24
+    LTEXT "By moving the sliders below you can adjust the volume of all speakers connected to this computer.", 9506, 8, 4, 212, 24
     LTEXT "Lav", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17

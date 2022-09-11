@@ -24,6 +24,9 @@ list(APPEND SOURCE
     volume.c
     vfat.h)
 
+if(KDBG)
+    add_definitions(-DKDBG)
+endif()
 add_library(fastfat MODULE ${SOURCE} vfatfs.rc)
 set_module_type(fastfat kernelmodedriver)
 target_link_libraries(fastfat ${PSEH_LIB})

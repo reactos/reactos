@@ -6,10 +6,6 @@
     #undef _DEBUG
 #endif
 
-#if DBG && !defined(_DEBUG)
-    #define _DEBUG
-#endif
-
 #include <stdarg.h>
 
 #include <windef.h>
