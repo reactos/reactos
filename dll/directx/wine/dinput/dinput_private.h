@@ -65,8 +65,10 @@ extern void dinput_hooks_acquire_device( IDirectInputDevice8W *iface );
 extern void dinput_hooks_unacquire_device( IDirectInputDevice8W *iface );
 extern int dinput_mouse_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPARAM lparam );
 extern int dinput_keyboard_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPARAM lparam );
+#ifndef __REACTOS__
 extern void dinput_mouse_rawinput_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPARAM lparam,
                                         RAWINPUT *raw );
+#endif
 
 extern void check_dinput_hooks( IDirectInputDevice8W *iface, BOOL acquired ) DECLSPEC_HIDDEN;
 extern void check_dinput_events(void) DECLSPEC_HIDDEN;

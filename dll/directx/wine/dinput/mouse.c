@@ -25,7 +25,9 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#ifndef __REACTOS__
 #include "winternl.h"
+#endif
 #include "winuser.h"
 #include "winerror.h"
 #include "winreg.h"
@@ -105,7 +107,11 @@ HRESULT mouse_create_device( struct dinput *dinput, const GUID *guid, IDirectInp
 
     if (FAILED(hr = dinput_device_alloc( sizeof(struct mouse), &mouse_vtbl, guid, dinput, (void **)&impl )))
         return hr;
+
+#ifndef __REACTOS__
+// windows compatibility
     impl->base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": struct mouse*->base.crit");
+#endif
 
     mouse_enum_device( 0, 0, &impl->base.instance, dinput->dwVersion );
     impl->base.caps.dwDevType = impl->base.instance.dwDevType;
@@ -116,8 +122,14 @@ HRESULT mouse_create_device( struct dinput *dinput, const GUID *guid, IDirectInp
     get_app_key(&hkey, &appkey);
     if (!get_config_key( hkey, appkey, L"MouseWarpOverride", buffer, sizeof(buffer) ))
     {
+#ifdef __REACTOS__
+        _wcslwr(buffer);
+        if (!wcscmp(buffer, L"disable")) impl->warp_override = WARP_DISABLE;
+        else if (!wcscmp(buffer, L"force")) impl->warp_override = WARP_FORCE_ON;
+#else
         if (!wcsnicmp( buffer, L"disable", -1 )) impl->warp_override = WARP_DISABLE;
         else if (!wcsnicmp( buffer, L"force", -1 )) impl->warp_override = WARP_FORCE_ON;
+#endif
     }
     if (appkey) RegCloseKey(appkey);
     if (hkey) RegCloseKey(hkey);
@@ -128,17 +140,22 @@ HRESULT mouse_create_device( struct dinput *dinput, const GUID *guid, IDirectInp
         return hr;
     }
 
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     if (dinput->dwVersion >= 0x0800)
     {
         impl->base.use_raw_input = TRUE;
         impl->base.raw_device.usUsagePage = 1; /* HID generic device page */
         impl->base.raw_device.usUsage = 2;     /* HID generic mouse */
     }
+#endif
 
     *out = &impl->base.IDirectInputDevice8W_iface;
     return DI_OK;
 }
 
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
 void dinput_mouse_rawinput_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPARAM lparam, RAWINPUT *ri )
 {
     struct mouse *impl = impl_from_IDirectInputDevice8W( iface );
@@ -236,6 +253,7 @@ void dinput_mouse_rawinput_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPA
     if (notify && impl->base.hEvent) SetEvent( impl->base.hEvent );
     LeaveCriticalSection( &impl->base.crit );
 }
+#endif
 
 /* low-level mouse hook */
 int dinput_mouse_hook( IDirectInputDevice8W *iface, WPARAM wparam, LPARAM lparam )

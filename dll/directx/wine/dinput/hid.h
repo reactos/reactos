@@ -25,9 +25,15 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
+#ifndef __REACTOS__
 #include "winternl.h"
 #include "hidusage.h"
 #include "ddk/hidpi.h"
+#else
+#include "ndk/ntndk.h"
+#include "hidusage.h"
+#include "psdk/hidpi.h"
+#endif
 
 #define HID_MAGIC 0x8491759
 

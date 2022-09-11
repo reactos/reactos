@@ -84,9 +84,19 @@ static DWORD dinput_thread_id;
 static CRITICAL_SECTION dinput_hook_crit;
 static CRITICAL_SECTION_DEBUG dinput_critsect_debug =
 {
+#ifndef __REACTOS__
+// windows compatibility
     0, 0, &dinput_hook_crit,
     { &dinput_critsect_debug.ProcessLocksList, &dinput_critsect_debug.ProcessLocksList },
       0, 0, { (DWORD_PTR)(__FILE__ ": dinput_hook_crit") }
+#else
+    .Type = 0,
+    .CreatorBackTraceIndex = 0,
+    .CriticalSection = &dinput_hook_crit,
+    .ProcessLocksList = { &dinput_critsect_debug.ProcessLocksList, &dinput_critsect_debug.ProcessLocksList },
+    .EntryCount = 0,
+    .ContentionCount = 0
+#endif
 };
 static CRITICAL_SECTION dinput_hook_crit = { &dinput_critsect_debug, -1, 0, 0, 0, 0 };
 
@@ -104,7 +114,12 @@ void dinput_hooks_acquire_device( IDirectInputDevice8W *iface )
 
     EnterCriticalSection( &dinput_hook_crit );
     if (IsEqualGUID( &impl->guid, &GUID_SysMouse ))
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
         list_add_tail( impl->use_raw_input ? &acquired_rawmouse_list : &acquired_mouse_list, &impl->entry );
+#else
+        list_add_tail(&acquired_mouse_list, &impl->entry);
+#endif
     else if (IsEqualGUID( &impl->guid, &GUID_SysKeyboard ))
         list_add_tail( &acquired_keyboard_list, &impl->entry );
     else
@@ -373,6 +388,8 @@ static HRESULT WINAPI dinput7_QueryInterface( IDirectInput7W *iface, REFIID iid,
     return E_NOINTERFACE;
 }
 
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
 static LRESULT WINAPI di_em_win_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     struct dinput_device *impl;
@@ -398,9 +415,12 @@ static LRESULT WINAPI di_em_win_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 
     return DefWindowProcW( hwnd, msg, wparam, lparam );
 }
+#endif
 
 static void register_di_em_win_class(void)
 {
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     WNDCLASSEXW class;
 
     memset(&class, 0, sizeof(class));
@@ -411,12 +431,16 @@ static void register_di_em_win_class(void)
 
     if (!RegisterClassExW( &class ) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
         WARN( "Unable to register message window class\n" );
+#endif
 }
 
 static void unregister_di_em_win_class(void)
 {
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     if (!UnregisterClassW( L"DIEmWin", NULL ) && GetLastError() != ERROR_CLASS_DOES_NOT_EXIST)
         WARN( "Unable to unregister message window class\n" );
+#endif
 }
 
 static HRESULT initialize_directinput_instance( struct dinput *impl, DWORD version )
@@ -1155,7 +1179,10 @@ static LRESULT CALLBACK LL_hook_proc( int code, WPARAM wparam, LPARAM lparam )
     }
     LIST_FOR_EACH_ENTRY( impl, &acquired_keyboard_list, struct dinput_device, entry )
     {
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
         if (impl->use_raw_input) continue;
+#endif
         TRACE( "calling dinput_keyboard_hook (%p %Ix %Ix)\n", impl, wparam, lparam );
         skip |= dinput_keyboard_hook( &impl->IDirectInputDevice8W_iface, wparam, lparam );
     }
@@ -1193,6 +1220,8 @@ static LRESULT CALLBACK callwndproc_proc( int code, WPARAM wparam, LPARAM lparam
             dinput_device_internal_unacquire( &impl->IDirectInputDevice8W_iface );
         }
     }
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     LIST_FOR_EACH_ENTRY_SAFE( impl, next, &acquired_rawmouse_list, struct dinput_device, entry )
     {
         if (msg->hwnd == impl->win && msg->hwnd != foreground)
@@ -1201,6 +1230,7 @@ static LRESULT CALLBACK callwndproc_proc( int code, WPARAM wparam, LPARAM lparam
             dinput_device_internal_unacquire( &impl->IDirectInputDevice8W_iface );
         }
     }
+#endif
     LIST_FOR_EACH_ENTRY_SAFE( impl, next, &acquired_keyboard_list, struct dinput_device, entry )
     {
         if (msg->hwnd == impl->win && msg->hwnd != foreground)
@@ -1334,8 +1364,18 @@ static BOOL WINAPI dinput_thread_start_once( INIT_ONCE *once, void *param, void 
 
 static void dinput_thread_start(void)
 {
+#ifndef __REACTOS__
     static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
     InitOnceExecuteOnce( &init_once, dinput_thread_start_once, NULL, NULL );
+#else
+    //trivial init once
+    static BOOL initialized = FALSE;
+
+    if (!InterlockedCompareExchange(&initialized, TRUE, FALSE))
+    {
+        dinput_thread_start_once(NULL, NULL, NULL);
+    }
+#endif
 }
 
 static void dinput_thread_stop(void)
@@ -1374,6 +1414,8 @@ void check_dinput_hooks( IDirectInputDevice8W *iface, BOOL acquired )
         callwndproc_hook = NULL;
     }
 
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     if (impl->use_raw_input)
     {
         if (acquired)
@@ -1398,6 +1440,7 @@ void check_dinput_hooks( IDirectInputDevice8W *iface, BOOL acquired )
         if (!RegisterRawInputDevices( &impl->raw_device, 1, sizeof(RAWINPUTDEVICE) ))
             WARN( "Unable to (un)register raw device %x:%x\n", impl->raw_device.usUsagePage, impl->raw_device.usUsage );
     }
+#endif
 
     hook_change_finished_event = CreateEventW( NULL, FALSE, FALSE, NULL );
     PostThreadMessageW( dinput_thread_id, WM_USER + 0x10, 1, (LPARAM)hook_change_finished_event );
@@ -1410,6 +1453,9 @@ void check_dinput_hooks( IDirectInputDevice8W *iface, BOOL acquired )
 
 void check_dinput_events(void)
 {
+#ifndef __REACTOS__
+// looks like this is not needed on win\ros
+// commit 6130b8208be87689133c65ba539449abe5f91061
     /* Windows does not do that, but our current implementation of winex11
      * requires periodic event polling to forward events to the wineserver.
      *
@@ -1422,6 +1468,7 @@ void check_dinput_events(void)
      *   (for example Morrowind in its key binding page)
      */
     MsgWaitForMultipleObjectsEx(0, NULL, 0, QS_ALLINPUT, 0);
+#endif
 }
 
 BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, void *reserved )

@@ -364,6 +364,10 @@ static DWORD semantic_to_obj_id( struct dinput_device *This, DWORD dwSemantic )
     return type | (0x0000ff00 & (instance << 8));
 }
 
+#ifdef __REACTOS__
+#define swprintf(a, b, c, ...) swprintf((a), (c), __VA_ARGS__)
+#endif
+
 /*
  * get_mapping_key
  * Retrieves an open registry key to save the mapping, parametrized for an username,
@@ -475,6 +479,10 @@ static BOOL load_mapping_settings( struct dinput_device *This, LPDIACTIONFORMATW
     return mapped > 0;
 }
 
+#ifdef __REACTOS__
+#undef swprintf
+#endif
+
 static BOOL set_app_data( struct dinput_device *dev, int offset, UINT_PTR app_data )
 {
     int num_actions = dev->num_actions;
@@ -524,7 +532,11 @@ void queue_event( IDirectInputDevice8W *iface, int inst_id, DWORD data, DWORD ti
     static ULONGLONG notify_ms = 0;
     struct dinput_device *This = impl_from_IDirectInputDevice8W( iface );
     int next_pos, ofs = id_to_offset( This, inst_id );
+#ifndef __REACTOS__
     ULONGLONG time_ms = GetTickCount64();
+#else
+    ULONGLONG time_ms = GetTickCount();
+#endif
 
     if (time_ms - notify_ms > 1000)
     {
@@ -759,7 +771,10 @@ void dinput_device_destroy( IDirectInputDevice8W *iface )
     free( This->action_map );
 
     IDirectInput_Release(&This->dinput->IDirectInput7A_iface);
+#ifndef __REACTOS__
+// windows compatibility
     This->crit.DebugInfo->Spare[0] = 0;
+#endif
     DeleteCriticalSection(&This->crit);
 
     free( This );

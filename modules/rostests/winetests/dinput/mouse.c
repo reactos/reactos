@@ -142,6 +142,10 @@ static void test_acquire(IDirectInputA *pDI, HWND hwnd)
     hr = IDirectInputDevice_Acquire(pMouse);
     ok(hr == S_OK, "Acquire() failed: %08x\n", hr);
 
+if (!winetest_interactive)
+    skip("ROSTESTS-176/CORE-9710: Skipping randomly failing tests\n");
+else {
+
     mouse_event(MOUSEEVENTF_MOVE, 10, 10, 0, 0);
     cnt = 1;
     hr = IDirectInputDevice_GetDeviceData(pMouse, sizeof(mouse_state), &mouse_state, &cnt, 0);
@@ -197,7 +201,7 @@ static void test_acquire(IDirectInputA *pDI, HWND hwnd)
     hr = IDirectInputDevice_GetProperty(pMouse, DIPROP_GRANULARITY, &di_op.diph);
     /* Granularity of Y axis should be 1! */
     ok(hr == S_OK && di_op.dwData == 1, "GetProperty(): %08x, dwData: %i but should be 1.\n", hr, di_op.dwData);
-
+}
     if (pMouse) IUnknown_Release(pMouse);
 
     DestroyWindow( hwnd2 );

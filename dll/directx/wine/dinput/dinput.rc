@@ -20,6 +20,8 @@
 
 #pragma makedep po
 
+1 WINE_REGISTRY dinput_classes.rgs
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE

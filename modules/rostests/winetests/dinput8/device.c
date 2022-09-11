@@ -38,6 +38,8 @@ struct enum_data {
 /* Dummy GUID */
 static const GUID ACTION_MAPPING_GUID = { 0x1, 0x2, 0x3, { 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb } };
 
+static const GUID NULL_GUID = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+
 enum {
     DITEST_AXIS,
     DITEST_BUTTON,
@@ -365,6 +367,17 @@ static void test_action_mapping(void)
         hr = IDirectInputDevice8_SetActionMap(data.keyboard, data.lpdiaf, NULL, 0);
         ok (hr == DI_NOEFFECT, "SetActionMap should have no effect with no actions to map hr=%08x\n", hr);
 
+        /* Test that after changing actionformat SetActionMap has effect and that second
+         * SetActionMap call with same empty actionformat has no effect */
+        af.dwDataSize = 4 * 1;
+        af.dwNumActions = 1;
+
+        hr = IDirectInputDevice8_SetActionMap(data.keyboard, data.lpdiaf, NULL, 0);
+        ok (hr != DI_NOEFFECT, "SetActionMap should have effect as actionformat has changed hr=%08x\n", hr);
+
+        hr = IDirectInputDevice8_SetActionMap(data.keyboard, data.lpdiaf, NULL, 0);
+        ok (hr == DI_NOEFFECT, "SetActionMap should have no effect with no actions to map hr=%08x\n", hr);
+
         af.dwDataSize = 4 * ARRAY_SIZE(actionMapping);
         af.dwNumActions = ARRAY_SIZE(actionMapping);
 
@@ -555,6 +568,43 @@ static void test_save_settings(void)
     ok (other_results[1] == af.rgoAction[1].dwObjID,
         "Mapped incorrectly expected: 0x%08x got: 0x%08x\n", other_results[1], af.rgoAction[1].dwObjID);
     ok (IsEqualGUID(&GUID_SysKeyboard, &af.rgoAction[1].guidInstance), "Action should be mapped to keyboard\n");
+
+    /* Save and load empty mapping */
+    af.rgoAction[0].dwObjID = 0;
+    af.rgoAction[0].dwHow = 0;
+    memset(&af.rgoAction[0].guidInstance, 0, sizeof(GUID));
+    af.rgoAction[1].dwObjID = 0;
+    af.rgoAction[1].dwHow = 0;
+    memset(&af.rgoAction[1].guidInstance, 0, sizeof(GUID));
+
+    hr = IDirectInputDevice8_SetActionMap(pKey, &af, NULL, DIDSAM_FORCESAVE);
+    ok (SUCCEEDED(hr), "SetActionMap failed hr=%08x\n", hr);
+
+    if (hr == DI_SETTINGSNOTSAVED)
+    {
+        skip ("Can't test saving settings if SetActionMap returns DI_SETTINGSNOTSAVED\n");
+        return;
+    }
+
+    af.rgoAction[0].dwObjID = other_results[0];
+    af.rgoAction[0].dwHow = DIAH_USERCONFIG;
+    af.rgoAction[0].guidInstance = GUID_SysKeyboard;
+    af.rgoAction[1].dwObjID = other_results[1];
+    af.rgoAction[1].dwHow = DIAH_USERCONFIG;
+    af.rgoAction[1].guidInstance = GUID_SysKeyboard;
+
+    hr = IDirectInputDevice8_BuildActionMap(pKey, &af, NULL, 0);
+    ok (SUCCEEDED(hr), "BuildActionMap failed hr=%08x\n", hr);
+
+    ok (other_results[0] == af.rgoAction[0].dwObjID,
+        "Mapped incorrectly expected: 0x%08x got: 0x%08x\n", other_results[0], af.rgoAction[0].dwObjID);
+    ok (af.rgoAction[0].dwHow == DIAH_UNMAPPED, "dwHow should have been DIAH_UNMAPPED\n");
+    ok (IsEqualGUID(&NULL_GUID, &af.rgoAction[0].guidInstance), "Action should not be mapped\n");
+
+    ok (other_results[1] == af.rgoAction[1].dwObjID,
+        "Mapped incorrectly expected: 0x%08x got: 0x%08x\n", other_results[1], af.rgoAction[1].dwObjID);
+    ok (af.rgoAction[1].dwHow == DIAH_UNMAPPED, "dwHow should have been DIAH_UNMAPPED\n");
+    ok (IsEqualGUID(&NULL_GUID, &af.rgoAction[1].guidInstance), "Action should not be mapped\n");
 
     IDirectInputDevice_Release(pKey);
     IDirectInput_Release(pDI);

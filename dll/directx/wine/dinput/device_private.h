@@ -93,8 +93,11 @@ struct dinput_device
     HWND                        win;
     enum device_status          status;
 
+#ifndef __REACTOS__
+// RawInput is not supported by ROS
     BOOL                        use_raw_input; /* use raw input instead of low-level messages */
     RAWINPUTDEVICE              raw_device;    /* raw device to (un)register */
+#endif
 
     LPDIDEVICEOBJECTDATA        data_queue;  /* buffer for 'GetDeviceData'.                 */
     int                         queue_len;   /* valid size of the queue                     */

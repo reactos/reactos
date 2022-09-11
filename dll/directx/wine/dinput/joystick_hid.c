@@ -17,6 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#define _USE_MATH_DEFINES
+#endif
+
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
@@ -26,7 +30,9 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
+#ifndef __REACTOS__
 #include "winternl.h"
+#endif
 #include "winuser.h"
 #include "winerror.h"
 #include "winreg.h"
@@ -44,7 +50,11 @@
 #include "devpkey.h"
 
 #include "wine/debug.h"
+#ifdef __REACTOS__
+#include "hid.h"
+#else
 #include "wine/hid.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
@@ -531,6 +541,10 @@ static void set_axis_type( DIDEVICEOBJECTINSTANCEW *instance, BOOL *seen, DWORD 
     seen[i] = TRUE;
 }
 
+#ifdef __REACTOS__
+#define swprintf(a, b, c, ...) swprintf((a), (c), __VA_ARGS__)
+#endif
+
 static BOOL enum_objects( struct hid_joystick *impl, const DIPROPHEADER *filter, DWORD flags,
                           enum_object_callback callback, void *data )
 {
@@ -745,6 +759,10 @@ static BOOL enum_objects( struct hid_joystick *impl, const DIPROPHEADER *filter,
     return DIENUM_CONTINUE;
 }
 
+#ifdef __REACTOS__
+#undef swprintf
+#endif
+
 static void set_report_value( struct hid_joystick *impl, char *report_buf,
                               struct hid_value_caps *caps, LONG value )
 {
@@ -907,7 +925,11 @@ static HRESULT hid_joystick_unacquire( IDirectInputDevice8W *iface )
 
     if (impl->device == INVALID_HANDLE_VALUE) return DI_NOEFFECT;
 
+#ifndef __REACTOS__
     ret = CancelIoEx( impl->device, &impl->read_ovl );
+#else
+    ret = CancelIo(impl->device);
+#endif
     if (!ret) WARN( "CancelIoEx failed, last error %lu\n", GetLastError() );
     else WaitForSingleObject( impl->base.read_event, INFINITE );
 
@@ -1245,7 +1267,11 @@ static HRESULT hid_joystick_read( IDirectInputDevice8W *iface )
             for (i = 0; i < count;)
             {
                 char buffer[256], *buf = buffer;
+#ifdef __REACTOS__
+                buf += sprintf(buf, "%08x ", i);
+#else
                 buf += sprintf(buf, "%08lx ", i);
+#endif
                 do { buf += sprintf(buf, " %02x", (BYTE)report_buf[i] ); }
                 while (++i % 16 && i < count);
                 TRACE("%s\n", buffer);
@@ -1596,10 +1622,16 @@ static HRESULT hid_joystick_device_open( int index, DIDEVICEINSTANCEW *filter, W
         detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
         if (!SetupDiGetDeviceInterfaceDetailW( set, &iface, detail, sizeof(buffer), NULL, &devinfo ))
             continue;
+#ifdef __REACTOS__
+        //Wine uses own custom methods to identify devices with same VID/PID, so we can create own!
+        handle = RtlComputeCrc32(0, (BYTE*)detail->DevicePath, wcslen(detail->DevicePath) * sizeof(WCHAR));
+        UNREFERENCED_PARAMETER(type);
+#else
         if (!SetupDiGetDevicePropertyW( set, &devinfo, &DEVPROPKEY_HID_HANDLE, &type,
                                         (BYTE *)&handle, sizeof(handle), NULL, 0 ) ||
             type != DEVPROP_TYPE_UINT32)
             continue;
+#endif
         if (!hid_joystick_device_try_open( handle, detail->DevicePath, device, preparsed,
                                            attrs, caps, &instance, version ))
             continue;
@@ -2051,7 +2083,10 @@ HRESULT hid_joystick_create_device( struct dinput *dinput, const GUID *guid, IDi
 
     hr = dinput_device_alloc( sizeof(struct hid_joystick), &hid_joystick_vtbl, guid, dinput, (void **)&impl );
     if (FAILED(hr)) return hr;
+#ifndef __REACTOS__
+// windows compatibilityz
     impl->base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": hid_joystick.base.crit");
+#endif
     impl->base.dwCoopLevel = DISCL_NONEXCLUSIVE | DISCL_BACKGROUND;
     impl->base.read_event = CreateEventW( NULL, TRUE, FALSE, NULL );
     impl->internal_ref = 1;
@@ -2844,7 +2879,11 @@ static HRESULT WINAPI hid_joystick_effect_GetEffectStatus( IDirectInputEffect *i
 static void set_parameter_value( struct hid_joystick_effect *impl, char *report_buf,
                                  struct hid_value_caps *caps, LONG value )
 {
+#ifndef __REACTOS__
     return set_report_value( impl->joystick, report_buf, caps, value );
+#else
+    set_report_value( impl->joystick, report_buf, caps, value );
+#endif
 }
 
 static void set_parameter_value_angle( struct hid_joystick_effect *impl, char *report_buf,

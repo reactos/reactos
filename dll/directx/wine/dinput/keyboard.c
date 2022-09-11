@@ -176,7 +176,10 @@ HRESULT keyboard_create_device( struct dinput *dinput, const GUID *guid, IDirect
 
     if (FAILED(hr = dinput_device_alloc( sizeof(struct keyboard), &keyboard_vtbl, guid, dinput, (void **)&impl )))
         return hr;
+#ifndef __REACTOS__
+// windows compatibility
     impl->base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": struct keyboard*->base.crit");
+#endif
 
     keyboard_enum_device( 0, 0, &impl->base.instance, dinput->dwVersion );
     impl->base.caps.dwDevType = impl->base.instance.dwDevType;

@@ -30,8 +30,8 @@ dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-6.0-rc5
 dll/directx/wine/d3dxof         # Synced to WineStaging-4.18
 dll/directx/wine/ddraw          # Synced to WineStaging-3.3
 dll/directx/wine/devenum        # Synced to WineStaging-4.18
-dll/directx/wine/dinput         # Synced to WineStaging-4.18
-dll/directx/wine/dinput8        # Synced to WineStaging-4.18
+dll/directx/wine/dinput         # Synced to Wine-7.8 (tests is WineStaging-4.18 because newer are depending NT6+ )
+dll/directx/wine/dinput8        # Synced to Wine-7.8 (tests is WineStaging-4.18 because newer are depending NT6+ )
 dll/directx/wine/dmusic         # Synced to WineStaging-4.18
 dll/directx/wine/dplay          # Synced to WineStaging-3.3
 dll/directx/wine/dplayx         # Synced to WineStaging-4.18
