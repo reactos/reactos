@@ -20,6 +20,8 @@
 
 #include "resource.h"
 
+#define CONST_STR_LEN(str) (_countof(str) - 1)
+
 //typedef LONG (CALLBACK *APPLET_PROC)(VOID);
 
 typedef struct _APPLET
@@ -61,17 +63,17 @@ MmSysApplet(HWND hwnd,
 INT_PTR
 CALLBACK
 SoundsDlgProc(HWND hwndDlg,
-	          UINT uMsg,
-	          WPARAM wParam,
-	          LPARAM lParam);
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam);
 
 /* volume.c */
 
 INT_PTR CALLBACK
 VolumeDlgProc(HWND hwndDlg,
-	          UINT uMsg,
-	          WPARAM wParam,
-	          LPARAM lParam);
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam);
 
 /* voice.c */
 

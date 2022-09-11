@@ -19,6 +19,7 @@ VoiceDlgProc(HWND hwndDlg,
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
+    
     switch (uMsg)
     {
         case WM_INITDIALOG:

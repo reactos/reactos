@@ -18,9 +18,9 @@
 
 typedef struct _LABEL_MAP
 {
-    WCHAR *szName;
-    WCHAR *szDesc;
-    WCHAR *szIcon;
+    PWCHAR szName;
+    PWCHAR szDesc;
+    PWCHAR szIcon;
     struct _APP_MAP *AppMap;
     struct _LABEL_MAP *Next;
 } LABEL_MAP, *PLABEL_MAP;
@@ -63,7 +63,7 @@ typedef struct _GLOBAL_DATA
 /* A filter string is a list separated by NULL and ends with double NULLs. */
 LPWSTR MakeFilter(LPWSTR psz)
 {
-    WCHAR *pch;
+    PWCHAR pch;
 
     ASSERT(psz[0] != UNICODE_NULL &&
            psz[wcslen(psz) - 1] == L'|');
@@ -78,7 +78,7 @@ LPWSTR MakeFilter(LPWSTR psz)
     return psz;
 }
 
-PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, WCHAR *szName)
+PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, PWCHAR szName)
 {
     PLABEL_MAP pMap = pGlobalData->pLabelMap;
 
@@ -168,7 +168,7 @@ FreeLabelMap(PGLOBAL_DATA pGlobalData)
     }
 }
 
-PAPP_MAP FindApp(PGLOBAL_DATA pGlobalData, WCHAR *szName)
+PAPP_MAP FindApp(PGLOBAL_DATA pGlobalData, PWCHAR szName)
 {
     PAPP_MAP pMap = pGlobalData->pAppMap;
 
@@ -197,7 +197,7 @@ FreeAppMap(PGLOBAL_DATA pGlobalData)
     }
 }
 
-PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, WCHAR *AppName, WCHAR *LabelName)
+PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, PWCHAR AppName, PWCHAR LabelName)
 {
     PLABEL_CONTEXT pLabelContext;
 
@@ -232,7 +232,7 @@ PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT 
 
 
 BOOL
-LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, WCHAR *szSubKey)
+LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, PWCHAR szSubKey)
 {
     HKEY hSubKey;
     DWORD cbValue;
@@ -346,7 +346,7 @@ LoadEventLabels(PGLOBAL_DATA pGlobalData)
 
 
 BOOL
-AddSoundProfile(HWND hwndDlg, HKEY hKey, WCHAR *szSubKey, BOOL SetDefault)
+AddSoundProfile(HWND hwndDlg, HKEY hKey, PWCHAR szSubKey, BOOL SetDefault)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -463,7 +463,7 @@ EnumerateSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
 }
 
 
-PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, WCHAR *szName)
+PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, PWCHAR szName)
 {
     LRESULT lCount, lIndex, lResult;
     PSOUND_SCHEME_CONTEXT pScheme;
@@ -529,7 +529,7 @@ FreeSoundProfiles(HWND hwndDlg)
 }
 
 BOOL
-ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szProfile, WCHAR *szLabelName, WCHAR *szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
+ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWCHAR szProfile, PWCHAR szLabelName, PWCHAR szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -590,7 +590,7 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szPro
 
 
 DWORD
-ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szLabelName, WCHAR *szAppName, PAPP_MAP pAppMap)
+ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWCHAR szLabelName, PWCHAR szAppName, PAPP_MAP pAppMap)
 {
     HKEY hSubKey;
     DWORD dwNumProfiles;
@@ -649,7 +649,7 @@ ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szLab
 
 
 DWORD
-ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, WCHAR *szAppName)
+ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWCHAR szAppName)
 {
     HKEY hSubKey;
     WCHAR szDefault[MAX_PATH];
@@ -813,7 +813,7 @@ LoadSoundFiles(HWND hwndDlg)
 {
     WCHAR szList[256];
     WCHAR szPath[MAX_PATH];
-    WCHAR *ptr;
+    PWCHAR ptr;
     WIN32_FIND_DATAW FileData;
     HANDLE hFile;
     LRESULT lResult;
@@ -828,7 +828,7 @@ LoadSoundFiles(HWND hwndDlg)
 
     /* Load sound files */
     length = GetWindowsDirectoryW(szPath, _countof(szPath));
-    if (length == 0 || length >= _countof(szPath) - 8)
+    if (length == 0 || length >= _countof(szPath) - CONST_STR_LEN(L"\\media\\*"))
     {
         return FALSE;
     }
@@ -859,7 +859,9 @@ LoadSoundFiles(HWND hwndDlg)
         lResult = SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, 0, (LPARAM)ptr);
         if (lResult != CB_ERR)
         {
-            StringCchCopyW(szPath + (length + 7), _countof(szPath) - (length + 7), FileData.cFileName);
+            StringCchCopyW(szPath + (length + CONST_STR_LEN(L"\\media\\")),
+                           _countof(szPath) - (length + CONST_STR_LEN(L"\\media\\")),
+                           FileData.cFileName);
             SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(szPath));
         }
     } while (FindNextFileW(hFile, &FileData) != 0);
@@ -873,7 +875,7 @@ VOID
 FreeSoundFiles(HWND hwndDlg)
 {
     LRESULT lCount, lIndex, lResult;
-    WCHAR *pSoundPath;
+    PWCHAR pSoundPath;
     HWND hwndComboBox;
 
     hwndComboBox = GetDlgItem(hwndDlg, IDC_SOUND_LIST);
@@ -889,7 +891,7 @@ FreeSoundFiles(HWND hwndDlg)
             continue;
         }
 
-        pSoundPath = (WCHAR*)lResult;
+        pSoundPath = (PWCHAR)lResult;
         
         free(pSoundPath);
     }
@@ -1211,7 +1213,7 @@ SoundsDlgProc(HWND hwndDlg,
                     lIndex = ComboBox_GetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                     if (lIndex != CB_ERR)
                     {
-                        PlaySoundW((WCHAR*)lIndex, NULL, SND_FILENAME);
+                        PlaySoundW((PWCHAR)lIndex, NULL, SND_FILENAME);
                     }
                     break;
                 }
@@ -1279,7 +1281,7 @@ SoundsDlgProc(HWND hwndDlg,
                                 break;
                             }
 
-                            if (_wcsicmp(pLabelContext->szValue, (WCHAR*)lResult) || (lIndex != pLabelContext->szValue[0]))
+                            if (_wcsicmp(pLabelContext->szValue, (PWCHAR)lResult) || (lIndex != pLabelContext->szValue[0]))
                             {
                                 /* Update the tree view item image */
                                 item.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
@@ -1292,10 +1294,10 @@ SoundsDlgProc(HWND hwndDlg,
                                 ///
                                 /// Should store in current member
                                 ///
-                                StringCchCopyW(pLabelContext->szValue, _countof(pLabelContext->szValue), (WCHAR*)lResult);
+                                StringCchCopyW(pLabelContext->szValue, _countof(pLabelContext->szValue), (PWCHAR)lResult);
                             }
 
-                            if (wcslen((WCHAR*)lResult) && lIndex != 0 && pGlobalData->NumWavOut != 0)
+                            if (wcslen((PWCHAR)lResult) && lIndex != 0 && pGlobalData->NumWavOut != 0)
                             {
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
                             }
@@ -1324,7 +1326,7 @@ SoundsDlgProc(HWND hwndDlg,
         case WM_NOTIFY:
         {
             PLABEL_CONTEXT pLabelContext;
-            WCHAR *ptr;
+            PWCHAR ptr;
 
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
@@ -1371,7 +1373,7 @@ SoundsDlgProc(HWND hwndDlg,
                         if (lResult == CB_ERR || lResult == 0)
                             continue;
 
-                        if (!wcscmp((WCHAR*)lResult, pLabelContext->szValue))
+                        if (!wcscmp((PWCHAR)lResult, pLabelContext->szValue))
                         {
                             ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                             return FALSE;

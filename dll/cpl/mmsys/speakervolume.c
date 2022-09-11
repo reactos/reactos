@@ -93,7 +93,7 @@ OnInitDialog(
         SetWindowTextW(GetDlgItem(hwndDlg, 9472 + j), szBuffer);
 
         /* Initialize the channel trackbar */
-        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETRANGE, (WPARAM)TRUE, MAKELPARAM(VOLUME_MIN, VOLUME_MAX));
         SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
         SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
         SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);

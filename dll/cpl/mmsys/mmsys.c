@@ -89,11 +89,11 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
                            UINT uNumberOfGuids,
                            HWPAGE_DISPLAYMODE DisplayMode);
 
-typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(IN OPTIONAL HWND hwndParent,
-                                                              IN LPCWSTR HardwareId,
-                                                              IN LPCWSTR FullInfPath,
-                                                              IN DWORD InstallFlags,
-                                                              OUT OPTIONAL PBOOL bRebootRequired);
+typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(_In_opt_ HWND hwndParent,
+                                                              _In_ LPCWSTR HardwareId,
+                                                              _In_ LPCWSTR FullInfPath,
+                                                              _In_ DWORD InstallFlags,
+                                                              _Out_opt_ PBOOL bRebootRequired);
 
 #define UPDATEDRIVERFORPLUGANDPLAYDEVICES "UpdateDriverForPlugAndPlayDevicesW"
 #define NUM_APPLETS    (1)
@@ -459,7 +459,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         return ERROR_DI_DO_DEFAULT;
 
     Length = GetWindowsDirectoryW(szBuffer, _countof(szBuffer));
-    if (!Length || Length >= _countof(szBuffer) - 14)
+    if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\inf\\audio.inf"))
     {
         return ERROR_GEN_FAILURE;
     }
@@ -509,7 +509,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     if (!IsSoftwareBusPnpEnumeratorInstalled())
     {
         Length = GetWindowsDirectoryW(szBuffer, _countof(szBuffer));
-        if (!Length || Length >= _countof(szBuffer) - 16)
+        if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\inf\\machine.inf"))
         {
             return ERROR_GEN_FAILURE;
         }
@@ -540,7 +540,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         Length = GetSystemDirectoryW(szBuffer, _countof(szBuffer));
-        if (!Length || Length >= _countof(szBuffer) - 11)
+        if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\wdmaud.drv"))
         {
             RegCloseKey(hKey);
             return ERROR_DI_DO_DEFAULT;
@@ -648,6 +648,7 @@ HardwareDlgProc(HWND hwndDlg,
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
+    
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -845,6 +846,7 @@ DllMain(HINSTANCE hinstDLL,
         LPVOID lpReserved)
 {
     UNREFERENCED_PARAMETER(lpReserved);
+    
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
