@@ -819,8 +819,6 @@ static void poll_osx_device_state(LPDIRECTINPUTDEVICE8A iface)
                         TRACE("valueRef %s val %d oldVal %d newVal %d\n", debugstr_cf(valueRef), val, oldVal, newVal);
                         if (oldVal != newVal)
                         {
-                            button_idx = device->generic.button_map[button_idx];
-
                             inst_id = DIDFT_MAKEINSTANCE(button_idx) | DIDFT_PSHBUTTON;
                             queue_event(iface,inst_id,newVal,GetCurrentTime(),device->generic.base.dinput->evsequence++);
                         }

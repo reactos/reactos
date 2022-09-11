@@ -84,13 +84,6 @@ struct wine_input_absinfo {
     LONG flat;
 };
 
-enum wine_joystick_linuxinput_fd_state {
-    WINE_FD_STATE_CLOSED = 0,    /* No device has been opened yet */
-    WINE_FD_STATE_OK,            /* File descriptor is open and ready for reading */
-    WINE_FD_STATE_DISCONNECTED,  /* Read error occurred; might be able to reopen later */
-    WINE_FD_STATE_INVALID,       /* Device is no longer available at original pathname */
-};
-
 /* implemented in effect_linuxinput.c */
 HRESULT linuxinput_create_effect(int* fd, REFGUID rguid, struct list *parent_list_entry, LPDIRECTINPUTEFFECT* peff);
 HRESULT linuxinput_get_info_A(int fd, REFGUID rguid, LPDIEFFECTINFOA info);
@@ -130,7 +123,6 @@ struct JoystickImpl
 
 	/* joystick private */
 	int				joyfd;
-	enum wine_joystick_linuxinput_fd_state joyfd_state;
 
 	int                             dev_axes_to_di[ABS_MAX];
         POINTL                          povs[4];
@@ -481,7 +473,6 @@ static JoystickImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput, unsig
     newDevice->generic.base.dinput = dinput;
     newDevice->generic.joy_polldev = joy_polldev;
     newDevice->joyfd       = -1;
-    newDevice->joyfd_state = WINE_FD_STATE_CLOSED;
     newDevice->joydev      = &joydevs[index];
     newDevice->generic.name        = newDevice->joydev->name;
     list_init(&newDevice->ff_effects);
@@ -689,44 +680,6 @@ static HRESULT joydev_create_device(IDirectInputImpl *dinput, REFGUID rguid, REF
     return DIERR_DEVICENOTREG;
 }
 
-static int joydev_open_evdev(JoystickImpl *This)
-{
-    int fd;
-
-    if ((fd = open(This->joydev->device, O_RDWR)) == -1)
-    {
-        if ((fd = open(This->joydev->device, O_RDONLY)) == -1)
-        {
-            /* Couldn't open the device at all */
-        }
-        else
-        {
-            /* Couldn't open in r/w but opened in read-only. */
-            WARN("Could not open %s in read-write mode.  Force feedback will be disabled.\n", This->joydev->device);
-        }
-    }
-    else
-    {
-        struct input_event event;
-
-        event.type = EV_FF;
-        event.code = FF_GAIN;
-        event.value = This->ff_gain;
-        if (write(fd, &event, sizeof(event)) == -1)
-            ERR("Failed to set gain (%i): %d %s\n", This->ff_gain, errno, strerror(errno));
-        if (!This->ff_autocenter)
-        {
-            /* Disable autocenter. */
-            event.code = FF_AUTOCENTER;
-            event.value = 0;
-            if (write(fd, &event, sizeof(event)) == -1)
-                ERR("Failed disabling autocenter: %d %s\n", errno, strerror(errno));
-        }
-    }
-
-    return fd;
-}
-
 
 const struct dinput_device joystick_linuxinput_device = {
   "Wine Linux-input joystick driver",
@@ -751,14 +704,40 @@ static HRESULT WINAPI JoystickWImpl_Acquire(LPDIRECTINPUTDEVICE8W iface)
         return res;
     }
 
-    if ((This->joyfd = joydev_open_evdev(This)) == -1)
+    if ((This->joyfd = open(This->joydev->device, O_RDWR)) == -1)
     {
-        ERR("Failed to open device %s: %d %s\n", This->joydev->device, errno, strerror(errno));
-        IDirectInputDevice2WImpl_Unacquire(iface);
-        return DIERR_NOTFOUND;
+        if ((This->joyfd = open(This->joydev->device, O_RDONLY)) == -1)
+        {
+            /* Couldn't open the device at all */
+            ERR("Failed to open device %s: %d %s\n", This->joydev->device, errno, strerror(errno));
+            IDirectInputDevice2WImpl_Unacquire(iface);
+            return DIERR_NOTFOUND;
+        }
+        else
+        {
+            /* Couldn't open in r/w but opened in read-only. */
+            WARN("Could not open %s in read-write mode.  Force feedback will be disabled.\n", This->joydev->device);
+        }
+    }
+    else
+    {
+        struct input_event event;
+
+        event.type = EV_FF;
+        event.code = FF_GAIN;
+        event.value = This->ff_gain;
+        if (write(This->joyfd, &event, sizeof(event)) == -1)
+            ERR("Failed to set gain (%i): %d %s\n", This->ff_gain, errno, strerror(errno));
+        if (!This->ff_autocenter)
+        {
+            /* Disable autocenter. */
+            event.code = FF_AUTOCENTER;
+            event.value = 0;
+            if (write(This->joyfd, &event, sizeof(event)) == -1)
+                ERR("Failed disabling autocenter: %d %s\n", errno, strerror(errno));
+        }
     }
 
-    This->joyfd_state = WINE_FD_STATE_OK;
     return DI_OK;
 }
 
@@ -796,7 +775,6 @@ static HRESULT WINAPI JoystickWImpl_Unacquire(LPDIRECTINPUTDEVICE8W iface)
 
       close(This->joyfd);
       This->joyfd = -1;
-      This->joyfd_state = WINE_FD_STATE_CLOSED;
     }
     return res;
 }
@@ -841,79 +819,23 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
     struct input_event ie;
     JoystickImpl *This = impl_from_IDirectInputDevice8A(iface);
 
-    if (This->joyfd == -1)
-    {
-        int fd;
-        char namebuf[MAX_PATH + 8];  /* 8 == strlen(EVDEVDRIVER) */
-
-        if (This->joyfd_state != WINE_FD_STATE_DISCONNECTED)
-            return;
-        /* Try to reconnect to the device. */
-        fd = joydev_open_evdev(This);
-        if (fd == -1)
-            return;
-        namebuf[sizeof(namebuf) - strlen(EVDEVDRIVER) - 1] = 0;
-        if (ioctl(fd, EVIOCGNAME(sizeof(namebuf) - strlen(EVDEVDRIVER) - 1), namebuf) == -1)
-        {
-            /* Couldn't get the name; assume it's a different device. */
-            ERR("EVIOCGNAME(%s) failed: %d %s", This->joydev->device, errno, strerror(errno));
-            This->joyfd_state = WINE_FD_STATE_INVALID;
-            return;
-        }
-        strcat(namebuf, EVDEVDRIVER);  /* Guaranteed to be safe. */
-        if (strcmp(namebuf, This->joydev->name) != 0)
-        {
-            ERR("Device %s changed from \"%s\" to \"%s\"!  Can't reconnect.\n", This->joydev->device, This->joydev->name, namebuf);
-            This->joyfd_state = WINE_FD_STATE_INVALID;
-            return;
-        }
-        if (InterlockedCompareExchange(&This->joyfd, fd, -1) == -1)
-        {
-            This->joyfd_state = WINE_FD_STATE_OK;
-            TRACE("Reconnected to \"%s\" on %s", This->joydev->name, This->joydev->device);
-        }
-        else
-        {
-            /* Somebody beat us to it!  Throw away our fd and use theirs. */
-            close(fd);
-        }
-    }
+    if (This->joyfd==-1)
+	return;
 
     while (1)
     {
         LONG value = 0;
         int inst_id = -1;
-        int result;
 
 	plfd.fd = This->joyfd;
 	plfd.events = POLLIN;
 
-        result = poll(&plfd,1,0);
-        if (result != 1)
-        {
-            if (result == -1)
-            {
-                ERR("poll failed: %d %s\n", errno, strerror(errno));
-                close(This->joyfd);
-                This->joyfd = -1;
-                This->joyfd_state = WINE_FD_STATE_DISCONNECTED;
-            }
-            return;
-        }
+	if (poll(&plfd,1,0) != 1)
+	    return;
 
 	/* we have one event, so we can read */
-        result = read(This->joyfd,&ie,sizeof(ie));
-        if (result != sizeof(ie))
-        {
-            if (result == -1)
-            {
-                ERR("read failed: %d %s\n", errno, strerror(errno));
-                close(This->joyfd);
-                This->joyfd = -1;
-                This->joyfd_state = WINE_FD_STATE_DISCONNECTED;
-            }
-            return;
-        }
+	if (sizeof(ie)!=read(This->joyfd,&ie,sizeof(ie)))
+	    return;
 
 	TRACE("input_event: type %d, code %d, value %d\n",ie.type,ie.code,ie.value);
 	switch (ie.type) {
@@ -925,8 +847,6 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
             if (btn & 0x80)
             {
                 btn &= 0x7F;
-                btn = This->generic.button_map[btn];
-
                 inst_id = DIDFT_MAKEINSTANCE(btn) | DIDFT_PSHBUTTON;
                 This->generic.js.rgbButtons[btn] = value = ie.value ? 0x80 : 0x00;
             }

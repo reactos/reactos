@@ -862,8 +862,6 @@ static HRESULT WINAPI SysMouseAImpl_SetActionMap(LPDIRECTINPUTDEVICE8A iface,
 
     hr = SysMouseWImpl_SetActionMap(&This->base.IDirectInputDevice8W_iface, &diafW, lpszUserNameW, dwFlags);
 
-    lpdiaf->dwCRC = diafW.dwCRC;
-
     HeapFree(GetProcessHeap(), 0, diafW.rgoAction);
     HeapFree(GetProcessHeap(), 0, lpszUserNameW);
 

@@ -872,13 +872,10 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
               jse.type,jse.number,jse.value);
         if (jse.type & JS_EVENT_BUTTON)
         {
-            int button;
             if (jse.number >= This->generic.devcaps.dwButtons) return;
 
-            button = This->generic.button_map[jse.number];
-
-            inst_id = DIDFT_MAKEINSTANCE(button) | DIDFT_PSHBUTTON;
-            This->generic.js.rgbButtons[button] = value = jse.value ? 0x80 : 0x00;
+            inst_id = DIDFT_MAKEINSTANCE(jse.number) | DIDFT_PSHBUTTON;
+            This->generic.js.rgbButtons[jse.number] = value = jse.value ? 0x80 : 0x00;
         }
         else if (jse.type & JS_EVENT_AXIS)
         {
