@@ -37,6 +37,7 @@ DrawLogoffScreen(HDC hdcMem)
     NT5_CreateLogoffScreen(L"Saving your settings...", hdcMem);
 }
 
+
 #if 0
 static ULONG
 GetULONG(LPWSTR String)
