@@ -2735,12 +2735,9 @@ LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
 
 BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
 {
-    WCHAR buffer[MAX_PATH];
-
     TRACE("CShellLink::OnInitDialog(hwnd %p hwndFocus %p lParam %p)\n", hwndDlg, hwndFocus, lParam);
 
-    if (m_pPidl && SHGetPathFromIDListW(m_pPidl, buffer))
-        m_sPath = buffer;
+    Resolve(0, SLR_NO_UI | SLR_NOUPDATE | SLR_NOSEARCH | SLR_NOTRACK);
 
     TRACE("m_sArgs: %S sComponent: %S m_sDescription: %S m_sIcoPath: %S m_sPath: %S m_sPathRel: %S sProduct: %S m_sWorkDir: %S\n", m_sArgs, sComponent, m_sDescription,
           m_sIcoPath, m_sPath, m_sPathRel, sProduct, m_sWorkDir);
