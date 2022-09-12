@@ -41,7 +41,6 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     return TRUE;
 }
 
-
 BOOL
 InputList_SetFontSubstitutes(LCID dwLocaleId)
 {
@@ -129,6 +128,7 @@ InputList_SetFontSubstitutes(LCID dwLocaleId)
 
 static INPUT_LIST_NODE *_InputList = NULL;
 
+
 static INPUT_LIST_NODE*
 InputList_AppendNode(VOID)
 {
@@ -149,7 +149,7 @@ InputList_AppendNode(VOID)
     }
     else
     {
-        while (pCurrent->pNext)
+        while (pCurrent->pNext != NULL)
         {
             pCurrent = pCurrent->pNext;
         }
