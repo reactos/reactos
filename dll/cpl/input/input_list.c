@@ -212,6 +212,7 @@ InputList_Destroy(VOID)
     _InputList = NULL;
 }
 
+
 static BOOL
 InputList_PrepareUserRegistry(VOID)
 {
@@ -579,15 +580,16 @@ InputList_Create(VOID)
 
     for (iIndex = 0; iIndex < iLayoutCount; ++iIndex)
     {
-        LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(pLayoutList[iIndex]);
-        LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(pLayoutList[iIndex]);
+        HKL hKL = pLayoutList[iIndex];
+        LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(hKL);
+        LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(hKL);
         if (!pLocale || !pLayout)
             continue;
 
         pInput = InputList_AppendNode();
         pInput->pLocale = pLocale;
         pInput->pLayout = pLayout;
-        pInput->hkl     = pLayoutList[iIndex];
+        pInput->hkl     = hKL;
 
         if (pInput->hkl == hklDefault) /* Default HKL? */
         {
@@ -603,7 +605,6 @@ InputList_Create(VOID)
                            ARRAYSIZE(szIndicator)))
         {
             size_t len = wcslen(szIndicator);
-
             if (len > 0)
             {
                 szIndicator[len - 1] = 0;
