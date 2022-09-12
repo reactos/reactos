@@ -42,14 +42,14 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     return TRUE;
 }
 
-HKL GetDefaultHKL(VOID)
+inline HKL GetDefaultHKL(VOID)
 {
     HKL hKL = NULL;
     SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, &hKL, 0);
     return hKL;
 }
 
-BOOL SetDefaultHKL(HKL hKL)
+inline BOOL SetDefaultHKL(HKL hKL)
 {
     HKL hTempKL = hKL;
     return SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hTempKL, 0);
@@ -163,7 +163,7 @@ InputList_AppendNode(VOID)
     }
     else
     {
-        while (pCurrent->pNext != NULL)
+        while (pCurrent->pNext)
         {
             pCurrent = pCurrent->pNext;
         }
@@ -227,50 +227,36 @@ InputList_Destroy(VOID)
 static BOOL
 InputList_PrepareUserRegistry(VOID)
 {
-    BOOL bResult = FALSE;
-    HKEY hTempKey = NULL;
-    HKEY hKey = NULL;
+    BOOL ret = FALSE;
+    HKEY hLayoutKey = NULL, hPreloadKey = NULL, hSubstKey = NULL;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Keyboard Layout",
                       0,
                       KEY_ALL_ACCESS,
-                      &hKey) == ERROR_SUCCESS)
+                      &hLayoutKey) == ERROR_SUCCESS)
     {
-        RegDeleteKeyW(hKey, L"Preload");
-        RegDeleteKeyW(hKey, L"Substitutes");
-
-        RegCloseKey(hKey);
+        RegDeleteKeyW(hLayoutKey, L"Preload");
+        RegDeleteKeyW(hLayoutKey, L"Substitutes");
+        RegCloseKey(hLayoutKey);
+        hLayoutKey = NULL;
     }
 
-    if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) != ERROR_SUCCESS)
+    if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hLayoutKey) == ERROR_SUCCESS &&
+        RegCreateKeyW(hKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
+        RegCreateKeyW(hKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
     {
-        goto Cleanup;
+        ret = TRUE;
     }
 
-    if (RegCreateKeyW(hKey, L"Preload", &hTempKey) != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
+    if (hSubstKey)
+        RegCloseKey(hSubstKey);
+    if (hPreloadKey)
+        RegCloseKey(hPreloadKey);
+    if (hLayoutKey)
+        RegCloseKey(hLayoutKey);
 
-    RegCloseKey(hTempKey);
-
-    if (RegCreateKeyW(hKey, L"Substitutes", &hTempKey) != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
-
-    RegCloseKey(hTempKey);
-
-    bResult = TRUE;
-
-Cleanup:
-    if (hTempKey != NULL)
-        RegCloseKey(hTempKey);
-    if (hKey != NULL)
-        RegCloseKey(hKey);
-
-    return bResult;
+    return ret;
 }
 
 
@@ -577,30 +563,31 @@ InputList_Create(VOID)
     pLayoutList = (HKL*) malloc(iLayoutCount * sizeof(HKL));
 
     if (!pLayoutList || GetKeyboardLayoutList(iLayoutCount, pLayoutList) <= 0)
+    {
+        free(pLayoutList);
         return FALSE;
+    }
 
-    for (iIndex = 0; iIndex < iLayoutCount; iIndex++)
+    for (iIndex = 0; iIndex < iLayoutCount; ++iIndex)
     {
         LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(pLayoutList[iIndex]);
         LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(pLayoutList[iIndex]);
-
         if (!pLocale || !pLayout)
             continue;
 
-        szIndicator[0] = 0;
-
         pInput = InputList_AppendNode();
-
         pInput->pLocale = pLocale;
         pInput->pLayout = pLayout;
         pInput->hkl     = pLayoutList[iIndex];
 
-        if (pInput->hkl == hklDefault)
+        if (pInput->hkl == hklDefault) /* Default HKL? */
         {
             pInput->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
-            hklDefault = NULL;
+            hklDefault = NULL; /* No more default item */
         }
 
+        /* Get abbrev language name */
+        szIndicator[0] = 0;
         if (GetLocaleInfoW(LOWORD(pInput->pLocale->dwId),
                            LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
                            szIndicator,
