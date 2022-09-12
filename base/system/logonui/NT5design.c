@@ -29,7 +29,7 @@ NT5_DrawLogoffCaptionText(LPWSTR lpText,
     ZeroMemory(&LogFont, sizeof(LOGFONTW));
     LogFont.lfCharSet = DEFAULT_CHARSET;
     LogFont.lfHeight = 22;
-    LogFont.lfWeight = 109; // From WinXP disassembly
+    LogFont.lfWeight = 109;
     wcscpy(LogFont.lfFaceName, L"Arial");
 
     /* Create it */
@@ -136,9 +136,6 @@ NT5_DrawBaseBackground(HDC hdcDesktop)
 {
     HBITMAP hBitmap = NULL;
     HDC hdcMem = NULL;
-#if 0
-    BOOL bRet = FALSE;
-#endif
 
     /* Create an an off screen DC to match the desktop DC */
     hdcMem = CreateCompatibleDC(hdcDesktop);
