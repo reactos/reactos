@@ -291,15 +291,21 @@ InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey, DWORD dwPhysicalKLID)
 {
     DWORD iTrial;
     DWORD dwLogicalKLID = LOWORD(dwPhysicalKLID);
+    BOOL bSubstNeeded = (HIWORD(dwPhysicalKLID) != 0);
 
     for (iTrial = 0; iTrial <= 0xFF; ++iTrial)
     {
         if (!InputList_FindPreloadKLID(hPreloadKey, dwLogicalKLID)) /* Not found? */
         {
-            /* Write now */
-            InputList_WriteSubst(hSubstKey, dwPhysicalKLID, dwLogicalKLID);
+            if (bSubstNeeded)
+            {
+                /* Write now */
+                InputList_WriteSubst(hSubstKey, dwPhysicalKLID, dwLogicalKLID);
+            }
             return dwLogicalKLID;
         }
+
+        bSubstNeeded = TRUE;
 
         /* Calculate the next logical KLID */
         if (!IS_SUBST_KLID(dwLogicalKLID))
