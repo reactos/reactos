@@ -866,6 +866,33 @@ NTAPI
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
 
+/* balance.c / pagefile.c******************************************************/
+
+inline VOID UpdateTotalCommittedPages(LONG Delta)
+{
+    /*
+     * Add up all the used "Committed" memory + pagefile.
+     * Not sure this is right. 8^\
+     * MmTotalCommittedPages should be adjusted consistently with
+     * other counters at different places.
+     *
+       MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+                               MiMemoryConsumers[MC_USER].PagesUsed +
+                               MiUsedSwapPages;
+     */
+    
+    /* Update Commitment */
+    SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Delta) + Delta;
+
+    /* Update Peak = max(Peak, Total) in a lockless way */
+    SIZE_T PeakCommitment = MmPeakCommitment;
+    while (TotalCommittedPages > PeakCommitment &&
+           InterlockedCompareExchangeSizeT(&MmPeakCommitment, TotalCommittedPages, PeakCommitment) != PeakCommitment)
+    {
+        PeakCommitment = MmPeakCommitment;
+    }
+}
+
 /* balance.c *****************************************************************/
 
 CODE_SEG("INIT")

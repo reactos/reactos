@@ -714,13 +714,8 @@ QSI_DEF(SystemPerformanceInformation)
     }
 
     Spi->AvailablePages = (ULONG)MmAvailablePages;
-    /*
-     *   Add up all the used "Committed" memory + pagefile.
-     *   Not sure this is right. 8^\
-     */
-    Spi->CommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
-                          MiMemoryConsumers[MC_USER].PagesUsed +
-                          MiUsedSwapPages;
+
+    Spi->CommittedPages = MmTotalCommittedPages;
     /*
      *  Add up the full system total + pagefile.
      *  All this make Taskmgr happy but not sure it is the right numbers.
@@ -728,7 +723,7 @@ QSI_DEF(SystemPerformanceInformation)
      */
     Spi->CommitLimit = MmNumberOfPhysicalPages + MiFreeSwapPages + MiUsedSwapPages;
 
-    Spi->PeakCommitment = 0; /* FIXME */
+    Spi->PeakCommitment = MmPeakCommitment;
     Spi->PageFaultCount = 0; /* FIXME */
     Spi->CopyOnWriteCount = 0; /* FIXME */
     Spi->TransitionCount = 0; /* FIXME */
