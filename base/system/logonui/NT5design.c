@@ -136,9 +136,9 @@ NT5_DrawBaseBackground(HDC hdcDesktop)
 {
     HBITMAP hBitmap = NULL;
     HDC hdcMem = NULL;
-    #if 0
+#if 0
     BOOL bRet = FALSE;
-    #endif
+#endif
 
     /* Create an an off screen DC to match the desktop DC */
     hdcMem = CreateCompatibleDC(hdcDesktop);

@@ -37,51 +37,51 @@ DrawLogoffScreen(HDC hdcMem)
     NT5_CreateLogoffScreen(L"Saving your settings...", hdcMem);
 }
 #if 0
- static ULONG
- GetULONG(LPWSTR String)
- {
-     UINT i, Length;
-     ULONG Value;
-     LPWSTR StopString;
+static ULONG
+GetULONG(LPWSTR String)
+{
+    UINT i, Length;
+    ULONG Value;
+    LPWSTR StopString;
 
-     i = 0;
-     /* Get the string length */
-     Length = (UINT)wcslen(String);
+    i = 0;
+    /* Get the string length */
+    Length = (UINT)wcslen(String);
 
-     /* Check the string only consists of numbers */
-     while ((i < Length) && ((String[i] < L'0') || (String[i] > L'9'))) i++;
-     if ((i >= Length) || ((String[i] < L'0') || (String[i] > L'9')))
-     {
-         return (ULONG)-1;
-     }
+    /* Check the string only consists of numbers */
+    while ((i < Length) && ((String[i] < L'0') || (String[i] > L'9'))) i++;
+    if ((i >= Length) || ((String[i] < L'0') || (String[i] > L'9')))
+    {
+        return (ULONG)-1;
+    }
 
-     /* Convert it */
-     Value = wcstoul(&String[i], &StopString, 10);
+    /* Convert it */
+    Value = wcstoul(&String[i], &StopString, 10);
 
-     return Value;
- }
+    return Value;
+}
 
- static ULONG
- GetULONG2(LPWSTR String1, LPWSTR String2, PINT i)
- {
-     ULONG Value;
+static ULONG
+GetULONG2(LPWSTR String1, LPWSTR String2, PINT i)
+{
+    ULONG Value;
 
-     /* Check the first string value */
-     Value = GetULONG(String1);
-     if (Value == (ULONG)-1)
-     {
-         /* Check the second string value isn't a switch */
-         if (String2[0] != L'-')
-         {
-             /* Check the value */
-             Value = GetULONG(String2);
-             *i += 1;
-         }
-     }
+    /* Check the first string value */
+    Value = GetULONG(String1);
+    if (Value == (ULONG)-1)
+    {
+        /* Check the second string value isn't a switch */
+        if (String2[0] != L'-')
+        {
+            /* Check the value */
+            Value = GetULONG(String2);
+            *i += 1;
+        }
+    }
 
-     return Value;
- }
- #endif
+    return Value;
+}
+#endif
 
 static BOOL
 ParseCmdline(int argc, WCHAR* argv[])
