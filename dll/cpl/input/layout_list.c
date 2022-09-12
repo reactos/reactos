@@ -155,8 +155,8 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
 {
     WCHAR szFile[80], szImeFile[80], szBuffer[MAX_PATH], szFilePath[MAX_PATH];
     DWORD dwSize, dwKLID = DWORDfromString(szKLID);
-    WORD wSpecialId;
-    LPWSTR pszImeFile;
+    WORD wSpecialId = 0;
+    LPWSTR pszImeFile = NULL;
 
     dwSize = sizeof(szFile);
     if (RegQueryValueExW(hLayoutKey, L"Layout File", NULL, NULL,
@@ -165,7 +165,6 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
         return FALSE; /* No "Layout File" value */
     }
 
-    pszImeFile = NULL;
     if (IS_IME_KLID(dwKLID))
     {
         dwSize = sizeof(szImeFile);
@@ -183,7 +182,6 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
         return FALSE; /* No layout file found */
 
     /* Get the special ID */
-    wSpecialId = 0;
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Id", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
