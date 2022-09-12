@@ -195,9 +195,6 @@ InputList_Destroy(VOID)
     INPUT_LIST_NODE *pCurrent;
     INPUT_LIST_NODE *pNext;
 
-    if (_InputList == NULL)
-        return;
-
     for (pCurrent = _InputList; pCurrent; pCurrent = pNext)
     {
         pNext = pCurrent->pNext;
@@ -408,7 +405,7 @@ InputList_Process(VOID)
     InputList_PrepareUserRegistry();
 
     /* Find default input method */
-    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
         {
@@ -431,7 +428,7 @@ InputList_Process(VOID)
 
     /* Add methods to registry */
     dwNumber = 2;
-    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             continue;

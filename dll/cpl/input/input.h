@@ -85,13 +85,13 @@ DWORDfromString(const WCHAR *pszString)
 #define SUBST_MASK      (0xD0000000UL)
 #define SPECIAL_MASK    (0xF0000000UL)
 
-#define IS_IME_HKL(hKL)       ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
-#define IS_IME_KLID(dwKLID)   ((((ULONG_PTR)(dwKLID)) & 0xF0000000) == IME_MASK)
-#define IS_SPECIAL_HKL(hKL)   ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define IS_SUBST_KLID(dwKLID) ((((ULONG_PTR)(dwKLID)) & 0xF0000000) == SUBST_MASK)
-
+#define IS_IME_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
+#define IS_SPECIAL_HKL(hKL)     ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
 #define LANGIDFROMHKL(hKL)      LOWORD(hKL)
-#define LANGIDFROMKLID(dwKLID)  LOWORD(dwKLID)
 #define SPECIALIDFROMHKL(hKL)   ((WORD)(HIWORD(hKL) & 0x0FFF))
+
+#define IS_IME_KLID(dwKLID)     ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
+#define IS_SUBST_KLID(dwKLID)   ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
+#define LANGIDFROMKLID(dwKLID)  LOWORD(dwKLID)
 
 #endif /* _INPUT_H */
