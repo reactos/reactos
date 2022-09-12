@@ -261,8 +261,11 @@ InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
         StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%u", dwNumber);
 
         cbValue = ARRAYSIZE(szValue) * sizeof(WCHAR);
-        if (!RegQueryValueExW(hPreloadKey, szNumber, NULL, &dwType, (LPBYTE)szValue, &cbValue))
+        if (RegQueryValueExW(hPreloadKey, szNumber, NULL, &dwType,
+                             (LPBYTE)szValue, &cbValue) != ERROR_SUCCESS || dwType != REG_SZ)
+        {
             break;
+        }
 
         szValue[ARRAYSIZE(szValue) - 1] = 0;
         if (_wcsicmp(szKLID, szValue) == 0)
@@ -336,7 +339,7 @@ InputList_AddInputMethodToUserRegistry(
 
     if (IS_IME_HKL(hKL)) /* IME? */
     {
-        /* Don't substitute the IME KLIDs */
+        /* Do not substitute the IME KLID */
         dwLogicalKLID = dwPhysicalKLID = HandleToUlong(hKL);
     }
     else

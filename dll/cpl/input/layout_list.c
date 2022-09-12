@@ -279,6 +279,7 @@ LayoutList_GetByHkl(HKL hkl)
     return NULL;
 }
 
+
 LAYOUT_LIST_NODE*
 LayoutList_GetFirst(VOID)
 {
