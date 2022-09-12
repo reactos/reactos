@@ -15,6 +15,10 @@ if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(framebuf ksanitize_w32k)
 endif()
 
+if(KASAN_ENABLED)
+    target_compile_options(framebuf PRIVATE "-fsanitize=address")
+endif()
+
 set_module_type(framebuf kerneldll ENTRYPOINT DrvEnableDriver 12)
 add_pch(framebuf framebuf.h SOURCE)
 target_link_libraries(framebuf libcntpr)

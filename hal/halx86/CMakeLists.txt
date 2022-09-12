@@ -40,8 +40,12 @@ function(add_hal _halname)
     endif()
 
     if(SANITIZE_UB OR KASAN_ENABLED)
-        target_compile_options(${_halname} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
         target_link_libraries(${_halname} ksanitize)
+        if(KASAN_ENABLED)
+            target_compile_options(${_halname} PRIVATE "-fsanitize=address")
+        else()
+            target_compile_options(${_halname} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
+        endif()
     endif()
 endfunction()
 

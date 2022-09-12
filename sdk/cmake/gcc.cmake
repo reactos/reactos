@@ -335,8 +335,11 @@ function(set_module_type_toolchain MODULE TYPE)
 
         if(SANITIZE_UB OR KASAN_ENABLED)
             # we have too many alignment warnings at the moment
-            target_compile_options(${MODULE} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
-
+            if(SANITIZE_UB)
+                target_compile_options(${MODULE} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
+            else()
+                target_compile_options(${MODULE} PRIVATE "-fsanitize=address")
+            endif()
             # win32k&dependencies require a special version of ksanitize
             if(NOT ${TYPE} STREQUAL "kerneldll")
                 target_link_libraries(${MODULE} ksanitize)

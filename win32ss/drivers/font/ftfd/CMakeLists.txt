@@ -21,6 +21,10 @@ if(SANITIZE_UB OR KASAN_ENABLED)
     target_link_libraries(ftfd ksanitize_w32k)
 endif()
 
+if(KASAN_ENABLED)
+    target_link_libraries(ftfd ksanitize_w32k)
+endif()
+
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)
 target_link_libraries(ftfd freetype libcntpr)
 add_pch(ftfd ftfd.h "${PCH_SKIP_SOURCE}")
