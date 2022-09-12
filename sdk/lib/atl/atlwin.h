@@ -326,7 +326,7 @@ public:
         if (!(::GetWindowLong(hWndCenter, GWL_STYLE) & WS_CHILD))
         {
             MONITORINFO m_MonInfo;
-            m_MonInfo.cbSize = sizeof(MONITORINFO);
+            m_MonInfo.cbSize = sizeof(m_MonInfo);
             HMONITOR hMonitor = MonitorFromWindow(hWndCenter, MONITOR_DEFAULTTOPRIMARY);
             GetMonitorInfo(hMonitor, &m_MonInfo);
 
