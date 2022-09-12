@@ -42,6 +42,19 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     return TRUE;
 }
 
+HKL GetDefaultHKL(VOID)
+{
+    HKL hKL = NULL;
+    SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, &hKL, 0);
+    return hKL;
+}
+
+BOOL SetDefaultHKL(HKL hKL)
+{
+    HKL hTempKL = hKL;
+    return SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hTempKL, 0);
+}
+
 BOOL
 InputList_SetFontSubstitutes(LCID dwLocaleId)
 {
@@ -194,20 +207,17 @@ VOID
 InputList_Destroy(VOID)
 {
     INPUT_LIST_NODE *pCurrent;
+    INPUT_LIST_NODE *pNext;
 
     if (_InputList == NULL)
         return;
 
-    pCurrent = _InputList;
-
-    while (pCurrent != NULL)
+    for (pCurrent = _InputList; pCurrent; pCurrent = pNext)
     {
-        INPUT_LIST_NODE *pNext = pCurrent->pNext;
+        pNext = pCurrent->pNext;
 
         free(pCurrent->pszIndicator);
         free(pCurrent);
-
-        pCurrent = pNext;
     }
 
     _InputList = NULL;
@@ -265,12 +275,16 @@ Cleanup:
 
 
 static VOID
-InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
+InputList_AddInputMethodToUserRegistry(
+    HKEY hPreloadKey,
+    HKEY hSubstKey,
+    DWORD dwIndex,
+    INPUT_LIST_NODE *pNode)
 {
     WCHAR szMethodIndex[MAX_PATH];
     WCHAR szPreload[MAX_PATH];
+    WCHAR szSubstitutes[MAX_PATH];
     BOOL bIsImeMethod = FALSE;
-    HKEY hKey;
 
     StringCchPrintfW(szMethodIndex, ARRAYSIZE(szMethodIndex), L"%lu", dwIndex);
 
@@ -285,43 +299,23 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLocale->dwId);
     }
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                      L"Keyboard Layout\\Preload",
-                      0,
-                      KEY_SET_VALUE,
-                      &hKey) == ERROR_SUCCESS)
-    {
-        RegSetValueExW(hKey,
-                       szMethodIndex,
-                       0,
-                       REG_SZ,
-                       (LPBYTE)szPreload,
-                       (wcslen(szPreload) + 1) * sizeof(WCHAR));
-
-        RegCloseKey(hKey);
-    }
+    RegSetValueExW(hPreloadKey,
+                   szMethodIndex,
+                   0,
+                   REG_SZ,
+                   (LPBYTE)szPreload,
+                   (wcslen(szPreload) + 1) * sizeof(WCHAR));
 
     if (pNode->pLocale->dwId != pNode->pLayout->dwKLID && !bIsImeMethod)
     {
-        if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                          L"Keyboard Layout\\Substitutes",
-                          0,
-                          KEY_SET_VALUE,
-                          &hKey) == ERROR_SUCCESS)
-        {
-            WCHAR szSubstitutes[MAX_PATH];
+        StringCchPrintfW(szSubstitutes, ARRAYSIZE(szSubstitutes), L"%08X", pNode->pLayout->dwKLID);
 
-            StringCchPrintfW(szSubstitutes, ARRAYSIZE(szSubstitutes), L"%08X", pNode->pLayout->dwKLID);
-
-            RegSetValueExW(hKey,
-                           szPreload,
-                           0,
-                           REG_SZ,
-                           (LPBYTE)szSubstitutes,
-                           (wcslen(szSubstitutes) + 1) * sizeof(WCHAR));
-
-            RegCloseKey(hKey);
-        }
+        RegSetValueExW(hSubstKey,
+                       szPreload,
+                       0,
+                       REG_SZ,
+                       (LPBYTE)szSubstitutes,
+                       (wcslen(szSubstitutes) + 1) * sizeof(WCHAR));
     }
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
@@ -341,6 +335,26 @@ InputList_Process(VOID)
     INPUT_LIST_NODE *pCurrent;
     DWORD dwIndex;
     BOOL bRet = FALSE;
+    HKEY hPreloadKey, hSubstKey;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Keyboard Layout\\Preload",
+                      0,
+                      KEY_READ | KEY_WRITE,
+                      &hPreloadKey) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Keyboard Layout\\Substitutes",
+                      0,
+                      KEY_READ | KEY_WRITE,
+                      &hSubstKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hPreloadKey);
+        return FALSE;
+    }
 
     /* Process deleted and edited input methods */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
@@ -367,19 +381,14 @@ InputList_Process(VOID)
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
         {
             bRet = InputList_SetFontSubstitutes(pCurrent->pLocale->dwId);
-            InputList_AddInputMethodToUserRegistry(1, pCurrent);
+            InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, 1, pCurrent);
             break;
         }
     }
 
-    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG,
-                              0,
-                              (LPVOID)((LPDWORD)&pCurrent->hkl),
-                              0))
+    if (SetDefaultHKL(pCurrent->hkl))
     {
-        DWORD dwRecipients;
-
-        dwRecipients = BSM_ALLCOMPONENTS;
+        DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
 
         BroadcastSystemMessageW(BSF_POSTMESSAGE,
                                 &dwRecipients,
@@ -396,11 +405,14 @@ InputList_Process(VOID)
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             continue;
 
-        InputList_AddInputMethodToUserRegistry(dwIndex, pCurrent);
+        InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, dwIndex, pCurrent);
 
         dwIndex++;
     }
 
+
+    RegCloseKey(hPreloadKey);
+    RegCloseKey(hSubstKey);
     return bRet;
 }
 
@@ -553,72 +565,60 @@ InputList_Dump(VOID)
     fclose(fp);
 }
 
-VOID
+BOOL
 InputList_Create(VOID)
 {
-    INT iLayoutCount;
-    HKL *pLayoutList;
+    INT iLayoutCount, iIndex;
+    WCHAR szIndicator[MAX_STR_LEN];
+    INPUT_LIST_NODE *pInput;
+    HKL *pLayoutList, hklDefault = GetDefaultHKL();
 
     iLayoutCount = GetKeyboardLayoutList(0, NULL);
     pLayoutList = (HKL*) malloc(iLayoutCount * sizeof(HKL));
 
-    if (pLayoutList != NULL)
+    if (!pLayoutList || GetKeyboardLayoutList(iLayoutCount, pLayoutList) <= 0)
+        return FALSE;
+
+    for (iIndex = 0; iIndex < iLayoutCount; iIndex++)
     {
-        if (GetKeyboardLayoutList(iLayoutCount, pLayoutList) > 0)
+        LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(pLayoutList[iIndex]);
+        LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(pLayoutList[iIndex]);
+
+        if (!pLocale || !pLayout)
+            continue;
+
+        szIndicator[0] = 0;
+
+        pInput = InputList_AppendNode();
+
+        pInput->pLocale = pLocale;
+        pInput->pLayout = pLayout;
+        pInput->hkl     = pLayoutList[iIndex];
+
+        if (pInput->hkl == hklDefault)
         {
-            INT iIndex;
-
-            for (iIndex = 0; iIndex < iLayoutCount; iIndex++)
-            {
-                LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(pLayoutList[iIndex]);
-                LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(pLayoutList[iIndex]);
-
-                if (pLocale != NULL && pLayout != NULL)
-                {
-                    WCHAR szIndicator[MAX_STR_LEN] = { 0 };
-                    INPUT_LIST_NODE *pInput;
-                    HKL hklDefault;
-
-                    pInput = InputList_AppendNode();
-
-                    pInput->pLocale = pLocale;
-                    pInput->pLayout = pLayout;
-                    pInput->hkl     = pLayoutList[iIndex];
-
-                    if (SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG,
-                                              0,
-                                              (LPVOID)((LPDWORD)&hklDefault),
-                                              0) == FALSE)
-                    {
-                        hklDefault = GetKeyboardLayout(0);
-                    }
-
-                    if (pInput->hkl == hklDefault)
-                    {
-                        pInput->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
-                    }
-
-                    if (GetLocaleInfoW(LOWORD(pInput->pLocale->dwId),
-                                       LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
-                                       szIndicator,
-                                       ARRAYSIZE(szIndicator)))
-                    {
-                        size_t len = wcslen(szIndicator);
-
-                        if (len > 0)
-                        {
-                            szIndicator[len - 1] = 0;
-                            pInput->pszIndicator = _wcsdup(szIndicator);
-                        }
-                    }
-                }
-            }
+            pInput->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
+            hklDefault = NULL;
         }
 
-        free(pLayoutList);
+        if (GetLocaleInfoW(LOWORD(pInput->pLocale->dwId),
+                           LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                           szIndicator,
+                           ARRAYSIZE(szIndicator)))
+        {
+            size_t len = wcslen(szIndicator);
+
+            if (len > 0)
+            {
+                szIndicator[len - 1] = 0;
+                pInput->pszIndicator = _wcsdup(szIndicator);
+            }
+        }
     }
 
+    free(pLayoutList);
     InputList_Dump();
+    return TRUE;
 }
 
 

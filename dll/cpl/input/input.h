@@ -89,4 +89,7 @@ DWORDfromString(const WCHAR *pszString)
 #define LANGIDFROMKLID(dwKLID)  LOWORD(dwKLID)
 #define SPECIALIDFROMHKL(hKL)   ((WORD)(HIWORD(hKL) & 0x0FFF))
 
+HKL GetDefaultHKL(VOID);
+BOOL SetDefaultHKL(HKL hKL);
+
 #endif /* _INPUT_H */

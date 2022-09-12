@@ -20,14 +20,14 @@ typedef struct _INPUT_LIST_NODE
 
     HKL hkl; /* Only for loaded input methods */
 
-    WCHAR *pszIndicator;
+    LPWSTR pszIndicator;
 
     struct _INPUT_LIST_NODE *pPrev;
     struct _INPUT_LIST_NODE *pNext;
 } INPUT_LIST_NODE;
 
 
-VOID
+BOOL
 InputList_Create(VOID);
 
 BOOL
