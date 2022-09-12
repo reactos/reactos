@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Multi-canaux"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "En déplaçant les curseurs ci-dessous, vous pouvez modifier le niveau du volume de toutes les enceintes connectés à cet ordinateur.", 9506, 8, 4, 212, 36
+    LTEXT "En déplaçant les curseurs ci-dessous, vous pouvez modifier le niveau du volume des enceintes connectées à cet ordinateur.", 9506, 8, 4, 212, 36
     LTEXT "Faible", 9473, 65, 31, 18, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17
