@@ -325,27 +325,27 @@ public:
 
         if (!(::GetWindowLong(hWndCenter, GWL_STYLE) & WS_CHILD))
         {
-            MONITORINFO m_MonInfo;
-            m_MonInfo.cbSize = sizeof(m_MonInfo);
+            MONITORINFO mi;
+            mi.cbSize = sizeof(mi);
             HMONITOR hMonitor = MonitorFromWindow(hWndCenter, MONITOR_DEFAULTTOPRIMARY);
-            GetMonitorInfo(hMonitor, &m_MonInfo);
+            GetMonitorInfo(hMonitor, &mi);
 
-            if (xPos + wndWidth > m_MonInfo.rcWork.right)
+            if (xPos + wndWidth > mi.rcWork.right)
             {
-                xPos = m_MonInfo.rcWork.right - wndWidth;
+                xPos = mi.rcWork.right - wndWidth;
             }
-            else if (xPos < m_MonInfo.rcWork.left)
+            else if (xPos < mi.rcWork.left)
             {
-                xPos = m_MonInfo.rcWork.left;
+                xPos = mi.rcWork.left;
             }
 
-            if (yPos + wndHeight > m_MonInfo.rcWork.bottom)
+            if (yPos + wndHeight > mi.rcWork.bottom)
             {
-                yPos = m_MonInfo.rcWork.bottom - wndHeight;
+                yPos = mi.rcWork.bottom - wndHeight;
             }
-            if (yPos < m_MonInfo.rcWork.top)
+            if (yPos < mi.rcWork.top)
             {
-                yPos = m_MonInfo.rcWork.top;
+                yPos = mi.rcWork.top;
             }
         }
         return ::MoveWindow(m_hWnd,
