@@ -247,7 +247,7 @@ LayoutList_GetByHkl(HKL hkl)
     {
         WORD wSpecialId = SPECIALIDFROMHKL(hkl);
 
-        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
             if (wSpecialId == pCurrent->wSpecialId)
             {
@@ -257,7 +257,7 @@ LayoutList_GetByHkl(HKL hkl)
     }
     else if (IS_IME_HKL(hkl))
     {
-        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
             if (hkl == UlongToHandle(pCurrent->dwKLID))
             {
@@ -267,7 +267,7 @@ LayoutList_GetByHkl(HKL hkl)
     }
     else
     {
-        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
             if (LANGIDFROMHKL(hkl) == LANGIDFROMKLID(pCurrent->dwKLID))
             {
