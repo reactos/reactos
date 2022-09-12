@@ -92,14 +92,70 @@ LayoutList_Destroy(VOID)
     _LayoutList = NULL;
 }
 
+typedef HRESULT (WINAPI *FN_SHLoadRegUIStringW)(HKEY, LPCWSTR, LPWSTR, DWORD);
+
+/* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it had fully implemented */
+HRESULT FakeSHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
+{
+#if 1
+    PWCHAR pBuffer, pIndex;
+    WCHAR szDllPath[MAX_PATH];
+    DWORD dwSize;
+    HINSTANCE hDllInst;
+    INT iIndex, iLength;
+
+    dwSize = size * sizeof(WCHAR);
+    if (RegQueryValueExW(hkey, value, NULL, NULL, (LPBYTE)buf, &dwSize) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    if (buf[0] != L'@')
+        return S_OK;
+
+    /* Move to the position after the character "@" */
+    pBuffer = buf + 1;
+
+    /* Get a pointer to the beginning ",-" */
+    pIndex = wcsstr(pBuffer, L",-");
+    if (!pIndex)
+        return E_FAIL;
+
+    /* Convert the number in the string after the ",-" */
+    iIndex = _wtoi(pIndex + 2);
+
+    *pIndex = 0; /* Cut the string */
+
+    if (ExpandEnvironmentStringsW(pBuffer, szDllPath, ARRAYSIZE(szDllPath)) == 0)
+        return E_FAIL;
+
+    hDllInst = LoadLibraryW(szDllPath);
+    if (!hDllInst)
+        return E_FAIL;
+
+    iLength = LoadStringW(hDllInst, iIndex, buf, size);
+    FreeLibrary(hDllInst);
+
+    if (iLength <= 0)
+        return E_FAIL;
+
+    return S_OK;
+#else
+    HRESULT hr = E_FAIL;
+    HINSTANCE hSHLWAPI = LoadLibraryW(L"shlwapi");
+    FN_SHLoadRegUIStringW fn;
+    fn = (FN_SHLoadRegUIStringW)GetProcAddress(hSHLWAPI, (LPCSTR)(INT_PTR)439);
+    if (fn)
+        hr = fn(hkey, value, buf, size);
+    FreeLibrary(hSHLWAPI);
+    return hr;
+#endif
+}
+
 static BOOL
 LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory)
 {
-    WCHAR szFile[80], szImeFile[80], szBuffer[MAX_PATH], szFilePath[MAX_PATH], szDllPath[MAX_PATH];
-    INT iIndex, iLength = 0;
+    WCHAR szFile[80], szImeFile[80], szBuffer[MAX_PATH], szFilePath[MAX_PATH];
     DWORD dwSize, dwKLID = DWORDfromString(szKLID);
     WORD wSpecialId;
-    HINSTANCE hDllInst;
     LPWSTR pszImeFile;
 
     dwSize = sizeof(szFile);
@@ -136,41 +192,11 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
     }
 
     /* If there is a valid "Layout Display Name", then use it as the entry name */
-    dwSize = sizeof(szBuffer);
-    if (RegQueryValueExW(hLayoutKey, L"Layout Display Name", NULL, NULL,
-                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS && szBuffer[0] == L'@')
+    if (FakeSHLoadRegUIStringW(hLayoutKey, L"Layout Display Name",
+                               szBuffer, ARRAYSIZE(szBuffer)) == S_OK)
     {
-        /* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it had fully implemented */
-
-        /* Move to the position after the character "@" */
-        WCHAR *pBuffer = szBuffer + 1;
-
-        /* Get a pointer to the beginning ",-" */
-        WCHAR *pIndex = wcsstr(pBuffer, L",-");
-
-        if (pIndex)
-        {
-            /* Convert the number in the string after the ",-" */
-            iIndex = _wtoi(pIndex + 2);
-
-            *pIndex = 0; /* Cut the string */
-
-            if (ExpandEnvironmentStringsW(pBuffer, szDllPath, ARRAYSIZE(szDllPath)) != 0)
-            {
-                hDllInst = LoadLibraryW(szDllPath);
-                if (hDllInst)
-                {
-                    iLength = LoadStringW(hDllInst, iIndex, szBuffer, ARRAYSIZE(szBuffer));
-                    FreeLibrary(hDllInst);
-
-                    if (iLength > 0)
-                    {
-                        LayoutList_AppendNode(dwKLID, wSpecialId, szFile, szBuffer, pszImeFile);
-                        return TRUE;
-                    }
-                }
-            }
-        }
+        LayoutList_AppendNode(dwKLID, wSpecialId, szFile, szBuffer, pszImeFile);
+        return TRUE;
     }
 
     /* Otherwise, use "Layout Text" value as the entry name */
