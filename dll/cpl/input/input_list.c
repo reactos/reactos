@@ -7,7 +7,6 @@
 */
 
 #include "input_list.h"
-#include <stdio.h>
 
 typedef struct
 {
@@ -569,45 +568,6 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
     }
 }
 
-VOID
-InputList_Dump(VOID)
-{
-    INPUT_LIST_NODE *pNode = _InputList;
-    LOCALE_LIST_NODE *pLocale;
-    LAYOUT_LIST_NODE *pLayout;
-    FILE *fp = fopen("C:\\input_list.txt", "a");
-    fprintf(fp, "---\n");
-
-    INT i = 0;
-    char szText[64];
-    while (pNode)
-    {
-        fprintf(fp, "[%d]\n", i);
-
-        fprintf(fp, "hkl: %p\n", pNode->hkl);
-        fprintf(fp, "wFlags: 0x%X\n", pNode->wFlags);
-
-        WideCharToMultiByte(CP_UTF8, 0, pNode->pszIndicator, -1, szText, 64, NULL, NULL);
-        fprintf(fp, "pszIndicator: %s\n", szText);
-
-        pLocale = pNode->pLocale;
-        WideCharToMultiByte(CP_UTF8, 0, pLocale->pszName, -1, szText, 64, NULL, NULL);
-        fprintf(fp, "pLocale->pszName: %s\n", szText);
-        fprintf(fp, "pLocale->dwId: 0x%lX\n", pLocale->dwId);
-
-        pLayout = pNode->pLayout;
-        WideCharToMultiByte(CP_UTF8, 0, pLayout->pszName, -1, szText, 64, NULL, NULL);
-        fprintf(fp, "pLayout->pszName: %s\n", szText);
-        fprintf(fp, "pLayout->dwKLID: 0x%lX\n", pLayout->dwKLID);
-        fprintf(fp, "pLayout->wSpecialId: 0x%04X\n", pLayout->wSpecialId);
-
-        ++i;
-        pNode = pNode->pNext;
-    }
-
-    fclose(fp);
-}
-
 BOOL
 InputList_Create(VOID)
 {
@@ -661,7 +621,6 @@ InputList_Create(VOID)
     }
 
     free(pLayoutList);
-    InputList_Dump();
     return TRUE;
 }
 
