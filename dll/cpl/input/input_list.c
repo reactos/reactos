@@ -541,8 +541,8 @@ InputList_Dump(VOID)
         fprintf(fp, "pLocale->dwId: 0x%lX\n", pLocale->dwId);
 
         pLayout = pNode->pLayout;
-        WideCharToMultiByte(CP_UTF8, 0, pLayout->pszText, -1, szText, 64, NULL, NULL);
-        fprintf(fp, "pLayout->pszText: %s\n", szText);
+        WideCharToMultiByte(CP_UTF8, 0, pLayout->pszName, -1, szText, 64, NULL, NULL);
+        fprintf(fp, "pLayout->pszName: %s\n", szText);
         fprintf(fp, "pLayout->dwKLID: 0x%lX\n", pLayout->dwKLID);
         fprintf(fp, "pLayout->wSpecialId: 0x%04X\n", pLayout->wSpecialId);
 

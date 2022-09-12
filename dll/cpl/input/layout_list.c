@@ -18,13 +18,13 @@ LayoutList_GetFirst(VOID)
 }
 
 static LAYOUT_LIST_NODE*
-LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR pszText,
+LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR pszName,
                       LPCWSTR pszImeFile)
 {
     LAYOUT_LIST_NODE *pCurrent;
     LAYOUT_LIST_NODE *pNew;
 
-    if (pszText == NULL)
+    if (pszName == NULL)
         return NULL;
 
     pCurrent = _LayoutList;
@@ -38,13 +38,13 @@ LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR ps
     pNew->dwKLID = dwKLID;
     pNew->wSpecialId = wSpecialId;
 
-    pNew->pszText = _wcsdup(pszText);
+    pNew->pszName = _wcsdup(pszName);
     pNew->pszFile = _wcsdup(pszFile);
     pNew->pszImeFile = _wcsdup(pszImeFile);
-    if (pNew->pszText == NULL || pNew->pszFile == NULL ||
+    if (pNew->pszName == NULL || pNew->pszFile == NULL ||
         (pszImeFile && pNew->pszImeFile == NULL))
     {
-        free(pNew->pszText);
+        free(pNew->pszName);
         free(pNew->pszFile);
         free(pNew->pszImeFile);
         free(pNew);
@@ -83,7 +83,7 @@ LayoutList_Destroy(VOID)
     {
         pNext = pCurrent->pNext;
 
-        free(pCurrent->pszText);
+        free(pCurrent->pszName);
         free(pCurrent->pszFile);
         free(pCurrent->pszImeFile);
         free(pCurrent);

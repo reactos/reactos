@@ -90,7 +90,7 @@ OnInitAddDialog(HWND hwndDlg)
          pCurrentLayout != NULL;
          pCurrentLayout = pCurrentLayout->pNext)
     {
-        iItemIndex = ComboBox_AddString(hwndLayoutCombo, pCurrentLayout->pszText);
+        iItemIndex = ComboBox_AddString(hwndLayoutCombo, pCurrentLayout->pszName);
         ComboBox_SetItemData(hwndLayoutCombo, iItemIndex, pCurrentLayout);
 
         if (pCurrentLayout->dwKLID == dwDefaultLayoutId)

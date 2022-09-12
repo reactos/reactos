@@ -40,11 +40,11 @@ EditDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 INT iItemIndex;
 
-                iItemIndex = ComboBox_AddString(hwndList, pCurrentLayout->pszText);
+                iItemIndex = ComboBox_AddString(hwndList, pCurrentLayout->pszName);
                 ComboBox_SetItemData(hwndList, iItemIndex, pCurrentLayout);
             }
 
-            ComboBox_SelectString(hwndList, 0, pInput->pLayout->pszText);
+            ComboBox_SelectString(hwndList, 0, pInput->pLayout->pszName);
         }
         break;
 

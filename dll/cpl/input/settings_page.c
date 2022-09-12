@@ -148,7 +148,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     if (IS_IME_HKL(pInputNode->hkl))
-        item.pszText = pInputNode->pLayout->pszText;
+        item.pszText = pInputNode->pLayout->pszName;
     else
         item.pszText = pInputNode->pLocale->pszName;
     item.iItem   = ListView_GetItemCount(hwndList) + 1;
@@ -157,7 +157,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 
     ItemIndex = ListView_InsertItem(hwndList, &item);
 
-    ListView_SetItemText(hwndList, ItemIndex, 1, pInputNode->pLayout->pszText);
+    ListView_SetItemText(hwndList, ItemIndex, 1, pInputNode->pLayout->pszName);
 }
 
 
