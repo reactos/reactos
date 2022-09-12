@@ -81,6 +81,12 @@ DWORDfromString(const WCHAR *pszString)
     return wcstoul(pszString, &pszEnd, 16);
 }
 
-#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+#define IS_IME_HKL(hKL)     ((((ULONG_PTR)(hKL)) & 0xF0000000) == 0xE0000000)
+#define IS_IME_KLID(dwKLID) ((((ULONG_PTR)(dwKLID)) & 0xF0000000) == 0xE0000000)
+#define IS_SPECIAL_HKL(hKL) ((((ULONG_PTR)(hKL)) & 0xF0000000) == 0xF0000000)
+
+#define LANGIDFROMHKL(hKL)      LOWORD(hKL)
+#define LANGIDFROMKLID(dwKLID)  LOWORD(dwKLID)
+#define SPECIALIDFROMHKL(hKL)   ((WORD)(HIWORD(hKL) & 0x0FFF))
 
 #endif /* _INPUT_H */

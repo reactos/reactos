@@ -275,9 +275,9 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
     StringCchPrintfW(szMethodIndex, ARRAYSIZE(szMethodIndex), L"%lu", dwIndex);
 
     /* Check is IME method */
-    if ((HIWORD(pNode->pLayout->dwId) & 0xF000) == 0xE000)
+    if (IS_IME_KLID(pNode->pLayout->dwKLID))
     {
-        StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLayout->dwId);
+        StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLayout->dwKLID);
         bIsImeMethod = TRUE;
     }
     else
@@ -301,7 +301,7 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         RegCloseKey(hKey);
     }
 
-    if (pNode->pLocale->dwId != pNode->pLayout->dwId && bIsImeMethod == FALSE)
+    if (pNode->pLocale->dwId != pNode->pLayout->dwKLID && !bIsImeMethod)
     {
         if (RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"Keyboard Layout\\Substitutes",
@@ -311,7 +311,7 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         {
             WCHAR szSubstitutes[MAX_PATH];
 
-            StringCchPrintfW(szSubstitutes, ARRAYSIZE(szSubstitutes), L"%08X", pNode->pLayout->dwId);
+            StringCchPrintfW(szSubstitutes, ARRAYSIZE(szSubstitutes), L"%08X", pNode->pLayout->dwKLID);
 
             RegSetValueExW(hKey,
                            szPreload,
@@ -541,10 +541,10 @@ InputList_Dump(VOID)
         fprintf(fp, "pLocale->dwId: 0x%lX\n", pLocale->dwId);
 
         pLayout = pNode->pLayout;
-        WideCharToMultiByte(CP_UTF8, 0, pLayout->pszName, -1, szText, 64, NULL, NULL);
-        fprintf(fp, "pLayout->pszName: %s\n", szText);
-        fprintf(fp, "pLayout->dwId: 0x%lX\n", pLayout->dwId);
-        fprintf(fp, "pLayout->dwSpecialId: 0x%lX\n", pLayout->dwSpecialId);
+        WideCharToMultiByte(CP_UTF8, 0, pLayout->pszText, -1, szText, 64, NULL, NULL);
+        fprintf(fp, "pLayout->pszText: %s\n", szText);
+        fprintf(fp, "pLayout->dwKLID: 0x%lX\n", pLayout->dwKLID);
+        fprintf(fp, "pLayout->wSpecialId: 0x%04X\n", pLayout->wSpecialId);
 
         ++i;
         pNode = pNode->pNext;

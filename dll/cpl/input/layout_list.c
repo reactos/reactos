@@ -3,6 +3,7 @@
  * FILE:            dll/cpl/input/layout_list.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "layout_list.h"
@@ -10,14 +11,20 @@
 
 static LAYOUT_LIST_NODE *_LayoutList = NULL;
 
+LAYOUT_LIST_NODE*
+LayoutList_GetFirst(VOID)
+{
+    return _LayoutList;
+}
 
 static LAYOUT_LIST_NODE*
-LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
+LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR pszText,
+                      LPCWSTR pszImeFile)
 {
     LAYOUT_LIST_NODE *pCurrent;
     LAYOUT_LIST_NODE *pNew;
 
-    if (pszName == NULL)
+    if (pszText == NULL)
         return NULL;
 
     pCurrent = _LayoutList;
@@ -28,15 +35,21 @@ LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
 
     ZeroMemory(pNew, sizeof(LAYOUT_LIST_NODE));
 
-    pNew->pszName = _wcsdup(pszName);
-    if (pNew->pszName == NULL)
+    pNew->dwKLID = dwKLID;
+    pNew->wSpecialId = wSpecialId;
+
+    pNew->pszText = _wcsdup(pszText);
+    pNew->pszFile = _wcsdup(pszFile);
+    pNew->pszImeFile = _wcsdup(pszImeFile);
+    if (pNew->pszText == NULL || pNew->pszFile == NULL ||
+        (pszImeFile && pNew->pszImeFile == NULL))
     {
+        free(pNew->pszText);
+        free(pNew->pszFile);
+        free(pNew->pszImeFile);
         free(pNew);
         return NULL;
     }
-
-    pNew->dwId = dwId;
-    pNew->dwSpecialId = dwSpecialId;
 
     if (pCurrent == NULL)
     {
@@ -44,7 +57,7 @@ LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
     }
     else
     {
-        while (pCurrent->pNext != NULL)
+        while (pCurrent->pNext)
         {
             pCurrent = pCurrent->pNext;
         }
@@ -61,52 +74,65 @@ VOID
 LayoutList_Destroy(VOID)
 {
     LAYOUT_LIST_NODE *pCurrent;
+    LAYOUT_LIST_NODE *pNext;
 
     if (_LayoutList == NULL)
         return;
 
-    pCurrent = _LayoutList;
-
-    while (pCurrent != NULL)
+    for (pCurrent = _LayoutList; pCurrent; pCurrent = pNext)
     {
-        LAYOUT_LIST_NODE *pNext = pCurrent->pNext;
+        pNext = pCurrent->pNext;
 
-        free(pCurrent->pszName);
+        free(pCurrent->pszText);
+        free(pCurrent->pszFile);
+        free(pCurrent->pszImeFile);
         free(pCurrent);
-
-        pCurrent = pNext;
     }
 
     _LayoutList = NULL;
 }
 
 static BOOL
-LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirectory)
+LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory)
 {
-    WCHAR szBuffer[MAX_PATH], szFilePath[MAX_PATH], szDllPath[MAX_PATH];
+    WCHAR szFile[80], szImeFile[80], szBuffer[MAX_PATH], szFilePath[MAX_PATH], szDllPath[MAX_PATH];
     INT iIndex, iLength = 0;
-    DWORD dwSize, dwSpecialId, dwLayoutId = DWORDfromString(szLayoutId);
+    DWORD dwSize, dwKLID = DWORDfromString(szKLID);
+    WORD wSpecialId;
     HINSTANCE hDllInst;
+    LPWSTR pszImeFile;
 
-    dwSize = sizeof(szBuffer);
+    dwSize = sizeof(szFile);
     if (RegQueryValueExW(hLayoutKey, L"Layout File", NULL, NULL,
-                         (LPBYTE)szBuffer, &dwSize) != ERROR_SUCCESS)
+                         (LPBYTE)szFile, &dwSize) != ERROR_SUCCESS)
     {
         return FALSE; /* No "Layout File" value */
     }
 
+    pszImeFile = NULL;
+    if (IS_IME_KLID(dwKLID))
+    {
+        dwSize = sizeof(szImeFile);
+        if (RegQueryValueExW(hLayoutKey, L"IME File", NULL, NULL,
+                             (LPBYTE)szImeFile, &dwSize) != ERROR_SUCCESS)
+        {
+            return FALSE; /* No "IME File" value */
+        }
+        pszImeFile = szImeFile;
+    }
+
     /* Build the "Layout File" full path and check existence */
-    StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath), L"%s\\%s", szSystemDirectory, szBuffer);
+    StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath), L"%s\\%s", szSystemDirectory, szFile);
     if (GetFileAttributesW(szFilePath) == INVALID_FILE_ATTRIBUTES)
         return FALSE; /* No layout file found */
 
     /* Get the special ID */
-    dwSpecialId = 0;
+    wSpecialId = 0;
     dwSize = sizeof(szBuffer);
     if (RegQueryValueExW(hLayoutKey, L"Layout Id", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
     {
-        dwSpecialId = DWORDfromString(szBuffer);
+        wSpecialId = LOWORD(DWORDfromString(szBuffer));
     }
 
     /* If there is a valid "Layout Display Name", then use it as the entry name */
@@ -139,7 +165,7 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirec
 
                     if (iLength > 0)
                     {
-                        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                        LayoutList_AppendNode(dwKLID, wSpecialId, szFile, szBuffer, pszImeFile);
                         return TRUE;
                     }
                 }
@@ -152,7 +178,7 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirec
     if (RegQueryValueExW(hLayoutKey, L"Layout Text", NULL, NULL,
                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
     {
-        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+        LayoutList_AppendNode(dwKLID, wSpecialId, szFile, szBuffer, pszImeFile);
         return TRUE;
     }
 
@@ -162,7 +188,7 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szLayoutId, LPCWSTR szSystemDirec
 VOID
 LayoutList_Create(VOID)
 {
-    WCHAR szSystemDirectory[MAX_PATH], szLayoutId[MAX_PATH];
+    WCHAR szSystemDirectory[MAX_PATH], szKLID[MAX_PATH];
     DWORD dwSize, dwIndex;
     HKEY hKey, hLayoutKey;
 
@@ -170,23 +196,23 @@ LayoutList_Create(VOID)
         return;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
-                      0, KEY_ENUMERATE_SUB_KEYS, &hKey) != ERROR_SUCCESS)
+                      0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         return;
     }
 
     for (dwIndex = 0; ; ++dwIndex)
     {
-        dwSize = ARRAYSIZE(szLayoutId);
-        if (RegEnumKeyExW(hKey, dwIndex, szLayoutId, &dwSize, NULL, NULL,
+        dwSize = ARRAYSIZE(szKLID);
+        if (RegEnumKeyExW(hKey, dwIndex, szKLID, &dwSize, NULL, NULL,
                           NULL, NULL) != ERROR_SUCCESS)
         {
             break;
         }
 
-        if (RegOpenKeyExW(hKey, szLayoutId, 0, KEY_QUERY_VALUE, &hLayoutKey) == ERROR_SUCCESS)
+        if (RegOpenKeyExW(hKey, szKLID, 0, KEY_QUERY_VALUE, &hLayoutKey) == ERROR_SUCCESS)
         {
-            LayoutList_ReadLayout(hLayoutKey, szLayoutId, szSystemDirectory);
+            LayoutList_ReadLayout(hLayoutKey, szKLID, szSystemDirectory);
             RegCloseKey(hLayoutKey);
         }
     }
@@ -200,13 +226,13 @@ LayoutList_GetByHkl(HKL hkl)
 {
     LAYOUT_LIST_NODE *pCurrent;
 
-    if ((HIWORD(hkl) & 0xF000) == 0xF000)
+    if (IS_SPECIAL_HKL(hkl))
     {
-        DWORD dwSpecialId = (HIWORD(hkl) & 0x0FFF);
+        WORD wSpecialId = SPECIALIDFROMHKL(hkl);
 
-        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
         {
-            if (dwSpecialId == pCurrent->dwSpecialId)
+            if (wSpecialId == pCurrent->wSpecialId)
             {
                 return pCurrent;
             }
@@ -214,9 +240,9 @@ LayoutList_GetByHkl(HKL hkl)
     }
     else if (IS_IME_HKL(hkl))
     {
-        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
         {
-            if (hkl == UlongToHandle(pCurrent->dwId))
+            if (hkl == UlongToHandle(pCurrent->dwKLID))
             {
                 return pCurrent;
             }
@@ -224,9 +250,9 @@ LayoutList_GetByHkl(HKL hkl)
     }
     else
     {
-        for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+        for (pCurrent = _LayoutList; pCurrent; pCurrent = pCurrent->pNext)
         {
-            if (LOWORD(hkl) == LOWORD(pCurrent->dwId))
+            if (LANGIDFROMHKL(hkl) == LANGIDFROMKLID(pCurrent->dwKLID))
             {
                 return pCurrent;
             }
@@ -234,11 +260,4 @@ LayoutList_GetByHkl(HKL hkl)
     }
 
     return NULL;
-}
-
-
-LAYOUT_LIST_NODE*
-LayoutList_GetFirst(VOID)
-{
-    return _LayoutList;
 }

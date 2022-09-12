@@ -90,10 +90,10 @@ OnInitAddDialog(HWND hwndDlg)
          pCurrentLayout != NULL;
          pCurrentLayout = pCurrentLayout->pNext)
     {
-        iItemIndex = ComboBox_AddString(hwndLayoutCombo, pCurrentLayout->pszName);
+        iItemIndex = ComboBox_AddString(hwndLayoutCombo, pCurrentLayout->pszText);
         ComboBox_SetItemData(hwndLayoutCombo, iItemIndex, pCurrentLayout);
 
-        if (pCurrentLayout->dwId == dwDefaultLayoutId)
+        if (pCurrentLayout->dwKLID == dwDefaultLayoutId)
         {
             ComboBox_SetCurSel(hwndLayoutCombo, iItemIndex);
         }
@@ -159,7 +159,7 @@ OnCommandAddDialog(HWND hwndDlg, WPARAM wParam)
 
                         pCurrentLayout = (LAYOUT_LIST_NODE*)ComboBox_GetItemData(hwndLayoutCombo, iIndex);
 
-                        if (pCurrentLayout != NULL && pCurrentLayout->dwId == dwLayoutId)
+                        if (pCurrentLayout != NULL && pCurrentLayout->dwKLID == dwLayoutId)
                         {
                             ComboBox_SetCurSel(hwndLayoutCombo, iIndex);
                             break;
