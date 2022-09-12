@@ -41,18 +41,6 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     return TRUE;
 }
 
-inline HKL GetDefaultHKL(VOID)
-{
-    HKL hKL = NULL;
-    SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, &hKL, 0);
-    return hKL;
-}
-
-inline BOOL SetDefaultHKL(HKL hKL)
-{
-    HKL hTempKL = hKL;
-    return SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hTempKL, 0);
-}
 
 BOOL
 InputList_SetFontSubstitutes(LCID dwLocaleId)
@@ -430,7 +418,7 @@ InputList_Process(VOID)
         }
     }
 
-    if (SetDefaultHKL(pCurrent->hkl))
+    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
     {
         DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
 
@@ -574,7 +562,9 @@ InputList_Create(VOID)
     INT iLayoutCount, iIndex;
     WCHAR szIndicator[MAX_STR_LEN];
     INPUT_LIST_NODE *pInput;
-    HKL *pLayoutList, hklDefault = GetDefaultHKL();
+    HKL *pLayoutList, hklDefault;
+
+    SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, &hklDefault, 0);
 
     iLayoutCount = GetKeyboardLayoutList(0, NULL);
     pLayoutList = (HKL*) malloc(iLayoutCount * sizeof(HKL));
