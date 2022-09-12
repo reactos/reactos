@@ -193,19 +193,24 @@ VOID
 InputList_Destroy(VOID)
 {
     INPUT_LIST_NODE *pCurrent;
-    INPUT_LIST_NODE *pNext;
 
-    for (pCurrent = _InputList; pCurrent; pCurrent = pNext)
+    if (_InputList == NULL)
+        return;
+
+    pCurrent = _InputList;
+
+    while (pCurrent != NULL)
     {
-        pNext = pCurrent->pNext;
+        INPUT_LIST_NODE *pNext = pCurrent->pNext;
 
         free(pCurrent->pszIndicator);
         free(pCurrent);
+
+        pCurrent = pNext;
     }
 
     _InputList = NULL;
 }
-
 
 static BOOL
 InputList_PrepareUserRegistry(VOID)
