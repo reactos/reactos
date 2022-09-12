@@ -142,7 +142,6 @@ InputList_SetFontSubstitutes(LCID dwLocaleId)
 
 static INPUT_LIST_NODE *_InputList = NULL;
 
-
 static INPUT_LIST_NODE*
 InputList_AppendNode(VOID)
 {
@@ -243,8 +242,8 @@ InputList_PrepareUserRegistry(VOID)
     }
 
     if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hLayoutKey) == ERROR_SUCCESS &&
-        RegCreateKeyW(hKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
-        RegCreateKeyW(hKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
+        RegCreateKeyW(hLayoutKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
+        RegCreateKeyW(hLayoutKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
     {
         ret = TRUE;
     }
@@ -259,56 +258,116 @@ InputList_PrepareUserRegistry(VOID)
     return ret;
 }
 
+static BOOL
+InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
+{
+    DWORD dwNumber, dwType, cbValue;
+    WCHAR szNumber[16], szValue[16], szKLID[16];
 
-static VOID
+    StringCchPrintfW(szKLID, ARRAYSIZE(szKLID), L"%08X", dwKLID);
+
+    for (dwNumber = 1; dwNumber <= 0xFF; ++dwNumber)
+    {
+        StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%u", dwNumber);
+
+        cbValue = ARRAYSIZE(szValue) * sizeof(WCHAR);
+        if (!RegQueryValueExW(hPreloadKey, szNumber, NULL, &dwType, (LPBYTE)szValue, &cbValue))
+            break;
+
+        szValue[ARRAYSIZE(szValue) - 1] = 0;
+        if (_wcsicmp(szKLID, szValue) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL
+InputList_WriteSubst(HKEY hSubstKey, DWORD dwPhysicalKLID, DWORD dwLogicalKLID)
+{
+    DWORD cbValue;
+    WCHAR szLogicalKLID[16], szPhysicalKLID[16];
+
+    StringCchPrintfW(szLogicalKLID, ARRAYSIZE(szLogicalKLID), L"%08X", dwLogicalKLID);
+    StringCchPrintfW(szPhysicalKLID, ARRAYSIZE(szPhysicalKLID), L"%08X", dwPhysicalKLID);
+
+    cbValue = (wcslen(szPhysicalKLID) + 1) * sizeof(WCHAR);
+    return RegSetValueExW(hSubstKey, szLogicalKLID, 0, REG_SZ, (LPBYTE)szPhysicalKLID,
+                          cbValue) == ERROR_SUCCESS;
+}
+
+static DWORD
+InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey, DWORD dwPhysicalKLID)
+{
+    DWORD iTrial;
+    DWORD dwLogicalKLID = LOWORD(dwPhysicalKLID);
+
+    for (iTrial = 0; iTrial <= 0xFF; ++iTrial)
+    {
+        if (!InputList_FindPreloadKLID(hPreloadKey, dwLogicalKLID)) /* Not found? */
+        {
+            /* Write now */
+            InputList_WriteSubst(hSubstKey, dwPhysicalKLID, dwLogicalKLID);
+            return dwLogicalKLID;
+        }
+
+        /* Calculate the next logical KLID */
+        if (!IS_SUBST_KLID(dwLogicalKLID))
+        {
+            dwLogicalKLID |= SUBST_MASK;
+        }
+        else
+        {
+            WORD wLow = LOWORD(dwLogicalKLID), wHigh = HIWORD(dwLogicalKLID);
+            dwLogicalKLID = MAKELONG(wLow, wHigh + 1);
+        }
+    }
+
+    return 0;
+}
+
+static BOOL
 InputList_AddInputMethodToUserRegistry(
     HKEY hPreloadKey,
     HKEY hSubstKey,
-    DWORD dwIndex,
+    DWORD dwNumber,
     INPUT_LIST_NODE *pNode)
 {
-    WCHAR szMethodIndex[MAX_PATH];
-    WCHAR szPreload[MAX_PATH];
-    WCHAR szSubstitutes[MAX_PATH];
-    BOOL bIsImeMethod = FALSE;
+    WCHAR szNumber[MAX_PATH], szPreload[MAX_PATH];
+    DWORD dwPhysicalKLID, dwLogicalKLID, cbValue;
+    HKL hKL = pNode->hkl;
+    BOOL ret;
 
-    StringCchPrintfW(szMethodIndex, ARRAYSIZE(szMethodIndex), L"%lu", dwIndex);
-
-    /* Check is IME method */
-    if (IS_IME_KLID(pNode->pLayout->dwKLID))
+    if (IS_IME_HKL(hKL)) /* IME? */
     {
-        StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLayout->dwKLID);
-        bIsImeMethod = TRUE;
+        /* Don't substitute the IME KLIDs */
+        dwLogicalKLID = dwPhysicalKLID = HandleToUlong(hKL);
     }
     else
     {
-        StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLocale->dwId);
+        /* Substitute the KLID if necessary */
+        dwPhysicalKLID = pNode->pLayout->dwKLID;
+        dwLogicalKLID = InputList_DoSubst(hPreloadKey, hSubstKey, dwPhysicalKLID);
     }
 
-    RegSetValueExW(hPreloadKey,
-                   szMethodIndex,
-                   0,
-                   REG_SZ,
-                   (LPBYTE)szPreload,
-                   (wcslen(szPreload) + 1) * sizeof(WCHAR));
-
-    if (pNode->pLocale->dwId != pNode->pLayout->dwKLID && !bIsImeMethod)
-    {
-        StringCchPrintfW(szSubstitutes, ARRAYSIZE(szSubstitutes), L"%08X", pNode->pLayout->dwKLID);
-
-        RegSetValueExW(hSubstKey,
-                       szPreload,
-                       0,
-                       REG_SZ,
-                       (LPBYTE)szSubstitutes,
-                       (wcslen(szSubstitutes) + 1) * sizeof(WCHAR));
-    }
+    /* Write the Preload value (number |--> logical KLID) */
+    StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%lu", dwNumber);
+    StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", dwLogicalKLID);
+    cbValue = (wcslen(szPreload) + 1) * sizeof(WCHAR);
+    ret = (RegSetValueExW(hPreloadKey,
+                          szNumber,
+                          0,
+                          REG_SZ,
+                          (LPBYTE)szPreload,
+                          cbValue) == ERROR_SUCCESS);
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
         (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
         pNode->hkl = LoadKeyboardLayoutW(szPreload, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
     }
+
+    return ret;
 }
 
 
@@ -319,7 +378,7 @@ BOOL
 InputList_Process(VOID)
 {
     INPUT_LIST_NODE *pCurrent;
-    DWORD dwIndex;
+    DWORD dwNumber;
     BOOL bRet = FALSE;
     HKEY hPreloadKey, hSubstKey;
 
@@ -362,7 +421,7 @@ InputList_Process(VOID)
     InputList_PrepareUserRegistry();
 
     /* Find default input method */
-    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
         {
@@ -384,18 +443,16 @@ InputList_Process(VOID)
     }
 
     /* Add methods to registry */
-    dwIndex = 2;
-
-    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    dwNumber = 2;
+    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             continue;
 
-        InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, dwIndex, pCurrent);
+        InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, dwNumber, pCurrent);
 
-        dwIndex++;
+        ++dwNumber;
     }
-
 
     RegCloseKey(hPreloadKey);
     RegCloseKey(hSubstKey);

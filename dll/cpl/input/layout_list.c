@@ -8,14 +8,7 @@
 
 #include "layout_list.h"
 
-
 static LAYOUT_LIST_NODE *_LayoutList = NULL;
-
-LAYOUT_LIST_NODE*
-LayoutList_GetFirst(VOID)
-{
-    return _LayoutList;
-}
 
 static LAYOUT_LIST_NODE*
 LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR pszName,
@@ -284,4 +277,10 @@ LayoutList_GetByHkl(HKL hkl)
     }
 
     return NULL;
+}
+
+LAYOUT_LIST_NODE*
+LayoutList_GetFirst(VOID)
+{
+    return _LayoutList;
 }
