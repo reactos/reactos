@@ -39,13 +39,22 @@ static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
     // NOTE: This callback is needed to set large icon correctly.
-    HICON hIcon;
+    // FIXME: Handle leaks
+    HICON hIcon, hIconSmall;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO));
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+            hIconSmall = (HICON)LoadImageW(hApplet,
+                                           MAKEINTRESOURCEW(IDI_CPLSYSTEM),
+                                           IMAGE_ICON,
+                                           GetSystemMetrics(SM_CXSMICON),
+                                           GetSystemMetrics(SM_CYSMICON),
+                                           0);
+            SendMessageW(hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
             break;
         }
     }
@@ -65,7 +74,7 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     header.hwndParent  = hwnd;
     header.hInstance   = hApplet;
-    header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
+    header.pszIcon     = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
     header.pszCaption  = MAKEINTRESOURCEW(IDS_CPLSYSTEMNAME);
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
