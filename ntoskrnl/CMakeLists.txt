@@ -56,7 +56,8 @@ if(KASAN_ENABLED)
     target_compile_definitions(ntoskrnl PRIVATE KASAN_ENABLED) ## Note: Needs also a similar one in ntkrnlmp cmake.
 
     if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(ntoskrnl PRIVATE -fsanitize=address)
+        target_link_libraries(ntoskrnl ksanitize)
+        target_compile_options(ntoskrnl PRIVATE "-fsanitize=address")
     endif()
 ## Note: if different syntax for GCC, add a suitable elseif clause.
 endif()

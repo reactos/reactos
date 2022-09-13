@@ -11,6 +11,12 @@ typedef unsigned long long uptr;
 extern int __asan_option_detect_stack_use_after_return;
 
 void
+__asan_memcpy(uintptr_t p, uintptr_t p2, size_t sz)
+{
+
+}
+
+void
 __asan_report_load1(uintptr_t p) {
 }
 

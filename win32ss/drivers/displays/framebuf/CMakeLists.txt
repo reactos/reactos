@@ -16,6 +16,7 @@ if(SANITIZE_UB OR KASAN_ENABLED)
 endif()
 
 if(KASAN_ENABLED)
+    target_link_libraries(framebuf ksanitize)
     target_compile_options(framebuf PRIVATE "-fsanitize=address")
 endif()
 
