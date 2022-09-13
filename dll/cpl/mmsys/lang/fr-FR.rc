@@ -239,7 +239,7 @@ BEGIN
     IDS_SPEAKER_RIGHT "&Droite :"
     IDS_SPEAKER_CENTER "&Centre :"
     IDS_SPEAKER_BACK_LEFT "&Arrière gauche :"
-    IDS_SPEAKER_BACK_RIGHT "A&rrière droit :"
+    IDS_SPEAKER_BACK_RIGHT "A&rrière droite :"
     IDS_SPEAKER_LOW_FREQUENCY "&Basses :"
     5825 "Erreur programme"
     5826 "Fermeture programme"
