@@ -341,7 +341,7 @@ FrameOnCommand(HWND hwnd,
             if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
             {
                 hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
-                ShellAbout(NULL, lpTitle, NULL, hIcon);
+                ShellAbout(hwnd, lpTitle, NULL, hIcon);
                 DestroyIcon(hIcon);
                 LocalFree(lpTitle);
             }
