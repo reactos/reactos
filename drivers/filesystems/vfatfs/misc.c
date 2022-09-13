@@ -518,7 +518,7 @@ VfatCheckForDismount(
      * It seems to be related to the fact that the volume root directory as
      * well as auxiliary data stream(s) are still opened, and only these are
      * allowed to be opened at that moment. After analysis it appears that for
-     * the ReactOS' fastfat, this number is equal to "2".
+     * the ReactOS' vfatfs, this number is equal to "2".
      */
     UnCleanCount = 2;
 

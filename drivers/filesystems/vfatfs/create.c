@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/fastfat/create.c
+ * FILE:             drivers/filesystems/vfatfs/create.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Pierre Schweitzer (pierre@reactos.org)
