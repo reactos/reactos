@@ -360,7 +360,10 @@ InputList_AddInputMethodToUserRegistry(
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
         (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
-        pNode->hkl = LoadKeyboardLayoutW(szLogicalKLID, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
+        UINT uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL;
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+            uFlags |= KLF_REPLACELANG;
+        pNode->hkl = LoadKeyboardLayoutW(szLogicalKLID, uFlags);
     }
 }
 
