@@ -252,7 +252,7 @@ InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
     DWORD dwNumber, dwType, cbValue;
     WCHAR szNumber[16], szValue[16], szKLID[16];
 
-    StringCchPrintfW(szKLID, ARRAYSIZE(szKLID), L"%08X", dwKLID);
+    StringCchPrintfW(szKLID, ARRAYSIZE(szKLID), L"%08x", dwKLID);
 
     for (dwNumber = 1; dwNumber <= 0xFF; ++dwNumber)
     {
