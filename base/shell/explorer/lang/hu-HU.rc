@@ -196,6 +196,7 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Tálca és Start menü"
     IDS_RESTORE_ALL "&Megnyitott ablakok megjelenítése"
 END
+
 STRINGTABLE
 BEGIN
     IDS_TRAYWND_UNDO_CASCADE "Undo &cascade windows"
