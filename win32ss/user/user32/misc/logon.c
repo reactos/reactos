@@ -141,7 +141,7 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
     if (!ret)
     {
         /* Default to USA */
-        LoadKeyboardLayoutW(L"04090409", KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET);
+        LoadKeyboardLayoutW(L"00000409", KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET);
     }
 
     return ret;
