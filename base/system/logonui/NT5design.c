@@ -29,7 +29,7 @@ NT5_DrawLogoffCaptionText(LPWSTR lpText,
     ZeroMemory(&LogFont, sizeof(LOGFONTW));
     LogFont.lfCharSet = DEFAULT_CHARSET;
     LogFont.lfHeight = 22;
-    LogFont.lfWeight = 109;
+    LogFont.lfWeight = 109; // From WinXP disassembly
     wcscpy(LogFont.lfFaceName, L"Arial");
 
     /* Create it */
