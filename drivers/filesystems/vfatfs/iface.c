@@ -154,7 +154,7 @@ DriverEntry(
         BOOLEAN Registered;
 
         Registered = KdRosRegisterCliCallback(vfatKdbgHandler);
-        DPRINT1("FastFAT KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
+        DPRINT1("VFATFS KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
     }
 #endif
 

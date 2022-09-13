@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/fastfat/fat.c
- * PURPOSE:          FastFAT Filesystem
+ * FILE:             drivers/filesystems/vfatfs/fat.c
+ * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Pierre Schweitzer (pierre@reactos.org)
  *

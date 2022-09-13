@@ -1,5 +1,5 @@
 /*
-* FILE:             drivers/filesystems/fastfat/kdbg.c
+* FILE:             drivers/filesystems/vfatfs/kdbg.c
 * PURPOSE:          KDBG extension.
 * COPYRIGHT:        See COPYING in the top level directory
 * PROJECT:          ReactOS kernel
