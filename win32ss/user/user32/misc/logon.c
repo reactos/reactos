@@ -89,7 +89,7 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
 {
     UINT nNumber, uFlags;
     DWORD cbValue, dwType;
-    WCHAR szNumber[32], szValue[9];
+    WCHAR szNumber[32], szValue[KL_NAMELENGTH];
     HKEY hPreloadKey;
     BOOL ret = FALSE;
     HKL hKL, hDefaultKL = NULL;
@@ -119,7 +119,7 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
         if (dwType != REG_SZ)
             continue;
 
-        if (nNumber == 1)
+        if (nNumber == 1) /* The first entry is for default keyboard layout */
             uFlags = KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET;
         else
             uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL | KLF_REPLACELANG;
