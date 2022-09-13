@@ -131,5 +131,6 @@ BOOL WINAPI InitializeImmEntryTable(VOID);
 HRESULT User32GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer);
 BOOL WINAPI UpdatePerUserImmEnabling(VOID);
 VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL);
+VOID IntLoadPreloadKeyboardLayouts(VOID);
 
 /* EOF */
