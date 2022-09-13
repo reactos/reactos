@@ -151,7 +151,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.pszText = pInputNode->pLayout->pszName;
     else
         item.pszText = pInputNode->pLocale->pszName;
-    item.iItem   = ListView_GetItemCount(hwndList) + 1;
+    item.iItem   = ListView_GetItemCount(hwndList);
     item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;
 
