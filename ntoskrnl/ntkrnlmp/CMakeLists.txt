@@ -30,7 +30,9 @@ endif()
 # Kernel Address Sanitizer
 if(KASAN_ENABLED)
     target_compile_definitions(ntkrnlmp PRIVATE KASAN_ENABLED)
-    
+    target_link_libraries(ntkrnlmp ksanitize)
+    target_compile_options(ntkrnlmp PRIVATE "-fsanitize=address")
+
     if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         target_link_libraries(ntkrnlmp ksanitize)
         target_compile_options(ntkrnlmp PRIVATE "-fsanitize=address")
