@@ -216,7 +216,7 @@ InputList_Destroy(VOID)
 static BOOL
 InputList_PrepareUserRegistry(VOID)
 {
-    BOOL ret = FALSE;
+    BOOL bResult = FALSE;
     HKEY hKey = NULL, hPreloadKey = NULL, hSubstKey = NULL;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -235,7 +235,7 @@ InputList_PrepareUserRegistry(VOID)
         RegCreateKeyW(hKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
         RegCreateKeyW(hKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
     {
-        ret = TRUE;
+        bResult = TRUE;
     }
 
     if (hSubstKey)
@@ -245,7 +245,7 @@ InputList_PrepareUserRegistry(VOID)
     if (hKey)
         RegCloseKey(hKey);
 
-    return ret;
+    return bResult;
 }
 
 static BOOL
