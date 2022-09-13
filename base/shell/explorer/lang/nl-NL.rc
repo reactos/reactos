@@ -196,6 +196,7 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taakbalk en menu Start eigenschappen"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
 STRINGTABLE
 BEGIN
     IDS_TRAYWND_UNDO_CASCADE "Undo &cascade windows"
