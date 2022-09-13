@@ -227,8 +227,8 @@ InputList_PrepareUserRegistry(VOID)
     {
         RegDeleteKeyW(hKey, L"Preload");
         RegDeleteKeyW(hKey, L"Substitutes");
+
         RegCloseKey(hKey);
-        hKey = NULL;
     }
 
     if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) == ERROR_SUCCESS &&
@@ -281,8 +281,8 @@ InputList_WriteSubst(HKEY hSubstKey, DWORD dwPhysicalKLID, DWORD dwLogicalKLID)
     DWORD cbValue;
     WCHAR szLogicalKLID[16], szPhysicalKLID[16];
 
-    StringCchPrintfW(szLogicalKLID, ARRAYSIZE(szLogicalKLID), L"%08X", dwLogicalKLID);
-    StringCchPrintfW(szPhysicalKLID, ARRAYSIZE(szPhysicalKLID), L"%08X", dwPhysicalKLID);
+    StringCchPrintfW(szLogicalKLID, ARRAYSIZE(szLogicalKLID), L"%08x", dwLogicalKLID);
+    StringCchPrintfW(szPhysicalKLID, ARRAYSIZE(szPhysicalKLID), L"%08x", dwPhysicalKLID);
 
     cbValue = (wcslen(szPhysicalKLID) + 1) * sizeof(WCHAR);
     return RegSetValueExW(hSubstKey, szLogicalKLID, 0, REG_SZ, (LPBYTE)szPhysicalKLID,
@@ -351,7 +351,7 @@ InputList_AddInputMethodToUserRegistry(
 
     /* Write the Preload value (number |--> logical KLID) */
     StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%lu", dwNumber);
-    StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", dwLogicalKLID);
+    StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08x", dwLogicalKLID);
     cbValue = (wcslen(szPreload) + 1) * sizeof(WCHAR);
     ret = (RegSetValueExW(hPreloadKey,
                           szNumber,
