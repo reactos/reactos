@@ -6,6 +6,7 @@
  */
 
 #include "logonui.h"
+#include <strsafe.h>
 
 
 /* GLOBALS ******************************************************************/
@@ -30,7 +31,7 @@ NT5_DrawLogoffCaptionText(LPWSTR lpText,
     LogFont.lfCharSet = DEFAULT_CHARSET;
     LogFont.lfHeight = 22;
     LogFont.lfWeight = 109; // From WinXP disassembly
-    wcscpy(LogFont.lfFaceName, L"Arial");
+    StringCchCopyW(LogFont.lfFaceName, _countof(LogFont.lfFaceName), L"Arial");
 
     /* Create it */
     hFont = CreateFontIndirectW(&LogFont);
