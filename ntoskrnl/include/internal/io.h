@@ -633,6 +633,15 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                            PDEVICE_CAPABILITIES DeviceCaps);
 
 NTSTATUS
+IopGetDeviceInterfacesWorker(
+    _In_ CONST GUID* InterfaceClassGuid,
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN UseKernelPath,
+    _At_(*SymbolicLinkList, _When_(return == 0, __drv_allocatesMem(Mem)))
+        PWSTR* SymbolicLinkList);
+
+NTSTATUS
 IopSynchronousCall(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STACK_LOCATION IoStackLocation,

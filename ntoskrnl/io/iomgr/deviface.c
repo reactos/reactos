@@ -6,7 +6,7 @@
  *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Matthew Brace (ismarc@austin.rr.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -413,24 +413,26 @@ cleanup:
 }
 
 /*++
- * @name IoGetDeviceInterfaces
+ * @name IopGetDeviceInterfacesWorker
  * @implemented
  *
  * Returns a list of device interfaces of a particular device interface class.
- * Documented in WDK
  *
  * @param InterfaceClassGuid
- *        Points to a class GUID specifying the device interface class
+ *        Points to a class GUID specifying the device interface class.
  *
  * @param PhysicalDeviceObject
  *        Points to an optional PDO that narrows the search to only the
- *        device interfaces of the device represented by the PDO
+ *        device interfaces of the device represented by the PDO.
  *
  * @param Flags
  *        Specifies flags that modify the search for device interfaces. The
  *        DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
  *        returned symbolic links should contain also disabled device
  *        interfaces in addition to the enabled ones.
+ *
+ * @param UseKernelPath
+ *        If TRUE, all the device interfaces in the list will start from \??\.
  *
  * @param SymbolicLinkList
  *        Points to a character pointer that is filled in on successful return
@@ -450,11 +452,13 @@ cleanup:
  *
  *--*/
 NTSTATUS
-NTAPI
-IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
-                      IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-                      IN ULONG Flags,
-                      OUT PWSTR *SymbolicLinkList)
+IopGetDeviceInterfacesWorker(
+    _In_ CONST GUID* InterfaceClassGuid,
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN UseKernelPath,
+    _At_(*SymbolicLinkList, _When_(return == 0, __drv_allocatesMem(Mem)))
+        PWSTR* SymbolicLinkList)
 {
     UNICODE_STRING Control = RTL_CONSTANT_STRING(L"Control");
     UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
@@ -810,7 +814,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             KeyName.Buffer = (PWSTR)bip->Data;
 
             /* Fixup the prefix (from "\\?\") */
-            RtlCopyMemory(KeyName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+            if (UseKernelPath)
+                RtlCopyMemory(KeyName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
 
             /* Add new symbolic link to symbolic link list */
             if (ReturnBuffer.Length + KeyName.Length + sizeof(WCHAR) > ReturnBuffer.MaximumLength)
@@ -918,6 +923,56 @@ cleanup:
     if (bip)
         ExFreePool(bip);
     return Status;
+}
+
+/*++
+ * @name IoGetDeviceInterfaces
+ * @implemented
+ *
+ * Returns a list of device interfaces of a particular device interface class.
+ * Documented in WDK.
+ *
+ * @param InterfaceClassGuid
+ *        Points to a class GUID specifying the device interface class.
+ *
+ * @param PhysicalDeviceObject
+ *        Points to an optional PDO that narrows the search to only the
+ *        device interfaces of the device represented by the PDO.
+ *
+ * @param Flags
+ *        Specifies flags that modify the search for device interfaces. The
+ *        DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
+ *        returned symbolic links should contain also disabled device
+ *        interfaces in addition to the enabled ones.
+ *
+ * @param SymbolicLinkList
+ *        Points to a character pointer that is filled in on successful return
+ *        with a list of unicode strings identifying the device interfaces
+ *        that match the search criteria. The newly allocated buffer contains
+ *        a list of symbolic link names. Each unicode string in the list is
+ *        null-terminated; the end of the whole list is marked by an additional
+ *        NULL. The caller is responsible for freeing the buffer (ExFreePool)
+ *        when it is no longer needed.
+ *        If no device interfaces match the search criteria, this routine
+ *        returns STATUS_SUCCESS and the string contains a single NULL
+ *        character.
+ *
+ * @return Usual NTSTATUS
+ *
+ * @remarks None
+ *
+ *--*/
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaces(
+    _In_ CONST GUID* InterfaceClassGuid,
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG Flags,
+    _Outptr_result_nullonfailure_
+    _At_(*SymbolicLinkList, _When_(return == 0, __drv_allocatesMem(Mem)))
+        PZZWSTR* SymbolicLinkList)
+{
+    return IopGetDeviceInterfacesWorker(InterfaceClassGuid, PhysicalDeviceObject, Flags, TRUE, SymbolicLinkList);
 }
 
 /*++
