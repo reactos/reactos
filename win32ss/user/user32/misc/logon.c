@@ -84,20 +84,20 @@ Logon(BOOL IsLogon)
 }
 
 /* Win: LoadPreloadKeyboardLayouts */
-BOOL IntLoadPreloadKeyboardLayouts(VOID)
+VOID IntLoadPreloadKeyboardLayouts(VOID)
 {
     UINT nNumber, uFlags;
     DWORD cbValue, dwType;
     WCHAR szNumber[32], szValue[KL_NAMELENGTH];
     HKEY hPreloadKey;
-    BOOL ret = FALSE;
+    BOOL bOK = FALSE;
     HKL hKL, hDefaultKL = NULL;
 
     if (RegOpenKeyW(HKEY_CURRENT_USER,
                     L"Keyboard Layout\\Preload",
                     &hPreloadKey) != ERROR_SUCCESS)
     {
-        return FALSE;
+        return;
     }
 
     for (nNumber = 1; nNumber <= 1000; ++nNumber)
@@ -126,8 +126,8 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
         hKL = LoadKeyboardLayoutW(szValue, uFlags);
         if (hKL)
         {
-            ret = TRUE;
-            if (nNumber == 1)
+            bOK = TRUE;
+            if (nNumber == 1) /* The first entry */
                 hDefaultKL = hKL;
         }
     }
@@ -137,13 +137,11 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
     if (hDefaultKL)
         SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hDefaultKL, 0);
 
-    if (!ret)
+    if (!bOK)
     {
         /* Default to USA */
         LoadKeyboardLayoutW(L"00000409", KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET);
     }
-
-    return ret;
 }
 
 /*
