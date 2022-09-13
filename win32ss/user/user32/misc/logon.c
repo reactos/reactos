@@ -7,7 +7,6 @@
  */
 
 #include <user32.h>
-#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -103,7 +102,7 @@ BOOL IntLoadPreloadKeyboardLayouts(VOID)
 
     for (nNumber = 1; nNumber <= 1000; ++nNumber)
     {
-        StringCchPrintfW(szNumber, _countof(szNumber), L"%u", nNumber);
+        _ultow(nNumber, szNumber, 10);
 
         cbValue = sizeof(szValue);
         if (RegQueryValueExW(hPreloadKey,
