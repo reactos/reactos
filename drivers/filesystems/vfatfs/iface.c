@@ -52,7 +52,7 @@ DriverEntry(
     IN PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\FatX");
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(RegistryPath);
@@ -64,20 +64,6 @@ DriverEntry(
                             0,
                             FALSE,
                             &DeviceObject);
-    if (Status == STATUS_OBJECT_NAME_EXISTS ||
-       Status == STATUS_OBJECT_NAME_COLLISION)
-    {
-        /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
-        RtlInitUnicodeString(&DeviceName, L"\\RosFat");
-        Status = IoCreateDevice(DriverObject,
-                                sizeof(VFAT_GLOBAL_DATA),
-                                &DeviceName,
-                                FILE_DEVICE_DISK_FILE_SYSTEM,
-                                0,
-                                FALSE,
-                                &DeviceObject);
-    }
-
     if (!NT_SUCCESS(Status))
     {
         return Status;
