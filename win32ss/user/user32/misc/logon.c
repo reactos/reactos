@@ -7,6 +7,7 @@
  */
 
 #include <user32.h>
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -83,6 +84,69 @@ Logon(BOOL IsLogon)
                          sizeof(*LogonRequest));
 }
 
+/* Win: LoadPreloadKeyboardLayouts */
+BOOL IntLoadPreloadKeyboardLayouts(VOID)
+{
+    UINT nNumber, uFlags;
+    DWORD cbValue, dwType;
+    WCHAR szNumber[32], szValue[9];
+    HKEY hPreloadKey;
+    BOOL ret = FALSE;
+    HKL hKL, hDefaultKL = NULL;
+
+    if (RegOpenKeyW(HKEY_CURRENT_USER,
+                    L"Keyboard Layout\\Preload",
+                    &hPreloadKey) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    for (nNumber = 1; nNumber <= 1000; ++nNumber)
+    {
+        StringCchPrintfW(szNumber, _countof(szNumber), L"%u", nNumber);
+
+        cbValue = sizeof(szValue);
+        if (RegQueryValueExW(hPreloadKey,
+                             szNumber,
+                             NULL,
+                             &dwType,
+                             (LPBYTE)szValue,
+                             &cbValue) != ERROR_SUCCESS)
+        {
+            break;
+        }
+
+        if (dwType != REG_SZ)
+            continue;
+
+        if (nNumber == 1)
+            uFlags = KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET;
+        else
+            uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL | KLF_REPLACELANG;
+
+        hKL = LoadKeyboardLayoutW(szValue, uFlags);
+        if (hKL)
+        {
+            ret = TRUE;
+            if (nNumber == 1)
+                hDefaultKL = hKL;
+        }
+    }
+
+    RegCloseKey(hPreloadKey);
+
+    if (hDefaultKL)
+        SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hDefaultKL, 0);
+
+    if (!ret)
+    {
+        /* Default to USA */
+        LoadKeyboardLayoutW(L"04090409", KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET);
+    }
+
+    return ret;
+}
+
 /*
  * @implemented
  */
@@ -103,6 +167,12 @@ UpdatePerUserSystemParameters(DWORD dwReserved,
 {
     // Update Imm support and load Imm32.dll.
     UpdatePerUserImmEnabling();
+
+    /* Delete all the IME hotkeys */
+    CliImmInitializeHotKeys(SETIMEHOTKEY_DELETEALL, NULL);
+
+    /* Load Preload keyboard layouts */
+    IntLoadPreloadKeyboardLayouts();
 
     return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
