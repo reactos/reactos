@@ -132,7 +132,8 @@ static INPUT_LIST_NODE *_InputList = NULL;
 static INPUT_LIST_NODE*
 InputList_AppendNode(VOID)
 {
-    INPUT_LIST_NODE *pCurrent, *pNew;
+    INPUT_LIST_NODE *pCurrent;
+    INPUT_LIST_NODE *pNew;
 
     pCurrent = _InputList;
 
@@ -559,6 +560,7 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
         InputList_RemoveNode(pNode);
     }
 }
+
 
 VOID
 InputList_Create(VOID)
