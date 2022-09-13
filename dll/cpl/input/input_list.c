@@ -358,7 +358,8 @@ InputList_AddInputMethodToUserRegistry(
                    cbValue);
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
-        (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
+        (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED) ||
+        (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
     {
         UINT uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL;
         if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
