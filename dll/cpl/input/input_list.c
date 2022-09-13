@@ -217,23 +217,23 @@ static BOOL
 InputList_PrepareUserRegistry(VOID)
 {
     BOOL ret = FALSE;
-    HKEY hLayoutKey = NULL, hPreloadKey = NULL, hSubstKey = NULL;
+    HKEY hKey = NULL, hPreloadKey = NULL, hSubstKey = NULL;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Keyboard Layout",
                       0,
                       KEY_ALL_ACCESS,
-                      &hLayoutKey) == ERROR_SUCCESS)
+                      &hKey) == ERROR_SUCCESS)
     {
-        RegDeleteKeyW(hLayoutKey, L"Preload");
-        RegDeleteKeyW(hLayoutKey, L"Substitutes");
-        RegCloseKey(hLayoutKey);
-        hLayoutKey = NULL;
+        RegDeleteKeyW(hKey, L"Preload");
+        RegDeleteKeyW(hKey, L"Substitutes");
+        RegCloseKey(hKey);
+        hKey = NULL;
     }
 
-    if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hLayoutKey) == ERROR_SUCCESS &&
-        RegCreateKeyW(hLayoutKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
-        RegCreateKeyW(hLayoutKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
+    if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) == ERROR_SUCCESS &&
+        RegCreateKeyW(hKey, L"Preload", &hPreloadKey) == ERROR_SUCCESS &&
+        RegCreateKeyW(hKey, L"Substitutes", &hSubstKey) == ERROR_SUCCESS)
     {
         ret = TRUE;
     }
@@ -242,8 +242,8 @@ InputList_PrepareUserRegistry(VOID)
         RegCloseKey(hSubstKey);
     if (hPreloadKey)
         RegCloseKey(hPreloadKey);
-    if (hLayoutKey)
-        RegCloseKey(hLayoutKey);
+    if (hKey)
+        RegCloseKey(hKey);
 
     return ret;
 }
