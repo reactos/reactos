@@ -381,19 +381,17 @@ InputList_Process(VOID)
     BOOL bRet = FALSE;
     HKEY hPreloadKey, hSubstKey;
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+    InputList_PrepareUserRegistry();
+
+    if (RegCreateKeyW(HKEY_CURRENT_USER,
                       L"Keyboard Layout\\Preload",
-                      0,
-                      KEY_READ | KEY_WRITE,
                       &hPreloadKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+    if (RegCreateKeyW(HKEY_CURRENT_USER,
                       L"Keyboard Layout\\Substitutes",
-                      0,
-                      KEY_READ | KEY_WRITE,
                       &hSubstKey) != ERROR_SUCCESS)
     {
         RegCloseKey(hPreloadKey);
@@ -416,8 +414,6 @@ InputList_Process(VOID)
             }
         }
     }
-
-    InputList_PrepareUserRegistry();
 
     /* Find default input method */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
