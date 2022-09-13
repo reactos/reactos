@@ -428,6 +428,7 @@ static
 VOID
 vfatInitFCBFromDirEntry(
     PDEVICE_EXTENSION Vcb,
+    PVFATFCB ParentFcb,
     PVFATFCB Fcb,
     PVFAT_DIRENTRY_CONTEXT DirContext)
 {
@@ -476,7 +477,8 @@ vfatInitFCBFromDirEntry(
     }
     Fcb->dirIndex = DirContext->DirIndex;
     Fcb->startIndex = DirContext->StartIndex;
-    if (vfatVolumeIsFatX(Vcb) && !vfatFCBIsRoot(Fcb))
+    Fcb->parentFcb = ParentFcb;
+    if (vfatVolumeIsFatX(Vcb) && !vfatFCBIsRoot(ParentFcb))
     {
         ASSERT(DirContext->DirIndex >= 2 && DirContext->StartIndex >= 2);
         Fcb->dirIndex = DirContext->DirIndex-2;
@@ -572,13 +574,12 @@ vfatUpdateFCB(
     RemoveEntryList(&Fcb->ParentListEntry);
 
     /* Reinit FCB */
-    vfatInitFCBFromDirEntry(pVCB, Fcb, DirContext);
+    vfatInitFCBFromDirEntry(pVCB, ParentFcb, Fcb, DirContext);
 
     if (vfatFCBIsDirectory(Fcb))
     {
         CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
     }
-    Fcb->parentFcb = ParentFcb;
     InsertTailList(&ParentFcb->ParentListHead, &Fcb->ParentListEntry);
     vfatAddFCBToTable(pVCB, Fcb);
 
@@ -739,10 +740,9 @@ vfatMakeFCBFromDirEntry(
     }
 
     rcFCB = vfatNewFCB(vcb, &NameU);
-    vfatInitFCBFromDirEntry(vcb, rcFCB, DirContext);
+    vfatInitFCBFromDirEntry(vcb, directoryFCB, rcFCB, DirContext);
 
     rcFCB->RefCount = 1;
-    rcFCB->parentFcb = directoryFCB;
     InsertTailList(&directoryFCB->ParentListHead, &rcFCB->ParentListEntry);
     vfatAddFCBToTable(vcb, rcFCB);
     *fileFCB = rcFCB;
