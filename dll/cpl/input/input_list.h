@@ -27,7 +27,7 @@ typedef struct _INPUT_LIST_NODE
 } INPUT_LIST_NODE;
 
 
-BOOL
+VOID
 InputList_Create(VOID);
 
 BOOL

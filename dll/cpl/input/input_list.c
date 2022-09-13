@@ -132,8 +132,7 @@ static INPUT_LIST_NODE *_InputList = NULL;
 static INPUT_LIST_NODE*
 InputList_AppendNode(VOID)
 {
-    INPUT_LIST_NODE *pCurrent;
-    INPUT_LIST_NODE *pNew;
+    INPUT_LIST_NODE *pCurrent, *pNew;
 
     pCurrent = _InputList;
 
@@ -325,17 +324,16 @@ InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey, DWORD dwPhysicalKLID)
     return 0;
 }
 
-static BOOL
+static VOID
 InputList_AddInputMethodToUserRegistry(
     HKEY hPreloadKey,
     HKEY hSubstKey,
     DWORD dwNumber,
     INPUT_LIST_NODE *pNode)
 {
-    WCHAR szNumber[MAX_PATH], szPreload[MAX_PATH];
+    WCHAR szNumber[32], szLogicalKLID[16];
     DWORD dwPhysicalKLID, dwLogicalKLID, cbValue;
     HKL hKL = pNode->hkl;
-    BOOL ret;
 
     if (IS_IME_HKL(hKL)) /* IME? */
     {
@@ -351,22 +349,20 @@ InputList_AddInputMethodToUserRegistry(
 
     /* Write the Preload value (number |--> logical KLID) */
     StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%lu", dwNumber);
-    StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08x", dwLogicalKLID);
-    cbValue = (wcslen(szPreload) + 1) * sizeof(WCHAR);
-    ret = (RegSetValueExW(hPreloadKey,
-                          szNumber,
-                          0,
-                          REG_SZ,
-                          (LPBYTE)szPreload,
-                          cbValue) == ERROR_SUCCESS);
+    StringCchPrintfW(szLogicalKLID, ARRAYSIZE(szLogicalKLID), L"%08x", dwLogicalKLID);
+    cbValue = (wcslen(szLogicalKLID) + 1) * sizeof(WCHAR);
+    RegSetValueExW(hPreloadKey,
+                   szNumber,
+                   0,
+                   REG_SZ,
+                   (LPBYTE)szLogicalKLID,
+                   cbValue);
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
         (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
-        pNode->hkl = LoadKeyboardLayoutW(szPreload, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
+        pNode->hkl = LoadKeyboardLayoutW(szLogicalKLID, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
     }
-
-    return ret;
 }
 
 
@@ -564,7 +560,7 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
     }
 }
 
-BOOL
+VOID
 InputList_Create(VOID)
 {
     INT iLayoutCount, iIndex;
@@ -580,7 +576,7 @@ InputList_Create(VOID)
     if (!pLayoutList || GetKeyboardLayoutList(iLayoutCount, pLayoutList) <= 0)
     {
         free(pLayoutList);
-        return FALSE;
+        return;
     }
 
     for (iIndex = 0; iIndex < iLayoutCount; ++iIndex)
@@ -619,7 +615,6 @@ InputList_Create(VOID)
     }
 
     free(pLayoutList);
-    return TRUE;
 }
 
 
