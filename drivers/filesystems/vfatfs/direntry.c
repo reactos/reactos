@@ -497,10 +497,9 @@ FATXGetNextDirEntry(
         switch (DirContext->DirIndex)
         {
             case 0: /* entry . */
-                DirContext->ShortNameU.Buffer[0] = 0;
-                DirContext->ShortNameU.Length = 0;
                 wcscpy(DirContext->LongNameU.Buffer, L".");
                 DirContext->LongNameU.Length = sizeof(WCHAR);
+                DirContext->ShortNameU = DirContext->LongNameU;
                 RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
                 DirContext->DirEntry.FatX.Filename[0] = '.';
                 DirContext->DirEntry.FatX.FilenameLength = 1;
@@ -508,10 +507,9 @@ FATXGetNextDirEntry(
                 return STATUS_SUCCESS;
 
             case 1: /* entry .. */
-                DirContext->ShortNameU.Buffer[0] = 0;
-                DirContext->ShortNameU.Length = 0;
                 wcscpy(DirContext->LongNameU.Buffer, L"..");
                 DirContext->LongNameU.Length = 2 * sizeof(WCHAR);
+                DirContext->ShortNameU = DirContext->LongNameU;
                 RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
                 DirContext->DirEntry.FatX.Filename[0] = DirContext->DirEntry.FatX.Filename[1] = '.';
                 DirContext->DirEntry.FatX.FilenameLength = 2;
@@ -603,10 +601,9 @@ FATXGetNextDirEntry(
             fatxDirEntry++;
         }
     }
-    DirContext->ShortNameU.Buffer[0] = 0;
-    DirContext->ShortNameU.Length = 0;
     StringO.Buffer = (PCHAR)fatxDirEntry->Filename;
     StringO.Length = StringO.MaximumLength = fatxDirEntry->FilenameLength;
     RtlOemStringToUnicodeString(&DirContext->LongNameU, &StringO, FALSE);
+    DirContext->ShortNameU = DirContext->LongNameU;
     return STATUS_SUCCESS;
 }
