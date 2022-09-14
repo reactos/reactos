@@ -261,7 +261,7 @@ InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
 
     StringCchPrintfW(szKLID, ARRAYSIZE(szKLID), L"%08x", dwKLID);
 
-    for (dwNumber = 1; dwNumber <= 0xFF; ++dwNumber)
+    for (dwNumber = 1; dwNumber <= 1000; ++dwNumber)
     {
         StringCchPrintfW(szNumber, ARRAYSIZE(szNumber), L"%u", dwNumber);
 
@@ -295,13 +295,13 @@ InputList_WriteSubst(HKEY hSubstKey, DWORD dwPhysicalKLID, DWORD dwLogicalKLID)
 }
 
 static DWORD
-InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey, DWORD dwPhysicalKLID)
+InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey,
+                  DWORD dwPhysicalKLID, DWORD dwLogicalKLID)
 {
     DWORD iTrial;
-    DWORD dwLogicalKLID = LOWORD(dwPhysicalKLID);
-    BOOL bSubstNeeded = (HIWORD(dwPhysicalKLID) != 0);
+    BOOL bSubstNeeded = (dwPhysicalKLID != dwLogicalKLID) || (HIWORD(dwPhysicalKLID) != 0);
 
-    for (iTrial = 0; iTrial <= 0xFF; ++iTrial)
+    for (iTrial = 0; iTrial < 1000; ++iTrial)
     {
         if (!InputList_FindPreloadKLID(hPreloadKey, dwLogicalKLID)) /* Not found? */
         {
@@ -350,7 +350,8 @@ InputList_AddInputMethodToUserRegistry(
     {
         /* Substitute the KLID if necessary */
         dwPhysicalKLID = pNode->pLayout->dwKLID;
-        dwLogicalKLID = InputList_DoSubst(hPreloadKey, hSubstKey, dwPhysicalKLID);
+        dwLogicalKLID = pNode->pLocale->dwId;
+        dwLogicalKLID = InputList_DoSubst(hPreloadKey, hSubstKey, dwPhysicalKLID, dwLogicalKLID);
     }
 
     /* Write the Preload value (number |--> logical KLID) */
