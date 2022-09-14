@@ -18,11 +18,11 @@
  */
 
 #include "precomp.h"
+#include <shellapi.h>
 #include <stdlib.h>
 #include <strsafe.h>
 
 #include "resource.h"
-#include <shellapi.h>
 
 #define NDEBUG
 #include <debug.h>
