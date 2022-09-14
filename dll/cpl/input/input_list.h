@@ -4,12 +4,30 @@
 #include "locale_list.h"
 #include "layout_list.h"
 
-
+/*
+ * INPUT_LIST_NODE_FLAG_EDITED
+ * --- The edited entry. Since previous time, this entry is modified.
+ */
 #define INPUT_LIST_NODE_FLAG_EDITED    0x0001
-#define INPUT_LIST_NODE_FLAG_ADDED     0x0002
-#define INPUT_LIST_NODE_FLAG_DELETED   0x0004
-#define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
+/*
+ * INPUT_LIST_NODE_FLAG_ADDED
+ * --- Newly-added entry. Since previous time, this entry is added.
+ */
+#define INPUT_LIST_NODE_FLAG_ADDED     0x0002
+
+/*
+ * INPUT_LIST_NODE_FLAG_DELETED
+ * --- Deleted or to-be-deleted entry.
+ *     The application should ignore this entry if necessary.
+ */
+#define INPUT_LIST_NODE_FLAG_DELETED   0x0004
+
+/*
+ * INPUT_LIST_NODE_FLAG_DEFAULT
+ * --- The default entry. The entry that has this flag should be single.
+ */
+#define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
 typedef struct _INPUT_LIST_NODE
 {

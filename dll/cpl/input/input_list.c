@@ -537,6 +537,29 @@ InputList_SetDefault(INPUT_LIST_NODE *pNode)
     }
 }
 
+INPUT_LIST_NODE *
+InputList_FindNextDefault(INPUT_LIST_NODE *pNode)
+{
+    INPUT_LIST_NODE *pCurrent;
+
+    for (pCurrent = pNode->pNext; pCurrent; pCurrent = pCurrent->pNext)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        return pCurrent;
+    }
+
+    for (pCurrent = pNode->pPrev; pCurrent; pCurrent = pCurrent->pPrev)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        return pCurrent;
+    }
+
+    return NULL;
+}
 
 /*
  * It marks the input method for deletion, but does not delete it directly.
@@ -565,14 +588,9 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
 
     if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
     {
-        if (pNode->pNext != NULL)
-        {
-            pNode->pNext->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
-        }
-        else if (pNode->pPrev != NULL)
-        {
-            pNode->pPrev->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
-        }
+        INPUT_LIST_NODE *pCurrent = InputList_FindNextDefault(pNode);
+        if (pCurrent)
+            pCurrent->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
 
         pNode->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
     }
