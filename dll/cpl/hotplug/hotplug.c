@@ -360,7 +360,17 @@ SafeRemovalDlgProc(
             pHotplugData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HOTPLUG_DATA));
             if (pHotplugData != NULL)
             {
+                WCHAR szWindowTitle[MAX_PATH];
+
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pHotplugData);
+
+                if (LoadStringW(hApplet,
+                                IDS_CPLNAME,
+                                szWindowTitle,
+                                ARRAYSIZE(szWindowTitle)))
+                {
+                    SetWindowTextW(hwndDlg, szWindowTitle);
+                }
 
                 pHotplugData->ImageListData.cbSize = sizeof(pHotplugData->ImageListData);
                 SetupDiGetClassImageList(&pHotplugData->ImageListData);
