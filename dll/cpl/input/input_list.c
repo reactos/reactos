@@ -280,7 +280,7 @@ static BOOL
 InputList_WriteSubst(HKEY hSubstKey, DWORD dwPhysicalKLID, DWORD dwLogicalKLID)
 {
     DWORD cbValue;
-    WCHAR szLogicalKLID[16], szPhysicalKLID[16];
+    WCHAR szLogicalKLID[KL_NAMELENGTH], szPhysicalKLID[KL_NAMELENGTH];
 
     StringCchPrintfW(szLogicalKLID, ARRAYSIZE(szLogicalKLID), L"%08x", dwLogicalKLID);
     StringCchPrintfW(szPhysicalKLID, ARRAYSIZE(szPhysicalKLID), L"%08x", dwPhysicalKLID);
