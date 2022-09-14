@@ -1234,16 +1234,27 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         /* Perform the copy */
         MiCopyPfn(PageFrameIndex, ProtoPageFrameIndex);
 
+        /* Temporarily release lock */
+        MiReleasePfnLock(OldIrql);
+
         /* This will drop everything MiResolveProtoPteFault referenced */
         MiDeletePte(PointerPte, Address, Process, PointerProtoPte);
-
-        /* Because now we use this */
-        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
-        MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
 
         /* Fix the protection */
         Protection &= ~MM_WRITECOPY;
         Protection |= MM_READWRITE;
+
+        /* Restore our PTE to a sensible value for proper PFN init. */
+        MI_MAKE_SOFTWARE_PTE(&TempPte, Protection);
+        MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+
+        /* Lock again */
+        OldIrql = MiAcquirePfnLock();
+
+        /* Initialize like a private page */
+        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+        MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
+
         if (Address < MmSystemRangeStart)
         {
             /* Build the user PTE */
@@ -1300,7 +1311,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
-                                      
+
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -2263,14 +2274,30 @@ UserFault:
                 ASSERT(Pfn1->u3.e1.PrototypePte == 1);
                 ASSERT(!MI_IS_PFN_DELETED(Pfn1));
                 ProtoPte = Pfn1->PteAddress;
+
+                /* Temporarily release PFN lock */
+                MiReleasePfnLock(LockIrql);
+
                 MiDeletePte(PointerPte, Address, CurrentProcess, ProtoPte);
+
+                LockIrql = MiAcquirePfnLock();
+
+                /* Reset original soft PTE to sensible value */
+                if (ProtectionCode == MM_INVALID_PROTECTION)
+                    MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+
+                ASSERT((ProtectionCode & MM_WRITECOPY) == MM_WRITECOPY);
+
+                ProtectionCode &= ~MM_WRITECOPY;
+                ProtectionCode |= MM_READWRITE;
+
+                MI_MAKE_SOFTWARE_PTE(&TempPte, ProtectionCode);
+                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
 
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
-                TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-                TempPte.u.Hard.Write = 1;
-                TempPte.u.Hard.CopyOnWrite = 0;
 
+                MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, ProtectionCode, PageFrameIndex);
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
                 MiReleasePfnLock(LockIrql);

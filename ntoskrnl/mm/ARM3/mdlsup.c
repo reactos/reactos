@@ -299,7 +299,6 @@ MiUnmapLockedPagesInUserSpace(
     PMMVAD Vad;
     PMMPTE PointerPte;
     PMMPDE PointerPde;
-    KIRQL OldIrql;
     ULONG NumberOfPages;
     PPFN_NUMBER MdlPages;
     PFN_NUMBER PageTablePage;
@@ -333,12 +332,12 @@ MiUnmapLockedPagesInUserSpace(
     ASSERT(Process->VadRoot.NodeHint != Vad);
 
     PointerPte = MiAddressToPte(BaseAddress);
-    OldIrql = MiAcquirePfnLock();
     while (NumberOfPages != 0 &&
            *MdlPages != LIST_HEAD)
     {
         ASSERT(MiAddressToPte(PointerPte)->u.Hard.Valid == 1);
         ASSERT(PointerPte->u.Hard.Valid == 1);
+        ASSERT(PFN_FROM_PTE(PointerPte) == *MdlPages);
 
         /* Invalidate it */
         MI_ERASE_PTE(PointerPte);
@@ -362,7 +361,6 @@ MiUnmapLockedPagesInUserSpace(
     }
 
     KeFlushProcessTb();
-    MiReleasePfnLock(OldIrql);
     MiUnlockProcessWorkingSetUnsafe(Process, Thread);
     MmUnlockAddressSpace(&Process->Vm);
     ExFreePoolWithTag(Vad, 'ldaV');

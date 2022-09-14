@@ -375,9 +375,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     MMPTE TempPte;
     PFN_NUMBER PageFrameIndex;
     PMMPDE PointerPde;
-
-    /* PFN lock must be held */
-    MI_ASSERT_PFN_LOCK_HELD();
+    KIRQL OldIrql;
 
     /* WorkingSet must be exclusively locked */
     ASSERT(MM_ANY_WS_LOCK_HELD_EXCLUSIVE(PsGetCurrentThread()));
@@ -409,6 +407,9 @@ MiDeletePte(IN PMMPTE PointerPte,
             /* Destroy the PTE */
             MI_ERASE_PTE(PointerPte);
 
+            /* Lock PFN DB while processing */
+            OldIrql = MiAcquirePfnLock();
+
             /* Drop the reference on the page table. */
             MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
 
@@ -434,12 +435,18 @@ MiDeletePte(IN PMMPTE PointerPte,
                 /* This will put it back in free list and clean properly up */
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
+
+            /* Done for this PTE */
+            MiReleasePfnLock(OldIrql);
             return;
         }
     }
 
     /* Get the PFN entry */
     PageFrameIndex = PFN_FROM_PTE(&TempPte);
+
+    /* Lock while tinkering with PFNs */
+    OldIrql = MiAcquirePfnLock();
     Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
     /* Check if this is a valid, prototype PTE */
@@ -471,6 +478,9 @@ MiDeletePte(IN PMMPTE PointerPte,
 
         /* Drop the share count */
         MiDecrementShareCount(Pfn1, PageFrameIndex);
+
+        /* Done with PFNs */
+        MiReleasePfnLock(OldIrql);
 
         /* Either a fork, or this is the shared user data page */
         if ((PointerPte <= MiHighestUserPte) && (PrototypePte != Pfn1->PteAddress))
@@ -504,9 +514,6 @@ MiDeletePte(IN PMMPTE PointerPte,
                          (ULONG_PTR)Pfn1->PteAddress);
         }
 
-        /* Erase the PTE */
-        MI_ERASE_PTE(PointerPte);
-
         /* There should only be 1 shared reference count */
         ASSERT(Pfn1->u2.ShareCount == 1);
 
@@ -516,6 +523,12 @@ MiDeletePte(IN PMMPTE PointerPte,
         /* Mark the PFN for deletion and dereference what should be the last ref */
         MI_SET_PFN_DELETED(Pfn1);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
+
+        /* Done with PFNs */
+        MiReleasePfnLock(OldIrql);
+
+        /* Erase the PTE */
+        MI_ERASE_PTE(PointerPte);
 
         /* We should eventually do this */
         //CurrentProcess->NumberOfPrivatePages--;
@@ -541,7 +554,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 #endif
     MMPTE TempPte;
     PEPROCESS CurrentProcess;
-    KIRQL OldIrql;
     BOOLEAN AddressGap = FALSE;
     PSUBSECTION Subsection;
 
@@ -654,8 +666,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             }
         }
 
-        /* Lock the PFN Database while we delete the PTEs */
-        OldIrql = MiAcquirePfnLock();
         PointerPte = MiAddressToPte(Va);
         do
         {
@@ -732,9 +742,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             PointerPte++;
             PrototypePte++;
         } while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
-
-        /* Release the lock */
-        MiReleasePfnLock(OldIrql);
 
         if (Va > EndingAddress) return;
 
