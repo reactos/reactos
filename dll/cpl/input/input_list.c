@@ -260,10 +260,13 @@ InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
 
         cbValue = ARRAYSIZE(szValue) * sizeof(WCHAR);
         if (RegQueryValueExW(hPreloadKey, szNumber, NULL, &dwType,
-                             (LPBYTE)szValue, &cbValue) != ERROR_SUCCESS || dwType != REG_SZ)
+                             (LPBYTE)szValue, &cbValue) != ERROR_SUCCESS)
         {
             break;
         }
+
+        if (dwType != REG_SZ)
+            continue;
 
         szValue[ARRAYSIZE(szValue) - 1] = 0;
         if (_wcsicmp(szKLID, szValue) == 0)
