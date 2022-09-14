@@ -35,5 +35,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Безопасное извлечение устройств"
-    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
+    IDS_CPLDESCRIPTION "Безопасно отключайте или извлекайте устройства из вашего компьютера."
 END
