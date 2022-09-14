@@ -566,6 +566,8 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
         {
             pNode->pPrev->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
         }
+
+        pNode->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
     }
 
     if (bRemoveNode)
