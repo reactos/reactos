@@ -237,7 +237,7 @@ BEGIN
     IDS_SPEAKER_VOLUME "Volume des enceintes"
     IDS_SPEAKER_LEFT "&Gauche :"
     IDS_SPEAKER_RIGHT "&Droite :"
-    IDS_SPEAKER_CENTER "&Centre :"
+    IDS_SPEAKER_CENTER "&Centrale :"
     IDS_SPEAKER_BACK_LEFT "&Arrière gauche :"
     IDS_SPEAKER_BACK_RIGHT "A&rrière droite :"
     IDS_SPEAKER_LOW_FREQUENCY "&Basses :"
