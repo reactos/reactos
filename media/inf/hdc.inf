@@ -689,6 +689,7 @@ PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE controller"
 ;Compatible adapters
 
 UniATA_Name = "Universal ATA Driver"
+*PNP0600.DeviceDesc     = "IDE/ESDI Hard Disk Controller"
 *PNP0600.PriDeviceDesc  = "Primary IDE Channel"
 *PNP0600.SecDeviceDesc  = "Secondary IDE Channel"
 PCI\CC_0101.DeviceDesc  = "Dual Channel PCI BusMaster IDE Controller"
