@@ -192,13 +192,11 @@ UpdateInputListView(HWND hwndList)
 
     if (iSelected != -1)
     {
-        LV_ITEM item = { LVIF_STATE, iSelected };
+        INT nCount = ListView_GetItemCount(hwndList);
+        LV_ITEM item = { LVIF_STATE };
         item.state = item.stateMask = LVIS_SELECTED;
-        if (!ListView_SetItem(hwndList, &item))
-        {
-            --(item.iItem);
-            ListView_SetItem(hwndList, &item);
-        }
+        item.iItem = ((nCount == iSelected) ? nCount - 1 : iSelected);
+        ListView_SetItem(hwndList, &item);
     }
 
     InvalidateRect(hwndList, NULL, TRUE);
