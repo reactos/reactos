@@ -51,16 +51,16 @@ InitImageInfo(PIMGINFO ImgInfo)
 
     ZeroMemory(ImgInfo, sizeof(*ImgInfo));
 
-    ImgInfo->hBitmap = LoadImage(hApplet,
-                                 MAKEINTRESOURCE(IDB_SPEAKIMG),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
+    ImgInfo->hBitmap = LoadImageW(hApplet,
+                                  MAKEINTRESOURCEW(IDB_SPEAKIMG),
+                                  IMAGE_BITMAP,
+                                  0,
+                                  0,
+                                  LR_DEFAULTCOLOR);
 
     if (ImgInfo->hBitmap != NULL)
     {
-        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+        GetObjectW(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
 
         ImgInfo->cxSource = bitmap.bmWidth;
         ImgInfo->cySource = bitmap.bmHeight;
@@ -71,28 +71,30 @@ InitImageInfo(PIMGINFO ImgInfo)
 VOID
 GetMuteControl(PGLOBAL_DATA pGlobalData)
 {
-    MIXERLINE mxln;
-    MIXERCONTROL mxc;
-    MIXERLINECONTROLS mxlctrl;
+    MIXERLINEW mxln;
+    MIXERCONTROLW mxc;
+    MIXERLINECONTROLSW mxlctrl;
 
     if (pGlobalData->hMixer == NULL)
         return;
 
-    mxln.cbStruct = sizeof(MIXERLINE);
+    mxln.cbStruct = sizeof(MIXERLINEW);
     mxln.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
 
-    if (mixerGetLineInfo((HMIXEROBJ)pGlobalData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE)
-        != MMSYSERR_NOERROR) return;
+    if (mixerGetLineInfoW((HMIXEROBJ)pGlobalData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE)
+        != MMSYSERR_NOERROR)
+        return;
 
-    mxlctrl.cbStruct = sizeof(MIXERLINECONTROLS);
+    mxlctrl.cbStruct = sizeof(MIXERLINECONTROLSW);
     mxlctrl.dwLineID = mxln.dwLineID;
     mxlctrl.dwControlType = MIXERCONTROL_CONTROLTYPE_MUTE;
     mxlctrl.cControls = 1;
-    mxlctrl.cbmxctrl = sizeof(MIXERCONTROL);
+    mxlctrl.cbmxctrl = sizeof(MIXERCONTROLW);
     mxlctrl.pamxctrl = &mxc;
 
-    if (mixerGetLineControls((HMIXEROBJ)pGlobalData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
-        != MMSYSERR_NOERROR) return;
+    if (mixerGetLineControlsW((HMIXEROBJ)pGlobalData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
+        != MMSYSERR_NOERROR)
+        return;
 
     pGlobalData->muteControlID = mxc.dwControlID;
 }
@@ -114,7 +116,7 @@ GetMuteState(PGLOBAL_DATA pGlobalData)
     mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_BOOLEAN);
     mxcd.paDetails = &mxcdMute;
 
-    if (mixerGetControlDetails((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE)
+    if (mixerGetControlDetailsW((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE)
         != MMSYSERR_NOERROR)
         return;
 
@@ -147,28 +149,28 @@ SwitchMuteState(PGLOBAL_DATA pGlobalData)
 VOID
 GetVolumeControl(PGLOBAL_DATA pGlobalData)
 {
-    MIXERLINE mxln;
-    MIXERCONTROL mxc;
-    MIXERLINECONTROLS mxlc;
+    MIXERLINEW mxln;
+    MIXERCONTROLW mxc;
+    MIXERLINECONTROLSW mxlc;
 
     if (pGlobalData->hMixer == NULL)
         return;
 
-    mxln.cbStruct = sizeof(MIXERLINE);
+    mxln.cbStruct = sizeof(MIXERLINEW);
     mxln.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
-    if (mixerGetLineInfo((HMIXEROBJ)pGlobalData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE)
+    if (mixerGetLineInfoW((HMIXEROBJ)pGlobalData->hMixer, &mxln, MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE)
         != MMSYSERR_NOERROR)
         return;
 
     pGlobalData->volumeChannels = mxln.cChannels;
 
-    mxlc.cbStruct = sizeof(MIXERLINECONTROLS);
+    mxlc.cbStruct = sizeof(MIXERLINECONTROLSW);
     mxlc.dwLineID = mxln.dwLineID;
     mxlc.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
     mxlc.cControls = 1;
-    mxlc.cbmxctrl = sizeof(MIXERCONTROL);
+    mxlc.cbmxctrl = sizeof(MIXERCONTROLW);
     mxlc.pamxctrl = &mxc;
-    if (mixerGetLineControls((HMIXEROBJ)pGlobalData->hMixer, &mxlc, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
+    if (mixerGetLineControlsW((HMIXEROBJ)pGlobalData->hMixer, &mxlc, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
         != MMSYSERR_NOERROR)
         return;
 
@@ -215,7 +217,7 @@ GetVolumeValue(
     mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
     mxcd.paDetails = pGlobalData->volumePreviousValues;
 
-    if (mixerGetControlDetails((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE)
+    if (mixerGetControlDetailsW((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE)
         != MMSYSERR_NOERROR)
         return;
 
@@ -259,7 +261,7 @@ SetVolumeValue(PGLOBAL_DATA pGlobalData,
         else
         {
             pGlobalData->volumeCurrentValues[i].dwValue =
-                pGlobalData->volumePreviousValues[i].dwValue * dwVolume / pGlobalData-> maxVolume;
+                pGlobalData->volumePreviousValues[i].dwValue * dwVolume / pGlobalData->maxVolume;
         }
     }
 
@@ -331,14 +333,14 @@ VOID
 InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     UINT NumMixers;
-    MIXERCAPS mxc;
-    TCHAR szNoDevices[256];
+    MIXERCAPSW mxc;
+    WCHAR szNoDevices[256];
 
-    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
+    LoadStringW(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+    SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
+    SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
 
     NumMixers = mixerGetNumDevs();
     if (!NumMixers)
@@ -351,21 +353,21 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconNoHW);
-        SetDlgItemText(hwndDlg, IDC_DEVICE_NAME, szNoDevices);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconNoHW);
+        SetDlgItemTextW(hwndDlg, IDC_DEVICE_NAME, szNoDevices);
         return;
     }
 
     if (mixerOpen(&pGlobalData->hMixer, 0, PtrToUlong(hwndDlg), 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
     {
-        MessageBox(hwndDlg, _T("Cannot open mixer"), NULL, MB_OK);
+        MessageBoxW(hwndDlg, L"Cannot open mixer", NULL, MB_OK);
         return;
     }
 
-    ZeroMemory(&mxc, sizeof(MIXERCAPS));
-    if (mixerGetDevCaps(PtrToUint(pGlobalData->hMixer), &mxc, sizeof(MIXERCAPS)) != MMSYSERR_NOERROR)
+    ZeroMemory(&mxc, sizeof(MIXERCAPSW));
+    if (mixerGetDevCapsW(PtrToUint(pGlobalData->hMixer), &mxc, sizeof(MIXERCAPSW)) != MMSYSERR_NOERROR)
     {
-        MessageBox(hwndDlg, _T("mixerGetDevCaps failed"), NULL, MB_OK);
+        MessageBoxW(hwndDlg, L"mixerGetDevCaps failed", NULL, MB_OK);
         return;
     }
 
@@ -377,20 +379,20 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     GetMuteState(pGlobalData);
     if (pGlobalData->muteVal)
     {
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
     }
     else
     {
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
     }
 
     GetVolumeControl(pGlobalData);
     GetVolumeValue(pGlobalData, TRUE);
 
-    SendDlgItemMessage(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, 0, (LPARAM)mxc.szPname);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
+    SendDlgItemMessageW(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, 0, (LPARAM)mxc.szPname);
+    SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
 }
 
 VOID
@@ -408,7 +410,7 @@ LaunchSoundControl(HWND hwndDlg)
 {
     if ((INT_PTR)ShellExecuteW(NULL, L"open", L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL) > 32)
         return;
-    MessageBox(hwndDlg, _T("Cannot run sndvol32.exe"), NULL, MB_OK);
+    MessageBoxW(hwndDlg, L"Cannot run sndvol32.exe", NULL, MB_OK);
 }
 
 /* Volume property page dialog callback */
@@ -421,42 +423,40 @@ VolumeDlgProc(HWND hwndDlg,
 {
     static IMGINFO ImgInfo;
     PGLOBAL_DATA pGlobalData;
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
 
-    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case MM_MIXM_LINE_CHANGE:
         {
             GetMuteState(pGlobalData);
             if (pGlobalData->muteVal)
             {
-                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
             }
             else
             {
-                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
-                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+                SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
             }
             break;
         }
         case MM_MIXM_CONTROL_CHANGE:
         {
             GetVolumeValue(pGlobalData, FALSE);
-            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
+            SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
             break;
         }
         case WM_INITDIALOG:
         {
-            pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+            pGlobalData = (PGLOBAL_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            pGlobalData->hIconUnMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-            pGlobalData->hIconMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_MUTED_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-            pGlobalData->hIconNoHW = LoadImage(hApplet, MAKEINTRESOURCE(IDI_NO_HW), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            pGlobalData->hIconUnMuted = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            pGlobalData->hIconMuted = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_MUTED_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            pGlobalData->hIconNoHW = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_NO_HW), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 
             InitImageInfo(&ImgInfo);
             InitVolumeControls(hwndDlg, pGlobalData);
@@ -466,8 +466,8 @@ VolumeDlgProc(HWND hwndDlg,
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-            if(lpDrawItem->CtlID == IDC_SPEAKIMG)
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
+            if (lpDrawItem->CtlID == IDC_SPEAKIMG)
             {
                 HDC hdcMem;
                 LONG left;
@@ -504,11 +504,11 @@ VolumeDlgProc(HWND hwndDlg,
                         SwitchMuteState(pGlobalData);
                         if (pGlobalData->muteVal)
                         {
-                            SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+                            SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
                         }
                         else
                         {
-                            SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
+                            SendDlgItemMessageW(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
                         }
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -544,12 +544,12 @@ VolumeDlgProc(HWND hwndDlg,
                         break;
 
                     case TB_ENDTRACK:
-                        PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ALIAS_ID | SND_ASYNC);
+                        PlaySoundW((LPCWSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ALIAS_ID | SND_ASYNC);
                         break;
 
                     default:
                         SetVolumeValue(pGlobalData,
-                                       (DWORD)SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_GETPOS, 0, 0));
+                                       (DWORD)SendDlgItemMessageW(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_GETPOS, 0, 0));
                         break;
                 }
             }
