@@ -10,7 +10,7 @@
 #include "layout_list.h"
 #include "locale_list.h"
 #include "input_list.h"
-
+#include <shellapi.h>
 
 static HICON
 CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
@@ -134,8 +134,21 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     {
         HICON hLayoutIcon;
 
-        hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator,
-                                       (pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT));
+        if (IS_IME_HKL(pInputNode->hkl) && pInputNode->pLayout->pszImeFile)
+        {
+            WCHAR szPath[MAX_PATH];
+            GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), pInputNode->pLayout->pszImeFile);
+
+            /* Load the IME icon */
+            ExtractIconExW(szPath, 0, NULL, &hLayoutIcon, 1);
+            if (hLayoutIcon == NULL)
+                hLayoutIcon = LoadIconW(NULL, IDI_APPLICATION);
+        }
+        else
+        {
+            hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator,
+                                           (pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT));
+        }
 
         if (hLayoutIcon != NULL)
         {
@@ -147,10 +160,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     ZeroMemory(&item, sizeof(item));
 
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
-    if (IS_IME_HKL(pInputNode->hkl))
-        item.pszText = pInputNode->pLayout->pszName;
-    else
-        item.pszText = pInputNode->pLocale->pszName;
+    item.pszText = pInputNode->pLocale->pszName;
     item.iItem   = ListView_GetItemCount(hwndList);
     item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;

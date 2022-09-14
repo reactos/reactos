@@ -41,6 +41,13 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     return TRUE;
 }
 
+VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
+{
+    WCHAR szSysDir[MAX_PATH];
+    GetSystemDirectoryW(szSysDir, ARRAYSIZE(szSysDir));
+    StringCchPrintfW(pszPath, cchPath, L"%s\\%s", szSysDir, pszFileName);
+}
+
 BOOL
 InputList_SetFontSubstitutes(LCID dwLocaleId)
 {

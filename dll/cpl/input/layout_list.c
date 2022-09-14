@@ -50,7 +50,7 @@ LayoutList_AppendNode(DWORD dwKLID, WORD wSpecialId, LPCWSTR pszFile, LPCWSTR ps
     }
     else
     {
-        while (pCurrent->pNext)
+        while (pCurrent->pNext != NULL)
         {
             pCurrent = pCurrent->pNext;
         }
@@ -160,12 +160,21 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
 
     if (IS_IME_KLID(dwKLID))
     {
+        WCHAR szPath[MAX_PATH];
         dwSize = sizeof(szImeFile);
         if (RegQueryValueExW(hLayoutKey, L"IME File", NULL, NULL,
                              (LPBYTE)szImeFile, &dwSize) != ERROR_SUCCESS)
         {
             return FALSE; /* No "IME File" value */
         }
+
+        if (wcschr(szImeFile, L'\\') != NULL)
+            return FALSE; /* Invalid character */
+
+        GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), szImeFile);
+        if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES)
+            return FALSE; /* Does not exist */
+
         pszImeFile = szImeFile;
     }
 
@@ -269,7 +278,7 @@ LayoutList_GetByHkl(HKL hkl)
     {
         for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
-            if (LANGIDFROMHKL(hkl) == LANGIDFROMKLID(pCurrent->dwKLID))
+            if (LAYOUTLANGIDFROMHKL(hkl) == LANGIDFROMKLID(pCurrent->dwKLID))
             {
                 return pCurrent;
             }
