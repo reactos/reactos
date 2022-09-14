@@ -542,7 +542,7 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
     }
     else
     {
-        pNode->wFlags = INPUT_LIST_NODE_FLAG_DELETED;
+        pNode->wFlags |= INPUT_LIST_NODE_FLAG_DELETED;
     }
 
     if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
@@ -557,7 +557,7 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
         }
     }
 
-    if (bRemoveNode != FALSE)
+    if (bRemoveNode)
     {
         InputList_RemoveNode(pNode);
     }
