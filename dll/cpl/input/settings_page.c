@@ -398,8 +398,8 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
                 INT iSelected = ListView_GetNextItem(header->hwndFrom, -1, LVNI_SELECTED);
                 SetControlsState(hwndDlg, (iSelected != -1));
             }
-            break;
         }
+        break;
 
         case PSN_APPLY:
         {

@@ -23,9 +23,7 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     static const WCHAR pszKey[] =
         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes";
 
-    hKey = NULL;
-    RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszKey, 0, KEY_ALL_ACCESS, &hKey);
-    if (hKey == NULL)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszKey, 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
     /* Overwrite only */
@@ -37,7 +35,6 @@ BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
     }
 
     RegCloseKey(hKey);
-
     return TRUE;
 }
 
@@ -142,28 +139,27 @@ InputList_AppendNode(VOID)
     INPUT_LIST_NODE *pCurrent;
     INPUT_LIST_NODE *pNew;
 
-    pCurrent = _InputList;
-
     pNew = (INPUT_LIST_NODE*)malloc(sizeof(INPUT_LIST_NODE));
     if (pNew == NULL)
         return NULL;
 
     ZeroMemory(pNew, sizeof(INPUT_LIST_NODE));
 
-    if (pCurrent == NULL)
+    if (_InputList == NULL) /* Empty? */
     {
         _InputList = pNew;
+        return pNew;
     }
-    else
-    {
-        while (pCurrent->pNext != NULL)
-        {
-            pCurrent = pCurrent->pNext;
-        }
 
-        pNew->pPrev = pCurrent;
-        pCurrent->pNext = pNew;
+    /* Find last node */
+    for (pCurrent = _InputList; pCurrent->pNext; pCurrent = pCurrent->pNext)
+    {
+        ;
     }
+
+    /* Add to the end */
+    pCurrent->pNext = pNew;
+    pNew->pPrev = pCurrent;
 
     return pNew;
 }
@@ -200,20 +196,17 @@ VOID
 InputList_Destroy(VOID)
 {
     INPUT_LIST_NODE *pCurrent;
+    INPUT_LIST_NODE *pNext;
 
     if (_InputList == NULL)
         return;
 
-    pCurrent = _InputList;
-
-    while (pCurrent != NULL)
+    for (pCurrent = _InputList; pCurrent; pCurrent = pNext)
     {
-        INPUT_LIST_NODE *pNext = pCurrent->pNext;
+        pNext = pCurrent->pNext;
 
         free(pCurrent->pszIndicator);
         free(pCurrent);
-
-        pCurrent = pNext;
     }
 
     _InputList = NULL;
@@ -224,7 +217,7 @@ static BOOL
 InputList_PrepareUserRegistry(PHKEY phPreloadKey, PHKEY phSubstKey)
 {
     BOOL bResult = FALSE;
-    HKEY hKey = NULL;
+    HKEY hKey;
 
     *phPreloadKey = *phSubstKey = NULL;
 
@@ -301,7 +294,7 @@ InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey,
     DWORD iTrial;
     BOOL bSubstNeeded = (dwPhysicalKLID != dwLogicalKLID) || (HIWORD(dwPhysicalKLID) != 0);
 
-    for (iTrial = 0; iTrial < 1000; ++iTrial)
+    for (iTrial = 1; iTrial <= 1000; ++iTrial)
     {
         if (!InputList_FindPreloadKLID(hPreloadKey, dwLogicalKLID)) /* Not found? */
         {
@@ -322,7 +315,8 @@ InputList_DoSubst(HKEY hPreloadKey, HKEY hSubstKey,
         }
         else
         {
-            WORD wLow = LOWORD(dwLogicalKLID), wHigh = HIWORD(dwLogicalKLID);
+            WORD wLow = LOWORD(dwLogicalKLID);
+            WORD wHigh = HIWORD(dwLogicalKLID);
             dwLogicalKLID = MAKELONG(wLow, wHigh + 1);
         }
     }
@@ -366,12 +360,12 @@ InputList_AddInputMethodToUserRegistry(
                    cbValue);
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
-        (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED) ||
-        (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
+        (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
         UINT uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL;
         if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             uFlags |= KLF_REPLACELANG;
+
         pNode->hkl = LoadKeyboardLayoutW(szLogicalKLID, uFlags);
     }
 }
@@ -397,24 +391,24 @@ InputList_Process(VOID)
         return FALSE;
     }
 
-    /* Process deleted and edited input methods */
+    /* Process DELETED and EDITED entries */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED) ||
             (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
-            if (UnloadKeyboardLayout(pCurrent->hkl))
+            /* Only unload the deleted or edited entries */
+            UnloadKeyboardLayout(pCurrent->hkl);
+
+            /* But do not delete the non-deleted-flagged entries from the list */
+            if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
             {
-                /* Only unload the edited input method, but does not delete it from the list */
-                if (!(pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
-                {
-                    InputList_RemoveNode(pCurrent);
-                }
+                InputList_RemoveNode(pCurrent);
             }
         }
     }
 
-    /* Find default input method */
+    /* Add the DEFAULT entry and set font substitutes */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
@@ -425,6 +419,7 @@ InputList_Process(VOID)
         }
     }
 
+    /* Change the default keyboard language */
     if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
     {
         DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
@@ -436,7 +431,7 @@ InputList_Process(VOID)
                                 (LPARAM)pCurrent->hkl);
     }
 
-    /* Add methods to registry */
+    /* Add entries except DEFAULT to registry */
     dwNumber = 2;
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
@@ -446,6 +441,12 @@ InputList_Process(VOID)
         InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, dwNumber, pCurrent);
 
         ++dwNumber;
+    }
+
+    /* Remove ADDED and EDITED flags */
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        pCurrent->wFlags &= ~(INPUT_LIST_NODE_FLAG_ADDED | INPUT_LIST_NODE_FLAG_EDITED);
     }
 
     RegCloseKey(hPreloadKey);
@@ -469,14 +470,13 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
     {
         if (pInput->pLocale == pLocale && pInput->pLayout == pLayout)
         {
-            return FALSE;
+            return FALSE; /* Already exists */
         }
     }
 
     pInput = InputList_AppendNode();
 
     pInput->wFlags = INPUT_LIST_NODE_FLAG_ADDED;
-
     pInput->pLocale = pLocale;
     pInput->pLayout = pLayout;
 
