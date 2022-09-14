@@ -794,6 +794,11 @@ IntLoadKeyboardLayout(
             if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
                                  &dwSize) != ERROR_SUCCESS)
             {
+                bIsIME = FALSE;
+                wHigh = 0;
+            }
+            else
+            {
                 WCHAR szPath[MAX_PATH];
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
                 if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
