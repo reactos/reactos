@@ -6,26 +6,26 @@
 
 /*
  * INPUT_LIST_NODE_FLAG_EDITED
- * --- The edited entry. Since previous time, this entry is modified.
+ * --- The modification flag. Since previous time, this entry is modified.
  */
 #define INPUT_LIST_NODE_FLAG_EDITED    0x0001
 
 /*
  * INPUT_LIST_NODE_FLAG_ADDED
- * --- Newly-added entry. Since previous time, this entry is added.
+ * --- The addition flag. Since previous time, this entry is newly added.
  */
 #define INPUT_LIST_NODE_FLAG_ADDED     0x0002
 
 /*
  * INPUT_LIST_NODE_FLAG_DELETED
- * --- Deleted or to-be-deleted entry.
- *     The application should ignore this entry if necessary.
+ * --- The deletion flag.
+ *     The application should ignore the entry with this flag if necessary.
  */
 #define INPUT_LIST_NODE_FLAG_DELETED   0x0004
 
 /*
  * INPUT_LIST_NODE_FLAG_DEFAULT
- * --- The default entry. The entry that has this flag should be single.
+ * --- The default flag. The entry with this flag should be single in the list.
  */
 #define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
