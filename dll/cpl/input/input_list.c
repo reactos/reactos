@@ -450,7 +450,7 @@ InputList_Process(VOID)
                                 (LPARAM)pCurrent->hkl);
     }
 
-    /* Retry to delete (if unable to delete the default keyboard) */
+    /* Retry to delete (in case of failure to delete the default keyboard) */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
