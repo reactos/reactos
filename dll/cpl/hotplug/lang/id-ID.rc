@@ -1,7 +1,7 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
-CAPTION "Hapus perangkat keras dengan aman"
+CAPTION ""
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -27,4 +27,13 @@ BEGIN
         MENUITEM "Stop", IDM_STOP
         MENUITEM "Properties", IDM_PROPERTIES
     END
+END
+
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Hapus perangkat keras dengan aman"
+    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
 END

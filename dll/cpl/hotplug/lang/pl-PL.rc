@@ -1,7 +1,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
-CAPTION "Bezpieczne usuwanie sprzętu"
+CAPTION ""
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -27,4 +27,13 @@ BEGIN
         MENUITEM "Zatrzymaj", IDM_STOP
         MENUITEM "Właściwości", IDM_PROPERTIES
     END
+END
+
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Bezpieczne usuwanie sprzętu"
+    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
 END
