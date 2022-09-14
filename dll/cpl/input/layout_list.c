@@ -214,7 +214,7 @@ LayoutList_ReadLayout(HKEY hLayoutKey, LPCWSTR szKLID, LPCWSTR szSystemDirectory
 VOID
 LayoutList_Create(VOID)
 {
-    WCHAR szSystemDirectory[MAX_PATH], szKLID[MAX_PATH];
+    WCHAR szSystemDirectory[MAX_PATH], szKLID[KL_NAMELENGTH];
     DWORD dwSize, dwIndex;
     HKEY hKey, hLayoutKey;
 
