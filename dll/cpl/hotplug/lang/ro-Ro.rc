@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Safely Remove Hardware Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+ 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
