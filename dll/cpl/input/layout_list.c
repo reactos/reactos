@@ -87,7 +87,7 @@ LayoutList_Destroy(VOID)
 
 typedef HRESULT (WINAPI *FN_SHLoadRegUIStringW)(HKEY, LPCWSTR, LPWSTR, DWORD);
 
-/* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it had fully implemented */
+/* FIXME: Use shlwapi!SHLoadRegUIStringW instead when it is fully implemented */
 HRESULT FakeSHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
 {
 #if 1
