@@ -821,7 +821,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "L'élément '%1' ne peut être envoyé à la Corbeille. Voulez-vous le supprimer ?"
     IDS_OVERWRITEFILE_TEXT "Ce dossier contient déjà un fichier nommé '%1'.\n\nVoulez-vous le remplacer ?"
     IDS_OVERWRITEFILE_CAPTION "Confirmer l'écrasement du fichier"
-    IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\ndossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\nle dossier?"
+    IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le dossier sélectionné, ils seront remplacés.\nVoulez-vous toujours déplacer ou copier le dossier?"
 
     IDS_FILEOOP_COPYING "Copie..."
     IDS_FILEOOP_MOVING "Déplacement..."
