@@ -649,7 +649,6 @@ HardwareDlgProc(HWND hwndDlg,
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -847,7 +846,6 @@ DllMain(HINSTANCE hinstDLL,
         LPVOID lpReserved)
 {
     UNREFERENCED_PARAMETER(lpReserved);
-    
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:

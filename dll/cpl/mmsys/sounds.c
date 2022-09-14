@@ -892,7 +892,6 @@ FreeSoundFiles(HWND hwndDlg)
         }
 
         pSoundPath = (PWCHAR)lResult;
-        
         free(pSoundPath);
     }
 }

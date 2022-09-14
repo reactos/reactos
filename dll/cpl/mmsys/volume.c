@@ -170,7 +170,6 @@ GetVolumeControl(PGLOBAL_DATA pGlobalData)
     mxlc.cControls = 1;
     mxlc.cbmxctrl = sizeof(MIXERCONTROLW);
     mxlc.pamxctrl = &mxc;
-    
     if (mixerGetLineControlsW((HMIXEROBJ)pGlobalData->hMixer, &mxlc, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE)
         != MMSYSERR_NOERROR)
         return;
