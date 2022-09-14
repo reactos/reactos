@@ -398,12 +398,13 @@ InputList_Process(VOID)
             (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
             /* Only unload the deleted or edited entries */
-            UnloadKeyboardLayout(pCurrent->hkl);
-
-            /* But do not delete the non-deleted-flagged entries from the list */
-            if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            if (UnloadKeyboardLayout(pCurrent->hkl))
             {
-                InputList_RemoveNode(pCurrent);
+                /* But do not delete the non-deleted-flagged entries from the list */
+                if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+                {
+                    InputList_RemoveNode(pCurrent);
+                }
             }
         }
     }
@@ -417,18 +418,6 @@ InputList_Process(VOID)
             InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, 1, pCurrent);
             break;
         }
-    }
-
-    /* Change the default keyboard language */
-    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
-    {
-        DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
-
-        BroadcastSystemMessageW(BSF_POSTMESSAGE,
-                                &dwRecipients,
-                                WM_INPUTLANGCHANGEREQUEST,
-                                0,
-                                (LPARAM)pCurrent->hkl);
     }
 
     /* Add entries except DEFAULT to registry */
@@ -447,6 +436,28 @@ InputList_Process(VOID)
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         pCurrent->wFlags &= ~(INPUT_LIST_NODE_FLAG_ADDED | INPUT_LIST_NODE_FLAG_EDITED);
+    }
+
+    /* Change the default keyboard language */
+    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
+    {
+        DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
+
+        BroadcastSystemMessageW(BSF_POSTMESSAGE,
+                                &dwRecipients,
+                                WM_INPUTLANGCHANGEREQUEST,
+                                0,
+                                (LPARAM)pCurrent->hkl);
+    }
+
+    /* Retry to delete (if unable to delete the default keyboard) */
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+        {
+            UnloadKeyboardLayout(pCurrent->hkl);
+            InputList_RemoveNode(pCurrent);
+        }
     }
 
     RegCloseKey(hPreloadKey);
