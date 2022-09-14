@@ -39,22 +39,13 @@ static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
     // NOTE: This callback is needed to set large icon correctly.
-    // FIXME: Handle leaks
-    HICON hIcon, hIconSmall;
+    HICON hIcon;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
             hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-
-            hIconSmall = (HICON)LoadImageW(hApplet,
-                                           MAKEINTRESOURCEW(IDI_CPLSYSTEM),
-                                           IMAGE_ICON,
-                                           GetSystemMetrics(SM_CXSMICON),
-                                           GetSystemMetrics(SM_CYSMICON),
-                                           0);
-            SendMessageW(hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
             break;
         }
     }
@@ -96,9 +87,9 @@ LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     CPLINFO *CPlInfo;
-    DWORD i;
+    int i;
 
-    i = (DWORD)lParam1;
+    i = (int)lParam1;
 
     switch (uMsg)
     {
