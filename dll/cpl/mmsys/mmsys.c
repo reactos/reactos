@@ -89,11 +89,12 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
                            UINT uNumberOfGuids,
                            HWPAGE_DISPLAYMODE DisplayMode);
 
-typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(_In_opt_ HWND hwndParent,
-                                                              _In_ LPCWSTR HardwareId,
-                                                              _In_ LPCWSTR FullInfPath,
-                                                              _In_ DWORD InstallFlags,
-                                                              _Out_opt_ PBOOL bRebootRequired);
+typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(
+    _In_opt_ HWND hwndParent,
+    _In_ LPCWSTR HardwareId,
+    _In_ LPCWSTR FullInfPath,
+    _In_ DWORD InstallFlags,
+    _Out_opt_ PBOOL bRebootRequired);
 
 #define UPDATEDRIVERFORPLUGANDPLAYDEVICES "UpdateDriverForPlugAndPlayDevicesW"
 #define NUM_APPLETS    (1)
