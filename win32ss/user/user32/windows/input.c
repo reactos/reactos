@@ -143,6 +143,69 @@ Failure:
     return FALSE;
 }
 
+
+/* Win: LoadPreloadKeyboardLayouts */
+VOID IntLoadPreloadKeyboardLayouts(VOID)
+{
+    UINT nNumber, uFlags;
+    DWORD cbValue, dwType;
+    WCHAR szNumber[32], szValue[KL_NAMELENGTH];
+    HKEY hPreloadKey;
+    BOOL bOK = FALSE;
+    HKL hKL, hDefaultKL = NULL;
+
+    if (RegOpenKeyW(HKEY_CURRENT_USER,
+                    L"Keyboard Layout\\Preload",
+                    &hPreloadKey) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    for (nNumber = 1; nNumber <= 1000; ++nNumber)
+    {
+        _ultow(nNumber, szNumber, 10);
+
+        cbValue = sizeof(szValue);
+        if (RegQueryValueExW(hPreloadKey,
+                             szNumber,
+                             NULL,
+                             &dwType,
+                             (LPBYTE)szValue,
+                             &cbValue) != ERROR_SUCCESS)
+        {
+            break;
+        }
+
+        if (dwType != REG_SZ)
+            continue;
+
+        if (nNumber == 1) /* The first entry is for default keyboard layout */
+            uFlags = KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET;
+        else
+            uFlags = KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL | KLF_REPLACELANG;
+
+        hKL = LoadKeyboardLayoutW(szValue, uFlags);
+        if (hKL)
+        {
+            bOK = TRUE;
+            if (nNumber == 1) /* The first entry */
+                hDefaultKL = hKL;
+        }
+    }
+
+    RegCloseKey(hPreloadKey);
+
+    if (hDefaultKL)
+        SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hDefaultKL, 0);
+
+    if (!bOK)
+    {
+        /* Fallback to English (US) */
+        LoadKeyboardLayoutW(L"00000409", KLF_SUBSTITUTE_OK | KLF_ACTIVATE | KLF_RESET);
+    }
+}
+
+
 BOOL APIENTRY
 CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bDelete)
 {

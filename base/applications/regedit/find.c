@@ -32,7 +32,7 @@ static BOOL s_bAbort;
 
 static DWORD s_dwFlags;
 static WCHAR s_szName[MAX_PATH];
-static DWORD s_cbName;
+static DWORD s_cchName;
 static const WCHAR s_empty[] = L"";
 static const WCHAR s_backslash[] = L"\\";
 
@@ -174,8 +174,8 @@ BOOL RegFindRecurse(
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(WCHAR);
-        lResult = RegEnumValueW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cchName = _countof(s_szName);
+        lResult = RegEnumValueW(hSubKey, i, s_szName, &s_cchName, NULL, NULL,
                                NULL, &cb);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -184,7 +184,7 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
+        if (s_cchName >= _countof(s_szName))
             continue;
 
         ppszNames[i] = _wcsdup(s_szName);
@@ -267,8 +267,8 @@ BOOL RegFindRecurse(
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(WCHAR);
-        lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cchName = _countof(s_szName);
+        lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cchName, NULL, NULL,
                                NULL, NULL);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -277,7 +277,7 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
+        if (s_cchName >= _countof(s_szName))
             continue;
 
         ppszNames[i] = _wcsdup(s_szName);
@@ -416,8 +416,8 @@ BOOL RegFindWalk(
             if (DoEvents())
                 goto err;
 
-            s_cbName = MAX_PATH * sizeof(WCHAR);
-            lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName,
+            s_cchName = _countof(s_szName);
+            lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cchName,
                                     NULL, NULL, NULL, NULL);
             if (lResult == ERROR_NO_MORE_ITEMS)
             {

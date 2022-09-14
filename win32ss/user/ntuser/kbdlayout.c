@@ -556,6 +556,26 @@ UserHklToKbl(HKL hKl)
     return NULL;
 }
 
+// Win: ReorderKeyboardLayouts
+VOID FASTCALL
+IntReorderKeyboardLayouts(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PKL pNewKL)
+{
+    PKL pOldKL = gspklBaseLayout;
+
+    if ((pWinSta->Flags & WSS_NOIO) || pNewKL == pOldKL)
+        return;
+
+    pNewKL->pklPrev->pklNext = pNewKL->pklNext;
+    pNewKL->pklNext->pklPrev = pNewKL->pklPrev;
+    pNewKL->pklNext = pOldKL;
+    pNewKL->pklPrev = pOldKL->pklPrev;
+    pOldKL->pklPrev->pklNext = pNewKL;
+    pOldKL->pklPrev = pNewKL;
+    gspklBaseLayout = pNewKL; /* Should we use UserAssignmentLock? */
+}
+
 /*
  * UserSetDefaultInputLang
  *
@@ -571,7 +591,7 @@ UserSetDefaultInputLang(HKL hKl)
     if (!pKl)
         return FALSE;
 
-    gspklBaseLayout = pKl;
+    IntReorderKeyboardLayouts(IntGetProcessWindowStation(NULL), pKl);
     return TRUE;
 }
 
@@ -739,26 +759,6 @@ co_UserActivateKeyboardLayout(
     if (pOldKL)
         UserDerefObjectCo(pOldKL);
     return hOldKL;
-}
-
-// Win: ReorderKeyboardLayouts
-VOID FASTCALL
-IntReorderKeyboardLayouts(
-    _Inout_ PWINSTATION_OBJECT pWinSta,
-    _Inout_ PKL pNewKL)
-{
-    PKL pOldKL = gspklBaseLayout;
-
-    if ((pWinSta->Flags & WSS_NOIO) || pNewKL == pOldKL)
-        return;
-
-    pNewKL->pklPrev->pklNext = pNewKL->pklNext;
-    pNewKL->pklNext->pklPrev = pNewKL->pklPrev;
-    pNewKL->pklNext = pOldKL;
-    pNewKL->pklPrev = pOldKL->pklPrev;
-    pOldKL->pklPrev->pklNext = pNewKL;
-    pOldKL->pklPrev = pNewKL;
-    gspklBaseLayout = pNewKL; /* Should we use UserAssignmentLock? */
 }
 
 /* Win: xxxActivateKeyboardLayout */
