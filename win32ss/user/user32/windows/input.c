@@ -729,7 +729,7 @@ IntLoadKeyboardLayout(
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
 {
-    DWORD dwHKL, dwType, dwSize;
+    DWORD dwKLID, dwHKL, dwType, dwSize;
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
@@ -745,11 +745,11 @@ IntLoadKeyboardLayout(
         return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
     }
 
-    dwHKL = wcstoul(pwszKLID, NULL, 16);
-    bIsIME = IS_IME_HKL(UlongToHandle(dwHKL));
+    dwKLID = wcstoul(pwszKLID, NULL, 16);
+    bIsIME = IS_IME_HKL(UlongToHandle(dwKLID));
 
-    wLow = LOWORD(dwHKL);
-    wHigh = HIWORD(dwHKL);
+    wLow = LOWORD(dwKLID);
+    wHigh = HIWORD(dwKLID);
 
     if (Flags & KLF_SUBSTITUTE_OK)
     {
@@ -764,8 +764,8 @@ IntLoadKeyboardLayout(
             {
                 /* Use new KLID value */
                 pwszKLID = wszNewKLID;
-                dwHKL = wcstoul(pwszKLID, NULL, 16);
-                wHigh = LOWORD(dwHKL);
+                dwKLID = wcstoul(pwszKLID, NULL, 16);
+                wHigh = LOWORD(dwKLID);
             }
 
             /* Close the key now */

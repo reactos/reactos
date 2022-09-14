@@ -278,7 +278,7 @@ LayoutList_GetByHkl(HKL hkl)
     {
         for (pCurrent = _LayoutList; pCurrent != NULL; pCurrent = pCurrent->pNext)
         {
-            if (LAYOUTLANGIDFROMHKL(hkl) == LANGIDFROMKLID(pCurrent->dwKLID))
+            if (HIWORD(hkl) == LOWORD(pCurrent->dwKLID))
             {
                 return pCurrent;
             }

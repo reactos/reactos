@@ -87,13 +87,10 @@ DWORDfromString(const WCHAR *pszString)
 
 #define IS_IME_HKL(hKL)             ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
 #define IS_SPECIAL_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define LANGIDFROMHKL(hKL)          LOWORD(hKL)
-#define LAYOUTLANGIDFROMHKL(hKL)    HIWORD(hKL)
 #define SPECIALIDFROMHKL(hKL)       ((WORD)(HIWORD(hKL) & 0x0FFF))
 
 #define IS_IME_KLID(dwKLID)         ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
 #define IS_SUBST_KLID(dwKLID)       ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
-#define LANGIDFROMKLID(dwKLID)      LOWORD(dwKLID)
 
 VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
 
