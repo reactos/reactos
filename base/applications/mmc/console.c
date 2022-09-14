@@ -342,7 +342,6 @@ FrameOnCommand(HWND hwnd,
             {
                 hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
                 ShellAbout(hwnd, lpTitle, NULL, hIcon);
-                DestroyIcon(hIcon);
                 LocalFree(lpTitle);
             }
             break;
