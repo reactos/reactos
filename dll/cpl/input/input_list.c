@@ -250,7 +250,7 @@ static BOOL
 InputList_FindPreloadKLID(HKEY hPreloadKey, DWORD dwKLID)
 {
     DWORD dwNumber, dwType, cbValue;
-    WCHAR szNumber[16], szValue[16], szKLID[16];
+    WCHAR szNumber[16], szValue[KL_NAMELENGTH], szKLID[KL_NAMELENGTH];
 
     StringCchPrintfW(szKLID, ARRAYSIZE(szKLID), L"%08x", dwKLID);
 
@@ -334,7 +334,7 @@ InputList_AddInputMethodToUserRegistry(
     DWORD dwNumber,
     INPUT_LIST_NODE *pNode)
 {
-    WCHAR szNumber[32], szLogicalKLID[16];
+    WCHAR szNumber[32], szLogicalKLID[KL_NAMELENGTH];
     DWORD dwPhysicalKLID, dwLogicalKLID, cbValue;
     HKL hKL = pNode->hkl;
 
