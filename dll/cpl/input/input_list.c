@@ -583,25 +583,13 @@ InputList_Create(VOID)
         return;
     }
 
-    {
-        WCHAR sz[54];
-        StringCchPrintfW(sz, ARRAYSIZE(sz), L"%d", iLayoutCount);
-        MessageBoxW(NULL, sz, NULL, 0);
-    }
-
     for (iIndex = 0; iIndex < iLayoutCount; ++iIndex)
     {
         HKL hKL = pLayoutList[iIndex];
         LOCALE_LIST_NODE *pLocale = LocaleList_GetByHkl(hKL);
         LAYOUT_LIST_NODE *pLayout = LayoutList_GetByHkl(hKL);
         if (!pLocale || !pLayout)
-        {
-            if (!pLocale)
-                MessageBoxA(NULL, "!pLocale", NULL, 0);
-            if (!pLayout)
-                MessageBoxA(NULL, "!pLayout", NULL, 0);
             continue;
-        }
 
         pInput = InputList_AppendNode();
         pInput->pLocale = pLocale;
