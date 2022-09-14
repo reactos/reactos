@@ -171,7 +171,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 static VOID
 UpdateInputListView(HWND hwndList)
 {
-    INPUT_LIST_NODE *pCurrentInputNode;
+    INPUT_LIST_NODE *pNode;
     HIMAGELIST hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
     INT iSelected = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
@@ -182,14 +182,12 @@ UpdateInputListView(HWND hwndList)
 
     ListView_DeleteAllItems(hwndList);
 
-    for (pCurrentInputNode = InputList_GetFirst();
-         pCurrentInputNode != NULL;
-         pCurrentInputNode = pCurrentInputNode->pNext)
+    for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
     {
-        if (!(pCurrentInputNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED))
-        {
-            AddToInputListView(hwndList, pCurrentInputNode);
-        }
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        AddToInputListView(hwndList, pNode);
     }
 
     if (iSelected != -1)
@@ -198,6 +196,8 @@ UpdateInputListView(HWND hwndList)
         item.state = item.stateMask = LVIS_SELECTED;
         ListView_SetItem(hwndList, &item);
     }
+
+    InvalidateRect(hwndList, NULL, TRUE);
 }
 
 

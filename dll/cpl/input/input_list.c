@@ -397,10 +397,10 @@ InputList_Process(VOID)
         if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED) ||
             (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
-            /* Only unload the deleted or edited entries */
+            /* Only unload the DELETED and EDITED entries */
             if (UnloadKeyboardLayout(pCurrent->hkl))
             {
-                /* But do not delete the non-deleted-flagged entries from the list */
+                /* But the EDITED entries are used later */
                 if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
                 {
                     InputList_RemoveNode(pCurrent);
@@ -412,6 +412,9 @@ InputList_Process(VOID)
     /* Add the DEFAULT entry and set font substitutes */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
         {
             bRet = InputList_SetFontSubstitutes(pCurrent->pLocale->dwId);
@@ -424,6 +427,8 @@ InputList_Process(VOID)
     dwNumber = 2;
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
         if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             continue;
 
@@ -470,7 +475,7 @@ BOOL
 InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
 {
     WCHAR szIndicator[MAX_STR_LEN];
-    INPUT_LIST_NODE *pInput;
+    INPUT_LIST_NODE *pInput = NULL;
 
     if (pLocale == NULL || pLayout == NULL)
     {
@@ -479,6 +484,9 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
 
     for (pInput = _InputList; pInput != NULL; pInput = pInput->pNext)
     {
+        if (pInput->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
         if (pInput->pLocale == pLocale && pInput->pLayout == pLayout)
         {
             return FALSE; /* Already exists */
@@ -486,7 +494,6 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
     }
 
     pInput = InputList_AppendNode();
-
     pInput->wFlags = INPUT_LIST_NODE_FLAG_ADDED;
     pInput->pLocale = pLocale;
     pInput->pLayout = pLayout;
