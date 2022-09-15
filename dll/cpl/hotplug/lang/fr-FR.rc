@@ -1,0 +1,39 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
+CAPTION ""
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HOTPLUG, IDC_SAFE_REMOVE_ICON, 7, 10, 20, 20
+    LTEXT "Sélectionnez le périphérique que vous voulez déconnecter ou éjecter, puis cliquez sur Arrêter. Lorsque ReactOS vous en informera, vous pourrez déconnecter le périphérique de votre ordinateur en toute sécurité.", IDC_STATIC, 36, 8, 234, 32, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Périphériques:", IDC_STATIC, 7, 42, 248, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
+    CONTROL "", IDC_SAFE_REMOVE_DEVICE_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 52, 264, 102
+    LTEXT "", IDC_SAFE_REMOVE_TEXT, 7, 156, 264, 16, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "&Propriétés", IDC_SAFE_REMOVE_PROPERTIES, 158, 178, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Arrêter", IDC_SAFE_REMOVE_STOP, 216, 178, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    CONTROL "", IDC_STATIC, "static", SS_CENTER | SS_SUNKEN | WS_CHILD | WS_VISIBLE, 7, 200, 264, 1
+    AUTOCHECKBOX "&Afficher les composants de périphériques", IDC_SAFE_REMOVE_DISPLAY_COMPONENTS, 7, 208, 145, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Fermer", IDCLOSE, 216, 224, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+
+/* Menus */
+
+IDM_POPUP_DEVICE_TREE MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Arrêter", IDM_STOP
+        MENUITEM "Propriétés", IDM_PROPERTIES
+    END
+END
+
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Retirer un périphérique en toute sécurité"
+    IDS_CPLDESCRIPTION "Déconnecter ou éjecter un périphérique de votre ordinateur en sécurité."
+END
