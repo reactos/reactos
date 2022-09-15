@@ -1579,6 +1579,13 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     m_cidl = m_ListView.GetSelectedCount();
 
+    /* Release cached IContextMenu */
+    if (m_pCM)
+    {
+        IUnknown_SetSite(m_pCM, NULL);
+        m_pCM.Release();
+    }
+
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
