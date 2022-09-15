@@ -313,7 +313,6 @@ FrameOnCommand(HWND hwnd,
     PCONSOLE_MAINFRAME_WND Info;
     HWND hChild;
     LPTSTR lpTitle;
-    HICON hIcon;
 
     Info = (PCONSOLE_MAINFRAME_WND)GetWindowLongPtr(hwnd, 0);
 
