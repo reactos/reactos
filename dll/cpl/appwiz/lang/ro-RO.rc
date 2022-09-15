@@ -1,7 +1,8 @@
 /*
  * FILE:             dll/cpl/appwiz/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot com)
+ * TRANSLATOR:       Andrei Miloiu
+                     Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -88,8 +89,8 @@ BEGIN
     IDS_DWL_FAILED "Descărcarea pachetului Gecko a eșuat. Asigurați-vă că aveți conexiune la internet pentru a putea descărca. Asistentul va continua fără a instala pachetul Gecko."
     IDS_CANTMAKEINETSHORTCUT "Eșec în crearea scurtăturii la Internet."
     IDS_CANTMAKESHORTCUT "Eșec în crearea scurtăturii."
-    IDS_NO_MEMORY "No memory could be allocated!"
-    IDS_NO_DIRECTORY "No directory given!"
-    IDS_INVALID_PATH "The given path is invalid!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_NO_MEMORY "Nu s-a putut aloca memorie!"
+    IDS_NO_DIRECTORY "Nu a fost dat niciun director!"
+    IDS_INVALID_PATH "Calea dată este invalidă!"
+    IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere invalide pentru numele fișierelor, fie era prea lung."
 END
