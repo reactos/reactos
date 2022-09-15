@@ -340,8 +340,8 @@ FrameOnCommand(HWND hwnd,
         case IDM_HELP_ABOUT:
             if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
             {
-                hIcon = LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
-                ShellAbout(hwnd, lpTitle, NULL, hIcon);
+                ShellAbout(hwnd, lpTitle, NULL,
+                           LoadIcon(hAppInstance, MAKEINTRESOURCEW(IDI_MAINAPP));
                 LocalFree(lpTitle);
             }
             break;
