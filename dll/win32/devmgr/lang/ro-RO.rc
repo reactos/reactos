@@ -1,5 +1,6 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ * Translators: Andrei Miloiu
+                Petru Dimitriu (petrimetri at gmail dot com)
  *              Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
@@ -19,17 +20,17 @@ BEGIN
     IDS_ENABLEDEVICE "Folosește acest dispozitiv (activare)"
     IDS_DISABLEDEVICE "Nu folosi acest dispozitiv (dezactivare)"
     IDS_UNKNOWNDEVICE "Dispozitiv necunoscut"
-    IDS_NODRIVERLOADED "Pentru acest dispozitiv nu sunt instalate modúle-pilot."
+    IDS_NODRIVERLOADED "Pentru acest dispozitiv nu sunt instalate module-pilot."
     IDS_DEVONPARENT "pe %1"
     IDS_TROUBLESHOOTDEV "&Depanare…"
     IDS_ENABLEDEV "A&ctivare"
     IDS_REINSTALLDRV "Reinstalea&ză modulul-pilot"
     IDS_PROPERTIES "P&roprietăți"
-    IDS_UPDATEDRV "A&ctualizare modúl-pilot…"
+    IDS_UPDATEDRV "A&ctualizează modulul-pilot…"
     IDS_REBOOT "Repornire &calculator…"
     IDS_NOTAVAILABLE "Indisponibil"
     IDS_NOTDIGITALLYSIGNED "Nesemnat digital"
-    IDS_NODRIVERS "Fie nu sunt necesare modúle-pilot, fie nu a fost încărcat niciunul."
+    IDS_NODRIVERS "Fie nu sunt necesare module-pilot, fie nu a fost încărcat niciunul."
     IDS_RESOURCE_COLUMN "Tip de resursă"
     IDS_SETTING_COLUMN "Configurație"
     IDS_RESOURCE_MEMORY_RANGE "Domeniu de memorie"
@@ -52,7 +53,7 @@ BEGIN
     IDS_DEV_FAILED_FILTER "Modulele-pilot pentru acest dispozitiv necesită reinstalare."
     IDS_DEV_DEVLOADER_NOT_FOUND "Acest dispozitiv nu funcționează corect deoarece nu poate fi pornit mecanismul (ce conține fișierul %1) necesar pentru încărcarea modulelor-pilot."
     IDS_DEV_DEVLOADER_NOT_FOUND2 "Acest dispozitiv nu funcționează corect deoare fișierul %1 care încarcă modulele-pilot pentru acest dispozitiv, este deteriorat."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Defecțiune dispozitiv: Încercați alte modúle-pilot pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Defecțiune dispozitiv: Încercați alte module-pilot pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
     IDS_DEV_INVALID_DATA "Acest dispozitiv nu funcționează corect, deoarece BIOS din calculator nu raportează corect resursele dispozitivului."
     IDS_DEV_INVALID_DATA2 "Acest dispozitiv nu funcționează corect, deoarece BIOS din dispozitiv nu raportează corect resursele dispozitivului. "
     IDS_DEV_FAILED_START "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
@@ -165,7 +166,7 @@ END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Modúle-pilot"
+CAPTION "Module-pilot"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -185,12 +186,12 @@ BEGIN
     PUSHBUTTON "&Restabilește", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
     LTEXT "Dacă dispozitivul manifestă disfuncții după actualizarea modulului-pilot, restabiliți o versiune precedentă.", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "De&zinstalează", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "Pentru a dezinstala un modúl-pilot (opțiuni avansate).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    LTEXT "Pentru a dezinstala un modul-pilot (opțiuni avansate).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detalii modúl-pilot"
+CAPTION "Detaliile modulului-pilot"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -201,7 +202,7 @@ BEGIN
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "Furnizor:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Versiune fișier:", -1, 14, 150, 50, 8
+    LTEXT "Versiunea fișierului:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Drept de autor:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -247,14 +248,14 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "Confirmați eliminarea dispozitivului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    LTEXT "Avertisment: Urmează să dezinstalați acest dispozitiv din sistemul dvs.", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 166, 100, 50, 14
 END
 
 
@@ -298,7 +299,7 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Actualizare modúl-pilot…"
+  IDS_MENU_UPDATE           "Actualizează modulul-pilot…"
   IDS_MENU_ENABLE           "Activează"
   IDS_MENU_DISABLE          "Dezactivează"
   IDS_MENU_UNINSTALL        "Dezinstalează"
@@ -313,7 +314,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "Scanează configurația fizică"
   IDS_TOOLTIP_ENABLE        "Activează"
   IDS_TOOLTIP_DISABLE       "Dezactivează"
-  IDS_TOOLTIP_UPDATE        "Actualizează modúl-pilot…"
+  IDS_TOOLTIP_UPDATE        "Actualizează modulul-pilot…"
   IDS_TOOLTIP_UNINSTALL     "Dezinstalează"
 END
 
@@ -321,12 +322,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Inspectare proprietăți pentru selecția curentă."
+  IDS_HINT_PROPERTIES   " Inspectarea proprietăților pentru selecția curentă."
   IDS_HINT_SCAN         " Scanare pentru depistarea schimbărilor în configurația sistemului."
   IDS_HINT_ENABLE       " Activare dispozitiv selectat."
   IDS_HINT_DISABLE      " Dezactivare dispozitiv selectat."
   IDS_HINT_UPDATE       " Lansare asistent de actualizare a modulului-pilot pentru dispozitivul selestat."
-  IDS_HINT_UNINSTALL    " Dezinstalare modúl-pilot pentru dispozitivul selectat."
+  IDS_HINT_UNINSTALL    " Dezinstalare modul-pilot pentru dispozitivul selectat."
   IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator."
   IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
   IDS_HINT_EXIT         " Ieșire din program."
