@@ -1223,7 +1223,7 @@ Language=English
 Cannot create another system semaphore.
 .
 Language=Russian
-Не удается создать еще один системный семафор.
+Не удается создать ещё один системный семафор.
 .
 Language=Polish
 Nie można utworzyć innego semafora systemowego.
@@ -2124,7 +2124,7 @@ Language=English
 Cannot create another thread.
 .
 Language=Russian
-Не удается создать еще один поток команд.
+Не удается создать ещё один поток команд.
 .
 Language=Polish
 Nie można utworzyć innego wątku.
@@ -9740,7 +9740,7 @@ Language=English
 An address has not yet been associated with the network endpoint.
 .
 Language=Russian
-Конечной точке сети еще не сопоставлен адрес.
+Конечной точке сети ещё не сопоставлен адрес.
 .
 Language=Polish
 Adres nie został jeszcze skojarzony z punktem końcowym sieci.
@@ -10369,7 +10369,7 @@ Language=English
 The system detected a possible attempt to compromise security. Please ensure that you can contact the server that authenticated you.
 .
 Language=Russian
-Системе не удается установить связь с контроллером домена, чтобы обработать запрос на проверку подлинности. Попробуйте еще раз позже.
+Системе не удается установить связь с контроллером домена, чтобы обработать запрос на проверку подлинности. Попробуйте ещё раз позже.
 .
 Language=Polish
 System wykrył możliwe zagrożenie bezpieczeństwa. Upewnij się, że możesz skontaktować się z serwerem, który Cię uwierzytelnił.
