@@ -71,11 +71,11 @@ static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
 {
     WINDOWPOSBACKUPDATA wposdata;
     HWND hDesk = GetDesktopWindow();
-    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && (hwnd != hDesk))
+    if (IsWindowVisible(hwnd) && !IsIconic(hwnd) && (hwnd != hDesk))
     {
         wposdata.hwnd = hwnd;
         wposdata.wplt.length = sizeof(wposdata.wplt);
-        ::GetWindowPlacement(hwnd, &(wposdata.wplt));
+        GetWindowPlacement(hwnd, &(wposdata.wplt));
         g_WindowPosBackup.Add(wposdata);
     }
 
@@ -91,7 +91,7 @@ VOID RestoreWindowPos()
 {
     for (INT i = g_WindowPosBackup.GetSize() - 1; i >= 0; --i)
     {
-        ::SetWindowPlacement(g_WindowPosBackup[i].hwnd, &(g_WindowPosBackup[i].wplt));
+        SetWindowPlacement(g_WindowPosBackup[i].hwnd, &(g_WindowPosBackup[i].wplt));
     }
     g_WindowPosBackup.RemoveAll();
 }
