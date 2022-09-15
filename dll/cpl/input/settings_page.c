@@ -11,7 +11,6 @@
 #include "locale_list.h"
 #include "input_list.h"
 
-
 static HICON
 CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
 {
@@ -112,23 +111,37 @@ CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
 
 
 static VOID
-SetControlsState(HWND hwndDlg, BOOL bIsEnabled)
+SetControlsState(HWND hwndDlg)
 {
-    EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bIsEnabled);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON), bIsEnabled);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), bIsEnabled);
-}
+    HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+    INT iSelected = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+    INT nCount = ListView_GetItemCount(hwndList);
+    BOOL bCanRemove = (iSelected != -1) && (nCount >= 2);
+    BOOL bCanDefault = (iSelected != -1) && (nCount >= 2);
+    BOOL bCanProp = (iSelected != -1);
 
+    LV_ITEM item = { LVIF_PARAM, iSelected };
+    if (ListView_GetItem(hwndList, &item))
+    {
+        INPUT_LIST_NODE *pInput = (INPUT_LIST_NODE*)item.lParam;
+
+        if (pInput && (pInput->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
+        {
+            bCanDefault = FALSE;
+        }
+    }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bCanRemove);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON), bCanProp);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), bCanDefault);
+}
 
 static VOID
 AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 {
-    INT ItemIndex = -1;
-    INT ImageIndex = -1;
+    INT ItemIndex, ImageIndex = -1;
     LV_ITEM item;
-    HIMAGELIST hImageList;
-
-    hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
+    HIMAGELIST hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
 
     if (hImageList != NULL)
     {
@@ -136,7 +149,6 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 
         hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator,
                                        (pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT));
-
         if (hLayoutIcon != NULL)
         {
             ImageIndex = ImageList_AddIcon(hImageList, hLayoutIcon);
@@ -145,13 +157,11 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     }
 
     ZeroMemory(&item, sizeof(item));
-
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     item.pszText = pInputNode->pLocale->pszName;
-    item.iItem   = ListView_GetItemCount(hwndList) + 1;
+    item.iItem   = ListView_GetItemCount(hwndList);
     item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;
-
     ItemIndex = ListView_InsertItem(hwndList, &item);
 
     ListView_SetItemText(hwndList, ItemIndex, 1, pInputNode->pLayout->pszName);
@@ -161,51 +171,54 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 static VOID
 UpdateInputListView(HWND hwndList)
 {
-    INPUT_LIST_NODE *pCurrentInputNode;
-    HIMAGELIST hImageList;
+    INPUT_LIST_NODE *pNode;
+    HIMAGELIST hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
+    INT iSelected = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-    hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
-    if (hImageList != NULL)
+    if (hImageList)
     {
         ImageList_RemoveAll(hImageList);
     }
 
     ListView_DeleteAllItems(hwndList);
 
-    for (pCurrentInputNode = InputList_GetFirst();
-         pCurrentInputNode != NULL;
-         pCurrentInputNode = pCurrentInputNode->pNext)
+    for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
     {
-        if (!(pCurrentInputNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED))
-        {
-            AddToInputListView(hwndList, pCurrentInputNode);
-        }
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        AddToInputListView(hwndList, pNode);
     }
+
+    if (iSelected != -1)
+    {
+        INT nCount = ListView_GetItemCount(hwndList);
+        LV_ITEM item = { LVIF_STATE };
+        item.state = item.stateMask = LVIS_SELECTED;
+        item.iItem = ((nCount == iSelected) ? nCount - 1 : iSelected);
+        ListView_SetItem(hwndList, &item);
+    }
+
+    InvalidateRect(hwndList, NULL, TRUE);
 }
 
 
 static VOID
 OnInitSettingsPage(HWND hwndDlg)
 {
-    HWND hwndInputList;
+    HWND hwndInputList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
     LayoutList_Create();
     LocaleList_Create();
     InputList_Create();
 
-    hwndInputList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-
     if (hwndInputList != NULL)
     {
         WCHAR szBuffer[MAX_STR_LEN];
         HIMAGELIST hLayoutImageList;
-        LV_COLUMN column;
+        LV_COLUMN column = { LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM };
 
         ListView_SetExtendedListViewStyle(hwndInputList, LVS_EX_FULLROWSELECT);
-
-        ZeroMemory(&column, sizeof(column));
-
-        column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
         LoadStringW(hApplet, IDS_LANGUAGE, szBuffer, ARRAYSIZE(szBuffer));
         column.fmt      = LVCFMT_LEFT;
@@ -233,7 +246,7 @@ OnInitSettingsPage(HWND hwndDlg)
         UpdateInputListView(hwndInputList);
     }
 
-    SetControlsState(hwndDlg, FALSE);
+    SetControlsState(hwndDlg);
 }
 
 
@@ -259,6 +272,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                            AddDialogProc) == IDOK)
             {
                 UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
+                SetControlsState(hwndDlg);
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
         }
@@ -266,21 +280,17 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_REMOVE_BUTTON:
         {
-            HWND hwndList;
-
-            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-
-            if (hwndList != NULL)
+            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+            if (hwndList)
             {
-                LVITEM item = { 0 };
-
-                item.mask = LVIF_PARAM;
+                LVITEM item = { LVIF_PARAM };
                 item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-                if (ListView_GetItem(hwndList, &item) != FALSE)
+                if (ListView_GetItem(hwndList, &item))
                 {
                     InputList_Remove((INPUT_LIST_NODE*) item.lParam);
                     UpdateInputListView(hwndList);
+                    SetControlsState(hwndDlg);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
@@ -289,18 +299,13 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_PROP_BUTTON:
         {
-            HWND hwndList;
-
-            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-
-            if (hwndList != NULL)
+            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+            if (hwndList)
             {
-                LVITEM item = { 0 };
-
-                item.mask = LVIF_PARAM;
+                LVITEM item = { LVIF_PARAM };
                 item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-                if (ListView_GetItem(hwndList, &item) != FALSE)
+                if (ListView_GetItem(hwndList, &item))
                 {
                     if (DialogBoxParamW(hApplet,
                                         MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
@@ -309,6 +314,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                                         item.lParam) == IDOK)
                     {
                         UpdateInputListView(hwndList);
+                        SetControlsState(hwndDlg);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                 }
@@ -318,21 +324,17 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_SET_DEFAULT:
         {
-            HWND hwndList;
-
-            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-
-            if (hwndList != NULL)
+            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+            if (hwndList)
             {
-                LVITEM item = { 0 };
-
-                item.mask = LVIF_PARAM;
+                LVITEM item = { LVIF_PARAM };
                 item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-                if (ListView_GetItem(hwndList, &item) != FALSE)
+                if (ListView_GetItem(hwndList, &item))
                 {
                     InputList_SetDefault((INPUT_LIST_NODE*) item.lParam);
                     UpdateInputListView(hwndList);
+                    SetControlsState(hwndDlg);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
@@ -350,73 +352,18 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
     }
 }
 
-BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable)
-{
-    HANDLE hToken;
-    LUID luid;
-    TOKEN_PRIVILEGES tokenPrivileges;
-    BOOL Ret;
-
-    Ret = OpenProcessToken(GetCurrentProcess(),
-                           TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-                           &hToken);
-    if (!Ret)
-        return Ret;     // failure
-
-    Ret = LookupPrivilegeValueW(NULL, lpPrivilegeName, &luid);
-    if (Ret)
-    {
-        tokenPrivileges.PrivilegeCount = 1;
-        tokenPrivileges.Privileges[0].Luid = luid;
-        tokenPrivileges.Privileges[0].Attributes = bEnable ? SE_PRIVILEGE_ENABLED : 0;
-
-        Ret = AdjustTokenPrivileges(hToken, FALSE, &tokenPrivileges, 0, 0, 0);
-    }
-
-    CloseHandle(hToken);
-    return Ret;
-}
-
 static VOID
 OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 {
-    LPNMHDR header;
-
-    header = (LPNMHDR)lParam;
+    LPNMHDR header = (LPNMHDR)lParam;
 
     switch (header->code)
     {
-        case NM_CLICK:
+        case LVN_ITEMCHANGED:
         {
             if (header->idFrom == IDC_KEYLAYOUT_LIST)
             {
-                INT iSelected = ListView_GetNextItem(header->hwndFrom, -1, LVNI_SELECTED);
-
-                if (iSelected != -1)
-                {
-                    LVITEM item = { 0 };
-
-                    SetControlsState(hwndDlg, TRUE);
-
-                    item.mask = LVIF_PARAM;
-                    item.iItem = iSelected;
-
-                    if (ListView_GetItem(header->hwndFrom, &item) != FALSE)
-                    {
-                        INPUT_LIST_NODE *pInput;
-
-                        pInput = (INPUT_LIST_NODE*) item.lParam;
-
-                        if (pInput != NULL && pInput->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
-                        {
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), FALSE);
-                        }
-                    }
-                }
-                else
-                {
-                    SetControlsState(hwndDlg, FALSE);
-                }
+                SetControlsState(hwndDlg);
             }
         }
         break;
@@ -424,20 +371,7 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
         case PSN_APPLY:
         {
             /* Write Input Methods list to registry */
-            if (InputList_Process())
-            {
-                /* Needs reboot */
-                WCHAR szNeedsReboot[128], szLanguage[64];
-                LoadStringW(hApplet, IDS_REBOOT_NOW, szNeedsReboot, _countof(szNeedsReboot));
-                LoadStringW(hApplet, IDS_LANGUAGE, szLanguage, _countof(szLanguage));
-
-                if (MessageBoxW(hwndDlg, szNeedsReboot, szLanguage,
-                                MB_ICONINFORMATION | MB_YESNOCANCEL) == IDYES)
-                {
-                    EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
-                    ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
-                }
-            }
+            InputList_Process();
         }
         break;
     }

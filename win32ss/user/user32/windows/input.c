@@ -706,6 +706,13 @@ inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
     return (pwszKLID != NULL) && (wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == (KL_NAMELENGTH - 1));
 }
 
+VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
+{
+    WCHAR szSysDir[MAX_PATH];
+    GetSystemDirectoryW(szSysDir, _countof(szSysDir));
+    StringCchPrintfW(pszPath, cchPath, L"%s\\%s", szSysDir, pszFileName);
+}
+
 #define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
 
 /*
@@ -722,15 +729,15 @@ IntLoadKeyboardLayout(
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
 {
-    DWORD dwhkl, dwType, dwSize;
+    DWORD dwKLID, dwHKL, dwType, dwSize;
     UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
     WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
-    PWCHAR endptr;
     HKL hNewKL;
     HKEY hKey;
     BOOL bIsIME;
+    WORD wLow, wHigh;
 
     if (!IsValidKLID(pwszKLID))
     {
@@ -738,13 +745,11 @@ IntLoadKeyboardLayout(
         return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
     }
 
-    dwhkl = wcstoul(pwszKLID, &endptr, 16);
+    dwKLID = wcstoul(pwszKLID, NULL, 16);
+    bIsIME = IS_IME_HKL(UlongToHandle(dwKLID));
 
-    bIsIME = IS_IME_HKL(UlongToHandle(dwhkl));
-    if (!bIsIME) /* Not IME? */
-    {
-        dwhkl = LOWORD(dwhkl); /* LOWORD of dwhkl is language identifier */
-    }
+    wLow = LOWORD(dwKLID);
+    wHigh = HIWORD(dwKLID);
 
     if (Flags & KLF_SUBSTITUTE_OK)
     {
@@ -753,10 +758,14 @@ IntLoadKeyboardLayout(
                           KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             dwSize = sizeof(wszNewKLID);
-            if (RegQueryValueExW(hKey, pwszKLID, NULL, &dwType, (LPBYTE)wszNewKLID, &dwSize) == ERROR_SUCCESS)
+            if (RegQueryValueExW(hKey, pwszKLID, NULL, &dwType, (LPBYTE)wszNewKLID,
+                                 &dwSize) == ERROR_SUCCESS &&
+                dwType == REG_SZ)
             {
                 /* Use new KLID value */
                 pwszKLID = wszNewKLID;
+                dwKLID = wcstoul(pwszKLID, NULL, 16);
+                wHigh = LOWORD(dwKLID);
             }
 
             /* Close the key now */
@@ -771,14 +780,11 @@ IntLoadKeyboardLayout(
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(wszLayoutId);
-        if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId, &dwSize) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId,
+                             &dwSize) == ERROR_SUCCESS && dwType == REG_SZ)
         {
             /* If Layout Id is specified, use this value | f000 as HIWORD */
-            /* FIXME: Microsoft Office expects this value to be something specific
-             * for Japanese and Korean Windows with an IME the value is 0xe001
-             */
-            if (!bIsIME)
-                dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+            wHigh = (0xF000 | wcstoul(wszLayoutId, NULL, 16));
         }
 
         if (bIsIME)
@@ -788,9 +794,18 @@ IntLoadKeyboardLayout(
             if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
                                  &dwSize) != ERROR_SUCCESS)
             {
-                FIXME("Check IME file existence in system32\n");
                 bIsIME = FALSE;
-                dwhkl = LOWORD(dwhkl);
+                wHigh = 0;
+            }
+            else
+            {
+                WCHAR szPath[MAX_PATH];
+                GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
+                if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
+                {
+                    bIsIME = FALSE;
+                    wHigh = 0;
+                }
             }
         }
 
@@ -803,13 +818,14 @@ IntLoadKeyboardLayout(
         return NULL;
     }
 
-    /* If Layout Id is not given HIWORD == LOWORD (for dwhkl) */
-    if (!HIWORD(dwhkl))
-        dwhkl |= dwhkl << 16;
+    if (wHigh == 0)
+        wHigh = wLow;
+
+    dwHKL = MAKELONG(wLow, wHigh);
 
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwhkl, Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwHKL, Flags);
     CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
     return hNewKL;
 }
