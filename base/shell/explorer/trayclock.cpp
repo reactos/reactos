@@ -426,8 +426,6 @@ UINT CTrayClockWnd::CalculateDueTime()
 
     GetLocalTime(&LocalTime);
     uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-    if (!g_TaskbarSettings.bShowSeconds)
-        uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
     return uiDueTime;
 }
@@ -469,16 +467,8 @@ VOID CTrayClockWnd::CalibrateTimer()
 
     uiDueTime = CalculateDueTime();
 
-    if (g_TaskbarSettings.bShowSeconds)
-    {
-        uiWait1 = 1000 - 200;
-        uiWait2 = 1000;
-    }
-    else
-    {
-        uiWait1 = 60 * 1000 - 200;
-        uiWait2 = 60 * 1000;
-    }
+    uiWait1 = 1000 - 200;
+    uiWait2 = 1000;
 
     if (uiDueTime > uiWait1)
     {
