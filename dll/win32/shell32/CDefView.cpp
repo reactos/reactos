@@ -1678,18 +1678,18 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
         SFGAOF rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
         hResult = m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &rfg);
         if (FAILED_UNEXPECTEDLY(hResult))
-            return 0;
+            goto cleanup;
 
         if (!(rfg & SFGAO_CANMOVE) && uCommand == FCIDM_SHVIEW_CUT)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANCOPY) && uCommand == FCIDM_SHVIEW_COPY)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANDELETE) && uCommand == FCIDM_SHVIEW_DELETE)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANRENAME) && uCommand == FCIDM_SHVIEW_RENAME)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_HASPROPSHEET) && uCommand == FCIDM_SHVIEW_PROPERTIES)
-            return 0;
+            goto cleanup;
     }
 
     InvokeContextMenuCommand(uCommand);
