@@ -801,7 +801,11 @@ IntLoadKeyboardLayout(
             {
                 WCHAR szPath[MAX_PATH];
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
-                if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
+
+                /* We don't allow the invalid "IME File" values for security reason */
+                if (dwType != REG_SZ || szImeFileName[0] == 0 ||
+                    wcsspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
+                    GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
                 {
                     bIsIME = FALSE;
                     wHigh = 0;
