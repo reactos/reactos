@@ -281,10 +281,6 @@ CPlApplet(HWND hwndCPl,
             {
                 return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             }
-            else
-            {
-                return FALSE;
-            }
             break;
     }
 
