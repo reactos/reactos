@@ -800,6 +800,7 @@ IntLoadKeyboardLayout(
             else
             {
                 WCHAR szPath[MAX_PATH];
+                szImeFileName[_countof(szImeFileName) - 1] = UNICODE_NULL;
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
 
                 /* We don't allow the invalid "IME File" values for security reason */
