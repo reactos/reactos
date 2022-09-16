@@ -203,7 +203,7 @@ CPlApplet(HWND hwndCPl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    INT i = (INT)lParam1;
+    UINT i = (UINT)lParam1;
 
     UNREFERENCED_PARAMETER(hwndCPl);
 
@@ -216,7 +216,7 @@ CPlApplet(HWND hwndCPl,
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-            if (0 <= i && i < NUM_APPLETS)
+            if (i < NUM_APPLETS)
             {
                  CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                  CPlInfo->lData = 0;
@@ -231,14 +231,14 @@ CPlApplet(HWND hwndCPl,
             break;
 
         case CPL_DBLCLK:
-            if (0 <= i && i < NUM_APPLETS)
+            if (i < NUM_APPLETS)
                 Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             else
                 return TRUE;
             break;
 
         case CPL_STARTWPARMSW:
-            if (0 <= i && i < NUM_APPLETS)
+            if (i < NUM_APPLETS)
                 return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
     }

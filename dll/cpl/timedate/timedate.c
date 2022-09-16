@@ -131,7 +131,7 @@ CPlApplet(HWND hwndCpl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    INT i = (INT)lParam1;
+    UINT i = (UINT)lParam1;
 
     switch (uMsg)
     {
@@ -142,7 +142,7 @@ CPlApplet(HWND hwndCpl,
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-            if (0 <= i && i < NUM_APPLETS)
+            if (i < NUM_APPLETS)
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
@@ -157,7 +157,7 @@ CPlApplet(HWND hwndCpl,
             break;
 
         case CPL_DBLCLK:
-            if (0 <= i && i < NUM_APPLETS)
+            if (i < NUM_APPLETS)
                 Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
             else
                 return TRUE;
