@@ -1,6 +1,16 @@
 #include "intl.h"
 
 #include <shellapi.h>
+#include <shlobj.h>
+
+/* Is there any Japanese input method? */
+BOOL HasJapaneseIME(VOID)
+{
+    WCHAR szImePath[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szImePath, CSIDL_PROGRAM_FILES, FALSE);
+    lstrcatW(szImePath, L"\\mzimeja\\mzimeja.ime");
+    return GetFileAttributesW(szImePath) != INVALID_FILE_ATTRIBUTES;
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -25,6 +35,24 @@ LanguagesPageProc(HWND hwndDlg,
                 EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_RTOL_LANG), FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
             }
+
+            /* EAST ASIAN specific */
+            switch (PRIMARYLANGID(GetUserDefaultLangID()))
+            {
+                case LANG_JAPANESE:
+                    if (HasJapaneseIME())
+                    {
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
+                        CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
+                    }
+                    break;
+
+                case LANG_CHINESE: /* Not supported yet */
+                case LANG_KOREAN: /* Not supported yet */
+                default:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
+                    break;
+            }
             break;
 
         case WM_COMMAND:
@@ -46,6 +74,43 @@ LanguagesPageProc(HWND hwndDlg,
                         }
                     }
                     break;
+
+                case IDC_INST_FILES_FOR_ASIAN:
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            {
+                /* Apply changes */
+                if (IsDlgButtonChecked(hwndDlg, IDC_INST_FILES_FOR_ASIAN) == BST_CHECKED)
+                {
+                    /* EAST ASIAN specific */
+                    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+                    {
+                        case LANG_JAPANESE:
+                            if (HasJapaneseIME())
+                            {
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
+                                CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
+                            }
+                            else
+                            {
+                                ShellExecuteW(hwndDlg, NULL, L"rapps.com", L"/INSTALL mzimeja",
+                                              NULL, SW_SHOWNORMAL);
+                            }
+                            break;
+
+                        case LANG_CHINESE: /* Not supported yet */
+                        case LANG_KOREAN: /* Not supported yet */
+                        default:
+                            break;
+                    }
+                }
+
+                PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
             }
             break;
     }
