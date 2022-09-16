@@ -89,8 +89,8 @@ BEGIN
     IDS_DWL_FAILED "Descărcarea pachetului Gecko a eșuat. Asigurați-vă că aveți conexiune la internet pentru a putea descărca. Asistentul va continua fără a instala pachetul Gecko."
     IDS_CANTMAKEINETSHORTCUT "Eșec în crearea scurtăturii la Internet."
     IDS_CANTMAKESHORTCUT "Eșec în crearea scurtăturii."
-    IDS_NO_MEMORY "Nu s-a putut aloca memorie!"
+    IDS_NO_MEMORY "Nu a putut fi alocată memorie!"
     IDS_NO_DIRECTORY "Nu a fost dat niciun director!"
-    IDS_INVALID_PATH "Calea dată este invalidă!"
-    IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere invalide pentru numele fișierelor, fie era prea lung."
+    IDS_INVALID_PATH "Calea dată este nevalidă!"
+    IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere nevalide pentru numele fișierelor, fie era prea lung."
 END
