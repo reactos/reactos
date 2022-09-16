@@ -548,6 +548,7 @@ CPlApplet(
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
+            if (0 <= i && i < NUM_APPLETS)
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
@@ -555,14 +556,29 @@ CPlApplet(
                 CPlInfo->idName = Applets[i].idName;
                 CPlInfo->idInfo = Applets[i].idDescription;
             }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (0 <= i && i < NUM_APPLETS)
+            {
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_STARTWPARMSW:
-            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (0 <= i && i < NUM_APPLETS)
+            {
+                return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            }
+            return FALSE;
     }
     return FALSE;
 }
