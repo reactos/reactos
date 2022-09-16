@@ -360,12 +360,7 @@ static BOOL IsRebootNeeded(VOID)
     {
         if (IS_IME_HKL(pNode->hkl)) /* IME? */
         {
-            if (pNode->wFlags & (INPUT_LIST_NODE_FLAG_ADDED |
-                                 INPUT_LIST_NODE_FLAG_EDITED |
-                                 INPUT_LIST_NODE_FLAG_DEFAULT))
-            {
-                return TRUE;
-            }
+            return TRUE;
         }
     }
 
