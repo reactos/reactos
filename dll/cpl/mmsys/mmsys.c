@@ -772,16 +772,9 @@ CPlApplet(HWND hwndCpl,
 
         case CPL_DBLCLK:
             if (i < NUM_APPLETS)
-            {
-                Applets[i].AppletProc(hwndCpl,
-                                      uMsg,
-                                      lParam1,
-                                      lParam2);
-            }
+                Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
             else
-            {
                 return TRUE;
-            }
             break;
 
         case CPL_STARTWPARMSW:
