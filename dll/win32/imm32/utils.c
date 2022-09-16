@@ -909,7 +909,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
         RegCloseKey(hkeyIME);
 
         /* We don't allow the invalid "IME File" values for security reason */
-        if (!szImeFileName[0] || wcschr(szImeFileName, L'\\') != NULL)
+        if (!szImeFileName[0] || wcsspn(szImeFileName, L":\\/") != wcslen(szImeFileName))
             break;
 
         Imm32StrToUInt(szImeKey, &Value, 16);
