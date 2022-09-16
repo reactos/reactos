@@ -103,6 +103,9 @@ typedef struct
 	HFONT font;			/* NULL means standard system font */
 	INT x_offset;			/* scroll offset	for multi lines this is in pixels
 								for single lines it's in characters */
+#ifdef __REACTOS__
+    DWORD dwCaretWidth;
+#endif
 	INT line_height;		/* height of a screen line in pixels */
 	INT char_width;			/* average character width in pixels */
 	DWORD style;			/* sane version of wnd->dwStyle */
@@ -3691,6 +3694,9 @@ static void EDIT_WM_SetFocus(HTHEME theme, EDITSTATE *es)
     if (!(es->style & ES_NOHIDESEL))
         EDIT_InvalidateText(es, es->selection_start, es->selection_end);
 
+#ifdef __REACTOS__
+    SystemParametersInfo(SPI_GETCARETWIDTH, 0, &es->dwCaretWidth, 0);
+#endif
     CreateCaret(es->hwndSelf, 0, 1, es->line_height);
     EDIT_SetCaretPos(es, es->selection_end, es->flags & EF_AFTER_WRAP);
     ShowCaret(es->hwndSelf);
