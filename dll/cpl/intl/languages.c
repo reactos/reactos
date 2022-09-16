@@ -1,13 +1,14 @@
 #include "intl.h"
 
 #include <shellapi.h>
+#include <strsafe.h>
 
 /* Is there any Japanese input method? */
 BOOL HasJapaneseIME(VOID)
 {
     WCHAR szImePath[MAX_PATH];
     GetSystemDirectoryW(szImePath, _countof(szImePath));
-    lstrcatW(szImePath, L"\\mzimeja.ime");
+    StringCchCatW(szImePath, _countof(szImePath), L"\\mzimeja.ime");
     return GetFileAttributesW(szImePath) != INVALID_FILE_ATTRIBUTES;
 }
 
