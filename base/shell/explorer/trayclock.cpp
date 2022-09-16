@@ -417,29 +417,31 @@ VOID CTrayClockWnd::UpdateWnd()
 BOOL SameTime(SYSTEMTIME a, SYSTEMTIME b)
 {
     /*
-    no need to look for other members
-    only consequence is only at worst a single extra redraw
-    for corner cases (best performance option)
+    no need to look for milliseconds nor seconds (only used if second not displayed)
     */
-    if(a.wHour != b.wHour)
-        return FALSE;
-    if(a.wMinute != b.wMinute)
-        return FALSE;
-    if(a.wSecond != b.wSecond)
-        return FALSE;
-    return TRUE;
+    
+    return (a.wMinute == b.wMinute) &&
+           (a.wHour == b.wHour) &&
+           (a.wDay == b.wDay) &&
+           (a.wMonth == b.wMonth) &&
+           (a.wYear == b.wYear);
 }
 
 VOID CTrayClockWnd::Update()
 {
     static SYSTEMTIME LocalTime_old;
+    static BOOL bShowSeconds_old;
     
     GetLocalTime(&LocalTime);
-    if (SameTime(LocalTime, LocalTime_old) && !g_TaskbarSettings.bShowSeconds)
+    
+    /* if seconds not displayed and time (w/o secs) and date unchanged, no need to update
+    but force update if switching from hh:mm:ss to hh:mm*/
+    if (SameTime(LocalTime, LocalTime_old) && !g_TaskbarSettings.bShowSeconds && !bShowSeconds_old)
         return;
-
+    
     UpdateWnd();
     LocalTime_old = LocalTime;
+    bShowSeconds_old = g_TaskbarSettings.bShowSeconds;
 }
 
 UINT CTrayClockWnd::CalculateDueTime()
