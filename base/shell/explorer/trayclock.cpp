@@ -414,10 +414,32 @@ VOID CTrayClockWnd::UpdateWnd()
     delete[] szDate;
 }
 
+BOOL SameTime(SYSTEMTIME a, SYSTEMTIME b)
+{
+    /*
+    no need to look for other members
+    only consequence is only at worst a single extra redraw
+    for corner cases (best performance option)
+    */
+    if(a.wHour != b.wHour)
+        return FALSE;
+    if(a.wMinute != b.wMinute)
+        return FALSE;
+    if(a.wSecond != b.wSecond)
+        return FALSE;
+    return TRUE;
+}
+
 VOID CTrayClockWnd::Update()
 {
+    static SYSTEMTIME LocalTime_old;
+    
     GetLocalTime(&LocalTime);
+    if (SameTime(LocalTime, LocalTime_old) && !g_TaskbarSettings.bShowSeconds)
+        return;
+
     UpdateWnd();
+    LocalTime_old = LocalTime;
 }
 
 UINT CTrayClockWnd::CalculateDueTime()
