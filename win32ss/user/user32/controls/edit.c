@@ -3910,8 +3910,10 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
 
 #ifdef __REACTOS__
     SystemParametersInfo(SPI_GETCARETWIDTH, 0, &es->dwCaretWidth, 0);
-#endif
+    CreateCaret(es->hwndSelf, NULL, es->dwCaretWidth, es->line_height);
+#else
 	CreateCaret(es->hwndSelf, 0, 1, es->line_height);
+#endif
 	EDIT_SetCaretPos(es, es->selection_end,
 			 es->flags & EF_AFTER_WRAP);
 	ShowCaret(es->hwndSelf);
@@ -3962,7 +3964,11 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		EDIT_UpdateText(es, NULL, TRUE);
 	if (es->flags & EF_FOCUSED) {
 		DestroyCaret();
+#ifdef __REACTOS__
+		CreateCaret(es->hwndSelf, NULL, es->dwCaretWidth, es->line_height);
+#else
 		CreateCaret(es->hwndSelf, 0, 1, es->line_height);
+#endif
 		EDIT_SetCaretPos(es, es->selection_end,
 				 es->flags & EF_AFTER_WRAP);
 		ShowCaret(es->hwndSelf);
