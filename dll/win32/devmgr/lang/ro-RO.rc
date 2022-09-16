@@ -26,7 +26,7 @@ BEGIN
     IDS_ENABLEDEV "A&ctivare"
     IDS_REINSTALLDRV "Reinstalea&ză modulul-pilot"
     IDS_PROPERTIES "P&roprietăți"
-    IDS_UPDATEDRV "A&ctualizează modulul-pilot…"
+    IDS_UPDATEDRV "A&ctualizare modul-pilot…"
     IDS_REBOOT "Repornire &calculator…"
     IDS_NOTAVAILABLE "Indisponibil"
     IDS_NOTDIGITALLYSIGNED "Nesemnat digital"
