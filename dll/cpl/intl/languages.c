@@ -98,7 +98,7 @@ LanguagesPageProc(HWND hwndDlg,
                             }
                             else
                             {
-                                ShellExecuteW(hwndDlg, NULL, L"rapps.com", L"/INSTALL mzimeja",
+                                ShellExecuteW(hwndDlg, NULL, L"rapps.exe", L"/INSTALL mzimeja",
                                               NULL, SW_SHOWNORMAL);
                             }
                             break;
