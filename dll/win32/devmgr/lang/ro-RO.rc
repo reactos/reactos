@@ -255,7 +255,7 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
     LTEXT "Avertisment: Urmează să dezinstalați acest dispozitiv din sistemul dvs.", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Revocare", IDCANCEL, 166, 100, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 166, 100, 50, 14
 END
 
 
@@ -299,7 +299,7 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Actualizează modulul-pilot…"
+  IDS_MENU_UPDATE           "Actualizare modul-pilot…"
   IDS_MENU_ENABLE           "Activează"
   IDS_MENU_DISABLE          "Dezactivează"
   IDS_MENU_UNINSTALL        "Dezinstalează"
@@ -314,7 +314,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "Scanează configurația fizică"
   IDS_TOOLTIP_ENABLE        "Activează"
   IDS_TOOLTIP_DISABLE       "Dezactivează"
-  IDS_TOOLTIP_UPDATE        "Actualizează modulul-pilot…"
+  IDS_TOOLTIP_UPDATE        "Actualizare modul-pilot…"
   IDS_TOOLTIP_UNINSTALL     "Dezinstalează"
 END
 
