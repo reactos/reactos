@@ -1,0 +1,7 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Desktop (Creare comandă rapidă)"
+    IDS_SHORTCUT, "Comandă rapidă la %s"
+}
