@@ -1,13 +1,4 @@
 
-include_directories(
-    BEFORE include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include/ipv4)
-
-add_definitions(
-    -DNDIS40
-    -D_NTDRIVER_)
-
 spec2def(tcpip.sys tcpip.spec)
 
 list(APPEND SOURCE
@@ -32,8 +23,10 @@ add_library(tcpip MODULE
     ${SOURCE}
     tcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)
+target_compile_definitions(tcpip PRIVATE -DNDIS40 -D_NTDRIVER_)
+target_include_directories(tcpip BEFORE PRIVATE include)
 
-target_link_libraries(tcpip ip lwip ${PSEH_LIB} chew)
+target_link_libraries(tcpip ip lwipcore ${PSEH_LIB} chew)
 set_module_type(tcpip kernelmodedriver)
 add_importlibs(tcpip ndis ntoskrnl hal)
 add_pch(tcpip include/precomp.h SOURCE)
