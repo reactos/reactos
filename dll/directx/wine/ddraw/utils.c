@@ -580,8 +580,10 @@ unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags)
         wined3d_flags |= WINED3D_MAP_NO_DIRTY_UPDATE;
     flags &= ~(handled | DDLOCK_WAIT | DDLOCK_READONLY | DDLOCK_NODIRTYUPDATE);
 
+#ifndef __REACTOS__
     if (flags)
         FIXME("Unhandled flags %#x.\n", flags);
+#endif
 
     return wined3d_flags;
 }
