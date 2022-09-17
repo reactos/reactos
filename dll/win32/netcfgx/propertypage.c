@@ -316,7 +316,7 @@ GetEnumOptions(
                                 &dwValueLength);
         if (dwError == ERROR_NO_MORE_ITEMS)
         {
-            dwError == ERROR_SUCCESS;
+            dwError = ERROR_SUCCESS;
             goto done;
         }
         else if (dwError != ERROR_SUCCESS)
