@@ -319,11 +319,9 @@ LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     CPLINFO *CPlInfo;
-    DWORD i;
-
+    UINT i = (UINT)lParam1;
     UNREFERENCED_PARAMETER(hwndCPl);
 
-    i = (DWORD)lParam1;
     switch (uMsg)
     {
         case CPL_INIT:
@@ -333,15 +331,25 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-            CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[i].idIcon;
-            CPlInfo->idName = Applets[i].idName;
-            CPlInfo->idInfo = Applets[i].idDescription;
+            if (i < NUM_APPLETS)
+            {
+                CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
     }
 
