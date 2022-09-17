@@ -24,11 +24,11 @@ BucketCompletionWorker(PVOID Context)
 {
     PTDI_BUCKET Bucket = (PTDI_BUCKET)Context;
     PTCP_COMPLETION_ROUTINE Complete;
-
+    
     Complete = (PTCP_COMPLETION_ROUTINE)Bucket->Request.RequestNotifyObject;
-
+    
     Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-
+    
     DereferenceObject(Bucket->AssociatedEndpoint);
 
     ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
@@ -50,66 +50,125 @@ CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEA
 }
 
 VOID
-FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
-
-    ASSERT_TCPIP_OBJECT_LOCKED(Connection);
-
-    while (!IsListEmpty(&Connection->ReceiveRequest))
+    
+    ReferenceObject(Connection);
+    
+    if (interlocked)
     {
-        Entry = RemoveHeadList(&Connection->ReceiveRequest);
-
-        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-
-        Bucket->Information = 0;
-        Bucket->Status = Status;
-
-        CompleteBucket(Connection, Bucket, FALSE);
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+        {
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Receive request: %x %x\n",
+                         Bucket->Request, Status));
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
     }
+    else
+    {
+        while (!IsListEmpty(&Connection->ReceiveRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ReceiveRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+
+    DereferenceObject(Connection);
 }
 
 VOID
-FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
 
-    ASSERT_TCPIP_OBJECT_LOCKED(Connection);
-
-    while (!IsListEmpty(&Connection->SendRequest))
+    if (interlocked)
     {
-        Entry = RemoveHeadList(&Connection->SendRequest);
-
-        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-
-        Bucket->Information = 0;
-        Bucket->Status = Status;
-
-        CompleteBucket(Connection, Bucket, FALSE);
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
+        {
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );    
+        
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Send request: %x %x\n",
+                         Bucket->Request, Status));
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
     }
+    else
+    {
+        while (!IsListEmpty(&Connection->SendRequest))
+        {
+            Entry = RemoveHeadList(&Connection->SendRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+
+    DereferenceObject(Connection);
 }
 
 VOID
-FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
 
-    ASSERT_TCPIP_OBJECT_LOCKED(Connection);
-
-    while (!IsListEmpty(&Connection->ShutdownRequest))
+    if (interlocked)
     {
-        Entry = RemoveHeadList(&Connection->ShutdownRequest);
-
-        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-
-        Bucket->Information = 0;
-        Bucket->Status = Status;
-
-        CompleteBucket(Connection, Bucket, FALSE);
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->ShutdownRequest, &Connection->Lock)))
+        {   
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
     }
+    else
+    {
+        while (!IsListEmpty(&Connection->ShutdownRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ShutdownRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+
+    DereferenceObject(Connection);
 }
 
 VOID
@@ -117,19 +176,20 @@ FlushConnectQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
 
-    ASSERT_TCPIP_OBJECT_LOCKED(Connection);
-
-    while (!IsListEmpty(&Connection->ConnectRequest))
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
     {
-        Entry = RemoveHeadList(&Connection->ConnectRequest);
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Bucket->Status = Status;
         Bucket->Information = 0;
-
+        
         CompleteBucket(Connection, Bucket, FALSE);
     }
+
+    DereferenceObject(Connection);
 }
 
 VOID
@@ -137,45 +197,50 @@ FlushListenQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
 
-    ASSERT_TCPIP_OBJECT_LOCKED(Connection);
-
-    while (!IsListEmpty(&Connection->ListenRequest))
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
     {
-        Entry = RemoveHeadList(&Connection->ListenRequest);
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Bucket->Status = Status;
         Bucket->Information = 0;
-
+        
         DereferenceObject(Bucket->AssociatedEndpoint);
         CompleteBucket(Connection, Bucket, FALSE);
     }
+
+    DereferenceObject(Connection);
 }
 
 VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
-{
+{    
+    ReferenceObject(Connection);
+    
     // flush receive queue
-    FlushReceiveQueue(Connection, Status);
+    FlushReceiveQueue(Connection, Status, TRUE);
 
     /* We completed the reads successfully but we need to return failure now */
     if (Status == STATUS_SUCCESS)
     {
         Status = STATUS_FILE_CLOSED;
     }
-
+    
     // flush listen queue
     FlushListenQueue(Connection, Status);
-
+    
     // flush send queue
-    FlushSendQueue(Connection, Status);
-
+    FlushSendQueue(Connection, Status, TRUE);
+    
     // flush connect queue
     FlushConnectQueue(Connection, Status);
 
     // flush shutdown queue
-    FlushShutdownQueue(Connection, Status);
+    FlushShutdownQueue(Connection, Status, TRUE);
+    
+    DereferenceObject(Connection);
 }
 
 VOID
@@ -183,17 +248,18 @@ TCPFinEventHandler(void *arg, const err_t err)
 {
    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
    const NTSTATUS Status = TCPTranslateError(err);
+   KIRQL OldIrql;
 
    ASSERT(Connection->SocketContext == NULL);
    ASSERT(Connection->AddressFile);
    ASSERT(err != ERR_OK);
 
-   LockObject(Connection);
-
    /* Complete all outstanding requests now */
    FlushAllQueues(Connection, Status);
 
-   LockObject(Connection->AddressFile);
+   LockObject(Connection, &OldIrql);
+
+   LockObjectAtDpcLevel(Connection->AddressFile);
 
    /* Unlink this connection from the address file */
    if (Connection->AddressFile->Connection == Connection)
@@ -218,15 +284,15 @@ TCPFinEventHandler(void *arg, const err_t err)
        }
    }
 
-   UnlockObject(Connection->AddressFile);
+   UnlockObjectFromDpcLevel(Connection->AddressFile);
 
    /* Remove the address file from this connection */
    DereferenceObject(Connection->AddressFile);
    Connection->AddressFile = NULL;
 
-   UnlockObject(Connection);
+   UnlockObject(Connection, OldIrql);
 }
-
+    
 VOID
 TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
 {
@@ -235,50 +301,49 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
     PLIST_ENTRY Entry;
     PIRP Irp;
     NTSTATUS Status;
-
-    LockObject(Connection);
-
-    while (!IsListEmpty(&Connection->ListenRequest))
+    KIRQL OldIrql;
+        
+    ReferenceObject(Connection);
+    
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
     {
         PIO_STACK_LOCATION IrpSp;
-
-        Entry = RemoveHeadList(&Connection->ListenRequest);
-
+        
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Irp = Bucket->Request.RequestContext;
         IrpSp = IoGetCurrentIrpStackLocation( Irp );
-
+        
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPAcceptEventHandler] Getting the socket\n"));
-
+        
         Status = TCPCheckPeerForAccept(newpcb,
                                        (PTDI_REQUEST_KERNEL)&IrpSp->Parameters);
-
+        
         TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n", Status));
-
+        
         Bucket->Status = Status;
         Bucket->Information = 0;
-
+                
         if (Status == STATUS_SUCCESS)
         {
-            LockObject(Bucket->AssociatedEndpoint);
+            LockObject(Bucket->AssociatedEndpoint, &OldIrql);
 
             /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
-
+            
             /*  free socket context created in FileOpenConnection, as we're using a new one */
             LibTCPClose(Bucket->AssociatedEndpoint, TRUE, FALSE);
 
             /* free previously created socket context (we don't use it, we use newpcb) */
             Bucket->AssociatedEndpoint->SocketContext = newpcb;
-
-            UnlockObject(Bucket->AssociatedEndpoint);
-
+            
             LibTCPAccept(newpcb, (PTCP_PCB)Connection->SocketContext, Bucket->AssociatedEndpoint);
+
+            UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
         }
-
+        
         DereferenceObject(Bucket->AssociatedEndpoint);
-
+        
         CompleteBucket(Connection, Bucket, FALSE);
 
         if (Status == STATUS_SUCCESS)
@@ -286,8 +351,8 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
             break;
         }
     }
-
-    UnlockObject(Connection);
+    
+    DereferenceObject(Connection);
 }
 
 VOID
@@ -299,49 +364,45 @@ TCPSendEventHandler(void *arg, const u16_t space)
     PIRP Irp;
     NTSTATUS Status;
     PMDL Mdl;
-    ULONG BytesSent;
-
+    u32_t BytesSent;
+    
     ReferenceObject(Connection);
-    LockObject(Connection);
 
-    while (!IsListEmpty(&Connection->SendRequest))
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
     {
         UINT SendLen = 0;
         PVOID SendBuffer = 0;
-
-        Entry = RemoveHeadList(&Connection->SendRequest);
-
-        UnlockObject(Connection);
-
+        
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Irp = Bucket->Request.RequestContext;
         Mdl = Irp->MdlAddress;
-
+        
         TI_DbgPrint(DEBUG_TCP,
                     ("Getting the user buffer from %x\n", Mdl));
-
+        
         NdisQueryBuffer( Mdl, &SendBuffer, &SendLen );
-
+        
         TI_DbgPrint(DEBUG_TCP,
                     ("Writing %d bytes to %x\n", SendLen, SendBuffer));
-
+        
         TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
         TI_DbgPrint
         (DEBUG_TCP,
          ("Connection->SocketContext: %x\n",
           Connection->SocketContext));
-
+        
         Status = TCPTranslateError(LibTCPSend(Connection,
                                               SendBuffer,
                                               SendLen, &BytesSent, TRUE));
-
+        
         TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", BytesSent));
-
+        
         if( Status == STATUS_PENDING )
         {
-            LockObject(Connection);
-            InsertHeadList(&Connection->SendRequest, &Bucket->Entry);
+            ExInterlockedInsertHeadList(&Connection->SendRequest,
+                                        &Bucket->Entry,
+                                        &Connection->Lock);
             break;
         }
         else
@@ -349,30 +410,26 @@ TCPSendEventHandler(void *arg, const u16_t space)
             TI_DbgPrint(DEBUG_TCP,
                         ("Completing Send request: %x %x\n",
                          Bucket->Request, Status));
-
+            
             Bucket->Status = Status;
             Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? BytesSent : 0;
-
+                        
             CompleteBucket(Connection, Bucket, FALSE);
         }
-
-        LockObject(Connection);
     }
 
     //  If we completed all outstanding send requests then finish all pending shutdown requests,
     //  cancel the timer and dereference the connection
     if (IsListEmpty(&Connection->SendRequest))
     {
-        FlushShutdownQueue(Connection, STATUS_SUCCESS);
+        FlushShutdownQueue(Connection, STATUS_SUCCESS, FALSE);
 
         if (KeCancelTimer(&Connection->DisconnectTimer))
         {
             DereferenceObject(Connection);
         }
     }
-
-    UnlockObject(Connection);
-
+    
     DereferenceObject(Connection);
 }
 
@@ -389,13 +446,12 @@ TCPRecvEventHandler(void *arg)
     PUCHAR RecvBuffer;
     NTSTATUS Status;
 
-    LockObject(Connection);
+    ReferenceObject(Connection);
 
-    while(!IsListEmpty(&Connection->ReceiveRequest))
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
-        Entry = RemoveHeadList(&Connection->ReceiveRequest);
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Irp = Bucket->Request.RequestContext;
         Mdl = Irp->MdlAddress;
 
@@ -404,7 +460,9 @@ TCPRecvEventHandler(void *arg)
         Status = LibTCPGetDataFromConnectionQueue(Connection, RecvBuffer, RecvLen, &Received);
         if (Status == STATUS_PENDING)
         {
-            InsertHeadList(&Connection->ReceiveRequest, &Bucket->Entry);
+            ExInterlockedInsertHeadList(&Connection->ReceiveRequest,
+                                        &Bucket->Entry,
+                                        &Connection->Lock);
             break;
         }
 
@@ -413,7 +471,8 @@ TCPRecvEventHandler(void *arg)
 
         CompleteBucket(Connection, Bucket, FALSE);
     }
-    UnlockObject(Connection);
+
+    DereferenceObject(Connection);
 }
 
 VOID
@@ -422,20 +481,19 @@ TCPConnectEventHandler(void *arg, const err_t err)
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
-
-    LockObject(Connection);
-
-    while (!IsListEmpty(&Connection->ConnectRequest))
+        
+    ReferenceObject(Connection);
+    
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
     {
-        Entry = RemoveHeadList(&Connection->ConnectRequest);
-
+        
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
+        
         Bucket->Status = TCPTranslateError(err);
         Bucket->Information = 0;
-
+                
         CompleteBucket(Connection, Bucket, FALSE);
     }
-
-    UnlockObject(Connection);
+    
+    DereferenceObject(Connection);
 }

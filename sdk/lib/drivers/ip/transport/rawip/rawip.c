@@ -46,7 +46,7 @@ NTSTATUS AddGenericHeaderIPv4(
 		&IPPacket->TotalSize );
     IPPacket->MappedHeader = TRUE;
 
-    IPPacket->HeaderSize = sizeof(IPv4_HEADER);
+    IPPacket->HeaderSize = 20;
 
     TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n",
 			    BufferSize, IPPacket->Header));
@@ -191,8 +191,9 @@ NTSTATUS RawIPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    KIRQL OldIrql;
 
-    LockObject(AddrFile);
+    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -207,7 +208,7 @@ NTSTATUS RawIPSendDatagram(
             break;
 
         default:
-            UnlockObject(AddrFile);
+            UnlockObject(AddrFile, OldIrql);
             return STATUS_UNSUCCESSFUL;
     }
 
@@ -221,7 +222,7 @@ NTSTATUS RawIPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-            UnlockObject(AddrFile);
+            UnlockObject(AddrFile, OldIrql);
             return STATUS_NETWORK_UNREACHABLE;
         }
 
@@ -230,7 +231,7 @@ NTSTATUS RawIPSendDatagram(
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress, NULL ))) {
-            UnlockObject(AddrFile);
+            UnlockObject(AddrFile, OldIrql);
             return STATUS_INVALID_PARAMETER;
         }
     }
@@ -244,7 +245,7 @@ NTSTATUS RawIPSendDatagram(
                                BufferData,
                                DataSize );
 
-    UnlockObject(AddrFile);
+    UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
         return Status;

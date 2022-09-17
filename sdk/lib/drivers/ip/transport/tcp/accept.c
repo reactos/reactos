@@ -21,24 +21,24 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
     NTSTATUS Status;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
     PTA_IP_ADDRESS RemoteAddress;
-    struct ip_addr ipaddr;
-
+    ip_addr_t ipaddr;
+    
     if (Request->RequestFlags & TDI_QUERY_ACCEPT)
         DbgPrint("TDI_QUERY_ACCEPT NOT SUPPORTED!!!\n");
 
     WhoIsConnecting = (PTDI_CONNECTION_INFORMATION)Request->ReturnConnectionInformation;
     RemoteAddress = (PTA_IP_ADDRESS)WhoIsConnecting->RemoteAddress;
-
+    
     RemoteAddress->TAAddressCount = 1;
     RemoteAddress->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
     RemoteAddress->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-
+    
     Status = TCPTranslateError(LibTCPGetPeerName(newpcb,
                                                  &ipaddr,
                                                  &RemoteAddress->Address[0].Address[0].sin_port));
-
+    
     RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
-
+    
     return Status;
 }
 
@@ -47,12 +47,13 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
 NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    struct ip_addr AddressToBind;
+    ip_addr_t AddressToBind;
+    KIRQL OldIrql;
     TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);
 
-    LockObject(Connection);
+    LockObject(Connection, &OldIrql);
 
     ASSERT_KM_POINTER(Connection->AddressFile);
 
@@ -60,7 +61,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 
     TI_DbgPrint(DEBUG_TCP, ("Connection->SocketContext %x\n",
         Connection->SocketContext));
-
+    
     AddressToBind.addr = Connection->AddressFile->Address.Address.IPv4Address;
 
     Status = TCPTranslateError(LibTCPBind(Connection,
@@ -78,7 +79,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
             {
                 /* Allocate the port in the port bitmap */
                 Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-
+                
                 /* This should never fail */
                 ASSERT(Connection->AddressFile->Port != 0xFFFF);
             }
@@ -92,7 +93,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
             Status = STATUS_UNSUCCESSFUL;
     }
 
-    UnlockObject(Connection);
+    UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Leaving. Status = %x\n", Status));
 
@@ -105,9 +106,10 @@ BOOLEAN TCPAbortListenForSocket
 {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
+    KIRQL OldIrql;
     BOOLEAN Found = FALSE;
 
-    LockObject(Listener);
+    LockObject(Listener, &OldIrql);
 
     ListEntry = Listener->ListenRequest.Flink;
     while (ListEntry != &Listener->ListenRequest)
@@ -126,7 +128,7 @@ BOOLEAN TCPAbortListenForSocket
         ListEntry = ListEntry->Flink;
     }
 
-    UnlockObject(Listener);
+    UnlockObject(Listener, OldIrql);
 
     return Found;
 }
@@ -139,11 +141,12 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 {
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
+    KIRQL OldIrql;
 
-    LockObject(Listener);
+    LockObject(Listener, &OldIrql);
 
     Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
-
+    
     if (Bucket)
     {
         Bucket->AssociatedEndpoint = Connection;
@@ -157,7 +160,7 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     else
         Status = STATUS_NO_MEMORY;
 
-    UnlockObject(Listener);
+    UnlockObject(Listener, OldIrql);
 
     return Status;
 }
