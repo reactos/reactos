@@ -2,5 +2,5 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NOSRCFILEFOUND "Fișierul sau folderul sursă '%ls' nu a fost găsit."
+    IDS_NOSRCFILEFOUND "Fișierul sau dosarul sursă '%ls' nu a fost găsit."
 }
