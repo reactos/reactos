@@ -18,7 +18,9 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 #define TAG_BTRFS_FILE  'FftB'
 #define TAG_BTRFS_LINK  'LftB'
 
-#define INVALID_INODE ((ULONGLONG)-1)
+#define INVALID_INODE _UI64_MAX
+#define INVALID_ADDRESS _UI64_MAX
+#define READ_ERROR _UI64_MAX
 
 struct BTRFS_INFO {
     ULONG DeviceId;
@@ -239,9 +241,9 @@ static u64 logical_physical(u64 logical)
     if (ret == 0)
         slot++;
     else if (slot == 0)
-        return -1;
+        return INVALID_ADDRESS;
     if (logical >= chunk_map->map[slot - 1].logical + chunk_map->map[slot - 1].length)
-        return -1;
+        return INVALID_ADDRESS;
 
     TRACE("Address translation: 0x%llx -> 0x%llx\n", logical,
           chunk_map->map[slot - 1].physical + logical - chunk_map->map[slot - 1].logical);
@@ -408,7 +410,7 @@ static int next_slot(struct btrfs_disk_key *key,
     }
     path->slots[0] = slot;
 
-    out:
+out:
     if (path_current_disk_key(path)->objectid && !btrfs_comp_keys_type(key, path_current_disk_key(path)))
         return 0;
     else
@@ -626,7 +628,7 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
 
     } while (!next_slot(&key, &path));
 
-    cleanup:
+cleanup:
     free_path(&path);
     return result;
 }
@@ -652,7 +654,7 @@ static u64 btrfs_read_extent_inline(struct btrfs_path *path,
     if (offset > dlen)
     {
         ERR("Tried to read offset (%llu) beyond extent length (%lu)\n", offset, dlen);
-        return INVALID_INODE;
+        return READ_ERROR;
     }
 
     if (size > dlen - offset)
@@ -666,7 +668,7 @@ static u64 btrfs_read_extent_inline(struct btrfs_path *path,
     }
 
     ERR("No compression supported right now\n");
-    return INVALID_INODE;
+    return READ_ERROR;
 }
 
 static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_extent_item *extent,
@@ -679,17 +681,17 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     if (offset > dlen)
     {
         ERR("Tried to read offset (%llu) beyond extent length (%lu)\n", offset, dlen);
-        return -1ULL;
+        return READ_ERROR;
     }
 
     if (size > dlen - offset)
         size = dlen - offset;
 
     physical = logical_physical(extent->disk_bytenr);
-    if (physical == -1ULL)
+    if (physical == INVALID_ADDRESS)
     {
         ERR("Unable to convert logical address to physical: %llu\n", extent->disk_bytenr);
-        return -1ULL;
+        return READ_ERROR;
     }
 
     if (extent->compression == BTRFS_COMPRESS_NONE)
@@ -704,7 +706,7 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
             if (!disk_read(physical, temp_out, size + offset))
             {
                 FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
-                return -1ULL;
+                return READ_ERROR;
             }
 
             memcpy(out, temp_out + offset, size);
@@ -712,14 +714,14 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
         } else
         {
             if (!disk_read(physical, out, size))
-                return -1ULL;
+                return READ_ERROR;
         }
 
         return size;
     }
 
     ERR("No compression supported right now\n");
-    return -1ULL;
+    return READ_ERROR;
 }
 
 static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offset, u64 size, char *buf)
@@ -728,7 +730,7 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
     struct btrfs_disk_key key;
     struct btrfs_file_extent_item *extent;
     int res = 0;
-    u64 rd, seek_pointer = (u64) -1ULL, offset_in_extent;
+    u64 rd, seek_pointer = READ_ERROR, offset_in_extent;
     BOOLEAN find_res;
 
     TRACE("btrfs_file_read inr=%llu offset=%llu size=%llu\n", inr, offset, size);
@@ -776,10 +778,10 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
             rd = btrfs_read_extent_reg(&path, extent, offset_in_extent, size, buf);
         }
 
-        if (rd == -1ULL)
+        if (rd == READ_ERROR)
         {
             ERR("Error while reading extent\n");
-            seek_pointer = (u64) -1ULL;
+            seek_pointer = READ_ERROR;
             goto out;
         }
 
@@ -794,12 +796,12 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
 
     if (res)
     {
-        seek_pointer = (u64) -1ULL;
+        seek_pointer = READ_ERROR;
         goto out;
     }
 
     seek_pointer -= offset;
-    out:
+out:
     free_path(&path);
     return seek_pointer;
 }
@@ -814,7 +816,7 @@ static u64 btrfs_lookup_inode_ref(const struct btrfs_root_item *root, u64 inr,
 {
     struct btrfs_path path;
     struct btrfs_inode_ref *ref;
-    u64 ret = -1ULL;
+    u64 ret = INVALID_INODE;
     init_path(&path);
 
     if (BtrFsSearchTreeType(root, inr, BTRFS_INODE_REF_KEY, &path))
@@ -915,7 +917,7 @@ static BOOLEAN btrfs_readlink(const struct btrfs_root_item *root, u64 inr, char 
 
     res = TRUE;
 
-    out:
+out:
     free_path(&path);
     return res;
 }
@@ -1023,7 +1025,7 @@ static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const 
         if (len > BTRFS_NAME_MAX)
         {
             ERR("%s: Name too long at \"%.*s\"\n", BTRFS_NAME_MAX, cur);
-            return -1ULL;
+            return INVALID_INODE;
         }
 
         if (len == 1 && cur[0] == '.')
@@ -1150,7 +1152,7 @@ ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
 
     inr = btrfs_lookup_path(&BtrFsInfo->FsRoot, BtrFsInfo->FsRoot.root_dirid, Path, &type, &temp_file_info.inode, 40);
 
-    if (inr == -1ULL)
+    if (inr == INVALID_INODE)
     {
         TRACE("Cannot lookup file %s\n", Path);
         return ENOENT;
@@ -1191,7 +1193,7 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
         Size = phandle->inode.size;
 
     rd = btrfs_file_read(&BtrFsInfo->FsRoot, phandle->inr, phandle->position, Size, Buffer);
-    if (rd == -1ULL)
+    if (rd == READ_ERROR)
     {
         TRACE("An error occured while reading file %lu\n", FileId);
         return ENOENT;
@@ -1245,7 +1247,7 @@ const DEVVTBL *BtrFsMount(ULONG DeviceId)
         return NULL;
     }
 
-    /* Check if SuperBlock is valid. If yes, return Ext2 function table */
+    /* Check if SuperBlock is valid. If yes, return BTRFS function table */
     if (BtrFsInfo->SuperBlock.magic == BTRFS_MAGIC_N)
     {
         BtrFsInfo->DeviceId = DeviceId;
