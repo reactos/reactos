@@ -246,27 +246,6 @@ set(lwipallapps_SRCS
 # Generate lwip/init.h (version info)
 configure_file(${LWIP_DIR}/src/include/lwip/init.h.cmake.in ${LWIP_DIR}/src/include/lwip/init.h)
 
-# Documentation
-set(DOXYGEN_DIR ${LWIP_DIR}/doc/doxygen)
-set(DOXYGEN_OUTPUT_DIR output)
-set(DOXYGEN_IN  ${LWIP_DIR}/doc/doxygen/lwip.Doxyfile.cmake.in)
-set(DOXYGEN_OUT ${LWIP_DIR}/doc/doxygen/lwip.Doxyfile)
-configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT})
-
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    message("Doxygen build started")
-
-    add_custom_target(lwipdocs
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_DIR}/${DOXYGEN_OUTPUT_DIR}/html
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${DOXYGEN_DIR}
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM)
-else (DOXYGEN_FOUND)
-    message("Doxygen needs to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
-
 # lwIP libraries
 add_library(lwipcore EXCLUDE_FROM_ALL ${lwipnoapps_SRCS})
 target_compile_options(lwipcore PRIVATE ${LWIP_COMPILER_FLAGS})
