@@ -1,5 +1,6 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ * Translators: Andrei Miloiu
+                Petru Dimitriu (petrimetri at gmail dot com)
  *              Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
@@ -13,8 +14,8 @@ BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "Temă:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Salvează &ca...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Șterge", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "Păstrare &ca…", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "Ș&terge", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -81,7 +82,7 @@ CAPTION "Opțiuni avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Dacă selectați o temă alta decât ReactOS clasic, va suprascrie următoarele setări, cu excepția unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -128,7 +129,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Amână sublinierea literelor navigării din tastatură până la apăsarea tastei «Alt»",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Folosește meniuri &plate", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "A&nulează", IDCANCEL, 130, 165, 50, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 77, 165, 50, 14
