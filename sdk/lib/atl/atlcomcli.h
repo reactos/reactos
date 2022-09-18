@@ -59,6 +59,13 @@ inline HRESULT AtlHresultFromLastError() throw()
     return HRESULT_FROM_WIN32(dwError);
 }
 
+template <class T>
+class _NoAddRefReleaseOnCComPtr : public T
+{
+  private:
+    virtual ULONG STDMETHODCALLTYPE AddRef() = 0;
+    virtual ULONG STDMETHODCALLTYPE Release() = 0;
+};
 
 template<class T>
 class CComPtr
@@ -173,10 +180,10 @@ public:
         return p;
     }
 
-    T *operator -> ()
+    _NoAddRefReleaseOnCComPtr<T> *operator -> () const
     {
         ATLASSERT(p != NULL);
-        return p;
+        return (_NoAddRefReleaseOnCComPtr<T> *)p;
     }
 };
 
