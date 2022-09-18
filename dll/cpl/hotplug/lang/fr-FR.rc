@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Safely Remove Hardware Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2022 Kyle Katarn <contact@kcsoftwares.com>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
