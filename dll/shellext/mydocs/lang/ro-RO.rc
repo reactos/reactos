@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS My Documents Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
