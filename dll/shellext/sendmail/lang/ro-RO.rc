@@ -1,7 +1,14 @@
+/*
+ * PROJECT:     ReactOS Send Mail
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_DESKLINK, "Desktop (Creare comandă rapidă)"
+    IDS_DESKLINK, "Birou (Creare comandă rapidă)"
     IDS_SHORTCUT, "Comandă rapidă la %s"
 }
