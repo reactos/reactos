@@ -8,6 +8,7 @@ list(APPEND SOURCE
     tcpip/cinfo.c
     tcpip/dispatch.c
     tcpip/fileobjs.c
+    tcpip/icmp.c
     tcpip/iinfo.c
     tcpip/info.c
     tcpip/lock.c

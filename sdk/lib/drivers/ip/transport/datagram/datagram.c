@@ -16,7 +16,6 @@ BOOLEAN DGRemoveIRP(
 {
     PLIST_ENTRY ListEntry;
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-    KIRQL OldIrql;
     BOOLEAN Found = FALSE;
 
     TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
@@ -72,7 +71,6 @@ VOID DGDeliverData(
  *     handler if it exists, otherwise we drop the packet.
  */
 {
-  KIRQL OldIrql;
   PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler;
   PVOID HandlerContext;
   LONG AddressLength;
@@ -246,7 +244,6 @@ NTSTATUS DGReceiveDatagram(
 {
     NTSTATUS Status;
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-    KIRQL OldIrql;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 

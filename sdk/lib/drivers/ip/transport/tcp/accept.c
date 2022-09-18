@@ -48,7 +48,6 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ip_addr_t AddressToBind;
-    KIRQL OldIrql;
     TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);

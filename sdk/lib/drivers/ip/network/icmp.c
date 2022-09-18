@@ -137,7 +137,6 @@ NTSTATUS ICMPSendDatagram(
     IP_ADDRESS RemoteAddress,  LocalAddress;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    KIRQL OldIrql;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));

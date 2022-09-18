@@ -191,7 +191,6 @@ NTSTATUS RawIPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    KIRQL OldIrql;
 
     LockObject(AddrFile);
 
