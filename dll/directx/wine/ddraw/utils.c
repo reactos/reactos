@@ -583,6 +583,13 @@ unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags)
 #ifndef __REACTOS__
     if (flags)
         FIXME("Unhandled flags %#x.\n", flags);
+#elif defined(__REACTOS__) && defined(DBG)
+    if (flags == 0x20)
+    {
+        static int bWarnedOnce = 0; if (!bWarnedOnce) { bWarnedOnce++; FIXME("Unhandled flag 0x20 once\n"); }
+    }
+    else if (flags)
+        FIXME("Unhandled flags %#x.\n", flags);
 #endif
 
     return wined3d_flags;
