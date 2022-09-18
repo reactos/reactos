@@ -71,7 +71,7 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
 
 	ULONG TestMask = IPv4NToHl(Netmask->Address.IPv4Address);
 
-	while( (BitTest & TestMask) == BitTest ) {
+	while ((BitTest & TestMask) != 0) {
 	    Prefix++;
 	    BitTest >>= 1;
 	}
