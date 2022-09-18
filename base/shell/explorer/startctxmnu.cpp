@@ -242,8 +242,5 @@ public:
 
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * m_TrayWnd, IN HWND m_Owner, IContextMenu ** ppCtxMenu)
 {
-    CStartMenuBtnCtxMenu * mnu = new CComObject<CStartMenuBtnCtxMenu>();
-    mnu->Initialize(m_TrayWnd, m_Owner);
-    *ppCtxMenu = mnu;
-    return S_OK;
+    return ShellObjectCreatorInit<CStartMenuBtnCtxMenu>(m_TrayWnd, m_Owner, IID_PPV_ARG(IContextMenu, ppCtxMenu));
 }

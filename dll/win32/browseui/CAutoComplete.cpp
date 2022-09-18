@@ -1126,18 +1126,12 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     ::GetWindowRect(m_hwndEdit, &m_rcEdit);
 
     // get an IEnumString
-    ATLASSERT(!m_pEnum);
     punkACL->QueryInterface(IID_IEnumString, (VOID **)&m_pEnum);
     TRACE("m_pEnum: %p\n", static_cast<void *>(m_pEnum));
-    if (m_pEnum)
-        m_pEnum->AddRef(); // hold not to be freed
 
     // get an IACList
-    ATLASSERT(!m_pACList);
     punkACL->QueryInterface(IID_IACList, (VOID **)&m_pACList);
     TRACE("m_pACList: %p\n", static_cast<void *>(m_pACList));
-    if (m_pACList)
-        m_pACList->AddRef(); // hold not to be freed
 
     UpdateDropDownState(); // create/hide the drop-down window if necessary
 

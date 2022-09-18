@@ -38,7 +38,7 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Parent(IDispatch **ppid)
     if (ppid)
     {
         *ppid = m_Folder;
-        m_Folder->AddRef();
+        (*ppid)->AddRef();
     }
     return E_NOTIMPL;
 }

@@ -348,8 +348,8 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     BOOL Ret;
 
     // Tell the thread ref we are using it.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->AddRef();
+    if (parameters && parameters->pExplorerInstance)
+        parameters->pExplorerInstance->AddRef();
 
     /* Handle /e parameter */
      UINT wFlags = 0;
@@ -410,17 +410,11 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
         }
     }
 
-    int nrc = browser->Release();
-    if (nrc > 0)
-    {
-        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
-    }
-
-    browser.Detach();
+    ReleaseCComPtrExpectZero(browser);
 
     // Tell the thread ref we are not using it anymore.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->Release();
+    if (parameters && parameters->pExplorerInstance)
+        parameters->pExplorerInstance->Release();
 
     return hResult;
 }
@@ -519,8 +513,8 @@ extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
         param->offset78->Release();
     if (param->offsetC != NULL)
         param->offsetC->Release();
-    if (param->offsetF8 != NULL)
-        param->offsetF8->Release();
+    if (param->pExplorerInstance != NULL)
+        param->pExplorerInstance->Release();
     LocalFree(param);
 }
 
@@ -563,7 +557,7 @@ extern "C" HRESULT WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters)
 
     PIE_THREAD_PARAM_BLOCK paramsCopy = SHCloneIETHREADPARAM(parameters);
 
-    SHGetInstanceExplorer(&(paramsCopy->offsetF8));
+    SHGetInstanceExplorer(&(paramsCopy->pExplorerInstance));
     threadHandle = CreateThread(NULL, 0x10000, BrowserThreadProc, paramsCopy, 0, &threadID);
     if (threadHandle != NULL)
     {

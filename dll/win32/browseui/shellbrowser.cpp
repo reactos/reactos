@@ -1121,7 +1121,7 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
 
         // we have to store our basebar into cache now
         *cache = newBaseBar;
-        newBaseBar->AddRef();
+        (*cache)->AddRef();
 
         // tell the new base bar about the shell browser
         hResult = IUnknown_SetSite(newBaseBar, static_cast<IDropTarget *>(this));

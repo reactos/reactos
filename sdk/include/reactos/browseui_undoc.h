@@ -60,7 +60,7 @@ typedef struct IEThreadParamBlock
     UCHAR gap108[24];
     DWORD dword120;
     DWORD dword124;
-    IUnknown*                       offsetF8; // 0x128 instance explorer
+    IUnknown*                       pExplorerInstance; // 0x128 instance explorer
     UCHAR byteflags_130;
 } IE_THREAD_PARAM_BLOCK, * PIE_THREAD_PARAM_BLOCK;
 #else
@@ -90,7 +90,7 @@ typedef struct IEThreadParamBlock
     char                            offsetA4[0xD8-0xA4];    // unknown contents -- 0xA4..0xD8
     LONG                            offsetD8;
     char                            offsetDC[0xF8-0xDC];    // unknown contents -- 0xDC..0xF8
-    IUnknown                      * offsetF8;        // instance explorer
+    IUnknown                      * pExplorerInstance;        // instance explorer
     LONG                            offsetFC;        // unknown contents
 } IE_THREAD_PARAM_BLOCK, *PIE_THREAD_PARAM_BLOCK;
 #endif

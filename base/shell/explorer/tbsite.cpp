@@ -301,8 +301,8 @@ public:
 
         if (ppcm != NULL)
         {
-            m_ContextMenu->AddRef();
             *ppcm = m_ContextMenu;
+            (*ppcm)->AddRef();
         }
 
         /* Add the menu items */

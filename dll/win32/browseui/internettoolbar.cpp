@@ -614,8 +614,6 @@ CInternetToolbar::CInternetToolbar()
     fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
-
-    fMenuCallback->AddRef();
 }
 
 CInternetToolbar::~CInternetToolbar()

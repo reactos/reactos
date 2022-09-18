@@ -99,9 +99,9 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetMenuInfo(
 
     if (ppsmc)
     {
-        if (m_psmc)
-            m_psmc->AddRef();
         *ppsmc = m_psmc;
+        if (*ppsmc)
+            (*ppsmc)->AddRef();
     }
 
     if (puId)
@@ -655,8 +655,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 
     if (m_subMenuChild)
     {
-        m_subMenuChild->AddRef();
         *ppunkClient = m_subMenuChild;
+        (*ppunkClient)->AddRef();
     }
 
     return S_OK;

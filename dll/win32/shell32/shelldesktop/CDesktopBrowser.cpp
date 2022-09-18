@@ -321,8 +321,8 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::QueryActiveShellView(IShellView **pps
     if (ppshv == NULL)
         return E_POINTER;
     *ppshv = m_ShellView;
-    if (m_ShellView != NULL)
-        m_ShellView->AddRef();
+    if (*ppshv != NULL)
+        (*ppshv)->AddRef();
 
     return S_OK;
 }

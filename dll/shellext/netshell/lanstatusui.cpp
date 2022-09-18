@@ -953,7 +953,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
         pItem->uID = Index;
         pItem->pNext = NULL;
         pItem->pNet = pNetCon;
-        pNetCon->AddRef();
+        pItem->pNet->AddRef();
         hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
         if (!hwndDlg)
         {

@@ -226,7 +226,8 @@ void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
     if (cptr.p != NULL)
     {
-        int nrc = cptr->Release();
+        T *raw = cptr.Detach();
+        int nrc = raw->Release();
         if (nrc > 0)
         {
             DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
@@ -234,11 +235,10 @@ void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
             {
                 while (nrc > 0)
                 {
-                    nrc = cptr->Release();
+                    nrc = raw->Release();
                 }
             }
         }
-        cptr.Detach();
     }
 }
 
