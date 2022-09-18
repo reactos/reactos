@@ -191,7 +191,7 @@ VOID ARPReceive(
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
     ULONG BytesCopied, DataSize;
     PCHAR DataBuffer;
-    
+
     PAGED_CODE();
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));

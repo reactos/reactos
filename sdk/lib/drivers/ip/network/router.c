@@ -344,9 +344,9 @@ VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface)
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
-    
+
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
-    
+
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
@@ -357,7 +357,7 @@ VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface)
 
         CurrentEntry = NextEntry;
     }
-    
+
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
 }
 
