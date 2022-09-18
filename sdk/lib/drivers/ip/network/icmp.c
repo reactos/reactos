@@ -156,7 +156,7 @@ NTSTATUS ICMPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile);
 
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
@@ -167,7 +167,7 @@ NTSTATUS ICMPSendDatagram(
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
         {
-            UnlockObject(AddrFile, OldIrql);
+            UnlockObject(AddrFile);
             return STATUS_NETWORK_UNREACHABLE;
         }
 
@@ -177,7 +177,7 @@ NTSTATUS ICMPSendDatagram(
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress, NULL )))
         {
-            UnlockObject(AddrFile, OldIrql);
+            UnlockObject(AddrFile);
             return STATUS_INVALID_PARAMETER;
         }
     }
@@ -189,7 +189,7 @@ NTSTATUS ICMPSendDatagram(
                                 BufferData,
                                 DataSize );
 
-    UnlockObject(AddrFile, OldIrql);
+    UnlockObject(AddrFile);
 
     if( !NT_SUCCESS(Status) )
         return Status;

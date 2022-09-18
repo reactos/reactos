@@ -22,7 +22,7 @@ BOOLEAN DGRemoveIRP(
     TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
                             Irp, AddrFile));
 
-    LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile);
 
     for( ListEntry = AddrFile->ReceiveQueue.Flink; 
          ListEntry != &AddrFile->ReceiveQueue;
@@ -42,7 +42,7 @@ BOOLEAN DGRemoveIRP(
         }
     }
 
-    UnlockObject(AddrFile, OldIrql);
+    UnlockObject(AddrFile);
 
     TI_DbgPrint(MAX_TRACE, ("Done.\n"));
 
@@ -83,7 +83,7 @@ VOID DGDeliverData(
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  LockObject(AddrFile, &OldIrql);
+  LockObject(AddrFile);
 
   if (AddrFile->Protocol == IPPROTO_UDP)
     {
@@ -145,7 +145,7 @@ VOID DGDeliverData(
 				      SrcAddress->Address.IPv4Address, SrcPort));
 
               ReferenceObject(AddrFile);
-              UnlockObject(AddrFile, OldIrql);
+              UnlockObject(AddrFile);
 
               /* Complete the receive request */
               if (Current->BufferSize < DataSize)
@@ -153,12 +153,12 @@ VOID DGDeliverData(
               else
                   Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
 
-              LockObject(AddrFile, &OldIrql);
+              LockObject(AddrFile);
               DereferenceObject(AddrFile);
 	  }
       }
 
-      UnlockObject(AddrFile, OldIrql);
+      UnlockObject(AddrFile);
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
     {
@@ -179,7 +179,7 @@ VOID DGDeliverData(
         }
 
       ReferenceObject(AddrFile);
-      UnlockObject(AddrFile, OldIrql);
+      UnlockObject(AddrFile);
 
       Status = (*ReceiveHandler)(HandlerContext,
         AddressLength,
@@ -200,7 +200,7 @@ VOID DGDeliverData(
     }
   else
     {
-      UnlockObject(AddrFile, OldIrql);
+      UnlockObject(AddrFile);
       TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
     }
 
@@ -250,7 +250,7 @@ NTSTATUS DGReceiveDatagram(
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile);
 
     ReceiveRequest = ExAllocatePoolWithTag(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST),
                                            DATAGRAM_RECV_TAG);
@@ -268,7 +268,7 @@ NTSTATUS DGReceiveDatagram(
 	    if (!NT_SUCCESS(Status))
             {
 		ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
-	        UnlockObject(AddrFile, OldIrql);
+	        UnlockObject(AddrFile);
 		return Status;
             }
 	}
@@ -296,13 +296,13 @@ NTSTATUS DGReceiveDatagram(
 
 	TI_DbgPrint(MAX_TRACE, ("Leaving (pending %08x).\n", ReceiveRequest));
 
-	UnlockObject(AddrFile, OldIrql);
+	UnlockObject(AddrFile);
 
 	return STATUS_PENDING;
     }
     else
     {
-	UnlockObject(AddrFile, OldIrql);
+	UnlockObject(AddrFile);
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 

@@ -104,11 +104,10 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
     struct pbuf* p;
     NTSTATUS Status;
     UINT ReadLength, PayloadLength, Offset, Copied;
-    KIRQL OldIrql;
 
     (*Received) = 0;
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     if (!IsListEmpty(&Connection->PacketQueue))
     {
@@ -132,12 +131,12 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
                 qp = NULL;
             }
 
-            UnlockObject(Connection, OldIrql);
+            UnlockObject(Connection);
 
             Copied = pbuf_copy_partial(p, RecvBuffer, ReadLength, Offset);
             ASSERT(Copied == ReadLength);
 
-            LockObject(Connection, &OldIrql);
+            LockObject(Connection);
 
             /* Update trackers */
             RecvLen -= ReadLength;
@@ -172,7 +171,7 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
             Status = STATUS_PENDING;
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     return Status;
 }

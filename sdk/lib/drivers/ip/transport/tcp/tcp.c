@@ -126,9 +126,8 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
                     UINT Family, UINT Type, UINT Proto )
 {
     NTSTATUS Status;
-    KIRQL OldIrql;
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
                            "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
@@ -140,7 +139,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status));
 
@@ -149,15 +148,13 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 {
-    KIRQL OldIrql;
-
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     FlushAllQueues(Connection, STATUS_CANCELLED);
 
     LibTCPClose(Connection, FALSE, TRUE);
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     DereferenceObject(Connection);
 
@@ -287,7 +284,6 @@ NTSTATUS TCPConnect
     TA_IP_ADDRESS LocalAddress;
     PTDI_BUCKET Bucket;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Called\n"));
 
@@ -308,11 +304,11 @@ NTSTATUS TCPConnect
                  RemoteAddress.Address.IPv4Address,
                  RemotePort));
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     if (!Connection->AddressFile)
     {
-        UnlockObject(Connection, OldIrql);
+        UnlockObject(Connection);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -320,7 +316,7 @@ NTSTATUS TCPConnect
     {
         if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
         {
-            UnlockObject(Connection, OldIrql);
+            UnlockObject(Connection);
             return STATUS_NETWORK_UNREACHABLE;
         }
 
@@ -361,7 +357,7 @@ NTSTATUS TCPConnect
             Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
             if (!Bucket)
             {
-                UnlockObject(Connection, OldIrql);
+                UnlockObject(Connection);
                 return STATUS_NO_MEMORY;
             }
             
@@ -376,7 +372,7 @@ NTSTATUS TCPConnect
         }
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Leaving. Status = 0x%x\n", Status));
 
@@ -394,12 +390,11 @@ NTSTATUS TCPDisconnect
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
     LARGE_INTEGER ActualTimeout;
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Called\n"));
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     if (Connection->SocketContext)
     {
@@ -431,7 +426,7 @@ NTSTATUS TCPDisconnect
                 Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
                 if (!Bucket)
                 {
-                    UnlockObject(Connection, OldIrql);
+                    UnlockObject(Connection);
                     return STATUS_NO_MEMORY;
                 }
 
@@ -465,7 +460,7 @@ NTSTATUS TCPDisconnect
         Status = STATUS_SUCCESS;
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Leaving. Status = 0x%x\n", Status));
 
@@ -532,9 +527,8 @@ NTSTATUS TCPSendData
 {
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Called for %d bytes (on socket %x)\n",
                            SendLength, Connection->SocketContext));
@@ -558,7 +552,7 @@ NTSTATUS TCPSendData
         Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
         if (!Bucket)
         {
-            UnlockObject(Connection, OldIrql);
+            UnlockObject(Connection);
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Failed to allocate bucket\n"));
             return STATUS_NO_MEMORY;
         }
@@ -570,7 +564,7 @@ NTSTATUS TCPSendData
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Queued write irp\n"));
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP, ("[IP, TCPSendData] Leaving. Status = %x\n", Status));
 
@@ -606,13 +600,12 @@ NTSTATUS TCPGetSockAddress
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
     ip_addr_t ipaddr;
     NTSTATUS Status;
-    KIRQL OldIrql;
-    
+
     AddressIP->TAAddressCount = 1;
     AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     if (GetRemote)
     {
@@ -627,7 +620,7 @@ NTSTATUS TCPGetSockAddress
                                     &AddressIP->Address[0].Address[0].sin_port));
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
     
     AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
     
@@ -641,7 +634,6 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
 {
     PLIST_ENTRY Entry;
     PLIST_ENTRY ListHead[5];
-    KIRQL OldIrql;
     PTDI_BUCKET Bucket;
     UINT i = 0;
     BOOLEAN Found = FALSE;
@@ -652,7 +644,7 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
     ListHead[3] = &Endpoint->ListenRequest;
     ListHead[4] = &Endpoint->ShutdownRequest;
 
-    LockObject(Endpoint, &OldIrql);
+    LockObject(Endpoint);
 
     for( i = 0; i < 5; i++ )
     {
@@ -671,7 +663,7 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
         }
     }
 
-    UnlockObject(Endpoint, OldIrql);
+    UnlockObject(Endpoint);
 
     return Found;
 }

@@ -248,7 +248,6 @@ TCPFinEventHandler(void *arg, const err_t err)
 {
    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
    const NTSTATUS Status = TCPTranslateError(err);
-   KIRQL OldIrql;
 
    ASSERT(Connection->SocketContext == NULL);
    ASSERT(Connection->AddressFile);
@@ -257,7 +256,7 @@ TCPFinEventHandler(void *arg, const err_t err)
    /* Complete all outstanding requests now */
    FlushAllQueues(Connection, Status);
 
-   LockObject(Connection, &OldIrql);
+   LockObject(Connection);
 
    LockObjectAtDpcLevel(Connection->AddressFile);
 
@@ -290,7 +289,7 @@ TCPFinEventHandler(void *arg, const err_t err)
    DereferenceObject(Connection->AddressFile);
    Connection->AddressFile = NULL;
 
-   UnlockObject(Connection, OldIrql);
+   UnlockObject(Connection);
 }
     
 VOID
@@ -301,8 +300,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
     PLIST_ENTRY Entry;
     PIRP Irp;
     NTSTATUS Status;
-    KIRQL OldIrql;
-        
+
     ReferenceObject(Connection);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
@@ -326,7 +324,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
                 
         if (Status == STATUS_SUCCESS)
         {
-            LockObject(Bucket->AssociatedEndpoint, &OldIrql);
+            LockObject(Bucket->AssociatedEndpoint);
 
             /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
@@ -339,7 +337,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
             
             LibTCPAccept(newpcb, (PTCP_PCB)Connection->SocketContext, Bucket->AssociatedEndpoint);
 
-            UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
+            UnlockObject(Bucket->AssociatedEndpoint);
         }
         
         DereferenceObject(Bucket->AssociatedEndpoint);
