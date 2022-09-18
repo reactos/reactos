@@ -46,7 +46,7 @@ NTSTATUS AddGenericHeaderIPv4(
 		&IPPacket->TotalSize );
     IPPacket->MappedHeader = TRUE;
 
-    IPPacket->HeaderSize = sizeof(IPv4_HEADER);
+    IPPacket->HeaderSize = 20;
 
     TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n",
 			    BufferSize, IPPacket->Header));

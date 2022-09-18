@@ -8,7 +8,7 @@
 #include "lwip/tcpip.h"
 
 err_t
-TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
+TCPSendDataCallback(struct netif *netif, struct pbuf *p, const ip4_addr_t *dest)
 {
     NDIS_STATUS NdisStatus;
     PNEIGHBOR_CACHE_ENTRY NCE;
@@ -23,14 +23,14 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
     {
         Header = p->payload;
-
+        
         LocalAddress.Type = IP_ADDRESS_V4;
         LocalAddress.Address.IPv4Address = Header->SrcAddr;
-
+        
         RemoteAddress.Type = IP_ADDRESS_V4;
         RemoteAddress.Address.IPv4Address = Header->DstAddr;
     }
-    else
+    else 
     {
         return ERR_IF;
     }
@@ -96,20 +96,20 @@ err_t
 TCPInterfaceInit(struct netif *netif)
 {
     PIP_INTERFACE IF = netif->state;
-
+    
     netif->hwaddr_len = IF->AddressLength;
     RtlCopyMemory(netif->hwaddr, IF->Address, netif->hwaddr_len);
 
     netif->output = TCPSendDataCallback;
     netif->mtu = IF->MTU;
-
+    
     netif->name[0] = 'e';
     netif->name[1] = 'n';
-
+    
     netif->flags |= NETIF_FLAG_BROADCAST;
-
+    
     TCPUpdateInterfaceLinkStatus(IF);
-
+    
     TCPUpdateInterfaceIPInformation(IF);
 
     return 0;
@@ -118,15 +118,15 @@ TCPInterfaceInit(struct netif *netif)
 VOID
 TCPRegisterInterface(PIP_INTERFACE IF)
 {
-    struct ip_addr ipaddr;
-    struct ip_addr netmask;
-    struct ip_addr gw;
-
+    ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gw;
+    
     gw.addr = 0;
     ipaddr.addr = 0;
     netmask.addr = 0;
-
-    IF->TCPContext = netif_add(IF->TCPContext,
+    
+    IF->TCPContext = netif_add(IF->TCPContext, 
                                &ipaddr,
                                &netmask,
                                &gw,
@@ -144,22 +144,22 @@ TCPUnregisterInterface(PIP_INTERFACE IF)
 VOID
 TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
 {
-    struct ip_addr ipaddr;
-    struct ip_addr netmask;
-    struct ip_addr gw;
-
+	ip_addr_t ipaddr;
+	ip_addr_t netmask;
+	ip_addr_t gw;
+    
     gw.addr = 0;
-
+    
     GetInterfaceIPv4Address(IF,
                             ADE_UNICAST,
                             (PULONG)&ipaddr.addr);
-
+    
     GetInterfaceIPv4Address(IF,
                             ADE_ADDRMASK,
                             (PULONG)&netmask.addr);
-
+    
     netif_set_addr(IF->TCPContext, &ipaddr, &netmask, &gw);
-
+    
     if (ipaddr.addr != 0)
     {
         netif_set_up(IF->TCPContext);
@@ -169,4 +169,4 @@ TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
     {
         netif_set_down(IF->TCPContext);
     }
-}
+}    
