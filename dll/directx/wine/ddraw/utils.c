@@ -570,7 +570,7 @@ unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags)
     unsigned int wined3d_flags;
 
     wined3d_flags = flags & handled;
-    if (!(flags & (DDLOCK_NOOVERWRITE | DDLOCK_DISCARDCONTENTS)))
+    if (!(flags & (DDLOCK_NOOVERWRITE | DDLOCK_DISCARDCONTENTS | DDLOCK_WRITEONLY)))
         wined3d_flags |= WINED3D_MAP_READ;
     if (!(flags & DDLOCK_READONLY))
         wined3d_flags |= WINED3D_MAP_WRITE;
@@ -578,19 +578,10 @@ unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags)
         wined3d_flags |= WINED3D_MAP_READ | WINED3D_MAP_WRITE;
     if (flags & DDLOCK_NODIRTYUPDATE)
         wined3d_flags |= WINED3D_MAP_NO_DIRTY_UPDATE;
-    flags &= ~(handled | DDLOCK_WAIT | DDLOCK_READONLY | DDLOCK_NODIRTYUPDATE);
+    flags &= ~(handled | DDLOCK_WAIT | DDLOCK_READONLY | DDLOCK_WRITEONLY | DDLOCK_NODIRTYUPDATE);
 
-#ifndef __REACTOS__
     if (flags)
         FIXME("Unhandled flags %#x.\n", flags);
-#elif defined(__REACTOS__) && defined(DBG)
-    if (flags == 0x20)
-    {
-        static int bWarnedOnce = 0; if (!bWarnedOnce) { bWarnedOnce++; FIXME("Unhandled flag 0x20 once\n"); }
-    }
-    else if (flags)
-        FIXME("Unhandled flags %#x.\n", flags);
-#endif
 
     return wined3d_flags;
 }
