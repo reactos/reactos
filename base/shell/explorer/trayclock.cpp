@@ -414,10 +414,34 @@ VOID CTrayClockWnd::UpdateWnd()
     delete[] szDate;
 }
 
+BOOL SameTime(SYSTEMTIME a, SYSTEMTIME b)
+{
+    /*
+    no need to look for milliseconds nor seconds (only used if second not displayed)
+    */
+    
+    return (a.wMinute == b.wMinute) &&
+           (a.wHour == b.wHour) &&
+           (a.wDay == b.wDay) &&
+           (a.wMonth == b.wMonth) &&
+           (a.wYear == b.wYear);
+}
+
 VOID CTrayClockWnd::Update()
 {
+    static SYSTEMTIME LocalTime_old;
+    static BOOL bShowSeconds_old;
+    
     GetLocalTime(&LocalTime);
+    
+    /* if seconds not displayed and time (w/o secs) and date unchanged, no need to update
+    but force update if switching from hh:mm:ss to hh:mm*/
+    if (SameTime(LocalTime, LocalTime_old) && !g_TaskbarSettings.bShowSeconds && !bShowSeconds_old)
+        return;
+    
     UpdateWnd();
+    LocalTime_old = LocalTime;
+    bShowSeconds_old = g_TaskbarSettings.bShowSeconds;
 }
 
 UINT CTrayClockWnd::CalculateDueTime()
@@ -426,8 +450,6 @@ UINT CTrayClockWnd::CalculateDueTime()
 
     GetLocalTime(&LocalTime);
     uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-    if (!g_TaskbarSettings.bShowSeconds)
-        uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
     return uiDueTime;
 }
@@ -469,16 +491,8 @@ VOID CTrayClockWnd::CalibrateTimer()
 
     uiDueTime = CalculateDueTime();
 
-    if (g_TaskbarSettings.bShowSeconds)
-    {
-        uiWait1 = 1000 - 200;
-        uiWait2 = 1000;
-    }
-    else
-    {
-        uiWait1 = 60 * 1000 - 200;
-        uiWait2 = 60 * 1000;
-    }
+    uiWait1 = 1000 - 200;
+    uiWait2 = 1000;
 
     if (uiDueTime > uiWait1)
     {
