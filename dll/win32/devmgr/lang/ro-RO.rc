@@ -257,8 +257,8 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
     LTEXT "Avertisment: Urmează să dezinstalați acest dispozitiv din sistemul dvs.", -1, 7, 37, 204, 50
-    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 166, 100, 50, 14
+    DEFPUSHBUTTON "Confirmă", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "Anulează", IDCANCEL, 166, 100, 50, 14
 END
 
 
