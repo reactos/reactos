@@ -9,8 +9,6 @@
 #include <checksum.h>
 
 
-#define UINT16_MAX (65535U)
-
 typedef struct _ICMP_PACKET_CONTEXT
 {
     TDI_REQUEST TdiRequest;
