@@ -196,3 +196,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barre des tâches et Menu Démarrer"
     IDS_RESTORE_ALL "&Afficher les fenêtres ouvertes"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Annuler &cascade"
+    IDS_TRAYWND_UNDO_TILE "Annuler &mosaïque"
+END

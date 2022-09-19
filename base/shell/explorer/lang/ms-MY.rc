@@ -198,3 +198,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bar Tugas dan Menu Mula"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &cascade windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &tile windows"
+END
