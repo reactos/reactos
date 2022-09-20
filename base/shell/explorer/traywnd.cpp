@@ -280,10 +280,6 @@ public:
     {
     }
 
-    virtual ~CTrayShowDesktopButton()
-    {
-    }
-
     INT WidthOrHeight() const
     {
         INT cxy = GetSystemMetrics(SM_CXEDGE);
@@ -307,22 +303,13 @@ public:
         INPUT input[4];
         ZeroMemory(input, sizeof(input));
 
-        // Win+D
-        input[0].type = INPUT_KEYBOARD;
-        input[0].ki.wVk = VK_LWIN;
-
-        input[1].type = INPUT_KEYBOARD;
-        input[1].ki.wVk = 'D';
-
-        input[2].type = INPUT_KEYBOARD;
-        input[2].ki.wVk = 'D';
-        input[2].ki.dwFlags = KEYEVENTF_KEYUP;
-
-        input[3].type = INPUT_KEYBOARD;
-        input[3].ki.wVk = VK_LWIN;
-        input[3].ki.dwFlags = KEYEVENTF_KEYUP;
-
+        // Emulate Win+D
+        input[0].type = input[1].type = input[2].type = input[3].type = INPUT_KEYBOARD;
+        input[0].ki.wVk = input[3].ki.wVk = VK_LWIN;
+        input[1].ki.wVk = input[2].ki.wVk = 'D';
+        input[2].ki.dwFlags = input[3].ki.dwFlags = KEYEVENTF_KEYUP;
         ::SendInput(_countof(input), input, sizeof(INPUT));
+
         return 0;
     }
 
@@ -2740,7 +2727,6 @@ ChangePos:
            get pressed when the user clicked left or below the button */
 
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-
         WINDOWINFO wi = {sizeof(WINDOWINFO)};
 
         RECT rcStartBtn;
