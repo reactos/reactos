@@ -273,7 +273,8 @@ class CTrayShowDesktopButton :
     public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
 {
 public:
-    DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
+    DECLARE_WND_CLASS_EX(szTrayShowDesktopButton,
+                         CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
 
     CTrayShowDesktopButton()
     {
@@ -338,6 +339,7 @@ public:
 
     BEGIN_MSG_MAP(CTrayShowDesktopButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
