@@ -2727,6 +2727,7 @@ ChangePos:
 
         RECT rcShowDesktop;
         m_ShowDesktopButton.GetWindowRect(&rcShowDesktop);
+        InflateRect(&rcShowDesktop, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
 
         bHandled = FALSE;
 
@@ -2736,7 +2737,7 @@ ChangePos:
         {
             case ABE_TOP:
             {
-                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.right <= pt.x)
+                if (::PtInRect(&rcShowDesktop, pt))
                 {
                     m_ShowDesktopButton.Click();
                     bHandled = TRUE;
@@ -2749,7 +2750,7 @@ ChangePos:
             }
             case ABE_LEFT:
             {
-                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.bottom <= pt.y)
+                if (::PtInRect(&rcShowDesktop, pt))
                 {
                     m_ShowDesktopButton.Click();
                     bHandled = TRUE;
@@ -2762,7 +2763,7 @@ ChangePos:
             }
             case ABE_RIGHT:
             {
-                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.bottom <= pt.y)
+                if (::PtInRect(&rcShowDesktop, pt))
                 {
                     m_ShowDesktopButton.Click();
                     bHandled = TRUE;
@@ -2781,7 +2782,7 @@ ChangePos:
             }
             case ABE_BOTTOM:
             {
-                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.right <= pt.x)
+                if (::PtInRect(&rcShowDesktop, pt))
                 {
                     m_ShowDesktopButton.Click();
                     bHandled = TRUE;
