@@ -273,8 +273,8 @@ class CTrayShowDesktopButton :
     public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
 {
 public:
-    DECLARE_WND_CLASS_EX(szTrayShowDesktopButton,
-                         CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
+    DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+                         COLOR_3DFACE)
 
     CTrayShowDesktopButton()
     {
@@ -312,10 +312,10 @@ public:
         input[0].ki.wVk = VK_LWIN;
 
         input[1].type = INPUT_KEYBOARD;
-        input[1].ki.wVk = L'D';
+        input[1].ki.wVk = 'D';
 
         input[2].type = INPUT_KEYBOARD;
-        input[2].ki.wVk = L'D';
+        input[2].ki.wVk = 'D';
         input[2].ki.dwFlags = KEYEVENTF_KEYUP;
 
         input[3].type = INPUT_KEYBOARD;
@@ -327,6 +327,7 @@ public:
     }
 
 #define TSDB_CLICK (WM_USER + 100)
+
     VOID Click()
     {
         PostMessage(TSDB_CLICK, 0, 0);
@@ -334,9 +335,6 @@ public:
 
     LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (uMsg == WM_KEYUP)
-            return 0;
-
         Click();
         return 0;
     }
@@ -354,7 +352,7 @@ public:
 
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(&ps);
-        DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
+        ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
         EndPaint(&ps);
         return 0;
     }
