@@ -264,6 +264,85 @@ public:
 
 };
 
+static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";
+
+// The 'Show Desktop' button at edge of taskbar
+class CTrayShowDesktopButton :
+    public CComCoClass<CTrayShowDesktopButton>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
+{
+public:
+    DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
+
+    CTrayShowDesktopButton()
+    {
+    }
+
+    virtual ~CTrayShowDesktopButton()
+    {
+    }
+
+    INT WidthOrHeight() const
+    {
+        INT cxy = GetSystemMetrics(SM_CXEDGE);
+        return (cxy ? (2 * cxy) : 6);
+    }
+
+    HRESULT Create(HWND hwndParent)
+    {
+        DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+        ATL::CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>::
+            Create(hwndParent, NULL, NULL, style);
+        if (!m_hWnd)
+            return E_FAIL;
+
+        SetWindowTheme(m_hWnd, L"Start", NULL);
+        return S_OK;
+    }
+
+    VOID Click()
+    {
+        keybd_event(VK_LWIN, 0, 0, 0);
+        keybd_event(L'D', 0, 0, 0);
+        keybd_event(L'D', 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
+    }
+
+    LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (uMsg == WM_KEYUP)
+            return 0;
+
+        Click();
+        return 0;
+    }
+
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        ::InvalidateRect(m_hWnd, NULL, TRUE);
+        return 0;
+    }
+
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        RECT rc;
+        GetClientRect(&rc);
+
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(&ps);
+        DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
+        EndPaint(&ps);
+        return 0;
+    }
+
+    BEGIN_MSG_MAP(CTrayShowDesktopButton)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+    END_MSG_MAP()
+};
+
 class CTrayWindow :
     public CComCoClass<CTrayWindow>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -274,6 +353,7 @@ class CTrayWindow :
     public IContextMenu
 {
     CStartButton m_StartButton;
+    CTrayShowDesktopButton m_ShowDesktopButton;
 
     CComPtr<IMenuBand>  m_StartMenuBand;
     CComPtr<IMenuPopup> m_StartMenuPopup;
@@ -327,6 +407,7 @@ public:
 public:
     CTrayWindow() :
         m_StartButton(),
+        m_ShowDesktopButton(),
         m_Theme(NULL),
         m_Font(NULL),
         m_DesktopWnd(NULL),
@@ -1617,7 +1698,7 @@ ChangePos:
 
         /* We're about to resize/move the start button, the rebar control and
            the tray notification control */
-        dwp = BeginDeferWindowPos(3);
+        dwp = BeginDeferWindowPos(4);
         if (dwp == NULL)
         {
             ERR("BeginDeferWindowPos failed. lastErr=%d\n", GetLastError());
@@ -1652,6 +1733,39 @@ ChangePos:
             {
                 ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
                 return;
+            }
+        }
+
+        if (m_ShowDesktopButton.m_hWnd)
+        {
+            INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
+
+            /* Resize and reposition the button */
+            if (Horizontal)
+            {
+                dwp = m_ShowDesktopButton.DeferWindowPos(
+                    dwp,
+                    NULL,
+                    rcClient.right - cxyShowDesktop,
+                    0,
+                    rcClient.right,
+                    rcClient.bottom,
+                    SWP_NOZORDER | SWP_NOACTIVATE);
+
+                rcClient.right -= cxyShowDesktop + ::GetSystemMetrics(SM_CXEDGE);
+            }
+            else
+            {
+                dwp = m_ShowDesktopButton.DeferWindowPos(
+                    dwp,
+                    NULL,
+                    0,
+                    rcClient.bottom - cxyShowDesktop,
+                    rcClient.right,
+                    rcClient.bottom,
+                    SWP_NOZORDER | SWP_NOACTIVATE);
+
+                rcClient.bottom -= cxyShowDesktop + ::GetSystemMetrics(SM_CYEDGE);
             }
         }
 
@@ -2224,6 +2338,9 @@ ChangePos:
         /* Create the Start button */
         m_StartButton.Create(m_hWnd);
 
+        /* Create the 'Show Desktop' button */
+        m_ShowDesktopButton.Create(m_hWnd);
+
         /* Load the saved tray window settings */
         RegLoadSettings();
 
@@ -2600,25 +2717,56 @@ ChangePos:
            get pressed when the user clicked left or below the button */
 
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+
         WINDOWINFO wi = {sizeof(WINDOWINFO)};
+
         RECT rcStartBtn;
+        m_StartButton.GetWindowRect(&rcStartBtn);
+
+        RECT rcShowDesktop;
+        m_ShowDesktopButton.GetWindowRect(&rcShowDesktop);
 
         bHandled = FALSE;
 
-        m_StartButton.GetWindowRect(&rcStartBtn);
         GetWindowInfo(m_hWnd, &wi);
 
         switch (m_Position)
         {
             case ABE_TOP:
+            {
+                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.right <= pt.x)
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return 0;
+                }
+
+                if (pt.x > rcStartBtn.right || pt.y > rcStartBtn.bottom)
+                    return 0;
+                break;
+            }
             case ABE_LEFT:
             {
+                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.bottom <= pt.y)
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return 0;
+                }
+
                 if (pt.x > rcStartBtn.right || pt.y > rcStartBtn.bottom)
                     return 0;
                 break;
             }
             case ABE_RIGHT:
             {
+                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.bottom <= pt.y)
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return 0;
+                }
+
                 if (pt.x < rcStartBtn.left || pt.y > rcStartBtn.bottom)
                     return 0;
 
@@ -2631,10 +2779,15 @@ ChangePos:
             }
             case ABE_BOTTOM:
             {
-                if (pt.x > rcStartBtn.right || pt.y < rcStartBtn.top)
+                if (::PtInRect(&rcShowDesktop, pt) || rcShowDesktop.right <= pt.x)
                 {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
                     return 0;
                 }
+
+                if (pt.x > rcStartBtn.right || pt.y < rcStartBtn.top)
+                    return 0;
 
                 if (rcStartBtn.bottom + (int)wi.cyWindowBorders * 2 + 1 < wi.rcWindow.bottom &&
                     pt.y > rcStartBtn.bottom)
