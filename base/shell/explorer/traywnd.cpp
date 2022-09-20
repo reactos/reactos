@@ -302,12 +302,34 @@ public:
         return S_OK;
     }
 
+    LRESULT OnClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        INPUT input[4];
+        ZeroMemory(input, sizeof(input));
+
+        // Win+D
+        input[0].type = INPUT_KEYBOARD;
+        input[0].ki.wVk = VK_LWIN;
+
+        input[1].type = INPUT_KEYBOARD;
+        input[1].ki.wVk = L'D';
+
+        input[2].type = INPUT_KEYBOARD;
+        input[2].ki.wVk = L'D';
+        input[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+        input[3].type = INPUT_KEYBOARD;
+        input[3].ki.wVk = VK_LWIN;
+        input[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+        ::SendInput(_countof(input), input, sizeof(INPUT));
+        return 0;
+    }
+
+#define TSDB_CLICK (WM_USER + 100)
     VOID Click()
     {
-        keybd_event(VK_LWIN, 0, 0, 0);
-        keybd_event(L'D', 0, 0, 0);
-        keybd_event(L'D', 0, KEYEVENTF_KEYUP, 0);
-        keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
+        PostMessage(TSDB_CLICK, 0, 0);
     }
 
     LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -342,6 +364,7 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(TSDB_CLICK, OnClick)
     END_MSG_MAP()
 };
 
