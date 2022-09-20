@@ -2746,51 +2746,24 @@ ChangePos:
         RECT rcStartBtn;
         m_StartButton.GetWindowRect(&rcStartBtn);
 
-        RECT rcShowDesktop;
-        m_ShowDesktopButton.GetWindowRect(&rcShowDesktop);
-        InflateRect(&rcShowDesktop, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
-
         bHandled = FALSE;
+
+        if (CheckShowDesktopClick(lParam, bHandled))
+            return TRUE;
 
         GetWindowInfo(m_hWnd, &wi);
 
         switch (m_Position)
         {
             case ABE_TOP:
-            {
-                if (::PtInRect(&rcShowDesktop, pt))
-                {
-                    m_ShowDesktopButton.Click();
-                    bHandled = TRUE;
-                    return 0;
-                }
-
-                if (pt.x > rcStartBtn.right || pt.y > rcStartBtn.bottom)
-                    return 0;
-                break;
-            }
             case ABE_LEFT:
             {
-                if (::PtInRect(&rcShowDesktop, pt))
-                {
-                    m_ShowDesktopButton.Click();
-                    bHandled = TRUE;
-                    return 0;
-                }
-
                 if (pt.x > rcStartBtn.right || pt.y > rcStartBtn.bottom)
                     return 0;
                 break;
             }
             case ABE_RIGHT:
             {
-                if (::PtInRect(&rcShowDesktop, pt))
-                {
-                    m_ShowDesktopButton.Click();
-                    bHandled = TRUE;
-                    return 0;
-                }
-
                 if (pt.x < rcStartBtn.left || pt.y > rcStartBtn.bottom)
                     return 0;
 
@@ -2803,13 +2776,6 @@ ChangePos:
             }
             case ABE_BOTTOM:
             {
-                if (::PtInRect(&rcShowDesktop, pt))
-                {
-                    m_ShowDesktopButton.Click();
-                    bHandled = TRUE;
-                    return 0;
-                }
-
                 if (pt.x > rcStartBtn.right || pt.y < rcStartBtn.top)
                     return 0;
 
@@ -2941,8 +2907,66 @@ HandleTrayContextMenu:
         return Ret;
     }
 
+    BOOL CheckShowDesktopClick(LPARAM lParam, BOOL& bHandled)
+    {
+        POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+
+        RECT rcShowDesktop;
+        m_ShowDesktopButton.GetWindowRect(&rcShowDesktop);
+        InflateRect(&rcShowDesktop, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
+
+        switch (m_Position)
+        {
+            case ABE_TOP:
+            {
+                if (::PtInRect(&rcShowDesktop, pt))
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return TRUE;
+                }
+                break;
+            }
+            case ABE_LEFT:
+            {
+                if (::PtInRect(&rcShowDesktop, pt))
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return TRUE;
+                }
+                break;
+            }
+            case ABE_RIGHT:
+            {
+                if (::PtInRect(&rcShowDesktop, pt))
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return TRUE;
+                }
+                break;
+            }
+            case ABE_BOTTOM:
+            {
+                if (::PtInRect(&rcShowDesktop, pt))
+                {
+                    m_ShowDesktopButton.Click();
+                    bHandled = TRUE;
+                    return TRUE;
+                }
+                break;
+            }
+        }
+
+        return FALSE;
+    }
+
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        if (CheckShowDesktopClick(lParam, bHandled))
+            return TRUE;
+
         /* Let the clock handle the double click */
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
