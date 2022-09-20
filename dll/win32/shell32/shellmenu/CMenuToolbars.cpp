@@ -258,6 +258,10 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         }
         *theResult = TRUE;
         return S_OK;
+
+    default:
+        *theResult = 0L;
+        break;
     }
     return S_OK;
 }
