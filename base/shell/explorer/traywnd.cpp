@@ -2495,25 +2495,31 @@ ChangePos:
         return FALSE;
     }
 
-    LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    void DrawShowDesktop()
     {
-        DefWindowProc(uMsg, wParam, lParam);
-
         RECT rcButton, rcWnd;
         GetWindowRect(&rcWnd);
         m_ShowDesktopButton.GetWindowRect(&rcButton);
         ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
 
-        HDC hdc = ::GetDCEx(m_hWnd, NULL, DCX_WINDOW | DCX_USESTYLE);
+        HDC hdc = ::GetDCEx(m_hWnd, NULL, DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS);
         m_ShowDesktopButton.OnDraw(hdc, &rcButton);
         ::ReleaseDC(m_hWnd, hdc);
+    }
 
+    LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        DefWindowProc(uMsg, wParam, lParam);
         bHandled = TRUE;
 
         if (!m_Theme || g_TaskbarSettings.bLock)
+        {
+            DrawShowDesktop();
             return 0;
+        }
 
         DrawSizerWithTheme((HRGN) wParam);
+        DrawShowDesktop();
         return 0;
     }
 
@@ -3115,6 +3121,14 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        DefWindowProc(uMsg, wParam, lParam);
+        DrawShowDesktop();
+        bHandled = TRUE;
+        return 0;
+    }
+
     LRESULT OnNcCalcSize(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         RECT *rc = NULL;
@@ -3300,6 +3314,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
+        MESSAGE_HANDLER(WM_NCACTIVATE, OnNcActivate)
         MESSAGE_HANDLER(WM_NCPAINT, OnNcPaint)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
