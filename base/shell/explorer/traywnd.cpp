@@ -332,6 +332,12 @@ public:
         return 0;
     }
 
+    VOID OnDraw(HDC hdc, LPRECT prc)
+    {
+        // FIXME: Theme
+        ::DrawFrameControl(hdc, prc, DFC_BUTTON, DFCS_BUTTONPUSH);
+    }
+
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         RECT rc;
@@ -339,7 +345,7 @@ public:
 
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(&ps);
-        ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
+        OnDraw(hdc, &rc);
         EndPaint(&ps);
         return 0;
     }
@@ -2493,17 +2499,24 @@ ChangePos:
 
     LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (!m_Theme)
-        {
-            bHandled = FALSE;
-            return 0;
-        }
-        else if (g_TaskbarSettings.bLock)
-        {
-            return 0;
-        }
+        DefWindowProc(uMsg, wParam, lParam);
 
-        return DrawSizerWithTheme((HRGN) wParam);
+        RECT rcButton, rcWnd;
+        GetWindowRect(&rcWnd);
+        m_ShowDesktopButton.GetWindowRect(&rcButton);
+        ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
+
+        HDC hdc = ::GetDCEx(m_hWnd, (HRGN)wParam, DCX_WINDOW | DCX_USESTYLE | DCX_INTERSECTRGN);
+        m_ShowDesktopButton.OnDraw(hdc, &rcButton);
+        ::ReleaseDC(m_hWnd, hdc);
+
+        bHandled = TRUE;
+
+        if (!m_Theme || g_TaskbarSettings.bLock)
+            return 0;
+
+        DrawSizerWithTheme((HRGN) wParam);
+        return 0;
     }
 
     LRESULT OnCtlColorBtn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3273,7 +3286,6 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_DISPLAYCHANGE, OnDisplayChange)
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
-        MESSAGE_HANDLER(WM_NCPAINT, OnNcPaint)
         MESSAGE_HANDLER(WM_CTLCOLORBTN, OnCtlColorBtn)
         MESSAGE_HANDLER(WM_MOVING, OnMoving)
         MESSAGE_HANDLER(WM_SIZING, OnSizing)
@@ -3290,6 +3302,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
+        MESSAGE_HANDLER(WM_NCPAINT, OnNcPaint)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
