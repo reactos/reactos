@@ -268,8 +268,6 @@ static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";
 
 // The 'Show Desktop' button at edge of taskbar
 class CTrayShowDesktopButton :
-    public CComCoClass<CTrayShowDesktopButton>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
 {
 public:
@@ -2506,7 +2504,7 @@ ChangePos:
         m_ShowDesktopButton.GetWindowRect(&rcButton);
         ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
 
-        HDC hdc = ::GetDCEx(m_hWnd, (HRGN)wParam, DCX_WINDOW | DCX_USESTYLE | DCX_INTERSECTRGN);
+        HDC hdc = ::GetDCEx(m_hWnd, NULL, DCX_WINDOW | DCX_USESTYLE);
         m_ShowDesktopButton.OnDraw(hdc, &rcButton);
         ::ReleaseDC(m_hWnd, hdc);
 
