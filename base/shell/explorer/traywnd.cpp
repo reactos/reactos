@@ -366,7 +366,6 @@ public:
 
     BEGIN_MSG_MAP(CTrayShowDesktopButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnSettingChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
