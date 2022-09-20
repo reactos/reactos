@@ -135,6 +135,7 @@ class CDefView :
         INT _FindInsertableIndexFromPoint(POINT pt);
         void _HandleStatusBarResize(int width);
         void _ForceStatusBarResize();
+        void InitCM();
 
     public:
         CDefView();
@@ -1304,18 +1305,20 @@ UINT ReallyGetMenuItemID(HMENU hmenu, int i)
     return UINT_MAX;
 }
 
-HRESULT CDefView::FillFileMenu()
+void CDefView::InitCM()
 {
-    HMENU hFileMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_FILE);
-    if (!hFileMenu)
-        return E_FAIL;
-
-    /* Release cached IContextMenu */
     if (m_pCM)
     {
         IUnknown_SetSite(m_pCM, NULL);
         m_pCM.Release();
     }
+}
+
+HRESULT CDefView::FillFileMenu()
+{
+    HMENU hFileMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_FILE);
+    if (!hFileMenu)
+        return E_FAIL;
 
     /* Cleanup the items added previously */
     for (int i = GetMenuItemCount(hFileMenu) - 1; i >= 0; i--)
@@ -1327,6 +1330,8 @@ HRESULT CDefView::FillFileMenu()
 
     m_cidl = m_ListView.GetSelectedCount();
 
+    /* Release cached IContextMenu */
+    InitCM();
     /* Store the context menu in m_pCM and keep it in order to invoke the selected command later on */
     HRESULT hr = GetItemObject((m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND),
                                IID_PPV_ARG(IContextMenu, &m_pCM));
@@ -1513,6 +1518,8 @@ HRESULT CDefView::OpenSelectedItems()
     if (!hMenu)
         return E_FAIL;
 
+    /* Release cached IContextMenu */
+    InitCM();
     hResult = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
@@ -1531,15 +1538,10 @@ HRESULT CDefView::OpenSelectedItems()
     InvokeContextMenuCommand(uCommand);
 
 cleanup:
+    InitCM();
 
     if (hMenu)
         DestroyMenu(hMenu);
-
-    if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
-        m_pCM.Release();
-    }
 
     return hResult;
 }
@@ -1579,6 +1581,8 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     m_cidl = m_ListView.GetSelectedCount();
 
+    /* Release cached IContextMenu */
+    InitCM();
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
@@ -1636,12 +1640,8 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     InvokeContextMenuCommand(uCommand - CONTEXT_MENU_BASE_ID);
 
 cleanup:
-    if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
-        m_pCM.Release();
-    }
-
+    InitCM();
+    
     if (m_hContextMenu)
     {
         DestroyMenu(m_hContextMenu);
@@ -1656,6 +1656,8 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     HRESULT hResult;
     HMENU hMenu = NULL;
 
+    /* Release cached IContextMenu */
+    InitCM();
     hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY( hResult))
         goto cleanup;
@@ -1676,29 +1678,25 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
         SFGAOF rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
         hResult = m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &rfg);
         if (FAILED_UNEXPECTEDLY(hResult))
-            return 0;
+            goto cleanup;
 
         if (!(rfg & SFGAO_CANMOVE) && uCommand == FCIDM_SHVIEW_CUT)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANCOPY) && uCommand == FCIDM_SHVIEW_COPY)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANDELETE) && uCommand == FCIDM_SHVIEW_DELETE)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_CANRENAME) && uCommand == FCIDM_SHVIEW_RENAME)
-            return 0;
+            goto cleanup;
         if (!(rfg & SFGAO_HASPROPSHEET) && uCommand == FCIDM_SHVIEW_PROPERTIES)
-            return 0;
+            goto cleanup;
     }
 
     InvokeContextMenuCommand(uCommand);
 
 cleanup:
-    if (m_pCM)
-    {
-        IUnknown_SetSite(m_pCM, NULL);
-        m_pCM.Release();
-    }
-
+    InitCM();
+    
     if (hMenu)
         DestroyMenu(hMenu);
 
