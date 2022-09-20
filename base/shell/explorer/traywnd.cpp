@@ -292,7 +292,8 @@ public:
         if (!m_hWnd)
             return E_FAIL;
 
-        SetWindowTheme(m_hWnd, L"Start", NULL);
+        if (::SetWindowTheme(m_hWnd, L"Start", NULL) != S_OK)
+            ::SetWindowTheme(m_hWnd, L"Explorer", NULL);
         return S_OK;
     }
 
@@ -332,8 +333,16 @@ public:
 
     VOID OnDraw(HDC hdc, LPRECT prc)
     {
-        // FIXME: Theme
-        ::DrawFrameControl(hdc, prc, DFC_BUTTON, DFCS_BUTTONPUSH);
+        HTHEME hTheme = ::GetWindowTheme(m_hWnd);
+        if (hTheme)
+        {
+            ::DrawThemeParentBackground(m_hWnd, hdc, prc);
+            ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
+        }
+        else
+        {
+            ::DrawFrameControl(hdc, prc, DFC_BUTTON, DFCS_BUTTONPUSH);
+        }
     }
 
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -352,6 +361,7 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
+        MESSAGE_HANDLER(WM_THEMECHANGED, OnSettingChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(TSDB_CLICK, OnClick)
     END_MSG_MAP()
