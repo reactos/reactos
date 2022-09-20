@@ -1750,7 +1750,7 @@ ChangePos:
                     NULL,
                     rcClient.right - cxyShowDesktop,
                     0,
-                    rcClient.right,
+                    cxyShowDesktop + 16,
                     rcClient.bottom,
                     SWP_NOZORDER | SWP_NOACTIVATE);
 
@@ -1764,7 +1764,7 @@ ChangePos:
                     0,
                     rcClient.bottom - cxyShowDesktop,
                     rcClient.right,
-                    rcClient.bottom,
+                    cxyShowDesktop + 16,
                     SWP_NOZORDER | SWP_NOACTIVATE);
 
                 rcClient.bottom -= cxyShowDesktop + ::GetSystemMetrics(SM_CYEDGE);
