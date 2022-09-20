@@ -270,11 +270,13 @@ static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";
 class CTrayShowDesktopButton :
     public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
 {
+    LONG m_nClickedTime;
+
 public:
     DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
                          COLOR_3DFACE)
 
-    CTrayShowDesktopButton()
+    CTrayShowDesktopButton() : m_nClickedTime(0)
     {
     }
 
@@ -299,6 +301,11 @@ public:
 
     LRESULT OnClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        LONG nTime0 = m_nClickedTime;
+        LONG nTime1 = ::GetMessageTime();
+        if (nTime1 - nTime0 >= 800) // 0.8sec
+            return 0;
+
         INPUT input[4];
         ZeroMemory(input, sizeof(input));
 
@@ -316,6 +323,7 @@ public:
 
     VOID Click()
     {
+        m_nClickedTime = ::GetMessageTime();
         PostMessage(TSDB_CLICK, 0, 0);
     }
 
