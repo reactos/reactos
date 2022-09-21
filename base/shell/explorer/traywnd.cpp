@@ -289,12 +289,9 @@ public:
 #undef SHOW_DESKTOP_MINIMUM_WIDTH
     }
 
-    HRESULT DoCreate(HWND hwndParent, BOOL bShow)
+    HRESULT DoCreate(HWND hwndParent)
     {
-        DWORD style = WS_CHILD | WS_CLIPSIBLINGS;
-        if (bShow)
-            style |= WS_VISIBLE;
-
+        DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
         Create(hwndParent, NULL, NULL, style);
         if (!m_hWnd)
             return E_FAIL;
@@ -1842,7 +1839,7 @@ ChangePos:
             }
         }
 
-        if (m_ShowDesktopButton.IsWindowVisible())
+        if (m_ShowDesktopButton.m_hWnd)
         {
             INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
 
@@ -2453,8 +2450,9 @@ ChangePos:
         /* Create the Start button */
         m_StartButton.Create(m_hWnd);
 
-        /* Create the 'Show Desktop' button */
-        m_ShowDesktopButton.DoCreate(m_hWnd, IsShowDesktopButtonNeeded());
+        /* Create the 'Show Desktop' button if necessary */
+        if (IsShowDesktopButtonNeeded())
+            m_ShowDesktopButton.DoCreate(m_hWnd);
 
         /* Load the saved tray window settings */
         RegLoadSettings();
