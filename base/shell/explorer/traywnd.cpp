@@ -264,7 +264,7 @@ public:
 
 };
 
-// This window class name is CONFIRMED by WinHier.
+// This window class name is CONFIRMED on Win10 by WinHier.
 static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";
 
 // The 'Show Desktop' button at edge of taskbar
@@ -272,11 +272,12 @@ class CTrayShowDesktopButton :
     public CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>
 {
     LONG m_nClickedTime;
+    BOOL m_bHovering;
 
 public:
     DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
 
-    CTrayShowDesktopButton() : m_nClickedTime(0)
+    CTrayShowDesktopButton() : m_nClickedTime(0), m_bHovering(FALSE)
     {
     }
 
@@ -350,15 +351,32 @@ public:
     VOID OnDraw(HDC hdc, LPRECT prc)
     {
         HTHEME hTheme = ::GetWindowTheme(m_hWnd);
-        if (hTheme)
+        if (hTheme && 0) // FIXME: It doesn't work.
         {
-            // FIXME: It doesn't work.
             ::DrawThemeParentBackground(m_hWnd, hdc, prc);
-            ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
+            if (m_bHovering)
+                ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_HOT, prc, prc);
+            else
+                ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
         }
         else
         {
-            ::DrawFrameControl(hdc, prc, DFC_BUTTON, DFCS_BUTTONPUSH);
+            RECT rc = *prc;
+            if (m_bHovering)
+            {
+                // Draw a hot button
+                ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH | DFCS_ADJUSTRECT);
+                HBRUSH hbrHot = ::CreateSolidBrush(RGB(255, 255, 191));
+                ::FillRect(hdc, &rc, hbrHot);
+                ::DeleteObject(hbrHot);
+            }
+            else
+            {
+                // Draw a flattish button
+                ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
+                ::InflateRect(&rc, -1, -1);
+                ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_3DFACE));
+            }
         }
     }
 
@@ -374,11 +392,60 @@ public:
         return 0;
     }
 
+#define SHOW_DESKTOP_TIMER_ID 999
+#define SHOW_DESKTOP_TIMER_INTERVAL 200
+
+    BOOL PtInButton(POINT pt)
+    {
+        RECT rc;
+        GetWindowRect(&rc);
+        ::InflateRect(&rc, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
+        return ::PtInRect(&rc, pt);
+    }
+
+    VOID StartHovering()
+    {
+        if (!m_bHovering)
+        {
+            m_bHovering = TRUE;
+            SetTimer(SHOW_DESKTOP_TIMER_ID, SHOW_DESKTOP_TIMER_INTERVAL, NULL);
+            InvalidateRect(NULL, TRUE);
+            ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+        }
+    }
+
+    LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        StartHovering();
+        return 0;
+    }
+
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam != SHOW_DESKTOP_TIMER_ID || !m_bHovering)
+            return 0;
+
+        POINT pt;
+        ::GetCursorPos(&pt);
+
+        if (!PtInButton(pt))
+        {
+            KillTimer(SHOW_DESKTOP_TIMER_ID);
+            m_bHovering = FALSE;
+            InvalidateRect(NULL, TRUE);
+            ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+        }
+
+        return 0;
+    }
+
     BEGIN_MSG_MAP(CTrayShowDesktopButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnSettingChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(TSDB_CLICK, OnClick)
     END_MSG_MAP()
 };
@@ -2950,11 +3017,7 @@ HandleTrayContextMenu:
     {
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
-        RECT rcShowDesktop;
-        m_ShowDesktopButton.GetWindowRect(&rcShowDesktop);
-        ::InflateRect(&rcShowDesktop, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
-
-        if (::PtInRect(&rcShowDesktop, pt))
+        if (m_ShowDesktopButton.PtInButton(pt))
         {
             m_ShowDesktopButton.Click();
             bHandled = TRUE;
@@ -3134,6 +3197,11 @@ HandleTrayContextMenu:
 
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        POINT pt;
+        ::GetCursorPos(&pt);
+        if (m_ShowDesktopButton.PtInButton(pt))
+            m_ShowDesktopButton.StartHovering();
+
         if (g_TaskbarSettings.sr.AutoHide)
         {
             SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
