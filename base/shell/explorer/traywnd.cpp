@@ -283,9 +283,10 @@ public:
 
     INT WidthOrHeight() const
     {
-        INT cxyMin = 6;
+#define SHOW_DESKTOP_MINIMUM_WIDTH 6
         INT cxy = 2 * ::GetSystemMetrics(SM_CXEDGE);
-        return (cxy >= cxyMin) ? cxy : cxyMin;
+        return ((cxy >= SHOW_DESKTOP_MINIMUM_WIDTH) ? cxy : SHOW_DESKTOP_MINIMUM_WIDTH);
+#undef SHOW_DESKTOP_MINIMUM_WIDTH
     }
 
     HRESULT DoCreate(HWND hwndParent, BOOL bShow)
