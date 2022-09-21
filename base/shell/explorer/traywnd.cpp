@@ -273,6 +273,7 @@ class CTrayShowDesktopButton :
 {
     LONG m_nClickedTime;
     BOOL m_bHovering;
+    HTHEME m_hTheme;
 
 public:
     DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
@@ -296,8 +297,7 @@ public:
         if (!m_hWnd)
             return E_FAIL;
 
-        if (::SetWindowTheme(m_hWnd, L"Start", NULL) != S_OK)
-            ::SetWindowTheme(m_hWnd, L"Explorer", NULL);
+        ::SetWindowTheme(m_hWnd, L"TaskBar", NULL);
         return S_OK;
     }
 
@@ -333,6 +333,11 @@ public:
 
     LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        if (m_hTheme)
+            ::CloseThemeData(m_hTheme);
+
+        m_hTheme = ::OpenThemeData(m_hWnd, L"TaskBar");
+
         ::InvalidateRect(m_hWnd, NULL, TRUE);
         return 0;
     }
@@ -340,14 +345,20 @@ public:
     // This function is called from OnPaint and parent.
     VOID OnDraw(HDC hdc, LPRECT prc)
     {
-        HTHEME hTheme = ::GetWindowTheme(m_hWnd);
-        if (hTheme && 0) // FIXME: It doesn't work.
+        if (m_hTheme)
         {
-            ::DrawThemeParentBackground(m_hWnd, hdc, prc);
             if (m_bHovering)
-                ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_HOT, prc, prc);
+            {
+                // Draw a hot button
+                HTHEME hButtonTheme = ::OpenThemeData(m_hWnd, L"Button");
+                ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_HOT, prc, prc);
+                ::CloseThemeData(hButtonTheme);
+            }
             else
-                ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
+            {
+                // Draw a taskbar background
+                ::DrawThemeBackground(m_hTheme, hdc, TBP_BACKGROUNDTOP, 0, prc, prc);
+            }
         }
         else
         {
@@ -435,6 +446,16 @@ public:
         return 0;
     }
 
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (m_hTheme)
+        {
+            CloseThemeData(m_hTheme);
+            m_hTheme = NULL;
+        }
+        return 0;
+    }
+
     BEGIN_MSG_MAP(CTrayShowDesktopButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
@@ -442,6 +463,7 @@ public:
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(TSDB_CLICK, OnClick)
     END_MSG_MAP()
 };
