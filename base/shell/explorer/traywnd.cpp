@@ -2437,12 +2437,13 @@ ChangePos:
         return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
-    BOOL IsShowDesktopButtonNeeded() // Read a registry value
+    BOOL IsShowDesktopButtonNeeded() // Read the registry value
     {
-        return SHRegGetBoolUSValueW(L"SOFTWARE\\ReactOS",
-                                    L"ShowDesktopButton",
-                                    FALSE,
-                                    TRUE);
+        return SHRegGetBoolUSValueW(
+            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+            L"TaskbarSd",
+            FALSE,
+            TRUE);
     }
 
     /**********************************************************
