@@ -2363,6 +2363,14 @@ ChangePos:
         return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
+    BOOL ShouldShowDesktopButton()
+    {
+        return SHRegGetBoolUSValueW(L"SOFTWARE\\ReactOS",
+                                    L"ShowDesktopButton",
+                                    FALSE,
+                                    TRUE);
+    }
+
     /**********************************************************
      *    ##### message handling #####
      */
@@ -2379,7 +2387,7 @@ ChangePos:
         m_StartButton.Create(m_hWnd);
 
         /* Create the 'Show Desktop' button */
-        m_ShowDesktopButton.DoCreate(m_hWnd, TRUE);
+        m_ShowDesktopButton.DoCreate(m_hWnd, ShouldShowDesktopButton());
 
         /* Load the saved tray window settings */
         RegLoadSettings();
