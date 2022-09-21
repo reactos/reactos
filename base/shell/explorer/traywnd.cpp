@@ -351,7 +351,7 @@ public:
             {
                 // Draw a hot button
                 HTHEME hButtonTheme = ::OpenThemeData(m_hWnd, L"Button");
-                ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_HOT, prc, prc);
+                ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
                 ::CloseThemeData(hButtonTheme);
             }
             else
