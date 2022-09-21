@@ -2,7 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * this library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -285,11 +285,13 @@ public:
         return (cxy ? (2 * cxy) : 6);
     }
 
-    HRESULT Create(HWND hwndParent)
+    HRESULT DoCreate(HWND hwndParent, BOOL bShow)
     {
         DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
-        ATL::CWindowImpl<CTrayShowDesktopButton, CWindow, CControlWinTraits>::
-            Create(hwndParent, NULL, NULL, style);
+        if (bShow)
+            style |= WS_VISIBLE;
+
+        Create(hwndParent, NULL, NULL, style);
         if (!m_hWnd)
             return E_FAIL;
 
@@ -1766,37 +1768,37 @@ ChangePos:
             }
         }
 
-        if (m_ShowDesktopButton.m_hWnd)
+        if (m_ShowDesktopButton.IsWindowVisible())
         {
             INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
 
-            /* Resize and reposition the button */
+            // Get rectangle from rcClient
+            RECT rc = rcClient;
             if (Horizontal)
             {
-                dwp = m_ShowDesktopButton.DeferWindowPos(
-                    dwp,
-                    NULL,
-                    rcClient.right - cxyShowDesktop,
-                    0,
-                    cxyShowDesktop + 16,
-                    rcClient.bottom,
-                    SWP_NOZORDER | SWP_NOACTIVATE);
-
-                rcClient.right -= cxyShowDesktop + ::GetSystemMetrics(SM_CXEDGE);
+                rc.left = rc.right - cxyShowDesktop;
+                rc.right += 5; // excessive
             }
             else
             {
-                dwp = m_ShowDesktopButton.DeferWindowPos(
-                    dwp,
-                    NULL,
-                    0,
-                    rcClient.bottom - cxyShowDesktop,
-                    rcClient.right,
-                    cxyShowDesktop + 16,
-                    SWP_NOZORDER | SWP_NOACTIVATE);
-
-                rcClient.bottom -= cxyShowDesktop + ::GetSystemMetrics(SM_CYEDGE);
+                rc.top = rc.bottom - cxyShowDesktop;
+                rc.bottom += 5; // excessive
             }
+
+            /* Resize and reposition the button */
+            dwp = m_ShowDesktopButton.DeferWindowPos(dwp,
+                                                     NULL,
+                                                     rc.left,
+                                                     rc.top,
+                                                     rc.right - rc.left,
+                                                     rc.bottom - rc.top,
+                                                     SWP_NOZORDER | SWP_NOACTIVATE);
+
+            // Adjust rcClient
+            if (Horizontal)
+                rcClient.right -= cxyShowDesktop + ::GetSystemMetrics(SM_CXEDGE);
+            else
+                rcClient.bottom -= cxyShowDesktop + ::GetSystemMetrics(SM_CYEDGE);
         }
 
         /* Determine the size that the tray notification window needs */
@@ -2369,7 +2371,7 @@ ChangePos:
         m_StartButton.Create(m_hWnd);
 
         /* Create the 'Show Desktop' button */
-        m_ShowDesktopButton.Create(m_hWnd);
+        m_ShowDesktopButton.DoCreate(m_hWnd, TRUE);
 
         /* Load the saved tray window settings */
         RegLoadSettings();
