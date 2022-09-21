@@ -13,6 +13,58 @@ BEGIN
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
+/* Command-line strings */
+STRINGTABLE
+BEGIN
+    STRING_USAGE "Usage:\n\
+  regedit [options] [filename] [reg_key]\n\n\
+Options:\n\
+  [no option]    Launch the graphical version of this program.\n\
+  /L:system.dat  The location of the system.dat file to be modified.\n\
+                 Compatible with any other switch. Ignored.\n\
+  /R:user.dat    The location of the user.dat file to be modified.\n\
+                 Compatible with any other switch. Ignored.\n\
+  /C             Import the contents of a registry file.\n\
+  /D             Delete a specified registry key.\n\
+  /E             Export the contents of a specified registry key to a file.\n\
+                 If no key is specified, the entire registry is exported.\n\
+  /S             Silent mode. No messages will be displayed.\n\
+  /V             Launch the GUI in advanced mode. Ignored.\n\
+  /?             Display this information and exit.\n\
+  [filename]     The location of the file containing registry information to\n\
+                 be imported. When used with [/E], this option specifies the\n\
+                 file location where registry information will be exported.\n\
+  [reg_key]      The registry key to be modified.\n\
+n\
+Usage examples:\n\
+  regedit ""import.reg""\n\
+  regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
+  regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
+    STRING_INVALID_SWITCH "regedit: Invalid or unrecognized switch [%1]\n"
+    STRING_HELP "Type ""regedit /?"" for help.\n"
+    STRING_NO_FILENAME "regedit: No filename was specified.\n"
+    STRING_NO_REG_KEY "regedit: No registry key was specified for removal.\n"
+    STRING_FILE_NOT_FOUND "regedit: The file '%1' was not found.\n"
+    STRING_CANNOT_OPEN_FILE "regedit: Unable to open the file '%1'.\n"
+    STRING_UNHANDLED_ACTION "regedit: Unhandled action.\n"
+    STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
+    STRING_INVALID_HEX "regedit: Invalid hexadecimal value.\n"
+    STRING_CSV_HEX_ERROR "regedit: Unable to convert hexadecimal data. An invalid value was encountered at '%1'.\n"
+    STRING_ESCAPE_SEQUENCE "regedit: Unrecognized escape sequence [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Unsupported registry data type [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: Unexpected end of line in '%1'.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: The line '%1' was not recognized.\n"
+    STRING_SETVALUE_FAILED "regedit: Unable to add the registry value '%1' to '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Unable to open the registry key '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Unsupported registry data type [0x%1!x!] encountered in '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: The registry value '%1' will be exported as binary data.\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: Invalid system key [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: Unable to export '%1'. The specified registry key was not found.\n"
+    STRING_DELETE_FAILED "regedit: Unable to delete the registry key '%1'.\n"
+    STRING_UNKNOWN_TYPE "Unknown Type"
+    STRING_INVALID_LINE_SYNTAX, "regedit: The line contains invalid syntax.\n"
+END
+
 /* Menus */
 
 IDC_REGEDIT MENU

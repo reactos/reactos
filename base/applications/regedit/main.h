@@ -30,7 +30,7 @@
 #define SPLIT_WIDTH    5
 #define SPLIT_MIN     30
 
-#define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
+#define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
 
 #define PM_MODIFYVALUE  0
 #define PM_NEW          1
@@ -38,9 +38,11 @@
 #define PM_ROOTITEM     3
 #define PM_HEXEDIT      4
 
-#define MAX_NEW_KEY_LEN 128
+#define MAX_NEW_KEY_LEN  128
+#define KEY_MAX_LEN      1024
 
-extern HINSTANCE hInst;
+#define REG_FORMAT_5     1
+#define REG_FORMAT_4     2
 
 /******************************************************************************/
 
@@ -86,71 +88,79 @@ extern WCHAR szFrameClass[];
 extern WCHAR szChildClass[];
 
 extern const WCHAR g_szGeneralRegKey[];
+extern const WCHAR* reg_class_namesW[];
 
 /* about.c */
-extern void ShowAboutBox(HWND hWnd);
+void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
-extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-extern void ResizeWnd(int cx, int cy);
-extern LPCWSTR get_root_key_name(HKEY hRootKey);
+LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+void ResizeWnd(int cx, int cy);
+LPCWSTR get_root_key_name(HKEY hRootKey);
 VOID UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath);
 
+/* edit.c */
+BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin);
+BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCWSTR keyPath);
+LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName);
+LONG RenameValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpDestValue, LPCWSTR lpSrcValue);
+LONG QueryStringValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR pszBuffer, DWORD dwBufferLen);
+BOOL GetKeyName(LPWSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCWSTR lpSubKey);
+
 /* error.c */
-extern int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...);
-extern int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMessage, ...);
+int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...);
+int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMessage, ...);
 
 /* find.c */
-extern void FindDialog(HWND hWnd);
-extern BOOL FindNext(HWND hWnd);
-extern void FindNextMessageBox(HWND hWnd);
+void FindDialog(HWND hWnd);
+BOOL FindNext(HWND hWnd);
+void FindNextMessageBox(HWND hWnd);
 
 /* framewnd.c */
-extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
-extern void SetupStatusBar(HWND hWnd, BOOL bResize);
-extern void UpdateStatusBar(void);
-extern BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName);
-extern BOOL ExportRegistryFile(HWND hWnd);
+LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+void SetupStatusBar(HWND hWnd, BOOL bResize);
+void UpdateStatusBar(void);
+BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName);
+BOOL ExportRegistryFile(HWND hWnd);
 
 /* listview.c */
-extern HWND CreateListView(HWND hwndParent, HMENU id, INT cx);
-extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath);
-extern LPCWSTR GetValueName(HWND hwndLV, int iStartAt);
-extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
-extern BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
-extern BOOL IsDefaultValue(HWND hwndLV, int i);
+HWND CreateListView(HWND hwndParent, HMENU id, INT cx);
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath);
+WCHAR *GetValueName(HWND hwndLV, int iStartAt);
+BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
+BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
+BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* regedit.c */
-LPCWSTR getAppName(void);
+void WINAPIV output_message(unsigned int id, ...);
+void WINAPIV error_exit(unsigned int id, ...);
 
-/* treeview.c */
-extern HWND CreateTreeView(HWND hwndParent, LPWSTR pHostName, HMENU id);
-extern BOOL RefreshTreeView(HWND hWndTV);
-extern BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
-extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
-extern LPCWSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
-extern BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem);
-extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name);
-extern HWND StartKeyRename(HWND hwndTV);
-extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
-extern BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath);
-extern void DestroyTreeView(HWND hwndTV);
-extern void DestroyListView(HWND hwndLV);
-extern void DestroyMainMenu(void);
-
-/* edit.c */
-extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin);
-extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCWSTR keyPath);
-extern LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName);
-extern LONG RenameValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpDestValue, LPCWSTR lpSrcValue);
-extern LONG QueryStringValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR pszBuffer, DWORD dwBufferLen);
-extern BOOL GetKeyName(LPWSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCWSTR lpSubKey);
+/* regproc.c */
+char *GetMultiByteString(const WCHAR *strW);
+BOOL import_registry_file(FILE *reg_file);
+void delete_registry_key(WCHAR *reg_key_name);
+BOOL export_registry_key(WCHAR *file_name, WCHAR *path, DWORD format);
 
 /* security.c */
-extern BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCWSTR lpMachine, LPCWSTR lpKeyName);
+BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCWSTR lpMachine, LPCWSTR lpKeyName);
 
 /* settings.c */
-extern void LoadSettings(void);
-extern void SaveSettings(void);
+void LoadSettings(void);
+void SaveSettings(void);
+
+/* treeview.c */
+HWND CreateTreeView(HWND hwndParent, LPWSTR pHostName, HMENU id);
+BOOL RefreshTreeView(HWND hWndTV);
+BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
+BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
+LPCWSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
+BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem);
+HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name);
+HWND StartKeyRename(HWND hwndTV);
+BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
+BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath);
+void DestroyTreeView(HWND hwndTV);
+void DestroyListView(HWND hwndLV);
+void DestroyMainMenu(void);
 
 /* EOF */

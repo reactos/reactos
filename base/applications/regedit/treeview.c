@@ -370,7 +370,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name)
             item.mask = TVIF_HANDLE | TVIF_TEXT;
             item.hItem = hNewItem;
             item.pszText = buf;
-            item.cchTextMax = COUNT_OF(buf);
+            item.cchTextMax = ARRAY_SIZE(buf);
             if (!TreeView_GetItem(hwndTV, &item)) continue;
             if (wcscmp(name, item.pszText) == 0) break;
         }
@@ -439,16 +439,12 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
 {
     HIMAGELIST himl;  /* handle to image list  */
     HICON hico;       /* handle to icon  */
+    INT cx = GetSystemMetrics(SM_CXSMICON);
+    INT cy = GetSystemMetrics(SM_CYSMICON);
 
     /* Create the image list.  */
-    if ((himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
-                                 GetSystemMetrics(SM_CYSMICON),
-                                 ILC_MASK | ILC_COLOR32,
-                                 0,
-                                 NUM_ICONS)) == NULL)
-    {
+    if ((himl = ImageList_Create(cx, cy, ILC_MASK, 0, NUM_ICONS)) == NULL)
         return FALSE;
-    }
 
     /* Add the open file, closed file, and document bitmaps.  */
     hico = LoadImageW(hInst,
@@ -586,7 +582,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     else if (RegOpenKeyW(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
         goto done;
 
-    if (LoadStringW(hInst, IDS_NEW_KEY, szNewKeyFormat, COUNT_OF(szNewKeyFormat)) <= 0)
+    if (LoadStringW(hInst, IDS_NEW_KEY, szNewKeyFormat, ARRAY_SIZE(szNewKeyFormat)) <= 0)
         goto done;
 
     /* Need to create a new key with a unique name */
@@ -700,9 +696,9 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             {
                 keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
                 if (wcslen(keyPath))
-                    _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
+                    _snwprintf(szBuffer, ARRAY_SIZE(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
                 else
-                    _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s", ptvdi->item.pszText);
+                    _snwprintf(szBuffer, ARRAY_SIZE(szBuffer), L"%s", ptvdi->item.pszText);
                 keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
                 if (RegOpenKeyExW(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
                 {
@@ -715,7 +711,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                     nRenResult = RenameKey(hRootKey, keyPath, ptvdi->item.pszText);
                     if (nRenResult != ERROR_SUCCESS)
                     {
-                        LoadStringW(hInst, IDS_ERROR, Caption, COUNT_OF(Caption));
+                        LoadStringW(hInst, IDS_ERROR, Caption, ARRAY_SIZE(Caption));
                         ErrorMessageBox(hWnd, Caption, nRenResult);
                         lResult = FALSE;
                     }
@@ -778,7 +774,7 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
     TVITEMW tvi;
 
     /* Load "My Computer" string... */
-    LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
+    LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, ARRAY_SIZE(szBuffer));
     wcscat(szBuffer, L"\\");
 
     /* ... and remove it from the key path */
@@ -820,7 +816,7 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
             tvi.hItem = hChildItem;
             tvi.mask = TVIF_TEXT | TVIF_CHILDREN;
             tvi.pszText = szBuffer;
-            tvi.cchTextMax = COUNT_OF(szBuffer);
+            tvi.cchTextMax = ARRAY_SIZE(szBuffer);
 
             (void)TreeView_GetItem(hwndTV, &tvi);
 

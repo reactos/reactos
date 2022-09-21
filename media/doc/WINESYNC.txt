@@ -247,7 +247,6 @@ base/applications/games/winmine     # Synced to WineStaging-2.16 with our own re
 base/applications/extrac32          # Synced to WineStaging-4.0
 base/applications/iexplore          # Synced to WineStaging-3.3
 base/applications/notepad           # Forked at Wine-20041201
-base/applications/regedit           # Out of sync
 base/applications/winhlp32          # Synced to WineStaging-4.0
 base/applications/wordpad           # Synced to WineStaging-1.9.16
 base/applications/write             # Synced to WineStaging-3.3
@@ -319,6 +318,10 @@ msvcrt -
   sdk/lib/crt/wine/heap.c               # Synced at 20080529
   sdk/lib/crt/wine/undname.c            # Synced to WineStaging-1.9.16
   sdk/lib/crt/process/thread.c          # Synced to WineStaging-1.7.55
+
+regedit
+  base/applications/regedit/regedit.c   # Synced to Wine-7.17
+  base/applications/regedit/regproc.c   # Synced to Wine-7.17
 
 user32 -
   win32ss/user/user32/controls/button.c    # Synced to WineStaging-1.7.37

@@ -8,10 +8,11 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <aclapi.h>
+#include <shellapi.h>
 
 #include "main.h"
-#include "regproc.h"
 #include "hexedit.h"
 #include "security.h"
+#include "wine/debug.h"
 
 #endif /* _REGEDIT_H */
