@@ -399,7 +399,13 @@ public:
     {
         RECT rc;
         GetWindowRect(&rc);
-        ::InflateRect(&rc, ::GetSystemMetrics(SM_CXEDGE), ::GetSystemMetrics(SM_CYEDGE));
+        INT cxEdge = ::GetSystemMetrics(SM_CXEDGE);
+        INT cyEdge = ::GetSystemMetrics(SM_CYEDGE);
+        if (cxEdge <= 0)
+            cxEdge = 1;
+        if (cyEdge <= 0)
+            cyEdge = 1;
+        ::InflateRect(&rc, cxEdge, cyEdge);
         return ::PtInRect(&rc, pt);
     }
 
