@@ -2521,6 +2521,7 @@ ChangePos:
         return FALSE;
     }
 
+    // We have to draw non-client area because the 'Show Desktop' button is beyond client area.
     void DrawShowDesktopButton()
     {
         // Get the rectangle in window coordinates
@@ -2778,7 +2779,7 @@ ChangePos:
 
         bHandled = FALSE;
 
-        if (CheckShowDesktopClick(lParam, bHandled))
+        if (CheckShowDesktopButtonClick(lParam, bHandled))
             return TRUE;
 
         GetWindowInfo(m_hWnd, &wi);
@@ -2937,7 +2938,7 @@ HandleTrayContextMenu:
         return Ret;
     }
 
-    BOOL CheckShowDesktopClick(LPARAM lParam, BOOL& bHandled)
+    BOOL CheckShowDesktopButtonClick(LPARAM lParam, BOOL& bHandled)
     {
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
@@ -2957,7 +2958,7 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (CheckShowDesktopClick(lParam, bHandled))
+        if (CheckShowDesktopButtonClick(lParam, bHandled))
             return TRUE;
 
         /* Let the clock handle the double click */
