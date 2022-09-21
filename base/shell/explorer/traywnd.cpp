@@ -313,16 +313,8 @@ public:
         if (nTime1 - nTime0 >= 600) // Ignore after 0.6 sec
             return 0;
 
-        INPUT inputs[4];
-        ZeroMemory(inputs, sizeof(inputs));
-
-        // Emulate Win+D
-        inputs[0].type = inputs[1].type = inputs[2].type = inputs[3].type = INPUT_KEYBOARD;
-        inputs[0].ki.wVk = inputs[3].ki.wVk = VK_LWIN;
-        inputs[1].ki.wVk = inputs[2].ki.wVk = 'D';
-        inputs[2].ki.dwFlags = inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
-        ::SendInput(_countof(inputs), inputs, sizeof(INPUT));
-
+        // Show/Hide Desktop
+        SendMessageW(::GetParent(m_hWnd), WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
         return 0;
     }
 
