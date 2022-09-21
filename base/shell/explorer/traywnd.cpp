@@ -2521,15 +2521,16 @@ ChangePos:
         return FALSE;
     }
 
-    void DrawShowDesktop()
+    void DrawShowDesktopButton()
     {
+        // Get the rectangle in window coordinates
         RECT rcButton, rcWnd;
         GetWindowRect(&rcWnd);
         m_ShowDesktopButton.GetWindowRect(&rcButton);
         ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
 
         HDC hdc = ::GetDCEx(m_hWnd, NULL, DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS);
-        m_ShowDesktopButton.OnDraw(hdc, &rcButton);
+        m_ShowDesktopButton.OnDraw(hdc, &rcButton); // Draw the button
         ::ReleaseDC(m_hWnd, hdc);
     }
 
@@ -2540,12 +2541,12 @@ ChangePos:
 
         if (!m_Theme || g_TaskbarSettings.bLock)
         {
-            DrawShowDesktop();
+            DrawShowDesktopButton(); // We have to draw non-client area
             return 0;
         }
 
         DrawSizerWithTheme((HRGN) wParam);
-        DrawShowDesktop();
+        DrawShowDesktopButton(); // We have to draw non-client area
         return 0;
     }
 
@@ -3150,7 +3151,7 @@ HandleTrayContextMenu:
     LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         DefWindowProc(uMsg, wParam, lParam);
-        DrawShowDesktop();
+        DrawShowDesktopButton(); // We have to draw non-client area
         bHandled = TRUE;
         return 0;
     }
