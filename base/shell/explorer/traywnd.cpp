@@ -264,6 +264,7 @@ public:
 
 };
 
+// This window class name is CONFIRMED by WinHier.
 static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";
 
 // The 'Show Desktop' button at edge of taskbar
@@ -281,13 +282,14 @@ public:
 
     INT WidthOrHeight() const
     {
-        INT cxy = GetSystemMetrics(SM_CXEDGE);
-        return (cxy ? (2 * cxy) : 6);
+        INT cxyMin = 6;
+        INT cxy = 2 * ::GetSystemMetrics(SM_CXEDGE);
+        return (cxy >= cxyMin) ? cxy : cxyMin;
     }
 
     HRESULT DoCreate(HWND hwndParent, BOOL bShow)
     {
-        DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+        DWORD style = WS_CHILD | WS_CLIPSIBLINGS;
         if (bShow)
             style |= WS_VISIBLE;
 
@@ -302,35 +304,39 @@ public:
 
     LRESULT OnClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        // The actual action can be delayed as an expected behaviour.
+        // But a too late action is an unexpected behaviour.
         LONG nTime0 = m_nClickedTime;
         LONG nTime1 = ::GetMessageTime();
-        if (nTime1 - nTime0 >= 800) // 0.8sec
+        if (nTime1 - nTime0 >= 600) // Ignore after 0.6 sec
             return 0;
 
-        INPUT input[4];
-        ZeroMemory(input, sizeof(input));
+        INPUT inputs[4];
+        ZeroMemory(inputs, sizeof(inputs));
 
         // Emulate Win+D
-        input[0].type = input[1].type = input[2].type = input[3].type = INPUT_KEYBOARD;
-        input[0].ki.wVk = input[3].ki.wVk = VK_LWIN;
-        input[1].ki.wVk = input[2].ki.wVk = 'D';
-        input[2].ki.dwFlags = input[3].ki.dwFlags = KEYEVENTF_KEYUP;
-        ::SendInput(_countof(input), input, sizeof(INPUT));
+        inputs[0].type = inputs[1].type = inputs[2].type = inputs[3].type = INPUT_KEYBOARD;
+        inputs[0].ki.wVk = inputs[3].ki.wVk = VK_LWIN;
+        inputs[1].ki.wVk = inputs[2].ki.wVk = 'D';
+        inputs[2].ki.dwFlags = inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+        ::SendInput(_countof(inputs), inputs, sizeof(INPUT));
 
         return 0;
     }
 
 #define TSDB_CLICK (WM_USER + 100)
 
+    // This function is called from OnLButtonDown and parent.
     VOID Click()
     {
+        // The actual action can be delayed as an expected behaviour.
         m_nClickedTime = ::GetMessageTime();
         PostMessage(TSDB_CLICK, 0, 0);
     }
 
     LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        Click();
+        Click(); // Left-click
         return 0;
     }
 
@@ -340,11 +346,13 @@ public:
         return 0;
     }
 
+    // This function is called from OnPaint and parent.
     VOID OnDraw(HDC hdc, LPRECT prc)
     {
         HTHEME hTheme = ::GetWindowTheme(m_hWnd);
         if (hTheme)
         {
+            // FIXME: It doesn't work.
             ::DrawThemeParentBackground(m_hWnd, hdc, prc);
             ::DrawThemeBackground(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
         }
