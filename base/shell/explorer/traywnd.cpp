@@ -311,7 +311,7 @@ public:
             return 0;
 
         // Show/Hide Desktop
-        SendMessageW(::GetParent(m_hWnd), WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
+        ::SendMessageW(::GetParent(m_hWnd), WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
         return 0;
     }
 
