@@ -369,13 +369,13 @@ public:
 
     VOID StartHovering()
     {
-        if (!m_bHovering)
-        {
-            m_bHovering = TRUE;
-            SetTimer(SHOW_DESKTOP_TIMER_ID, SHOW_DESKTOP_TIMER_INTERVAL, NULL);
-            InvalidateRect(NULL, TRUE);
-            ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
-        }
+        if (m_bHovering)
+            return;
+
+        m_bHovering = TRUE;
+        SetTimer(SHOW_DESKTOP_TIMER_ID, SHOW_DESKTOP_TIMER_INTERVAL, NULL);
+        InvalidateRect(NULL, TRUE);
+        ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
     }
 
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -391,11 +391,10 @@ public:
 
         POINT pt;
         ::GetCursorPos(&pt);
-
-        if (!PtInButton(pt))
+        if (!PtInButton(pt)) // The end of hovering?
         {
-            KillTimer(SHOW_DESKTOP_TIMER_ID);
             m_bHovering = FALSE;
+            KillTimer(SHOW_DESKTOP_TIMER_ID);
             InvalidateRect(NULL, TRUE);
             ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
         }
@@ -1854,10 +1853,9 @@ ChangePos:
 
         if (m_ShowDesktopButton.m_hWnd)
         {
-            INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
-
             // Get rectangle from rcClient
             RECT rc = rcClient;
+            INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
             if (Horizontal)
             {
                 rc.left = rc.right - cxyShowDesktop;
@@ -1870,12 +1868,9 @@ ChangePos:
             }
 
             /* Resize and reposition the button */
-            dwp = m_ShowDesktopButton.DeferWindowPos(dwp,
-                                                     NULL,
-                                                     rc.left,
-                                                     rc.top,
-                                                     rc.right - rc.left,
-                                                     rc.bottom - rc.top,
+            dwp = m_ShowDesktopButton.DeferWindowPos(dwp, NULL,
+                                                     rc.left, rc.top,
+                                                     rc.right - rc.left, rc.bottom - rc.top,
                                                      SWP_NOZORDER | SWP_NOACTIVATE);
 
             // Adjust rcClient
@@ -3027,8 +3022,7 @@ HandleTrayContextMenu:
     BOOL CheckShowDesktopButtonClick(LPARAM lParam, BOOL& bHandled)
     {
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-
-        if (m_ShowDesktopButton.PtInButton(pt))
+        if (m_ShowDesktopButton.PtInButton(pt)) // Did you click the button?
         {
             m_ShowDesktopButton.Click();
             bHandled = TRUE;
