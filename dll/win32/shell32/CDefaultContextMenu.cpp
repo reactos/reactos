@@ -86,21 +86,21 @@ class CDefaultContextMenu :
         BOOL EnumerateDynamicContextHandlerForKey(HKEY hRootKey);
         UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT* IndexMenu, UINT iIdCmdFirst, UINT iIdCmdLast);
-        HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink);
-        HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoDelete(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy);
-        HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoUndo(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
-        HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy);
-        HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFO lpcmi);
-        DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
-        HRESULT TryToBrowse(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags);
-        HRESULT InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
+        HRESULT DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink);
+        HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoDelete(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCopy);
+        HRESULT DoRename(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoProperties(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoUndo(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFOEX lpici);
+        HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFOEX lpici, BOOL bCopy);
+        HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFOEX lpcmi);
+        HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFOEX lpcmi);
+        DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStaticShellEntry pEntry);
+        HRESULT TryToBrowse(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, DWORD wFlags);
+        HRESULT InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
         PDynamicShellEntry GetDynamicEntry(UINT idCmd);
         BOOL MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode);
 
@@ -695,7 +695,7 @@ CDefaultContextMenu::QueryContextMenu(
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
 }
 
-HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
+HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink)
 {
     HRESULT hr;
 
@@ -748,13 +748,13 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
 }
 
 HRESULT
-CDefaultContextMenu::DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi)
+CDefaultContextMenu::DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     UNIMPLEMENTED;
     return E_FAIL;
 }
 
-HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
@@ -769,7 +769,7 @@ HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi)
     return S_OK;
 }
 
-HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
@@ -785,7 +785,7 @@ HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
     return S_OK;
 }
 
-HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy)
+HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCopy)
 {
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
@@ -808,7 +808,7 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy
     return S_OK;
 }
 
-HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     CComPtr<IShellBrowser> psb;
     HRESULT hr;
@@ -836,7 +836,7 @@ HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFO lpcmi)
 
 HRESULT
 CDefaultContextMenu::DoProperties(
-    LPCMINVOKECOMMANDINFO lpcmi)
+    LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     HRESULT hr = _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
 
@@ -850,14 +850,14 @@ CDefaultContextMenu::DoProperties(
 }
 
 HRESULT
-CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFO lpcmi)
+CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     ERR("TODO: Undo\n");
     return E_NOTIMPL;
 }
 
 HRESULT
-CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy)
+CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFOEX lpici, BOOL bCopy)
 {
     HRESULT hr = E_FAIL;
     if (!m_pDataObj)
@@ -890,13 +890,13 @@ CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCop
     else
         lpici->lpVerb = "moveto";
 
-    return pContextMenu->InvokeCommand(lpici);
+    return pContextMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)lpici);
 }
 
 // This code is taken from CNewMenu and should be shared between the 2 classes
 HRESULT
 CDefaultContextMenu::DoCreateNewFolder(
-    LPCMINVOKECOMMANDINFO lpici)
+    LPCMINVOKECOMMANDINFOEX lpici)
 {
     WCHAR wszPath[MAX_PATH];
     WCHAR wszName[MAX_PATH];
@@ -1009,7 +1009,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
 
 HRESULT
 CDefaultContextMenu::InvokeShellExt(
-    LPCMINVOKECOMMANDINFO lpcmi)
+    LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     TRACE("verb %p first %x last %x\n", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
 
@@ -1020,11 +1020,11 @@ CDefaultContextMenu::InvokeShellExt(
 
     /* invoke the dynamic context menu */
     lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd - pEntry->iIdCmdFirst);
-    return pEntry->pCM->InvokeCommand(lpcmi);
+    return pEntry->pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)lpcmi);
 }
 
 DWORD
-CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry)
+CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStaticShellEntry pEntry)
 {
     CComPtr<IShellBrowser> psb;
     HWND hwndTree;
@@ -1064,7 +1064,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
 
 HRESULT
 CDefaultContextMenu::TryToBrowse(
-    LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags)
+    LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, DWORD wFlags)
 {
     CComPtr<IShellBrowser> psb;
     HRESULT hr;
@@ -1081,7 +1081,7 @@ CDefaultContextMenu::TryToBrowse(
 }
 
 HRESULT
-CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
+CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
     LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
@@ -1127,7 +1127,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
 
 HRESULT
 CDefaultContextMenu::InvokeRegVerb(
-    LPCMINVOKECOMMANDINFO lpcmi)
+    LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     INT iCmd = LOWORD(lpcmi->lpVerb);
     HRESULT hr;
@@ -1174,13 +1174,13 @@ WINAPI
 CDefaultContextMenu::InvokeCommand(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    CMINVOKECOMMANDINFO LocalInvokeInfo;
+    CMINVOKECOMMANDINFOEX LocalInvokeInfo = {};
     HRESULT Result;
     UINT CmdId;
 
     /* Take a local copy of the fixed members of the
        struct as we might need to modify the verb */
-    LocalInvokeInfo = *lpcmi;
+    memcpy(&LocalInvokeInfo, lpcmi, min(sizeof(LocalInvokeInfo), lpcmi->cbSize));
 
     /* Check if this is a string verb */
     if (HIWORD(LocalInvokeInfo.lpVerb))
@@ -1217,6 +1217,14 @@ CDefaultContextMenu::InvokeCommand(
         CmdId -= m_iIdDfltFirst;
         /* See the definitions of IDM_CUT and co to see how this works */
         CmdId += 0x7000;
+    }
+
+    if (LocalInvokeInfo.cbSize >= sizeof(CMINVOKECOMMANDINFOEX) && (LocalInvokeInfo.fMask & CMIC_MASK_PTINVOKE))
+    {
+        if (FAILED_UNEXPECTEDLY(DataObject_SetOffset(m_pDataObj, &LocalInvokeInfo.ptInvoke)))
+        {
+            ERR("Unable to add OFFSET to DataObject!\n");
+        }
     }
 
     /* Check if this is a Id */

@@ -80,7 +80,7 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
  */
 
 BOOL
-SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
+SH_ShowPropertiesDialog(LPCWSTR pwszPath, IDataObject *pDataObj)
 {
     HPSXA hpsxa[3] = {NULL, NULL, NULL};
     CComObject<CFileDefExt> *pFileDefExt = NULL;
@@ -100,14 +100,33 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CH
     /* remove trailing \\ at the end of path */
     PathRemoveBackslashW(wszPath);
 
+    CDataObjectHIDA cida(pDataObj);
+    if (FAILED_UNEXPECTEDLY(cida.hr()))
+        return FALSE;
+
+    if (cida->cidl == 0)
+    {
+        ERR("Empty HIDA\n");
+        return FALSE;
+    }
+
     /* Handle drives */
-    if (PathIsRootW(wszPath))
-        return SUCCEEDED(SH_ShowDriveProperties(wszPath, pidlFolder, apidl));
+    if (_ILIsDrive(HIDA_GetPIDLItem(cida, 0)))
+        return SH_ShowDriveProperties(wszPath, pDataObj);
+
+
+    RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
+    POINT pt;
+    if (SUCCEEDED(DataObject_GetOffset(pDataObj, &pt)))
+    {
+        rcPosition.left = pt.x;
+        rcPosition.top = pt.y;
+    }
 
     DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
     DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
     CStubWindow32 stub;
-    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
+    if (!stub.Create(NULL, rcPosition, NULL, style, exstyle))
     {
         ERR("StubWindow32 creation failed\n");
         return FALSE;
@@ -122,34 +141,28 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CH
     Header.phpage = hppages;
     Header.pszCaption = PathFindFileNameW(wszPath);
 
-    CComPtr<IDataObject> pDataObj;
-    HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
-
+    HRESULT hr = CComObject<CFileDefExt>::CreateInstance(&pFileDefExt);
     if (SUCCEEDED(hr))
     {
-        hr = CComObject<CFileDefExt>::CreateInstance(&pFileDefExt);
-        if (SUCCEEDED(hr))
+        pFileDefExt->AddRef(); // CreateInstance returns object with 0 ref count
+        hr = pFileDefExt->Initialize(HIDA_GetPIDLFolder(cida), pDataObj, NULL);
+        if (!FAILED_UNEXPECTEDLY(hr))
         {
-            pFileDefExt->AddRef(); // CreateInstance returns object with 0 ref count
-            hr = pFileDefExt->Initialize(pidlFolder, pDataObj, NULL);
-            if (!FAILED_UNEXPECTEDLY(hr))
+            hr = pFileDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&Header);
+            if (FAILED_UNEXPECTEDLY(hr))
             {
-                hr = pFileDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&Header);
-                if (FAILED_UNEXPECTEDLY(hr))
-                {
-                    ERR("AddPages failed\n");
-                    return FALSE;
-                }
-            }
-            else
-            {
-                ERR("Initialize failed\n");
+                ERR("AddPages failed\n");
                 return FALSE;
             }
         }
-
-        LoadPropSheetHandlers(wszPath, &Header, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj);
+        else
+        {
+            ERR("Initialize failed\n");
+            return FALSE;
+        }
     }
+
+    LoadPropSheetHandlers(wszPath, &Header, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj);
 
     INT_PTR Result = PropertySheetW(&Header);
 

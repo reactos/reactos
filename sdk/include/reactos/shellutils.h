@@ -560,6 +560,7 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 #ifdef __cplusplus
 
 DECLSPEC_SELECTANY CLIPFORMAT g_cfHIDA = NULL;
+DECLSPEC_SELECTANY CLIPFORMAT g_cfShellIdListOffsets = NULL;
 
 // Allow to use the HIDA from an IDataObject without copying it
 struct CDataObjectHIDA
@@ -682,6 +683,31 @@ HRESULT DataObject_SetData(IDataObject* pDataObject, CLIPFORMAT clipformat, PVOI
         GlobalFree(medium.hGlobal);
 
     return hr;
+}
+
+
+inline HRESULT
+DataObject_GetOffset(IDataObject *pDataObject, POINT *point)
+{
+    if (g_cfShellIdListOffsets == NULL)
+    {
+        g_cfShellIdListOffsets = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTOFFSETW);
+    }
+
+    point->x = point->y = 0;
+
+    return DataObject_GetData(pDataObject, g_cfShellIdListOffsets, point, sizeof(point[0]));
+}
+
+inline HRESULT
+DataObject_SetOffset(IDataObject* pDataObject, POINT* point)
+{
+    if (g_cfShellIdListOffsets == NULL)
+    {
+        g_cfShellIdListOffsets = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTOFFSETW);
+    }
+
+    return DataObject_SetData(pDataObject, g_cfShellIdListOffsets, point, sizeof(point[0]));
 }
 
 #endif

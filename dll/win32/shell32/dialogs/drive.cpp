@@ -166,59 +166,62 @@ typedef struct _DRIVE_PROP_PAGE
     UINT DriveType;
 } DRIVE_PROP_PAGE;
 
-HRESULT
-SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
+BOOL
+SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
 {
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
-    PROPSHEETHEADERW psh;
     CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-    WCHAR wszName[256];
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
-    psh.dwSize = sizeof(PROPSHEETHEADERW);
-    psh.dwFlags = 0; // FIXME: make it modeless
-    psh.hwndParent = NULL;
+    CDataObjectHIDA cida(pDataObj);
+    if (FAILED_UNEXPECTEDLY(cida.hr()))
+        return cida.hr();
+
+    RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
+    POINT pt;
+    if (SUCCEEDED(DataObject_GetOffset(pDataObj, &pt)))
+    {
+        rcPosition.left = pt.x;
+        rcPosition.top = pt.y;
+    }
+
+    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+    CStubWindow32 stub;
+    if (!stub.Create(NULL, rcPosition, NULL, style, exstyle))
+    {
+        ERR("StubWindow32 creation failed\n");
+        return FALSE;
+    }
+
+    PROPSHEETHEADERW psh = {sizeof(PROPSHEETHEADERW)};
+    psh.dwFlags = PSH_PROPTITLE;
+    psh.pszCaption = pwszDrive;
+    psh.hwndParent = stub;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
 
-    LPITEMIDLIST completePidl = ILCombine(pidlFolder, apidl[0]);
-    if (!completePidl)
-        return E_OUTOFMEMORY;
-
-    if (ILGetDisplayNameExW(NULL, completePidl, wszName, ILGDN_NORMAL))
-    {
-        psh.pszCaption = wszName;
-        psh.dwFlags |= PSH_PROPTITLE;
-    }
-
-    ILFree(completePidl);
-
-    CComPtr<IDataObject> pDataObj;
-    HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
-
+    HRESULT hr = CComObject<CDrvDefExt>::CreateInstance(&pDrvDefExt);
     if (SUCCEEDED(hr))
     {
-        hr = CComObject<CDrvDefExt>::CreateInstance(&pDrvDefExt);
+        pDrvDefExt->AddRef(); // CreateInstance returns object with 0 ref count
+        hr = pDrvDefExt->Initialize(HIDA_GetPIDLFolder(cida), pDataObj, NULL);
         if (SUCCEEDED(hr))
         {
-            pDrvDefExt->AddRef(); // CreateInstance returns object with 0 ref count
-            hr = pDrvDefExt->Initialize(pidlFolder, pDataObj, NULL);
-            if (SUCCEEDED(hr))
-            {
-                hr = pDrvDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&psh);
-                if (FAILED(hr))
-                    ERR("AddPages failed\n");
-            } else
-                ERR("Initialize failed\n");
+            hr = pDrvDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&psh);
+            if (FAILED(hr))
+                ERR("AddPages failed\n");
         }
-
-        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE, pDataObj);
-        if (hpsx)
-            SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageCallback, (LPARAM)&psh);
+        else
+        {
+            ERR("Initialize failed\n");
+        }
     }
 
-    // NOTE: Currently property sheet is modal. If we make it modeless, then it returns HWND.
+    hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE, pDataObj);
+    if (hpsx)
+        SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageCallback, (LPARAM)&psh);
+
     INT_PTR ret = PropertySheetW(&psh);
 
     if (hpsx)
@@ -226,9 +229,9 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
     if (pDrvDefExt)
         pDrvDefExt->Release();
 
-    if (ret >= 0)
-        return S_OK;
-    return E_FAIL;
+    stub.DestroyWindow();
+
+    return ret != -1;
 }
 
 static VOID
