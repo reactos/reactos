@@ -343,43 +343,7 @@ public:
     }
 
     // This function is called from OnPaint and parent.
-    VOID OnDraw(HDC hdc, LPRECT prc)
-    {
-        if (m_hTheme)
-        {
-            if (m_bHovering)
-            {
-                // Draw a hot button
-                HTHEME hButtonTheme = ::OpenThemeData(m_hWnd, L"Button");
-                ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
-                ::CloseThemeData(hButtonTheme);
-            }
-            else
-            {
-                // Draw a taskbar background
-                ::DrawThemeBackground(m_hTheme, hdc, TBP_BACKGROUNDTOP, 0, prc, prc);
-            }
-        }
-        else
-        {
-            RECT rc = *prc;
-            if (m_bHovering)
-            {
-                // Draw a hot button
-                ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH | DFCS_ADJUSTRECT);
-                HBRUSH hbrHot = ::CreateSolidBrush(RGB(255, 255, 191));
-                ::FillRect(hdc, &rc, hbrHot);
-                ::DeleteObject(hbrHot);
-            }
-            else
-            {
-                // Draw a flattish button
-                ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
-                ::InflateRect(&rc, -1, -1);
-                ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_3DFACE));
-            }
-        }
-    }
+    VOID OnDraw(HDC hdc, LPRECT prc);
 
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
@@ -392,9 +356,6 @@ public:
         EndPaint(&ps);
         return 0;
     }
-
-#define SHOW_DESKTOP_TIMER_ID 999
-#define SHOW_DESKTOP_TIMER_INTERVAL 200
 
     BOOL PtInButton(POINT pt)
     {
@@ -409,6 +370,9 @@ public:
         ::InflateRect(&rc, cxEdge, cyEdge);
         return ::PtInRect(&rc, pt);
     }
+
+#define SHOW_DESKTOP_TIMER_ID 999
+#define SHOW_DESKTOP_TIMER_INTERVAL 200
 
     VOID StartHovering()
     {
@@ -467,6 +431,44 @@ public:
         MESSAGE_HANDLER(TSDB_CLICK, OnClick)
     END_MSG_MAP()
 };
+
+VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
+{
+    if (m_hTheme)
+    {
+        if (m_bHovering)
+        {
+            // Draw a hot button
+            HTHEME hButtonTheme = ::OpenThemeData(m_hWnd, L"Button");
+            ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
+            ::CloseThemeData(hButtonTheme);
+        }
+        else
+        {
+            // Draw a taskbar background
+            ::DrawThemeBackground(m_hTheme, hdc, TBP_BACKGROUNDTOP, 0, prc, prc);
+        }
+    }
+    else
+    {
+        RECT rc = *prc;
+        if (m_bHovering)
+        {
+            // Draw a hot button
+            ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH | DFCS_ADJUSTRECT);
+            HBRUSH hbrHot = ::CreateSolidBrush(RGB(255, 255, 191));
+            ::FillRect(hdc, &rc, hbrHot);
+            ::DeleteObject(hbrHot);
+        }
+        else
+        {
+            // Draw a flattish button
+            ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
+            ::InflateRect(&rc, -1, -1);
+            ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_3DFACE));
+        }
+    }
+}
 
 class CTrayWindow :
     public CComCoClass<CTrayWindow>,
