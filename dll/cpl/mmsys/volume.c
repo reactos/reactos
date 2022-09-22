@@ -526,20 +526,23 @@ VolumeDlgProc(HWND hwndDlg,
         case WM_DESTROY:
             if (pGlobalData)
             {
-                if (pGlobalData->volumeCurrentValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeCurrentValues);
-
-                if (pGlobalData->volumePreviousValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumePreviousValues);
-
-                if (pGlobalData->volumeInitialValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitialValues);
-
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumeCurrentValues);
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumePreviousValues);
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitialValues);
                 mixerClose(pGlobalData->hMixer);
-                DestroyIcon(pGlobalData->hIconSpeakImg);
-                DestroyIcon(pGlobalData->hIconMuted);
-                DestroyIcon(pGlobalData->hIconUnMuted);
-                DestroyIcon(pGlobalData->hIconNoHW);
+
+                if (pGlobalData->hIconSpeakImg)
+                    DestroyIcon(pGlobalData->hIconSpeakImg);
+
+                if (pGlobalData->hIconNoHW)
+                    DestroyIcon(pGlobalData->hIconNoHW);
+
+                if (pGlobalData->hIconMuted)
+                    DestroyIcon(pGlobalData->hIconMuted);
+
+                if (pGlobalData->hIconUnMuted)
+                    DestroyIcon(pGlobalData->hIconUnMuted);
+
                 HeapFree(GetProcessHeap(), 0, pGlobalData);
             }
             break;
