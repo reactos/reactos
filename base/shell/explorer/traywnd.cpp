@@ -287,7 +287,6 @@ public:
 #define SHOW_DESKTOP_MINIMUM_WIDTH 3
         INT cxy = 2 * ::GetSystemMetrics(SM_CXEDGE);
         return ((cxy >= SHOW_DESKTOP_MINIMUM_WIDTH) ? cxy : SHOW_DESKTOP_MINIMUM_WIDTH);
-#undef SHOW_DESKTOP_MINIMUM_WIDTH
     }
 
     HRESULT DoCreate(HWND hwndParent)
@@ -361,8 +360,7 @@ public:
     {
         RECT rc;
         GetWindowRect(&rc);
-        INT cxEdge = ::GetSystemMetrics(SM_CXEDGE);
-        INT cyEdge = ::GetSystemMetrics(SM_CYEDGE);
+        INT cxEdge = ::GetSystemMetrics(SM_CXEDGE), cyEdge = ::GetSystemMetrics(SM_CYEDGE);
         if (cxEdge <= 0)
             cxEdge = 1;
         if (cyEdge <= 0)
@@ -436,33 +434,29 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
 {
     if (m_hTheme)
     {
-        if (m_bHovering)
+        if (m_bHovering) // Draw a hot button
         {
-            // Draw a hot button
             HTHEME hButtonTheme = ::OpenThemeData(m_hWnd, L"Button");
             ::DrawThemeBackground(hButtonTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, prc, prc);
             ::CloseThemeData(hButtonTheme);
         }
-        else
+        else // Draw a taskbar background
         {
-            // Draw a taskbar background
             ::DrawThemeBackground(m_hTheme, hdc, TBP_BACKGROUNDTOP, 0, prc, prc);
         }
     }
     else
     {
         RECT rc = *prc;
-        if (m_bHovering)
+        if (m_bHovering) // Draw a hot button
         {
-            // Draw a hot button
             ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH | DFCS_ADJUSTRECT);
             HBRUSH hbrHot = ::CreateSolidBrush(RGB(255, 255, 191));
             ::FillRect(hdc, &rc, hbrHot);
             ::DeleteObject(hbrHot);
         }
-        else
+        else // Draw a flattish button
         {
-            // Draw a flattish button
             ::DrawFrameControl(hdc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH);
             ::InflateRect(&rc, -1, -1);
             ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_3DFACE));
