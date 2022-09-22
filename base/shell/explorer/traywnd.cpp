@@ -2871,13 +2871,13 @@ ChangePos:
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
         WINDOWINFO wi = {sizeof(WINDOWINFO)};
 
-        RECT rcStartBtn;
-        m_StartButton.GetWindowRect(&rcStartBtn);
-
         bHandled = FALSE;
 
         if (CheckShowDesktopButtonClick(lParam, bHandled))
             return TRUE;
+
+        RECT rcStartBtn;
+        m_StartButton.GetWindowRect(&rcStartBtn);
 
         GetWindowInfo(m_hWnd, &wi);
 
