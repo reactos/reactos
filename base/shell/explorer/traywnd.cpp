@@ -377,7 +377,7 @@ public:
         m_bHovering = TRUE;
         SetTimer(SHOW_DESKTOP_TIMER_ID, SHOW_DESKTOP_TIMER_INTERVAL, NULL);
         InvalidateRect(NULL, TRUE);
-        ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+        ::PostMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
     }
 
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -398,7 +398,7 @@ public:
             m_bHovering = FALSE;
             KillTimer(SHOW_DESKTOP_TIMER_ID);
             InvalidateRect(NULL, TRUE);
-            ::SendMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+            ::PostMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
         }
 
         return 0;
@@ -2615,7 +2615,7 @@ ChangePos:
         m_ShowDesktopButton.GetWindowRect(&rcButton);
         ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
 
-        HDC hdc = GetDCEx(NULL, DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS);
+        HDC hdc = GetDCEx(NULL, DCX_WINDOW | DCX_CACHE);
         m_ShowDesktopButton.OnDraw(hdc, &rcButton); // Draw the button
         ReleaseDC(hdc);
     }
@@ -3236,10 +3236,10 @@ HandleTrayContextMenu:
 
     LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        DefWindowProc(uMsg, wParam, lParam);
+        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
         DrawShowDesktopButton(); // We have to draw non-client area
         bHandled = TRUE;
-        return 0;
+        return ret;
     }
 
     LRESULT OnNcCalcSize(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
