@@ -336,8 +336,7 @@ public:
             ::CloseThemeData(m_hTheme);
 
         m_hTheme = ::OpenThemeData(m_hWnd, L"TaskBar");
-
-        ::InvalidateRect(m_hWnd, NULL, TRUE);
+        InvalidateRect(NULL, TRUE);
         return 0;
     }
 
@@ -2621,9 +2620,9 @@ ChangePos:
         m_ShowDesktopButton.GetWindowRect(&rcButton);
         ::OffsetRect(&rcButton, -rcWnd.left, -rcWnd.top);
 
-        HDC hdc = ::GetDCEx(m_hWnd, NULL, DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS);
+        HDC hdc = GetDCEx(NULL, DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS);
         m_ShowDesktopButton.OnDraw(hdc, &rcButton); // Draw the button
-        ::ReleaseDC(m_hWnd, hdc);
+        ReleaseDC(hdc);
     }
 
     LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
