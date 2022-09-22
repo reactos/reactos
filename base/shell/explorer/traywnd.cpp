@@ -2861,9 +2861,6 @@ ChangePos:
 
         bHandled = FALSE;
 
-        if (CheckShowDesktopButtonClick(lParam, bHandled))
-            return TRUE;
-
         RECT rcStartBtn;
         m_StartButton.GetWindowRect(&rcStartBtn);
 
@@ -3038,15 +3035,20 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (CheckShowDesktopButtonClick(lParam, bHandled))
-            return TRUE;
-
         /* Let the clock handle the double click */
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
         /* We "handle" this message so users can't cause a weird maximize/restore
         window animation when double-clicking the tray window! */
         return TRUE;
+    }
+
+    LRESULT OnNcLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (CheckShowDesktopButtonClick(lParam, bHandled))
+            return 0;
+
+        return 0;
     }
 
     LRESULT OnAppTrayDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3423,6 +3425,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_SYSCHAR, OnSysChar)
         MESSAGE_HANDLER(WM_NCRBUTTONUP, OnNcRButtonUp)
         MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnNcLButtonDblClick)
+        MESSAGE_HANDLER(WM_NCLBUTTONUP, OnNcLButtonUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
