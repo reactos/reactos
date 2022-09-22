@@ -357,7 +357,7 @@ public:
 
     BOOL PtInButton(POINT pt)
     {
-        if (!m_hWnd)
+        if (!IsWindow())
             return FALSE;
         RECT rc;
         GetWindowRect(&rc);
@@ -2607,7 +2607,7 @@ ChangePos:
     // We have to draw non-client area because the 'Show Desktop' button is beyond client area.
     void DrawShowDesktopButton()
     {
-        if (!m_ShowDesktopButton.m_hWnd)
+        if (!m_ShowDesktopButton.IsWindow())
             return;
         // Get the rectangle in window coordinates
         RECT rcButton, rcWnd;
