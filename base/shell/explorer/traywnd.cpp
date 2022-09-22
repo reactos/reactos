@@ -357,6 +357,8 @@ public:
 
     BOOL PtInButton(POINT pt)
     {
+        if (!m_hWnd)
+            return FALSE;
         RECT rc;
         GetWindowRect(&rc);
         INT cxEdge = ::GetSystemMetrics(SM_CXEDGE), cyEdge = ::GetSystemMetrics(SM_CYEDGE);
@@ -2605,6 +2607,8 @@ ChangePos:
     // We have to draw non-client area because the 'Show Desktop' button is beyond client area.
     void DrawShowDesktopButton()
     {
+        if (!m_ShowDesktopButton.m_hWnd)
+            return;
         // Get the rectangle in window coordinates
         RECT rcButton, rcWnd;
         GetWindowRect(&rcWnd);
