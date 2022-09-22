@@ -32,8 +32,8 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "Con&firmă",IDOK,174,114,60,14
     PUSHBUTTON      "A&nulează",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "Modurile disponibile",-1,6,6,76,8
+    LTEXT           "Modurile selectate",-1,168,6,76,8
 END
 
 STRINGTABLE
