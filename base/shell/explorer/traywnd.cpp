@@ -286,7 +286,7 @@ public:
     {
 #define SHOW_DESKTOP_MINIMUM_WIDTH 3
         INT cxy = 2 * ::GetSystemMetrics(SM_CXEDGE);
-        return ((cxy >= SHOW_DESKTOP_MINIMUM_WIDTH) ? cxy : SHOW_DESKTOP_MINIMUM_WIDTH);
+        return max(cxy, SHOW_DESKTOP_MINIMUM_WIDTH);
     }
 
     HRESULT DoCreate(HWND hwndParent)
