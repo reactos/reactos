@@ -310,7 +310,7 @@ public:
             return 0;
 
         // Show/Hide Desktop
-        ::SendMessageW(::GetParent(m_hWnd), WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
+        GetParent().SendMessage(WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
         return 0;
     }
 
@@ -377,7 +377,7 @@ public:
         m_bHovering = TRUE;
         SetTimer(SHOW_DESKTOP_TIMER_ID, SHOW_DESKTOP_TIMER_INTERVAL, NULL);
         InvalidateRect(NULL, TRUE);
-        ::PostMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+        GetParent().PostMessage(WM_NCPAINT, 0, 0);
     }
 
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -398,7 +398,7 @@ public:
             m_bHovering = FALSE;
             KillTimer(SHOW_DESKTOP_TIMER_ID);
             InvalidateRect(NULL, TRUE);
-            ::PostMessageW(::GetParent(m_hWnd), WM_NCPAINT, 0, 0);
+            GetParent().PostMessage(WM_NCPAINT, 0, 0);
         }
 
         return 0;
