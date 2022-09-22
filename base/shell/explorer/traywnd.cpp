@@ -360,11 +360,7 @@ public:
         RECT rc;
         GetWindowRect(&rc);
         INT cxEdge = ::GetSystemMetrics(SM_CXEDGE), cyEdge = ::GetSystemMetrics(SM_CYEDGE);
-        if (cxEdge <= 0)
-            cxEdge = 1;
-        if (cyEdge <= 0)
-            cyEdge = 1;
-        ::InflateRect(&rc, cxEdge, cyEdge);
+        ::InflateRect(&rc, max(cxEdge, 1), max(cyEdge, 1));
         return ::PtInRect(&rc, pt);
     }
 
