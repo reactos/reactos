@@ -962,7 +962,6 @@ IntDefWindowProc(
 #define ID_NEXTLAYOUT 10003
                         UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, 0);
                     }
-                    pti->MessageQueue->QF_flags &= ~QF_FF10STATUS; //iF10Key = 0;
                 }
             }
             else if( wParam == VK_F10 )
