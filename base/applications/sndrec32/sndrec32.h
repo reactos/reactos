@@ -106,6 +106,7 @@ LRESULT CALLBACK Buttons_proc(HWND, UINT, WPARAM, LPARAM);
 BOOL write_wav(TCHAR *);
 BOOL open_wav(TCHAR *);
 
+void CreateButtons(HWND, HFONT);
 void DrawButton(UINT, LPARAM);
 void l_play_finished(void);
 void l_audio_arrival(unsigned int);

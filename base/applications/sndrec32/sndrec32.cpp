@@ -42,7 +42,6 @@ HWND slider;
 HWND buttons[5];
 HTHEME buttontheme[5];
 LPCTSTR buttxts[5];
-HFONT hfButtonCaption;
 WNDPROC buttons_std_proc;
 
 BOOL stopped_flag;
@@ -127,39 +126,6 @@ _tWinMain(HINSTANCE hInstance,
 
     /* Set font size */
     s_info.lfMenuFont.lfHeight = 14;
-
-    /* get the language layout */
-    DWORD layout;
-    GetProcessDefaultLayout(&layout);
-
-    /* Init button texts, exchange rewind and forward in case we use an RTL layout*/
-    if (layout == LAYOUT_RTL)
-    {
-        buttxts[BUTSTART_ID] = TEXT("44");  // rewind
-        buttxts[BUTEND_ID] = TEXT("33");    // forward
-        buttxts[BUTPLAY_ID] = TEXT("3");        // play
-    }
-    else
-    {
-        buttxts[BUTSTART_ID] = TEXT("33");  // rewind
-        buttxts[BUTEND_ID] = TEXT("44");    // forward
-        buttxts[BUTPLAY_ID] = TEXT("4");        // play
-    }
-    buttxts[BUTSTOP_ID] = TEXT("g");        // stop
-    buttxts[BUTREC_ID] = TEXT("n");         // record
-
-    /* Create a Marlett Font */
-    hfButtonCaption = CreateFont(0, 0, 0, 0,
-                                 FW_BOLD,
-                                 FALSE,
-                                 FALSE,
-                                 FALSE,
-                                 SYMBOL_CHARSET,
-                                 OUT_DEFAULT_PRECIS,
-                                 CLIP_DEFAULT_PRECIS,
-                                 DEFAULT_QUALITY,
-                                 DEFAULT_PITCH | FF_DECORATIVE,
-                                 TEXT("Marlett"));
 
     /* Inits audio devices and buffers */
 
@@ -449,8 +415,7 @@ WndProc(HWND hWnd,
     TCHAR str_tmp[MAX_LOADSTRING];
     PAINTSTRUCT ps;
     HDC hdc;
-    HFONT font;
-    HFONT oldfont;
+    HFONT font, oldfont, hfButtonCaption=NULL;
     long long slid_samp = 0;
     WCHAR szAppName[100];
     HICON hIcon;
@@ -472,33 +437,7 @@ WndProc(HWND hWnd,
                 return FALSE;
             }
 
-            /* Create the audio control buttons, associate a theme handle and use the Marlett font on them */
-            for (UINT i = 0; i < _countof(buttons); ++i)
-            {
-                buttons[i] = CreateWindow(TEXT("button"),
-                                          buttxts[i],
-                                          WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CENTER | BS_TEXT | BS_OWNERDRAW,
-                                          BUTTONS_CX + (i * (BUTTONS_W + ((i == 0) ? 0 : BUTTONS_SPACE))),
-                                          BUTTONS_CY,
-                                          BUTTONS_W,
-                                          BUTTONS_H,
-                                          hWnd,
-                                          (HMENU)UlongToPtr(i),
-                                          hInst,
-                                          0);
-                if (!buttons[i])
-                {
-                    MessageBox(0, 0, TEXT("CreateWindow() Error!"), 0);
-                    return FALSE;
-                }
-
-                buttontheme[i] = OpenThemeData(buttons[i], L"Button");
-
-                /* Use Marlett font on this button */
-                SendMessage(buttons[i], WM_SETFONT, (WPARAM)hfButtonCaption, (LPARAM)TRUE);
-                UpdateWindow(buttons[i]);
-                EnableWindow(GetDlgItem(hWnd, i), FALSE);
-            }
+            CreateButtons(hWnd, hfButtonCaption);
 
             /* Creating the SLIDER window */
             slider = CreateWindow(TRACKBAR_CLASS,
@@ -937,7 +876,6 @@ WndProc(HWND hWnd,
             {
                 DeleteObject(hfButtonCaption);
             }
-
             for (UINT i = 0; i < _countof(buttontheme); ++i)
             {
                 if (buttontheme[i])
@@ -952,6 +890,70 @@ WndProc(HWND hWnd,
     }
 
     return 0;
+}
+
+void CreateButtons(HWND hWnd, HFONT hfButtonCaption)
+{
+        /* get the language layout */
+    DWORD layout;
+    GetProcessDefaultLayout(&layout);
+
+    /* Init button texts, exchange rewind and forward in case we use an RTL layout*/
+    if (layout == LAYOUT_RTL)
+    {
+        buttxts[BUTSTART_ID] = TEXT("44");  // rewind
+        buttxts[BUTEND_ID] = TEXT("33");    // forward
+        buttxts[BUTPLAY_ID] = TEXT("3");    // play
+    }
+    else
+    {
+        buttxts[BUTSTART_ID] = TEXT("33");  // rewind
+        buttxts[BUTEND_ID] = TEXT("44");    // forward
+        buttxts[BUTPLAY_ID] = TEXT("4");    // play
+    }
+    buttxts[BUTSTOP_ID] = TEXT("g");        // stop
+    buttxts[BUTREC_ID] = TEXT("n");         // record
+
+    /* Create a Marlett Font */
+    hfButtonCaption = CreateFont(0, 0, 0, 0,
+                                 FW_BOLD,
+                                 FALSE,
+                                 FALSE,
+                                 FALSE,
+                                 SYMBOL_CHARSET,
+                                 OUT_DEFAULT_PRECIS,
+                                 CLIP_DEFAULT_PRECIS,
+                                 DEFAULT_QUALITY,
+                                 DEFAULT_PITCH | FF_DECORATIVE,
+                                 TEXT("Marlett"));
+
+    /* Create the audio control buttons, associate a theme handle and use the Marlett font on them */
+    for (UINT i = 0; i < _countof(buttons); ++i)
+    {
+        buttons[i] = CreateWindow(TEXT("button"),
+                                  buttxts[i],
+                                  WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CENTER | BS_TEXT | BS_OWNERDRAW,
+                                  BUTTONS_CX + (i * (BUTTONS_W + ((i == 0) ? 0 : BUTTONS_SPACE))),
+                                  BUTTONS_CY,
+                                  BUTTONS_W,
+                                  BUTTONS_H,
+                                  hWnd,
+                                  (HMENU)UlongToPtr(i),
+                                  hInst,
+                                  0);
+        if (!buttons[i])
+        {
+            MessageBox(0, 0, TEXT("CreateWindow() Error!"), 0);
+            return;
+        }
+
+        buttontheme[i] = OpenThemeData(buttons[i], L"Button");
+
+        /* Use Marlett font on this button */
+        SendMessage(buttons[i], WM_SETFONT, (WPARAM)hfButtonCaption, (LPARAM)TRUE);
+        UpdateWindow(buttons[i]);
+        EnableWindow(GetDlgItem(hWnd, i), FALSE);
+    }
 }
 
 void DrawButton(UINT ButtonID, LPARAM lParam)
