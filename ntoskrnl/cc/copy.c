@@ -381,6 +381,16 @@ CcCanIWrite (
         return FALSE;
     }
 
+    /* Otherwise, if there are no deferred writes yet, start the lazy writer */
+    if (IsListEmpty(&CcDeferredWrites))
+    {
+        KIRQL OldIrql;
+
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        CcScheduleLazyWriteScan(TRUE);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+    }
+
     /* Initialize our wait event */
     KeInitializeEvent(&WaitEvent, NotificationEvent, FALSE);
 
@@ -407,12 +417,6 @@ CcCanIWrite (
                                     &Context.DeferredWriteLinks,
                                     &CcDeferredWriteSpinLock);
     }
-
-    /* Now make sure that the lazy scan writer will be active */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-    if (!LazyWriter.ScanActive)
-        CcScheduleLazyWriteScan(TRUE);
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
 #if DBG
     DPRINT1("Actively deferring write for: %p\n", FileObject);
