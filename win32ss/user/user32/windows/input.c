@@ -805,7 +805,7 @@ IntLoadKeyboardLayout(
 
                 /* We don't allow the invalid "IME File" values for security reason */
                 if (dwType != REG_SZ || szImeFileName[0] == 0 ||
-                    wcsspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
+                    wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
                     GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
                 {
                     bIsIME = FALSE;
