@@ -70,9 +70,7 @@ static void output_formatstring(const WCHAR *fmt, va_list va_args)
     if (len == 0 && GetLastError() != ERROR_NO_WORK_DONE)
 #endif
     {
-#ifndef __REACTOS__
         WINE_FIXME("Could not format string: le=%lu, fmt=%s\n", GetLastError(), wine_dbgstr_w(fmt));
-#endif
         return;
     }
     output_writeconsole(str, len);
@@ -86,9 +84,7 @@ void WINAPIV output_message(unsigned int id, ...)
 
     if (!LoadStringW(GetModuleHandleW(NULL), id, fmt, ARRAY_SIZE(fmt)))
     {
-#ifndef __REACTOS__
         WINE_FIXME("LoadString failed with %ld\n", GetLastError());
-#endif
         return;
     }
     va_start(va_args, id);
