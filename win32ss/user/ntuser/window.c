@@ -3040,7 +3040,7 @@ CLEANUP:
 }
 
 
-static HWND FASTCALL
+HWND FASTCALL
 IntFindWindow(PWND Parent,
               PWND ChildAfter,
               RTL_ATOM ClassAtom,
