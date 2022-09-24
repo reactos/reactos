@@ -18,6 +18,7 @@
  */
 
 #include "precomp.h"
+#include <shellapi.h>
 #include <stdlib.h>
 #include <strsafe.h>
 
@@ -311,6 +312,7 @@ FrameOnCommand(HWND hwnd,
 {
     PCONSOLE_MAINFRAME_WND Info;
     HWND hChild;
+    LPTSTR lpTitle;
 
     Info = (PCONSOLE_MAINFRAME_WND)GetWindowLongPtr(hwnd, 0);
 
@@ -332,6 +334,15 @@ FrameOnCommand(HWND hwnd,
 
         case IDM_FILE_EXIT:
             PostMessage(hwnd, WM_CLOSE, 0, 0);
+            break;
+
+        case IDM_HELP_ABOUT:
+            if (AllocAndLoadString(&lpTitle, hAppInstance, IDS_APPTITLE))
+            {
+                ShellAbout(hwnd, lpTitle, NULL,
+                           LoadIcon(hAppInstance, MAKEINTRESOURCE(IDI_MAINAPP)));
+                LocalFree(lpTitle);
+            }
             break;
 
         default:

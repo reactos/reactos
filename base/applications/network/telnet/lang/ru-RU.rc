@@ -67,7 +67,7 @@ BEGIN
     MSG_WSAEHOSTUNREACH "Нет маршрута к узлу.\n"
     MSG_WSAESYSNOTREADY "Сетевая подсистема недоступна.\n"
     MSG_WSAVERNOTSUPPORTED "WINSOCK.DLL не правильная версия.\n"
-    MSG_WSANOTINITIALISED "WSAStartup еще не выполнена успешно.\n"
+    MSG_WSANOTINITIALISED "WSAStartup ещё не выполнена успешно.\n"
     MSG_WSAHOST_NOT_FOUND "Узел не найден.\n"
     MSG_WSATRY_AGAIN "Ненадежный узел не найден.\n"
     MSG_WSANO_RECOVERY "Это неустранимая ошибка.\n"

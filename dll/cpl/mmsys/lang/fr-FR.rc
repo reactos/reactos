@@ -64,7 +64,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "Volu&me...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "À propos de...", IDC_ADV3_BTN, 160, 185, 70, 15
-    AUTOCHECKBOX "&Utiliser uniquement les périphériques par défaut", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "&Utiliser uniquement les périphériques par défaut", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 200, 10, WS_GROUP | WS_TABSTOP
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -179,39 +179,39 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Multi-canaux"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La description prend place ici.", 9506, 8, 4, 212, 24
-    LTEXT "Faible", 9473, 65, 31, 14, 8
+    LTEXT "En déplaçant les curseurs ci-dessous, vous pouvez modifier le volume des enceintes connectées à cet ordinateur.", 9506, 8, 4, 212, 36
+    LTEXT "Faible", 9473, 65, 31, 18, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17
-    LTEXT "Élevé", 9474, 202, 31, 17, 8
-    LTEXT "Faible", 9477, 65, 50, 14, 8
+    LTEXT "Élevé", 9474, 202, 31, 18, 8
+    LTEXT "Faible", 9477, 65, 50, 18, 8
     LTEXT "", 9476, 5, 50, 55, 8
     CONTROL "Slider1", 9479, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 48, 108, 17
-    LTEXT "Élevé", 9478, 202, 50, 17, 8
-    LTEXT "Faible", 9481, 65, 69, 14, 8
+    LTEXT "Élevé", 9478, 202, 50, 18, 8
+    LTEXT "Faible", 9481, 65, 69, 18, 8
     LTEXT "", 9480, 5, 69, 55, 8
     CONTROL "Slider1", 9483, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 67, 108, 17
-    LTEXT "Élevé", 9482, 202, 69, 17, 8
-    LTEXT "Faible", 9485, 65, 88, 14, 8
+    LTEXT "Élevé", 9482, 202, 69, 18, 8
+    LTEXT "Faible", 9485, 65, 88, 18, 8
     LTEXT "", 9484, 5, 88, 55, 8
     CONTROL "Slider1", 9487, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 86, 108, 17
-    LTEXT "Élevé", 9486, 202, 88, 17, 8
-    LTEXT "Faible", 9489, 65, 107, 14, 8
+    LTEXT "Élevé", 9486, 202, 88, 18, 8
+    LTEXT "Faible", 9489, 65, 107, 18, 8
     LTEXT "", 9488, 5, 107, 55, 8
     CONTROL "Slider1", 9491, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 105, 108, 17
-    LTEXT "Élevé", 9490, 202, 107, 17, 8
-    LTEXT "Faible", 9493, 65, 126, 14, 8
+    LTEXT "Élevé", 9490, 202, 107, 18, 8
+    LTEXT "Faible", 9493, 65, 126, 18, 8
     LTEXT "", 9492, 5, 126, 55, 8
     CONTROL "Slider1", 9495, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 124, 108, 17
-    LTEXT "Élevé", 9494, 202, 126, 17, 8
-    LTEXT "Faible", 9497, 65, 145, 14, 8
+    LTEXT "Élevé", 9494, 202, 126, 18, 8
+    LTEXT "Faible", 9497, 65, 145, 18, 8
     LTEXT "", 9496, 5, 145, 55, 8
     CONTROL "Slider1", 9499, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 143, 108, 17
-    LTEXT "Élevé", 9498, 202, 145, 17, 8
-    LTEXT "Faible", 9501, 65, 164, 14, 8
+    LTEXT "Élevé", 9498, 202, 145, 18, 8
+    LTEXT "Faible", 9501, 65, 164, 18, 8
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 162, 108, 17
-    LTEXT "Élevé", 9502, 202, 164, 17, 8
+    LTEXT "Élevé", 9502, 202, 164, 18, 8
     AUTOCHECKBOX "Déplacer toutes les barres en &même temps", 9504, 5, 185, 216, 9
     PUSHBUTTON "Paramètres par &défaut", 9505, 110, 199, 110, 14
 END
@@ -234,13 +234,13 @@ BEGIN
     IDS_CPLDESCRIPTION "Change le modèle de sons de votre ordinateur, ou configure les paramètres de vos hauts-parleurs et de vos périphériques d'enregistrement."
     IDS_NO_SOUND "(Aucun)"
     IDS_NO_DEVICES "Aucun périphérique"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
-    IDS_SPEAKER_LEFT "&Left:"
-    IDS_SPEAKER_RIGHT "&Right:"
-    IDS_SPEAKER_CENTER "&Center:"
-    IDS_SPEAKER_BACK_LEFT "&Back left:"
-    IDS_SPEAKER_BACK_RIGHT "B&ack right:"
-    IDS_SPEAKER_LOW_FREQUENCY "Low &Frequency:"
+    IDS_SPEAKER_VOLUME "Volume des enceintes"
+    IDS_SPEAKER_LEFT "&Gauche :"
+    IDS_SPEAKER_RIGHT "&Droite :"
+    IDS_SPEAKER_CENTER "&Centrale :"
+    IDS_SPEAKER_BACK_LEFT "&Arrière gauche :"
+    IDS_SPEAKER_BACK_RIGHT "A&rrière droite :"
+    IDS_SPEAKER_LOW_FREQUENCY "&Basses :"
     5825 "Erreur programme"
     5826 "Fermeture programme"
     5827 "Alarme batterie critique"
@@ -270,7 +270,7 @@ BEGIN
     5851 "Menu démarrer"
     IDS_REACTOS_LOGOFF "Déconnexion ReactOS"
     IDS_REACTOS_LOGON "Connexion ReactOS"
-    5854 "ReactOS Explorer"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    5854 "Explorateur ReactOS"
+    IDS_BROWSE_FOR_SOUND "Chercher de nouveaux sons"
+    IDS_WAVE_FILES_FILTER "Fichiers Wave (*.wav)|*.wav|"
 END

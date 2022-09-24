@@ -5,8 +5,8 @@
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
-/* Don't use the inline ceilf, unless required */
-#if defined(TEST_STATIC_CRT) || defined(_M_ARM)
+/* Don't use the inline fabsf, unless required */
+#if !defined(_CRTBLD) && defined(_M_ARM)
 #define _CRTBLD
 #endif
 #include "math_helpers.h"

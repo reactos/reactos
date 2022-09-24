@@ -333,6 +333,11 @@ IntCreateCompatibleBitmap(
                           Planes ? Planes : 1,
                           Bpp ? Bpp : dibs.dsBm.bmBitsPixel,
                           NULL);
+            if (Bmp == NULL)
+            {
+                DPRINT1("Failed to allocate a bitmap!\n");
+                return NULL;
+            }
             psurfBmp = SURFACE_ShareLockSurface(Bmp);
             ASSERT(psurfBmp);
 
@@ -342,7 +347,7 @@ IntCreateCompatibleBitmap(
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // FIXME:
-            psurf->SurfObj.hdev = (HDEV)Dc->ppdev;
+            psurfBmp->SurfObj.hdev = (HDEV)Dc->ppdev;
             SURFACE_ShareUnlockSurface(psurfBmp);
         }
         else if (Count == sizeof(DIBSECTION))

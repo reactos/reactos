@@ -1,5 +1,8 @@
 
 add_definitions(${I18N_DEFS})
+if(_WINKD_)
+    add_definitions(-D_WINKD_)
+endif()
 
 include_directories(spapisup utils)
 

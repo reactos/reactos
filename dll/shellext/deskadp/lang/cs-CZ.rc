@@ -15,16 +15,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Vlastnosti", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Informace o adaptéru", -1, 7, 56, 237, 75
-    LTEXT "Typ čipu:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Typ DAC:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Velikost paměti:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Řetězec:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "BIOS informace:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    LTEXT "Typ čipu:", -1, 13, 68, 53, 8
+    LTEXT "", IDC_CHIPTYPE, 72, 68, 169, 8, SS_NOPREFIX
+    LTEXT "Typ DAC:", -1, 13, 80, 53, 8
+    LTEXT "", IDC_DACTYPE, 72, 80, 169, 8, SS_NOPREFIX
+    LTEXT "Velikost paměti:", -1, 13, 92, 53, 8
+    LTEXT "", IDC_MEMORYSIZE, 72, 92, 169, 8, SS_NOPREFIX
+    LTEXT "Řetězec:", -1, 13, 104, 53, 8
+    LTEXT "", IDC_ADAPTERSTRING, 72, 104, 169, 8, SS_NOPREFIX
+    LTEXT "BIOS informace:", -1, 13, 116, 53, 8
+    LTEXT "", IDC_BIOSINFORMATION, 72, 116, 169, 8, SS_NOPREFIX
     PUSHBUTTON "&Zobrazit režimy", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
@@ -50,4 +50,5 @@ BEGIN
     IDS_16BPP "High Color (16 bitů)"
     IDS_24BPP "True Color (24 bitů)"
     IDS_32BPP "True Color (32 bitů)"
+    IDS_NOTAVAIL "Not Available"
 END

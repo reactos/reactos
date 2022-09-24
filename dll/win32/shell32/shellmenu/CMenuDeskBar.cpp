@@ -645,7 +645,8 @@ HRESULT CMenuDeskBar::_CloseBar()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    SetWindowPos(NULL, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE);
+    if (m_hWnd)
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE);
 
     return UIActivateIO(FALSE, NULL);
 }

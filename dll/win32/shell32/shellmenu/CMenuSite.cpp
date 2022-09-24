@@ -246,7 +246,8 @@ HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
         m_DeskBand = NULL;
         m_WinEventHandler = NULL;
         m_hWndBand = NULL;
-        m_hWnd = NULL;
+        if (m_hWnd)
+            DestroyWindow();
         m_DeskBarSite = NULL;
     }
 

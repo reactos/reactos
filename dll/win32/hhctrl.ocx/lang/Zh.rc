@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2022 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -27,7 +27,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE
 BEGIN
 #ifdef __REACTOS__
-    IDS_DEFTITLE     "HTML Help"
+    IDS_DEFTITLE     "HTML 帮助"
 #endif
     IDS_CONTENTS     "内容(&C)"
     IDS_INDEX        "索引(&N)"
@@ -97,6 +97,9 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML 說明"
+#endif
     IDS_CONTENTS     "內容(&C)"
     IDS_INDEX        "索引(&N)"
     IDS_SEARCH       "搜尋(&S)"

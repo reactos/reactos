@@ -378,6 +378,10 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 if(NOT _WINKD_)
+    if(KDBG)
+        add_definitions(-DKDBG)
+    endif()
+
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c)
@@ -411,6 +415,8 @@ if(NOT _WINKD_)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
 
+else()
+    add_definitions(-D_WINKD_)
 endif()
 
 if(CMAKE_C_COMPILER_ID STEQUAL "Clang")

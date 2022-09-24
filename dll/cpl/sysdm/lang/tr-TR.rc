@@ -335,7 +335,7 @@ BEGIN
     IDS_PETABYTE "PB Bellek"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Gün, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu Gün, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Değişken"
     IDS_VALUE "Değer"
     IDS_NO_DUMP "(Yok)"

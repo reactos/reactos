@@ -119,6 +119,9 @@ KiDispatchExceptionToUser(
     /* Get pointer to the usermode context, exception record and machine frame */
     UserStack = (PKUSER_EXCEPTION_STACK)UserRsp;
 
+    /* Enable interrupts */
+    _enable();
+
     /* Set up the user-stack */
     _SEH2_TRY
     {
@@ -143,6 +146,7 @@ KiDispatchExceptionToUser(
         // FIXME: handle stack overflow
 
         /* Nothing we can do here */
+        _disable();
         _SEH2_YIELD(return);
     }
     _SEH2_END;
@@ -164,6 +168,8 @@ KiDispatchExceptionToUser(
 
     /* Set RIP to the User-mode Dispatcher */
     TrapFrame->Rip = (ULONG64)KeUserExceptionDispatcher;
+
+    _disable();
 
     /* Exit to usermode */
     KiServiceExit2(TrapFrame);
@@ -202,6 +208,9 @@ KiPrepareUserDebugData(void)
     Teb = KeGetCurrentThread()->Teb;
     if (!Teb) return;
 
+    /* Enable interrupts */
+    _enable();
+
     _SEH2_TRY
     {
         /* Get a pointer to the loader data */
@@ -230,6 +239,8 @@ KiPrepareUserDebugData(void)
     {
     }
     _SEH2_END;
+
+    _disable();
 }
 
 VOID
@@ -350,9 +361,10 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
-            /* Forward exception to user mode (does not return) */
+            /* Forward exception to user mode (does not return, if successful) */
             KiDispatchExceptionToUser(TrapFrame, &Context, ExceptionRecord);
-            NT_ASSERT(FALSE);
+
+            /* Failed to dispatch, fall through for second chance handling */
         }
 
         /* Try second chance */
@@ -660,7 +672,49 @@ NTAPI
 KiXmmExceptionHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
-    return -1;
+    ULONG ExceptionCode;
+
+    if ((TrapFrame->MxCsr & _MM_EXCEPT_INVALID) &&
+        !(TrapFrame->MxCsr & _MM_MASK_INVALID))
+    {
+        /* Invalid operation */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DENORM) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DENORM))
+    {
+        /* Denormalized operand. Yes, this is what Windows returns. */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DIV_ZERO) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DIV_ZERO))
+    {
+        /* Divide by zero */
+        ExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_OVERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_OVERFLOW))
+    {
+        /* Overflow */
+        ExceptionCode = STATUS_FLOAT_OVERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_UNDERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_UNDERFLOW))
+    {
+        /* Underflow */
+        ExceptionCode = STATUS_FLOAT_UNDERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_INEXACT) &&
+             !(TrapFrame->MxCsr & _MM_MASK_INEXACT))
+    {
+        /* Precision */
+        ExceptionCode = STATUS_FLOAT_INEXACT_RESULT;
+    }
+    else
+    {
+        /* Should not happen */
+        ASSERT(FALSE);
+    }
+    
+    return ExceptionCode;
 }

@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "マルチチャンネル"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "記述はここから始まります。", 9506, 8, 4, 212, 24
+    LTEXT "By moving the sliders below you can adjust the volume of all speakers connected to this computer.", 9506, 8, 4, 212, 24
     LTEXT "低", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "スライダー1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17
@@ -234,13 +234,13 @@ BEGIN
     IDS_CPLDESCRIPTION "コンピューターの音声スキームを変更するか、スピーカーと録音デバイスの設定を変更します。"
     IDS_NO_SOUND "(なし)"
     IDS_NO_DEVICES "デバイスがありません"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
-    IDS_SPEAKER_LEFT "&Left:"
-    IDS_SPEAKER_RIGHT "&Right:"
-    IDS_SPEAKER_CENTER "&Center:"
-    IDS_SPEAKER_BACK_LEFT "&Back left:"
-    IDS_SPEAKER_BACK_RIGHT "B&ack right:"
-    IDS_SPEAKER_LOW_FREQUENCY "Low &Frequency:"
+    IDS_SPEAKER_VOLUME "スピーカー音量"
+    IDS_SPEAKER_LEFT "左(&L):"
+    IDS_SPEAKER_RIGHT "右(&R):"
+    IDS_SPEAKER_CENTER "中央(&C):"
+    IDS_SPEAKER_BACK_LEFT "左後ろ(&B):"
+    IDS_SPEAKER_BACK_RIGHT "右後ろ(&A):"
+    IDS_SPEAKER_LOW_FREQUENCY "低周波数(&F):"
     5825 "プログラム エラー"
     5826 "プログラムを閉じる"
     5827 "重大なバッテリー警告音"
@@ -271,6 +271,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "ReactOSログオフ"
     IDS_REACTOS_LOGON "ReactOSログオン"
     5854 "ReactOSエクスプローラー"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "新しい音声を探す"
+    IDS_WAVE_FILES_FILTER "音声ファイル (*.wav)|*.wav|"
 END

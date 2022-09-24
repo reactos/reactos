@@ -417,7 +417,7 @@
 @ stdcall NtUserGetImeInfoEx(long long)
 @ stdcall NtUserGetInternalWindowPos(ptr ptr ptr)
 @ stdcall NtUserGetKeyboardLayoutList(long ptr)
-@ stdcall NtUserGetKeyboardLayoutName(str)
+@ stdcall NtUserGetKeyboardLayoutName(ptr)
 @ stdcall NtUserGetKeyboardState(ptr)
 @ stdcall NtUserGetKeyNameText(long wstr long)
 @ stdcall NtUserGetKeyState(long)

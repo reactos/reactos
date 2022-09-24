@@ -160,11 +160,13 @@ BEGIN
     STRING_UNICODE "Юнікод"
     STRING_UNICODE_BE "Юнікод (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Рядок %d, стовпчик %d"
     STRING_PRINTERROR "Неможливо розпечатати файл '%s'.\n\nПереконайтесь, що принтер ввімкнено, та налаштовано."
+    STRING_DEFAULTFONT "Lucida Console"
 
     STRING_TEXT_DOCUMENT "Текстовий документ"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

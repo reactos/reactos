@@ -147,7 +147,7 @@ BEGIN
     STRING_TOOLARGE "Файл '%s' слишком велик.\n\
 Воспользуйтесь другим текстовым редактором."
     STRING_NOTEXT "Вы не ввели текст.\n\
-Введите что-нибудь и попробуйте еще."
+Введите что-нибудь и попробуйте ещё."
     STRING_DOESNOTEXIST "Файл '%s'\nне существует\n\n\
 Хотите создать новый файл?"
     STRING_NOTSAVED "Файл '%s'\nбыл изменен\n\n\
@@ -160,11 +160,13 @@ BEGIN
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (Big Endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Macintosh (CR)"
     STRING_LINE_COLUMN "Строка %d, столбец %d"
     STRING_PRINTERROR "Невозможно распечатать файл '%s'.\n\nПроверьте, включен ли принтер, и настроен ли он правильно."
+    STRING_DEFAULTFONT "Lucida Console"
 
     STRING_TEXT_DOCUMENT "Текстовый документ"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

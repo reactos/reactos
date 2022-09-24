@@ -140,7 +140,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     }
     else if ((dwSize >= 3) && (pBytes[0] == 0xEF) && (pBytes[1] == 0xBB) && (pBytes[2] == 0xBF))
     {
-        encFile = ENCODING_UTF8;
+        encFile = ENCODING_UTF8BOM;
         dwPos += 3;
     }
     else
@@ -166,10 +166,11 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
 
     case ENCODING_ANSI:
     case ENCODING_UTF8:
-        if (encFile == ENCODING_ANSI)
-            iCodePage = CP_ACP;
-        else if (encFile == ENCODING_UTF8)
+    case ENCODING_UTF8BOM:
+        if (encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
             iCodePage = CP_UTF8;
+        else
+            iCodePage = CP_ACP;
 
         if ((dwSize - dwPos) > 0)
         {
@@ -312,10 +313,11 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENC
 
             case ENCODING_ANSI:
             case ENCODING_UTF8:
-                if (encFile == ENCODING_ANSI)
-                    iCodePage = CP_ACP;
-                else if (encFile == ENCODING_UTF8)
+            case ENCODING_UTF8BOM:
+                if (encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
                     iCodePage = CP_UTF8;
+                else
+                    iCodePage = CP_ACP;
 
                 iRequiredBytes = WideCharToMultiByte(iCodePage, 0, &pszText[dwPos], dwTextLen - dwPos, NULL, 0, NULL, NULL);
                 if (iRequiredBytes <= 0)
@@ -371,8 +373,8 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile,
     LPCWSTR pszLF = L"\n";
     DWORD dwPos, dwNext;
 
-    /* Write the proper byte order marks if not ANSI */
-    if (encFile != ENCODING_ANSI)
+    /* Write the proper byte order marks if not ANSI or UTF-8 without BOM */
+    if (encFile != ENCODING_ANSI && encFile != ENCODING_UTF8)
     {
         wcBom = 0xFEFF;
         if (!WriteEncodedText(hFile, &wcBom, 1, encFile))

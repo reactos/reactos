@@ -689,6 +689,7 @@ PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE controller"
 ;Compatible adapters
 
 UniATA_Name = "Universal ATA Driver"
+*PNP0600.DeviceDesc     = "IDE/ESDI Hard Disk Controller"
 *PNP0600.PriDeviceDesc  = "Primary IDE Channel"
 *PNP0600.SecDeviceDesc  = "Secondary IDE Channel"
 PCI\CC_0101.DeviceDesc  = "Dual Channel PCI BusMaster IDE Controller"
@@ -2257,7 +2258,7 @@ PCI\CC_0106.DeviceDesc  = "Dispozitiv de control Serial ATA generic"
 
 [Strings.0419]
 HDCClassName = "IDE ATA/ATAPI контроллеры"
-GenericMfg = "(Универсальный контроллер жесткого диска)"
+GenericMfg = "(Универсальный контроллер жёсткого диска)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 контроллер"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 контроллер"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 контроллер"
@@ -2562,6 +2563,7 @@ PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE контроллер"
 ;Compatible adapters
 
 UniATA_Name = "Универсальный ATA драйвер"
+*PNP0600.DeviceDesc     = "IDE/ESDI контроллер жёсткого диска"
 *PNP0600.PriDeviceDesc  = "Первичный канал IDE"
 *PNP0600.SecDeviceDesc  = "Вторичный канал IDE"
 PCI\CC_0101.DeviceDesc  = "Двухканальный PCI BusMaster IDE контроллер"

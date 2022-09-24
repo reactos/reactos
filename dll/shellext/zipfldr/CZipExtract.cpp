@@ -331,10 +331,23 @@ public:
     };
 
 
+    /* NOTE: This callback is needed to set large icon correctly. */
+    static INT CALLBACK s_PropSheetCallbackProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+    {
+        if (uMsg == PSCB_INITIALIZED)
+        {
+            HICON hIcon = LoadIconW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDI_ZIPFLDR));
+            CWindow dlg(hwndDlg);
+            dlg.SetIcon(hIcon, TRUE);
+        }
+
+        return 0;
+    }
+
     void runWizard()
     {
         PROPSHEETHEADERW psh = { sizeof(psh), 0 };
-        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER;
+        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER | PSH_USEICONID | PSH_USECALLBACK;
         psh.hInstance = _AtlBaseModule.GetResourceInstance();
 
         CExtractSettingsPage extractPage(this, &m_Password);
@@ -347,8 +360,10 @@ public:
 
         psh.phpage = hpsp;
         psh.nPages = _countof(hpsp);
+        psh.pszIcon = MAKEINTRESOURCE(IDI_ZIPFLDR);
         psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
         psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+        psh.pfnCallback = s_PropSheetCallbackProc;
 
         PropertySheetW(&psh);
     }

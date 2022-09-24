@@ -17,16 +17,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&गुण", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "अडैप्टर जानकारी", -1, 7, 56, 237, 75
-    LTEXT "चिप प्रकार:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "डीएसी प्रकार:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "मेमोरी क्षमता:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "अडैप्टर स्ट्रिंग:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "बाआईओएस जानकारी:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    LTEXT "चिप प्रकार:", -1, 13, 68, 43, 8
+    LTEXT "", IDC_CHIPTYPE, 62, 68, 179, 8, SS_NOPREFIX
+    LTEXT "डीएसी प्रकार:", -1, 13, 80, 43, 8
+    LTEXT "", IDC_DACTYPE, 62, 80, 179, 8, SS_NOPREFIX
+    LTEXT "मेमोरी क्षमता:", -1, 13, 92, 43, 8
+    LTEXT "", IDC_MEMORYSIZE, 62, 92, 179, 8, SS_NOPREFIX
+    LTEXT "अडैप्टर स्ट्रिंग:", -1, 13, 104, 43, 8
+    LTEXT "", IDC_ADAPTERSTRING, 62, 104, 179, 8, SS_NOPREFIX
+    LTEXT "बाआईओएस जानकारी:", -1, 13, 116, 43, 8
+    LTEXT "", IDC_BIOSINFORMATION, 62, 116, 179, 8, SS_NOPREFIX
     PUSHBUTTON "&सभी मोड की सूची दें...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
@@ -52,4 +52,5 @@ BEGIN
     IDS_16BPP "उच्च कलर (16 बिट)"
     IDS_24BPP "ट्रू कलर (24 बिट)"
     IDS_32BPP "ट्रू कलर (32 बिट)"
+    IDS_NOTAVAIL "Not Available"
 END

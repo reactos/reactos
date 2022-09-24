@@ -121,8 +121,8 @@
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
-/sdk/cmake/     @learn-more
-*.cmake         @learn-more
+/sdk/cmake/
+*.cmake
 
 # File Patch API
 #   M: learn-more, learn_more, Mark Jansen
@@ -225,7 +225,7 @@
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
-/modules/rostests/apitests/ @learn-more
+/modules/rostests/apitests/
 
 # ReactOS Kernel-Mode Tests
 #   M: ThFabba, Thomas Faber

@@ -320,9 +320,37 @@ public:
         int wndCenterHeight = wndCenterRect.bottom - wndCenterRect.top;
         int wndWidth = wndRect.right - wndRect.left;
         int wndHeight = wndRect.bottom - wndRect.top;
+        int xPos = wndCenterRect.left + ((wndCenterWidth - wndWidth + 1) >> 1);
+        int yPos = wndCenterRect.top + ((wndCenterHeight - wndHeight + 1) >> 1);
+
+        if (!(::GetWindowLong(hWndCenter, GWL_STYLE) & WS_CHILD))
+        {
+            MONITORINFO mi;
+            mi.cbSize = sizeof(mi);
+            HMONITOR hMonitor = MonitorFromWindow(hWndCenter, MONITOR_DEFAULTTOPRIMARY);
+            GetMonitorInfo(hMonitor, &mi);
+
+            if (xPos + wndWidth > mi.rcWork.right)
+            {
+                xPos = mi.rcWork.right - wndWidth;
+            }
+            else if (xPos < mi.rcWork.left)
+            {
+                xPos = mi.rcWork.left;
+            }
+
+            if (yPos + wndHeight > mi.rcWork.bottom)
+            {
+                yPos = mi.rcWork.bottom - wndHeight;
+            }
+            if (yPos < mi.rcWork.top)
+            {
+                yPos = mi.rcWork.top;
+            }
+        }
         return ::MoveWindow(m_hWnd,
-                            wndCenterRect.left + ((wndCenterWidth - wndWidth + 1) >> 1),
-                            wndCenterRect.top + ((wndCenterHeight - wndHeight + 1) >> 1),
+                            xPos,
+                            yPos,
                             wndWidth, wndHeight, TRUE);
     }
 

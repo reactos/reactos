@@ -14,11 +14,16 @@ typedef struct _SECL_REQUEST
     [string] WCHAR *CurrentDirectory;
     DWORD dwLogonFlags;
     DWORD dwCreationFlags;
+    DWORD dwProcessId;
 } SECL_REQUEST, *PSECL_REQUEST;
 
 typedef struct _SECL_RESPONSE
 {
-    ULONG ulError;
+    DWORD_PTR hProcess;
+    DWORD_PTR hThread;
+    DWORD dwProcessId;
+    DWORD dwThreadId;
+    DWORD dwError;
 } SECL_RESPONSE, *PSECL_RESPONSE;
 
 [

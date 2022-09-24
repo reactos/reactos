@@ -69,6 +69,11 @@ CreateDIBPalette(
                                     0,
                                     0,
                                     0);
+        if (ppal == NULL)
+        {
+            DPRINT1("Failed to allocate palette.\n");
+            return NULL;
+        }
 
         /* Check if the BITMAPINFO specifies how many colors to use */
         if ((pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&

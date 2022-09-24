@@ -462,6 +462,7 @@ InitThreadCallback(PETHREAD Thread)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+    PKL pDefKL;
 
     Process = Thread->ThreadsProcess;
 
@@ -532,9 +533,8 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    ptiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
-    if (ptiCurrent->KeyboardLayout)
-        UserReferenceObject(ptiCurrent->KeyboardLayout);
+    pDefKL = W32kGetDefaultKeyLayout();
+    UserAssignmentLock((PVOID*)&(ptiCurrent->KeyboardLayout), pDefKL);
 
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
 
@@ -550,10 +550,10 @@ InitThreadCallback(PETHREAD Thread)
     pci->ppi = ptiCurrent->ppi;
     pci->fsHooks = ptiCurrent->fsHooks;
     pci->dwTIFlags = ptiCurrent->TIF_flags;
-    if (ptiCurrent->KeyboardLayout)
+    if (pDefKL)
     {
-        pci->hKL = ptiCurrent->KeyboardLayout->hkl;
-        pci->CodePage = ptiCurrent->KeyboardLayout->CodePage;
+        pci->hKL = pDefKL->hkl;
+        pci->CodePage = pDefKL->CodePage;
     }
 
     /* Need to pass the user Startup Information to the current process. */
@@ -829,8 +829,8 @@ ExitThreadCallback(PETHREAD Thread)
     /* Remove it from the list */
     *ppti = ptiCurrent->ptiSibling;
 
-    if (ptiCurrent->KeyboardLayout)
-        UserDereferenceObject(ptiCurrent->KeyboardLayout);
+    if (!UserAssignmentUnlock((PVOID*)&(ptiCurrent->KeyboardLayout)))
+        ptiCurrent->pClientInfo->hKL = NULL;
 
     if (gptiForeground == ptiCurrent)
     {

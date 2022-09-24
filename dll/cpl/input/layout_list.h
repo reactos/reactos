@@ -4,10 +4,11 @@
 
 typedef struct _LAYOUT_LIST_NODE
 {
-    WCHAR *pszName;
-
-    DWORD dwId;
-    DWORD dwSpecialId;
+    DWORD dwKLID;           /* The physical KLID */
+    WORD wSpecialId;        /* The special ID */
+    LPWSTR pszName;         /* The layout text */
+    LPWSTR pszFile;         /* The layout file */
+    LPWSTR pszImeFile;      /* The IME file */
 
     struct _LAYOUT_LIST_NODE *pPrev;
     struct _LAYOUT_LIST_NODE *pNext;

@@ -24,3 +24,4 @@
 #define IDS_16BPP           107
 #define IDS_24BPP           108
 #define IDS_32BPP           109
+#define IDS_NOTAVAIL        110

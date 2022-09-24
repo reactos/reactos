@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2022 Chan Chilung <eason066@gmail.com>
  * REFERENCES:  Wine's Chinese (Traditional) resource translation
  */
 
@@ -11,99 +11,99 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage:\n\
-  REG [operation] [parameters]\n\n\
-Supported operations:\n\
+    STRING_USAGE, "用法:\n\
+  REG [操作] [參數]\n\n\
+支援的操作:\n\
   ADD | COPY | DELETE | EXPORT | IMPORT | QUERY\n\n\
-For help on a specific operation, type:\n\
-  REG [operation] /?\n\n"
+要取得指定操作的說明，請輸入:\n\
+  REG [操作] /?\n\n"
 
-    STRING_ADD_USAGE, "REG ADD <key> [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n\n\
-  Adds a key to the registry or adds a new value to a given registry key.\n\n\
-  <key>\n\
-     The registry key to add or, if either [/v] or [/ve] is specified,\n\
-     the key in which to add the new registry data.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_ADD_USAGE, "REG ADD <機碼> [/v 值名稱 | /ve] [/t 類型] [/s 分隔符號] [/d 資料] [/f]\n\n\
+  新增一個機碼到登錄，或新增值到給定的登錄機碼。\n\n\
+  <機碼>\n\
+     要新增的機碼，如果指定了 [/v] 或 [/ve]，\n\
+     則會在該機碼新增登錄資料。\n\n\
+     格式: ROOT\\Subkey\n\n\
+     ROOT: 預先定義的登錄機碼。這必須是下列的其中一個:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to add.\n\n\
+     Subkey: 在所選取 ROOT 機碼下的登錄機碼的完整路徑。\n\n\
+  /v <值名稱>\n\
+     要新增的登錄值的名稱。\n\n\
   /ve\n\
-     Add an unnamed registry value. This option modifies the (Default)\n\
-     registry value.\n\n\
-  /t <type>\n\
-     The type of data to add to the registry. If [/t] is specified,\n\
-     <type> must be one of the following:\n\n\
+     新增未命名的登錄值。這個選項會修改 (預設) 的\n\
+     登錄值。\n\n\
+  /t <類型>\n\
+     要新增到登錄的資料類型。如果指定了 [/t]，\n\
+     <類型> 必須是下列的其中一個:\n\n\
          REG_SZ    | REG_MULTI_SZ | REG_EXPAND_SZ\n\
          REG_DWORD | REG_BINARY   | REG_NONE\n\n\
-     If [/t] is not specified, the default data type is REG_SZ.\n\n\
-  /s <separator>\n\
-     The character used to separate strings in REG_MULTI_SZ data.\n\
-     If [/s] is not specified, the default separator is \\0.\n\n\
-  /d <data>\n\
-     The data to add to the new registry value.\n\n\
+     如果未指定 [/t]，資料類型將預設為 REG_SZ。\n\n\
+  /s <分隔符號>\n\
+     指定一個用於分隔 REG_MULTI_SZ 資料字串的字元。\n\
+     如果未指定 [/s]，分隔符號會預設為 \\0。\n\n\
+  /d <資料>\n\
+     要新增給新的登錄值的資料。\n\n\
   /f\n\
-     Modify the registry without prompting for confirmation.\n\n"
+     修改登錄項目而不需確認提示。\n\n"
 
-    STRING_DELETE_USAGE, "REG DELETE <key> [/v value_name | /ve | /va] [/f]\n\n\
-  Deletes a registry key (including all subkeys and values), or deletes\n\
-  one or more values from a given registry key.\n\n\
-  <key>\n\
-     The registry key to delete or, if one of [/v], [/ve] or [/va] is\n\
-     specified, the registry key in which to delete one or more values.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_DELETE_USAGE, "REG DELETE <金> [/v 值名稱 | /ve | /va] [/f]\n\n\
+  刪除一個登錄機碼 (所有子機碼和值)，\n\
+  或從給定的登錄機碼刪除一個或多個值。\n\n\
+  <機碼>\n\
+     要刪除的登錄機碼。如果指定了 [/v]、[/ve] 或 [/va]，\n\
+     則可刪除登錄機碼內的一個或多個值。\n\n\
+     格式: ROOT\\Subkey\n\n\
+     ROOT: 預先定義的登錄機碼。這必須是下列的其中一個:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to delete.\n\n\
+     Subkey: 在所選取 ROOT 機碼下的登錄機碼的完整路徑。\n\n\
+  /v <值名稱>\n\
+     要刪除的登錄值的名稱。\n\n\
   /ve\n\
-     Delete an unnamed registry value. This option deletes the (Default)\n\
-     registry value.\n\n\
+     刪除未命名的登錄值。這個選項會刪除 (預設) 的\n\
+     登錄值。\n\n\
   /va\n\
-     Delete all values from a registry key.\n\n\
+     刪除登錄機碼的所有值。\n\n\
   /f\n\
-     Delete a registry key (including all subkeys and values) without\n\
-     prompting for confirmation.\n\n"
+     刪除一個登錄機碼 (包括所有子機碼和值)\n\
+     而不需確認提示。\n\n"
 
-    STRING_QUERY_USAGE, "REG QUERY <key> [/v value_name | /ve] [/s]\n\n\
-  Queries a specified registry key and lists all immediate subkeys, values\n\
-  and data within that key. Use [/s] to recursively query each subkey.\n\n\
-  <key>\n\
-     The registry key to query.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_QUERY_USAGE, "REG QUERY <機碼> [/v 值名稱 | /ve] [/s]\n\n\
+  查詢指定的登錄機碼，並列出該機碼中的所有即時子機碼、值和資料。\n\
+  使用 [/s] 來遞迴查詢每個子機碼。\n\n\
+  <機碼>\n\
+     要查詢的登錄機碼。\n\n\
+     格式: ROOT\\Subkey\n\n\
+     ROOT: 預先定義的登錄機碼。這必須是下列的其中一個:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to query. If neither [/v] nor [/ve] is\n\
-     specified, all values under <key> are listed.\n\n\
+     Subkey: 在所選取 ROOT 機碼下的登錄機碼的完整路徑。\n\n\
+  /v <值名稱>\n\
+     要查詢的登錄值的名稱。如果未指定 [/v] 或 [/ve]，\n\
+     則會列出 <機碼> 下所有的值。\n\n\
  /ve\n\
-     Query an unnamed registry value. This option queries the (Default)\n\
-     registry value.\n\n\
+     查詢未命名的登錄值。這個選項會查詢 (預設) 的\n\
+     登錄值。\n\n\
   /s\n\
-     List all registry entries under <key> and its subkeys.\n\n"
+     列出 <機碼> 及其子機碼的所有登錄項目。\n\n"
 
-    STRING_SUCCESS, "操作成功完成\n"
+    STRING_SUCCESS, "reg: 操作成功完成\n"
     STRING_INVALID_KEY, "reg: 無效的登錄機碼名稱\n"
     STRING_INVALID_CMDLINE, "reg: 無效的命令列參數\n"
     STRING_NO_REMOTE, "reg: 無法存取遠端機器\n"
     STRING_VALUE_NONEXIST, "reg: 系統找不到指定的登錄機碼或登錄值\n"
     STRING_UNSUPPORTED_TYPE, "reg: 不支援的類型\n"
-    STRING_MISSING_NUMBER, "reg: The option [/d] must be followed by a valid numeric value\n"
+    STRING_MISSING_NUMBER, "reg: 選項 [/d] 後必須接著一個有效的數字值\n"
     STRING_MISSING_HEXDATA, "reg: 選項 [/d] 後必須接著一個有效的十六進制值\n"
     STRING_UNHANDLED_TYPE, "reg: 未處理的登錄資料類型 [/t 0x%1!x!, /d %2]\n"
     STRING_OVERWRITE_VALUE, "登錄值 '%1' 已經存在。您要覆寫它嗎?"
@@ -112,7 +112,7 @@ For help on a specific operation, type:\n\
     STRING_ALL, "#msgctxt#All key#A"
     STRING_YESNO, " (Yes|No)"
     STRING_YESNOALL, " (Yes|No|All)"
-    STRING_CANCELLED, "註冊表操作已經取消\n"
+    STRING_CANCELLED, "reg: 登錄操作已經取消\n"
     STRING_DEFAULT_VALUE, "(預設)"
     STRING_DELETE_VALUE, "您確定要刪除登錄值 '%1' 嗎?"
     STRING_DELETE_VALUEALL, "您確定要刪除 '%1' 下的所有登錄值嗎?"
@@ -126,65 +126,65 @@ For help on a specific operation, type:\n\
     STRING_FUNC_HELP, "輸入 'REG %1 /?' 以取得說明。\n"
     STRING_VALUE_NOT_SET, "(沒有設定值)"
 
-    STRING_IMPORT_USAGE, "REG IMPORT <file>\n\n\
-  Imports keys, values and data from a given file into the registry.\n\n\
-  <file>\n\
-     The name and path of the registry file to import.\n\n"
+    STRING_IMPORT_USAGE, "REG IMPORT <檔案>\n\n\
+  從給定的檔案匯入機碼、值和資料到登錄。\n\n\
+  <檔案>\n\
+     要匯入的登錄檔案的名稱和路徑。\n\n"
 
     STRING_FILE_NOT_FOUND, "reg: 無法找到檔案 '%1'。\n"
     STRING_ESCAPE_SEQUENCE, "reg: 無法辨識的逸出序列 [\\%1!c!]\n"
 
-    STRING_EXPORT_USAGE, "REG EXPORT <key> <file> [/y]\n\n\
-  Exports a specified registry key (including all subkeys and values)\n\
-  to a file.\n\n\
-  <key>\n\
-     The registry key to export.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_EXPORT_USAGE, "REG EXPORT <機碼> <檔案> [/y]\n\n\
+  將指定的登錄機碼 (包括所有子機碼和值)\n\
+  匯出到一個檔案。\n\n\
+  <機碼>\n\
+     要匯出的登錄機碼。\n\n\
+     格式: ROOT\\Subkey\n\n\
+     ROOT: 預先定義的登錄機碼。這必須是下列的其中一個:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  <file>\n\
-     The name and path of the registry file that will be created.\n\
-     This file must have a .reg extension.\n\n\
+     Subkey: 在所選取 ROOT 機碼下的登錄機碼的完整路徑。\n\n\
+  <檔案>\n\
+     要建立的登錄檔案的名稱和路徑。\n\
+     檔案必須是 .reg 的副檔名。\n\n\
   /y\n\
-     Overwrite <file> without prompting for confirmation.\n\n"
+     覆寫 <檔案> 而不需確認提示。\n\n"
 
     STRING_INVALID_SYSTEM_KEY, "reg: 無效的系統金鑰 [%1]\n"
     STRING_OVERWRITE_FILE, "檔案 '%1' 已經存在。您要覆寫它嗎?"
-    STRING_KEY_NONEXIST, "reg: Unable to find the specified registry key\n"
-    STRING_KEY_IMPORT_FAILED, "reg: Unable to import the registry key '%1'\n"
+    STRING_KEY_NONEXIST, "reg: 找不到指定的登錄值\n"
+    STRING_KEY_IMPORT_FAILED, "reg: 無法匯入登錄機碼 '%1'\n"
 
     STRING_REG_VIEW_USAGE, "  /reg:32\n\
-     Access the registry using the 32-bit view.\n\n\
+     使用 32 位元登錄檢視來存取機碼。\n\n\
   /reg:64\n\
-     Access the registry using the 64-bit view.\n\n"
-    STRING_ACCESS_DENIED, "reg: Unable to access or create the specified registry key\n"
+     使用 64 位元登錄檢視來存取機碼。\n\n"
+    STRING_ACCESS_DENIED, "reg: 無法存取或建立指定的登錄機碼\n"
 
-    STRING_COPY_USAGE, "REG COPY <key1> <key2> [/s] [/f]\n\n\
-  Copies the contents of a specified registry key to another location.\n\
-  By default, this operation only copies registry values. Use [/s] to\n\
-  recursively copy all subkeys and values.\n\n\
-  <key1>, <key2>\n\
-     Registry keys specifying the source (<key1>) and destination (<key2>)\n\
-     of the data. If <key2> does not exist, it is created.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_COPY_USAGE, "REG COPY <機碼1> <機碼2> [/s] [/f]\n\n\
+  複製指定登錄機碼的內容到另一個位置。\n\
+  預設情況下，這個操作只會複製登錄值。\n\
+  使用 [/s] 來遞迴複製所有子機碼和值。\n\n\
+  <機碼1>，<機碼2>\n\
+     指定登錄機碼的來源 (<機碼1>) 和目標 (<機碼2>) 資料。\n\
+     如果 <機碼2> 不存在，系統將會建立它。\n\n\
+     格式: ROOT\\Subkey\n\n\
+     ROOT: 預先定義的登錄機碼。這必須是下列的其中一個:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
+     Subkey: 在所選取 ROOT 機碼下的登錄機碼的完整路徑。\n\n\
   /s\n\
-     Copy all subkeys and values from <key1> to <key2>.\n\n\
+     從 <機碼1> 複製所有子機碼和值到 <機碼2>。\n\n\
   /f\n\
-     Overwrite all registry data in <key2> without prompting for confirmation.\n\
-     This option does not modify subkeys and values that only exist in <key2>.\n\n"
+     覆寫 <機碼2> 內所有的登錄資料而不需確認提示。\n\
+     這個選項不會修改只在 <機碼2> 存在的子機碼和值。\n\n"
 
-    STRING_COPY_SRC_DEST_SAME, "reg: The source and destination keys cannot be the same\n"
-    STRING_COPY_CONFIRM, "The value '%1\\%2' already exists in the destination key. Do you want to overwrite it?"
+    STRING_COPY_SRC_DEST_SAME, "reg: 來源和目標機碼不可以相同\n"
+    STRING_COPY_CONFIRM, "目標機碼內的值 '%1\\%2' 已經存在。您要覆寫它嗎?"
 }

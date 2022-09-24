@@ -33,14 +33,14 @@ typedef struct
     LPWSTR DefaultName;
     UINT LocalizedResId;
     LPWSTR FileName;
-}EVENT_LABEL_ITEM;
+} EVENT_LABEL_ITEM;
 
 typedef struct
 {
     LPWSTR LabelName;
     LPWSTR DefaultName;
     UINT IconId;
-}SYSTEM_SCHEME_ITEM;
+} SYSTEM_SCHEME_ITEM;
 
 static EVENT_LABEL_ITEM EventLabels[] =
 {
@@ -89,12 +89,12 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
                            UINT uNumberOfGuids,
                            HWPAGE_DISPLAYMODE DisplayMode);
 
-typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(IN OPTIONAL HWND hwndParent,
-                                                              IN LPCTSTR HardwareId,
-                                                              IN LPCTSTR FullInfPath,
-                                                              IN DWORD InstallFlags,
-                                                              OUT OPTIONAL PBOOL bRebootRequired
-                                                         );
+typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(
+    _In_opt_ HWND hwndParent,
+    _In_ LPCWSTR HardwareId,
+    _In_ LPCWSTR FullInfPath,
+    _In_ DWORD InstallFlags,
+    _Out_opt_ PBOOL bRebootRequired);
 
 #define UPDATEDRIVERFORPLUGANDPLAYDEVICES "UpdateDriverForPlugAndPlayDevicesW"
 #define NUM_APPLETS    (1)
@@ -105,7 +105,7 @@ HINSTANCE hApplet = 0;
 /* Applets */
 const APPLET Applets[NUM_APPLETS] =
 {
-  {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
+    {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
 };
 
 
@@ -208,16 +208,16 @@ InstallSystemSoundLabels(HKEY hKey)
 
     do
     {
-        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)EventLabels[i].DefaultName, (wcslen(EventLabels[i].DefaultName)+1) * sizeof(WCHAR));
-            swprintf(Buffer, L"@mmsys.cpl,-%u", EventLabels[i].LocalizedResId);
-            RegSetValueExW(hSubKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Buffer, (wcslen(Buffer)+1) * sizeof(WCHAR));
+            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)EventLabels[i].DefaultName, (wcslen(EventLabels[i].DefaultName) + 1) * sizeof(WCHAR));
+            StringCchPrintfW(Buffer, _countof(Buffer), L"@mmsys.cpl,-%u", EventLabels[i].LocalizedResId);
+            RegSetValueExW(hSubKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
 
             RegCloseKey(hSubKey);
         }
         i++;
-    }while(EventLabels[i].LabelName);
+    } while (EventLabels[i].LabelName);
 }
 
 VOID
@@ -228,13 +228,13 @@ InstallSystemSoundSchemeNames(HKEY hKey)
 
     do
     {
-        if (RegCreateKeyExW(hKey, SystemSchemes[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        if (RegCreateKeyExW(hKey, SystemSchemes[i].LabelName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[i].DefaultName, (wcslen(SystemSchemes[i].DefaultName)+1) * sizeof(WCHAR));
+            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[i].DefaultName, (wcslen(SystemSchemes[i].DefaultName) + 1) * sizeof(WCHAR));
             RegCloseKey(hSubKey);
         }
         i++;
-    }while(SystemSchemes[i].LabelName);
+    } while (SystemSchemes[i].LabelName);
 }
 
 VOID
@@ -247,39 +247,39 @@ InstallDefaultSystemSoundScheme(HKEY hRootKey)
     if (RegCreateKeyExW(hRootKey, L".Default", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
 
-    RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[0].DefaultName, (wcslen(SystemSchemes[0].DefaultName)+1) * sizeof(WCHAR));
-    swprintf(Path, L"@mmsys.cpl,-%u", SystemSchemes[0].IconId);
-    RegSetValueExW(hKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[0].DefaultName, (wcslen(SystemSchemes[0].DefaultName) + 1) * sizeof(WCHAR));
+    StringCchPrintfW(Path, _countof(Path), L"@mmsys.cpl,-%u", SystemSchemes[0].IconId);
+    RegSetValueExW(hKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Path, (wcslen(Path) + 1) * sizeof(WCHAR));
 
     do
     {
-        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
         {
             HKEY hScheme;
 
-            swprintf(Path, L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
-            if (RegCreateKeyExW(hSubKey, L".Current",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
+            StringCchPrintfW(Path, _countof(Path), L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
+            if (RegCreateKeyExW(hSubKey, L".Current", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path) + 1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
 
-            if (RegCreateKeyExW(hSubKey, L".Default",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
+            if (RegCreateKeyExW(hSubKey, L".Default", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path) + 1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
             RegCloseKey(hSubKey);
         }
         i++;
-    }while(EventLabels[i].LabelName);
+    } while (EventLabels[i].LabelName);
 
     RegCloseKey(hKey);
 }
 
 
 VOID
-InstallSystemSoundScheme()
+InstallSystemSoundScheme(VOID)
 {
     HKEY hKey, hSubKey;
     DWORD dwDisposition;
@@ -310,7 +310,7 @@ InstallSystemSoundScheme()
             if (dwDisposition & REG_CREATED_NEW_KEY)
             {
                 // FIXME
-                RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)L".Default", (wcslen(L".Default")+1) * sizeof(WCHAR));
+                RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)L".Default", sizeof(L".Default"));
             }
         }
 
@@ -328,7 +328,7 @@ IsSoftwareBusPnpEnumeratorInstalled()
     GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
 
-    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
+    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
     if (!hDevInfo)
     {
         // failed
@@ -343,7 +343,7 @@ IsSoftwareBusPnpEnumeratorInstalled()
         return FALSE;
     }
 
-    DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W));
+    DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(), 0, (MAX_PATH * sizeof(WCHAR)) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W));
     if (!DeviceInterfaceDetailData)
     {
         // failed
@@ -352,7 +352,7 @@ IsSoftwareBusPnpEnumeratorInstalled()
     }
 
     DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
-    if (!SetupDiGetDeviceInterfaceDetailW(hDevInfo,  &DeviceInterfaceData, DeviceInterfaceDetailData,MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W), NULL, NULL))
+    if (!SetupDiGetDeviceInterfaceDetailW(hDevInfo, &DeviceInterfaceData, DeviceInterfaceDetailData, (MAX_PATH * sizeof(WCHAR)) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W), NULL, NULL))
     {
         // failed
         HeapFree(GetProcessHeap(), 0, DeviceInterfaceDetailData);
@@ -370,32 +370,32 @@ InstallSoftwareBusPnpEnumerator(LPWSTR InfPath, LPCWSTR HardwareIdList)
     HDEVINFO DeviceInfoSet = INVALID_HANDLE_VALUE;
     SP_DEVINFO_DATA DeviceInfoData;
     GUID ClassGUID;
-    TCHAR ClassName[50];
+    WCHAR ClassName[50];
     int Result = 0;
     HMODULE hModule = NULL;
     UpdateDriverForPlugAndPlayDevicesProto UpdateProc;
     BOOL reboot = FALSE;
     DWORD flags = 0;
 
-    if (!SetupDiGetINFClass(InfPath,&ClassGUID,ClassName,sizeof(ClassName)/sizeof(ClassName[0]),0))
+    if (!SetupDiGetINFClassW(InfPath, &ClassGUID, ClassName, _countof(ClassName), NULL))
     {
         return -1;
     }
 
-    DeviceInfoSet = SetupDiCreateDeviceInfoList(&ClassGUID,0);
-    if(DeviceInfoSet == INVALID_HANDLE_VALUE)
+    DeviceInfoSet = SetupDiCreateDeviceInfoList(&ClassGUID, NULL);
+    if (DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         return -1;
     }
 
     DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-    if (!SetupDiCreateDeviceInfo(DeviceInfoSet, ClassName, &ClassGUID, NULL, 0, DICD_GENERATE_ID, &DeviceInfoData))
+    if (!SetupDiCreateDeviceInfoW(DeviceInfoSet, ClassName, &ClassGUID, NULL, NULL, DICD_GENERATE_ID, &DeviceInfoData))
     {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         return -1;
     }
 
-    if(!SetupDiSetDeviceRegistryProperty(DeviceInfoSet, &DeviceInfoData, SPDRP_HARDWAREID, (LPBYTE)HardwareIdList, (lstrlen(HardwareIdList)+1+1)*sizeof(TCHAR)))
+    if (!SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet, &DeviceInfoData, SPDRP_HARDWAREID, (LPBYTE)HardwareIdList, (wcslen(HardwareIdList) + 1 + 1) * sizeof(WCHAR)))
     {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         return -1;
@@ -407,27 +407,29 @@ InstallSoftwareBusPnpEnumerator(LPWSTR InfPath, LPCWSTR HardwareIdList)
         return -1;
     }
 
-    if(GetFileAttributes(InfPath)==(DWORD)(-1)) {
+    if (GetFileAttributesW(InfPath) == INVALID_FILE_ATTRIBUTES)
+    {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         return -1;
     }
 
     flags |= INSTALLFLAG_FORCE;
     hModule = LoadLibraryW(L"newdev.dll");
-    if(!hModule) {
+    if (!hModule)
+    {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         return -1;
     }
 
-    UpdateProc = (UpdateDriverForPlugAndPlayDevicesProto)GetProcAddress(hModule,UPDATEDRIVERFORPLUGANDPLAYDEVICES);
-    if(!UpdateProc)
+    UpdateProc = (UpdateDriverForPlugAndPlayDevicesProto)GetProcAddress(hModule, UPDATEDRIVERFORPLUGANDPLAYDEVICES);
+    if (!UpdateProc)
     {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         FreeLibrary(hModule);
         return -1;
     }
 
-    if(!UpdateProc(NULL, HardwareIdList, InfPath, flags, &reboot))
+    if (!UpdateProc(NULL, HardwareIdList, InfPath, flags, &reboot))
     {
         SetupDiDestroyDeviceInfoList(DeviceInfoSet);
         FreeLibrary(hModule);
@@ -443,7 +445,6 @@ DWORD
 MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 {
     UINT Length;
-    LPWSTR pBuffer;
     WCHAR szBuffer[MAX_PATH];
     HINF hInf;
     PVOID Context;
@@ -458,24 +459,19 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
         return ERROR_DI_DO_DEFAULT;
 
-    Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
-    if (!Length || Length >= MAX_PATH - 14)
+    Length = GetWindowsDirectoryW(szBuffer, _countof(szBuffer));
+    if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\inf\\audio.inf"))
     {
         return ERROR_GEN_FAILURE;
     }
 
-    pBuffer = PathAddBackslashW(szBuffer);
-    if (!pBuffer)
-    {
-        return ERROR_GEN_FAILURE;
-    }
-
-    wcscpy(pBuffer, L"inf\\audio.inf");
+    //PathCchAppend(szBuffer, _countof(szBuffer), L"inf\\audio.inf");
+    StringCchCatW(szBuffer, _countof(szBuffer), L"\\inf\\audio.inf");
 
     hInf = SetupOpenInfFileW(szBuffer,
                              NULL,
-                            INF_STYLE_WIN4,
-                            NULL);
+                             INF_STYLE_WIN4,
+                             NULL);
 
     if (hInf == INVALID_HANDLE_VALUE)
     {
@@ -513,52 +509,54 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 
     if (!IsSoftwareBusPnpEnumeratorInstalled())
     {
-        Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
-        if (!Length || Length >= MAX_PATH - 14)
+        Length = GetWindowsDirectoryW(szBuffer, _countof(szBuffer));
+        if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\inf\\machine.inf"))
         {
             return ERROR_GEN_FAILURE;
         }
 
-        pBuffer = PathAddBackslashW(szBuffer);
-        if (!pBuffer)
-        {
-            return ERROR_GEN_FAILURE;
-        }
+        //PathCchAppend(szBuffer, _countof(szBuffer), L"inf\\machine.inf");
+        StringCchCatW(szBuffer, _countof(szBuffer), L"\\inf\\machine.inf");
 
-        wcscpy(pBuffer, L"inf\\machine.inf");
         InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM\0");
     }
 
-    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
         return ERROR_DI_DO_DEFAULT;
     }
 
-    hService = OpenService(hSCManager, L"AudioSrv", SERVICE_ALL_ACCESS);
+    hService = OpenServiceW(hSCManager, L"AudioSrv", SERVICE_ALL_ACCESS);
     if (hService)
     {
         /* Make AudioSrv start automatically */
-        ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        ChangeServiceConfigW(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-        StartService(hService, 0, NULL);
+        StartServiceW(hService, 0, NULL);
         CloseServiceHandle(hService);
     }
     CloseServiceHandle(hSCManager);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, GENERIC_READ | GENERIC_WRITE, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
-        szBuffer[Length] = '\0';
-        pBuffer = PathAddBackslashW(szBuffer);
-        wcscpy(pBuffer, L"system32\\wdmaud.drv");
-
-        for(Index = 1; Index <= 4; Index++)
+        Length = GetSystemDirectoryW(szBuffer, _countof(szBuffer));
+        if (!Length || Length >= _countof(szBuffer) - CONST_STR_LEN(L"\\wdmaud.drv"))
         {
-            swprintf(WaveName, L"wave%u", Index);
+            RegCloseKey(hKey);
+            return ERROR_DI_DO_DEFAULT;
+        }
+
+        //PathCchAppend(szBuffer, _countof(szBuffer), L"wdmaud.drv");
+        StringCchCatW(szBuffer, _countof(szBuffer), L"\\wdmaud.drv");
+
+        for (Index = 1; Index <= 4; Index++)
+        {
+            StringCchPrintfW(WaveName, _countof(WaveName), L"wave%u", Index);
             if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
             {
                 /* Store new audio driver entry */
-                RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+                RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
                 break;
             }
             else
@@ -569,9 +567,9 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
                 if (RegQueryValueExW(hKey, WaveName, 0, NULL, (LPBYTE)Buffer, &BufferSize) == ERROR_SUCCESS)
                 {
                     /* Make sure the buffer is zero terminated */
-                    Buffer[MAX_PATH-1] = L'\0';
+                    Buffer[_countof(Buffer) - 1] = UNICODE_NULL;
 
-                    if (!wcsicmp(Buffer, szBuffer))
+                    if (!_wcsicmp(Buffer, szBuffer))
                     {
                         /* An entry already exists */
                         break;
@@ -651,7 +649,7 @@ HardwareDlgProc(HWND hwndDlg,
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
         {
@@ -662,7 +660,7 @@ HardwareDlgProc(HWND hwndDlg,
             /* Create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
                                        Guids,
-                                       sizeof(Guids) / sizeof(Guids[0]),
+                                       _countof(Guids),
                                        HWPD_LARGELIST);
             break;
         }
@@ -694,53 +692,48 @@ MmSysApplet(HWND hwnd,
             LPARAM wParam,
             LPARAM lParam)
 {
-    PROPSHEETPAGE psp[5];
-    PROPSHEETHEADER psh; // = { 0 };
-    TCHAR Caption[256];
+    PROPSHEETPAGEW psp[5];
+    PROPSHEETHEADERW psh; // = { 0 };
     INT nPage = 0;
 
-    UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(uMsg);
 
     if (uMsg == CPL_STARTWPARMSW && lParam != 0)
         nPage = _wtoi((PWSTR)lParam);
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
-
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
+    psh.nPages = _countof(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
     psh.pfnCallback = PropSheetProc;
 
-    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
-    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
-    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
-    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
-    InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
+    InitPropSheetPage(&psp[0], IDD_VOLUME, VolumeDlgProc);
+    InitPropSheetPage(&psp[1], IDD_SOUNDS, SoundsDlgProc);
+    InitPropSheetPage(&psp[2], IDD_AUDIO, AudioDlgProc);
+    InitPropSheetPage(&psp[3], IDD_VOICE, VoiceDlgProc);
+    InitPropSheetPage(&psp[4], IDD_HARDWARE, HardwareDlgProc);
 
     if (nPage != 0 && nPage <= psh.nPages)
         psh.nStartPage = nPage;
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    return (LONG)(PropertySheetW(&psh) != -1);
 }
 
 VOID
-InitPropSheetPage(PROPSHEETPAGE *psp,
+InitPropSheetPage(PROPSHEETPAGEW *psp,
                   WORD idDlg,
                   DLGPROC DlgProc)
 {
-    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-    psp->dwSize = sizeof(PROPSHEETPAGE);
+    ZeroMemory(psp, sizeof(PROPSHEETPAGEW));
+    psp->dwSize = sizeof(PROPSHEETPAGEW);
     psp->dwFlags = PSP_DEFAULT;
     psp->hInstance = hApplet;
-    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pszTemplate = MAKEINTRESOURCEW(idDlg);
     psp->pfnDlgProc = DlgProc;
 }
 
@@ -752,7 +745,9 @@ CPlApplet(HWND hwndCpl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    switch(uMsg)
+    UINT i = (UINT)lParam1;
+
+    switch (uMsg)
     {
         case CPL_INIT:
             return TRUE;
@@ -761,29 +756,31 @@ CPlApplet(HWND hwndCpl,
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-        {
-            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            UINT uAppIndex = (UINT)lParam1;
-
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[uAppIndex].idIcon;
-            CPlInfo->idName = Applets[uAppIndex].idName;
-            CPlInfo->idInfo = Applets[uAppIndex].idDescription;
+            if (i < NUM_APPLETS)
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            else
+            {
+                return TRUE;
+            }
             break;
-        }
 
         case CPL_DBLCLK:
-        {
-            UINT uAppIndex = (UINT)lParam1;
-            Applets[uAppIndex].AppletProc(hwndCpl,
-                                          uMsg,
-                                          lParam1,
-                                          lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
-        }
 
         case CPL_STARTWPARMSW:
-            return Applets[(UINT)lParam1].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                return Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            break;
     }
 
     return FALSE;
@@ -792,31 +789,28 @@ CPlApplet(HWND hwndCpl,
 VOID WINAPI
 ShowAudioPropertySheet(HWND hwnd,
                        HINSTANCE hInstance,
-                       LPTSTR lpszCmd,
+                       LPWSTR lpszCmd,
                        int nCmdShow)
 {
-    PROPSHEETPAGE psp[1];
-    PROPSHEETHEADER psh;
-    TCHAR Caption[256];
+    PROPSHEETPAGEW psp[1];
+    PROPSHEETHEADERW psh;
 
     DPRINT("ShowAudioPropertySheet()\n");
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
-
-    psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
+    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
+    psh.nPages = _countof(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
     psh.pfnCallback = PropSheetProc;
 
     InitPropSheetPage(&psp[0], IDD_AUDIO,AudioDlgProc);
 
-    PropertySheet(&psh);
+    PropertySheetW(&psh);
 }
 
 VOID WINAPI
@@ -825,32 +819,29 @@ ShowFullControlPanel(HWND hwnd,
                      LPSTR lpszCmd,
                      int nCmdShow)
 {
-    PROPSHEETPAGE psp[5];
-    PROPSHEETHEADER psh;
-    TCHAR Caption[256];
+    PROPSHEETPAGEW psp[5];
+    PROPSHEETHEADERW psh;
 
     DPRINT("ShowFullControlPanel()\n");
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
-
-    psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
+    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
-    psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
+    psh.nPages = _countof(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
     psh.pfnCallback = PropSheetProc;
 
-    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
-    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
-    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
-    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
-    InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
+    InitPropSheetPage(&psp[0], IDD_VOLUME, VolumeDlgProc);
+    InitPropSheetPage(&psp[1], IDD_SOUNDS, SoundsDlgProc);
+    InitPropSheetPage(&psp[2], IDD_AUDIO, AudioDlgProc);
+    InitPropSheetPage(&psp[3], IDD_VOICE, VoiceDlgProc);
+    InitPropSheetPage(&psp[4], IDD_HARDWARE, HardwareDlgProc);
 
-    PropertySheet(&psh);
+    PropertySheetW(&psh);
 }
 
 BOOL WINAPI
@@ -859,7 +850,7 @@ DllMain(HINSTANCE hinstDLL,
         LPVOID lpReserved)
 {
     UNREFERENCED_PARAMETER(lpReserved);
-    switch(dwReason)
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
             hApplet = hinstDLL;

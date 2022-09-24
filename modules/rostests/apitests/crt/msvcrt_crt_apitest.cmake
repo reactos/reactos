@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE_MSVCRT
+    fpcontrol.c
 #    _CrtCheckMemory.c
 #    _CrtDbgBreak.c
 #    _CrtDbgReport.c
@@ -168,13 +169,9 @@ list(APPEND SOURCE_MSVCRT
 #    _chsize_s
 #    _chvalidator
 #    _chvalidator_l
-#    _clearfp.c
 #    _close.c
 #    _commit.c
 #    _commode
-#    _control87.c
-#    _controlfp.c
-#    _controlfp_s.c
 #    _copysign.c
 #    _cprintf.c
 #    _cprintf_l
@@ -665,7 +662,6 @@ list(APPEND SOURCE_MSVCRT
 #    _searchenv.c
 #    _searchenv_s.c
 #    _set_SSE2_enable
-#    _set_controlfp
 #    _set_doserrno.c
 #    _set_errno.c
 #    _set_error_mode.c
@@ -717,7 +713,6 @@ list(APPEND SOURCE_MSVCRT
 #    _stat.c
 #    _stat64.c
 #    _stati64.c
-#    _statusfp.c
 #    _strcmpi.c
 #    _strcoll_l
 #    _strdate.c
@@ -1022,7 +1017,7 @@ list(APPEND SOURCE_MSVCRT
 #    bsearch_s
 #    btowc.c
 #    calloc.c
-#    ceil.c
+    ceil.c
 #    clearerr.c
 #    clearerr_s
 #    clock.c
@@ -1043,7 +1038,7 @@ list(APPEND SOURCE_MSVCRT
 #    fgets.c
 #    fgetwc.c
 #    fgetws.c
-#    floor.c
+    floor.c
 #    fmod.c
 #    fopen.c
 #    fopen_s.c

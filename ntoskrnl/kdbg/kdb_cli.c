@@ -1211,44 +1211,30 @@ KdbpCmdBackTrace(
     PCHAR Argv[])
 {
     CONTEXT Context = *KdbCurrentTrapFrame;
-    ULONG64 CurrentRsp, CurrentRip;
-
-    KdbpPrint("Rip:\n");
-    if (!KdbSymPrintAddress((PVOID)KeGetContextPc(&Context), &Context))
-        KdbpPrint("<%p>\n", KeGetContextPc(&Context));
-    else
-        KdbpPrint("\n");
 
     /* Walk through the frames */
     KdbpPrint("Frames:\n");
-    for (;;)
+    do
     {
-        CurrentRip = Context.Rip;
-        CurrentRsp = Context.Rsp;
+        BOOLEAN GotNextFrame;
 
-        BOOLEAN GotNextFrame = GetNextFrame(&Context);
+        KdbpPrint("[%p] ", (PVOID)Context.Rsp);
 
-        KdbpPrint("[%p] ", (PVOID)CurrentRsp);
-        Context.Rsp = Context.Rsp;
-
-        /* Print the location afrer the call instruction */
-        if (!KdbSymPrintAddress((PVOID)CurrentRip, &Context))
+        /* Print the location after the call instruction */
+        if (!KdbSymPrintAddress((PVOID)Context.Rip, &Context))
             KdbpPrint("<%p>", (PVOID)Context.Rip);
-
-        KdbpPrint(" (stack: 0x%Ix)\n", Context.Rsp - CurrentRsp);
+        KdbpPrint("\n");
 
         if (KdbOutputAborted)
             break;
 
-        if (Context.Rsp == 0)
-            break;
-
+        GotNextFrame = GetNextFrame(&Context);
         if (!GotNextFrame)
         {
-            KdbpPrint("Couldn't access memory at 0x%p!\n", (PVOID)Context.Rsp);
+            KdbpPrint("Couldn't get next frame\n");
             break;
         }
-    }
+    } while ((Context.Rip != 0) && (Context.Rsp != 0));
 
     return TRUE;
 }

@@ -36,6 +36,9 @@ IDI_HOTPLUG ICON "resources/1.ico"
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
 #endif
@@ -47,6 +50,9 @@ IDI_HOTPLUG ICON "resources/1.ico"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/pt-PT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"

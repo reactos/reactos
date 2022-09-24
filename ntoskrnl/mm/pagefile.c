@@ -295,6 +295,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
     MiFreeSwapPages++;
     MiUsedSwapPages--;
+    UpdateTotalCommittedPages(-1);
 
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
 }
@@ -329,6 +330,8 @@ MmAllocSwapPage(VOID)
             }
             MiUsedSwapPages++;
             MiFreeSwapPages--;
+            UpdateTotalCommittedPages(1);
+
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
 
             entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);

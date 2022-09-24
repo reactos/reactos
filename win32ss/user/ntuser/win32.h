@@ -53,13 +53,8 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-// FIXME: Move to ntuser.h
-typedef struct _TL
-{
-    struct _TL* next;
-    PVOID pobj;
-    PVOID pfnFree;
-} TL, *PTL;
+struct _TL;
+typedef struct _TL *PTL;
 
 typedef struct _W32THREAD
 {

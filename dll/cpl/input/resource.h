@@ -4,7 +4,6 @@
 #define IDI_KEYBOARD_ICO  202
 #define IDI_MARKER_ICO    205
 #define IDI_MIC_ICO       203
-#define IDI_KEY_SHORT_ICO 200
 #define IDI_INFO_ICO      207
 #define IDI_CPLSYSTEM     1502
 

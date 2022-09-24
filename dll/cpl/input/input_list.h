@@ -4,12 +4,30 @@
 #include "locale_list.h"
 #include "layout_list.h"
 
-
+/*
+ * INPUT_LIST_NODE_FLAG_EDITED
+ * --- The modification flag. Since previous time, this entry is modified.
+ */
 #define INPUT_LIST_NODE_FLAG_EDITED    0x0001
-#define INPUT_LIST_NODE_FLAG_ADDED     0x0002
-#define INPUT_LIST_NODE_FLAG_DELETED   0x0004
-#define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
+/*
+ * INPUT_LIST_NODE_FLAG_ADDED
+ * --- The addition flag. Since previous time, this entry is newly added.
+ */
+#define INPUT_LIST_NODE_FLAG_ADDED     0x0002
+
+/*
+ * INPUT_LIST_NODE_FLAG_DELETED
+ * --- The deletion flag.
+ *     The application should ignore the entry with this flag if necessary.
+ */
+#define INPUT_LIST_NODE_FLAG_DELETED   0x0004
+
+/*
+ * INPUT_LIST_NODE_FLAG_DEFAULT
+ * --- The default flag. The entry with this flag should be single in the list.
+ */
+#define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
 typedef struct _INPUT_LIST_NODE
 {
@@ -20,7 +38,7 @@ typedef struct _INPUT_LIST_NODE
 
     HKL hkl; /* Only for loaded input methods */
 
-    WCHAR *pszIndicator;
+    LPWSTR pszIndicator;
 
     struct _INPUT_LIST_NODE *pPrev;
     struct _INPUT_LIST_NODE *pNext;

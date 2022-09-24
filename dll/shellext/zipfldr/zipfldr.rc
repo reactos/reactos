@@ -3,10 +3,11 @@
 
 #include "resource.h"
 
-164 BITMAP "res/zipfldr.bmp"
-200 BITMAP "res/header.bmp"
-201 BITMAP "res/watermark.bmp"
-1 ICON "res/zipfldr.ico"
+IDI_ZIPFLDR ICON "res/zipfldr.ico"
+
+IDB_ZIPFLDR BITMAP "res/zipfldr.bmp"
+IDB_HEADER BITMAP "res/header.bmp"
+IDB_WATERMARK BITMAP "res/watermark.bmp"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Zip Shell Extension"
