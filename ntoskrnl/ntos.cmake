@@ -232,7 +232,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/zeropage.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/balance.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/freelist.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/kasan.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/marea.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mmfault.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mminit.c
@@ -412,4 +411,10 @@ if(NOT _WINKD_)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
 
+endif()
+
+if(CMAKE_C_COMPILER_ID STEQUAL "Clang")
+    if(KASAN_ENABLED)
+        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/kasan.c)
+    endif()
 endif()

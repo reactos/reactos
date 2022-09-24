@@ -22,7 +22,7 @@ if(SANITIZE_UB OR KASAN_ENABLED)
 endif()
 
 if(KASAN_ENABLED)
-    target_link_libraries(ftfd ksanitize_w32k)
+    target_compile_options(ftfd PRIVATE "-fsanitize=address")
 endif()
 
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)

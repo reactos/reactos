@@ -1643,7 +1643,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Failed to create the system root link */
         KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
-    
+
     /* Set up Region Maps, Sections and the Paging File */
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 

@@ -103,7 +103,7 @@
 
 #endif
 
-#ifdef __SANITIZE_UB__ || KASAN_ENABLED
+#if defined(__SANITIZE_UB__) || defined(KASAN_ENABLED)
 #ifdef _MSC_VER
 #define NO_SANITIZE __declspec(no_sanitize_address)
 #else
@@ -111,7 +111,7 @@
 #endif
 #else
 #define NO_SANITIZE
-#endif
+#endif /* defined(__SANITIZE_UB__) || defined(KASAN_ENABLED) */
 
 #ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);

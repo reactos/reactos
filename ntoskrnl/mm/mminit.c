@@ -76,8 +76,8 @@ MiInitSystemMemoryAreas(VOID)
     // The loader mappings. The only Executable area.
     MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
 
-    // KASAN shadow memory
 #ifdef KASAN_ENABLED
+    // KASAN shadow memory
     MiCreateArm3StaticMemoryArea((PVOID)MM_KASAN_SHADOW_MEMORY, MM_KASAN_SHADOW_MEMORY_END - MM_KASAN_SHADOW_MEMORY, FALSE);
 #endif
 

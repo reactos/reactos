@@ -8,12 +8,14 @@ list(APPEND SOURCE
 
 add_library(kdcom MODULE ${SOURCE})
 
-if(SANITIZE_UB OR KASAN_ENABLED)
-    target_link_libraries(kdcom ksanitize)
-endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(SANITIZE_UB OR KASAN_ENABLED)
+        target_link_libraries(kdcom ksanitize)
+    endif()
 
-if(KASAN_ENABLED)
-    target_compile_options(kdcom PRIVATE "-fsanitize=address")
+    if(KASAN_ENABLED)
+        target_compile_options(kdcom PRIVATE "-fsanitize=address")
+    endif()
 endif()
 
 set_module_type(kdcom kerneldll ENTRYPOINT 0)

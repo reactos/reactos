@@ -1,9 +1,9 @@
 /*
- * PROJECT:         GSoC 2022, kernel address sanitizer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/mm/kasan.c
- * PURPOSE:         Manage shadow memory for kernel address sanitization
- * PROGRAMMERS:     Nick DiMeglio
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Kernel address sanitizer. Manage shadow memory
+ *              for kernel address sanitization.
+ * COPYRIGHT:   Copyright 2022 Nick DiMeglio
  */
 
 /* INCLUDES ******************************************************************/

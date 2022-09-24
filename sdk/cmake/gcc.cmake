@@ -340,7 +340,7 @@ function(set_module_type_toolchain MODULE TYPE)
             else()
                 target_compile_options(${MODULE} PRIVATE "-fsanitize=address")
             endif()
-            # win32k&dependencies require a special version of ksanitize
+            # win32k & dependencies require a special version of ksanitize
             if(NOT ${TYPE} STREQUAL "kerneldll")
                 target_link_libraries(${MODULE} ksanitize)
             endif()
