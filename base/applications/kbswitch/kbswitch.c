@@ -166,6 +166,7 @@ CreateTrayIcon(LPTSTR szLCID)
     }
     szBuf[2] = 0; /* "ENG" --> "EN" etc. */
 
+    /* Prepare for DIB (device-independent bitmap) */
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = CX_ICON;
@@ -179,8 +180,10 @@ CreateTrayIcon(LPTSTR szLCID)
     hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
 
     /* Create a font */
-    SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
-    hFont = CreateFontIndirect(&lf);
+    if (SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
+        hFont = CreateFontIndirect(&lf);
+    else
+        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     /* Checking NULL */
     if (!hdc || !hbmColor || !hbmMono || !hFont)
