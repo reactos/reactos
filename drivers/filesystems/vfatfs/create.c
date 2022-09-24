@@ -1,27 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/vfatfs/create.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Pierre Schweitzer (pierre@reactos.org)
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     File creation routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2010-2019 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/flush.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Flushing routines
+ * COPYRIGHT:   Copyright 2004-2013 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2014-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

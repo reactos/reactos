@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS File System Recognizer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     FATX Recognizer
- * COPYRIGHT:   Copyright 2022 Hervé Poussineau
+ * COPYRIGHT:   Copyright 2022 Hervé Poussineau <hpoussin@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

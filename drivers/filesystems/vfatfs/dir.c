@@ -1,12 +1,11 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/dir.c
- * PURPOSE:          VFAT Filesystem : directory control
- * UPDATE HISTORY:
-     19-12-1998 : created
-
-*/
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Directory control
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2004-2005 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2012-2018 Pierre Schweitzer <pierre@reactos.org>
+ */
 
 /* INCLUDES *****************************************************************/
 

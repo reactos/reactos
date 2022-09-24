@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/misc.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Misc routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2015-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

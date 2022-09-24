@@ -1,10 +1,9 @@
 /*
- * FILE:             drivers/filesystems/vfatfs/fastio.c
- * PURPOSE:          Fast IO routines.
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PROGRAMMER:       Herve Poussineau (hpoussin@reactos.org)
- *                   Pierre Schweitzer (pierre@reactos.org)
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Fast IO routines
+ * COPYRIGHT:   Copyright 2005 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2015-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 #include "vfat.h"

@@ -1,13 +1,12 @@
 /*
-* FILE:             drivers/filesystems/vfatfs/fcb.c
-* PURPOSE:          Routines to manipulate FCBs.
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
-*                   Rex Jolliff (rex@lvcablemodem.com)
-*                   Herve Poussineau (reactos@poussine.freesurf.fr)
-*                   Pierre Schweitzer (pierre@reactos.org)
-*/
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Routines to manipulate FCBs
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2001 Rex Jolliff <rex@lvcablemodem.com>
+ *              Copyright 2005-2022 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2008-2018 Pierre Schweitzer <pierre@reactos.org>
+ */
 
 /*  -------------------------------------------------------  INCLUDES  */
 

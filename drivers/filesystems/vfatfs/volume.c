@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/volume.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Herve Poussineau (reactos@poussine.freesurf.fr)
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Volume routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2004-2022 Hervé Poussineau <hpoussin@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

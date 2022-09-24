@@ -1,10 +1,9 @@
 /*
-* FILE:             drivers/filesystems/vfatfs/kdbg.c
-* PURPOSE:          KDBG extension.
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
-*/
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     KDBG extension
+ * COPYRIGHT:   Copyright 2018 Pierre Schweitzer <pierre@reactos.org>
+ */
 
 /*  -------------------------------------------------------  INCLUDES  */
 

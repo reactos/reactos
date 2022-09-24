@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/string.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMERS:      Jason Filby (jasonfilby@yahoo.com)
- *                   Doug Lyons (douglyons at douglyons dot com)
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Volume routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2020 Doug Lyons <douglyons@douglyons.com>
  */
 
 /* INCLUDES *****************************************************************/
