@@ -147,7 +147,7 @@ static HICON
 CreateTrayIcon(LPTSTR szLCID)
 {
     LANGID LangID;
-    TCHAR szBuf[3];
+    TCHAR szBuf[4];
     HDC hdc;
     HBITMAP hbmColor, hbmMono, hBmpOld;
     RECT rect;
@@ -157,11 +157,13 @@ CreateTrayIcon(LPTSTR szLCID)
     LOGFONT lf;
 
     /* Getting "EN", "FR", etc. from English, French, ... */
-    LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
-    if (!GetLocaleInfo(LangID, LOCALE_SISO639LANGNAME, szBuf, ARRAYSIZE(szBuf)))
+    LangID = LOWORD(_tcstoul(szLCID, NULL, 16));
+    if (!GetLocaleInfo(LangID, LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                       szBuf, ARRAYSIZE(szBuf)))
     {
         StringCchCopy(szBuf, ARRAYSIZE(szBuf), _T("??"));
     }
+    szBuf[2] = 0; /* "ENG" --> "EN" etc. */
     CharUpper(szBuf);
 
     /* Create hdc, hbmColor and hbmMono */
@@ -170,11 +172,7 @@ CreateTrayIcon(LPTSTR szLCID)
     hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
 
     /* Create a font */
-    ZeroMemory(&lf, sizeof(lf));
-    lf.lfHeight = -11;
-    lf.lfCharSet = ANSI_CHARSET;
-    lf.lfWeight = FW_NORMAL;
-    StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), _T("Tahoma"));
+    SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
     hFont = CreateFontIndirect(&lf);
 
     /* Checking NULL */
