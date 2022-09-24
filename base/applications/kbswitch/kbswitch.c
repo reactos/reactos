@@ -164,7 +164,6 @@ CreateTrayIcon(LPTSTR szLCID)
         StringCchCopy(szBuf, ARRAYSIZE(szBuf), _T("??"));
     }
     szBuf[2] = 0; /* "ENG" --> "EN" etc. */
-    CharUpper(szBuf);
 
     /* Create hdc, hbmColor and hbmMono */
     hdc = CreateCompatibleDC(NULL);
