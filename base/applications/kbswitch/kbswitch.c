@@ -155,6 +155,7 @@ CreateTrayIcon(LPTSTR szLCID)
     ICONINFO IconInfo;
     HICON hIcon;
     LOGFONT lf;
+    BITMAPINFO bmi;
 
     /* Getting "EN", "FR", etc. from English, French, ... */
     LangID = LOWORD(_tcstoul(szLCID, NULL, 16));
@@ -165,9 +166,16 @@ CreateTrayIcon(LPTSTR szLCID)
     }
     szBuf[2] = 0; /* "ENG" --> "EN" etc. */
 
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = CX_ICON;
+    bmi.bmiHeader.biHeight = CY_ICON;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+
     /* Create hdc, hbmColor and hbmMono */
     hdc = CreateCompatibleDC(NULL);
-    hbmColor = CreateCompatibleBitmap(hdc, CX_ICON, CY_ICON);
+    hbmColor = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
     hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
 
     /* Create a font */
