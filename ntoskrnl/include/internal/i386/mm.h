@@ -14,8 +14,8 @@
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
-#define MM_KASAN_SHADOW_MEMORY                         0x90000000
-#define MM_KASAN_SHADOW_MEMORY_END                     0xA0000000
+#define MM_KASAN_SHADOW_MEMORY                  (PVOID)0x90000000
+#define MM_KASAN_SHADOW_MEMORY_END              (PVOID)0xA0000000
 #ifndef _X86PAE_
 #define HYPER_SPACE                                    0xC0400000
 #define HYPER_SPACE_END                                0xC07FFFFF
