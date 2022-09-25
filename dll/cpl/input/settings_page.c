@@ -34,7 +34,7 @@ CreateLayoutIcon(LANGID LangID)
     {
         StringCchCopyW(szBuf, ARRAYSIZE(szBuf), L"??");
     }
-    szBuf[2] = 0; /* "ENG" --> "EN" etc. */
+    szBuf[2] = UNICODE_NULL; /* Truncate the identifiers to two characters: "ENG" --> "EN" etc. */
 
     /* Prepare for DIB (device-independent bitmap) */
     ZeroMemory(&bmi, sizeof(bmi));
