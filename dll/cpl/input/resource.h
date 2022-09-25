@@ -19,6 +19,7 @@
 
 /* IDC */
 #define IDC_KEYLAYOUT_LIST       1000
+#define IDC_DEFAULT_LANGUAGE     1001
 #define IDC_ADD_BUTTON           1002
 #define IDC_REMOVE_BUTTON        1003
 #define IDC_PROP_BUTTON          1004
@@ -39,7 +40,6 @@
 #define IDC_LEFT_ALT_LANG        1019
 #define IDC_LEFT_ALT_LAYOUT      1020
 #define IDC_LANGUAGE_BAR         1021
-#define IDC_DEFAULT_LANGUAGE     1022
 
 /* IDS */
 #define IDS_CPLSYSTEMNAME        1
