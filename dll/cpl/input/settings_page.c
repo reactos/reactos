@@ -11,176 +11,326 @@
 #include "locale_list.h"
 #include "input_list.h"
 
+static INT s_nLeavesCount = 0;
+
 static HICON
-CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
+CreateLayoutIcon(LANGID LangID)
 {
-    INT width = GetSystemMetrics(SM_CXSMICON) * 2;
-    INT height = GetSystemMetrics(SM_CYSMICON);
+    WCHAR szBuf[4];
     HDC hdc;
-    HDC hdcsrc;
-    HBITMAP hBitmap;
-    HICON hIcon = NULL;
+    HBITMAP hbmColor, hbmMono, hBmpOld;
+    RECT rect;
+    HFONT hFontOld, hFont;
+    ICONINFO IconInfo;
+    HICON hIcon;
+    LOGFONTW lf;
+    BITMAPINFO bmi;
+    INT cxIcon = GetSystemMetrics(SM_CXSMICON);
+    INT cyIcon = GetSystemMetrics(SM_CYSMICON);
 
-    hdcsrc = GetDC(NULL);
-    hdc = CreateCompatibleDC(hdcsrc);
-    hBitmap = CreateCompatibleBitmap(hdcsrc, width, height);
-
-    ReleaseDC(NULL, hdcsrc);
-
-    if (hdc && hBitmap)
+    /* Getting "EN", "FR", etc. from English, French, ... */
+    if (!GetLocaleInfoW(LangID, LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                        szBuf, ARRAYSIZE(szBuf)))
     {
-        HBITMAP hBmpNew;
+        StringCchCopyW(szBuf, ARRAYSIZE(szBuf), L"??");
+    }
+    szBuf[2] = 0; /* "ENG" --> "EN" etc. */
 
-        hBmpNew = CreateBitmap(width, height, 1, 1, NULL);
-        if (hBmpNew)
-        {
-            LOGFONTW lf;
+    /* Prepare for DIB (device-independent bitmap) */
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = cxIcon;
+    bmi.bmiHeader.biHeight = cyIcon;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
 
-            if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
-            {
-                ICONINFO IconInfo;
-                HFONT hFont;
+    /* Create hdc, hbmColor and hbmMono */
+    hdc = CreateCompatibleDC(NULL);
+    hbmColor = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    hbmMono = CreateBitmap(cxIcon, cyIcon, 1, 1, NULL);
 
-                hFont = CreateFontIndirectW(&lf);
+    /* Create a font */
+    if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
+        hFont = CreateFontIndirectW(&lf);
+    else
+        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
-                if (hFont != NULL)
-                {
-                    HBITMAP hBmpOld;
-
-                    hBmpOld = SelectObject(hdc, hBitmap);
-
-                    if (hBmpOld != NULL)
-                    {
-                        RECT rect;
-
-                        SetRect(&rect, 0, 0, width / 2, height);
-
-                        if (bIsDefault != FALSE)
-                        {
-                            SetBkColor(hdc, GetSysColor(COLOR_WINDOW));
-                            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
-
-                            ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
-
-                            SelectObject(hdc, hFont);
-                            DrawFrameControl(hdc, &rect, DFC_MENU, DFCS_MENUBULLET);
-                        }
-                        else
-                        {
-                            FillRect(hdc, &rect, GetSysColorBrush(COLOR_WINDOW));
-                        }
-
-                        SetRect(&rect, width / 2, 0, width, height);
-
-                        SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-                        SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-
-                        ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
-
-                        SelectObject(hdc, hFont);
-                        DrawTextW(hdc, szLayout, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-
-                        SelectObject(hdc, hBmpNew);
-
-                        PatBlt(hdc, 0, 0, width, height, BLACKNESS);
-
-                        SelectObject(hdc, hBmpOld);
-
-                        IconInfo.hbmColor = hBitmap;
-                        IconInfo.hbmMask = hBmpNew;
-                        IconInfo.fIcon = TRUE;
-
-                        hIcon = CreateIconIndirect(&IconInfo);
-
-                        DeleteObject(hBmpOld);
-                    }
-
-                    DeleteObject(hFont);
-                }
-            }
-
-            DeleteObject(hBmpNew);
-        }
+    /* Checking NULL */
+    if (!hdc || !hbmColor || !hbmMono || !hFont)
+    {
+        if (hdc)
+            DeleteDC(hdc);
+        if (hbmColor)
+            DeleteObject(hbmColor);
+        if (hbmMono)
+            DeleteObject(hbmMono);
+        if (hFont)
+            DeleteObject(hFont);
+        return NULL;
     }
 
+    SetRect(&rect, 0, 0, cxIcon, cyIcon);
+
+    /* Draw hbmColor */
+    hBmpOld = SelectObject(hdc, hbmColor);
+    SetDCBrushColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+    FillRect(hdc, &rect, (HBRUSH)GetStockObject(DC_BRUSH));
+    hFontOld = SelectObject(hdc, hFont);
+    SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+    SetBkMode(hdc, TRANSPARENT);
+    DrawText(hdc, szBuf, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    SelectObject(hdc, hFontOld);
+    SelectObject(hdc, hBmpOld);
+
+    /* Fill hbmMono by black */
+    hBmpOld = SelectObject(hdc, hbmMono);
+    PatBlt(hdc, 0, 0, cxIcon, cyIcon, BLACKNESS);
+    SelectObject(hdc, hBmpOld);
+
+    /* Create an icon from hbmColor and hbmMono */
+    IconInfo.hbmColor = hbmColor;
+    IconInfo.hbmMask = hbmMono;
+    IconInfo.fIcon = TRUE;
+    hIcon = CreateIconIndirect(&IconInfo);
+
+    /* Clean up */
+    DeleteObject(hbmColor);
+    DeleteObject(hbmMono);
+    DeleteObject(hFont);
     DeleteDC(hdc);
-    DeleteObject(hBitmap);
 
     return hIcon;
 }
 
+static VOID InitDefaultLangComboBox(HWND hwndCombo)
+{
+    WCHAR szText[256];
+    INPUT_LIST_NODE *pNode;
+    INT iIndex, iDefault = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+
+    SendMessageW(hwndCombo, CB_RESETCONTENT, 0, 0);
+
+    for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
+    {
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        StringCchPrintfW(szText, _countof(szText), L"%s - %s",
+                         pNode->pLocale->pszName, pNode->pLayout->pszName);
+        iIndex = (INT)SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)szText);
+        SendMessageW(hwndCombo, CB_SETITEMDATA, iIndex, (LPARAM)pNode);
+
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+            iDefault = iIndex;
+    }
+
+    if (iDefault == (INT)SendMessageW(hwndCombo, CB_GETCOUNT, 0, 0))
+        SendMessageW(hwndCombo, CB_SETCURSEL, iDefault - 1, 0);
+    else
+        SendMessageW(hwndCombo, CB_SETCURSEL, iDefault, 0);
+}
 
 static VOID
 SetControlsState(HWND hwndDlg)
 {
     HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-    INT iSelected = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
-    INT nCount = ListView_GetItemCount(hwndList);
-    BOOL bCanRemove = (iSelected != -1) && (nCount >= 2);
-    BOOL bCanDefault = (iSelected != -1) && (nCount >= 2);
-    BOOL bCanProp = (iSelected != -1);
+    HWND hwndCombo = GetDlgItem(hwndDlg, IDC_DEFAULT_LANGUAGE);
+    BOOL bIsLeaf, bCanRemove, bCanProp;
+    HTREEITEM hSelected = TreeView_GetSelection(hwndList);
+    TV_ITEM item = { TVIF_PARAM };
+    item.hItem = hSelected;
 
-    LV_ITEM item = { LVIF_PARAM, iSelected };
-    if (ListView_GetItem(hwndList, &item))
-    {
-        INPUT_LIST_NODE *pInput = (INPUT_LIST_NODE*)item.lParam;
+    bIsLeaf = (hSelected && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam));
 
-        if (pInput && (pInput->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
-        {
-            bCanDefault = FALSE;
-        }
-    }
+    bCanRemove = bIsLeaf && (s_nLeavesCount > 1);
+    bCanProp = bIsLeaf;
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bCanRemove);
     EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON), bCanProp);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), bCanDefault);
+
+    InitDefaultLangComboBox(hwndCombo);
+}
+
+HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
+{
+    TV_ITEM item;
+    TCHAR szText[128];
+    HTREEITEM hItem;
+
+    hItem = TreeView_GetRoot(hwndList);
+    while (hItem)
+    {
+        szText[0] = 0;
+        item.mask       = TVIF_TEXT | TVIF_HANDLE;
+        item.pszText    = szText;
+        item.cchTextMax = _countof(szText);
+        item.hItem      = hItem;
+        TreeView_GetItem(hwndList, &item);
+        if (lstrcmpi(szText, pszLangName) == 0)
+            return hItem;
+
+        hItem = TreeView_GetNextSibling(hwndList, hItem);
+    }
+
+    return NULL;
 }
 
 static VOID
 AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 {
-    INT ItemIndex, ImageIndex = -1;
-    LV_ITEM item;
-    HIMAGELIST hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
+    INT LangImageIndex = -1, KeyboardImageIndex = -1, ImeImageIndex = -1;
+    HICON hLayoutIcon, hKeyboardIcon, hInputMethodIcon;
+    TV_ITEM item;
+    TV_INSERTSTRUCT insert;
+    HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
+    TCHAR szKeyboard[] = TEXT("Keyboard");
+    HTREEITEM hItem;
+    BOOL bBold = !!(pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT);
 
-    if (hImageList != NULL)
+    hItem = FindLanguageInList(hwndList, pInputNode->pLocale->pszName);
+    if (hItem == NULL)
     {
-        HICON hLayoutIcon;
-
-        hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator,
-                                       (pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT));
-        if (hLayoutIcon != NULL)
+        // Language icon
+        hLayoutIcon = CreateLayoutIcon(LOWORD(pInputNode->pLayout->dwKLID));
+        if (hLayoutIcon)
         {
-            ImageIndex = ImageList_AddIcon(hImageList, hLayoutIcon);
+            LangImageIndex = ImageList_AddIcon(hImageList, hLayoutIcon);
             DestroyIcon(hLayoutIcon);
+        }
+
+        // Keyboard icon
+        hKeyboardIcon = (HICON)LoadImageW(hApplet,
+                                          MAKEINTRESOURCEW(IDI_KEYBOARD),
+                                          IMAGE_ICON,
+                                          GetSystemMetrics(SM_CXSMICON),
+                                          GetSystemMetrics(SM_CYSMICON),
+                                          0);
+        if (hKeyboardIcon)
+        {
+            KeyboardImageIndex = ImageList_AddIcon(hImageList, hKeyboardIcon);
+            DestroyIcon(hKeyboardIcon);
+        }
+
+        // Language
+        ZeroMemory(&item, sizeof(item));
+        item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_STATE;
+        item.pszText        = pInputNode->pLocale->pszName;
+        item.iImage         = LangImageIndex;
+        item.iSelectedImage = LangImageIndex;
+        item.lParam         = LOWORD(pInputNode->pLocale->dwId);
+        if (bBold)
+        {
+            item.state = item.stateMask = TVIS_BOLD;
+        }
+        insert.hParent      = TVI_ROOT;
+        insert.hInsertAfter = TVI_LAST;
+        insert.item         = item;
+        hItem = TreeView_InsertItem(hwndList, &insert);
+
+        // Keyboard
+        ZeroMemory(&item, sizeof(item));
+        item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_STATE;
+        item.pszText        = szKeyboard;
+        item.iImage         = KeyboardImageIndex;
+        item.iSelectedImage = KeyboardImageIndex;
+        item.lParam         = 0xFFFF;
+        if (bBold)
+        {
+            item.state = item.stateMask = TVIS_BOLD;
+        }
+        insert.hParent      = hItem;
+        insert.hInsertAfter = TVI_LAST;
+        insert.item         = item;
+        hItem = TreeView_InsertItem(hwndList, &insert);
+    }
+    else
+    {
+        // Language
+        ZeroMemory(&item, sizeof(item));
+        item.mask           = TVIF_STATE | TVIF_HANDLE;
+        item.hItem          = hItem;
+        item.stateMask      = TVIS_BOLD;
+        if (TreeView_GetItem(hwndList, &item) && bBold && !(item.state & TVIS_BOLD))
+        {
+            item.mask = TVIF_STATE | TVIF_HANDLE;
+            item.hItem = hItem;
+            item.state = item.stateMask = TVIS_BOLD;
+            TreeView_SetItem(hwndList, &item);
+        }
+
+        // Keyboard
+        hItem = TreeView_GetChild(hwndList, hItem);
+        ZeroMemory(&item, sizeof(item));
+        item.mask           = TVIF_STATE | TVIF_HANDLE;
+        item.hItem          = hItem;
+        item.stateMask      = TVIS_BOLD;
+        if (TreeView_GetItem(hwndList, &item) && bBold && !(item.state & TVIS_BOLD))
+        {
+            item.mask = TVIF_STATE | TVIF_HANDLE;
+            item.hItem = hItem;
+            item.state = item.stateMask = TVIS_BOLD;
+            TreeView_SetItem(hwndList, &item);
         }
     }
 
-    ZeroMemory(&item, sizeof(item));
-    item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
-    item.pszText = pInputNode->pLocale->pszName;
-    item.iItem   = ListView_GetItemCount(hwndList);
-    item.lParam  = (LPARAM)pInputNode;
-    item.iImage  = ImageIndex;
-    ItemIndex = ListView_InsertItem(hwndList, &item);
+    // Input method
+    if (hItem)
+    {
+        // FIXME: IME icon
+        hInputMethodIcon = (HICON)LoadImageW(hApplet,
+                                             MAKEINTRESOURCEW(IDI_DOT),
+                                             IMAGE_ICON,
+                                             GetSystemMetrics(SM_CXSMICON),
+                                             GetSystemMetrics(SM_CYSMICON),
+                                             0);
+        if (hInputMethodIcon)
+        {
+            ImeImageIndex = ImageList_AddIcon(hImageList, hInputMethodIcon);
+            DestroyIcon(hInputMethodIcon);
+        }
 
-    ListView_SetItemText(hwndList, ItemIndex, 1, pInputNode->pLayout->pszName);
+        ZeroMemory(&item, sizeof(item));
+        item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_STATE;
+        item.pszText        = pInputNode->pLayout->pszName;
+        item.iImage         = ImeImageIndex;
+        item.iSelectedImage = ImeImageIndex;
+        item.lParam         = (LPARAM)pInputNode;
+        if (bBold)
+        {
+            item.state = item.stateMask = TVIS_BOLD;
+        }
+        insert.hParent      = hItem;
+        insert.hInsertAfter = TVI_LAST;
+        insert.item         = item;
+        TreeView_InsertItem(hwndList, &insert);
+    }
 }
 
+static VOID ExpandTreeItem(HWND hwndTree, HTREEITEM hItem)
+{
+    TreeView_Expand(hwndTree, hItem, TVE_EXPAND);
+    hItem = TreeView_GetChild(hwndTree, hItem);
+    while (hItem)
+    {
+        ExpandTreeItem(hwndTree, hItem);
+        hItem = TreeView_GetNextSibling(hwndTree, hItem);
+    }
+}
 
 static VOID
 UpdateInputListView(HWND hwndList)
 {
     INPUT_LIST_NODE *pNode;
-    HIMAGELIST hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
-    INT iSelected = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+    HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
+    HTREEITEM hItem;
 
     if (hImageList)
-    {
         ImageList_RemoveAll(hImageList);
-    }
 
-    ListView_DeleteAllItems(hwndList);
+    TreeView_DeleteAllItems(hwndList);
+    s_nLeavesCount = 0;
+
+    InputList_Sort();
 
     for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
     {
@@ -188,15 +338,14 @@ UpdateInputListView(HWND hwndList)
             continue;
 
         AddToInputListView(hwndList, pNode);
+        ++s_nLeavesCount;
     }
 
-    if (iSelected != -1)
+    hItem = TreeView_GetRoot(hwndList);
+    while (hItem)
     {
-        INT nCount = ListView_GetItemCount(hwndList);
-        LV_ITEM item = { LVIF_STATE };
-        item.state = item.stateMask = LVIS_SELECTED;
-        item.iItem = ((nCount == iSelected) ? nCount - 1 : iSelected);
-        ListView_SetItem(hwndList, &item);
+        ExpandTreeItem(hwndList, hItem);
+        hItem = TreeView_GetNextSibling(hwndList, hItem);
     }
 
     InvalidateRect(hwndList, NULL, TRUE);
@@ -207,40 +356,23 @@ static VOID
 OnInitSettingsPage(HWND hwndDlg)
 {
     HWND hwndInputList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+    HIMAGELIST hLayoutImageList, hOldImageList;
 
     LayoutList_Create();
     LocaleList_Create();
     InputList_Create();
 
+    EnableWindow(GetDlgItem(hwndDlg, IDC_LANGUAGE_BAR), FALSE);
+
     if (hwndInputList != NULL)
     {
-        WCHAR szBuffer[MAX_STR_LEN];
-        HIMAGELIST hLayoutImageList;
-        LV_COLUMN column = { LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM };
-
-        ListView_SetExtendedListViewStyle(hwndInputList, LVS_EX_FULLROWSELECT);
-
-        LoadStringW(hApplet, IDS_LANGUAGE, szBuffer, ARRAYSIZE(szBuffer));
-        column.fmt      = LVCFMT_LEFT;
-        column.iSubItem = 0;
-        column.pszText  = szBuffer;
-        column.cx       = 175;
-        ListView_InsertColumn(hwndInputList, 0, &column);
-
-        LoadStringW(hApplet, IDS_LAYOUT, szBuffer, ARRAYSIZE(szBuffer));
-        column.fmt      = LVCFMT_RIGHT;
-        column.cx       = 155;
-        column.iSubItem = 1;
-        column.pszText  = szBuffer;
-        ListView_InsertColumn(hwndInputList, 1, &column);
-
-        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON) * 2,
+        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                                             GetSystemMetrics(SM_CYSMICON),
                                             ILC_COLOR8 | ILC_MASK, 0, 0);
         if (hLayoutImageList != NULL)
         {
-            HIMAGELIST hOldImagelist = ListView_SetImageList(hwndInputList, hLayoutImageList, LVSIL_SMALL);
-            ImageList_Destroy(hOldImagelist);
+            hOldImageList = TreeView_SetImageList(hwndInputList, hLayoutImageList, TVSIL_NORMAL);
+            ImageList_Destroy(hOldImageList);
         }
 
         UpdateInputListView(hwndInputList);
@@ -283,10 +415,11 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
             HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
             if (hwndList)
             {
-                LVITEM item = { LVIF_PARAM };
-                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+                HTREEITEM hItem = TreeView_GetSelection(hwndList);
+                TV_ITEM item = { TVIF_PARAM };
+                item.hItem = hItem;
 
-                if (ListView_GetItem(hwndList, &item))
+                if (hItem && TreeView_GetItem(hwndList, &item))
                 {
                     InputList_Remove((INPUT_LIST_NODE*) item.lParam);
                     UpdateInputListView(hwndList);
@@ -302,10 +435,10 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
             HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
             if (hwndList)
             {
-                LVITEM item = { LVIF_PARAM };
-                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+                HTREEITEM hItem = TreeView_GetSelection(hwndList);
+                TV_ITEM item = { TVIF_PARAM };
 
-                if (ListView_GetItem(hwndList, &item))
+                if (hItem && TreeView_GetItem(hwndList, &item))
                 {
                     if (DialogBoxParamW(hApplet,
                                         MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
@@ -322,25 +455,6 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
         }
         break;
 
-        case IDC_SET_DEFAULT:
-        {
-            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-            if (hwndList)
-            {
-                LVITEM item = { LVIF_PARAM };
-                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
-
-                if (ListView_GetItem(hwndList, &item))
-                {
-                    InputList_SetDefault((INPUT_LIST_NODE*) item.lParam);
-                    UpdateInputListView(hwndList);
-                    SetControlsState(hwndDlg);
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                }
-            }
-        }
-        break;
-
         case IDC_KEY_SET_BTN:
         {
             DialogBoxW(hApplet,
@@ -349,6 +463,33 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                        KeySettingsDialogProc);
         }
         break;
+
+        case IDC_LANGUAGE_BAR:
+        {
+            // FIXME
+            break;
+        }
+
+        case IDC_DEFAULT_LANGUAGE:
+        {
+            if (HIWORD(wParam) == CBN_SELENDOK)
+            {
+                HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+                HWND hwndCombo = GetDlgItem(hwndDlg, IDC_DEFAULT_LANGUAGE);
+                INT iSelected = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+                if (iSelected != CB_ERR)
+                {
+                    LPARAM lParam = SendMessageW(hwndCombo, CB_GETITEMDATA, iSelected, 0);
+                    if (lParam)
+                    {
+                        InputList_SetDefault((INPUT_LIST_NODE*)lParam);
+                        UpdateInputListView(hwndList);
+                        SetControlsState(hwndDlg);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -394,19 +535,22 @@ BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable)
     return Ret;
 }
 
-static VOID
+static INT_PTR
 OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 {
     LPNMHDR header = (LPNMHDR)lParam;
 
     switch (header->code)
     {
-        case LVN_ITEMCHANGED:
+        case TVN_SELCHANGED:
         {
-            if (header->idFrom == IDC_KEYLAYOUT_LIST)
-            {
-                SetControlsState(hwndDlg);
-            }
+            SetControlsState(hwndDlg);
+        }
+        break;
+
+        case TVN_ITEMEXPANDING:
+        {
+            // FIXME: Prevent collapse
         }
         break;
 
@@ -432,8 +576,9 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
         }
         break;
     }
-}
 
+    return 0;
+}
 
 INT_PTR CALLBACK
 SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -453,8 +598,7 @@ SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NOTIFY:
-            OnNotifySettingsPage(hwndDlg, lParam);
-            break;
+            return OnNotifySettingsPage(hwndDlg, lParam);
     }
 
     return FALSE;

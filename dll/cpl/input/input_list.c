@@ -662,6 +662,73 @@ InputList_Create(VOID)
     free(pLayoutList);
 }
 
+static INT InputList_Compare(INPUT_LIST_NODE *pNode1, INPUT_LIST_NODE *pNode2)
+{
+    INT nCompare = lstrcmpiW(pNode1->pszIndicator, pNode2->pszIndicator);
+    if (nCompare != 0)
+        return nCompare;
+
+    return lstrcmpiW(pNode1->pLayout->pszName, pNode2->pLayout->pszName);
+}
+
+VOID InputList_Sort(VOID)
+{
+    INPUT_LIST_NODE *pNode, *pNext, *pPrev, *pMinimum, *pList = _InputList;
+
+    _InputList = NULL;
+
+    while (pList)
+    {
+        /* Find the minimum node */
+        pMinimum = NULL;
+        for (pNode = pList; pNode; pNode = pNext)
+        {
+            pNext = pNode->pNext;
+
+            if (pMinimum == NULL)
+            {
+                pMinimum = pNode;
+            }
+            else
+            {
+                if (InputList_Compare(pNode, pMinimum) < 0)
+                {
+                    pMinimum = pNode;
+                }
+            }
+        }
+
+        // Remove pMinimum from pList
+        pNext = pMinimum->pNext;
+        pPrev = pMinimum->pPrev;
+        if (pNext)
+            pNext->pPrev = pPrev;
+        if (pPrev)
+            pPrev->pNext = pNext;
+        else
+            pList = pNext;
+
+        // Append pMinimum to _InputList
+        if (!_InputList)
+        {
+            pMinimum->pPrev = pMinimum->pNext = NULL;
+            _InputList = pMinimum;
+        }
+        else
+        {
+            /* Find last node */
+            for (pNode = _InputList; pNode->pNext; pNode = pNode->pNext)
+            {
+                ;
+            }
+
+            /* Add to the end */
+            pNode->pNext = pMinimum;
+            pMinimum->pPrev = pNode;
+            pMinimum->pNext = NULL;
+        }
+    }
+}
 
 INPUT_LIST_NODE*
 InputList_GetFirst(VOID)

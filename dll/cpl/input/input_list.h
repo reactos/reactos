@@ -60,6 +60,8 @@ InputList_SetDefault(INPUT_LIST_NODE *pNode);
 VOID
 InputList_Remove(INPUT_LIST_NODE *pNode);
 
+VOID InputList_Sort(VOID);
+
 VOID
 InputList_Destroy(VOID);
 

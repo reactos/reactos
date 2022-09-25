@@ -6,6 +6,8 @@
 #define IDI_MIC_ICO       203
 #define IDI_INFO_ICO      207
 #define IDI_CPLSYSTEM     1502
+#define IDI_KEYBOARD      1503
+#define IDI_DOT           1504
 
 /* IDD */
 #define IDD_PROPPAGESETTINGS         500
@@ -17,7 +19,7 @@
 
 /* IDC */
 #define IDC_KEYLAYOUT_LIST       1000
-#define IDC_SET_DEFAULT          1001
+#define IDC_SET_DEFAULT          1001 // To be deleted
 #define IDC_ADD_BUTTON           1002
 #define IDC_REMOVE_BUTTON        1003
 #define IDC_PROP_BUTTON          1004
@@ -37,6 +39,8 @@
 #define IDC_CTRL_LAYOUT          1018
 #define IDC_LEFT_ALT_LANG        1019
 #define IDC_LEFT_ALT_LAYOUT      1020
+#define IDC_LANGUAGE_BAR         1021
+#define IDC_DEFAULT_LANGUAGE     1022
 
 /* IDS */
 #define IDS_CPLSYSTEMNAME        1
