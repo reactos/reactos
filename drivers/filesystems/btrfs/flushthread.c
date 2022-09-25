@@ -29,6 +29,8 @@
 
 // #define DEBUG_WRITE_LOOPS
 
+#define BATCH_ITEM_LIMIT 1000
+
 typedef struct {
     KEVENT Event;
     IO_STATUS_BLOCK iosb;
@@ -48,6 +50,10 @@ typedef struct {
 
 static NTSTATUS create_chunk(device_extension* Vcb, chunk* c, PIRP Irp);
 static NTSTATUS update_tree_extents(device_extension* Vcb, tree* t, PIRP Irp, LIST_ENTRY* rollback);
+
+static NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, root* r, uint64_t objid,
+                                       uint8_t objtype, uint64_t offset, _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* data,
+                                       uint16_t datalen, enum batch_operation operation);
 
 _Function_class_(IO_COMPLETION_ROUTINE)
 static NTSTATUS __stdcall write_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr) {
@@ -2923,7 +2929,7 @@ static NTSTATUS update_chunk_usage(device_extension* Vcb, PIRP Irp, LIST_ENTRY* 
 
 #ifdef DEBUG_PARANOID
             if (bgi->used & 0x8000000000000000) {
-                ERR("refusing to write BLOCK_GROUP_ITEM with negative usage value (%I64x)", bgi->used);
+                ERR("refusing to write BLOCK_GROUP_ITEM with negative usage value (%I64x)\n", bgi->used);
                 int3;
             }
 #endif
@@ -4429,12 +4435,88 @@ static NTSTATUS insert_sparse_extent(fcb* fcb, LIST_ENTRY* batchlist, uint64_t s
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS split_batch_item_list(batch_item_ind* bii) {
+    LIST_ENTRY* le;
+    unsigned int i = 0;
+    LIST_ENTRY* midpoint = NULL;
+    batch_item_ind* bii2;
+    batch_item* midpoint_item;
+    LIST_ENTRY* before_midpoint;
+
+    le = bii->items.Flink;
+    while (le != &bii->items) {
+        if (i >= bii->num_items / 2) {
+            midpoint = le;
+            break;
+        }
+
+        i++;
+
+        le = le->Flink;
+    }
+
+    if (!midpoint)
+        return STATUS_SUCCESS;
+
+    // make sure items on either side of split don't have same key
+
+    while (midpoint->Blink != &bii->items) {
+        batch_item* item = CONTAINING_RECORD(midpoint, batch_item, list_entry);
+        batch_item* prev = CONTAINING_RECORD(midpoint->Blink, batch_item, list_entry);
+
+        if (item->key.obj_id != prev->key.obj_id)
+            break;
+
+        if (item->key.obj_type != prev->key.obj_type)
+            break;
+
+        if (item->key.offset != prev->key.offset)
+            break;
+
+        midpoint = midpoint->Blink;
+        i--;
+    }
+
+    if (midpoint->Blink == &bii->items)
+        return STATUS_SUCCESS;
+
+    bii2 = ExAllocatePoolWithTag(PagedPool, sizeof(batch_item_ind), ALLOC_TAG);
+    if (!bii2) {
+        ERR("out of memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    midpoint_item = CONTAINING_RECORD(midpoint, batch_item, list_entry);
+
+    bii2->key.obj_id = midpoint_item->key.obj_id;
+    bii2->key.obj_type = midpoint_item->key.obj_type;
+    bii2->key.offset = midpoint_item->key.offset;
+
+    bii2->num_items = bii->num_items - i;
+    bii->num_items = i;
+
+    before_midpoint = midpoint->Blink;
+
+    bii2->items.Flink = midpoint;
+    midpoint->Blink = &bii2->items;
+    bii2->items.Blink = bii->items.Blink;
+    bii->items.Blink->Flink = &bii2->items;
+
+    bii->items.Blink = before_midpoint;
+    before_midpoint->Flink = &bii->items;
+
+    InsertHeadList(&bii->list_entry, &bii2->list_entry);
+
+    return STATUS_SUCCESS;
+}
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(suppress: 28194)
 #endif
-NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, root* r, uint64_t objid, uint8_t objtype, uint64_t offset,
-                                _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* data, uint16_t datalen, enum batch_operation operation) {
+static NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, root* r, uint64_t objid,
+                                       uint8_t objtype, uint64_t offset, _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* data,
+                                       uint16_t datalen, enum batch_operation operation) {
     LIST_ENTRY* le;
     batch_root* br = NULL;
     batch_item* bi;
@@ -4459,8 +4541,25 @@ NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, ro
         }
 
         br->r = r;
-        InitializeListHead(&br->items);
+        InitializeListHead(&br->items_ind);
         InsertTailList(batchlist, &br->list_entry);
+    }
+
+    if (IsListEmpty(&br->items_ind)) {
+        batch_item_ind* bii;
+
+        bii = ExAllocatePoolWithTag(PagedPool, sizeof(batch_item_ind), ALLOC_TAG);
+        if (!bii) {
+            ERR("out of memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        bii->key.obj_id = 0;
+        bii->key.obj_type = 0;
+        bii->key.offset = 0;
+        InitializeListHead(&bii->items);
+        bii->num_items = 0;
+        InsertTailList(&br->items_ind, &bii->list_entry);
     }
 
     bi = ExAllocateFromPagedLookasideList(&Vcb->batch_item_lookaside);
@@ -4476,22 +4575,41 @@ NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, ro
     bi->datalen = datalen;
     bi->operation = operation;
 
-    le = br->items.Blink;
-    while (le != &br->items) {
-        batch_item* bi2 = CONTAINING_RECORD(le, batch_item, list_entry);
-        int cmp = keycmp(bi2->key, bi->key);
+    le = br->items_ind.Blink;
+    while (le != &br->items_ind) {
+        LIST_ENTRY* le2;
+        batch_item_ind* bii = CONTAINING_RECORD(le, batch_item_ind, list_entry);
 
-        if (cmp == -1 || (cmp == 0 && bi->operation >= bi2->operation)) {
-            InsertHeadList(&bi2->list_entry, &bi->list_entry);
-            return STATUS_SUCCESS;
+        if (keycmp(bii->key, bi->key) == 1) {
+            le = le->Blink;
+            continue;
         }
 
-        le = le->Blink;
+        le2 = bii->items.Blink;
+        while (le2 != &bii->items) {
+            batch_item* bi2 = CONTAINING_RECORD(le2, batch_item, list_entry);
+            int cmp = keycmp(bi2->key, bi->key);
+
+            if (cmp == -1 || (cmp == 0 && bi->operation >= bi2->operation)) {
+                InsertHeadList(&bi2->list_entry, &bi->list_entry);
+                bii->num_items++;
+                goto end;
+            }
+
+            le2 = le2->Blink;
+        }
+
+        InsertHeadList(&bii->items, &bi->list_entry);
+        bii->num_items++;
+
+end:
+        if (bii->num_items > BATCH_ITEM_LIMIT)
+            return split_batch_item_list(bii);
+
+        return STATUS_SUCCESS;
     }
 
-    InsertHeadList(&br->items, &bi->list_entry);
-
-    return STATUS_SUCCESS;
+    return STATUS_INTERNAL_ERROR;
 }
 #ifdef _MSC_VER
 #pragma warning(pop)

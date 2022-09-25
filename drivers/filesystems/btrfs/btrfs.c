@@ -83,6 +83,7 @@ uint32_t mount_clear_cache = 0;
 uint32_t mount_allow_degraded = 0;
 uint32_t mount_readonly = 0;
 uint32_t mount_no_root_dir = 0;
+uint32_t mount_nodatacow = 0;
 uint32_t no_pnp = 0;
 bool log_started = false;
 UNICODE_STRING log_device, log_file, registry_path;
@@ -645,6 +646,36 @@ static void calculate_total_space(_In_ device_extension* Vcb, _Out_ uint64_t* to
 }
 
 #ifndef __REACTOS__
+// simplified version of FsRtlAreNamesEqual, which can be a bottleneck!
+static bool compare_strings(const UNICODE_STRING* us1, const UNICODE_STRING* us2) {
+    if (us1->Length != us2->Length)
+        return false;
+
+    WCHAR* s1 = us1->Buffer;
+    WCHAR* s2 = us2->Buffer;
+
+    for (unsigned int i = 0; i < us1->Length; i++) {
+        WCHAR c1 = *s1;
+        WCHAR c2 = *s2;
+
+        if (c1 != c2) {
+            if (c1 >= 'a' && c1 <= 'z')
+                c1 = c1 - 'a' + 'A';
+
+            if (c2 >= 'a' && c2 <= 'z')
+                c2 = c2 - 'a' + 'A';
+
+            if (c1 != c2)
+                return false;
+        }
+
+        s1++;
+        s2++;
+    }
+
+    return true;
+}
+
 #define INIT_UNICODE_STRING(var, val) UNICODE_STRING us##var; us##var.Buffer = (WCHAR*)val; us##var.Length = us##var.MaximumLength = sizeof(val) - sizeof(WCHAR);
 
 // This function exists because we have to lie about our FS type in certain situations.
@@ -707,7 +738,7 @@ static bool lie_about_fs_type() {
             name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usmpr.Length) / sizeof(WCHAR)];
             name.Length = name.MaximumLength = usmpr.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &usmpr, true, NULL);
+            blacklist = compare_strings(&name, &usmpr);
         }
 
         if (!blacklist && entry->FullDllName.Length >= uscmd.Length) {
@@ -716,7 +747,7 @@ static bool lie_about_fs_type() {
             name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - uscmd.Length) / sizeof(WCHAR)];
             name.Length = name.MaximumLength = uscmd.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &uscmd, true, NULL);
+            blacklist = compare_strings(&name, &uscmd);
         }
 
         if (!blacklist && entry->FullDllName.Length >= usfsutil.Length) {
@@ -725,7 +756,7 @@ static bool lie_about_fs_type() {
             name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usfsutil.Length) / sizeof(WCHAR)];
             name.Length = name.MaximumLength = usfsutil.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &usfsutil, true, NULL);
+            blacklist = compare_strings(&name, &usfsutil);
         }
 
         if (!blacklist && entry->FullDllName.Length >= usstorsvc.Length) {
@@ -734,7 +765,7 @@ static bool lie_about_fs_type() {
             name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usstorsvc.Length) / sizeof(WCHAR)];
             name.Length = name.MaximumLength = usstorsvc.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &usstorsvc, true, NULL);
+            blacklist = compare_strings(&name, &usstorsvc);
         }
 
         if (!blacklist && entry->FullDllName.Length >= usifstest.Length) {
@@ -743,7 +774,7 @@ static bool lie_about_fs_type() {
             name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usifstest.Length) / sizeof(WCHAR)];
             name.Length = name.MaximumLength = usifstest.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &usifstest, true, NULL);
+            blacklist = compare_strings(&name, &usifstest);
         }
 
         if (blacklist) {
@@ -5943,59 +5974,32 @@ static void init_serial(bool first_time) {
 #if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
 static void check_cpu() {
     bool have_sse2 = false, have_sse42 = false, have_avx2 = false;
+    int cpu_info[4];
 
-#ifndef _MSC_VER
-    {
-        uint32_t eax, ebx, ecx, edx;
+    __cpuid(cpu_info, 1);
+    have_sse42 = cpu_info[2] & (1 << 20);
+    have_sse2 = cpu_info[3] & (1 << 26);
 
-        __cpuid(1, eax, ebx, ecx, edx);
+    __cpuidex(cpu_info, 7, 0);
+    have_avx2 = cpu_info[1] & (1 << 5);
 
-        if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
-            have_sse42 = ecx & bit_SSE4_2;
-            have_sse2 = edx & bit_SSE2;
-        }
+    if (have_avx2) {
+        // check Windows has enabled AVX2 - Windows 10 doesn't immediately
 
-        if (__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx))
-            have_avx2 = ebx & bit_AVX2;
+        if (__readcr4() & (1 << 18)) {
+            uint32_t xcr0;
 
-        if (have_avx2) {
-            // check Windows has enabled AVX2 - Windows 10 doesn't immediately
-
-            if (__readcr4() & (1 << 18)) {
-                uint32_t xcr0;
-
-                __asm__("xgetbv" : "=a" (xcr0) : "c" (0) : "edx" );
-
-                if ((xcr0 & 6) != 6)
-                    have_avx2 = false;
-            } else
-                have_avx2 = false;
-        }
-    }
+#ifdef _MSC_VER
+            xcr0 = (uint32_t)_xgetbv(0);
 #else
-    {
-        unsigned int cpu_info[4];
-
-        __cpuid(cpu_info, 1);
-        have_sse42 = cpu_info[2] & (1 << 20);
-        have_sse2 = cpu_info[3] & (1 << 26);
-
-        __cpuidex(cpu_info, 7, 0);
-        have_avx2 = cpu_info[1] & (1 << 5);
-
-        if (have_avx2) {
-            // check Windows has enabled AVX2 - Windows 10 doesn't immediately
-
-            if (__readcr4() & (1 << 18)) {
-                uint32_t xcr0 = (uint32_t)_xgetbv(0);
-
-                if ((xcr0 & 6) != 6)
-                    have_avx2 = false;
-            } else
-                have_avx2 = false;
-        }
-    }
+            __asm__("xgetbv" : "=a" (xcr0) : "c" (0) : "edx");
 #endif
+
+            if ((xcr0 & 6) != 6)
+                have_avx2 = false;
+        } else
+            have_avx2 = false;
+    }
 
     if (have_sse42) {
         TRACE("SSE4.2 is supported\n");

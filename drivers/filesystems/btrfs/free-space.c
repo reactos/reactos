@@ -1892,16 +1892,16 @@ static NTSTATUS update_chunk_cache_tree(device_extension* Vcb, chunk* c, PIRP Ir
 
                 fsi_count++;
 
-                ExFreePool(s);
                 RemoveHeadList(&space_list);
+                ExFreePool(s);
                 continue;
             } else if (s->address == tp.item->key.obj_id && s->size == tp.item->key.offset) {
                 // unchanged entry
 
                 fsi_count++;
 
-                ExFreePool(s);
                 RemoveHeadList(&space_list);
+                ExFreePool(s);
             } else {
                 // remove entry
 

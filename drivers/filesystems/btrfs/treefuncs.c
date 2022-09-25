@@ -1254,11 +1254,16 @@ void clear_batch_list(device_extension* Vcb, LIST_ENTRY* batchlist) {
         LIST_ENTRY* le = RemoveHeadList(batchlist);
         batch_root* br = CONTAINING_RECORD(le, batch_root, list_entry);
 
-        while (!IsListEmpty(&br->items)) {
-            LIST_ENTRY* le2 = RemoveHeadList(&br->items);
-            batch_item* bi = CONTAINING_RECORD(le2, batch_item, list_entry);
+        while (!IsListEmpty(&br->items_ind)) {
+            batch_item_ind* bii = CONTAINING_RECORD(RemoveHeadList(&br->items_ind), batch_item_ind, list_entry);
 
-            ExFreeToPagedLookasideList(&Vcb->batch_item_lookaside, bi);
+            while (!IsListEmpty(&bii->items)) {
+                batch_item* bi = CONTAINING_RECORD(RemoveHeadList(&bii->items), batch_item, list_entry);
+
+                ExFreeToPagedLookasideList(&Vcb->batch_item_lookaside, bi);
+            }
+
+            ExFreePool(bii);
         }
 
         ExFreePool(br);
@@ -1901,15 +1906,31 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
 
 __attribute__((nonnull(1,2)))
 static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, batch_root* br, PIRP Irp) {
+    LIST_ENTRY items;
     LIST_ENTRY* le;
     NTSTATUS Status;
 
     TRACE("root: %I64x\n", br->r->id);
 
-    le = br->items.Flink;
-    while (le != &br->items) {
+    InitializeListHead(&items);
+
+    // move sub-lists into one big list
+
+    while (!IsListEmpty(&br->items_ind)) {
+        batch_item_ind* bii = CONTAINING_RECORD(RemoveHeadList(&br->items_ind), batch_item_ind, list_entry);
+
+        items.Blink->Flink = bii->items.Flink;
+        bii->items.Flink->Blink = items.Blink;
+        items.Blink = bii->items.Blink;
+        bii->items.Blink->Flink = &items;
+
+        ExFreePool(bii);
+    }
+
+    le = items.Flink;
+    while (le != &items) {
         batch_item* bi = CONTAINING_RECORD(le, batch_item, list_entry);
-        LIST_ENTRY *le2;
+        LIST_ENTRY* le2;
         traverse_ptr tp;
         KEY tree_end;
         bool no_end;
@@ -2174,7 +2195,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                     if (td)
                         InsertHeadList(tp.item->list_entry.Blink, &td->list_entry);
                 } else {
-                    Status = handle_batch_collision(Vcb, bi, tp.tree, tp.item, td, &br->items, &ignore);
+                    Status = handle_batch_collision(Vcb, bi, tp.tree, tp.item, td, &items, &ignore);
                     if (!NT_SUCCESS(Status)) {
                         ERR("handle_batch_collision returned %08lx\n", Status);
 #ifdef _DEBUG
@@ -2192,7 +2213,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
             }
 
             if (bi->operation == Batch_DeleteInodeRef && cmp != 0 && Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF) {
-                add_delete_inode_extref(Vcb, bi, &br->items);
+                add_delete_inode_extref(Vcb, bi, &items);
             }
 
             if (!ignore && td) {
@@ -2214,7 +2235,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
             }
 
             le2 = le->Flink;
-            while (le2 != &br->items) {
+            while (le2 != &items) {
                 batch_item* bi2 = CONTAINING_RECORD(le2, batch_item, list_entry);
 
                 if (bi2->operation == Batch_DeleteInode || bi2->operation == Batch_DeleteExtentData || bi2->operation == Batch_DeleteFreeSpace)
@@ -2255,10 +2276,10 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                                     InsertHeadList(le3->Blink, &td->list_entry);
                                     inserted = true;
                                 } else if (bi2->operation == Batch_DeleteInodeRef && Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF) {
-                                    add_delete_inode_extref(Vcb, bi2, &br->items);
+                                    add_delete_inode_extref(Vcb, bi2, &items);
                                 }
                             } else {
-                                Status = handle_batch_collision(Vcb, bi2, tp.tree, td2, td, &br->items, &ignore);
+                                Status = handle_batch_collision(Vcb, bi2, tp.tree, td2, td, &items, &ignore);
                                 if (!NT_SUCCESS(Status)) {
                                     ERR("handle_batch_collision returned %08lx\n", Status);
 #ifdef _DEBUG
@@ -2275,7 +2296,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                                 InsertHeadList(le3->Blink, &td->list_entry);
                                 inserted = true;
                             } else if (bi2->operation == Batch_DeleteInodeRef && Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF) {
-                                add_delete_inode_extref(Vcb, bi2, &br->items);
+                                add_delete_inode_extref(Vcb, bi2, &items);
                             }
                             break;
                         }
@@ -2294,7 +2315,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                             listhead = td;
                         }
                     } else if (!inserted && bi2->operation == Batch_DeleteInodeRef && Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF) {
-                        add_delete_inode_extref(Vcb, bi2, &br->items);
+                        add_delete_inode_extref(Vcb, bi2, &items);
                     }
 
                     while (listhead->list_entry.Blink != &tp.tree->itemlist) {
@@ -2330,8 +2351,8 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
     }
 
     // FIXME - remove as we are going along
-    while (!IsListEmpty(&br->items)) {
-        batch_item* bi = CONTAINING_RECORD(RemoveHeadList(&br->items), batch_item, list_entry);
+    while (!IsListEmpty(&items)) {
+        batch_item* bi = CONTAINING_RECORD(RemoveHeadList(&items), batch_item, list_entry);
 
         if ((bi->operation == Batch_DeleteDirItem || bi->operation == Batch_DeleteInodeRef ||
             bi->operation == Batch_DeleteInodeExtRef || bi->operation == Batch_DeleteXattr) && bi->data)
