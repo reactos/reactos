@@ -8,10 +8,10 @@ CAPTION "Configurare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 20
+    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "&Installed services", -1, 5, 65, 246, 125
-    LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 15, 80, 230, 20
+    LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "A&dăugare…", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 175, 125, 70, 14

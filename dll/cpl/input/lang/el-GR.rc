@@ -6,10 +6,10 @@ CAPTION "Ρυθμίσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 20
+    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "&Installed services", -1, 5, 65, 246, 125
-    LTEXT "Επιλέξτε τις υπηρεσίες που θέλετε για κάθε γλώσσα εισαγωγής που εμφανίζεται στη λίστα. Χρησιμοποιήστε τα κουμπιά Προσθήκη και Κατάργηση για την τροποποίηση αυτής της λίστας.", -1, 15, 80, 230, 20
+    LTEXT "Επιλέξτε τις υπηρεσίες που θέλετε για κάθε γλώσσα εισαγωγής που εμφανίζεται στη λίστα. Χρησιμοποιήστε τα κουμπιά Προσθήκη και Κατάργηση για την τροποποίηση αυτής της λίστας.", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "Π&ροσθήκη...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "&Κατάργηση", IDC_REMOVE_BUTTON, 175, 125, 70, 14
