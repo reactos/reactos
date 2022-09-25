@@ -19,7 +19,6 @@
 
 /* IDC */
 #define IDC_KEYLAYOUT_LIST       1000
-#define IDC_SET_DEFAULT          1001 // To be deleted
 #define IDC_ADD_BUTTON           1002
 #define IDC_REMOVE_BUTTON        1003
 #define IDC_PROP_BUTTON          1004
