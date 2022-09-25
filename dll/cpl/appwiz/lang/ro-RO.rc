@@ -1,7 +1,9 @@
-/*
- * FILE:             dll/cpl/appwiz/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot com)
+ /*
+ * PROJECT:     ReactOS Application Wizard
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
