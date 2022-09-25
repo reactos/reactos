@@ -120,7 +120,6 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Alt Izq+Mayús"
     IDS_SWITCH_BET_INLANG "Cambiar entre los idiomas de entrada"
     IDS_REBOOT_NOW, "¿Reiniciar ahora?"
-    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE

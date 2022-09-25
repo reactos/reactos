@@ -113,7 +113,6 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "מקש Alt שמאלי+Shift"
     IDS_SWITCH_BET_INLANG "החלף בין שפות כתיבה"
     IDS_REBOOT_NOW, "להפעיל מחדש כעת?"
-    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE

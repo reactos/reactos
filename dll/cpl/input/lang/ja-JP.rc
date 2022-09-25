@@ -111,7 +111,6 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "左Alt+Shift"
     IDS_SWITCH_BET_INLANG "入力言語の切り替え"
     IDS_REBOOT_NOW, "再起動しますか?"
-    IDS_KEYBOARD "キーボード"
 END
 
 STRINGTABLE

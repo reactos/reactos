@@ -111,7 +111,6 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Alt kiri+Shift"
     IDS_SWITCH_BET_INLANG "Mengganti salah satu bahasa masukan"
     IDS_REBOOT_NOW, "Mulai ulang sekarang?"
-    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE
