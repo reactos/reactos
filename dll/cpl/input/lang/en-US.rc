@@ -3,7 +3,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 CAPTION "Settings"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-FONT 8, "MS Shell Dlg", 0, 0, 1
+FONT 8, "MS Shell Dlg"
 {
     GROUPBOX "Default input &language", -1, 5, 5, 246, 55
     LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 20

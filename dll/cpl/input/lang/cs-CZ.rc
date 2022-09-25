@@ -10,14 +10,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zvolte služby pro každý vstupní jazyk v seznamu.\nSeznam lze měnit pomocí tlačítek Přidat a Odebrat.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
-    PUSHBUTTON "Nas&tavit výchozí", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&Přidat...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Odebrat", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Vlastnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Předvolby", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Nastavení kláves...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
+    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 20
+    COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    LTEXT "Zvolte služby pro každý vstupní jazyk v seznamu. Seznam lze měnit pomocí tlačítek Přidat a Odebrat.", -1, 15, 80, 230, 20
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    PUSHBUTTON "&Přidat...", IDC_ADD_BUTTON, 175, 105, 70, 14
+    PUSHBUTTON "&Odebrat", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "&Vlastnosti...", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Předvolby", -1, 5, 195, 245, 30
+    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "&Nastavení kláves...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
