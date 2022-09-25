@@ -12,6 +12,6 @@ STRINGTABLE
 BEGIN
     IDS_NTOBJFLD_NAME "Spațiul de nume Obiect NT"
     IDS_REGISTRY_NAME "Registrul de sistem"
-    IDS_NTOBJFLD_COMMENT "Se permite navigarea în Spațiul de nume Obiect NT"
-    IDS_REGISTRY_COMMENT "Se permite navigarea în Registrul de sistem"
+    IDS_NTOBJFLD_COMMENT "E permisă navigarea în Spațiul de nume Obiect NT"
+    IDS_REGISTRY_COMMENT "E permisă navigarea în Registrul de sistem"
 END
