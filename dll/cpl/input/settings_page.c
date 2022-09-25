@@ -78,7 +78,7 @@ CreateLayoutIcon(LANGID LangID)
     hFontOld = SelectObject(hdc, hFont);
     SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, szBuf, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    DrawTextW(hdc, szBuf, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
     SelectObject(hdc, hFontOld);
     SelectObject(hdc, hBmpOld);
 
