@@ -16,7 +16,7 @@ BEGIN
     AUTOCHECKBOX "タスクバーに音量アイコンを置く(&I)", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "上級者向け(&V)...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "スピーカーの設定", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "個別のスピーカーの音量やその他の設定を変更するために下の設定をお使い下さい。", -1, 70, 155, 150, 36
     PUSHBUTTON "スピーカー音量(&S)...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "上級者向け(&D)...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
