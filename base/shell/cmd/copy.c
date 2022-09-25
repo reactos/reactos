@@ -258,7 +258,8 @@ copy(TCHAR source[MAX_PATH],
     CloseHandle (hFileSrc);
 
     TRACE ("setting mode\n");
-    SetFileAttributes (dest, dwAttrib);
+    /* For MS-DOS backwards-compatibility, always remove the read-only attribute */
+    SetFileAttributes (dest, dwAttribs & ~FILE_ATTRIBUTE_READONLY);
 
     /* Now finish off the copy if needed with CopyFileEx */
     if (lpdwFlags & COPY_RESTART)
