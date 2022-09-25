@@ -3045,10 +3045,8 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (CheckShowDesktopButtonClick(lParam, bHandled))
-            return 0;
-
-        return 0;
+        CheckShowDesktopButtonClick(lParam, bHandled);
+        return FALSE;
     }
 
     LRESULT OnAppTrayDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
