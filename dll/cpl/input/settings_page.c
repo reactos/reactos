@@ -179,7 +179,7 @@ static VOID
 AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 {
     INT LangImageIndex = -1, KeyboardImageIndex = -1, ImeImageIndex = -1;
-    HICON hLayoutIcon, hKeyboardIcon, hInputMethodIcon;
+    HICON hLangIcon, hKeyboardIcon, hInputMethodIcon;
     TV_ITEM item;
     TV_INSERTSTRUCT insert;
     HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
@@ -191,11 +191,11 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     if (hItem == NULL)
     {
         // Language icon
-        hLayoutIcon = CreateLayoutIcon(LOWORD(pInputNode->pLayout->dwKLID));
-        if (hLayoutIcon)
+        hLangIcon = CreateLayoutIcon(LOWORD(pInputNode->pLocale->dwId));
+        if (hLangIcon)
         {
-            LangImageIndex = ImageList_AddIcon(hImageList, hLayoutIcon);
-            DestroyIcon(hLayoutIcon);
+            LangImageIndex = ImageList_AddIcon(hImageList, hLangIcon);
+            DestroyIcon(hLangIcon);
         }
 
         // Keyboard icon
