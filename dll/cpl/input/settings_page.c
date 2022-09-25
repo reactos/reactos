@@ -38,7 +38,7 @@ CreateLayoutIcon(LANGID LangID)
 
     /* Prepare for DIB (device-independent bitmap) */
     ZeroMemory(&bmi, sizeof(bmi));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = cxIcon;
     bmi.bmiHeader.biHeight = cyIcon;
     bmi.bmiHeader.biPlanes = 1;
