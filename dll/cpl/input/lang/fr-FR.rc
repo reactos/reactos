@@ -111,6 +111,7 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Alt Gauche+Maj"
     IDS_SWITCH_BET_INLANG "Changer les langues de saisie"
     IDS_REBOOT_NOW, "Redémarrer maintenant ?"
+    IDS_KEYBOARD "Keyboard"
 END
 
 /* FIXME : À améliorer/compléter */

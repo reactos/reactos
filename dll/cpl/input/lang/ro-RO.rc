@@ -113,6 +113,7 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "«Alt» (stâng) + «Shift»"
     IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
     IDS_REBOOT_NOW, "Reboot now?"
+    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE

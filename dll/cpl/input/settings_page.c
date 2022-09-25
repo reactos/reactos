@@ -183,9 +183,11 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     TV_ITEM item;
     TV_INSERTSTRUCT insert;
     HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
-    TCHAR szKeyboard[] = TEXT("Keyboard");
+    WCHAR szKeyboard[64];
     HTREEITEM hItem;
     BOOL bBold = !!(pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT);
+
+    LoadStringW(hApplet, IDS_KEYBOARD, szKeyboard, _countof(szKeyboard));
 
     hItem = FindLanguageInList(hwndList, pInputNode->pLocale->pszName);
     if (hItem == NULL)

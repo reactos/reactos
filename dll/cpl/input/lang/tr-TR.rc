@@ -113,6 +113,7 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Sol Alt + Shift"
     IDS_SWITCH_BET_INLANG "Giriş dilleri arasında geçiş yap."
     IDS_REBOOT_NOW, "Şimdi yeniden başlatılsın mı?"
+    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE

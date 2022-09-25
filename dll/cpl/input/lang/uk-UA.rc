@@ -119,6 +119,7 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Alt зліва+Shift"
     IDS_SWITCH_BET_INLANG "Перемикання мов вводу"
     IDS_REBOOT_NOW, "Перезавантажити зараз?"
+    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE

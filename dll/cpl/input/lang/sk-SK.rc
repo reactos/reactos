@@ -116,6 +116,7 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Ľavý Alt+Shift"
     IDS_SWITCH_BET_INLANG "Switch between input languages"
     IDS_REBOOT_NOW, "Reboot now?"
+    IDS_KEYBOARD "Keyboard"
 END
 
 STRINGTABLE
