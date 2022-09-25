@@ -1,10 +1,10 @@
 /*
- * PROJECT: ReactOS System Control Panel Applet
- * FILE:    dll/cpl/sysdm/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for System Control Panel Applet
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Desktop
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -176,14 +176,14 @@ END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Schimbarea tipul profilului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
-    AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
-    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    AUTORADIOBUTTON "&Profil de roaming", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "&Profil local", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    DEFPUSHBUTTON "Confirmă", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "Renunță", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
@@ -356,11 +356,11 @@ BEGIN
     IDS_USERPROFILE_MODIFIED "Modificat"
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
-    IDS_USERPROFILE_MANDATORY "Mandatory"
+    IDS_USERPROFILE_MANDATORY "Obligatoriu"
     IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
-    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
-    IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Cont necunoscut"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Cont șters"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
     IDS_MESSAGEBOXTITLE "Specificare valori de sistem"
     IDS_WARNINITIALSIZE "Introduceți o valoare numerică pentru dimensiunea inițială a fișierului de paginare."
@@ -377,6 +377,6 @@ BEGIN
     IDS_HWPROFILE_PROFILE "Profil"
     IDS_HWPROFILE_WARNING "Avertisment"
     IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
-    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_ENVIRONMENT_WARNING_TITLE "Proprietăți de sistem"
+    IDS_FILE_BROWSE_FILTER "toate fișierele (*.*)\0*.*\0"
 END
