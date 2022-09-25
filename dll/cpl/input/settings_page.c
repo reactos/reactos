@@ -278,7 +278,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     // Input method
     if (hItem)
     {
-        // FIXME: IME icon
+        // FIXME: Load 1st resource icon from "IME File"...
         hInputMethodIcon = (HICON)LoadImageW(hApplet,
                                              MAKEINTRESOURCEW(IDI_DOT),
                                              IMAGE_ICON,
