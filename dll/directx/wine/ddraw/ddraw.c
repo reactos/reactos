@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 1997-2000 Marcus Meissner
  * Copyright 1998-2000 Lionel Ulmer
  * Copyright 2000-2001 TransGaming Technologies Inc.
@@ -1146,13 +1146,13 @@ static HRESULT WINAPI ddraw7_SetDisplayMode(IDirectDraw7 *iface, DWORD width, DW
                 ddrawformat_from_wined3dformat(&ddraw->primary->surface_desc.u4.ddpfPixelFormat, mode.format_id);
         }
         ddraw->flags |= DDRAW_RESTORE_MODE;
+		
+		if (ddraw->cooperative_level & DDSCL_EXCLUSIVE)
+            SetWindowPos(ddraw->dest_window, HWND_TOP, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+            TRACE("DirectDraw window has been resized\n");
     }
 
     InterlockedCompareExchange(&ddraw->device_state, DDRAW_DEVICE_STATE_NOT_RESTORED, DDRAW_DEVICE_STATE_OK);
-
-    if (ddraw->cooperative_level & DDSCL_EXCLUSIVE)
-       SetWindowPos(ddraw->dest_window, HWND_TOP, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOACTIVATE);
-       TRACE("DirectDraw window has been resized\n");
 
     wined3d_mutex_unlock();
 
