@@ -290,7 +290,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         insert.hParent      = hItem;
         insert.hInsertAfter = TVI_LAST;
         insert.item         = item;
-        TreeView_InsertItem(hwndList, &insert);
+        hItem = TreeView_InsertItem(hwndList, &insert);
     }
 }
 
@@ -378,19 +378,16 @@ OnInitSettingsPage(HWND hwndDlg)
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_LANGUAGE_BAR), FALSE);
 
-    if (hwndInputList != NULL)
+    hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                                        GetSystemMetrics(SM_CYSMICON),
+                                        ILC_COLOR8 | ILC_MASK, 0, 0);
+    if (hLayoutImageList != NULL)
     {
-        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
-                                            GetSystemMetrics(SM_CYSMICON),
-                                            ILC_COLOR8 | ILC_MASK, 0, 0);
-        if (hLayoutImageList != NULL)
-        {
-            hOldImageList = TreeView_SetImageList(hwndInputList, hLayoutImageList, TVSIL_NORMAL);
-            ImageList_Destroy(hOldImageList);
-        }
-
-        UpdateInputListView(hwndInputList);
+        hOldImageList = TreeView_SetImageList(hwndInputList, hLayoutImageList, TVSIL_NORMAL);
+        ImageList_Destroy(hOldImageList);
     }
+
+    UpdateInputListView(hwndInputList);
 
     SetControlsState(hwndDlg);
 }
@@ -435,29 +432,25 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
                 if (hItem && TreeView_GetItem(hwndList, &item))
                 {
-                    if (HIWORD(item.lParam))
+                    if (item.lParam == 0) // Keyboard item?
+                    {
+                        item.hItem = hItem = TreeView_GetParent(hwndList, hItem);
+                        TreeView_GetItem(hwndList, &item);
+                    }
+
+                    if (HIWORD(item.lParam)) // Leaf?
                     {
                         InputList_Remove((INPUT_LIST_NODE*) item.lParam);
                         UpdateInputListView(hwndList);
                         SetControlsState(hwndDlg);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
-                    else
+                    else // Root?
                     {
-                        if (item.lParam == 0)
-                        {
-                            hItem = TreeView_GetParent(hwndList, hItem);
-                        }
-
-                        item.mask = TVIF_HANDLE | TVIF_PARAM;
-                        item.hItem = hItem;
-                        if (hItem && TreeView_GetItem(hwndList, &item))
-                        {
-                            InputList_RemoveByLang(LOWORD(item.lParam));
-                            UpdateInputListView(hwndList);
-                            SetControlsState(hwndDlg);
-                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                        }
+                        InputList_RemoveByLang(LOWORD(item.lParam));
+                        UpdateInputListView(hwndList);
+                        SetControlsState(hwndDlg);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                 }
             }
