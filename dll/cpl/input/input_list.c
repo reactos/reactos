@@ -692,7 +692,9 @@ static INT InputList_Compare(INPUT_LIST_NODE *pNode1, INPUT_LIST_NODE *pNode2)
 
 VOID InputList_Sort(VOID)
 {
-    INPUT_LIST_NODE *pNode, *pNext, *pPrev, *pMinimum, *pList = _InputList;
+    INPUT_LIST_NODE *pList = _InputList;
+    INPUT_LIST_NODE *pNext, *pPrev;
+    INPUT_LIST_NODE *pMinimum, *pNode;
 
     _InputList = NULL;
 
@@ -708,12 +710,9 @@ VOID InputList_Sort(VOID)
             {
                 pMinimum = pNode;
             }
-            else
+            else if (InputList_Compare(pNode, pMinimum) < 0)
             {
-                if (InputList_Compare(pNode, pMinimum) < 0)
-                {
-                    pMinimum = pNode;
-                }
+                pMinimum = pNode;
             }
         }
 
