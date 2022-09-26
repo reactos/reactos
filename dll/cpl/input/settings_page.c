@@ -200,38 +200,6 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     HTREEITEM hItem;
     BOOL bBold = !!(pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT);
 
-    if (s_iKeyboardImage == -1)
-    {
-        // Keyboard icon
-        HICON hKeyboardIcon = (HICON)LoadImageW(hApplet,
-                                                MAKEINTRESOURCEW(IDI_KEYBOARD),
-                                                IMAGE_ICON,
-                                                GetSystemMetrics(SM_CXSMICON),
-                                                GetSystemMetrics(SM_CYSMICON),
-                                                0);
-        if (hKeyboardIcon)
-        {
-            s_iKeyboardImage = ImageList_AddIcon(hImageList, hKeyboardIcon);
-            DestroyIcon(hKeyboardIcon);
-        }
-    }
-
-    if (s_iDotImage == -1)
-    {
-        // Dot icon
-        HICON hDotIcon = (HICON)LoadImageW(hApplet,
-                                           MAKEINTRESOURCEW(IDI_DOT),
-                                           IMAGE_ICON,
-                                           GetSystemMetrics(SM_CXSMICON),
-                                           GetSystemMetrics(SM_CYSMICON),
-                                           0);
-        if (hDotIcon)
-        {
-            s_iDotImage = ImageList_AddIcon(hImageList, hDotIcon);
-            DestroyIcon(hDotIcon);
-        }
-    }
-
     hItem = FindLanguageInList(hwndList, pInputNode->pLocale->pszName);
     if (hItem == NULL)
     {
@@ -357,17 +325,38 @@ UpdateInputListView(HWND hwndList)
     INPUT_LIST_NODE *pNode;
     HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
     HTREEITEM hItem;
+    HICON hKeyboardIcon, hDotIcon;
 
-    if (hImageList)
-        ImageList_RemoveAll(hImageList);
-
+    ImageList_RemoveAll(hImageList);
     TreeView_DeleteAllItems(hwndList);
-    s_nAliveLeafCount = 0;
-    s_iDotImage = s_iKeyboardImage = -1;
+
+    // Add keyboard icon
+    s_iKeyboardImage = -1;
+    hKeyboardIcon = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_KEYBOARD), IMAGE_ICON,
+                                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                      0);
+    if (hKeyboardIcon)
+    {
+        s_iKeyboardImage = ImageList_AddIcon(hImageList, hKeyboardIcon);
+        DestroyIcon(hKeyboardIcon);
+    }
+
+    // Add dot icon
+    s_iDotImage = -1;
+    hDotIcon = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_DOT), IMAGE_ICON,
+                                 GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                 0);
+    if (hDotIcon)
+    {
+        s_iDotImage = ImageList_AddIcon(hImageList, hDotIcon);
+        DestroyIcon(hDotIcon);
+    }
 
     InputList_Sort();
 
-    for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
+    // Add items to the list (with counting s_nAliveLeafCount)
+    s_nAliveLeafCount = 0;
+    for (pNode = InputList_GetFirst(); pNode; pNode = pNode->pNext)
     {
         if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
             continue;
@@ -376,6 +365,7 @@ UpdateInputListView(HWND hwndList)
         ++s_nAliveLeafCount;
     }
 
+    // Expand all
     hItem = TreeView_GetRoot(hwndList);
     while (hItem)
     {
@@ -383,6 +373,7 @@ UpdateInputListView(HWND hwndList)
         hItem = TreeView_GetNextSibling(hwndList, hItem);
     }
 
+    // Redraw
     InvalidateRect(hwndList, NULL, TRUE);
 }
 
