@@ -1147,6 +1147,39 @@ PiControlSyncDeviceAction(
     return Status;
 }
 
+static
+NTSTATUS
+PiControlQueryRemoveDevice(
+    _In_ PPLUGPLAY_CONTROL_QUERY_REMOVE_DATA ControlData)
+{
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    UNICODE_STRING DeviceInstance;
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &ControlData->DeviceInstance);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
+    if (DeviceObject == NULL)
+    {
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    UNIMPLEMENTED;
+    Status = STATUS_NOT_IMPLEMENTED;
+
+    ObDereferenceObject(DeviceObject);
+
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1400,7 +1433,10 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                                              PlugPlayControlClass);
 
 //        case PlugPlayControlUnlockDevice:
-//        case PlugPlayControlQueryAndRemoveDevice:
+        case PlugPlayControlQueryAndRemoveDevice:
+              if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_QUERY_REMOVE_DATA))
+                  return STATUS_INVALID_PARAMETER;
+              return PiControlQueryRemoveDevice((PPLUGPLAY_CONTROL_QUERY_REMOVE_DATA)Buffer);
 
         case PlugPlayControlUserResponse:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_USER_RESPONSE_DATA))
