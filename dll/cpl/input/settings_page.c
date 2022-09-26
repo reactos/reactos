@@ -10,7 +10,6 @@
 #include "layout_list.h"
 #include "locale_list.h"
 #include "input_list.h"
-#include <shellapi.h>
 
 static INT s_nAliveLeafCount = 0;
 static INT s_nRootCount = 0;
@@ -156,15 +155,58 @@ SetControlsState(HWND hwndDlg)
     InitDefaultLangComboBox(hwndCombo);
 }
 
+static BOOL CALLBACK
+EnumResLangProc(HMODULE hModule,
+                LPCWSTR lpszType,
+                LPCWSTR lpszName,
+                WORD wIDLanguage,
+                LONG_PTR lParam)
+{
+    HICON *phIcon = (HICON *)lParam;
+    if (*phIcon)
+        return FALSE;
+    *phIcon = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON,
+                                GetSystemMetrics(SM_CXSMICON),
+                                GetSystemMetrics(SM_CYSMICON),
+                                0);
+    return FALSE;
+}
+
+static BOOL CALLBACK
+EnumResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
+{
+    HICON *phIcon = (HICON *)lParam;
+    if (*phIcon)
+        return FALSE;
+    EnumResourceLanguagesW(hModule, lpszType, lpszName, EnumResLangProc, lParam);
+    return FALSE;
+}
+
+static BOOL CALLBACK
+EnumResTypeProc(HMODULE hModule, LPWSTR lpszType, LONG_PTR lParam)
+{
+    if (lpszType == RT_GROUP_ICON)
+    {
+        EnumResourceNamesW(hModule, lpszType, EnumResNameProc, lParam);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 static HICON LoadIMEIcon(LPCTSTR pszImeFile)
 {
     WCHAR szSysDir[MAX_PATH], szPath[MAX_PATH];
     HICON hIconSm = NULL;
+    HINSTANCE hImeInst;
 
     GetSystemDirectoryW(szSysDir, _countof(szSysDir));
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\%s", szSysDir, pszImeFile);
 
-    ExtractIconExW(szPath, 0, NULL, &hIconSm, 1);
+    hImeInst = LoadLibraryExW(szPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hImeInst == NULL)
+        return NULL;
+
+    EnumResourceTypesW(hImeInst, EnumResTypeProc, (LPARAM)&hIconSm);
     return hIconSm;
 }
 
@@ -364,7 +406,6 @@ UpdateInputListView(HWND hwndList)
     // Redraw
     InvalidateRect(hwndList, NULL, TRUE);
 }
-
 
 static VOID
 OnInitSettingsPage(HWND hwndDlg)
