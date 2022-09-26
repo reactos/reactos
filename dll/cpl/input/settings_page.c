@@ -15,6 +15,7 @@ static INT s_nAliveLeafCount = 0;
 static INT s_nRootCount = 0;
 static INT s_iKeyboardImage = -1;
 static INT s_iDotImage = -1;
+static BOOL s_bDefaultInputChanged = FALSE;
 
 static HICON
 CreateLayoutIcon(LANGID LangID)
@@ -480,9 +481,15 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                     }
 
                     if (HIWORD(item.lParam)) // Leaf?
-                        InputList_Remove((INPUT_LIST_NODE*)item.lParam);
+                    {
+                        if (InputList_Remove((INPUT_LIST_NODE*)item.lParam))
+                            s_bDefaultInputChanged = TRUE;
+                    }
                     else // Root?
-                        InputList_RemoveByLang(LOWORD(item.lParam));
+                    {
+                        if (InputList_RemoveByLang(LOWORD(item.lParam)))
+                            s_bDefaultInputChanged = TRUE;
+                    }
 
                     UpdateInputListView(hwndList);
                     SetControlsState(hwndDlg);
@@ -545,10 +552,15 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                     LPARAM lParam = SendMessageW(hwndCombo, CB_GETITEMDATA, iSelected, 0);
                     if (lParam)
                     {
-                        InputList_SetDefault((INPUT_LIST_NODE*)lParam);
-                        UpdateInputListView(hwndList);
-                        SetControlsState(hwndDlg);
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        INPUT_LIST_NODE* pNode = (INPUT_LIST_NODE*)lParam;
+                        if (!(pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
+                        {
+                            s_bDefaultInputChanged = TRUE;
+                            InputList_SetDefault(pNode);
+                            UpdateInputListView(hwndList);
+                            SetControlsState(hwndDlg);
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
                     }
                 }
             }
@@ -559,6 +571,9 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 static BOOL IsRebootNeeded(VOID)
 {
     INPUT_LIST_NODE *pNode;
+
+    if (s_bDefaultInputChanged)
+        return TRUE;
 
     for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
     {

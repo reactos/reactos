@@ -60,10 +60,10 @@ InputList_SetDefault(INPUT_LIST_NODE *pNode);
 INT
 InputList_GetAliveCount(VOID);
 
-VOID
+BOOL
 InputList_Remove(INPUT_LIST_NODE *pNode);
 
-VOID
+BOOL
 InputList_RemoveByLang(LANGID wLangId);
 
 VOID

@@ -569,13 +569,14 @@ InputList_FindNextDefault(INPUT_LIST_NODE *pNode)
  * It marks the input method for deletion, but does not delete it directly.
  * To apply the changes using InputList_Process()
  */
-VOID
+BOOL
 InputList_Remove(INPUT_LIST_NODE *pNode)
 {
+    BOOL ret = FALSE;
     BOOL bRemoveNode = FALSE;
 
     if (pNode == NULL)
-        return;
+        return FALSE;
 
     if (pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED)
     {
@@ -597,17 +598,21 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
             pCurrent->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
 
         pNode->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
+        ret = TRUE; /* default is changed */
     }
 
     if (bRemoveNode)
     {
         InputList_RemoveNode(pNode);
     }
+
+    return ret;
 }
 
-VOID
+BOOL
 InputList_RemoveByLang(LANGID wLangId)
 {
+    BOOL ret = FALSE;
     INPUT_LIST_NODE *pCurrent;
 
 Retry:
@@ -618,10 +623,13 @@ Retry:
 
         if (LOWORD(pCurrent->pLocale->dwId) == wLangId)
         {
-            InputList_Remove(pCurrent);
+            if (InputList_Remove(pCurrent))
+                ret = TRUE;
             goto Retry;
         }
     }
+
+    return ret;
 }
 
 VOID
