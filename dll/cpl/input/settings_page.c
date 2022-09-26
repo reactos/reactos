@@ -12,7 +12,7 @@
 #include "input_list.h"
 #include <shellapi.h>
 
-static INT s_nLeavesCount = 0;
+static INT s_nAliveLeafCount = 0;
 static INT s_iKeyboardImage = -1;
 static INT s_iDotImage = -1;
 
@@ -145,7 +145,7 @@ SetControlsState(HWND hwndDlg)
 
     bIsLeaf = (hSelected && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam));
 
-    bCanRemove = bIsLeaf && (s_nLeavesCount > 1);
+    bCanRemove = bIsLeaf && (s_nAliveLeafCount > 1);
     bCanProp = bIsLeaf;
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bCanRemove);
@@ -267,7 +267,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.pszText        = szKeyboard;
         item.iImage         = s_iKeyboardImage;
         item.iSelectedImage = s_iKeyboardImage;
-        item.lParam         = 0xFFFF;
+        item.lParam         = 0;
         if (bBold)
         {
             item.state = item.stateMask = TVIS_BOLD;
@@ -313,7 +313,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     if (hItem)
     {
         INT ImeImageIndex = s_iDotImage;
-        if (IS_IME_HKL(pInputNode->hkl) && pInputNode->pLayout->pszImeFile)
+        if (IS_IME_HKL(pInputNode->hkl) && pInputNode->pLayout->pszImeFile) // IME?
         {
             HICON hImeIcon = LoadIMEIcon(pInputNode->pLayout->pszImeFile);
             if (hImeIcon)
@@ -331,7 +331,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.lParam         = (LPARAM)pInputNode;
         if (bBold)
         {
-            item.state = item.stateMask = TVIS_BOLD;
+            item.state = item.stateMask = TVIS_BOLD; // Make the item bold
         }
         insert.hParent      = hItem;
         insert.hInsertAfter = TVI_LAST;
@@ -362,7 +362,7 @@ UpdateInputListView(HWND hwndList)
         ImageList_RemoveAll(hImageList);
 
     TreeView_DeleteAllItems(hwndList);
-    s_nLeavesCount = 0;
+    s_nAliveLeafCount = 0;
     s_iDotImage = s_iKeyboardImage = -1;
 
     InputList_Sort();
@@ -373,7 +373,7 @@ UpdateInputListView(HWND hwndList)
             continue;
 
         AddToInputListView(hwndList, pNode);
-        ++s_nLeavesCount;
+        ++s_nAliveLeafCount;
     }
 
     hItem = TreeView_GetRoot(hwndList);
