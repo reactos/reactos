@@ -140,7 +140,7 @@ SetControlsState(HWND hwndDlg)
     HWND hwndCombo = GetDlgItem(hwndDlg, IDC_DEFAULT_LANGUAGE);
     BOOL bIsLeaf, bCanRemove, bCanProp;
     HTREEITEM hSelected = TreeView_GetSelection(hwndList);
-    TV_ITEM item = { TVIF_PARAM };
+    TV_ITEM item = { TVIF_PARAM | TVIF_HANDLE };
     item.hItem = hSelected;
 
     bIsLeaf = (hSelected && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam));
@@ -328,7 +328,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.pszText        = pInputNode->pLayout->pszName;
         item.iImage         = ImeImageIndex;
         item.iSelectedImage = ImeImageIndex;
-        item.lParam         = (LPARAM)pInputNode;
+        item.lParam         = (LPARAM)pInputNode; // HIWORD(item.lParam) != 0
         if (bBold)
         {
             item.state = item.stateMask = TVIS_BOLD; // Make the item bold
@@ -454,7 +454,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                 TV_ITEM item = { TVIF_HANDLE | TVIF_PARAM };
                 item.hItem = hItem;
 
-                if (hItem && TreeView_GetItem(hwndList, &item))
+                if (hItem && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam))
                 {
                     InputList_Remove((INPUT_LIST_NODE*) item.lParam);
                     UpdateInputListView(hwndList);
@@ -474,7 +474,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                 TV_ITEM item = { TVIF_HANDLE | TVIF_PARAM };
                 item.hItem = hItem;
 
-                if (hItem && TreeView_GetItem(hwndList, &item))
+                if (hItem && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam))
                 {
                     if (DialogBoxParamW(hApplet,
                                         MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
