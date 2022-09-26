@@ -578,7 +578,14 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 
         case TVN_ITEMEXPANDING:
         {
-            // FIXME: Prevent collapse
+            // FIXME: Prevent collapse (COMCTL32 is buggy)
+            // https://bugs.winehq.org/show_bug.cgi?id=53727
+            NM_TREEVIEW* pTreeView = (NM_TREEVIEW*)lParam;
+            if ((pTreeView->action & TVE_TOGGLE) == TVE_COLLAPSE)
+            {
+                SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
+                return TRUE;
+            }
         }
         break;
 
