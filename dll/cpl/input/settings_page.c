@@ -608,8 +608,8 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
         case TVN_SELCHANGED:
         {
             SetControlsState(hwndDlg);
+            break;
         }
-        break;
 
         case TVN_ITEMEXPANDING:
         {
@@ -621,8 +621,8 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
                 SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                 return TRUE;
             }
+            break;
         }
-        break;
 
         case PSN_APPLY:
         {
@@ -643,8 +643,8 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
                     ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
                 }
             }
+            break;
         }
-        break;
     }
 
     return 0;
