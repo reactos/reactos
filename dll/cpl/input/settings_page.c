@@ -231,15 +231,11 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         // Keyboard
         LoadStringW(hApplet, IDS_KEYBOARD, szKeyboard, _countof(szKeyboard));
         ZeroMemory(&item, sizeof(item));
-        item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_STATE;
+        item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE;
         item.pszText        = szKeyboard;
         item.iImage         = s_iKeyboardImage;
         item.iSelectedImage = s_iKeyboardImage;
         item.lParam         = 0;  // HIWORD(item.lParam) == 0
-        if (bBold)
-        {
-            item.state = item.stateMask = TVIS_BOLD;
-        }
         insert.hParent      = hItem;
         insert.hInsertAfter = TVI_LAST;
         insert.item         = item;
@@ -263,18 +259,6 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 
         // Keyboard
         hItem = TreeView_GetChild(hwndList, hItem);
-        ZeroMemory(&item, sizeof(item));
-        item.mask           = TVIF_STATE | TVIF_HANDLE;
-        item.hItem          = hItem;
-        item.stateMask      = TVIS_BOLD;
-        if (TreeView_GetItem(hwndList, &item) && bBold && !(item.state & TVIS_BOLD))
-        {
-            // Make the item bold
-            item.mask = TVIF_STATE | TVIF_HANDLE;
-            item.hItem = hItem;
-            item.state = item.stateMask = TVIS_BOLD;
-            TreeView_SetItem(hwndList, &item);
-        }
     }
 
     // Input method
