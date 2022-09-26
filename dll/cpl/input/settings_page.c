@@ -38,7 +38,7 @@ CreateLayoutIcon(LANGID LangID)
     {
         StringCchCopyW(szBuf, ARRAYSIZE(szBuf), L"??");
     }
-    szBuf[2] = UNICODE_NULL; /* Truncate the identifiers to two characters: "ENG" --> "EN" etc. */
+    szBuf[2] = UNICODE_NULL; /* Truncate the identifier to two characters: "ENG" --> "EN" etc. */
 
     /* Prepare for DIB (device-independent bitmap) */
     ZeroMemory(&bmi, sizeof(bmi));
@@ -183,7 +183,7 @@ HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
         item.cchTextMax = _countof(szText);
         item.hItem      = hItem;
         TreeView_GetItem(hwndList, &item);
-        if (lstrcmpi(szText, pszLangName) == 0)
+        if (_wcsicmp(szText, pszLangName) == 0)
             return hItem;
 
         hItem = TreeView_GetNextSibling(hwndList, hItem);
@@ -439,19 +439,13 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                     }
 
                     if (HIWORD(item.lParam)) // Leaf?
-                    {
-                        InputList_Remove((INPUT_LIST_NODE*) item.lParam);
-                        UpdateInputListView(hwndList);
-                        SetControlsState(hwndDlg);
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+                        InputList_Remove((INPUT_LIST_NODE*)item.lParam);
                     else // Root?
-                    {
                         InputList_RemoveByLang(LOWORD(item.lParam));
-                        UpdateInputListView(hwndList);
-                        SetControlsState(hwndDlg);
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+
+                    UpdateInputListView(hwndList);
+                    SetControlsState(hwndDlg);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
         }

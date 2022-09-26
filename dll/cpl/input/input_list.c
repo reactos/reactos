@@ -7,6 +7,7 @@
 */
 
 #include "input_list.h"
+#define NOTHING
 
 typedef struct
 {
@@ -154,7 +155,7 @@ InputList_AppendNode(VOID)
     /* Find last node */
     for (pCurrent = _InputList; pCurrent->pNext; pCurrent = pCurrent->pNext)
     {
-        ;
+        NOTHING;
     }
 
     /* Add to the end */
@@ -682,11 +683,11 @@ InputList_Create(VOID)
 
 static INT InputList_Compare(INPUT_LIST_NODE *pNode1, INPUT_LIST_NODE *pNode2)
 {
-    INT nCompare = lstrcmpiW(pNode1->pszIndicator, pNode2->pszIndicator);
+    INT nCompare = _wcsicmp(pNode1->pszIndicator, pNode2->pszIndicator);
     if (nCompare != 0)
         return nCompare;
 
-    return lstrcmpiW(pNode1->pLayout->pszName, pNode2->pLayout->pszName);
+    return _wcsicmp(pNode1->pLayout->pszName, pNode2->pLayout->pszName);
 }
 
 VOID InputList_Sort(VOID)
@@ -737,7 +738,7 @@ VOID InputList_Sort(VOID)
             /* Find last node */
             for (pNode = _InputList; pNode->pNext; pNode = pNode->pNext)
             {
-                ;
+                NOTHING;
             }
 
             /* Add to the end */
