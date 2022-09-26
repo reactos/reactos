@@ -164,11 +164,11 @@ CreateTrayIcon(LPTSTR szLCID)
     {
         StringCchCopy(szBuf, ARRAYSIZE(szBuf), _T("??"));
     }
-    szBuf[2] = 0; /* "ENG" --> "EN" etc. */
+    szBuf[2] = 0; /* Truncate the identifiers to two characters: "ENG" --> "EN" etc. */
 
     /* Prepare for DIB (device-independent bitmap) */
     ZeroMemory(&bmi, sizeof(bmi));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = CX_ICON;
     bmi.bmiHeader.biHeight = CY_ICON;
     bmi.bmiHeader.biPlanes = 1;
