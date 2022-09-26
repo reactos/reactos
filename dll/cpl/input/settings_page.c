@@ -163,35 +163,20 @@ EnumResLangProc(HMODULE hModule,
                 WORD wIDLanguage,
                 LONG_PTR lParam)
 {
-    HICON *phIcon = (HICON *)lParam;
-    if (*phIcon)
-        return FALSE;
+    HICON* phIcon = (HICON*)lParam;
     *phIcon = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON,
                                 GetSystemMetrics(SM_CXSMICON),
                                 GetSystemMetrics(SM_CYSMICON),
                                 0);
-    return FALSE;
+    return *phIcon == NULL;
 }
 
 static BOOL CALLBACK
 EnumResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
 {
-    HICON *phIcon = (HICON *)lParam;
-    if (*phIcon)
-        return FALSE;
+    HICON* phIcon = (HICON*)lParam;
     EnumResourceLanguagesW(hModule, lpszType, lpszName, EnumResLangProc, lParam);
-    return FALSE;
-}
-
-static BOOL CALLBACK
-EnumResTypeProc(HMODULE hModule, LPWSTR lpszType, LONG_PTR lParam)
-{
-    if (lpszType == RT_GROUP_ICON)
-    {
-        EnumResourceNamesW(hModule, lpszType, EnumResNameProc, lParam);
-        return FALSE;
-    }
-    return TRUE;
+    return *phIcon == NULL;
 }
 
 static HICON LoadIMEIcon(LPCTSTR pszImeFile)
@@ -207,7 +192,7 @@ static HICON LoadIMEIcon(LPCTSTR pszImeFile)
     if (hImeInst == NULL)
         return NULL;
 
-    EnumResourceTypesW(hImeInst, EnumResTypeProc, (LPARAM)&hIconSm);
+    EnumResourceNamesW(hImeInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&hIconSm);
     FreeLibrary(hImeInst);
     return hIconSm;
 }
