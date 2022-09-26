@@ -250,7 +250,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.pszText        = pInputNode->pLocale->pszName;
         item.iImage         = LangImageIndex;
         item.iSelectedImage = LangImageIndex;
-        item.lParam         = LOWORD(pInputNode->pLocale->dwId);
+        item.lParam         = LOWORD(pInputNode->pLocale->dwId); // HIWORD(item.lParam) == 0
         if (bBold)
         {
             item.state = item.stateMask = TVIS_BOLD;
@@ -267,7 +267,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.pszText        = szKeyboard;
         item.iImage         = s_iKeyboardImage;
         item.iSelectedImage = s_iKeyboardImage;
-        item.lParam         = 0;
+        item.lParam         = 0;  // HIWORD(item.lParam) == 0
         if (bBold)
         {
             item.state = item.stateMask = TVIS_BOLD;
