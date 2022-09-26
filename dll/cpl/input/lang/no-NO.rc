@@ -10,7 +10,7 @@ BEGIN
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "&Installed services", -1, 5, 65, 246, 125
     LTEXT "Velg tjenesten som du vil ha for hver inndataspråk som er vist i listen. Bruk legg til og fjern knappen for å endre denne listen.", -1, 15, 78, 230, 25
-    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "Le&gg til...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "&Fjern", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "&Egenskaper...", IDC_PROP_BUTTON, 175, 145, 70, 14
