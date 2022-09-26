@@ -208,6 +208,7 @@ static HICON LoadIMEIcon(LPCTSTR pszImeFile)
         return NULL;
 
     EnumResourceTypesW(hImeInst, EnumResTypeProc, (LPARAM)&hIconSm);
+    FreeLibrary(hImeInst);
     return hIconSm;
 }
 
