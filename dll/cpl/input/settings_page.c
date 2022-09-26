@@ -13,6 +13,8 @@
 #include <shellapi.h>
 
 static INT s_nLeavesCount = 0;
+static INT s_iKeyboardImage = -1;
+static INT s_iDotImage = -1;
 
 static HICON
 CreateLayoutIcon(LANGID LangID)
@@ -191,8 +193,6 @@ HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
 static VOID
 AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 {
-    INT LangImageIndex = -1, KeyboardImageIndex = -1, ImeImageIndex = -1;
-    HICON hLangIcon, hKeyboardIcon, hInputMethodIcon;
     TV_ITEM item;
     TV_INSERTSTRUCT insert;
     HIMAGELIST hImageList = TreeView_GetImageList(hwndList, TVSIL_NORMAL);
@@ -200,30 +200,48 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     HTREEITEM hItem;
     BOOL bBold = !!(pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT);
 
-    LoadStringW(hApplet, IDS_KEYBOARD, szKeyboard, _countof(szKeyboard));
+    if (s_iKeyboardImage == -1)
+    {
+        // Keyboard icon
+        HICON hKeyboardIcon = (HICON)LoadImageW(hApplet,
+                                                MAKEINTRESOURCEW(IDI_KEYBOARD),
+                                                IMAGE_ICON,
+                                                GetSystemMetrics(SM_CXSMICON),
+                                                GetSystemMetrics(SM_CYSMICON),
+                                                0);
+        if (hKeyboardIcon)
+        {
+            s_iKeyboardImage = ImageList_AddIcon(hImageList, hKeyboardIcon);
+            DestroyIcon(hKeyboardIcon);
+        }
+    }
+
+    if (s_iDotImage == -1)
+    {
+        // Dot icon
+        HICON hDotIcon = (HICON)LoadImageW(hApplet,
+                                           MAKEINTRESOURCEW(IDI_DOT),
+                                           IMAGE_ICON,
+                                           GetSystemMetrics(SM_CXSMICON),
+                                           GetSystemMetrics(SM_CYSMICON),
+                                           0);
+        if (hDotIcon)
+        {
+            s_iDotImage = ImageList_AddIcon(hImageList, hDotIcon);
+            DestroyIcon(hDotIcon);
+        }
+    }
 
     hItem = FindLanguageInList(hwndList, pInputNode->pLocale->pszName);
     if (hItem == NULL)
     {
         // Language icon
-        hLangIcon = CreateLayoutIcon(LOWORD(pInputNode->pLocale->dwId));
+        INT LangImageIndex = -1;
+        HICON hLangIcon = CreateLayoutIcon(LOWORD(pInputNode->pLocale->dwId));
         if (hLangIcon)
         {
             LangImageIndex = ImageList_AddIcon(hImageList, hLangIcon);
             DestroyIcon(hLangIcon);
-        }
-
-        // Keyboard icon
-        hKeyboardIcon = (HICON)LoadImageW(hApplet,
-                                          MAKEINTRESOURCEW(IDI_KEYBOARD),
-                                          IMAGE_ICON,
-                                          GetSystemMetrics(SM_CXSMICON),
-                                          GetSystemMetrics(SM_CYSMICON),
-                                          0);
-        if (hKeyboardIcon)
-        {
-            KeyboardImageIndex = ImageList_AddIcon(hImageList, hKeyboardIcon);
-            DestroyIcon(hKeyboardIcon);
         }
 
         // Language
@@ -243,11 +261,12 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         hItem = TreeView_InsertItem(hwndList, &insert);
 
         // Keyboard
+        LoadStringW(hApplet, IDS_KEYBOARD, szKeyboard, _countof(szKeyboard));
         ZeroMemory(&item, sizeof(item));
         item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_STATE;
         item.pszText        = szKeyboard;
-        item.iImage         = KeyboardImageIndex;
-        item.iSelectedImage = KeyboardImageIndex;
+        item.iImage         = s_iKeyboardImage;
+        item.iSelectedImage = s_iKeyboardImage;
         item.lParam         = 0xFFFF;
         if (bBold)
         {
@@ -267,6 +286,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.stateMask      = TVIS_BOLD;
         if (TreeView_GetItem(hwndList, &item) && bBold && !(item.state & TVIS_BOLD))
         {
+            // Make the item bold
             item.mask = TVIF_STATE | TVIF_HANDLE;
             item.hItem = hItem;
             item.state = item.stateMask = TVIS_BOLD;
@@ -281,6 +301,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         item.stateMask      = TVIS_BOLD;
         if (TreeView_GetItem(hwndList, &item) && bBold && !(item.state & TVIS_BOLD))
         {
+            // Make the item bold
             item.mask = TVIF_STATE | TVIF_HANDLE;
             item.hItem = hItem;
             item.state = item.stateMask = TVIS_BOLD;
@@ -291,26 +312,15 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     // Input method
     if (hItem)
     {
-        hInputMethodIcon = NULL;
+        INT ImeImageIndex = s_iDotImage;
         if (IS_IME_HKL(pInputNode->hkl) && pInputNode->pLayout->pszImeFile)
         {
-            hInputMethodIcon = LoadIMEIcon(pInputNode->pLayout->pszImeFile);
-        }
-
-        if (hInputMethodIcon == NULL)
-        {
-            hInputMethodIcon = (HICON)LoadImageW(hApplet,
-                                                 MAKEINTRESOURCEW(IDI_DOT),
-                                                 IMAGE_ICON,
-                                                 GetSystemMetrics(SM_CXSMICON),
-                                                 GetSystemMetrics(SM_CYSMICON),
-                                                 0);
-        }
-
-        if (hInputMethodIcon)
-        {
-            ImeImageIndex = ImageList_AddIcon(hImageList, hInputMethodIcon);
-            DestroyIcon(hInputMethodIcon);
+            HICON hImeIcon = LoadIMEIcon(pInputNode->pLayout->pszImeFile);
+            if (hImeIcon)
+            {
+                ImeImageIndex = ImageList_AddIcon(hImageList, hImeIcon);
+                DestroyIcon(hImeIcon);
+            }
         }
 
         ZeroMemory(&item, sizeof(item));
@@ -353,6 +363,7 @@ UpdateInputListView(HWND hwndList)
 
     TreeView_DeleteAllItems(hwndList);
     s_nLeavesCount = 0;
+    s_iDotImage = s_iKeyboardImage = -1;
 
     InputList_Sort();
 
