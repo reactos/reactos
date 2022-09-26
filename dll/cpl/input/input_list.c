@@ -749,6 +749,23 @@ VOID InputList_Sort(VOID)
     }
 }
 
+INT
+InputList_GetAliveCount(VOID)
+{
+    INPUT_LIST_NODE *pNode;
+    INT nCount = 0;
+
+    for (pNode = _InputList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        ++nCount;
+    }
+
+    return nCount;
+}
+
 INPUT_LIST_NODE*
 InputList_GetFirst(VOID)
 {

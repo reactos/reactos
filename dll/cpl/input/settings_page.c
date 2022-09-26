@@ -340,15 +340,15 @@ UpdateInputListView(HWND hwndList)
 
     InputList_Sort();
 
-    // Add items to the list (with counting s_nAliveLeafCount)
-    s_nAliveLeafCount = 0;
+    s_nAliveLeafCount = InputList_GetAliveCount();
+
+    // Add items to the list
     for (pNode = InputList_GetFirst(); pNode; pNode = pNode->pNext)
     {
         if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
             continue;
 
         AddToInputListView(hwndList, pNode);
-        ++s_nAliveLeafCount;
     }
 
     // Expand all (with counting s_nRootCount)
