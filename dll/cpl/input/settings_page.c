@@ -440,7 +440,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
             if (hwndList)
             {
                 HTREEITEM hItem = TreeView_GetSelection(hwndList);
-                TV_ITEM item = { TVIF_PARAM };
+                TV_ITEM item = { TVIF_HANDLE | TVIF_PARAM };
                 item.hItem = hItem;
 
                 if (hItem && TreeView_GetItem(hwndList, &item))
@@ -460,7 +460,8 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
             if (hwndList)
             {
                 HTREEITEM hItem = TreeView_GetSelection(hwndList);
-                TV_ITEM item = { TVIF_PARAM };
+                TV_ITEM item = { TVIF_HANDLE | TVIF_PARAM };
+                item.hItem = hItem;
 
                 if (hItem && TreeView_GetItem(hwndList, &item))
                 {
