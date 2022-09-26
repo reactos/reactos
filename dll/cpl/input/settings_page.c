@@ -10,6 +10,7 @@
 #include "layout_list.h"
 #include "locale_list.h"
 #include "input_list.h"
+#include <shellapi.h>
 
 static INT s_nLeavesCount = 0;
 
@@ -151,6 +152,18 @@ SetControlsState(HWND hwndDlg)
     InitDefaultLangComboBox(hwndCombo);
 }
 
+static HICON LoadIMEIcon(LPCTSTR pszImeFile)
+{
+    WCHAR szSysDir[MAX_PATH], szPath[MAX_PATH];
+    HICON hIconSm = NULL;
+
+    GetSystemDirectoryW(szSysDir, _countof(szSysDir));
+    StringCchPrintfW(szPath, _countof(szPath), L"%s\\%s", szSysDir, pszImeFile);
+
+    ExtractIconExW(szPath, 0, NULL, &hIconSm, 1);
+    return hIconSm;
+}
+
 HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
 {
     TV_ITEM item;
@@ -278,13 +291,22 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     // Input method
     if (hItem)
     {
-        // FIXME: Load 1st resource icon from "IME File"...
-        hInputMethodIcon = (HICON)LoadImageW(hApplet,
-                                             MAKEINTRESOURCEW(IDI_DOT),
-                                             IMAGE_ICON,
-                                             GetSystemMetrics(SM_CXSMICON),
-                                             GetSystemMetrics(SM_CYSMICON),
-                                             0);
+        hInputMethodIcon = NULL;
+        if (IS_IME_HKL(pInputNode->hkl) && pInputNode->pLayout->pszImeFile)
+        {
+            hInputMethodIcon = LoadIMEIcon(pInputNode->pLayout->pszImeFile);
+        }
+
+        if (hInputMethodIcon == NULL)
+        {
+            hInputMethodIcon = (HICON)LoadImageW(hApplet,
+                                                 MAKEINTRESOURCEW(IDI_DOT),
+                                                 IMAGE_ICON,
+                                                 GetSystemMetrics(SM_CXSMICON),
+                                                 GetSystemMetrics(SM_CYSMICON),
+                                                 0);
+        }
+
         if (hInputMethodIcon)
         {
             ImeImageIndex = ImageList_AddIcon(hImageList, hInputMethodIcon);
