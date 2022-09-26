@@ -604,6 +604,24 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
     }
 }
 
+VOID
+InputList_RemoveByLang(LANGID wLangId)
+{
+    INPUT_LIST_NODE *pCurrent;
+
+Retry:
+    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        if (LOWORD(pCurrent->pLocale->dwId) == wLangId)
+        {
+            InputList_Remove(pCurrent);
+            goto Retry;
+        }
+    }
+}
 
 VOID
 InputList_Create(VOID)

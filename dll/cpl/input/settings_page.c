@@ -13,6 +13,7 @@
 #include <shellapi.h>
 
 static INT s_nAliveLeafCount = 0;
+static INT s_nRootCount = 0;
 static INT s_iKeyboardImage = -1;
 static INT s_iDotImage = -1;
 
@@ -109,7 +110,7 @@ static VOID InitDefaultLangComboBox(HWND hwndCombo)
 {
     WCHAR szText[256];
     INPUT_LIST_NODE *pNode;
-    INT iIndex, iDefault = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+    INT iIndex, nCount, iDefault = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
 
     SendMessageW(hwndCombo, CB_RESETCONTENT, 0, 0);
 
@@ -127,8 +128,9 @@ static VOID InitDefaultLangComboBox(HWND hwndCombo)
             iDefault = iIndex;
     }
 
-    if (iDefault == (INT)SendMessageW(hwndCombo, CB_GETCOUNT, 0, 0))
-        SendMessageW(hwndCombo, CB_SETCURSEL, iDefault - 1, 0);
+    nCount = (INT)SendMessageW(hwndCombo, CB_GETCOUNT, 0, 0);
+    if (iDefault >= nCount)
+        SendMessageW(hwndCombo, CB_SETCURSEL, nCount - 1, 0);
     else
         SendMessageW(hwndCombo, CB_SETCURSEL, iDefault, 0);
 }
@@ -145,7 +147,7 @@ SetControlsState(HWND hwndDlg)
 
     bIsLeaf = (hSelected && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam));
 
-    bCanRemove = bIsLeaf && (s_nAliveLeafCount > 1);
+    bCanRemove = (bIsLeaf && (s_nAliveLeafCount > 1)) || (s_nRootCount > 1);
     bCanProp = bIsLeaf;
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bCanRemove);
@@ -349,10 +351,12 @@ UpdateInputListView(HWND hwndList)
         ++s_nAliveLeafCount;
     }
 
-    // Expand all
+    // Expand all (with counting s_nRootCount)
+    s_nRootCount = 0;
     hItem = TreeView_GetRoot(hwndList);
     while (hItem)
     {
+        ++s_nRootCount;
         ExpandTreeItem(hwndList, hItem);
         hItem = TreeView_GetNextSibling(hwndList, hItem);
     }
@@ -429,12 +433,32 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                 TV_ITEM item = { TVIF_HANDLE | TVIF_PARAM };
                 item.hItem = hItem;
 
-                if (hItem && TreeView_GetItem(hwndList, &item) && HIWORD(item.lParam))
+                if (hItem && TreeView_GetItem(hwndList, &item))
                 {
-                    InputList_Remove((INPUT_LIST_NODE*) item.lParam);
-                    UpdateInputListView(hwndList);
-                    SetControlsState(hwndDlg);
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    if (HIWORD(item.lParam))
+                    {
+                        InputList_Remove((INPUT_LIST_NODE*) item.lParam);
+                        UpdateInputListView(hwndList);
+                        SetControlsState(hwndDlg);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    else
+                    {
+                        if (item.lParam == 0)
+                        {
+                            hItem = TreeView_GetParent(hwndList, hItem);
+                        }
+
+                        item.mask = TVIF_HANDLE | TVIF_PARAM;
+                        item.hItem = hItem;
+                        if (hItem && TreeView_GetItem(hwndList, &item))
+                        {
+                            InputList_RemoveByLang(LOWORD(item.lParam));
+                            UpdateInputListView(hwndList);
+                            SetControlsState(hwndDlg);
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
+                    }
                 }
             }
         }

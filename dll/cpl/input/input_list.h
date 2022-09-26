@@ -61,6 +61,9 @@ VOID
 InputList_Remove(INPUT_LIST_NODE *pNode);
 
 VOID
+InputList_RemoveByLang(LANGID wLangId);
+
+VOID
 InputList_Sort(VOID);
 
 VOID
