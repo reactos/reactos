@@ -159,10 +159,14 @@ SetControlsState(HWND hwndDlg)
 static BOOL CALLBACK
 EnumResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
 {
-    LPWSTR *ppName = (LPWSTR *)lParam;
-    if (*ppName)
+    HICON* phIconSm = (HICON*)lParam;
+    if (*phIconSm)
         return FALSE;
-    *ppName = (HIWORD(lpszName) ? _wcsdup(lpszName) : lpszName);
+
+    *phIconSm = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON,
+                                  GetSystemMetrics(SM_CXSMICON),
+                                  GetSystemMetrics(SM_CYSMICON),
+                                  0);
     return TRUE;
 }
 
@@ -171,7 +175,6 @@ static HICON LoadIMEIcon(LPCTSTR pszImeFile)
     WCHAR szSysDir[MAX_PATH], szPath[MAX_PATH];
     HINSTANCE hImeInst;
     HICON hIconSm = NULL;
-    LPWSTR pName = NULL;
 
     GetSystemDirectoryW(szSysDir, _countof(szSysDir));
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\%s", szSysDir, pszImeFile);
@@ -180,16 +183,7 @@ static HICON LoadIMEIcon(LPCTSTR pszImeFile)
     if (hImeInst == NULL)
         return NULL;
 
-    EnumResourceNamesW(hImeInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&pName);
-
-    hIconSm = (HICON)LoadImageW(hImeInst, pName, IMAGE_ICON,
-                                GetSystemMetrics(SM_CXSMICON),
-                                GetSystemMetrics(SM_CYSMICON),
-                                0);
-
-    if (HIWORD(pName))
-        free(pName);
-
+    EnumResourceNamesW(hImeInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&hIconSm);
     FreeLibrary(hImeInst);
 
     return hIconSm;
