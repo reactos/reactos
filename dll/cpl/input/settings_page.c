@@ -452,9 +452,10 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
                 if (hItem && TreeView_GetItem(hwndList, &item))
                 {
-                    if (item.lParam == 0) // Keyboard item?
+                    if (item.lParam == 0) // Branch? (currently branch is keyboard only)
                     {
-                        item.hItem = hItem = TreeView_GetParent(hwndList, hItem);
+                        // Get root of branch
+                        item.hItem = TreeView_GetParent(hwndList, hItem);
                         TreeView_GetItem(hwndList, &item);
                     }
 
