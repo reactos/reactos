@@ -881,7 +881,7 @@
 @ stdcall RtlGetFrame()
 @ stdcall RtlGetFullPathName_U(wstr long ptr ptr)
 @ stdcall RtlGetFullPathName_UstrEx(ptr ptr ptr ptr ptr ptr ptr ptr)
-@ stub -version=0x600+ -arch=x86_64 RtlGetFunctionTableListHead
+@ stdcall -arch=x86_64 RtlGetFunctionTableListHead()
 @ stdcall RtlGetGroupSecurityDescriptor(ptr ptr ptr)
 @ stub -version=0x600+ RtlGetIntegerAtom
 @ stdcall RtlGetLastNtStatus()

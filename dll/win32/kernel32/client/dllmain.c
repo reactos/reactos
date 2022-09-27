@@ -174,7 +174,7 @@ DllMain(HANDLE hDll,
             /* Construct the default path (using the static buffer) */
             Status = RtlStringCbPrintfW(BaseDefaultPathBuffer,
                                      sizeof(BaseDefaultPathBuffer),
-                                     L".;%wZ;%wZ\\system;%wZ;",
+                                     L"%wZ;%wZ\\system;%wZ;",
                                      &BaseWindowsSystemDirectory,
                                      &BaseWindowsDirectory,
                                      &BaseWindowsDirectory);

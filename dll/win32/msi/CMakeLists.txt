@@ -86,7 +86,7 @@ set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BI
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine_dll_register oldnames)
 add_dependencies(msi msi_idlheader)
-add_delay_importlibs(msi odbccp32 crypt32 wintrust)
+add_delay_importlibs(msi odbccp32 crypt32 wintrust apphelp)
 add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi rpcrt4 urlmon user32 version wininet sxs
     #FIXME : imagehlp, mspatcha should be in delayed imports
     imagehlp

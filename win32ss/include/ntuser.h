@@ -1201,6 +1201,8 @@ typedef enum IMEINFOEXCLASS
 } IMEINFOEXCLASS;
 
 #define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+#define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+#define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 
 typedef struct tagIMEUI
 {
@@ -1219,6 +1221,7 @@ typedef struct tagIMEUI
         UINT fCtrlShowStatus:1;
         UINT fFreeActiveEvent:1;
     };
+    DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
 /* Window Extra data container. */
@@ -1326,7 +1329,7 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 #define CLIENTIMC_UNKNOWN5 0x2
 #define CLIENTIMC_UNKNOWN4 0x20
 #define CLIENTIMC_DESTROY 0x40
-#define CLIENTIMC_UNKNOWN3 0x80
+#define CLIENTIMC_DISABLEIME 0x80
 #define CLIENTIMC_UNKNOWN2 0x100
 
 DWORD
@@ -1515,7 +1518,7 @@ NtUserTrackPopupMenuEx(
 HKL
 NTAPI
 NtUserActivateKeyboardLayout(
-    HKL hKl,
+    HKL hKL,
     ULONG Flags);
 
 DWORD
@@ -2431,7 +2434,7 @@ NtUserGetKeyboardLayoutList(
 BOOL
 NTAPI
 NtUserGetKeyboardLayoutName(
-    LPWSTR lpszName);
+    _Inout_ PUNICODE_STRING pustrName);
 
 DWORD
 NTAPI
@@ -3365,6 +3368,8 @@ NtUserSetWindowLongPtr(
     DWORD Index,
     LONG_PTR NewValue,
     BOOL Ansi);
+#else
+#define NtUserSetWindowLongPtr NtUserSetWindowLong
 #endif // _WIN64
 
 BOOL

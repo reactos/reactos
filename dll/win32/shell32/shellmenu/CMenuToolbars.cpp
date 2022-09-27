@@ -294,10 +294,11 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
 
 CMenuToolbarBase::~CMenuToolbarBase()
 {
-    ClearToolbar();
-
     if (m_hWnd)
+    {
+        ClearToolbar();
         DestroyWindow();
+    }
 
     if (m_pager.m_hWnd)
         m_pager.DestroyWindow();

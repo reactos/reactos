@@ -59,7 +59,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
             return FALSE;
     }
-    else if (Imm32IsCiceroMode() && pImeDpi->CtfImeInquireExW)
+    else if (IS_CICERO_MODE())
     {
         if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
             return FALSE;
@@ -149,6 +149,15 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
+/* Define stub IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) \
+    type APIENTRY Stub##name params { \
+        FIXME("%s: Why stub called?\n", #name); \
+        return (type)0; \
+    }
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
 // Win: LoadIME
 BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
@@ -160,18 +169,19 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
         return FALSE;
 
-    hIME = GetModuleHandleW(szPath);
+    pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        hIME = LoadLibraryW(szPath);
-        if (hIME == NULL)
-        {
-            ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
-            return FALSE;
-        }
+        ERR("Imm32LoadIME: LoadLibraryW(%s) failed\n", debugstr_w(szPath));
+        return FALSE;
     }
-    pImeDpi->hInst = hIME;
 
+    /* Populate the table by stub IME functions */
+#define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Stub##name;
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
+
+    /* Populate the table by real IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) \
     do { \
         fn = GetProcAddress(hIME, #name); \
@@ -219,7 +229,7 @@ Failed:
 }
 
 // Win: LoadImeDpi
-PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
+PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
     CHARSETINFO ci;
@@ -286,12 +296,12 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
         return NULL;
 
     pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi == NULL)
-        pImeDpi = Ime32LoadImeDpi(hKL, TRUE);
+        pImeDpi = Imm32LoadImeDpi(hKL, TRUE);
     return pImeDpi;
 }
 
@@ -301,7 +311,7 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     if (IS_IME_HKL(hKL))
         return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
-    if (Imm32IsCiceroMode() && pImeDpi->CtfImeEscapeEx)
+    if (IS_CICERO_MODE())
         return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
 
     return 0;
@@ -355,13 +365,193 @@ Quit:
     return ret;
 }
 
+// We will transport the IME menu items by using a flat memory block via
+// a file mapping object beyond the boundary of a process.
+
+#define MAX_IMEMENU_BITMAP_BYTES 0xF00
+
+typedef struct tagIMEMENUITEM
+{
+    IMEMENUITEMINFOW Info;
+    BYTE abChecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abUnchecked[MAX_IMEMENU_BITMAP_BYTES];
+    BYTE abItem[MAX_IMEMENU_BITMAP_BYTES];
+} IMEMENUITEM, *PIMEMENUITEM;
+
+typedef struct tagIMEMENU
+{
+    DWORD dwVersion;
+    DWORD dwFlags;
+    DWORD dwType;
+    DWORD dwItemCount;
+    IMEMENUITEMINFOW Parent;
+    IMEMENUITEM Items[ANYSIZE_ARRAY];
+} IMEMENU, *PIMEMENU;
+
+/***********************************************************************
+ *		ImmPutImeMenuItemsIntoMappedFile (IMM32.@)
+ *
+ * Called from user32.dll to transport the IME menu items by using a
+ * file mapping object. This function is provided for WM_IME_SYSTEM:IMS_GETIMEMENU
+ * handling.
+ */
+LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
+{
+    LRESULT ret = FALSE;
+    HANDLE hMapping;
+    PIMEMENU pView;
+    LPIMEMENUITEMINFOW pParent = NULL, pItems = NULL;
+    DWORD i, cItems, cbItems = 0;
+
+    hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    if (!pView || pView->dwVersion != 1)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    if (pView->Parent.cbSize > 0)
+        pParent = &pView->Parent;
+
+    if (pView->dwItemCount > 0)
+    {
+        cbItems = pView->dwItemCount * sizeof(IMEMENUITEMINFOW);
+        pItems = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbItems);
+        if (!pItems)
+        {
+            ERR("!pItems\n");
+            goto Quit;
+        }
+    }
+
+    cItems = ImmGetImeMenuItemsW(hIMC, pView->dwFlags, pView->dwType, pParent, pItems, cbItems);
+    pView->dwItemCount = cItems;
+    if (cItems == 0)
+        goto Quit;
+
+    if (pItems)
+    {
+        for (i = 0; i < cItems; ++i)
+        {
+            pView->Items[i].Info = pItems[i];
+
+            // store bitmaps to bytes
+            if (pItems[i].hbmpChecked)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpChecked, pView->Items[i].abChecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpChecked);
+            }
+            if (pItems[i].hbmpUnchecked)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpUnchecked, pView->Items[i].abUnchecked,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpUnchecked);
+            }
+            if (pItems[i].hbmpItem)
+            {
+                Imm32StoreBitmapToBytes(pItems[i].hbmpItem, pView->Items[i].abItem,
+                                        MAX_IMEMENU_BITMAP_BYTES);
+                DeleteObject(pItems[i].hbmpItem);
+            }
+        }
+    }
+
+    ret = TRUE;
+
+Quit:
+    if (pItems)
+        ImmLocalFree(pItems);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
+}
+
 // Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
-Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
 {
-    FIXME("We have to do something\n");
-    return 0;
+    HANDLE hMapping;
+    PIMEMENU pView;
+    DWORD i, cbView, dwItemCount, ret = 0;
+    HWND hImeWnd;
+    PIMEMENUITEM pGotItem;
+    LPIMEMENUITEMINFOW pSetInfo;
+
+    hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
+    if (!hImeWnd || !IsWindow(hImeWnd))
+    {
+        ERR("hImeWnd %p\n", hImeWnd);
+        return 0;
+    }
+
+    dwItemCount = (lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0);
+    cbView = sizeof(IMEMENU) + ((size_t)dwItemCount - 1) * sizeof(IMEMENUITEM);
+
+    RtlEnterCriticalSection(&gcsImeDpi);
+
+    // create a file mapping
+    hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                  0, cbView, L"ImmMenuInfo");
+    pView = MapViewOfFile(hMapping, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+    if (!pView)
+    {
+        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        goto Quit;
+    }
+
+    ZeroMemory(pView, cbView);
+    pView->dwVersion = 1;
+    pView->dwFlags = dwFlags;
+    pView->dwType = dwType;
+    pView->dwItemCount = dwItemCount;
+    if (lpImeParentMenu)
+    {
+        pView->Parent = *(LPIMEMENUITEMINFOW)lpImeParentMenu;
+        pView->Parent.cbSize = sizeof(IMEMENUITEMINFOW);
+    }
+
+    if (!SendMessageW(hImeWnd, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
+        goto Quit;
+
+    ret = pView->dwItemCount;
+
+    if (!lpImeMenu)
+        goto Quit;
+
+    for (i = 0; i < ret; ++i)
+    {
+        pGotItem = &(pView->Items[i]);
+        pSetInfo = &((LPIMEMENUITEMINFOW)lpImeMenu)[i];
+
+        *pSetInfo = pGotItem->Info;
+
+        // load bitmaps from bytes
+        if (pSetInfo->hbmpChecked)
+        {
+            pSetInfo->hbmpChecked = Imm32LoadBitmapFromBytes(pGotItem->abChecked);
+        }
+        if (pSetInfo->hbmpUnchecked)
+        {
+            pSetInfo->hbmpUnchecked = Imm32LoadBitmapFromBytes(pGotItem->abUnchecked);
+        }
+        if (pSetInfo->hbmpItem)
+        {
+            pSetInfo->hbmpItem = Imm32LoadBitmapFromBytes(pGotItem->abItem);
+        }
+    }
+
+Quit:
+    RtlLeaveCriticalSection(&gcsImeDpi);
+    if (pView)
+        UnmapViewOfFile(pView);
+    if (hMapping)
+        CloseHandle(hMapping);
+    return ret;
 }
 
 // Win: ImmGetImeMenuItemsWorker
@@ -391,7 +581,7 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
     {
         if (bTargetIsAnsi)
             return 0;
-        return Imm32GetImeMenuItemWCrossProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
+        return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
                                                 lpImeMenu, dwSize);
     }
 
@@ -413,9 +603,6 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
         ImmUnlockIMC(hIMC);
         return 0;
     }
-
-    if (pImeDpi->ImeGetImeMenuItems == NULL)
-        goto Quit;
 
     bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
@@ -696,7 +883,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
             if (!IS_IME_HKL(hKL))
             {
                 if (!CtfImmIsTextFrameServiceDisabled() ||
-                    !Imm32IsCiceroMode() || Imm32Is16BitMode())
+                    !IS_CICERO_MODE() || IS_16BIT_MODE())
                 {
                     return FALSE;
                 }
@@ -807,12 +994,12 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+    if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
         return FALSE;
 
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
-        pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
+        pImeDpi = Imm32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
 }
 
@@ -1635,7 +1822,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL) && Imm32IsCiceroMode() && !Imm32Is16BitMode())
+    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !IS_16BIT_MODE())
         fUseCicero = TRUE;
 
     if (Imm32IsCrossThreadAccess(hIMC))
@@ -1812,4 +1999,58 @@ ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
     return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize, FALSE);
+}
+
+/***********************************************************************
+ *		ImmWINNLSEnableIME (IMM32.@)
+ */
+BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
+{
+    HIMC hIMC;
+    PCLIENTIMC pClientImc;
+    HWND hImeWnd;
+    BOOL bImeWnd, ret;
+
+    TRACE("(%p, %d)\n", hWnd, enable);
+
+    if (!Imm32IsSystemJapaneseOrKorean())
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
+    if (!hIMC)
+        return FALSE;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (!pClientImc)
+        return FALSE;
+
+    ret = !(pClientImc->dwFlags & CLIENTIMC_DISABLEIME);
+    if (!!enable == ret)
+    {
+        ImmUnlockClientImc(pClientImc);
+        return ret;
+    }
+
+    if (!IsWindow(hWnd))
+        hWnd = GetFocus();
+
+    hImeWnd = ImmGetDefaultIMEWnd(hWnd);
+    bImeWnd = IsWindow(hImeWnd);
+    if (bImeWnd)
+        ImmSetActiveContext(hWnd, (enable ? NULL : hIMC), FALSE);
+
+    if (enable)
+        pClientImc->dwFlags &= ~CLIENTIMC_DISABLEIME;
+    else
+        pClientImc->dwFlags |= CLIENTIMC_DISABLEIME;
+
+    ImmUnlockClientImc(pClientImc);
+
+    if (bImeWnd)
+        ImmSetActiveContext(hWnd, (enable ? hIMC : NULL), TRUE);
+
+    return ret;
 }

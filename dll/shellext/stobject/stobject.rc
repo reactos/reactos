@@ -31,6 +31,18 @@ IDI_HOTPLUG_ERR ICON "resources/hotplug/0.ico"
 IDI_HOTPLUG_OK ICON  "resources/hotplug/1.ico"
 
 
+IDI_MOUSE_DISABLED ICON "resources/mouse/disabled.ico"
+IDI_MOUSE_NOBTN ICON "resources/mouse/none.ico"
+IDI_MOUSE_L_ACTIVE ICON "resources/mouse/left_active.ico"
+IDI_MOUSE_L_DOWN ICON "resources/mouse/left_down.ico"
+IDI_MOUSE_R_ACTIVE ICON "resources/mouse/right_active.ico"
+IDI_MOUSE_R_DOWN ICON "resources/mouse/right_down.ico"
+IDI_MOUSE_LR_ACTIVE ICON "resources/mouse/left_right_active.ico"
+IDI_MOUSE_LR_DOWN ICON "resources/mouse/left_right_down.ico"
+IDI_MOUSE_L_ACTIVE_R_DOWN ICON "resources/mouse/left_active_right_down.ico"
+IDI_MOUSE_R_ACTIVE_L_DOWN ICON "resources/mouse/left_down_right_active.ico"
+
+
 IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 
 #include <reactos/manifest_dll.rc>

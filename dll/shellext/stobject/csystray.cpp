@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#include <regstr.h>
 #include <undocshell.h>
 #include <shellutils.h>
 
@@ -19,8 +20,15 @@ SysTrayIconHandlers_t g_IconHandlers [] = {
 };
 const int g_NumIcons = _countof(g_IconHandlers);
 
-CSysTray::CSysTray() {}
-CSysTray::~CSysTray() {}
+CSysTray::CSysTray() : dwServicesEnabled(0)
+{
+    wm_SHELLHOOK = RegisterWindowMessageW(L"SHELLHOOK");
+    wm_DESTROYWINDOW = RegisterWindowMessageW(L"CSysTray_DESTROY");
+}
+
+CSysTray::~CSysTray()
+{
+}
 
 VOID CSysTray::GetServicesEnabled()
 {
@@ -30,8 +38,7 @@ VOID CSysTray::GetServicesEnabled()
     /* Enable power, volume and hotplug by default */
     this->dwServicesEnabled = POWER_SERVICE_FLAG | VOLUME_SERVICE_FLAG | HOTPLUG_SERVICE_FLAG;
 
-    if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\SysTray",
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_SYSTRAY,
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
@@ -122,6 +129,8 @@ HRESULT CSysTray::InitIcons()
         }
     }
 
+    MouseKeys_Init(this);
+
     return InitNetShell();
 }
 
@@ -132,11 +141,13 @@ HRESULT CSysTray::ShutdownIcons()
     {
         if (this->dwServicesEnabled & g_IconHandlers[i].dwServiceFlag)
         {
+            this->dwServicesEnabled &= ~g_IconHandlers[i].dwServiceFlag;
             HRESULT hr = g_IconHandlers[i].pfnShutdown(this);
-            if (FAILED(hr))
-                return hr;
+            FAILED_UNEXPECTEDLY(hr);
         }
     }
+
+    MouseKeys_Shutdown(this);
 
     return ShutdownNetShell();
 }
@@ -253,12 +264,14 @@ HRESULT CSysTray::SysTrayThreadProc()
 
     CoUninitialize();
 
+    Release();
     FreeLibraryAndExitThread(hLib, ret);
 }
 
 HRESULT CSysTray::CreateSysTrayThread()
 {
     TRACE("CSysTray Init TODO: Initialize tray icon handlers.\n");
+    AddRef();
 
     HANDLE hThread = CreateThread(NULL, 0, s_SysTrayThreadProc, this, 0, NULL);
 
@@ -269,8 +282,11 @@ HRESULT CSysTray::CreateSysTrayThread()
 
 HRESULT CSysTray::DestroySysTrayWindow()
 {
-    DestroyWindow();
-    hwndSysTray = NULL;
+    if (!DestroyWindow())
+    {
+        // Window is from another thread, ask it politely to destroy itself:
+        SendMessage(wm_DESTROYWINDOW);
+    }
     return S_OK;
 }
 
@@ -303,6 +319,21 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     if (hWnd != m_hWnd)
         return FALSE;
 
+    if (wm_DESTROYWINDOW && uMsg == wm_DESTROYWINDOW)
+    {
+        return DestroyWindow();
+    }
+
+    if (wm_SHELLHOOK && uMsg == wm_SHELLHOOK)
+    {
+        if (wParam == HSHELL_ACCESSIBILITYSTATE && lParam == ACCESS_MOUSEKEYS)
+        {
+            MouseKeys_Update(this);
+        }
+        lResult = 0L;
+        return TRUE;
+    }
+
     switch (uMsg)
     {
     case WM_NCCREATE:
@@ -313,6 +344,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         GetServicesEnabled();
         InitIcons();
         SetTimer(1, 2000, NULL);
+        RegisterShellHookWindow(hWnd);
         return TRUE;
 
     case WM_TIMER:
@@ -322,9 +354,18 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
             ProcessIconMessage(uMsg, wParam, lParam, lResult);
         return TRUE;
 
+    case WM_SETTINGCHANGE:
+        if (wParam == SPI_SETMOUSEKEYS)
+        {
+            MouseKeys_Update(this);
+        }
+        break;
+
     case WM_DESTROY:
         KillTimer(1);
+        DeregisterShellHookWindow(hWnd);
         ShutdownIcons();
+        PostQuitMessage(0);
         return TRUE;
     }
 

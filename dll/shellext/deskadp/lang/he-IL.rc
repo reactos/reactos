@@ -11,16 +11,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "מאפיינים", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "פרטי המתאם", -1, 7, 56, 237, 75
-    LTEXT "סוג שבב:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "סוג DAC:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "גודל זיכרון:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "מחרוזת מתאם:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "מידע BIOS:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    LTEXT "סוג שבב:", -1, 13, 68, 40, 8
+    LTEXT "", IDC_CHIPTYPE, 59, 68, 182, 8, SS_NOPREFIX
+    LTEXT "סוג DAC:", -1, 13, 80, 40, 8
+    LTEXT "", IDC_DACTYPE, 59, 80, 182, 8, SS_NOPREFIX
+    LTEXT "גודל זיכרון:", -1, 13, 92, 40, 8
+    LTEXT "", IDC_MEMORYSIZE, 59, 92, 182, 8, SS_NOPREFIX
+    LTEXT "מחרוזת מתאם:", -1, 13, 104, 40, 8
+    LTEXT "", IDC_ADAPTERSTRING, 59, 104, 182, 8, SS_NOPREFIX
+    LTEXT "מידע BIOS:", -1, 13, 116, 40, 8
+    LTEXT "", IDC_BIOSINFORMATION, 59, 116, 182, 8, SS_NOPREFIX
     PUSHBUTTON "פרט את כל המצבים...", IDC_LISTALLMODES, 7, 139, 84, 14
 END
 
@@ -47,4 +47,5 @@ BEGIN
     IDS_16BPP "צבעים גבוהים (16 סיביות)"
     IDS_24BPP "צבעים מלאים (24 סיביות)"
     IDS_32BPP "צבעים מלאים (32 סיביות)"
+    IDS_NOTAVAIL "Not Available"
 END

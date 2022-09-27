@@ -163,7 +163,10 @@ LoadOrderGroup = Boot Bus Extender
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 SystemClassName = "System devices"
 
 GenericMfg = "(Generic system devices)"
@@ -378,7 +381,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU σε P
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU σε PCI-Γέφυρα"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 SystemClassName = "Dispositivos del sistema"
 
 GenericMfg = "(Dispositivos del sistema estándar)"
@@ -506,7 +508,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI ブリッジ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 SystemClassName = "Urządzenia systemowe"
 
 GenericMfg = "(Standardowe urządzenia systemowe)"
@@ -588,7 +589,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Ponte CPU 
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Ponte CPU - PCI"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 SystemClassName = "Dispozitive de sistem"
 
 GenericMfg = "(dispozitiv generic de sistem)"
@@ -633,7 +633,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Punte Intel 82443BX/ZX/DX Pentium(R) II CPU 
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Punte Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 SystemClassName = "Системные устройства"
 
 GenericMfg = "(Стандартные системные устройства)"
@@ -723,7 +722,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Most Intel 82443BX/ZX/DX Pentium(R) II CPU n
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Most Intel 82443BX/ZX/DX Pentium(R) II CPU na PCI"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 SystemClassName = "Sistem Aygıtları"
 
 GenericMfg = "(Genel Sistem Aygıtları)"
@@ -767,7 +765,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU'dan PC
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU'dan PCI'ya Köprü"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 SystemClassName = "Системні пристрої"
 
 GenericMfg = "(Стандартні системні пристрої)"
@@ -892,7 +889,6 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 桥"
 
 [Strings.0816]
-ReactOS = "Equipa ReactOS"
 SystemClassName = "Dispositivos do sistema"
 
 GenericMfg = "(Dispositivos do sistema padrão)"

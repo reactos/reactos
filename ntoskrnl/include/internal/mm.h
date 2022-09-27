@@ -866,6 +866,33 @@ NTAPI
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
 
+/* balance.c / pagefile.c******************************************************/
+
+inline VOID UpdateTotalCommittedPages(LONG Delta)
+{
+    /*
+     * Add up all the used "Committed" memory + pagefile.
+     * Not sure this is right. 8^\
+     * MmTotalCommittedPages should be adjusted consistently with
+     * other counters at different places.
+     *
+       MmTotalCommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+                               MiMemoryConsumers[MC_USER].PagesUsed +
+                               MiUsedSwapPages;
+     */
+    
+    /* Update Commitment */
+    SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Delta) + Delta;
+
+    /* Update Peak = max(Peak, Total) in a lockless way */
+    SIZE_T PeakCommitment = MmPeakCommitment;
+    while (TotalCommittedPages > PeakCommitment &&
+           InterlockedCompareExchangeSizeT(&MmPeakCommitment, TotalCommittedPages, PeakCommitment) != PeakCommitment)
+    {
+        PeakCommitment = MmPeakCommitment;
+    }
+}
+
 /* balance.c *****************************************************************/
 
 CODE_SEG("INIT")
@@ -1261,13 +1288,13 @@ NTSTATUS
 NTAPI
 MmGetExecuteOptions(IN PULONG ExecuteOptions);
 
-VOID
-NTAPI
+_Success_(return)
+BOOLEAN
 MmDeleteVirtualMapping(
-    struct _EPROCESS *Process,
-    PVOID Address,
-    BOOLEAN* WasDirty,
-    PPFN_NUMBER Page
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _Out_opt_ BOOLEAN* WasDirty,
+    _Out_opt_ PPFN_NUMBER Page
 );
 
 /* arch/procsup.c ************************************************************/

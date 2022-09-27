@@ -666,6 +666,7 @@ MonitorDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWLP_MSGRESULT,
                                      ApplyMonitorChanges(This));
+                    Ret = TRUE;
                     break;
                 }
 

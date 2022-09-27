@@ -435,7 +435,7 @@ QueryTokenImpersonationTests(
                                      &BufferLength);
     ok_ntstatus(Status, STATUS_SUCCESS);
     ok(Level == SecurityAnonymous, "The current token impersonation level is not anonymous!\n");
-    CloseHandle(DupToken);
+    NtClose(DupToken);
 }
 
 static
@@ -463,7 +463,7 @@ QueryTokenStatisticsTests(
     Statistics = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Statistics)
     {
-        skip("Failed to allocate heap for token statistics!\n");
+        ok(FALSE, "Failed to allocate from heap for token statistics (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -484,6 +484,96 @@ QueryTokenStatisticsTests(
     trace("=========================================\n\n");
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, Statistics);
+}
+
+static
+VOID
+QueryTokenPrivilegesAndGroupsTests(
+    _In_ HANDLE Token)
+{
+    NTSTATUS Status;
+    PTOKEN_GROUPS_AND_PRIVILEGES PrivsAndGroups;
+    TOKEN_GROUPS SidToRestrict;
+    HANDLE FilteredToken;
+    PSID WorldSid;
+    ULONG BufferLength;
+    static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+
+    /*
+     * Create a World SID and filter the token
+     * by adding a restricted SID.
+     */
+    Status = RtlAllocateAndInitializeSid(&WorldAuthority,
+                                         1,
+                                         SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &WorldSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ok(FALSE, "Failed to allocate World SID (Status code %lx)!\n", Status);
+        return;
+    }
+
+    SidToRestrict.GroupCount = 1;
+    SidToRestrict.Groups[0].Attributes = 0;
+    SidToRestrict.Groups[0].Sid = WorldSid;
+
+    Status = NtFilterToken(Token,
+                           0,
+                           NULL,
+                           NULL,
+                           &SidToRestrict,
+                           &FilteredToken);
+    if (!NT_SUCCESS(Status))
+    {
+        ok(FALSE, "Failed to filter the current token (Status code %lx)!\n", Status);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
+        return;
+    }
+
+    /*
+     * Query the exact buffer length to hold
+     * our stuff, STATUS_BUFFER_TOO_SMALL must
+     * be expected here.
+     */
+    Status = NtQueryInformationToken(FilteredToken,
+                                     TokenGroupsAndPrivileges,
+                                     NULL,
+                                     0,
+                                     &BufferLength);
+    ok_ntstatus(Status, STATUS_BUFFER_TOO_SMALL);
+
+    /* Allocate the buffer based on the size we got */
+    PrivsAndGroups = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+    if (!PrivsAndGroups)
+    {
+        ok(FALSE, "Failed to allocate from heap for token privileges and groups (required buffer length %lu)!\n", BufferLength);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
+        NtClose(FilteredToken);
+        return;
+    }
+
+    /* Do the actual query */
+    Status = NtQueryInformationToken(FilteredToken,
+                                     TokenGroupsAndPrivileges,
+                                     PrivsAndGroups,
+                                     BufferLength,
+                                     &BufferLength);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    trace("=============== TokenGroupsAndPrivileges ===============\n");
+    trace("SID count: %lu\n", PrivsAndGroups->SidCount);
+    trace("SID length: %lu\n", PrivsAndGroups->SidLength);
+    trace("Restricted SID count: %lu\n", PrivsAndGroups->RestrictedSidCount);
+    trace("Restricted SID length: %lu\n", PrivsAndGroups->RestrictedSidLength);
+    trace("Privilege count: %lu\n", PrivsAndGroups->PrivilegeCount);
+    trace("Privilege length: %lu\n", PrivsAndGroups->PrivilegeLength);
+    trace("Authentication ID: %lu %lu\n", PrivsAndGroups->AuthenticationId.LowPart, PrivsAndGroups->AuthenticationId.HighPart);
+    trace("=========================================\n\n");
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PrivsAndGroups);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
+    NtClose(FilteredToken);
 }
 
 static
@@ -591,7 +681,7 @@ QueryTokenRestrictedSidsTest(
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, RestrictedGroups);
     RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
-    CloseHandle(FilteredToken);
+    NtClose(FilteredToken);
 }
 
 static
@@ -667,7 +757,7 @@ QueryTokenIsSandboxInert(
     ok_ntstatus(Status, STATUS_SUCCESS);
     ok(IsTokenInert == TRUE, "The token must be a sandbox inert one after filtering!\n");
 
-    CloseHandle(FilteredToken);
+    NtClose(FilteredToken);
 }
 
 static
@@ -744,10 +834,11 @@ START_TEST(NtQueryInformationToken)
     QueryTokenTypeTests(Token);
     QueryTokenImpersonationTests(Token);
     QueryTokenStatisticsTests(Token);
+    QueryTokenPrivilegesAndGroupsTests(Token);
     QueryTokenRestrictedSidsTest(Token);
     QueryTokenSessionIdTests(Token);
     QueryTokenIsSandboxInert(Token);
     QueryTokenOriginTests(Token);
 
-    CloseHandle(Token);
+    NtClose(Token);
 }

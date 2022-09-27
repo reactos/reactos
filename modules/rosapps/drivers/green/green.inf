@@ -87,10 +87,11 @@ AddService = green, 0x00000002, green_Service_Inst
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+ReactOSMfg = "(ReactOS Project)"
 
+; Localizable
 GREEN.DriverDesc = "VT100 server emulator"
-
-ReactOSMfg = "(ReactOS Team)"
 KEYBOARD.DeviceDesc = "Keyboard for remote console"
 SCREEN.DeviceDesc = "Screen for remote console"

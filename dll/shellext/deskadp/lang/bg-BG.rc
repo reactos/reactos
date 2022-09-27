@@ -10,16 +10,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Свойства", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Сведения за картата:", -1, 7, 56, 237, 75
-    LTEXT "Вид чип:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 85, 68, 155, 8, SS_NOPREFIX
-    LTEXT "Вид ЦАП:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 85, 80, 155, 8, SS_NOPREFIX
-    LTEXT "Размер на паметта:", -1, 13, 92, 75, 8
-    LTEXT "", IDC_MEMORYSIZE, 85, 92, 155, 8, SS_NOPREFIX
-    LTEXT "Низ на картата:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 85, 104, 155, 8, SS_NOPREFIX
-    LTEXT "Сведения на БИОСа:", -1, 13, 115, 75, 8
-    LTEXT "", IDC_BIOSINFORMATION, 85, 115, 155, 8, SS_NOPREFIX
+    LTEXT "Вид чип:", -1, 13, 68, 72, 8
+    LTEXT "", IDC_CHIPTYPE, 91, 68, 150, 8, SS_NOPREFIX
+    LTEXT "Вид ЦАП:", -1, 13, 80, 72, 8
+    LTEXT "", IDC_DACTYPE, 91, 80, 150, 8, SS_NOPREFIX
+    LTEXT "Размер на паметта:", -1, 13, 92, 72, 8
+    LTEXT "", IDC_MEMORYSIZE, 91, 92, 150, 8, SS_NOPREFIX
+    LTEXT "Низ на картата:", -1, 13, 104, 72, 8
+    LTEXT "", IDC_ADAPTERSTRING, 91, 104, 150, 8, SS_NOPREFIX
+    LTEXT "Сведения на БИОСа:", -1, 13, 115, 72, 8
+    LTEXT "", IDC_BIOSINFORMATION, 91, 115, 150, 8, SS_NOPREFIX
     PUSHBUTTON "&Списък на всички режими...", IDC_LISTALLMODES, 7, 139, 110, 14
 END
 
@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Висока цветност (16 разряда)"
     IDS_24BPP "Истинска цветност (24 разряда)"
     IDS_32BPP "Истинска цветност (32 разряда)"
+    IDS_NOTAVAIL "Not Available"
 END

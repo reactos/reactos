@@ -121,7 +121,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
     //Сменено 60, 150, 90, 10->60, 150, 150, 10
     CHECKBOX "&Скриване на показалеца по време на писане", IDC_CHECK_HIDE_POINTER,60, 150, 170, 10
-    ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
+    ICON IDI_MOUSE_HIDE, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
     CHECKBOX "&Показване мястото на показалеца, при натискне на Ctrl",
              IDC_CHECK_SHOW_POINTER, 60, 175, 170, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 15, 170, 15, 15

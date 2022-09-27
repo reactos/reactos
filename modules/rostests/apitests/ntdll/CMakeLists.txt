@@ -94,6 +94,7 @@ list(APPEND SOURCE
     RtlxUnicodeStringToOemSize.c
     StackOverflow.c
     SystemInfo.c
+    UserModeException.c
     Timer.c)
 
 if(ARCH STREQUAL "i386")

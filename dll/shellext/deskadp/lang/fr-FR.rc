@@ -10,17 +10,17 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Propriétés", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Informations sur l'adaptateur", -1, 7, 56, 237, 75
-    LTEXT "Type de puce:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Type de CNA:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Taille de la mémoire:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Texte de l'adaptateur:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "Informations du BIOS:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "&Lister tous les modes...", IDC_LISTALLMODES, 7, 139, 75, 14
+    LTEXT "Type de puce :", -1, 13, 68, 74, 8
+    LTEXT "", IDC_CHIPTYPE, 93, 68, 148, 8, SS_NOPREFIX
+    LTEXT "Type de CNA :", -1, 13, 80, 74, 8
+    LTEXT "", IDC_DACTYPE, 93, 80, 148, 8, SS_NOPREFIX
+    LTEXT "Taille de la mémoire :", -1, 13, 92, 74, 8
+    LTEXT "", IDC_MEMORYSIZE, 93, 92, 148, 8, SS_NOPREFIX
+    LTEXT "Adaptateur :", -1, 13, 104, 74, 8
+    LTEXT "", IDC_ADAPTERSTRING, 93, 104, 148, 8, SS_NOPREFIX
+    LTEXT "Informations du BIOS :", -1, 13, 116, 74, 8
+    LTEXT "", IDC_BIOSINFORMATION, 93, 116, 148, 8, SS_NOPREFIX
+    PUSHBUTTON "&Lister tous les modes...", IDC_LISTALLMODES, 7, 139, 80, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Couleurs élevées (16 bit)"
     IDS_24BPP "Vraies couleurs (24 bit)"
     IDS_32BPP "Vraies couleurs (32 bit)"
+    IDS_NOTAVAIL "Non disponible"
 END

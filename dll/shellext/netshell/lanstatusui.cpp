@@ -9,6 +9,8 @@
 
 #include <winsock.h>
 
+#define NETTIMERID 0xFABC
+
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
     m_pHead(NULL)
@@ -116,7 +118,7 @@ UpdateLanStatusUiDlg(
 }
 
 VOID
-UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
+UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     MIB_IFROW IfEntry;
     HICON hIcon, hOldIcon = NULL;
@@ -128,6 +130,17 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
         return;
+    }
+
+    if (pContext->Status == (UINT)-1)
+    {
+        /*
+         * On first execution, pContext->dw[In|Out]Octets will be zero while
+         * the interface info is already refreshed with non-null data, so a
+         * gap is normal and does not correspond to an effective TX or RX packet.
+         */
+        pContext->dwInOctets = IfEntry.dwInOctets;
+        pContext->dwOutOctets = IfEntry.dwOutOctets;
     }
 
     hIcon = NULL;
@@ -828,7 +841,7 @@ LANStatusDlg(
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT *)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
-            pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
+            pContext->nIDEvent = SetTimer(hwndDlg, NETTIMERID, 1000, NULL);
             return TRUE;
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
@@ -935,6 +948,8 @@ CLanStatus::InitializeNetTaskbarNotifications()
         ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
         pContext->uID = Index;
         pContext->pNet = pNetCon;
+        pContext->Status = -1;
+        pContext->dwAdapterIndex = Index;
         pItem->uID = Index;
         pItem->pNext = NULL;
         pItem->pNet = pNetCon;

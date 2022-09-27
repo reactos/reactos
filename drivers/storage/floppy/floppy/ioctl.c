@@ -153,16 +153,10 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
     if(DiskChanged)
     {
         INFO_(FLOPPY, "DeviceIoctl(): detected disk changed; signalling media change and completing\n");
-        SignalMediaChanged(DriveInfo->DeviceObject, Irp);
 
-        /*
-         * Just guessing here - I have a choice of returning NO_MEDIA or VERIFY_REQUIRED.  If there's
-         * really no disk in the drive, I'm thinking I can save time by just reporting that fact, rather
-         * than forcing windows to ask me twice.  If this doesn't work, we'll need to split this up and
-         * handle the CHECK_VERIFY IOCTL separately.
-         */
-        if(ResetChangeFlag(DriveInfo) == STATUS_NO_MEDIA_IN_DEVICE)
-            Irp->IoStatus.Status = STATUS_NO_MEDIA_IN_DEVICE;
+        /* The following call sets IoStatus.Status and IoStatus.Information */
+        SignalMediaChanged(DriveInfo->DeviceObject, Irp);
+        ResetChangeFlag(DriveInfo);
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         StopMotor(DriveInfo->ControllerInfo);

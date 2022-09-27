@@ -821,7 +821,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "L'élément '%1' ne peut être envoyé à la Corbeille. Voulez-vous le supprimer ?"
     IDS_OVERWRITEFILE_TEXT "Ce dossier contient déjà un fichier nommé '%1'.\n\nVoulez-vous le remplacer ?"
     IDS_OVERWRITEFILE_CAPTION "Confirmer l'écrasement du fichier"
-    IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\ndossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\nle dossier?"
+    IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le dossier sélectionné, ils seront remplacés.\nVoulez-vous toujours déplacer ou copier le dossier?"
 
     IDS_FILEOOP_COPYING "Copie..."
     IDS_FILEOOP_MOVING "Déplacement..."
@@ -842,8 +842,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formatage terminé."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "Impossible de formater ce volume"
+    IDS_NO_FORMAT "Ce volume ne peut pas être formaté. Il contient des fichiers systèmes indispensables pour le fonctionnement de ReactOS."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Impossible d'afficher la boîte de dialogue pour l'exécution d'un fichier (erreur interne)"
@@ -1029,8 +1029,8 @@ BEGIN
     IDS_SYSTEMFOLDER "Dossier système"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Ferme vos programmes et termine votre session ReactOS."
+    IDS_SWITCH_USER_DESC "Permet à un autre utilisateur de se connecter, tout en gardant vos fichiers et programmes ouverts.\r\n\r\n(Vous pouvez également changer d'utilisateurs avec les touches Windows + L.)"
     IDS_LOG_OFF_TITLE "Fermer"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Changer d'utilisateur"
 END

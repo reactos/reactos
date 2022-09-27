@@ -1256,6 +1256,9 @@ extern "C" {
 #endif /* WINVER >= 0x0400 */
 #if(_WIN32_WINNT >= 0x0500)
 #define HSHELL_ACCESSIBILITYSTATE 11
+#define ACCESS_STICKYKEYS 0x01
+#define ACCESS_FILTERKEYS 0x02
+#define ACCESS_MOUSEKEYS 0x03
 #define HSHELL_APPCOMMAND 12
 #endif /* _WIN32_WINNT >= 0x0500 */
 #if(_WIN32_WINNT >= 0x0501)
@@ -2125,14 +2128,21 @@ extern "C" {
 #define HCF_HOTKEYSOUND 16
 #define HCF_INDICATOR 32
 #define HCF_HOTKEYAVAILABLE 64
-#define MKF_AVAILABLE 2
-#define MKF_CONFIRMHOTKEY 8
-#define MKF_HOTKEYACTIVE 4
-#define MKF_HOTKEYSOUND 16
-#define MKF_INDICATOR 32
-#define MKF_MOUSEKEYSON 1
-#define MKF_MODIFIERS 64
-#define MKF_REPLACENUMBERS 128
+
+#define MKF_MOUSEKEYSON     0x00000001
+#define MKF_AVAILABLE       0x00000002
+#define MKF_HOTKEYACTIVE    0x00000004
+#define MKF_CONFIRMHOTKEY   0x00000008
+#define MKF_HOTKEYSOUND     0x00000010
+#define MKF_INDICATOR       0x00000020
+#define MKF_MODIFIERS       0x00000040
+#define MKF_REPLACENUMBERS  0x00000080
+#define MKF_LEFTBUTTONDOWN  0x01000000
+#define MKF_RIGHTBUTTONDOWN 0x02000000
+#define MKF_LEFTBUTTONSEL   0x10000000
+#define MKF_RIGHTBUTTONSEL  0x20000000
+#define MKF_MOUSEMODE       0x80000000
+
 #define SERKF_ACTIVE 8 /* May be obsolete. Not in recent MS docs. */
 #define SERKF_AVAILABLE 2
 #define SERKF_INDICATOR 4
@@ -5039,13 +5049,13 @@ MapWindowPoints(
   _In_ UINT cPoints);
 
 int WINAPI MenuItemFromPoint(_In_opt_ HWND, _In_ HMENU, _In_ POINT);
-BOOL WINAPI MessageBeep(_In_ UINT);
-int WINAPI MessageBoxA(_In_opt_ HWND, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_ UINT);
-int WINAPI MessageBoxW(_In_opt_ HWND, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_ UINT);
-int WINAPI MessageBoxExA(_In_opt_ HWND, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_ UINT, _In_ WORD);
-int WINAPI MessageBoxExW(_In_opt_ HWND, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_ UINT, _In_ WORD);
-int WINAPI MessageBoxIndirectA(_In_ CONST MSGBOXPARAMSA*);
-int WINAPI MessageBoxIndirectW(_In_ CONST MSGBOXPARAMSW*);
+BOOL WINAPI MessageBeep(_In_ UINT uType);
+int WINAPI MessageBoxA(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType);
+int WINAPI MessageBoxW(_In_opt_ HWND hWnd, _In_opt_ LPCWSTR lpText, _In_opt_ LPCWSTR lpCaption, _In_ UINT uType);
+int WINAPI MessageBoxExA(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType, _In_ WORD wLanguageId);
+int WINAPI MessageBoxExW(_In_opt_ HWND hWnd, _In_opt_ LPCWSTR lpText, _In_opt_ LPCWSTR lpCaption, _In_ UINT uType, _In_ WORD wLanguageId);
+int WINAPI MessageBoxIndirectA(_In_ CONST MSGBOXPARAMSA* lpmbp);
+int WINAPI MessageBoxIndirectW(_In_ CONST MSGBOXPARAMSW* lpmbp);
 BOOL WINAPI ModifyMenuA(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCSTR);
 BOOL WINAPI ModifyMenuW(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCWSTR);
 HMONITOR WINAPI MonitorFromPoint(_In_ POINT, _In_ DWORD);
@@ -5347,8 +5357,8 @@ BOOL WINAPI SwitchDesktop(_In_ HDESK);
 #if(_WIN32_WINNT >= 0x0500)
 VOID WINAPI SwitchToThisWindow(_In_ HWND, _In_ BOOL);
 #endif /* (_WIN32_WINNT >= 0x0500) */
-BOOL WINAPI SystemParametersInfoA(_In_ UINT, _In_ UINT, _Inout_opt_ PVOID, _In_ UINT);
-BOOL WINAPI SystemParametersInfoW(_In_ UINT, _In_ UINT, _Inout_opt_ PVOID, _In_ UINT);
+BOOL WINAPI SystemParametersInfoA(_In_ UINT uiAction, _In_ UINT uiParam, _Inout_opt_ PVOID pvParam, _In_ UINT fWinIni);
+BOOL WINAPI SystemParametersInfoW(_In_ UINT uiAction, _In_ UINT uiParam, _Inout_opt_ PVOID pvParam, _In_ UINT fWinIni);
 
 LONG
 WINAPI

@@ -18,6 +18,13 @@
 /* DEFINES *******************************************************************/
 
 #define KDB_STACK_SIZE                   (4096*3)
+#ifdef _M_AMD64
+#define KDB_STACK_ALIGN                 16
+#define KDB_STACK_RESERVE               (5 * sizeof(PVOID)) /* Home space + return address */
+#else
+#define KDB_STACK_ALIGN                 4
+#define KDB_STACK_RESERVE               sizeof(ULONG) /* Return address */
+#endif
 #define KDB_MAXIMUM_BREAKPOINT_COUNT     256
 #define KDB_MAXIMUM_HW_BREAKPOINT_COUNT  4
 #define KDB_MAXIMUM_SW_BREAKPOINT_COUNT  256
@@ -28,7 +35,7 @@
 /* GLOBALS *******************************************************************/
 
 static LONG KdbEntryCount = 0;
-static CHAR KdbStack[KDB_STACK_SIZE];
+static DECLSPEC_ALIGN(KDB_STACK_ALIGN) CHAR KdbStack[KDB_STACK_SIZE];
 
 static ULONG KdbBreakPointCount = 0;  /* Number of used breakpoints in the array */
 static KDB_BREAKPOINT KdbBreakPoints[KDB_MAXIMUM_BREAKPOINT_COUNT] = {{0}};  /* Breakpoint array */
@@ -333,7 +340,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Get the interrupt descriptor */
-    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)((ULONG_PTR)Idtr.Base + (IntVect * 8)), sizeof(IntDesc))))
     {
         /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
         return FALSE;
@@ -479,7 +486,7 @@ KdbpInsertBreakPoint(
     IN  BOOLEAN Global,
     OUT PLONG BreakPointNr  OPTIONAL)
 {
-    LONG i;
+    LONG_PTR i;
     PVOID Condition;
     PCHAR ConditionExpressionDup;
     LONG ErrOffset;
@@ -673,7 +680,7 @@ KdbpIsBreakPointOurs(
                    KdbHwBreakPoints[i]->Enabled);
             DebugReg = KdbHwBreakPoints[i]->Data.Hw.DebugReg;
 
-            if ((Context->Dr6 & (1 << DebugReg)) != 0)
+            if ((Context->Dr6 & ((ULONG_PTR)1 << DebugReg)) != 0)
             {
                 return KdbHwBreakPoints[i] - KdbBreakPoints;
             }
@@ -1174,7 +1181,7 @@ KdbpInternalEnter(VOID)
 
     // KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
 
-    KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
+    KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - KDB_STACK_RESERVE, KdbpCallMainLoop);
 
     Thread->Tcb.InitialStack = SavedInitialStack;
     Thread->Tcb.StackBase = SavedStackBase;
@@ -1489,7 +1496,7 @@ KdbEnterDebuggerException(
         }
 
         KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%p.\n",
-                  Context->SegCs & 0xffff, KeGetContextPc(Context) - 1);
+                  Context->SegCs & 0xffff, KeGetContextPc(Context));
     }
     else
     {

@@ -30,7 +30,7 @@ STRINGTABLE
 {
 5000, "Lunar"
 5001, "視覺樣式"
-5002, "ReactOS Foundation"
+5002, "ReactOS Project"
 5003, "Cernodile & Illen, built on top of Lautus"
 5004, "於 2019 年以 GNU/GPL 2.0 條款發行"
 5005, "https://reactos.org/"

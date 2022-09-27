@@ -12,6 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* DEFINES ********************************************************************/
+
+#define SE_TOKEN_DYNAMIC_SLIM 500
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /**
@@ -121,7 +125,8 @@ SepCreateToken(
     ULONG PrivilegesLength;
     ULONG UserGroupsLength;
     ULONG VariableLength;
-    ULONG TotalSize;
+    ULONG DynamicPartSize, TotalSize;
+    ULONG TokenPagedCharges;
     ULONG i;
 
     PAGED_CODE();
@@ -169,13 +174,34 @@ SepCreateToken(
     VariableLength = PrivilegesLength + UserGroupsLength;
     TotalSize = FIELD_OFFSET(TOKEN, VariablePart) + VariableLength;
 
+    /*
+     * A token is considered slim if it has the default dynamic
+     * contents, or in other words, the primary group and ACL.
+     * We judge if such contents are default by checking their
+     * total size if it's over the range. On Windows this range
+     * is 0x1F4 (aka 500). If the size of the whole dynamic contents
+     * is over that range then the token is considered fat and
+     * the token will be charged the whole of its token body length
+     * plus the dynamic size.
+     */
+    DynamicPartSize = DefaultDacl ? DefaultDacl->AclSize : 0;
+    DynamicPartSize += RtlLengthSid(PrimaryGroup);
+    if (DynamicPartSize > SE_TOKEN_DYNAMIC_SLIM)
+    {
+        TokenPagedCharges = DynamicPartSize + TotalSize;
+    }
+    else
+    {
+        TokenPagedCharges = SE_TOKEN_DYNAMIC_SLIM + TotalSize;
+    }
+
     Status = ObCreateObject(PreviousMode,
                             SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
                             TotalSize,
-                            0,
+                            TokenPagedCharges,
                             0,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
@@ -203,6 +229,7 @@ SepCreateToken(
 
     AccessToken->ExpirationTime = *ExpirationTime;
     AccessToken->ModifiedId = ModifiedId;
+    AccessToken->DynamicCharged = TokenPagedCharges - TotalSize;
 
     AccessToken->TokenFlags = TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
 
@@ -332,27 +359,48 @@ SepCreateToken(
         goto Quit;
     }
 
-    AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
-    AccessToken->DefaultOwnerIndex = DefaultOwnerIndex;
+    /*
+     * Now allocate the token's dynamic information area
+     * and set the data. The dynamic part consists of two
+     * contents, the primary group SID and the default DACL
+     * of the token, in this strict order.
+     */
+    AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                                     DynamicPartSize,
+                                                     TAG_TOKEN_DYNAMIC);
+    if (AccessToken->DynamicPart == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
 
-    /* Now allocate the token's dynamic information area and set the data */
-    AccessToken->DynamicAvailable = 0; // Unused memory in the dynamic area.
-    AccessToken->DynamicPart = NULL;
+    /* Unused memory in the dynamic area */
+    AccessToken->DynamicAvailable = 0;
+
+    /*
+     * Assign the primary group to the token
+     * and put it in the dynamic part as well.
+     */
+    EndMem = (PVOID)AccessToken->DynamicPart;
+    AccessToken->PrimaryGroup = EndMem;
+    RtlCopySid(RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid),
+                            EndMem,
+                            AccessToken->UserAndGroups[PrimaryGroupIndex].Sid);
+    AccessToken->DefaultOwnerIndex = DefaultOwnerIndex;
+    EndMem = (PVOID)((ULONG_PTR)EndMem + RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid));
+
+    /*
+     * We have assigned a primary group and put it in the
+     * dynamic part, now it's time to copy the provided
+     * default DACL (if it's provided to begin with) into
+     * the DACL field of the token and put it at the end
+     * tail of the dynamic part too.
+     */
     if (DefaultDacl != NULL)
     {
-        AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
-                                                         DefaultDacl->AclSize,
-                                                         TAG_TOKEN_DYNAMIC);
-        if (AccessToken->DynamicPart == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Quit;
-        }
-
-        EndMem = (PVOID)AccessToken->DynamicPart;
         AccessToken->DefaultDacl = EndMem;
 
-        RtlCopyMemory(AccessToken->DefaultDacl,
+        RtlCopyMemory(EndMem,
                       DefaultDacl,
                       DefaultDacl->AclSize);
     }
@@ -434,7 +482,7 @@ SepDuplicateToken(
     PVOID EndMem;
     ULONG PrimaryGroupIndex;
     ULONG VariableLength;
-    ULONG TotalSize;
+    ULONG DynamicPartSize, TotalSize;
     ULONG PrivilegesIndex, GroupsIndex;
 
     PAGED_CODE();
@@ -443,14 +491,22 @@ SepDuplicateToken(
     VariableLength = Token->VariableLength;
     TotalSize = FIELD_OFFSET(TOKEN, VariablePart) + VariableLength;
 
+    /*
+     * Compute how much size we need to allocate
+     * the dynamic part of the newly duplicated
+     * token.
+     */
+    DynamicPartSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+    DynamicPartSize += RtlLengthSid(Token->PrimaryGroup);
+
     Status = ObCreateObject(PreviousMode,
                             SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
                             TotalSize,
-                            0,
-                            0,
+                            Token->DynamicCharged,
+                            TotalSize,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
@@ -484,6 +540,7 @@ SepDuplicateToken(
     AccessToken->ParentTokenId = Token->ParentTokenId;
     AccessToken->ExpirationTime = Token->ExpirationTime;
     AccessToken->OriginatingLogonSession = Token->OriginatingLogonSession;
+    AccessToken->DynamicCharged = Token->DynamicCharged;
 
     /* Lock the source token and copy the mutable fields */
     SepAcquireTokenLockShared(Token);
@@ -584,9 +641,6 @@ SepDuplicateToken(
         goto Quit;
     }
 
-    AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
-    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
-
     /* Copy the restricted SIDs */
     AccessToken->RestrictedSidCount = 0;
     AccessToken->RestrictedSids = NULL;
@@ -684,31 +738,40 @@ SepDuplicateToken(
         }
     }
 
-    //
-    // NOTE: So far our dynamic area only contains
-    // the default dacl, so this makes the following
-    // code pretty simple. The day where it stores
-    // other data, the code will require adaptations.
-    //
-
     /* Now allocate the token's dynamic information area and set the data */
-    AccessToken->DynamicAvailable = 0; // Unused memory in the dynamic area.
-    AccessToken->DynamicPart = NULL;
+    AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                                     DynamicPartSize,
+                                                     TAG_TOKEN_DYNAMIC);
+    if (AccessToken->DynamicPart == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Unused memory in the dynamic area */
+    AccessToken->DynamicAvailable = 0;
+
+    /*
+     * Assign the primary group to the token
+     * and put it in the dynamic part as well.
+     */
+    EndMem = (PVOID)AccessToken->DynamicPart;
+    AccessToken->PrimaryGroup = EndMem;
+    RtlCopySid(RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid),
+                            EndMem,
+                            AccessToken->UserAndGroups[PrimaryGroupIndex].Sid);
+    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
+    EndMem = (PVOID)((ULONG_PTR)EndMem + RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid));
+
+    /*
+     * The existing token has a default DACL only
+     * if it has an allocated dynamic part.
+     */
     if (Token->DynamicPart && Token->DefaultDacl)
     {
-        AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
-                                                         Token->DefaultDacl->AclSize,
-                                                         TAG_TOKEN_DYNAMIC);
-        if (AccessToken->DynamicPart == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Quit;
-        }
-
-        EndMem = (PVOID)AccessToken->DynamicPart;
         AccessToken->DefaultDacl = EndMem;
 
-        RtlCopyMemory(AccessToken->DefaultDacl,
+        RtlCopyMemory(EndMem,
                       Token->DefaultDacl,
                       Token->DefaultDacl->AclSize);
     }
@@ -804,6 +867,7 @@ SepPerformTokenFiltering(
     NTSTATUS Status;
     PTOKEN AccessToken;
     PVOID EndMem;
+    ULONG DynamicPartSize;
     ULONG RestrictedSidsLength;
     ULONG PrivilegesLength;
     ULONG PrimaryGroupIndex;
@@ -863,6 +927,14 @@ SepPerformTokenFiltering(
         TotalSize = FIELD_OFFSET(TOKEN, VariablePart) + VariableLength;
     }
 
+    /*
+     * Compute how much size we need to allocate
+     * the dynamic part of the newly duplicated
+     * token.
+     */
+    DynamicPartSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+    DynamicPartSize += RtlLengthSid(Token->PrimaryGroup);
+
     /* Set up a filtered token object */
     Status = ObCreateObject(PreviousMode,
                             SeTokenObjectType,
@@ -870,8 +942,8 @@ SepPerformTokenFiltering(
                             PreviousMode,
                             NULL,
                             TotalSize,
-                            0,
-                            0,
+                            Token->DynamicCharged,
+                            TotalSize,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
@@ -907,6 +979,7 @@ SepPerformTokenFiltering(
     AccessToken->AuthenticationId = Token->AuthenticationId;
     AccessToken->ParentTokenId = Token->TokenId;
     AccessToken->OriginatingLogonSession = Token->OriginatingLogonSession;
+    AccessToken->DynamicCharged = Token->DynamicCharged;
 
     AccessToken->ExpirationTime = Token->ExpirationTime;
 
@@ -1092,28 +1165,40 @@ SepPerformTokenFiltering(
         goto Quit;
     }
 
-    /* Assign the primary group and default owner index now */
-    AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
-    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
-
     /* Now allocate the token's dynamic information area and set the data */
+    AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                                     DynamicPartSize,
+                                                     TAG_TOKEN_DYNAMIC);
+    if (AccessToken->DynamicPart == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Unused memory in the dynamic area */
     AccessToken->DynamicAvailable = 0;
-    AccessToken->DynamicPart = NULL;
+
+    /*
+     * Assign the primary group to the token
+     * and put it in the dynamic part as well.
+     */
+    EndMem = (PVOID)AccessToken->DynamicPart;
+    AccessToken->PrimaryGroup = EndMem;
+    RtlCopySid(RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid),
+                            EndMem,
+                            AccessToken->UserAndGroups[PrimaryGroupIndex].Sid);
+    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
+    EndMem = (PVOID)((ULONG_PTR)EndMem + RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid));
+
+    /*
+     * The existing token has a default DACL only
+     * if it has an allocated dynamic part.
+     */
     if (Token->DynamicPart && Token->DefaultDacl)
     {
-        AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
-                                                         Token->DefaultDacl->AclSize,
-                                                         TAG_TOKEN_DYNAMIC);
-        if (AccessToken->DynamicPart == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Quit;
-        }
-
-        EndMem = (PVOID)AccessToken->DynamicPart;
         AccessToken->DefaultDacl = EndMem;
 
-        RtlCopyMemory(AccessToken->DefaultDacl,
+        RtlCopyMemory(EndMem,
                       Token->DefaultDacl,
                       Token->DefaultDacl->AclSize);
     }

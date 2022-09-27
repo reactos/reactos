@@ -51,7 +51,7 @@ dll/win32/atl                 # Synced to WineStaging-4.18
 dll/win32/atl80               # Synced to WineStaging-4.18
 dll/win32/atl100              # Synced to WineStaging-3.3
 dll/win32/avifil32            # Synced to WineStaging-4.18
-dll/win32/bcrypt              # Synced to WineStaging-1.9.23
+dll/win32/bcrypt              # Synced to WineStaging-1.9.23 (+ winetest synced to 8d8936cbb6fea3cac862e059e814527f5361f48b, a.k.a 20161206-BJ)
 dll/win32/browseui            # Out of sync
 dll/win32/cabinet             # Synced to WineStaging-4.18
 dll/win32/clusapi             # Synced to WineStaging-3.3
@@ -131,7 +131,13 @@ dll/win32/msvfw32             # Synced to WineStaging-4.18
 dll/win32/msvidc32            # Synced to WineStaging-4.0
 dll/win32/msxml               # Synced to WineStaging-3.3
 dll/win32/msxml2              # Synced to WineStaging-3.3
-dll/win32/msxml3              # Synced to WineStaging-4.18
+dll/win32/msxml3/domdoc       # Synced to WineStaging-4.18
+dll/win32/msxml3/httpreq      # Synced to WineStaging-4.18
+dll/win32/msxml3/saxreader    # Synced to WineStaging-4.18
+dll/win32/msxml3/schema       # Synced to Wine-6.14
+dll/win32/msxml3/xmldoc       # Synced to WineStaging-4.18
+dll/win32/msxml3/xmlparser    # Synced to WineStaging-4.18
+dll/win32/msxml3/xmlview      # Synced to WineStaging-4.18
 dll/win32/msxml4              # Synced to WineStaging-3.3
 dll/win32/msxml6              # Synced to WineStaging-3.3
 dll/win32/nddeapi             # Synced to WineStaging-3.3
@@ -231,7 +237,7 @@ win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-4.18 (known ther
 ReactOS shares the following programs with Winehq.
 
 base/applications/cmdutils/cscript  # Synced to WineStaging-4.18
-base/applications/cmdutils/reg      # Synced to WineStaging-4.18
+base/applications/cmdutils/reg      # Synced to WineStaging-6.23
 base/applications/cmdutils/schtasks # Synced to WineStaging-3.3
 base/applications/cmdutils/taskkill # Synced to WineStaging-3.17
 base/applications/cmdutils/wmic     # Synced to WineStaging-4.0

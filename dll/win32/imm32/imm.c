@@ -53,57 +53,49 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
  */
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
-    DWORD cbData;
-    HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
+    DWORD cbData, dwType;
+    HKEY hLayoutKey;
     LONG error;
     WCHAR szLayout[MAX_PATH];
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
-    if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
+    ZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
+
+    if (IS_IME_HKL(hKL) || !IS_CICERO_MODE() || IS_16BIT_MODE())
     {
-        Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
+        StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
+                         REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
 
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
-            return FALSE;
-        }
-
-        error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
-        if (error)
-        {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
-            RegCloseKey(hLayoutsKey);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
     }
     else
     {
-        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            ERR("RegOpenKeyExW: 0x%08lX\n", error);
             return FALSE;
         }
     }
 
     cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, &dwType,
                              (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
 
     RegCloseKey(hLayoutKey);
-    if (hLayoutsKey)
-        RegCloseKey(hLayoutsKey);
 
     pImeInfoEx->fLoadFlag = 0;
 
-    if (error)
+    if (error != ERROR_SUCCESS || dwType != REG_SZ)
     {
-        ERR("RegQueryValueExW: 0x%08lX\n", error);
-        pImeInfoEx->hkl = NULL;
+        ERR("RegQueryValueExW: 0x%lX, 0x%lX\n", error, dwType);
         return FALSE;
     }
 
@@ -116,7 +108,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
  */
 BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
-    WCHAR szKBD[9];
+    WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
     HKL hOldKL, hNewKL, *pList;
     PIMEDPI pImeDpi;
@@ -228,7 +220,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hOldKL))
                 pOldImeDpi->ImeSelect(hIMC, FALSE);
-            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pOldImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pOldImeDpi->CtfImeSelectEx(hIMC, FALSE, hOldKL);
         }
         pClientImc->hKL = NULL;
@@ -236,7 +228,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
     if (CtfImmIsTextFrameServiceDisabled())
     {
-        if (IS_IMM_MODE() && !Imm32IsCiceroMode())
+        if (IS_IMM_MODE() && !IS_CICERO_MODE())
         {
             bIsNewHKLIme = IS_IME_HKL(hNewKL);
             bIsOldHKLIme = IS_IME_HKL(hOldKL);
@@ -250,7 +242,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hNewKL))
                 pNewImeDpi->ImeSelect(hIMC, TRUE);
-            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pNewImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
 
             pClientImc->hKL = hNewKL;
@@ -397,7 +389,7 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             if (IS_IME_HKL(hNewKL))
                 pNewImeDpi->ImeSelect(hIMC, TRUE);
-            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pNewImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
 
             pClientImc->hKL = hNewKL;
@@ -689,7 +681,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         {
             if (IS_IME_HKL(hKL))
                 pImeDpi->ImeSelect(hIMC, FALSE);
-            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode())
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pImeDpi->CtfImeSelectEx(hIMC, FALSE, hKL);
 
             ImmUnlockImeDpi(pImeDpi);
@@ -789,7 +781,7 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
         {
             if (IS_IME_HKL(hKL))
                 pImeDpi->ImeSelect(hIMC, TRUE);
-            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pImeDpi->CtfImeSelectEx)
+            else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
                 pImeDpi->CtfImeSelectEx(hIMC, TRUE, hKL);
         }
 
@@ -839,7 +831,7 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
-    if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
+    if (dwThreadId == GetCurrentThreadId() && IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
         hOldKL = GetKeyboardLayout(0);
         LangID = LOWORD(hOldKL);
@@ -998,7 +990,7 @@ Quit:
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
         return NULL;
-    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
+    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_DISABLEIME))
         hIMC = NULL;
     ImmUnlockClientImc(pClientImc);
     return hIMC;
@@ -1185,7 +1177,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     hKL = GetKeyboardLayout(0);
 
-    if (Imm32IsCiceroMode() && !Imm32Is16BitMode())
+    if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
         Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
         hKL = GetKeyboardLayout(0);

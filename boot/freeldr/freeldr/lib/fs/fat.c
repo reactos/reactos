@@ -1547,6 +1547,16 @@ const DEVVTBL FatFuncTable =
     L"fastfat",
 };
 
+const DEVVTBL FatXFuncTable =
+{
+    FatClose,
+    FatGetFileInformation,
+    FatOpen,
+    FatRead,
+    FatSeek,
+    L"vfatfs",
+};
+
 const DEVVTBL* FatMount(ULONG DeviceId)
 {
     PFAT_VOLUME_INFO Volume;
@@ -1634,5 +1644,5 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     // Return success
     //
     TRACE("FatMount(%lu) success\n", DeviceId);
-    return &FatFuncTable;
+    return (ISFATX(Volume->FatType) ? &FatXFuncTable : &FatFuncTable);
 }

@@ -10,16 +10,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Proprietà", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Informazioni sul'adattatore", -1, 7, 56, 237, 75
-    LTEXT "Tipo di Chip:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Tipo di DAC:", -1, 13, 80, 58, 8
-    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Quantità di memoria:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Testo dell'adattatore:", -1, 13, 104, 58, 8
-    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "Informazioni sul BIOS:", -1, 13, 116, 58, 8
-    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    LTEXT "Tipo di Chip:", -1, 13, 68, 72, 8
+    LTEXT "", IDC_CHIPTYPE, 91, 68, 150, 8, SS_NOPREFIX
+    LTEXT "Tipo di DAC:", -1, 13, 80, 72, 8
+    LTEXT "", IDC_DACTYPE, 91, 80, 150, 8, SS_NOPREFIX
+    LTEXT "Quantità di memoria:", -1, 13, 92, 72, 8
+    LTEXT "", IDC_MEMORYSIZE, 91, 92, 150, 8, SS_NOPREFIX
+    LTEXT "Testo dell'adattatore:", -1, 13, 104, 72, 8
+    LTEXT "", IDC_ADAPTERSTRING, 91, 104, 150, 8, SS_NOPREFIX
+    LTEXT "Informazioni sul BIOS:", -1, 13, 116, 72, 8
+    LTEXT "", IDC_BIOSINFORMATION, 91, 116, 150, 8, SS_NOPREFIX
     PUSHBUTTON "&Elenco di tutte le modalità...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "High Color (16 bit)"
     IDS_24BPP "True Color (24 bit)"
     IDS_32BPP "True Color (32 bit)"
+    IDS_NOTAVAIL "Not Available"
 END

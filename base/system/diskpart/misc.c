@@ -78,3 +78,71 @@ RoundingDivide(
 {
     return (Dividend + Divisor / 2) / Divisor;
 }
+
+
+PWSTR
+DuplicateQuotedString(
+    _In_ PWSTR pszInString)
+{
+    PWSTR pszOutString = NULL;
+    PWSTR pStart, pEnd;
+    INT nLength;
+
+    if ((pszInString == NULL) || (pszInString[0] == UNICODE_NULL))
+        return NULL;
+
+    if (pszInString[0] == L'"')
+    {
+        if (pszInString[1] == UNICODE_NULL)
+            return NULL;
+
+        pStart = &pszInString[1];
+        pEnd = wcschr(pStart, '"');
+        if (pEnd == NULL)
+        {
+            nLength = wcslen(pStart);
+        }
+        else
+        {
+            nLength = (pEnd - pStart);
+        }
+    }
+    else
+    {
+        pStart = pszInString;
+        nLength = wcslen(pStart);
+    }
+
+    pszOutString = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   (nLength + 1) * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    wcsncpy(pszOutString, pStart, nLength);
+
+    return pszOutString;
+}
+
+
+PWSTR
+DuplicateString(
+    _In_ PWSTR pszInString)
+{
+    PWSTR pszOutString = NULL;
+    INT nLength;
+
+    if ((pszInString == NULL) || (pszInString[0] == UNICODE_NULL))
+        return NULL;
+
+    nLength = wcslen(pszInString);
+    pszOutString = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   (nLength + 1) * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    wcscpy(pszOutString, pszInString);
+
+    return pszOutString;
+}

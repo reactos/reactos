@@ -398,7 +398,7 @@ SeQueryInformationToken(
             ts->TokenType = Token->TokenType;
             ts->ImpersonationLevel = Token->ImpersonationLevel;
             ts->DynamicCharged = Token->DynamicCharged;
-            ts->DynamicAvailable = Token->DynamicAvailable;
+            ts->DynamicAvailable = SepComputeAvailableDynamicSpace(Token->DynamicCharged, Token->PrimaryGroup, Token->DefaultDacl);
             ts->GroupCount = Token->UserAndGroupCount - 1;
             ts->PrivilegeCount = Token->PrivilegeCount;
             ts->ModifiedId = Token->ModifiedId;
@@ -854,7 +854,7 @@ NtQueryInformationToken(
                         ts->TokenType = Token->TokenType;
                         ts->ImpersonationLevel = Token->ImpersonationLevel;
                         ts->DynamicCharged = Token->DynamicCharged;
-                        ts->DynamicAvailable = Token->DynamicAvailable;
+                        ts->DynamicAvailable = SepComputeAvailableDynamicSpace(Token->DynamicCharged, Token->PrimaryGroup, Token->DefaultDacl);
                         ts->GroupCount = Token->UserAndGroupCount - 1;
                         ts->PrivilegeCount = Token->PrivilegeCount;
                         ts->ModifiedId = Token->ModifiedId;
@@ -905,9 +905,83 @@ NtQueryInformationToken(
             }
 
             case TokenGroupsAndPrivileges:
-                DPRINT1("NtQueryInformationToken(TokenGroupsAndPrivileges) not implemented\n");
-                Status = STATUS_NOT_IMPLEMENTED;
+            {
+                PSID Sid, RestrictedSid;
+                ULONG SidLen, RestrictedSidLen;
+                ULONG UserGroupLength, RestrictedSidLength, PrivilegeLength;
+                PTOKEN_GROUPS_AND_PRIVILEGES GroupsAndPrivs = (PTOKEN_GROUPS_AND_PRIVILEGES)TokenInformation;
+
+                DPRINT("NtQueryInformationToken(TokenGroupsAndPrivileges)\n");
+                UserGroupLength = RtlLengthSidAndAttributes(Token->UserAndGroupCount, Token->UserAndGroups);
+                RestrictedSidLength = RtlLengthSidAndAttributes(Token->RestrictedSidCount, Token->RestrictedSids);
+                PrivilegeLength = Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+
+                RequiredLength = sizeof(TOKEN_GROUPS_AND_PRIVILEGES) +
+                                 UserGroupLength + RestrictedSidLength + PrivilegeLength;
+
+                _SEH2_TRY
+                {
+                    if (TokenInformationLength >= RequiredLength)
+                    {
+                        GroupsAndPrivs->SidCount = Token->UserAndGroupCount;
+                        GroupsAndPrivs->SidLength = UserGroupLength;
+                        GroupsAndPrivs->Sids = (PSID_AND_ATTRIBUTES)(GroupsAndPrivs + 1);
+
+                        Sid = (PSID)((ULONG_PTR)GroupsAndPrivs->Sids + (Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES)));
+                        SidLen = UserGroupLength - (Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES));
+                        Status = RtlCopySidAndAttributesArray(Token->UserAndGroupCount,
+                                                              Token->UserAndGroups,
+                                                              SidLen,
+                                                              GroupsAndPrivs->Sids,
+                                                              Sid,
+                                                              &Unused.PSid,
+                                                              &Unused.Ulong);
+                        NT_ASSERT(NT_SUCCESS(Status));
+
+                        GroupsAndPrivs->RestrictedSidCount = Token->RestrictedSidCount;
+                        GroupsAndPrivs->RestrictedSidLength = RestrictedSidLength;
+                        GroupsAndPrivs->RestrictedSids = NULL;
+                        if (SeTokenIsRestricted(Token))
+                        {
+                            GroupsAndPrivs->RestrictedSids = (PSID_AND_ATTRIBUTES)((ULONG_PTR)GroupsAndPrivs->Sids + UserGroupLength);
+
+                            RestrictedSid = (PSID)((ULONG_PTR)GroupsAndPrivs->RestrictedSids + (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES)));
+                            RestrictedSidLen = RestrictedSidLength - (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+                            Status = RtlCopySidAndAttributesArray(Token->RestrictedSidCount,
+                                                                  Token->RestrictedSids,
+                                                                  RestrictedSidLen,
+                                                                  GroupsAndPrivs->RestrictedSids,
+                                                                  RestrictedSid,
+                                                                  &Unused.PSid,
+                                                                  &Unused.Ulong);
+                            NT_ASSERT(NT_SUCCESS(Status));
+                        }
+
+                        GroupsAndPrivs->PrivilegeCount = Token->PrivilegeCount;
+                        GroupsAndPrivs->PrivilegeLength = PrivilegeLength;
+                        GroupsAndPrivs->Privileges = (PLUID_AND_ATTRIBUTES)((ULONG_PTR)(GroupsAndPrivs + 1) +
+                                                     UserGroupLength + RestrictedSidLength);
+                        RtlCopyLuidAndAttributesArray(Token->PrivilegeCount,
+                                                      Token->Privileges,
+                                                      GroupsAndPrivs->Privileges);
+
+                        GroupsAndPrivs->AuthenticationId = Token->AuthenticationId;
+                    }
+                    else
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+
+                    *ReturnLength = RequiredLength;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
                 break;
+            }
 
             case TokenRestrictedSids:
             {
@@ -1042,7 +1116,7 @@ NtQueryInformationToken(
  * the operation in question. A failure NTSTATUS code is returned otherwise.
  *
  * @remarks
- * The function is partly implemented, mainly TokenOrigin and TokenDefaultDacl.
+ * The function is partly implemented, mainly TokenOrigin.
  */
 _Must_inspect_result_
 __kernel_entry
@@ -1153,8 +1227,10 @@ NtSetInformationToken(
                 if (TokenInformationLength >= sizeof(TOKEN_PRIMARY_GROUP))
                 {
                     PTOKEN_PRIMARY_GROUP tpg = (PTOKEN_PRIMARY_GROUP)TokenInformation;
+                    ULONG AclSize;
+                    ULONG_PTR PrimaryGroup;
                     PSID InputSid = NULL, CapturedSid;
-                    ULONG PrimaryGroupIndex;
+                    ULONG PrimaryGroupIndex, NewDynamicLength;
 
                     _SEH2_TRY
                     {
@@ -1177,17 +1253,78 @@ NtSetInformationToken(
                         /* Lock the token */
                         SepAcquireTokenLockExclusive(Token);
 
-                        /* Find the primary group amongst the existing token user and groups */
-                        Status = SepFindPrimaryGroupAndDefaultOwner(Token,
-                                                                    CapturedSid,
-                                                                    NULL,
-                                                                    &PrimaryGroupIndex,
-                                                                    NULL);
+                        /*
+                         * We can whack the token's primary group only if
+                         * the charged dynamic space boundary allows us
+                         * to do so. Exceeding this boundary and we're
+                         * busted out.
+                         */
+                        AclSize = Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0;
+                        NewDynamicLength = RtlLengthSid(CapturedSid) + AclSize;
+                        if (NewDynamicLength > Token->DynamicCharged)
+                        {
+                            SepReleaseTokenLock(Token);
+                            SepReleaseSid(CapturedSid, PreviousMode, FALSE);
+                            Status = STATUS_ALLOTTED_SPACE_EXCEEDED;
+                            DPRINT1("NtSetInformationToken(): Couldn't assign new primary group, space exceeded (current length %u, new length %lu)\n",
+                                    Token->DynamicCharged, NewDynamicLength);
+                            goto Cleanup;
+                        }
+
+                        /*
+                         * The dynamic part of the token may require a rebuild
+                         * if the current dynamic area is too small. If not then
+                         * we're pretty much good as is.
+                         */
+                        Status = SepRebuildDynamicPartOfToken(Token, NewDynamicLength);
                         if (NT_SUCCESS(Status))
                         {
-                            /* Found it */
-                            Token->PrimaryGroup = Token->UserAndGroups[PrimaryGroupIndex].Sid;
-                            ExAllocateLocallyUniqueId(&Token->ModifiedId);
+                            /* Find the primary group amongst the existing token user and groups */
+                            Status = SepFindPrimaryGroupAndDefaultOwner(Token,
+                                                                        CapturedSid,
+                                                                        NULL,
+                                                                        &PrimaryGroupIndex,
+                                                                        NULL);
+                            if (NT_SUCCESS(Status))
+                            {
+                                /*
+                                 * We have found it. Add the length of
+                                 * the previous primary group SID to the
+                                 * available dynamic area.
+                                 */
+                                Token->DynamicAvailable += RtlLengthSid(Token->PrimaryGroup);
+
+                                /*
+                                 * Move the default DACL if it's not at the
+                                 * head of the dynamic part.
+                                 */
+                                if ((Token->DefaultDacl) &&
+                                    ((PULONG)(Token->DefaultDacl) != Token->DynamicPart))
+                                {
+                                    RtlMoveMemory(Token->DynamicPart,
+                                                  Token->DefaultDacl,
+                                                  RtlLengthSid(Token->PrimaryGroup));
+                                    Token->DefaultDacl = (PACL)(Token->DynamicPart);
+                                }
+
+                                /* Take away available space from the dynamic area */
+                                Token->DynamicAvailable -= RtlLengthSid(Token->UserAndGroups[PrimaryGroupIndex].Sid);
+
+                                /*
+                                 * And assign the new primary group. For that
+                                 * we have to make sure where the primary group
+                                 * is going to stay in memory, so if this token
+                                 * has a default DACL then add up its size with
+                                 * the address of the dynamic part.
+                                 */
+                                PrimaryGroup = (ULONG_PTR)(Token->DynamicPart) + AclSize;
+                                RtlCopySid(RtlLengthSid(Token->UserAndGroups[PrimaryGroupIndex].Sid),
+                                           (PVOID)PrimaryGroup,
+                                           Token->UserAndGroups[PrimaryGroupIndex].Sid);
+                                Token->PrimaryGroup = (PSID)PrimaryGroup;
+
+                                ExAllocateLocallyUniqueId(&Token->ModifiedId);
+                            }
                         }
 
                         /* Unlock the token */
@@ -1235,68 +1372,76 @@ NtSetInformationToken(
                                                &CapturedAcl);
                         if (NT_SUCCESS(Status))
                         {
-                            ULONG DynamicLength;
+                            ULONG NewDynamicLength;
+                            ULONG_PTR Acl;
 
                             /* Lock the token */
                             SepAcquireTokenLockExclusive(Token);
 
-                            //
-                            // NOTE: So far our dynamic area only contains
-                            // the default dacl, so this makes the following
-                            // code pretty simple. The day where it stores
-                            // other data, the code will require adaptations.
-                            //
-
-                            DynamicLength = Token->DynamicAvailable;
-                            // Add here any other data length present in the dynamic area...
-                            if (Token->DefaultDacl)
-                                DynamicLength += Token->DefaultDacl->AclSize;
-
-                            /* Reallocate the dynamic area if it is too small */
-                            Status = STATUS_SUCCESS;
-                            if ((DynamicLength < CapturedAcl->AclSize) ||
-                                (Token->DynamicPart == NULL))
+                            /*
+                             * We can whack the token's default DACL only if
+                             * the charged dynamic space boundary allows us
+                             * to do so. Exceeding this boundary and we're
+                             * busted out.
+                             */
+                            NewDynamicLength = CapturedAcl->AclSize + RtlLengthSid(Token->PrimaryGroup);
+                            if (NewDynamicLength > Token->DynamicCharged)
                             {
-                                PVOID NewDynamicPart;
-
-                                NewDynamicPart = ExAllocatePoolWithTag(PagedPool,
-                                                                       CapturedAcl->AclSize,
-                                                                       TAG_TOKEN_DYNAMIC);
-                                if (NewDynamicPart == NULL)
-                                {
-                                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                                }
-                                else
-                                {
-                                    if (Token->DynamicPart != NULL)
-                                    {
-                                        // RtlCopyMemory(NewDynamicPart, Token->DynamicPart, DynamicLength);
-                                        ExFreePoolWithTag(Token->DynamicPart, TAG_TOKEN_DYNAMIC);
-                                    }
-                                    Token->DynamicPart = NewDynamicPart;
-                                    Token->DynamicAvailable = 0;
-                                }
-                            }
-                            else
-                            {
-                                Token->DynamicAvailable = DynamicLength - CapturedAcl->AclSize;
+                                SepReleaseTokenLock(Token);
+                                SepReleaseAcl(CapturedAcl, PreviousMode, TRUE);
+                                Status = STATUS_ALLOTTED_SPACE_EXCEEDED;
+                                DPRINT1("NtSetInformationToken(): Couldn't assign new default DACL, space exceeded (current length %u, new length %lu)\n",
+                                        Token->DynamicCharged, NewDynamicLength);
+                                goto Cleanup;
                             }
 
+                            /*
+                             * The dynamic part of the token may require a rebuild
+                             * if the current dynamic area is too small. If not then
+                             * we're pretty much good as is.
+                             */
+                            Status = SepRebuildDynamicPartOfToken(Token, NewDynamicLength);
                             if (NT_SUCCESS(Status))
                             {
+                                /*
+                                 * Before setting up a new DACL for the
+                                 * token object we add up the size of
+                                 * the old DACL to the available dynamic
+                                 * area
+                                 */
+                                if (Token->DefaultDacl)
+                                {
+                                    Token->DynamicAvailable += Token->DefaultDacl->AclSize;
+                                }
+
+                                /*
+                                 * Move the primary group if it's not at the
+                                 * head of the dynamic part.
+                                 */
+                                if ((PULONG)(Token->PrimaryGroup) != Token->DynamicPart)
+                                {
+                                    RtlMoveMemory(Token->DynamicPart,
+                                                  Token->PrimaryGroup,
+                                                  RtlLengthSid(Token->PrimaryGroup));
+                                    Token->PrimaryGroup = (PSID)(Token->DynamicPart);
+                                }
+
+                                /* Take away available space from the dynamic area */
+                                Token->DynamicAvailable -= CapturedAcl->AclSize;
+
                                 /* Set the new dacl */
-                                Token->DefaultDacl = (PVOID)Token->DynamicPart;
-                                RtlCopyMemory(Token->DefaultDacl,
+                                Acl = (ULONG_PTR)(Token->DynamicPart) + RtlLengthSid(Token->PrimaryGroup);
+                                RtlCopyMemory((PVOID)Acl,
                                               CapturedAcl,
                                               CapturedAcl->AclSize);
+                                Token->DefaultDacl = (PACL)Acl;
 
                                 ExAllocateLocallyUniqueId(&Token->ModifiedId);
                             }
 
-                            /* Unlock the token */
+                            /* Unlock the token and release the ACL */
                             SepReleaseTokenLock(Token);
-
-                            ExFreePoolWithTag(CapturedAcl, TAG_ACL);
+                            SepReleaseAcl(CapturedAcl, PreviousMode, TRUE);
                         }
                     }
                     else

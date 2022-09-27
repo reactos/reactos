@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2005  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2001-2005  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 
 /* Just some stuff */
 #define VERSION         "FreeLoader v3.0"
-#define COPYRIGHT       "Copyright (C) 1998-" COPYRIGHT_YEAR " ReactOS Team"
+#define COPYRIGHT       "Copyright (C) 1996-" COPYRIGHT_YEAR " ReactOS Project"
 #define AUTHOR_EMAIL    "<www.reactos.org>"
-#define BY_AUTHOR       "by ReactOS Team"
+#define BY_AUTHOR       "by ReactOS Project"
 
 // FreeLoader version defines
 //

@@ -119,6 +119,9 @@ KiDispatchExceptionToUser(
     /* Get pointer to the usermode context, exception record and machine frame */
     UserStack = (PKUSER_EXCEPTION_STACK)UserRsp;
 
+    /* Enable interrupts */
+    _enable();
+
     /* Set up the user-stack */
     _SEH2_TRY
     {
@@ -143,6 +146,7 @@ KiDispatchExceptionToUser(
         // FIXME: handle stack overflow
 
         /* Nothing we can do here */
+        _disable();
         _SEH2_YIELD(return);
     }
     _SEH2_END;
@@ -164,6 +168,8 @@ KiDispatchExceptionToUser(
 
     /* Set RIP to the User-mode Dispatcher */
     TrapFrame->Rip = (ULONG64)KeUserExceptionDispatcher;
+
+    _disable();
 
     /* Exit to usermode */
     KiServiceExit2(TrapFrame);
@@ -202,6 +208,9 @@ KiPrepareUserDebugData(void)
     Teb = KeGetCurrentThread()->Teb;
     if (!Teb) return;
 
+    /* Enable interrupts */
+    _enable();
+
     _SEH2_TRY
     {
         /* Get a pointer to the loader data */
@@ -230,6 +239,8 @@ KiPrepareUserDebugData(void)
     {
     }
     _SEH2_END;
+
+    _disable();
 }
 
 VOID
@@ -350,9 +361,10 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
-            /* Forward exception to user mode (does not return) */
+            /* Forward exception to user mode (does not return, if successful) */
             KiDispatchExceptionToUser(TrapFrame, &Context, ExceptionRecord);
-            NT_ASSERT(FALSE);
+
+            /* Failed to dispatch, fall through for second chance handling */
         }
 
         /* Try second chance */
@@ -425,6 +437,184 @@ KiNpxNotAvailableFaultHandler(
     return -1;
 }
 
+static
+BOOLEAN
+KiIsPrivilegedInstruction(PUCHAR Ip, BOOLEAN Wow64)
+{
+    ULONG i;
+
+    /* Handle prefixes */
+    for (i = 0; i < 15; i++)
+    {
+        if (!Wow64)
+        {
+            /* Check for REX prefix */
+            if ((Ip[0] >= 0x40) && (Ip[0] <= 0x4F))
+            {
+                Ip++;
+                continue;
+            }
+        }
+
+        switch (Ip[0])
+        {
+            /* Check prefixes */
+            case 0x26: // ES
+            case 0x2E: // CS / null
+            case 0x36: // SS
+            case 0x3E: // DS
+            case 0x64: // FS
+            case 0x65: // GS
+            case 0x66: // OP
+            case 0x67: // ADDR
+            case 0xF0: // LOCK
+            case 0xF2: // REP
+            case 0xF3: // REP INS/OUTS
+                Ip++;
+                continue;
+        }
+
+        break;
+    }
+
+    if (i == 15)
+    {
+        /* Too many prefixes. Should only happen, when the code was concurrently modified. */
+         return FALSE;
+    }
+
+    switch (Ip[0])
+    {
+        case 0xF4: // HLT
+        case 0xFA: // CLI
+        case 0xFB: // STI
+            return TRUE;
+
+        case 0x0F:
+        {
+            switch (Ip[1])
+            {
+                case 0x06: // CLTS
+                case 0x07: // SYSRET
+                case 0x08: // INVD
+                case 0x09: // WBINVD
+                case 0x20: // MOV CR, XXX
+                case 0x21: // MOV DR, XXX
+                case 0x22: // MOV XXX, CR
+                case 0x23: // MOV YYY, DR
+                case 0x30: // WRMSR
+                case 0x32: // RDMSR
+                case 0x33: // RDPMC
+                case 0x35: // SYSEXIT
+                case 0x78: // VMREAD
+                case 0x79: // VMWRITE
+                    return TRUE;
+
+                case 0x00:
+                {
+                    /* Check MODRM Reg field */
+                    switch ((Ip[2] >> 3) & 0x7)
+                    {
+                        case 2: // LLDT
+                        case 3: // LTR
+                            return TRUE;
+                    }
+                    break;
+                }
+
+                case 0x01:
+                {
+                    switch (Ip[2])
+                    {
+                        case 0xC1: // VMCALL
+                        case 0xC2: // VMLAUNCH
+                        case 0xC3: // VMRESUME
+                        case 0xC4: // VMXOFF
+                        case 0xC8: // MONITOR
+                        case 0xC9: // MWAIT
+                        case 0xD1: // XSETBV
+                        case 0xF8: // SWAPGS
+                            return TRUE;
+                    }
+
+                    /* Check MODRM Reg field */
+                    switch ((Ip[2] >> 3) & 0x7)
+                    {
+                        case 2: // LGDT
+                        case 3: // LIDT
+                        case 6: // LMSW
+                        case 7: // INVLPG / SWAPGS / RDTSCP
+                            return TRUE;
+                    }
+                    break;
+                }
+
+                case 0x38:
+                {
+                    switch (Ip[2])
+                    {
+                        case 0x80: // INVEPT
+                        case 0x81: // INVVPID
+                            return TRUE;
+                    }
+                    break;
+                }
+
+                case 0xC7:
+                {
+                    /* Check MODRM Reg field */
+                    switch ((Ip[2] >> 3) & 0x7)
+                    {
+                        case 0x06: // VMPTRLD, VMCLEAR, VMXON
+                        case 0x07: // VMPTRST
+                            return TRUE;
+                    }
+                    break;
+                }
+            }
+
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+static
+NTSTATUS
+KiGeneralProtectionFaultUserMode(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    BOOLEAN Wow64 = TrapFrame->SegCs == KGDT64_R3_CMCODE;
+    PUCHAR InstructionPointer;
+    NTSTATUS Status;
+
+    /* We need to decode the instruction at RIP */
+    InstructionPointer = (PUCHAR)TrapFrame->Rip;
+
+    _SEH2_TRY
+    {
+        /* Probe the instruction address */
+        ProbeForRead(InstructionPointer, 64, 1);
+
+        /* Check if it's a privileged instruction */
+        if (KiIsPrivilegedInstruction(InstructionPointer, Wow64))
+        {
+            Status = STATUS_PRIVILEGED_INSTRUCTION;
+        }
+        else
+        {
+            Status = STATUS_ACCESS_VIOLATION;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    return Status;
+}
 
 NTSTATUS
 NTAPI
@@ -436,8 +626,7 @@ KiGeneralProtectionFaultHandler(
     /* Check for user-mode GPF */
     if (TrapFrame->SegCs & 3)
     {
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        return KiGeneralProtectionFaultUserMode(TrapFrame);
     }
 
     /* Check for lazy segment load */
@@ -452,15 +641,6 @@ KiGeneralProtectionFaultHandler(
         /* Fix it */
         TrapFrame->SegEs = (KGDT64_R3_DATA | RPL_MASK);
         return STATUS_SUCCESS;
-    }
-
-    /* Check for nested exception */
-    if ((TrapFrame->Rip >= (ULONG64)KiGeneralProtectionFaultHandler) &&
-        (TrapFrame->Rip < (ULONG64)KiGeneralProtectionFaultHandler))
-    {
-        /* Not implemented */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
     }
 
     /* Get Instruction Pointer */
@@ -492,7 +672,49 @@ NTAPI
 KiXmmExceptionHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
-    return -1;
+    ULONG ExceptionCode;
+
+    if ((TrapFrame->MxCsr & _MM_EXCEPT_INVALID) &&
+        !(TrapFrame->MxCsr & _MM_MASK_INVALID))
+    {
+        /* Invalid operation */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DENORM) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DENORM))
+    {
+        /* Denormalized operand. Yes, this is what Windows returns. */
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_DIV_ZERO) &&
+             !(TrapFrame->MxCsr & _MM_MASK_DIV_ZERO))
+    {
+        /* Divide by zero */
+        ExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_OVERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_OVERFLOW))
+    {
+        /* Overflow */
+        ExceptionCode = STATUS_FLOAT_OVERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_UNDERFLOW) &&
+             !(TrapFrame->MxCsr & _MM_MASK_UNDERFLOW))
+    {
+        /* Underflow */
+        ExceptionCode = STATUS_FLOAT_UNDERFLOW;
+    }
+    else if ((TrapFrame->MxCsr & _MM_EXCEPT_INEXACT) &&
+             !(TrapFrame->MxCsr & _MM_MASK_INEXACT))
+    {
+        /* Precision */
+        ExceptionCode = STATUS_FLOAT_INEXACT_RESULT;
+    }
+    else
+    {
+        /* Should not happen */
+        ASSERT(FALSE);
+    }
+    
+    return ExceptionCode;
 }

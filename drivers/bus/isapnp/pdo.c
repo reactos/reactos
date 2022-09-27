@@ -146,7 +146,7 @@ IsaPdoQueryId(
                                            &End,
                                            &Remaining,
                                            0,
-                                           L"ISAPNP\\%.3S%04x",
+                                           L"ISAPNP\\%.3S%04X",
                                            LogDev->VendorId,
                                            LogDev->ProdId);
             if (!NT_VERIFY(NT_SUCCESS(Status)))
@@ -194,7 +194,7 @@ IsaPdoQueryId(
                                            &End,
                                            &Remaining,
                                            0,
-                                           L"ISAPNP\\%.3S%04x",
+                                           L"ISAPNP\\%.3S%04X",
                                            LogDev->VendorId,
                                            LogDev->ProdId);
             if (!NT_VERIFY(NT_SUCCESS(Status)))
@@ -225,7 +225,7 @@ IsaPdoQueryId(
                                            &End,
                                            &Remaining,
                                            0,
-                                           L"*%.3S%04x",
+                                           L"*%.3S%04X",
                                            LogDev->LogVendorId,
                                            LogDev->LogProdId);
             if (!NT_VERIFY(NT_SUCCESS(Status)))
@@ -275,7 +275,7 @@ IsaPdoQueryId(
                                                &End,
                                                &Remaining,
                                                0,
-                                               L"*%.3S%04x",
+                                               L"*%.3S%04X",
                                                CompatibleId->VendorId,
                                                CompatibleId->ProdId);
                 if (!NT_VERIFY(NT_SUCCESS(Status)))

@@ -204,7 +204,7 @@ CreateLogicalPartition(
     ULONGLONG ullOffset = 0ULL;
     BOOL bNoErr = FALSE;
 #endif
-    UCHAR PartitionType = 6;
+    UCHAR PartitionType = PARTITION_HUGE;
     INT i, length;
     PWSTR pszSuffix = NULL;
     NTSTATUS Status;
@@ -404,7 +404,7 @@ CreatePrimaryPartition(
     ULONGLONG ullOffset = 0ULL;
     BOOL bNoErr = FALSE;
 #endif
-    UCHAR PartitionType = 6;
+    UCHAR PartitionType = PARTITION_HUGE;
     INT i, length;
     PWSTR pszSuffix = NULL;
     NTSTATUS Status;

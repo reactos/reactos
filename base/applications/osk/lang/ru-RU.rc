@@ -1,67 +1,67 @@
 /*
- * PROJECT:         ReactOS On-Screen Keyboard
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/lang/ru-RU.rc
- * PURPOSE:         On screen keyboard (Russian resources)
- * PROGRAMMERS:     Denis ROBERT
+ * PROJECT:      ReactOS On-Screen Keyboard
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Russian resource file
+ * TRANSLATORS:  Copyright 2022 Artyom Ovsyannikov <artemka6834@gmail.com>
+ *               Copyright 2022 Stanislav Motylkov <binarymaster@mail.ru>
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "File"
+    POPUP "Файл"
     BEGIN
-        MENUITEM "&Exit", IDM_EXIT
+        MENUITEM "&Выход", IDM_EXIT
     END
 
-    POPUP "Keyboard"
+    POPUP "Клавиатура"
     BEGIN
-        MENUITEM "Enhanced Keyboard", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Standard Keyboard", IDM_STANDARD_KB
+        MENUITEM "Расширенная клавиатура", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Стандартная клавиатура", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "Обычная раскладка", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Блочная раскладка", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
-        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+        MENUITEM "101 клавиша", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 клавиши", IDM_102_KEYS, GRAYED
+        MENUITEM "106 клавиш", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Settings"
+    POPUP "Настройки"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED
+        MENUITEM "Поверх остальных окон", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
+        MENUITEM "&Звук нажатия", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Режим ввода...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Font...", IDM_FONT
+        MENUITEM "&Шрифт...", IDM_FONT
     END
 
-    POPUP "Help"
+    POPUP "Справка"
     BEGIN
-        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "&Справка", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+        MENUITEM "&О программе ""Экранная клавиатура""", IDM_ABOUT
     END
 END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "On-Screen Keyboard"
+CAPTION "Экранная клавиатура"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Экранная клавиатура обеспечивает минимальный функционал для пользователей с ограниченными физическими возможностями. Пользователям с ограниченными физическими возможностями нужны более функциональные программы.", IDC_STATIC, 36, 7, 207, 41
+    CONTROL "Не показывать это сообщение снова", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OSK "On-Screen Keyboard"
+    IDS_OSK "Экранная клавиатура"
     IDS_AUTHORS "Copyright Denis Robert"
     IDS_NUMLOCK "Num"
     IDS_CAPSLOCK "Caps"

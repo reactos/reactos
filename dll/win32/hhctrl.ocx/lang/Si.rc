@@ -25,6 +25,9 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Vsebina"
     IDS_INDEX        "I&ndeks"
     IDS_SEARCH       "&Iskanje"

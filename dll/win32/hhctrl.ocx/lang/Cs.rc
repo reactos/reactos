@@ -27,6 +27,9 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Obsah"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Hledat"

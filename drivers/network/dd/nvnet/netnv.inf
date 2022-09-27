@@ -237,10 +237,12 @@ HKR, , TypesSupported,   0x00010001, 7
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
 nVidiaMfg = "nVidia"
 
+; Localizable
 OM = "Optimization Mode"
 M1 = "Dynamic"
 M2 = "CPU"
@@ -277,8 +279,6 @@ MCP79.DeviceDesc = "nVidia MCP79 PCI Ethernet Controller"
 MCP89.DeviceDesc = "nVidia MCP89 PCI Ethernet Controller"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 OM = "Оптимизировать"
 M1 = "Динамически"
 M2 = "Нагрузку на ЦП"

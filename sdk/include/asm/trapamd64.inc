@@ -97,6 +97,9 @@ MACRO(EnterTrap, Flags)
         mov [rbp + KTRAP_FRAME_SegGs], gs
     endif
 
+    /* Save MCXSR */
+    stmxcsr [rbp + KTRAP_FRAME_MxCsr]
+
 #if DBG
     mov ecx, MSR_GS_BASE
     rdmsr
@@ -115,6 +118,9 @@ MACRO(EnterTrap, Flags)
     mov ds, ax
     mov es, ax
     swapgs
+
+    /* Load kernel MXCSR */
+    ldmxcsr gs:[PcMxCsr]
 
 #if DBG
     /* Check IRQL */
@@ -254,6 +260,9 @@ kernel_mode_return:
         movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
         movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
     endif
+
+    /* Restore MCXSR */
+    ldmxcsr [rbp + KTRAP_FRAME_MxCsr]
 
     /* Restore rbp */
     mov rbp, [rbp + KTRAP_FRAME_Rbp]

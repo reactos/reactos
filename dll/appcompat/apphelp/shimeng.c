@@ -878,7 +878,13 @@ VOID SeiAppendInExclude(PARRAY dest, PCWSTR ModuleName, BOOL IsInclude)
     }
 }
 
-/* Read the INEXCLUD tags from a given parent tag */
+/* Read the INEXCLUD tags from a given parent tag
+FIXME:
+    Some observed tags:
+        '*' with include
+        '$' with include, followed by '*' without include
+    Include list logging, referring to: (MODE: EA)
+*/
 VOID SeiReadInExclude(PDB pdb, TAGID parent, PARRAY dest)
 {
     TAGID InExcludeTag;
@@ -1175,7 +1181,7 @@ VOID SeiResetEntryProcessed(PPEB Peb)
     }
 }
 
-VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
+VOID SeiInit(LPCWSTR ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery, BOOLEAN ProcessInit)
 {
     DWORD n;
     ARRAY ShimRefArray;
@@ -1197,15 +1203,18 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 
     SeiCheckComPlusImage(Peb->ImageBaseAddress);
 
-    /* Mark all modules loaded until now as 'LDRP_ENTRY_PROCESSED' so that their entrypoint is not called while we are loading shims */
-    SeiSetEntryProcessed(Peb);
+    if (ProcessInit)
+    {
+        /* Mark all modules loaded until now as 'LDRP_ENTRY_PROCESSED' so that their entrypoint is not called while we are loading shims */
+        SeiSetEntryProcessed(Peb);
+    }
 
     /* TODO:
     if (pQuery->trApphelp)
         SeiDisplayAppHelp(?pQuery->trApphelp?);
     */
 
-    SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(ExePath(%wZ))\n", ProcessImage);
+    SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(ExePath(%S))\n", ProcessImage);
     SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray, &ShimFlags);
     if (ShimFlags.AppCompatFlags.QuadPart)
     {
@@ -1344,8 +1353,11 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     SeiResolveAPIs();
     PatchNewModules(Peb);
 
-    /* Remove the 'LDRP_ENTRY_PROCESSED' flag from entries we modified, so that the loader can continue to process them */
-    SeiResetEntryProcessed(Peb);
+    if (ProcessInit)
+    {
+        /* Remove the 'LDRP_ENTRY_PROCESSED' flag from entries we modified, so that the loader can continue to process them */
+        SeiResetEntryProcessed(Peb);
+    }
 }
 
 
@@ -1413,7 +1425,7 @@ VOID NTAPI SE_InstallBeforeInit(PUNICODE_STRING ProcessImage, PVOID pShimData)
     }
 
     g_bShimDuringInit = TRUE;
-    SeiInit(ProcessImage, hsdb, &QueryResult);
+    SeiInit(ProcessImage->Buffer, hsdb, &QueryResult, TRUE);
     g_bShimDuringInit = FALSE;
 
     SdbReleaseDatabase(hsdb);
@@ -1462,5 +1474,22 @@ BOOL WINAPI SE_IsShimDll(PVOID BaseAddress)
     SHIMENG_INFO("(%p)\n", BaseAddress);
 
     return SeiGetShimModuleInfo(BaseAddress) != NULL;
+}
+
+/* 'Private' ntdll function */
+BOOLEAN
+NTAPI
+LdrInitShimEngineDynamic(IN PVOID BaseAddress);
+
+
+BOOL WINAPI SE_DynamicShim(LPCWSTR ProcessImage, HSDB hsdb, PVOID pQueryResult, LPCSTR Module, LPDWORD lpdwDynamicToken)
+{
+    g_bShimDuringInit = TRUE;
+    SeiInit(ProcessImage, hsdb, pQueryResult, FALSE);
+    g_bShimDuringInit = FALSE;
+
+    LdrInitShimEngineDynamic(g_hInstance);
+
+    return TRUE;
 }
 

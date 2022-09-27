@@ -26,7 +26,7 @@ BEGIN
     AUTOCHECKBOX "将音量图标放入任务栏(&I)", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "高级(&V)...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "扬声器设置", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "用下列设置更改每个扬声器音量和其他设置。", -1, 70, 155, 150, 36
     PUSHBUTTON "扬声器音量(&S)...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "高级(&D)...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
@@ -189,7 +189,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "多声道"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "这里是说明。", 9506, 8, 4, 212, 24
+    LTEXT "By moving the sliders below you can adjust the volume of all speakers connected to this computer.", 9506, 8, 4, 212, 24
     LTEXT "低", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17

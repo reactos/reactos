@@ -59,6 +59,10 @@
 #define	_PC_24		0x00020000
 #define	_PC_53		0x00010000
 #define	_PC_64		0x00000000
+#define _DN_SAVE	0x00000000
+#define _DN_FLUSH	0x01000000
+#define _DN_FLUSH_OPERANDS_SAVE_RESULTS 0x02000000
+#define _DN_SAVE_OPERANDS_FLUSH_RESULTS 0x03000000
 
 /* These are also defined in Mingw math.h, needed to work around
    GCC build issues.  */

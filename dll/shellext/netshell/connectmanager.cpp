@@ -135,15 +135,19 @@ CNetConnection::Disconnect()
         PropChangeParams.Scope = DICS_FLAG_CONFIGSPECIFIC;
         PropChangeParams.HwProfile = 0;
 
-        if (SetupDiSetClassInstallParams(hInfo, &DevInfo, &PropChangeParams.ClassInstallHeader, sizeof(SP_PROPCHANGE_PARAMS)))
+        if (!SetupDiSetClassInstallParams(hInfo, &DevInfo, &PropChangeParams.ClassInstallHeader, sizeof(SP_PROPCHANGE_PARAMS)) ||
+            !SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hInfo, &DevInfo))
         {
-            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hInfo, &DevInfo);
+            hr = HRESULT_FROM_WIN32(GetLastError());
         }
     }
     SetupDiDestroyDeviceInfoList(hInfo);
 
     swprintf(szPath, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pDisplayName);
     CoTaskMemFree(pDisplayName);
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return E_FAIL;

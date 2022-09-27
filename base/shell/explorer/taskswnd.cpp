@@ -491,7 +491,7 @@ public:
     {
         HICON hIcon = NULL;
 #define GET_ICON(type) \
-    SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
+    SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_NOTIMEOUTIFNOTHUNG, 100, (PDWORD_PTR)&hIcon)
 
         LRESULT bAlive = GET_ICON(ICON_SMALL2);
         if (hIcon)
@@ -512,11 +512,11 @@ public:
         }
 #undef GET_ICON
 
-        hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
+        hIcon = (HICON)GetClassLongPtr(hwnd, GCLP_HICONSM);
         if (hIcon)
             return hIcon;
 
-        return (HICON)GetClassLongPtr(hwnd, GCL_HICON);
+        return (HICON)GetClassLongPtr(hwnd, GCLP_HICON);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)

@@ -55,28 +55,28 @@ AddService = , 2
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "RAM disk controller"
 RamdiskVolume.Desc = "RAM disk device (volume)"
 Ramdisk.ServiceDesc = "ReactOS RAM Disk Driver"
 
 [Strings.040C]
-ReactOS = "Equipe ReactOS"
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Controleur de disque virtuel"
 RamdiskVolume.Desc = "Disque virtuel (volume)"
 Ramdisk.ServiceDesc = "Pilote de disque virtuel ReactOS"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Kontroler dysku RAM"
 RamdiskVolume.Desc = "Urządzenie dysku RAM (wolumin)"
 Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu ReactOS"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 RamdiskClassName = "RAM-диски"
 RamdiskBus.Desc = "Контроллер RAM-диска"
 RamdiskVolume.Desc = "Устройство RAM-диска (том)"

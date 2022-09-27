@@ -10,10 +10,10 @@ list(APPEND _keyboard_layouts
     kbdazel
     kbdbe
     kbdbga
-    kbdbgm
     kbdbgt
     kbdblr
     kbdbr
+    kbdbu
     kbdbur
     kbdcan
     kbdcr
@@ -22,7 +22,6 @@ list(APPEND _keyboard_layouts
     kbdda
     kbddv
     kbdeo
-    kbdes
     kbdest
     kbdfc
     kbdfi
@@ -31,7 +30,7 @@ list(APPEND _keyboard_layouts
     kbdgerg
     kbdgneo
     kbdgr
-    kbdgrist
+    kbdgr1
     kbdhe
     kbdheb
     kbdhu
@@ -43,9 +42,9 @@ list(APPEND _keyboard_layouts
     kbdinmal
     kbdir
     kbdit
-    kbdja
+    kbdjpn
     kbdkaz
-    kbdko
+    kbdkor
     kbdla
     kbdlt1
     kbdlv
@@ -61,8 +60,9 @@ list(APPEND _keyboard_layouts
     kbdru1
     kbdsf
     kbdsg
-    kbdsk
-    kbdsk1
+    kbdsl
+    kbdsl1
+    kbdsp
     kbdsw
     kbdtat
     kbdth0

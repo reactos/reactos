@@ -132,13 +132,20 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CH
         {
             pFileDefExt->AddRef(); // CreateInstance returns object with 0 ref count
             hr = pFileDefExt->Initialize(pidlFolder, pDataObj, NULL);
-            if (SUCCEEDED(hr))
+            if (!FAILED_UNEXPECTEDLY(hr))
             {
                 hr = pFileDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&Header);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
+                {
                     ERR("AddPages failed\n");
-            } else
+                    return FALSE;
+                }
+            }
+            else
+            {
                 ERR("Initialize failed\n");
+                return FALSE;
+            }
         }
 
         LoadPropSheetHandlers(wszPath, &Header, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj);

@@ -64,12 +64,12 @@ typedef enum _KDB_OUTPUT_SETTINGS
 
 LONG
 KdbpDisassemble(
-   IN ULONG Address,
+   IN ULONG_PTR Address,
    IN ULONG IntelSyntax);
 
 LONG
 KdbpGetInstLength(
-   IN ULONG Address);
+   IN ULONG_PTR Address);
 
 /* from i386/kdb_help.S */
 
@@ -96,16 +96,16 @@ KdbpCliMainLoop(
    IN BOOLEAN EnteredOnSingleStep);
 
 VOID
-KdbpCliModuleLoaded(
-   IN PUNICODE_STRING Name);
-
-VOID
 KdbpCliInterpretInitFile(VOID);
 
 VOID
 KdbpPrint(
    IN PCHAR Format,
    IN ...  OPTIONAL);
+
+VOID
+KdbpPrintUnicodeString(
+    _In_ PCUNICODE_STRING String);
 
 BOOLEAN
 NTAPI
@@ -263,16 +263,7 @@ CHAR
 KdbpTryGetCharSerial(ULONG Retry);
 
 VOID
-KdbEnter(VOID);
-VOID
-DbgRDebugInit(VOID);
-VOID
-DbgShowFiles(VOID);
-VOID
-DbgEnableFile(PCH Filename);
-VOID
-DbgDisableFile(PCH Filename);
-VOID
 KbdDisableMouse(VOID);
+
 VOID
 KbdEnableMouse(VOID);

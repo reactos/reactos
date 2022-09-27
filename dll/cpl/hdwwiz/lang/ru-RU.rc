@@ -30,7 +30,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Было ли это устройство уже подключено к компьютеру?", -1, 20, 11, 275, 8
     AUTORADIOBUTTON "Д&а, устройство уже подключено", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "Н&ет, это устройство еще не подключено", IDC_NOTCONNECTED, 29, 35, 266, 8
+    AUTORADIOBUTTON "Н&ет, это устройство ещё не подключено", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143

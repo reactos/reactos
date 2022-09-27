@@ -1330,6 +1330,58 @@ UINT msi_set_original_database_property( MSIDATABASE *db, const WCHAR *package )
     return r;
 }
 
+#ifdef __REACTOS__
+BOOL WINAPI ApphelpCheckRunAppEx(HANDLE FileHandle, PVOID Unk1, PVOID Unk2, PCWSTR ApplicationName, PVOID Environment, USHORT ExeType, PULONG Reason, PVOID *SdbQueryAppCompatData, PULONG SdbQueryAppCompatDataSize,
+    PVOID *SxsData, PULONG SxsDataSize, PULONG FusionFlags, PULONG64 SomeFlag1, PULONG SomeFlag2);
+BOOL WINAPI SE_DynamicShim(LPCWSTR ProcessImage, PVOID hsdb, PVOID pQueryResult, LPCSTR Module, LPDWORD lpdwDynamicToken);
+PVOID WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path);
+PVOID WINAPI SdbReleaseDatabase(PVOID hsdb);
+
+#define HID_DOS_PATHS 0x1
+#define SDB_DATABASE_MAIN_SHIM 0x80030000
+
+#define APPHELP_VALID_RESULT 0x10000
+#define APPHELP_RESULT_FOUND 0x40000
+
+static void
+AppHelpCheckPackage(LPCWSTR szPackage)
+{
+    USHORT ExeType = 0;
+    ULONG Reason = 0;
+
+    PVOID QueryResult = NULL;
+    ULONG QueryResultSize = 0;
+
+    HANDLE Handle = NULL;
+    BOOL Continue = ApphelpCheckRunAppEx(
+        Handle, NULL, NULL, szPackage, NULL, ExeType, &Reason, &QueryResult, &QueryResultSize, NULL,
+        NULL, NULL, NULL, NULL);
+
+    if (Continue)
+    {
+        if ((Reason & (APPHELP_VALID_RESULT | APPHELP_RESULT_FOUND)) == (APPHELP_VALID_RESULT | APPHELP_RESULT_FOUND))
+        {
+            DWORD dwToken;
+            PVOID hsdb = SdbInitDatabase(HID_DOS_PATHS | SDB_DATABASE_MAIN_SHIM, NULL);
+            if (hsdb)
+            {
+                BOOL bShim = SE_DynamicShim(szPackage, hsdb, QueryResult, "msi.dll", &dwToken);
+                ERR("ReactOS HACK: Used SE_DynamicShim %d!\n", bShim);
+
+                SdbReleaseDatabase(hsdb);
+            }
+            else
+            {
+                ERR("Unable to open SDB_DATABASE_MAIN_SHIM\n");
+            }
+        }
+    }
+
+    if (QueryResult)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, QueryResult);
+}
+#endif
+
 UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
 {
     MSIDATABASE *db;
@@ -1368,6 +1420,10 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
 
             file = cachefile;
         }
+#ifdef __REACTOS__
+        AppHelpCheckPackage(file);
+#endif
+
         r = MSI_OpenDatabaseW( file, MSIDBOPEN_READONLY, &db );
         if (r != ERROR_SUCCESS)
         {

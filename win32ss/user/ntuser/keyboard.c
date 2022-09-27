@@ -1174,9 +1174,18 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
     if (!pti->KeyboardLayout)
     {
-       pti->KeyboardLayout = W32kGetDefaultKeyLayout();
-       pti->pClientInfo->hKL = pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL;
-       pKbdTbl = pti->KeyboardLayout ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
+        PKL pDefKL = W32kGetDefaultKeyLayout();
+        UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pDefKL);
+        if (pDefKL)
+        {
+            pti->pClientInfo->hKL = pDefKL->hkl;
+            pKbdTbl = pDefKL->spkf->pKbdTbl;
+        }
+        else
+        {
+            pti->pClientInfo->hKL = NULL;
+            pKbdTbl = NULL;
+        }
     }
     else
        pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;

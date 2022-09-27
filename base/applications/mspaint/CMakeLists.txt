@@ -2,6 +2,10 @@ project(MSPAINT)
 
 add_definitions(-DINITGUID)
 
+if(DBG)
+    add_definitions(-D_DEBUG=1) # CORE-17505
+endif()
+
 list(APPEND SOURCE
     dialogs.cpp
     dib.cpp

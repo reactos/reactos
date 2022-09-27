@@ -22,7 +22,7 @@ BEGIN
     IDS_SNDVOL32 "Contrôle du volume"
     IDS_NOMIXERDEVICES "Il n'y a pas de périphérique de mixage disponible ! L'application va se terminer."
     IDS_SELECT "&Select"
-    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_ADVANCED_CONTROLS "Contrôles avancés pour %s"
     IDS_OTHER_CONTROLS1 "&1  %s"
     IDS_OTHER_CONTROLS2 "&2  %s"
 END
@@ -36,7 +36,7 @@ BEGIN
     COMBOBOX IDC_MIXERDEVICE, 55, 8, 162, 80, CBS_DROPDOWNLIST | WS_TABSTOP
     GROUPBOX "Ajuster le volume pour :", -1, 7, 25, 211, 77
     AUTORADIOBUTTON "&Lecture", IDC_PLAYBACK, 13, 43, 47, 8
-    AUTORADIOBUTTON "&Enregistrement", IDC_RECORDING, 13, 61, 47, 8
+    AUTORADIOBUTTON "&Enregistrement", IDC_RECORDING, 13, 61, 150, 8
     AUTORADIOBUTTON "&Autre :", IDC_OTHER, 13, 80, 42, 8, WS_DISABLED
     COMBOBOX IDC_LINE, 55, 80, 155, 50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     LTEXT "Montrer les contrôles du volume suivants :", IDC_LABELCONTROLS, 7, 109, 162, 8
@@ -113,24 +113,24 @@ END
 
 IDD_ADVANCED DIALOGEX 0, 0, 255, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Controls for Volume Control"
+CAPTION "Contrôles avancés du volume"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
-    LTEXT "These settings can be used to make fine adjustments to your audio.", -1, 44, 7, 200, 32
-    GROUPBOX "Tone Controls", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
-    LTEXT "These settings control how the tone of your audio sounds.", -1, 17, 48, 200, 14
-    LTEXT "&Bass:", -1, 17, 62, 50, 8
-    LTEXT "Low", IDC_ADV_BASS_LOW, 77, 62, 20, 8
-    LTEXT "High", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
+    LTEXT "Ces paramètres peuvent être utilisés pour des ajustements fins de l'audio.", -1, 44, 7, 200, 32
+    GROUPBOX "Contrôles du ton", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
+    LTEXT "Ces paramètres contrôlent la tonalité de l'audio.", -1, 17, 48, 200, 14
+    LTEXT "&Basses :", -1, 17, 62, 50, 8
+    LTEXT "Bas", IDC_ADV_BASS_LOW, 77, 62, 20, 8
+    LTEXT "Haut", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
-    LTEXT "&Treble:", -1, 17, 90, 50, 8
-    LTEXT "Low", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
-    LTEXT "High", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
+    LTEXT "&Aigus :", -1, 17, 90, 50, 8
+    LTEXT "Bas", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
+    LTEXT "Haut", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
-    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    GROUPBOX "Autres contrôles", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
+    LTEXT "Ces paramètres apportent d'autres modifications sur l'audio. Consultez la documentation du matériel pour plus de détails.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
-    DEFPUSHBUTTON "Close", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Fermer", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END

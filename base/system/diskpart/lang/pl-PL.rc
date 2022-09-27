@@ -71,8 +71,8 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Bieżący system plików\n"
     IDS_FILESYSTEMS_FORMATTING "Systemy plików obsługiwane przy formatowaniu\n"
-    IDS_FILESYSTEMS_TYPE "Typ        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Rozmiar klastra: \n"
+    IDS_FILESYSTEMS_TYPE "Typ            : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Rozmiar klastra: %lu\n"
 END
 
 STRINGTABLE
@@ -233,4 +233,5 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Błąd podczas otwierania skryptu: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Błąd przetwarzania argumentu: %s\n"
     IDS_ERROR_INVALID_ARGS "Nieprawidłowe argumenty\n"
+    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
 END

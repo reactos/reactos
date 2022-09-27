@@ -32,6 +32,7 @@ class CStartMenuBtnCtxMenu :
     CComPtr<ITrayWindow>  m_TrayWnd;
     CComPtr<IContextMenu> m_Inner;
     CComPtr<IShellFolder> m_Folder;
+    UINT m_idCmdCmLast;
 
     HWND m_Owner;
     LPITEMIDLIST m_FolderPidl;
@@ -167,7 +168,8 @@ public:
                     hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &m_Folder));
                     if (SUCCEEDED(hRet))
                     {
-                        CreateContextMenuFromShellFolderPidl(hPopup);
+                        hRet = CreateContextMenuFromShellFolderPidl(hPopup);
+                        m_idCmdCmLast = (SUCCEEDED(hRet)) ? HRESULT_CODE(hRet) : ID_SHELL_CMD_LAST;
                         AddStartContextMenuItems(hPopup);
                     }
                 }
@@ -185,7 +187,7 @@ public:
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (uiCmdId != 0)
         {
-            if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId <= ID_SHELL_CMD_LAST))
+            if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId < m_idCmdCmLast))
             {
                 CMINVOKECOMMANDINFO cmici = { 0 };
                 CHAR szDir[MAX_PATH];
@@ -224,6 +226,7 @@ public:
 
     CStartMenuBtnCtxMenu()
     {
+        m_idCmdCmLast = ID_SHELL_CMD_LAST;
     }
 
     virtual ~CStartMenuBtnCtxMenu()

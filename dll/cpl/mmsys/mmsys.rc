@@ -57,8 +57,7 @@ IDI_SHUTDOWN_ICON ICON "resources/4394.ico"
 IDI_PLAY_ICON ICON "resources/play.ico"
 IDI_STOP_ICON ICON "resources/stop.ico"
 
-/* Bitmaps */
-IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
+IDI_SPEAKIMG ICON "resources/speaker.ico"
 
 #include <reactos/manifest_hosted.rc>
 

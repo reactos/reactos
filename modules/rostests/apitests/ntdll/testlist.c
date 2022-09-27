@@ -90,6 +90,7 @@ extern void func_RtlxUnicodeStringToAnsiSize(void);
 extern void func_RtlxUnicodeStringToOemSize(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
+extern void func_UserModeException(void);
 
 const struct test winetest_testlist[] =
 {
@@ -180,6 +181,7 @@ const struct test winetest_testlist[] =
     { "RtlValidateUnicodeString",       func_RtlValidateUnicodeString },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
+    { "UserModeException",              func_UserModeException },
 
     { 0, 0 }
 };

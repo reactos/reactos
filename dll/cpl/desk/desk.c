@@ -144,7 +144,6 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     HPROPSHEETPAGE hpsp[MAX_DESK_PAGES];
     PROPSHEETHEADER psh;
     HPSXA hpsxa = NULL;
-    TCHAR Caption[1024];
     UINT i;
     LPWSTR *argv = NULL;
     LPCWSTR pwszSelectedTab = NULL;
@@ -198,15 +197,13 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDC_DESK_ICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
@@ -255,7 +252,7 @@ cleanup:
 LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    int i = (int)lParam1;
+    UINT i = (UINT)lParam1;
 
     switch (uMsg)
     {
@@ -266,6 +263,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
+            if (i < NUM_APPLETS)
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
@@ -273,14 +271,23 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
                 CPlInfo->idName = Applets[i].idName;
                 CPlInfo->idInfo = Applets[i].idDescription;
             }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
 
         case CPL_STARTWPARMSW:
-            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            break;
     }
 
     return FALSE;

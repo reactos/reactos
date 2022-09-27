@@ -56,7 +56,7 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
 
     BytesRead = ReadAttribute(Vcb, IndexAllocationContext, 0, (PCHAR)Buffer, BufferSize);
 
-    ASSERT(BytesRead = BufferSize);
+    ASSERT(BytesRead == BufferSize);
 
     CurrentNode = Buffer;
 

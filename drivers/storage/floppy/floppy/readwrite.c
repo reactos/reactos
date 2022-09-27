@@ -478,16 +478,11 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
 
     if(DiskChanged)
     {
-        INFO_(FLOPPY, "ReadWritePhase1(): signalling media changed; Completing with STATUS_MEDIA_CHANGED\n");
+        INFO_(FLOPPY, "ReadWritePhase1(): detected disk changed: signalling media change and completing\n");
 
         /* The following call sets IoStatus.Status and IoStatus.Information */
         SignalMediaChanged(DeviceObject, Irp);
-
-        /*
-         * Guessing at something... see ioctl.c for more info
-         */
-        if(ResetChangeFlag(DriveInfo) == STATUS_NO_MEDIA_IN_DEVICE)
-            Irp->IoStatus.Status = STATUS_NO_MEDIA_IN_DEVICE;
+        ResetChangeFlag(DriveInfo);
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         StopMotor(DriveInfo->ControllerInfo);

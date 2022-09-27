@@ -50,13 +50,13 @@ HKR,, VideoDebugLevel,         0x00010001, 0
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
-
+; Non-localizable
+ReactOS = "ReactOS Project"
 NecMfg = "NEC"
+
+; Localizable
 PCI\VEN_1033&DEV_0009.DeviceDesc = "NEC PCI to Core-Graph Bridge"
 pc98vid.DeviceDesc = "Graphic controller for PC-9821"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 pc98vid.DeviceDesc = "Графический контроллер для PC-9821"

@@ -1831,7 +1831,6 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     HPROPSHEETPAGE hpsp[MAX_CPL_PAGES];
     PROPSHEETHEADER psh;
     HPSXA hpsxa;
-    TCHAR Caption[256];
     UINT i;
     INT nPage = 0;
     LONG ret;
@@ -1844,15 +1843,13 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     if (uMsg == CPL_STARTWPARMSW && lParam2 != 0)
         nPage = _wtoi((PWSTR)lParam2);
 
-    LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
-
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON_1);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME_1);
     psh.nStartPage = 0;
     psh.phpage = hpsp;
     psh.pfnCallback = PropSheetProc;

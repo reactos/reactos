@@ -41,12 +41,6 @@
 #endif
 
 //
-// Hack since bigkeys are not yet supported
-//
-#define ASSERT_VALUE_BIG(h, s)                          \
-    ASSERTMSG("Big keys not supported!\n", !CmpIsKeyValueBig(h, s));
-
-//
 // CM_KEY_CONTROL_BLOCK Signatures
 //
 #define CM_KCB_SIGNATURE                                'bKmC'
@@ -67,19 +61,14 @@
 //
 // CM_KEY_BODY Types
 //
-#define CM_KEY_BODY_TYPE                                0x6B793032
-
-//
-// CM_KEY_VALUE Types
-//
-#define CM_KEY_VALUE_SMALL                              0x4
-#define CM_KEY_VALUE_BIG                                0x3FD8
-#define CM_KEY_VALUE_SPECIAL_SIZE                       0x80000000
+#define CM_KEY_BODY_TYPE                                0x6B793032  // 'ky02'
 
 //
 // Number of various lists and hashes
 //
+#if 0 // See sdk/lib/cmlib/cmlib.h
 #define CMP_SECURITY_HASH_LISTS                         64
+#endif
 #define CMP_MAX_CALLBACKS                               100
 
 //
@@ -115,7 +104,7 @@
 //
 // Maximum size of Value Cache
 //
-#define MAXIMUM_CACHED_DATA                             2 * PAGE_SIZE
+#define MAXIMUM_CACHED_DATA                             (2 * PAGE_SIZE)
 
 //
 // Hives to load on startup
@@ -372,71 +361,6 @@ typedef struct _CM_DELAY_DEREF_KCB_ITEM
     LIST_ENTRY ListEntry;
     PCM_KEY_CONTROL_BLOCK Kcb;
 } CM_DELAY_DEREF_KCB_ITEM, *PCM_DELAY_DEREF_KCB_ITEM;
-
-//
-// Use Count Log and Entry
-//
-typedef struct _CM_USE_COUNT_LOG_ENTRY
-{
-    HCELL_INDEX Cell;
-    PVOID Stack[7];
-} CM_USE_COUNT_LOG_ENTRY, *PCM_USE_COUNT_LOG_ENTRY;
-
-typedef struct _CM_USE_COUNT_LOG
-{
-    USHORT Next;
-    USHORT Size;
-    CM_USE_COUNT_LOG_ENTRY Log[32];
-} CM_USE_COUNT_LOG, *PCM_USE_COUNT_LOG;
-
-//
-// Configuration Manager Hive Structure
-//
-typedef struct _CMHIVE
-{
-    HHIVE Hive;
-    HANDLE FileHandles[HFILE_TYPE_MAX];
-    LIST_ENTRY NotifyList;
-    LIST_ENTRY HiveList;
-    EX_PUSH_LOCK HiveLock;
-    PKTHREAD HiveLockOwner;
-    PKGUARDED_MUTEX ViewLock;
-    PKTHREAD ViewLockOwner;
-    EX_PUSH_LOCK WriterLock;
-    PKTHREAD WriterLockOwner;
-    PERESOURCE FlusherLock;
-    EX_PUSH_LOCK SecurityLock;
-    PKTHREAD HiveSecurityLockOwner;
-    LIST_ENTRY LRUViewListHead;
-    LIST_ENTRY PinViewListHead;
-    PFILE_OBJECT FileObject;
-    UNICODE_STRING FileFullPath;
-    UNICODE_STRING FileUserName;
-    USHORT MappedViews;
-    USHORT PinnedViews;
-    ULONG UseCount;
-    ULONG SecurityCount;
-    ULONG SecurityCacheSize;
-    LONG SecurityHitHint;
-    PCM_KEY_SECURITY_CACHE_ENTRY SecurityCache;
-    LIST_ENTRY SecurityHash[CMP_SECURITY_HASH_LISTS];
-    PKEVENT UnloadEvent;
-    PCM_KEY_CONTROL_BLOCK RootKcb;
-    BOOLEAN Frozen;
-    PWORK_QUEUE_ITEM UnloadWorkItem;
-    BOOLEAN GrowOnlyMode;
-    ULONG GrowOffset;
-    LIST_ENTRY KcbConvertListHead;
-    LIST_ENTRY KnodeConvertListHead;
-    PCM_CELL_REMAP_BLOCK CellRemapArray;
-    CM_USE_COUNT_LOG UseCountLog;
-    CM_USE_COUNT_LOG LockHiveLog;
-    ULONG Flags;
-    LIST_ENTRY TrustClassEntry;
-    ULONG FlushCount;
-    BOOLEAN HiveIsLoading;
-    PKTHREAD CreatorOwner;
-} CMHIVE, *PCMHIVE;
 
 //
 // Cached Value Index

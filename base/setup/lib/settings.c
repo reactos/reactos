@@ -274,8 +274,12 @@ GetComputerIdentifier(
     }
 
 #ifdef _M_AMD64
-    /* On x64 we are l33t and use the MP config by default */
+    /* On x64 we are l33t and use the MP config by default (except when we use KDBG, which is broken) */
+#ifndef KDBG
     ComputerIdentifier = L"X64 MP";
+#else
+    ComputerIdentifier = L"X64 UP";
+#endif
 #else
     if (IsAcpiComputer())
     {

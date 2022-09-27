@@ -334,8 +334,11 @@ AddService = ac97, 0x00000002, ac97_Service_Inst
 
 
 [Strings]
-ReactOS="ReactOS Team"
+; Non-localizable
+ReactOS="ReactOS Project"
 MfgName="Intel"
+
+; Localizable
 DiskDescription="AC'97 WDM Driver Disk"
 
 ac97_440MX.DeviceDesc="Intel 82440MX AC'97 Audio Controller"

@@ -390,6 +390,17 @@ SepRemoveUserGroupToken(
     _Inout_ PTOKEN Token,
     _In_ ULONG Index);
 
+ULONG
+SepComputeAvailableDynamicSpace(
+    _In_ ULONG DynamicCharged,
+    _In_ PSID PrimaryGroup,
+    _In_opt_ PACL DefaultDacl);
+
+NTSTATUS
+SepRebuildDynamicPartOfToken(
+    _In_ PTOKEN Token,
+    _In_ ULONG NewDynamicPartSize);
+
 BOOLEAN
 NTAPI
 SeTokenCanImpersonate(

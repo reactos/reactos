@@ -8,6 +8,8 @@ list(APPEND LIBCNTPR_MATH_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_MATH_SOURCE
+        math/fabs.c
+        math/fabsf.c
         math/i386/ci.c
         math/i386/cicos.c
         math/i386/cilog.c
@@ -31,7 +33,7 @@ if(ARCH STREQUAL "i386")
         math/i386/aullshr_asm.s
         math/i386/ceil_asm.s
         math/i386/cos_asm.s
-        math/i386/fabs_asm.s
+        # math/i386/fabs_asm.s # FIXME
         math/i386/floor_asm.s
         math/i386/ftol_asm.s
         math/i386/ftol2_asm.s
@@ -51,17 +53,17 @@ if(ARCH STREQUAL "i386")
     )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND LIBCNTPR_MATH_SOURCE
+        math/ceil.c
         math/cos.c
         math/sin.c
+        math/floor.c
     )
     list(APPEND LIBCNTPR_MATH_ASM_SOURCE
         math/amd64/atan.S
         math/amd64/atan2.S
-        math/amd64/ceil.S
         math/amd64/exp.S
         math/amd64/fabs.S
-        math/amd64/floor.S
-        math/amd64/floorf.S
+        math/amd64/fabsf.S
         math/amd64/fmod.S
         math/amd64/ldexp.S
         math/amd64/log.S
@@ -73,7 +75,8 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_MATH_SOURCE
         math/cos.c
-        math/floorf.c
+        math/fabs.c
+        math/fabsf.c
         math/sin.c
         math/sqrt.c
         math/arm/__rt_sdiv.c
@@ -92,15 +95,11 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__u64tos.c
         math/arm/__64tof.h
     )
-    list(APPEND CRT_MATH_SOURCE
-        math/fabsf.c
-    )
     list(APPEND LIBCNTPR_MATH_ASM_SOURCE
         math/arm/atan.s
         math/arm/atan2.s
         math/arm/ceil.s
         math/arm/exp.s
-        math/arm/fabs.s
         math/arm/fmod.s
         math/arm/floor.s
         math/arm/ldexp.s
@@ -130,6 +129,7 @@ if(NOT ARCH STREQUAL "i386")
         math/cos.c
         math/coshf.c
         math/expf.c
+        math/floorf.c
         math/fmodf.c
         math/log10f.c
         math/modff.c

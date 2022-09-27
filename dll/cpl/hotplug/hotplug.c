@@ -17,6 +17,8 @@
 
 typedef struct _HOTPLUG_DATA
 {
+    HICON hIcon;
+    HICON hIconSm;
     SP_CLASSIMAGELIST_DATA ImageListData;
     HMENU hPopupMenu;
     DWORD dwFlags;
@@ -360,7 +362,32 @@ SafeRemovalDlgProc(
             pHotplugData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HOTPLUG_DATA));
             if (pHotplugData != NULL)
             {
+                WCHAR szWindowTitle[MAX_PATH];
+
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pHotplugData);
+
+                if (LoadStringW(hApplet,
+                                IDS_CPLNAME,
+                                szWindowTitle,
+                                ARRAYSIZE(szWindowTitle)))
+                {
+                    SetWindowTextW(hwndDlg, szWindowTitle);
+                }
+
+                pHotplugData->hIcon = (HICON)LoadImageW(hApplet,
+                                                        MAKEINTRESOURCEW(IDI_HOTPLUG),
+                                                        IMAGE_ICON,
+                                                        GetSystemMetrics(SM_CXICON),
+                                                        GetSystemMetrics(SM_CYICON),
+                                                        LR_DEFAULTCOLOR);
+                pHotplugData->hIconSm = (HICON)LoadImageW(hApplet,
+                                                          MAKEINTRESOURCEW(IDI_HOTPLUG),
+                                                          IMAGE_ICON,
+                                                          GetSystemMetrics(SM_CXSMICON),
+                                                          GetSystemMetrics(SM_CYSMICON),
+                                                          LR_DEFAULTCOLOR);
+                SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)pHotplugData->hIcon);
+                SendMessageW(hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM)pHotplugData->hIconSm);
 
                 pHotplugData->ImageListData.cbSize = sizeof(pHotplugData->ImageListData);
                 SetupDiGetClassImageList(&pHotplugData->ImageListData);
@@ -462,6 +489,16 @@ SafeRemovalDlgProc(
 
                 SetupDiDestroyClassImageList(&pHotplugData->ImageListData);
 
+                if (pHotplugData->hIconSm)
+                {
+                    DestroyIcon(pHotplugData->hIconSm);
+                }
+
+                if (pHotplugData->hIcon)
+                {
+                    DestroyIcon(pHotplugData->hIcon);
+                }
+
                 HeapFree(GetProcessHeap(), 0, pHotplugData);
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
             }
@@ -511,6 +548,7 @@ CPlApplet(
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
+            if (i < NUM_APPLETS)
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
@@ -518,14 +556,23 @@ CPlApplet(
                 CPlInfo->idName = Applets[i].idName;
                 CPlInfo->idInfo = Applets[i].idDescription;
             }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
 
         case CPL_STARTWPARMSW:
-            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            break;
     }
     return FALSE;
 }

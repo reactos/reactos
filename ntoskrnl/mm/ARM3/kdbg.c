@@ -60,17 +60,17 @@ ExpKdbgExtPool(
         /* Get address */
         if (!KdbpGetHexNumber(Argv[1], &Address))
         {
-            KdbpPrint("Invalid parameter: %s\n", Argv[0]);
+            KdbpPrint("Invalid parameter: %s\n", Argv[1]);
             return TRUE;
         }
     }
 
     if (Argc > 2)
     {
-        /* Get address */
-        if (!KdbpGetHexNumber(Argv[1], &Flags))
+        /* Get flags */
+        if (!KdbpGetHexNumber(Argv[2], &Flags))
         {
-            KdbpPrint("Invalid parameter: %s\n", Argv[0]);
+            KdbpPrint("Invalid parameter: %s\n", Argv[2]);
             return TRUE;
         }
     }
@@ -144,7 +144,7 @@ VOID
 ExpKdbgExtPoolUsedGetTag(PCHAR Arg, PULONG Tag, PULONG Mask)
 {
     CHAR Tmp[4];
-    ULONG Len;
+    SIZE_T Len;
     USHORT i;
 
     /* Get the tag */
@@ -175,7 +175,7 @@ ExpKdbgExtPoolUsed(
 {
     ULONG Tag = 0;
     ULONG Mask = 0;
-    ULONG Flags = 0;
+    ULONG_PTR Flags = 0;
 
     if (Argc > 1)
     {
@@ -185,14 +185,14 @@ ExpKdbgExtPoolUsed(
             ExpKdbgExtPoolUsedGetTag(Argv[2], &Tag, &Mask);
             if (!KdbpGetHexNumber(Argv[1], &Flags))
             {
-                KdbpPrint("Invalid parameter: %s\n", Argv[0]);
+                KdbpPrint("Invalid parameter: %s\n", Argv[1]);
             }
         }
         else
         {
             /* Otherwise, try to find out whether that's flags */
             if (strlen(Argv[1]) == 1 ||
-                (strlen(Argv[1]) == 3 && Argv[1][0] == '0' && Argv[1][1] == 'x'))
+                (strlen(Argv[1]) == 3 && Argv[1][0] == '0' && (Argv[1][1] == 'x' || Argv[1][1] == 'X')))
             {
                 /* Fallback: if reading flags failed, assume it's a tag */
                 if (!KdbpGetHexNumber(Argv[1], &Flags))
@@ -568,7 +568,7 @@ ExpKdbgExtIrpFind(
     {
         if (!KdbpGetHexNumber(Argv[2], &FindCtxt.RestartAddress))
         {
-            KdbpPrint("Invalid parameter: %s\n", Argv[0]);
+            KdbpPrint("Invalid parameter: %s\n", Argv[2]);
             FindCtxt.RestartAddress = 0;
         }
     }

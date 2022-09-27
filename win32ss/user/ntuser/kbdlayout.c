@@ -6,9 +6,11 @@
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
  *                  Copyright 2011 Rafal Harabien
+ *                  Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 
 // Was included only because of CP_ACP and required  the
 // definition of SYSTEMTIME in ndk\rtltypes.h
@@ -17,15 +19,127 @@
 
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
-PKL gspklBaseLayout = NULL;
+PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
+DWORD gLCIDSentToShell = 0;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
-
 /* PRIVATE FUNCTIONS ******************************************************/
+
+/*
+ * Retrieves a PKL by an input locale identifier (HKL).
+ * @implemented
+ * Win: HKLtoPKL
+ */
+PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
+{
+    PKL pFirstKL, pKL;
+
+    pFirstKL = pti->KeyboardLayout;
+    if (!pFirstKL)
+        return NULL;
+
+    pKL = pFirstKL;
+
+    /* hKL can have special value HKL_NEXT or HKL_PREV */
+    if (hKL == (HKL)(ULONG_PTR)HKL_NEXT) /* Looking forward */
+    {
+        do
+        {
+            pKL = pKL->pklNext;
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                return pKL;
+        } while (pKL != pFirstKL);
+    }
+    else if (hKL == (HKL)(ULONG_PTR)HKL_PREV) /* Looking backward */
+    {
+        do
+        {
+            pKL = pKL->pklPrev;
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                return pKL;
+        } while (pKL != pFirstKL);
+    }
+    else if (HIWORD(hKL)) /* hKL is a full input locale identifier */
+    {
+        /* No KLF_UNLOAD check */
+        do
+        {
+            if (pKL->hkl == hKL)
+                return pKL;
+
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+    else  /* Language only specified */
+    {
+        /* No KLF_UNLOAD check */
+        do
+        {
+            if (LOWORD(pKL->hkl) == LOWORD(hKL)) /* Low word is language ID */
+                return pKL;
+
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+
+    return NULL;
+}
+
+/*
+ * A helper function for NtUserGetKeyboardLayoutList.
+ * @implemented
+ * Win: _GetKeyboardLayoutList
+ */
+static UINT APIENTRY
+IntGetKeyboardLayoutList(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _In_ ULONG nBuff,
+    _Out_ HKL *pHklBuff)
+{
+    UINT ret = 0;
+    PKL pKL, pFirstKL;
+
+    pFirstKL = gspklBaseLayout; /* FIXME: Use pWinSta->spklList instead */
+    if (!pWinSta || !pFirstKL)
+        return 0;
+
+    pKL = pFirstKL;
+
+    if (nBuff == 0)
+    {
+        /* Count the effective PKLs */
+        do
+        {
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+                ++ret;
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+    else
+    {
+        /* Copy the effective HKLs to pHklBuff */
+        do
+        {
+            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            {
+                *pHklBuff = pKL->hkl;
+                ++pHklBuff;
+                ++ret;
+                --nBuff;
+
+                if (nBuff == 0)
+                    break;
+            }
+            pKL = pKL->pklNext;
+        } while (pKL != pFirstKL);
+    }
+
+    return ret;
+}
 
 #if 0 && DBG
 
@@ -383,6 +497,10 @@ UserUnloadKbl(PKL pKl)
     pKl->pklPrev->pklNext = pKl->pklNext;
     pKl->pklNext->pklPrev = pKl->pklPrev;
     UnloadKbdFile(pKl->spkf);
+    if (pKl->piiex)
+    {
+        ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
+    }
     UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
     return TRUE;
 }
@@ -438,6 +556,26 @@ UserHklToKbl(HKL hKl)
     return NULL;
 }
 
+// Win: ReorderKeyboardLayouts
+VOID FASTCALL
+IntReorderKeyboardLayouts(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PKL pNewKL)
+{
+    PKL pOldKL = gspklBaseLayout;
+
+    if ((pWinSta->Flags & WSS_NOIO) || pNewKL == pOldKL)
+        return;
+
+    pNewKL->pklPrev->pklNext = pNewKL->pklNext;
+    pNewKL->pklNext->pklPrev = pNewKL->pklPrev;
+    pNewKL->pklNext = pOldKL;
+    pNewKL->pklPrev = pOldKL->pklPrev;
+    pOldKL->pklPrev->pklNext = pNewKL;
+    pOldKL->pklPrev = pNewKL;
+    gspklBaseLayout = pNewKL; /* Should we use UserAssignmentLock? */
+}
+
 /*
  * UserSetDefaultInputLang
  *
@@ -453,7 +591,7 @@ UserSetDefaultInputLang(HKL hKl)
     if (!pKl)
         return FALSE;
 
-    gspklBaseLayout = pKl;
+    IntReorderKeyboardLayouts(IntGetProcessWindowStation(NULL), pKl);
     return TRUE;
 }
 
@@ -469,16 +607,13 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     PWND pWnd;
 
     pklPrev = pti->KeyboardLayout;
-    if (pklPrev)
-        UserDereferenceObject(pklPrev);
 
-    pti->KeyboardLayout = pKl;
+    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKl);
     pti->pClientInfo->hKL = pKl->hkl;
-    UserReferenceObject(pKl);
 
     if (Flags & KLF_SETFORPROCESS)
     {
-        // FIXME
+        FIXME("KLF_SETFORPROCESS\n");
     }
 
     if (!(pWnd = pti->MessageQueue->spwndFocus))
@@ -493,6 +628,222 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
                       (LPARAM)pKl->hkl); // hkl
 
     return pklPrev;
+}
+
+// Win: xxxImmActivateLayout
+VOID APIENTRY
+IntImmActivateLayout(
+    _Inout_ PTHREADINFO pti,
+    _Inout_ PKL pKL)
+{
+    PWND pImeWnd;
+    HWND hImeWnd;
+    USER_REFERENCE_ENTRY Ref;
+
+    if (pti->KeyboardLayout == pKL)
+        return;
+
+    pImeWnd = pti->spwndDefaultIme;
+    if (pImeWnd)
+    {
+        UserRefObjectCo(pImeWnd, &Ref);
+        hImeWnd = UserHMGetHandle(pImeWnd);
+        co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)pKL->hkl);
+        UserDerefObjectCo(pImeWnd);
+    }
+
+    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
+    pti->pClientInfo->hKL = pKL->hkl;
+}
+
+/* Win: xxxInternalActivateKeyboardLayout */
+HKL APIENTRY
+co_UserActivateKeyboardLayout(
+    _Inout_ PKL     pKL,
+    _In_    ULONG   uFlags,
+    _Inout_ PWND    pWnd)
+{
+    HKL hOldKL = NULL;
+    PKL pOldKL = NULL;
+    PTHREADINFO pti = GetW32ThreadInfo();
+    PWND pTargetWnd, pImeWnd;
+    HWND hTargetWnd, hImeWnd;
+    USER_REFERENCE_ENTRY Ref1, Ref2;
+    PCLIENTINFO ClientInfo = pti->pClientInfo;
+
+    if (pti->KeyboardLayout)
+    {
+        pOldKL = pti->KeyboardLayout;
+        if (pOldKL)
+            hOldKL = pOldKL->hkl;
+    }
+
+    if (uFlags & KLF_RESET)
+    {
+        FIXME("KLF_RESET\n");
+    }
+
+    if (!(uFlags & KLF_SETFORPROCESS) && pKL == pti->KeyboardLayout)
+        return hOldKL;
+
+    pKL->wchDiacritic = 0;
+
+    if (pOldKL)
+        UserRefObjectCo(pOldKL, &Ref1);
+
+    if (pti->TIF_flags & TIF_CSRSSTHREAD)
+    {
+        UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+        ClientInfo->CodePage = pKL->CodePage;
+        ClientInfo->hKL = pKL->hkl;
+    }
+    else if (uFlags & KLF_SETFORPROCESS)
+    {
+        FIXME("KLF_SETFORPROCESS\n");
+    }
+    else
+    {
+        if (IS_IMM_MODE())
+            IntImmActivateLayout(pti, pKL);
+        else
+            UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pKL);
+
+        ClientInfo->CodePage = pKL->CodePage;
+        ClientInfo->hKL = pKL->hkl;
+    }
+
+    if (gptiForeground && (gptiForeground->ppi == pti->ppi))
+    {
+        /* Send shell message */
+        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+    }
+
+    if (pti->MessageQueue)
+    {
+        /* Determine the target window */
+        pTargetWnd = pti->MessageQueue->spwndFocus;
+        if (!pTargetWnd)
+        {
+            pTargetWnd = pti->MessageQueue->spwndActive;
+            if (!pTargetWnd)
+                pTargetWnd = pWnd;
+        }
+
+        /* Send WM_INPUTLANGCHANGE message */
+        if (pTargetWnd)
+        {
+            UserRefObjectCo(pTargetWnd, &Ref2);
+            hTargetWnd = UserHMGetHandle(pTargetWnd);
+            co_IntSendMessage(hTargetWnd, WM_INPUTLANGCHANGE, pKL->iBaseCharset, (LPARAM)pKL->hkl);
+            UserDerefObjectCo(pTargetWnd);
+        }
+    }
+
+    /* Send WM_IME_SYSTEM:IMS_SENDNOTIFICATION message if necessary */
+    if (pti && !(pti->TIF_flags & TIF_CSRSSTHREAD))
+    {
+        if (IS_IME_HKL(pKL->hkl) || IS_CICERO_MODE())
+        {
+            pImeWnd = pti->spwndDefaultIme;
+            if (pImeWnd)
+            {
+                UserRefObjectCo(pImeWnd, &Ref2);
+                BOOL bProcess = !!(pti->TIF_flags & KLF_SETFORPROCESS);
+                hImeWnd = UserHMGetHandle(pImeWnd);
+                co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bProcess);
+                UserDerefObjectCo(pImeWnd);
+            }
+        }
+    }
+
+    if (pOldKL)
+        UserDerefObjectCo(pOldKL);
+    return hOldKL;
+}
+
+/* Win: xxxActivateKeyboardLayout */
+HKL APIENTRY
+co_IntActivateKeyboardLayout(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _In_ HKL hKL,
+    _In_ ULONG uFlags,
+    _Inout_ PWND pWnd)
+{
+    PKL pKL;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    pKL = IntHKLtoPKL(pti, hKL);
+    if (!pKL)
+    {
+        ERR("Invalid HKL %p!\n", hKL);
+        return NULL;
+    }
+
+    if (uFlags & KLF_REORDER)
+        IntReorderKeyboardLayouts(pWinSta, pKL);
+
+    return co_UserActivateKeyboardLayout(pKL, uFlags, pWnd);
+}
+
+// Win: xxxInternalUnloadKeyboardLayout
+static BOOL APIENTRY
+co_IntUnloadKeyboardLayoutEx(
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _Inout_ PKL pKL,
+    _In_ DWORD dwFlags)
+{
+    PKL pNextKL;
+    USER_REFERENCE_ENTRY Ref1, Ref2;
+    PTHREADINFO pti = gptiCurrent;
+
+    if (pKL == gspklBaseLayout && !(dwFlags & 0x80000000))
+        return FALSE;
+
+    UserRefObjectCo(pKL, &Ref1); /* Add reference */
+
+    /* Regard as unloaded */
+    UserMarkObjectDestroy(pKL);
+    pKL->dwKL_Flags |= KLF_UNLOAD;
+
+    if (!(dwFlags & 0x80000000) && pti->KeyboardLayout == pKL)
+    {
+        pNextKL = IntHKLtoPKL(pti, (HKL)(ULONG_PTR)HKL_NEXT);
+        if (pNextKL)
+        {
+            UserRefObjectCo(pNextKL, &Ref2); /* Add reference */
+            co_UserActivateKeyboardLayout(pNextKL, dwFlags, NULL);
+            UserDerefObjectCo(pNextKL); /* Release reference */
+        }
+    }
+
+    if (gspklBaseLayout == pKL && pKL != pKL->pklNext)
+    {
+        /* Set next layout as default (FIXME: Use UserAssignmentLock?) */
+        gspklBaseLayout = pKL->pklNext;
+    }
+
+    UserDerefObjectCo(pKL); /* Release reference */
+
+    if (pti->pDeskInfo->fsHooks)
+    {
+        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
+        gLCIDSentToShell = 0;
+    }
+
+    return TRUE;
+}
+
+// Win: xxxUnloadKeyboardLayout
+static BOOL APIENTRY
+IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
+{
+    PKL pKL = IntHKLtoPKL(gptiCurrent, hKL);
+    if (!pKL)
+    {
+        ERR("Invalid HKL %p!\n", hKL);
+        return FALSE;
+    }
+    return co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0);
 }
 
 /* EXPORTS *******************************************************************/
@@ -550,54 +901,47 @@ NtUserGetKeyboardLayoutList(
     ULONG nBuff,
     HKL *pHklBuff)
 {
-    UINT uRet = 0;
-    PKL pKl;
+    UINT ret = 0;
+    PWINSTATION_OBJECT pWinSta;
 
     if (!pHklBuff)
         nBuff = 0;
 
     UserEnterShared();
 
-    if (!gspklBaseLayout)
+    if (nBuff > MAXULONG / sizeof(HKL))
     {
-        UserLeave();
-        return 0;
-    }
-    pKl = gspklBaseLayout;
-
-    if (nBuff == 0)
-    {
-        do
-        {
-            uRet++;
-            pKl = pKl->pklNext;
-        } while (pKl != gspklBaseLayout);
-    }
-    else
-    {
-        _SEH2_TRY
-        {
-            ProbeForWrite(pHklBuff, nBuff*sizeof(HKL), 4);
-
-            while (uRet < nBuff)
-            {
-                pHklBuff[uRet] = pKl->hkl;
-                uRet++;
-                pKl = pKl->pklNext;
-                if (pKl == gspklBaseLayout)
-                    break;
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            SetLastNtError(_SEH2_GetExceptionCode());
-            uRet = 0;
-        }
-        _SEH2_END;
+        SetLastNtError(ERROR_INVALID_PARAMETER);
+        goto Quit;
     }
 
+    _SEH2_TRY
+    {
+        ProbeForWrite(pHklBuff, nBuff * sizeof(HKL), 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        goto Quit;
+    }
+    _SEH2_END;
+
+    pWinSta = IntGetProcessWindowStation(NULL);
+
+    _SEH2_TRY
+    {
+        ret = IntGetKeyboardLayoutList(pWinSta, nBuff, pHklBuff);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        goto Quit;
+    }
+    _SEH2_END;
+
+Quit:
     UserLeave();
-    return uRet;
+    return ret;
 }
 
 /*
@@ -608,11 +952,13 @@ NtUserGetKeyboardLayoutList(
 BOOL
 APIENTRY
 NtUserGetKeyboardLayoutName(
-    LPWSTR pwszName)
+    _Inout_ PUNICODE_STRING pustrName)
 {
     BOOL bRet = FALSE;
     PKL pKl;
     PTHREADINFO pti;
+    UNICODE_STRING ustrNameSafe;
+    NTSTATUS Status;
 
     UserEnterShared();
 
@@ -624,9 +970,33 @@ NtUserGetKeyboardLayoutName(
 
     _SEH2_TRY
     {
-        ProbeForWrite(pwszName, KL_NAMELENGTH*sizeof(WCHAR), 1);
-        wcscpy(pwszName, pKl->spkf->awchKF);
-        bRet = TRUE;
+        ProbeForWriteUnicodeString(pustrName);
+        ustrNameSafe = *pustrName;
+
+        ProbeForWrite(ustrNameSafe.Buffer, ustrNameSafe.MaximumLength, 1);
+
+        if (IS_IME_HKL(pKl->hkl))
+        {
+            Status = RtlIntegerToUnicodeString((ULONG)(ULONG_PTR)pKl->hkl, 16, &ustrNameSafe);
+        }
+        else
+        {
+            if (ustrNameSafe.MaximumLength < KL_NAMELENGTH * sizeof(WCHAR))
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                goto cleanup;
+            }
+
+            /* FIXME: Do not use awchKF */
+            ustrNameSafe.Length = 0;
+            Status = RtlAppendUnicodeToString(&ustrNameSafe, pKl->spkf->awchKF);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            *pustrName = ustrNameSafe;
+            bRet = TRUE;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -639,10 +1009,34 @@ cleanup:
     return bRet;
 }
 
+/* Win: xxxImmLoadLayout */
+PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
+{
+    PIMEINFOEX piiex;
+
+    if (!IS_IME_HKL(hKL) && !IS_CICERO_MODE())
+        return NULL;
+
+    piiex = ExAllocatePoolWithTag(PagedPool, sizeof(IMEINFOEX), USERTAG_IME);
+    if (!piiex)
+        return NULL;
+
+    if (!co_ClientImmLoadLayout(hKL, piiex))
+    {
+        ExFreePoolWithTag(piiex, USERTAG_IME);
+        return NULL;
+    }
+
+    return piiex;
+}
+
 /*
  * NtUserLoadKeyboardLayoutEx
  *
  * Loads keyboard layout with given locale id
+ *
+ * NOTE: We adopt a different design from Microsoft's one for security reason.
+ *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
  */
 HKL
 APIENTRY
@@ -657,7 +1051,7 @@ NtUserLoadKeyboardLayoutEx(
 {
     HKL hklRet = NULL;
     PKL pKl = NULL, pklLast;
-    WCHAR Buffer[9];
+    WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING ustrSafeKLID;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
@@ -724,6 +1118,8 @@ NtUserLoadKeyboardLayoutEx(
             pKl->pklPrev = pKl;
             gspklBaseLayout = pKl;
         }
+
+        pKl->piiex = co_UserImmLoadLayout(UlongToHandle(hkl));
     }
 
     /* If this layout was prepared to unload, undo it */
@@ -754,62 +1150,23 @@ cleanup:
  * Activates specified layout for thread or process
  */
 HKL
-APIENTRY
+NTAPI
 NtUserActivateKeyboardLayout(
-    HKL hKl,
+    HKL hKL,
     ULONG Flags)
 {
-    PKL pKl = NULL;
-    HKL hkl = NULL;
-    PTHREADINFO pti;
+    PWINSTATION_OBJECT pWinSta;
+    HKL hOldKL;
 
     UserEnterExclusive();
 
-    pti = PsGetCurrentThreadWin32Thread();
+    /* FIXME */
 
-    /* hKl can have special value HKL_NEXT or HKL_PREV */
-    if (hKl == (HKL)HKL_NEXT)
-    {
-        /* Get next keyboard layout starting with current */
-        if (pti->KeyboardLayout)
-            pKl = pti->KeyboardLayout->pklNext;
-    }
-    else if (hKl == (HKL)HKL_PREV)
-    {
-        /* Get previous keyboard layout starting with current */
-        if (pti->KeyboardLayout)
-            pKl = pti->KeyboardLayout->pklPrev;
-    }
-    else
-        pKl = UserHklToKbl(hKl);
-
-    if (!pKl)
-    {
-        ERR("Invalid HKL %p!\n", hKl);
-        goto cleanup;
-    }
-
-    hkl = pKl->hkl;
-
-    /* FIXME: KLF_RESET
-              KLF_SHIFTLOCK */
-
-    if (Flags & KLF_REORDER)
-        gspklBaseLayout = pKl;
-
-    if (pKl != pti->KeyboardLayout)
-    {
-        /* Activate layout for current thread */
-        pKl = co_UserActivateKbl(pti, pKl, Flags);
-
-        /* Send shell message */
-        if (!(Flags & KLF_NOTELLSHELL))
-            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hkl);
-    }
-
-cleanup:
+    pWinSta = IntGetProcessWindowStation(NULL);
+    hOldKL = co_IntActivateKeyboardLayout(pWinSta, hKL, Flags, NULL);
     UserLeave();
-    return hkl;
+
+    return hOldKL;
 }
 
 /*
@@ -822,19 +1179,16 @@ APIENTRY
 NtUserUnloadKeyboardLayout(
     HKL hKl)
 {
-    PKL pKl;
-    BOOL bRet = FALSE;
+    BOOL ret;
+    PWINSTATION_OBJECT pWinSta;
 
     UserEnterExclusive();
 
-    pKl = UserHklToKbl(hKl);
-    if (pKl)
-        bRet = UserUnloadKbl(pKl);
-    else
-        ERR("Invalid HKL %p!\n", hKl);
+    pWinSta = IntGetProcessWindowStation(NULL);
+    ret = IntUnloadKeyboardLayout(pWinSta, hKl);
 
     UserLeave();
-    return bRet;
+    return ret;
 }
 
 /* EOF */

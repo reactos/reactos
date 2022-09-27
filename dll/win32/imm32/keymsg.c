@@ -13,6 +13,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+/* Win: CIMENonIMEToggle */
 BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
@@ -44,6 +45,7 @@ BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
     return TRUE;
 }
 
+/* Win: TShapeToggle */
 BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
@@ -74,6 +76,7 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: CSymbolToggle */
 BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
@@ -104,6 +107,7 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: JCloseOpen */
 BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
@@ -119,6 +123,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Win: KShapeToggle */
 BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
@@ -141,6 +146,7 @@ BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
     return TRUE;
 }
 
+/* Win: KHanjaConvert */
 BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
@@ -158,6 +164,7 @@ BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     return TRUE;
 }
 
+/* Win: KEnglishHangul */
 BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
@@ -179,7 +186,7 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
-// Win: HotKeyIDDispatcher
+/* Win: HotKeyIDDispatcher */
 BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     PIMEDPI pImeDpi;
@@ -236,7 +243,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     return ret;
 }
 
-// Win: ImmIsUIMessageWorker
+/* Win: ImmIsUIMessageWorker */
 static BOOL APIENTRY
 ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
@@ -261,36 +268,41 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
     return TRUE;
 }
 
-typedef struct IMM_UNKNOWN_PROCESS1
+typedef struct IMM_DELAY_SET_LANG_BAND
 {
     HWND hWnd;
-    BOOL fFlag;
-} IMM_UNKNOWN_PROCESS1, *PIMM_UNKNOWN_PROCESS1;
+    BOOL fSet;
+} IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
 
-static DWORD WINAPI Imm32UnknownProcess1Proc(LPVOID arg)
+/* Sends a message to set the language band with delay. */
+/* Win: DelaySetLangBand */
+static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
 {
     HWND hwndDefIME;
-    UINT uValue;
+    WPARAM wParam;
     DWORD_PTR lResult;
-    PIMM_UNKNOWN_PROCESS1 pUnknown = arg;
+    PIMM_DELAY_SET_LANG_BAND pSetBand = arg;
 
-    Sleep(3000);
-    hwndDefIME = ImmGetDefaultIMEWnd(pUnknown->hWnd);
+    Sleep(3000); /* Delay 3 seconds! */
+
+    hwndDefIME = ImmGetDefaultIMEWnd(pSetBand->hWnd);
     if (hwndDefIME)
     {
-        uValue = (pUnknown->fFlag ? 0x23 : 0x24);
-        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pUnknown->hWnd,
+        wParam = (pSetBand->fSet ? IMS_SETLANGBAND : IMS_UNSETLANGBAND);
+        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, wParam, (LPARAM)pSetBand->hWnd,
                             SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
     }
-    ImmLocalFree(pUnknown);
+    ImmLocalFree(pSetBand);
     return FALSE;
 }
 
-LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
+/* Updates the language band. */
+/* Win: CtfImmSetLangBand */
+LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
 {
     HANDLE hThread;
     PWND pWnd = NULL;
-    PIMM_UNKNOWN_PROCESS1 pUnknown1;
+    PIMM_DELAY_SET_LANG_BAND pSetBand;
     DWORD_PTR lResult = 0;
 
     if (hWnd && gpsi)
@@ -301,24 +313,26 @@ LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
 
     if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
     {
-        SendMessageTimeoutW(hWnd, 0x505, 0, fFlag, 3, 5000, &lResult);
+        SendMessageTimeoutW(hWnd, WM_USER + 0x105, 0, fSet, SMTO_BLOCK | SMTO_ABORTIFHUNG,
+                            5000, &lResult);
         return lResult;
     }
 
-    pUnknown1 = ImmLocalAlloc(0, sizeof(IMM_UNKNOWN_PROCESS1));
-    if (!pUnknown1)
+    pSetBand = ImmLocalAlloc(0, sizeof(IMM_DELAY_SET_LANG_BAND));
+    if (!pSetBand)
         return 0;
 
-    pUnknown1->hWnd = hWnd;
-    pUnknown1->fFlag = fFlag;
+    pSetBand->hWnd = hWnd;
+    pSetBand->fSet = fSet;
 
-    hThread = CreateThread(NULL, 0, Imm32UnknownProcess1Proc, pUnknown1, 0, NULL);
+    hThread = CreateThread(NULL, 0, Imm32DelaySetLangBandProc, pSetBand, 0, NULL);
     if (hThread)
         CloseHandle(hThread);
     return 0;
 }
 
-static BOOL CALLBACK Imm32SendChangeProc(HIMC hIMC, LPARAM lParam)
+/* Win: SendNotificationProc */
+static BOOL CALLBACK Imm32SendNotificationProc(HIMC hIMC, LPARAM lParam)
 {
     HWND hWnd;
     LPINPUTCONTEXTDX pIC;
@@ -345,9 +359,10 @@ Quit:
     return TRUE;
 }
 
-BOOL APIENTRY Imm32SendChange(BOOL bProcess)
+/* Win: ImmSendNotification */
+BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
 {
-    return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendChangeProc, 0);
+    return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
 }
 
 VOID APIENTRY Imm32RequestError(DWORD dwError)
@@ -557,7 +572,7 @@ Quit:
     return ret;
 }
 
-// Win: ImmRequestMessageWorker
+/* Win: ImmRequestMessageWorker */
 LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
     LRESULT ret = 0;
@@ -757,16 +772,17 @@ LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 
     switch (wParam)
     {
-        case 0x1f:
-            Imm32SendChange((BOOL)lParam);
+        case IMS_SENDNOTIFICATION:
+            Imm32SendNotification((BOOL)lParam);
             return 0;
 
-        case 0x20:
+        case IMS_COMPLETECOMPSTR:
             ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
             return 0;
 
-        case 0x23: case 0x24:
-            return Imm32UnknownProcess1((HWND)lParam, (wParam == 0x23));
+        case IMS_SETLANGBAND:
+        case IMS_UNSETLANGBAND:
+            return CtfImmSetLangBand((HWND)lParam, (wParam == IMS_SETLANGBAND));
 
         default:
             return 0;

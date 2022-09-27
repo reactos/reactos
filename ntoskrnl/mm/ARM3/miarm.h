@@ -2428,21 +2428,29 @@ FORCEINLINE
 BOOLEAN
 MiSynchronizeSystemPde(PMMPDE PointerPde)
 {
-    MMPDE SystemPde;
     ULONG Index;
 
     /* Get the Index from the PDE */
     Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
+    if (PointerPde->u.Hard.Valid != 0)
+    {
+        NT_ASSERT(PointerPde->u.Long == MmSystemPagePtes[Index].u.Long);
+        return TRUE;
+    }
+
+    if (MmSystemPagePtes[Index].u.Hard.Valid == 0)
+    {
+        return FALSE;
+    }
 
     /* Copy the PDE from the double-mapped system page directory */
-    SystemPde = MmSystemPagePtes[Index];
-    *PointerPde = SystemPde;
+    MI_WRITE_VALID_PDE(PointerPde, MmSystemPagePtes[Index]);
 
     /* Make sure we re-read the PDE and PTE */
     KeMemoryBarrierWithoutFence();
 
-    /* Return, if we had success */
-    return SystemPde.u.Hard.Valid != 0;
+    /* Return success */
+    return TRUE;
 }
 #endif
 
