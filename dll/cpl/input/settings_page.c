@@ -157,43 +157,41 @@ SetControlsState(HWND hwndDlg)
 }
 
 static BOOL CALLBACK
-EnumResLangProc(HMODULE hModule,
-                LPCWSTR lpszType,
-                LPCWSTR lpszName,
-                WORD wIDLanguage,
-                LONG_PTR lParam)
-{
-    HICON* phIcon = (HICON*)lParam;
-    *phIcon = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON,
-                                GetSystemMetrics(SM_CXSMICON),
-                                GetSystemMetrics(SM_CYSMICON),
-                                0);
-    return *phIcon == NULL;
-}
-
-static BOOL CALLBACK
 EnumResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
 {
-    HICON* phIcon = (HICON*)lParam;
-    EnumResourceLanguagesW(hModule, lpszType, lpszName, EnumResLangProc, lParam);
-    return *phIcon == NULL;
+    LPWSTR *ppName = (LPWSTR *)lParam;
+    if (*ppName)
+        return FALSE;
+    *ppName = (HIWORD(lpszName) ? _wcsdup(lpszName) : lpszName);
+    return TRUE;
 }
 
 static HICON LoadIMEIcon(LPCTSTR pszImeFile)
 {
     WCHAR szSysDir[MAX_PATH], szPath[MAX_PATH];
-    HICON hIconSm = NULL;
     HINSTANCE hImeInst;
+    HICON hIconSm = NULL;
+    LPWSTR pName = NULL;
 
     GetSystemDirectoryW(szSysDir, _countof(szSysDir));
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\%s", szSysDir, pszImeFile);
 
-    hImeInst = LoadLibraryExW(szPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    hImeInst = LoadLibraryExW(szPath, NULL, DONT_RESOLVE_DLL_REFERENCES);
     if (hImeInst == NULL)
         return NULL;
 
-    EnumResourceNamesW(hImeInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&hIconSm);
+    EnumResourceNamesW(hImeInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&pName);
+
+    hIconSm = (HICON)LoadImageW(hImeInst, pName, IMAGE_ICON,
+                                GetSystemMetrics(SM_CXSMICON),
+                                GetSystemMetrics(SM_CYSMICON),
+                                0);
+
+    if (HIWORD(pName))
+        free(pName);
+
     FreeLibrary(hImeInst);
+
     return hIconSm;
 }
 
