@@ -598,7 +598,7 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
             pCurrent->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
 
         pNode->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
-        ret = TRUE; /* default is changed */
+        ret = TRUE; /* default input is changed */
     }
 
     if (bRemoveNode)
@@ -624,7 +624,7 @@ Retry:
         if (LOWORD(pCurrent->pLocale->dwId) == wLangId)
         {
             if (InputList_Remove(pCurrent))
-                ret = TRUE;
+                ret = TRUE; /* default input is changed */
             goto Retry;
         }
     }
