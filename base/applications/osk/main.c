@@ -174,6 +174,17 @@ VOID OSK_DestroyKeys(VOID)
     Globals.Keyboard = NULL;
 }
 
+static int OSK_GetKeyText(INT_PTR scancode, PBYTE bKeyStates, LPWSTR lpKeyText, UINT cchCount)
+{
+    UINT uVirtKey;
+    INT iResult;
+
+    uVirtKey = MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK);
+    iResult = ToUnicode(uVirtKey, scancode, bKeyStates, lpKeyText, cchCount, 0);
+    lpKeyText[cchCount - 1] = UNICODE_NULL;
+    
+    return iResult;
+}
 /***********************************************************************
  *
  *           OSK_SetKeys
@@ -186,7 +197,6 @@ LRESULT OSK_SetKeys(int reason)
     BYTE bKeyStates[256];
     LPCWSTR szKey;
     PKEY Keys;
-    UINT uVirtKey;
     POINT LedPos;
     SIZE LedSize;
     int i, yPad;
@@ -209,9 +219,7 @@ LRESULT OSK_SetKeys(int reason)
                 if (!Keys[i].translate)
                     continue;
 
-                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
-
-                if (ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                if (OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
                 {
                     szKey = wKey;
                 }
@@ -258,9 +266,7 @@ LRESULT OSK_SetKeys(int reason)
             /* Create key buttons */
             for (i = 0; i < Globals.Keyboard->KeyCount; i++)
             {
-                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
-
-                if (Keys[i].translate && ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                if (Keys[i].translate && OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
                 {
                     szKey = wKey;
                 }
