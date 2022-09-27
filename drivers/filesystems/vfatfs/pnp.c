@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/fastfat/pnp.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Pierre Schweitzer
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Plug & Play handlers
+ * COPYRIGHT:   Copyright 2010-2015 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

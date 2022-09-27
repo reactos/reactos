@@ -16,7 +16,7 @@ BEGIN
     AUTOCHECKBOX "Colocar um &icone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 190, 10
     PUSHBUTTON "A&vançadas...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Definições dos altifalantes", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "Utilize as definições abaixo, para modificar o volume dos altifalantas individualmente e outras definições.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Volume dos altifalantes...", IDC_SPEAKER_VOL_BTN, 60, 195, 85, 15
     PUSHBUTTON "Ava&nçadas...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

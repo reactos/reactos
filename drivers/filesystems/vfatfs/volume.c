@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/volume.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Herve Poussineau (reactos@poussine.freesurf.fr)
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Volume routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2004-2022 Hervé Poussineau <hpoussin@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -100,13 +99,14 @@ FsdGetFsAttributeInformation(
     ASSERT(*BufferLength >= sizeof(FILE_FS_ATTRIBUTE_INFORMATION));
     *BufferLength -= FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION, FileSystemName);
 
-    if (DeviceExt->FatInfo.FatType == FAT32)
+    switch (DeviceExt->FatInfo.FatType)
     {
-        pName = L"FAT32";
-    }
-    else
-    {
-        pName = L"FAT";
+        case FAT12: pName = L"FAT"; break;
+        case FAT16: pName = L"FAT"; break;
+        case FAT32: pName = L"FAT32"; break;
+        case FATX16: pName = L"FATX"; break;
+        case FATX32: pName = L"FATX"; break;
+        default: return STATUS_NOT_SUPPORTED;
     }
 
     Length = wcslen(pName) * sizeof(WCHAR);

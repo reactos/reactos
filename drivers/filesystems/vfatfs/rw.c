@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/fastfat/rw.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Pierre Schweitzer (pierre@reactos.org)
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Reading and writing routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2008-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

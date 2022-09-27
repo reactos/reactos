@@ -546,6 +546,12 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
 
+                case ID_NEXTLAYOUT:
+                {
+                    ActivateLayout(hwnd, GetNextLayout());
+                    break;
+                }
+
                 default:
                 {
                     ActivateLayout(hwnd, LOWORD(wParam));

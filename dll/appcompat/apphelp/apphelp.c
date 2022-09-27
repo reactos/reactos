@@ -185,7 +185,7 @@ ApphelpCheckRunAppEx(
     _In_ HANDLE FileHandle,
     _In_opt_ PVOID Unk1,
     _In_opt_ PVOID Unk2,
-    _In_opt_z_ PWCHAR ApplicationName,
+    _In_opt_z_ PCWSTR ApplicationName,
     _In_opt_ PVOID Environment,
     _In_opt_ USHORT ExeType,
     _Inout_opt_ PULONG Reason,

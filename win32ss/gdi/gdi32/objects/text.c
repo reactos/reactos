@@ -465,8 +465,15 @@ ExtTextOutA(
     UNICODE_STRING StringU;
     BOOL ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    if (fuOptions & ETO_GLYPH_INDEX)
+        return ExtTextOutW(hdc, x, y, fuOptions, lprc, (LPCWSTR)lpString, cch, lpDx);
+
+    StringA.Buffer = (PCHAR)lpString;
+    StringA.Length = StringA.MaximumLength = cch;
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+
+    if (StringU.Length != StringA.Length * sizeof(WCHAR))
+        DPRINT1("ERROR: Should convert lpDx properly!\n");
 
     ret = ExtTextOutW(hdc, x, y, fuOptions, lprc, StringU.Buffer, cch, lpDx);
 

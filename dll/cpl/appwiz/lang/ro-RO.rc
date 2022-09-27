@@ -1,5 +1,5 @@
- /*
- * PROJECT:     ReactOS Application Wizard
+/*
+ * PROJECT:     ReactOS Software Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -93,5 +93,5 @@ BEGIN
     IDS_NO_MEMORY "Nu a putut fi alocată memorie!"
     IDS_NO_DIRECTORY "Nu a fost dat niciun director!"
     IDS_INVALID_PATH "Calea dată este nevalidă!"
-    IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea caractere nevalide pentru numele fișierelor sau era prea lung."
+    IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere nevalide pentru numele fișierelor, fie era prea lung."
 END

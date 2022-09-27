@@ -742,7 +742,7 @@ co_UserActivateKeyboardLayout(
     /* Send WM_IME_SYSTEM:IMS_SENDNOTIFICATION message if necessary */
     if (pti && !(pti->TIF_flags & TIF_CSRSSTHREAD))
     {
-        if (IS_IME_HKL(pKL->hkl) || (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        if (IS_IME_HKL(pKL->hkl) || IS_CICERO_MODE())
         {
             pImeWnd = pti->spwndDefaultIme;
             if (pImeWnd)

@@ -98,6 +98,8 @@ extern PWINDOWLIST gpwlCache;
 
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti);
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
+HWND FASTCALL IntFindWindow(PWND Parent, PWND ChildAfter, RTL_ATOM ClassAtom,
+                            PUNICODE_STRING WindowName);
 
 /* Undocumented dwFlags for IntBuildHwndList */
 #define IACE_LIST  0x0002

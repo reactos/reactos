@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/shutdown.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Eric Kohl
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Shutdown handlers
+ * COPYRIGHT:   Copyright 2000-2013 Eric Kohl <eric.kohl@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

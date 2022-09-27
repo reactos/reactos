@@ -16,7 +16,7 @@ BEGIN
     AUTOCHECKBOX "Placer une icône du volume dans la barre de tâches", IDC_ICON_IN_TASKBAR, 50, 92, 175, 10
     PUSHBUTTON "A&vancé...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Paramètres des enceintes", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "Utilisez les paramètres ci-dessous pour changer le volume de chaque enceinte et modifier d'autres réglagles.", -1, 70, 155, 150, 36
     PUSHBUTTON "Volume des enceinte&s...", IDC_SPEAKER_VOL_BTN, 60, 195, 85, 15
     PUSHBUTTON "A&vancé...", IDC_ADVANCED2_BTN, 150, 195, 75, 15

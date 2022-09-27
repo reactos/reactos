@@ -945,6 +945,24 @@ IntDefWindowProc(
                    wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
                    co_IntSendMessage( Active, WM_SYSCOMMAND, wParamTmp, wParam );
                 }
+                else if (wParam == VK_SHIFT) // Alt+Shift
+                {
+                    RTL_ATOM ClassAtom = 0;
+                    UNICODE_STRING ustrClass, ustrWindow;
+                    HWND hwndSwitch;
+
+                    RtlInitUnicodeString(&ustrClass, L"kbswitcher");
+                    RtlInitUnicodeString(&ustrWindow, L"");
+
+                    IntGetAtomFromStringOrAtom(&ustrClass, &ClassAtom);
+
+                    hwndSwitch = IntFindWindow(UserGetDesktopWindow(), NULL, ClassAtom, &ustrWindow);
+                    if (hwndSwitch)
+                    {
+#define ID_NEXTLAYOUT 10003
+                        UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, 0);
+                    }
+                }
             }
             else if( wParam == VK_F10 )
             {

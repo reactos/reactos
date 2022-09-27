@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/blockdev.c
- * PURPOSE:          Temporary sector reading support
- * PROGRAMMER:       David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Temporary sector reading support
+ * COPYRIGHT:   Copyright 1999-2001 David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *****************************************************************/

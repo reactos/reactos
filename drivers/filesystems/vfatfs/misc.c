@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/misc.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Misc routines
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2015-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -518,7 +517,7 @@ VfatCheckForDismount(
      * It seems to be related to the fact that the volume root directory as
      * well as auxiliary data stream(s) are still opened, and only these are
      * allowed to be opened at that moment. After analysis it appears that for
-     * the ReactOS' fastfat, this number is equal to "2".
+     * the ReactOS' vfatfs, this number is equal to "2".
      */
     UnCleanCount = 2;
 

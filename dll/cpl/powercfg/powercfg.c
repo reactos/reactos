@@ -155,7 +155,7 @@ CPlApplet(HWND hwndCPl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    int i = (int)lParam1;
+    UINT i = (UINT)lParam1;
 
     switch (uMsg)
     {
@@ -170,20 +170,26 @@ CPlApplet(HWND hwndCPl,
         }
 
         case CPL_INQUIRE:
-        {
-            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[i].idIcon;
-            CPlInfo->idName = Applets[i].idName;
-            CPlInfo->idInfo = Applets[i].idDescription;
+            if (i < NUM_APPLETS)
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            else
+            {
+                return TRUE;
+            }
             break;
-        }
 
         case CPL_DBLCLK:
-        {
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
-        }
     }
 
     return FALSE;

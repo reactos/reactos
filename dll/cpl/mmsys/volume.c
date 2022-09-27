@@ -12,20 +12,13 @@
 #include <shellapi.h>
 
 
-typedef struct _IMGINFO
-{
-    HBITMAP hBitmap;
-    INT cxSource;
-    INT cySource;
-} IMGINFO, *PIMGINFO;
-
-
 typedef struct _GLOBAL_DATA
 {
     HMIXER hMixer;
     HICON hIconMuted;
     HICON hIconUnMuted;
     HICON hIconNoHW;
+    HICON hIconSpeakImg;
 
     LONG muteVal;
     DWORD muteControlID;
@@ -42,30 +35,6 @@ typedef struct _GLOBAL_DATA
     PMIXERCONTROLDETAILS_UNSIGNED volumeCurrentValues;
 
 } GLOBAL_DATA, *PGLOBAL_DATA;
-
-
-static VOID
-InitImageInfo(PIMGINFO ImgInfo)
-{
-    BITMAP bitmap;
-
-    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
-
-    ImgInfo->hBitmap = LoadImageW(hApplet,
-                                  MAKEINTRESOURCEW(IDB_SPEAKIMG),
-                                  IMAGE_BITMAP,
-                                  0,
-                                  0,
-                                  LR_DEFAULTCOLOR);
-
-    if (ImgInfo->hBitmap != NULL)
-    {
-        GetObjectW(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
-
-        ImgInfo->cxSource = bitmap.bmWidth;
-        ImgInfo->cySource = bitmap.bmHeight;
-    }
-}
 
 
 VOID
@@ -421,7 +390,7 @@ VolumeDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-    static IMGINFO ImgInfo;
+    static const INT speakImgSize[] = {72, 72};
     PGLOBAL_DATA pGlobalData;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
@@ -457,8 +426,13 @@ VolumeDlgProc(HWND hwndDlg,
             pGlobalData->hIconUnMuted = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pGlobalData->hIconMuted = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_MUTED_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pGlobalData->hIconNoHW = LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_NO_HW), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            pGlobalData->hIconSpeakImg = LoadImageW(hApplet,
+                                                    MAKEINTRESOURCEW(IDI_SPEAKIMG),
+                                                    IMAGE_ICON,
+                                                    speakImgSize[0],
+                                                    speakImgSize[1],
+                                                    LR_DEFAULTCOLOR);
 
-            InitImageInfo(&ImgInfo);
             InitVolumeControls(hwndDlg, pGlobalData);
             break;
         }
@@ -469,27 +443,20 @@ VolumeDlgProc(HWND hwndDlg,
             lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
             if (lpDrawItem->CtlID == IDC_SPEAKIMG)
             {
-                HDC hdcMem;
                 LONG left;
 
                 /* Position image in centre of dialog */
-                left = (lpDrawItem->rcItem.right - ImgInfo.cxSource) / 2;
+                left = (lpDrawItem->rcItem.right - speakImgSize[0]) / 2;
 
-                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
-                if (hdcMem != NULL)
-                {
-                    SelectObject(hdcMem, ImgInfo.hBitmap);
-                    BitBlt(lpDrawItem->hDC,
+                DrawIconEx(lpDrawItem->hDC,
                            left,
                            lpDrawItem->rcItem.top,
-                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-                           hdcMem,
+                           pGlobalData->hIconSpeakImg,
+                           speakImgSize[0],
+                           speakImgSize[1],
                            0,
-                           0,
-                           SRCCOPY);
-                    DeleteDC(hdcMem);
-                }
+                           NULL,
+                           DI_NORMAL);
             }
             break;
         }
@@ -559,19 +526,23 @@ VolumeDlgProc(HWND hwndDlg,
         case WM_DESTROY:
             if (pGlobalData)
             {
-                if (pGlobalData->volumeCurrentValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeCurrentValues);
-
-                if (pGlobalData->volumePreviousValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumePreviousValues);
-
-                if (pGlobalData->volumeInitialValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitialValues);
-
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumeCurrentValues);
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumePreviousValues);
+                HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitialValues);
                 mixerClose(pGlobalData->hMixer);
-                DestroyIcon(pGlobalData->hIconMuted);
-                DestroyIcon(pGlobalData->hIconUnMuted);
-                DestroyIcon(pGlobalData->hIconNoHW);
+
+                if (pGlobalData->hIconSpeakImg)
+                    DestroyIcon(pGlobalData->hIconSpeakImg);
+
+                if (pGlobalData->hIconNoHW)
+                    DestroyIcon(pGlobalData->hIconNoHW);
+
+                if (pGlobalData->hIconMuted)
+                    DestroyIcon(pGlobalData->hIconMuted);
+
+                if (pGlobalData->hIconUnMuted)
+                    DestroyIcon(pGlobalData->hIconUnMuted);
+
                 HeapFree(GetProcessHeap(), 0, pGlobalData);
             }
             break;

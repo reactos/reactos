@@ -1,27 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/iface.c
- * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Pierre Schweitzer (pierre@reactos.org)
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Driver entry interface
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2010-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -52,7 +34,7 @@ DriverEntry(
     IN PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\FatX");
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(RegistryPath);
@@ -64,20 +46,6 @@ DriverEntry(
                             0,
                             FALSE,
                             &DeviceObject);
-    if (Status == STATUS_OBJECT_NAME_EXISTS ||
-       Status == STATUS_OBJECT_NAME_COLLISION)
-    {
-        /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
-        RtlInitUnicodeString(&DeviceName, L"\\RosFat");
-        Status = IoCreateDevice(DriverObject,
-                                sizeof(VFAT_GLOBAL_DATA),
-                                &DeviceName,
-                                FILE_DEVICE_DISK_FILE_SYSTEM,
-                                0,
-                                FALSE,
-                                &DeviceObject);
-    }
-
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -154,7 +122,7 @@ DriverEntry(
         BOOLEAN Registered;
 
         Registered = KdRosRegisterCliCallback(vfatKdbgHandler);
-        DPRINT1("FastFAT KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
+        DPRINT1("VFATFS KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
     }
 #endif
 

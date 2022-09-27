@@ -1,13 +1,12 @@
 /*
-* FILE:             drivers/filesystems/fastfat/fcb.c
-* PURPOSE:          Routines to manipulate FCBs.
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
-*                   Rex Jolliff (rex@lvcablemodem.com)
-*                   Herve Poussineau (reactos@poussine.freesurf.fr)
-*                   Pierre Schweitzer (pierre@reactos.org)
-*/
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Routines to manipulate FCBs
+ * COPYRIGHT:   Copyright 1998 Jason Filby <jasonfilby@yahoo.com>
+ *              Copyright 2001 Rex Jolliff <rex@lvcablemodem.com>
+ *              Copyright 2005-2022 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2008-2018 Pierre Schweitzer <pierre@reactos.org>
+ */
 
 /*  -------------------------------------------------------  INCLUDES  */
 
@@ -428,6 +427,7 @@ static
 VOID
 vfatInitFCBFromDirEntry(
     PDEVICE_EXTENSION Vcb,
+    PVFATFCB ParentFcb,
     PVFATFCB Fcb,
     PVFAT_DIRENTRY_CONTEXT DirContext)
 {
@@ -476,7 +476,8 @@ vfatInitFCBFromDirEntry(
     }
     Fcb->dirIndex = DirContext->DirIndex;
     Fcb->startIndex = DirContext->StartIndex;
-    if (vfatVolumeIsFatX(Vcb) && !vfatFCBIsRoot(Fcb))
+    Fcb->parentFcb = ParentFcb;
+    if (vfatVolumeIsFatX(Vcb) && !vfatFCBIsRoot(ParentFcb))
     {
         ASSERT(DirContext->DirIndex >= 2 && DirContext->StartIndex >= 2);
         Fcb->dirIndex = DirContext->DirIndex-2;
@@ -572,13 +573,12 @@ vfatUpdateFCB(
     RemoveEntryList(&Fcb->ParentListEntry);
 
     /* Reinit FCB */
-    vfatInitFCBFromDirEntry(pVCB, Fcb, DirContext);
+    vfatInitFCBFromDirEntry(pVCB, ParentFcb, Fcb, DirContext);
 
     if (vfatFCBIsDirectory(Fcb))
     {
         CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
     }
-    Fcb->parentFcb = ParentFcb;
     InsertTailList(&ParentFcb->ParentListHead, &Fcb->ParentListEntry);
     vfatAddFCBToTable(pVCB, Fcb);
 
@@ -739,10 +739,9 @@ vfatMakeFCBFromDirEntry(
     }
 
     rcFCB = vfatNewFCB(vcb, &NameU);
-    vfatInitFCBFromDirEntry(vcb, rcFCB, DirContext);
+    vfatInitFCBFromDirEntry(vcb, directoryFCB, rcFCB, DirContext);
 
     rcFCB->RefCount = 1;
-    rcFCB->parentFcb = directoryFCB;
     InsertTailList(&directoryFCB->ParentListHead, &rcFCB->ParentListEntry);
     vfatAddFCBToTable(vcb, rcFCB);
     *fileFCB = rcFCB;

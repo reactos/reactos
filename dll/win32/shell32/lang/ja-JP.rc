@@ -498,11 +498,11 @@ FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 180, 2, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "ユーザー切り替え(&S)", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "ログオフ(&L)", IDC_LOG_OFF_BUTTON, 134, 46, 19, 19, BS_OWNERDRAW
     PUSHBUTTON "キャンセル", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "ReactOS のログオフ", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "ユーザー切り替え", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "ログオフ", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -802,8 +802,8 @@ BEGIN
     IDS_COPYERRORSAME "コピーできません '%s': コピー元とコピー先のファイル名が同じです。"
     IDS_MOVEERRORSUBFOLDER "移動できません '%s': 移動先のフォルダは移動元のフォルダのサブフォルダです。"
     IDS_COPYERRORSUBFOLDER "コピーできません '%s': コピー先のフォルダはコピー元のフォルダのサブフォルダです。"
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "移動できません '%s': %s"
+    IDS_COPYERROR "コピーできません '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
@@ -839,8 +839,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "フォーマット完了。"
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "ボリュームをフォーマットできません"
+    IDS_NO_FORMAT "このボリュームをフォーマットできません! ReactOS を実行するための重要なシステム ファイルが含まれています。"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "「ファイルの実行」ダイアログを表示できませんでした (内部エラー)"
@@ -948,7 +948,7 @@ BEGIN
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"
     IDS_PRINT_VERB "印刷"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "ここでコマンドプロンプトを開く"
 
     IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
     IDS_PRINTERS "プリンタ"
@@ -1023,11 +1023,11 @@ BEGIN
     IDS_MOVEITEMS "項目の移動先"
     IDS_MOVEBUTTON "移動"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "システムフォルダ"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "プログラムを終了し、ReactOS セッションを終了します。"
+    IDS_SWITCH_USER_DESC "プログラムとファイルを開いたまま、別のユーザーがログオンできるようにします。\r\n\r\n(Win+L を押して、ユーザーを切り替えることもできます)"
     IDS_LOG_OFF_TITLE "ログオフ"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "ユーザー切り替え"
 END

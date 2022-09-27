@@ -194,5 +194,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "タスクバーとスタートメニュー"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "開いているウィンドウを表示(&S)"
 END

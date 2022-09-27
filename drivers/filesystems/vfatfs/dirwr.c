@@ -1,12 +1,10 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/fastfat/dirwr.c
- * PURPOSE:          VFAT Filesystem : write in directory
- * PROGRAMMER:       Rex Jolliff (rex@lvcablemodem.com)
- *                   Herve Poussineau (reactos@poussine.freesurf.fr)
- *                   Pierre Schweitzer (pierre@reactos.org)
- *
+ * PROJECT:     VFAT Filesystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Write in directory
+ * COPYRIGHT:   Copyright 1999-2001 Rex Jolliff <rex@lvcablemodem.com>
+ *              Copyright 2004-2008 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2010-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

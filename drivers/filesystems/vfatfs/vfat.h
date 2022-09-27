@@ -1,5 +1,5 @@
-#ifndef _FASTFAT_PCH_
-#define _FASTFAT_PCH_
+#ifndef _VFATFS_PCH_
+#define _VFATFS_PCH_
 
 #include <ntifs.h>
 #include <ntdddisk.h>
@@ -1241,4 +1241,4 @@ NTSTATUS
 VfatSetVolumeInformation(
     PVFAT_IRP_CONTEXT IrpContext);
 
-#endif /* _FASTFAT_PCH_ */
+#endif /* _VFATFS_PCH_ */

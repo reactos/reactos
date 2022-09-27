@@ -16,7 +16,7 @@ BEGIN
     AUTOCHECKBOX "タスクバーに音量アイコンを置く(&I)", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "上級者向け(&V)...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "スピーカーの設定", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "個別のスピーカーの音量やその他の設定を変更するために下の設定をお使い下さい。", -1, 70, 155, 150, 36
     PUSHBUTTON "スピーカー音量(&S)...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "上級者向け(&D)...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
@@ -234,13 +234,13 @@ BEGIN
     IDS_CPLDESCRIPTION "コンピューターの音声スキームを変更するか、スピーカーと録音デバイスの設定を変更します。"
     IDS_NO_SOUND "(なし)"
     IDS_NO_DEVICES "デバイスがありません"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
-    IDS_SPEAKER_LEFT "&Left:"
-    IDS_SPEAKER_RIGHT "&Right:"
-    IDS_SPEAKER_CENTER "&Center:"
-    IDS_SPEAKER_BACK_LEFT "&Back left:"
-    IDS_SPEAKER_BACK_RIGHT "B&ack right:"
-    IDS_SPEAKER_LOW_FREQUENCY "Low &Frequency:"
+    IDS_SPEAKER_VOLUME "スピーカー音量"
+    IDS_SPEAKER_LEFT "左(&L):"
+    IDS_SPEAKER_RIGHT "右(&R):"
+    IDS_SPEAKER_CENTER "中央(&C):"
+    IDS_SPEAKER_BACK_LEFT "左後ろ(&B):"
+    IDS_SPEAKER_BACK_RIGHT "右後ろ(&A):"
+    IDS_SPEAKER_LOW_FREQUENCY "低周波数(&F):"
     5825 "プログラム エラー"
     5826 "プログラムを閉じる"
     5827 "重大なバッテリー警告音"
@@ -271,6 +271,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "ReactOSログオフ"
     IDS_REACTOS_LOGON "ReactOSログオン"
     5854 "ReactOSエクスプローラー"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "新しい音声を探す"
+    IDS_WAVE_FILES_FILTER "音声ファイル (*.wav)|*.wav|"
 END
