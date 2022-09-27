@@ -195,7 +195,7 @@ static HICON LoadIMEIcon(LPCTSTR pszImeFile)
     return hIconSm;
 }
 
-HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
+static HTREEITEM FindLanguageInList(HWND hwndList, LPCTSTR pszLangName)
 {
     TV_ITEM item;
     TCHAR szText[128];
