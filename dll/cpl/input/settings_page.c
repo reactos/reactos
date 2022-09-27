@@ -251,7 +251,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         insert.item         = item;
         hItem = TreeView_InsertItem(hwndList, &insert);
 
-        // Keyboard
+        // The type of input method (currently keyboard only)
         LoadStringW(hApplet, IDS_KEYBOARD, szKeyboard, _countof(szKeyboard));
         ZeroMemory(&item, sizeof(item));
         item.mask           = TVIF_TEXT | TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE;
@@ -280,7 +280,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
             TreeView_SetItem(hwndList, &item);
         }
 
-        // Keyboard
+        // The type of input method (currently keyboard only)
         hItem = TreeView_GetChild(hwndList, hItem);
     }
 
