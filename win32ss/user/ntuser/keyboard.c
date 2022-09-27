@@ -1270,6 +1270,9 @@ IntMapVirtualKeyEx(UINT uCode, UINT Type, PKBDTABLES pKbdTbl)
 {
     UINT uRet = 0;
 
+    if (uCode == 0)
+        return uRet;
+
     switch (Type)
     {
         case MAPVK_VK_TO_VSC:
