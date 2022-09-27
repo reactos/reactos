@@ -1,5 +1,6 @@
 LanguageNames=(English=0x409:MSG00409
-               Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415
+               Romanian=0x418:MSG00418)
 
 MessageId=0
 SymbolicName=NONE
@@ -8,6 +9,9 @@ PCI Device
 .
 Language=Polish
 Urządzenie PCI
+.
+Language=Romanian
+Dispozitiv PCI
 .
 
 MessageId=1
@@ -18,6 +22,9 @@ VGA Device
 Language=Polish
 Urządzenie VGA
 .
+Language=Romanian
+Dispozitiv VGA
+.
 
 MessageId=256
 SymbolicName=NONE
@@ -26,6 +33,9 @@ SCSI Controller
 .
 Language=Polish
 Kontroler SCSI
+.
+Language=Romanian
+Controller SCSI
 .
 
 MessageId=257
@@ -36,6 +46,9 @@ IDE Controller
 Language=Polish
 Kontroler IDE
 .
+Language=Romanian
+Controller IDE
+.
 
 MessageId=258
 SymbolicName=NONE
@@ -44,6 +57,9 @@ Floppy Controller
 .
 Language=Polish
 Kontroler dyskietek
+.
+Language=Romanian
+Controller pentru dischete
 .
 
 MessageId=259
