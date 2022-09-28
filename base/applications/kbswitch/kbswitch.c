@@ -147,7 +147,7 @@ static HICON
 CreateTrayIcon(LPTSTR szLCID)
 {
     LANGID LangID;
-    TCHAR szBuf[3];
+    TCHAR szBuf[4];
     HDC hdc;
     HBITMAP hbmColor, hbmMono, hBmpOld;
     RECT rect;
@@ -155,27 +155,35 @@ CreateTrayIcon(LPTSTR szLCID)
     ICONINFO IconInfo;
     HICON hIcon;
     LOGFONT lf;
+    BITMAPINFO bmi;
 
     /* Getting "EN", "FR", etc. from English, French, ... */
-    LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
-    if (!GetLocaleInfo(LangID, LOCALE_SISO639LANGNAME, szBuf, ARRAYSIZE(szBuf)))
+    LangID = LOWORD(_tcstoul(szLCID, NULL, 16));
+    if (!GetLocaleInfo(LangID, LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                       szBuf, ARRAYSIZE(szBuf)))
     {
         StringCchCopy(szBuf, ARRAYSIZE(szBuf), _T("??"));
     }
-    CharUpper(szBuf);
+    szBuf[2] = 0; /* Truncate the identifiers to two characters: "ENG" --> "EN" etc. */
+
+    /* Prepare for DIB (device-independent bitmap) */
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = CX_ICON;
+    bmi.bmiHeader.biHeight = CY_ICON;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
 
     /* Create hdc, hbmColor and hbmMono */
     hdc = CreateCompatibleDC(NULL);
-    hbmColor = CreateCompatibleBitmap(hdc, CX_ICON, CY_ICON);
+    hbmColor = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
     hbmMono = CreateBitmap(CX_ICON, CY_ICON, 1, 1, NULL);
 
     /* Create a font */
-    ZeroMemory(&lf, sizeof(lf));
-    lf.lfHeight = -11;
-    lf.lfCharSet = ANSI_CHARSET;
-    lf.lfWeight = FW_NORMAL;
-    StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), _T("Tahoma"));
-    hFont = CreateFontIndirect(&lf);
+    if (SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
+        hFont = CreateFontIndirect(&lf);
+    else
+        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     /* Checking NULL */
     if (!hdc || !hbmColor || !hbmMono || !hFont)
