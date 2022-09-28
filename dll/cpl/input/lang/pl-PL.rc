@@ -13,14 +13,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ustawienia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz usługi dla kadego używanego języka z listy.\nListę można modyfikować przyciskami Dodaj i Usuń.", -1, 9, 6, 238, 17
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 28, 237, 109
-    PUSHBUTTON "&Ustaw domyślne", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&Dodaj...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "U&suń", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Właściwości...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferencje", -1, 7, 185, 240, 36
-    PUSHBUTTON "Us&tawienia klawiszy...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
+    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    LTEXT "Wybierz usługi dla kadego używanego języka z listy. Listę można modyfikować przyciskami Dodaj i Usuń.", -1, 15, 78, 230, 25
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    PUSHBUTTON "&Dodaj...", IDC_ADD_BUTTON, 175, 105, 70, 14
+    PUSHBUTTON "U&suń", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "&Właściwości...", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Preferencje", -1, 5, 195, 245, 30
+    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Us&tawienia klawiszy...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228

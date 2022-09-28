@@ -57,8 +57,17 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout);
 VOID
 InputList_SetDefault(INPUT_LIST_NODE *pNode);
 
-VOID
+INT
+InputList_GetAliveCount(VOID);
+
+BOOL
 InputList_Remove(INPUT_LIST_NODE *pNode);
+
+BOOL
+InputList_RemoveByLang(LANGID wLangId);
+
+VOID
+InputList_Sort(VOID);
 
 VOID
 InputList_Destroy(VOID);

@@ -7,6 +7,7 @@
 */
 
 #include "input_list.h"
+#define NOTHING
 
 typedef struct
 {
@@ -154,7 +155,7 @@ InputList_AppendNode(VOID)
     /* Find last node */
     for (pCurrent = _InputList; pCurrent->pNext; pCurrent = pCurrent->pNext)
     {
-        ;
+        NOTHING;
     }
 
     /* Add to the end */
@@ -568,13 +569,14 @@ InputList_FindNextDefault(INPUT_LIST_NODE *pNode)
  * It marks the input method for deletion, but does not delete it directly.
  * To apply the changes using InputList_Process()
  */
-VOID
+BOOL
 InputList_Remove(INPUT_LIST_NODE *pNode)
 {
+    BOOL ret = FALSE;
     BOOL bRemoveNode = FALSE;
 
     if (pNode == NULL)
-        return;
+        return FALSE;
 
     if (pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED)
     {
@@ -596,14 +598,39 @@ InputList_Remove(INPUT_LIST_NODE *pNode)
             pCurrent->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
 
         pNode->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
+        ret = TRUE; /* default input is changed */
     }
 
     if (bRemoveNode)
     {
         InputList_RemoveNode(pNode);
     }
+
+    return ret;
 }
 
+BOOL
+InputList_RemoveByLang(LANGID wLangId)
+{
+    BOOL ret = FALSE;
+    INPUT_LIST_NODE *pCurrent;
+
+Retry:
+    for (pCurrent = _InputList; pCurrent; pCurrent = pCurrent->pNext)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        if (LOWORD(pCurrent->pLocale->dwId) == wLangId)
+        {
+            if (InputList_Remove(pCurrent))
+                ret = TRUE; /* default input is changed */
+            goto Retry;
+        }
+    }
+
+    return ret;
+}
 
 VOID
 InputList_Create(VOID)
@@ -662,6 +689,89 @@ InputList_Create(VOID)
     free(pLayoutList);
 }
 
+static INT InputList_Compare(INPUT_LIST_NODE *pNode1, INPUT_LIST_NODE *pNode2)
+{
+    INT nCompare = _wcsicmp(pNode1->pszIndicator, pNode2->pszIndicator);
+    if (nCompare != 0)
+        return nCompare;
+
+    return _wcsicmp(pNode1->pLayout->pszName, pNode2->pLayout->pszName);
+}
+
+VOID InputList_Sort(VOID)
+{
+    INPUT_LIST_NODE *pList = _InputList;
+    INPUT_LIST_NODE *pNext, *pPrev;
+    INPUT_LIST_NODE *pMinimum, *pNode;
+
+    _InputList = NULL;
+
+    while (pList)
+    {
+        /* Find the minimum node */
+        pMinimum = NULL;
+        for (pNode = pList; pNode; pNode = pNext)
+        {
+            pNext = pNode->pNext;
+
+            if (pMinimum == NULL)
+            {
+                pMinimum = pNode;
+            }
+            else if (InputList_Compare(pNode, pMinimum) < 0)
+            {
+                pMinimum = pNode;
+            }
+        }
+
+        // Remove pMinimum from pList
+        pNext = pMinimum->pNext;
+        pPrev = pMinimum->pPrev;
+        if (pNext)
+            pNext->pPrev = pPrev;
+        if (pPrev)
+            pPrev->pNext = pNext;
+        else
+            pList = pNext;
+
+        // Append pMinimum to _InputList
+        if (!_InputList)
+        {
+            pMinimum->pPrev = pMinimum->pNext = NULL;
+            _InputList = pMinimum;
+        }
+        else
+        {
+            /* Find last node */
+            for (pNode = _InputList; pNode->pNext; pNode = pNode->pNext)
+            {
+                NOTHING;
+            }
+
+            /* Add to the end */
+            pNode->pNext = pMinimum;
+            pMinimum->pPrev = pNode;
+            pMinimum->pNext = NULL;
+        }
+    }
+}
+
+INT
+InputList_GetAliveCount(VOID)
+{
+    INPUT_LIST_NODE *pNode;
+    INT nCount = 0;
+
+    for (pNode = _InputList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        ++nCount;
+    }
+
+    return nCount;
+}
 
 INPUT_LIST_NODE*
 InputList_GetFirst(VOID)

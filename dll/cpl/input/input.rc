@@ -13,6 +13,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 
 IDI_CPLSYSTEM ICON "resources/keyboard-shortcuts.ico"
+IDI_KEYBOARD ICON "resources/keyboard.ico"
+IDI_DOT ICON "resources/dot.ico"
 
 #include <reactos/manifest_hosted.rc>
 
