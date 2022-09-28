@@ -804,15 +804,38 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     if (!bResult)
         return FALSE;
 
-    if (bSearchClosestMode)
+    if (LDEVOBJ_bGetClosestMode(pGraphicsDevice, &dmSearch, &pdmSelected))
     {
-        if (LDEVOBJ_bGetClosestMode(pGraphicsDevice, &dmSearch, &pdmSelected))
+        if (bSearchClosestMode)
         {
             /* Ok, found a closest mode. Update search */
             dmSearch.dmBitsPerPel = pdmSelected->dmBitsPerPel;
             dmSearch.dmPelsWidth = pdmSelected->dmPelsWidth;
             dmSearch.dmPelsHeight = pdmSelected->dmPelsHeight;
             dmSearch.dmDisplayFrequency = pdmSelected->dmDisplayFrequency;
+        }
+        else
+        {
+            /* Only update not provided fields */
+            _SEH2_TRY
+            {
+                if (!(RequestedMode->dmFields & DM_BITSPERPEL) || RequestedMode->dmBitsPerPel == 0)
+                    dmSearch.dmBitsPerPel = pdmSelected->dmBitsPerPel;
+                if (!(RequestedMode->dmFields & DM_PELSWIDTH) || RequestedMode->dmPelsWidth == 0)
+                    dmSearch.dmPelsWidth = pdmSelected->dmPelsWidth;
+                if (!(RequestedMode->dmFields & DM_PELSHEIGHT) || RequestedMode->dmPelsHeight == 0)
+                    dmSearch.dmPelsHeight = pdmSelected->dmPelsHeight;
+                if (!(RequestedMode->dmFields & DM_DISPLAYFREQUENCY) || RequestedMode->dmDisplayFrequency == 0)
+                    dmSearch.dmDisplayFrequency = pdmSelected->dmDisplayFrequency;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                bResult = FALSE;
+            }
+            _SEH2_END;
+
+            if (!bResult)
+                return FALSE;
         }
     }
 
