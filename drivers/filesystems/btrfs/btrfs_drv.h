@@ -492,8 +492,15 @@ typedef struct {
 } batch_item;
 
 typedef struct {
-    root* r;
+    KEY key;
     LIST_ENTRY items;
+    unsigned int num_items;
+    LIST_ENTRY list_entry;
+} batch_item_ind;
+
+typedef struct {
+    root* r;
+    LIST_ENTRY items_ind;
     LIST_ENTRY list_entry;
 } batch_root;
 
@@ -674,6 +681,7 @@ typedef struct {
     bool clear_cache;
     bool allow_degraded;
     bool no_root_dir;
+    bool nodatacow;
 } mount_options;
 
 #define VCB_TYPE_FS         1
@@ -1182,6 +1190,7 @@ extern uint32_t mount_clear_cache;
 extern uint32_t mount_allow_degraded;
 extern uint32_t mount_readonly;
 extern uint32_t mount_no_root_dir;
+extern uint32_t mount_nodatacow;
 extern uint32_t no_pnp;
 
 #ifndef __GNUC__
@@ -1468,8 +1477,6 @@ NTSTATUS do_tree_writes(device_extension* Vcb, LIST_ENTRY* tree_writes, bool no_
 void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, void* csum, PIRP Irp);
 bool find_metadata_address_in_chunk(device_extension* Vcb, chunk* c, uint64_t* address);
 void add_trim_entry_avoid_sb(device_extension* Vcb, device* dev, uint64_t address, uint64_t size);
-NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, root* r, uint64_t objid, uint8_t objtype, uint64_t offset,
-                                _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* data, uint16_t datalen, enum batch_operation operation);
 NTSTATUS flush_partial_stripe(device_extension* Vcb, chunk* c, partial_stripe* ps);
 NTSTATUS update_dev_item(device_extension* Vcb, device* device, PIRP Irp);
 void calc_tree_checksum(device_extension* Vcb, tree_header* th);
@@ -1697,6 +1704,9 @@ static __inline void print_open_trees(device_extension* Vcb) {
 }
 
 static __inline bool write_fcb_compressed(fcb* fcb) {
+    if (fcb->inode_item.flags & BTRFS_INODE_NODATACOW)
+        return false;
+
     // make sure we don't accidentally write the cache inodes or pagefile compressed
     if (fcb->subvol->id == BTRFS_ROOT_ROOT || fcb->Header.Flags2 & FSRTL_FLAG2_IS_PAGING_FILE)
         return false;

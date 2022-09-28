@@ -38,7 +38,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     mount_options* options = &Vcb->options;
     UNICODE_STRING path, ignoreus, compressus, compressforceus, compresstypeus, readonlyus, zliblevelus, flushintervalus,
                    maxinlineus, subvolidus, skipbalanceus, nobarrierus, notrimus, clearcacheus, allowdegradedus, zstdlevelus,
-                   norootdirus;
+                   norootdirus, nodatacowus;
     OBJECT_ATTRIBUTES oa;
     NTSTATUS Status;
     ULONG i, j, kvfilen, index, retlen;
@@ -59,6 +59,8 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     options->clear_cache = mount_clear_cache;
     options->allow_degraded = mount_allow_degraded;
     options->subvol_id = 0;
+    options->no_root_dir = mount_no_root_dir;
+    options->nodatacow = mount_nodatacow;
 
     path.Length = path.MaximumLength = registry_path.Length + (37 * sizeof(WCHAR));
     path.Buffer = ExAllocatePoolWithTag(PagedPool, path.Length, ALLOC_TAG);
@@ -123,6 +125,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     RtlInitUnicodeString(&allowdegradedus, L"AllowDegraded");
     RtlInitUnicodeString(&zstdlevelus, L"ZstdLevel");
     RtlInitUnicodeString(&norootdirus, L"NoRootDir");
+    RtlInitUnicodeString(&nodatacowus, L"NoDataCOW");
 
     do {
         Status = ZwEnumerateValueKey(h, index, KeyValueFullInformation, kvfi, kvfilen, &retlen);
@@ -199,6 +202,10 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
                 DWORD* val = (DWORD*)((uint8_t*)kvfi + kvfi->DataOffset);
 
                 options->no_root_dir = *val;
+            } else if (FsRtlAreNamesEqual(&nodatacowus, &us, true, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((uint8_t*)kvfi + kvfi->DataOffset);
+
+                options->nodatacow = *val;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
             ERR("ZwEnumerateValueKey returned %08lx\n", Status);
@@ -813,6 +820,7 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
     get_registry_value(h, L"Readonly", REG_DWORD, &mount_readonly, sizeof(mount_readonly));
     get_registry_value(h, L"ZstdLevel", REG_DWORD, &mount_zstd_level, sizeof(mount_zstd_level));
     get_registry_value(h, L"NoRootDir", REG_DWORD, &mount_no_root_dir, sizeof(mount_no_root_dir));
+    get_registry_value(h, L"NoDataCOW", REG_DWORD, &mount_nodatacow, sizeof(mount_nodatacow));
 
     if (!refresh)
         get_registry_value(h, L"NoPNP", REG_DWORD, &no_pnp, sizeof(no_pnp));

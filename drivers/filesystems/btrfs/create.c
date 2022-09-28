@@ -2319,19 +2319,24 @@ static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr
         fcb->inode_item.flags = BTRFS_INODE_NODATACOW | BTRFS_INODE_NODATASUM | BTRFS_INODE_NOCOMPRESS;
     } else {
         // inherit nodatacow flag from parent directory
-        if (parfileref->fcb->inode_item.flags & BTRFS_INODE_NODATACOW) {
+        if (parfileref->fcb->inode_item.flags & BTRFS_INODE_NODATACOW || Vcb->options.nodatacow) {
             fcb->inode_item.flags |= BTRFS_INODE_NODATACOW;
 
             if (type != BTRFS_TYPE_DIRECTORY)
                 fcb->inode_item.flags |= BTRFS_INODE_NODATASUM;
         }
 
-        if (parfileref->fcb->inode_item.flags & BTRFS_INODE_COMPRESS)
+        if (parfileref->fcb->inode_item.flags & BTRFS_INODE_COMPRESS &&
+            !(fcb->inode_item.flags & BTRFS_INODE_NODATACOW)) {
             fcb->inode_item.flags |= BTRFS_INODE_COMPRESS;
+        }
     }
 
-    fcb->prop_compression = parfileref->fcb->prop_compression;
-    fcb->prop_compression_changed = fcb->prop_compression != PropCompression_None;
+    if (!(fcb->inode_item.flags & BTRFS_INODE_NODATACOW)) {
+        fcb->prop_compression = parfileref->fcb->prop_compression;
+        fcb->prop_compression_changed = fcb->prop_compression != PropCompression_None;
+    } else
+        fcb->prop_compression = PropCompression_None;
 
     fcb->inode_item_changed = true;
 
@@ -2838,7 +2843,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
     fcb->adsmaxlen = Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - (sizeof(DIR_ITEM) - 1);
 
     if (utf8len + sizeof(xapref) - 1 + overhead > fcb->adsmaxlen) {
-        WARN("not enough room for new DIR_ITEM (%Iu + %lu > %lu)", utf8len + sizeof(xapref) - 1, overhead, fcb->adsmaxlen);
+        WARN("not enough room for new DIR_ITEM (%Iu + %lu > %lu)\n", utf8len + sizeof(xapref) - 1, overhead, fcb->adsmaxlen);
         reap_fcb(fcb);
         free_fileref(parfileref);
         return STATUS_DISK_FULL;
@@ -4551,7 +4556,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             uint64_t inode;
 
             if (!related) {
-                WARN("cannot open by short file ID unless related fileref also provided");
+                WARN("cannot open by short file ID unless related fileref also provided"\n);
                 Status = STATUS_INVALID_PARAMETER;
                 goto exit;
             }

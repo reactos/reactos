@@ -3248,6 +3248,7 @@ static NTSTATUS set_end_of_file_information(device_extension* Vcb, PIRP Irp, PFI
     LIST_ENTRY rollback;
     bool set_size = false;
     ULONG filter;
+    uint64_t new_end_of_file;
 
     if (!fileref) {
         ERR("fileref is NULL\n");
@@ -3306,35 +3307,43 @@ static NTSTATUS set_end_of_file_information(device_extension* Vcb, PIRP Irp, PFI
     TRACE("FileObject: AllocationSize = %I64x, FileSize = %I64x, ValidDataLength = %I64x\n",
         fcb->Header.AllocationSize.QuadPart, fcb->Header.FileSize.QuadPart, fcb->Header.ValidDataLength.QuadPart);
 
-    TRACE("setting new end to %I64x bytes (currently %I64x)\n", feofi->EndOfFile.QuadPart, fcb->inode_item.st_size);
+    new_end_of_file = feofi->EndOfFile.QuadPart;
 
-    if ((uint64_t)feofi->EndOfFile.QuadPart < fcb->inode_item.st_size) {
+    /* The lazy writer sometimes tries to round files to the next page size through CcSetValidData -
+     * ignore these. See fastfat!FatSetEndOfFileInfo, where Microsoft does the same as we're
+     * doing below. */
+    if (advance_only && new_end_of_file >= (uint64_t)fcb->Header.FileSize.QuadPart)
+        new_end_of_file = fcb->Header.FileSize.QuadPart;
+
+    TRACE("setting new end to %I64x bytes (currently %I64x)\n", new_end_of_file, fcb->inode_item.st_size);
+
+    if (new_end_of_file < fcb->inode_item.st_size) {
         if (advance_only) {
             Status = STATUS_SUCCESS;
             goto end;
         }
 
-        TRACE("truncating file to %I64x bytes\n", feofi->EndOfFile.QuadPart);
+        TRACE("truncating file to %I64x bytes\n", new_end_of_file);
 
         if (!MmCanFileBeTruncated(&fcb->nonpaged->segment_object, &feofi->EndOfFile)) {
             Status = STATUS_USER_MAPPED_FILE;
             goto end;
         }
 
-        Status = truncate_file(fcb, feofi->EndOfFile.QuadPart, Irp, &rollback);
+        Status = truncate_file(fcb, new_end_of_file, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("error - truncate_file failed\n");
             goto end;
         }
-    } else if ((uint64_t)feofi->EndOfFile.QuadPart > fcb->inode_item.st_size) {
-        TRACE("extending file to %I64x bytes\n", feofi->EndOfFile.QuadPart);
+    } else if (new_end_of_file > fcb->inode_item.st_size) {
+        TRACE("extending file to %I64x bytes\n", new_end_of_file);
 
-        Status = extend_file(fcb, fileref, feofi->EndOfFile.QuadPart, prealloc, NULL, &rollback);
+        Status = extend_file(fcb, fileref, new_end_of_file, prealloc, NULL, &rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("error - extend_file failed\n");
             goto end;
         }
-    } else if ((uint64_t)feofi->EndOfFile.QuadPart == fcb->inode_item.st_size && advance_only) {
+    } else if (new_end_of_file == fcb->inode_item.st_size && advance_only) {
         Status = STATUS_SUCCESS;
         goto end;
     }
@@ -5502,6 +5511,11 @@ NTSTATUS __stdcall drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
         goto end;
     }
 
+    if (fcb == fcb->Vcb->volume_fcb) {
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
+    }
+
     ccb = FileObject->FsContext2;
 
     if (!ccb) {
@@ -5749,6 +5763,11 @@ NTSTATUS __stdcall drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
 
     if (!fcb) {
         ERR("no fcb\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
+    }
+
+    if (fcb == fcb->Vcb->volume_fcb) {
         Status = STATUS_INVALID_PARAMETER;
         goto end;
     }

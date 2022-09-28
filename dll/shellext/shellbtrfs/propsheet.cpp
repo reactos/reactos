@@ -597,6 +597,16 @@ void BtrfsPropSheet::change_inode_flag(HWND hDlg, uint64_t flag, UINT state) {
         flags_set = ~flag;
     }
 
+    if (flags & BTRFS_INODE_NODATACOW && flags_set & BTRFS_INODE_NODATACOW) {
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS), false);
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS_TYPE), false);
+    } else {
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS), true);
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS_TYPE), flags & BTRFS_INODE_COMPRESS && flags_set & BTRFS_INODE_COMPRESS);
+    }
+
+    EnableWindow(GetDlgItem(hDlg, IDC_NODATACOW), !(flags & BTRFS_INODE_COMPRESS) || !(flags_set & BTRFS_INODE_COMPRESS));
+
     flags_changed = true;
 
     SendMessageW(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
@@ -994,6 +1004,11 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
 
     set_check_box(hwndDlg, IDC_NODATACOW, min_flags & BTRFS_INODE_NODATACOW, max_flags & BTRFS_INODE_NODATACOW);
     set_check_box(hwndDlg, IDC_COMPRESS, min_flags & BTRFS_INODE_COMPRESS, max_flags & BTRFS_INODE_COMPRESS);
+
+    if (min_flags & BTRFS_INODE_NODATACOW || max_flags & BTRFS_INODE_NODATACOW)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_COMPRESS), false);
+    else if (min_flags & BTRFS_INODE_COMPRESS || max_flags & BTRFS_INODE_COMPRESS)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_NODATACOW), false);
 
     comptype = GetDlgItem(hwndDlg, IDC_COMPRESS_TYPE);
 

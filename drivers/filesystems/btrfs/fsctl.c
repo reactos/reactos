@@ -1363,6 +1363,10 @@ static NTSTATUS set_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
         return STATUS_ACCESS_DENIED;
     }
 
+    // nocow and compression are mutually exclusive
+    if (bsii->flags_changed && bsii->flags & BTRFS_INODE_NODATACOW && bsii->flags & BTRFS_INODE_COMPRESS)
+        return STATUS_INVALID_PARAMETER;
+
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
 
     if (bsii->flags_changed) {
