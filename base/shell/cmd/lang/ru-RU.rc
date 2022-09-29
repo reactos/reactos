@@ -1,4 +1,11 @@
-/* Russian translation by Andrey Korotaev (unC0Rr@inbox.ru) & Aleksey Bragin (aleksey@reactos.org) & Kudratov Olimjon (olim98@bk.ru)*/
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2005 Andrey Korotaev <unC0Rr@inbox.ru>
+ *              Copyright 2005 Aleksey Bragin <aleksey@reactos.org>
+ *              Copyright 2014-2015 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -69,13 +76,13 @@ COLOR [цвета [/-F]]\n\n\
 3) два шестнадцатеричных числа\n\n\
 Таблица цветов:\n\
 дес  шест название    дес  шест название\n\
- 0   0    Черный       8   8    Серый\n\
+ 0   0    Чёрный       8   8    Серый\n\
  1   1    Синий        9   9    Светло-синий\n\
- 2   2    Зеленый     10   A    Светло-зеленый\n\
+ 2   2    Зелёный     10   A    Светло-зелёный\n\
  3   3    Голубой     11   B    Светло-голубой\n\
  4   4    Красный     12   C    Светло-красный\n\
  5   5    Лиловый     13   D    Светло-лиловый\n\
- 6   6    Желтый      14   E    Светло-желтый\n\
+ 6   6    Жёлтый      14   E    Светло-жёлтый\n\
  7   7    Белый       15   F    Ярко-белый\n"
     STRING_COPY_HELP1 "Перезаписать %s (Yes/No/All)? "
     STRING_COPY_HELP2 "Копирование одного или нескольких файлов в другое место.\n\n\

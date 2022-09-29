@@ -1,4 +1,10 @@
-/* Russian translation by Dmitry Chapyshev, 2007-06-11 */
+/*
+ * PROJECT:     ReactOS Console Configuration DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -105,11 +111,11 @@ BEGIN
     EDITTEXT IDC_EDIT_COLOR_RED, 210, 22, 30, 14, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_COLOR_RED, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 240, 22, 12, 14
-    LTEXT "&Зеленый:", IDC_STATIC, 140, 42, 48, 10
+    LTEXT "&Зелёный:", IDC_STATIC, 140, 42, 48, 10
     EDITTEXT IDC_EDIT_COLOR_GREEN, 210, 39, 30, 14, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_COLOR_GREEN, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 240, 39, 12, 14
-    LTEXT "&Голубой:", IDC_STATIC, 140, 60, 48, 10
+    LTEXT "&Синий:", IDC_STATIC, 140, 60, 48, 10
     EDITTEXT IDC_EDIT_COLOR_BLUE, 210, 56, 30, 14, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_COLOR_BLUE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 240, 56, 12, 14
