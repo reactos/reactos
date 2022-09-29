@@ -379,6 +379,7 @@ BOOL FASTCALL can_activate_window( PWND Wnd OPTIONAL)
     if (!(style & WS_VISIBLE)) return FALSE;
     if (style & WS_MINIMIZE) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
+    if (Wnd->ExStyle & WS_EX_NOACTIVATE) return FALSE;
     return TRUE;
     /* FIXME: This window could be disable because the child that closed
               was a popup. */

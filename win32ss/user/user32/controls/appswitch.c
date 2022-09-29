@@ -225,9 +225,9 @@ BOOL IsAltTabWindow(HWND hwnd)
     if (!IsWindowVisible(hwnd))
         return FALSE;
 
-    // must not be WS_EX_TOOLWINDOW
+    // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
     ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    if (ExStyle & WS_EX_TOOLWINDOW)
+    if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
         return FALSE;
 
     // must be not empty rect

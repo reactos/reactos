@@ -2494,7 +2494,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
       SwFlag = co_WinPosMinMaximize(Window, SwFlag, &NewPos);
       SwFlag |= SWP_NOZORDER|SWP_FRAMECHANGED; /* Frame always gets changed */
-      if (!(style & WS_VISIBLE) || (style & WS_CHILD) || UserGetActiveWindow()) SwFlag |= SWP_NOACTIVATE;
+      if (!(style & WS_VISIBLE) || (style & WS_CHILD) || UserGetActiveWindow() ||
+          (Window->ExStyle & WS_EX_NOACTIVATE))
+      {
+         SwFlag |= SWP_NOACTIVATE;
+      }
       co_WinPosSetWindowPos(Window, 0, NewPos.left, NewPos.top,
                             NewPos.right, NewPos.bottom, SwFlag);
    }
