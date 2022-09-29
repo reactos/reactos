@@ -838,6 +838,9 @@ IEEE 1394 Controller
 Language=Polish
 Kontroler IEEE 1394
 .
+Language=Romanian
+Controler IEEE 1394
+.
 
 MessageId=3073
 SymbolicName=NONE
@@ -846,6 +849,9 @@ ACCESS Bus Controller
 .
 Language=Polish
 Kontroler magistrali ACCESS
+.
+Language=Romanian
+Controler de magistrală ACCESS
 .
 
 MessageId=3074
@@ -856,6 +862,9 @@ SSA Controller
 Language=Polish
 Kontroler SSA
 .
+Language=Romanian
+Controler SSA
+.
 
 MessageId=3075
 SymbolicName=NONE
@@ -864,6 +873,9 @@ Universal Serial Bus (USB) Controller
 .
 Language=Polish
 Kontroler uniwersalnej magistrali szeregowej (USB)
+.
+Language=Romanian
+Controler universal de magistrală serială (USB)
 .
 
 MessageId=3076
@@ -874,6 +886,9 @@ Fibre Channel Controller
 Language=Polish
 Kontroler Fibre Channel
 .
+Language=Romanian
+Controler Fibre Channel
+.
 
 MessageId=3077
 SymbolicName=NONE
@@ -882,6 +897,9 @@ SM Bus Controller
 .
 Language=Polish
 Kontroler magistrali zarządzania systemem
+.
+Language=Romanian
+Controler de magistrală de management al sistemului
 .
 
 MessageId=3078
@@ -892,6 +910,9 @@ Infiniband Controller
 Language=Polish
 Kontroler Infiniband
 .
+Language=Romanian
+Controler Infiniband
+.
 
 MessageId=3079
 SymbolicName=NONE
@@ -900,6 +921,9 @@ IPMI Interface
 .
 Language=Polish
 Interfejs IPMI
+.
+Language=Romanian
+Interfață IPMI
 .
 
 MessageId=3080
@@ -910,6 +934,9 @@ SERCOS Interface
 Language=Polish
 Interfejs SERCOS
 .
+Language=Romanian
+Interfață SERCOS
+.
 
 MessageId=3081
 SymbolicName=NONE
@@ -918,6 +945,9 @@ CANbus Controller
 .
 Language=Polish
 Kontroler CANbus
+.
+Language=Romanian
+Controler CANbus
 .
 
 MessageId=3328
@@ -928,6 +958,9 @@ iRDA Compatible Controller
 Language=Polish
 Kontroler zgodny z iRDA
 .
+Language=Romanian
+Controler compatibil iRDA
+.
 
 MessageId=3329
 SymbolicName=NONE
@@ -936,6 +969,9 @@ Consumer IR Controller
 .
 Language=Polish
 Kontroler Consumer IR
+.
+Language=Romanian
+Controler de infraroșu (IR) de consum
 .
 
 MessageId=3344
@@ -946,6 +982,9 @@ RF Controller
 Language=Polish
 Kontroler częstotliwości radiowej
 .
+Language=Romanian
+Controler de radiofrecvență
+.
 
 MessageId=3345
 SymbolicName=NONE
@@ -954,6 +993,9 @@ Bluetooth Controller
 .
 Language=Polish
 Kontroler Bluetooth
+.
+Language=Romanian
+Controler Bluetooth
 .
 
 MessageId=3346
@@ -964,6 +1006,9 @@ Broadband Controller
 Language=Polish
 Kontroler szerokopasmowy
 .
+Language=Romanian
+Controler de bandă largă
+.
 
 MessageId=3360
 SymbolicName=NONE
@@ -972,6 +1017,9 @@ Ethernet 802.11a Controller
 .
 Language=Polish
 Kontroler Ethernet 802.11a
+.
+Language=Romanian
+Controler de Ethernet 802.11a
 .
 
 MessageId=3361
@@ -982,6 +1030,9 @@ Ethernet 802.11b Controller
 Language=Polish
 Kontroler Ethernet 802.11b
 .
+Language=Romanian
+Controler de Ethernet 802.11b
+.
 
 MessageId=3456
 SymbolicName=NONE
@@ -990,6 +1041,9 @@ PCI Wireless Controller
 .
 Language=Polish
 Kontroler bezprzewodowy PCI
+.
+Language=Romanian
+Controler wireless PCI
 .
 
 MessageId=3584
@@ -1000,6 +1054,9 @@ Intelligent I/O (I2O) Controller
 Language=Polish
 Kontroler We/Wy Intelligent (I2O)
 .
+Language=Romanian
+Controler inteligent I/O (I2O).
+.
 
 MessageId=3841
 SymbolicName=NONE
@@ -1008,6 +1065,9 @@ Satellite Communications Television Controller
 .
 Language=Polish
 Kontroler telewizji dla komunikacji satelitarnej
+.
+Language=Romanian
+Controler de televiziune pentru comunicații prin satelit
 .
 
 MessageId=3842
@@ -1018,6 +1078,9 @@ Satellite Communications Audio Controller
 Language=Polish
 Kontroler audio dla komunikacji satelitarnej
 .
+Language=Romanian
+Controler audio pentru comunicații prin satelit
+.
 
 MessageId=3843
 SymbolicName=NONE
@@ -1026,6 +1089,9 @@ Satellite Communications Voice Controller
 .
 Language=Polish
 Kontroler głosu dla komunikacji satelitarnej
+.
+Language=Romanian
+Controler de voce pentru comunicații prin satelit
 .
 
 MessageId=3844
@@ -1036,6 +1102,9 @@ Satellite Communications Data Controller
 Language=Polish
 Kontroler danych dla komunikacji satelitarnej
 .
+Language=Romanian
+Controler de date pentru comunicații prin satelit
+.
 
 MessageId=4096
 SymbolicName=NONE
@@ -1044,6 +1113,9 @@ Network and Computing Encryption/Decryption Controller
 .
 Language=Polish
 Kontroler szyfrowania/odszyfrowywania danych sieciowych i komputerowych
+.
+Language=Romanian
+Controler de criptare/decriptare de rețea și de calcul
 .
 
 MessageId=4112
@@ -1054,6 +1126,9 @@ Entertainment Encryption/Decryption Controller
 Language=Polish
 Kontroler szyfrowania/odszyfrowywania rozrywki
 .
+Language=Romanian
+Controler de criptare/decriptare de divertisment
+.
 
 MessageId=4224
 SymbolicName=NONE
@@ -1062,6 +1137,9 @@ PCI Encryption/Decryption Controller
 .
 Language=Polish
 Kontroler szyfrowania/odszyfrowywania PCI
+.
+Language=Romanian
+Controler PCI de criptare/decriptare
 .
 
 MessageId=4352
@@ -1072,6 +1150,9 @@ DPIO Module
 Language=Polish
 Moduł DPIO
 .
+Language=Romanian
+Modul DPIO
+.
 
 MessageId=4353
 SymbolicName=NONE
@@ -1080,6 +1161,9 @@ Performance Counters
 .
 Language=Polish
 Liczniki wydajności
+.
+Language=Romanian
+Contoare de performanță
 .
 
 MessageId=4368
@@ -1090,6 +1174,9 @@ PCI Communications Synchronization plus Time and Frequency Test/Measurement Cont
 Language=Polish
 Kontroler PCI synchronizacji komunikacji oraz testowania/pomiaru czasu i częstotliwości
 .
+Language=Romanian
+Controler pentru sincronizarea comunicațiilor PCI și pentru testarea/măsurarea timpului și a frecvenței
+.
 
 MessageId=4384
 SymbolicName=NONE
@@ -1099,6 +1186,9 @@ Management Card
 Language=Polish
 Karta zarządzania
 .
+Language=Romanian
+Card de administrare
+.
 
 MessageId=4480
 SymbolicName=NONE
@@ -1107,4 +1197,7 @@ PCI Data Acquisition and Signal Processing Controller
 .
 Language=Polish
 Kontroler PCI gromadzenia danych i przetwarzania sygnałów
+.
+Language=Romanian
+Controler PCI pentru achiziție de date și procesare a semnalului
 .
