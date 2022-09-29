@@ -35,7 +35,7 @@ Language=Polish
 Kontroler SCSI
 .
 Language=Romanian
-Controller SCSI
+Controler SCSI
 .
 
 MessageId=257
@@ -47,7 +47,7 @@ Language=Polish
 Kontroler IDE
 .
 Language=Romanian
-Controller IDE
+Controler IDE
 .
 
 MessageId=258
@@ -59,7 +59,7 @@ Language=Polish
 Kontroler dyskietek
 .
 Language=Romanian
-Controller pentru dischete
+Controler pentru dischete
 .
 
 MessageId=259
@@ -70,6 +70,9 @@ IPI Controller
 Language=Polish
 Kontroler IPI
 .
+Language=Romanian
+Controler IPI
+.
 
 MessageId=260
 SymbolicName=NONE
@@ -78,6 +81,9 @@ RAID Controller
 .
 Language=Polish
 Kontroler RAID
+.
+Language=Romanian
+Controler RAID
 .
 
 MessageId=261
@@ -88,6 +94,9 @@ ATA Controller
 Language=Polish
 Kontroler ATA
 .
+Language=Romanian
+Controler ATA
+.
 
 MessageId=262
 SymbolicName=NONE
@@ -96,6 +105,9 @@ Serial ATA Controller
 .
 Language=Polish
 Kontroler Serial ATA
+.
+Language=Romanian
+Controler Serial ATA
 .
 
 MessageId=263
@@ -106,6 +118,9 @@ SAS Controller
 Language=Polish
 Kontroler SAS
 .
+Language=Romanian
+Controler SAS
+.
 
 MessageId=384
 SymbolicName=NONE
@@ -114,6 +129,9 @@ Mass Storage Controller
 .
 Language=Polish
 Kontroler pamięci masowej
+.
+Language=Romanian
+Controler de stocare în masă
 .
 
 MessageId=512
@@ -124,6 +142,9 @@ Ethernet Controller
 Language=Polish
 Kontroler Ethernet
 .
+Language=Romanian
+Controler de Ethernet
+.
 
 MessageId=513
 SymbolicName=NONE
@@ -132,6 +153,9 @@ Token Ring Network Controller
 .
 Language=Polish
 Kontroler sieci typu Token Ring
+.
+Language=Romanian
+Controler de rețea Token Ring
 .
 
 MessageId=514
@@ -142,6 +166,9 @@ FDDI Network Controller
 Language=Polish
 Kontroler sieci typu FDDI
 .
+Language=Romanian
+Controler de rețea FDDI
+.
 
 MessageId=515
 SymbolicName=NONE
@@ -150,6 +177,9 @@ ATM Network Controller
 .
 Language=Polish
 Kontroler sieci typu ATM
+.
+Language=Romanian
+Controler de rețea ATM
 .
 
 MessageId=516
@@ -160,6 +190,9 @@ ISDN Controller
 Language=Polish
 Kontroler ISDN
 .
+Language=Romanian
+Controler ISDN
+.
 
 MessageId=517
 SymbolicName=NONE
@@ -168,6 +201,9 @@ WorldFip Controller
 .
 Language=Polish
 Kontroler WorldFip
+.
+Language=Romanian
+Controler WorldFip
 .
 
 MessageId=640
@@ -178,6 +214,9 @@ Network Controller
 Language=Polish
 Kontroler sieci
 .
+Language=Romanian
+Controler de rețea
+.
 
 MessageId=768
 SymbolicName=NONE
@@ -186,6 +225,9 @@ Video Controller (VGA Compatible)
 .
 Language=Polish
 Kontroler wideo (zgodny z VGA)
+.
+Language=Romanian
+Controler video (compatibil cu VGA)
 .
 
 MessageId=769
@@ -196,6 +238,9 @@ Video Controller (VGA Compatible)
 Language=Polish
 Kontroler wideo (zgodny z VGA)
 .
+Language=Romanian
+Controler video (compatibil cu VGA)
+.
 
 MessageId=770
 SymbolicName=NONE
@@ -204,6 +249,9 @@ Language=English
 .
 Language=Polish
 Kontroler wideo 3W
+.
+Language=Romanian
+Controler video 3D
 .
 
 MessageId=896
@@ -214,6 +262,9 @@ Video Controller
 Language=Polish
 Kontroler wideo
 .
+Language=Romanian
+Controler video
+.
 
 MessageId=1024
 SymbolicName=NONE
@@ -222,6 +273,9 @@ Multimedia Video Controller
 .
 Language=Polish
 Kontroler multimediów wideo
+.
+Language=Romanian
+Controler video multimedia
 .
 
 MessageId=1025
@@ -232,6 +286,9 @@ Multimedia Audio Controller
 Language=Polish
 Kontroler multimediów audio
 .
+Language=Romanian
+Controler audio multimedia
+.
 
 MessageId=1026
 SymbolicName=NONE
@@ -240,6 +297,9 @@ Computer Telephony Device
 .
 Language=Polish
 Komputerowe urządzenie telefoniczne
+.
+Language=Romanian
+Dispozitiv de telefonie computerizată
 .
 
 MessageId=1152
@@ -250,6 +310,9 @@ Multimedia Controller
 Language=Polish
 Kontroler multimediów
 .
+Language=Romanian
+Controler multimedia
+.
 
 MessageId=1280
 SymbolicName=NONE
@@ -258,6 +321,9 @@ PCI Memory
 .
 Language=Polish
 Pamięć PCI
+.
+Language=Romanian
+Memorie PCI
 .
 
 MessageId=1281
@@ -268,6 +334,9 @@ PCI FLASH Memory
 Language=Polish
 Pamięć PCI FLASH
 .
+Language=Romanian
+Memorie PCI Flash
+.
 
 MessageId=1408
 SymbolicName=NONE
@@ -276,6 +345,9 @@ PCI Memory Controller
 .
 Language=Polish
 Kontroler pamięci PCI
+.
+Language=Romanian
+Controler de memorie PCI
 .
 
 MessageId=1536
@@ -286,6 +358,9 @@ PCI HOST Bridge
 Language=Polish
 Mostek PCI HOST
 .
+Language=Romanian
+Punte PCI HOST
+.
 
 MessageId=1537
 SymbolicName=NONE
@@ -294,6 +369,9 @@ PCI to ISA Bridge
 .
 Language=Polish
 Mostek PCI do ISA
+.
+Language=Romanian
+Punte PCI la ISA
 .
 
 MessageId=1538
@@ -304,6 +382,9 @@ PCI to EISA Bridge
 Language=Polish
 Mostek PCI do EISA
 .
+Language=Romanian
+Punte PCI la EISA
+.
 
 MessageId=1539
 SymbolicName=NONE
@@ -312,6 +393,9 @@ PCI to Micro Channel Bridge
 .
 Language=Polish
 Mostek PCI do Micro Channel
+.
+Language=Romanian
+Punte PCI la Micro Channel
 .
 
 MessageId=1540
@@ -322,6 +406,9 @@ PCI to PCI Bridge
 Language=Polish
 Mostek PCI do PCI
 .
+Language=Romanian
+Punte PCI la PCI
+.
 
 MessageId=1541
 SymbolicName=NONE
@@ -330,6 +417,9 @@ PCI to PCMCIA Bridge
 .
 Language=Polish
 Mostek PCI do PCMCIA
+.
+Language=Romanian
+Punte PCI la PCMCIA
 .
 
 MessageId=1542
@@ -340,6 +430,9 @@ PCI to NUBUS Bridge
 Language=Polish
 Mostek PCI do NUBUS
 .
+Language=Romanian
+Punte PCI la NUBUS
+.
 
 MessageId=1543
 SymbolicName=NONE
@@ -348,6 +441,9 @@ PCI to CARDBUS Bridge
 .
 Language=Polish
 Mostek PCI do CARDBUS
+.
+Language=Romanian
+Punte PCI la CARDBUS
 .
 
 MessageId=1544
@@ -358,6 +454,9 @@ PCI to RACEway Bridge
 Language=Polish
 Mostek PCI-RACEway
 .
+Language=Romanian
+Punte PCI la RACEway
+.
 
 MessageId=1545
 SymbolicName=NONE
@@ -366,6 +465,9 @@ Semi-transparent PCI to PCI Bridge
 .
 Language=Polish
 Półprzeźroczysty mostek PCI do PCI
+.
+Language=Romanian
+Punte semi-transparentă PCI la PCI
 .
 
 MessageId=1546
@@ -376,6 +478,9 @@ Infiniband to PCI Host Bridge
 Language=Polish
 Mostek Infiniband do hosta PCI
 .
+Language=Romanian
+Punte Infiniband PCI la gazdă
+.
 
 MessageId=1664
 SymbolicName=NONE
@@ -384,6 +489,9 @@ Other PCI Bridge Device
 .
 Language=Polish
 Inne urządzenie typu mostek PCI
+.
+Language=Romanian
+Alt dispozitiv de punte PCI
 .
 
 MessageId=1792
@@ -394,6 +502,9 @@ PCI Serial Port
 Language=Polish
 Port szeregowy PCI
 .
+Language=Romanian
+Port serial PCI
+.
 
 MessageId=1793
 SymbolicName=NONE
@@ -402,6 +513,9 @@ PCI Parallel Port
 .
 Language=Polish
 Port równoległy PCI
+.
+Language=Romanian
+Port paralel PCI
 .
 
 MessageId=1794
