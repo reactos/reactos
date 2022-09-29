@@ -5,17 +5,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    GROUPBOX "&Язык ввода по умолчанию", -1, 5, 5, 246, 55
+    LTEXT "Выберите один из установленных языков ввода, который будет использоваться при загрузке компьютера.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    GROUPBOX "Ус&тановленные службы", -1, 5, 65, 246, 125
     LTEXT "Выберите нужные раскладки для каждого языка ввода из списка. Для изменения списка служат кнопки ""Добавить"" и ""Удалить"".", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "&Удалить", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 145, 70, 14
     GROUPBOX "Параметры", -1, 5, 195, 245, 30
-    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Я&зыковая панель...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
     PUSHBUTTON "&Параметры клавиатуры...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
@@ -42,7 +42,7 @@ BEGIN
     RTEXT "&Сочетание клавиш", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
     PUSHBUTTON "См&ена сочетания клавиш...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+    DEFPUSHBUTTON "ОК", IDOK, 66, 140, 70, 14
     PUSHBUTTON "Отмена", IDCANCEL, 146, 140, 70, 14
 END
 
@@ -55,7 +55,7 @@ BEGIN
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
     LTEXT "&Раскладка клавиатуры:", -1, 7, 36, 170, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+    DEFPUSHBUTTON "ОК", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 169, 68, 50, 14
 END
 
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
     LTEXT "&Раскладка клавиатуры:", -1, 7, 21, 170, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 114, 53, 52, 14
+    DEFPUSHBUTTON "ОК", IDOK, 114, 53, 52, 14
     PUSHBUTTON "Отмена", IDCANCEL, 169, 53, 52, 14
 END
 
