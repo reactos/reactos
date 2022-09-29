@@ -526,6 +526,9 @@ PCI Multiport Serial Controller
 Language=Polish
 Wieloportowy kontroler szeregowy PCI
 .
+Language=Romanian
+Controler serial multiport PCI
+.
 
 MessageId=1795
 SymbolicName=NONE
@@ -533,6 +536,9 @@ Language=English
 PCI Modem
 .
 Language=Polish
+Modem PCI
+.
+Language=Romanian
 Modem PCI
 .
 
@@ -544,6 +550,9 @@ PCI GBIB Controller
 Language=Polish
 Kontroler PCI GBIB
 .
+Language=Romanian
+Controler PCI GBIB
+.
 
 MessageId=1797
 SymbolicName=NONE
@@ -552,6 +561,9 @@ PCI Smart Card
 .
 Language=Polish
 Karta inteligentna PCI
+.
+Language=Romanian
+Card inteligent PCI
 .
 
 MessageId=1920
@@ -562,6 +574,9 @@ PCI Simple Communications Controller
 Language=Polish
 Kontroler PCI Simple Communications
 .
+Language=Romanian
+Controler PCI pentru comunicații simple
+.
 
 MessageId=2048
 SymbolicName=NONE
@@ -570,6 +585,9 @@ System Interrupt Controller
 .
 Language=Polish
 Kontroler przerwań systemowych
+.
+Language=Romanian
+Controler de întrerupere a sistemului
 .
 
 MessageId=2049
@@ -580,6 +598,9 @@ System DMA Controller
 Language=Polish
 Kontroler systemowy DMA
 .
+Language=Romanian
+Controler DMA de sistem
+.
 
 MessageId=2050
 SymbolicName=NONE
@@ -589,14 +610,20 @@ System Timer
 Language=Polish
 Czasomierz systemowy
 .
+Language=Romanian
+Cronometru de sistem
+.
 
 MessageId=2051
 SymbolicName=NONE
 Language=English
-Real Time CLock
+Real Time Clock
 .
 Language=Polish
 Zegar czasu rzeczywistego
+.
+Language=Romanian
+Ceas în timp real
 .
 
 MessageId=2052
@@ -607,6 +634,9 @@ Generic PCI Hot-Plug Controller
 Language=Polish
 Rodzajowy kontroler PCI Hot-Plug
 .
+Language=Romanian
+Controler generic PCI Hot-Plug
+.
 
 MessageId=2053
 SymbolicName=NONE
@@ -615,6 +645,9 @@ SD Host Controller
 .
 Language=Polish
 Kontroler hosta SD
+.
+Language=Romanian
+Controler de gazdă SD
 .
 
 MessageId=2173
@@ -625,6 +658,9 @@ Base System Device
 Language=Polish
 Podstawowe urządzenie systemowe
 .
+Language=Romanian
+Dispozitiv de sistem de bază
+.
 
 MessageId=2304
 SymbolicName=NONE
@@ -633,6 +669,9 @@ PCI Keyboard Controller
 .
 Language=Polish
 Kontroler klawiatury PCI
+.
+Language=Romanian
+Controler de tastatură PCI
 .
 
 MessageId=2305
@@ -643,6 +682,9 @@ PCI Digitizer
 Language=Polish
 Dyskretyzator PCI
 .
+Language=Romanian
+Digitizor PCI
+.
 
 MessageId=2306
 SymbolicName=NONE
@@ -651,6 +693,9 @@ PCI Mouse Controller
 .
 Language=Polish
 Kontroler myszy PCI
+.
+Language=Romanian
+Controler de șoricel PCI
 .
 
 MessageId=2307
@@ -661,6 +706,9 @@ PCI Scanner Controller
 Language=Polish
 Kontroler skanera PCI
 .
+Language=Romanian
+Controler de scaner PCI
+.
 
 MessageId=2308
 SymbolicName=NONE
@@ -669,6 +717,9 @@ PCI Gameport Controller
 .
 Language=Polish
 Kontroler portu gier PCI
+.
+Language=Romanian
+Controler PCI pentru port de joc
 .
 
 MessageId=2432
@@ -679,6 +730,9 @@ PCI Input Device
 Language=Polish
 Urządzenie wejściowe PCI
 .
+Language=Romanian
+Dispozitiv de intrare PCI
+.
 
 MessageId=2560
 SymbolicName=NONE
@@ -687,6 +741,9 @@ Docking Station
 .
 Language=Polish
 Stacja dokująca
+.
+Language=Romanian
+Sistem de andocare
 .
 
 MessageId=2688
@@ -697,6 +754,9 @@ Docking Station (Unknown type)
 Language=Polish
 Stacja dokująca (nieznanego typu)
 .
+Language=Romanian
+Sistem de andocare (de tip necunoscut)
+.
 
 MessageId=2816
 SymbolicName=NONE
@@ -704,6 +764,9 @@ Language=English
 386 Processor
 .
 Language=Polish
+Procesor 386
+.
+Language=Romanian
 Procesor 386
 .
 
@@ -715,6 +778,9 @@ Language=English
 Language=Polish
 Procesor 486
 .
+Language=Romanian
+Procesor 486
+.
 
 MessageId=2818
 SymbolicName=NONE
@@ -722,6 +788,9 @@ Language=English
 Pentium Processor
 .
 Language=Polish
+Procesor Pentium
+.
+Language=Romanian
 Procesor Pentium
 .
 
@@ -733,6 +802,9 @@ ALPHA Processor
 Language=Polish
 Procesor ALPHA
 .
+Language=Romanian
+Procesor ALPHA
+.
 
 MessageId=2848
 SymbolicName=NONE
@@ -740,6 +812,9 @@ Language=English
 PowerPC Processor
 .
 Language=Polish
+Procesor PowerPC
+.
+Language=Romanian
 Procesor PowerPC
 .
 
@@ -750,6 +825,9 @@ Coprocessor
 .
 Language=Polish
 Koprocesor
+.
+Language=Romanian
+Coprocesor
 .
 
 MessageId=3072
