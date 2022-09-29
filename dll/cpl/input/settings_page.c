@@ -21,57 +21,56 @@ static HICON
 CreateLayoutIcon(LANGID LangID)
 {
     WCHAR szBuf[4];
-    HDC hdc;
+    HDC hdcScreen, hdc;
     HBITMAP hbmColor, hbmMono, hBmpOld;
+    HFONT hFont, hFontOld;
+    LOGFONTW lf;
     RECT rect;
-    HFONT hFontOld, hFont;
     ICONINFO IconInfo;
     HICON hIcon;
-    LOGFONTW lf;
-    BITMAPINFO bmi;
     INT cxIcon = GetSystemMetrics(SM_CXSMICON);
     INT cyIcon = GetSystemMetrics(SM_CYSMICON);
 
     /* Getting "EN", "FR", etc. from English, French, ... */
-    if (!GetLocaleInfoW(LangID, LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
-                        szBuf, ARRAYSIZE(szBuf)))
+    if (GetLocaleInfoW(LangID,
+                       LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                       szBuf,
+                       ARRAYSIZE(szBuf)) == 0)
     {
-        StringCchCopyW(szBuf, ARRAYSIZE(szBuf), L"??");
+        szBuf[0] = szBuf[1] = L'?';
     }
     szBuf[2] = UNICODE_NULL; /* Truncate the identifier to two characters: "ENG" --> "EN" etc. */
 
-    /* Prepare for DIB (device-independent bitmap) */
-    ZeroMemory(&bmi, sizeof(bmi));
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = cxIcon;
-    bmi.bmiHeader.biHeight = cyIcon;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
-
     /* Create hdc, hbmColor and hbmMono */
-    hdc = CreateCompatibleDC(NULL);
-    hbmColor = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    hdcScreen = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcScreen);
+    hbmColor = CreateCompatibleBitmap(hdcScreen, cxIcon, cyIcon);
+    ReleaseDC(NULL, hdcScreen);
     hbmMono = CreateBitmap(cxIcon, cyIcon, 1, 1, NULL);
 
-    /* Create a font */
-    if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
-        hFont = CreateFontIndirectW(&lf);
-    else
-        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-
     /* Checking NULL */
-    if (!hdc || !hbmColor || !hbmMono || !hFont)
+    if (!hdc || !hbmColor || !hbmMono)
     {
-        if (hdc)
-            DeleteDC(hdc);
-        if (hbmColor)
-            DeleteObject(hbmColor);
         if (hbmMono)
             DeleteObject(hbmMono);
-        if (hFont)
-            DeleteObject(hFont);
+        if (hbmColor)
+            DeleteObject(hbmColor);
+        if (hdc)
+            DeleteDC(hdc);
         return NULL;
     }
+
+    /* Create a font */
+    hFont = NULL;
+    if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
+    {
+        /* Override the current size with something manageable */
+        lf.lfHeight = -11;
+        lf.lfWidth = 0;
+        hFont = CreateFontIndirectW(&lf);
+    }
+    if (!hFont)
+        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     SetRect(&rect, 0, 0, cxIcon, cyIcon);
 
@@ -84,23 +83,23 @@ CreateLayoutIcon(LANGID LangID)
     SetBkMode(hdc, TRANSPARENT);
     DrawTextW(hdc, szBuf, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
     SelectObject(hdc, hFontOld);
-    SelectObject(hdc, hBmpOld);
 
-    /* Fill hbmMono by black */
-    hBmpOld = SelectObject(hdc, hbmMono);
+    /* Fill hbmMono with black */
+    SelectObject(hdc, hbmMono);
     PatBlt(hdc, 0, 0, cxIcon, cyIcon, BLACKNESS);
     SelectObject(hdc, hBmpOld);
 
     /* Create an icon from hbmColor and hbmMono */
+    IconInfo.fIcon = TRUE;
+    IconInfo.xHotspot = IconInfo.yHotspot = 0;
     IconInfo.hbmColor = hbmColor;
     IconInfo.hbmMask = hbmMono;
-    IconInfo.fIcon = TRUE;
     hIcon = CreateIconIndirect(&IconInfo);
 
     /* Clean up */
-    DeleteObject(hbmColor);
-    DeleteObject(hbmMono);
     DeleteObject(hFont);
+    DeleteObject(hbmMono);
+    DeleteObject(hbmColor);
     DeleteDC(hdc);
 
     return hIcon;
