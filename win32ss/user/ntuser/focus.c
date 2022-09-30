@@ -1250,6 +1250,8 @@ BOOL FASTCALL
 co_IntMouseActivateWindow(PWND Wnd)
 {
    TRACE("Mouse Active\n");
+   if (Wnd && (Wnd->ExStyle & WS_EX_NOACTIVATE))
+      return TRUE;
    return co_IntSetForegroundAndFocusWindow(Wnd, TRUE, TRUE);
 }
 
