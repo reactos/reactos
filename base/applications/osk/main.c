@@ -495,17 +495,17 @@ int OSK_Close(void)
     OSK_ReleaseKey(SCAN_CODE_44); // Left shift
     OSK_ReleaseKey(SCAN_CODE_57); // Right shift
 
-    /* As releasing ROS calls main menu, press ctrl first */
+    /* As releasing Super key opens Start menu, press ctrl first */
     INPUT Input;
     Input.type = INPUT_KEYBOARD;
     Input.ki.wVk = 0;
-    Input.ki.wScan = SCAN_CODE_58;
+    Input.ki.wScan = SCAN_CODE_58; // Left ctrl
     Input.ki.time = GetTickCount();
     Input.ki.dwExtraInfo = GetMessageExtraInfo();
     Input.ki.dwFlags = KEYEVENTF_SCANCODE;
     SendInput(1, &Input, sizeof(Input));
-    OSK_ReleaseKey(SCAN_CODE_127); // Left ROS
-    OSK_ReleaseKey(SCAN_CODE_128); // Right ROS
+    OSK_ReleaseKey(SCAN_CODE_127); // Left Super/Win key
+    OSK_ReleaseKey(SCAN_CODE_128); // Right Super/Win key
     Input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
     SendInput(1, &Input, sizeof(Input));
 
