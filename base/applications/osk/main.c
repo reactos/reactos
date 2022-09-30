@@ -491,7 +491,7 @@ int OSK_Close(void)
 {
     KillTimer(Globals.hMainWnd, Globals.iTimer);
 
-    /* Release Ctrl, Shift, Alt, ROS keys */
+    /* Release Ctrl, Shift, Alt, Super keys */
     OSK_ReleaseKey(SCAN_CODE_44); // Left shift
     OSK_ReleaseKey(SCAN_CODE_57); // Right shift
 
