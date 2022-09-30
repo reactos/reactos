@@ -364,3 +364,4 @@ set(baseaddress_fusion_2_0             0x72cb0000)
 set(baseaddress_getuname               0x723b0000) # displaced for user32
 set(baseaddress_hid                    0x72380000) # displaced for user32
 set(baseaddress_hlink                  0x72340000) # displaced for user32
+set(baseaddress_notifyhook             0x72310000)
