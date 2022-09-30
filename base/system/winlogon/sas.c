@@ -251,30 +251,36 @@ PlaySoundRoutine(
     BOOL Ret = FALSE;
 
     hLibrary = LoadLibraryW(L"winmm.dll");
-    if (hLibrary)
+    if (!hLibrary)
+        return FALSE;
+
+    waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
+    Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
+
+    _SEH2_TRY
     {
-        waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
         if (waveOutGetNumDevs)
         {
             NumDevs = waveOutGetNumDevs();
             if (!NumDevs)
             {
                 if (!bLogon)
-                {
                     Beep(440, 125);
-                }
-                FreeLibrary(hLibrary);
-                return FALSE;
+                _SEH2_LEAVE;
             }
         }
 
-        Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
         if (Play)
-        {
             Ret = Play(FileName, NULL, Flags);
-        }
-        FreeLibrary(hLibrary);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("WL: Exception while playing sound '%S', Status 0x%08lx\n",
+            FileName ? FileName : L"(n/a)", _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    FreeLibrary(hLibrary);
 
     return Ret;
 }

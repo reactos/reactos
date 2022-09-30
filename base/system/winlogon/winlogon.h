@@ -26,10 +26,12 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
-#include <stdarg.h>
-
 #define USE_GETLASTINPUTINFO
 
+
+#include <stdarg.h>
+
+/* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
@@ -40,6 +42,9 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/exfuncs.h>
 #include <strsafe.h>
+
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
 
 #include <reactos/undocuser.h>
 #include <reactos/undocmpr.h>

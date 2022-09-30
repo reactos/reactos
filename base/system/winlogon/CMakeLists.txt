@@ -21,7 +21,7 @@ list(APPEND SOURCE
 
 add_rc_deps(winlogon.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/winlogon.ico)
 add_executable(winlogon ${SOURCE} winlogon.rc)
-target_link_libraries(winlogon wine)
+target_link_libraries(winlogon wine ${PSEH_LIB})
 set_module_type(winlogon win32gui)
 add_importlibs(winlogon user32 advapi32 userenv secur32 rpcrt4 mpr msvcrt kernel32 ntdll)
 add_pch(winlogon winlogon.h SOURCE)
