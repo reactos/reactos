@@ -29,11 +29,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
 typedef struct tagWINE_PLAYSOUND
 {
-    unsigned                    bLoop : 1,
-                                bAlloc : 1;
-    LPCWSTR                     pszSound;
-    HMODULE                     hMod;
-    DWORD                       fdwSound;
+    unsigned                    bLoop : 1;
+    HMMIO                       hmmio;
     HWAVEOUT                    hWave;
     struct tagWINE_PLAYSOUND*   lpNext;
 } WINE_PLAYSOUND;
@@ -188,6 +185,107 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     return 0;
 }
 
+static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
+{
+    PVOID data;
+    HMMIO hmmio;
+
+    TRACE("SoundName=%s !\n", debugstr_w(pszSound));
+
+    /* if resource, grab it */
+    if ((fdwSound & SND_RESOURCE) == SND_RESOURCE)
+    {
+        HRSRC hRes;
+        HGLOBAL hGlob;
+
+        hRes = FindResourceW(hMod, pszSound, L"WAVE");
+        hGlob = LoadResource(hMod, hRes);
+        if (!hRes || !hGlob)
+        {
+            return NULL;
+        }
+
+        data = LockResource(hGlob);
+        if (!data)
+        {
+            FreeResource(hGlob);
+            return NULL;
+        }
+
+        FreeResource(hGlob);
+    }
+    else
+    {
+        data = (PVOID)pszSound;
+    }
+
+    /* construct an MMIO stream (either in memory, or from a file
+     * NOTE: SND_RESOURCE has the SND_MEMORY bit set */
+    if (fdwSound & SND_MEMORY)
+    {
+        MMIOINFO mminfo;
+        
+        ZeroMemory(&mminfo, sizeof(mminfo));
+        mminfo.fccIOProc = FOURCC_MEM;
+        mminfo.pchBuffer = data;
+        mminfo.cchBuffer = -1; /* FIXME: when a resource, could grab real size */
+
+        TRACE("Memory sound %p\n", data);
+
+        hmmio = mmioOpenW(NULL, &mminfo, MMIO_READ);
+    }
+    else if (fdwSound & SND_ALIAS)
+    {
+        if ((fdwSound & SND_ALIAS_ID) == SND_ALIAS_ID)
+        {
+            LPWSTR pszName;
+
+            if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMASTERISK)
+                pszName = L"SystemAsterisk";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMDEFAULT)
+                pszName = L"SystemDefault";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMEXCLAMATION)
+                pszName = L"SystemExclamation";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMEXIT)
+                pszName = L"SystemExit";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMHAND)
+                pszName = L"SystemHand";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMQUESTION)
+                pszName = L"SystemQuestion";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMSTART)
+                pszName = L"SystemStart";
+            else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMWELCOME)
+                pszName = L"SystemWelcome";
+            else
+                return NULL;
+
+            hmmio = get_mmioFromProfile(fdwSound & ~(SND_ALIAS_ID ^ SND_ALIAS), pszName);
+        }
+        else
+        {
+            hmmio = get_mmioFromProfile(fdwSound, pszSound);
+        }
+    }
+    else if (fdwSound & SND_FILENAME)
+    {
+        hmmio = get_mmioFromFile(pszSound);
+    }
+    else
+    {
+        hmmio = get_mmioFromProfile(fdwSound | SND_NODEFAULT, pszSound);
+        if (!hmmio)
+        {
+            hmmio = get_mmioFromFile(pszSound);
+            if (!hmmio)
+            {
+                hmmio = get_mmioFromProfile(fdwSound, pszSound);
+            }
+        }
+    }
+
+    return hmmio;
+}
+
 struct playsound_data
 {
     HANDLE	hEvent;
@@ -251,149 +349,63 @@ static void     PlaySound_Free(WINE_PLAYSOUND* wps)
     if (*p) *p = (*p)->lpNext;
     if (PlaySoundList == NULL) SetEvent(psLastEvent);
     LeaveCriticalSection(&WINMM_cs);
-    if (wps->bAlloc) HeapFree(GetProcessHeap(), 0, (void*)wps->pszSound);
+    if (wps->hmmio) mmioClose(wps->hmmio, 0);
     HeapFree(GetProcessHeap(), 0, wps);
 }
 
-static WINE_PLAYSOUND*  PlaySound_Alloc(const void* pszSound, HMODULE hmod,
-                                        DWORD fdwSound, BOOL bUnicode)
+static WINE_PLAYSOUND* PlaySound_AllocAndGetMMIO(const void* pszSound, HMODULE hmod,
+                                                 DWORD fdwSound, BOOL bUnicode)
 {
+    BOOL bIsString;
+    LPWSTR pszSoundW;
+    UNICODE_STRING usBuffer;
     WINE_PLAYSOUND* wps;
 
-    wps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wps));
-    if (!wps) return NULL;
+    bIsString = PlaySound_IsString(fdwSound, pszSound);
 
-    wps->hMod = hmod;
-    wps->fdwSound = fdwSound;
-    if (PlaySound_IsString(fdwSound, pszSound))
+    if (bIsString && !bUnicode)
     {
-        if (bUnicode)
-        {
-            if (fdwSound & SND_ASYNC)
-            {
-                LPWSTR sound = HeapAlloc(GetProcessHeap(), 0,
-                                         (lstrlenW(pszSound)+1) * sizeof(WCHAR));
-                if (!sound) goto oom_error;
-                wps->pszSound = lstrcpyW(sound, pszSound);
-                wps->bAlloc = TRUE;
-            }
-            else
-                wps->pszSound = pszSound;
-        }
-        else
-        {
-            UNICODE_STRING usBuffer;
-            RtlCreateUnicodeStringFromAsciiz(&usBuffer, pszSound);
-            wps->pszSound = usBuffer.Buffer;
-            if (!wps->pszSound) goto oom_error;
-            wps->bAlloc = TRUE;
-        }
+        RtlCreateUnicodeStringFromAsciiz(&usBuffer, pszSound);
+        if (!usBuffer.Buffer)
+            return NULL;
+
+        pszSoundW = usBuffer.Buffer;
     }
     else
-        wps->pszSound = pszSound;
+    {
+        pszSoundW = (LPWSTR)pszSound;
+    }
+
+    wps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wps));
+    if (wps)
+    {
+        wps->hmmio = PlaySound_GetMMIO(pszSoundW, hmod, fdwSound);
+        if (!wps->hmmio)
+        {
+            PlaySound_Free(wps);
+            wps = NULL;
+        }
+    }
+
+    if (bIsString && !bUnicode)
+        RtlFreeUnicodeString(&usBuffer);
 
     return wps;
- oom_error:
-    PlaySound_Free(wps);
-    return NULL;
 }
 
 static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 {
     BOOL		bRet = FALSE;
-    HMMIO		hmmio = 0;
     MMCKINFO		ckMainRIFF;
     MMCKINFO        	mmckInfo;
     LPWAVEFORMATEX      lpWaveFormat = NULL;
     LPWAVEHDR		waveHdr = NULL;
     INT			count, bufsize, left, index;
     struct playsound_data	s;
-    void*               data;
 
     s.hEvent = 0;
 
-    TRACE("SoundName=%s !\n", debugstr_w(wps->pszSound));
-
-    /* if resource, grab it */
-    if ((wps->fdwSound & SND_RESOURCE) == SND_RESOURCE) {
-        static const WCHAR wszWave[] = {'W','A','V','E',0};
-        HRSRC	hRes;
-        HGLOBAL	hGlob;
-
-        if ((hRes = FindResourceW(wps->hMod, wps->pszSound, wszWave)) == 0 ||
-            (hGlob = LoadResource(wps->hMod, hRes)) == 0)
-            goto errCleanUp;
-        if ((data = LockResource(hGlob)) == NULL) {
-            FreeResource(hGlob);
-            goto errCleanUp;
-        }
-        FreeResource(hGlob);
-    } else
-        data = (void*)wps->pszSound;
-
-    /* construct an MMIO stream (either in memory, or from a file */
-    if (wps->fdwSound & SND_MEMORY)
-    { /* NOTE: SND_RESOURCE has the SND_MEMORY bit set */
-	MMIOINFO	mminfo;
-
-	memset(&mminfo, 0, sizeof(mminfo));
-	mminfo.fccIOProc = FOURCC_MEM;
-	mminfo.pchBuffer = data;
-	mminfo.cchBuffer = -1; /* FIXME: when a resource, could grab real size */
-	TRACE("Memory sound %p\n", data);
-	hmmio = mmioOpenW(NULL, &mminfo, MMIO_READ);
-    }
-    else if (wps->fdwSound & SND_ALIAS)
-    {
-        if ((wps->fdwSound & SND_ALIAS_ID) == SND_ALIAS_ID)
-        {
-            static const WCHAR  wszSystemAsterisk[] = {'S','y','s','t','e','m','A','s','t','e','r','i','s','k',0};
-            static const WCHAR  wszSystemDefault[] = {'S','y','s','t','e','m','D','e','f','a','u','l','t',0};
-            static const WCHAR  wszSystemExclamation[] = {'S','y','s','t','e','m','E','x','c','l','a','m','a','t','i','o','n',0};
-            static const WCHAR  wszSystemExit[] = {'S','y','s','t','e','m','E','x','i','t',0};
-            static const WCHAR  wszSystemHand[] = {'S','y','s','t','e','m','H','a','n','d',0};
-            static const WCHAR  wszSystemQuestion[] = {'S','y','s','t','e','m','Q','u','e','s','t','i','o','n',0};
-            static const WCHAR  wszSystemStart[] = {'S','y','s','t','e','m','S','t','a','r','t',0};
-            static const WCHAR  wszSystemWelcome[] = {'S','y','s','t','e','m','W','e','l','c','o','m','e',0};
-
-            wps->fdwSound &= ~(SND_ALIAS_ID ^ SND_ALIAS);
-            if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMASTERISK)
-                wps->pszSound = wszSystemAsterisk;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMDEFAULT)
-                wps->pszSound = wszSystemDefault;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMEXCLAMATION)
-                wps->pszSound = wszSystemExclamation;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMEXIT)
-                wps->pszSound = wszSystemExit;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMHAND)
-                wps->pszSound = wszSystemHand;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMQUESTION)
-                wps->pszSound = wszSystemQuestion;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMSTART)
-                wps->pszSound = wszSystemStart;
-            else if (wps->pszSound == (LPCWSTR)SND_ALIAS_SYSTEMWELCOME)
-                wps->pszSound = wszSystemWelcome;
-            else goto errCleanUp;
-        }
-        hmmio = get_mmioFromProfile(wps->fdwSound, wps->pszSound);
-    }
-    else if (wps->fdwSound & SND_FILENAME)
-    {
-        hmmio = get_mmioFromFile(wps->pszSound);
-    }
-    else
-    {
-        if ((hmmio = get_mmioFromProfile(wps->fdwSound | SND_NODEFAULT, wps->pszSound)) == 0)
-        {
-            if ((hmmio = get_mmioFromFile(wps->pszSound)) == 0)
-            {
-                hmmio = get_mmioFromProfile(wps->fdwSound, wps->pszSound);
-            }
-        }
-    }
-    if (hmmio == 0) goto errCleanUp;
-
-    if (mmioDescend(hmmio, &ckMainRIFF, NULL, 0))
+    if (mmioDescend(wps->hmmio, &ckMainRIFF, NULL, 0))
 	goto errCleanUp;
 
     TRACE("ParentChunk ckid=%.4s fccType=%.4s cksize=%08X\n",
@@ -404,14 +416,14 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	goto errCleanUp;
 
     mmckInfo.ckid = mmioFOURCC('f', 'm', 't', ' ');
-    if (mmioDescend(hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
+    if (mmioDescend(wps->hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
 	goto errCleanUp;
 
     TRACE("Chunk Found ckid=%.4s fccType=%08x cksize=%08X\n",
 	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     lpWaveFormat = HeapAlloc(GetProcessHeap(), 0, mmckInfo.cksize);
-    if (mmioRead(hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize) < sizeof(PCMWAVEFORMAT))
+    if (mmioRead(wps->hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize) < sizeof(PCMWAVEFORMAT))
 	goto errCleanUp;
 
     TRACE("wFormatTag=%04X !\n", 	lpWaveFormat->wFormatTag);
@@ -422,10 +434,10 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     TRACE("wBitsPerSample=%u !\n", 	lpWaveFormat->wBitsPerSample);
 
     /* move to end of 'fmt ' chunk */
-    mmioAscend(hmmio, &mmckInfo, 0);
+    mmioAscend(wps->hmmio, &mmckInfo, 0);
 
     mmckInfo.ckid = mmioFOURCC('d', 'a', 't', 'a');
-    if (mmioDescend(hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
+    if (mmioDescend(wps->hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
 	goto errCleanUp;
 
     TRACE("Chunk Found ckid=%.4s fccType=%08x cksize=%08X\n",
@@ -458,7 +470,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     do {
 	left = mmckInfo.cksize;
 
-	mmioSeek(hmmio, mmckInfo.dwDataOffset, SEEK_SET);
+	mmioSeek(wps->hmmio, mmckInfo.dwDataOffset, SEEK_SET);
 	while (left)
         {
 	    if (WaitForSingleObject(psStopEvent, 0) == WAIT_OBJECT_0)
@@ -466,7 +478,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 		wps->bLoop = FALSE;
 		break;
 	    }
-	    count = mmioRead(hmmio, waveHdr[index].lpData, min(bufsize, left));
+	    count = mmioRead(wps->hmmio, waveHdr[index].lpData, min(bufsize, left));
 	    if (count < 1) break;
 	    left -= count;
 	    waveHdr[index].dwBufferLength = count;
@@ -487,12 +499,11 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     waveOutUnprepareHeader(wps->hWave, &waveHdr[1], sizeof(WAVEHDR));
 
 errCleanUp:
-    TRACE("Done playing=%s => %s!\n", debugstr_w(wps->pszSound), bRet ? "ok" : "ko");
+    TRACE("Done playing sound => %s!\n", bRet ? "ok" : "ko");
     CloseHandle(s.hEvent);
     HeapFree(GetProcessHeap(), 0, waveHdr);
     HeapFree(GetProcessHeap(), 0, lpWaveFormat);
     if (wps->hWave)	while (waveOutClose(wps->hWave) == WAVERR_STILLPLAYING) Sleep(100);
-    if (hmmio) 		mmioClose(hmmio, 0);
 
     PlaySound_Free(wps);
 
@@ -543,7 +554,7 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
     /* alloc internal structure, if we need to play something */
     if (pszSound && !(fdwSound & SND_PURGE))
     {
-        if (!(wps = PlaySound_Alloc(pszSound, hmod, fdwSound, bUnicode)))
+        if (!(wps = PlaySound_AllocAndGetMMIO(pszSound, hmod, fdwSound, bUnicode)))
             return FALSE;
     }
 
