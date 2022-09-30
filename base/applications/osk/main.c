@@ -491,9 +491,25 @@ int OSK_Close(void)
 {
     KillTimer(Globals.hMainWnd, Globals.iTimer);
 
-    /* Release Ctrl, Shift, Alt keys */
+    /* Release Ctrl, Shift, Alt, ROS keys */
     OSK_ReleaseKey(SCAN_CODE_44); // Left shift
     OSK_ReleaseKey(SCAN_CODE_57); // Right shift
+
+    /* As releasing ROS calls main menu, press ctrl first */
+    INPUT Input;
+    Input.type = INPUT_KEYBOARD;
+    Input.ki.wVk = 0;
+    Input.ki.wScan = SCAN_CODE_58;
+    Input.ki.time = GetTickCount();
+    Input.ki.dwExtraInfo = GetMessageExtraInfo();
+    Input.ki.dwFlags = KEYEVENTF_SCANCODE;
+    SendInput(1, &Input, sizeof(Input));
+    OSK_ReleaseKey(SCAN_CODE_127); // Left ROS
+    OSK_ReleaseKey(SCAN_CODE_128); // Right ROS
+    Input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+    SendInput(1, &Input, sizeof(Input));
+
+    /* Continue releasing keys */
     OSK_ReleaseKey(SCAN_CODE_58); // Left ctrl
     OSK_ReleaseKey(SCAN_CODE_60); // Left alt
     OSK_ReleaseKey(SCAN_CODE_62); // Right alt
