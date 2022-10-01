@@ -130,6 +130,16 @@ CcWriteBehind(VOID)
         ++CcLazyWriteIos;
         DPRINT("Lazy writer done (%d)\n", Count);
     }
+
+    /* Make sure we're not throttling writes after this */
+    while (MmAvailablePages < MmThrottleTop)
+    {
+        /* Break if we can't even find one to free */
+        if (!CcRosFreeOneUnusedVacb())
+        {
+            break;
+        }
+    }
 }
 
 VOID

@@ -595,34 +595,26 @@ CcRosUnmarkDirtyVacb (
     }
 }
 
-static
 BOOLEAN
-CcRosFreeUnusedVacb (
-    PULONG Count)
+CcRosFreeOneUnusedVacb (
+    VOID)
 {
-    ULONG cFreed;
-    BOOLEAN Freed;
     KIRQL oldIrql;
-    PROS_VACB current;
-    LIST_ENTRY FreeList;
     PLIST_ENTRY current_entry;
-
-    cFreed = 0;
-    Freed = FALSE;
-    InitializeListHead(&FreeList);
+    PROS_VACB to_free = NULL;
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
     /* Browse all the available VACB */
     current_entry = VacbLruListHead.Flink;
-    while (current_entry != &VacbLruListHead)
+    while ((current_entry != &VacbLruListHead) && (to_free == NULL))
     {
         ULONG Refs;
+        PROS_VACB current;
 
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     VacbLruListEntry);
-        current_entry = current_entry->Flink;
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
@@ -634,47 +626,32 @@ CcRosFreeUnusedVacb (
             ASSERT(!current->MappedCount);
             ASSERT(Refs == 1);
 
-            /* Reset and move to free list */
+            /* Reset it, this is the one we want to free */
             RemoveEntryList(&current->CacheMapVacbListEntry);
+            InitializeListHead(&current->CacheMapVacbListEntry);
             RemoveEntryList(&current->VacbLruListEntry);
             InitializeListHead(&current->VacbLruListEntry);
-            InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
+
+            to_free = current;
         }
 
         KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
+        current_entry = current_entry->Flink;
     }
 
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
-    /* And now, free any of the found VACB, that'll free memory! */
-    while (!IsListEmpty(&FreeList))
+    /* And now, free the VACB that we found, if any. */
+    if (to_free == NULL)
     {
-        ULONG Refs;
-
-        current_entry = RemoveHeadList(&FreeList);
-        current = CONTAINING_RECORD(current_entry,
-                                    ROS_VACB,
-                                    CacheMapVacbListEntry);
-        InitializeListHead(&current->CacheMapVacbListEntry);
-        Refs = CcRosVacbDecRefCount(current);
-        ASSERT(Refs == 0);
-        ++cFreed;
+        return FALSE;
     }
 
-    /* If we freed at least one VACB, return success */
-    if (cFreed != 0)
-    {
-        Freed = TRUE;
-    }
+    /* This must be its last ref */
+    NT_VERIFY(CcRosVacbDecRefCount(to_free) == 0);
 
-    /* If caller asked for free count, return it */
-    if (Count != NULL)
-    {
-        *Count = cFreed;
-    }
-
-    return Freed;
+    return TRUE;
 }
 
 static
@@ -690,7 +667,6 @@ CcRosCreateVacb (
     NTSTATUS Status;
     KIRQL oldIrql;
     ULONG Refs;
-    BOOLEAN Retried;
     SIZE_T ViewSize = VACB_MAPPING_GRANULARITY;
 
     ASSERT(SharedCacheMap);
@@ -711,28 +687,24 @@ CcRosCreateVacb (
 
     CcRosVacbIncRefCount(current);
 
-    Retried = FALSE;
-Retry:
-    /* Map VACB in system space */
-    Status = MmMapViewInSystemSpaceEx(SharedCacheMap->Section, &current->BaseAddress, &ViewSize, &current->FileOffset, 0);
-
-    if (!NT_SUCCESS(Status))
+    while (TRUE)
     {
-        ULONG Freed;
-        /* If no space left, try to prune unused VACB
-         * to recover space to map our VACB
-         * If it succeed, retry to map, otherwise
-         * just fail.
-         */
-        if (!Retried && CcRosFreeUnusedVacb(&Freed))
+        /* Map VACB in system space */
+        Status = MmMapViewInSystemSpaceEx(SharedCacheMap->Section, &current->BaseAddress, &ViewSize, &current->FileOffset, 0);
+        if (NT_SUCCESS(Status))
         {
-            DPRINT("Prunned %d VACB, trying again\n", Freed);
-            Retried = TRUE;
-            goto Retry;
+            break;
         }
 
-        ExFreeToNPagedLookasideList(&VacbLookasideList, current);
-        return Status;
+        /*
+         * If no space left, try to prune  one unused VACB to recover space to map our VACB.
+         * If it succeeds, retry to map, otherwise just fail.
+         */
+        if (!CcRosFreeOneUnusedVacb())
+        {
+            ExFreeToNPagedLookasideList(&VacbLookasideList, current);
+            return Status;
+        }
     }
 
 #if DBG
