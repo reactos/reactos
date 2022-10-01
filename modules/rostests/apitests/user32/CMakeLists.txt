@@ -48,6 +48,7 @@ list(APPEND SOURCE
     SwitchToThisWindow.c
     SystemParametersInfo.c
     TrackMouseEvent.c
+    VirtualKey.c
     WndProc.c
     wsprintf.c)
 
