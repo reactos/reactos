@@ -415,8 +415,10 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
 
 #ifdef SANITIZER_ENABLED
     {
-        ASSERT(!Face->family_name || IsBadStringPtrA(Face->family_name, 256));
-        ASSERT(!Face->style_name || IsBadStringPtrA(Face->style_name, 256));
+        if (Face->family_name)
+            ValidateStringPtrA(Face->family_name);
+        if (Face->style_name)
+            ValidateStringPtrA(Face->style_name);
         // ...
     }
 #endif
