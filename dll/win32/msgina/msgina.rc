@@ -60,7 +60,8 @@ IDB_IMAGE_STRIP BITMAP "resources/image_strip.bmp"
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
-#ifdef LANGUAGE_NB_NO
+//#ifdef LANGUAGE_NB_NO
+#ifdef LANGUAGE_NN_NO
     #include "lang/no-NO.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
