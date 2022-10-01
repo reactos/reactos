@@ -63,6 +63,21 @@ INT AllocAndLoadString(LPTSTR *lpTarget,
 
 ULONG __cdecl DbgPrint(PCCH Format,...);
 
+/*
+ * The values in these macros are dependent on the
+ * layout of the monitor image and they must be adjusted
+ * if that image is changed.
+ */
+#define MONITOR_LEFT        20
+#define MONITOR_TOP         8
+#define MONITOR_RIGHT       140
+#define MONITOR_BOTTOM      92
+
+#define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
+#define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
+
+#define MONITOR_ALPHA       0xFF00FF
+
 #define MAX_DESK_PAGES        32
 #define NUM_SPECTRUM_BITMAPS  3
 
@@ -106,6 +121,9 @@ typedef struct _GLOBAL_DATA
     COLORREF desktop_color;
     LPCWSTR pwszFile;
     LPCWSTR pwszAction;
+    HBITMAP hMonitorBitmap;
+    LONG bmMonWidth;
+    LONG bmMonHeight;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;

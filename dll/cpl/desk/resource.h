@@ -31,6 +31,7 @@
 #define IDC_COLOR_BUTTON             1004
 #define IDC_PLACEMENT_COMBO          1005
 #define IDS_BACKGROUND_COMDLG_FILTER 1006
+#define IDC_RESOLUTION_PREVIEW       1007
 
 /* Screensaver Page */
 #define IDC_SCREENS_PREVIEW      1010
@@ -65,10 +66,11 @@
 #define IDC_SETTINGS_ADVANCED        205
 #define IDC_SETTINGS_MONSEL          206
 #define IDC_SETTINGS_SPECTRUM        207
+#define IDC_SETTINGS_MONTEXT         208
 
-#define IDB_SPECTRUM_4  208
-#define IDB_SPECTRUM_8  209
-#define IDB_SPECTRUM_16 210
+#define IDB_SPECTRUM_4  209
+#define IDB_SPECTRUM_8  210
+#define IDB_SPECTRUM_16 211
 
 #define IDR_PREVIEW_MENU 2100
 #define ID_MENU_NORMAL   2101

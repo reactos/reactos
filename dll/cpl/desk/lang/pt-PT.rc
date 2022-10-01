@@ -139,7 +139,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Arraste os ícones dos monitores, para que correspondam à disposição física dos seus monitores.", -1, 3, 3, 240, 20
+    CONTROL "", IDC_RESOLUTION_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
+    LTEXT "Arraste os ícones dos monitores, para que correspondam à disposição física dos seus monitores.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 250, 82, WS_EX_CLIENTEDGE
     LTEXT "Monitor:", 1820, 3, 107, 70, 9

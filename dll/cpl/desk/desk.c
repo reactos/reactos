@@ -150,6 +150,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     LPCWSTR pwszFile = NULL;
     LPCWSTR pwszAction = NULL;
     INT nPage = 0;
+    BITMAP bitmap;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -197,6 +198,16 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
 
+    /* Initialize the monitor preview bitmap, used on multiple pages */
+    g_GlobalData.hMonitorBitmap = LoadBitmapW(hApplet, MAKEINTRESOURCEW(IDC_MONITOR));
+    if (g_GlobalData.hMonitorBitmap != NULL)
+    {
+        GetObjectW(g_GlobalData.hMonitorBitmap, sizeof(bitmap), &bitmap);
+
+        g_GlobalData.bmMonWidth = bitmap.bmWidth;
+        g_GlobalData.bmMonHeight = bitmap.bmHeight;
+    }
+
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE | PSH_USEICONID;
@@ -238,6 +249,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     PropertySheet(&psh);
 
 cleanup:
+    DeleteObject(g_GlobalData.hMonitorBitmap);
+
     if (hpsxa != NULL)
         SHDestroyPropSheetExtArray(hpsxa);
 

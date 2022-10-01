@@ -360,6 +360,9 @@ SettingsOnInitDialog(IN HWND hwndDlg)
         /* Single video adapter */
         OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
 
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_MONTEXT), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_MONSEL), SW_HIDE);
+
         monitors.Position.x = monitors.Position.y = 0;
         monitors.Size.cx = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
         monitors.Size.cy = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
@@ -376,6 +379,8 @@ SettingsOnInitDialog(IN HWND hwndDlg)
         DWORD i;
 
         OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
+
+        ShowWindow(GetDlgItem(hwndDlg, IDC_RESOLUTION_PREVIEW), SW_HIDE);
 
         pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
         if (pMonitors)
@@ -419,6 +424,40 @@ SettingsOnInitDialog(IN HWND hwndDlg)
             }
         }
     }
+}
+
+static VOID
+ShowResolutionPreview(IN LPDRAWITEMSTRUCT draw, IN PSETTINGS_DATA pData)
+{
+    HBRUSH hBrush;
+    HDC hDC;
+    HGDIOBJ hOldObj;
+    RECT rcItem = {
+        MONITOR_LEFT,
+        MONITOR_TOP,
+        MONITOR_RIGHT,
+        MONITOR_BOTTOM
+    };
+
+    hDC = CreateCompatibleDC(draw->hDC);
+    hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
+
+    /* FIXME: Draw resolution preview bitmap inside monitor. */
+    hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
+    FillRect(hDC, &rcItem, hBrush);
+    DeleteObject(hBrush);
+
+    GdiTransparentBlt(draw->hDC,
+                      draw->rcItem.left, draw->rcItem.top,
+                      draw->rcItem.right - draw->rcItem.left + 1,
+                      draw->rcItem.bottom - draw->rcItem.top + 1,
+                      hDC,
+                      0, 0,
+                      g_GlobalData.bmMonWidth, g_GlobalData.bmMonHeight,
+                      MONITOR_ALPHA);
+
+    SelectObject(hDC, hOldObj);
+    DeleteDC(hDC);
 }
 
 /* Get the ID for SETTINGS_DATA::hSpectrumBitmaps */
@@ -576,6 +615,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData, IN DWORD NewPositi
     }
 
     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_RESOLUTION_PREVIEW), NULL, TRUE);
 
     dmBitsPerPel = Current->dmBitsPerPel;
     dmDisplayFrequency = Current->dmDisplayFrequency;
@@ -854,8 +894,19 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
             LPDRAWITEMSTRUCT lpDrawItem;
             lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
 
-            if (lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
-                ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pData);
+            switch (lpDrawItem->CtlID)
+            {
+                case IDC_RESOLUTION_PREVIEW:
+                {
+                    ShowResolutionPreview(lpDrawItem, pData);
+                    break;
+                }
+                case IDC_SETTINGS_SPECTRUM:
+                {
+                    ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pData);
+                    break;
+                }
+            }
             break;
         }
         case WM_COMMAND:

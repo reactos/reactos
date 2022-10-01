@@ -37,18 +37,6 @@ typedef enum
     PLACEMENT_VALUE_FILL      = 10
 } PLACEMENT_VALUE;
 
-/* The values in these macros are dependent on the
- * layout of the monitor image and they must be adjusted
- * if that image will be changed.
- */
-#define MONITOR_LEFT        20
-#define MONITOR_TOP         8
-#define MONITOR_RIGHT       140
-#define MONITOR_BOTTOM      92
-
-#define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
-#define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
-
 typedef struct
 {
     BOOL bWallpaper; /* Is this background a wallpaper */
@@ -73,10 +61,6 @@ typedef struct _BACKGROUND_DATA
     COLORREF custom_colors[16];
 
     int listViewItemCount;
-
-    HBITMAP hBitmap;
-    int cxSource;
-    int cySource;
 
     ULONG_PTR gdipToken;
 } BACKGROUND_DATA, *PBACKGROUND_DATA;
@@ -468,7 +452,6 @@ InitBackgroundDialog(HWND hwndDlg, PBACKGROUND_DATA pData)
     HKEY regKey;
     TCHAR szBuffer[3];
     DWORD bufferSize = sizeof(szBuffer);
-    BITMAP bitmap;
 
     AddListViewItems(hwndDlg, pData);
 
@@ -489,15 +472,6 @@ InitBackgroundDialog(HWND hwndDlg, PBACKGROUND_DATA pData)
 
     SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
     pData->placementSelection = PLACEMENT_CENTER;
-
-    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    if (pData->hBitmap != NULL)
-    {
-        GetObject(pData->hBitmap, sizeof(BITMAP), &bitmap);
-
-        pData->cxSource = bitmap.bmWidth;
-        pData->cySource = bitmap.bmHeight;
-    }
 
     /* Load the default settings from the registry */
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_QUERY_VALUE, &regKey) != ERROR_SUCCESS)
@@ -822,7 +796,7 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PBACKGROUND_DATA pData)
     };
 
     hDC = CreateCompatibleDC(draw->hDC);
-    hOldObj = SelectObject(hDC, pData->hBitmap);
+    hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
 
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == FALSE)
     {
@@ -997,12 +971,12 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PBACKGROUND_DATA pData)
 
     GdiTransparentBlt(draw->hDC,
                       draw->rcItem.left, draw->rcItem.top,
-                      draw->rcItem.right-draw->rcItem.left+1,
-                      draw->rcItem.bottom-draw->rcItem.top+1,
+                      draw->rcItem.right - draw->rcItem.left + 1,
+                      draw->rcItem.bottom - draw->rcItem.top + 1,
                       hDC,
                       0, 0,
-                      pData->cxSource, pData->cySource,
-                      0xFF00FF);
+                      g_GlobalData.bmMonWidth, g_GlobalData.bmMonHeight,
+                      MONITOR_ALPHA);
 
     SelectObject(hDC, hOldObj);
     DeleteDC(hDC);
@@ -1265,7 +1239,6 @@ BackgroundPageProc(HWND hwndDlg,
             if (pData->pWallpaperBitmap != NULL)
                 DibFreeImage(pData->pWallpaperBitmap);
 
-            DeleteObject(pData->hBitmap);
             GdiplusShutdown(pData->gdipToken);
             HeapFree(GetProcessHeap(), 0, pData);
             break;

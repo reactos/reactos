@@ -134,7 +134,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ρυθμίσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Σύρετε τα εικονίδια της οθόνης, ώστε να ταιριάξουν με τη φυσική διάταξη των οθονών σας.", -1, 3, 3, 240, 20
+    CONTROL "", IDC_RESOLUTION_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
+    LTEXT "Σύρετε τα εικονίδια της οθόνης, ώστε να ταιριάξουν με τη φυσική διάταξη των οθονών σας.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Εμφάνιση:", 1820, 3, 107, 70, 9
