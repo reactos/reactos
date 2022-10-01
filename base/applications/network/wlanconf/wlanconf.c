@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS WLAN command-line configuration utility
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/wlanconf/wlanconf.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Allows WLAN configuration via the command prompt
- * COPYRIGHT:   Copyright 2012 Cameron Gutman (cameron.gutman@reactos.org)
+ * COPYRIGHT:   Copyright 2012 Cameron Gutman <cameron.gutman@reactos.org>
  */
 
 #include <stdio.h>
@@ -183,8 +182,13 @@ OpenAdapterHandle(DWORD Index, HANDLE *hAdapter, IP_ADAPTER_INDEX_MAP *IpInfo)
 
     for (i = 0; i < InterfaceInfo->NumAdapters; i++)
     {
+        PWCHAR InterfaceGuid = wcschr(InterfaceInfo->Adapter[i].Name, L'{');
+
+        if (InterfaceGuid == NULL)
+            continue;
+
         if (wcsstr((PWCHAR)((PUCHAR)QueryBinding + QueryBinding->DeviceNameOffset),
-                   InterfaceInfo->Adapter[i].Name))
+                   InterfaceGuid))
         {
             *IpInfo = InterfaceInfo->Adapter[i];
             *hAdapter = hDriver;
