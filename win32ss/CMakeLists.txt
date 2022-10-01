@@ -192,6 +192,7 @@ list(APPEND SOURCE
     gdi/ntgdi/print.c
     gdi/ntgdi/rect.c
     gdi/ntgdi/region.c
+    gdi/ntgdi/sanitizer.c
     gdi/ntgdi/stockobj.c
     gdi/ntgdi/text.c
     gdi/ntgdi/wingl.c

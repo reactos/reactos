@@ -11,6 +11,8 @@
 /** Includes ******************************************************************/
 
 #include <win32k.h>
+#include "sanitizer.h"
+#define SANITIZER_ENABLED
 
 #include FT_GLYPH_H
 #include FT_TYPE1_TABLES_H
@@ -385,7 +387,7 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 }
 
 
-#if DBG
+#if DBG || defined(SANITIZER_ENABLED)
 VOID DumpFontEntry(PFONT_ENTRY FontEntry)
 {
     const char *family_name;
@@ -411,6 +413,14 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
         style_name = "<invalid>";
     }
 
+#ifdef SANITIZER_ENABLED
+    {
+        ASSERT(!Face->family_name || IsBadStringPtrA(Face->family_name, 256));
+        ASSERT(!Face->style_name || IsBadStringPtrA(Face->style_name, 256));
+        // ...
+    }
+#endif
+
     DPRINT("family_name '%s', style_name '%s', FaceName '%wZ', StyleName '%wZ', FontGDI %p, "
            "FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
            family_name,
@@ -424,6 +434,15 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
            Face,
            FontGDI->CharSet,
            FontGDI->Filename);
+}
+
+VOID DumpFontCacheEntry(PFONT_CACHE_ENTRY FontEntry)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+
+#ifdef SANITIZER_ENABLED
+    // ...
+#endif
 }
 
 VOID DumpFontList(PLIST_ENTRY Head)
@@ -447,6 +466,10 @@ VOID DumpFontSubstEntry(PFONTSUBST_ENTRY pSubstEntry)
         pSubstEntry->CharSets[FONTSUBST_FROM],
         &pSubstEntry->FontNames[FONTSUBST_TO],
         pSubstEntry->CharSets[FONTSUBST_TO]);
+
+#ifdef SANITIZER_ENABLED
+    // ...
+#endif
 }
 
 VOID DumpFontSubstList(VOID)
@@ -495,11 +518,34 @@ VOID DumpGlobalFontList(BOOL bDoLock)
         IntUnLockGlobalFonts();
 }
 
+VOID DumpFontCacheList(BOOL bDoLock)
+{
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    PFONT_CACHE_ENTRY FontEntry;
+
+    if (bDoLock)
+        IntLockGlobalFonts();
+
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = NextEntry)
+    {
+        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
+
+        DumpFontCacheEntry(FontEntry);
+    }
+
+    if (bDoLock)
+        IntUnLockGlobalFonts();
+}
+
 VOID DumpFontInfo(BOOL bDoLock)
 {
     DumpGlobalFontList(bDoLock);
     DumpPrivateFontList(bDoLock);
     DumpFontSubstList();
+    DumpFontCacheList(bDoLock);
 }
 #endif
 
@@ -696,7 +742,7 @@ InitFontSupport(VOID)
 
     IntLoadFontSubstList(&g_FontSubstListHead);
 
-#if DBG
+#if DBG || defined(SANITIZER_ENABLED)
     DumpFontInfo(TRUE);
 #endif
 
