@@ -12,6 +12,7 @@
 #include <debug.h>
 #include "sanitizer.h"
 
+/* #define DO_HEAVY_CHECK */
 /* #define PUNISH_SUSPECTED */
 
 #define UNINIT_BYTE 0xDD
@@ -119,13 +120,17 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
 {
     PVOID ret;
 
+#ifdef DO_HEAVY_CHECK
     SanitizeHeapSystem();
+#endif
 
     ret = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
     if (ret)
         RtlFillMemory(ret, NumberOfBytes, UNINIT_BYTE);
 
+#ifdef DO_HEAVY_CHECK
     SanitizeHeapSystem();
+#endif
 
     return ret;
 }
@@ -158,12 +163,16 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
 
 VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
 {
+#ifdef DO_HEAVY_CHECK
     SanitizeHeapSystem();
+#endif
 
     if (P)
         SanitizeBeforeExFreePool(P, TagToFree);
 
     ExFreePoolWithTag(P, TagToFree);
 
+#ifdef DO_HEAVY_CHECK
     SanitizeHeapSystem();
+#endif
 }

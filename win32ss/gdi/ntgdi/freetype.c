@@ -200,6 +200,7 @@ static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 
 VOID SanitizeFace(FT_Face Face)
 {
+    SanitizeReadPtr(Face, sizeof(*FT_Face), FALSE);
     SanitizeStringPtrA(Face->family_name, TRUE);
     SanitizeStringPtrA(Face->style_name, TRUE);
     // ...
@@ -210,18 +211,54 @@ VOID SanitizeBitmapGlyph(FT_BitmapGlyph BitmapGlyph)
     // ...
 }
 
+VOID SanitizeSharedMem(PSHARED_MEM pSharedMem)
+{
+    SanitizePoolMemory(pSharedMem, TAG_FONT);
+    if (!pSharedMem->IsMapping)
+    {
+        SanitizePoolMemory(pSharedMem->Buffer, TAG_FONT);
+    }
+    // ...
+}
+
 VOID SanitizeSharedFaceCache(PSHARED_FACE_CACHE pFaceCache)
 {
+    SanitizePoolMemory(pFaceCache, TAG_FONT);
     SanitizeUnicodeString(&pFaceCache->FontFamily);
     SanitizeUnicodeString(&pFaceCache->FullName);
 }
 
 VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
 {
+    SanitizePoolMemory(SharedFace, TAG_FONT);
     SanitizeFace(SharedFace->Face);
     SanitizeSharedMem(SharedFace->Memory);
     SanitizeSharedFaceCache(&SharedFace->EnglishUS);
     SanitizeSharedFaceCache(&SharedFace->UserLanguage);
+}
+
+VOID SanitizeFontSubstEntry(PFONTSUBST_ENTRY pEntry)
+{
+    SanitizePoolMemory(pEntry, TAG_FONT);
+    SanitizeUnicodeString(&pEntry->FontNames[0]);
+    SanitizeUnicodeString(&pEntry->FontNames[1]);
+}
+
+VOID SanitizeFontSubstList(VOID)
+{
+    PLIST_ENTRY         pHead = &g_FontSubstListHead;
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry =
+            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+
+        SanitizeFontSubstEntry(pSubstEntry);
+    }
 }
 
 VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
@@ -229,13 +266,10 @@ VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
     FT_Face Face;
     PFONTGDI FontGDI = FontEntry->Font;
 
-    if (!FontGDI)
+    if (!FontGDI || !FontGDI->SharedFace)
         return;
 
-    if (FontGDI->SharedFace)
-    {
-        SanitizeSharedFace(FontGDI->SharedFace);
-    }
+    SanitizeSharedFace(FontGDI->SharedFace);
 }
 
 VOID SanitizeFontList(PLIST_ENTRY Head)
@@ -309,6 +343,7 @@ VOID SanitizeFontInfo(BOOL bDoLock)
     SanitizeGlobalFontList(bDoLock);
     SanitizePrivateFontList(bDoLock);
     SanitizeFontCacheList(bDoLock);
+    SanitizeFontSubstList();
 }
 
 #endif /* def SANITIZER_ENABLED */
