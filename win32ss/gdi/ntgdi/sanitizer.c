@@ -27,11 +27,11 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
+VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bNullOK)
 {
     volatile const BYTE *pb;
 
-    if (bCanBeNull && !ptr)
+    if (bNullOK && !ptr)
         return;
 
     for (pb = ptr; cb-- > 0; ++pb)
@@ -45,11 +45,11 @@ VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
     }
 }
 
-VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
+VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK)
 {
     volatile const BYTE *pb;
 
-    if (bCanBeNull && !ptr)
+    if (bNullOK && !ptr)
         return;
 
     for (pb = ptr; cb-- > 0; ++pb)
@@ -58,11 +58,11 @@ VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
     }
 }
 
-VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bCanBeNull)
+VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bNullOK)
 {
     volatile const CHAR *pch;
 
-    if (bCanBeNull && !psz)
+    if (bNullOK && !psz)
         return;
 
     for (pch = psz; *pch; ++pch)
@@ -72,11 +72,11 @@ VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bCanBeNull)
     *pch = *pch;
 }
 
-VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bCanBeNull)
+VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
 {
     volatile const WCHAR *pch;
 
-    if (bCanBeNull && !psz)
+    if (bNullOK && !psz)
         return;
 
     for (pch = psz; *pch; ++pch)
