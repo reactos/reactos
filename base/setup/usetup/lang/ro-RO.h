@@ -1,7 +1,15 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* Ștefan Fulea (stefan dot fulea at mail dot com) */
+
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 #pragma once
 
 static MUI_ENTRY roROSetupInitPageEntries[] =
@@ -16,7 +24,7 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         20,
-        "Asteptati initializarea programului de instalare si",
+        "A\272tepta\376i ini\376ializarea programului de instalare \272i",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -30,7 +38,7 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         0,
-        "Asteptati...",
+        "A\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -449,9 +457,9 @@ static MUI_ENTRY roRODevicePageEntries[] =
         TEXT_ID_STATIC
     },
     {
-        24,
-        11,
-        "Arh. de calcul:",
+        6,
+        8,
+        "Arhitectur\343 de calcul:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
         TEXT_ID_STATIC
     },
@@ -1105,28 +1113,28 @@ static MUI_ENTRY roROChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalare " KERNEL_VERSION_STR " ReactOS ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "Parti\376ia curent\343 a calculatorului dumneavoastr\343",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "on the system disk",
+        "pe un disc de sistem",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "folose\272te un format ce nu este suportat de ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1210,7 +1218,7 @@ static MUI_ENTRY roROChangeSystemPartition[] =
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Continuare   ESC = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
