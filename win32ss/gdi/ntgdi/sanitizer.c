@@ -25,14 +25,14 @@
     #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
 #endif
 
-VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
+VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
 {
     volatile const BYTE *pb;
 
-    if (bCanBeNull && !lp)
+    if (bCanBeNull && !ptr)
         return;
 
-    for (pb = lp; ucb-- > 0; ++pb)
+    for (pb = ptr; cb-- > 0; ++pb)
     {
         if (*pb != *pb)
         {
@@ -43,41 +43,41 @@ VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
     }
 }
 
-VOID FASTCALL SanitizeWritePtr(LPVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
+VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
 {
     volatile const BYTE *pb;
 
-    if (bCanBeNull && !lp)
+    if (bCanBeNull && !ptr)
         return;
 
-    for (pb = lp; ucb-- > 0; ++pb)
+    for (pb = ptr; cb-- > 0; ++pb)
     {
         *pb = *pb;
     }
 }
 
-VOID FASTCALL SanitizeStringPtrA(LPSTR lpsz, BOOL bCanBeNull)
+VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bCanBeNull)
 {
     volatile const CHAR *pch;
 
-    if (bCanBeNull && !lpsz)
+    if (bCanBeNull && !psz)
         return;
 
-    for (pch = lpsz; *pch; ++pch)
+    for (pch = psz; *pch; ++pch)
     {
         *pch = *pch;
     }
     *pch = *pch;
 }
 
-VOID FASTCALL SanitizeStringPtrW(LPWSTR lpsz, BOOL bCanBeNull)
+VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bCanBeNull)
 {
     volatile const WCHAR *pch;
 
-    if (bCanBeNull && !lpsz)
+    if (bCanBeNull && !psz)
         return;
 
-    for (pch = lpsz; *pch; ++pch)
+    for (pch = psz; *pch; ++pch)
     {
         *pch = *pch;
     }
