@@ -27,6 +27,9 @@
     #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
 #endif
 
+#undef ExAllocatePoolWithTag
+#undef ExFreePoolWithTag
+
 /* FUNCTIONS ******************************************************************/
 
 VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bNullOK)
@@ -96,8 +99,6 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
     return ExQueryPoolBlockSize(P, &QuotaCharged); // FIXME: Implement
 }
 
-#undef ExAllocatePoolWithTag
-
 PVOID FASTCALL
 SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
                               SIZE_T NumberOfBytes,
@@ -137,8 +138,6 @@ VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, ULONG TagToFree)
 
     RtlFillMemory(P, NumberOfBytes, FREED_BYTE);
 }
-
-#undef ExFreePoolWithTag
 
 VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree)
 {
