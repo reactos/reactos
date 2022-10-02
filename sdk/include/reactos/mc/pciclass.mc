@@ -35,7 +35,7 @@ Language=Polish
 Kontroler SCSI
 .
 Language=Romanian
-Controler SCSI
+Server pentru controlul domeniilor SCSI
 .
 
 MessageId=257
@@ -47,7 +47,7 @@ Language=Polish
 Kontroler IDE
 .
 Language=Romanian
-Controler IDE
+Server pentru controlul domeniilor IDE
 .
 
 MessageId=258
@@ -59,7 +59,7 @@ Language=Polish
 Kontroler dyskietek
 .
 Language=Romanian
-Controler pentru dischete
+Server pentru controlul domeniilor pentru dischete
 .
 
 MessageId=259
@@ -71,7 +71,7 @@ Language=Polish
 Kontroler IPI
 .
 Language=Romanian
-Controler IPI
+Server pentru controlul domeniilor IPI
 .
 
 MessageId=260
@@ -83,7 +83,7 @@ Language=Polish
 Kontroler RAID
 .
 Language=Romanian
-Controler RAID
+Server pentru controlul domeniilor RAID
 .
 
 MessageId=261
@@ -95,7 +95,7 @@ Language=Polish
 Kontroler ATA
 .
 Language=Romanian
-Controler ATA
+Server pentru controlul domeniilor ATA
 .
 
 MessageId=262
@@ -107,7 +107,7 @@ Language=Polish
 Kontroler Serial ATA
 .
 Language=Romanian
-Controler Serial ATA
+Server pentru controlul domeniilor Serial ATA
 .
 
 MessageId=263
@@ -119,7 +119,7 @@ Language=Polish
 Kontroler SAS
 .
 Language=Romanian
-Controler SAS
+Server pentru controlul domeniilor SAS
 .
 
 MessageId=384
@@ -131,7 +131,7 @@ Language=Polish
 Kontroler pamięci masowej
 .
 Language=Romanian
-Controler de stocare în masă
+Server pentru controlul domeniilor de stocare în masă
 .
 
 MessageId=512
@@ -143,7 +143,7 @@ Language=Polish
 Kontroler Ethernet
 .
 Language=Romanian
-Controler de Ethernet
+Server pentru controlul domeniilor de Ethernet
 .
 
 MessageId=513
@@ -155,7 +155,7 @@ Language=Polish
 Kontroler sieci typu Token Ring
 .
 Language=Romanian
-Controler de rețea Token Ring
+Server pentru controlul domeniilor de rețea Token Ring
 .
 
 MessageId=514
@@ -167,7 +167,7 @@ Language=Polish
 Kontroler sieci typu FDDI
 .
 Language=Romanian
-Controler de rețea FDDI
+Server pentru controlul domeniilor de rețea FDDI
 .
 
 MessageId=515
@@ -179,7 +179,7 @@ Language=Polish
 Kontroler sieci typu ATM
 .
 Language=Romanian
-Controler de rețea ATM
+Server pentru controlul domeniilor de rețea ATM
 .
 
 MessageId=516
@@ -191,7 +191,7 @@ Language=Polish
 Kontroler ISDN
 .
 Language=Romanian
-Controler ISDN
+Server pentru controlul domeniilor ISDN
 .
 
 MessageId=517
@@ -203,7 +203,7 @@ Language=Polish
 Kontroler WorldFip
 .
 Language=Romanian
-Controler WorldFip
+Server pentru controlul domeniilor WorldFip
 .
 
 MessageId=640
@@ -215,7 +215,7 @@ Language=Polish
 Kontroler sieci
 .
 Language=Romanian
-Controler de rețea
+Server pentru controlul domeniilor de rețea
 .
 
 MessageId=768
@@ -227,7 +227,7 @@ Language=Polish
 Kontroler wideo (zgodny z VGA)
 .
 Language=Romanian
-Controler video (compatibil cu VGA)
+Server pentru controlul domeniilor video (compatibil cu VGA)
 .
 
 MessageId=769
@@ -239,7 +239,7 @@ Language=Polish
 Kontroler wideo (zgodny z VGA)
 .
 Language=Romanian
-Controler video (compatibil cu VGA)
+Server pentru controlul domeniilor video (compatibil cu VGA)
 .
 
 MessageId=770
@@ -251,7 +251,7 @@ Language=Polish
 Kontroler wideo 3W
 .
 Language=Romanian
-Controler video 3D
+Server pentru controlul domeniilor video 3D
 .
 
 MessageId=896
@@ -263,7 +263,7 @@ Language=Polish
 Kontroler wideo
 .
 Language=Romanian
-Controler video
+Server pentru controlul domeniilor video
 .
 
 MessageId=1024
@@ -275,7 +275,7 @@ Language=Polish
 Kontroler multimediów wideo
 .
 Language=Romanian
-Controler video multimedia
+Server pentru controlul domeniilor video multimedia
 .
 
 MessageId=1025
@@ -287,7 +287,7 @@ Language=Polish
 Kontroler multimediów audio
 .
 Language=Romanian
-Controler audio multimedia
+Server pentru controlul domeniilor audio multimedia
 .
 
 MessageId=1026
@@ -311,7 +311,7 @@ Language=Polish
 Kontroler multimediów
 .
 Language=Romanian
-Controler multimedia
+Server pentru controlul domeniilor multimedia
 .
 
 MessageId=1280
@@ -347,7 +347,7 @@ Language=Polish
 Kontroler pamięci PCI
 .
 Language=Romanian
-Controler de memorie PCI
+Server pentru controlul domeniilor de memorie PCI
 .
 
 MessageId=1536
@@ -527,7 +527,7 @@ Language=Polish
 Wieloportowy kontroler szeregowy PCI
 .
 Language=Romanian
-Controler serial multiport PCI
+Server pentru controlul domeniilor serial multiport PCI
 .
 
 MessageId=1795
@@ -551,7 +551,7 @@ Language=Polish
 Kontroler PCI GBIB
 .
 Language=Romanian
-Controler PCI GBIB
+Server pentru controlul domeniilor PCI GBIB
 .
 
 MessageId=1797
@@ -575,7 +575,7 @@ Language=Polish
 Kontroler PCI Simple Communications
 .
 Language=Romanian
-Controler PCI pentru comunicații simple
+Server pentru controlul domeniilor PCI pentru comunicații simple
 .
 
 MessageId=2048
@@ -587,7 +587,7 @@ Language=Polish
 Kontroler przerwań systemowych
 .
 Language=Romanian
-Controler de întrerupere a sistemului
+Server pentru controlul domeniilor de întrerupere a sistemului
 .
 
 MessageId=2049
@@ -599,7 +599,7 @@ Language=Polish
 Kontroler systemowy DMA
 .
 Language=Romanian
-Controler DMA de sistem
+Server pentru controlul domeniilor DMA de sistem
 .
 
 MessageId=2050
@@ -635,7 +635,7 @@ Language=Polish
 Rodzajowy kontroler PCI Hot-Plug
 .
 Language=Romanian
-Controler generic PCI Hot-Plug
+Server pentru controlul domeniilor generic PCI Hot-Plug
 .
 
 MessageId=2053
@@ -647,7 +647,7 @@ Language=Polish
 Kontroler hosta SD
 .
 Language=Romanian
-Controler de gazdă SD
+Server pentru controlul domeniilor de gazdă SD
 .
 
 MessageId=2173
@@ -671,7 +671,7 @@ Language=Polish
 Kontroler klawiatury PCI
 .
 Language=Romanian
-Controler de tastatură PCI
+Server pentru controlul domeniilor de tastatură PCI
 .
 
 MessageId=2305
@@ -695,7 +695,7 @@ Language=Polish
 Kontroler myszy PCI
 .
 Language=Romanian
-Controler de șoricel PCI
+Server pentru controlul domeniilor de șoricel PCI
 .
 
 MessageId=2307
@@ -707,7 +707,7 @@ Language=Polish
 Kontroler skanera PCI
 .
 Language=Romanian
-Controler de scaner PCI
+Server pentru controlul domeniilor dispozitivelor de scanare PCI
 .
 
 MessageId=2308
@@ -719,7 +719,7 @@ Language=Polish
 Kontroler portu gier PCI
 .
 Language=Romanian
-Controler PCI pentru port de joc
+Server pentru controlul domeniilor PCI pentru port de joc
 .
 
 MessageId=2432
@@ -839,7 +839,7 @@ Language=Polish
 Kontroler IEEE 1394
 .
 Language=Romanian
-Controler IEEE 1394
+Server pentru controlul domeniilor IEEE 1394
 .
 
 MessageId=3073
@@ -851,7 +851,7 @@ Language=Polish
 Kontroler magistrali ACCESS
 .
 Language=Romanian
-Controler de magistrală ACCESS
+Server pentru controlul domeniilor de magistrală ACCESS
 .
 
 MessageId=3074
@@ -863,7 +863,7 @@ Language=Polish
 Kontroler SSA
 .
 Language=Romanian
-Controler SSA
+Server pentru controlul domeniilor SSA
 .
 
 MessageId=3075
@@ -875,7 +875,7 @@ Language=Polish
 Kontroler uniwersalnej magistrali szeregowej (USB)
 .
 Language=Romanian
-Controler universal de magistrală serială (USB)
+Server pentru controlul domeniilor universal de magistrală serială (USB)
 .
 
 MessageId=3076
@@ -887,7 +887,7 @@ Language=Polish
 Kontroler Fibre Channel
 .
 Language=Romanian
-Controler Fibre Channel
+Server pentru controlul domeniilor Fibre Channel
 .
 
 MessageId=3077
@@ -899,7 +899,7 @@ Language=Polish
 Kontroler magistrali zarządzania systemem
 .
 Language=Romanian
-Controler de magistrală de management al sistemului
+Server pentru controlul domeniilor de magistrală de management al sistemului
 .
 
 MessageId=3078
@@ -911,7 +911,7 @@ Language=Polish
 Kontroler Infiniband
 .
 Language=Romanian
-Controler Infiniband
+Server pentru controlul domeniilor Infiniband
 .
 
 MessageId=3079
@@ -947,7 +947,7 @@ Language=Polish
 Kontroler CANbus
 .
 Language=Romanian
-Controler CANbus
+Server pentru controlul domeniilor CANbus
 .
 
 MessageId=3328
@@ -959,7 +959,7 @@ Language=Polish
 Kontroler zgodny z iRDA
 .
 Language=Romanian
-Controler compatibil iRDA
+Server pentru controlul domeniilor compatibil iRDA
 .
 
 MessageId=3329
@@ -971,7 +971,7 @@ Language=Polish
 Kontroler Consumer IR
 .
 Language=Romanian
-Controler de infraroșu (IR) de consum
+Server pentru controlul domeniilor de infraroșu (IR) pentru consum
 .
 
 MessageId=3344
@@ -983,7 +983,7 @@ Language=Polish
 Kontroler częstotliwości radiowej
 .
 Language=Romanian
-Controler de radiofrecvență
+Server pentru controlul domeniilor de radiofrecvență
 .
 
 MessageId=3345
@@ -995,7 +995,7 @@ Language=Polish
 Kontroler Bluetooth
 .
 Language=Romanian
-Controler Bluetooth
+Server pentru controlul domeniilor Bluetooth
 .
 
 MessageId=3346
@@ -1007,7 +1007,7 @@ Language=Polish
 Kontroler szerokopasmowy
 .
 Language=Romanian
-Controler de bandă largă
+Server pentru controlul domeniilor de bandă largă
 .
 
 MessageId=3360
@@ -1019,7 +1019,7 @@ Language=Polish
 Kontroler Ethernet 802.11a
 .
 Language=Romanian
-Controler de Ethernet 802.11a
+Server pentru controlul domeniilor de Ethernet 802.11a
 .
 
 MessageId=3361
@@ -1031,7 +1031,7 @@ Language=Polish
 Kontroler Ethernet 802.11b
 .
 Language=Romanian
-Controler de Ethernet 802.11b
+Server pentru controlul domeniilor de Ethernet 802.11b
 .
 
 MessageId=3456
@@ -1043,7 +1043,7 @@ Language=Polish
 Kontroler bezprzewodowy PCI
 .
 Language=Romanian
-Controler wireless PCI
+Server pentru controlul domeniilor wireless PCI
 .
 
 MessageId=3584
@@ -1055,7 +1055,7 @@ Language=Polish
 Kontroler We/Wy Intelligent (I2O)
 .
 Language=Romanian
-Controler inteligent I/O (I2O).
+Server pentru controlul domeniilor inteligent I/O (I2O).
 .
 
 MessageId=3841
@@ -1067,7 +1067,7 @@ Language=Polish
 Kontroler telewizji dla komunikacji satelitarnej
 .
 Language=Romanian
-Controler de televiziune pentru comunicații prin satelit
+Server pentru controlul domeniilor de televiziune pentru comunicații prin satelit
 .
 
 MessageId=3842
@@ -1079,7 +1079,7 @@ Language=Polish
 Kontroler audio dla komunikacji satelitarnej
 .
 Language=Romanian
-Controler audio pentru comunicații prin satelit
+Server pentru controlul domeniilor audio pentru comunicații prin satelit
 .
 
 MessageId=3843
@@ -1091,7 +1091,7 @@ Language=Polish
 Kontroler głosu dla komunikacji satelitarnej
 .
 Language=Romanian
-Controler de voce pentru comunicații prin satelit
+Server pentru controlul domeniilor de voce pentru comunicații prin satelit
 .
 
 MessageId=3844
@@ -1103,7 +1103,7 @@ Language=Polish
 Kontroler danych dla komunikacji satelitarnej
 .
 Language=Romanian
-Controler de date pentru comunicații prin satelit
+Server pentru controlul domeniilor de date pentru comunicații prin satelit
 .
 
 MessageId=4096
@@ -1115,7 +1115,7 @@ Language=Polish
 Kontroler szyfrowania/odszyfrowywania danych sieciowych i komputerowych
 .
 Language=Romanian
-Controler de criptare/decriptare de rețea și de calcul
+Server pentru controlul domeniilor de criptare/decriptare de rețea și de calcul
 .
 
 MessageId=4112
@@ -1127,7 +1127,7 @@ Language=Polish
 Kontroler szyfrowania/odszyfrowywania rozrywki
 .
 Language=Romanian
-Controler de criptare/decriptare de divertisment
+Server pentru controlul domeniilor de criptare/decriptare de divertisment
 .
 
 MessageId=4224
@@ -1139,7 +1139,7 @@ Language=Polish
 Kontroler szyfrowania/odszyfrowywania PCI
 .
 Language=Romanian
-Controler PCI de criptare/decriptare
+Server pentru controlul domeniilor PCI de criptare/decriptare
 .
 
 MessageId=4352
@@ -1175,7 +1175,7 @@ Language=Polish
 Kontroler PCI synchronizacji komunikacji oraz testowania/pomiaru czasu i częstotliwości
 .
 Language=Romanian
-Controler pentru sincronizarea comunicațiilor PCI și pentru testarea/măsurarea timpului și a frecvenței
+Server pentru controlul domeniilor pentru sincronizarea comunicațiilor PCI și pentru testarea/măsurarea timpului și a frecvenței
 .
 
 MessageId=4384
@@ -1199,5 +1199,5 @@ Language=Polish
 Kontroler PCI gromadzenia danych i przetwarzania sygnałów
 .
 Language=Romanian
-Controler PCI pentru achiziție de date și procesare a semnalului
+Server pentru controlul domeniilor PCI pentru achiziție de date și procesare a semnalului
 .
