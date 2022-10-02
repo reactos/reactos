@@ -12,9 +12,6 @@
 
 #include <win32k.h>
 
-#define SANITIZER_ENABLED
-#include "sanitizer.h"
-
 #include FT_GLYPH_H
 #include FT_TYPE1_TABLES_H
 #include FT_TRUETYPE_TABLES_H
@@ -38,6 +35,9 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#define SANITIZER_ENABLED
+#include "sanitizer.h"
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
