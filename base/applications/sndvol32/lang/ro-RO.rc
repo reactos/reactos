@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Desktop
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -23,8 +29,8 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Reglaj de volum"
     IDS_NOMIXERDEVICES "Nu există dispozitive active de mixaj! Aplicația va fi închisă."
-    IDS_SELECT "&Select"
-    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_SELECT "&Selectează"
+    IDS_ADVANCED_CONTROLS "Controale avansate pentru %s"
     IDS_OTHER_CONTROLS1 "&1  %s"
     IDS_OTHER_CONTROLS2 "&2  %s"
 END
@@ -60,7 +66,7 @@ BEGIN
     LTEXT "Volum", -1, 4, 58, 80, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 67, 30, 56
     AUTOCHECKBOX "A&muțește tot", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Avansat", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 90, 1, 1, 137
 END
 
@@ -77,7 +83,7 @@ BEGIN
     LTEXT "Volum", -1, 4, 58, 60, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 67, 30, 56
     AUTOCHECKBOX "A&muțește tot", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 7, 138, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Avansat", IDC_LINE_ADVANCED, 7, 138, 55, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 70, 25, 1, 113
 END
 
@@ -113,26 +119,26 @@ BEGIN
     AUTOCHECKBOX "A&muțește tot", IDC_LINE_SWITCH, 4, 70, 44, 8
 END
 
-IDD_ADVANCED DIALOGEX 0, 0, 255, 140
+IDD_ADVANCED DIALOGEX 0, 0, 260, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Controls for Volume Control"
+CAPTION "Comenzi avansate pentru controlul volumului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
-    LTEXT "These settings can be used to make fine adjustments to your audio.", -1, 44, 7, 200, 32
-    GROUPBOX "Tone Controls", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
-    LTEXT "These settings control how the tone of your audio sounds.", -1, 17, 48, 200, 14
-    LTEXT "&Bass:", -1, 17, 62, 50, 8
-    LTEXT "Low", IDC_ADV_BASS_LOW, 77, 62, 20, 8
-    LTEXT "High", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
+    LTEXT "Aceste setări pot fi folosite pentru a face ajustări fine ale sunetului dumneavoastră.", -1, 44, 7, 200, 32
+    GROUPBOX "Controale de ton", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
+    LTEXT "Aceste setări controlează felul în care sună tonul sunetului dumneavoastră.", -1, 17, 43, 227, 19
+    LTEXT "&Bas:", -1, 17, 62, 50, 8
+    LTEXT "Jos", IDC_ADV_BASS_LOW, 77, 62, 20, 8
+    LTEXT "Înalt", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
-    LTEXT "&Treble:", -1, 17, 90, 50, 8
-    LTEXT "Low", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
-    LTEXT "High", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
+    LTEXT "&Sopran:", -1, 17, 90, 50, 8
+    LTEXT "Jos", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
+    LTEXT "Înalt", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
-    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    GROUPBOX "Alte controale", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
+    LTEXT "Aceste setări fac alte schimbări la felul în care se aude sunetul dumneavoastră. Vedeți documentația dispozitivului dumneavoastră pentru mai multe detalii.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
-    DEFPUSHBUTTON "Close", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Închide", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
