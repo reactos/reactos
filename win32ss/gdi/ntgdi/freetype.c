@@ -892,6 +892,10 @@ InitFontSupport(VOID)
     DumpFontInfo(TRUE);
 #endif
 
+#ifdef SANITIZER_ENABLED
+    SanitizeFontInfo(TRUE);
+#endif
+
     return TRUE;
 }
 
