@@ -61,7 +61,6 @@ FT_Library  g_FreeTypeLibrary;
 static UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
-
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
 static PFAST_MUTEX      g_FreeTypeLock;
@@ -196,6 +195,116 @@ BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
 
 /* list head */
 static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
+
+#ifdef SANITIZER_ENABLED
+
+VOID SanitizeFace(FT_Face Face)
+{
+    SanitizeStringPtrA(Face->family_name, TRUE);
+    SanitizeStringPtrA(Face->style_name, TRUE);
+    // ...
+}
+
+VOID SanitizeFaceCache(PSHARED_FACE_CACHE pFaceCache)
+{
+    // ...
+}
+
+VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
+{
+    SanitizeFace(SharedFace->Face);
+    SanitizeSharedMem(SharedFace->Memory);
+    SanitizeFaceCache(SharedFace->EnglishUS);
+    SanitizeFaceCache(SharedFace->UserLanguage);
+}
+
+VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
+{
+    FT_Face Face;
+    PFONTGDI FontGDI = FontEntry->Font;
+
+    if (!FontGDI)
+        return;
+
+    if (FontGDI->SharedFace)
+    {
+        SanitizeSharedFace(SharedFace);
+    }
+}
+
+VOID SanitizeFontList(PLIST_ENTRY Head)
+{
+    PLIST_ENTRY Entry;
+    PFONT_ENTRY CurrentEntry;
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        SanitizeFontEntry(CurrentEntry);
+    }
+}
+
+VOID SanitizeGlobalFontList(BOOL bDoLock)
+{
+    if (bDoLock)
+        IntLockGlobalFonts();
+
+    SanitizeFontList(&g_FontListHead);
+
+    if (bDoLock)
+        IntUnLockGlobalFonts();
+}
+
+VOID SanitizePrivateFontList(BOOL bDoLock)
+{
+    PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
+    if (!Win32Process)
+        return;
+
+    if (bDoLock)
+        IntLockProcessPrivateFonts(Win32Process);
+
+    SanitizeFontList(&Win32Process->PrivateFontListHead);
+
+    if (bDoLock)
+        IntUnLockProcessPrivateFonts(Win32Process);
+}
+
+VOID SanitizeFontCacheEntry(PFONT_CACHE_ENTRY FontEntry)
+{
+    SanitizeFace(FontEntry->Face);
+}
+
+VOID SanitizeFontCacheList(BOOL bDoLock)
+{
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    PFONT_CACHE_ENTRY FontEntry;
+
+    if (bDoLock)
+        IntLockGlobalFonts();
+
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = NextEntry)
+    {
+        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
+
+        SanitizeFontCacheEntry(FontEntry);
+    }
+
+    if (bDoLock)
+        IntUnLockGlobalFonts();
+}
+
+VOID SanitizeFontInfo(BOOL bDoLock)
+{
+    SanitizeGlobalFontList(bDoLock);
+    SanitizePrivateFontList(bDoLock);
+    SanitizeFontCacheList(bDoLock);
+}
+
+#endif /* def SANITIZER_ENABLED */
 
 static void
 SharedMem_AddRef(PSHARED_MEM Ptr)
@@ -388,7 +497,7 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 }
 
 
-#if DBG || defined(SANITIZER_ENABLED)
+#if DBG
 VOID DumpFontEntry(PFONT_ENTRY FontEntry)
 {
     const char *family_name;
@@ -414,16 +523,6 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
         style_name = "<invalid>";
     }
 
-#ifdef SANITIZER_ENABLED
-    {
-        if (Face->family_name)
-            SanitizeStringPtrA(Face->family_name);
-        if (Face->style_name)
-            SanitizeStringPtrA(Face->style_name);
-        // ...
-    }
-#endif
-
     DPRINT("family_name '%s', style_name '%s', FaceName '%wZ', StyleName '%wZ', FontGDI %p, "
            "FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
            family_name,
@@ -437,15 +536,6 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
            Face,
            FontGDI->CharSet,
            FontGDI->Filename);
-}
-
-VOID DumpFontCacheEntry(PFONT_CACHE_ENTRY FontEntry)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-#ifdef SANITIZER_ENABLED
-    // ...
-#endif
 }
 
 VOID DumpFontList(PLIST_ENTRY Head)
@@ -521,36 +611,13 @@ VOID DumpGlobalFontList(BOOL bDoLock)
         IntUnLockGlobalFonts();
 }
 
-VOID DumpFontCacheList(BOOL bDoLock)
-{
-    PLIST_ENTRY CurrentEntry, NextEntry;
-    PFONT_CACHE_ENTRY FontEntry;
-
-    if (bDoLock)
-        IntLockGlobalFonts();
-
-    for (CurrentEntry = g_FontCacheListHead.Flink;
-         CurrentEntry != &g_FontCacheListHead;
-         CurrentEntry = NextEntry)
-    {
-        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        NextEntry = CurrentEntry->Flink;
-
-        DumpFontCacheEntry(FontEntry);
-    }
-
-    if (bDoLock)
-        IntUnLockGlobalFonts();
-}
-
 VOID DumpFontInfo(BOOL bDoLock)
 {
     DumpGlobalFontList(bDoLock);
     DumpPrivateFontList(bDoLock);
     DumpFontSubstList();
-    DumpFontCacheList(bDoLock);
 }
-#endif
+#endif /* DBG */
 
 /*
  * IntLoadFontSubstList --- loads the list of font substitutes
