@@ -13,13 +13,9 @@
     ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
                                   SIZE_T NumberOfBytes,
                                   ULONG Tag);
-    VOID FASTCALL
-    ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree);
+    VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree);
 
-    #undef ExAllocatePoolWithTag
     #define ExAllocatePoolWithTag ExAllocatePoolWithTagSanitize
-
-    #undef ExFreePoolWithTag
     #define ExFreePoolWithTag ExFreePoolWithTagSanitize
 #else
     #define SanitizeReadPtr(ptr, cb, bNullOK)
@@ -28,6 +24,4 @@
     #define SanitizeStringPtrW(psz, bNullOK)
     #define SanitizeHeapSystem()
     #define SanitizePoolMemory(P, Tag) ((SIZE_T)0)
-    #define ExAllocatePoolWithTagSanitize ExAllocatePoolWithTag
-    #define ExFreePoolWithTagSanitize ExFreePoolWithTag
 #endif
