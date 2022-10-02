@@ -1,4 +1,9 @@
-/* Hebrew translation by Baruch Rutman */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hebrew resource file
+ * TRANSLATORS: Copyright 2013 Baruch Rutman <peterooch@gmail.com>
+ */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 

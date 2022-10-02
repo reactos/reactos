@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Event Viewer
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/mscutils/eventvwr/lang/tr-TR.rc
- * PURPOSE:    Turkish Language File for ReactOS Event Viewer
- * TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Türkish resource file
+ * TRANSLATORS: Copyright 2013-2017 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

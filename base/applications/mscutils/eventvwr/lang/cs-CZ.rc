@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2014-2017 Kamil Hornicek <kamil.hornicek@reactos.org>
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDM_EVENTVWR MENU

@@ -1,4 +1,9 @@
-/* Korean translation by manatails007 */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Korean resource file
+ * TRANSLATORS: Copyright 2008 Seungju Kim aka manatails007 <admin@manateeshome.com>
+ */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 

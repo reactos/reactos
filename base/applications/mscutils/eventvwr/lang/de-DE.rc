@@ -1,4 +1,10 @@
-/* German translation by Daniel Reimer and Joachim Henze */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007-2008 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2021 Joachim Henze <joachim.henze@reactos.org>
+ */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 

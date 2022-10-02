@@ -1,4 +1,9 @@
-/* Japanese translation by Tomoya Kitagawa */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATORS: Copyright 2009 Tomoya Kitagawa <jptomoya@yahoo.co.jp>
+ */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 

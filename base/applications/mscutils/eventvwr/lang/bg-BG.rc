@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Bulgarian resource file
+ * TRANSLATORS: Copyright 2007 Станев <sstpr@narod.ru>
+ */
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDM_EVENTVWR MENU

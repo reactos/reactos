@@ -1,4 +1,10 @@
-/* Italian translation by Paolo Devoti */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Italian resource file
+ * TRANSLATORS: Copyright 2007 Paolo Devoti <devotip@tiscali.it>
+ *              Copyright 2010-2011 Gabriel Ilardi <gabrielilardi@hotmail.it>
+ */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 

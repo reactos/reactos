@@ -1,5 +1,11 @@
-/* Polish translation by Caemyr - Olaf Siejka
- * PL update by wojo664 (June 2014)
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007-2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2014 Wojtek Kozłowski <wojo664@gmail.com>
+ *              Copyright 2017-2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2011-2020 Adam Stachowicz <saibamenppl@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

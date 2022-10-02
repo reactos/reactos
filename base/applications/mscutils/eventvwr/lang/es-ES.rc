@@ -1,4 +1,12 @@
-/* Spanish translation by Marc Piulachs, proofread by Ismael Ferreras Morezuelas, revised in 2020 by Julen Urizar Compains */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2007 Remialdo <remialdo@gmail.com>
+ *              Copyright 2009 Javier Remacha
+ *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 

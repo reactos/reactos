@@ -1,4 +1,11 @@
-/* Ukraianian translation by Rostislav Zabolotny, Artem Reznikov, Igor Paliychuk */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Rostislav Zabolotny
+ *              Copyright 2008 Artem Reznikov
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
+ */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 

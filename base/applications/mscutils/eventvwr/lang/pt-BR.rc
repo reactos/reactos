@@ -1,4 +1,9 @@
-/* Portuguese Brazilian translation by Matheus Macabu */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese Brazilian resource file
+ * TRANSLATORS: Copyright 2012 Matheus Macabu
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 

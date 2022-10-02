@@ -1,4 +1,13 @@
-/* Russian translation by Dmitry Chapyshev, Artem Reznikov, Kudratov Olimjon (olim98@bk.ru) */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007-2016 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2008 Artem Reznikov
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2016 Sergey Stopkin <stopkin.sergey@gmail.com>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 

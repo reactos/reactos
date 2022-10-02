@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Norwegian resource file
+ * TRANSLATORS: Copyright 2008 Lars Martin Hambro (lars_martin4@hotmail.com)
+ */
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDM_EVENTVWR MENU

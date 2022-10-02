@@ -1,4 +1,9 @@
-/* Greek translation by Apostolos Alexiadis */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Greek resource file
+ * TRANSLATORS: Copyright 2007 Apostolos Alexiadis
+ */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
