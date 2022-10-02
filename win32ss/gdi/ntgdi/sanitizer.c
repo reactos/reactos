@@ -9,8 +9,8 @@
 /** Includes ******************************************************************/
 
 #include <win32k.h>
-
-/* FUNCTIONS ******************************************************************/
+#include <debug.h>
+#include "sanitizer.h"
 
 /* #define PUNISH_SUSPECTED */
 
@@ -24,6 +24,8 @@
     #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDD)
     #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
 #endif
+
+/* FUNCTIONS ******************************************************************/
 
 VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bCanBeNull)
 {
@@ -96,6 +98,7 @@ SIZE_T FASTCALL SanitizeHeapMemory(PVOID P, ULONG Tag)
 
     if (P == FREED_POINTER || P == UNINIT_POINTER)
     {
+        DPRINT1("%p is bad pointer\n", P);
         ASSERT(0);
         return 0;
     }
@@ -139,7 +142,7 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
 
     if (cbSuspicous >= 4)
     {
-        DPRINT1("%p is double-free suspicous\n", P);
+        DPRINT1("%p is double-free suspicious\n", P);
 #ifdef PUNISH_SUSPECTED
         ASSERT(0);
 #endif

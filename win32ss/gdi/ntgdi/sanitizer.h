@@ -15,6 +15,12 @@
                                   ULONG Tag);
     VOID FASTCALL
     ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree);
+
+    #undef ExAllocatePoolWithTag
+    #define ExAllocatePoolWithTag ExAllocatePoolWithTagSanitize
+
+    #undef ExFreePoolWithTag
+    #define ExFreePoolWithTag ExFreePoolWithTagSanitize
 #else
     #define SanitizeReadPtr(ptr, cb, bCanBeNull)
     #define SanitizeWritePtr(ptr, cb, bCanBeNull)
