@@ -2934,7 +2934,6 @@ ExQueryPoolBlockSize(IN PVOID PoolBlock,
     PPOOL_HEADER Entry;
     ULONG i;
     KIRQL OldIrql;
-    POOL_TYPE RealPoolType;
 
     if (QuotaCharged)
         *QuotaCharged = FALSE; /* FIXME */

@@ -200,7 +200,7 @@ static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 
 VOID SanitizeFace(FT_Face Face)
 {
-    SanitizeReadPtr(Face, sizeof(*FT_Face), FALSE);
+    SanitizeReadPtr(Face, sizeof(*Face), FALSE);
     SanitizeStringPtrA(Face->family_name, TRUE);
     SanitizeStringPtrA(Face->style_name, TRUE);
     // ...
@@ -263,7 +263,6 @@ VOID SanitizeFontSubstList(VOID)
 
 VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
 {
-    FT_Face Face;
     PFONTGDI FontGDI = FontEntry->Font;
 
     if (!FontGDI || !FontGDI->SharedFace)

@@ -10,6 +10,8 @@
 
 #include <win32k.h>
 #include <debug.h>
+
+#define SANITIZER_ENABLED
 #include "sanitizer.h"
 
 /* #define PUNISH_SUSPECTED */
@@ -65,7 +67,7 @@ VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
     ProbeForWrite(psz, cch * sizeof(WCHAR), 1);
 }
 
-VOID FASTCALL SanitizeUnicodeString(const UNICODE_STRING *pustr)
+VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr)
 {
     ASSERT(pustr != NULL);
     ASSERT(pustr->Buffer != UNINIT_POINTER);
@@ -110,7 +112,7 @@ SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
     return ret;
 }
 
-VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULONG TagToFree)
+VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, ULONG TagToFree)
 {
     volatile BYTE *pb = P;
     SIZE_T NumberOfBytes, cb, cbFreed;
