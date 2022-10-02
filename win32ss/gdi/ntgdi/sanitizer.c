@@ -12,22 +12,20 @@
 
 /* FUNCTIONS ******************************************************************/
 
-DWORD FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
+VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
 {
     volatile const BYTE *pb;
-    DWORD ret;
 
     if (bCanBeNull && !lp)
-        return 0;
+        return;
 
     pb = lp;
-    ret = 0;
     while (ucb-- > 0)
     {
-        ret += *pb;
+        if (*pb != *pb)
+            break;
         ++pb;
     }
-    return ret;
 }
 
 VOID FASTCALL SanitizeWritePtr(LPVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
@@ -35,7 +33,7 @@ VOID FASTCALL SanitizeWritePtr(LPVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
     volatile const BYTE *pb;
 
     if (bCanBeNull && !lp)
-        return 0;
+        return;
 
     pb = lp;
     while (ucb-- > 0)
@@ -48,8 +46,10 @@ VOID FASTCALL SanitizeWritePtr(LPVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
 VOID FASTCALL SanitizeStringPtrA(LPSTR lpsz, BOOL bCanBeNull)
 {
     volatile const CHAR *pch = lpsz;
+
     if (bCanBeNull && !lpsz)
         return;
+
     while (*pch)
     {
         *pch = *pch;
@@ -60,8 +60,10 @@ VOID FASTCALL SanitizeStringPtrA(LPSTR lpsz, BOOL bCanBeNull)
 VOID FASTCALL SanitizeStringPtrW(LPWSTR lpsz, BOOL bCanBeNull)
 {
     volatile const WCHAR *pch = lpsz;
+
     if (bCanBeNull && !lpsz)
         return;
+
     while (*pch)
     {
         *pch = *pch;
@@ -104,6 +106,24 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
     return ret;
 }
 
+VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes)
+{
+    volatile const BYTE *pb = P;
+    SIZE_T cbSuspicous = 0;
+
+    while (NumberOfBytes--)
+    {
+        if (*pb == 0xEE)
+            ++cbSuspicous;
+        ++pb;
+    }
+
+    if (cbSuspicous >= 4)
+    {
+        DPRINT1("%p is double-free suspicous\n", P);
+    }
+}
+
 VOID FASTCALL
 ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
 {
@@ -114,6 +134,7 @@ ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
     if (P)
     {
         NumberOfBytes = SanitizeGetExPoolSize(P);
+        SanitizeCheckSuspicious(P, NumberOfBytes);
         memset(P, 0xEE, NumberOfBytes);
     }
 

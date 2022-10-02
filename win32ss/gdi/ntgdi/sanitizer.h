@@ -16,3 +16,5 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
 VOID FASTCALL
 ExFreePoolWithTagSanitize(PVOID P,
                           ULONG TagToFree);
+
+VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes);
