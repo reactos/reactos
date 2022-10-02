@@ -12,6 +12,8 @@
 
 /* FUNCTIONS ******************************************************************/
 
+#define PUNISH_SUSPECTED
+
 VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
 {
     volatile const BYTE *pb;
@@ -121,6 +123,9 @@ VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes)
     if (cbSuspicous >= 4)
     {
         DPRINT1("%p is double-free suspicous\n", P);
+#ifdef PUNISH_SUSPECTED
+        ASSERT(0);
+#endif
     }
 }
 
