@@ -2923,18 +2923,59 @@ ExFreePool(PVOID P)
 }
 
 /*
- * @unimplemented
+ * @half-implemented
  */
 SIZE_T
 NTAPI
 ExQueryPoolBlockSize(IN PVOID PoolBlock,
                      OUT PBOOLEAN QuotaCharged)
 {
-    //
-    // Not implemented
-    //
-    UNIMPLEMENTED;
-    return FALSE;
+    PPOOL_HEADER Entry;
+    ULONG i;
+    KIRQL OldIrql;
+    POOL_TYPE RealPoolType;
+
+    if (QuotaCharged)
+        *QuotaCharged = FALSE; /* FIXME */
+
+    if (PoolBlock == NULL)
+        return 0;
+
+    /* Get the pool header */
+    Entry = POOL_ENTRY(PoolBlock);
+
+    /* Check if this is a large allocation */
+    if (PAGE_ALIGN(PoolBlock) == PoolBlock)
+    {
+        /* Lock the pool table */
+        KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
+
+        /* Find the pool tag */
+        for (i = 0; i < PoolBigPageTableSize; i++)
+        {
+            /* Check if this is our allocation */
+            if (PoolBigPageTable[i].Va == PoolBlock)
+            {
+                break;
+            }
+        }
+
+        /* Release the lock */
+        KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+
+        if (i == PoolBigPageTableSize)
+        {
+            ASSERT(FALSE);
+            return 0;
+        }
+    }
+    else
+    {
+        /* Check the rest of the header */
+        ExpCheckPoolHeader(Entry);
+    }
+
+    return Entry->BlockSize;
 }
 
 /*

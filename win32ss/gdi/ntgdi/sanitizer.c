@@ -12,7 +12,6 @@
 #include <debug.h>
 #include "sanitizer.h"
 
-/* #define DO_HEAVY_CHECK */
 /* #define PUNISH_SUSPECTED */
 
 #define UNINIT_BYTE 0xDD
@@ -30,77 +29,60 @@
 
 VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bNullOK)
 {
-    volatile const BYTE *pb;
-
-    if (bNullOK && !ptr)
+    if (bNullOK && ptr == NULL)
         return;
 
-    for (pb = ptr; cb-- > 0; ++pb)
-    {
-        if (*pb != *pb)
-        {
-            pb = NULL;
-            *pb = 0;
-            break;
-        }
-    }
+    ProbeForRead(ptr, cb, 1);
 }
 
 VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK)
 {
-    volatile const BYTE *pb;
-
-    if (bNullOK && !ptr)
+    if (bNullOK && ptr == NULL)
         return;
 
-    for (pb = ptr; cb-- > 0; ++pb)
-    {
-        *pb = *pb;
-    }
+    ProbeForWrite(ptr, cb, 1);
 }
 
 VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bNullOK)
 {
-    volatile const CHAR *pch;
+    size_t cch;
 
-    if (bNullOK && !psz)
+    if (bNullOK && psz == NULL)
         return;
 
-    for (pch = psz; *pch; ++pch)
-    {
-        *pch = *pch;
-    }
-    *pch = *pch;
+    cch = strlen(psz) + 1;
+    ProbeForWrite(psz, cch * sizeof(CHAR), 1);
 }
 
 VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
 {
-    volatile const WCHAR *pch;
+    size_t cch;
 
-    if (bNullOK && !psz)
+    if (bNullOK && psz == NULL)
         return;
 
-    for (pch = psz; *pch; ++pch)
-    {
-        *pch = *pch;
-    }
-    *pch = *pch;
+    cch = wcslen(psz) + 1;
+    ProbeForWrite(psz, cch * sizeof(WCHAR), 1);
 }
 
-VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr)
+VOID FASTCALL SanitizeUnicodeString(const UNICODE_STRING *pustr)
 {
-    // FIXME
-}
-
-VOID FASTCALL SanitizeHeapSystem(VOID)
-{
-    // FIXME
+    ASSERT(pustr != NULL);
+    ASSERT(pustr->Buffer != UNINIT_POINTER);
+    ASSERT(pustr->Buffer != FREED_POINTER);
+    ProbeForReadUnicodeString(pustr);
+    // FIXME: pustr->Buffer
 }
 
 SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
 {
-    if (!P)
+    BOOLEAN QuotaCharged;
+
+    if (P == NULL)
+    {
+        ASSERT(0);
         return 0;
+    }
 
     if (P == FREED_POINTER || P == UNINIT_POINTER)
     {
@@ -109,8 +91,7 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
         return 0;
     }
 
-    // FIXME
-    return 0;
+    return ExQueryPoolBlockSize(P, &QuotaCharged); // FIXME: Implement
 }
 
 PVOID FASTCALL
@@ -120,17 +101,9 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
 {
     PVOID ret;
 
-#ifdef DO_HEAVY_CHECK
-    SanitizeHeapSystem();
-#endif
-
     ret = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
     if (ret)
         RtlFillMemory(ret, NumberOfBytes, UNINIT_BYTE);
-
-#ifdef DO_HEAVY_CHECK
-    SanitizeHeapSystem();
-#endif
 
     return ret;
 }
@@ -138,19 +111,19 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
 static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULONG TagToFree)
 {
     volatile BYTE *pb = P;
-    SIZE_T NumberOfBytes, cb, cbSuspicous;
+    SIZE_T NumberOfBytes, cb, cbFreed;
 
     NumberOfBytes = SanitizePoolMemory(P, TagToFree);
     if (!NumberOfBytes)
         return;
 
-    for (cb = cbSuspicous = 0; cb < NumberOfBytes; ++cb, ++pb)
+    for (cb = cbFreed = 0; cb < NumberOfBytes; ++cb, ++pb)
     {
         if (*pb == FREED_BYTE)
-            ++cbSuspicous;
+            ++cbFreed;
     }
 
-    if (cbSuspicous >= 4)
+    if (cbFreed >= 4)
     {
         DPRINT1("%p is double-free suspicious\n", P);
 #ifdef PUNISH_SUSPECTED
@@ -163,16 +136,8 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
 
 VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
 {
-#ifdef DO_HEAVY_CHECK
-    SanitizeHeapSystem();
-#endif
-
     if (P)
         SanitizeBeforeExFreePool(P, TagToFree);
 
     ExFreePoolWithTag(P, TagToFree);
-
-#ifdef DO_HEAVY_CHECK
-    SanitizeHeapSystem();
-#endif
 }
