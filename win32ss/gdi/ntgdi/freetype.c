@@ -220,8 +220,8 @@ VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
 {
     SanitizeFace(SharedFace->Face);
     SanitizeSharedMem(SharedFace->Memory);
-    SanitizeSharedFaceCache(SharedFace->EnglishUS);
-    SanitizeSharedFaceCache(SharedFace->UserLanguage);
+    SanitizeSharedFaceCache(&SharedFace->EnglishUS);
+    SanitizeSharedFaceCache(&SharedFace->UserLanguage);
 }
 
 VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
@@ -318,6 +318,9 @@ SharedMem_AddRef(PSHARED_MEM Ptr)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedMem(Ptr);
+#endif
     ++Ptr->RefCount;
 }
 
@@ -361,6 +364,9 @@ SharedMem_Create(PBYTE Buffer, ULONG BufferSize, BOOL IsMapping)
         Ptr->IsMapping = IsMapping;
         DPRINT("Creating SharedMem for %p (%i, %p)\n", Buffer, IsMapping, Ptr);
     }
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedMem(Ptr);
+#endif
     return Ptr;
 }
 
@@ -370,6 +376,9 @@ SharedFace_AddRef(PSHARED_FACE Ptr)
     ASSERT_FREETYPE_LOCK_HELD();
 
     ++Ptr->RefCount;
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedFace(Ptr);
+#endif
 }
 
 static void
@@ -377,6 +386,9 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
+#ifdef SANITIZER_ENABLED
+    SanitizeFontCacheEntry(Entry);
+#endif
     FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
     ExFreePoolWithTag(Entry, TAG_FONT);
@@ -391,6 +403,10 @@ RemoveCacheEntries(FT_Face Face)
     PFONT_CACHE_ENTRY FontEntry;
 
     ASSERT_FREETYPE_LOCK_HELD();
+
+#ifdef SANITIZER_ENABLED
+    SanitizeFace(Face);
+#endif
 
     for (CurrentEntry = g_FontCacheListHead.Flink;
          CurrentEntry != &g_FontCacheListHead;
@@ -414,6 +430,10 @@ static void SharedMem_Release(PSHARED_MEM Ptr)
     if (Ptr->RefCount <= 0)
         return;
 
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedMem(Ptr);
+#endif
+
     --Ptr->RefCount;
     if (Ptr->RefCount == 0)
     {
@@ -429,6 +449,9 @@ static void SharedMem_Release(PSHARED_MEM Ptr)
 static void
 SharedFaceCache_Release(PSHARED_FACE_CACHE Cache)
 {
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedFaceCache(Cache);
+#endif
     RtlFreeUnicodeString(&Cache->FontFamily);
     RtlFreeUnicodeString(&Cache->FullName);
 }
@@ -440,7 +463,14 @@ SharedFace_Release(PSHARED_FACE Ptr)
     ASSERT(Ptr->RefCount > 0);
 
     if (Ptr->RefCount <= 0)
+    {
+        IntUnLockFreeType();
         return;
+    }
+
+#ifdef SANITIZER_ENABLED
+    SanitizeSharedFace(Ptr);
+#endif
 
     --Ptr->RefCount;
     if (Ptr->RefCount == 0)
@@ -463,6 +493,11 @@ CleanupFontEntryEx(PFONT_ENTRY FontEntry, PFONTGDI FontGDI)
     // PFONTGDI FontGDI = FontEntry->Font;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
 
+#ifdef SANITIZER_ENABLED
+    SanitizeFontEntry(FontEntry);
+    SanitizeSharedFace(SharedFace);
+#endif
+
     if (FontGDI->Filename)
         ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
 
@@ -480,6 +515,9 @@ CleanupFontEntryEx(PFONT_ENTRY FontEntry, PFONTGDI FontGDI)
 static __inline VOID FASTCALL
 CleanupFontEntry(PFONT_ENTRY FontEntry)
 {
+#ifdef SANITIZER_ENABLED
+    SanitizeFontEntry(FontEntry);
+#endif
     CleanupFontEntryEx(FontEntry, FontEntry->Font);
 }
 
@@ -566,10 +604,6 @@ VOID DumpFontSubstEntry(PFONTSUBST_ENTRY pSubstEntry)
         pSubstEntry->CharSets[FONTSUBST_FROM],
         &pSubstEntry->FontNames[FONTSUBST_TO],
         pSubstEntry->CharSets[FONTSUBST_TO]);
-
-#ifdef SANITIZER_ENABLED
-    // ...
-#endif
 }
 
 VOID DumpFontSubstList(VOID)
@@ -624,7 +658,7 @@ VOID DumpFontInfo(BOOL bDoLock)
     DumpPrivateFontList(bDoLock);
     DumpFontSubstList();
 }
-#endif /* DBG */
+#endif
 
 /*
  * IntLoadFontSubstList --- loads the list of font substitutes
@@ -819,7 +853,7 @@ InitFontSupport(VOID)
 
     IntLoadFontSubstList(&g_FontSubstListHead);
 
-#if DBG || defined(SANITIZER_ENABLED)
+#if DBG
     DumpFontInfo(TRUE);
 #endif
 
