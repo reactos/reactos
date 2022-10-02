@@ -370,3 +370,19 @@ set(baseaddress_xinput9_1_0                    0x71a50000)
 set(baseaddress_xmllite                        0x71a00000)
 set(baseaddress_xolehlp                        0x719d0000)
 set(baseaddress_zipfldr                        0x71910000)
+set(baseaddress_custom                         0x718e0000) #added manually, last entry - 0x30000
+set(baseaddress_fusion                         0x718a0000) #added manually, last entry - 0x40000
+set(baseaddress_fusion_1_1                     0x71860000) #added manually, last entry - 0x40000
+set(baseaddress_fusion_2_0                     0x71820000) #added manually, last entry - 0x40000
+set(baseaddress_load_notifications             0x71800000) #added manually, last entry - 0x20000
+set(baseaddress_localspl_apitest.dll           0x717d0000) #added manually, last entry - 0x30000, module name corrected manually
+set(baseaddress_msvcrt_crt_dll_startup         0x717a0000) #added manually, last entry - 0x30000
+set(baseaddress_msxml3r                        0x71780000) #added manually, last entry - 0x20000
+set(baseaddress_netlogon                       0x71740000) #added manually, last entry - 0x40000
+set(baseaddress_notifyhook                     0x71710000) #added manually, last entry - 0x30000
+set(baseaddress_redirtest1                     0x716e0000) #added manually, last entry - 0x30000
+set(baseaddress_redirtest2                     0x716b0000) #added manually, last entry - 0x30000
+set(baseaddress_rshell                         0x71600000) #added manually, last entry - 0xb0000
+set(baseaddress_testvdd                        0x715d0000) #added manually, last entry - 0x30000
+set(baseaddress_vfd                            0x71570000) #added manually, last entry - 0x60000
+set(baseaddress_w32time                        0x71540000) #added manually, last entry - 0x30000
