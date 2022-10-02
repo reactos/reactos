@@ -1,7 +1,9 @@
-/*
- * FILE:        base/applications/mstsc/lang/ro-RO.rc
- *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ /*
+ * PROJECT:     ReactOS MSTSC
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -65,6 +67,6 @@ BEGIN
     IDS_PIXEL "%lux%lu pixeli"
     IDS_FULLSCREEN "Pe tot ecranul"
     IDS_BROWSESERVER "<Căutare mai multe…>"
-    IDS_HEADERTEXT1 "Remote Desktop"
-    IDS_HEADERTEXT2 "Connection"
+    IDS_HEADERTEXT1 "Birou de la distanță"
+    IDS_HEADERTEXT2 "Conexiune"
 END
