@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS win32 kernel mode subsystem
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/sanitizer.c
- * PURPOSE:         Address/heap sanitizer
- * PROGRAMMERS:     Copyright 2022 Katayama Hirofumi MZ.
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Sanitizing address, memory and heap
+ * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /** Includes ******************************************************************/
