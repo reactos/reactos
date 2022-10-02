@@ -80,14 +80,14 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
 
     if (P == NULL)
     {
-        ASSERT(0);
+        ASSERT(FALSE);
         return 0;
     }
 
     if (P == FREED_POINTER || P == UNINIT_POINTER)
     {
         DPRINT1("%p is bad pointer\n", P);
-        ASSERT(0);
+        ASSERT(FALSE);
         return 0;
     }
 
@@ -127,7 +127,7 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
     {
         DPRINT1("%p is double-free suspicious\n", P);
 #ifdef PUNISH_SUSPECTED
-        ASSERT(0);
+        ASSERT(FALSE);
 #endif
     }
 

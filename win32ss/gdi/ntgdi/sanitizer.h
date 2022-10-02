@@ -7,9 +7,6 @@
     VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK);
     VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr);
 
-    VOID FASTCALL SanitizeHeapSystem(VOID);
-    SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag);
-
     PVOID FASTCALL
     ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
                                   SIZE_T NumberOfBytes,
@@ -24,6 +21,4 @@
     #define SanitizeStringPtrA(psz, bNullOK)
     #define SanitizeStringPtrW(psz, bNullOK)
     #define SanitizeUnicodeString(pustr)
-    #define SanitizeHeapSystem()
-    #define SanitizePoolMemory(P, Tag) ((SIZE_T)0)
 #endif
