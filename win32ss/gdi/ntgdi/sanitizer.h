@@ -7,7 +7,7 @@
     VOID FASTCALL SanitizeStringPtrW(LPWSTR lpsz, BOOL bCanBeNull);
 
     VOID FASTCALL SanitizeHeapSystem(VOID);
-    VOID FASTCALL SanitizeHeapMemory(PVOID P, POOL_TYPE PoolType, ULONG Tag);
+    SIZE_T FASTCALL SanitizeHeapMemory(PVOID P, ULONG Tag);
 
     PVOID FASTCALL
     ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
@@ -15,15 +15,13 @@
                                   ULONG Tag);
     VOID FASTCALL
     ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree);
-
-    VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes);
 #else
     #define SanitizeReadPtr(lp, ucb, bCanBeNull)
     #define SanitizeWritePtr(lp, ucb, bCanBeNull)
     #define SanitizeStringPtrA(lpsz, bCanBeNull)
     #define SanitizeStringPtrW(lpsz, bCanBeNull)
     #define SanitizeHeapSystem()
-    #define SanitizeHeapMemory(P, PoolType, Tag)
+    #define SanitizeHeapMemory(P, Tag) ((SIZE_T)0)
     #define ExAllocatePoolWithTagSanitize ExAllocatePoolWithTag
     #define ExFreePoolWithTagSanitize ExFreePoolWithTag
 #endif

@@ -12,7 +12,18 @@
 
 /* FUNCTIONS ******************************************************************/
 
-#define PUNISH_SUSPECTED
+/* #define PUNISH_SUSPECTED */
+
+#define UNINIT_BYTE 0xDD
+#define FREED_BYTE 0xEE
+
+#ifdef _WIN64
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDDDDDDDDDD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEEEEEEEEEE)
+#else
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
+#endif
 
 VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
 {
@@ -21,12 +32,14 @@ VOID FASTCALL SanitizeReadPtr(LPCVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
     if (bCanBeNull && !lp)
         return;
 
-    pb = lp;
-    while (ucb-- > 0)
+    for (pb = lp; ucb-- > 0; ++pb)
     {
         if (*pb != *pb)
+        {
+            pb = NULL;
+            *pb = 0;
             break;
-        ++pb;
+        }
     }
 }
 
@@ -37,40 +50,38 @@ VOID FASTCALL SanitizeWritePtr(LPVOID lp, UINT_PTR ucb, BOOL bCanBeNull)
     if (bCanBeNull && !lp)
         return;
 
-    pb = lp;
-    while (ucb-- > 0)
+    for (pb = lp; ucb-- > 0; ++pb)
     {
         *pb = *pb;
-        ++pb;
     }
 }
 
 VOID FASTCALL SanitizeStringPtrA(LPSTR lpsz, BOOL bCanBeNull)
 {
-    volatile const CHAR *pch = lpsz;
+    volatile const CHAR *pch;
 
     if (bCanBeNull && !lpsz)
         return;
 
-    while (*pch)
+    for (pch = lpsz; *pch; ++pch)
     {
         *pch = *pch;
-        ++pch;
     }
+    *pch = *pch;
 }
 
 VOID FASTCALL SanitizeStringPtrW(LPWSTR lpsz, BOOL bCanBeNull)
 {
-    volatile const WCHAR *pch = lpsz;
+    volatile const WCHAR *pch;
 
     if (bCanBeNull && !lpsz)
         return;
 
-    while (*pch)
+    for (pch = lpsz; *pch; ++pch)
     {
         *pch = *pch;
-        ++pch;
     }
+    *pch = *pch;
 }
 
 VOID FASTCALL SanitizeHeapSystem(VOID)
@@ -78,14 +89,19 @@ VOID FASTCALL SanitizeHeapSystem(VOID)
     // FIXME
 }
 
-VOID FASTCALL SanitizeHeapMemory(PVOID P, POOL_TYPE PoolType, ULONG Tag)
+SIZE_T FASTCALL SanitizeHeapMemory(PVOID P, ULONG Tag)
 {
-    // FIXME
-}
+    if (!P)
+        return 0;
 
-static SIZE_T FASTCALL SanitizeGetExPoolSize(LPCVOID pv)
-{
-    return 0; // FIXME
+    if (P == FREED_POINTER || P == UNINIT_POINTER)
+    {
+        ASSERT(0);
+        return 0;
+    }
+
+    // FIXME
+    return 0;
 }
 
 PVOID FASTCALL
@@ -99,25 +115,26 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
 
     ret = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
     if (ret)
-    {
-        memset(ret, 0xDD, NumberOfBytes);
-    }
+        RtlFillMemory(ret, NumberOfBytes, UNINIT_BYTE);
 
     SanitizeHeapSystem();
 
     return ret;
 }
 
-VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes)
+static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULONG TagToFree)
 {
-    volatile const BYTE *pb = P;
-    SIZE_T cbSuspicous = 0;
+    volatile BYTE *pb = P;
+    SIZE_T NumberOfBytes, cb, cbSuspicous;
 
-    while (NumberOfBytes--)
+    NumberOfBytes = SanitizeHeapMemory(P, TagToFree);
+    if (!NumberOfBytes)
+        return;
+
+    for (cb = cbSuspicous = 0; cb < NumberOfBytes; ++cb, ++pb)
     {
-        if (*pb == 0xEE)
+        if (*pb == FREED_BYTE)
             ++cbSuspicous;
-        ++pb;
     }
 
     if (cbSuspicous >= 4)
@@ -127,20 +144,16 @@ VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes)
         ASSERT(0);
 #endif
     }
+
+    RtlFillMemory(P, NumberOfBytes, FREED_BYTE);
 }
 
 VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
 {
-    SIZE_T NumberOfBytes;
-
     SanitizeHeapSystem();
 
     if (P)
-    {
-        NumberOfBytes = SanitizeGetExPoolSize(P);
-        SanitizeDoubleFreeSuspicious(P, NumberOfBytes);
-        memset(P, 0xEE, NumberOfBytes);
-    }
+        SanitizeBeforeExFreePool(P, TagToFree);
 
     ExFreePoolWithTag(P, TagToFree);
 
