@@ -1,10 +1,10 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/ro-RO.rc
- * PURPOSE:     Romanian Language resource file
- * TRANSLATORS: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Paint
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -161,7 +161,7 @@ BEGIN
     AUTORADIOBUTTON "pixeli", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Culori", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "Alb-negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Color", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Culoare", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "Con&firmă", IDOK, 170, 8, 48, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 170, 24, 48, 14
     PUSHBUTTON "Impli&cite", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
@@ -212,7 +212,7 @@ BEGIN
     IDS_INFOTITLE "Pictare pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
-    IDS_DEFAULTFILENAME "FărăNume"
+    IDS_DEFAULTFILENAME "Fără nume"
     IDS_MINIATURETITLE "Miniatură"
     IDS_TOOLTIP1 "Golire selecție"
     IDS_TOOLTIP2 "Selecție"
@@ -241,6 +241,6 @@ BEGIN
     IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curent disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
     IDS_BOLD "Bold"
     IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
+    IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
 END
