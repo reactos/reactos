@@ -2930,7 +2930,7 @@ NTAPI
 ExQueryPoolBlockSize(IN PVOID PoolBlock,
                      OUT PBOOLEAN QuotaCharged)
 {
-    SIZE_T Size;
+    SIZE_T BlockSize;
     PPOOL_HEADER Entry;
     ULONG i;
     KIRQL OldIrql;
@@ -2964,17 +2964,17 @@ ExQueryPoolBlockSize(IN PVOID PoolBlock,
 
         ASSERT(i != PoolBigPageTableSize);
 
-        Size = 0; /* FIXME: ??? */
+        BlockSize = 0; /* FIXME: ??? */
     }
     else
     {
         /* Check the rest of the header */
         ExpCheckPoolHeader(Entry);
 
-        Size = Entry->BlockSize;
+        BlockSize = Entry->BlockSize;
     }
 
-    return Size;
+    return BlockSize;
 }
 
 /*
