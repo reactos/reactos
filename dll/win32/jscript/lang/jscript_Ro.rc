@@ -1,8 +1,15 @@
 /*
- * Copyright 2009 Piotr Caban
- * Copyright 2010 Claudia Cotună
- *                Michael Stefaniuc
- *                Ștefan Fulea
+ * PROJECT:     ReactOS Desktop
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Piotr Caban
+ *              Copyright 2010 Claudia Cotună
+ *              Copyright 2010 Michael Stefaniuc
+ *              Copyright 2010 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
+/*
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,8 +73,8 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "Precizia este în afara limitelor admise"
     IDS_INVALID_LENGTH      "Lungimea unei matrice trebuie să fie un număr întreg pozitiv"
     IDS_ARRAY_EXPECTED      "Era așteptat un obiect matrice"
-    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
-    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
-    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
-    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
+    IDS_INVALID_WRITABLE_PROP_DESC "„inscriptibil” de pe descriptorul de proprietate nu poate fi setat la „adevărat” pe acest obiect"
+    IDS_NONCONFIGURABLE_REDEFINED  "Nu se poate redefini proprietatea neconfigurabilă „|”"
+    IDS_NONWRITABLE_MODIFIED       "Nu se poate modifica proprietatea neinscriptibilă „|”"
+    IDS_PROP_DESC_MISMATCH         "Proprietatea nu poate avea atât accesori, cât și o valoare"
 }
