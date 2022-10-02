@@ -83,7 +83,7 @@ VOID FASTCALL SanitizeHeapMemory(PVOID P, POOL_TYPE PoolType, ULONG Tag)
     // FIXME
 }
 
-SIZE_T FASTCALL SanitizeGetExPoolSize(LPCVOID pv)
+static SIZE_T FASTCALL SanitizeGetExPoolSize(LPCVOID pv)
 {
     return 0; // FIXME
 }
@@ -129,8 +129,7 @@ VOID FASTCALL SanitizeDoubleFreeSuspicious(PVOID P, SIZE_T NumberOfBytes)
     }
 }
 
-VOID FASTCALL
-ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
+VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
 {
     SIZE_T NumberOfBytes;
 

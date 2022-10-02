@@ -11,8 +11,9 @@
 /** Includes ******************************************************************/
 
 #include <win32k.h>
-#include "sanitizer.h"
+
 #define SANITIZER_ENABLED
+#include "sanitizer.h"
 
 #include FT_GLYPH_H
 #include FT_TYPE1_TABLES_H
