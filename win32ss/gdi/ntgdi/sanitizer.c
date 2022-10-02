@@ -91,7 +91,7 @@ VOID FASTCALL SanitizeHeapSystem(VOID)
     // FIXME
 }
 
-SIZE_T FASTCALL SanitizeHeapMemory(PVOID P, ULONG Tag)
+SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
 {
     if (!P)
         return 0;
@@ -130,7 +130,7 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
     volatile BYTE *pb = P;
     SIZE_T NumberOfBytes, cb, cbSuspicous;
 
-    NumberOfBytes = SanitizeHeapMemory(P, TagToFree);
+    NumberOfBytes = SanitizePoolMemory(P, TagToFree);
     if (!NumberOfBytes)
         return;
 
