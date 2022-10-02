@@ -8,13 +8,14 @@
     VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr);
 
     PVOID FASTCALL
-    ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
+    SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
                                   SIZE_T NumberOfBytes,
                                   ULONG Tag);
-    VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree);
 
-    #define ExAllocatePoolWithTag ExAllocatePoolWithTagSanitize
-    #define ExFreePoolWithTag ExFreePoolWithTagSanitize
+    VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree);
+
+    #define ExAllocatePoolWithTag SanitizeExAllocatePoolWithTag
+    #define ExFreePoolWithTag SanitizeExFreePoolWithTag
 #else
     #define SanitizeReadPtr(ptr, cb, bNullOK)
     #define SanitizeWritePtr(ptr, cb, bNullOK)

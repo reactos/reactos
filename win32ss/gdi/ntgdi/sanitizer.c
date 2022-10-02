@@ -94,8 +94,10 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
     return ExQueryPoolBlockSize(P, &QuotaCharged); // FIXME: Implement
 }
 
+#undef ExAllocatePoolWithTag
+
 PVOID FASTCALL
-ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
+SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
                               SIZE_T NumberOfBytes,
                               ULONG Tag)
 {
@@ -108,7 +110,7 @@ ExAllocatePoolWithTagSanitize(POOL_TYPE PoolType,
     return ret;
 }
 
-static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULONG TagToFree)
+VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULONG TagToFree)
 {
     volatile BYTE *pb = P;
     SIZE_T NumberOfBytes, cb, cbFreed;
@@ -134,7 +136,9 @@ static VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, SIZE_T NumberOfBytes, ULO
     RtlFillMemory(P, NumberOfBytes, FREED_BYTE);
 }
 
-VOID FASTCALL ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
+#undef ExFreePoolWithTag
+
+VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree)
 {
     if (P)
         SanitizeBeforeExFreePool(P, TagToFree);
