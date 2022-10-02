@@ -139,7 +139,7 @@ ExFreePoolWithTagSanitize(PVOID P, ULONG TagToFree)
     if (P)
     {
         NumberOfBytes = SanitizeGetExPoolSize(P);
-        SanitizeCheckSuspicious(P, NumberOfBytes);
+        SanitizeDoubleFreeSuspicious(P, NumberOfBytes);
         memset(P, 0xEE, NumberOfBytes);
     }
 
