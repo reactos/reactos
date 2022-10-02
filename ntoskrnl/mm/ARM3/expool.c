@@ -2923,13 +2923,14 @@ ExFreePool(PVOID P)
 }
 
 /*
- * @half-implemented
+ * @unimplemented
  */
 SIZE_T
 NTAPI
 ExQueryPoolBlockSize(IN PVOID PoolBlock,
                      OUT PBOOLEAN QuotaCharged)
 {
+    SIZE_T Size;
     PPOOL_HEADER Entry;
     ULONG i;
     KIRQL OldIrql;
@@ -2955,27 +2956,25 @@ ExQueryPoolBlockSize(IN PVOID PoolBlock,
         {
             /* Check if this is our allocation */
             if (PoolBigPageTable[i].Va == PoolBlock)
-            {
                 break;
-            }
         }
 
         /* Release the lock */
         KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
 
-        if (i == PoolBigPageTableSize)
-        {
-            ASSERT(FALSE);
-            return 0;
-        }
+        ASSERT(i != PoolBigPageTableSize);
+
+        Size = 0; /* FIXME: ??? */
     }
     else
     {
         /* Check the rest of the header */
         ExpCheckPoolHeader(Entry);
+
+        Size = Entry->BlockSize;
     }
 
-    return Entry->BlockSize;
+    return Size;
 }
 
 /*
