@@ -205,17 +205,23 @@ VOID SanitizeFace(FT_Face Face)
     // ...
 }
 
-VOID SanitizeFaceCache(PSHARED_FACE_CACHE pFaceCache)
+VOID SanitizeBitmapGlyph(FT_BitmapGlyph BitmapGlyph)
 {
     // ...
+}
+
+VOID SanitizeSharedFaceCache(PSHARED_FACE_CACHE pFaceCache)
+{
+    SanitizeUnicodeString(&pFaceCache->FontFamily);
+    SanitizeUnicodeString(&pFaceCache->FullName);
 }
 
 VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
 {
     SanitizeFace(SharedFace->Face);
     SanitizeSharedMem(SharedFace->Memory);
-    SanitizeFaceCache(SharedFace->EnglishUS);
-    SanitizeFaceCache(SharedFace->UserLanguage);
+    SanitizeSharedFaceCache(SharedFace->EnglishUS);
+    SanitizeSharedFaceCache(SharedFace->UserLanguage);
 }
 
 VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
@@ -228,7 +234,7 @@ VOID SanitizeFontEntry(PFONT_ENTRY FontEntry)
 
     if (FontGDI->SharedFace)
     {
-        SanitizeSharedFace(SharedFace);
+        SanitizeSharedFace(FontGDI->SharedFace);
     }
 }
 
@@ -273,6 +279,7 @@ VOID SanitizePrivateFontList(BOOL bDoLock)
 VOID SanitizeFontCacheEntry(PFONT_CACHE_ENTRY FontEntry)
 {
     SanitizeFace(FontEntry->Face);
+    SanitizeBitmapGlyph(FontEntry->BitmapGlyph);
 }
 
 VOID SanitizeFontCacheList(BOOL bDoLock)

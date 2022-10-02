@@ -86,6 +86,11 @@ VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
     *pch = *pch;
 }
 
+VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr)
+{
+    // FIXME
+}
+
 VOID FASTCALL SanitizeHeapSystem(VOID)
 {
     // FIXME
