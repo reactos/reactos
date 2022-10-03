@@ -22,6 +22,7 @@
 #include FT_WINFONTS_H
 #include FT_SFNT_NAMES_H
 #include FT_SYNTHESIS_H
+#include FT_SYSTEM_H
 #include FT_TRUETYPE_IDS_H
 
 #ifndef FT_INTERNAL_INTERNAL_H
@@ -55,6 +56,7 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
+struct FT_MemoryRec_ g_FreeTypeMemory = { NULL };
 FT_Library  g_FreeTypeLibrary;
 
 /* registry */
@@ -197,6 +199,54 @@ BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
 static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 
 #ifdef SANITIZER_ENABLED
+
+static void ft_custom_free(FT_Memory memory, void* block)
+{
+    if (block)
+        ExFreePoolWithTag(block, TAG_FONT);
+}
+
+static void* ft_custom_malloc(FT_Memory memory, long size)
+{
+    ASSERT(size >= 0);
+    if (size == 0)
+        return NULL;
+    return ExAllocatePoolWithTag(NonPagedPool, (size_t)size, TAG_FONT);
+}
+
+static void*
+ft_custom_realloc(FT_Memory memory,
+                  long      cur_size,
+                  long      new_size,
+                  void*     block)
+{
+    void *new_block;
+
+    ASSERT(cur_size >= 0);
+    ASSERT(new_size >= 0);
+
+    if (new_size == 0)
+    {
+        ft_custom_free(memory, block);
+        return NULL;
+    }
+
+    if (!block)
+        return ft_custom_malloc(memory, new_size);
+
+    if (new_size <= cur_size)
+    {
+        RtlFillMemory((LPBYTE)block + new_size, cur_size - new_size, FREED_BYTE);
+        return block;
+    }
+
+    new_block = ft_custom_malloc(memory, new_size);
+    if (new_block == NULL)
+        return NULL;
+
+    RtlCopyMemory(new_block, block, cur_size);
+    return new_block;
+}
 
 VOID SanitizeFace(FT_Face Face)
 {
@@ -870,7 +920,23 @@ InitFontSupport(VOID)
     }
     ExInitializeFastMutex(g_FreeTypeLock);
 
-    ulError = FT_Init_FreeType(&g_FreeTypeLibrary);
+    /* Initialize FreeType */
+#ifdef SANITIZER_ENABLED
+    g_FreeTypeMemory.user    = NULL;
+    g_FreeTypeMemory.alloc   = ft_custom_malloc;
+    g_FreeTypeMemory.realloc = ft_custom_realloc;
+    g_FreeTypeMemory.free    = ft_custom_free;
+    ulError = FT_New_Library(&g_FreeTypeMemory, &g_FreeTypeLibrary);
+    if (!ulError)
+    {
+        FT_Add_Default_Modules(g_FreeTypeLibrary);
+    }
+    else
+#endif
+    {
+        ulError = FT_Init_FreeType(&g_FreeTypeLibrary);
+    }
+
     if (ulError)
     {
         DPRINT1("FT_Init_FreeType failed with error code 0x%x\n", ulError);

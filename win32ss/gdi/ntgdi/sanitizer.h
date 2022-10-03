@@ -7,6 +7,17 @@
 
 #pragma once
 
+#define UNINIT_BYTE 0xDD
+#define FREED_BYTE 0xEE
+
+#ifdef _WIN64
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDDDDDDDDDD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEEEEEEEEEE)
+#else
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
+#endif
+
 #ifdef SANITIZER_ENABLED
     VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bNullOK);
     VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK);
