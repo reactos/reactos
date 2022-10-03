@@ -200,7 +200,7 @@ static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 
 VOID SanitizeFace(FT_Face Face)
 {
-    SanitizeReadPtr(Face, sizeof(*Face), FALSE);
+    SanitizeReadPtr(Face, sizeof(*Face), TRUE);
     SanitizeStringPtrA(Face->family_name, TRUE);
     SanitizeStringPtrA(Face->style_name, TRUE);
     // ...

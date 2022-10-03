@@ -36,7 +36,15 @@ VOID FASTCALL SanitizeReadPtr(LPCVOID ptr, UINT_PTR cb, BOOL bNullOK)
     if (bNullOK && ptr == NULL)
         return;
 
-    ProbeForRead(ptr, cb, 1);
+    _SEH2_TRY
+    {
+        ProbeForRead(ptr, cb, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
 }
 
 VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK)
@@ -44,7 +52,15 @@ VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK)
     if (bNullOK && ptr == NULL)
         return;
 
-    ProbeForWrite(ptr, cb, 1);
+    _SEH2_TRY
+    {
+        ProbeForWrite(ptr, cb, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
 }
 
 VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bNullOK)
@@ -54,8 +70,16 @@ VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bNullOK)
     if (bNullOK && psz == NULL)
         return;
 
-    cch = strlen(psz) + 1;
-    ProbeForWrite(psz, cch * sizeof(CHAR), 1);
+    _SEH2_TRY
+    {
+        cch = strlen(psz) + 1;
+        ProbeForWrite(psz, cch * sizeof(CHAR), 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
 }
 
 VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
@@ -65,17 +89,33 @@ VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK)
     if (bNullOK && psz == NULL)
         return;
 
-    cch = wcslen(psz) + 1;
-    ProbeForWrite(psz, cch * sizeof(WCHAR), 1);
+    _SEH2_TRY
+    {
+        cch = wcslen(psz) + 1;
+        ProbeForWrite(psz, cch * sizeof(WCHAR), 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
 }
 
 VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr)
 {
-    ASSERT(pustr != NULL);
-    ASSERT(pustr->Buffer != UNINIT_POINTER);
-    ASSERT(pustr->Buffer != FREED_POINTER);
-    ProbeForReadUnicodeString(pustr);
-    // FIXME: pustr->Buffer
+    _SEH2_TRY
+    {
+        // FIXME: pustr->Buffer
+        ASSERT(pustr != NULL);
+        ASSERT(pustr->Buffer != UNINIT_POINTER);
+        ASSERT(pustr->Buffer != FREED_POINTER);
+        ProbeForReadUnicodeString(pustr);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
 }
 
 SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag)
