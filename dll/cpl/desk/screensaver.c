@@ -27,6 +27,7 @@ typedef struct _DATA
     ScreenSaverItem     ScreenSaverItems[MAX_SCREENSAVERS];
     PROCESS_INFORMATION PrevWindowPi;
     int                 Selection;
+    WNDPROC             OldPreviewProc;
     UINT                ScreenSaverCount;
     HWND                ScreenSaverPreviewParent;
 } DATA, *PDATA;
@@ -104,6 +105,33 @@ SelectionChanged(HWND hwndDlg, PDATA pData)
     EnableWindow(GetDlgItem(hwndDlg, IDC_SCREENS_TIME), bEnable);
     EnableWindow(GetDlgItem(hwndDlg, IDC_WAITTEXT), bEnable);
     EnableWindow(GetDlgItem(hwndDlg, IDC_MINTEXT), bEnable);
+}
+
+
+LRESULT CALLBACK
+RedrawSubclassProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+    HWND hwnd;
+    PDATA pData;
+    LRESULT Ret = FALSE;
+
+    pData = (PDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    if (!pData)
+        return Ret;
+
+    Ret = CallWindowProc(pData->OldPreviewProc, hwndDlg, uMsg, wParam, lParam);
+
+    if (uMsg == WM_PAINT)
+    {
+        hwnd = pData->ScreenSaverPreviewParent;
+        if (hwnd)
+            RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
+    }
+
+    return Ret;
 }
 
 
@@ -650,8 +678,16 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
         HWND hParent = GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW);
         HWND hChild;
 
+        if (hParent != NULL)
+        {
+            pData->OldPreviewProc = (WNDPROC)GetWindowLongPtr(hParent, GWLP_WNDPROC);
+            SetWindowLongPtr(hParent, GWLP_WNDPROC, (LONG_PTR)RedrawSubclassProc);
+            SetWindowLongPtr(hParent, GWLP_USERDATA, (LONG_PTR)pData);
+        }
+
         hChild = CreateWindowEx(0, szPreviewWndClass, NULL,
-                                WS_CHILD, 0, 0, 0, 0, hParent,
+                                WS_CHILD | WS_CLIPCHILDREN,
+                                0, 0, 0, 0, hParent,
                                 NULL, hApplet, NULL);
         if (hChild != NULL)
         {
@@ -781,6 +817,9 @@ ScreenSaverPageProc(HWND hwndDlg,
         {
             if (pData->ScreenSaverPreviewParent)
             {
+                SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW),
+                                 GWLP_WNDPROC,
+                                 (LONG_PTR)pData->OldPreviewProc);
                 DestroyWindow(pData->ScreenSaverPreviewParent);
                 pData->ScreenSaverPreviewParent = NULL;
             }
