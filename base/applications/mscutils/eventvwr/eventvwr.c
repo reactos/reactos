@@ -3362,16 +3362,44 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if ( (pnmv->uChanged  & LVIF_STATE) && /* The state has changed */
                              (pnmv->uNewState & LVIS_SELECTED) /* The item has been (de)selected */ )
                         {
-                            if (hwndEventDetails)
-                                SendMessageW(hwndEventDetails, EVT_DISPLAY, 0, 0);
+                            if (!hwndEventDetails)
+                                break;
+
+                            /* Verify the index of selected item */
+                            if (pnmv->iItem == -1)
+                            {
+                                MessageBoxW(hWnd,
+                                            L"No selected items!",
+                                            szTitle,
+                                            MB_OK | MB_ICONERROR);
+                                break;
+                            }
+                            SendMessageW(hwndEventDetails, EVT_DISPLAY, 0, (LPARAM)pnmv->iItem);
                         }
                         break;
                     }
 
+#ifdef LVN_ITEMACTIVATE
+                    case LVN_ITEMACTIVATE:
+                    {
+                        /* Get the index of the single focused selected item */
+                        LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
+                        INT iItem = lpnmitem->iItem;
+                        if (iItem != -1)
+                            SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, (LPARAM)iItem);
+                        break;
+                    }
+#else // LVN_ITEMACTIVATE
                     case NM_DBLCLK:
                     case NM_RETURN:
-                        SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, 0);
+                    {
+                        /* Get the index of the single focused selected item */
+                        INT iItem = ListView_GetNextItem(hwndListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
+                        if (iItem != -1)
+                            SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, (LPARAM)iItem);
                         break;
+                    }
+#endif // LVN_ITEMACTIVATE
                 }
             }
             else if (hdr->hwndFrom == hwndTreeView)
@@ -3529,16 +3557,35 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_EVENT_DETAILS:
                 {
-                    // LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
-                    PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(NULL);
-                    if (/*lpnmitem->iItem != -1 &&*/ EventLogFilter)
+                    INT iItem;
+                    PEVENTLOGFILTER EventLogFilter;
+
+                    /* Get the index of the single focused selected item */
+                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
+                    if (iItem == -1)
                     {
+                        /**
+                        // FIXME: Reenable this check once menu items are
+                        // correctly disabled when no event is selected, etc.
+                        MessageBoxW(hWnd,
+                                    L"No selected items!",
+                                    szTitle,
+                                    MB_OK | MB_ICONERROR);
+                        **/
+                        break;
+                    }
+
+                    EventLogFilter = GetSelectedFilter(NULL);
+                    if (EventLogFilter)
+                    {
+                        EVENTDETAIL_INFO DetailInfo = {EventLogFilter, iItem};
+
                         EventLogFilter_AddRef(EventLogFilter);
                         DialogBoxParamW(hInst,
                                         MAKEINTRESOURCEW(IDD_EVENTDETAILS_DLG),
                                         hWnd,
                                         EventDetails,
-                                        (LPARAM)EventLogFilter);
+                                        (LPARAM)&DetailInfo);
                         EventLogFilter_Release(EventLogFilter);
                     }
                     break;
@@ -4272,6 +4319,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             LONG_PTR dwStyle;
             RECT rcWnd, rect;
+            INT iEventItem;
 
             hWndDetailsCtrl = CreateEventDetailsCtrl(hInst, hDlg, lParam);
             if (!hWndDetailsCtrl)
@@ -4333,8 +4381,9 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             cxOld = rcWnd.right - rcWnd.left;
             cyOld = rcWnd.bottom - rcWnd.top;
 
-            /* Show event info on dialog control */
-            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, 0, 0);
+            /* Show event info in dialog control */
+            iEventItem = (lParam != 0 ? ((PEVENTDETAIL_INFO)lParam)->iEventItem : 0);
+            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, 0, (LPARAM)iEventItem);
 
             // SetWindowPos(hWndDetailsCtrl, NULL,
                          // 0, 0,

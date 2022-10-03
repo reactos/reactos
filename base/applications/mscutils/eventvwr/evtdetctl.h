@@ -10,6 +10,14 @@
 #ifndef _EVTDETCTL_H_
 #define _EVTDETCTL_H_
 
+/* Optional structure passed by pointer
+ * as LPARAM to CreateEventDetailsCtrl() */
+typedef struct _EVENTDETAIL_INFO
+{
+    PEVENTLOGFILTER EventLogFilter;
+    INT iEventItem;
+} EVENTDETAIL_INFO, *PEVENTDETAIL_INFO;
+
 #define EVT_SETFILTER   (WM_APP + 2)
 #define EVT_DISPLAY     (WM_APP + 3)
 
