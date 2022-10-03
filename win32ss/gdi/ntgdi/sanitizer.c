@@ -140,8 +140,10 @@ VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr, BOOL bNullOK)
 #define REAL2DATA(ptr) *((SIZE_T*)(ptr))
 #define FAKE2DATA(ptr) REAL2DATA(FAKE2REAL(ptr))
 #ifdef _WIN64
+    #define SIZE_MASK (0x0FFFFFFFFFFFFFFFULL)
     #define DATA_MASK (0xF000000000000000ULL)
 #else
+    #define SIZE_MASK (0x0FFFFFFFUL)
     #define DATA_MASK (0xF0000000UL)
 #endif
 #define IS_FAKE(ptr) ((FAKE2DATA(ptr) & DATA_MASK) == DATA_MASK)
@@ -149,7 +151,6 @@ VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr, BOOL bNullOK)
 SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK)
 {
     SIZE_T Size;
-    PVOID real;
 
     if (bNullOK && P == NULL)
         return 0;
@@ -158,26 +159,21 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK)
     ASSERT(P != UNINIT_POINTER);
     ASSERT(P != FREED_POINTER);
 
-    real = P;
     Size = 0;
 
     _SEH2_TRY
     {
         if (IS_FAKE(P))
-        {
-            real = FAKE2REAL(P);
-            Size = (REAL2DATA(real) & DATA_MASK);
-        }
+            Size = (FAKE2DATA(P) & SIZE_MASK);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        real = P;
         Size = 0;
     }
     _SEH2_END;
 
     if (Size > 0)
-        SanitizeReadPtr(real, Size, FALSE);
+        SanitizeReadPtr(P, Size, FALSE);
 
     return Size;
 }
