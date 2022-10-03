@@ -2930,50 +2930,11 @@ NTAPI
 ExQueryPoolBlockSize(IN PVOID PoolBlock,
                      OUT PBOOLEAN QuotaCharged)
 {
-    SIZE_T BlockSize;
-    PPOOL_HEADER Entry;
-    ULONG i;
-    KIRQL OldIrql;
-
-    if (QuotaCharged)
-        *QuotaCharged = FALSE; /* FIXME */
-
-    if (PoolBlock == NULL)
-        return 0;
-
-    /* Get the pool header */
-    Entry = POOL_ENTRY(PoolBlock);
-
-    /* Check if this is a large allocation */
-    if (PAGE_ALIGN(PoolBlock) == PoolBlock)
-    {
-        /* Lock the pool table */
-        KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
-
-        /* Find the pool tag */
-        for (i = 0; i < PoolBigPageTableSize; i++)
-        {
-            /* Check if this is our allocation */
-            if (PoolBigPageTable[i].Va == PoolBlock)
-                break;
-        }
-
-        /* Release the lock */
-        KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
-
-        ASSERT(i != PoolBigPageTableSize);
-
-        BlockSize = 0; /* FIXME: ??? */
-    }
-    else
-    {
-        /* Check the rest of the header */
-        ExpCheckPoolHeader(Entry);
-
-        BlockSize = Entry->BlockSize;
-    }
-
-    return BlockSize;
+    //
+    // Not implemented
+    //
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
