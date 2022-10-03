@@ -23,8 +23,8 @@
     VOID FASTCALL SanitizeWritePtr(LPVOID ptr, UINT_PTR cb, BOOL bNullOK);
     VOID FASTCALL SanitizeStringPtrA(LPSTR psz, BOOL bNullOK);
     VOID FASTCALL SanitizeStringPtrW(LPWSTR psz, BOOL bNullOK);
-    VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr);
-    SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag);
+    VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr, BOOL bNullOK);
+    SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK);
 
     PVOID FASTCALL
     SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
@@ -40,6 +40,6 @@
     #define SanitizeWritePtr(ptr, cb, bNullOK)
     #define SanitizeStringPtrA(psz, bNullOK)
     #define SanitizeStringPtrW(psz, bNullOK)
-    #define SanitizeUnicodeString(pustr)
-    #define SanitizePoolMemory(P, Tag) ((SIZE_T)0)
+    #define SanitizeUnicodeString(pustr, bNullOK)
+    #define SanitizePoolMemory(P, Tag, bNullOK) ((SIZE_T)0)
 #endif

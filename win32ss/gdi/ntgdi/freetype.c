@@ -255,37 +255,47 @@ struct FT_MemoryRec_ g_FreeTypeMemory =
 
 VOID SanitizeFace(FT_Face Face)
 {
-    SanitizeReadPtr(Face, sizeof(*Face), TRUE);
+    SanitizeReadPtr(Face, sizeof(FT_FaceRec), FALSE);
     SanitizeStringPtrA(Face->family_name, TRUE);
     SanitizeStringPtrA(Face->style_name, TRUE);
-    // ...
+    SanitizeReadPtr(Face->available_sizes, sizeof(FT_Bitmap_Size), FALSE);
+    SanitizeReadPtr(Face->charmaps, Face->num_charmaps * sizeof(FT_CharMap), TRUE);
+    SanitizeReadPtr(Face->charmap, sizeof(FT_CharMap), TRUE);
+    // FIXME: ...
+}
+
+VOID SanitizeGlyph(FT_Glyph Glyph)
+{
+    SanitizeReadPtr(Glyph, sizeof(FT_GlyphRec), FALSE);
+    // FIXME: ...
 }
 
 VOID SanitizeBitmapGlyph(FT_BitmapGlyph BitmapGlyph)
 {
-    // ...
+    SanitizeReadPtr(BitmapGlyph, sizeof(FT_BitmapGlyphRec), FALSE);
+    ASSERT(BitmapGlyph->bitmap.buffer != NULL);
 }
 
 VOID SanitizeSharedMem(PSHARED_MEM pSharedMem)
 {
-    SanitizePoolMemory(pSharedMem, TAG_FONT);
+    SanitizePoolMemory(pSharedMem, TAG_FONT, FALSE);
     if (!pSharedMem->IsMapping)
     {
-        SanitizePoolMemory(pSharedMem->Buffer, TAG_FONT);
+        SanitizePoolMemory(pSharedMem->Buffer, TAG_FONT, FALSE);
     }
-    // ...
+    // FIXME: ...
 }
 
 VOID SanitizeSharedFaceCache(PSHARED_FACE_CACHE pFaceCache)
 {
-    SanitizePoolMemory(pFaceCache, TAG_FONT);
-    SanitizeUnicodeString(&pFaceCache->FontFamily);
-    SanitizeUnicodeString(&pFaceCache->FullName);
+    SanitizePoolMemory(pFaceCache, TAG_FONT, FALSE);
+    SanitizeUnicodeString(&pFaceCache->FontFamily, FALSE);
+    SanitizeUnicodeString(&pFaceCache->FullName, FALSE);
 }
 
 VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
 {
-    SanitizePoolMemory(SharedFace, TAG_FONT);
+    SanitizePoolMemory(SharedFace, TAG_FONT, FALSE);
     SanitizeFace(SharedFace->Face);
     SanitizeSharedMem(SharedFace->Memory);
     SanitizeSharedFaceCache(&SharedFace->EnglishUS);
@@ -294,9 +304,9 @@ VOID SanitizeSharedFace(PSHARED_FACE SharedFace)
 
 VOID SanitizeFontSubstEntry(PFONTSUBST_ENTRY pEntry)
 {
-    SanitizePoolMemory(pEntry, TAG_FONT);
-    SanitizeUnicodeString(&pEntry->FontNames[0]);
-    SanitizeUnicodeString(&pEntry->FontNames[1]);
+    SanitizePoolMemory(pEntry, TAG_FONT, FALSE);
+    SanitizeUnicodeString(&pEntry->FontNames[0], FALSE);
+    SanitizeUnicodeString(&pEntry->FontNames[1], FALSE);
 }
 
 VOID SanitizeFontSubstList(VOID)
