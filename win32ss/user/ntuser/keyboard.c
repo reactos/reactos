@@ -528,14 +528,11 @@ IntVkToVsc(WORD wVk, PKBDTABLES pKbdTbl)
 
     ASSERT(pKbdTbl);
 
-    if (wVk == 0)
-        return 0;
-
     /* Check standard keys first */
     for (i = 0; i < pKbdTbl->bMaxVSCtoVK; i++)
     {
         if ((pKbdTbl->pusVSCtoVK[i] & 0xFF) == wVk)
-            return i;
+            return pKbdTbl->pusVSCtoVK[i] & 0xFF;
     }
 
     /* Check extended keys now */
