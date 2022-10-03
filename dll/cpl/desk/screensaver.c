@@ -12,6 +12,8 @@
 
 #define MAX_SCREENSAVERS 100
 
+static const TCHAR szPreviewWndClass[] = TEXT("SSDemoParent");
+
 typedef struct
 {
     BOOL  bIsScreenSaver; /* Is this background a wallpaper */
@@ -26,6 +28,7 @@ typedef struct _DATA
     PROCESS_INFORMATION PrevWindowPi;
     int                 Selection;
     UINT                ScreenSaverCount;
+    HWND                ScreenSaverPreviewParent;
 } DATA, *PDATA;
 
 
@@ -105,9 +108,47 @@ SelectionChanged(HWND hwndDlg, PDATA pData)
 
 
 static VOID
+ShowScreenSaverPreview(IN LPDRAWITEMSTRUCT draw, IN PDATA pData)
+{
+    HBRUSH hBrush;
+    HDC hDC;
+    HGDIOBJ hOldObj;
+    RECT rcItem = {
+        MONITOR_LEFT,
+        MONITOR_TOP,
+        MONITOR_RIGHT,
+        MONITOR_BOTTOM
+    };
+
+    hDC = CreateCompatibleDC(draw->hDC);
+    hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
+
+    if (!IsWindowVisible(pData->ScreenSaverPreviewParent))
+    {
+        /* FIXME: Draw static bitmap inside monitor. */
+        hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
+        FillRect(hDC, &rcItem, hBrush);
+        DeleteObject(hBrush);
+    }
+
+    GdiTransparentBlt(draw->hDC,
+                      draw->rcItem.left, draw->rcItem.top,
+                      draw->rcItem.right - draw->rcItem.left + 1,
+                      draw->rcItem.bottom - draw->rcItem.top + 1,
+                      hDC,
+                      0, 0,
+                      g_GlobalData.bmMonWidth, g_GlobalData.bmMonHeight,
+                      MONITOR_ALPHA);
+
+    SelectObject(hDC, hOldObj);
+    DeleteDC(hDC);
+}
+
+
+static VOID
 SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
 {
-    HWND hPreview = GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW);
+    HWND hPreview = pData->ScreenSaverPreviewParent;
     STARTUPINFO si;
     TCHAR szCmdline[2048];
 
@@ -119,6 +160,7 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
         CloseHandle(pData->PrevWindowPi.hThread);
         pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
+    ShowWindow(pData->ScreenSaverPreviewParent, SW_HIDE);
 
     if (pData->Selection > 0)
     {
@@ -130,6 +172,8 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
         ZeroMemory(&pData->PrevWindowPi, sizeof(pData->PrevWindowPi));
+
+        ShowWindow(pData->ScreenSaverPreviewParent, SW_SHOW);
 
         if (!CreateProcess(NULL,
                            szCmdline,
@@ -584,6 +628,7 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
     LPTSTR lpCurSs;
     HWND hwndSSCombo = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
     INT Num;
+    WNDCLASS wc = {0};
 
     pData = HeapAlloc(GetProcessHeap(),
                             HEAP_ZERO_MEMORY,
@@ -592,6 +637,32 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
     {
         EndDialog(hwndDlg, -1);
         return FALSE;
+    }
+
+    wc.lpfnWndProc = DefWindowProc;
+    wc.hInstance = hApplet;
+    wc.hCursor = NULL;
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wc.lpszClassName = szPreviewWndClass;
+
+    if (RegisterClass(&wc))
+    {
+        HWND hParent = GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW);
+        HWND hChild;
+
+        hChild = CreateWindowEx(0, szPreviewWndClass, NULL,
+                                WS_CHILD, 0, 0, 0, 0, hParent,
+                                NULL, hApplet, NULL);
+        if (hChild != NULL)
+        {
+            RECT rc;
+            GetClientRect(hParent, &rc);
+            rc.left += MONITOR_LEFT;
+            rc.top += MONITOR_TOP;
+            MoveWindow(hChild, rc.left, rc.top, MONITOR_WIDTH, MONITOR_HEIGHT, FALSE);
+        }
+
+        pData->ScreenSaverPreviewParent = hChild;
     }
 
     SetWindowLongPtr(hwndDlg,
@@ -708,6 +779,12 @@ ScreenSaverPageProc(HWND hwndDlg,
 
         case WM_DESTROY:
         {
+            if (pData->ScreenSaverPreviewParent)
+            {
+                DestroyWindow(pData->ScreenSaverPreviewParent);
+                pData->ScreenSaverPreviewParent = NULL;
+            }
+            UnregisterClass(szPreviewWndClass, hApplet);
             if (pData->PrevWindowPi.hProcess)
             {
                 TerminateProcess(pData->PrevWindowPi.hProcess, 0);
@@ -724,6 +801,16 @@ ScreenSaverPageProc(HWND hwndDlg,
         {
             SetScreenSaverPreviewBox(hwndDlg,
                                      pData);
+            break;
+        }
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDrawItem;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
+
+            if (lpDrawItem->CtlID == IDC_SCREENS_PREVIEW)
+                ShowScreenSaverPreview(lpDrawItem, pData);
             break;
         }
 
