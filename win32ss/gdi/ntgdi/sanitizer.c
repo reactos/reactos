@@ -131,10 +131,25 @@ VOID FASTCALL SanitizeUnicodeString(PUNICODE_STRING pustr, BOOL bNullOK)
     _SEH2_END;
 }
 
+/*
+ * We wrap the pool memory blocks.
+ * The 'fake' pool pointer is incompatible to the 'real' pool pointer.
+ */
+#define REAL2FAKE(ptr) ((PVOID)(((SIZE_T*)(ptr)) + 1))
+#define FAKE2REAL(ptr) ((PVOID)(((SIZE_T*)(ptr)) - 1))
+#define REAL2DATA(ptr) *((SIZE_T*)(ptr))
+#define FAKE2DATA(ptr) REAL2DATA(FAKE2REAL(ptr))
+#ifdef _WIN64
+    #define DATA_MASK (0xF000000000000000ULL)
+#else
+    #define DATA_MASK (0xF0000000UL)
+#endif
+#define IS_FAKE(ptr) ((FAKE2DATA(ptr) & DATA_MASK) == DATA_MASK)
+
 SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK)
 {
-    BOOLEAN QuotaCharged;
     SIZE_T Size;
+    PVOID real;
 
     if (bNullOK && P == NULL)
         return 0;
@@ -143,9 +158,28 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK)
     ASSERT(P != UNINIT_POINTER);
     ASSERT(P != FREED_POINTER);
 
-    Size = ExQueryPoolBlockSize(P, &QuotaCharged); // FIXME: Implement
-    if (Size)
-        SanitizeReadPtr(P, Size, FALSE);
+    _SEH2_TRY
+    {
+        if (IS_FAKE(P))
+        {
+            real = FAKE2REAL(P);
+            Size = REAL2DATA(real);
+        }
+        else
+        {
+            real = P;
+            Size = 0;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        real = P;
+        Size = 0;
+    }
+    _SEH2_END;
+
+    if (Size > 0)
+        SanitizeReadPtr(real, Size, FALSE);
 
     return Size;
 }
@@ -155,13 +189,19 @@ SanitizeExAllocatePoolWithTag(POOL_TYPE PoolType,
                               SIZE_T NumberOfBytes,
                               ULONG Tag)
 {
-    PVOID ret;
+    PVOID real, fake;
 
-    ret = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
-    if (ret)
-        RtlFillMemory(ret, NumberOfBytes, UNINIT_BYTE);
+    if (NumberOfBytes == 0)
+        return NULL;
 
-    return ret;
+    real = ExAllocatePoolWithTag(PoolType, sizeof(SIZE_T) + NumberOfBytes, Tag);
+    if (real == NULL)
+        return NULL;
+
+    REAL2DATA(real) = (NumberOfBytes | DATA_MASK);
+    fake = REAL2FAKE(real);
+    RtlFillMemory(fake, NumberOfBytes, UNINIT_BYTE);
+    return fake;
 }
 
 VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, ULONG TagToFree)
@@ -192,8 +232,22 @@ VOID FASTCALL SanitizeBeforeExFreePool(PVOID P, ULONG TagToFree)
 
 VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree)
 {
-    if (P)
-        SanitizeBeforeExFreePool(P, TagToFree);
+    PVOID real;
 
-    ExFreePoolWithTag(P, TagToFree);
+    if (!P)
+        return;
+
+    SanitizeBeforeExFreePool(P, TagToFree);
+
+    _SEH2_TRY
+    {
+        real = (IS_FAKE(P) ? FAKE2REAL(P) : P);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        real = P;
+    }
+    _SEH2_END;
+
+    ExFreePoolWithTag(real, TagToFree);
 }
