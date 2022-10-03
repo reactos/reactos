@@ -201,6 +201,8 @@ static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 
 static void ft_custom_free(FT_Memory memory, void* block)
 {
+    ASSERT(block != UNINIT_POINTER);
+    ASSERT(block != FREED_POINTER);
     if (block)
         ExFreePoolWithTag(block, TAG_FONT);
 }
@@ -223,6 +225,8 @@ ft_custom_realloc(FT_Memory memory,
 
     ASSERT(cur_size >= 0);
     ASSERT(new_size >= 0);
+    ASSERT(block != UNINIT_POINTER);
+    ASSERT(block != FREED_POINTER);
 
     if (new_size == 0)
     {
@@ -255,7 +259,7 @@ struct FT_MemoryRec_ g_FreeTypeMemory =
 
 VOID SanitizeFace(FT_Face Face)
 {
-    SanitizeReadPtr(Face, sizeof(FT_FaceRec), FALSE);
+    SanitizePoolMemory(Face, TAG_FONT, FALSE);
     SanitizeStringPtrA(Face->family_name, TRUE);
     SanitizeStringPtrA(Face->style_name, TRUE);
     SanitizeReadPtr(Face->available_sizes, sizeof(FT_Bitmap_Size), FALSE);
@@ -266,13 +270,13 @@ VOID SanitizeFace(FT_Face Face)
 
 VOID SanitizeGlyph(FT_Glyph Glyph)
 {
-    SanitizeReadPtr(Glyph, sizeof(FT_GlyphRec), FALSE);
+    SanitizePoolMemory(Glyph, TAG_FONT, FALSE);
     // FIXME: ...
 }
 
 VOID SanitizeBitmapGlyph(FT_BitmapGlyph BitmapGlyph)
 {
-    SanitizeReadPtr(BitmapGlyph, sizeof(FT_BitmapGlyphRec), FALSE);
+    SanitizePoolMemory(BitmapGlyph, TAG_FONT, FALSE);
     ASSERT(BitmapGlyph->bitmap.buffer != NULL);
 }
 
@@ -413,17 +417,6 @@ VOID SanitizeFontInfo(BOOL bDoLock)
 #endif /* def SANITIZER_ENABLED */
 
 static void
-SharedMem_AddRef(PSHARED_MEM Ptr)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-#ifdef SANITIZER_ENABLED
-    SanitizeSharedMem(Ptr);
-#endif
-    ++Ptr->RefCount;
-}
-
-static void
 SharedFaceCache_Init(PSHARED_FACE_CACHE Cache)
 {
     Cache->OutlineRequiredSize = 0;
@@ -444,8 +437,10 @@ SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
         SharedFaceCache_Init(&Ptr->EnglishUS);
         SharedFaceCache_Init(&Ptr->UserLanguage);
 
-        SharedMem_AddRef(Memory);
         DPRINT("Creating SharedFace for %s\n", Face->family_name ? Face->family_name : "<NULL>");
+#ifdef SANITIZER_ENABLED
+        SanitizeSharedFace(Ptr);
+#endif
     }
     return Ptr;
 }
@@ -461,11 +456,12 @@ SharedMem_Create(PBYTE Buffer, ULONG BufferSize, BOOL IsMapping)
         Ptr->BufferSize = BufferSize;
         Ptr->RefCount = 1;
         Ptr->IsMapping = IsMapping;
+
         DPRINT("Creating SharedMem for %p (%i, %p)\n", Buffer, IsMapping, Ptr);
-    }
 #ifdef SANITIZER_ENABLED
-    SanitizeSharedMem(Ptr);
+        SanitizeSharedMem(Ptr);
 #endif
+    }
     return Ptr;
 }
 
@@ -476,7 +472,7 @@ SharedFace_AddRef(PSHARED_FACE Ptr)
 
     ++Ptr->RefCount;
 #ifdef SANITIZER_ENABLED
-    SanitizeSharedFace(Ptr);
+    //SanitizeSharedFace(Ptr); // FIXME: Sanitize me!
 #endif
 }
 
@@ -1406,7 +1402,12 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                     &Face);
 
         if (!Error)
+        {
+#ifdef SANITIZER_ENABLED
+            SanitizeFace(Face);
+#endif
             SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
+        }
 
         IntUnLockFreeType();
 
