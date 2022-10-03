@@ -188,7 +188,7 @@ set(baseaddress_load_notifications             0x76020000)
 set(baseaddress_loadperf                       0x75ff0000)
 set(baseaddress_localmon                       0x75fc0000)
 set(baseaddress_localspl                       0x75f80000)
-set(baseaddress_localspl_apitest               0x75f50000)
+set(baseaddress_localspl_apitest.dll           0x75f50000) #module name corrected manually
 set(baseaddress_localui                        0x75f20000)
 set(baseaddress_lpk                            0x75ee0000)
 set(baseaddress_lsasrv                         0x75e70000)
@@ -376,3 +376,9 @@ set(baseaddress_xinput1_3                      0x720e0000)
 set(baseaddress_xinput9_1_0                    0x720b0000)
 set(baseaddress_xmllite                        0x72070000)
 set(baseaddress_zipfldr                        0x71fd0000)
+set(baseaddress_cryptext                       0x71fa0000) #added manually, last entry - 0x30000
+set(baseaddress_dcomlaunch                     0x71f70000) #added manually, last entry - 0x30000
+set(baseaddress_fusion                         0x71f30000) #added manually, last entry - 0x40000
+set(baseaddress_fusion_1_1                     0x71ef0000) #added manually, last entry - 0x40000
+set(baseaddress_fusion_2_0                     0x71eb0000) #added manually, last entry - 0x40000
+set(baseaddress_xolehlp                        0x71eb0000) #added manually, last entry - 0x30000
