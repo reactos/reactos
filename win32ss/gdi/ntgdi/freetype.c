@@ -56,7 +56,6 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
-struct FT_MemoryRec_ g_FreeTypeMemory = { NULL };
 FT_Library  g_FreeTypeLibrary;
 
 /* registry */
@@ -248,6 +247,11 @@ ft_custom_realloc(FT_Memory memory,
     ft_custom_free(memory, block);
     return new_block;
 }
+
+struct FT_MemoryRec_ g_FreeTypeMemory =
+{
+    NULL, ft_custom_malloc, ft_custom_free, ft_custom_realloc
+};
 
 VOID SanitizeFace(FT_Face Face)
 {
@@ -923,10 +927,6 @@ InitFontSupport(VOID)
 
     /* Initialize FreeType */
 #ifdef SANITIZER_ENABLED
-    g_FreeTypeMemory.user    = NULL;
-    g_FreeTypeMemory.alloc   = ft_custom_malloc;
-    g_FreeTypeMemory.realloc = ft_custom_realloc;
-    g_FreeTypeMemory.free    = ft_custom_free;
     ulError = FT_New_Library(&g_FreeTypeMemory, &g_FreeTypeLibrary);
     if (!ulError)
     {
