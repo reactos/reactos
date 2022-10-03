@@ -528,6 +528,9 @@ IntVkToVsc(WORD wVk, PKBDTABLES pKbdTbl)
 
     ASSERT(pKbdTbl);
 
+    if (wVk == 0)
+        return 0;
+
     /* Check standard keys first */
     for (i = 0; i < pKbdTbl->bMaxVSCtoVK; i++)
     {
@@ -1269,9 +1272,6 @@ static UINT
 IntMapVirtualKeyEx(UINT uCode, UINT Type, PKBDTABLES pKbdTbl)
 {
     UINT uRet = 0;
-
-    if (uCode == 0)
-        return uRet;
 
     switch (Type)
     {
