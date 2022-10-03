@@ -13,7 +13,7 @@
 #include <shellapi.h>
 
 // FIXME:
-#define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
+#define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)
 extern HWND hwndListView;
 extern BOOL
 GetEventMessage(IN LPCWSTR KeyName,
@@ -479,7 +479,8 @@ OnScroll(HWND hDlg, PDETAILDATA pData, INT nBar, WORD sbCode)
     }
 }
 
-static VOID
+static
+VOID
 OnSize(HWND hDlg, PDETAILDATA pData, INT cx, INT cy)
 {
     LONG_PTR dwStyle;
@@ -877,20 +878,15 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 case IDC_BYTESRADIO:
-                    if (pData->EventLogFilter)
-                    {
-                        pData->bDisplayWords = FALSE;
-                        DisplayEventData(hDlg, pData->bDisplayWords);
-                    }
-                    return (INT_PTR)TRUE;
-
                 case IDC_WORDRADIO:
+                {
                     if (pData->EventLogFilter)
                     {
-                        pData->bDisplayWords = TRUE;
+                        pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDRADIO);
                         DisplayEventData(hDlg, pData->bDisplayWords);
                     }
                     return (INT_PTR)TRUE;
+                }
 
                 default:
                     break;
@@ -914,14 +910,14 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_HSCROLL:
-            OnScroll(hDlg, pData, SB_HORZ, LOWORD(wParam));
-            SetWindowLongPtrW(hDlg, DWLP_MSGRESULT, 0);
-            return (INT_PTR)TRUE;
-
         case WM_VSCROLL:
-            OnScroll(hDlg, pData, SB_VERT, LOWORD(wParam));
+        {
+            OnScroll(hDlg, pData,
+                     (uMsg == WM_HSCROLL) ? SB_HORZ : SB_VERT,
+                     LOWORD(wParam));
             SetWindowLongPtrW(hDlg, DWLP_MSGRESULT, 0);
             return (INT_PTR)TRUE;
+        }
 
         case WM_SIZE:
             OnSize(hDlg, pData, LOWORD(lParam), HIWORD(lParam));

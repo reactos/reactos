@@ -33,8 +33,8 @@ static const LPCWSTR SystemLogs[] =
 };
 
 /* MessageFile message buffer size */
-#define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10                             // NOTE: Used by evtdetctl.c
-#define EVENT_MESSAGE_FILE_BUFFER       1024*10
+#define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)                           // NOTE: Used by evtdetctl.c
+#define EVENT_MESSAGE_FILE_BUFFER       (1024*10)
 #define EVENT_DLL_SEPARATOR             L";"
 #define EVENT_CATEGORY_MESSAGE_FILE     L"CategoryMessageFile"
 #define EVENT_MESSAGE_FILE              L"EventMessageFile"
@@ -2034,7 +2034,7 @@ EnumEventsThread(IN LPVOID lpParameter)
         // (EventLogFilter->NumOfEventLogs > 1)
         MessageBoxW(hwndMainWindow,
                     L"Many-logs filtering is not implemented yet!!",
-                    L"Event Log",
+                    szTitle,
                     MB_OK | MB_ICONINFORMATION);
     }
 
@@ -3514,22 +3514,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
 
                 case IDM_LIST_NEWEST:
-                {
-                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_NEWEST, MF_BYCOMMAND);
-                    if (!Settings.bNewestEventsFirst)
-                    {
-                        Settings.bNewestEventsFirst = TRUE;
-                        Refresh(GetSelectedFilter(NULL));
-                    }
-                    break;
-                }
-
                 case IDM_LIST_OLDEST:
                 {
-                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_OLDEST, MF_BYCOMMAND);
-                    if (Settings.bNewestEventsFirst)
+                    BOOL bNewest = (LOWORD(wParam) == IDM_LIST_NEWEST);
+                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, LOWORD(wParam), MF_BYCOMMAND);
+
+                    if (bNewest != Settings.bNewestEventsFirst)
                     {
-                        Settings.bNewestEventsFirst = FALSE;
+                        Settings.bNewestEventsFirst = bNewest;
                         Refresh(GetSelectedFilter(NULL));
                     }
                     break;
@@ -3608,11 +3600,11 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
 
                 case IDM_HELP:
-                    MessageBoxW(hwndMainWindow,
+                    MessageBoxW(hWnd,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
-                                break;
+                    break;
 
                 case IDM_EXIT:
                     DestroyWindow(hWnd);
@@ -4192,7 +4184,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDHELP:
                     MessageBoxW(hDlg,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
                     return (INT_PTR)TRUE;
 
@@ -4279,7 +4271,6 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
         {
             LONG_PTR dwStyle;
-            INT sbVXSize, sbHYSize;
             RECT rcWnd, rect;
 
             hWndDetailsCtrl = CreateEventDetailsCtrl(hInst, hDlg, lParam);
@@ -4291,11 +4282,12 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             /* Create a size grip if the dialog has a sizing border */
             GetClientRect(hDlg, &rcWnd);
-            dwStyle  = GetWindowLongPtrW(hDlg, GWL_STYLE);
-            sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
-            sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
+            dwStyle = GetWindowLongPtrW(hDlg, GWL_STYLE);
             if (dwStyle & WS_THICKFRAME /* == WS_SIZEBOX */)
             {
+                INT sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
+                INT sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
+
                 hWndGrip = CreateWindowW(WC_SCROLLBARW,
                                          NULL,
                                          WS_CHILD | WS_VISIBLE | /**/ WS_CLIPSIBLINGS | /**/ SBS_SIZEGRIP | SBS_SIZEBOXBOTTOMRIGHTALIGN,
@@ -4380,7 +4372,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDHELP:
                     MessageBoxW(hDlg,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
                     return (INT_PTR)TRUE;
 
