@@ -158,17 +158,15 @@ SIZE_T FASTCALL SanitizePoolMemory(PVOID P, ULONG Tag, BOOL bNullOK)
     ASSERT(P != UNINIT_POINTER);
     ASSERT(P != FREED_POINTER);
 
+    real = P;
+    Size = 0;
+
     _SEH2_TRY
     {
         if (IS_FAKE(P))
         {
             real = FAKE2REAL(P);
-            Size = REAL2DATA(real);
-        }
-        else
-        {
-            real = P;
-            Size = 0;
+            Size = (REAL2DATA(real) & DATA_MASK);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
