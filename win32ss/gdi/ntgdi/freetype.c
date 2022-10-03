@@ -231,7 +231,7 @@ ft_custom_realloc(FT_Memory memory,
         return NULL;
     }
 
-    if (!block)
+    if (block == NULL)
         return ft_custom_malloc(memory, new_size);
 
     if (new_size <= cur_size)
@@ -245,6 +245,7 @@ ft_custom_realloc(FT_Memory memory,
         return NULL;
 
     RtlCopyMemory(new_block, block, cur_size);
+    ft_custom_free(memory, block);
     return new_block;
 }
 
