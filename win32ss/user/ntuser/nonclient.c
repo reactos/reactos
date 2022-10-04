@@ -438,12 +438,12 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             if (doSideSnap)
             {
                co_WinPosSetWindowPos(pwnd,
-                                     0,
+                                     NULL,
                                      snapRect.left,
                                      snapRect.top,
                                      snapRect.right - snapRect.left,
                                      snapRect.bottom - snapRect.top,
-                                     0);
+                                     SWP_NOACTIVATE);
                pwnd->InternalPos.NormalRect = origRect;
             }
             else
@@ -551,13 +551,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
                     //// This causes the mdi child window to jump up when it is moved.
                     //IntMapWindowPoints( 0, pWndParent, (POINT *)&rect, 2 );
-		    co_WinPosSetWindowPos( pwnd,
-		                           0,
-		                           newRect.left,
-		                           newRect.top,
-				           newRect.right - newRect.left,
-				           newRect.bottom - newRect.top,
-				          ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
+                    co_WinPosSetWindowPos(pwnd,
+                                          NULL,
+                                          newRect.left,
+                                          newRect.top,
+                                          newRect.right - newRect.left,
+                                          newRect.bottom - newRect.top,
+                                          SWP_NOACTIVATE | ((hittest == HTCAPTION) ? SWP_NOSIZE : 0));
 
                     hrgnNew = GreCreateRectRgnIndirect(&pwnd->rcWindow);
                     if (pwnd->hrgnClip != NULL)
@@ -1532,7 +1532,8 @@ NC_HandleNCLButtonDown(PWND pWnd, WPARAM wParam, LPARAM lParam)
                 TopWnd = parent;
             }
 
-            if ( co_IntSetForegroundWindowMouse(TopWnd) ||
+            if ( (pWnd && (pWnd->ExStyle & WS_EX_NOACTIVATE)) ||
+                 co_IntSetForegroundWindowMouse(TopWnd) ||
                  //NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
                  UserGetActiveWindow() == UserHMGetHandle(TopWnd))
             {
@@ -1689,6 +1690,7 @@ LRESULT NC_HandleNCRButtonDown( PWND pwnd, WPARAM wParam, LPARAM lParam )
           if (UserHMGetHandle(pwnd) != IntGetCapture()) return 0;
       }
       IntReleaseCapture();
+
       if (hittest == HTCAPTION || hittest == HTSYSMENU || hittest == HTHSCROLL || hittest == HTVSCROLL)
       {
          TRACE("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
