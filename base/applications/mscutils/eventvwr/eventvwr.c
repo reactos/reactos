@@ -346,116 +346,135 @@ Quit:
 BOOL
 LoadSettings(int nDefCmdShow)
 {
-    HKEY hKeyEventVwr;
     LONG Result;
-    DWORD dwSize;
-    DWORD dwType;
-    DWORD Value;
-    UNICODE_STRING ValueU;
+    HKEY hKeyEventVwr;
+    DWORD dwType, cbData;
     WCHAR buffer[100];
 
     /* Load the default values */
+    Settings.bSaveSettings = TRUE;
     Settings.bShowDetailsPane = TRUE;
     Settings.bShowGrid = FALSE;
-    Settings.bSaveSettings = TRUE;
     Settings.bNewestEventsFirst = TRUE;
     Settings.nVSplitPos = 250; /* Splitter default positions */
     Settings.nHSplitPos = 250;
     ZeroMemory(&Settings.wpPos, sizeof(Settings.wpPos));
     Settings.wpPos.length = sizeof(Settings.wpPos);
-    Settings.wpPos.rcNormalPosition.left = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.top  = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.right  = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.bottom = CW_USEDEFAULT;
+    SetRect(&Settings.wpPos.rcNormalPosition,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+    Settings.wpPos.showCmd = nDefCmdShow; // SW_SHOWNORMAL;
 
-    /* Try to create/open the Event Viewer user key */
-    if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                        EVNTVWR_PARAM_KEY,
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_READ | KEY_WRITE,
-                        NULL,
-                        &hKeyEventVwr,
-                        NULL) != ERROR_SUCCESS)
+    /* Try to open the Event Viewer user key */
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      EVNTVWR_PARAM_KEY,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKeyEventVwr) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Filter", NULL, &dwType, (LPBYTE)&szFilter, &dwSize); // REG_SZ
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Find", NULL, &dwType, (LPBYTE)&szFind, &dwSize); // REG_SZ
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Module", NULL, &dwType, (LPBYTE)&szModule, &dwSize); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Filter", NULL, &dwType, (LPBYTE)&szFilter, &cbData); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Find", NULL, &dwType, (LPBYTE)&szFind, &cbData); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Module", NULL, &dwType, (LPBYTE)&szModule, &cbData); // REG_SZ
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"DetailsPane", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"SaveSettings", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bSaveSettings = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bShowDetailsPane = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bSaveSettings = !!*(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"ShowGrid", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"DetailsPane", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bShowDetailsPane = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bShowGrid = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bShowDetailsPane = !!*(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"SortOrder", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"ShowGrid", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bShowGrid = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bNewestEventsFirst = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bShowGrid = !!*(PDWORD)buffer;
+        }
+    }
+
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"SortOrder", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
+    {
+        if (dwType == REG_SZ)
+        {
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bNewestEventsFirst = !!(DWORD)_wtoi(buffer);
+        }
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bNewestEventsFirst = !!*(PDWORD)buffer;
+        }
     }
 
     /* Retrieve the splitter positions */
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"VSplitPos", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"VSplitPos", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.nVSplitPos = (DWORD)_wtoi(buffer);
         }
-        Settings.nVSplitPos = Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.nVSplitPos = *(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"HSplitPos", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"HSplitPos", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.nHSplitPos = (DWORD)_wtoi(buffer);
         }
-        Settings.nHSplitPos = Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.nHSplitPos = *(PDWORD)buffer;
+        }
     }
 
     /* Retrieve the geometry of the main window */
-    dwSize = sizeof(buffer);
-    Result = RegQueryValueExW(hKeyEventVwr, L"Window", NULL, &dwType, (LPBYTE)buffer, &dwSize);
-    if ((Result != ERROR_SUCCESS) || (dwType != REG_SZ))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"Window", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ))
+        buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+    else
         buffer[0] = UNICODE_NULL;
 
     if (swscanf(buffer, L"%d %d %d %d %d",
@@ -466,24 +485,9 @@ LoadSettings(int nDefCmdShow)
                 &Settings.wpPos.showCmd) != 5)
     {
         /* Parsing failed, use defaults */
-        Settings.wpPos.rcNormalPosition.left = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.top  = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.right  = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.bottom = CW_USEDEFAULT;
+        SetRect(&Settings.wpPos.rcNormalPosition,
+                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
         Settings.wpPos.showCmd = nDefCmdShow; // SW_SHOWNORMAL;
-    }
-
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"SaveSettings", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
-    {
-        if (dwType == REG_SZ)
-        {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
-        }
-        Settings.bSaveSettings = !!Value;
     }
 
     RegCloseKey(hKeyEventVwr);
@@ -503,7 +507,7 @@ SaveSettings(VOID)
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
-                        KEY_READ | KEY_WRITE,
+                        KEY_SET_VALUE,
                         NULL,
                         &hKeyEventVwr,
                         NULL) != ERROR_SUCCESS)
@@ -543,7 +547,7 @@ SaveSettings(VOID)
                     Settings.wpPos.rcNormalPosition.bottom,
                     Settings.wpPos.showCmd);
 
-    dwSize = (DWORD)(wcslen(buffer) * sizeof(WCHAR));
+    dwSize = (DWORD)((wcslen(buffer) + 1) * sizeof(WCHAR));
     RegSetValueExW(hKeyEventVwr, L"Window", 0, REG_SZ, (LPBYTE)buffer, dwSize);
 
 Quit:
@@ -855,7 +859,7 @@ GetMessageStringFromDllList(
     szMessageDllList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbLength);
     if (!szMessageDllList)
         return NULL;
-    RtlCopyMemory(szMessageDllList, lpMessageDllList, cbLength);
+    CopyMemory(szMessageDllList, lpMessageDllList, cbLength);
 
     /* Loop through the list of message DLLs */
     szDll = wcstok(szMessageDllList, EVENT_DLL_SEPARATOR);
@@ -1346,7 +1350,7 @@ AllocAndCopyMultiStr(IN PCWSTR MultiStr OPTIONAL)
     pStr = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
     // NOTE: If we failed allocating the string, then fall back into no filter!
     if (pStr)
-        RtlCopyMemory(pStr, MultiStr, Length * sizeof(WCHAR));
+        CopyMemory(pStr, MultiStr, Length * sizeof(WCHAR));
 
     return pStr;
 }
@@ -1386,7 +1390,7 @@ AllocEventLogFilter(// IN PCWSTR FilterName,
 
     /* Copy the list of event logs */
     EventLogFilter->NumOfEventLogs = NumOfEventLogs;
-    RtlCopyMemory(EventLogFilter->EventLogs, EventLogs, NumOfEventLogs * sizeof(PEVENTLOG));
+    CopyMemory(EventLogFilter->EventLogs, EventLogs, NumOfEventLogs * sizeof(PEVENTLOG));
 
     /* Initialize the filter reference count */
     EventLogFilter->ReferenceCount = 1;
@@ -1508,8 +1512,8 @@ GetExpandedFilePathName(
             lpFullFileName[1] = L'$';
 
         /* Prepend the computer name */
-        RtlMoveMemory(lpFullFileName + 2 + wcslen(ComputerName) + 1,
-                      lpFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        MoveMemory(lpFullFileName + 2 + wcslen(ComputerName) + 1,
+                   lpFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
         lpFullFileName[0] = L'\\';
         lpFullFileName[1] = L'\\';
         wcsncpy(lpFullFileName + 2, ComputerName, wcslen(ComputerName));
@@ -1699,7 +1703,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         {
             if (iswdigit(lpMsgBuf[2]))
             {
-                RtlMoveMemory(lpMsgBuf, lpMsgBuf+1, ((szStringArray + cch) - lpMsgBuf - 1) * sizeof(WCHAR));
+                MoveMemory(lpMsgBuf, lpMsgBuf+1, ((szStringArray + cch) - lpMsgBuf - 1) * sizeof(WCHAR));
             }
         }
 
@@ -2198,7 +2202,7 @@ EnumEventsThread(IN LPVOID lpParameter)
             StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pEvlrTmp->EventCategory);
 
             g_RecordPtrs[dwCurrentRecord] = HeapAlloc(hProcessHeap, 0, pEvlrTmp->Length);
-            RtlCopyMemory(g_RecordPtrs[dwCurrentRecord], pEvlrTmp, pEvlrTmp->Length);
+            CopyMemory(g_RecordPtrs[dwCurrentRecord], pEvlrTmp, pEvlrTmp->Length);
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
