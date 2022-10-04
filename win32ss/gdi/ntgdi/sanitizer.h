@@ -7,15 +7,15 @@
 
 #pragma once
 
-#define UNINIT_BYTE 0xDD
-#define FREED_BYTE 0xEE
+#define UNINIT_BYTE 0xCD
+#define FREED_BYTE 0xFD
 
 #ifdef _WIN64
-    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDDDDDDDDDD)
-    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEEEEEEEEEE)
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xCDCDCDCDCDCDCDCD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xFDFDFDFDFDFDFDFD)
 #else
-    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xDDDDDDDD)
-    #define FREED_POINTER ((PVOID)(UINT_PTR)0xEEEEEEEE)
+    #define UNINIT_POINTER ((PVOID)(UINT_PTR)0xCDCDCDCD)
+    #define FREED_POINTER ((PVOID)(UINT_PTR)0xFDFDFDFD)
 #endif
 
 #ifdef SANITIZER_ENABLED
@@ -34,7 +34,10 @@
     VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree);
 
     #define ExAllocatePoolWithTag SanitizeExAllocatePoolWithTag
-    #define ExFreePoolWithTag SanitizeExFreePoolWithTag
+    #define ExFreePoolWithTag(P, TagToFree) do { \
+        SanitizeExFreePoolWithTag((P), (TagToFree)); \
+        (P) = FREED_POINTER; \
+    } while (0)
 #else
     #define SanitizeReadPtr(ptr, cb, bNullOK)
     #define SanitizeWritePtr(ptr, cb, bNullOK)
