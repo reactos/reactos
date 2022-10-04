@@ -373,7 +373,7 @@ static HRESULT WINAPI BindStatusCallback_GetBindInfo(IBindStatusCallback *iface,
     pbindinfo->dwBindVerb = This->request->verb;
     if (This->request->verb == BINDVERB_CUSTOM)
     {
-        pbindinfo->szCustomVerb = CoTaskMemAlloc(SysStringByteLen(This->request->custom));
+        pbindinfo->szCustomVerb = CoTaskMemAlloc(SysStringByteLen(This->request->custom)+sizeof(WCHAR));
         strcpyW(pbindinfo->szCustomVerb, This->request->custom);
     }
 
