@@ -417,7 +417,7 @@ CONSOLE_SetUnderlinedTextXY(
 
     coPos.Y++;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xCD,
+                                MUITranslateChar(0xCD),
                                 Length,
                                 coPos,
                                 &Written);

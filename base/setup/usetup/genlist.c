@@ -78,7 +78,7 @@ DrawListFrame(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xDA, // '+',
+                                MUITranslateChar(0xDA), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -87,7 +87,7 @@ DrawListFrame(
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC4, // '-',
+                                MUITranslateChar(0xC4), // '-',
                                 ListUi->Right - ListUi->Left - 1,
                                 coPos,
                                 &Written);
@@ -96,7 +96,7 @@ DrawListFrame(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xBF, // '+',
+                                MUITranslateChar(0xBF), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -107,14 +107,14 @@ DrawListFrame(
         coPos.X = ListUi->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, // '|',
+                                    MUITranslateChar(0xB3), // '|',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = ListUi->Right;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, //'|',
+                                    MUITranslateChar(0xB3), //'|',
                                     1,
                                     coPos,
                                     &Written);
@@ -124,7 +124,7 @@ DrawListFrame(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC0, // '+',
+                                MUITranslateChar(0xC0), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -133,7 +133,7 @@ DrawListFrame(
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC4, // '-',
+                                MUITranslateChar(0xC4), // '-',
                                 ListUi->Right - ListUi->Left - 1,
                                 coPos,
                                 &Written);
@@ -142,7 +142,7 @@ DrawListFrame(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xD9, // '+',
+                                MUITranslateChar(0xD9), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -239,7 +239,7 @@ DrawScrollBarGenericList(
     if (ListUi->FirstShown != List->ListHead.Flink)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    '\x18',
+                                    MUITranslateChar(0x18),
                                     1,
                                     coPos,
                                     &Written);
@@ -257,7 +257,7 @@ DrawScrollBarGenericList(
     if (ListUi->LastShown != List->ListHead.Blink)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    '\x19',
+                                    MUITranslateChar(0x19),
                                     1,
                                     coPos,
                                     &Written);

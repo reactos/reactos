@@ -99,6 +99,10 @@ MUISetStyledText(
     IN INT TextID,
     IN INT Flags);
 
+CHAR
+MUITranslateChar(
+    IN CHAR Ch);
+
 /* MUI Text IDs */
 
 /* Static MUI Text */

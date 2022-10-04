@@ -175,7 +175,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xDA, // '+',
+                                MUITranslateChar(0xDA), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -184,7 +184,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC4, // '-',
+                                MUITranslateChar(0xC4), // '-',
                                 Width - 2,
                                 coPos,
                                 &Written);
@@ -193,7 +193,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xBF, // '+',
+                                MUITranslateChar(0xBF), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -203,7 +203,7 @@ DrawBox(IN SHORT xLeft,
     {
         coPos.X = xLeft;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, // '|',
+                                    MUITranslateChar(0xB3), // '|',
                                     1,
                                     coPos,
                                     &Written);
@@ -217,7 +217,7 @@ DrawBox(IN SHORT xLeft,
 
         coPos.X = xLeft + Width - 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, // '|',
+                                    MUITranslateChar(0xB3), // '|',
                                     1,
                                     coPos,
                                     &Written);
@@ -227,7 +227,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC0, // '+',
+                                MUITranslateChar(0xC0), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -236,7 +236,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC4, // '-',
+                                MUITranslateChar(0xC4), // '-',
                                 Width - 2,
                                 coPos,
                                 &Written);
@@ -245,7 +245,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xD9, // '+',
+                                MUITranslateChar(0xD9), // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -375,21 +375,21 @@ PopupError(PCCH Text,
         coPos.Y = yTop + Height - 3;
         coPos.X = xLeft;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC3, // '+',
+                                    MUITranslateChar(0xC3), // '+',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = xLeft + 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    MUITranslateChar(0xC4), // '-',
                                     Width - 2,
                                     coPos,
                                     &Written);
 
         coPos.X = xLeft + Width - 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB4, // '+',
+                                    MUITranslateChar(0xB4), // '+',
                                     1,
                                     coPos,
                                     &Written);
@@ -662,6 +662,12 @@ LanguagePage(PINPUT_RECORD Ir)
 
                 /* Load the font */
                 SetConsoleCodePage();
+
+                /* Redraw the list */
+                DrawGenericList(&ListUi,
+                                2, 18,
+                                xScreen - 3,
+                                yScreen - 3);
 
                 /* Redraw language selection page in native language */
                 MUIDisplayPage(LANGUAGE_PAGE);
