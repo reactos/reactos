@@ -58,6 +58,7 @@
 #define FNID_PxeCallApi 3
 #define FNID_PnpBiosGetDeviceNodeCount  4
 #define FNID_PnpBiosGetDeviceNode       5
+#define FNID_PnpBiosGetDockStationInformation  6
 
 /* Flag Masks */
 #define CR0_PE_SET    HEX(00000001)    /* OR this value with CR0 to enable pmode */
