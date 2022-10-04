@@ -663,6 +663,9 @@ LanguagePage(PINPUT_RECORD Ir)
                 /* Load the font */
                 SetConsoleCodePage();
 
+                /* Update video mode */
+                MUIUpdateVideoMode();
+
                 /* Redraw the list */
                 DrawGenericList(&ListUi,
                                 2, 18,

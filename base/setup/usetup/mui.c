@@ -579,4 +579,20 @@ MUITranslateChar(
     return Ch;
 }
 
+VOID
+MUIUpdateVideoMode(VOID)
+{
+    switch (SelectedCodePage)
+    {
+        case 28606: /* Romanian */
+        case 932: /* Japanese */
+            /* FIXME: Enter 640x400 video mode */
+            break;
+
+        default:
+            /* FIXME: Enter 720x400 video mode */
+            break;
+    }
+}
+
 /* EOF */

@@ -103,6 +103,9 @@ CHAR
 MUITranslateChar(
     IN CHAR Ch);
 
+VOID
+MUIUpdateVideoMode(VOID);
+
 /* MUI Text IDs */
 
 /* Static MUI Text */
