@@ -180,5 +180,5 @@ BEGIN
     IDS_TIMEOUT16 "dezactivată"
     IDS_DEL_SCHEME "Sigur doriți eliminarea aceastui regim de consum energetic: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminarea regumului de consum"
-    IDS_DEL_SCHEME_ERROR "Nu poate fi șteasă schema de alimentare"
+    IDS_DEL_SCHEME_ERROR "Nu poate fi ștearsă schema de alimentare"
 END
