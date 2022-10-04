@@ -285,7 +285,7 @@ TimeZonePageProc(HWND hwndDlg,
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
             if(lpDrawItem->CtlID == IDC_WORLD_BACKGROUND)
             {
                 HDC hdcMem;

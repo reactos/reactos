@@ -892,7 +892,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
 
             switch (lpDrawItem->CtlID)
             {
