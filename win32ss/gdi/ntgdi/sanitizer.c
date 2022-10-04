@@ -231,6 +231,9 @@ VOID FASTCALL SanitizeExFreePoolWithTag(PVOID P, ULONG TagToFree)
     if (!P)
         return;
 
+    ASSERT(P != UNINIT_POINTER);
+    ASSERT(P != FREED_POINTER);
+
     SanitizeBeforeExFreePool(P, TagToFree);
 
     _SEH2_TRY
