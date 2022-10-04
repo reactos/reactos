@@ -2235,58 +2235,69 @@ Return Value:
             sizeof(PARTITION_INFORMATION)) {
 
             status = STATUS_INFO_LENGTH_MISMATCH;
-
+            break;
         }
-#if 0 // HACK: ReactOS partition numbers must be wrong
-        else if (diskData->PartitionNumber == 0) {
+
+        //
+        // Update the geometry in case it has changed.
+        //
+
+        status = UpdateRemovableGeometry (DeviceObject, Irp);
+
+        if (!NT_SUCCESS(status)) {
 
             //
-            // Partition zero is not a partition so this is not a
-            // reasonable request.
+            // Note the drive is not ready.
             //
 
-            status = STATUS_INVALID_DEVICE_REQUEST;
-
+            diskData->DriveNotReady = TRUE;
+            break;
         }
-#endif
-        else {
+
+        //
+        // Note the drive is now ready.
+        //
+
+        diskData->DriveNotReady = FALSE;
+
+        //
+        // Handle the case were we query the whole disk
+        //
+
+        if (diskData->PartitionNumber == 0) {
 
             PPARTITION_INFORMATION outputBuffer;
 
-            if (diskData->PartitionNumber == 0) {
-                DPRINT1("HACK: Handling partition 0 request!\n");
-                //ASSERT(FALSE);
-            }
+            outputBuffer =
+                    (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+            outputBuffer->PartitionType = PARTITION_ENTRY_UNUSED;
+            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
+            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
+            outputBuffer->HiddenSectors = 0;
+            outputBuffer->PartitionNumber = diskData->PartitionNumber;
+            outputBuffer->BootIndicator = FALSE;
+            outputBuffer->RewritePartition = FALSE;
+            outputBuffer->RecognizedPartition = FALSE;
+
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+
+        } else {
+
+            PPARTITION_INFORMATION outputBuffer;
 
             //
-            // Update the geometry in case it has changed.
+            // We query a single partition here
+            // FIXME: this can only work for MBR-based disks, check for this!
             //
-
-            status = UpdateRemovableGeometry (DeviceObject, Irp);
-
-            if (!NT_SUCCESS(status)) {
-
-                //
-                // Note the drive is not ready.
-                //
-
-                diskData->DriveNotReady = TRUE;
-                break;
-            }
-
-            //
-            // Note the drive is now ready.
-            //
-
-            diskData->DriveNotReady = FALSE;
 
             outputBuffer =
                     (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
             outputBuffer->PartitionType = diskData->PartitionType;
             outputBuffer->StartingOffset = deviceExtension->StartingOffset;
-            outputBuffer->PartitionLength.QuadPart = (diskData->PartitionNumber) ?
-                deviceExtension->PartitionLength.QuadPart : 0x1FFFFFFFFFFFFFFFLL; // HACK
+            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
             outputBuffer->HiddenSectors = diskData->HiddenSectors;
             outputBuffer->PartitionNumber = diskData->PartitionNumber;
             outputBuffer->BootIndicator = diskData->BootIndicator;
