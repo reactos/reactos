@@ -717,7 +717,7 @@
 708 stdcall UpdatePerUserSystemParameters(long long)
 709 stdcall UpdateWindow(long)
 710 stdcall User32InitializeImmEntryTable(ptr)
-711 stdcall UserClientDllInitialize(long long ptr) DllMain
+711 stdcall UserClientDllInitialize(ptr long ptr) DllMain
 712 stdcall UserHandleGrantAccess(ptr ptr long) NtUserUserHandleGrantAccess
 713 stdcall UserLpkPSMTextOut(long long long wstr long long)
 714 stdcall UserLpkTabbedTextOut(long long long long long long long long long long long long)

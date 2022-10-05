@@ -14,16 +14,19 @@ RTL_CRITICAL_SECTION semLocal;
 extern CRITICAL_SECTION gcsClientObjLinks;
 
 /*
- * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call
- * to GdiDllInitialize(). This call is done from the entry point of USER32.DLL.
+ * GDI32.DLL does have an entry point for DisableThreadLibraryCalls().
+ * The initialization is done by a call to GdiDllInitialize(). This
+ * call is done from the entry point of USER32.DLL.
  */
 BOOL
 WINAPI
 DllMain(
-    HANDLE  hDll,
-    DWORD   dwReason,
-    LPVOID  lpReserved)
+    _In_ HANDLE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
 {
+    UNREFERENCED_PARAMETER(pReserved);
+
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH :
@@ -74,10 +77,12 @@ GdiProcessShutdown(VOID)
 BOOL
 WINAPI
 GdiDllInitialize(
-    HANDLE hDll,
-    DWORD dwReason,
-    LPVOID lpReserved)
+    _In_ HANDLE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
 {
+    UNREFERENCED_PARAMETER(pReserved);
+
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:

@@ -50,10 +50,7 @@ add_library(gdi32 MODULE
     gdi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
 
-set_module_type(gdi32
-    win32dll
-    ENTRYPOINT DllMain 12
-    UNICODE)
+set_module_type(gdi32 win32dll UNICODE ENTRYPOINT DllMain 12)
 
 target_link_libraries(gdi32
     winegdi

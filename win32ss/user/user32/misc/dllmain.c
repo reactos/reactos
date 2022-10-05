@@ -466,11 +466,13 @@ Cleanup(VOID)
     DeleteFrameBrushes();
 }
 
-INT WINAPI
+// UserClientDllInitialize
+BOOL
+WINAPI
 DllMain(
-   IN PVOID hInstanceDll,
-   IN ULONG dwReason,
-   IN PVOID reserved)
+    _In_ HANDLE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
 {
     switch (dwReason)
     {
@@ -495,7 +497,7 @@ DllMain(
             TRACE("user32::DllMain\n");
 
             /* Don't bother us for each thread */
-            DisableThreadLibraryCalls(hInstanceDll);
+            DisableThreadLibraryCalls(hDll);
 
             RtlZeroMemory(&ConnectInfo, sizeof(ConnectInfo));
 
@@ -536,7 +538,7 @@ DllMain(
 
 #endif
 
-            User32Instance = hInstanceDll;
+            User32Instance = hDll;
 
             /* Finish initialization */
             TRACE("Checkpoint (call Init)\n");
@@ -572,7 +574,7 @@ DllMain(
     }
 
     /* Finally, initialize GDI */
-    return GdiDllInitialize(hInstanceDll, dwReason, reserved);
+    return GdiDllInitialize(hDll, dwReason, pReserved);
 }
 
 NTSTATUS

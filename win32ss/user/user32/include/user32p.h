@@ -60,7 +60,7 @@ extern Imm32ApiTable gImmApiEntries;
 
 /* FIXME: move to a correct header */
 /* undocumented gdi32 definitions */
-BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
+BOOL WINAPI GdiDllInitialize(HANDLE, ULONG, PVOID);
 LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 
 /* definitions for spy.c */
