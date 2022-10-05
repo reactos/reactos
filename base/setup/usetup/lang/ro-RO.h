@@ -1211,7 +1211,7 @@ static MUI_ENTRY roROChangeSystemPartition[] =
     {
         6,
         35,
-        "la cea original\343, dup\343 terminarea instal\343rii lui ReactOS.",
+        "la cea original\343, dup\343 terminarea instal\343rii ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
