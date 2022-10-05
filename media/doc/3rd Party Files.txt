@@ -251,7 +251,7 @@ URL: http://stlport.sourceforge.net/
 
 Title: ZLib
 Path: sdk/lib/3rdparty/zlib
-Used Version: 1.2.11
+Used Version: 1.2.12
 License: Zlib (https://spdx.org/licenses/Zlib.html)
 URL: http://www.zlib.net
 
