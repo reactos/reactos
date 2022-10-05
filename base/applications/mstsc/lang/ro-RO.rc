@@ -67,6 +67,6 @@ BEGIN
     IDS_PIXEL "%lux%lu pixeli"
     IDS_FULLSCREEN "Pe tot ecranul"
     IDS_BROWSESERVER "<Căutare mai multe…>"
-    IDS_HEADERTEXT1 "Birou de la distanță"
+    IDS_HEADERTEXT1 "Calculator la distanță"
     IDS_HEADERTEXT2 "Conexiune"
 END
