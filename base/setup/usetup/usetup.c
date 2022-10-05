@@ -175,7 +175,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xDA), // '+',
+                                CharUpperLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -184,7 +184,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC4), // '-',
+                                CharHorizontalLine, // '-',
                                 Width - 2,
                                 coPos,
                                 &Written);
@@ -193,7 +193,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xBF), // '+',
+                                CharUpperRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -203,7 +203,7 @@ DrawBox(IN SHORT xLeft,
     {
         coPos.X = xLeft;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), // '|',
+                                    CharVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
@@ -217,7 +217,7 @@ DrawBox(IN SHORT xLeft,
 
         coPos.X = xLeft + Width - 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), // '|',
+                                    CharVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
@@ -227,7 +227,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC0), // '+',
+                                CharLowerLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -236,7 +236,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC4), // '-',
+                                CharHorizontalLine, // '-',
                                 Width - 2,
                                 coPos,
                                 &Written);
@@ -245,7 +245,7 @@ DrawBox(IN SHORT xLeft,
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xD9), // '+',
+                                CharLowerRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -375,21 +375,21 @@ PopupError(PCCH Text,
         coPos.Y = yTop + Height - 3;
         coPos.X = xLeft;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC3), // '+',
+                                    CharVertLineAndRightHorizLine, // '+',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = xLeft + 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     Width - 2,
                                     coPos,
                                     &Written);
 
         coPos.X = xLeft + Width - 1;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB4), // '+',
+                                    CharLeftHorizLineAndVertLine, // '+',
                                     1,
                                     coPos,
                                     &Written);
@@ -662,9 +662,6 @@ LanguagePage(PINPUT_RECORD Ir)
 
                 /* Load the font */
                 SetConsoleCodePage();
-
-                /* Update video mode */
-                MUIUpdateVideoMode();
 
                 /* Redraw the list */
                 DrawGenericList(&ListUi,

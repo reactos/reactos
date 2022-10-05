@@ -56,7 +56,7 @@ DrawBorder(
     coPos.X = Bar->Left;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xDA), // '+',
+                                CharUpperLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -65,7 +65,7 @@ DrawBorder(
     coPos.X = Bar->Left + 1;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC4), // '-',
+                                CharHorizontalLine, // '-',
                                 Bar->Right - Bar->Left - 1,
                                 coPos,
                                 &Written);
@@ -74,7 +74,7 @@ DrawBorder(
     coPos.X = Bar->Right;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xBF), // '+',
+                                CharUpperRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -85,14 +85,14 @@ DrawBorder(
         coPos.X = Bar->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), // '|',
+                                    CharVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = Bar->Right;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), //'|',
+                                    CharVerticalLine, //'|',
                                     1,
                                     coPos,
                                     &Written);
@@ -102,7 +102,7 @@ DrawBorder(
     coPos.X = Bar->Left;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC0), // '+',
+                                CharLowerLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -111,7 +111,7 @@ DrawBorder(
     coPos.X = Bar->Left + 1;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC4), // '-',
+                                CharHorizontalLine, // '-',
                                 Bar->Right - Bar->Left - 1,
                                 coPos,
                                 &Written);
@@ -120,7 +120,7 @@ DrawBorder(
     coPos.X = Bar->Right;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xD9), // '+',
+                                CharLowerRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -139,7 +139,7 @@ DrawThickBorder(
     coPos.X = Bar->Left;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC9), // '+',
+                                CharDoubleUpperLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -148,7 +148,7 @@ DrawThickBorder(
     coPos.X = Bar->Left + 1;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xCD), // '-',
+                                CharDoubleHorizontalLine, // '-',
                                 Bar->Right - Bar->Left - 1,
                                 coPos,
                                 &Written);
@@ -157,7 +157,7 @@ DrawThickBorder(
     coPos.X = Bar->Right;
     coPos.Y = Bar->Top + 1;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xBB), // '+',
+                                CharDoubleUpperRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -168,14 +168,14 @@ DrawThickBorder(
         coPos.X = Bar->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xBA), // '|',
+                                    CharDoubleVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = Bar->Right;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xBA), //'|',
+                                    CharDoubleVerticalLine, //'|',
                                     1,
                                     coPos,
                                     &Written);
@@ -185,7 +185,7 @@ DrawThickBorder(
     coPos.X = Bar->Left;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC8), // '+',
+                                CharDoubleLowerLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -194,7 +194,7 @@ DrawThickBorder(
     coPos.X = Bar->Left + 1;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xCD), // '-',
+                                CharDoubleHorizontalLine, // '-',
                                 Bar->Right - Bar->Left - 1,
                                 coPos,
                                 &Written);
@@ -203,7 +203,7 @@ DrawThickBorder(
     coPos.X = Bar->Right;
     coPos.Y = Bar->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xBC), // '+',
+                                CharDoubleLowerRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -404,7 +404,7 @@ ProgressSetStep(
         {
             coPos.X = Bar->Left + 1;
             FillConsoleOutputCharacterA(StdOutput,
-                                        MUITranslateChar(0xDB),
+                                        CharBlock,
                                         Bar->Pos / 2,
                                         coPos,
                                         &Written);
@@ -413,7 +413,7 @@ ProgressSetStep(
             if (NewPos & 1)
             {
                 FillConsoleOutputCharacterA(StdOutput,
-                                            MUITranslateChar(0xDD),
+                                            CharHalfBlock,
                                             1,
                                             coPos,
                                             &Written);

@@ -696,7 +696,7 @@ DrawPartitionList(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xDA), // '+',
+                                CharUpperLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -707,7 +707,7 @@ DrawPartitionList(
     if (ListUi->Offset == 0)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     Width,
                                     coPos,
                                     &Written);
@@ -715,13 +715,13 @@ DrawPartitionList(
     else
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     Width - 4,
                                     coPos,
                                     &Written);
         {
-            CHAR szBuff[] = "(\x18)"; // "(up)"
-            szBuff[1] = MUITranslateChar(szBuff[1]);
+            CHAR szBuff[] = "(.)"; // "(up)"
+            szBuff[1] = CharUpArrow;
             coPos.X = ListUi->Right - 5;
             WriteConsoleOutputCharacterA(StdOutput,
                                          szBuff,
@@ -731,7 +731,7 @@ DrawPartitionList(
         }
         coPos.X = ListUi->Right - 2;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     2,
                                     coPos,
                                     &Written);
@@ -741,7 +741,7 @@ DrawPartitionList(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xBF), // '+',
+                                CharUpperRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -752,14 +752,14 @@ DrawPartitionList(
         coPos.X = ListUi->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), // '|',
+                                    CharVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = ListUi->Right;
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xB3), //'|',
+                                    CharVerticalLine, //'|',
                                     1,
                                     coPos,
                                     &Written);
@@ -769,7 +769,7 @@ DrawPartitionList(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xC0), // '+',
+                                CharLowerLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -780,7 +780,7 @@ DrawPartitionList(
     if (LastLine - ListUi->Offset <= Height)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     Width,
                                     coPos,
                                     &Written);
@@ -788,13 +788,13 @@ DrawPartitionList(
     else
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    MUITranslateChar(0xC4), // '-',
+                                    CharHorizontalLine, // '-',
                                     Width - 4,
                                     coPos,
                                     &Written);
         {
-            CHAR szBuff[] = "(\x19)"; // "(down)"
-            szBuff[1] = MUITranslateChar(szBuff[1]);
+            CHAR szBuff[] = "(.)"; // "(down)"
+            szBuff[1] = CharDownArrow;
             coPos.X = ListUi->Right - 5;
             WriteConsoleOutputCharacterA(StdOutput,
                                          szBuff,
@@ -804,7 +804,7 @@ DrawPartitionList(
         }
        coPos.X = ListUi->Right - 2;
        FillConsoleOutputCharacterA(StdOutput,
-                                   MUITranslateChar(0xC4), // '-',
+                                   CharHorizontalLine, // '-',
                                    2,
                                    coPos,
                                    &Written);
@@ -814,7 +814,7 @@ DrawPartitionList(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                MUITranslateChar(0xD9), // '+',
+                                CharLowerRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);

@@ -30,7 +30,26 @@
 #define NDEBUG
 #include <debug.h>
 
-WORD SelectedCodePage = 437;
+/* Special characters */
+CHAR CharBullet                     = 0x07; /* bullet */
+CHAR CharBlock                      = 0xDB; /* block */
+CHAR CharHalfBlock                  = 0xDD; /* half-left block */
+CHAR CharUpArrow                    = 0x18; /* up arrow */
+CHAR CharDownArrow                  = 0x19; /* down arrow */
+CHAR CharHorizontalLine             = 0xC4; /* horizontal line */
+CHAR CharVerticalLine               = 0xB3; /* vertical line */
+CHAR CharUpperLeftCorner            = 0xDA; /* upper left corner */
+CHAR CharUpperRightCorner           = 0xBF; /* upper right corner */
+CHAR CharLowerLeftCorner            = 0xC0; /* lower left corner */
+CHAR CharLowerRightCorner           = 0xD9; /* lower right corner */
+CHAR CharVertLineAndRightHorizLine  = 0xC3; /* |- (vertical line and right horizontal line) */
+CHAR CharLeftHorizLineAndVertLine   = 0xB4; /* -| (left horizontal line and vertical line) */
+CHAR CharDoubleHorizontalLine       = 0xCD; /* double horizontal line (and underline) */
+CHAR CharDoubleVerticalLine         = 0xBA; /* double vertical line */
+CHAR CharDoubleUpperLeftCorner      = 0xC9; /* double upper left corner */
+CHAR CharDoubleUpperRightCorner     = 0xBB; /* double upper right corner */
+CHAR CharDoubleLowerLeftCorner      = 0xC8; /* double lower left corner */
+CHAR CharDoubleLowerRightCorner     = 0xBC; /* double lower right corner */
 
 static
 ULONG
@@ -538,61 +557,61 @@ SetConsoleCodePage(VOID)
     SetConsoleOutputCP(wCodePage);
 #endif
 
-    SelectedCodePage = wCodePage;
-}
-
-CHAR
-MUITranslateChar(
-    IN CHAR Ch)
-{
-    switch (SelectedCodePage)
+    switch (wCodePage)
     {
         case 28606: /* Romanian */
-            switch ((BYTE)Ch)
-            {
-                case 0x07: Ch = 0x07; break; /* bullet */
-                case 0xDB: Ch = 0x01; break; /* block */
-                case 0xDD: Ch = 0x02; break; /* half-left block */
-                case 0x18: Ch = 0x03; break; /* up arrow */
-                case 0x19: Ch = 0x04; break; /* down arrow */
-                case 0xC4: Ch = 0x05; break; /* horizontal line */
-                case 0xB3: Ch = 0x06; break; /* vertical line */
-                case 0xDA: Ch = 0x08; break; /* upper left corner */
-                case 0xBF: Ch = 0x09; break; /* upper right corner */
-                case 0xC0: Ch = 0x0B; break; /* lower left corner */
-                case 0xD9: Ch = 0x0C; break; /* lower right corner */
-                case 0xC3: Ch = 0x0E; break; /* |- (vertical line and right horizontal line) */
-                case 0xB4: Ch = 0x0F; break; /* -| (left horizontal line and vertical line) */
-                case 0xCD: Ch = 0x10; break; /* double horizontal line (and underline) */
-                case 0xBA: Ch = 0x11; break; /* double vertical line */
-                case 0xC9: Ch = 0x12; break; /* double upper left corner */
-                case 0xBB: Ch = 0x13; break; /* double upper right corner */
-                case 0xC8: Ch = 0x14; break; /* double lower left corner */
-                case 0xBC: Ch = 0x15; break; /* double lower right corner */
-            }
-            break;
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0x01;
+            CharHalfBlock = 0x02;
+            CharUpArrow = 0x03;
+            CharDownArrow = 0x04;
+            CharHorizontalLine = 0x05;
+            CharVerticalLine = 0x06;
+            CharUpperLeftCorner = 0x08;
+            CharUpperRightCorner = 0x09;
+            CharLowerLeftCorner = 0x0B;
+            CharLowerRightCorner = 0x0C;
+            CharVertLineAndRightHorizLine = 0x0E;
+            CharLeftHorizLineAndVertLine = 0x0F;
+            CharDoubleHorizontalLine = 0x10;
+            CharDoubleVerticalLine = 0x11;
+            CharDoubleUpperLeftCorner = 0x12;
+            CharDoubleUpperRightCorner = 0x13;
+            CharDoubleLowerLeftCorner = 0x14;
+            CharDoubleLowerRightCorner = 0x15;
 
-        case 932: /* Japanese */
-            /* FIXME */
-            break;
-    }
-    return Ch;
-}
-
-VOID
-MUIUpdateVideoMode(VOID)
-{
-    switch (SelectedCodePage)
-    {
-        case 28606: /* Romanian */
-        case 932: /* Japanese */
             /* FIXME: Enter 640x400 video mode */
             break;
 
-        default:
+        case 932: /* Japanese */
+            /* FIXME: Set special characters */
+            /* FIXME: Enter 640x400 video mode */
+            break;
+
+        default: /* Other codepages */
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0xDB;
+            CharHalfBlock = 0xDD;
+            CharUpArrow = 0x18;
+            CharDownArrow = 0x19;
+            CharHorizontalLine = 0xC4;
+            CharVerticalLine = 0xB3;
+            CharUpperLeftCorner = 0xDA;
+            CharUpperRightCorner = 0xBF;
+            CharLowerLeftCorner = 0xC0;
+            CharLowerRightCorner = 0xD9;
+            CharVertLineAndRightHorizLine = 0xC3;
+            CharLeftHorizLineAndVertLine = 0xB4;
+            CharDoubleHorizontalLine = 0xCD;
+            CharDoubleVerticalLine = 0xBA;
+            CharDoubleUpperLeftCorner = 0xC9;
+            CharDoubleUpperRightCorner = 0xBB;
+            CharDoubleLowerLeftCorner = 0xC8;
+            CharDoubleLowerRightCorner = 0xBC;
+
             /* FIXME: Enter 720x400 video mode */
             break;
     }
 }
-
-/* EOF */
