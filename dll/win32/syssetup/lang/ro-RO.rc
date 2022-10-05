@@ -122,7 +122,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Componente în curs de înregistrare", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Instalarea elementelor din meniul de pornire", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Salvarea setărilor", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Păstrarea configurațiilor", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "Ștergerea fișierelor temporare", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
