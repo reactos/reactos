@@ -13,6 +13,10 @@
 #define _NO_COM
 #define STRICT
 
+#ifdef __cplusplus
+    #define NONAMELESSUNION /* C++ forbids nameless struct/union */
+#endif
+
 /* DDK/NDK/SDK headers */
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
