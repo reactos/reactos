@@ -424,7 +424,7 @@ BEGIN
     AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 225, 10
     AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
-    PUSHBUTTON "&Restaurar valores por defeito", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
+    PUSHBUTTON "&Restaurar predefinições", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 274, 256
@@ -439,7 +439,7 @@ BEGIN
     PUSHBUTTON "&Reiniciar todas as Pastas", IDC_VIEW_RESET_ALL, 140, 50, 95, 14, WS_TABSTOP
     LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 259, 120
-    PUSHBUTTON "Restaurar valores &predefinidos", IDC_VIEW_RESTORE_DEFAULTS, 140, 215, 110, 14, WS_TABSTOP
+    PUSHBUTTON "Restaurar &predefinições", IDC_VIEW_RESTORE_DEFAULTS, 140, 215, 110, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 274, 256
@@ -528,7 +528,7 @@ BEGIN
     AUTORADIOBUTTON "Seleccione uma acção para &executar:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "perguntar sempre para escolher uma &acção", 1006, 14, 177, 202, 10
-    PUSHBUTTON "&Restaurar valores predefinidos", 1008, 108, 197, 110, 14, WS_DISABLED
+    PUSHBUTTON "&Restaurar predefinições", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
@@ -644,7 +644,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
     LTEXT "Este ficheiro pode ser usado pelo sistema operativo ou por\n\
-outro aplicativo. Modificar este ficheiro pode danificar o seu\n\
+outra aplicação. Modificar este ficheiro pode danificar o seu\n\
 sistema ou torná-lo instável.\n\n\
 Tem a certeza que deseja abrir este ficheiro?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "&Sim", IDYES, 125, 55, 50, 14
@@ -693,7 +693,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Acção:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "Aplicativo usado para executar a acção:", -1, 5, 42, 150, 10
+    LTEXT "Aplicação utilizada para executar a acção:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Procurar...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&Utilizar DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
@@ -717,7 +717,7 @@ BEGIN
     LTEXT "Visualizar:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "Icones", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Para todas as exibições, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 180, 210, 25
+    LTEXT "Para todas as vistas, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
     PUSHBUTTON "Alterar &Icone.", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
@@ -728,9 +728,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho não mais funcionará correctamente.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho deixará de funcionar correctamente.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Correspondência mais próxima com base no nome, tipo, tamanho e data:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Deseja corrigir este atalho para apontar para este destino ou apenas excluír?", -1, 35, 85, 210, 30
+    LTEXT "Pretende corrigir este atalho para apontar para este destino ou apenas eliminá-lo?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Corrigir", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Eliminar", IDYES, 120, 120, 60, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 185, 120, 60, 15
