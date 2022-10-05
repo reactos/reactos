@@ -135,7 +135,6 @@ typedef struct _THREADINFO
     WCHAR               wchInjected;
     UINT                cWindows;
     UINT                cVisWindows;
-#ifndef __cplusplus /// FIXME!
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
 
@@ -155,7 +154,6 @@ typedef struct _THREADINFO
 #if DBG
     USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
 #endif
-#endif // __cplusplus
 } THREADINFO;
 
 

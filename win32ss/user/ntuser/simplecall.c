@@ -477,7 +477,7 @@ NtUserCallTwoParam(
 
         case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
         {
-            PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+            PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
             ASSERT(pti->MessageQueue);
             Ret = (DWORD_PTR)MsqSetStateWindow(pti, (ULONG)Param1, (HWND)Param2);
             break;

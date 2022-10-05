@@ -31,6 +31,10 @@
 #include <ntintsafe.h>
 #include <ntddkbd.h>
 
+/* Hack for C++ */
+#define PsGetCurrentThreadWin32Thread() ((PTHREADINFO)PsGetCurrentThreadWin32Thread())
+#define PsGetCurrentProcessWin32Process() ((PPROCESSINFO)PsGetCurrentProcessWin32Process())
+
 /* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
@@ -84,11 +88,9 @@ extern "C" {
 #include <include/ntgdihdl.h>
 #include <include/ntgdibad.h>
 
-#ifndef __cplusplus
 #include <include/ntusrtyp.h>
 #include <include/ntuser.h>
 #include <include/callback.h>
-#endif // __cplusplus
 
 /* Undocumented user definitions */
 #include <undocuser.h>

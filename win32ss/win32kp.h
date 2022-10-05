@@ -58,7 +58,6 @@ typedef struct _DC *PDC;
 #include "user/ntuser/win32kdebug.h"
 #include "user/ntuser/win32.h"
 #include "user/ntuser/tags.h"
-#ifndef __cplusplus
 #include "user/ntuser/ntuser.h"
 #include "user/ntuser/usrheap.h"
 #include "user/ntuser/object.h"
@@ -96,7 +95,5 @@ typedef struct _DC *PDC;
 
 /* CSRSS Interface */
 #include "user/ntuser/csr.h"
-
-#endif // __cplusplus
 
 #include "gdi/ntgdi/gdidebug.h"

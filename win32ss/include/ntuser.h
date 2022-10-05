@@ -176,13 +176,13 @@ typedef struct _HEAD
 
 typedef struct _THROBJHEAD
 {
-    HEAD;
+    HEAD DUMMYSTRUCTNAME;
     struct _THREADINFO *pti;
 } THROBJHEAD, *PTHROBJHEAD;
 
 typedef struct _THRDESKHEAD
 {
-    THROBJHEAD;
+    THROBJHEAD DUMMYSTRUCTNAME;
     struct _DESKTOP *rpdesk;
     PVOID pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
@@ -195,7 +195,7 @@ typedef struct tagIMC
     HWND           hImeWnd;
 } IMC, *PIMC;
 
-#ifndef _WIN64
+#if !defined(_WIN64) && !defined(__cplusplus)
 C_ASSERT(offsetof(IMC, head.h) == 0x0);
 C_ASSERT(offsetof(IMC, head.cLockObj) == 0x4);
 C_ASSERT(offsetof(IMC, head.pti) == 0x8);
@@ -206,7 +206,7 @@ C_ASSERT(offsetof(IMC, hImeWnd) == 0x1c);
 
 typedef struct _PROCDESKHEAD
 {
-    HEAD;
+    HEAD DUMMYSTRUCTNAME;
     DWORD_PTR hTaskWow;
     struct _DESKTOP *rpdesk;
     PVOID pSelf;
@@ -214,7 +214,7 @@ typedef struct _PROCDESKHEAD
 
 typedef struct _PROCMARKHEAD
 {
-    HEAD;
+    HEAD DUMMYSTRUCTNAME;
     ULONG hTaskWow;
     struct _PROCESSINFO *ppi;
 } PROCMARKHEAD, *PPROCMARKHEAD;
@@ -1040,7 +1040,7 @@ typedef struct tagSERVERINFO
     CHAR acOemToAnsi[256];
     CHAR acAnsiToOem[256];
     DWORD dwInstalledEventHooks;
-    PERUSERSERVERINFO;
+    PERUSERSERVERINFO DUMMYSTRUCTNAME;
 } SERVERINFO, *PSERVERINFO;
 
 #ifdef _M_IX86

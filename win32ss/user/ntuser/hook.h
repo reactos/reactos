@@ -3,7 +3,7 @@
 #define HOOK_THREAD_REFERENCED	(0x1)
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
-#define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks & HOOKID_TO_FLAG(HookId))
+#define ISITHOOKED(HookId) (PsGetCurrentThreadWin32Thread()->fsHooks & HOOKID_TO_FLAG(HookId))
 
 /* NOTE: The following definition is not a real hook but
          a pseudo-id that will be used only for 

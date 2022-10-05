@@ -3,7 +3,7 @@
 // Win: ValidateHmenu
 FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
 {
-   PMENU pMenu = UserGetObject(gHandleTable, hMenu, TYPE_MENU);
+   PMENU pMenu = (PMENU)UserGetObject(gHandleTable, hMenu, TYPE_MENU);
    if (!pMenu)
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);

@@ -174,6 +174,7 @@ list(APPEND SOURCE
     gdi/ntgdi/device.c
     gdi/ntgdi/dibobj.c
     gdi/ntgdi/drawing.c
+    gdi/ntgdi/dummy.cpp
     gdi/ntgdi/fillshap.c
     gdi/ntgdi/font.c
     gdi/ntgdi/freetype.c

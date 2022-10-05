@@ -129,7 +129,7 @@ GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 FORCEINLINE void
 GdiDbgAssertNoLocks(char * pszFile, ULONG nLine)
 {
-    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
         ULONG i;

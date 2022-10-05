@@ -147,7 +147,7 @@ typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 typedef struct _DDEPOSTGET_CALLBACK_ARGUMENTS
 {
     INT Type;
-    MSG;
+    MSG DUMMYSTRUCTNAME;
     int size;
     PVOID pvData;
     BYTE buffer[1];
