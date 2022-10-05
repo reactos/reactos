@@ -68,8 +68,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef __REACTOS__
 #ifndef NOUNCRYPT
         #define NOUNCRYPT
+#endif
 #endif
 
 #include "zlib.h"
