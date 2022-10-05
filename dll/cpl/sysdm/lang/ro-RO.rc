@@ -299,7 +299,7 @@ BEGIN
     LTEXT "&Valoare variabilă:", IDC_STATIC, 7, 32, 50, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Confirmă", IDOK, 260, 50, 50, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Renunță", IDCANCEL, 314, 50, 50, 14
     PUSHBUTTON "Navigare prin &directorul...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 93, 14
     PUSHBUTTON "Navigare prin &fișierele...", IDC_BUTTON_BROWSE_FILE, 107, 50, 85, 14 
 END
