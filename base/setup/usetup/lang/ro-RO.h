@@ -1887,7 +1887,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "E\272ec \356n a c\343ile de instalare pentru directorul de instalare ReactOS!\n"
+        "E\272ec \356n construirea c\343ilor de instalare pentru directorul de instalare ReactOS!\n"
         "ENTER = Repornire calculator"
     },
     {
