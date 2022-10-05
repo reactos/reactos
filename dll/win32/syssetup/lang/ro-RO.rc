@@ -261,7 +261,7 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Puteți alege o opțiune de produs care afectează comportamentul sistemului."
     IDS_PRODUCTSERVERNAME "Server ReactOS"
     IDS_PRODUCTWORKSTATIONNAME "Stație de lucru ReactOS"
-    IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Dosarele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" vor fi independente de ""Documentele mele""."
-    IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Dosarele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" sunt în ""Documentele mele""."
+    IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Dosarele private ""Imagini"", ""Video"" și ""Audio"" vor fi independente de ""Documentele mele""."
+    IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Dosarele private ""Imagini"", ""Video"" și ""Audio"" sunt în ""Documentele mele""."
     IDS_DEFAULT "(Implicit)"
 END
