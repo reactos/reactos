@@ -240,7 +240,7 @@ BEGIN
     IDS_ACCOUNTEXPIRED "Contul v-a expirat, adresați-vă administratorului."
     IDS_ACCOUNTLOCKED "Nu vă pot conecta deoarece contul dumneavoastră. a fost blocat. Consultați administratorul de sistem."
     IDS_INVALIDLOGONHOURS "Contul dumneavoastră are restricții de timp care vă împiedică să vă conectați în acest moment. Încercați mai târziu."
-    IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Vă rugăm, încercați la alt calculator."
+    IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
     IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
 END
 
