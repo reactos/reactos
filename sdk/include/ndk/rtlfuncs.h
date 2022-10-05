@@ -1575,7 +1575,8 @@ NTSTATUS
 NTAPI
 RtlRemovePrivileges(
     _In_ HANDLE TokenHandle,
-    _In_reads_opt_(PrivilegeCount) _When_(PrivilegeCount != 0, _Notnull_) PULONG PrivilegesToKeep,
+    _In_reads_opt_(PrivilegeCount) _When_(PrivilegeCount != 0, _Notnull_)
+         PULONG PrivilegesToKeep,
     _In_ ULONG PrivilegeCount
 );
 
