@@ -128,7 +128,7 @@ BEGIN
     LTEXT "Aceste setări pot fi folosite pentru a face ajustări fine ale sunetului dumneavoastră.", -1, 44, 7, 200, 32
     GROUPBOX "Controale de ton", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
     LTEXT "Aceste setări controlează felul în care sună tonul sunetului dumneavoastră.", -1, 17, 43, 227, 19
-    LTEXT "&Basuri:", -1, 17, 62, 50, 8
+    LTEXT "&Bas:", -1, 17, 62, 50, 8
     LTEXT "Mic", IDC_ADV_BASS_LOW, 77, 62, 20, 8
     LTEXT "Mare", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
