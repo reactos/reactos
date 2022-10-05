@@ -1619,11 +1619,13 @@ BOOL CSysPagerWnd::EnumIcons(BOOL (*Operation)(IconWatcherData*, CSysPagerWnd *o
 }
 
 LRESULT CSysPagerWnd::IsActive(IconWatcherData *pIcon)
-{ MESSAGE("\nUID %d %s\n", pIcon->IconData.uID, debugstr_w(pIcon->IconData.szTip));
+{
     /**
-     For now, we force Volume and Remove hardware inactive by simulation
+     For now, simulate Volume and Remove hardware inactive
     */
-    if (pIcon->IconData.uID == 33996 || pIcon->IconData.uID == 33997)
+    if (bAutoTrayEnabled == FALSE)
+        return TRUE;
+    else if (pIcon->IconData.uID == 33996 || pIcon->IconData.uID == 33997)
         return FALSE;
     return TRUE;
 }
@@ -1642,16 +1644,31 @@ BOOL EnumProc(IconWatcherData *pIcon, CSysPagerWnd *obj, BOOL Expand)
     {
         if (Expand)
         {
-            pIcon->IconData.dwState &= ~NIS_HIDDEN;
-            tbbi.fsState &= ~TBSTATE_HIDDEN;
-            obj->Toolbar.IncVisibleButtons();
+            if ((pIcon->IconData.dwState & NIS_HIDDEN) == NIS_HIDDEN)
+            {
+                pIcon->IconData.dwState &= ~NIS_HIDDEN;
+                tbbi.fsState &= ~TBSTATE_HIDDEN;
+                obj->Toolbar.IncVisibleButtons();
+            }
         }
-        else
+        else if (pIcon->dwPreference != ALWAYS_SHOW )
         {
-            pIcon->IconData.dwState |= NIS_HIDDEN;
-            tbbi.fsState |= TBSTATE_HIDDEN;
-            obj->Toolbar.DecVisibleButtons();
+            if ((pIcon->IconData.dwState & NIS_HIDDEN) != NIS_HIDDEN)
+            {
+                pIcon->IconData.dwState |= NIS_HIDDEN;
+                tbbi.fsState |= TBSTATE_HIDDEN;
+                obj->Toolbar.DecVisibleButtons();
+            }
         }
+    }
+    else if (pIcon->dwPreference != ALWAYS_HIDE)
+    {
+        if ((pIcon->IconData.dwState & NIS_HIDDEN) == NIS_HIDDEN)
+         {
+             pIcon->IconData.dwState &= ~NIS_HIDDEN;
+             tbbi.fsState &= ~TBSTATE_HIDDEN;
+             obj->Toolbar.IncVisibleButtons();
+         }
     }
     obj->Toolbar.SetButtonInfo(index, &tbbi);
 
@@ -1730,8 +1747,8 @@ LRESULT CSysPagerWnd::OnEnableAutoTray(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         NotifyIcon(NIM_DELETE, &iData);
         return S_OK;
     }
-    INT ButtonCount = Toolbar.GetVisibleButtonCount() - 1;
-    Toolbar.MoveButton(ButtonCount, 0);
+  //  INT ButtonCount = Toolbar.GetVisibleButtonCount() - 1;
+  //  Toolbar.MoveButton(ButtonCount, 0);
     AutoTray(FALSE);
 
     return S_OK;
