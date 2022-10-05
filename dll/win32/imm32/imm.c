@@ -1241,18 +1241,22 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
-// Win: ImmDllInitialize
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+BOOL
+WINAPI
+ImmDllInitialize(
+    _In_ HANDLE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
 {
     HKL hKL;
     HIMC hIMC;
 
-    TRACE("(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
+    TRACE("(%p, 0x%X, %p)\n", hDll, dwReason, pReserved);
 
-    switch (fdwReason)
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-            if (!ImmInitializeGlobals(hinstDLL))
+            if (!ImmInitializeGlobals(hDll))
             {
                 ERR("ImmInitializeGlobals failed\n");
                 return FALSE;
