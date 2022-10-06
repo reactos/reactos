@@ -3,7 +3,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "Сравнение двух файлов или двух наборов файлов\n\
-и вывод различий между ними\n\
+и вывод различий между ними.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [диск1:][путь1]имя_файла1 [диск2:][путь2]имя_файла2\n\

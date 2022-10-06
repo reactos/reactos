@@ -3,7 +3,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them\n\
+them.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [drive1:][path1]filename1 [drive2:][path2]filename2\n\

@@ -10,7 +10,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "Porównuje dwa pliki lub zestawy plików i wyświetla różnice między\n\
-nimi\n\
+nimi.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\

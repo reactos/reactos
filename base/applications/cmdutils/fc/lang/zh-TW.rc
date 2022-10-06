@@ -9,7 +9,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-	IDS_USAGE "比較兩個或兩組檔案，並顯示兩者的不同之處。\n\
+    IDS_USAGE "比較兩個或兩組檔案，並顯示兩者的不同之處。\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [磁碟機1:][路徑1]檔案名稱1 [磁碟機2:][路徑2]檔案名稱2\n\
