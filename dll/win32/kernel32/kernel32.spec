@@ -93,15 +93,15 @@
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
 @ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime(ptr ptr)
-@ stdcall ConvertDefaultLocale (long)
+@ stdcall ConvertDefaultLocale(long)
 @ stdcall ConvertFiberToThread()
 @ stdcall -stub -version=0x600+ ConvertNLSDayOfWeekToWin32DayOfWeek(long)
 @ stdcall -stub -version=0x600+ ConvertSystemTimeToCalDateTime(ptr long ptr)
 @ stdcall ConvertThreadToFiber(ptr)
 @ stdcall ConvertThreadToFiberEx(ptr long)
 @ stdcall CopyFileA(str str long)
-@ stdcall CopyFileExA (str str ptr ptr ptr long)
-@ stdcall CopyFileExW (wstr wstr ptr ptr ptr long)
+@ stdcall CopyFileExA(str str ptr ptr ptr long)
+@ stdcall CopyFileExW(wstr wstr ptr ptr ptr long)
 @ stdcall -stub -version=0x600+ CopyFileTransactedA(str str ptr ptr ptr long ptr)
 @ stdcall -stub -version=0x600+ CopyFileTransactedW(wstr wstr ptr ptr ptr long ptr)
 @ stdcall CopyFileW(wstr wstr long)
@@ -174,7 +174,7 @@
 @ stub -version=0x600+ CreateThreadpoolTimer
 @ stub -version=0x600+ CreateThreadpoolWait
 @ stub -version=0x600+ CreateThreadpoolWork
-@ stdcall CreateTimerQueue ()
+@ stdcall CreateTimerQueue()
 @ stdcall CreateTimerQueueTimer(ptr long ptr ptr long long long)
 @ stdcall CreateToolhelp32Snapshot(long long)
 @ stdcall CreateWaitableTimerA(ptr long str)
@@ -203,16 +203,16 @@
 @ stdcall DeleteFileW(wstr)
 @ stub -version=0x600+ DeleteProcThreadAttributeList
 @ stdcall DeleteTimerQueue(long)
-@ stdcall DeleteTimerQueueEx (long long)
+@ stdcall DeleteTimerQueueEx(long long)
 @ stdcall DeleteTimerQueueTimer(long long long)
 @ stdcall DeleteVolumeMountPointA(str) ;check
 @ stdcall DeleteVolumeMountPointW(wstr) ;check
 @ stdcall DeviceIoControl(long long ptr long ptr long ptr ptr)
-@ stdcall DisableThreadLibraryCalls(long)
+@ stdcall DisableThreadLibraryCalls(ptr)
 @ stub -version=0x600+ DisassociateCurrentThreadFromCallback
 @ stdcall DisconnectNamedPipe(long)
-@ stdcall DnsHostnameToComputerNameA (str ptr ptr)
-@ stdcall DnsHostnameToComputerNameW (wstr ptr ptr)
+@ stdcall DnsHostnameToComputerNameA(str ptr ptr)
+@ stdcall DnsHostnameToComputerNameW(wstr ptr ptr)
 @ stdcall DosDateTimeToFileTime(long long ptr)
 @ stdcall DosPathToSessionPathA(long str str)
 @ stdcall DosPathToSessionPathW(long wstr wstr)
@@ -444,8 +444,8 @@
 @ stdcall -version=0x501-0x502 GetDefaultSortkeySize(ptr)
 @ stdcall GetDevicePowerState(long ptr)
 @ stdcall GetDiskFreeSpaceA(str ptr ptr ptr ptr)
-@ stdcall GetDiskFreeSpaceExA (str ptr ptr ptr)
-@ stdcall GetDiskFreeSpaceExW (wstr ptr ptr ptr)
+@ stdcall GetDiskFreeSpaceExA(str ptr ptr ptr)
+@ stdcall GetDiskFreeSpaceExW(wstr ptr ptr ptr)
 @ stdcall GetDiskFreeSpaceW(wstr ptr ptr ptr ptr)
 @ stdcall GetDllDirectoryA(long ptr)
 @ stdcall GetDllDirectoryW(long ptr)
@@ -504,10 +504,10 @@
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
 @ stdcall GetLogicalProcessorInformation(ptr ptr)
-@ stdcall GetLongPathNameA (str long long)
+@ stdcall GetLongPathNameA(str long long)
 @ stub -version=0x600+ GetLongPathNameTransactedA
 @ stub -version=0x600+ GetLongPathNameTransactedW
-@ stdcall GetLongPathNameW (wstr long long)
+@ stdcall GetLongPathNameW(wstr long long)
 @ stdcall GetMailslotInfo(long ptr ptr ptr ptr)
 @ stdcall GetModuleFileNameA(long ptr long)
 @ stdcall GetModuleFileNameW(long ptr long)
@@ -553,7 +553,7 @@
 @ stdcall GetPrivateProfileSectionW(wstr ptr long wstr)
 @ stdcall GetPrivateProfileStringA(str str str ptr long str)
 @ stdcall GetPrivateProfileStringW(wstr wstr wstr ptr long wstr)
-@ stdcall GetPrivateProfileStructA (str str ptr long str)
+@ stdcall GetPrivateProfileStructA(str str ptr long str)
 @ stdcall GetPrivateProfileStructW(wstr wstr ptr long wstr)
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
@@ -719,7 +719,7 @@
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stub -version=0x600+ InitializeSRWLock
 @ stdcall -arch=i386 -ret64 InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
-@ stdcall -arch=i386 InterlockedCompareExchange (ptr long long)
+@ stdcall -arch=i386 InterlockedCompareExchange(ptr long long)
 @ stdcall -arch=i386 InterlockedDecrement(ptr)
 @ stdcall -arch=i386 InterlockedExchange(ptr long)
 @ stdcall -arch=i386 InterlockedExchangeAdd(ptr long)
@@ -857,10 +857,10 @@
 @ stdcall PrepareTape(ptr long long)
 @ stdcall PrivCopyFileExW(wstr wstr ptr ptr long long)
 @ stdcall PrivMoveFileIdentityW(long long long)
-@ stdcall Process32First (ptr ptr)
-@ stdcall Process32FirstW (ptr ptr)
-@ stdcall Process32Next (ptr ptr)
-@ stdcall Process32NextW (ptr ptr)
+@ stdcall Process32First(ptr ptr)
+@ stdcall Process32FirstW(ptr ptr)
+@ stdcall Process32Next(ptr ptr)
+@ stdcall Process32NextW(ptr ptr)
 @ stdcall ProcessIdToSessionId(long ptr)
 @ stdcall PulseEvent(long)
 @ stdcall PurgeComm(long long)
@@ -1108,7 +1108,7 @@
 @ stdcall SwitchToFiber(ptr)
 @ stdcall SwitchToThread()
 @ stdcall SystemTimeToFileTime(ptr ptr)
-@ stdcall SystemTimeToTzSpecificLocalTime (ptr ptr ptr)
+@ stdcall SystemTimeToTzSpecificLocalTime(ptr ptr ptr)
 @ stdcall TerminateJobObject(ptr long)
 @ stdcall TerminateProcess(ptr long)
 @ stdcall TerminateThread(ptr long)
@@ -1173,8 +1173,8 @@
 @ stub -version=0x600+ WaitForThreadpoolTimerCallbacks
 @ stub -version=0x600+ WaitForThreadpoolWaitCallbacks
 @ stub -version=0x600+ WaitForThreadpoolWorkCallbacks
-@ stdcall WaitNamedPipeA (str long)
-@ stdcall WaitNamedPipeW (wstr long)
+@ stdcall WaitNamedPipeA(str long)
+@ stdcall WaitNamedPipeW(wstr long)
 @ stub -version=0x600+ WakeAllConditionVariable
 @ stub -version=0x600+ WakeConditionVariable
 @ stub -version=0x600+ WerGetFlags
@@ -1215,7 +1215,7 @@
 @ stdcall WritePrivateProfileSectionW(wstr wstr wstr)
 @ stdcall WritePrivateProfileStringA(str str str str)
 @ stdcall WritePrivateProfileStringW(wstr wstr wstr wstr)
-@ stdcall WritePrivateProfileStructA (str str ptr long str)
+@ stdcall WritePrivateProfileStructA(str str ptr long str)
 @ stdcall WritePrivateProfileStructW(wstr wstr ptr long wstr)
 @ stdcall WriteProcessMemory(long ptr ptr long ptr)
 @ stdcall WriteProfileSectionA(str str)
