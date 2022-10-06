@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS ACP Page
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018  Ștefan Fulea <stefan.fulea@mail.com>
- *                        2022       Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
