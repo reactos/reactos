@@ -204,7 +204,7 @@ typedef struct tagIMC
     HWND           hImeWnd;
 } IMC, *PIMC;
 
-#if !defined(_WIN64) && !defined(__cplusplus)
+#ifndef _WIN64
 C_ASSERT(offsetof(IMC, head.h) == 0x0);
 C_ASSERT(offsetof(IMC, head.cLockObj) == 0x4);
 C_ASSERT(offsetof(IMC, head.pti) == 0x8);
