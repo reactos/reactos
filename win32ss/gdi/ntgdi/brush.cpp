@@ -7,8 +7,6 @@
  * REFERENCES:        http://support.microsoft.com/kb/kbview/108497
  */
 
-#define NONAMELESSUNION /* C++ forbids nameless struct/union */
-
 #include "brush.hpp"
 
 DBG_DEFAULT_CHANNEL(GdiBrush);

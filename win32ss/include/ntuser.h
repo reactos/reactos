@@ -176,13 +176,22 @@ typedef struct _HEAD
 
 typedef struct _THROBJHEAD
 {
-    HEAD DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct { /* HEAD */
+        HANDLE h;
+        DWORD cLockObj;
+    } DUMMYSTRUCTNAME;
     struct _THREADINFO *pti;
 } THROBJHEAD, *PTHROBJHEAD;
 
 typedef struct _THRDESKHEAD
 {
-    THROBJHEAD DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct { /* THROBJHEAD */
+        _ANONYMOUS_STRUCT struct { /* HEAD */
+            HANDLE h;
+            DWORD cLockObj;
+        } DUMMYSTRUCTNAME;
+        struct _THREADINFO *pti;
+    } DUMMYSTRUCTNAME;
     struct _DESKTOP *rpdesk;
     PVOID pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
@@ -206,7 +215,10 @@ C_ASSERT(offsetof(IMC, hImeWnd) == 0x1c);
 
 typedef struct _PROCDESKHEAD
 {
-    HEAD DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct { /* HEAD */
+        HANDLE h;
+        DWORD cLockObj;
+    } DUMMYSTRUCTNAME;
     DWORD_PTR hTaskWow;
     struct _DESKTOP *rpdesk;
     PVOID pSelf;
@@ -214,7 +226,10 @@ typedef struct _PROCDESKHEAD
 
 typedef struct _PROCMARKHEAD
 {
-    HEAD DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct { /* HEAD */
+        HANDLE h;
+        DWORD cLockObj;
+    } DUMMYSTRUCTNAME;
     ULONG hTaskWow;
     struct _PROCESSINFO *ppi;
 } PROCMARKHEAD, *PPROCMARKHEAD;
@@ -1040,7 +1055,46 @@ typedef struct tagSERVERINFO
     CHAR acOemToAnsi[256];
     CHAR acAnsiToOem[256];
     DWORD dwInstalledEventHooks;
-    PERUSERSERVERINFO DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct { /* PERUSERSERVERINFO */
+        INT aiSysMet[SM_CMETRICS];
+        ULONG argbSystemUnmatched[NUM_SYSCOLORS];
+        COLORREF argbSystem[NUM_SYSCOLORS];
+        HBRUSH ahbrSystem[NUM_SYSCOLORS];
+        HBRUSH hbrGray;
+        POINT ptCursor;
+        POINT ptCursorReal;
+        DWORD dwLastRITEventTickCount;
+        INT nEvents;
+        UINT dtScroll;
+        UINT dtLBSearch;
+        UINT dtCaretBlink;
+        UINT ucWheelScrollLines;
+        UINT ucWheelScrollChars;
+        INT wMaxLeftOverlapChars;
+        INT wMaxRightOverlapChars;
+        INT cxSysFontChar;
+        INT cySysFontChar;
+        TEXTMETRICW tmSysFont;
+        DPISERVERINFO dpiSystem;
+        HICON hIconSmWindows;
+        HICON hIconWindows;
+        DWORD dwKeyCache;
+        DWORD dwAsyncKeyCache;
+        ULONG cCaptures;
+        OEMBITMAPINFO oembmi[OBI_CTYPES];
+        RECT rcScreenReal;
+        USHORT BitCount;
+        USHORT dmLogPixels;
+        BYTE Planes;
+        BYTE BitsPixel;
+        ULONG PUSIFlags;
+        UINT uCaretWidth;
+        USHORT UILangID;
+        DWORD dwLastSystemRITEventTickCountUpdate;
+        ULONG adwDBGTAGFlags[35];
+        DWORD dwTagCount;
+        DWORD dwRIPFlags;
+    } DUMMYSTRUCTNAME;
 } SERVERINFO, *PSERVERINFO;
 
 #ifdef _M_IX86
