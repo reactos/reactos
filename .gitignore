@@ -8,6 +8,7 @@ modules/3rdparty
 modules/[Aa][Hh][Kk]_[Tt]ests
 .cache
 .cproject
+.DS_Store
 .project
 .settings
 .vscode
