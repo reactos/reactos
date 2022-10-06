@@ -1,12 +1,9 @@
 /*
- * PROJECT:     ReactOS Javascript
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2009 Piotr Caban
- *              Copyright 2010 Claudia Cotună
- *              Copyright 2010 Michael Stefaniuc
- *              Copyright 2010 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ * Copyright 2009 Piotr Caban
+ * Copyright 2010 Claudia Cotună
+ *                Michael Stefaniuc
+ *                Ștefan Fulea
+ * Copyright 2022 Andrei Miloiu
  */
 
 /*
