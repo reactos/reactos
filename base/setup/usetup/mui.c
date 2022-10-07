@@ -30,6 +30,27 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Special characters */
+CHAR CharBullet                     = 0x07; /* bullet */
+CHAR CharBlock                      = 0xDB; /* block */
+CHAR CharHalfBlock                  = 0xDD; /* half-left block */
+CHAR CharUpArrow                    = 0x18; /* up arrow */
+CHAR CharDownArrow                  = 0x19; /* down arrow */
+CHAR CharHorizontalLine             = 0xC4; /* horizontal line */
+CHAR CharVerticalLine               = 0xB3; /* vertical line */
+CHAR CharUpperLeftCorner            = 0xDA; /* upper left corner */
+CHAR CharUpperRightCorner           = 0xBF; /* upper right corner */
+CHAR CharLowerLeftCorner            = 0xC0; /* lower left corner */
+CHAR CharLowerRightCorner           = 0xD9; /* lower right corner */
+CHAR CharVertLineAndRightHorizLine  = 0xC3; /* |- (vertical line and right horizontal line) */
+CHAR CharLeftHorizLineAndVertLine   = 0xB4; /* -| (left horizontal line and vertical line) */
+CHAR CharDoubleHorizontalLine       = 0xCD; /* double horizontal line (and underline) */
+CHAR CharDoubleVerticalLine         = 0xBA; /* double vertical line */
+CHAR CharDoubleUpperLeftCorner      = 0xC9; /* double upper left corner */
+CHAR CharDoubleUpperRightCorner     = 0xBB; /* double upper right corner */
+CHAR CharDoubleLowerLeftCorner      = 0xC8; /* double lower left corner */
+CHAR CharDoubleLowerRightCorner     = 0xBC; /* double lower right corner */
+
 static
 ULONG
 FindLanguageIndex(VOID)
@@ -535,6 +556,62 @@ SetConsoleCodePage(VOID)
     wCodePage = (UINT)wcstoul(MUIGetOEMCodePage(SelectedLanguageId), NULL, 10);
     SetConsoleOutputCP(wCodePage);
 #endif
-}
 
-/* EOF */
+    switch (wCodePage)
+    {
+        case 28606: /* Romanian */
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0x01;
+            CharHalfBlock = 0x02;
+            CharUpArrow = 0x03;
+            CharDownArrow = 0x04;
+            CharHorizontalLine = 0x05;
+            CharVerticalLine = 0x06;
+            CharUpperLeftCorner = 0x08;
+            CharUpperRightCorner = 0x09;
+            CharLowerLeftCorner = 0x0B;
+            CharLowerRightCorner = 0x0C;
+            CharVertLineAndRightHorizLine = 0x0E;
+            CharLeftHorizLineAndVertLine = 0x0F;
+            CharDoubleHorizontalLine = 0x10;
+            CharDoubleVerticalLine = 0x11;
+            CharDoubleUpperLeftCorner = 0x12;
+            CharDoubleUpperRightCorner = 0x13;
+            CharDoubleLowerLeftCorner = 0x14;
+            CharDoubleLowerRightCorner = 0x15;
+
+            /* FIXME: Enter 640x400 video mode */
+            break;
+
+        case 932: /* Japanese */
+            /* FIXME: Set special characters */
+            /* FIXME: Enter 640x400 video mode */
+            break;
+
+        default: /* Other codepages */
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0xDB;
+            CharHalfBlock = 0xDD;
+            CharUpArrow = 0x18;
+            CharDownArrow = 0x19;
+            CharHorizontalLine = 0xC4;
+            CharVerticalLine = 0xB3;
+            CharUpperLeftCorner = 0xDA;
+            CharUpperRightCorner = 0xBF;
+            CharLowerLeftCorner = 0xC0;
+            CharLowerRightCorner = 0xD9;
+            CharVertLineAndRightHorizLine = 0xC3;
+            CharLeftHorizLineAndVertLine = 0xB4;
+            CharDoubleHorizontalLine = 0xCD;
+            CharDoubleVerticalLine = 0xBA;
+            CharDoubleUpperLeftCorner = 0xC9;
+            CharDoubleUpperRightCorner = 0xBB;
+            CharDoubleLowerLeftCorner = 0xC8;
+            CharDoubleLowerRightCorner = 0xBC;
+
+            /* FIXME: Enter 720x400 video mode */
+            break;
+    }
+}

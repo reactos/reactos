@@ -99,6 +99,27 @@ MUISetStyledText(
     IN INT TextID,
     IN INT Flags);
 
+/* Special characters */
+extern CHAR CharBullet;
+extern CHAR CharBlock;
+extern CHAR CharHalfBlock;
+extern CHAR CharUpArrow;
+extern CHAR CharDownArrow;
+extern CHAR CharHorizontalLine;
+extern CHAR CharVerticalLine;
+extern CHAR CharUpperLeftCorner;
+extern CHAR CharUpperRightCorner;
+extern CHAR CharLowerLeftCorner;
+extern CHAR CharLowerRightCorner;
+extern CHAR CharVertLineAndRightHorizLine;
+extern CHAR CharLeftHorizLineAndVertLine;
+extern CHAR CharDoubleHorizontalLine;
+extern CHAR CharDoubleVerticalLine;
+extern CHAR CharDoubleUpperLeftCorner;
+extern CHAR CharDoubleUpperRightCorner;
+extern CHAR CharDoubleLowerLeftCorner;
+extern CHAR CharDoubleLowerRightCorner;
+
 /* MUI Text IDs */
 
 /* Static MUI Text */
