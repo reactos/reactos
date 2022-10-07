@@ -560,6 +560,7 @@ SetConsoleCodePage(VOID)
     switch (wCodePage)
     {
         case 28606: /* Romanian */
+        case 932: /* Japanese */
             /* Set special characters */
             CharBullet = 0x07;
             CharBlock = 0x01;
@@ -581,11 +582,6 @@ SetConsoleCodePage(VOID)
             CharDoubleLowerLeftCorner = 0x14;
             CharDoubleLowerRightCorner = 0x15;
 
-            /* FIXME: Enter 640x400 video mode */
-            break;
-
-        case 932: /* Japanese */
-            /* FIXME: Set special characters */
             /* FIXME: Enter 640x400 video mode */
             break;
 
