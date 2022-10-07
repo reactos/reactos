@@ -815,6 +815,11 @@ CONSOLE_ClearStyledText(
     {
         CONSOLE_ClearStatusTextX(coPos.X, Length);
     }
+    else if (Flags & TEXT_STYLE_UNDERLINE)
+    {
+        CONSOLE_ClearTextXY(coPos.X, coPos.Y, Length);
+        CONSOLE_ClearTextXY(coPos.X, coPos.Y + 1, Length);
+    }
     else /* TEXT_TYPE_REGULAR (Default) */
     {
         CONSOLE_ClearTextXY(coPos.X, coPos.Y, Length);
