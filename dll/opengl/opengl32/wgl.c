@@ -379,7 +379,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     struct wgl_context* context;
     DHGLRC dhglrc;
     
-    TRACE("Creating context for %p, format %i\n", hdc);
+    TRACE("Creating context for %p.\n", hdc);
     
     if(!dc_data)
     {
@@ -736,9 +736,13 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     else
     {
         /* Winetest conformance */
-        if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
+        DWORD objType = GetObjectType(hdc);
+        if (objType != OBJ_DC && objType != OBJ_MEMDC)
         {
-            ERR( "Error: hdc is not a DC handle!\n");
+            if (hdc)
+            {
+                ERR("hdc (%p) is not a DC handle (ObjectType: %d)!\n", hdc, objType);
+            }
             SetLastError( ERROR_INVALID_HANDLE );
             return FALSE;
         }
