@@ -2,6 +2,7 @@
 spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE
+    branding.c
     gui.c
     lsa.c
     msgina.c

@@ -7,6 +7,7 @@
  */
 
 #include "msgina.h"
+#include "branding.h"
 
 #include <wingdi.h>
 #include <winnls.h>
@@ -34,18 +35,15 @@ typedef struct _LEGALNOTICEDATA
 typedef struct _DLG_DATA
 {
     PGINA_CONTEXT pgContext;
-    HBITMAP hLogoBitmap;
-    HBITMAP hBarBitmap;
+    BRAND Brand;
     HWND hWndBarCtrl;
     DWORD BarCounter;
-    DWORD LogoWidth;
-    DWORD LogoHeight;
-    DWORD BarWidth;
-    DWORD BarHeight;
 } DLG_DATA, *PDLG_DATA;
 
 static PDLG_DATA
-DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
+DlgData_Create(
+    _In_ HWND hwndDlg,
+    _In_ PGINA_CONTEXT pgContext)
 {
     PDLG_DATA pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
     if (pDlgData)
@@ -57,57 +55,18 @@ DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
 }
 
 static VOID
-DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
-{
-    BITMAP bm;
-
-    if (!pDlgData)
-    {
-        return;
-    }
-
-    pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
-                                       MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
-                                       0, 0, LR_DEFAULTCOLOR);
-    if (pDlgData->hLogoBitmap)
-    {
-        GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
-        pDlgData->LogoWidth = bm.bmWidth;
-        pDlgData->LogoHeight = bm.bmHeight;
-    }
-
-    pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
-                                      IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    if (pDlgData->hBarBitmap)
-    {
-        GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-        pDlgData->BarWidth = bm.bmWidth;
-        pDlgData->BarHeight = bm.bmHeight;
-    }
-}
-
-static VOID
-DlgData_Destroy(_Inout_ HWND hwndDlg)
+DlgData_Destroy(
+    _In_ HWND hwndDlg)
 {
     PDLG_DATA pDlgData;
 
     pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     if (!pDlgData)
-    {
         return;
-    }
 
     SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)NULL);
 
-    if (pDlgData->hBarBitmap)
-    {
-        DeleteObject(pDlgData->hBarBitmap);
-    }
-
-    if (pDlgData->hLogoBitmap)
-    {
-        DeleteObject(pDlgData->hLogoBitmap);
-    }
+    Brand_Cleanup(&pDlgData->Brand);
 
     HeapFree(GetProcessHeap(), 0, pDlgData);
 }
@@ -206,8 +165,8 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
             return;
     }
 
-    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
-        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    if (!GetObjectW(pDlgData->Brand.hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObjectW(pDlgData->Brand.hBarBitmap, sizeof(BITMAP), &bmBar))
     {
         return;
     }
@@ -276,8 +235,8 @@ StatusDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            DlgData_LoadBitmaps(pDlgData);
-            if (pDlgData->hBarBitmap)
+            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            if (pDlgData->Brand.hBarBitmap)
             {
                 if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
                 {
@@ -296,13 +255,13 @@ StatusDialogProc(
 
         case WM_TIMER:
         {
-            if (pDlgData && pDlgData->hBarBitmap)
+            if (pDlgData && pDlgData->Brand.hBarBitmap)
             {
                 /*
                  * Default rotation bar image width is 413 (same as logo)
                  * We can divide 413 by 7 without remainder
                  */
-                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->Brand.BarWidth;
                 InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
                 UpdateWindow(pDlgData->hWndBarCtrl);
             }
@@ -318,16 +277,16 @@ StatusDialogProc(
                 return FALSE;
             }
 
-            if (pDlgData && pDlgData->hBarBitmap)
+            if (pDlgData && pDlgData->Brand.hBarBitmap)
             {
                 HDC hdcMem;
                 HGDIOBJ hOld;
                 DWORD off = pDlgData->BarCounter;
-                DWORD iw = pDlgData->BarWidth;
-                DWORD ih = pDlgData->BarHeight;
+                DWORD iw = pDlgData->Brand.BarWidth;
+                DWORD ih = pDlgData->Brand.BarHeight;
 
                 hdcMem = CreateCompatibleDC(lpDis->hDC);
-                hOld = SelectObject(hdcMem, pDlgData->hBarBitmap);
+                hOld = SelectObject(hdcMem, pDlgData->Brand.hBarBitmap);
                 BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
                 BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
                 SelectObject(hdcMem, hOld);
@@ -340,7 +299,7 @@ StatusDialogProc(
 
         case WM_DESTROY:
         {
-            if (pDlgData && pDlgData->hBarBitmap)
+            if (pDlgData && pDlgData->Brand.hBarBitmap)
             {
                 KillTimer(hwndDlg, IDT_BAR);
             }
@@ -497,26 +456,25 @@ WelcomeDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            DlgData_LoadBitmaps(pDlgData);
+            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
             return TRUE;
         }
 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->hLogoBitmap)
+            if (pDlgData && pDlgData->Brand.hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
+
         case WM_DESTROY:
-        {
             DlgData_Destroy(hwndDlg);
             return TRUE;
-        }
     }
     return FALSE;
 }
@@ -1270,7 +1228,7 @@ LogonDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            DlgData_LoadBitmaps(pDlgData);
+            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
 
             SetWelcomeText(hwndDlg);
 
@@ -1300,10 +1258,10 @@ LogonDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->hLogoBitmap)
+            if (pDlgData && pDlgData->Brand.hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
@@ -1553,21 +1511,22 @@ UnlockDialogProc(
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            DlgData_LoadBitmaps(pDlgData);
+            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
             return TRUE;
         }
 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->hLogoBitmap)
+            if (pDlgData && pDlgData->Brand.hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
+
         case WM_DESTROY:
             DlgData_Destroy(hwndDlg);
             return TRUE;
@@ -1637,29 +1596,29 @@ LockedDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            DlgData_LoadBitmaps(pDlgData);
+            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
 
             SetWelcomeText(hwndDlg);
 
             SetLockMessage(hwndDlg, IDC_LOCKED_MESSAGE, pDlgData->pgContext);
             return TRUE;
         }
+
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->hLogoBitmap)
+            if (pDlgData && pDlgData->Brand.hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
+
         case WM_DESTROY:
-        {
             DlgData_Destroy(hwndDlg);
             return TRUE;
-        }
     }
 
     return FALSE;

@@ -9,6 +9,8 @@
  */
 
 #include "msgina.h"
+#include "branding.h"
+
 #include <powrprof.h>
 #include <wingdi.h>
 #include <windowsx.h>
