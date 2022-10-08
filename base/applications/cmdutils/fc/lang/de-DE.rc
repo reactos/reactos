@@ -2,40 +2,40 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them\n\
+    IDS_USAGE "Vergleicht zwei Dateien oder Gruppen von Dateien und zeigt die\n\
+Unterschiede zwischen ihnen an.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [Laufwerk1:][Pfad1]Dateiname1 [Laufwerk2:][Pfad2]Dateiname2\n\
+FC /B [Laufwerk1:][Pfad1]Dateiname1 [Laufwerk2:][Pfad2]Dateiname2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+  /A         Zeigt nur die erste und letzte Zeile für jeden Satz von Unterschieden an.\n\
+  /B         Führt einen binären Vergleich durch.\n\
+  /C         Groß- und Kleinschreibung wird nicht berücksichtigt.\n\
+  /L         Vergleicht Dateien als ASCII-Text.\n\
+  /LBn       Setzt die maximale Anzahl aufeinanderfolgender Abweichungen auf die\n\
+             angegebene Anzahl von Zeilen (Standard: 100).\n\
+  /N         Zeigt die Zeilennummern im ASCII-Vergleich an.\n\
+  /OFF[LINE] Überspringt keine Dateien mit gesetztem Offline-Attribut.\n\
+  /T         Erweitert Tabulatoren nicht zu Leerzeichen (Standard: erweitern).\n\
+  /U         Dateien als UNICODE-Textdateien vergleichen.\n\
+  /W         Komprimiert Tabulatoren und Leerzeichen beim Vergleich.\n\
+  /nnnn      Gibt die Anzahl der aufeinanderfolgenden Zeilen an, die nach einem\n\
+             Unterschied übereinstimmen müssen (Standard: 2).\n\
+  [Laufwerk1:][Pfad1]Dateiname1\n\
+             Gibt die erste zu vergleichende Datei oder Gruppe von Dateien an.\n\
+  [Laufwerk2:][Pfad2]Dateiname2\n\
+             Gibt die zweite zu vergleichende Datei oder Gruppe von Dateien an.\n"
+    IDS_NO_DIFFERENCE "FC: keine Unterschiede festgestellt.\n"
+    IDS_LONGER_THAN "FC: %ls ist länger als %ls.\n"
+    IDS_COMPARING "Vergleiche Dateien %ls und %ls.\n"
+    IDS_OUT_OF_MEMORY "FC: Nicht genügend Speicherplatz.\n"
+    IDS_CANNOT_READ "FC: Lesen von %ls nicht möglich.\n"
+    IDS_INVALID_SWITCH "FC: Unzulässige Option.\n"
+    IDS_CANNOT_OPEN "FC: Öffnen von %ls nicht möglich - Datei oder Ordner nicht vorhanden.\n"
+    IDS_NEEDS_FILES "FC: Unzureichende Anzahl von Dateiangaben.\n"
+    IDS_CANT_USE_WILDCARD "Wildcards ('*' und '?') werden noch nicht unterstützt.\n"
+    IDS_DIFFERENT "FC: Die Dateien %ls und %ls sind unterschiedlich.\n"
+    IDS_TOO_LARGE "FC: Die Datei %ls ist zu groß.\n"
+    IDS_RESYNC_FAILED "Resync fehlgeschlagen. Die Dateien sind zu unterschiedlich.\n"
 END
