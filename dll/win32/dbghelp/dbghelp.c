@@ -242,7 +242,7 @@ BOOL WINAPI SymSetSearchPath(HANDLE hProcess, PCSTR searchPath)
     }
 
     ret = SymSetSearchPathW(hProcess, sp);
- 
+
     if (searchPath)
     {
         HeapFree(GetProcessHeap(), 0, sp);
@@ -378,7 +378,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     pcs->dbg_hdr_addr = 0;
     pcs->next = process_first;
     process_first = pcs;
-    
+
 #ifndef DBGHELP_STATIC_LIB
     if (check_live_target(pcs))
     {
