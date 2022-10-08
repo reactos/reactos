@@ -301,7 +301,7 @@ BEGIN
     DEFPUSHBUTTON "Confirmă", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Anulează", IDCANCEL, 314, 50, 50, 14
     PUSHBUTTON "Navigare prin &directorul...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 93, 14
-    PUSHBUTTON "Navigare prin fiși&erele...", IDC_BUTTON_BROWSE_FILE, 107, 50, 85, 14 
+    PUSHBUTTON "Navigare prin fiși&erele...", IDC_BUTTON_BROWSE_FILE, 107, 50, 85, 14
 END
 
 IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250

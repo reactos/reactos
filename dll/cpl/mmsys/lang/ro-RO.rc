@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
- *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
@@ -141,7 +141,7 @@ BEGIN
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "&Restabilire implicite", 5400, 7, 191, 110, 14
     LTEXT "Fără", 8497, 128, 56, 21, 10
-    LTEXT "Completă", 8498, 214, 56, 34, 9 
+    LTEXT "Completă", 8498, 214, 56, 34, 9
     LTEXT "Bună", 8499, 128, 123, 21, 10
     LTEXT "Superioară", 8500, 214, 123, 40, 9
     LTEXT "Opțiuni pentru dispozitivul de înregistrare a sunetelor.", 5399, 13, 145, 227, 21

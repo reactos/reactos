@@ -5,7 +5,8 @@
  * PROJECT:     ReactOS Setup
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2018 George Bișoc <george.bisoc@reactos.org>
  *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 

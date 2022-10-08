@@ -53,7 +53,7 @@ CAPTION "Parolă necesară"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Confirmă",IDOK,186,24,57,14 
+    DEFPUSHBUTTON   "Confirmă",IDOK,186,24,57,14
     PUSHBUTTON      "Sari peste fișier",IDSKIP,186,24,57,14
     PUSHBUTTON      "Anulează",IDCANCEL,186,42,50,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
