@@ -46,17 +46,17 @@ BEGIN
         MENUITEM "&Trapsgewijs", ID_WINDOWS_CASCADE
         MENUITEM "Naar &voorgrond", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "Afsl&uiten"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By",                           ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                          ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Uitzetten",                          ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Opnieuw Opstarten",                  ID_SHUTDOWN_REBOOT
+        MENUITEM "%s &afmelden",                        ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Verander van gebruiker\tWinKey+L",   ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",            ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                         ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",                     ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Help"
     BEGIN
