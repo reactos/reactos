@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Vizitați<A HREF=""https://reactos.org/""> pagina web ReactOS </A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Vizitați <A HREF=""https://reactos.org/"">pagina web ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Licență…", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -162,7 +162,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
     LTEXT "Mulțimea opțiunilor legate de conturile de utilizator (opțiunile de interfață și alte preferințe) formează un profil de utilizator. Gestionând aceste profiluri, puteți deține pe diferite calculatoare fie profiluri diferite, fie unul comun de „călător”.", IDC_STATIC, 40, 11, 211, 35
-    LTEXT "Profiluri stocate în acest calculator:", IDC_STATIC, 6, 56, 204, 9
+    LTEXT "Profiluri stocate în acest calculator:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON "S&chimbare tip…", IDC_USERPROFILE_CHANGE, 60, 155, 60, 15
@@ -294,14 +294,14 @@ CAPTION "Editare variablă"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "N&ume variabilă:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "N&ume variabilă:", IDC_STATIC, 7, 14, 60, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "&Valoare variabilă:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "&Valoare variabilă:", IDC_STATIC, 7, 32, 60, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Confirmă", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Anulează", IDCANCEL, 314, 50, 50, 14
     PUSHBUTTON "Navigare prin &directorul...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 93, 14
-    PUSHBUTTON "Navigare prin fiși&erele...", IDC_BUTTON_BROWSE_FILE, 107, 50, 85, 14
+    PUSHBUTTON "Navigare prin fiși&erele...", IDC_BUTTON_BROWSE_FILE, 104, 50, 93, 14
 END
 
 IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250

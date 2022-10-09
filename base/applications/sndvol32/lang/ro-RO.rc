@@ -119,7 +119,7 @@ BEGIN
     AUTOCHECKBOX "A&muțește tot", IDC_LINE_SWITCH, 4, 70, 44, 8
 END
 
-IDD_ADVANCED DIALOGEX 0, 0, 260, 200
+IDD_ADVANCED DIALOGEX 0, 0, 255, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Comenzi avansate pentru controlul volumului"
 FONT 8, "MS Shell Dlg"
@@ -137,7 +137,7 @@ BEGIN
     LTEXT "Mare", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
     GROUPBOX "Alte controale", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "Aceste configurații fac alte schimbări la felul în care se aude sunetul dumneavoastră. Vedeți documentația dispozitivului dumneavoastră pentru mai multe detalii.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    LTEXT "Aceste configurații fac alte schimbări la felul în care se aude sunetul dumneavoastră. Vedeți documentația dispozitivului dumneavoastră pentru mai multe detalii.", IDC_ADV_OTHER_TEXT, 17, 132, 220, 26
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
     DEFPUSHBUTTON "Închide", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP

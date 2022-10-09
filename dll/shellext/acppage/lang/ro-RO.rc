@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de operare care să fie raportat aplicației.\nConștientizați că aceasta este o funcționalitate în dezvoltare.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Modul de compatibilitate", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Lansați acest program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Lansați acest program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 196, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Configurația de afișare", -1, 7, 99, 210, 61, BS_GROUPBOX
     CHECKBOX "Lansează în 256 culori", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
