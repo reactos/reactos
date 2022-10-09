@@ -1,6 +1,10 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -176,5 +180,5 @@ BEGIN
     IDS_TIMEOUT16 "dezactivată"
     IDS_DEL_SCHEME "Sigur doriți eliminarea aceastui regim de consum energetic: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminarea regumului de consum"
-    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Nu poate fi ștearsă schema de alimentare"
 END

@@ -1,7 +1,15 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 #pragma once
 
 static MUI_ENTRY roROSetupInitPageEntries[] =
@@ -16,7 +24,7 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         20,
-        "Asteptati initializarea programului de instalare si",
+        "A\272tepta\376i ini\376ializarea programului de instalare \272i",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -30,7 +38,7 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         0,
-        "Asteptati...",
+        "A\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -449,9 +457,9 @@ static MUI_ENTRY roRODevicePageEntries[] =
         TEXT_ID_STATIC
     },
     {
-        24,
-        11,
-        "Arh. de calcul:",
+        6,
+        8,
+        "Arhitectur\343 de calcul:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
         TEXT_ID_STATIC
     },
@@ -1105,112 +1113,112 @@ static MUI_ENTRY roROChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalare " KERNEL_VERSION_STR " ReactOS ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "Parti\376ia curent\343 a calculatorului dumneavoastr\343",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "on the system disk",
+        "pe un disc de sistem",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "folose\272te un format ce nu este suportat de ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "Pentru a instala cu succes ReactOS, programul de instalare trebuie s\343 schimbe",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "parti\376ia curent\343 a sistemului cu una nou\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "Noua parti\376ie de sistem nominalizat\343 este:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  Pentru a accepta aceast\343 alegere, ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  Pentru a schimba manual parti\376ia sistemului, ap\343sa\376i ESC pentru a merge \356napoi la",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   parti\376ia din lista de selec\376ie, apoi selecta\376i sau crea\376i o nou\343 parti\376ie",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   de sistem pe discul de sistem.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "\316n cazul \356n care mai sunt \272i alte sisteme de operare care depind de parti\376ia original\343",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "a sistemului, ve\376i fi nevoi ca fie s\343 le reconfigura\376i pentru noua",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "parti\376ie a sistemului, fie ve\376i fi nevoit s\343 schimba\376i parti\376ia sistemului \356napoi",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "la cea original\343, dup\343 terminarea instal\343rii ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Continuare   ESC = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1560,7 +1568,7 @@ static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Instalarea programului de pornire pe suport, v\343 rug\343m s\343 a\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1879,18 +1887,18 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
-        "ENTER = Reboot computer"
+        "E\272ec \356n construirea c\343ilor de instalare pentru directorul de instalare ReactOS!\n"
+        "ENTER = Repornire calculator"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
-        "ENTER = Reboot computer"
+        "Nu pute\376i \272terge parti\376ia surs\343 de instalare!\n"
+        "ENTER = Repornire calculator"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
-        "ENTER = Reboot computer"
+        "Nu pute\376i instala ReactOS \356n directorul surs\343 de instalare!\n"
+        "ENTER = Repornire calculator"
     },
     {
         // ERROR_NO_HDD

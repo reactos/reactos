@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS International Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -215,5 +221,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_CODE_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_INPUT_DLL "„input.dll” nu a putut fi încărcat!"
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Nu a putut fi instalată o nouă limbă pentru programele ce nu suportă Unicode!"
 END

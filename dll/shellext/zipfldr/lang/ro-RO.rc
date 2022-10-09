@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Romanian resource translation
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -16,7 +17,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Răsfoiți...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "Parolă",IDC_PASSWORD,189,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,86,114,80,8
+    LTEXT           "Clic „Înainte” pentru a extrage",IDC_STATUSTEXT,86,114,100,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
@@ -46,17 +47,17 @@ BEGIN
     LTEXT           "",IDC_MESSAGE,36,6,228,24
 END
 
-IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+IDD_PASSWORD DIALOGEX 0, 0, 270, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Password needed"
+CAPTION "Parolă necesară"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    DEFPUSHBUTTON   "Confirmă",IDOK,186,6,57,14
+    PUSHBUTTON      "Sari peste fișier",IDSKIP,186,24,57,14
+    PUSHBUTTON      "Anulează",IDCANCEL,186,42,57,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Password:",IDC_STATIC,24,44,44,8
+    LTEXT           "Parolă:",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -70,15 +71,15 @@ BEGIN
     IDS_COL_DATE_MOD "Data modificată"
     IDS_YES "Da"
     IDS_NO "Nu"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
+    IDS_ERRORTITLE "Eroare de dosare comprimate (zipate)."
+    IDS_CANTSTARTTHREAD "Nu se poate porni firul de execuție pentru a comprima fișierele."
+    IDS_NOFILES "Directorul specificat '%s' este gol, deci Dosarele comprimate (zipate) nu îl pot adăuga în arhivă."
+    IDS_CANTCREATEZIP "Nu a putut fi creat un dosar comprimat '%s' (cod de eroare: %d)."
+    IDS_CANTREADFILE "Nu a putut fi citit fișierul '%s'."
     IDS_EXTRACTING "Extragere..."
-    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
-    IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTEXTRACTFILE "Nu a putut fi extras fișierul '%1'."
+    IDS_DECOMPRESSERROR "Metoda de compresie %d nu este suportată. Doriți să continuați?"
+    IDS_UNKNOWNERROR "Eroare necunoscută 0x%08x."
 
     IDS_WIZ_TITLE "Asistent de extracție"
     IDS_WIZ_DEST_TITLE "Selectați o Destinație"
@@ -88,10 +89,10 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "Selectați destinația unde doriți să extrageți elementele selectate."
 
     IDS_OVERWRITEFILE_TEXT "Acest folder deja conține un fișier numit '%1'.\nDoriți să o înlocuiți?"
-    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
-    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_PASSWORD_FILE_TEXT "Fișierul '%1' este protejat de parolă. Vă rugăm, introduceți parola."
+    IDS_PASSWORD_ZIP_TEXT "Vă rugăm să specificați parola pe care doriți să o folosiți când extrageți acest fișier zip."
 
     IDS_MENUITEM "Extrage &Tot..."
-    IDS_HELPTEXT "Extrage conținutul folderului"
-    IDS_FRIENDLYNAME "Folder comprimat (zip)"
+    IDS_HELPTEXT "Extrage conținutul dosarului"
+    IDS_FRIENDLYNAME "Dosar comprimat (zip)"
 END

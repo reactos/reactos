@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Language Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -112,7 +118,7 @@ BEGIN
     IDS_CTRL_SHIFT "«Ctrl» + «Shift»"
     IDS_LEFT_ALT_SHIFT "«Alt» (stâng) + «Shift»"
     IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
-    IDS_REBOOT_NOW, "Reboot now?"
+    IDS_REBOOT_NOW, "Reporniți acum?"
 END
 
 STRINGTABLE

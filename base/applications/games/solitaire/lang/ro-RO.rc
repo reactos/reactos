@@ -1,11 +1,10 @@
 /*
- * PROJECT: Solitaire
- * LICENSE: Freeware, permission to use under Public Domain
- * FILE:    base/applications/games/solitaire/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for Solitaire
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Solitaire
+ * LICENSE:     Freeware, permission to use under Public Domain
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -73,7 +72,7 @@ BEGIN
     BEGIN
         MENUITEM "Rundă &nouă\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        MENUITEM "&Anulează", IDM_GAME_UNDO, GRAYED
         MENUITEM "Culoare &dorsală…", IDM_GAME_DECK
         MENUITEM "&Opțiuni…", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -1,10 +1,10 @@
 /*
- * PROJECT: ReactOS GUI first stage setup application
- * FILE:    base/setup/reactos/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for ReactOS GUI first stage setup
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS GUI first stage setup application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -76,7 +76,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
     CONTROL "Crearea și formatarea partiției", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
-    LTEXT "Marime:", IDC_STATIC, 13, 24, 27, 9
+    LTEXT "Mărime:", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GO", IDC_UNIT, 117, 24, 14, 9
     LTEXT "Sistemul de fișiere:", IDC_STATIC, 13, 46, 42, 9
@@ -119,10 +119,10 @@ BEGIN
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Volum de destinație:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Directór de destinație:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "Director de destinație:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Confirm că toate opțiunile de instalare sunt corecte. De asemenea, conștientizez că\nReactOS nu a ajuns la maturitate și în consecință îmi poate deteriora calculatorul sau datele.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE
     LTEXT "Verificați că toate opțiunile de instalare sunt corecte,\napoi acționați „Instalează” pentru a porni procesul de instalare.", IDC_STATIC, 7, 124, 303, 18
 END
 
@@ -154,7 +154,7 @@ BEGIN
     IDS_TYPESUBTITLE "Alegeți tipul de instalare."
     IDS_DEVICETITLE "Instalare dispozitive de bază"
     IDS_DEVICESUBTITLE "Stabilirea parametrilor de afișare și tastatură."
-    IDS_DRIVETITLE "Stabilire destinație"
+    IDS_DRIVETITLE "Stabilirea destinației"
     IDS_DRIVESUBTITLE "Pregătirea partiției de instalare, a dosarului de sistem și a inițializatorului."
     IDS_PROCESSTITLE "Executare pași de instalare"
     IDS_PROCESSSUBTITLE "Crearea și formatarea partiției, copierea de fișiere și instalarea inițializatorului."
@@ -164,7 +164,7 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
-    IDS_NO_TXTSETUP_SIF "Fișierulu „txtsetup.sif” nu poate fi găsit.\nInstalarea nu poate continua."
+    IDS_NO_TXTSETUP_SIF "Fișierului „txtsetup.sif” nu poate fi găsit.\nInstalarea nu poate continua."
     IDS_CAPTION "Asistentul de instalare ReactOS"
 END
 
