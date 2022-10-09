@@ -55,7 +55,7 @@ BEGIN
     LTEXT "Настройки на работната площ, свързани с влизането ви.", IDC_STATIC, 16, 88, 210, 20
     PUSHBUTTON "Настройки", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Пускане и възстановяване", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Изборите за пускане и възстановяване казват на компютъра ви как да се пусне и какво да прави, в случай на грешка, която да го накара да спре.", IDC_STATIC, 16, 144, 210, 24
+    LTEXT "Изборите за пускане и възстановяване казват на компютъра ви как да се пусне и какво да прави, в случай на грешка, която да го накара да спре.", IDC_STATIC, 16, 144, 210, 27
     PUSHBUTTON "Настройки", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Променливи на средата", IDC_ENVVAR, 88, 192, 80, 15
@@ -142,8 +142,8 @@ BEGIN
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
     LTEXT "На:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
-    DEFPUSHBUTTON "Добре", IDOK, 196, 6, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "Добре", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
@@ -152,7 +152,7 @@ CAPTION "Потребителски очерци"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Потребителските очерци съдържат настройки на работната площ и други сведения, свързани с влизането ви. Можете да си правите различен на всеки компютър, който използвате или можете да изберете прехождащ очерк, който да е еднакъв навсякъде.", IDC_STATIC, 40, 11, 204, 41
+    LTEXT "Потребителските очерци съдържат настройки на работната площ и други сведения, свързани с влизането ви. Можете да си правите различен на всеки компютър, който използвате или можете да изберете прехождащ очерк, който да е еднакъв навсякъде.", IDC_STATIC, 40, 6, 204, 44
     LTEXT "Очерци в компютъра:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -285,10 +285,10 @@ CAPTION "Обработка на променливата"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "&Име на променливата:", IDC_STATIC, 7, 14, 50, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "&Стойност на променливата:", IDC_STATIC, 7, 32, 50, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    LTEXT "&Име на променливата:", IDC_STATIC, 7, 14, 96, 8
+    EDITTEXT IDC_VARIABLE_NAME, 106, 12, 258, 12, ES_AUTOHSCROLL
+    LTEXT "&Стойност на променливата:", IDC_STATIC, 7, 32, 96, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 106, 30, 258, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Добре", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Отказ", IDCANCEL, 314, 50, 50, 14
     PUSHBUTTON "Browse &Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14

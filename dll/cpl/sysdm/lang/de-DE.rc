@@ -151,8 +151,8 @@ BEGIN
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
     LTEXT "Nach:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
-    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-    PUSHBUTTON "Abbrechen", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
@@ -161,7 +161,7 @@ CAPTION "Benutzerprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile für jeden Computer, den Sie benutzen einrichten oder ein einziges Profil wählen, welches auf jedem Computer gleich ist.", IDC_STATIC, 40, 7, 204, 40
+    LTEXT "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile für jeden Computer, den Sie benutzen einrichten oder ein einziges Profil wählen, welches auf jedem Computer gleich ist.", IDC_STATIC, 40, 6, 204, 44
     LTEXT "Auf diesem Computer gespeicherte Profile:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -294,9 +294,9 @@ CAPTION "Variable bearbeiten"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "Variablen-&Name:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "Variablen-&Name:", IDC_STATIC, 7, 14, 56, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "Variablen-&Wert:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "Variablen-&Wert:", IDC_STATIC, 7, 32, 56, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 314, 50, 50, 14

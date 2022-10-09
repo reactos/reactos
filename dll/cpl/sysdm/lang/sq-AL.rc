@@ -42,24 +42,24 @@ BEGIN
     PUSHBUTTON "Profile Pjesëve Elektronike...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avancuar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Privilegjet Administratorit janë të nevojshme për shumicën e këtyre konfigurimeve.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX "Performanca", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "Opsionet e performancës kontrollojnë se si programet përdorin memorien, e cila ndikon në shpejtësinë e kompjuterit tuaj.", IDC_STATIC, 16, 29, 228, 17
-    PUSHBUTTON "Cilësimet", IDC_PERFOR, 194, 48, 50, 15
-    GROUPBOX "Profili Përdoruesit", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "Cilësimet e Desktop-it në lidhje me hyrjen tuaj", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON "Cilësimet", IDC_USERPROFILE, 194, 103, 50, 15
-    GROUPBOX "Fillim dhe Rimëkëmbje", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Opsionet e Fillimit dhe shërimit udhëzojnë kompjuterin tuaj se si të filloi dhe çfarë të bëjë, nëse gabimet e shkaktojn kompjuterin tuaj për të ndaluar.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON "Cilësimet", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Cilësime Sistemi", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Mjedis Variablël", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Raporto Gabimet", IDC_ERRORREPORT, 170, 192, 80, 15
+    LTEXT "Privilegjet Administratorit janë të nevojshme për shumicën e këtyre konfigurimeve.", IDC_STATIC, 12, 5, 236, 17
+    GROUPBOX "Performanca", IDC_STATIC, 6, 28, 244, 50
+    LTEXT "Opsionet e performancës kontrollojnë se si programet përdorin memorien, e cila ndikon në shpejtësinë e kompjuterit tuaj.", IDC_STATIC, 16, 39, 228, 17
+    PUSHBUTTON "Cilësimet", IDC_PERFOR, 194, 58, 50, 15
+    GROUPBOX "Profili Përdoruesit", IDC_STATIC, 6, 85, 244, 48
+    LTEXT "Cilësimet e Desktop-it në lidhje me hyrjen tuaj", IDC_STATIC, 16, 98, 228, 20
+    PUSHBUTTON "Cilësimet", IDC_USERPROFILE, 194, 113, 50, 15
+    GROUPBOX "Fillim dhe Rimëkëmbje", IDC_STATIC, 6, 141, 244, 52
+    LTEXT "Opsionet e Fillimit dhe shërimit udhëzojnë kompjuterin tuaj se si të filloi dhe çfarë të bëjë, nëse gabimet e shkaktojn kompjuterin tuaj për të ndaluar.", IDC_STATIC, 16, 154, 228, 27
+    PUSHBUTTON "Cilësimet", IDC_STAREC, 194, 172, 50, 15
+    PUSHBUTTON "Cilësime Sistemi", IDC_SYSSETTINGS, 6, 202, 80, 15
+    PUSHBUTTON "Mjedis Variablël", IDC_ENVVAR, 88, 202, 80, 15
+    PUSHBUTTON "Raporto Gabimet", IDC_ERRORREPORT, 170, 202, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

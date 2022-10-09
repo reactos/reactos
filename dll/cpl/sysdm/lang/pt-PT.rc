@@ -51,7 +51,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avançado"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Tem de ter a sessão iniciada como ""Administrador"" para fazer a maior parte destas configurações.", IDC_STATIC, 12, 3, 236, 18
+    LTEXT "Tem de ter a sessão iniciada como ""Administrador"" para fazer a maior parte destas configurações.", IDC_STATIC, 12, 5, 236, 17
     GROUPBOX "Performance", IDC_STATIC, 6, 28, 244, 50
     LTEXT "As opções de desempenho controlam como as aplicações usam a memória, o que afecta a velocidade do seu computador.", IDC_STATIC, 16, 39, 228, 17
     PUSHBUTTON "&Definições", IDC_PERFOR, 194, 58, 50, 15
@@ -156,7 +156,7 @@ CAPTION "Perfis de utilizador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Crie um perfil novo, ou restaure um perfil do servidor por cada computador.", IDC_STATIC, 40, 5, 211, 43
+    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Crie um perfil novo, ou restaure um perfil do servidor por cada computador.", IDC_STATIC, 40, 11, 211, 35
     LTEXT "Perfis armazenados neste computador:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -289,9 +289,9 @@ CAPTION "Editar variável"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "&Nome da variável:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "&Nome da variável:", IDC_STATIC, 7, 14, 58, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "&Valor da variável:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "&Valor da variável:", IDC_STATIC, 7, 32, 58, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 314, 50, 50, 14
@@ -324,7 +324,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
-    DEFPUSHBUTTON "&OK", IDOK, 106, 140, 54, 15
+    DEFPUSHBUTTON "OK", IDOK, 106, 140, 54, 15
 END
 
 STRINGTABLE

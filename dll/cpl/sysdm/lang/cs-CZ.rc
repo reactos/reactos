@@ -290,9 +290,9 @@ CAPTION "Úpravy proměnných"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "&Název proměnné:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "&Název proměnné:", IDC_STATIC, 7, 14, 66, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "&Hodnota proměnné:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "&Hodnota proměnné:", IDC_STATIC, 7, 32, 66, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 314, 50, 50, 14

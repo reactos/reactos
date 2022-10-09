@@ -49,13 +49,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Prestaties", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "Met de instellingen voor prestaties regelt u hoe toepassingen het geheugen gebruiken, hetgeen van invloed is op de snelheid van de computer.", IDC_STATIC, 16, 29, 228, 17
+    LTEXT "Met de instellingen voor prestaties regelt u hoe toepassingen het geheugen gebruiken, hetgeen van invloed is op de snelheid van de computer.", IDC_STATIC, 16, 29, 228, 27
     PUSHBUTTON "Settings", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Gebruikersprofielen", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Desktop settings related to your logon", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "Settings", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Opstart- en herstelinstellingen", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Met de opstart- en herstelinstellingen bepaalt u hoe de computer wordt opgestart en wat er moet gebeuren wanneer een fout ervoor zorgt dat de computer vastloopt.", IDC_STATIC, 16, 144, 228, 19
+    LTEXT "Met de opstart- en herstelinstellingen bepaalt u hoe de computer wordt opgestart en wat er moet gebeuren wanneer een fout ervoor zorgt dat de computer vastloopt.", IDC_STATIC, 16, 144, 228, 27
     PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Omgevingsvariabelen", IDC_ENVVAR, 88, 192, 80, 15
@@ -285,10 +285,10 @@ CAPTION "Variabele bewerken"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "Naam van variabele:", IDC_STATIC, 7, 14, 50, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "Waarde van variabele:", IDC_STATIC, 7, 32, 50, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    LTEXT "Naam van variabele:", IDC_STATIC, 7, 14, 78, 8
+    EDITTEXT IDC_VARIABLE_NAME, 87, 12, 277, 12, ES_AUTOHSCROLL
+    LTEXT "Waarde van variabele:", IDC_STATIC, 7, 32, 78, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 87, 30, 277, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Annuleren", IDCANCEL, 314, 50, 50, 14
     PUSHBUTTON "Browse &Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14

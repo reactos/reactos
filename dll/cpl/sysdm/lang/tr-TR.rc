@@ -57,7 +57,7 @@ BEGIN
     LTEXT "Oturum açmanızla ilgili masaüstü ayarları.", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "A&yarlar", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Başlangıç ve Kurtarma", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Başlangıç ve kurtarma seçenekleri, bilgisayarınıza, nasıl açılacağını ve bir hatanın bilgisayarınızın durmasına neden olduğunda ne yapacağını bildirir.", IDC_STATIC, 16, 144, 228, 19
+    LTEXT "Başlangıç ve kurtarma seçenekleri, bilgisayarınıza, nasıl açılacağını ve bir hatanın bilgisayarınızın durmasına neden olduğunda ne yapacağını bildirir.", IDC_STATIC, 16, 144, 228, 27
     PUSHBUTTON "Aya&rlar", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "&Sistem Ayarları", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "&Ortam Değişkenleri", IDC_ENVVAR, 88, 192, 80, 15
@@ -127,10 +127,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Profili Kopyala"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ş&uradan:", IDC_STATIC, 5, 10, 20, 8
-    LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "Şu&raya:", IDC_STATIC, 5, 30, 20, 8
-    EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
+    LTEXT "Ş&uradan:", IDC_STATIC, 5, 10, 30, 8
+    LTEXT "", IDC_COPYPROFILEFROM, 40, 10, 150, 10
+    LTEXT "Şu&raya:", IDC_STATIC, 5, 30, 30, 8
+    EDITTEXT IDC_COPYPROFILETO, 40, 30, 150, 12
     DEFPUSHBUTTON "Tamam", IDOK, 199, 9, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 199, 30, 50, 14
 END
@@ -140,10 +140,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Profili Yeniden Adlandır"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ş&undan:", IDC_STATIC, 5, 10, 20, 8
-    LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "Şu&na:", IDC_STATIC, 5, 30, 20, 8
-    EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
+    LTEXT "Ş&undan:", IDC_STATIC, 5, 10, 30, 8
+    LTEXT "", IDC_RENPROFEDITFROM, 40, 10, 150, 10
+    LTEXT "Şu&na:", IDC_STATIC, 5, 30, 30, 8
+    EDITTEXT IDC_RENPROFEDITTO, 40, 30, 150, 12
     DEFPUSHBUTTON "Tamam", IDOK, 199, 9, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 199, 30, 50, 14
 END
@@ -287,9 +287,9 @@ CAPTION "Değişkenleri Düzenle"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
-    LTEXT "&Değişken adı:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "&Değişken adı:", IDC_STATIC, 7, 14, 60, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
-    LTEXT "D&eğişken değeri:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "D&eğişken değeri:", IDC_STATIC, 7, 32, 60, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", IDOK, 260, 50, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 314, 50, 50, 14

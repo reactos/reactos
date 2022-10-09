@@ -51,13 +51,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "A legtöbb beállítás módosításához rendszergazdai jogok szükségesek.", IDC_STATIC, 12, 5, 237, 8
     GROUPBOX "Teljesítmény", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "A teljesítmény-beállításokkal lehet megadni azt, hogy a programok hogyan használják a memóriát. Ez hatással van a számítógépe sebességére.", IDC_STATIC, 16, 29, 228, 24
+    LTEXT "A teljesítmény-beállításokkal lehet megadni azt, hogy a programok hogyan használják a memóriát. Ez hatással van a számítógépe sebességére.", IDC_STATIC, 16, 29, 228, 27
     PUSHBUTTON "Beállítások", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Felhasználói profilok", IDC_STATIC, 6, 75, 244, 48
     LTEXT "A bejelentkezéssel kapcsolatos asztali beállítások.", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "Beállítások", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Indítás és helyreállítás", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Az indítási és helyreállítási beállításokkal adhatja meg az operációs rendszernek hogy hogyan induljon el és hogy mit tegyen ha egy hiba miatt leáll a számítógépe.", IDC_STATIC, 16, 144, 228, 24
+    LTEXT "Az indítási és helyreállítási beállításokkal adhatja meg az operációs rendszernek hogy hogyan induljon el és hogy mit tegyen ha egy hiba miatt leáll a számítógépe.", IDC_STATIC, 16, 144, 228, 27
     PUSHBUTTON "Beállítások", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "Rendszerbeállítások", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Környezeti változók", IDC_ENVVAR, 88, 192, 80, 15
@@ -154,7 +154,7 @@ CAPTION "Felhasználói profilok"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "A felhasználói profilok tárolják személyes adatait, és az asztala beállításait. Minden számítógépen létrehozhat különböző profilokat, vagy kiválaszthat egy vándor profilt, amely mindegyik gépen egyforma beállításokat fog eredményezni, ahol csak használja.", IDC_STATIC, 40, 6, 211, 40
+    LTEXT "A felhasználói profilok tárolják személyes adatait, és az asztala beállításait. Minden számítógépen létrehozhat különböző profilokat, vagy kiválaszthat egy vándor profilt, amely mindegyik gépen egyforma beállításokat fog eredményezni, ahol csak használja.", IDC_STATIC, 40, 6, 204, 44
     LTEXT "A számítógépen tárolt profilok:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
