@@ -86,13 +86,16 @@ private:
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        hr = m_pTrayPriv->AppendMenuW(&hmenu);
+        hr = m_pTrayPriv->AppendMenu(&hmenu);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_pShellMenu->SetMenu(hmenu, NULL, SMSET_BOTTOM);
         if (FAILED_UNEXPECTEDLY(hr))
+        {
+            DestroyMenu(hmenu);
             return hr;
+        }
 
         return hr;
     }
