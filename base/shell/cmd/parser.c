@@ -537,9 +537,10 @@ error:
 /* Parse a REM command */
 static PARSED_COMMAND *ParseRem(void)
 {
-    /* Just ignore the rest of the line */
-    while (CurChar && CurChar != _T('\n'))
-        ParseChar();
+    /* "Ignore" the rest of the line.
+     * (Line continuations will still be parsed, though.) */
+    while (ParseToken(0, NULL) != TOK_END)
+        ;
     return NULL;
 }
 
