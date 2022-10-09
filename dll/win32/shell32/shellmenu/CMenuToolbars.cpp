@@ -246,7 +246,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             WCHAR text [] = L"8";
 
             // Configure the font to draw with Marlett, keeping the current background color as-is
-            SelectObject(cdraw->nmcd.hdc, m_marlett);
+            HGDIOBJ hFontOld = SelectObject(cdraw->nmcd.hdc, m_marlett);
             SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
 
             // Tweak the alignment by 1 pixel so the menu draws like the Windows start menu.
@@ -255,6 +255,8 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 
             // The arrow is drawn at the right of the item's rect, aligned vertically.
             DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
+
+            SelectObject(cdraw->nmcd.hdc, hFontOld);
         }
         *theResult = TRUE;
         return S_OK;
