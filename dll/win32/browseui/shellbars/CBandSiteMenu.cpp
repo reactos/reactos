@@ -103,11 +103,16 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
             hr = SHLoadRegUIStringW(hKey, L"MenuTextPUI", wszBandName, _countof(wszBandName));
             if (FAILED_UNEXPECTEDLY(hr))
             {
-                SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
+                hr = SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
+                FAILED_UNEXPECTEDLY(hr);
             }
             RegCloseKey(hKey);
         }
-        wszBandName[_countof(wszBandName) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        else
+        {
+            dwDataSize = sizeof(wszBandName);
+            SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+        }
 
         /* Insert it */
         InsertMenu(hmenuToolbars, cBands, MF_BYPOSITION, m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID, wszBandName);
