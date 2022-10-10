@@ -301,7 +301,7 @@ FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
     if (!(plfont->fl & TEXTOBJECT_INIT))
     {
         NTSTATUS Status;
-        DPRINT1("FontGetObject font not initialized!\n");
+        DPRINT("FontGetObject font not initialized!\n");
 
         Status = TextIntRealizeFont(plfont->BaseObject.hHmgr, plfont);
         if (!NT_SUCCESS(Status))
@@ -928,25 +928,24 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       return 0;
   }
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
-  if (otm)
-  {
-     _SEH2_TRY
-     {
-         ProbeForWrite(otm, Size, 1);
-         RtlCopyMemory(otm, potm, Size);
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-         Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END
 
-     if (!NT_SUCCESS(Status))
-     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        Size = 0;
-     }
+  _SEH2_TRY
+  {
+      ProbeForWrite(otm, Size, 1);
+      RtlCopyMemory(otm, potm, Size);
   }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+      Status = _SEH2_GetExceptionCode();
+  }
+  _SEH2_END
+
+  if (!NT_SUCCESS(Status))
+  {
+     EngSetLastError(ERROR_INVALID_PARAMETER);
+     Size = 0;
+  }
+
   ExFreePoolWithTag(potm,GDITAG_TEXT);
   return Size;
 }
