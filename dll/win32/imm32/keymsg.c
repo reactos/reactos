@@ -682,6 +682,20 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     return ret;
 }
 
+DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
+{
+    PCLIENTIMC pClientIMC;
+    DWORD dwFlags;
+
+    pClientIMC = ImmLockClientImc(hIMC);
+    if (pClientIMC == NULL)
+        return 0;
+
+    dwFlags = pClientIMC->dwCompatFlags;
+    ImmUnlockClientImc(pClientIMC);
+    return dwFlags;
+}
+
 /***********************************************************************
  *		ImmProcessKey(IMM32.@)
  *       ( Undocumented, called from user32.dll )
@@ -754,9 +768,16 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         }
     }
 
-    if (ret & IPHK_PROCESSBYIME)
+    if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
     {
-        FIXME("TODO: We have to do something here.\n");
+        LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        if (PRIMARYLANGID(wLangID) != LANG_KOREAN ||
+            (vKey != VK_PROCESSKEY && !(ret & IPHK_HOTKEY)))
+        {
+            ImmTranslateMessage(hWnd, WM_KEYDOWN, VK_PROCESSKEY, lParam);
+            ret &= ~IPHK_PROCESSBYIME;
+            ret |= IPHK_SKIPTHISKEY;
+        }
     }
 
     ImmReleaseContext(hWnd, hIMC);
