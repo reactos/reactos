@@ -1022,13 +1022,13 @@ IopInitializeBootDrivers(VOID)
 
     /* Get highest group order index */
     IopGroupIndex = PpInitGetGroupOrderIndex(NULL);
-    if (IopGroupIndex == 0xFFFF) ASSERT(FALSE);
+    ASSERT(IopGroupIndex != 0xFFFF);
 
     /* Allocate the group table */
     IopGroupTable = ExAllocatePoolWithTag(PagedPool,
                                           IopGroupIndex * sizeof(LIST_ENTRY),
                                           TAG_IO);
-    if (IopGroupTable == NULL) ASSERT(FALSE);
+    ASSERT(IopGroupTable != NULL);
 
     /* Initialize the group table lists */
     for (i = 0; i < IopGroupIndex; i++) InitializeListHead(&IopGroupTable[i]);
