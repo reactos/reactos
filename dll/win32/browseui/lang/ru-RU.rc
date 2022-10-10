@@ -2,9 +2,9 @@
  * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Russian resource file
- * COPYRIGHT:   Copyright 2014-2015 Petr Akhlamov (petr-akhlamov@yandex.ru)
- *              Copyright 2017-2020 Stanislav Motylkov (binarymaster@mail.ru)
- *              Copyright 2019 Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
+ * COPYRIGHT:   Copyright 2014-2015 Petr Akhlamov <petr-akhlamov@yandex.ru>
+ *              Copyright 2017-2022 Stanislav Motylkov <binarymaster@mail.ru>
+ *              Copyright 2019 Abdulganiev Rafael <abdulganiev.rafael@gmail.com>
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -307,7 +307,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ADDRESSMENUTEXT "&Address"
+    IDS_ADDRESSMENUTEXT "&Адрес"
     IDS_HISTORYTEXT "&История\tCtrl+H"
 END
 
