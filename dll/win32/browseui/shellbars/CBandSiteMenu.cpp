@@ -111,7 +111,7 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
         else
         {
             dwDataSize = sizeof(wszBandName);
-            SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+            SHGetValueW(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
         }
 
         /* Insert it */
