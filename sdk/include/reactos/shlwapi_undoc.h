@@ -137,11 +137,11 @@ DWORD WINAPI SHGetValueGoodBootW(HKEY hkey, LPCWSTR pSubKey, LPCWSTR pValue,
 HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size);
 HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size);
 #ifdef UNICODE
-#define SHLoadRegUIString SHLoadRegUIStringW
 #define SHGetValueGoodBoot SHGetValueGoodBootW
+#define SHLoadRegUIString  SHLoadRegUIStringW
 #else
-#define SHLoadRegUIString SHLoadRegUIStringA
 #define SHGetValueGoodBoot SHGetValueGoodBootA
+#define SHLoadRegUIString  SHLoadRegUIStringA
 #endif
 
 int
