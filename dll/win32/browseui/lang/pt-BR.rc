@@ -300,6 +300,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_ADDRESSMENUTEXT "&Address"
     IDS_HISTORYTEXT "&Histórico\tCtrl+H"
 END
 

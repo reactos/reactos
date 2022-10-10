@@ -316,6 +316,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_ADDRESSMENUTEXT "&Address"
     IDS_HISTORYTEXT "&Előzmények\tCtrl+H"
 END
 

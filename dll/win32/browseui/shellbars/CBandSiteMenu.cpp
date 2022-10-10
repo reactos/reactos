@@ -22,6 +22,7 @@
 #include "shellbars.h"
 
 #include <browseui_undoc.h>
+#include <shlwapi_undoc.h>
 
 /* The menu consists of 3 parts. The first is loaded from the resources,
    the second is populated with the classes of the CATID_DeskBand comcat
@@ -58,10 +59,9 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
     WCHAR wszBandGUID[MAX_PATH];
     WCHAR wRegKey[MAX_PATH];
     UINT cBands;
-    DWORD dwDataSize;
     CATID category = CATID_DeskBand;
     HMENU hmenuToolbars;
-    DWORD dwRead;
+    DWORD dwRead, dwDataSize;
     CComPtr<IEnumGUID> pEnumGUID;
     HRESULT hr;
 
@@ -97,8 +97,22 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
 
         /* Get the band name */
         StringCchPrintfW(wRegKey, MAX_PATH, L"CLSID\\%s", wszBandGUID);
-        dwDataSize = MAX_PATH;
-        SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+        HKEY hKey;
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            hr = SHLoadRegUIStringW(hKey, L"MenuTextPUI", wszBandName, _countof(wszBandName));
+            if (FAILED_UNEXPECTEDLY(hr))
+            {
+                hr = SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
+                FAILED_UNEXPECTEDLY(hr);
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            dwDataSize = sizeof(wszBandName);
+            SHGetValueW(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+        }
 
         /* Insert it */
         InsertMenu(hmenuToolbars, cBands, MF_BYPOSITION, m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID, wszBandName);
