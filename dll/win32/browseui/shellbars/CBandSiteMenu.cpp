@@ -61,7 +61,7 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
     UINT cBands;
     CATID category = CATID_DeskBand;
     HMENU hmenuToolbars;
-    DWORD dwRead;
+    DWORD dwRead, dwDataSize;
     CComPtr<IEnumGUID> pEnumGUID;
     HRESULT hr;
 
