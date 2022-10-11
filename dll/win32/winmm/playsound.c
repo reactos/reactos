@@ -328,15 +328,23 @@ static BOOL PlaySound_IsString(DWORD fdwSound, const void* psz)
     /* SND_RESOURCE is 0x40004 while
      * SND_MEMORY is 0x00004
      */
-    switch (fdwSound & (SND_RESOURCE|SND_ALIAS_ID|SND_FILENAME))
+    switch (fdwSound & (SND_RESOURCE | SND_ALIAS_ID | SND_FILENAME))
     {
-    case SND_RESOURCE:  return HIWORD(psz) != 0; /* by name or by ID ? */
-    case SND_ALIAS_ID:
-    case SND_MEMORY:    return FALSE;
-    case SND_ALIAS:
-    case SND_FILENAME:
-    case 0:             return TRUE;
-    default:            FIXME("WTF\n"); return FALSE;
+        case SND_RESOURCE:
+            return HIWORD(psz) != 0; /* by name or by ID ? */
+
+        case SND_ALIAS_ID:
+        case SND_MEMORY:
+            return FALSE;
+
+        case SND_ALIAS:
+        case SND_FILENAME:
+        case 0:
+            return TRUE;
+
+        default:
+            FIXME("WTF\n");
+            return FALSE;
     }
 }
 
