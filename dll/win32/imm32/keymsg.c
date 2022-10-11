@@ -173,7 +173,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
     /* Japanese IME is not selected. Select now */
     if (Imm32ImeNonImeToggle(hIMC, hKL, hWnd, FALSE, LANGID_JAPANESE))
     {
-        pIC = ImmLockIMC(hIMC);
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
             pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Request open */
