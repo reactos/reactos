@@ -84,7 +84,10 @@ MouseSafetyOnDrawStart(
         && pgp->Exclude.top <= HazardY2)
     {
         ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
-        ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
+        if (ppdev->flFlags & PDEV_HARDWARE_POINTER)
+            ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
+        else if (ppdev->flFlags & PDEV_SOFTWARE_POINTER)
+            EngMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
     }
 
     return TRUE;
@@ -116,10 +119,16 @@ MouseSafetyOnDrawEnd(
         return FALSE;
     }
 
-    ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj,
-                          gpsi->ptCursor.x,
-                          gpsi->ptCursor.y,
-                          &pgp->Exclude);
+    if (ppdev->flFlags & PDEV_HARDWARE_POINTER)
+        ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj,
+                              gpsi->ptCursor.x,
+                              gpsi->ptCursor.y,
+                              &pgp->Exclude);
+    else if (ppdev->flFlags & PDEV_SOFTWARE_POINTER)
+        EngMovePointer(&ppdev->pSurface->SurfObj,
+                       gpsi->ptCursor.x,
+                       gpsi->ptCursor.y,
+                       &pgp->Exclude);
 
     ppdev->SafetyRemoveLevel = 0;
 
