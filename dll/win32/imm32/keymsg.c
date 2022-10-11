@@ -759,7 +759,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    if (dwHotKeyID != INVALID_HOTKEY_ID)
+    if (dwHotKeyID != INVALID_HOTKEY_ID) /* Valid Hot-key */
     {
         if (Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
         {
@@ -770,10 +770,12 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
 
     if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
     {
+        /* The key has been processed by IME's ImeProcessKey */
         LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        if (PRIMARYLANGID(wLangID) != LANG_KOREAN ||
-            (vKey != VK_PROCESSKEY && !(ret & IPHK_HOTKEY)))
+        if (PRIMARYLANGID(wLangID) != LANG_KOREAN || /* Korean doesn't wanna this code */
+            (vKey != VK_PROCESSKEY && !(ret & IPHK_HOTKEY))) /* Is the key to be processed? */
         {
+            /* Add WM_KEYDOWN:VK_PROCESSKEY message */
             ImmTranslateMessage(hWnd, WM_KEYDOWN, VK_PROCESSKEY, lParam);
             ret &= ~IPHK_PROCESSBYIME;
             ret |= IPHK_SKIPTHISKEY;
