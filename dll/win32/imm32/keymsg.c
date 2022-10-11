@@ -25,7 +25,7 @@ BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, BOOL bNowIME, 
     /* Get the layout list */
     nLayoutCount = GetKeyboardLayoutList(_countof(LayoutList), LayoutList);
 
-    /* Is there the keyboard layout in the specified language ID? */
+    /* Is there hOldKL in the list in the specified language ID? */
     if (hOldKL && (LangID == 0 || LOWORD(hOldKL) == LangID))
     {
         for (iLayout = 0; iLayout < nLayoutCount; ++iLayout)
@@ -176,7 +176,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
-            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Request open */
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Notify open change */
             ImmUnlockIMC(hIMC);
         }
     }
