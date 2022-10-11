@@ -163,7 +163,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
     BOOL fOpen;
     LPINPUTCONTEXTDX pIC;
 
-    if (ImmIsIME(hKL) && LOWORD(hKL) == LANGID_JAPANESE) /* Japanese IME is selected */
+    if (LOWORD(hKL) == LANGID_JAPANESE && ImmIsIME(hKL)) /* Japanese IME is selected */
     {
         fOpen = ImmGetOpenStatus(hIMC);
         ImmSetOpenStatus(hIMC, !fOpen);
