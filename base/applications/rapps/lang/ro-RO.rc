@@ -1,10 +1,9 @@
 /*
- * PROJECT: ReactOS Applications Manager (RAPPS)
- * FILE:    base/applications/rapps/lang/ro-RO.rc
- * PURPOSE: Romanian Translation for RAPPS
- * TRANSLATORS:
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
- *          George Bișoc (george.bisoc@reactos.org)
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2017-2018 George Bișoc <george.bisoc@reactos.org>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -84,7 +83,7 @@ BEGIN
     CONTROL "Di&rect (fără mandatar)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
     CONTROL "Man&datar", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "excepție pentru", -1, 27, 225, 64, 10
+    LTEXT "excepție pentru", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 116, 245, 60, 14
@@ -103,8 +102,8 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "În curs de descărcare %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN

@@ -1,5 +1,11 @@
-/* Translated by Baruch Rutman, additional translations by Shy Zedaka and Omer I.S. */
-
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hebrew resource file
+ * TRANSLATORS: Copyright 2013-2019 Baruch Rutman <peterooch@gmail.com>
+ *              Copyright 2019 Shy Zedaka <shaytzedaka123@gmail.com>
+ *              Copyright 2020 Omer Itzic Schwartz <omeritzicschwartz@gmail.com>
+ */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -79,7 +85,7 @@ BEGIN
     CONTROL "חיבור ישיר(ללא פרוקסי)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
     CONTROL "פרוקסי", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "ללא פרוקסי עבור:", -1, 27, 225, 64, 10
+    LTEXT "ללא פרוקסי עבור:", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "ברירת מחדל", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "אישור", IDOK, 116, 245, 60, 14
@@ -99,8 +105,8 @@ BEGIN
     PUSHBUTTON "ביטול", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "הורדה %ls…"
 FONT 8, "MS Shell Dlg"

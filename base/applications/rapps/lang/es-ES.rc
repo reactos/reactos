@@ -1,5 +1,11 @@
-/* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 and Catalin Gabriel Draghita 2020-08-22 */
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ *              Copyright 2020 Catalin Gabriel Draghita <catalin.draghita@gmail.com>
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -77,9 +83,9 @@ BEGIN
     CONTROL "Utilizar el proxy del sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
     CONTROL "Conexión directa (sin nada)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
     CONTROL "Proxy:", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
-    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL
-    LTEXT "Sin proxy para:", -1, 27, 225, 64, 10
-    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Sin proxy para:", -1, 26, 226, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Por defecto", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 116, 245, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 181, 245, 60, 14
@@ -97,13 +103,13 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Descargando %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_DISABLED | NOT WS_BORDER, 0
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
