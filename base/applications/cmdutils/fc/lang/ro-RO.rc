@@ -1,15 +1,22 @@
+/*
+ * PROJECT:     ReactOS Command Prompt
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them.\n\
+    IDS_USAGE "Compară două fișiere sau seturi de fișiere și afișează diferențele dintre\n\
+ele.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [discul1:][calea1]numele fișierului1 [discul2:][calea2]numele fișierului2\n\
+FC /B [discul1:][calea1]numele fișierului1 [drive2:][path2]numele fișierului2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
+  /A         Afișează numai prima și ultima linie pentru fiecare set de diferențe.\n\
   /B         Performs a binary comparison.\n\
   /C         Disregards the case of letters.\n\
   /L         Compares files as ASCII text.\n\
