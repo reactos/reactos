@@ -225,7 +225,7 @@ LRESULT OSK_SetKeys(int reason)
                 }
                 else
                 {
-                    szKey = Keys[i].name;
+                    szKey = L"";
                 }
 
                 /* Only one & the button will try to underline the next character... */
@@ -266,13 +266,17 @@ LRESULT OSK_SetKeys(int reason)
             /* Create key buttons */
             for (i = 0; i < Globals.Keyboard->KeyCount; i++)
             {
-                if (Keys[i].translate && OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
+                if (!Keys[i].translate)
+                {
+                    szKey = Keys[i].name;
+                }
+                else if (OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
                 {
                     szKey = wKey;
                 }
                 else
                 {
-                    szKey = Keys[i].name;
+                    szKey = L"";
                 }
                 
                 Globals.hKeys[i] = CreateWindowW(WC_BUTTONW,
