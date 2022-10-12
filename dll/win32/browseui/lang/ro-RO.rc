@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS BrowseUI
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -99,13 +105,13 @@ IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Afișează", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Pictograme mari", IDM_LARGE_ICONS
+            MENUITEM "Pi&ctograme mici", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Deschide dosarul", IDM_OPEN_FOLDER
+        MENUITEM "&Afișează textul", IDM_SHOW_TEXT
     END
 END
 
@@ -300,7 +306,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ADDRESSMENUTEXT "&Address"
+    IDS_ADDRESSMENUTEXT "&Adresă"
     IDS_HISTORYTEXT "Ist&oric\tCtrl+H"
 END
 
