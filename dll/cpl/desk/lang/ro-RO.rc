@@ -161,25 +161,25 @@ BEGIN
     PUSHBUTTON "A&vansate…", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
 END
 
-IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
+IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 293, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
+    GROUPBOX "Pictograme de birou", IDC_STATIC, 6, 4, 212, 40
+    CONTROL "&Documente", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
+    CONTROL "Locurile din &rețeaua mea", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
+    CONTROL "&Calculatorul meu", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
+    CONTROL "&Navigatorul de internet", IDC_ICONS_INTERNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
-            6, 60, 212, 54
-    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+            6, 60, 251, 54
+    PUSHBUTTON "&Schimbă pictograma...", IDC_ICONS_CHANGEICON, 70, 120, 80, 15
+    PUSHBUTTON "&Restabilește valorile implicite", IDC_ICONS_SETDEFAULT, 154, 120, 103, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -242,7 +242,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Elemente de birou"
 END
 
 STRINGTABLE
@@ -260,8 +260,8 @@ BEGIN
     IDS_CENTER "Centrat"
     IDS_STRETCH "Extins"
     IDS_TILE "Tapițat"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "Potrivit"
+    IDS_FILL "Umplere"
 END
 
 STRINGTABLE
@@ -310,7 +310,7 @@ BEGIN
     IDS_ELEMENT_15 "Distanță simbol (vertical)"
     IDS_ELEMENT_16 "Pont"
     IDS_ELEMENT_17 "Simbol"
-//  IDS_ELEMENT_18 "Elemente meniu dezactivate"
+//  IDS_ELEMENT_18 "Elemente de meniu dezactivate"
 END
 
 STRINGTABLE
