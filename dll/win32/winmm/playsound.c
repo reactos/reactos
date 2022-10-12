@@ -61,7 +61,7 @@ static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
 static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
 {
     WCHAR	str[128];
-    LPWSTR	ptr;
+    LPWSTR	ptr, pszSnd;
     HMMIO  	hmmio;
     HKEY        hRegSnd, hRegApp, hScheme, hSnd;
     DWORD       err, type, count;
@@ -135,7 +135,42 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     err = RegQueryValueExW(hSnd, NULL, 0, &type, (LPBYTE)str, &count);
     RegCloseKey(hSnd);
     if (err != 0 || !*str) goto none;
-    hmmio = mmioOpenW(str, NULL, MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
+
+    if (type == REG_EXPAND_SZ)
+    {
+        /* Get full path length, including the NULL terminator */
+        count = ExpandEnvironmentStringsW(str, NULL, 0);
+        if (count == 0)
+            goto none;
+
+        /* Allocate a buffer for the path */
+        pszSnd = HeapAlloc(GetProcessHeap(), 0, count * sizeof(WCHAR));
+        if (!pszSnd)
+            goto none;
+
+        /* Get the path */
+        if (ExpandEnvironmentStringsW(str, pszSnd, count) == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, pszSnd);
+            goto none;
+        }
+    }
+    else if (type == REG_SZ)
+    {
+        /* The type is REG_SZ, no need to expand */
+        pszSnd = str;
+    }
+    else
+    {
+        /* Invalid type */
+        goto none;
+    }
+
+    hmmio = mmioOpenW(pszSnd, NULL, MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
+
+    if (type == REG_EXPAND_SZ)
+        HeapFree(GetProcessHeap(), 0, pszSnd);
+
     if (hmmio) return hmmio;
  none:
     WARN("can't find SystemSound=%s !\n", debugstr_w(lpszName));
