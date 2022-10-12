@@ -13,18 +13,68 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+/* Win: IMENonIMEToggle */
+BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, BOOL bNowIME, LANGID LangID)
+{
+    HKL hOldKL, LayoutList[32], hFoundKL = NULL;
+    UINT iLayout, nLayoutCount;
+
+    /* Get the previous layout */
+    hOldKL = (HKL)NtUserGetThreadState(THREADSTATE_OLDKEYBOARDLAYOUT);
+
+    /* Get the layout list */
+    nLayoutCount = GetKeyboardLayoutList(_countof(LayoutList), LayoutList);
+
+    /* Is there hOldKL in the list in the specified language ID? */
+    if (hOldKL && (LangID == 0 || LOWORD(hOldKL) == LangID))
+    {
+        for (iLayout = 0; iLayout < nLayoutCount; ++iLayout)
+        {
+            if (LayoutList[iLayout] == hOldKL)
+            {
+                hFoundKL = hOldKL;
+                break;
+            }
+        }
+    }
+
+    if (hFoundKL == NULL) /* Not found? */
+    {
+        /* Is there the keyboard layout of another kind in LangID? */
+        for (iLayout = 0; iLayout < nLayoutCount; ++iLayout)
+        {
+            if (bNowIME == ImmIsIME(LayoutList[iLayout])) /* Same kind? */
+                continue;
+
+            if (LangID == 0 || LangID == LOWORD(LayoutList[iLayout]))
+            {
+                hFoundKL = LayoutList[iLayout];
+                break;
+            }
+        }
+    }
+
+    if (hFoundKL && hKL != hFoundKL) /* Found and different layout */
+    {
+        PostMessageW(hWnd, WM_INPUTLANGCHANGEREQUEST, 1, (LPARAM)hFoundKL);
+    }
+
+    return ImmIsIME(hFoundKL);
+}
+
+/* Open or close the IME on Chinese or Taiwanese */
 /* Win: CIMENonIMEToggle */
-BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
+BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
 
-    if (hWnd != NULL)
+    if (hWnd == NULL)
         return FALSE;
 
-    if (!IS_IME_HKL(hKL) || LOWORD(hKL) != LangID)
+    if (LOWORD(hKL) != LangID || !ImmIsIME(hKL))
     {
-        FIXME("We have to do something here\n");
+        Imm32ImeNonImeToggle(hIMC, hKL, hWnd, FALSE, LangID);
         return TRUE;
     }
 
@@ -35,16 +85,15 @@ BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
     fOpen = pIC->fOpen;
     ImmUnlockIMC(hIMC);
 
-    if (!fOpen)
-    {
+    if (fOpen)
+        Imm32ImeNonImeToggle(hIMC, hKL, hWnd, TRUE, 0);
+    else
         ImmSetOpenStatus(hIMC, TRUE);
-        return TRUE;
-    }
 
-    FIXME("We have to do something here\n");
     return TRUE;
 }
 
+/* Toggle shape mode on Chinese or Taiwanese */
 /* Win: TShapeToggle */
 BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
@@ -52,7 +101,7 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     BOOL fOpen;
     DWORD dwConversion, dwSentence;
 
-    if (hWnd == NULL || !IS_IME_HKL(hKL))
+    if (hWnd == NULL || !ImmIsIME(hKL))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -83,7 +132,7 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     BOOL fOpen;
     DWORD dwConversion, dwSentence;
 
-    if (hWnd == NULL || !IS_IME_HKL(hKL))
+    if (hWnd == NULL || !ImmIsIME(hKL))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -107,19 +156,31 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
+/* Open or close Japanese IME */
 /* Win: JCloseOpen */
 BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
+    LPINPUTCONTEXTDX pIC;
 
-    if (ImmIsIME(hKL) && LOWORD(hKL) == LANGID_JAPANESE)
+    if (LOWORD(hKL) == LANGID_JAPANESE && ImmIsIME(hKL)) /* Japanese IME is selected */
     {
         fOpen = ImmGetOpenStatus(hIMC);
         ImmSetOpenStatus(hIMC, !fOpen);
         return TRUE;
     }
 
-    FIXME("We have to do something here\n");
+    /* Japanese IME is not selected. Select now */
+    if (Imm32ImeNonImeToggle(hIMC, hKL, hWnd, FALSE, LANGID_JAPANESE))
+    {
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+        if (pIC)
+        {
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Notify open change */
+            ImmUnlockIMC(hIMC);
+        }
+    }
+
     return TRUE;
 }
 
@@ -198,7 +259,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     switch (dwHotKeyID)
     {
         case IME_CHOTKEY_IME_NONIME_TOGGLE:
-            return Imm32ImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_SIMPLIFIED);
+            return Imm32CImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_SIMPLIFIED);
 
         case IME_CHOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hWnd);
@@ -219,7 +280,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
             return Imm32KEnglish(hIMC);
 
         case IME_THOTKEY_IME_NONIME_TOGGLE:
-            return Imm32ImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_TRADITIONAL);
+            return Imm32CImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_TRADITIONAL);
 
         case IME_THOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hWnd);
