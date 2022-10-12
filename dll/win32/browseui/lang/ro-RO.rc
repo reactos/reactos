@@ -140,25 +140,25 @@ BEGIN
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 85
+IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 148
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Search by any or all of the criteria below.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+    LTEXT "Căutați după unul sau toate criteriile de mai jos.", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "All or part &of the file name:", -1, 10, 25, 500, 10
+    LTEXT "Tot sau o parte &din numele fișierului:", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "A &word or phrase in the file:", -1, 10, 50, 500, 10
+    LTEXT "U&n cuvânt sau o expresie din fișier:", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "&Look in:", -1, 10, 75, 500, 10
+    LTEXT "&Uită-te în:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "Sea&rch", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Stop", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Căutare", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Oprește", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "Caută fișierele și dosarele ascunse",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -336,18 +336,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
-    IDS_SEARCHINVALID "'%1' is not a valid folder."
-    IDS_SEARCH_FOLDER "Searching %s"
-    IDS_SEARCH_FILES_FOUND "%u files found"
-    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
-    IDS_COL_NAME "Name"
-    IDS_COL_LOCATION "In Folder"
-    IDS_COL_RELEVANCE "Relevance"
+    IDS_SEARCH_RESULTS "Rezultatele căutării"
+    IDS_SEARCHINVALID "'%1' nu este un dosar valid."
+    IDS_SEARCH_FOLDER "Căutare %s"
+    IDS_SEARCH_FILES_FOUND "%u fișiere găsite"
+    IDS_SEARCH_OPEN_FOLDER "Deschide dosarul &conținător"
+    IDS_COL_NAME "Nume"
+    IDS_COL_LOCATION "În dosar"
+    IDS_COL_RELEVANCE "Relevanță"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "Navigatorul ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Navigatorul ReactOS nu poate găsi '%1'. Verificați ortografia și încercați din nou."
 END
