@@ -773,8 +773,10 @@ WinLdrAddDriverToList(
     return TRUE;
 
 Failure:
+#if 0 // Impossible case.
     if (GroupString.Buffer)
         RtlFreeUnicodeString(&GroupString);
+#endif
     if (RegistryString.Buffer)
         CmpFreeEx(RegistryString.Buffer, RegistryString.MaximumLength, TAG_WLDR_NAME);
     if (FilePath.Buffer)
@@ -784,6 +786,7 @@ Failure:
      * driver node, otherwise keep the original one in place. */
     if (!AlreadyInserted)
     {
+#if 0 // Impossible cases.
         if (DriverEntry->RegistryPath.Buffer)
         {
             CmpFreeEx(DriverEntry->RegistryPath.Buffer,
@@ -796,6 +799,7 @@ Failure:
                       DriverEntry->FilePath.MaximumLength,
                       TAG_WLDR_NAME);
         }
+#endif
         if (DriverNode->Name.Buffer)
             CmpFreeEx(DriverNode->Name.Buffer, DriverNode->Name.MaximumLength, TAG_CM);
         CmpFreeEx(DriverNode, sizeof(*DriverNode), TAG_CM);
