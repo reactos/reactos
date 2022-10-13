@@ -66,10 +66,13 @@ RosInitWdf()
 	FxLibraryGlobals.OsVersionInfo.dwMinorVersion = 1;
 }
 
+#ifdef __GNUC__ // GCC and Clang.
+// Needed for 'cdrom' driver.
 void
 __cxa_pure_virtual()
 {
 	__debugbreak();
 }
+#endif
 
-}  // extern "C"
+} // extern "C"

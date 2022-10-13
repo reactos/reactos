@@ -8,12 +8,11 @@
 
 #include "private.hpp"
 
-extern "C" {
-  void
-	  __cxa_pure_virtual()
-  {
+#if defined(__clang__) && defined(__GNUC__) // Clang only.
+extern "C" void __cxa_pure_virtual()
+{
     // put error handling here
 
     DbgBreakPoint();
-  }
 }
+#endif

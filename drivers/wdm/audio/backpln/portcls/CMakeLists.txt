@@ -39,13 +39,16 @@ list(APPEND SOURCE
     port_wavertstream.cpp
     power.cpp
     propertyhandler.cpp
-    purecall.cpp
     registry.cpp
     resource.cpp
     service_group.cpp
     undoc.cpp
     unregister.cpp
     version.cpp)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND NOT MSVC)
+    list(APPEND SOURCE purecall.cpp)
+endif()
 
 list(APPEND PCH_SKIP_SOURCE
     guid.cpp)

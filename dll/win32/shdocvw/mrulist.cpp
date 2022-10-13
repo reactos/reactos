@@ -18,6 +18,7 @@
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <strsafe.h>
+
 #include "shdocvw.h"
 
 #include <wine/debug.h>
@@ -32,11 +33,13 @@ class CMruBase;
             class CMruPidlList;
 class CMruClassFactory;
 
-extern "C" void __cxa_pure_virtual(void)
+#ifdef __GNUC__ // GCC and Clang.
+extern "C" void __cxa_pure_virtual()
 {
     ERR("__cxa_pure_virtual\n");
     ::DebugBreak();
 }
+#endif
 
 BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
 {

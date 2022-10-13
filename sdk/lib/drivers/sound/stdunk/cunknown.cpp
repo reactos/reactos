@@ -119,6 +119,7 @@ CUnknown::NonDelegatingQueryInterface(
     return STATUS_INVALID_PARAMETER;
 }
 
-#if __GNUC__
+#ifdef __GNUC__ // GCC and Clang.
+// Needed for 'CMIDriver' and 'ac97' drivers.
 extern "C" void __cxa_pure_virtual() { ASSERT(FALSE); }
 #endif
