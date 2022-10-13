@@ -9,6 +9,10 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
+#include <initguid.h>
+#include <wdmguid.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -153,7 +157,23 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    IN PINTERFACE Interface,
                    OUT PULONG Length)
 {
-    UNIMPLEMENTED;
+    if (IsEqualIID(InterfaceType, &GUID_ACPI_REGS_INTERFACE_STANDARD))
+    {
+        DPRINT1("HalpQueryInterface(GUID_ACPI_REGS_INTERFACE_STANDARD) is UNIMPLEMENTED\n");
+    }
+    else if (IsEqualIID(InterfaceType, &GUID_ACPI_PORT_RANGES_INTERFACE_STANDARD))
+    {
+        DPRINT1("HalpQueryInterface(GUID_ACPI_PORT_RANGES_INTERFACE_STANDARD) is UNIMPLEMENTED\n");
+    }
+    else
+    {
+        DPRINT1("HalpQueryInterface({%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}) is UNIMPLEMENTED\n",
+                InterfaceType->Data1, InterfaceType->Data2, InterfaceType->Data3,
+                InterfaceType->Data4[0], InterfaceType->Data4[1],
+                InterfaceType->Data4[2], InterfaceType->Data4[3],
+                InterfaceType->Data4[4], InterfaceType->Data4[5],
+                InterfaceType->Data4[6], InterfaceType->Data4[7]);
+    }
     return STATUS_NOT_SUPPORTED;
 }
 
