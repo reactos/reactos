@@ -124,7 +124,6 @@ pci.sys      = 1,,,,,,x,4,,,,1,4
 scsiport.sys = 1,,,,,,,4,,,,1,4
 storport.sys = 1,,,,,,,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
-vfatfs.sys   = 1,,,,,,,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
 pciide.sys   = 1,,,,,,,4,,,,1,4
@@ -282,6 +281,7 @@ halaacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+vfatfs.sys   = 1,,,,,,,4,,,,1,4
 
 [Files.pc98_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
