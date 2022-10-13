@@ -8,8 +8,9 @@
  *       19/1-2006   Magnus Olsen
  */
 
-
 #include <win32k.h>
+
+// #define NDEBUG
 #include <debug.h>
 
 /************************************************************************/
@@ -24,11 +25,11 @@ NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
 
     if (pfnDdBeginMoCompFrame == NULL)
     {
-        DPRINT1("Warning: no pfnDdBeginMoCompFrame");
+        DPRINT1("Warning: no pfnDdBeginMoCompFrame\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys DdBeginMoCompFrame");
+    DPRINT("Calling dxg.sys pfnDdBeginMoCompFrame\n");
     return pfnDdBeginMoCompFrame(hMoComp,puBeginFrameData);
 }
 
@@ -43,32 +44,33 @@ NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
 
     if (pfnDdCreateMoComp == NULL)
     {
-        DPRINT1("Warning: no pfnDdCreateMoComp");
+        DPRINT1("Warning: no pfnDdCreateMoComp\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys DdCreateMoComp");
+    DPRINT("Calling dxg.sys pfnDdCreateMoComp\n");
     return pfnDdCreateMoComp(hDirectDraw, puCreateMoCompData);
 }
 
 /************************************************************************/
 /* NtGdiDdDestroyMoComp                                                 */
 /************************************************************************/
-DWORD 
+DWORD
 APIENTRY
 NtGdiDdDestroyMoComp(HANDLE hMoComp,
                      PDD_DESTROYMOCOMPDATA puBeginFrameData)
 {
-    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = (PGD_DXDDDESTROYMOCOMP)gpDxFuncs[DXG_INDEX_DxDdDestroyMoComp].pfn;
+    PGD_DXDDDESTROYMOCOMP pfnDdDestroyMoComp =
+        (PGD_DXDDDESTROYMOCOMP)gpDxFuncs[DXG_INDEX_DxDdDestroyMoComp].pfn;
 
-    if (pfnDxDdDestroyMoComp == NULL)
+    if (pfnDdDestroyMoComp == NULL)
     {
-        DPRINT1("Warning: no pfnDxDdDestroyMoComp");
+        DPRINT1("Warning: no pfnDdDestroyMoComp\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys DxDdDestroyMoComp");
-    return pfnDxDdDestroyMoComp(hMoComp, puBeginFrameData);
+    DPRINT("Calling dxg.sys pfnDdDestroyMoComp\n");
+    return pfnDdDestroyMoComp(hMoComp, puBeginFrameData);
 }
 
 /************************************************************************/
@@ -83,11 +85,11 @@ NtGdiDdEndMoCompFrame(HANDLE hMoComp,
 
     if (pfnDdEndMoCompFrame == NULL)
     {
-        DPRINT1("Warning: no pfnDdEndMoCompFrame");
+        DPRINT1("Warning: no pfnDdEndMoCompFrame\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdEndMoCompFrame");
+    DPRINT("Calling dxg.sys pfnDdEndMoCompFrame\n");
     return pfnDdEndMoCompFrame(hMoComp, puEndFrameData);
 }
 
@@ -103,14 +105,13 @@ NtGdiDdGetInternalMoCompInfo(HANDLE hDirectDraw,
 
     if (pfnDdGetInternalMoCompInfo == NULL)
     {
-        DPRINT1("Warning: no pfnDdGetInternalMoCompInfo");
+        DPRINT1("Warning: no pfnDdGetInternalMoCompInfo\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdGetInternalMoCompInfo");
+    DPRINT("Calling dxg.sys pfnDdGetInternalMoCompInfo\n");
     return pfnDdGetInternalMoCompInfo(hDirectDraw, puGetInternalData);
 }
-
 
 /************************************************************************/
 /* NtGdiDdGetMoCompBuffInfo                                             */
@@ -124,11 +125,11 @@ NtGdiDdGetMoCompBuffInfo(HANDLE hDirectDraw,
 
     if (pfnDdGetMoCompBuffInfo == NULL)
     {
-        DPRINT1("Warning: no pfnDdGetMoCompBuffInfo");
+        DPRINT1("Warning: no pfnDdGetMoCompBuffInfo\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdGetMoCompBuffInfo");
+    DPRINT("Calling dxg.sys pfnDdGetMoCompBuffInfo\n");
     return pfnDdGetMoCompBuffInfo(hDirectDraw, puGetBuffData);
 }
 
@@ -144,14 +145,13 @@ NtGdiDdGetMoCompFormats(HANDLE hDirectDraw,
 
     if (pfnDdGetMoCompFormats == NULL)
     {
-        DPRINT1("Warning: no pfnDdGetMoCompFormats");
+        DPRINT1("Warning: no pfnDdGetMoCompFormats\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdGetMoCompFormats");
+    DPRINT("Calling dxg.sys pfnDdGetMoCompFormats\n");
     return pfnDdGetMoCompFormats(hDirectDraw, puGetMoCompFormatsData);
 }
-
 
 /************************************************************************/
 /* NtGdiDdGetMoCompGuids                                                */
@@ -165,15 +165,13 @@ NtGdiDdGetMoCompGuids(HANDLE hDirectDraw,
 
     if (pfnDdGetMoCompGuids == NULL)
     {
-        DPRINT1("Warning: no pfnDdGetMoCompGuids");
+        DPRINT1("Warning: no pfnDdGetMoCompGuids\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdGetMoCompGuids");
+    DPRINT("Calling dxg.sys pfnDdGetMoCompGuids\n");
     return pfnDdGetMoCompGuids(hDirectDraw, puGetMoCompGuidsData);
 }
-
-
 
 /************************************************************************/
 /* NtGdiDdQueryMoCompStatus                                             */
@@ -187,14 +185,13 @@ NtGdiDdQueryMoCompStatus(HANDLE hMoComp,
 
     if (pfnDdQueryMoCompStatus == NULL)
     {
-        DPRINT1("Warning: no pfnDdQueryMoCompStatus");
+        DPRINT1("Warning: no pfnDdQueryMoCompStatus\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdQueryMoCompStatus");
+    DPRINT("Calling dxg.sys pfnDdQueryMoCompStatus\n");
     return pfnDdQueryMoCompStatus(hMoComp, puQueryMoCompStatusData);
 }
-
 
 /************************************************************************/
 /* NtGdiDdRenderMoComp                                                  */
@@ -208,11 +205,10 @@ NtGdiDdRenderMoComp(HANDLE hMoComp,
 
     if (pfnDdRenderMoComp == NULL)
     {
-        DPRINT1("Warning: no pfnDdRenderMoComp");
+        DPRINT1("Warning: no pfnDdRenderMoComp\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdRenderMoComp");
+    DPRINT("Calling dxg.sys pfnDdRenderMoComp\n");
     return pfnDdRenderMoComp(hMoComp, puRenderMoCompData);
 }
-
