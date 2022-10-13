@@ -898,7 +898,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 
         lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
         if (lError != ERROR_SUCCESS)
-            break;
+            continue;
 
         /* Load the "Ime File" value */
         szImeFileName[0] = 0;
@@ -910,12 +910,12 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 
         /* We don't allow the invalid "IME File" values for security reason */
         if (!szImeFileName[0] || wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName))
-            break;
+            continue;
 
         Imm32StrToUInt(szImeKey, &Value, 16);
         hKL = (HKL)(DWORD_PTR)Value;
         if (!IS_IME_HKL(hKL))
-            break;
+            continue;
 
         /* Store the IME key and the IME filename */
         pLayouts[nCount].hKL = hKL;

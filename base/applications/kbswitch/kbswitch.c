@@ -341,7 +341,7 @@ BuildLeftPopupMenu(VOID)
             }
 
             if (!GetLayoutName(szLayoutNum, szName, ARRAYSIZE(szName)))
-                break;
+                continue;
 
             AppendMenu(hMenu, MF_STRING, _ttoi(szLayoutNum), szName);
         }

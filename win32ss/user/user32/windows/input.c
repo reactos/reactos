@@ -796,6 +796,7 @@ IntLoadKeyboardLayout(
             {
                 bIsIME = FALSE;
                 wHigh = 0;
+                ERR("0x%X\n", dwKLID);
             }
             else
             {
@@ -810,6 +811,7 @@ IntLoadKeyboardLayout(
                 {
                     bIsIME = FALSE;
                     wHigh = 0;
+                    ERR("'%s'\n", debugstr_w(szPath));
                 }
             }
         }
