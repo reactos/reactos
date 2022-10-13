@@ -12,7 +12,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
                Io=0x4:FACILITY_IO_ERROR_CODE
               )
 
-LanguageNames=(English=0x409:MSG00409)
+LanguageNames=(English=0x409:MSG00409
+               Romanian=0x418:MSG00418)
 
 MessageId=0x7E
 Severity=Informational
@@ -23,6 +24,11 @@ ReactOS Version %s
 Build %s
 Reporting NT %s (Build %u%s)
 .
+Language=Romanian
+Versiunea ReactOS %s
+Construcția %s
+Reportarea NT %s (Construcția %u%s)
+.
 
 MessageId=0x87
 Severity=Informational
@@ -30,6 +36,9 @@ Facility=System
 SymbolicName=WINDOWS_NT_CSD_STRING
 Language=English
 Service Pack
+.
+Language=Romanian
+Pachet de servicii
 .
 
 MessageId=0x88
@@ -39,6 +48,9 @@ SymbolicName=WINDOWS_NT_INFO_STRING
 Language=English
 %u System Processor [%u MB Memory] %Z
 .
+Language=Romanian
+Procesorul de sistem %u [memorie de %u MO] %Z
+.
 
 MessageId=0x89
 Severity=Informational
@@ -46,6 +58,9 @@ Facility=System
 SymbolicName=WINDOWS_NT_MP_STRING
 Language=English
 MultiProcessor Kernel
+.
+Language=Romanian
+Nucleu de multiprocesor
 .
 
 MessageId=0x8A
@@ -55,6 +70,9 @@ SymbolicName=THREAD_TERMINATE_HELD_MUTEX
 Language=English
 A kernel thread terminated while holding a mutex
 .
+Language=Romanian
+Un fir de execuție al nucleului s-a terminat în timp ce a fost ținut un obiect de execuție comun
+.
 
 MessageId=0x9D
 Severity=Informational
@@ -62,6 +80,9 @@ Facility=System
 SymbolicName=WINDOWS_NT_INFO_STRING_PLURAL
 Language=English
 %u System Processors [%u MB Memory] %Z
+.
+Language=Romanian
+%u Procesoare de sistem [memorie de %u MO] %Z
 .
 
 MessageId=0x9F
@@ -73,6 +94,11 @@ Language=English
  and you\n are welcome to change it and/or distribute copies of it under
  certain\n conditions. There is absolutely no warranty for ReactOS.\n
 .
+Language=Romanian
+\n\nReactOS este un utilitar gratuit, acoperit de GNU General Public License,
+ și sunteți\n binevenit să îl schimbați și/sau să redistribuiți copii ale lui cu
+ anumite\n condiții. Nu este absolut nicio garanție pentru ReactOS.\n
+.
 
 MessageId=0x7F
 Severity=Warning
@@ -81,6 +107,10 @@ SymbolicName=BUGCHECK_MESSAGE_INTRO
 Language=English
 A problem has been detected and ReactOS has been shut down to prevent damage
 to your computer.
+.
+Language=Romanian
+O problemă a fost detectată și ReactOS a fost oprit pentru a preveni stricarea
+calculatorului dumneavoastră.
 .
 
 MessageId=0x80
