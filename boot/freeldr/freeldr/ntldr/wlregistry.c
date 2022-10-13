@@ -16,6 +16,24 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
+// Not enabled by default, to save a bit of code memory.
+// #define ENABLE_CMPFREEEX
+
+#ifdef ENABLE_CMPFREEEX
+static
+VOID
+CmpFreeEx(
+    _In_ PVOID Ptr,
+    _In_ ULONG Quota,
+    _In_ ULONG Tag)
+{
+    UNREFERENCED_PARAMETER(Quota);
+    FrLdrHeapFree(Ptr, Tag);
+}
+#else
+#define CmpFreeEx(p, q, t) CmpFree(p, q)
+#endif
+
 // The only global var here, used to mark mem pages as NLS in WinLdrSetupMemoryLayout()
 ULONG TotalNLSSize = 0;
 
@@ -605,11 +623,11 @@ WinLdrAddDriverToList(
     else
     {
         /* Allocate a driver node and initialize it */
-        DriverNode = CmpAllocate(sizeof(BOOT_DRIVER_NODE), FALSE, TAG_CM);
+        DriverNode = CmpAllocate(sizeof(*DriverNode), FALSE, TAG_CM);
         if (!DriverNode)
             return FALSE;
 
-        RtlZeroMemory(DriverNode, sizeof(BOOT_DRIVER_NODE));
+        RtlZeroMemory(DriverNode, sizeof(*DriverNode));
         DriverEntry = &DriverNode->ListEntry;
 
         /* Driver Name */
@@ -693,8 +711,9 @@ WinLdrAddDriverToList(
     /* Set or replace the driver node's file path */
     if (DriverEntry->FilePath.Buffer)
     {
-        CmpFree(DriverEntry->FilePath.Buffer,
-                DriverEntry->FilePath.MaximumLength);
+        CmpFreeEx(DriverEntry->FilePath.Buffer,
+                  DriverEntry->FilePath.MaximumLength,
+                  TAG_WLDR_NAME);
     }
     DriverEntry->FilePath = FilePath;
     FilePath.Buffer = NULL;
@@ -702,8 +721,9 @@ WinLdrAddDriverToList(
     /* Set or replace the driver node's registry path */
     if (DriverEntry->RegistryPath.Buffer)
     {
-        CmpFree(DriverEntry->RegistryPath.Buffer,
-                DriverEntry->RegistryPath.MaximumLength);
+        CmpFreeEx(DriverEntry->RegistryPath.Buffer,
+                  DriverEntry->RegistryPath.MaximumLength,
+                  TAG_WLDR_NAME);
     }
     DriverEntry->RegistryPath = RegistryString;
     RegistryString.Buffer = NULL;
@@ -756,9 +776,9 @@ Failure:
     if (GroupString.Buffer)
         RtlFreeUnicodeString(&GroupString);
     if (RegistryString.Buffer)
-        CmpFree(RegistryString.Buffer, RegistryString.MaximumLength);
+        CmpFreeEx(RegistryString.Buffer, RegistryString.MaximumLength, TAG_WLDR_NAME);
     if (FilePath.Buffer)
-        CmpFree(FilePath.Buffer, FilePath.MaximumLength);
+        CmpFreeEx(FilePath.Buffer, FilePath.MaximumLength, TAG_WLDR_NAME);
 
     /* If it does not exist in the list already, free the allocated
      * driver node, otherwise keep the original one in place. */
@@ -766,20 +786,19 @@ Failure:
     {
         if (DriverEntry->RegistryPath.Buffer)
         {
-            CmpFree(DriverEntry->RegistryPath.Buffer,
-                    DriverEntry->RegistryPath.MaximumLength);
+            CmpFreeEx(DriverEntry->RegistryPath.Buffer,
+                      DriverEntry->RegistryPath.MaximumLength,
+                      TAG_WLDR_NAME);
         }
         if (DriverEntry->FilePath.Buffer)
         {
-            CmpFree(DriverEntry->FilePath.Buffer,
-                    DriverEntry->FilePath.MaximumLength);
+            CmpFreeEx(DriverEntry->FilePath.Buffer,
+                      DriverEntry->FilePath.MaximumLength,
+                      TAG_WLDR_NAME);
         }
         if (DriverNode->Name.Buffer)
-        {
-            CmpFree(DriverNode->Name.Buffer,
-                    DriverNode->Name.MaximumLength);
-        }
-        CmpFree(DriverNode, sizeof(BOOT_DRIVER_NODE));
+            CmpFreeEx(DriverNode->Name.Buffer, DriverNode->Name.MaximumLength, TAG_CM);
+        CmpFreeEx(DriverNode, sizeof(*DriverNode), TAG_CM);
     }
 
     return FALSE;
