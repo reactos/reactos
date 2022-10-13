@@ -6,8 +6,7 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-#ifndef _HAL_PCH_
-#define _HAL_PCH_
+#pragma once
 
 /* INCLUDES ******************************************************************/
 
@@ -59,7 +58,7 @@
 #endif
 
 #define TAG_HAL    ' laH'
-#define TAG_BUS_HANDLER 'BusH'
+#define TAG_BUS_HANDLER 'HsuB'
 
 /* Internal HAL Headers */
 #include "bus.h"
@@ -78,5 +77,3 @@
 #include "halp.h"
 #include "mps.h"
 #include "halacpi.h"
-
-#endif /* _HAL_PCH_ */
