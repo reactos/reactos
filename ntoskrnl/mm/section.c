@@ -4739,7 +4739,7 @@ MmPurgeSegment(
     if (!Segment)
     {
         /* Nothing to purge */
-        return STATUS_SUCCESS;
+        return TRUE;
     }
 
     PurgeStart.QuadPart = Offset ? Offset->QuadPart : 0LL;
