@@ -36,10 +36,7 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
                                   GetSystemMetrics(SM_CYSMICON),
                                   LR_DEFAULTCOLOR);
 
-    SendMessage(hDlg,
-                WM_SETICON,
-                ICON_BIG,
-                (LPARAM)pLicInfo->hIcon);
+    SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)pLicInfo->hIcon);
     SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)pLicInfo->hIconSm);
 
     /* Load license from resource */
