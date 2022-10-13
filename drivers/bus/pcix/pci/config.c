@@ -36,8 +36,9 @@ PciGetAdjustedInterruptLine(IN PPCI_PDO_EXTENSION PdoExtension)
                                        &PciInterruptLine,
                                        FIELD_OFFSET(PCI_COMMON_HEADER,
                                                     u.type0.InterruptLine),
-                                       sizeof(UCHAR));
-        if (Length) InterruptLine = PciInterruptLine;
+                                       sizeof(PciInterruptLine));
+        if (Length == sizeof(PciInterruptLine))
+            InterruptLine = PciInterruptLine;
     }
 
     /* Either keep the original interrupt line, or the one on the master bus */

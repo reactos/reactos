@@ -209,12 +209,9 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  OriginalValue,
                                  Offset,
-                                 sizeof(ULONG));
-    if (Size != sizeof(ULONG))
-    {
-        DPRINT1("Wrong size %lu\n", Size);
+                                 sizeof(*OriginalValue));
+    if (Size != sizeof(*OriginalValue))
         return FALSE;
-    }
 
     /* Write all ones to determine which bits are held to zero */
     AllOnes = MAXULONG;
@@ -223,12 +220,9 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  &AllOnes,
                                  Offset,
-                                 sizeof(ULONG));
-    if (Size != sizeof(ULONG))
-    {
-        DPRINT1("Wrong size %lu\n", Size);
+                                 sizeof(AllOnes));
+    if (Size != sizeof(AllOnes))
         return FALSE;
-    }
 
     /* Get the range length */
     Size = HalGetBusDataByOffset(PCIConfiguration,
@@ -236,12 +230,9 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  NewValue,
                                  Offset,
-                                 sizeof(ULONG));
-    if (Size != sizeof(ULONG))
-    {
-        DPRINT1("Wrong size %lu\n", Size);
+                                 sizeof(*NewValue));
+    if (Size != sizeof(*NewValue))
         return FALSE;
-    }
 
     /* Restore original value */
     Size = HalSetBusDataByOffset(PCIConfiguration,
@@ -249,12 +240,9 @@ PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  OriginalValue,
                                  Offset,
-                                 sizeof(ULONG));
-    if (Size != sizeof(ULONG))
-    {
-        DPRINT1("Wrong size %lu\n", Size);
+                                 sizeof(*OriginalValue));
+    if (Size != sizeof(*OriginalValue))
         return FALSE;
-    }
 
     return TRUE;
 }
@@ -1031,7 +1019,6 @@ InterfaceBusSetBusData(
     IN ULONG Length)
 {
     PPDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG Size;
 
     DPRINT("InterfaceBusSetBusData(%p 0x%lx %p 0x%lx 0x%lx)\n",
            Context, DataType, Buffer, Offset, Length);
@@ -1045,13 +1032,12 @@ InterfaceBusSetBusData(
     DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
 
     /* Get PCI configuration space */
-    Size = HalSetBusDataByOffset(PCIConfiguration,
+    return HalSetBusDataByOffset(PCIConfiguration,
                                  DeviceExtension->PciDevice->BusNumber,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  Buffer,
                                  Offset,
                                  Length);
-    return Size;
 }
 
 static GET_SET_DEVICE_DATA InterfaceBusGetBusData;
@@ -1067,7 +1053,6 @@ InterfaceBusGetBusData(
     IN ULONG Length)
 {
     PPDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG Size;
 
     DPRINT("InterfaceBusGetBusData(%p 0x%lx %p 0x%lx 0x%lx) called\n",
            Context, DataType, Buffer, Offset, Length);
@@ -1081,13 +1066,12 @@ InterfaceBusGetBusData(
     DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
 
     /* Get PCI configuration space */
-    Size = HalGetBusDataByOffset(PCIConfiguration,
+    return HalGetBusDataByOffset(PCIConfiguration,
                                  DeviceExtension->PciDevice->BusNumber,
                                  DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                                  Buffer,
                                  Offset,
                                  Length);
-    return Size;
 }
 
 
@@ -1354,12 +1338,12 @@ PdoStartDevice(
                         DeviceExtension->PciDevice->BusNumber);
 
                 Irq = (UCHAR)RawPartialDesc->u.Interrupt.Vector;
-                HalSetBusDataByOffset(PCIConfiguration,
-                                      DeviceExtension->PciDevice->BusNumber,
-                                      DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                      &Irq,
-                                      0x3c /* PCI_INTERRUPT_LINE */,
-                                      sizeof(UCHAR));
+                (VOID)HalSetBusDataByOffset(PCIConfiguration,
+                                            DeviceExtension->PciDevice->BusNumber,
+                                            DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                            &Irq,
+                                            0x3c /* PCI_INTERRUPT_LINE */,
+                                            sizeof(Irq));
             }
         }
     }
@@ -1394,12 +1378,12 @@ PdoStartDevice(
         /* OR with the previous value */
         Command |= DeviceExtension->PciDevice->PciConfig.Command;
 
-        HalSetBusDataByOffset(PCIConfiguration,
-                              DeviceExtension->PciDevice->BusNumber,
-                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                              &Command,
-                              FIELD_OFFSET(PCI_COMMON_CONFIG, Command),
-                              sizeof(USHORT));
+        (VOID)HalSetBusDataByOffset(PCIConfiguration,
+                                    DeviceExtension->PciDevice->BusNumber,
+                                    DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                    &Command,
+                                    FIELD_OFFSET(PCI_COMMON_CONFIG, Command),
+                                    sizeof(Command));
     }
     else
     {

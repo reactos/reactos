@@ -769,14 +769,12 @@ OslIsPciDevicePresent(ULONG BusNumber, ULONG SlotNumber)
                                        SlotNumber,
                                        &PciConfig,
                                        0,
-                                       sizeof(PciConfig));
-    if (ReadLength == 0)
+                                       RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, VendorID));
+    if (ReadLength != RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, VendorID))
     {
-        DPRINT("PCI device is not present\n");
+        DPRINT(ReadLength == 0 ? "PCI device is not present\n" : "Potential PCI device is ignored\n");
         return FALSE;
     }
-
-    ASSERT(ReadLength >= 2);
 
     if (PciConfig.VendorID == PCI_INVALID_VENDORID)
     {
@@ -797,6 +795,7 @@ AcpiOsReadPciConfiguration (
     UINT32                  Width)
 {
     PCI_SLOT_NUMBER slot;
+    ULONG Size;
 
     slot.u.AsULONG = 0;
     slot.u.bits.DeviceNumber = PciId->Device;
@@ -808,12 +807,14 @@ AcpiOsReadPciConfiguration (
         return AE_NOT_FOUND;
 
     /* Width is in BITS */
-    HalGetBusDataByOffset(PCIConfiguration,
-        PciId->Bus,
-        slot.u.AsULONG,
-        Value,
-        Reg,
-        (Width >> 3));
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 PciId->Bus,
+                                 slot.u.AsULONG,
+                                 Value,
+                                 Reg,
+                                 Width / 8);
+    if (Size != Width / 8)
+        return AE_ERROR;
 
     return AE_OK;
 }
@@ -827,22 +828,26 @@ AcpiOsWritePciConfiguration (
 {
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
+    ULONG Size;
 
     slot.u.AsULONG = 0;
     slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
-    DPRINT("AcpiOsWritePciConfiguration, slot=0x%x\n", slot.u.AsULONG);
+    DPRINT("AcpiOsWritePciConfiguration, slot=0x%X\n", slot.u.AsULONG);
+
     if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
         return AE_NOT_FOUND;
 
     /* Width is in BITS */
-    HalSetBusDataByOffset(PCIConfiguration,
-        PciId->Bus,
-        slot.u.AsULONG,
-        &buf,
-        Reg,
-        (Width >> 3));
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 PciId->Bus,
+                                 slot.u.AsULONG,
+                                 &buf,
+                                 Reg,
+                                 Width / 8);
+    if (Size != Width / 8)
+        return AE_ERROR;
 
     return AE_OK;
 }

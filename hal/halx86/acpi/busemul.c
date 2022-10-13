@@ -194,12 +194,13 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Length)
 {
     BUS_HANDLER BusHandler;
+    ULONG Size = 0; /* Invalid bus data type */
 
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (BusDataType == Cmos)
     {
         /* Call CMOS Function */
-        return HalpGetCmosData(0, SlotNumber, Buffer, Length);
+        Size = HalpGetCmosData(0, SlotNumber, Buffer, Length);
     }
     else if (BusDataType == EisaConfiguration)
     {
@@ -215,7 +216,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpGetPCIData(&BusHandler,
+        Size = HalpGetPCIData(&BusHandler,
                               &BusHandler,
                               SlotNumber,
                               Buffer,
@@ -223,8 +224,21 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                               Length);
     }
 
-    /* Invalid bus */
-    return 0;
+    /* Log unexpected size. 0 (no bus) and PCI_INVALID_VENDORID (no data) are valid results */
+    /* TODO: EisaConfiguration is excluded, until its case is implemented */
+    if (Size != Length &&
+        Size != 0 &&
+        BusDataType != EisaConfiguration &&
+        (BusDataType != PCIConfiguration ||
+         Size != RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, VendorID) ||
+         ((PPCI_COMMON_CONFIG)Buffer)->VendorID != PCI_INVALID_VENDORID))
+    {
+       DPRINT1("HalGetBusDataByOffset(%d, %lu, 0x%lX) failed (%lu != %lu)\n",
+               BusDataType, BusNumber, SlotNumber, Size, Length);
+    }
+
+    /* Return size */
+    return Size;
 }
 
 /*
@@ -279,12 +293,13 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Length)
 {
     BUS_HANDLER BusHandler;
+    ULONG Size = 0; /* Invalid bus data type */
 
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (BusDataType == Cmos)
     {
         /* Call CMOS Function */
-        return HalpSetCmosData(0, SlotNumber, Buffer, Length);
+        Size = HalpSetCmosData(0, SlotNumber, Buffer, Length);
     }
     else if ((BusDataType == PCIConfiguration) && (HalpPCIConfigInitialized))
     {
@@ -293,7 +308,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpSetPCIData(&BusHandler,
+        Size = HalpSetPCIData(&BusHandler,
                               &BusHandler,
                               SlotNumber,
                               Buffer,
@@ -301,8 +316,15 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                               Length);
     }
 
-    /* Invalid bus */
-    return 0;
+    /* Log unexpected size */
+    if (Size != Length)
+    {
+       DPRINT1("HalSetBusDataByOffset(%d, %lu, 0x%lX) failed (%lu != %lu)\n",
+               BusDataType, BusNumber, SlotNumber, Size, Length);
+    }
+
+    /* Return size */
+    return Size;
 }
 
 /*
