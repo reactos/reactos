@@ -103,8 +103,12 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
             hr = SHLoadRegUIStringW(hKey, L"MenuTextPUI", wszBandName, _countof(wszBandName));
             if (FAILED_UNEXPECTEDLY(hr))
             {
-                hr = SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
-                FAILED_UNEXPECTEDLY(hr);
+                hr = SHLoadRegUIStringW(hKey, L"MenuText", wszBandName, _countof(wszBandName));
+                if (FAILED_UNEXPECTEDLY(hr))
+                {
+                    hr = SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
+                    FAILED_UNEXPECTEDLY(hr);
+                }
             }
             RegCloseKey(hKey);
         }
