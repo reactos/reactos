@@ -140,7 +140,7 @@ SpiSendSynchronousSrb(
         KeStallExecutionProcessor(100 * 1000);
         if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
         {
-            ExFreePool(Srb);
+            ExFreePoolWithTag(Srb, TAG_FLDR_SRB);
             return FALSE;
         }
     }
@@ -152,7 +152,7 @@ SpiSendSynchronousSrb(
             DeviceExtension->MiniPortDeviceExtension,
             Srb))
     {
-        ExFreePool(Srb);
+        ExFreePoolWithTag(Srb, TAG_FLDR_SRB);
         return FALSE;
     }
 
@@ -162,21 +162,21 @@ SpiSendSynchronousSrb(
         KeStallExecutionProcessor(100 * 1000);
         if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
         {
-            ExFreePool(Srb);
+            ExFreePoolWithTag(Srb, TAG_FLDR_SRB);
             return FALSE;
         }
     }
 
     ret = SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS;
-    ExFreePool(Srb);
+
+    ExFreePoolWithTag(Srb, TAG_FLDR_SRB);
 
     return ret;
 }
 
 static ARC_STATUS DiskClose(ULONG FileId)
 {
-    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
-    ExFreePool(Context);
+    ExFreePoolWithTag(FsGetDeviceSpecific(FileId), TAG_FLDR_DISKCTX);
     return ESUCCESS;
 }
 
@@ -221,11 +221,12 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     PathId = ScsiBus - DeviceExtension->BusNum;
 
     /* Get disk capacity and sector size */
-    Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
+    Srb = ExAllocatePoolWithTag(PagedPool, sizeof(*Srb), TAG_FLDR_SRB);
     if (!Srb)
         return ENOMEM;
-    RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
-    Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+
+    RtlZeroMemory(Srb, sizeof(*Srb));
+    Srb->Length = sizeof(*Srb);
     Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
     Srb->PathId = (UCHAR)PathId;
     Srb->TargetId = (UCHAR)TargetId;
@@ -253,9 +254,10 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         return EIO;
     }
 
-    Context = ExAllocatePool(PagedPool, sizeof(DISKCONTEXT));
+    Context = ExAllocatePoolWithTag(PagedPool, sizeof(*Context), TAG_FLDR_DISKCTX);
     if (!Context)
         return ENOMEM;
+
     Context->DeviceExtension = DeviceExtension;
     Context->PathId = (UCHAR)PathId;
     Context->TargetId = (UCHAR)TargetId;
@@ -294,12 +296,12 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     Lba = (ULONG)(Context->SectorOffset + Context->SectorNumber);
     if (FullSectors > 0)
     {
-        Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
+        Srb = ExAllocatePoolWithTag(PagedPool, sizeof(*Srb), TAG_FLDR_SRB);
         if (!Srb)
             return ENOMEM;
 
-        RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
-        Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+        RtlZeroMemory(Srb, sizeof(*Srb));
+        Srb->Length = sizeof(*Srb);
         Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
         Srb->PathId = Context->PathId;
         Srb->TargetId = Context->TargetId;
@@ -334,19 +336,19 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     {
         PUCHAR Sector;
 
-        Sector = ExAllocatePool(PagedPool, Context->SectorSize);
+        Sector = ExAllocatePoolWithTag(PagedPool, Context->SectorSize, TAG_FLDR_SECTOR);
         if (!Sector)
             return ENOMEM;
 
-        Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
+        Srb = ExAllocatePoolWithTag(PagedPool, sizeof(*Srb), TAG_FLDR_SRB);
         if (!Srb)
         {
-            ExFreePool(Sector);
+            ExFreePoolWithTag(Sector, TAG_FLDR_SECTOR);
             return ENOMEM;
         }
 
-        RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
-        Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+        RtlZeroMemory(Srb, sizeof(*Srb));
+        Srb->Length = sizeof(*Srb);
         Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
         Srb->PathId = Context->PathId;
         Srb->TargetId = Context->TargetId;
@@ -367,13 +369,15 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Cdb->CDB10.TransferBlocksLsb = 1;
         if (!SpiSendSynchronousSrb(Context->DeviceExtension, Srb))
         {
-            ExFreePool(Sector);
+            ExFreePoolWithTag(Sector, TAG_FLDR_SECTOR);
             return EIO;
         }
+
         RtlCopyMemory(Buffer, Sector, N);
         *Count += N;
         /* Context->SectorNumber remains untouched (incomplete sector read) */
-        ExFreePool(Sector);
+
+        ExFreePoolWithTag(Sector, TAG_FLDR_SECTOR);
     }
 
     return ESUCCESS;
@@ -488,11 +492,11 @@ ScsiDebugPrint(
     /* Check if we went past the buffer */
     if (Length == MAXULONG)
     {
-        /* Terminate it if we went over-board */
-        Buffer[sizeof(Buffer) - 1] = '\0';
-
         /* Put maximum */
         Length = sizeof(Buffer);
+
+        /* Terminate it if we went over-board */
+        Buffer[Length - 1] = ANSI_NULL;
     }
 
     /* Print the message */
@@ -687,14 +691,14 @@ SpiAllocateCommonBuffer(
     BufSize = (BufSize + sizeof(LONGLONG) - 1) & ~(sizeof(LONGLONG) - 1);
 
     /* Sum up into the total common buffer length, and round it to page size */
-    CommonBufferLength =
-        ROUND_TO_PAGES(NonCachedSize);
+    CommonBufferLength = ROUND_TO_PAGES(NonCachedSize);
 
     /* Allocate it */
     if (!DeviceExtension->AdapterObject)
     {
         /* From nonpaged pool if there is no DMA */
-        CommonBuffer = ExAllocatePool(NonPagedPool, CommonBufferLength);
+        // Note: not freed by FreeLdr.
+        CommonBuffer = ExAllocatePoolWithTag(NonPagedPool, CommonBufferLength, TAG_FLDR_CMNBUF);
     }
     else
     {
@@ -719,14 +723,9 @@ SpiAllocateCommonBuffer(
     /* Non-cached extension buffer is located at the end of
        the common buffer */
     if (NonCachedSize)
-    {
-        CommonBufferLength -=  NonCachedSize;
-        DeviceExtension->NonCachedExtension = (PUCHAR)CommonBuffer + CommonBufferLength;
-    }
+        DeviceExtension->NonCachedExtension = (PUCHAR)CommonBuffer + CommonBufferLength - NonCachedSize;
     else
-    {
         DeviceExtension->NonCachedExtension = NULL;
-    }
 
     return STATUS_SUCCESS;
 }
@@ -866,7 +865,7 @@ SpiScanDevice(
                     FsRegisterDevice(PartitionName, &DiskVtbl);
                 }
             }
-            ExFreePool(PartitionBuffer);
+            ExFreePoolWithTag(PartitionBuffer, TAG_FLDR_PART);
         }
         ArcClose(FileId);
     }
@@ -902,11 +901,12 @@ SpiScanAdapter(
             TRACE("Scanning SCSI device %d.%d.%d\n",
                 ScsiBus, TargetId, Lun);
 
-            Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
+            Srb = ExAllocatePoolWithTag(PagedPool, sizeof(*Srb), TAG_FLDR_SRB);
             if (!Srb)
                 break;
-            RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
-            Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+
+            RtlZeroMemory(Srb, sizeof(*Srb));
+            Srb->Length = sizeof(*Srb);
             Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
             Srb->PathId = PathId;
             Srb->TargetId = TargetId;
@@ -1086,7 +1086,7 @@ SpiGetPciConfigData(
                 continue;
             }
 
-            TRACE( "Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
+            TRACE("Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
                 PciConfig.VendorID, PciConfig.DeviceID,
                 BusNumber,
                 SlotNumber.u.bits.DeviceNumber, SlotNumber.u.bits.FunctionNumber);
@@ -1109,6 +1109,7 @@ SpiGetPciConfigData(
                                 PortConfig);
 
             /* Free the resource list */
+            // TODO: would there be a known/unique tag to use?
             ExFreePool(ResourceList);
 
             /* Set dev & fn numbers */
@@ -1735,5 +1736,3 @@ LoadBootDeviceDriver(VOID)
 
     return ESUCCESS;
 }
-
-/* EOF */
