@@ -127,10 +127,10 @@ WinMain(HINSTANCE hInstance,
     InitOsVersion();
     printf("g_OsIdx = %d\n", g_OsIdx);
 
-    g_hModule = LoadLibraryW(L"w32kdll.dll");
+    g_hModule = LoadLibraryW(L"win32u.dll");
     if (!g_hModule)
     {
-        printf("w32kdll.dll not found!\n");
+        printf("win32u.dll not found!\n");
         return -1;
     }
 
