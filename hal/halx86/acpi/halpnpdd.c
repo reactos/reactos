@@ -243,7 +243,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 /* Free existing structure */
-                ExFreePool(*DeviceRelations);
+                ExFreePoolWithTag(*DeviceRelations, 0); // Tag is unknown.
             }
 
             /* Now check if we have a PDO list */
@@ -375,16 +375,15 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
 
         ASSERT(RequirementsList->AlternativeLists == 1);
 
-        /* Allocate the resourcel ist */
+        /* Allocate the resource list */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(CM_RESOURCE_LIST),
                                              TAG_HAL);
         if (!ResourceList )
         {
             /* Fail, no memory */
-            Status = STATUS_INSUFFICIENT_RESOURCES;
             ExFreePoolWithTag(RequirementsList, TAG_HAL);
-            return Status;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         /* Initialize it */
