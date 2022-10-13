@@ -11,7 +11,6 @@
 #ifndef YDEBUG
 #define NDEBUG
 #endif
-
 #include <debug.h>
 
 PVOID
@@ -20,12 +19,7 @@ AllocateItem(
     IN SIZE_T NumberOfBytes,
     IN ULONG Tag)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, Tag);
 }
 
 VOID
@@ -33,6 +27,5 @@ FreeItem(
     IN PVOID Item,
     IN ULONG Tag)
 {
-
     ExFreePoolWithTag(Item, Tag);
 }

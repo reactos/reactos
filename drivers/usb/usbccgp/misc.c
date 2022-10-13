@@ -95,17 +95,8 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN ULONG ItemSize)
 {
-    /* Allocate item */
-    PVOID Item = ExAllocatePoolWithTag(PoolType, ItemSize, USBCCPG_TAG);
-
-    if (Item)
-    {
-        /* Zero item */
-        RtlZeroMemory(Item, ItemSize);
-    }
-
-    /* Return element */
-    return Item;
+    /* Allocate, zero and return item */
+    return ExAllocatePoolZero(PoolType, ItemSize, USBCCPG_TAG);
 }
 
 VOID
@@ -122,7 +113,6 @@ DumpFunctionDescriptor(
     IN ULONG FunctionDescriptorCount)
 {
     ULONG Index, SubIndex;
-
 
     DPRINT("FunctionCount %lu\n", FunctionDescriptorCount);
     for (Index = 0; Index < FunctionDescriptorCount; Index++)
