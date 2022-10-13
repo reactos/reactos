@@ -94,8 +94,12 @@ LicenceDlgProc(HWND hDlg,
         case WM_DESTROY:
             if (pLicInfo)
             {
-                DestroyIcon(pLicInfo->hIconSm);
-                DestroyIcon(pLicInfo->hIcon);
+                if (pLicInfo->hIconSm)
+                    DestroyIcon(pLicInfo->hIconSm);
+
+                if (pLicInfo->hIcon)
+                    DestroyIcon(pLicInfo->hIcon);
+                    
                 HeapFree(GetProcessHeap(), 0, pLicInfo);
             }
             break;
