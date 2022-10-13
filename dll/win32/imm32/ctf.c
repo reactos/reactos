@@ -100,7 +100,7 @@ DWORD WINAPI CtfImmHideToolbarWnd(VOID)
  */
 LRESULT WINAPI CtfImmDispatchDefImeMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+    /* FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam); */
     return 0;
 }
 
