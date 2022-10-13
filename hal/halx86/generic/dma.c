@@ -342,7 +342,7 @@ HalpGrowMapBuffers(IN PADAPTER_OBJECT AdapterObject,
              * using RtlFindClearBits for contiguous map register regions.
              *
              * Also for non-EISA DMA leave one free entry for every 64Kb
-             * break, because the DMA controller can handle only coniguous
+             * break, because the DMA controller can handle only contiguous
              * 64Kb regions.
              */
             if (CurrentEntry != AdapterObject->MapRegisterBase)
@@ -427,7 +427,7 @@ HalpDmaAllocateMasterAdapter(VOID)
                                                            TAG_DMA);
     if (!MasterAdapter->MapRegisterBase)
     {
-        ExFreePool(MasterAdapter);
+        ExFreePoolWithTag(MasterAdapter, TAG_DMA);
         return NULL;
     }
 
@@ -435,7 +435,8 @@ HalpDmaAllocateMasterAdapter(VOID)
                   SizeOfBitmap * sizeof(ROS_MAP_REGISTER_ENTRY));
     if (!HalpGrowMapBuffers(MasterAdapter, 0x10000))
     {
-        ExFreePool(MasterAdapter);
+        ExFreePoolWithTag(MasterAdapter->MapRegisterBase, TAG_DMA);
+        ExFreePoolWithTag(MasterAdapter, TAG_DMA);
         return NULL;
     }
 
@@ -1429,7 +1430,7 @@ HalpGrowMapBufferWorker(IN PVOID DeferredContext)
         KfLowerIrql(OldIrql);
     }
 
-    ExFreePool(WorkItem);
+    ExFreePoolWithTag(WorkItem, TAG_DMA);
 }
 
 /**
@@ -1509,7 +1510,7 @@ HalAllocateAdapterChannel(IN PADAPTER_OBJECT AdapterObject,
          * - If some adapter is already present in the queue we must
          *   respect the order of adapters asking for map registers and
          *   so the fast case described above can't take place.
-         *   This case is also entered if not enough coniguous map
+         *   This case is also entered if not enough contiguous map
          *   registers are present.
          *
          *   A work queue item is allocated and queued, the adapter is
@@ -1551,6 +1552,7 @@ HalAllocateAdapterChannel(IN PADAPTER_OBJECT AdapterObject,
 
             KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
 
+            // TODO: Is it fine if ExAllocatePoolWithTag() failed?
             return STATUS_SUCCESS;
         }
 
