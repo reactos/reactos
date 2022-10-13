@@ -1032,7 +1032,11 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	ScatterGatherList = ExAllocatePoolWithTag(NonPagedPool,
 	                                          sizeof(SCATTER_GATHER_LIST) + sizeof(SCATTER_GATHER_ELEMENT) * ElementCount,
 											  TAG_DMA);
-	ASSERT(ScatterGatherList);
+	if (!ScatterGatherList)
+	{
+	    DPRINT1("ExAllocatePoolWithTag() failed\n");
+	    return DeallocateObject;
+	}
 
 	ScatterGatherList->NumberOfElements = ElementCount;
 	ScatterGatherList->Reserved = (ULONG_PTR)AdapterControlContext;
