@@ -121,6 +121,10 @@ Language=English
 The problem seems to be caused by the following file:
 
 .
+Language=Romanian
+Problema pare să fie cauzată de următorul fișier:
+
+.
 
 MessageId=0x81
 Severity=Warning
@@ -130,6 +134,12 @@ Language=English
 If this is the first time you've seen this Stop error screen,
 restart your computer. If this screen appears again, follow
 these steps:
+
+.
+Language=Romanian
+Dacă este pentru prima dată când ați văzut acest Ecran de eroare de oprire,
+reporniți-vă calculatorul. Dacă acest ecran apare din nou, urmați
+acești pași:
 
 .
 
@@ -148,6 +158,18 @@ If you need to use Safe Mode to remove or disable components, restart
 your computer, press F8 to select Advanced Startup Options, and then
 select Safe Mode.
 .
+Language=Romanian
+Verificați pentru a vă asigura că orice dispozitiv sau utilitar nou este instalat corect.
+Dacă aceasta este o instalare nouă, întrebați producătorul de dispozitiv sau de utilitar
+pentru orice actualizări ReactOS de care ați putea avea nevoie.
+
+Dacă problemele continuă, dezactivați sau eliminați orice dispozitiv nou instalat
+sau utilitar. Dezactivați opțiunile de memorie BIOS, cum ar fi stocarea în depozitul de memorie sau umbrirea.
+Dacă trebuie să utilizați Modul sigur pentru a elimina sau a dezactiva componente, reporniți
+computerul dumneavoastră, apăsați F8 pentru a selecta Opțiuni avansate de pornire, apoi
+selectați Modul sigur.
+.
+.
 
 MessageId=0x83
 Severity=Warning
@@ -155,6 +177,9 @@ Facility=System
 SymbolicName=BUGCHECK_TECH_INFO
 Language=English
 Technical information:
+.
+Language=Romanian
+Informații tehnice:
 .
 
 MessageId=0x0
@@ -164,12 +189,18 @@ SymbolicName=UNDEFINED_BUG_CODE
 Language=English
 The bug code is undefined. Please use an existing code instead.
 .
+Language=Romanian
+Codul de eroare este neidentificat. În locul lui folosiți un cod existent.
+.
 
 MessageId=0x01
 Severity=Success
 Facility=System
 SymbolicName=APC_INDEX_MISMATCH
 Language=English
+APC_INDEX_MISMATCH
+.
+Language=Romanian
 APC_INDEX_MISMATCH
 .
 
@@ -180,12 +211,18 @@ SymbolicName=DEVICE_QUEUE_NOT_BUSY
 Language=English
 DEVICE_QUEUE_NOT_BUSY
 .
+Language=Romanian
+DEVICE_QUEUE_NOT_BUSY
+.
 
 MessageId=0x3
 Severity=Success
 Facility=System
 SymbolicName=INVALID_AFFINITY_SET
 Language=English
+INVALID_AFFINITY_SET
+.
+Language=Romanian
 INVALID_AFFINITY_SET
 .
 
@@ -196,12 +233,18 @@ SymbolicName=INVALID_DATA_ACCESS_TRAP
 Language=English
 INVALID_DATA_ACCESS_TRAP
 .
+Language=Romanian
+INVALID_DATA_ACCESS_TRAP
+.
 
 MessageId=0x05
 Severity=Success
 Facility=System
 SymbolicName=INVALID_PROCESS_ATTACH_ATTEMPT
 Language=English
+INVALID_PROCESS_ATTACH_ATTEMPT
+.
+Language=Romanian
 INVALID_PROCESS_ATTACH_ATTEMPT
 .
 
