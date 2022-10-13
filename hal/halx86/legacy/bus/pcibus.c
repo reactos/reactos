@@ -803,6 +803,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
                            IN PDEVICE_OBJECT DeviceObject OPTIONAL,
                            IN ULONG Slot,
                            IN OUT PCM_RESOURCE_LIST *AllocatedResources)
+// FIXME: AllocatedResources is OUT only. Check and fix callers too.
 {
     PCI_COMMON_CONFIG PciConfig;
     SIZE_T Address;
@@ -902,6 +903,8 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
             else
             {
                 ASSERT(FALSE);
+                ExFreePoolWithTag(*AllocatedResources, TAG_HAL);
+                *AllocatedResources = NULL;
                 return STATUS_UNSUCCESSFUL;
             }
             Descriptor++;
