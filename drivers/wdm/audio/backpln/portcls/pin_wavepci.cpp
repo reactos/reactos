@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortPinWavePci : public CUnknownImpl<IPortPinWavePci, IServiceSink, IPortWavePciStream>
@@ -93,7 +90,6 @@ KSPROPERTY_SET PinWavePciPropertySet[] =
     }
 };
 
-
 NTSTATUS
 NTAPI
 PinWavePciAllocatorFraming(
@@ -114,7 +110,6 @@ PinWavePciAllocatorFraming(
 
     // cast to pin impl
     Pin = (CPortPinWavePci*)Descriptor->PortPin;
-
 
     if (Request->Flags & KSPROPERTY_TYPE_GET)
     {
@@ -167,7 +162,6 @@ PinWavePciAudioPosition(
     // not supported
     return STATUS_NOT_SUPPORTED;
 }
-
 
 NTSTATUS
 NTAPI
@@ -330,7 +324,6 @@ PinWavePciDataFormat(
             PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.SubFormat, KSDATAFORMAT_SUBTYPE_PCM));
             PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.Specifier, KSDATAFORMAT_SPECIFIER_WAVEFORMATEX));
 
-
             DPRINT("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
                                                                        ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
                                                                        ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
@@ -342,7 +335,6 @@ PinWavePciDataFormat(
             // failed to set format
             FreeItem(NewDataFormat, TAG_PORTCLASS);
         }
-
 
         // done
         return Status;
@@ -371,8 +363,8 @@ PinWavePciDataFormat(
     return STATUS_NOT_SUPPORTED;
 }
 
-
 //==================================================================================================================================
+
 NTSTATUS
 NTAPI
 CPortPinWavePci::QueryInterface(
@@ -395,7 +387,6 @@ CPortPinWavePci::QueryInterface(
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
-
 
     if (IsEqualGUIDAligned(refiid, IID_IPortWavePciStream))
     {
@@ -439,7 +430,6 @@ CPortPinWavePci::TerminatePacket()
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
     return STATUS_SUCCESS;
 }
-
 
 VOID
 NTAPI
@@ -554,7 +544,6 @@ CPortPinWavePci::HandleKsStream(
     return Status;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinWavePci::DeviceIoControl(
@@ -638,7 +627,6 @@ CPortPinWavePci::Close(
         // queue is freed
         m_IrpQueue = NULL;
     }
-
 
     if (m_ServiceGroup)
     {
@@ -765,7 +753,6 @@ CPortPinWavePci::FastWrite(
 {
     return FALSE;
 }
-
 
 NTSTATUS
 NTAPI
@@ -960,7 +947,6 @@ CPortPinWavePci::Init(
         }
     }
 
-
     return STATUS_SUCCESS;
 }
 
@@ -971,14 +957,12 @@ CPortPinWavePci::GetIrpStream()
     return (PVOID)m_IrpQueue;
 }
 
-
 PMINIPORT
 NTAPI
 CPortPinWavePci::GetMiniport()
 {
     return (PMINIPORT)m_Miniport;
 }
-
 
 NTSTATUS
 NewPortPinWavePci(
@@ -997,4 +981,3 @@ NewPortPinWavePci(
 
     return STATUS_SUCCESS;
 }
-

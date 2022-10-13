@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CRegistryKey : public CUnknownImpl<IRegistryKey>
@@ -43,7 +40,6 @@ CRegistryKey::~CRegistryKey()
          ZwClose(m_hKey);
     }
 }
-
 
 NTSTATUS
 NTAPI
