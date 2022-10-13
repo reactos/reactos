@@ -826,6 +826,7 @@ AcpiOsWritePciConfiguration (
     UINT64                   Value,
     UINT32                   Width)
 {
+    /* FIXME: ULONG != UINT64... */
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
     ULONG Size;

@@ -1390,6 +1390,7 @@ PdoStartDevice(
         DBGPRINT("None\n");
     }
 
+    /* FIXME: Should this fail if some HalSetBusDataByOffset() failed, for example? */
     return STATUS_SUCCESS;
 }
 

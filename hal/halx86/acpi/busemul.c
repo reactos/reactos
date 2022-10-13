@@ -223,6 +223,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                               Offset,
                               Length);
     }
+    /* TODO: No default handling? */
 
     /* Log unexpected size. 0 (no bus) and PCI_INVALID_VENDORID (no data) are valid results */
     /* TODO: EisaConfiguration is excluded, until its case is implemented */
@@ -315,6 +316,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                               Offset,
                               Length);
     }
+    /* TODO: No default handling? */
 
     /* Log unexpected size */
     if (Size != Length)

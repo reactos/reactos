@@ -23,6 +23,7 @@ UCHAR
 NTAPI
 PciGetAdjustedInterruptLine(IN PPCI_PDO_EXTENSION PdoExtension)
 {
+    /* TODO: InterruptLine is superfluous. (See FIXME below, first) */
     UCHAR InterruptLine = 0, PciInterruptLine;
     ULONG Length;
 
@@ -42,6 +43,7 @@ PciGetAdjustedInterruptLine(IN PPCI_PDO_EXTENSION PdoExtension)
     }
 
     /* Either keep the original interrupt line, or the one on the master bus */
+    /* FIXME: Are these values swapped? */
     return InterruptLine ? PdoExtension->RawInterruptLine : InterruptLine;
 }
 
