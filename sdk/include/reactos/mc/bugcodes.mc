@@ -169,7 +169,6 @@ memorie sau umbrirea. Dacă trebuie să utilizați Modul sigur pentru a elimina 
 computerul dumneavoastră, apăsați F8 pentru a selecta Opțiuni avansate de pornire, apoi
 selectați Modul sigur.
 .
-.
 
 MessageId=0x83
 Severity=Warning
