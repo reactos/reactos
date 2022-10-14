@@ -1,9 +1,9 @@
-/*
- * PROJECT:         Unicode name dll
- * FILE:            dll\win32\getuname\lang\ro-RO.rc
- * PURPOSE:         Unicode Description Strings
- * PROGRAMMERS:     Baruch Rutman (peterooch at gmail dot com)
- * TRANSLATOR:      Ștefan Fulea (stefan dot fulea at mail dot com)
+ /*
+ * PROJECT:     ReactOS Unicode name dll
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -7893,10 +7893,10 @@ BEGIN
     9011 "Pantă"
     9012 "Degajare"
     9013 "Locaș axial"
-    9014 "Apl Functional Symbol I-Beam"
-    9015 "Apl Functional Symbol Squish Quad"
-    9016 "Apl Functional Symbol Quad Equal"
-    9017 "Apl Functional Symbol Quad Divide"
+    9014 "Simbol funcțional Apl I-Beam"
+    9015 "Simbol funcțional Apl Squish Quad"
+    9016 "Simbol funcțional Apl Quad Egal"
+    9017 "Simbol funcțional Apl Quad Divide"
     9018 "Apl Functional Symbol Quad Diamond"
     9019 "Apl Functional Symbol Quad Jot"
     9020 "Apl Functional Symbol Quad Circle"
@@ -7961,7 +7961,7 @@ BEGIN
     9079 "Apl Functional Symbol Epsilon Underbar"
     9080 "Apl Functional Symbol Iota Underbar"
     9081 "Apl Functional Symbol Omega Underbar"
-    9082 "Apl Functional Symbol Alpha"
+    9082 "Simbol funcţional Apl Alpha"
     9083 "Însemn neverificat"
     9084 "Unghi drept cu săgeată zigzag descendentă"
     9085 "Cutie deschisă cu umeri"
@@ -7983,7 +7983,7 @@ BEGIN
     9101 "Simbol monostabil"
     9102 "Simbol histerezis"
     9103 "Însemn de ieșire impendanță înaltă pe circuit deschis"
-    9104 "Open-Circuit-Output L-Type Symbol"
+    9104 "Simbol de tip L de ieșire în circuit deschis"
     9105 "Passive-Pull-Down-Output Symbol"
     9106 "Passive-Pull-Up-Output Symbol"
     9107 "Direct Current Symbol Form Two"
@@ -16488,11 +16488,11 @@ BEGIN
     65513 "Halfwidth Leftwards Arrow"
     65514 "Halfwidth Upwards Arrow"
     65515 "Halfwidth Rightwards Arrow"
-    65516 "Halfwidth Downwards Arrow"
-    65517 "Halfwidth Black Square"
-    65518 "Halfwidth White Circle"
-    65529 "Interlinear Annotation Anchor"
-    65530 "Interlinear Annotation Separator"
-    65531 "Interlinear Annotation Terminator"
-    65532 "Object Replacement Character"
+    65516 "Săgeată în jos la jumătate"
+    65517 "Pătrat negru cu jumătate de lățime"
+    65518 "Cerc alb cu jumătate de lățime"
+    65529 "Ancoră de adnotare interliniară"
+    65530 "Separator de adnotări interliniare"
+    65531 "Terminator de adnotare interliniară"
+    65532 "Caracter de înlocuire a obiectului"
 END
