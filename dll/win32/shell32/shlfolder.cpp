@@ -26,23 +26,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static
-HRESULT WINAPI _SHBindToFolder(LPCITEMIDLIST path, IShellFolder** newFolder)
-{
-    CComPtr<IShellFolder>                   desktop;
-
-    HRESULT hr = ::SHGetDesktopFolder(&desktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-    if (path == NULL || path->mkid.cb == 0)
-    {
-        *newFolder = desktop;
-        desktop.p->AddRef();
-        return S_OK;
-    }
-    return desktop->BindToObject(path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
-}
-
 
 /***************************************************************************
  *  GetNextElement (internal function)
