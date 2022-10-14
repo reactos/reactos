@@ -1519,12 +1519,22 @@ to make sure it is properly configured and terminated.
 Run CHKDSK /F to check for hard drive corruption, and then
 restart your computer.
 .
+Language=Romanian
+Verificați dacă există viruși pe calculatorul dumneavoastră. Eliminați orice disc dur sau
+dispozitiv de control pentru discurile dure nou instalat. Verificați-vă discul dur
+pentru a fi sigur că este configurat și terminat corespunzător.
+Rulați CHKDSK /F pentru a verifica dacă discul dur este deteriorat și apoi
+reporniți-vă calculatorul.
+.
 
 MessageId=0x7C
 Severity=Success
 Facility=System
 SymbolicName=BUGCODE_NDIS_DRIVER
 Language=English
+BUGCODE_NDIS_DRIVER
+.
+Language=Romanian
 BUGCODE_NDIS_DRIVER
 .
 
@@ -1535,12 +1545,18 @@ SymbolicName=INSTALL_MORE_MEMORY
 Language=English
 INSTALL_MORE_MEMORY
 .
+Language=Romanian
+INSTALL_MORE_MEMORY
+.
 
 MessageId=0x7E
 Severity=Success
 Facility=System
 SymbolicName=SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
 Language=English
+SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
+.
+Language=Romanian
 SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
 .
 
@@ -1558,6 +1574,16 @@ remove any newly installed software. If you need to use Safe Mode to
 remove or disable components, restart your computer, press F8 to select
 Advanced Startup Options, and then select Safe Mode.
 .
+Language=Romanian
+Rulați un utilitar de diagnosticare a sistemului oferit de producătorul dumneavoastră de dispozitive.
+În special, executați o verificare a memoriei și verificați dacă există memorie defectuoasă sau
+nepotrivită. Încercați să schimbați adaptoarele video.
+
+Dezactivați sau eliminați orice dispozitiv sau modul-pilot nou instalat. Dezativați sau
+eliminați orice element de logică computațională nou instalat. Dacă aveți nevoie să folosiți Modul sigur
+pentru a elimina sau dezactiva componente, reporniți-vă calculatorul, apăsați F8 și selectați
+Opțiuni de pornire avansate, iar apoi selectați Modul sigur.
+.
 
 MessageId=0x80
 Severity=Success
@@ -1565,6 +1591,9 @@ Facility=System
 SymbolicName=NMI_HARDWARE_FAILURE
 Language=English
 Hardware malfunction
+.
+Language=Romanian
+Defecțiune a dispozitivului
 .
 
 MessageId=0x81
@@ -1574,12 +1603,19 @@ SymbolicName=SPIN_LOCK_INIT_FAILURE
 Language=English
 SPIN_LOCK_INIT_FAILURE
 .
+Language=Romanian
+SPIN_LOCK_INIT_FAILURE
+.
+
 
 MessageId=0x8E
 Severity=Success
 Facility=System
 SymbolicName=KERNEL_MODE_EXCEPTION_NOT_HANDLED
 Language=English
+KERNEL_MODE_EXCEPTION_NOT_HANDLED
+.
+Language=Romanian
 KERNEL_MODE_EXCEPTION_NOT_HANDLED
 .
 
@@ -1590,12 +1626,18 @@ SymbolicName=PP0_INITIALIZATION_FAILED
 Language=English
 PP0_INITIALIZATION_FAILED
 .
+Language=Romanian
+PP0_INITIALIZATION_FAILED
+.
 
 MessageId=0x90
 Severity=Success
 Facility=System
 SymbolicName=PP1_INITIALIZATION_FAILED
 Language=English
+PP1_INITIALIZATION_FAILED
+.
+Language=Romanian
 PP1_INITIALIZATION_FAILED
 .
 
@@ -1606,12 +1648,18 @@ SymbolicName=WIN32K_INIT_OR_RIT_FAILURE
 Language=English
 WIN32K_INIT_OR_RIT_FAILURE
 .
+Language=Romanian
+WIN32K_INIT_OR_RIT_FAILURE
+.
 
 MessageId=0x93
 Severity=Success
 Facility=System
 SymbolicName=INVALID_KERNEL_HANDLE
 Language=English
+INVALID_KERNEL_HANDLE
+.
+Language=Romanian
 INVALID_KERNEL_HANDLE
 .
 
@@ -1622,12 +1670,18 @@ SymbolicName=KERNEL_STACK_LOCKED_AT_EXIT
 Language=English
 KERNEL_STACK_LOCKED_AT_EXIT
 .
+Language=Romanian
+KERNEL_STACK_LOCKED_AT_EXIT
+.
 
 MessageId=0x96
 Severity=Success
 Facility=System
 SymbolicName=INVALID_WORK_QUEUE_ITEM
 Language=English
+INVALID_WORK_QUEUE_ITEM
+.
+Language=Romanian
 INVALID_WORK_QUEUE_ITEM
 .
 
@@ -1644,12 +1698,24 @@ If this is the first time you have seen this error screen, read
 
 If problems continue, remove all nonfree software from your computer.
 .
+Language=Romanian
+A fost făcută o încercare de a executa o instrucțiune proprietară de cod de mașină.
+Sistemul a fost oprit pentru a preveni deteriorarea conștiinței tale.
+
+Dacă este pentru prima dată când vedeți acest ecran de eroare, citiți
+<http://www.gnu.org/philosophy/free-sw.html>.
+
+Dacă problemele continuă, eliminați toate programele care nu sunt gratuite din calculatorul dumneavoastră.
+.
 
 MessageId=0xA0
 Severity=Success
 Facility=System
 SymbolicName=INTERNAL_POWER_ERROR
 Language=English
+INTERNAL_POWER_ERROR
+.
+Language=Romanian
 INTERNAL_POWER_ERROR
 .
 
@@ -1660,6 +1726,9 @@ SymbolicName=PCI_BUS_DRIVER_INTERNAL
 Language=English
 Inconsistency detected in the PCI Bus driver's internal structures.
 .
+Language=Romanian
+Incoerență detectată în structurile interne ale modulului-pilot PCI Bus.
+.
 
 MessageId=0xA5
 Severity=Success
@@ -1669,6 +1738,10 @@ Language=English
 The BIOS in this system is not fully ACPI compliant.  Please contact your
 system vendor for an updated BIOS.
 .
+Language=Romanian
+BIOS-ul acestui sistem nu este pe deplin compatibil cu ACPI. Contactați
+furnizorul dumneavoastră de sistem pentru un BIOS actualizat.
+.
 
 MessageId=0xA8
 Severity=Informational
@@ -1676,6 +1749,9 @@ Facility=System
 SymbolicName=BOOTING_IN_SAFEMODE_MINIMAL
 Language=English
 The system is booting in safemode - Minimal Services
+.
+Language=Romanian
+Sistemul pornește în modul sigur - Servicii minimale
 .
 
 MessageId=0xA9
@@ -1685,6 +1761,9 @@ SymbolicName=BOOTING_IN_SAFEMODE_NETWORK
 Language=English
 The system is booting in safemode - Minimal Services with Network
 .
+Language=Romanian
+Sistemul pornește în modul sigur - Servicii minimale cu rețea
+.
 
 MessageId=0xAA
 Severity=Informational
@@ -1692,6 +1771,9 @@ Facility=System
 SymbolicName=BOOTING_IN_SAFEMODE_DSREPAIR
 Language=English
 The system is booting in safemode - Directory Services Repair
+.
+Language=Romanian
+Sistemul pornește în modul sigur - Reparațiile serviciilor de director
 .
 
 MessageId=0xAC
@@ -1701,6 +1783,9 @@ SymbolicName=HAL_MEMORY_ALLOCATION
 Language=English
 Allocate from NonPaged Pool failed for a HAL critical allocation.
 .
+Language=Romanian
+Alocarea din grupul non-paginat nu a reușit pentru o alocare critică HAL.
+.
 
 MessageId=0xB4
 Severity=Success
@@ -1708,6 +1793,9 @@ Facility=System
 SymbolicName=VIDEO_DRIVER_INIT_FAILURE
 Language=English
 The video driver failed to initialize.
+.
+Language=Romanian
+Modulul-pilot video a eșuat să fie inițializat.
 .
 
 MessageId=0xB7
@@ -1717,6 +1805,9 @@ SymbolicName=BOOTLOG_ENABLED
 Language=English
 Boot Logging Enabled
 .
+Language=Romanian
+Logarea de pornire activată
+.
 
 MessageId=0xB8
 Severity=Success
@@ -1724,6 +1815,9 @@ Facility=System
 SymbolicName=ATTEMPTED_SWITCH_FROM_DPC
 Language=English
 A wait operation, attach process, or yield was attempted from a DPC routine.
+.
+Language=Romanian
+O operațiune de așteptare, un proces de atașare sau un randament a fost încercat(ă) dintr-o rutină DPC.
 .
 
 MessageId=0xBE
@@ -1733,6 +1827,9 @@ SymbolicName=ATTEMPTED_WRITE_TO_READONLY_MEMORY
 Language=English
 An attempt was made to write to read-only memory.
 .
+Language=Romanian
+A fost făcută o încercare de a scrie în memoria destinată numai pentru citire.
+.
 
 MessageId=0xC1
 Severity=Success
@@ -1741,12 +1838,18 @@ SymbolicName=SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
 Language=English
 SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
 .
+Language=Romanian
+SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
+.
 
 MessageId=0xC2
 Severity=Success
 Facility=System
 SymbolicName=BAD_POOL_CALLER
 Language=English
+BAD_POOL_CALLER
+.
+Language=Romanian
 BAD_POOL_CALLER
 .
 
@@ -1761,6 +1864,13 @@ verify the validity of the file's signature.  The operating system found that
 the file signature is not valid and put the original, correct file back
 so that your operating system will continue to function properly.
 .
+Language=Romanian
+Un fișier de sistem ce este deținut de ReactOS a fost înlocuit de o aplicație
+ce rulează în sistemul dumneavoastră. Sistemul de operare a detectat asta și a încercat să
+verifice validitatea semnăturii fișierului. Sistemul de operare a descoperit că
+semnătura fișierului nu este validă și a pus fișierul corect și original la loc,
+astfel încât sistemul dumneavoastră de operare va continua să funcționeze corect.
+.
 
 MessageId=0xC4
 Severity=Success
@@ -1768,6 +1878,9 @@ Facility=System
 SymbolicName=DRIVER_VERIFIER_DETECTED_VIOLATION
 Language=English
 Driver Verifier has detected a fatal error condition.
+.
+Language=Romanian
+Verificatorul de module-pilot a detectat o condiție de eroare fatală.
 .
 
 MessageId=0xC5
@@ -1790,6 +1903,22 @@ If you need to use Safe Mode to remove or disable components,
 restart your computer, press F8 to select Advanced Startup Options,
 and then select Safe Mode.
 .
+Language=Romanian
+Un modul-pilot pentru dispozitiv are un fond comun.
+
+Verificați dacă orice dispozitiv sau element de logică computațională nou este instalat corect.
+Dacă asta este o instalare nouă, întrebați-vă producătorul de dispozitive sau de elemente de logică computațională
+pentru orice actualizări de ReactOS de care ați putea avea nevoie.
+
+Rulați verificatorul de module-pilot în cazul unor module-pilot noi (sau suspecte).
+Dacă asta nu dezvăluie modulul-pilot corupt, încercați să activați fondul comun special.
+Ambele caracteristici sunt menite să surprindă deteriorarea într-un moment anterior, 
+în care modulul-pilot ofensator poate fi identificat.
+
+Dacă aveți nevoie să folosiți Modul sigur pentru a elimina sau a dezactiva componente,
+reporniți-vă calculatorul, apăsați F8 pentru a selecta Opțiuni avansate de pornire,
+iar apoi selectați Modul sigur.
+.
 
 MessageId=0xC6
 Severity=Success
@@ -1799,6 +1928,11 @@ Language=English
 A device driver attempting to corrupt the system has been caught.
 The faulty driver currently on the kernel stack must be replaced
 with a working version.
+.
+Language=Romanian
+A fost găsit un modul-pilot al dispozitivului care încearcă să corupă sistemul.
+Modulul-pilot defect aflat în prezent, în stiva de nucleu trebuie înlocuit
+cu o versiune funcțională.
 .
 
 MessageId=0xC8
@@ -1811,6 +1945,12 @@ This is a software error condition and is usually caused by a device
 driver changing IRQL and not restoring it to its previous value when
 it has finished its task.
 .
+Language=Romanian
+IRQL-ul procesorului nu este valabil pentru contextul care se execută în prezent.
+Aceasta este o condiție de eroare element de logică computațională și este de obicei
+cauzată de un modul-pilot de dispozitiv care modifică IRQL-ul și nu îl restabilește la
+valoarea anterioară atunci când și-a încheiat sarcina.
+.
 
 MessageId=0xCA
 Severity=Success
@@ -1819,12 +1959,18 @@ SymbolicName=PNP_DETECTED_FATAL_ERROR
 Language=English
 Plug and Play detected an error most likely caused by a faulty driver.
 .
+Language=Romanian
+Conectează și folosește a detectat o eroare cauzată cel mai probabil de un modul-pilot defect.
+.
 
 MessageId=0xCB
 Severity=Success
 Facility=System
 SymbolicName=DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
 Language=English
+DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
+.
+Language=Romanian
 DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
 .
 
@@ -1835,12 +1981,18 @@ SymbolicName=PAGE_FAULT_IN_FREED_SPECIAL_POOL
 Language=English
 PAGE_FAULT_IN_FREED_SPECIAL_POOL
 .
+Language=Romanian
+PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
 
 MessageId=0xCD
 Severity=Success
 Facility=System
 SymbolicName=PAGE_FAULT_BEYOND_END_OF_ALLOCATION
 Language=English
+PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+.
+Language=Romanian
 PAGE_FAULT_BEYOND_END_OF_ALLOCATION
 .
 
@@ -1851,12 +2003,18 @@ SymbolicName=DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS
 Language=English
 DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS
 .
+Language=Romanian
+DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS
+.
 
 MessageId=0xD0
 Severity=Success
 Facility=System
 SymbolicName=DRIVER_CORRUPTED_MMPOOL
 Language=English
+DRIVER_CORRUPTED_MMPOOL
+.
+Language=Romanian
 DRIVER_CORRUPTED_MMPOOL
 .
 
@@ -1867,6 +2025,9 @@ SymbolicName=DRIVER_IRQL_NOT_LESS_OR_EQUAL
 Language=English
 DRIVER_IRQL_NOT_LESS_OR_EQUAL
 .
+Language=Romanian
+DRIVER_IRQL_NOT_LESS_OR_EQUAL
+.
 
 MessageId=0xD3
 Severity=Success
@@ -1874,6 +2035,9 @@ Facility=System
 SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
 Language=English
 The driver mistakenly marked a part of its image pageable instead of non-pageable.
+.
+Language=Romanian
+Modulul-pilot a marcat din greșeală o parte a imaginii sale paginabilă în loc de nepaginabilă.
 .
 
 MessageId=0xD4
@@ -1883,12 +2047,18 @@ SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
 Language=English
 The driver unloaded without cancelling pending operations.
 .
+Language=Romanian
+Modulul-pilot a descărcat fără a anula operațiunile în așteptare.
+.
 
 MessageId=0xD5
 Severity=Success
 Facility=System
 SymbolicName=DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
 Language=English
+DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
+Language=Romanian
 DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
 .
 
@@ -1899,6 +2069,9 @@ SymbolicName=DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
 Language=English
 DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
 .
+Language=Romanian
+DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+.
 
 MessageId=0xD7
 Severity=Success
@@ -1906,6 +2079,9 @@ Facility=System
 SymbolicName=DRIVER_UNMAPPING_INVALID_VIEW
 Language=English
 The driver is attempting to unmap an invalid memory address.
+.
+Language=Romanian
+Modulul-pilot încearcă să anuleze maparea unei adrese de memorie nevalidă.
 .
 
 MessageId=0xD8
@@ -1915,6 +2091,9 @@ SymbolicName=DRIVER_USED_EXCESSIVE_PTES
 Language=English
 The driver has used an excessive number of system PTEs.
 .
+Language=Romanian
+Modulul-pilot a folosit un număr excesiv de PTE-uri de sistem.
+.
 
 MessageId=0xD9
 Severity=Success
@@ -1922,6 +2101,9 @@ Facility=System
 SymbolicName=LOCKED_PAGES_TRACKER_CORRUPTION
 Language=English
 The system's structures tracking locked pages have been corrupted.
+.
+Language=Romanian
+Structurile sistemului care urmăresc paginile blocate au fost corupte.
 .
 
 MessageId=0xDA
@@ -1931,6 +2113,9 @@ SymbolicName=SYSTEM_PTE_MISUSE
 Language=English
 The driver has called a system PTE routine in an improper way.
 .
+Language=Romanian
+Modulul-pilot a apelat o rutină PTE de sistem într-un mod necorespunzător.
+.
 
 MessageId=0xDB
 Severity=Success
@@ -1938,6 +2123,9 @@ Facility=System
 SymbolicName=DRIVER_CORRUPTED_SYSPTES
 Language=English
 The driver has corrupted system PTEs.
+.
+Language=Romanian
+Modulul-pilot a deteriorat PTE-urile sistemului.
 .
 
 MessageId=0xDC
@@ -1947,6 +2135,9 @@ SymbolicName=DRIVER_INVALID_STACK_ACCESS
 Language=English
 The driver has accessed an invalid stack address.
 .
+Language=Romanian
+Modulul-pilot a accesat o stivă de adresă invalidă.
+.
 
 MessageId=0xDE
 Severity=Success
@@ -1954,6 +2145,9 @@ Facility=System
 SymbolicName=POOL_CORRUPTION_IN_FILE_AREA
 Language=English
 Kernel pool corruption has been detected in an area marked to be written to disk.
+.
+Language=Romanian
+Fondul comun al nucleului a fost detectat în zona marcată să fie scrisă pe disc.
 .
 
 MessageId=0xDF
@@ -1963,6 +2157,10 @@ SymbolicName=IMPERSONATING_WORKER_THREAD
 Language=English
 A worker thread is impersonating another process. The work item forgot to
 disable impersonation before it returned.
+.
+Language=Romanian
+Un fir de execuție imporsonează alt proces. Elementul de lucru a uitat să
+dezactiveze impersonarea înainte de a reveni.
 .
 
 MessageId=0xE0
@@ -1979,12 +2177,25 @@ If you do not have this tool, you must contact your system vendor and report
 this error message to them.  They will be able to assist you in correcting this
 hardware problem thereby allowing ReactOS to operate.
 .
+Language=Romanian
+
+Calculatorul dumneavoastră (BIOS-ul) a raportat că o componentă din sistemul dumneavoastră
+este defectă și a prevenit ReactOS să mai opereze.  Puteți determina care componentă este
+defectă rulând discul de diagnostic sau unealta care a venit cu calculatorul dumneavoastră.
+
+Dacă nu aveți această unealtă, trebuie să vă contactați vânzătorul de sistem și să-i raportați
+acest mesaj de eroare.  Ei vor putea să vă asiste în corectarea acestei probleme de dispozitiv
+permițând astfel ReactOS să funcționeze.
+.
 
 MessageId=0xE1
 Severity=Success
 Facility=System
 SymbolicName=WORKER_THREAD_RETURNED_AT_BAD_IRQL
 Language=English
+WORKER_THREAD_RETURNED_AT_BAD_IRQL
+.
+Language=Romanian
 WORKER_THREAD_RETURNED_AT_BAD_IRQL
 .
 
@@ -1995,12 +2206,18 @@ SymbolicName=MANUALLY_INITIATED_CRASH
 Language=English
 The user manually generated the crash dump.
 .
+Language=Romanian
+Utilizatorul a generat manual groapa de prăbușire.
+.
 
 MessageId=0xE3
 Severity=Success
 Facility=System
 SymbolicName=RESOURCE_NOT_OWNED
 Language=English
+RESOURCE_NOT_OWNED
+.
+Language=Romanian
 RESOURCE_NOT_OWNED
 .
 
