@@ -530,11 +530,11 @@ select Safe Mode.
 .
 Language=Romanian
 Verificați pentru a fi sigur(ă) că aveți suficient spațiu pe disc. Dacă modulul-pilot este
-identificat în mesajul de Oprire, dezactivați modulul-pilot sau verificați
-împreună cu producătorul dacă nu există actualizări ale modulului-pilot.
+identificat în mesajul de Oprire, dezactivați modulul-pilot sau consultați
+producătorul dacă nu există actualizări ale modulului-pilot.
 schimbați adaptoarele video. 
 
-Verificați împreună cu furnizorul dispozitivului dumneavoastră dacă există vreo actualizare la BIOS. Dezactivați
+Consultați furnizorul dispozitivului dumneavoastră dacă există vreo actualizare la BIOS. Dezactivați
 opțiunile memorie BIOS-ului, cum ar fi înmagazinarea sau umbrirea. Dacă aveți nevoie
 să folosiți Modul sigur pentru a elimina sau a dezactiva componente, reporniți-vă
 calculatorul, apăsați F8 pentru a selecta Opțiuni avansate de pornire și apoi
@@ -1907,7 +1907,7 @@ Language=Romanian
 Un modul-pilot pentru dispozitiv are un fond comun.
 
 Verificați dacă orice dispozitiv sau element de logică computațională nou este instalat corect.
-Dacă asta este o instalare nouă, întrebați-vă producătorul de dispozitive sau de elemente de logică computațională
+Dacă asta este o instalare nouă, consultați-vă producătorul de dispozitive sau de elemente de logică computațională
 pentru orice actualizări de ReactOS de care ați putea avea nevoie.
 
 Rulați verificatorul de module-pilot în cazul unor module-pilot noi (sau suspecte).
@@ -2185,7 +2185,7 @@ defectă rulând discul de diagnostic sau unealta care a venit cu calculatorul d
 
 Dacă nu aveți această unealtă, trebuie să vă contactați vânzătorul de sistem și să-i raportați
 acest mesaj de eroare.  Ei vor putea să vă asiste în corectarea acestei probleme de dispozitiv
-permițând astfel ReactOS să funcționeze.
+permițând astfel ReactOS să opereze.
 .
 
 MessageId=0xE1
@@ -2234,12 +2234,24 @@ before freeing memory.
 If Parameter1 == 1, an attempt was made to queue an executive worker item
 with a usermode execution routine.
 .
+Language=Romanian
+Dacă Parametrul1 == 0, a fost găsit în memorie un element de lucrător executiv
+care nu trebuie să conțină astfel de articole.  De obicei, aceasta este memoria eliberată.  
+Acest lucru este cauzat de obicei de un modul-pilot de dispozitiv care nu a fost curățat
+corespunzător înainte de a elibera memoria.
+
+Dacă Parametrul1 == 1, a fost făcută o încercare de a pune în coadă un element de
+lucrător executiv cu o rutină de execuție în modul utilizator.
+.
 
 MessageId=0xE5
 Severity=Success
 Facility=System
 SymbolicName=POWER_FAILURE_SIMULATE
 Language=English
+POWER_FAILURE_SIMULATE
+.
+Language=Romanian
 POWER_FAILURE_SIMULATE
 .
 
@@ -2250,6 +2262,9 @@ SymbolicName=INVALID_FLOATING_POINT_STATE
 Language=English
 INVALID_FLOATING_POINT_STATE
 .
+Language=Romanian
+INVALID_FLOATING_POINT_STATE
+.
 
 MessageId=0xE8
 Severity=Success
@@ -2257,6 +2272,9 @@ Facility=System
 SymbolicName=INVALID_CANCEL_OF_FILE_OPEN
 Language=English
 Invalid cancel of a open file. It already has handle.
+.
+Language=Romanian
+Anularea nevalidă a unui fișier deschis. Are deja mâner.
 .
 
 MessageId=0xE9
@@ -2267,6 +2285,11 @@ Language=English
 An executive worker thread is being terminated without having gone through the worker thread rundown code.
 Work items queued to the Ex worker queue must not terminate their threads.
 A stack trace should indicate the culprit.
+.
+Language=Romanian
+Un fir de lucru executiv este terminat fără a fi trecut prin codul derulat al firului de lucru.
+Elementele de lucru aflate în coada fostului lucrător nu trebuie să-și termine firele de execuție.
+O urmă de stivă ar trebui să indice vinovatul.
 .
 
 MessageId=0xEA
@@ -2281,6 +2304,14 @@ hardware incorrectly.
 
 Please check with your hardware device vendor for any driver updates.
 .
+Language=Romanian
+
+Modulul-pilot dispozitivului a rămas blocat într-o buclă infinită. Acest lucru 
+indică de obicei o problemă cu dispozitivul în sine sau cu modulul-pilot de
+dispozitiv care programează incorect dispozitivul.
+
+Consultați furnizorul de dispozitive fizice pentru eventuale actualizări ale modulelor-pilot.
+.
 
 MessageId=0xEF
 Severity=Success
@@ -2288,6 +2319,9 @@ Facility=System
 SymbolicName=CRITICAL_PROCESS_DIED
 Language=English
 The kernel attempted to ready a thread that was in an incorrect state such as terminated.
+.
+Language=Romanian
+Nucleul a încercat să pregătească un fir care era într-o stare incorectă, cum ar fi terminat.
 .
 
 MessageId=0xF4
@@ -2297,6 +2331,9 @@ SymbolicName=CRITICAL_OBJECT_TERMINATION
 Language=English
 A process or thread crucial to system operation has unexpectedly exited or been terminated.
 .
+Language=Romanian
+Un proces sau un fir crucial pentru funcționarea sistemului a ieșit în mod neașteptat sau a fost încheiat.
+.
 
 MessageId=0xF6
 Severity=Success
@@ -2304,6 +2341,9 @@ Facility=System
 SymbolicName=PCI_VERIFIER_DETECTED_VIOLATION
 Language=English
 The PCI driver has detected an error in a PCI device or BIOS being verified.
+.
+Language=Romanian
+Modulul-pilot PCI a detectat o eroare într-un dispozitiv PCI sau BIOS, fiind în curs de verificare.
 .
 
 MessageId=0xF7
@@ -2314,6 +2354,10 @@ Language=English
 A driver has overrun a stack-based buffer.  This overrun could potentially
 allow a malicious user to gain control of this machine.
 .
+Language=Romanian
+Un modul-pilot a depășit un tampon bazat pe stivă. Această depășire ar putea
+permite unui utilizator rău intenționat să obțină controlul asupra acestei mașini.
+.
 
 MessageId=0xF8
 Severity=Success
@@ -2321,6 +2365,9 @@ Facility=System
 SymbolicName=RAMDISK_BOOT_INITIALIZATION_FAILED
 Language=English
 An initialization failure occurred while attempting to boot from the RAM disk.
+.
+Language=Romanian
+A apărut o eroare de inițializare în timpul încercării de pornire de pe discul RAM.
 .
 
 MessageId=0xF9
@@ -2330,6 +2377,9 @@ SymbolicName=DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN
 Language=English
 STATUS_REPARSE was returned from a FSD when trying to open a volume.
 .
+Language=Romanian
+STATUS_REPARSE a fost returnat de la un FSD la încercarea de a deschide un volum.
+.
 
 MessageId=0xFA
 Severity=Success
@@ -2337,6 +2387,9 @@ Facility=System
 SymbolicName=HTTP_DRIVER_CORRUPTED
 Language=English
 Corruption was detected in the HTTP kernel driver.
+.
+Language=Romanian
+A fost detectată o deteriorare în modulul-pilot al nucleului HTTP.
 .
 
 MessageId=0xFC
@@ -2346,12 +2399,18 @@ SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
 Language=English
 An attempt was made to execute to non-executable memory.
 .
+Language=Romanian
+A fost făcută o încercare de a se executa în memoria neexecutabilă.
+.
 
 MessageId=0xFD
 Severity=Success
 Facility=System
 SymbolicName=DIRTY_NOWRITE_PAGES_CONGESTION
 Language=English
+DIRTY_NOWRITE_PAGES_CONGESTION
+.
+Language=Romanian
 DIRTY_NOWRITE_PAGES_CONGESTION
 .
 
@@ -2362,6 +2421,9 @@ SymbolicName=BUGCODE_USB_DRIVER
 Language=English
 A fatal error occurred in the USB driver stack.
 .
+Language=Romanian
+A apărut o eroare fatală în stiva de module-pilot USB.
+.
 
 MessageId=0x139
 Severity=Success
@@ -2369,4 +2431,7 @@ Facility=System
 SymbolicName=KERNEL_SECURITY_CHECK_FAILURE
 Language=English
 A critical kernel security check failed.
+.
+Language=Romanian
+O verificare critică de securitate a nucleului a eșuat.
 .
