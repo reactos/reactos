@@ -117,9 +117,15 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 
 struct IME_STATE;
 
-typedef struct INPUTCONTEXTDX /* unconfirmed */
+/* unconfirmed */
+#ifdef __cplusplus
+typedef struct INPUTCONTEXTDX : INPUTCONTEXT
+{
+#else
+typedef struct INPUTCONTEXTDX
 {
     INPUTCONTEXT;
+#endif
     UINT nVKey;
     BOOL bNeedsTrans;
     DWORD dwUnknown1;
@@ -128,7 +134,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     struct IME_STATE *pState;
     DWORD dwChange;
     DWORD dwUnknown5;
-} INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
+} INPUTCONTEXTDX, *PINPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 #ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
