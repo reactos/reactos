@@ -1418,6 +1418,10 @@ cleanup:
 BOOL WINAPI
 RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
+    BOOL ret;
+    COLORREF rgbOldText;
+    INT iOldBackMode;
+
     if (GetMapMode(hDC) != MM_TEXT)
         return FALSE;
 
@@ -1429,7 +1433,12 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
             FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            rgbOldText = SetTextColor(hDC, RGB(0, 0, 0));
+            iOldBackMode = SetBkMode(hDC, TRANSPARENT);
+            ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            SetBkMode(hDC, iOldBackMode);
+            SetTextColor(hDC, rgbOldText);
+            return ret;
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;

@@ -1088,6 +1088,10 @@ DrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags)
 BOOL WINAPI
 DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
+    BOOL ret;
+    COLORREF rgbOldText;
+    INT iOldBackMode;
+
     if (GreGetMapMode(hDC) != MM_TEXT)
         return FALSE;
 
@@ -1099,7 +1103,12 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
             FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH));
-            return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            rgbOldText = IntGdiSetTextColor(hDC, RGB(0, 0, 0));
+            iOldBackMode = IntGdiSetBkMode(hDC, TRANSPARENT);
+            ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            IntGdiSetBkMode(hDC, iOldBackMode);
+            IntGdiSetTextColor(hDC, rgbOldText);
+            return ret;
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;
