@@ -3058,7 +3058,14 @@ SearchPathA(
   _Out_writes_to_opt_(nBufferLength, return + 1) LPSTR lpBuffer,
   _Out_opt_ LPSTR *lpFilePart);
 
-DWORD WINAPI SearchPathW(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,LPWSTR,LPWSTR*);
+DWORD WINAPI
+SearchPathW(
+    _In_opt_ LPCWSTR lpPath,
+    _In_ LPCWSTR lpFileName,
+    _In_opt_ LPCWSTR lpExtension,
+    _In_ DWORD nBufferLength,
+    _Out_writes_to_opt_(nBufferLength, return +1) LPWSTR lpBuffer,
+    _Out_opt_ LPWSTR *lpFilePart);
 BOOL WINAPI SetAclInformation(PACL,PVOID,DWORD,ACL_INFORMATION_CLASS);
 BOOL WINAPI SetCommBreak(_In_ HANDLE);
 
