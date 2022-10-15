@@ -959,6 +959,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     WCHAR Symbol;
     RECT myr;
     INT cxy;
+    FillRect(dc, r, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH));
     cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0x1f)
     {

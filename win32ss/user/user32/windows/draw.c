@@ -978,6 +978,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     TCHAR Symbol;
     RECT myr;
     INT cxy;
+    FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
     cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0x1f)
     {
