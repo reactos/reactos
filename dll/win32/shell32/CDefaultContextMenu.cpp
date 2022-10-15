@@ -1222,7 +1222,7 @@ CDefaultContextMenu::InvokeCommand(
 
     if (LocalInvokeInfo.cbSize >= sizeof(CMINVOKECOMMANDINFOEX) && (LocalInvokeInfo.fMask & CMIC_MASK_PTINVOKE))
     {
-        if (FAILED_UNEXPECTEDLY(DataObject_SetOffset(m_pDataObj, &LocalInvokeInfo.ptInvoke)))
+        if (m_pDataObj && FAILED_UNEXPECTEDLY(DataObject_SetOffset(m_pDataObj, &LocalInvokeInfo.ptInvoke)))
         {
             ERR("Unable to add OFFSET to DataObject!\n");
         }
