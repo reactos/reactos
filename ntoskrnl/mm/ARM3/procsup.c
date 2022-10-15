@@ -1046,6 +1046,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 
     /* Use idle process Working set */
     Process->Vm.VmWorkingSetList = PsGetCurrentProcess()->Vm.VmWorkingSetList;
+    Process->WorkingSetPage = PsGetCurrentProcess()->WorkingSetPage;
 
     /* Done */
     Process->HasAddressSpace = TRUE;//??
