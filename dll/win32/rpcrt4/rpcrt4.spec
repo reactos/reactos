@@ -71,7 +71,7 @@
 # I_RpcRecordCalloutFailure
 # I_RpcReplyToClientWithStatus
 73 stub I_RpcRequestMutex
-# I_RpcSNCHOption
+74 stub I_RpcSNCHOption
 75 stdcall I_RpcSend(ptr)
 76 stdcall I_RpcSendReceive(ptr)
 77 stub I_RpcServerAllocateIpPort
@@ -511,9 +511,9 @@
 511 stub long_from_ndr
 512 stub long_from_ndr_temp
 513 stub pfnFreeRoutines
-514 stub pfnMarshallRouteines
+514 stub pfnMarshallRoutines
 515 stub pfnSizeRoutines
-516 stub pfnUnmarshallRouteines
+516 stub pfnUnmarshallRoutines
 517 stub short_array_from_ndr
 518 stub short_from_ndr
 519 stub short_from_ndr_temp
