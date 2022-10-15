@@ -646,7 +646,7 @@ CDefaultContextMenu::QueryContextMenu(
     QCMINFO qcminfo = {hMenu, IndexMenu, idCmdNext, idCmdLast, NULL};
     if (SUCCEEDED(_DoCallback(DFM_MERGECONTEXTMENU, uFlags, &qcminfo)))
     {
-        UINT added = idCmdNext - (idCmdFirst + cIds);
+        UINT added = qcminfo.idCmdFirst - idCmdNext;
         cIds += added;
         IndexMenu += added;
         m_iIdCBFirst = m_iIdSHELast;
