@@ -1098,6 +1098,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
+            FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH));
             return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
 #if 0
         case DFC_POPUPMENU:
