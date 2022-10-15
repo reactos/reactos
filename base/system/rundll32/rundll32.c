@@ -337,6 +337,7 @@ int WINAPI _tWinMain(
 
     LPTSTR *argv;
     LPTSTR lptCmdLine,lptDllName,lptFuncName,lptMsgBuffer;
+    WCHAR ResolvedFile[MAX_PATH + 1] = {0}, *lpManifestName;
     LPSTR lpFuncName,lpaCmdLine;
     LPWSTR lpwCmdLine;
     HMODULE hDll;
@@ -386,7 +387,18 @@ int WINAPI _tWinMain(
     else
         lptCmdLine = _T("");
 
-    ActCtx.lpSource = lptDllName;
+    lpManifestName = lptDllName;
+    if (GetFileAttributesW(lptDllName) == INVALID_FILE_ATTRIBUTES)
+    {
+        LPWSTR FilePart = NULL;
+        if (SearchPathW(NULL, lptDllName, NULL, _countof(ResolvedFile) - 1, ResolvedFile, &FilePart))
+        {
+            lpManifestName = ResolvedFile;
+        }
+    }
+
+    // FIXME: If there is a .manifest file next to the input file, we should use that instead!
+    ActCtx.lpSource = lpManifestName;
     ActCtx.lpResourceName = (LPCWSTR)123;
     hActCtx = CreateActCtx(&ActCtx);
     bActivated = (hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx, &cookie) : FALSE);
