@@ -1146,19 +1146,15 @@ static VOID
 OnCustomButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     HPROPSHEETPAGE hpsp[1] = {0};
-    PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp;
+    PROPSHEETHEADER psh = {sizeof(psh)};
+    PROPSHEETPAGE psp = {sizeof(psp)};
 
-    ZeroMemory(&psh, sizeof(psh));
-    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSH_NOAPPLYNOW;
     psh.hwndParent = GetParent(hwndDlg);
     psh.hInstance = hApplet;
     psh.pszCaption = MAKEINTRESOURCE(IDS_DESKTOP_ITEMS);
     psh.phpage = hpsp;
 
-    ZeroMemory(&psp, sizeof(psp));
-    psp.dwSize = sizeof(psp);
     psp.dwFlags = PSP_DEFAULT;
     psp.hInstance = hApplet;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_DESKTOP_GENERAL);

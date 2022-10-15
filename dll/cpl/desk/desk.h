@@ -81,8 +81,8 @@ ULONG __cdecl DbgPrint(PCCH Format,...);
 #define MAX_DESK_PAGES        32
 #define NUM_SPECTRUM_BITMAPS  3
 
-/* This number must match DesktopIcons array size */
-#define NUM_DESKTOP_ICONS  4
+#define NUM_DESKTOP_ICONS  4  /* DesktopIcons array size */
+#define NUM_CHANGE_ICONS   5  /* IconChange array size */
 
 typedef struct
 {
@@ -90,15 +90,33 @@ typedef struct
     BOOL bHideNewStart; /* Hide icon in Modern Start menu mode */
 } HIDE_ICON;
 
+typedef struct _ICON_PATH
+{
+    TCHAR szPath[MAX_PATH];
+} ICON_PATH;
+
+typedef struct _ICON_DATA
+{
+    TCHAR szPath[MAX_PATH];
+    TCHAR szTitle[40];
+} ICON_DATA;
+
 typedef struct _DESKTOP_DATA
 {
     BOOL bSettingsChanged;
     HIDE_ICON optIcons[NUM_DESKTOP_ICONS];
     BOOL bHideChanged[NUM_DESKTOP_ICONS];
+    BOOL bIconChanged[NUM_CHANGE_ICONS];
+    ICON_PATH Icon[NUM_CHANGE_ICONS];
+    ICON_PATH DefIcon[NUM_CHANGE_ICONS];
 
     BOOL bLocalSettingsChanged;
     BOOL bLocalHideIcon[NUM_DESKTOP_ICONS];
     BOOL bLocalHideChanged[NUM_DESKTOP_ICONS];
+    BOOL bLocalIconChanged[NUM_CHANGE_ICONS];
+    ICON_DATA LocalIcon[NUM_CHANGE_ICONS];
+    HIMAGELIST hLocalImageList;
+    INT iLocalCurIcon;
 } DESKTOP_DATA, *PDESKTOP_DATA;
 
 /* As slider control can't contain user data, we have to keep an
