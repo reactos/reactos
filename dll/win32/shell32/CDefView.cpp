@@ -1517,7 +1517,7 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCom
         cmi.ptInvoke = *pt;
     }
 
-    HRESULT hr = m_pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmi);
+    HRESULT hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmi);
     // Most of our callers will do this, but in case they don't do that (File menu!)
     IUnknown_SetSite(pCM, NULL);
     pCM.Release();
