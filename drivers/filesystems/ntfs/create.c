@@ -111,7 +111,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     WCHAR FullPath[MAX_PATH];
     ULONG WritePosition = MAX_PATH - 1;
 
-    DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
+    DPRINT("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
 
     RtlZeroMemory(FullPath, sizeof(FullPath));
     MftRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
@@ -181,7 +181,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
     PNTFS_FCB FCB;
     PFILE_RECORD_HEADER MftRecord;
 
-    DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
+    DPRINT("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
 
     ASSERT(MftId < NTFS_FILE_FIRST_USER_FILE);
     if (MftId > 0xb) /* No entries are used yet beyond this */
@@ -250,7 +250,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
+    DPRINT("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
             DeviceExt,
             FileObject,
             FileName,
@@ -339,7 +339,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING FullPath;
     PIRP Irp = IrpContext->Irp;
 
-    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
+    DPRINT("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
@@ -499,7 +499,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             }
 
             // TODO: check for appropriate access
-           
+
             ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
 
             fileRecord = ExAllocateFromNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList);
@@ -522,8 +522,8 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             else
             {
                 Status = STATUS_NO_MEMORY;
-            }            
-           
+            }
+
         DoneOverwriting:
             if (fileRecord)
                 ExFreeToNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList, fileRecord);
@@ -536,7 +536,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             {
                 NtfsCloseFile(DeviceExt, FileObject);
                 return Status;
-            }            
+            }
 
             if (RequestedDisposition == FILE_SUPERSEDE)
             {
@@ -695,7 +695,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG MaxIndexRootSize;
     ULONG RootLength;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+    DPRINT("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
             DeviceExt,
             FileObject,
             CaseSensitive ? "TRUE" : "FALSE",
@@ -740,7 +740,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Calculate maximum size of index root
-    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord 
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord
                        - ((ULONG_PTR)NextAttribute - (ULONG_PTR)FileRecord)
                        - sizeof(ULONG) * 2;
 
@@ -810,7 +810,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
 *
 * @param DeviceExt
 * Pointer to the DEVICE_EXTENSION of the target volume the file record will be stored on.
-* 
+*
 * @return
 * A pointer to the newly-created FILE_RECORD_HEADER if the function succeeds, NULL otherwise.
 */
@@ -820,7 +820,7 @@ NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_RECORD NextAttribute;
 
-    DPRINT1("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
+    DPRINT("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
 
     // allocate memory for file record
     FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
@@ -875,11 +875,11 @@ NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
 * @param CanWait
 * Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
 * This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
-* 
+*
 * @return
-* STATUS_SUCCESS on success. 
+* STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
-* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but 
+* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but
 * couldn't get immediate, exclusive access to it.
 */
 NTSTATUS
@@ -895,7 +895,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ParentMftIndex;
     ULONGLONG FileMftIndex;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+    DPRINT("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
             DeviceExt,
             FileObject,
             CaseSensitive ? "TRUE" : "FALSE",
