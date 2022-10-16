@@ -60,7 +60,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     PCHAR ReadBuffer = (PCHAR)Buffer;
     ULONGLONG StreamSize;
 
-    DPRINT1("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
+    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
     *LengthRead = 0;
 
@@ -261,7 +261,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 * @implemented
 *
 * Writes a file to the disk. It presently borrows a lot of code from NtfsReadFile() and
-* VFatWriteFileData(). It needs some more work before it will be complete; it won't handle 
+* VFatWriteFileData(). It needs some more work before it will be complete; it won't handle
 * page files, asnyc io, cached writes, etc.
 *
 * @param DeviceExt
