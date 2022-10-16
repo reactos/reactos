@@ -45,7 +45,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     ULONG Read = 0;
     RTL_BITMAP Bitmap;
 
-    DPRINT1("NtfsGetFreeClusters(%p)\n", DeviceExt);
+    DPRINT("NtfsGetFreeClusters(%p)\n", DeviceExt);
 
     BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
                                          DeviceExt->NtfsInfo.BytesPerFileRecord,

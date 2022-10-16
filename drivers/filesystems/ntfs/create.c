@@ -111,7 +111,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     WCHAR FullPath[MAX_PATH];
     ULONG WritePosition = MAX_PATH - 1;
 
-    DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
+    DPRINT("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
 
     RtlZeroMemory(FullPath, sizeof(FullPath));
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -183,7 +183,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
     PNTFS_FCB FCB;
     PFILE_RECORD_HEADER MftRecord;
 
-    DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
+    DPRINT("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
 
     ASSERT(MftId < 0x10);
     if (MftId > 0xb) /* No entries are used yet beyond this */
@@ -253,7 +253,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
+    DPRINT("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
 
     *FoundFCB = NULL;
 
@@ -292,7 +292,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
                            ParentFcb);
         }
 
-        if (!NT_SUCCESS (Status))
+        if (!NT_SUCCESS(Status))
         {
             DPRINT("Could not make a new FCB, status: %x\n", Status);
 
@@ -335,11 +335,11 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     UNICODE_STRING FullPath;
 
-    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
+    DPRINT("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
-    Stack = IoGetCurrentIrpStackLocation (Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(Stack);
 
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);

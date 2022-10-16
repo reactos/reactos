@@ -59,7 +59,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     PCHAR ReadBuffer = (PCHAR)Buffer;
     ULONGLONG StreamSize;
 
-    DPRINT1("NtfsReadFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
+    DPRINT("NtfsReadFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
     *LengthRead = 0;
 
@@ -164,7 +164,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         AllocatedBuffer = TRUE;
     }
 
-    DPRINT1("Effective read: %lu at %lu for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
+    DPRINT("Effective read: %lu at %lu for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
     RealLengthRead = ReadAttribute(DeviceExt, DataContext, RealReadOffset, (PCHAR)ReadBuffer, RealLength);
     if (RealLengthRead == 0)
     {
@@ -183,7 +183,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     *LengthRead = ToRead;
 
-    DPRINT1("%lu got read\n", *LengthRead);
+    DPRINT("%lu got read\n", *LengthRead);
 
     if (AllocatedBuffer)
     {
