@@ -378,7 +378,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     UNICODE_STRING Pattern;
     ULONG Written;
 
-    DPRINT1("NtfsQueryDirectory() called\n");
+    DPRINT("NtfsQueryDirectory() called\n");
 
     ASSERT(IrpContext);
     Irp = IrpContext->Irp;
@@ -591,7 +591,7 @@ NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    DPRINT1("NtfsDirectoryControl() called\n");
+    DPRINT("NtfsDirectoryControl() called\n");
 
     switch (IrpContext->MinorFunction)
     {
