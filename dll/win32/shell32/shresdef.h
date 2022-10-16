@@ -271,6 +271,12 @@
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
 
+/* Desktop icon titles */
+#define IDS_TITLE_MYCOMP                            30386
+#define IDS_TITLE_MYNET                             30387
+#define IDS_TITLE_BIN_1                             30388
+#define IDS_TITLE_BIN_0                             30389
+
 /* Advanced settings */
 #define IDS_ADVANCED_FOLDER                         30498
 #define IDS_ADVANCED_NET_CRAWLER                    30509

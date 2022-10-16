@@ -981,6 +981,11 @@ BEGIN
     IDS_OBJECTS "%d Objekte"
     IDS_OBJECTS_SELECTED "%d Objekte ausgewählt"
 
+    IDS_TITLE_MYCOMP "Arbeitsplatz"
+    IDS_TITLE_MYNET "Netzwerkumgebung"
+    IDS_TITLE_BIN_1 "Papierkorb (voll)"
+    IDS_TITLE_BIN_0 "Papierkorb (leer)"
+
     IDS_ADVANCED_FOLDER "Dateien und Ordner"
     IDS_ADVANCED_NET_CRAWLER "Automatisch nach Netzwerkordnern und Druckern suchen"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Dateigrößeninformationen in Ordnertipps anzeigen"

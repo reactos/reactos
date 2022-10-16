@@ -990,6 +990,11 @@ BEGIN
     IDS_OBJECTS "%d 个对象"
     IDS_OBJECTS_SELECTED "已选中 %d 个对象"
 
+    IDS_TITLE_MYCOMP "我的电脑"
+    IDS_TITLE_MYNET "网上邻居"
+    IDS_TITLE_BIN_1 "Recycle Bin (full)"
+    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+
     IDS_ADVANCED_FOLDER "文件和文件夹"
     IDS_ADVANCED_NET_CRAWLER "自动搜索网络文件夹和打印机"
     IDS_ADVANCED_FOLDER_SIZE_TIP "在文件夹提示中显示大小信息"

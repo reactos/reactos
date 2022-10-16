@@ -980,6 +980,11 @@ BEGIN
     IDS_OBJECTS "%d objet(s)"
     IDS_OBJECTS_SELECTED "%d objet(s) sélectionné(s)"
 
+    IDS_TITLE_MYCOMP "Poste de travail"
+    IDS_TITLE_MYNET "Mes emplacements réseau"
+    IDS_TITLE_BIN_1 "Corbeille (pleine)"
+    IDS_TITLE_BIN_0 "Corbeille (vide)"
+
     IDS_ADVANCED_FOLDER "Fichiers et dossiers"
     IDS_ADVANCED_NET_CRAWLER "Rechercher automatiquement les dossiers et imprimantes partagés"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Afficher les informations concernant la taille des fichiers dans les info-bulles"

@@ -980,6 +980,11 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_TITLE_MYCOMP "Meu Computador"
+    IDS_TITLE_MYNET "Meus Locais de Rede"
+    IDS_TITLE_BIN_1 "Lixeira (cheia)"
+    IDS_TITLE_BIN_0 "Lixeira (vazia)"
+
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"

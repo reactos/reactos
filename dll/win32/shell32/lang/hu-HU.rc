@@ -979,6 +979,11 @@ BEGIN
     IDS_OBJECTS "%d elem"
     IDS_OBJECTS_SELECTED "%d kijelölt elem"
 
+    IDS_TITLE_MYCOMP "Számítógép"
+    IDS_TITLE_MYNET "Hálózati helyek"
+    IDS_TITLE_BIN_1 "Lomtár (tele)"
+    IDS_TITLE_BIN_0 "Lomtár (üres)"
+
     IDS_ADVANCED_FOLDER "Fájlok és mappák"
     IDS_ADVANCED_NET_CRAWLER "Hálózati mappák és nyomtatók automatikus keresése"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Fájlméretadatok megjelenítése a mappatippekben"

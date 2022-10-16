@@ -980,6 +980,11 @@ BEGIN
     IDS_OBJECTS "%d objekt"
     IDS_OBJECTS_SELECTED "%d markerade objekt"
 
+    IDS_TITLE_MYCOMP "Den här datorn"
+    IDS_TITLE_MYNET "Mina nätverksplatser"
+    IDS_TITLE_BIN_1 "Papperskorgen (full)"
+    IDS_TITLE_BIN_0 "Papperskorgen (tom)"
+
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"

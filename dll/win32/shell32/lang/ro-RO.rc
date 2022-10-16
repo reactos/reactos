@@ -982,6 +982,11 @@ BEGIN
     IDS_OBJECTS "%d Obiecte"
     IDS_OBJECTS_SELECTED "%d Obiecte selectate"
 
+    IDS_TITLE_MYCOMP "Calculatorul meu"
+    IDS_TITLE_MYNET "Locații în rețea"
+    IDS_TITLE_BIN_1 "Coșul de gunoi (plin)"
+    IDS_TITLE_BIN_0 "Coșul de gunoi (gol)"
+
     IDS_ADVANCED_FOLDER "Fișiere și Dosare"
     IDS_ADVANCED_NET_CRAWLER "Caută automat în rețea dosare și imprimante"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Afișează dimensiunea fișierulor la indicii de dosar"

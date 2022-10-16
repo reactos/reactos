@@ -985,6 +985,11 @@ BEGIN
     IDS_OBJECTS "%d elementuak"
     IDS_OBJECTS_SELECTED "%d elementu hautatuak"
 
+    IDS_TITLE_MYCOMP "Ordenagailua"
+    IDS_TITLE_MYNET "Nire sarelekuak"
+    IDS_TITLE_BIN_1 "Zakarrontzia (betea)"
+    IDS_TITLE_BIN_0 "Zakarrontzia (hutsik)"
+
     IDS_ADVANCED_FOLDER "Fitxategiak eta karpetak"
     IDS_ADVANCED_NET_CRAWLER "Bilatu sareko karpetak eta inprimagailuak automatikoki"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Erakutsi karpetaren tamaina"

@@ -981,6 +981,11 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_TITLE_MYCOMP "Моят компютър"
+    IDS_TITLE_MYNET "Моята мрежа"
+    IDS_TITLE_BIN_1 "Кошче (пълно)"
+    IDS_TITLE_BIN_0 "Кошче (празно)"
+
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"

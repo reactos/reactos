@@ -989,6 +989,11 @@ BEGIN
     IDS_OBJECTS "%d elementos"
     IDS_OBJECTS_SELECTED "%d elementos seleccionados"
 
+    IDS_TITLE_MYCOMP "Mi equipo"
+    IDS_TITLE_MYNET "Mis sitios de red"
+    IDS_TITLE_BIN_1 "Papelera (llena)"
+    IDS_TITLE_BIN_0 "Papelera (vacía)"
+
     IDS_ADVANCED_FOLDER "Archivos y carpetas"
     IDS_ADVANCED_NET_CRAWLER "Buscar automáticamente carpetas e impresoras en red"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Mostrar tamaño de la carpeta"

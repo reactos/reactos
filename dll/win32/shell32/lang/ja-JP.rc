@@ -977,6 +977,11 @@ BEGIN
     IDS_OBJECTS "%d 個のオブジェクト"
     IDS_OBJECTS_SELECTED "%d 個のオブジェクトが選択済み"
 
+    IDS_TITLE_MYCOMP "マイ コンピュータ"
+    IDS_TITLE_MYNET "マイ ネットワーク"
+    IDS_TITLE_BIN_1 "Recycle Bin (full)"
+    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+
     IDS_ADVANCED_FOLDER "ファイルとフォルダ"
     IDS_ADVANCED_NET_CRAWLER "自動的にネットワークフォルダとプリンタを検索する"
     IDS_ADVANCED_FOLDER_SIZE_TIP "フォルダ チップにファイルサイズ情報を表示する"
