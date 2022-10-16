@@ -2992,6 +2992,22 @@ ProcessSetupInf(
                              (LPBYTE)pSetupData->SourcePath,
                              (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
 
+        WCHAR szData[MAX_PATH];
+        LPWSTR pData = szData;
+        ZeroMemory(szData, _countof(szData) * sizeof(WCHAR));
+        GetWindowsDirectoryW(szData, _countof(szData));
+        wcscat(szData, L"\\inf");
+        pData = szData + (wcslen(szData) + 1) ;
+        wcscpy(pData, pSetupData->SourcePath);
+        pData += (wcslen(pData) + 1) ;
+        *pData = UNICODE_NULL;
+
+        res = RegSetValueExW(hKey,
+                             L"Installation Sources",
+                             0,
+                             REG_MULTI_SZ,
+                            (LPBYTE)szData,
+                            ((DWORD)(pData - szData) * sizeof(WCHAR)));
         RegCloseKey(hKey);
     }
 
