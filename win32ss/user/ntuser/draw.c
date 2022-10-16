@@ -1102,6 +1102,11 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
+        {
+            BOOL ret;
+            COLORREF rgbOldText;
+            INT iOldBackMode;
+
             FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
             rgbOldText = IntGdiSetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
             iOldBackMode = IntGdiSetBkMode(hDC, TRANSPARENT);
@@ -1109,6 +1114,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             IntGdiSetBkMode(hDC, iOldBackMode);
             IntGdiSetTextColor(hDC, rgbOldText);
             return ret;
+        }
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;
