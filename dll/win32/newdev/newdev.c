@@ -359,7 +359,7 @@ SearchDriverRecursive(
         wcscat(DirPath, L"\\");
 
     wcscpy(PathWithPattern, DirPath);
-    wcscat(PathWithPattern, L"\\*");
+    wcscat(PathWithPattern, L"*");
 
     for (hFindFile = FindFirstFileW(PathWithPattern, &wfd);
         ok && hFindFile != INVALID_HANDLE_VALUE;
