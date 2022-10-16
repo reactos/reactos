@@ -1432,8 +1432,8 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
-            FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            rgbOldText = SetTextColor(hDC, RGB(0, 0, 0));
+            FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */
+            rgbOldText = SetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
             iOldBackMode = SetBkMode(hDC, TRANSPARENT);
             ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
             SetBkMode(hDC, iOldBackMode);
