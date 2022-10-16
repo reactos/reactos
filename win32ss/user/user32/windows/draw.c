@@ -1432,6 +1432,11 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
+        {
+            BOOL ret;
+            COLORREF rgbOldText;
+            INT iOldBackMode;
+
             FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */
             rgbOldText = SetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
             iOldBackMode = SetBkMode(hDC, TRANSPARENT);
@@ -1439,6 +1444,7 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             SetBkMode(hDC, iOldBackMode);
             SetTextColor(hDC, rgbOldText);
             return ret;
+        }
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;
