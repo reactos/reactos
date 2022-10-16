@@ -68,6 +68,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 #include <imm.h>
+#include <immdev.h>
 #include <dbt.h>
 #include <ntddvdeo.h>
 

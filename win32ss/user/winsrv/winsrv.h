@@ -23,6 +23,7 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <imm.h>
+#include <immdev.h>
 
 /* Undocumented user definitions */
 #include <undocuser.h>

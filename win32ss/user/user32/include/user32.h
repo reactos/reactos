@@ -28,6 +28,7 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <imm.h>
+#include <immdev.h>
 #include <ddeml.h>
 #include <dde.h>
 #include <windowsx.h>

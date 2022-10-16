@@ -115,36 +115,6 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
-struct IME_STATE;
-
-/* unconfirmed */
-#ifdef __cplusplus
-typedef struct INPUTCONTEXTDX : INPUTCONTEXT
-{
-#else
-typedef struct INPUTCONTEXTDX
-{
-    INPUTCONTEXT;
-#endif
-    UINT nVKey;
-    BOOL bNeedsTrans;
-    DWORD dwUnknown1;
-    DWORD dwUIFlags;
-    DWORD dwUnknown2;
-    struct IME_STATE *pState;
-    DWORD dwChange;
-    DWORD dwUnknown5;
-} INPUTCONTEXTDX, *PINPUTCONTEXTDX, *LPINPUTCONTEXTDX;
-
-#ifndef _WIN64
-C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
-C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
-C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
-C_ASSERT(offsetof(INPUTCONTEXTDX, pState) == 0x154);
-C_ASSERT(offsetof(INPUTCONTEXTDX, dwChange) == 0x158);
-C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
-#endif
-
 // bits of fdwInit of INPUTCONTEXT
 #define INIT_STATUSWNDPOS               0x00000001
 #define INIT_CONVERSION                 0x00000002
@@ -152,12 +122,6 @@ C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
 #define INIT_LOGFONT                    0x00000008
 #define INIT_COMPFORM                   0x00000010
 #define INIT_SOFTKBDPOS                 0x00000020
-
-// bits for INPUTCONTEXTDX.dwChange
-#define INPUTCONTEXTDX_CHANGE_OPEN          0x1
-#define INPUTCONTEXTDX_CHANGE_CONVERSION    0x2
-#define INPUTCONTEXTDX_CHANGE_SENTENCE      0x4
-#define INPUTCONTEXTDX_CHANGE_FORCE_OPEN    0x100
 
 #ifndef WM_IME_REPORT
     #define WM_IME_REPORT 0x280
