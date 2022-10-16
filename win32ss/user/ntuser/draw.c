@@ -1088,10 +1088,6 @@ DrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags)
 BOOL WINAPI
 DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
-    BOOL ret;
-    COLORREF rgbOldText;
-    INT iOldBackMode;
-
     if (GreGetMapMode(hDC) != MM_TEXT)
         return FALSE;
 
