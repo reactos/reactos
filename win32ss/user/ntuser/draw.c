@@ -953,7 +953,6 @@ BOOL FASTCALL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    // TODO: DFCS_TRANSPARENT upon DFCS_MENUARROWUP or DFCS_MENUARROWDOWN
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     WCHAR Symbol;
@@ -1103,7 +1102,12 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             COLORREF rgbOldText;
             INT iOldBackMode;
 
-            FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
+            if (!(uState & DFCS_TRANSPARENT) ||
+                ((uState & 0x1f) != DFCS_MENUARROWUP && (uState & 0x1f) != DFCS_MENUARROWDOWN))
+            {
+                FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
+            }
+
             rgbOldText = IntGdiSetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
             iOldBackMode = IntGdiSetBkMode(hDC, TRANSPARENT);
             ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
