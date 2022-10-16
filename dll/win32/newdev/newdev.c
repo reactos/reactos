@@ -409,6 +409,14 @@ SearchDriverRecursive(
 }
 
 BOOL
+CheckBestDriver(
+    IN PDEVINSTDATA DevInstData,
+    PWCHAR szDir)
+{
+    return SearchDriverRecursive(DevInstData, szDir);
+}
+
+BOOL
 ScanFoldersForDriver(
     IN PDEVINSTDATA DevInstData)
 {

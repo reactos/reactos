@@ -61,6 +61,11 @@ BOOL
 InstallCurrentDriver(
 	IN PDEVINSTDATA DevInstData);
 
+BOOL
+CheckBestDriver(
+    IN PDEVINSTDATA DevInstData,
+    PWCHAR szDir);
+
 /* wizard.c */
 BOOL
 DisplayWizard(

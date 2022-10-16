@@ -579,6 +579,35 @@ AutoDriver(HWND Dlg, BOOL Enabled)
     IncludePath(Dlg, Enabled & IsDlgButtonChecked(Dlg, IDC_CHECK_PATH));
 }
 
+static INT CALLBACK
+BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+    switch (uMsg)
+    {
+        case BFFM_INITIALIZED:
+        {
+            SendMessage(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            break;
+        }
+
+        case BFFM_SELCHANGED:
+        {
+            WCHAR szDir[MAX_PATH];
+            if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
+            {
+                PDEVINSTDATA DevInstData = (PDEVINSTDATA)lpData;
+                SendMessage(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(DevInstData, szDir));
+            }
+            else
+            {
+                SendMessage(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            }
+            break;
+        }
+    }
+    return 0;
+}
+
 static INT_PTR CALLBACK
 CHSourceDlgProc(
     IN HWND hwndDlg,
@@ -659,6 +688,8 @@ CHSourceDlgProc(
                     bi.hwndOwner = hwndDlg;
                     bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
                     bi.lpszTitle = Title;
+                    bi.lpfn = BrowseCallbackProc;
+                    bi.lParam = (LPARAM)DevInstData;
                     pidl = SHBrowseForFolder(&bi);
                     if (pidl)
                     {
