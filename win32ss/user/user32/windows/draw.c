@@ -1418,10 +1418,6 @@ cleanup:
 BOOL WINAPI
 RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
-    BOOL ret;
-    COLORREF rgbOldText;
-    INT iOldBackMode;
-
     if (GetMapMode(hDC) != MM_TEXT)
         return FALSE;
 
