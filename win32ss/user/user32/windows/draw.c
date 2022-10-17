@@ -1438,8 +1438,12 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             COLORREF rgbOldText;
             INT iOldBackMode;
 
-            if (!(uState & DFCS_TRANSPARENT) ||
-                ((uState & 0x1f) != DFCS_MENUARROWUP && (uState & 0x1f) != DFCS_MENUARROWDOWN))
+            if (uState & (DFCS_MENUARROWUP | DFCS_MENUARROWDOWN))
+            {
+                if (!(uState & DFCS_TRANSPARENT))
+                    FillRect(hDC, rc, (HBRUSH)(COLOR_MENU + 1)); /* Fill by menu color */
+            }
+            else
             {
                 FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */
             }
