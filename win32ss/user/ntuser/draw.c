@@ -769,13 +769,18 @@ BOOL FASTCALL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
+            if (uState & DFCS_BUTTONRADIOIMAGE)
+                FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(BLACK_BRUSH)); /* Fill by black */
+            else
+                FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
+
+            return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
+
         case DFCS_BUTTONRADIO:
             return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
 
-
         default:
             ERR("Invalid button state=0x%04x\n", uState);
-
     }
     return FALSE;
 }
@@ -953,7 +958,6 @@ BOOL FASTCALL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    // TODO: DFCS_TRANSPARENT upon DFCS_MENUARROWUP or DFCS_MENUARROWDOWN
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     WCHAR Symbol;
@@ -983,6 +987,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
 
         case DFCS_MENUCHECK:
+        case DFCS_MENUCHECK | DFCS_MENUBULLET:
             Symbol = 'a';
             break;
 
@@ -1098,7 +1103,28 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
-            return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+        {
+            BOOL ret;
+            COLORREF rgbOldText;
+            INT iOldBackMode;
+
+            if (uState & (DFCS_MENUARROWUP | DFCS_MENUARROWDOWN))
+            {
+                if (!(uState & DFCS_TRANSPARENT))
+                    FillRect(hDC, rc, IntGetSysColorBrush(COLOR_MENU)); /* Fill by menu color */
+            }
+            else
+            {
+                FillRect(hDC, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
+            }
+
+            rgbOldText = IntGdiSetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
+            iOldBackMode = IntGdiSetBkMode(hDC, TRANSPARENT);
+            ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            IntGdiSetBkMode(hDC, iOldBackMode);
+            IntGdiSetTextColor(hDC, rgbOldText);
+            return ret;
+        }
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;

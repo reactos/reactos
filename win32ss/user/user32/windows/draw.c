@@ -6,7 +6,7 @@
  * Copyright 2003 Andrew Greenwood
  * Copyright 2003 Filip Navara
  * Copyright 2009 Matthias Kupfer
- * Copyright 2017 Katayama Hirofumi MZ
+ * Copyright 2017-2022 Katayama Hirofumi MZ
  *
  * Based on Wine code.
  *
@@ -704,7 +704,6 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         // FIXME: improve font rendering
         RECT Rect;
         HGDIOBJ hbrOld, hpenOld;
-        FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
         SetRect(&Rect, X, Y, X + Shorter, Y + Shorter);
         InflateRect(&Rect, -(Shorter * 8) / 54, -(Shorter * 8) / 54);
         hbrOld = SelectObject(dc, GetStockObject(BLACK_BRUSH));
@@ -788,13 +787,18 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
+            if (uState & DFCS_BUTTONRADIOIMAGE)
+                FillRect(hdc, rc, (HBRUSH)GetStockObject(BLACK_BRUSH)); /* Fill by black */
+            else
+                FillRect(hdc, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */
+
+            return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
+
         case DFCS_BUTTONRADIO:
             return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
 
-
         default:
             ERR("Invalid button state=0x%04x\n", uState);
-
     }
 
     return FALSE;
@@ -972,7 +976,6 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    // TODO: DFCS_TRANSPARENT upon DFCS_MENUARROWUP or DFCS_MENUARROWDOWN
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     TCHAR Symbol;
@@ -1002,6 +1005,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
 
         case DFCS_MENUCHECK:
+        case DFCS_MENUCHECK | DFCS_MENUBULLET:
             Symbol = 'a';
             break;
 
@@ -1428,7 +1432,28 @@ RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
         case DFC_CAPTION:
             return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
         case DFC_MENU:
-            return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+        {
+            BOOL ret;
+            COLORREF rgbOldText;
+            INT iOldBackMode;
+
+            if (uState & (DFCS_MENUARROWUP | DFCS_MENUARROWDOWN))
+            {
+                if (!(uState & DFCS_TRANSPARENT))
+                    FillRect(hDC, rc, (HBRUSH)(COLOR_MENU + 1)); /* Fill by menu color */
+            }
+            else
+            {
+                FillRect(hDC, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */
+            }
+
+            rgbOldText = SetTextColor(hDC, RGB(0, 0, 0)); /* Draw by black */
+            iOldBackMode = SetBkMode(hDC, TRANSPARENT);
+            ret = UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+            SetBkMode(hDC, iOldBackMode);
+            SetTextColor(hDC, rgbOldText);
+            return ret;
+        }
 #if 0
         case DFC_POPUPMENU:
             UNIMPLEMENTED;
