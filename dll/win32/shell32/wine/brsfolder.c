@@ -464,9 +464,17 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                     IShellFolder_Release(pSFChild);
                 }
 	    }
+#ifdef __REACTOS__
+        if (ulAttrs != SFGAO_FOLDER)
+        {
+	        if (!InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
+	            goto done;
+	    }
+#else
 
 	    if (!InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
 	        goto done;
+#endif
 	    SHFree(pidlTemp);  /* Finally, free the pidl that the shell gave us... */
 	    pidlTemp=NULL;
 	}
