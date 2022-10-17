@@ -6,7 +6,7 @@
  * Copyright 2003 Andrew Greenwood
  * Copyright 2003 Filip Navara
  * Copyright 2009 Matthias Kupfer
- * Copyright 2017 Katayama Hirofumi MZ
+ * Copyright 2017-2022 Katayama Hirofumi MZ
  *
  * Based on Wine code.
  *
@@ -787,7 +787,7 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
-            if ((uState & 0x1f) == DFCS_BUTTONRADIOIMAGE)
+            if (uState & DFCS_BUTTONRADIOIMAGE)
                 FillRect(hdc, rc, (HBRUSH)GetStockObject(BLACK_BRUSH)); /* Fill by black */
             else
                 FillRect(hdc, rc, (HBRUSH)GetStockObject(WHITE_BRUSH)); /* Fill by white */

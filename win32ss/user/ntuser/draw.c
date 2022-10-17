@@ -769,7 +769,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
-            if ((uState & 0x1f) == DFCS_BUTTONRADIOIMAGE)
+            if (uState & DFCS_BUTTONRADIOIMAGE)
                 FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(BLACK_BRUSH)); /* Fill by black */
             else
                 FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
