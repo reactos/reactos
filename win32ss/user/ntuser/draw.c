@@ -769,13 +769,18 @@ BOOL FASTCALL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
+            if ((uState & 0x1f) == DFCS_BUTTONRADIOIMAGE)
+                FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(BLACK_BRUSH)); /* Fill by black */
+            else
+                FillRect(hdc, rc, (HBRUSH)NtGdiGetStockObject(WHITE_BRUSH)); /* Fill by white */
+
+            return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
+
         case DFCS_BUTTONRADIO:
             return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
 
-
         default:
             ERR("Invalid button state=0x%04x\n", uState);
-
     }
     return FALSE;
 }
@@ -982,6 +987,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
 
         case DFCS_MENUCHECK:
+        case DFCS_MENUCHECK | DFCS_MENUBULLET:
             Symbol = 'a';
             break;
 
