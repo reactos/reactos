@@ -704,7 +704,6 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         // FIXME: improve font rendering
         RECT Rect;
         HGDIOBJ hbrOld, hpenOld;
-        FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
         SetRect(&Rect, X, Y, X + Shorter, Y + Shorter);
         InflateRect(&Rect, -(Shorter * 8) / 54, -(Shorter * 8) / 54);
         hbrOld = SelectObject(dc, GetStockObject(BLACK_BRUSH));
