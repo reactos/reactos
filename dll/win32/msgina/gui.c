@@ -36,7 +36,6 @@ typedef struct _DLG_DATA
 {
     PGINA_CONTEXT pgContext;
     BRAND Brand;
-    HWND hWndBarCtrl;
     DWORD BarCounter;
 } DLG_DATA, *PDLG_DATA;
 
@@ -140,70 +139,6 @@ done:
     RegCloseKey(hKey);
 }
 
-static VOID
-AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
-{
-    INT xOld, yOld, cxOld, cyOld;
-    INT xNew, yNew, cxNew, cyNew;
-    INT cxLabel, cyLabel, dyLabel;
-    RECT rc, rcBar, rcLabel, rcWnd;
-    BITMAP bmLogo, bmBar;
-    DWORD style, exstyle;
-    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
-    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
-    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUS_MESSAGE);
-
-    /* This adjustment is for CJK only */
-    switch (PRIMARYLANGID(GetUserDefaultLangID()))
-    {
-        case LANG_CHINESE:
-        case LANG_JAPANESE:
-        case LANG_KOREAN:
-            break;
-
-        default:
-            return;
-    }
-
-    if (!GetObjectW(pDlgData->Brand.hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
-        !GetObjectW(pDlgData->Brand.hBarBitmap, sizeof(BITMAP), &bmBar))
-    {
-        return;
-    }
-
-    GetWindowRect(hwndBar, &rcBar);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
-    dyLabel = bmLogo.bmHeight - rcBar.top;
-
-    GetWindowRect(hwndLabel, &rcLabel);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
-    cxLabel = rcLabel.right - rcLabel.left;
-    cyLabel = rcLabel.bottom - rcLabel.top;
-
-    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
-    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
-    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
-
-    GetWindowRect(hwndDlg, &rcWnd);
-    xOld = rcWnd.left;
-    yOld = rcWnd.top;
-    cxOld = rcWnd.right - rcWnd.left;
-    cyOld = rcWnd.bottom - rcWnd.top;
-
-    GetClientRect(hwndDlg, &rc);
-    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
-
-    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
-    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
-    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
-
-    cxNew = rc.right - rc.left;
-    cyNew = (rc.bottom - rc.top) + dyLabel;
-    xNew = xOld - (cxNew - cxOld) / 2;
-    yNew = yOld - (cyNew - cyOld) / 2;
-    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
-}
-
 static INT_PTR CALLBACK
 StatusDialogProc(
     IN HWND hwndDlg,
@@ -224,6 +159,10 @@ StatusDialogProc(
             if (!msg)
                 return FALSE;
 
+            pDlgData = DlgData_Create(hwndDlg, msg->Context);
+            if (pDlgData == NULL)
+                return FALSE;
+
             msg->Context->hStatusWindow = hwndDlg;
 
             if (msg->pTitle)
@@ -231,25 +170,13 @@ StatusDialogProc(
             SetDlgItemTextW(hwndDlg, IDC_STATUS_MESSAGE, msg->pMessage);
             SetEvent(msg->StartupEvent);
 
-            pDlgData = DlgData_Create(hwndDlg, msg->Context);
-            if (pDlgData == NULL)
-                return FALSE;
-
-            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
             if (pDlgData->Brand.hBarBitmap)
             {
                 if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
-                {
                     ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
-                }
-                else
-                {
-                    /* Get the animation bar control */
-                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
-                }
             }
-
-            AdjustStatusMessageWindow(hwndDlg, pDlgData);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
             return TRUE;
         }
 
@@ -258,51 +185,31 @@ StatusDialogProc(
             if (pDlgData && pDlgData->Brand.hBarBitmap)
             {
                 /*
-                 * Default rotation bar image width is 413 (same as logo)
-                 * We can divide 413 by 7 without remainder
+                 * Default rotation bar image width is 413 (same as logo).
+                 * We can divide 413 by 7 without remainder.
                  */
-                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->Brand.BarWidth;
-                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
-                UpdateWindow(pDlgData->hWndBarCtrl);
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->Brand.BarSize.cx;
+                Brand_Paint(hwndDlg, NULL, &pDlgData->Brand, TRUE, pDlgData->BarCounter, NULL);
             }
             return TRUE;
         }
 
-        case WM_DRAWITEM:
+        case WM_PAINT:
         {
-            LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
-
-            if (lpDis->CtlID != IDC_BAR)
+            if (pDlgData)
             {
-                return FALSE;
+                PAINTSTRUCT ps;
+                BeginPaint(hwndDlg, &ps);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, pDlgData->BarCounter, NULL);
+                EndPaint(hwndDlg, &ps);
             }
-
-            if (pDlgData && pDlgData->Brand.hBarBitmap)
-            {
-                HDC hdcMem;
-                HGDIOBJ hOld;
-                DWORD off = pDlgData->BarCounter;
-                DWORD iw = pDlgData->Brand.BarWidth;
-                DWORD ih = pDlgData->Brand.BarHeight;
-
-                hdcMem = CreateCompatibleDC(lpDis->hDC);
-                hOld = SelectObject(hdcMem, pDlgData->Brand.hBarBitmap);
-                BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
-                BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
-                SelectObject(hdcMem, hOld);
-                DeleteDC(hdcMem);
-
-                return TRUE;
-            }
-            return FALSE;
+            return TRUE;
         }
 
         case WM_DESTROY:
         {
             if (pDlgData && pDlgData->Brand.hBarBitmap)
-            {
                 KillTimer(hwndDlg, IDT_BAR);
-            }
             DlgData_Destroy(hwndDlg);
             return TRUE;
         }
@@ -456,17 +363,18 @@ WelcomeDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
             return TRUE;
         }
 
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->Brand.hLogoBitmap)
+            if (pDlgData)
             {
+                PAINTSTRUCT ps;
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
@@ -705,16 +613,22 @@ ChangePasswordDialogProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
-    PGINA_CONTEXT pgContext;
+    PDLG_DATA pDlgData;
 
-    pgContext = (PGINA_CONTEXT)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            pgContext = (PGINA_CONTEXT)lParam;
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pgContext);
+            PGINA_CONTEXT pgContext = (PGINA_CONTEXT)lParam;
+
+            pDlgData = DlgData_Create(hwndDlg, pgContext);
+            if (pDlgData == NULL)
+                return FALSE;
+
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
 
             SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_USERNAME, pgContext->UserName);
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
@@ -723,11 +637,27 @@ ChangePasswordDialogProc(
             return TRUE;
         }
 
+        case WM_PAINT:
+        {
+            if (pDlgData)
+            {
+                PAINTSTRUCT ps;
+                BeginPaint(hwndDlg, &ps);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
+                EndPaint(hwndDlg, &ps);
+            }
+            return TRUE;
+        }
+
+        case WM_DESTROY:
+            DlgData_Destroy(hwndDlg);
+            return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (DoChangePassword(pgContext, hwndDlg))
+                    if (DoChangePassword(pDlgData->pgContext, hwndDlg))
                     {
                         EndDialog(hwndDlg, TRUE);
                     }
@@ -917,26 +847,50 @@ SecurityDialogProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
-    PGINA_CONTEXT pgContext;
+    PDLG_DATA pDlgData;
 
-    pgContext = (PGINA_CONTEXT)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            pgContext = (PGINA_CONTEXT)lParam;
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pgContext);
+            PGINA_CONTEXT pgContext = (PGINA_CONTEXT)lParam;
+
+            pDlgData = DlgData_Create(hwndDlg, pgContext);
+            if (pDlgData == NULL)
+                return FALSE;
+
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_LEFT);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
 
             SetWelcomeText(hwndDlg);
 
-            OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
+            OnInitSecurityDlg(hwndDlg, pgContext);
             SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
         }
 
+        case WM_PAINT:
+        {
+            if (pDlgData)
+            {
+                PAINTSTRUCT ps;
+                BeginPaint(hwndDlg, &ps);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
+                EndPaint(hwndDlg, &ps);
+            }
+            return TRUE;
+        }
+
+        case WM_DESTROY:
+            DlgData_Destroy(hwndDlg);
+            return TRUE;
+
         case WM_COMMAND:
         {
+            PGINA_CONTEXT pgContext = pDlgData->pgContext;
+
             switch (LOWORD(wParam))
             {
                 case IDC_SECURITY_LOCK:
@@ -963,6 +917,7 @@ SecurityDialogProc(
             }
             break;
         }
+
         case WM_CLOSE:
         {
             EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
@@ -1223,33 +1178,36 @@ LogonDialogProc(
     {
         case WM_INITDIALOG:
         {
+            PGINA_CONTEXT pgContext = (PGINA_CONTEXT)lParam;
+
             /* FIXME: take care of NoDomainUI */
-            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
+            pDlgData = DlgData_Create(hwndDlg, pgContext);
             if (pDlgData == NULL)
                 return FALSE;
 
-            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
 
             SetWelcomeText(hwndDlg);
 
-            if (pDlgData->pgContext->bAutoAdminLogon ||
-                !pDlgData->pgContext->bDontDisplayLastUserName)
-                SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pDlgData->pgContext->UserName);
+            if (pgContext->bAutoAdminLogon ||
+                !pgContext->bDontDisplayLastUserName)
+                SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pgContext->UserName);
 
-            if (pDlgData->pgContext->bAutoAdminLogon)
-                SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pDlgData->pgContext->Password);
+            if (pgContext->bAutoAdminLogon)
+                SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pgContext->Password);
 
-            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_DOMAIN), pDlgData->pgContext);
+            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_DOMAIN), pgContext);
 
-            if (pDlgData->pgContext->bDisableCAD)
+            if (pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            if (!pDlgData->pgContext->bShutdownWithoutLogon)
+            if (!pgContext->bShutdownWithoutLogon)
                 EnableWindow(GetDlgItem(hwndDlg, IDC_LOGON_SHUTDOWN), FALSE);
 
-            SetFocus(GetDlgItem(hwndDlg, pDlgData->pgContext->bDontDisplayLastUserName ? IDC_LOGON_USERNAME : IDC_LOGON_PASSWORD));
+            SetFocus(GetDlgItem(hwndDlg, pgContext->bDontDisplayLastUserName ? IDC_LOGON_USERNAME : IDC_LOGON_PASSWORD));
 
-            if (pDlgData->pgContext->bAutoAdminLogon)
+            if (pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
 
             return TRUE;
@@ -1257,11 +1215,11 @@ LogonDialogProc(
 
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->Brand.hLogoBitmap)
+            if (pDlgData)
             {
+                PAINTSTRUCT ps;
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
@@ -1272,10 +1230,13 @@ LogonDialogProc(
             return TRUE;
 
         case WM_COMMAND:
+        {
+            PGINA_CONTEXT pgContext = pDlgData->pgContext;
+
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (DoLogon(hwndDlg, pDlgData->pgContext))
+                    if (DoLogon(hwndDlg, pgContext))
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
                     return TRUE;
 
@@ -1284,11 +1245,12 @@ LogonDialogProc(
                     return TRUE;
 
                 case IDC_LOGON_SHUTDOWN:
-                    if (OnShutDown(hwndDlg, pDlgData->pgContext) == IDOK)
-                        EndDialog(hwndDlg, pDlgData->pgContext->nShutdownAction);
+                    if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                        EndDialog(hwndDlg, pgContext->nShutdownAction);
                     return TRUE;
             }
             break;
+        }
     }
 
     return FALSE;
@@ -1489,7 +1451,6 @@ UnlockDialogProc(
     IN LPARAM lParam)
 {
     PDLG_DATA pDlgData;
-    INT result = WLX_SAS_ACTION_NONE;
 
     pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
@@ -1497,31 +1458,34 @@ UnlockDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
+            PGINA_CONTEXT pgContext = (PGINA_CONTEXT)lParam;
+
+            pDlgData = DlgData_Create(hwndDlg, pgContext);
             if (pDlgData == NULL)
                 return FALSE;
 
             SetWelcomeText(hwndDlg);
 
-            SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pDlgData->pgContext);
+            SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pgContext);
 
-            SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pDlgData->pgContext->UserName);
+            SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pgContext->UserName);
             SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
 
-            if (pDlgData->pgContext->bDisableCAD)
+            if (pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
             return TRUE;
         }
 
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->Brand.hLogoBitmap)
+            if (pDlgData)
             {
+                PAINTSTRUCT ps;
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
@@ -1532,6 +1496,9 @@ UnlockDialogProc(
             return TRUE;
 
         case WM_COMMAND:
+        {
+            INT result = WLX_SAS_ACTION_NONE;
+
             switch (LOWORD(wParam))
             {
                 case IDOK:
@@ -1544,6 +1511,7 @@ UnlockDialogProc(
                     return TRUE;
             }
             break;
+        }
     }
 
     return FALSE;
@@ -1596,7 +1564,8 @@ LockedDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            Brand_LoadBitmaps(hDllInstance, &pDlgData->Brand);
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_RIGHT);
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
 
             SetWelcomeText(hwndDlg);
 
@@ -1606,11 +1575,11 @@ LockedDialogProc(
 
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->Brand.hLogoBitmap)
+            if (pDlgData)
             {
+                PAINTSTRUCT ps;
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->Brand.hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, 0, NULL);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;

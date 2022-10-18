@@ -66,8 +66,6 @@
 #define IDD_LEGALNOTICE          2100
 #define IDC_LEGALNOTICE_TEXT     2101
 
-#define IDC_ROSLOGO              1007
-#define IDC_BAR                  1008
 #define IDC_DLG_BG               1009
 #define IDC_ROSLOGO_WHITE        1010
 

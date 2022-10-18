@@ -9,12 +9,13 @@
  */
 
 #include "msgina.h"
-#include "branding.h"
 
 #include <powrprof.h>
 #include <wingdi.h>
 #include <windowsx.h>
 #include <commctrl.h>
+
+#include "branding.h"
 
 /* Shutdown state flags */
 #define WLX_SHUTDOWN_STATE_LOGOFF       0x01
@@ -53,7 +54,7 @@
 typedef struct _SHUTDOWN_DLG_CONTEXT
 {
     PGINA_CONTEXT pgContext;
-    HBITMAP hBitmap;
+    BRAND Brand;
     HBITMAP hImageStrip;
     DWORD ShutdownOptions;
     HBRUSH hBrush;
@@ -1030,14 +1031,14 @@ ShutdownDialogProc(
 
             ShutdownOnInit(hDlg, pContext);
 
-            /* Draw the logo bitmap */
-            pContext->hBitmap =
-                LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            Brand_LoadBitmaps(&pContext->Brand, hDllInstance, IDI_ROSLOGO, IDI_BAR, DT_CENTER);
+            Brand_MoveControls(hDlg, &pContext->Brand);
             return TRUE;
         }
 
         case WM_DESTROY:
-            DeleteObject(pContext->hBitmap);
+        {
+            Brand_Cleanup(&pContext->Brand);
             DeleteObject(pContext->hBrush);
             DeleteObject(pContext->hImageStrip);
             DeleteObject(pContext->hfFont);
@@ -1048,6 +1049,7 @@ ShutdownDialogProc(
                 SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
             }
             return TRUE;
+        }
 
         case WM_ACTIVATE:
         {
@@ -1079,12 +1081,9 @@ ShutdownDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pContext->hBitmap)
-            {
-                BeginPaint(hDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
-                EndPaint(hDlg, &ps);
-            }
+            BeginPaint(hDlg, &ps);
+            Brand_Paint(hDlg, ps.hdc, &pContext->Brand, FALSE, 0, NULL);
+            EndPaint(hDlg, &ps);
             return TRUE;
         }
 
