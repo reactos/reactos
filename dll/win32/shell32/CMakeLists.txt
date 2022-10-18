@@ -82,6 +82,7 @@ add_rc_deps(shell32.rc ${shell32_rc_deps})
 
 add_library(shell32 SHARED
     ${SOURCE}
+    wine/appbar.c
     wine/brsfolder.c
     wine/changenotify.c
     wine/classes.c
