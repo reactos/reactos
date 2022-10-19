@@ -345,19 +345,19 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"Control Panel\\Input Method\\Hot Keys",
                           0,
-                          KEY_ALL_ACCESS,
+                          KEY_READ,
                           &hKey);
     if (error != ERROR_SUCCESS)
         return ret;
 
-    for (dwIndex = 0; ; ++dwIndex)
+    for (dwIndex = 0; dwIndex < 1000; ++dwIndex)
     {
         cchKeyName = _countof(szKeyName);
         error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cchKeyName, NULL, NULL, NULL, NULL);
-        if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
+        if (error != ERROR_SUCCESS)
             break;
 
-        szKeyName[_countof(szKeyName) - 1] = 0;
+        szKeyName[_countof(szKeyName) - 1] = 0; /* Avoid stack overrun */
 
         if (CliSetSingleHotKey(szKeyName, hKey))
             ret = TRUE;
