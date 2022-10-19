@@ -23,6 +23,8 @@
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
 
+#include <ui/branding.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -39,12 +41,8 @@ ADMIN_INFO AdminInfo;
 
 typedef struct _DLG_DATA
 {
-    HBITMAP hLogoBitmap;
-    HBITMAP hBarBitmap;
-    HWND hWndBarCtrl;
+    BRAND Brand;
     DWORD BarCounter;
-    DWORD BarWidth;
-    DWORD BarHeight;
 } DLG_DATA, *PDLG_DATA;
 
 /* FUNCTIONS ****************************************************************/
@@ -570,70 +568,6 @@ cleanup:
     return bRet;
 }
 
-static VOID
-AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
-{
-    INT xOld, yOld, cxOld, cyOld;
-    INT xNew, yNew, cxNew, cyNew;
-    INT cxLabel, cyLabel, dyLabel;
-    RECT rc, rcBar, rcLabel, rcWnd;
-    BITMAP bmLogo, bmBar;
-    DWORD style, exstyle;
-    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
-    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
-    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUSLABEL);
-
-    /* This adjustment is for CJK only */
-    switch (PRIMARYLANGID(GetUserDefaultLangID()))
-    {
-        case LANG_CHINESE:
-        case LANG_JAPANESE:
-        case LANG_KOREAN:
-            break;
-
-        default:
-            return;
-    }
-
-    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
-        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
-    {
-        return;
-    }
-
-    GetWindowRect(hwndBar, &rcBar);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
-    dyLabel = bmLogo.bmHeight - rcBar.top;
-
-    GetWindowRect(hwndLabel, &rcLabel);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
-    cxLabel = rcLabel.right - rcLabel.left;
-    cyLabel = rcLabel.bottom - rcLabel.top;
-
-    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
-    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
-    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
-
-    GetWindowRect(hwndDlg, &rcWnd);
-    xOld = rcWnd.left;
-    yOld = rcWnd.top;
-    cxOld = rcWnd.right - rcWnd.left;
-    cyOld = rcWnd.bottom - rcWnd.top;
-
-    GetClientRect(hwndDlg, &rc);
-    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
-
-    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
-    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
-    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
-
-    cxNew = rc.right - rc.left;
-    cyNew = (rc.bottom - rc.top) + dyLabel;
-    xNew = xOld - (cxNew - cxOld) / 2;
-    yNew = yOld - (cyNew - cyOld) / 2;
-    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
-}
-
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
@@ -646,107 +580,72 @@ StatusMessageWindowProc(
 
     pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
-    /* pDlgData is required for each case except WM_INITDIALOG */
-    if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            BITMAP bm;
             WCHAR szMsg[256];
-
-            /* Allocate pDlgData */
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
-            if (pDlgData)
-            {
-                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
-                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
-                /* Load bitmaps */
-                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
-                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
-                                                    0, 0, LR_DEFAULTCOLOR);
-
-                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
-                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-                pDlgData->BarWidth = bm.bmWidth;
-                pDlgData->BarHeight = bm.bmHeight;
-
-                if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
-                {
-                    if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
-                    {
-                        DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
-                    }
-
-                    /* Get the animation bar control */
-                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
-                }
-            }
 
             /* Get and set status text */
             if (!LoadStringW(hDllInstance, IDS_STATUS_INSTALL_DEV, szMsg, ARRAYSIZE(szMsg)))
                 return FALSE;
             SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
 
-            AdjustStatusMessageWindow(hwndDlg, pDlgData);
+            /* Allocate pDlgData */
+            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
+            if (pDlgData == NULL)
+                return FALSE;
+
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+
+            /* Set up the branding */
+            Brand_LoadBitmaps(&pDlgData->Brand, hDllInstance, IDB_REACTOS, IDB_LINE, DT_CENTER);
+            if (pDlgData->Brand.hBarBitmap)
+            {
+                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                    DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
+            }
+            Brand_MoveControls(hwndDlg, &pDlgData->Brand);
             return TRUE;
         }
 
         case WM_TIMER:
         {
-            if (pDlgData->hBarBitmap)
+            if (pDlgData && pDlgData->Brand.hBarBitmap)
             {
                 /*
-                 * Default rotation bar image width is 413 (same as logo)
-                 * We can divide 413 by 7 without remainder
+                 * Default rotation bar image width is 413 (same as logo).
+                 * We can divide 413 by 7 without remainder.
                  */
-                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
-                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
-                UpdateWindow(pDlgData->hWndBarCtrl);
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->Brand.BarSize.cx;
+                Brand_Paint(hwndDlg, NULL, &pDlgData->Brand, TRUE, pDlgData->BarCounter, NULL);
             }
             return TRUE;
         }
 
-        case WM_DRAWITEM:
+        case WM_PAINT:
         {
-            LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
+            PAINTSTRUCT ps;
 
-            if (lpDis->CtlID != IDC_BAR)
-            {
-                return FALSE;
-            }
-
-            if (pDlgData->hBarBitmap)
-            {
-                HDC hdcMem;
-                HGDIOBJ hOld;
-                DWORD off = pDlgData->BarCounter;
-                DWORD iw = pDlgData->BarWidth;
-                DWORD ih = pDlgData->BarHeight;
-
-                hdcMem = CreateCompatibleDC(lpDis->hDC);
-                hOld = SelectObject(hdcMem, pDlgData->hBarBitmap);
-                BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
-                BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
-                SelectObject(hdcMem, hOld);
-                DeleteDC(hdcMem);
+            if (!pDlgData)
                 return TRUE;
-            }
-            return FALSE;
+
+            BeginPaint(hwndDlg, &ps);
+            Brand_Paint(hwndDlg, ps.hdc, &pDlgData->Brand, FALSE, pDlgData->BarCounter, NULL);
+            EndPaint(hwndDlg, &ps);
+            return TRUE;
         }
 
         case WM_DESTROY:
         {
-            if (pDlgData->hBarBitmap)
-            {
-                KillTimer(hwndDlg, IDT_BAR);
-            }
+            if (!pDlgData)
+                return TRUE;
 
-            DeleteObject(pDlgData->hLogoBitmap);
-            DeleteObject(pDlgData->hBarBitmap);
+            if (pDlgData->Brand.hBarBitmap)
+                KillTimer(hwndDlg, IDT_BAR);
+
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)NULL);
+            Brand_Cleanup(&pDlgData->Brand);
             HeapFree(GetProcessHeap(), 0, pDlgData);
             return TRUE;
         }
