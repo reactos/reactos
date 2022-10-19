@@ -179,6 +179,63 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 
 static
 VOID
+DetectDockingStation(
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey)
+{
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCONFIGURATION_COMPONENT_DATA PeripheralKey;
+    PDOCKING_STATE_INFORMATION DockingState;
+    ULONG Size, Result;
+
+    Result = PnpBiosGetDockStationInformation(DiskReadBuffer);
+
+    /* Build full device descriptor */
+    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
+           sizeof(DOCKING_STATE_INFORMATION);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version = 0;
+    PartialResourceList->Revision = 0;
+    PartialResourceList->Count = 1;
+
+    /* Set device specific data */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->Flags = 0;
+    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(DOCKING_STATE_INFORMATION);
+
+    DockingState = (PDOCKING_STATE_INFORMATION)&PartialResourceList->PartialDescriptors[1];
+    DockingState->ReturnCode = Result;
+    if (Result == 0)
+    {
+        /* FIXME: Add more device specific data */
+        ERR("FIXME: System docked\n");
+    }
+
+    /* Create controller key */
+    FldrCreateComponentKey(BusKey,
+                           PeripheralClass,
+                           DockingInformation,
+                           0,
+                           0,
+                           0xFFFFFFFF,
+                           "Docking State Information",
+                           PartialResourceList,
+                           Size,
+                           &PeripheralKey);
+}
+
+static
+VOID
 DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
@@ -307,6 +364,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                            PartialResourceList,
                            Size,
                            &BusKey);
+
+    DetectDockingStation(BusKey);
 
     (*BusNumber)++;
 }

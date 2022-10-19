@@ -54,3 +54,28 @@ PnpBiosGetDeviceNode:
     mov dword ptr ds:[BSS_PnpResult], ecx
 
     ret
+
+
+PnpBiosGetDockStationInformation:
+
+    /* push bios segment */
+    mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
+    push ax
+
+    /* push pointer to info structure (segment/offset) */
+    mov ax, word ptr ds:[BSS_PnpBiosBufferSegment]
+    push ax
+    mov ax, word ptr ds:[BSS_PnpBiosBufferOffset]
+    push ax
+
+    /* push function number */
+    push 5
+
+    /* call entry point */
+    call dword ptr ds:[BSS_PnpBiosEntryPoint]
+    add sp, 8
+
+    movzx ecx, ax
+    mov dword ptr ds:[BSS_PnpResult], ecx
+
+    ret

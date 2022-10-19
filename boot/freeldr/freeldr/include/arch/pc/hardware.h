@@ -87,6 +87,7 @@ ULONG __cdecl PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
                   ULONG *NodeCount);
 ULONG __cdecl PnpBiosGetDeviceNode(UCHAR *NodeId,
              UCHAR *NodeBuffer);
+ULONG __cdecl PnpBiosGetDockStationInformation(UCHAR *DockingStationInfo);
 
 /* i386pxe.S */
 USHORT __cdecl PxeCallApi(USHORT Segment, USHORT Offset, USHORT Service, VOID* Parameter);
