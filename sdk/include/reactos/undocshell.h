@@ -785,6 +785,11 @@ void DumpIdList(LPCITEMIDLIST pcidl)
 #define SMSET_UNKNOWN08             0x08
 #define SMSET_UNKNOWN10             0x10
 
+// Explorer Tray Application Bar Data Message Commands
+#define TABDMC_APPBAR     0
+#define TABDMC_NOTIFY     1
+#define TABDMC_LOADINPROC 2
+
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);
 
