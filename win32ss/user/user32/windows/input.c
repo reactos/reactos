@@ -382,7 +382,7 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        RtlIntegerToUnicode(iNumber, 10, sizeof(szValueName), szValueName);
+        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
 
         cbValue = sizeof(szValue);
         error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
