@@ -183,7 +183,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
             continue;
 
         LangID = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
-        if (LangID != TargetLangId)
+        if (LangID != TargetLangId && LangID != 0)
             continue;
 
         uModifiers = pNode->uModifiers;
@@ -358,32 +358,33 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
     switch (dwAction)
     {
         case SETIMEHOTKEY_DELETE:
-            pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+            pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId); /* Find hotkey by ID */
             if (!pNode)
             {
                 ERR("dwHotKeyId: 0x%lX\n", dwHotKeyId);
                 return FALSE;
             }
 
-            IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
+            IntDeleteImeHotKey(&gpImeHotKeyList, pNode); /* Delete it */
             return TRUE;
 
         case SETIMEHOTKEY_ADD:
-            if (uVirtualKey == VK_PACKET)
+            if (LOWORD(uVirtualKey) == VK_PACKET) /* In case of VK_PACKET */
                 return FALSE;
 
             LangId = IntGetImeHotKeyLangId(dwHotKeyId);
             if (LangId == LANGID_KOREAN)
-                return FALSE;
+                return FALSE; /* Korean can't add IME hotkeys */
 
+            /* Find hotkey by key and language */
             pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
                                                 (uModifiers & MOD_KEYS),
                                                 (uModifiers & MOD_LEFT_RIGHT),
                                                 uVirtualKey, LangId);
-            if (!pNode)
-                pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+            if (pNode == NULL) /* If not found */
+                pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId); /* Find by ID */
 
-            if (pNode)
+            if (pNode) /* Already exists */
             {
                 pNode->uModifiers = uModifiers;
                 pNode->uVirtualKey = uVirtualKey;
@@ -391,23 +392,26 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
                 return TRUE;
             }
 
+            /* Allocate new hotkey */
             pNode = ExAllocatePoolWithTag(PagedPool, sizeof(IMEHOTKEY), USERTAG_IMEHOTKEY);
             if (!pNode)
                 return FALSE;
 
+            /* Populate */
             pNode->pNext = NULL;
             pNode->dwHotKeyId = dwHotKeyId;
             pNode->uModifiers = uModifiers;
             pNode->uVirtualKey = uVirtualKey;
             pNode->hKL = hKL;
-            IntAddImeHotKey(&gpImeHotKeyList, pNode);
+            IntAddImeHotKey(&gpImeHotKeyList, pNode); /* Add it */
             return TRUE;
 
         case SETIMEHOTKEY_INITIALIZE:
-            IntFreeImeHotKeys();
+            IntFreeImeHotKeys(); /* Delete all the IME hotkeys */
             return TRUE;
 
         default:
+            ERR("0x%lX\n", dwAction);
             return FALSE;
     }
 }
