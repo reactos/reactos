@@ -403,7 +403,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             IntAddImeHotKey(&gpImeHotKeyList, pNode);
             return TRUE;
 
-        case SETIMEHOTKEY_DELETEALL:
+        case SETIMEHOTKEY_INITIALIZE:
             IntFreeImeHotKeys();
             return TRUE;
 

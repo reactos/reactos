@@ -428,11 +428,11 @@ VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
     BYTE bFlags = 0;
     BOOL bCheck;
 
-    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_DELETEALL);
+    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_INITIALIZE);
 
     bCheck = CliGetImeHotKeysFromRegistry();
 
-    if (dwAction == SETIMEHOTKEY_DELETEALL)
+    if (dwAction == SETIMEHOTKEY_INITIALIZE)
     {
         LangID = LANGIDFROMLCID(GetUserDefaultLCID());
         IntSetFeKeyboardFlags(LangID, &bFlags);
