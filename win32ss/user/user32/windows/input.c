@@ -369,7 +369,7 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
 
 VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 {
-    WCHAR szValueName[12], szValue[16];
+    WCHAR szValueName[33], szValue[16];
     UNICODE_STRING ustrValue;
     DWORD dwKL, cbValue, dwType;
     UINT iNumber;
@@ -382,7 +382,7 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
+        _ultow(iNumber, szValueName, 10);
 
         cbValue = sizeof(szValue);
         error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
