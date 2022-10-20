@@ -32,6 +32,7 @@ static UNICODE_STRING g_LoadingShimDll;
 ULONG g_ShimEngDebugLevel = 0xffffffff;
 BOOL g_bComPlusImage = FALSE;
 BOOL g_bShimDuringInit = FALSE;
+BOOL g_bShimEngInitialized = FALSE;
 BOOL g_bInternalHooksUsed = FALSE;
 static ARRAY g_pShimInfo;   /* PSHIMMODULE */
 static ARRAY g_pHookArray;  /* HOOKMODULEINFO */
@@ -1358,6 +1359,7 @@ VOID SeiInit(LPCWSTR ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery, BOOLEAN Pr
         /* Remove the 'LDRP_ENTRY_PROCESSED' flag from entries we modified, so that the loader can continue to process them */
         SeiResetEntryProcessed(Peb);
     }
+    g_bShimEngInitialized = TRUE;
 }
 
 
@@ -1484,6 +1486,12 @@ LdrInitShimEngineDynamic(IN PVOID BaseAddress);
 
 BOOL WINAPI SE_DynamicShim(LPCWSTR ProcessImage, HSDB hsdb, PVOID pQueryResult, LPCSTR Module, LPDWORD lpdwDynamicToken)
 {
+    if (g_bShimEngInitialized)
+    {
+        SHIMENG_MSG("ReactOS HACK(CORE-13283): ShimEng already initialized!\n");
+        return TRUE;
+    }
+
     g_bShimDuringInit = TRUE;
     SeiInit(ProcessImage, hsdb, pQueryResult, FALSE);
     g_bShimDuringInit = FALSE;
