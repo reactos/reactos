@@ -1297,7 +1297,7 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #endif
 
 /* flags for IMEDPI.dwFlags */
-#define IMEDPI_FLAG_UNKNOWN 0x1
+#define IMEDPI_FLAG_UNLOADED 0x1
 #define IMEDPI_FLAG_LOCKED 0x2
 
 /* unconfirmed */

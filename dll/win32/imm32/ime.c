@@ -341,7 +341,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
 
     if (pImeDpi0->cLockObj)
     {
-        pImeDpi0->dwFlags |= IMEDPI_FLAG_UNKNOWN;
+        pImeDpi0->dwFlags |= IMEDPI_FLAG_UNLOADED;
         ret = FALSE;
         goto Quit;
     }
@@ -932,7 +932,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
         if (pImeDpi->hKL == hKL) /* found */
         {
             /* lock if possible */
-            if (pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN)
+            if (pImeDpi->dwFlags & IMEDPI_FLAG_UNLOADED)
                 pImeDpi = NULL;
             else
                 ++(pImeDpi->cLockObj);
@@ -966,7 +966,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         return;
     }
 
-    if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN) == 0)
+    if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNLOADED) == 0)
     {
         if ((pImeDpi->dwFlags & IMEDPI_FLAG_LOCKED) == 0 ||
             (pImeDpi->ImeInfo.fdwProperty & IME_PROP_END_UNLOAD) == 0)
