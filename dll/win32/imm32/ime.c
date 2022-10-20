@@ -54,12 +54,15 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     if (NtUserGetThreadState(THREADSTATE_ISWINLOGON2))
         dwSysInfoFlags |= IME_SYSINFO_WINLOGON;
 
+    if (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
+        dwSysInfoFlags |= IME_SYSINFO_WOW16;
+
     if (IS_IME_HKL(pImeDpi->hKL))
     {
         if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
             return FALSE;
     }
-    else if (IS_CICERO_MODE())
+    else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
         if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
             return FALSE;
@@ -139,11 +142,13 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     }
     else
     {
-        if (pImeDpi->uCodePage != GetACP() && pImeDpi->uCodePage)
+        if (pImeDpi->uCodePage != GetACP() && pImeDpi->uCodePage != CP_ACP)
             return FALSE;
 
         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPSTR)szUIClass, -1,
                             pImeDpi->szUIClass, _countof(pImeDpi->szUIClass));
+
+        pImeDpi->szUIClass[_countof(pImeDpi->szUIClass) - 1] = UNICODE_NULL;
     }
 
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
