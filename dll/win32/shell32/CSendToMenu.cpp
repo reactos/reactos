@@ -244,6 +244,7 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     {
         CStringW strNone(MAKEINTRESOURCEW(IDS_NONE));
         AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, strNone);
+        ++idCmd;
     }
 
     return idCmd - idCmdFirst;
