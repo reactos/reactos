@@ -207,6 +207,7 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
 }
 
 /* Converts the character index */
+/* Win: CalcCharacterPositionAtoW */
 LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
 {
     LONG cchWide;
@@ -227,6 +228,7 @@ LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
 }
 
 /* Converts the character index */
+/* Win: CalcCharacterPositionWtoA */
 LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage)
 {
     LONG cb, cchAnsi;

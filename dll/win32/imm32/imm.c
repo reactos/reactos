@@ -513,19 +513,23 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
         return hIMC;
 
     dwValue = NtUserAssociateInputContext(hWnd, hIMC, 0);
-    if (dwValue == 0)
-        return hOldIMC;
-    if (dwValue != 1)
-        return NULL;
-
-    hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
-    if (hwndFocus == hWnd)
+    switch (dwValue)
     {
-        ImmSetActiveContext(hWnd, hOldIMC, FALSE);
-        ImmSetActiveContext(hWnd, hIMC, TRUE);
-    }
+        case 0:
+            return hOldIMC;
 
-    return hOldIMC;
+        case 1:
+            hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
+            if (hwndFocus == hWnd)
+            {
+                ImmSetActiveContext(hWnd, hOldIMC, FALSE);
+                ImmSetActiveContext(hWnd, hIMC, TRUE);
+            }
+            return hOldIMC;
+
+        default:
+            return NULL;
+    }
 }
 
 /***********************************************************************
