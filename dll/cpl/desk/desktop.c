@@ -26,7 +26,7 @@
  */
 #define IDS_PERSONAL  9227
 
-static const TCHAR szHideDesktopIcons[] = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\HideDesktopIcons");
+static const TCHAR szHideDesktopIcons[] = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\HideDesktopIcons\\");
 static const TCHAR szClassicStartMenu[] = TEXT("ClassicStartMenu");
 static const TCHAR szNewStartPanel[] = TEXT("NewStartPanel");
 
@@ -62,75 +62,38 @@ struct
 VOID
 InitDesktopSettings(PDESKTOP_DATA pData)
 {
-    HKEY regKey, iconKey1, iconKey2;
     UINT i;
-    DWORD dwType, cbData;
-
-    /* Default values */
-    for (i = 0; i < _countof(pData->optIcons); i++)
-    {
-        // pData->optIcons[i].bHideClassic is FALSE by default
-        pData->optIcons[i].bHideNewStart = TRUE;
-    }
+    TCHAR regPath[MAX_PATH];
 
     /* Load desktop icon settings from the registry */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, szHideDesktopIcons,
-                     0, KEY_QUERY_VALUE, &regKey) != ERROR_SUCCESS)
-    {
-        goto LoadIcons;
-    }
-
-    if (RegOpenKeyEx(regKey, szClassicStartMenu, 0, KEY_QUERY_VALUE, &iconKey1) != ERROR_SUCCESS)
-        iconKey1 = NULL;
-
-    if (RegOpenKeyEx(regKey, szNewStartPanel, 0, KEY_QUERY_VALUE, &iconKey2) != ERROR_SUCCESS)
-        iconKey2 = NULL;
+    StringCchCopy(regPath, _countof(regPath), szHideDesktopIcons);
+    StringCchCat(regPath, _countof(regPath), szClassicStartMenu);
 
     for (i = 0; i < _countof(pData->optIcons); i++)
     {
-        LSTATUS res;
-        DWORD dwData;
-
-        if (iconKey1)
-        {
-            cbData = sizeof(dwData);
-            res = RegQueryValueEx(iconKey1, DesktopIcons[i].CLSID, NULL, &dwType, (LPBYTE)&dwData, &cbData);
-
-            if (res == ERROR_SUCCESS && dwType == REG_DWORD && cbData == sizeof(dwData))
-                pData->optIcons[i].bHideClassic = !!dwData;
-        }
-
-        if (iconKey2)
-        {
-            cbData = sizeof(dwData);
-            res = RegQueryValueEx(iconKey2, DesktopIcons[i].CLSID, NULL, &dwType, (LPBYTE)&dwData, &cbData);
-
-            if (res == ERROR_SUCCESS && dwType == REG_DWORD && cbData == sizeof(dwData))
-                pData->optIcons[i].bHideNewStart = !!dwData;
-        }
+        pData->optIcons[i].bHideClassic = SHRegGetBoolUSValue(regPath, DesktopIcons[i].CLSID, FALSE, FALSE);
     }
 
-    if (iconKey1)
-        RegCloseKey(iconKey1);
+    StringCchCopy(regPath, _countof(regPath), szHideDesktopIcons);
+    StringCchCat(regPath, _countof(regPath), szNewStartPanel);
 
-    if (iconKey2)
-        RegCloseKey(iconKey2);
+    for (i = 0; i < _countof(pData->optIcons); i++)
+    {
+        pData->optIcons[i].bHideNewStart = SHRegGetBoolUSValue(regPath, DesktopIcons[i].CLSID, FALSE, TRUE);
+    }
 
-    RegCloseKey(regKey);
-
-LoadIcons:
     for (i = 0; i < _countof(IconChange); i++)
     {
-        TCHAR iconPath[MAX_PATH];
+        DWORD cbData, dwType;
         TCHAR szData[MAX_PATH];
 
         /* Current icons */
-        StringCchCopy(iconPath, _countof(iconPath), szUserClass);
-        StringCchCat(iconPath, _countof(iconPath), IconChange[i].CLSID);
-        StringCchCat(iconPath, _countof(iconPath), szDefaultIcon);
+        StringCchCopy(regPath, _countof(regPath), szUserClass);
+        StringCchCat(regPath, _countof(regPath), IconChange[i].CLSID);
+        StringCchCat(regPath, _countof(regPath), szDefaultIcon);
         cbData = sizeof(szData);
 
-        if (SHGetValue(HKEY_CURRENT_USER, iconPath, IconChange[i].IconName, &dwType,
+        if (SHGetValue(HKEY_CURRENT_USER, regPath, IconChange[i].IconName, &dwType,
                        &szData, &cbData) == ERROR_SUCCESS &&
             (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
         {
@@ -139,12 +102,12 @@ LoadIcons:
 
         /* Default icons */
         /* FIXME: Get default icons from theme data, fallback to CLSID data on error. */
-        StringCchCopy(iconPath, _countof(iconPath), szSysClass);
-        StringCchCat(iconPath, _countof(iconPath), IconChange[i].CLSID);
-        StringCchCat(iconPath, _countof(iconPath), szDefaultIcon);
+        StringCchCopy(regPath, _countof(regPath), szSysClass);
+        StringCchCat(regPath, _countof(regPath), IconChange[i].CLSID);
+        StringCchCat(regPath, _countof(regPath), szDefaultIcon);
         cbData = sizeof(szData);
 
-        if (SHGetValue(HKEY_CLASSES_ROOT, iconPath, IconChange[i].IconName, &dwType,
+        if (SHGetValue(HKEY_CLASSES_ROOT, regPath, IconChange[i].IconName, &dwType,
                        &szData, &cbData) == ERROR_SUCCESS &&
             (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
         {
@@ -194,63 +157,24 @@ SaveDesktopSettings(PDESKTOP_DATA pData)
 static BOOL
 GetCurrentValue(UINT i, BOOL bNewStart)
 {
-    HKEY regKey, iconKey;
-    LSTATUS res;
-    DWORD dwType, cbData;
-    BOOL bRet;
+    TCHAR regPath[MAX_PATH];
 
-    /* Set default value */
-    bRet = bNewStart;
+    StringCchCopy(regPath, _countof(regPath), szHideDesktopIcons);
+    StringCchCat(regPath, _countof(regPath), bNewStart ? szNewStartPanel : szClassicStartMenu);
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, szHideDesktopIcons,
-                     0, KEY_QUERY_VALUE, &regKey) != ERROR_SUCCESS)
-    {
-        return bRet;
-    }
-
-    if (RegOpenKeyEx(regKey, (bNewStart ? szNewStartPanel : szClassicStartMenu),
-                     0, KEY_QUERY_VALUE, &iconKey) != ERROR_SUCCESS)
-    {
-        RegCloseKey(regKey);
-        return bRet;
-    }
-
-    cbData = sizeof(bRet);
-    res = RegQueryValueEx(iconKey, DesktopIcons[i].CLSID, NULL, &dwType, (LPBYTE)&bRet, &cbData);
-
-    if (res != ERROR_SUCCESS || dwType != REG_DWORD || cbData != sizeof(bRet))
-        bRet = bNewStart;
-
-    RegCloseKey(iconKey);
-    RegCloseKey(regKey);
-
-    return bRet;
+    return SHRegGetBoolUSValue(regPath, DesktopIcons[i].CLSID, FALSE, bNewStart);
 }
 
 static VOID
 SetCurrentValue(UINT i, BOOL bNewStart, BOOL bValue)
 {
-    HKEY regKey, iconKey;
+    TCHAR regPath[MAX_PATH];
 
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, szHideDesktopIcons,
-                       0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE,
-                       NULL, &regKey, NULL) != ERROR_SUCCESS)
-    {
-        return;
-    }
+    StringCchCopy(regPath, _countof(regPath), szHideDesktopIcons);
+    StringCchCat(regPath, _countof(regPath), bNewStart ? szNewStartPanel : szClassicStartMenu);
 
-    if (RegCreateKeyEx(regKey, (bNewStart ? szNewStartPanel : szClassicStartMenu),
-                       0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE,
-                       NULL, &iconKey, NULL) != ERROR_SUCCESS)
-    {
-        RegCloseKey(regKey);
-        return;
-    }
-
-    RegSetValueEx(iconKey, DesktopIcons[i].CLSID, 0, REG_DWORD, (LPBYTE)&bValue, sizeof(bValue));
-
-    RegCloseKey(iconKey);
-    RegCloseKey(regKey);
+    SHSetValue(HKEY_CURRENT_USER, regPath, DesktopIcons[i].CLSID, REG_DWORD,
+               (LPBYTE)&bValue, sizeof(bValue));
 }
 
 VOID
