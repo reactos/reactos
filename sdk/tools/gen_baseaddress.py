@@ -77,7 +77,6 @@ PRIORITIES = (
     'glu32.dll',
     'opengl32.dll',
     'riched20.dll',
-    'smdll.dll',
     'userenv.dll',
     'uxtheme.dll',
     'cryptui.dll',
