@@ -1093,7 +1093,17 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
             wChar = 0;
             kret = ToAsciiEx(vk, HIWORD(lKeyData), abKeyState, &wChar, 0, hKL);
             if (kret > 0)
-                vk = MAKEWORD(vk, wChar);
+            {
+                if ((BYTE)vk == VK_PACKET)
+                {
+                    vk &= 0xFF;
+                    vk |= (wChar << 8);
+                }
+                else
+                {
+                    vk = MAKEWORD(vk, wChar);
+                }
+            }
         }
     }
 
