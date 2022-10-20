@@ -1,7 +1,7 @@
 /*
  *    AutoComplete interfaces implementation.
  *
- *    Copyright 2004    Maxime Bellengé <maxime.bellenge@laposte.net>
+ *    Copyright 2004    Maxime BellengÃ© <maxime.bellenge@laposte.net>
  *    Copyright 2009  Andrew Hill
  *    Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
@@ -1549,7 +1549,7 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     m_hFont = reinterpret_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
     m_hwndList.SetFont(m_hFont);
 
-    // add reference to CAutoComplete::m_hWnd
+    // add reference so we won't be deleted during message processing
     AddRef();
     return 0; // success
 }
@@ -1575,9 +1575,17 @@ LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     // clean up
     m_hwndCombo = NULL;
-    // remove reference to CAutoComplete::m_hWnd
-    Release();
+
+    // Tell ATL to clean up
+    bHandled = 0;
+
     return 0;
+}
+
+VOID CAutoComplete::OnFinalMessage(HWND)
+{
+    // The message loop is finished, now we can safely destruct!
+    Release();
 }
 
 // WM_EXITSIZEMOVE

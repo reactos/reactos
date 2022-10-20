@@ -1,7 +1,7 @@
 /*
  *  AutoComplete interfaces implementation.
  *
- *  Copyright 2004  Maxime Bellengé <maxime.bellenge@laposte.net>
+ *  Copyright 2004  Maxime BellengÃ© <maxime.bellenge@laposte.net>
  *  Copyright 2009  Andrew Hill
  *  Copyright 2021  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
@@ -156,9 +156,9 @@ public:
 
     // public methods
     CAutoComplete();
-    HWND CreateDropDown();
     virtual ~CAutoComplete();
 
+    HWND CreateDropDown();
     BOOL CanAutoSuggest() const;
     BOOL CanAutoAppend() const;
     BOOL UseTab() const;
@@ -283,6 +283,8 @@ protected:
     LRESULT OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnAutoCompStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnAutoCompFinish(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+    virtual VOID OnFinalMessage(HWND) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)
     DECLARE_NOT_AGGREGATABLE(CAutoComplete)
