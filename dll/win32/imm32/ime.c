@@ -69,7 +69,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         return FALSE;
     }
 
-    szUIClass[_countof(szUIClass) - 1] = 0;
+    szUIClass[_countof(szUIClass) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
     if (pImeInfo->dwPrivateDataSize == 0)
         pImeInfo->dwPrivateDataSize = sizeof(DWORD);
@@ -1224,7 +1224,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szW, hKL);
             if (ret)
             {
-                szW[_countof(szW) - 1] = 0;
+                szW[_countof(szW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
                 WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1,
                                     lpData, MAX_IMM_FILENAME, NULL, NULL);
                 ((LPSTR)lpData)[MAX_IMM_FILENAME - 1] = 0;
@@ -1235,7 +1235,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_HANJA_MODE:
             MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                 lpData, -1, szW, _countof(szW));
-            szW[_countof(szW) - 1] = 0;
+            szW[_countof(szW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
             ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szW, hKL);
             break;
 
@@ -1304,7 +1304,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
                 szA[_countof(szA) - 1] = 0;
                 MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                     szA, -1, lpData, MAX_IMM_FILENAME);
-                ((LPWSTR)lpData)[MAX_IMM_FILENAME - 1] = 0;
+                ((LPWSTR)lpData)[MAX_IMM_FILENAME - 1] = UNICODE_NULL; /* Avoid buffer overrun */
             }
             break;
 
