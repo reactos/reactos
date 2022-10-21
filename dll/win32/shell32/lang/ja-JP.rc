@@ -656,7 +656,7 @@ BEGIN
     LTEXT "ファイル拡張子(&F):", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
     PUSHBUTTON "<< 高度な設定(&V)", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    LTEXT "関連付け先(&A):", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 190, 55, 60, 14
@@ -979,8 +979,8 @@ BEGIN
 
     IDS_TITLE_MYCOMP "マイ コンピュータ"
     IDS_TITLE_MYNET "マイ ネットワーク"
-    IDS_TITLE_BIN_1 "Recycle Bin (full)"
-    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+    IDS_TITLE_BIN_1 "ごみ箱 (いっぱい)"
+    IDS_TITLE_BIN_0 "ごみ箱 (空)"
 
     IDS_ADVANCED_FOLDER "ファイルとフォルダ"
     IDS_ADVANCED_NET_CRAWLER "自動的にネットワークフォルダとプリンタを検索する"
