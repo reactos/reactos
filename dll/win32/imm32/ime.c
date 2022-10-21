@@ -655,13 +655,13 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
         if (bTargetIsAnsi)
         {
             if (pNewParent)
-                Imm32ImeMenuWideToAnsi(pNewParent, lpImeParentMenu, CP_ACP);
+                Imm32ImeMenuWideToAnsi(pNewParent, lpImeParentMenu, pImeDpi->uCodePage);
 
             pItemW = pNewItems;
             pItemA = lpImeMenu;
             for (iItem = 0; iItem < ret; ++iItem, ++pItemW, ++pItemA)
             {
-                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, CP_ACP))
+                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, pImeDpi->uCodePage))
                 {
                     ret = 0;
                     break;
@@ -704,11 +704,11 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 
     TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
 
-    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
+    pszFileNameW = Imm32WideFromAnsi(CP_ACP, lpszIMEFileName);
     if (!pszFileNameW)
         goto Quit;
 
-    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
+    pszLayoutTextW = Imm32WideFromAnsi(CP_ACP, lpszLayoutText);
     if (!pszLayoutTextW)
         goto Quit;
 
@@ -1712,7 +1712,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
 
     if (pSrc)
     {
-        pszSrcW = Imm32WideFromAnsi(pSrc);
+        pszSrcW = Imm32WideFromAnsi(pImeDpi->uCodePage, pSrc);
         if (pszSrcW == NULL)
             goto Quit;
     }
@@ -1729,7 +1729,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (cb == 0)
         goto Quit;
 
-    ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, CP_ACP);
+    ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, pImeDpi->uCodePage);
 
 Quit:
     ImmLocalFree(pszSrcW);
@@ -1767,7 +1767,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
 
     if (pSrc)
     {
-        pszSrcA = Imm32AnsiFromWide(pSrc);
+        pszSrcA = Imm32AnsiFromWide(pImeDpi->uCodePage, pSrc);
         if (pszSrcA == NULL)
             goto Quit;
     }
@@ -1784,7 +1784,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (!cb)
         goto Quit;
 
-    ret = CandidateListAnsiToWide(pCL, lpDst, dwBufLen, CP_ACP);
+    ret = CandidateListAnsiToWide(pCL, lpDst, dwBufLen, pImeDpi->uCodePage);
 
 Quit:
     ImmLocalFree(pszSrcA);
@@ -1902,14 +1902,14 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     if (pRegWordA->lpReading)
     {
-        RegWordW.lpReading = Imm32WideFromAnsi(pRegWordA->lpReading);
+        RegWordW.lpReading = Imm32WideFromAnsi(pImeDpi->uCodePage, pRegWordA->lpReading);
         if (!RegWordW.lpReading)
             goto Quit;
     }
 
     if (pRegWordA->lpWord)
     {
-        RegWordW.lpWord = Imm32WideFromAnsi(pRegWordA->lpWord);
+        RegWordW.lpWord = Imm32WideFromAnsi(pImeDpi->uCodePage, pRegWordA->lpWord);
         if (!RegWordW.lpWord)
             goto Quit;
     }
@@ -1956,14 +1956,14 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     if (pRegWordW->lpReading)
     {
-        RegWordA.lpReading = Imm32AnsiFromWide(pRegWordW->lpReading);
+        RegWordA.lpReading = Imm32AnsiFromWide(pImeDpi->uCodePage, pRegWordW->lpReading);
         if (!RegWordA.lpReading)
             goto Quit;
     }
 
     if (pRegWordW->lpWord)
     {
-        RegWordA.lpWord = Imm32AnsiFromWide(pRegWordW->lpWord);
+        RegWordA.lpWord = Imm32AnsiFromWide(pImeDpi->uCodePage, pRegWordW->lpWord);
         if (!RegWordA.lpWord)
             goto Quit;
     }

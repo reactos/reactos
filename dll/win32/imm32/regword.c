@@ -14,6 +14,7 @@ typedef struct ENUM_WORD_A2W
     REGISTERWORDENUMPROCW lpfnEnumProc;
     LPVOID lpData;
     UINT ret;
+    UINT uCodePage;
 } ENUM_WORD_A2W, *LPENUM_WORD_A2W;
 
 typedef struct ENUM_WORD_W2A
@@ -21,6 +22,7 @@ typedef struct ENUM_WORD_W2A
     REGISTERWORDENUMPROCA lpfnEnumProc;
     LPVOID lpData;
     UINT ret;
+    UINT uCodePage;
 } ENUM_WORD_W2A, *LPENUM_WORD_W2A;
 
 /*
@@ -35,14 +37,14 @@ Imm32EnumWordProcA2W(LPCSTR pszReadingA, DWORD dwStyle, LPCSTR pszRegisterA, LPV
 
     if (pszReadingA)
     {
-        pszReadingW = Imm32WideFromAnsi(pszReadingA);
+        pszReadingW = Imm32WideFromAnsi(lpEnumData->uCodePage, pszReadingA);
         if (pszReadingW == NULL)
             goto Quit;
     }
 
     if (pszRegisterA)
     {
-        pszRegisterW = Imm32WideFromAnsi(pszRegisterA);
+        pszRegisterW = Imm32WideFromAnsi(lpEnumData->uCodePage, pszRegisterA);
         if (pszRegisterW == NULL)
             goto Quit;
     }
@@ -65,14 +67,14 @@ Imm32EnumWordProcW2A(LPCWSTR pszReadingW, DWORD dwStyle, LPCWSTR pszRegisterW, L
 
     if (pszReadingW)
     {
-        pszReadingA = Imm32AnsiFromWide(pszReadingW);
+        pszReadingA = Imm32AnsiFromWide(lpEnumData->uCodePage, pszReadingW);
         if (pszReadingW == NULL)
             goto Quit;
     }
 
     if (pszRegisterW)
     {
-        pszRegisterA = Imm32AnsiFromWide(pszRegisterW);
+        pszRegisterA = Imm32AnsiFromWide(lpEnumData->uCodePage, pszRegisterW);
         if (pszRegisterA == NULL)
             goto Quit;
     }
@@ -116,14 +118,14 @@ ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
 
     if (lpszReading)
     {
-        pszReadingW = Imm32WideFromAnsi(lpszReading);
+        pszReadingW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszReading);
         if (pszReadingW == NULL)
             goto Quit;
     }
 
     if (lpszRegister)
     {
-        pszRegisterW = Imm32WideFromAnsi(lpszRegister);
+        pszRegisterW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszRegister);
         if (pszRegisterW == NULL)
             goto Quit;
     }
@@ -131,6 +133,7 @@ ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
     EnumDataW2A.lpfnEnumProc = lpfnEnumProc;
     EnumDataW2A.lpData = lpData;
     EnumDataW2A.ret = 0;
+    EnumDataW2A.uCodePage = pImeDpi->uCodePage;
     pImeDpi->ImeEnumRegisterWord(Imm32EnumWordProcW2A, pszReadingW, dwStyle,
                                  pszRegisterW, &EnumDataW2A);
     ret = EnumDataW2A.ret;
@@ -172,14 +175,14 @@ ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
 
     if (lpszReading)
     {
-        pszReadingA = Imm32AnsiFromWide(lpszReading);
+        pszReadingA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszReading);
         if (pszReadingA == NULL)
             goto Quit;
     }
 
     if (lpszRegister)
     {
-        pszRegisterA = Imm32AnsiFromWide(lpszRegister);
+        pszRegisterA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszRegister);
         if (pszRegisterA == NULL)
             goto Quit;
     }
@@ -187,6 +190,7 @@ ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
     EnumDataA2W.lpfnEnumProc = lpfnEnumProc;
     EnumDataA2W.lpData = lpData;
     EnumDataA2W.ret = 0;
+    EnumDataA2W.uCodePage = pImeDpi->uCodePage;
     pImeDpi->ImeEnumRegisterWord(Imm32EnumWordProcA2W, pszReadingA, dwStyle,
                                  pszRegisterA, &EnumDataA2W);
     ret = EnumDataA2W.ret;
@@ -240,7 +244,7 @@ UINT WINAPI ImmGetRegisterWordStyleA(HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf
             pDestA = &lpStyleBuf[iItem];
             pDestA->dwStyle = pSrcW->dwStyle;
             StringCchLengthW(pSrcW->szDescription, _countof(pSrcW->szDescription), &cchW);
-            cchA = WideCharToMultiByte(CP_ACP, MB_PRECOMPOSED,
+            cchA = WideCharToMultiByte(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                        pSrcW->szDescription, (INT)cchW,
                                        pDestA->szDescription, _countof(pDestA->szDescription),
                                        NULL, NULL);
@@ -298,7 +302,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf
             pDestW = &lpStyleBuf[iItem];
             pDestW->dwStyle = pSrcA->dwStyle;
             StringCchLengthA(pSrcA->szDescription, _countof(pSrcA->szDescription), &cchA);
-            cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+            cchW = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                        pSrcA->szDescription, (INT)cchA,
                                        pDestW->szDescription, _countof(pDestW->szDescription));
             if (cchW > _countof(pDestW->szDescription) - 1)
@@ -339,14 +343,14 @@ ImmRegisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister
 
     if (lpszReading)
     {
-        pszReadingW = Imm32WideFromAnsi(lpszReading);
+        pszReadingW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszReading);
         if (pszReadingW == NULL)
             goto Quit;
     }
 
     if (lpszRegister)
     {
-        pszRegisterW = Imm32WideFromAnsi(lpszRegister);
+        pszRegisterW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszRegister);
         if (pszRegisterW == NULL)
             goto Quit;
     }
@@ -386,14 +390,14 @@ ImmRegisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegist
 
     if (lpszReading)
     {
-        pszReadingA = Imm32AnsiFromWide(lpszReading);
+        pszReadingA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszReading);
         if (!pszReadingA)
             goto Quit;
     }
 
     if (lpszRegister)
     {
-        pszRegisterA = Imm32AnsiFromWide(lpszRegister);
+        pszRegisterA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszRegister);
         if (!pszRegisterA)
             goto Quit;
     }
@@ -433,14 +437,14 @@ ImmUnregisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregi
 
     if (lpszReading)
     {
-        pszReadingW = Imm32WideFromAnsi(lpszReading);
+        pszReadingW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszReading);
         if (pszReadingW == NULL)
             goto Quit;
     }
 
     if (lpszUnregister)
     {
-        pszUnregisterW = Imm32WideFromAnsi(lpszUnregister);
+        pszUnregisterW = Imm32WideFromAnsi(pImeDpi->uCodePage, lpszUnregister);
         if (pszUnregisterW == NULL)
             goto Quit;
     }
@@ -480,14 +484,14 @@ ImmUnregisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnre
 
     if (lpszReading)
     {
-        pszReadingA = Imm32AnsiFromWide(lpszReading);
+        pszReadingA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszReading);
         if (!pszReadingA)
             goto Quit;
     }
 
     if (lpszUnregister)
     {
-        pszUnregisterA = Imm32AnsiFromWide(lpszUnregister);
+        pszUnregisterA = Imm32AnsiFromWide(pImeDpi->uCodePage, lpszUnregister);
         if (!pszUnregisterA)
             goto Quit;
     }

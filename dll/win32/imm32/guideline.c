@@ -19,10 +19,13 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
     DWORD cb, ret = 0;
     LPVOID pvStr, pvPrivate;
     BOOL bUsedDefault;
+    UINT uCodePage;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
         return 0;
+
+    uCodePage = pClientImc->uCodePage;
 
     pIC = ImmLockIMC(hIMC);
     if (!pIC)
@@ -60,7 +63,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         {
             if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             {
-                cb = WideCharToMultiByte(CP_ACP, 0, pvStr, pGuideLine->dwStrLen,
+                cb = WideCharToMultiByte(uCodePage, 0, pvStr, pGuideLine->dwStrLen,
                                          NULL, 0, NULL, &bUsedDefault);
             }
             else
@@ -76,7 +79,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             }
             else
             {
-                cb = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pvStr, pGuideLine->dwStrLen,
+                cb = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pvStr, pGuideLine->dwStrLen,
                                          NULL, 0) * sizeof(WCHAR);
             }
         }
@@ -92,7 +95,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         {
             if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             {
-                ret = WideCharToMultiByte(CP_ACP, 0, pvStr, pGuideLine->dwStrLen,
+                ret = WideCharToMultiByte(uCodePage, 0, pvStr, pGuideLine->dwStrLen,
                                           lpBuf, dwBufLen, NULL, &bUsedDefault);
                 goto Quit;
             }
@@ -101,7 +104,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         {
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE))
             {
-                ret = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pvStr, pGuideLine->dwStrLen,
+                ret = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pvStr, pGuideLine->dwStrLen,
                                           lpBuf, dwBufLen) * sizeof(WCHAR);
                 goto Quit;
             }
@@ -122,7 +125,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if ((pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                cb = CandidateListWideToAnsi(pvPrivate, NULL, 0, CP_ACP);
+                cb = CandidateListWideToAnsi(pvPrivate, NULL, 0, uCodePage);
             }
             else
             {
@@ -134,7 +137,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                cb = CandidateListAnsiToWide(pvPrivate, NULL, 0, CP_ACP);
+                cb = CandidateListAnsiToWide(pvPrivate, NULL, 0, uCodePage);
             }
             else
             {
@@ -154,7 +157,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if ((pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListWideToAnsi(pvPrivate, lpBuf, cb, CP_ACP);
+                ret = CandidateListWideToAnsi(pvPrivate, lpBuf, cb, uCodePage);
                 goto Quit;
             }
         }
@@ -163,7 +166,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListAnsiToWide(pvPrivate, lpBuf, cb, CP_ACP);
+                ret = CandidateListAnsiToWide(pvPrivate, lpBuf, cb, uCodePage);
                 goto Quit;
             }
         }
@@ -177,6 +180,7 @@ Quit:
     ImmUnlockIMCC(pIC->hGuideLine);
     ImmUnlockIMC(hIMC);
     ImmUnlockClientImc(pClientImc);
+    TRACE("ret: 0x%X\n", ret);
     return ret;
 }
 

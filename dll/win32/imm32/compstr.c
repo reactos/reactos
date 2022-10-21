@@ -841,6 +841,7 @@ Quit:
     ImmLocalFree(pCompNew);
     ImmLocalFree(pReadNew);
     ImmUnlockImeDpi(pImeDpi);
+    TRACE("ret: %d\n", ret);
     return ret;
 }
 
@@ -883,6 +884,7 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
     ret = Imm32GetCompStrA(hIMC, pCS, dwIndex, lpBuf, dwBufLen, bAnsiClient, uCodePage);
     ImmUnlockIMCC(pIC->hCompStr);
     ImmUnlockIMC(hIMC);
+    TRACE("ret: %ld\n", ret);
     return ret;
 }
 
@@ -925,6 +927,7 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
     ret = Imm32GetCompStrW(hIMC, pCS, dwIndex, lpBuf, dwBufLen, bAnsiClient, uCodePage);
     ImmUnlockIMCC(pIC->hCompStr);
     ImmUnlockIMC(hIMC);
+    TRACE("ret: %ld\n", ret);
     return ret;
 }
 

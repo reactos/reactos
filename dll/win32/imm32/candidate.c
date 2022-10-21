@@ -153,17 +153,18 @@ static DWORD APIENTRY
 ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen,
                       BOOL bAnsi)
 {
-    DWORD ret = 0;
+    DWORD dwSize, ret = 0;
+    UINT uCodePage;
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
     LPCANDIDATEINFO pCI;
     LPCANDIDATELIST pCL;
-    DWORD dwSize;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
         return 0;
 
+    uCodePage = pClientImc->uCodePage;
     pIC = ImmLockIMC(hIMC);
     if (pIC == NULL)
     {
@@ -187,7 +188,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     if (bAnsi)
     {
         if (pClientImc->dwFlags & CLIENTIMC_WIDE)
-            dwSize = CandidateListAnsiToWide(pCL, NULL, 0, CP_ACP);
+            dwSize = CandidateListAnsiToWide(pCL, NULL, 0, uCodePage);
         else
             dwSize = pCL->dwSize;
     }
@@ -196,7 +197,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
         if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             dwSize = pCL->dwSize;
         else
-            dwSize = CandidateListWideToAnsi(pCL, NULL, 0, CP_ACP);
+            dwSize = CandidateListWideToAnsi(pCL, NULL, 0, uCodePage);
     }
 
     if (dwBufLen != 0 && dwSize != 0)
@@ -208,7 +209,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
         if (bAnsi)
         {
             if (pClientImc->dwFlags & CLIENTIMC_WIDE)
-                CandidateListAnsiToWide(pCL, lpCandList, dwSize, CP_ACP);
+                CandidateListAnsiToWide(pCL, lpCandList, dwSize, uCodePage);
             else
                 RtlCopyMemory(lpCandList, pCL, dwSize);
         }
@@ -217,7 +218,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
             if (pClientImc->dwFlags & CLIENTIMC_WIDE)
                 RtlCopyMemory(lpCandList, pCL, dwSize);
             else
-                CandidateListWideToAnsi(pCL, lpCandList, dwSize, CP_ACP);
+                CandidateListWideToAnsi(pCL, lpCandList, dwSize, uCodePage);
         }
     }
 
@@ -227,6 +228,7 @@ Quit:
     ImmUnlockIMCC(pIC->hCandInfo);
     ImmUnlockIMC(hIMC);
     ImmUnlockClientImc(pClientImc);
+    TRACE("ret: 0x%X\n", ret);
     return ret;
 }
 
@@ -237,6 +239,7 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     DWORD ret = 0, cbGot, dwIndex;
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
+    UINT uCodePage;
     const CANDIDATEINFO *pCI;
     const BYTE *pb;
     const CANDIDATELIST *pCL;
@@ -257,6 +260,8 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
         ImmUnlockClientImc(pClientImc);
         return 0;
     }
+
+    uCodePage = pClientImc->uCodePage;
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
     if (pCI == NULL)
@@ -282,7 +287,7 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
             {
                 pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
                 pCL = (const CANDIDATELIST *)pb;
-                cbGot = CandidateListWideToAnsi(pCL, NULL, 0, CP_ACP);
+                cbGot = CandidateListWideToAnsi(pCL, NULL, 0, uCodePage);
                 ret += cbGot;
             }
         }
@@ -305,7 +310,7 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
             {
                 pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
                 pCL = (const CANDIDATELIST *)pb;
-                cbGot = CandidateListAnsiToWide(pCL, NULL, 0, CP_ACP);
+                cbGot = CandidateListAnsiToWide(pCL, NULL, 0, uCodePage);
                 ret += cbGot;
             }
         }
@@ -315,6 +320,7 @@ Quit:
     ImmUnlockIMCC(pIC->hCandInfo);
     ImmUnlockIMC(hIMC);
     ImmUnlockClientImc(pClientImc);
+    TRACE("ret: 0x%X\n", ret);
     return ret;
 }
 
@@ -379,6 +385,7 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     }
 
     ImmUnlockIMC(hIMC);
+    TRACE("ret: %d\n", ret);
     return ret;
 }
 

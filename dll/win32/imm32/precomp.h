@@ -88,8 +88,8 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes);
 #define ImmLocalFree(lpData) HeapFree(ghImmHeap, 0, (lpData))
 
-LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
-LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
+LPWSTR APIENTRY Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA);
+LPSTR APIENTRY Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW);
 LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
 LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);

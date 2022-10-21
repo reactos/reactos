@@ -184,25 +184,25 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
     return ret;
 }
 
-LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA)
+LPWSTR APIENTRY Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA)
 {
     INT cch = lstrlenA(pszA);
     LPWSTR pszW = ImmLocalAlloc(0, (cch + 1) * sizeof(WCHAR));
     if (pszW == NULL)
         return NULL;
-    cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
+    cch = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
     pszW[cch] = 0;
     return pszW;
 }
 
-LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
+LPSTR APIENTRY Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW)
 {
     INT cchW = lstrlenW(pszW);
     INT cchA = (cchW + 1) * sizeof(WCHAR);
     LPSTR pszA = ImmLocalAlloc(0, cchA);
     if (!pszA)
         return NULL;
-    cchA = WideCharToMultiByte(CP_ACP, 0, pszW, cchW, pszA, cchA, NULL, NULL);
+    cchA = WideCharToMultiByte(uCodePage, 0, pszW, cchW, pszA, cchA, NULL, NULL);
     pszA[cchA] = 0;
     return pszA;
 }
