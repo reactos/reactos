@@ -1577,9 +1577,8 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     PCLIENTIMC pClientImc;
     BOOL bWide;
     LPINPUTCONTEXTDX pIC;
-    LCID lcid;
+    LANGID LangID;
     HWND hWnd;
-    PTEB pTeb;
 
     TRACE("(%p, %p)\n", hIMC, lplf);
 
@@ -1603,11 +1602,11 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     if (pIC == NULL)
         return FALSE;
 
-    pTeb = NtCurrentTeb();
-    if (pTeb->Win32ClientInfo[2] < 0x400)
+    if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
-        lcid = GetSystemDefaultLCID();
-        if (PRIMARYLANGID(lcid) == LANG_JAPANESE && !(pIC->dwUIFlags & 2) &&
+        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        if (PRIMARYLANGID(LangID) == LANG_JAPANESE &&
+            !(pIC->dwUIFlags & 2) &&
             pIC->cfCompForm.dwStyle != CFS_DEFAULT)
         {
             PostMessageA(pIC->hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
@@ -1635,8 +1634,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     BOOL bWide;
     HWND hWnd;
     LPINPUTCONTEXTDX pIC;
-    PTEB pTeb;
-    LCID lcid;
+    LANGID LangID;
 
     TRACE("(%p, %p)\n", hIMC, lplf);
 
@@ -1660,11 +1658,10 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     if (pIC == NULL)
         return FALSE;
 
-    pTeb = NtCurrentTeb();
-    if (pTeb->Win32ClientInfo[2] < 0x400)
+    if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
-        lcid = GetSystemDefaultLCID();
-        if (PRIMARYLANGID(lcid) == LANG_JAPANESE &&
+        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        if (PRIMARYLANGID(LangID) == LANG_JAPANESE &&
             !(pIC->dwUIFlags & 2) &&
             pIC->cfCompForm.dwStyle != CFS_DEFAULT)
         {
