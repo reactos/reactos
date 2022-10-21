@@ -1468,18 +1468,23 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
  */
 BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 {
-    LPINPUTCONTEXT pIC;
+    LPINPUTCONTEXTDX pIC;
     HWND hWnd;
 
     if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (pIC == NULL)
         return FALSE;
 
     pIC->cfCompForm = *lpCompForm;
     pIC->fdwInit |= INIT_COMPFORM;
+
+    if (pIC->dwUIFlags & 0x8)
+        pIC->dwUIFlags &= ~0x8;
+    else
+        pIC->dwUIFlags &= ~0x2;
 
     hWnd = pIC->hWnd;
 
