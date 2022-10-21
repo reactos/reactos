@@ -933,11 +933,11 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 }
 
 // Win: WriteImeLayout
-BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayoutText)
 {
     UINT iPreload;
     HKEY hkeyLayouts, hkeyIME, hkeyPreload;
-    WCHAR szImeKey[20], szPreloadNumber[20], szPreloadKey[20], szImeFileName[80];
+    WCHAR szImeKey[20], szPreloadNumber[20], szPreloadKey[20];
     DWORD cbData;
     LANGID LangID;
     LONG lError;
@@ -963,8 +963,8 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
         goto Failure;
 
     /* Write "Layout Text" */
-    cbData = (wcslen(pszLayout) + 1) * sizeof(WCHAR);
-    lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayout, cbData);
+    cbData = (wcslen(pszLayoutText) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayoutText, cbData);
     if (lError != ERROR_SUCCESS)
         goto Failure;
 
@@ -976,11 +976,10 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
         case LANG_KOREAN:   pszLayoutFile = L"kbdkor.dll"; break;
         default:            pszLayoutFile = L"kbdus.dll"; break;
     }
-    StringCchCopyW(szImeFileName, _countof(szImeFileName), pszLayoutFile);
 
     /* Write "Layout File" */
-    cbData = (wcslen(szImeFileName) + 1) * sizeof(WCHAR);
-    lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)szImeFileName, cbData);
+    cbData = (wcslen(pszLayoutFile) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)pszLayoutFile, cbData);
     if (lError != ERROR_SUCCESS)
         goto Failure;
 
