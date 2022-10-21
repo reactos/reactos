@@ -364,8 +364,11 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
 
     TRACE("(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
 
+    if (dwIndex >= MAX_CANDIDATEFORM) /* Windows didn't check but we do for security reason */
+        return FALSE;
+
     pIC = ImmLockIMC(hIMC);
-    if (pIC  == NULL)
+    if (pIC == NULL)
         return FALSE;
 
     pCF = &pIC->cfCandForm[dwIndex];

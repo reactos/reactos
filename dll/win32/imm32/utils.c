@@ -42,6 +42,7 @@ Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
     return S_OK;
 }
 
+/* Win: CheckCountry */
 BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
 {
     LCID lcid = GetSystemDefaultLCID();
