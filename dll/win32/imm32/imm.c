@@ -867,7 +867,8 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     hNewKL = GetKeyboardLayout(dwThreadId);
     if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
     {
-        pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
+        LocalUnlock(hIC);
+        pClientImc->hInputContext = LocalFree(hIC);
         goto Failure;
     }
 
