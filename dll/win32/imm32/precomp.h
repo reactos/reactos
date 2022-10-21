@@ -157,6 +157,7 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
 HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 
+/* Win: PtiCurrent */
 static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
 {
     if (NtCurrentTeb()->Win32ThreadInfo == NULL)

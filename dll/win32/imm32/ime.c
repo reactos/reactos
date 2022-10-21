@@ -887,11 +887,8 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         {
             if (!IS_IME_HKL(hKL))
             {
-                if (!CtfImmIsTextFrameServiceDisabled() ||
-                    !IS_CICERO_MODE() || IS_16BIT_MODE())
-                {
+                if (CtfImmIsTextFrameServiceDisabled() || !IS_CICERO_MODE() || IS_16BIT_MODE())
                     return FALSE;
-                }
             }
 
             SearchType = ImeInfoExKeyboardLayout;
