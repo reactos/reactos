@@ -1146,7 +1146,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     if (!fActive)
     {
         if (pClientImc)
-            pClientImc->dwFlags &= ~CLIENTIMC_UNKNOWN5;
+            pClientImc->dwFlags &= ~CLIENTIMC_ACTIVE;
     }
     else if (hIMC)
     {
@@ -1161,7 +1161,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
         }
 
         pIC->hWnd = hWnd;
-        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN5;
+        pClientImc->dwFlags |= CLIENTIMC_ACTIVE;
 
         if (pIC->dwUIFlags & 2)
             dwShowFlags = (ISC_SHOWUIGUIDELINE | ISC_SHOWUIALLCANDIDATEWINDOW);
