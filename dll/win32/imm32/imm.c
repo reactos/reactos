@@ -477,6 +477,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
     return TRUE;
 }
 
+/* Win: Internal_CtfImeSetActiveContextAlways */
 static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
 {
     TRACE("We have to do something\n");
@@ -1129,9 +1130,10 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXTDX pIC;
     PIMEDPI pImeDpi;
+    HIMC hOldIMC;
     HKL hKL;
     BOOL fOpen = FALSE;
-    DWORD dwConversion = 0, iShow = ISC_SHOWUIALL;
+    DWORD dwConversion = 0, dwShowFlags = ISC_SHOWUIALL;
     HWND hwndDefIME;
 
     TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
@@ -1144,7 +1146,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     if (!fActive)
     {
         if (pClientImc)
-            pClientImc->dwFlags &= ~CLIENTIMC_UNKNOWN4;
+            pClientImc->dwFlags &= ~CLIENTIMC_UNKNOWN5;
     }
     else if (hIMC)
     {
@@ -1162,7 +1164,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
         pClientImc->dwFlags |= CLIENTIMC_UNKNOWN5;
 
         if (pIC->dwUIFlags & 2)
-            iShow = (ISC_SHOWUIGUIDELINE | ISC_SHOWUIALLCANDIDATEWINDOW);
+            dwShowFlags = (ISC_SHOWUIGUIDELINE | ISC_SHOWUIALLCANDIDATEWINDOW);
 
         fOpen = pIC->fOpen;
         dwConversion = pIC->fdwConversion;
@@ -1171,18 +1173,16 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     }
     else
     {
-        hIMC = ImmGetSaveContext(hWnd, 1);
-        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+        hOldIMC = ImmGetSaveContext(hWnd, 1);
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hOldIMC);
         if (pIC)
         {
             pIC->hWnd = hWnd;
-            ImmUnlockIMC(hIMC);
+            ImmUnlockIMC(hOldIMC);
         }
-        hIMC = NULL;
     }
 
     hKL = GetKeyboardLayout(0);
-
     if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
         Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
@@ -1199,7 +1199,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     if (IsWindow(hWnd))
     {
-        SendMessageW(hWnd, WM_IME_SETCONTEXT, fActive, iShow);
+        SendMessageW(hWnd, WM_IME_SETCONTEXT, fActive, dwShowFlags);
         if (fActive)
             NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
     }
@@ -1207,7 +1207,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     {
         hwndDefIME = ImmGetDefaultIMEWnd(NULL);
         if (hwndDefIME)
-            SendMessageW(hwndDefIME, WM_IME_SETCONTEXT, 0, iShow);
+            SendMessageW(hwndDefIME, WM_IME_SETCONTEXT, 0, dwShowFlags);
     }
 
     if (pClientImc)
