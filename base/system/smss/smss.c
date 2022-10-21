@@ -25,18 +25,6 @@ HANDLE SmpInitialCommandProcessId;
 
 /* FUNCTIONS ******************************************************************/
 
-/* GCC's incompetence strikes again */
-VOID
-sprintf_nt(IN PCHAR Buffer,
-           IN PCHAR Format,
-           IN ...)
-{
-    va_list ap;
-    va_start(ap, Format);
-    sprintf(Buffer, Format, ap);
-    va_end(ap);
-}
-
 NTSTATUS
 NTAPI
 SmpExecuteImage(IN PUNICODE_STRING FileName,
@@ -176,9 +164,10 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
     if (Flags & SMP_INVALID_PATH)
     {
         /* It wasn't, so create an error message to print on the screen */
-        sprintf_nt(MessageBuffer,
-                   "%wZ program not found - skipping AUTOCHECK\r\n",
-                   FileName);
+        RtlStringCbPrintfA(MessageBuffer,
+                           sizeof(MessageBuffer),
+                           "%wZ program not found - skipping AUTOCHECK\r\n",
+                           FileName);
         RtlInitAnsiString(&MessageString, MessageBuffer);
         if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&Destination,
                                                     &MessageString,

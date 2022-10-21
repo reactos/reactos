@@ -16,19 +16,6 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
-static
-inline
-VOID
-sprintf_nt(IN PCHAR Buffer,
-           IN PCHAR Format,
-           IN ...)
-{
-    va_list ap;
-    va_start(ap, Format);
-    vsprintf(Buffer, Format, ap);
-    va_end(ap);
-}
-
 /* GLOBALS ********************************************************************/
 
 LIST_ENTRY PsLoadedModuleList;
@@ -2908,7 +2895,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
-    UNICODE_STRING BaseName, BaseDirectory, PrefixName, UnicodeTemp;
+    UNICODE_STRING BaseName, BaseDirectory, PrefixName;
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
     ULONG EntrySize, DriverSize;
     PLOAD_IMPORTS LoadedImports = MM_SYSLDR_NO_IMPORTS;
@@ -2920,7 +2907,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
-    STRING AnsiTemp;
+
     PAGED_CODE();
 
     /* Detect session-load */
@@ -3364,6 +3351,9 @@ LoaderScan:
     if (MiCacheImageSymbols(LdrEntry->DllBase))
 #endif
     {
+        UNICODE_STRING UnicodeTemp;
+        STRING AnsiTemp;
+
         /* Check if the system root is present */
         if ((PrefixName.Length > (11 * sizeof(WCHAR))) &&
             !(_wcsnicmp(PrefixName.Buffer, L"\\SystemRoot", 11)))
@@ -3372,18 +3362,20 @@ LoaderScan:
             UnicodeTemp = PrefixName;
             UnicodeTemp.Buffer += 11;
             UnicodeTemp.Length -= (11 * sizeof(WCHAR));
-            sprintf_nt(Buffer,
-                       "%ws%wZ",
-                       &SharedUserData->NtSystemRoot[2],
-                       &UnicodeTemp);
+            RtlStringCbPrintfA(Buffer,
+                               MAXIMUM_FILENAME_LENGTH,
+                               "%ws%wZ",
+                               &SharedUserData->NtSystemRoot[2],
+                               &UnicodeTemp);
         }
         else
         {
             /* Build the name */
-            sprintf_nt(Buffer, "%wZ", &BaseName);
+            RtlStringCbPrintfA(Buffer, MAXIMUM_FILENAME_LENGTH,
+                               "%wZ", &BaseName);
         }
 
-        /* Setup the ansi string */
+        /* Setup the ANSI string */
         RtlInitString(&AnsiTemp, Buffer);
 
         /* Notify the debugger */
@@ -3523,7 +3515,7 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"hal.dll");
     ULONG Modules = 0;
 
-    /* Convert routine to ansi name */
+    /* Convert routine to ANSI name */
     Status = RtlUnicodeStringToAnsiString(&AnsiRoutineName,
                                           SystemRoutineName,
                                           TRUE);
