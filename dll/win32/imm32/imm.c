@@ -778,6 +778,8 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
     if (!pIC->hPrivate)
         goto Fail;
 
+    CtfImmTIMCreateInputContext(hIMC);
+
     if (pImeDpi)
     {
         /* Select the IME */
@@ -829,9 +831,14 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     {
         pIC = LocalLock(pClientImc->hInputContext);
         if (pIC)
+        {
+            CtfImmTIMCreateInputContext(hIMC);
             goto Success;
+        }
         else
+        {
             goto Failure;
+        }
     }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
@@ -868,7 +875,6 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
 Success:
-    CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
     InterlockedIncrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
