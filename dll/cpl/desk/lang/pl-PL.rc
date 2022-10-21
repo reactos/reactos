@@ -1,11 +1,12 @@
 /*
- *    Translated by Sebastian Gasiorek (2005-07-07) and Piotr_hh
- *    Updated by xrogers (13.04.2007)
- *    https://sourceforge.net/projects/reactospl
- *    Updated by Caemyr - Olaf Siejka (Jan-Feb, 2008)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (October, 2022)
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2005 Sebastian Gasiorek <sebastian.gasiorek@reactos.org>
+ *              Copyright 2007 Lech Groblewicz <xrogers@gmail.com>
+ *              Copyright 2008 Olaf Siejka <caemyr@openmailbox.org>
+ *              Copyright 2011 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2020-2022 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
