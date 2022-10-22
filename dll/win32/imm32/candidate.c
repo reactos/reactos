@@ -402,7 +402,7 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
     if (lpCandidate->dwIndex >= MAX_CANDIDATEFORM)
         return FALSE;
 
-    if (Imm32IsCrossThreadAccess(hIMC))
+    if (IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);

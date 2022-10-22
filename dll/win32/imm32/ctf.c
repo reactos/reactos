@@ -126,7 +126,7 @@ BOOL WINAPI CtfImmIsGuidMapEnable(HIMC hIMC)
         return ret;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (!pImeDpi)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return ret;
 
     ret = pImeDpi->CtfImeIsGuidMapEnable(hIMC);
@@ -158,7 +158,7 @@ HRESULT WINAPI CtfImmGetGuidAtom(HIMC hIMC, DWORD dwUnknown, LPDWORD pdwGuidAtom
         return S_OK;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (!pImeDpi)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return hr;
 
     hr = pImeDpi->CtfImeGetGuidAtom(hIMC, dwUnknown, pdwGuidAtom);

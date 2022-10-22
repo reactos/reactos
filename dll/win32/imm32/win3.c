@@ -16,7 +16,7 @@ DWORD APIENTRY
 Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
@@ -26,7 +26,7 @@ DWORD APIENTRY
 Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
@@ -188,19 +188,22 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
     LPCOMPOSITIONSTRING pCS;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTED(pIC))
         return 0;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (pCS)
+    if (IS_NULL_UNEXPECTED(pCS))
     {
-        if (wLang == LANG_JAPANESE)
-            ret = WINNLSTranslateMessageJ(dwCount, pEntries, pIC, pCS, bAnsi);
-        else if (wLang == LANG_KOREAN)
-            ret = WINNLSTranslateMessageK(dwCount, pEntries, pIC, pCS, bAnsi);
-        ImmUnlockIMCC(pIC->hCompStr);
+        ImmUnlockIMC(hIMC);
+        return 0;
     }
 
+    if (wLang == LANG_JAPANESE)
+        ret = WINNLSTranslateMessageJ(dwCount, pEntries, pIC, pCS, bAnsi);
+    else if (wLang == LANG_KOREAN)
+        ret = WINNLSTranslateMessageK(dwCount, pEntries, pIC, pCS, bAnsi);
+
+    ImmUnlockIMCC(pIC->hCompStr);
     ImmUnlockIMC(hIMC);
     return ret;
 }

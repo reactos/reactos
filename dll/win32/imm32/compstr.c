@@ -23,11 +23,11 @@ Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
     *ppCS = NULL;
 
     pIC = ImmLockIMC(hIMC);
-    if (!pIC)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return FALSE;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (!pCS)
+    if (IS_NULL_UNEXPECTEDLY(pCS))
     {
         ImmUnlockIMC(hIMC);
         return FALSE;
@@ -859,11 +859,11 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
 
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
-    if (dwBufLen && !lpBuf)
+    if (dwBufLen && IS_NULL_UNEXPECTEDLY(lpBuf))
         return 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (!pClientImc)
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
@@ -871,11 +871,11 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (!pIC)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return 0;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (!pCS)
+    if (IS_NULL_UNEXPECTEDLY(pCS))
     {
         ImmUnlockIMC(hIMC);
         return 0;
@@ -902,11 +902,11 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
 
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
-    if (dwBufLen && !lpBuf)
+    if (dwBufLen && IS_NULL_UNEXPECTEDLY(lpBuf))
         return 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (!pClientImc)
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
@@ -914,11 +914,11 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (!pIC)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return 0;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (!pCS)
+    if (IS_NULL_UNEXPECTEDLY(pCS))
     {
         ImmUnlockIMC(hIMC);
         return 0;
