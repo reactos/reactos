@@ -134,7 +134,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     StreamSize = AttributeDataLength(DataContext->pRecord);
-    if (ReadOffset >= StreamSize)
+    if ((ULONGLONG)ReadOffset >= StreamSize)
     {
         DPRINT1("Reading beyond stream end!\n");
         ReleaseAttributeContext(DataContext);
@@ -143,8 +143,8 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     ToRead = Length;
-    if (ReadOffset + Length > StreamSize)
-        ToRead = StreamSize - ReadOffset;
+    if ((ULONGLONG)ReadOffset + Length > StreamSize)
+        ToRead = (ULONG)(StreamSize - ReadOffset);
 
     RealReadOffset = ReadOffset;
     RealLength = ToRead;
@@ -154,9 +154,9 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         RealReadOffset = ROUND_DOWN(ReadOffset, DeviceExt->NtfsInfo.BytesPerSector);
         RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
         /* do we need to extend RealLength by one sector? */
-        if (RealLength + RealReadOffset < ReadOffset + Length)
+        if ((ULONGLONG)RealReadOffset + RealLength < (ULONGLONG)ReadOffset + Length)
         {
-            if (RealReadOffset + RealLength + DeviceExt->NtfsInfo.BytesPerSector <= AttributeAllocatedLength(DataContext->pRecord))
+            if ((ULONGLONG)RealReadOffset + RealLength + DeviceExt->NtfsInfo.BytesPerSector <= AttributeAllocatedLength(DataContext->pRecord))
                 RealLength += DeviceExt->NtfsInfo.BytesPerSector;
         }
 
@@ -425,7 +425,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     DPRINT("WriteOffset: %lu\tStreamSize: %I64u\n", WriteOffset, StreamSize);
 
     // Are we trying to write beyond the end of the stream?
-    if (WriteOffset + Length > StreamSize)
+    if ((ULONGLONG)WriteOffset + Length > StreamSize)
     {
         // is increasing the stream size allowed?
         if (!(Fcb->Flags & FCB_IS_VOLUME) &&
@@ -437,7 +437,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             ULONGLONG ParentMFTId;
             UNICODE_STRING filename;
 
-            DataSize.QuadPart = WriteOffset + Length;
+            DataSize.QuadPart = (ULONGLONG)WriteOffset + Length;
 
             // set the attribute data length
             Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);

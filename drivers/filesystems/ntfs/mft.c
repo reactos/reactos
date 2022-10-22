@@ -249,9 +249,9 @@ ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord)
 {
     if (AttrRecord->IsNonResident)
-        return AttrRecord->NonResident.AllocatedSize;
+        return (ULONGLONG)AttrRecord->NonResident.AllocatedSize; // From LONGLONG.
     else
-        return ALIGN_UP_BY(AttrRecord->Resident.ValueLength, ATTR_RECORD_ALIGNMENT);
+        return ALIGN_UP_BY(AttrRecord->Resident.ValueLength, ATTR_RECORD_ALIGNMENT); // From ULONG.
 }
 
 
@@ -259,9 +259,9 @@ ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
 {
     if (AttrRecord->IsNonResident)
-        return AttrRecord->NonResident.DataSize;
+        return (ULONGLONG)AttrRecord->NonResident.DataSize; // From LONGLONG.
     else
-        return AttrRecord->Resident.ValueLength;
+        return AttrRecord->Resident.ValueLength; // From ULONG.
 }
 
 /**
