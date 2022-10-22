@@ -390,9 +390,9 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 
     hIMC = pIMC->head.h;
     dwPID1 = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
-    dwPID2 = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess
+    dwPID2 = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
     if (dwPID1 != dwPID2)
-        WARN("\n");
+        WARN("PID 0x%X != 0x%X\n", dwPID1, dwPID2);
     return dwPID1 == dwPID2;
 }
 

@@ -836,8 +836,12 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
     {
         /* The key has been processed by IME's ImeProcessKey */
         LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        if (PRIMARYLANGID(wLangID) != LANG_KOREAN || /* Korean doesn't wanna this code */
-            (vKey != VK_PROCESSKEY && !(ret & IPHK_HOTKEY))) /* Is the key to be processed? */
+        if (PRIMARYLANGID(wLangID) == LANG_KOREAN &&
+            (vKey == VK_PROCESSKEY || (ret & IPHK_HOTKEY)))
+        {
+            /* Korean don't want VK_PROCESSKEY and hot-keys */
+        }
+        else
         {
             /* Add WM_KEYDOWN:VK_PROCESSKEY message */
             ImmTranslateMessage(hWnd, WM_KEYDOWN, VK_PROCESSKEY, lParam);
@@ -847,7 +851,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
     }
 
     ImmReleaseContext(hWnd, hIMC);
-    return ret;
+    return ret; /* Returns IPHK_... flags */
 }
 
 /***********************************************************************
