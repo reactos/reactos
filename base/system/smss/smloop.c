@@ -255,7 +255,7 @@ SmpStopCsr(IN PSM_API_MSG SmApiMsg,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-PSM_API_HANDLER SmpApiDispatch[SmpMaxApiNumber - SmpCreateForeignSessionApi] =
+const PSM_API_HANDLER SmpApiDispatch[SmpMaxApiNumber - SmpCreateForeignSessionApi] =
 {
     SmpCreateForeignSession,
     SmpSessionComplete,
@@ -265,6 +265,20 @@ PSM_API_HANDLER SmpApiDispatch[SmpMaxApiNumber - SmpCreateForeignSessionApi] =
     SmpStartCsr,
     SmpStopCsr
 };
+
+#if DBG
+const PCSTR SmpApiName[SmpMaxApiNumber - SmpCreateForeignSessionApi + 1] =
+{
+    "SmCreateForeignSession",
+    "SmSessionComplete",
+    "SmTerminateForeignSession",
+    "SmExecPgm",
+    "SmLoadDeferedSubsystem",
+    "SmStartCsr",
+    "SmStopCsr",
+    "Unknown Sm Api Number"
+};
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -489,20 +503,27 @@ SmpApiLoop(
                     break;
                 }
 
+#if DBG
+                DPRINT("SMSS: %s Api Request received from %lx.%lx\n",
+                       SmpApiName[min(RequestMsg.ApiNumber, SmpMaxApiNumber)],
+                       RequestMsg.h.ClientId.UniqueProcess,
+                       RequestMsg.h.ClientId.UniqueThread);
+#endif
+
                 RequestMsg.ReturnValue = STATUS_PENDING;
 
                 /* Check if the API is valid */
                 if (RequestMsg.ApiNumber >= SmpMaxApiNumber)
                 {
                     /* It isn't, fail */
-                    DPRINT1("Invalid API: %lx\n", RequestMsg.ApiNumber);
+                    DPRINT1("SMSS: Invalid Sm Api Number %lx\n", RequestMsg.ApiNumber);
                     Status = STATUS_NOT_IMPLEMENTED;
                 }
                 else if ((RequestMsg.ApiNumber <= SmpTerminateForeignSessionApi) &&
                          !(ClientContext->Subsystem))
                 {
                     /* It's valid, but doesn't have a subsystem with it */
-                    DPRINT1("Invalid session API\n");
+                    DPRINT1("SMSS: Invalid session API\n");
                     Status = STATUS_INVALID_PARAMETER;
                 }
                 else

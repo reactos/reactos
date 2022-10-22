@@ -18,7 +18,7 @@
 RTL_CRITICAL_SECTION CsrNtSessionLock;
 LIST_ENTRY CsrNtSessionList;
 
-PSB_API_ROUTINE CsrServerSbApiDispatch[SbpMaxApiNumber - SbpCreateSession] =
+const PSB_API_ROUTINE CsrServerSbApiDispatch[SbpMaxApiNumber - SbpCreateSession] =
 {
     CsrSbCreateSession,
     CsrSbTerminateSession,
@@ -26,13 +26,16 @@ PSB_API_ROUTINE CsrServerSbApiDispatch[SbpMaxApiNumber - SbpCreateSession] =
     CsrSbCreateProcess
 };
 
-PCHAR CsrServerSbApiName[SbpMaxApiNumber - SbpCreateSession] =
+#if DBG
+const PCSTR CsrServerSbApiName[SbpMaxApiNumber - SbpCreateSession + 1] =
 {
     "SbCreateSession",
     "SbTerminateSession",
     "SbForeignSessionComplete",
-    "SbCreateProcess"
+    "SbCreateProcess",
+    "Unknown CSR Sb Api Number"
 };
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -538,35 +541,37 @@ CsrSbApiRequestThread(
             continue;
         }
 
-        /*
-         * It's an API Message, check if it's within limits. If it's not,
-         * the NT Behaviour is to set this to the Maximum API.
-         */
-        if (ReceiveMsg.ApiNumber > SbpMaxApiNumber)
-        {
-            ReceiveMsg.ApiNumber = SbpMaxApiNumber;
-            DPRINT1("CSRSS: %lx is invalid Sb ApiNumber\n", ReceiveMsg.ApiNumber);
-        }
+        /* This is an actual API message */
+#if DBG
+        DPRINT("CSRSS: %s Session Api Request received from %lx.%lx\n",
+               CsrServerSbApiName[min(ReceiveMsg.ApiNumber, SbpMaxApiNumber)],
+               ReceiveMsg.h.ClientId.UniqueProcess,
+               ReceiveMsg.h.ClientId.UniqueThread);
+#endif
 
         /* Reuse the message */
         ReplyMsg = &ReceiveMsg;
 
-        /* Make sure that the message is supported */
+        /* Make sure that the API is supported */
         if (ReceiveMsg.ApiNumber < SbpMaxApiNumber)
         {
             /* Call the API */
             if (!CsrServerSbApiDispatch[ReceiveMsg.ApiNumber](&ReceiveMsg))
             {
+#if DBG
                 DPRINT1("CSRSS: %s Session Api called and failed\n",
                         CsrServerSbApiName[ReceiveMsg.ApiNumber]);
-
+#endif
                 /* It failed, so return nothing */
                 ReplyMsg = NULL;
             }
         }
         else
         {
-            /* We don't support this API Number */
+            /* This API number is not supported */
+            DPRINT1("CSRSS: Invalid Sb Api Number %lx\n", ReceiveMsg.ApiNumber);
+            /* The NT behaviour is to reset it to the Maximum API ID */
+            ReceiveMsg.ApiNumber = SbpMaxApiNumber;
             ReplyMsg->ReturnValue = STATUS_NOT_IMPLEMENTED;
         }
     }

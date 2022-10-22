@@ -79,16 +79,15 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
 
         /* Make sure that the ID is within limits, and the entry exists */
         if ((ApiId >= ServerDll->HighestApiSupported) ||
-            ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
+            (ServerDll->ValidTable && !ServerDll->ValidTable[ApiId]))
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
 #ifdef CSR_DBG
-            DPRINT1("API: %d\n", ApiId);
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
-                    ApiId,
-                    ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
-                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
+                    CSR_API_NUMBER_TO_API_ID(ReceiveMsg->ApiNumber),
+                    (ServerDll->NameTable && ServerDll->NameTable[ApiId])
+                        ? ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
                     &ServerDll->Name);
             if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
