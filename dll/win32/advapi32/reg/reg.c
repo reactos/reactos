@@ -1110,8 +1110,23 @@ RegCreateKeyExW(
           hKey, debugstr_w(lpSubKey), Reserved, debugstr_w(lpClass), dwOptions,
           samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
 
-    if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
+    if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(*lpSecurityAttributes))
+    {
+        /**/ ASSERT(lpSecurityAttributes->nLength == sizeof(*lpSecurityAttributes));
+        WARN("lpSecurityAttributes: %lu != %Iu\n",
+             lpSecurityAttributes->nLength, sizeof(*lpSecurityAttributes));
+        /**/ ASSERT(lpSecurityAttributes->nLength == sizeof(*lpSecurityAttributes));
+        WARN("lpSecurityAttributes: %lu != %Iu, %p\n",
+             lpSecurityAttributes->nLength, sizeof(*lpSecurityAttributes),
+             lpSecurityAttributes->lpSecurityDescriptor);
+        /**/ ASSERT(lpSecurityAttributes->nLength == sizeof(*lpSecurityAttributes));
+        WARN("lpSecurityAttributes: %lu != %Iu, %p, %d\n",
+             lpSecurityAttributes->nLength, sizeof(*lpSecurityAttributes),
+             lpSecurityAttributes->lpSecurityDescriptor,
+             lpSecurityAttributes->bInheritHandle);
+        /**/ ASSERT(lpSecurityAttributes->nLength == sizeof(*lpSecurityAttributes));
         return ERROR_INVALID_USER_BUFFER;
+    }
 
     /* get the real parent key */
     Status = MapDefaultKey(&ParentKey,
