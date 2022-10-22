@@ -286,7 +286,10 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage)
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
 {
     if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
+    {
+        ERR("\n");
         return FALSE;
+    }
     StringCchCatW(pszPath, cchPath, L"\\");
     StringCchCatW(pszPath, cchPath, pszFileName);
     return TRUE;
@@ -341,7 +344,10 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     LPVOID ptr;
 
     if (!NtUserValidateHandleSecure(hObject))
+    {
+        WARN("\n");
         return NULL;
+    }
 
     ht = gSharedInfo.aheList; /* handle table */
     ASSERT(ht);

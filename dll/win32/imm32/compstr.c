@@ -559,7 +559,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
             return FALSE;
     }
 
-    if (bAnsiAPI == bAnsiClient || (!pComp && !pRead))
+    if (bAnsiAPI == bAnsiClient || (!pComp && !pRead)) /* No conversion needed */
     {
         ret = pImeDpi->ImeSetCompositionString(hIMC, dwIndex, pComp, dwCompLen,
                                                pRead, dwReadLen);
@@ -569,6 +569,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
 
     if (!Imm32OpenICAndCS(hIMC, &pIC, &pCS))
     {
+        ERR("\n");
         ImmUnlockImeDpi(pImeDpi);
         return FALSE;
     }

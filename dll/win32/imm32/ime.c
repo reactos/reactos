@@ -1243,9 +1243,8 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return 0;
 
-    if (!ImeDpi_IsUnicode(pImeDpi) || !lpData)
+    if (!ImeDpi_IsUnicode(pImeDpi) || !lpData) /* No conversion needed */
     {
-        /* No conversion needed */
         ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
@@ -1333,9 +1332,8 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return 0;
 
-    if (ImeDpi_IsUnicode(pImeDpi) || !lpData)
+    if (ImeDpi_IsUnicode(pImeDpi) || !lpData) /* No conversion needed */
     {
-        /* No conversion needed */
         ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
@@ -2110,6 +2108,7 @@ BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
     ret = !(pClientImc->dwFlags & CLIENTIMC_DISABLEIME);
     if (!!enable == ret)
     {
+        TRACE("Same\n");
         ImmUnlockClientImc(pClientImc);
         return ret;
     }

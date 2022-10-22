@@ -853,7 +853,10 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
+    {
+        ERR("\n");
         goto Failure;
+    }
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
