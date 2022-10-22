@@ -146,7 +146,7 @@ typedef struct _SECURITY_DESCRIPTOR {
 typedef struct _SECURITY_ATTRIBUTES
 {
     DWORD nLength;
-    [size_is(nLength)] LPVOID lpSecurityDescriptor;
+    LPVOID lpSecurityDescriptor;
     BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
