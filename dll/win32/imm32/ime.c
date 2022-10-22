@@ -1876,11 +1876,17 @@ BOOL WINAPI ImmGetConversionStatus(HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD l
         return FALSE;
 
     if (lpfdwConversion)
+    {
         *lpfdwConversion = pIC->fdwConversion;
-    if (lpfdwSentence)
-        *lpfdwSentence = pIC->fdwSentence;
+        TRACE("0x%X\n", *lpfdwConversion);
+    }
 
-    TRACE("0x%X, 0x%X\n", *lpfdwConversion, *lpfdwSentence);
+    if (lpfdwSentence)
+    {
+        *lpfdwSentence = pIC->fdwSentence;
+        TRACE("0x%X\n", *lpfdwSentence);
+    }
+
     ImmUnlockIMC(hIMC);
     return TRUE;
 }
