@@ -97,6 +97,10 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
 BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
 
+/*
+ * Unexpected Condition Checkers
+ * --- Examine the condition, and then generate trace log if necessary.
+ */
 #ifdef NDEBUG
 #define IS_NULL_UNEXPECTEDLY(p) (!(p))
 #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
