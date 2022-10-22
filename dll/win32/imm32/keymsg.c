@@ -403,8 +403,11 @@ static BOOL CALLBACK Imm32SendNotificationProc(HIMC hIMC, LPARAM lParam)
         return TRUE;
 
     hWnd = pIC->hWnd;
-    if (IS_NULL_UNEXPECTEDLY(hWnd) || !IsWindow(hWnd))
+    if (hWnd == NULL || !IsWindow(hWnd))
+    {
+        ERR("\n");
         goto Quit;
+    }
 
     TRACE("dwChange: 0x%08X\n", pIC->dwChange);
 
@@ -432,7 +435,7 @@ LRESULT APIENTRY
 Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bAnsiAPI)
 {
     HWND hWnd;
-    DWORD ret = 0, dwCharPos, cchCompStr;
+    DWORD ret = 0, dwCharPos, cchCompStr, dwSize;
     LPVOID pCS, pTempData = pData;
     LPRECONVERTSTRING pRS;
     LPIMECHARPOSITION pICP;
@@ -457,7 +460,8 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
         return 0; /* Out of range */
     }
 
-    if (pData && IsBadWritePtr(pData, acbData[bAnsiAPI * 7 + dwCommand - 1]))
+    dwSize = acbData[bAnsiAPI * 7 + dwCommand - 1];
+    if (pData && IsBadWritePtr(pData, dwSize))
     {
         ERR("\n");
         return 0; /* Invalid pointer */
