@@ -516,6 +516,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                 pTempData = ImmLocalAlloc(0, sizeof(LOGFONTA));
             else
                 pTempData = ImmLocalAlloc(0, sizeof(LOGFONTW));
+
             if (IS_NULL_UNEXPECTEDLY(pTempData))
                 return 0;
             break;
