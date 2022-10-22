@@ -96,18 +96,21 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
 BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
+BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
+BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
+BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
 /*
  * Unexpected Condition Checkers
  * --- Examine the condition, and then generate trace log if necessary.
  */
-#ifdef NDEBUG
+#ifdef NDEBUG /* on Release */
 #define IS_NULL_UNEXPECTEDLY(p) (!(p))
 #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
 #define IS_TRUE_UNEXPECTEDLY(x) (x)
 #define IS_FALSE_UNEXPECTEDLY(x) (!(x))
 #define IS_ERROR_UNEXPECTEDLY(x) (!(x))
-#else
+#else /* on Debug */
 #define IS_NULL_UNEXPECTEDLY(p) \
     (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
                          __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), TRUE) \
@@ -130,10 +133,6 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
                                           "%s was 0x%X\n", #x, (x)), TRUE) \
                           : FALSE)
 #endif
-
-BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
-BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
-BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
 #define IS_NON_IMM_MODE_UNEXPECTEDLY() IS_FALSE_UNEXPECTEDLY(IS_IMM_MODE())
 #define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))

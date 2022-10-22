@@ -846,7 +846,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         if (PRIMARYLANGID(wLangID) == LANG_KOREAN &&
             (vKey == VK_PROCESSKEY || (ret & IPHK_HOTKEY)))
         {
-            /* Korean don't want VK_PROCESSKEY and hot-keys */
+            /* Korean don't want VK_PROCESSKEY and IME hot-keys */
         }
         else
         {
@@ -1091,7 +1091,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
 
     if (!GetKeyboardState(abKeyState)) /* get keyboard ON/OFF status */
     {
-        ASSERT(FALSE);
+        WARN("\n");
         goto Quit;
     }
 
