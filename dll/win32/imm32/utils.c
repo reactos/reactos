@@ -380,13 +380,20 @@ LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType)
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
-    DWORD dwProcessID;
+    DWORD_PTR dwPID1, dwPID2;
+
+    if (IS_NULL_UNEXPECTEDLY(pIMC))
+        return FALSE;
+
     if (pIMC->head.pti == Imm32CurrentPti())
         return TRUE;
 
     hIMC = pIMC->head.h;
-    dwProcessID = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
-    return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
+    dwPID1 = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
+    dwPID2 = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess
+    if (dwPID1 != dwPID2)
+        WARN("\n");
+    return dwPID1 == dwPID2;
 }
 
 // Win: ImmLocalAlloc
