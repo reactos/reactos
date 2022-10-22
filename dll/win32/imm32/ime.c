@@ -176,11 +176,13 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         pImeDpi->szUIClass[_countof(pImeDpi->szUIClass) - 1] = UNICODE_NULL;
     }
 
-    if (GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW))
-        return TRUE;
+    if (!GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW))
+    {
+        ERR("\n");
+        return FALSE;
+    }
 
-    ERR("\n");
-    return FALSE;
+    return TRUE;
 }
 
 /* Define stub IME functions */
@@ -443,9 +445,7 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 
     hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
     pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-    if (IS_NULL_UNEXPECTEDLY(pView))
-        goto Quit;
-    if (pView->dwVersion != 1)
+    if (!pView || pView->dwVersion != 1)
     {
         ERR("\n");
         goto Quit;
@@ -520,9 +520,7 @@ Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     LPIMEMENUITEMINFOW pSetInfo;
 
     hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
-    if (IS_NULL_UNEXPECTEDLY(hImeWnd))
-        return 0;
-    if (!IsWindow(hImeWnd))
+    if (!hImeWnd || !IsWindow(hImeWnd))
     {
         ERR("\n");
         return 0;
@@ -944,8 +942,11 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         }
         else
         {
-            if (IS_FALSE_UNEXPECTEDLY(IS_IME_HKL(hKL)))
+            if (!IS_IME_HKL(hKL))
+            {
+                WARN("\n");
                 return FALSE;
+            }
         }
     }
     else if (SearchType == ImeInfoExImeFileName)
