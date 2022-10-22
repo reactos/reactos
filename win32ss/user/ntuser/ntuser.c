@@ -113,10 +113,6 @@ InitUserImpl(VOID)
 
 NTSTATUS
 NTAPI
-InitVideo(VOID);
-
-NTSTATUS
-NTAPI
 UserInitialize(VOID)
 {
     static const DWORD wPattern55AA[] = /* 32 bit aligned */
