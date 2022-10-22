@@ -443,9 +443,11 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 
     hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
     pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-    if (!pView || pView->dwVersion != 1)
+    if (IS_NULL_UNEXPECTEDLY(pView))
+        goto Quit;
+    if (pView->dwVersion != 1)
     {
-        ERR("hMapping %p, pView %p\n", hMapping, pView);
+        ERR("\n");
         goto Quit;
     }
 
@@ -456,16 +458,13 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
     {
         cbItems = pView->dwItemCount * sizeof(IMEMENUITEMINFOW);
         pItems = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbItems);
-        if (!pItems)
-        {
-            ERR("!pItems\n");
+        if (IS_NULL_UNEXPECTEDLY(pItems))
             goto Quit;
-        }
     }
 
     cItems = ImmGetImeMenuItemsW(hIMC, pView->dwFlags, pView->dwType, pParent, pItems, cbItems);
     pView->dwItemCount = cItems;
-    if (cItems == 0)
+    if (IS_ZERO_UNEXPECTEDLY(cItems))
         goto Quit;
 
     if (pItems)
@@ -521,9 +520,11 @@ Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     LPIMEMENUITEMINFOW pSetInfo;
 
     hImeWnd = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
-    if (!hImeWnd || !IsWindow(hImeWnd))
+    if (IS_NULL_UNEXPECTEDLY(hImeWnd))
+        return 0;
+    if (!IsWindow(hImeWnd))
     {
-        ERR("hImeWnd %p\n", hImeWnd);
+        ERR("\n");
         return 0;
     }
 
@@ -536,11 +537,8 @@ Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                   0, cbView, L"ImmMenuInfo");
     pView = MapViewOfFile(hMapping, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
-    if (!pView)
-    {
-        ERR("hMapping %p, pView %p\n", hMapping, pView);
+    if (IS_NULL_UNEXPECTEDLY(pView))
         goto Quit;
-    }
 
     ZeroMemory(pView, cbView);
     pView->dwVersion = 1;
@@ -554,7 +552,10 @@ Imm32GetImeMenuItemWInterProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
     }
 
     if (!SendMessageW(hImeWnd, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
+    {
+        ERR("\n");
         goto Quit;
+    }
 
     ret = pView->dwItemCount;
 
@@ -655,7 +656,7 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
                 pNewItems = ImmLocalAlloc(0, cbTotal);
-                if (!pNewItems)
+                if (IS_NULL_UNEXPECTEDLY(pNewItems))
                     goto Quit;
             }
         }
@@ -668,7 +669,7 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
                 pNewItems = ImmLocalAlloc(0, cbTotal);
-                if (!pNewItems)
+                if (IS_NULL_UNEXPECTEDLY(pNewItems))
                     goto Quit;
             }
         }
@@ -680,11 +681,8 @@ ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentM
     }
 
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
-    if (!ret || !lpImeMenu)
-    {
-        ERR("\n");
+    if (IS_ZERO_UNEXPECTEDLY(ret) || !lpImeMenu)
         goto Quit;
-    }
 
     if (bImcIsAnsi != bTargetIsAnsi)
     {
@@ -1773,7 +1771,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return 0;
 
-    if (!ImeDpi_IsUnicode(pImeDpi))
+    if (!ImeDpi_IsUnicode(pImeDpi)) /* No conversion needed */
     {
         ret = pImeDpi->ImeConversionList(hIMC, pSrc, lpDst, dwBufLen, uFlag);
         ImmUnlockImeDpi(pImeDpi);
@@ -1783,7 +1781,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (pSrc)
     {
         pszSrcW = Imm32WideFromAnsi(pImeDpi->uCodePage, pSrc);
-        if (pszSrcW == NULL)
+        if (IS_NULL_UNEXPECTEDLY(pszSrcW))
             goto Quit;
     }
 
@@ -1829,7 +1827,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return 0;
 
-    if (ImeDpi_IsUnicode(pImeDpi))
+    if (ImeDpi_IsUnicode(pImeDpi)) /* No conversion needed */
     {
         ret = pImeDpi->ImeConversionList(hIMC, pSrc, lpDst, dwBufLen, uFlag);
         ImmUnlockImeDpi(pImeDpi);
@@ -1839,7 +1837,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (pSrc)
     {
         pszSrcA = Imm32AnsiFromWide(pImeDpi->uCodePage, pSrc);
-        if (pszSrcA == NULL)
+        if (IS_NULL_UNEXPECTEDLY(pszSrcA))
             goto Quit;
     }
 
