@@ -868,11 +868,8 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
         return 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (pClientImc == NULL)
-    {
-        TRACE("\n"); /* Frequently used. Be quiet. */
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
-    }
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     uCodePage = pClientImc->uCodePage;
@@ -914,11 +911,8 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
         return 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (pClientImc == NULL)
-    {
-        TRACE("\n"); /* Frequently used. Be quiet. */
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
-    }
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     uCodePage = pClientImc->uCodePage;
