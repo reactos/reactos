@@ -161,19 +161,19 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     LPCANDIDATELIST pCL;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (!pClientImc)
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
 
     uCodePage = pClientImc->uCodePage;
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
     {
         ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (pCI == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pCI))
     {
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientImc);
@@ -181,7 +181,10 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     }
 
     if (pCI->dwSize < sizeof(CANDIDATEINFO) || pCI->dwCount <= dwIndex)
+    {
+        ERR("\n");
         goto Quit;
+    }
 
     /* get required size */
     pCL = (LPCANDIDATELIST)((LPBYTE)pCI + pCI->dwOffset[dwIndex]);

@@ -531,11 +531,14 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId != GetCurrentThreadId())
+    {
+        ERR("\n");
         return FALSE;
+    }
 
     hKL = GetKeyboardLayout(dwThreadId);
     pImeDpi = ImmLockImeDpi(hKL);
-    if (!pImeDpi)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return FALSE;
 
     uCodePage = pImeDpi->uCodePage;
@@ -586,7 +589,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32CompStrWideToAnsi(pComp, dwCompLen, NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompStrWideToAnsi(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
@@ -595,7 +598,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32CompStrAnsiToWide(pComp, dwCompLen, NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompStrAnsiToWide(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
@@ -608,7 +611,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32CompStrWideToAnsi(pRead, dwReadLen, NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompStrWideToAnsi(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
@@ -617,7 +620,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32CompStrAnsiToWide(pRead, dwReadLen, NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompStrAnsiToWide(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
@@ -635,7 +638,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeW(pCS, CompStr),
                                                         NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompAttrWideToAnsi(pComp, dwCompLen,
@@ -649,7 +652,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeA(pCS, CompStr),
                                                         NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompAttrAnsiToWide(pComp, dwCompLen,
@@ -667,7 +670,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeW(pCS, CompReadStr),
                                                         NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompAttrWideToAnsi(pRead, dwReadLen,
@@ -681,7 +684,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeA(pCS, CompReadStr),
                                                         NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompAttrAnsiToWide(pRead, dwReadLen,
@@ -699,7 +702,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbCompNew = Imm32CompClauseWideToAnsi(pComp, dwCompLen, CS_StrW(pCS, CompStr),
                                                           NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompClauseWideToAnsi(pComp, dwCompLen, CS_StrW(pCS, CompStr),
@@ -710,7 +713,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbCompNew = Imm32CompClauseAnsiToWide(pComp, dwCompLen, CS_StrA(pCS, CompStr),
                                                           NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     Imm32CompClauseAnsiToWide(pComp, dwCompLen, CS_StrA(pCS, CompStr),
@@ -725,7 +728,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbReadNew = Imm32CompClauseWideToAnsi(pRead, dwReadLen, CS_StrW(pCS, CompReadStr),
                                                           NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompClauseWideToAnsi(pRead, dwReadLen,
@@ -737,7 +740,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbReadNew = Imm32CompClauseAnsiToWide(pRead, dwReadLen, CS_StrA(pCS, CompReadStr),
                                                           NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     Imm32CompClauseAnsiToWide(pRead, dwReadLen, CS_StrA(pCS, CompReadStr),
@@ -754,7 +757,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32ReconvertAnsiFromWide(NULL, pComp, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     pRS = pCompNew;
@@ -766,7 +769,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32ReconvertWideFromAnsi(NULL, pComp, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (!pCompNew)
+                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
                         goto Quit;
 
                     pRS = pCompNew;
@@ -782,7 +785,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32ReconvertAnsiFromWide(NULL, pRead, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     pRS = pReadNew;
@@ -794,7 +797,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32ReconvertWideFromAnsi(NULL, pRead, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (!pReadNew)
+                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
                         goto Quit;
 
                     pRS = pReadNew;
