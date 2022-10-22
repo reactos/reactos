@@ -261,7 +261,7 @@ CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
 
     /* Null-terminate the string if we don't take up the whole space */
     if (CapturedString->Length < CapturedString->MaximumLength)
-        CapturedString->Buffer[CapturedString->Length] = '\0';
+        CapturedString->Buffer[CapturedString->Length] = ANSI_NULL;
 }
 
 static VOID
@@ -277,11 +277,9 @@ CsrCaptureMessageUnicodeStringInPlace(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                             String->MaximumLength,
                             (PSTRING)String);
 
-    /* Null-terminate the string */
-    if (String->MaximumLength >= String->Length + sizeof(WCHAR))
-    {
-        String->Buffer[String->Length / sizeof(WCHAR)] = L'\0';
-    }
+    /* Null-terminate the string if we don't take up the whole space */
+    if (String->Length + sizeof(WCHAR) <= String->MaximumLength)
+        String->Buffer[String->Length / sizeof(WCHAR)] = UNICODE_NULL;
 }
 
 /*

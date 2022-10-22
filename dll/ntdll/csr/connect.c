@@ -49,7 +49,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     PSID SystemSid = NULL;
     CSR_API_CONNECTINFO ConnectionInfo;
-    ULONG ConnectionInfoLength = sizeof(CSR_API_CONNECTINFO);
+    ULONG ConnectionInfoLength = sizeof(ConnectionInfo);
 
     DPRINT("%s(%S)\n", __FUNCTION__, ObjectDirectory);
 
@@ -100,13 +100,13 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     }
 
     /* Set up the port view structures to match them with the section */
-    LpcWrite.Length = sizeof(PORT_VIEW);
+    LpcWrite.Length = sizeof(LpcWrite);
     LpcWrite.SectionHandle = CsrSectionHandle;
     LpcWrite.SectionOffset = 0;
     LpcWrite.ViewSize = CsrSectionViewSize.u.LowPart;
     LpcWrite.ViewBase = 0;
     LpcWrite.ViewRemoteBase = 0;
-    LpcRead.Length = sizeof(REMOTE_PORT_VIEW);
+    LpcRead.Length = sizeof(LpcRead);
     LpcRead.ViewSize = 0;
     LpcRead.ViewBase = 0;
 
@@ -202,12 +202,6 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
 {
     NTSTATUS Status;
     PIMAGE_NT_HEADERS NtHeader;
-    UNICODE_STRING CsrSrvName;
-    HANDLE hCsrSrv;
-    ANSI_STRING CsrServerRoutineName;
-    CSR_API_MESSAGE ApiMessage;
-    PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage.Data.CsrClientConnect;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("CsrClientConnectToServer: %lx %p\n", ServerId, ConnectionInfo);
 
@@ -241,8 +235,11 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     /* Now we can check if we are inside or not */
     if (InsideCsrProcess)
     {
+        UNICODE_STRING CsrSrvName;
+        HANDLE hCsrSrv;
+        ANSI_STRING CsrServerRoutineName;
+
         /* We're inside, so let's find csrsrv */
-        DPRINT("Next-GEN CSRSS support\n");
         RtlInitUnicodeString(&CsrSrvName, L"csrsrv");
         Status = LdrGetDllHandle(NULL,
                                  NULL,
@@ -267,6 +264,10 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     /* Now check if connection info is given */
     if (ConnectionInfo)
     {
+        CSR_API_MESSAGE ApiMessage;
+        PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage.Data.CsrClientConnect;
+        PCSR_CAPTURE_BUFFER CaptureBuffer;
+
         /* Well, we're definitely in a client now */
         InsideCsrProcess = FALSE;
 
@@ -307,7 +308,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
                                      CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpClientConnect),
-                                     sizeof(CSR_CLIENT_CONNECT));
+                                     sizeof(*ClientConnect));
 
         /* Copy the updated connection info data back into the user buffer */
         RtlMoveMemory(ConnectionInfo,
@@ -368,8 +369,6 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN ULONG DataLength)
 {
     NTSTATUS Status;
-    ULONG PointerCount;
-    PULONG_PTR OffsetPointer;
 
     /* Make sure the length is valid */
     if (DataLength > (MAXSHORT - sizeof(CSR_API_MESSAGE)))
@@ -397,6 +396,9 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     /* Check if we are already inside a CSR Server */
     if (!InsideCsrProcess)
     {
+        ULONG PointerCount;
+        PULONG_PTR OffsetPointer;
+
         /* Check if we got a Capture Buffer */
         if (CaptureBuffer)
         {
@@ -471,12 +473,13 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     }
     else
     {
-        /* This is a server-to-server call. Save our CID and do a direct call. */
-        DPRINT("Next gen server-to-server call\n");
+        /* This is a server-to-server call */
+        DPRINT("Server-to-server call\n");
 
-        /* We check this equality inside CsrValidateMessageBuffer */
+        /* Save our CID; we check this equality inside CsrValidateMessageBuffer */
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
 
+        /* Do a direct call */
         Status = CsrServerApiRoutine(&ApiMessage->Header,
                                      &ApiMessage->Header);
 
