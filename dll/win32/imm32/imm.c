@@ -982,8 +982,11 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
     PCLIENTIMC pClientImc;
     PWND pWnd;
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        TRACE("Not IMM mode.\n");
         return NULL;
+    }
 
     if (!hWnd)
     {
