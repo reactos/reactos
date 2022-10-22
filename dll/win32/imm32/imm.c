@@ -1227,7 +1227,6 @@ BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
 {
     if (!Imm32IsSystemJapaneseOrKorean())
     {
-        TRACE("\n");
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return FALSE;
     }

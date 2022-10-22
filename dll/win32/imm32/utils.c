@@ -71,7 +71,12 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     LCID lcid = GetSystemDefaultLCID();
     LANGID LangID = LANGIDFROMLCID(lcid);
     WORD wPrimary = PRIMARYLANGID(LangID);
-    return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
+    if (wPrimary != LANG_JAPANESE || wPrimary != LANG_KOREAN)
+    {
+        WARN("\n");
+        return FALSE;
+    }
+    return TRUE;
 }
 
 typedef struct tagBITMAPCOREINFO256
