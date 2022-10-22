@@ -289,6 +289,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
             return Imm32CSymbolToggle(hIMC, hKL, hWnd);
 
         default:
+            WARN("0x%X\n", dwHotKeyID);
             break;
     }
 
@@ -583,6 +584,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             break;
 
         default:
+            WARN("\n");
             break;
     }
 
@@ -631,6 +633,7 @@ DoIt:
             break;
 
         default:
+            WARN("\n");
             break;
     }
 

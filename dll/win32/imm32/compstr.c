@@ -272,7 +272,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("TODO:\n");
+                FIXME("\n");
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -357,7 +357,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("TODO:\n");
+                FIXME("\n");
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -449,7 +449,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("TODO:\n");
+                FIXME("\n");
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -506,7 +506,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("TODO:\n");
+                FIXME("\n");
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -551,6 +551,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 break;
             /* FALL THROUGH */
         default:
+            ERR("\n");
             ImmUnlockImeDpi(pImeDpi);
             return FALSE;
     }
