@@ -381,10 +381,9 @@ static void paint_ruler(HWND hWnd, LONG EditLeftmost, BOOL NewMetrics)
     HDC hdcPrint = make_dc();
     RECT printRect = get_print_rect(hdcPrint);
     RECT drawRect;
-    HBRUSH hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
 
     GetClientRect(hWnd, &drawRect);
-    FillRect(hdc, &drawRect, hBrush);
+    FillRect(hdc, &drawRect, GetSysColorBrush(COLOR_MENU));
 
     InflateRect(&drawRect, 0, -3);
     drawRect.left = EditLeftmost;
@@ -404,7 +403,6 @@ static void paint_ruler(HWND hWnd, LONG EditLeftmost, BOOL NewMetrics)
     add_ruler_units(hdc, &drawRect, NewMetrics, EditLeftmost);
 
     SelectObject(hdc, GetStockObject(BLACK_BRUSH));
-    DeleteObject(hBrush);
     DeleteDC(hdcPrint);
     EndPaint(hWnd, &ps);
 }
