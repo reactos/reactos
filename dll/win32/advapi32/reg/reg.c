@@ -1106,7 +1106,9 @@ RegCreateKeyExW(
     ULONG Attributes = OBJ_CASE_INSENSITIVE;
     NTSTATUS Status;
 
-    TRACE("RegCreateKeyExW() called\n");
+    TRACE("RegCreateKeyExW(%p, %s, %lu, %s, %08x, %08x, %p, %p, %p)\n",
+          hKey, debugstr_w(lpSubKey), Reserved, debugstr_w(lpClass), dwOptions,
+          samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
 
     if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
         return ERROR_INVALID_USER_BUFFER;
@@ -1116,6 +1118,7 @@ RegCreateKeyExW(
                            hKey);
     if (!NT_SUCCESS(Status))
     {
+        WARN("MapDefaultKey(%p) failed (Status %x)\n", hKey, Status);
         return RtlNtStatusToDosError(Status);
     }
 
