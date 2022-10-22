@@ -1850,15 +1850,23 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-       if (UserIsDesktopWindow(Window->spwndParent) &&
-           Window->spwndOwner == NULL &&
-           (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
-            (Window->ExStyle & WS_EX_APPWINDOW)))
-            {
-               co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
-               if (!(WinPos.flags & SWP_NOACTIVATE))
-                  UpdateShellHook(Window);
-            }
+      if (Window->style & WS_CHILD)
+      {
+         if ((Window->style & WS_POPUP) && (Window->ExStyle & WS_EX_APPWINDOW))
+         {
+            co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+            if (!(WinPos.flags & SWP_NOACTIVATE))
+               UpdateShellHook(Window);
+         }
+      }
+      else if ((Window->ExStyle & WS_EX_APPWINDOW) ||
+          (!(Window->ExStyle & WS_EX_TOOLWINDOW) && !Window->spwndOwner &&
+           (!Window->spwndParent || UserIsDesktopWindow(Window->spwndParent))))
+      {
+         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+         if (!(WinPos.flags & SWP_NOACTIVATE))
+            UpdateShellHook(Window);
+      }
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
@@ -2464,9 +2472,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWMINIMIZED:
+      case SW_MINIMIZE: /* CORE-15669: SW_MINIMIZE also shows */
          Swp |= SWP_SHOWWINDOW;
-         /* Fall through. */
-      case SW_MINIMIZE:
          {
             Swp |= SWP_NOACTIVATE;
             if (!(style & WS_MINIMIZE))
@@ -2561,7 +2568,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
       default:
          //ERR("co_WinPosShowWindow Exit Good 4\n");
-         return WasVisible;
+         return FALSE;
    }
 
    ShowFlag = (Cmd != SW_HIDE);
