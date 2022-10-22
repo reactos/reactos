@@ -208,7 +208,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        ERR("Imm32LoadIME: LoadLibraryW(%s) failed\n", debugstr_w(szPath));
+        ERR("LoadLibraryW(%s) failed\n", debugstr_w(szPath));
         return FALSE;
     }
 
@@ -1048,12 +1048,12 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 
     if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
     {
-        ERR("\n");
+        TRACE("\n");
         return FALSE;
     }
 
     pImeDpi = Imm32FindImeDpi(hKL);
-    if (pImeDpi == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         pImeDpi = Imm32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
 }
@@ -1470,7 +1470,7 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     TRACE("(%p, %p)\n", hIMC, lpptPos);
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return FALSE;
 
     ret = !!(pIC->fdwInit & INIT_STATUSWNDPOS);

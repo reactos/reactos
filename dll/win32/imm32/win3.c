@@ -52,7 +52,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     // clone the message list
     cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
     pTempList = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbTempList);
-    if (pTempList == NULL)
+    if (IS_NULL_UNEXPECTED(pTempList))
         return 0;
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 

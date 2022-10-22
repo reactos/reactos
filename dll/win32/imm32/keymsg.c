@@ -105,7 +105,7 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return TRUE;
 
     fOpen = pIC->fOpen;
@@ -136,7 +136,7 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return TRUE;
 
     fOpen = pIC->fOpen;
@@ -297,7 +297,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
         return FALSE;
 
     pImeDpi = ImmLockImeDpi(hKL);
-    if (pImeDpi == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return FALSE;
 
     ret = (BOOL)pImeDpi->ImeEscape(hIMC, IME_ESC_PRIVATE_HOTKEY, &dwHotKeyID);

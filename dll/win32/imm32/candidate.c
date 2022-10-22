@@ -248,17 +248,17 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     const CANDIDATELIST *pCL;
     const DWORD *pdwOffsets;
 
-    if (lpdwListCount == NULL)
+    if (IS_NULL_UNEXPECTEDLY(lpdwListCount))
         return 0;
 
     *lpdwListCount = 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (pClientImc == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
         return 0;
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
     {
         ImmUnlockClientImc(pClientImc);
         return 0;
@@ -267,7 +267,7 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     uCodePage = pClientImc->uCodePage;
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (pCI == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pCI))
     {
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientImc);
@@ -275,7 +275,10 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     }
 
     if (pCI->dwSize < sizeof(CANDIDATEINFO))
+    {
+        ERR("\n");
         goto Quit;
+    }
 
     *lpdwListCount = pCI->dwCount; /* the number of candidate lists */
 
@@ -374,10 +377,13 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     TRACE("(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
 
     if (dwIndex >= MAX_CANDIDATEFORM) /* Windows didn't check but we do for security reason */
+    {
+        ERR("\n");
         return FALSE;
+    }
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return FALSE;
 
     pCF = &pIC->cfCandForm[dwIndex];
@@ -385,6 +391,10 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     {
         *lpCandidate = *pCF;
         ret = TRUE;
+    }
+    else
+    {
+        ERR("\n");
     }
 
     ImmUnlockIMC(hIMC);
@@ -403,13 +413,16 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
     TRACE("(%p, %p)\n", hIMC, lpCandidate);
 
     if (lpCandidate->dwIndex >= MAX_CANDIDATEFORM)
+    {
+        ERR("\n");
         return FALSE;
+    }
 
     if (IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return FALSE;
 
     hWnd = pIC->hWnd;

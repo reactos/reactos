@@ -1005,7 +1005,10 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
 Quit:
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
+    {
+        TRACE("\n");
         return NULL;
+    }
     if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_DISABLEIME))
         hIMC = NULL;
     ImmUnlockClientImc(pClientImc);
@@ -1018,7 +1021,7 @@ Quit:
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
     TRACE("(%p)\n", hWnd);
-    if (hWnd == NULL)
+    if (IS_NULL_UNEXPECTEDLY(hWnd))
         return NULL;
     return ImmGetSaveContext(hWnd, 2);
 }

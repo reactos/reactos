@@ -413,7 +413,7 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
     if (!ghImmHeap)
     {
         ghImmHeap = RtlGetProcessHeap();
-        if (ghImmHeap == NULL)
+        if (IS_NULL_UNEXPECTEDLY(ghImmHeap))
             return NULL;
     }
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
@@ -812,7 +812,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     }
 
     if (pInfoEx->hkl == NULL)
-        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw; /* This is an invalid HKL */
+        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw;
 
     /* Try the current language and the Unicode codepage (0x04B0) */
     LangID = LANGIDFROMLCID(GetThreadLocale());
