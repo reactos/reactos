@@ -2014,7 +2014,7 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     TRACE("(%p, %p, 0x%lX, %p)\n", hKL, hWnd, dwMode, lpData);
 
-    if (IS_FALSE_UNEXPECTEDLY(ValidateHwnd(hWnd)) || IS_CROSS_PROCESS_HWND(hWnd))
+    if (IS_NULL_UNEXPECTEDLY(ValidateHwnd(hWnd)) || IS_CROSS_PROCESS_HWND(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
