@@ -403,8 +403,12 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     dwPID1 = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
     dwPID2 = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
     if (dwPID1 != dwPID2)
+    {
         WARN("PID 0x%X != 0x%X\n", dwPID1, dwPID2);
-    return dwPID1 == dwPID2;
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 // Win: ImmLocalAlloc
