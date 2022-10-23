@@ -22,6 +22,9 @@ HANDLE SmpWindowsSubSysProcessId;
 BOOLEAN RegPosixSingleInstance;
 WCHAR InitialCommandBuffer[256];
 
+#define DEFAULT_INITIAL_COMMAND     L"winlogon.exe"
+#define DEFAULT_KMODE_SUBSYSTEM     L"\\SystemRoot\\System32\\win32k.sys"
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -573,7 +576,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                      * instead of the Kmode one...
                      */
                     RtlInitUnicodeString(&DestinationString,
-                                         L"\\SystemRoot\\System32\\win32k.sys");
+                                         DEFAULT_KMODE_SUBSYSTEM);
                     Status = NtSetSystemInformation(SystemExtendServiceTableInformation,
                                                     &DestinationString,
                                                     sizeof(DestinationString));
@@ -638,11 +641,11 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     }
     else
     {
-        /* Use the default Winlogon initial command */
-        RtlInitUnicodeString(InitialCommand, L"winlogon.exe");
+        /* Use the default initial command (Winlogon) */
+        RtlInitUnicodeString(InitialCommand, DEFAULT_INITIAL_COMMAND);
         InitialCommandBuffer[0] = UNICODE_NULL;
 
-        /* Check if there's a debugger for Winlogon */
+        /* Check if there is a debugger for it */
         Status2 = LdrQueryImageFileExecutionOptions(InitialCommand,
                                                     L"Debugger",
                                                     REG_SZ,
@@ -652,7 +655,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                                                     NULL);
         if ((NT_SUCCESS(Status2)) && (InitialCommandBuffer[0]))
         {
-            /* Put the debugger string with the Winlogon string */
+            /* Set up the debugger string */
             RtlStringCbCatW(InitialCommandBuffer, sizeof(InitialCommandBuffer), L" ");
             RtlStringCbCatW(InitialCommandBuffer, sizeof(InitialCommandBuffer), InitialCommand->Buffer);
             RtlInitUnicodeString(InitialCommand, InitialCommandBuffer);
