@@ -1,17 +1,23 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            dll/ntdll/csr/connect.c
- * PURPOSE:         Routines for connecting and calling CSR
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROJECT:     ReactOS Client/Server Runtime SubSystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     CSR Client Library - CSR connection and calling
+ * COPYRIGHT:   Copyright 2005-2013 Alex Ionescu <alex@relsoft.net>
+ *              Copyright 2012-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
-#include <ntdll.h>
+#include "csrlib.h"
 
+#define NTOS_MODE_USER
+#include <ndk/ldrfuncs.h>
 #include <ndk/lpcfuncs.h>
-#include <csr/csrsrv.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/umfuncs.h>
+
+#include <csrsrv.h> // For CSR_CSRSS_SECTION_SIZE
 
 #define NDEBUG
 #include <debug.h>
@@ -29,8 +35,6 @@ typedef NTSTATUS
                                  IN PPORT_MESSAGE Reply);
 
 PCSR_SERVER_API_ROUTINE CsrServerApiRoutine;
-
-#define UNICODE_PATH_SEP L"\\"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -80,8 +84,8 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     }
 
     /* Create the name */
-    RtlAppendUnicodeToString(&PortName, ObjectDirectory );
-    RtlAppendUnicodeToString(&PortName, UNICODE_PATH_SEP);
+    RtlAppendUnicodeToString(&PortName, ObjectDirectory);
+    RtlAppendUnicodeToString(&PortName, L"\\");
     RtlAppendUnicodeToString(&PortName, CSR_PORT_NAME);
 
     /* Create a section for the port memory */

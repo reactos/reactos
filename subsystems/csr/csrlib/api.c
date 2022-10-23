@@ -1,21 +1,20 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            dll/ntdll/csr/api.c
- * PURPOSE:         CSR APIs exported through NTDLL
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROJECT:     ReactOS Client/Server Runtime SubSystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     CSR Client Library - API LPC Implementation
+ * COPYRIGHT:   Copyright 2005-2012 Alex Ionescu <alex@relsoft.net>
+ *              Copyright 2012-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
-#include <ntdll.h>
+#include "csrlib.h"
+
+#define NTOS_MODE_USER
+#include <ndk/psfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
-
-extern HANDLE CsrApiPort;
 
 /* FUNCTIONS ******************************************************************/
 

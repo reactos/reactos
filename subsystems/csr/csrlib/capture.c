@@ -1,22 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            dll/ntdll/csr/capture.c
- * PURPOSE:         Routines for probing and capturing CSR API Messages
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Client/Server Runtime SubSystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     CSR Client Library - CSR API Messages probing and capturing
+ * COPYRIGHT:   Copyright 2005 Alex Ionescu <alex@relsoft.net>
+ *              Copyright 2012-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
-#include <ntdll.h>
+#include "csrlib.h"
 
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
-
-extern HANDLE CsrPortHeap;
 
 /* FUNCTIONS ******************************************************************/
 
