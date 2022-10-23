@@ -15,6 +15,7 @@
 
 #include <rtl.h>
 #include <heap.h>
+#include <reactos/verifier.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -192,7 +193,11 @@ BOOLEAN NTAPI
 RtlpDphIsNormalFreeHeapBlock(PVOID Block, PULONG ValidationInformation, BOOLEAN CheckFillers);
 
 VOID NTAPI
-RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot, ULONG Reserved, PVOID Block, ULONG ValidationInfo);
+RtlpDphReportCorruptedBlock(
+    _In_ PDPH_HEAP_ROOT DphRoot,
+    _In_ ULONG Reserved,
+    _In_ PVOID Block,
+    _In_ ULONG ValidationInfo);
 
 BOOLEAN NTAPI
 RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
@@ -229,6 +234,27 @@ RtlpDphPointerFromHandle(PVOID Handle)
     DPRINT1("heap handle with incorrect signature\n");
     DbgBreakPoint();
     return NULL;
+}
+
+PVOID NTAPI
+RtlpDphHeapFromPointer(PDPH_HEAP_ROOT DphHeap)
+{
+    return ((PUCHAR)DphHeap) - PAGE_SIZE;
+}
+
+ULONG NTAPI
+RtlpDphGetBlockSizeFromCorruptedBlock(PVOID Block)
+{
+    PDPH_BLOCK_INFORMATION BlockInfo;
+    BlockInfo = (PDPH_BLOCK_INFORMATION)Block - 1;
+
+    /* Check stamps */
+    if (BlockInfo->StartStamp != DPH_FILL_START_STAMP_1 && BlockInfo->StartStamp != DPH_FILL_START_STAMP_2)
+    {
+        return 0;
+    }
+
+    return BlockInfo->RequestedSize;
 }
 
 VOID NTAPI
@@ -1297,59 +1323,94 @@ RtlpDphVerifyIntegrity(PDPH_HEAP_ROOT DphRoot)
 }
 
 VOID NTAPI
-RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot,
-                            ULONG Reserved,
-                            PVOID Block,
-                            ULONG ValidationInfo)
+RtlpDphReportCorruptedBlock(
+    _In_ PDPH_HEAP_ROOT DphRoot,
+    _In_ ULONG Reserved,
+    _In_ PVOID Block,
+    _In_ ULONG ValidationInfo)
 {
-    //RtlpDphGetBlockSizeFromCorruptedBlock();
+    PVOID Size = (PVOID)(ULONG_PTR)RtlpDphGetBlockSizeFromCorruptedBlock(Block);
+    DPH_BLOCK_INFORMATION SafeInfo = {0};
+
+    DPRINT1("Corrupted heap block %p\n", Block);
+
+    _SEH2_TRY
+    {
+        PDPH_BLOCK_INFORMATION BlockInfo = (PDPH_BLOCK_INFORMATION)Block - 1;
+        RtlCopyMemory(&SafeInfo, BlockInfo, sizeof(SafeInfo));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("ERROR: Could not read DPH_BLOCK_INFORMATION\n");
+        RtlZeroMemory(&SafeInfo, sizeof(SafeInfo));
+    }
+    _SEH2_END;
 
     if (ValidationInfo & DPH_VALINFO_CORRUPTED_AFTER_FREE)
     {
-        DPRINT1("block corrupted after having been freed\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_AFTER_FREE, "block corrupted after having been freed",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", (PVOID)Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_ALREADY_FREED)
     {
-        DPRINT1("block already freed\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_DOUBLE_FREE, "block already freed", RtlpDphHeapFromPointer(DphRoot), "Heap handle",
+            Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_INFIX_PATTERN)
     {
-        DPRINT1("corrupted infix pattern for freed block\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_INFIX_PATTERN, "corrupted infix pattern for freed block",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_POINTER)
     {
-        DPRINT1("corrupted heap pointer or using wrong heap\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPT_HEAP_POINTER, "corrupted heap pointer or using wrong heap",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size",
+            SafeInfo.Heap, "Actual heap handle");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_SUFFIX_PATTERN)
     {
-        DPRINT1("corrupted suffix pattern\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_SUFFIX_PATTERN, "corrupted suffix pattern", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_PREFIX_PATTERN)
     {
-        DPRINT1("corrupted prefix pattern\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_PREFIX_PATTERN, "corrupted prefix pattern", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_START_STAMP)
     {
-        DPRINT1("corrupted start stamp\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_START_STAMP, "corrupted start stamp", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.StartStamp,
+            "Corrupted start stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_END_STAMP)
     {
-        DPRINT1("corrupted end stamp\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_CORRUPTED_END_STAMP, "corrupted end stamp", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.EndStamp,
+            "Corrupted end stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_EXCEPTION)
     {
-        DPRINT1("exception raised while verifying block\n");
+        RtlApplicationVerifierStop(
+            APPLICATION_VERIFIER_EXCEPTION_WHILE_VERIFYING_BLOCK_HEADER, "exception raised while verifying block",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
-
-    DPRINT1("Corrupted heap block %p\n", Block);
 }
 
 BOOLEAN NTAPI
