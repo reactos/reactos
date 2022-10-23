@@ -1100,7 +1100,7 @@
 @ stdcall RtlRealPredecessor(ptr)
 @ stdcall RtlRealSuccessor(ptr)
 @ stdcall RtlRegisterSecureMemoryCacheCallback(ptr)
-@ stub -version=0x600+ RtlRegisterThreadWithCsrss
+@ stdcall -stub -version=0x600+ RtlRegisterThreadWithCsrss()
 @ stdcall RtlRegisterWait(ptr ptr ptr ptr long long)
 @ stdcall RtlReleaseActivationContext(ptr)
 @ stdcall RtlReleaseMemoryStream(ptr)
