@@ -586,7 +586,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
     {
         case BFFM_INITIALIZED:
         {
-            SendMessage(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             break;
         }
 
@@ -596,11 +596,11 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
             {
                 PDEVINSTDATA DevInstData = (PDEVINSTDATA)lpData;
-                SendMessage(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(DevInstData, szDir));
+                SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(DevInstData, szDir));
             }
             else
             {
-                SendMessage(hwnd, BFFM_ENABLEOK, 0, FALSE);
+                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             }
             break;
         }

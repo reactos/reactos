@@ -465,7 +465,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                 }
 	    }
 #ifdef __REACTOS__
-        if (ulAttrs != SFGAO_FOLDER)
+        if (ulAttrs != (ulAttrs & SFGAO_FOLDER))
         {
 	        if (!InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
 	            goto done;
