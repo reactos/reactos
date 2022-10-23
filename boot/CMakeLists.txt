@@ -54,8 +54,8 @@ ${_efisys_file} 1
 ")
 
 # ISO image identifier names
-set(ISO_MANUFACTURER "ReactOS Foundation")  # For both the publisher and the preparer
-set(ISO_VOLNAME      "ReactOS")             # For both the Volume ID and the Volume set ID
+set(ISO_MANUFACTURER "ReactOS Project") # For both the publisher and the preparer
+set(ISO_VOLNAME      "ReactOS")         # For both the Volume ID and the Volume set ID
 
 
 # Create user profile directories in the LiveImage

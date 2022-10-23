@@ -111,7 +111,7 @@ LoadOrderGroup = Extended Base
 
 [Strings]
 
-ReactOS = "ReactOS Foundation"
+ReactOS = "ReactOS Team"
 ProcessorClassName = "Processors"
 
 CyrixMfg = "Cyrix"
