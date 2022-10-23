@@ -15,14 +15,19 @@
 
 /* GLOBALS ********************************************************************/
 
-PCHAR SmpSubSystemNames[] =
+#if DBG
+const PCSTR SmpSubSystemNames[] =
 {
     "Unknown",
     "Native",
-    "Windows",
-    "Posix",
-    "OS/2"
+    "Windows GUI",
+    "Windows CUI",
+    NULL,
+    "OS/2 CUI"
+    NULL,
+    "Posix CUI"
 };
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -35,6 +40,7 @@ SmpSbCreateSession(IN PVOID Reserved,
                    IN PCLIENT_ID DbgClientId)
 {
     NTSTATUS Status;
+    ULONG SubSystemType = ProcessInformation->ImageInformation.SubSystemType;
     PSMP_SUBSYSTEM KnownSubsys;
     SB_API_MSG SbApiMsg;
     ULONG SessionId;
@@ -65,9 +71,7 @@ SmpSbCreateSession(IN PVOID Reserved,
     }
 
     /* Find the subsystem we have for this initial process */
-    KnownSubsys = SmpLocateKnownSubSysByType(MuSessionId,
-                                             ProcessInformation->
-                                             ImageInformation.SubSystemType);
+    KnownSubsys = SmpLocateKnownSubSysByType(MuSessionId, SubSystemType);
     if (KnownSubsys)
     {
         /* Duplicate the process handle into the message */
@@ -142,11 +146,22 @@ SmpSbCreateSession(IN PVOID Reserved,
     }
 
     /* If we don't yet have a subsystem, only native images can be launched */
-    if (ProcessInformation->ImageInformation.SubSystemType != IMAGE_SUBSYSTEM_NATIVE)
+    if (SubSystemType != IMAGE_SUBSYSTEM_NATIVE)
     {
         /* Fail */
-        DPRINT1("SMSS: %s SubSystem has not been started.\n",
-                SmpSubSystemNames[ProcessInformation->ImageInformation.SubSystemType]);
+#if DBG
+        PCSTR SubSysName = NULL;
+        CHAR SubSysTypeName[sizeof("Type 0x")+8];
+
+        if (SubSystemType < RTL_NUMBER_OF(SmpSubSystemNames))
+            SubSysName = SmpSubSystemNames[SubSystemType];
+        if (!SubSysName)
+        {
+            SubSysName = SubSysTypeName;
+            sprintf(SubSysTypeName, "Type 0x%08x", SubSystemType);
+        }
+        DPRINT1("SMSS: %s SubSystem not found (either not started or destroyed).\n", SubSysName);
+#endif
         Status = STATUS_UNSUCCESSFUL;
         NtClose(ProcessInformation->ProcessHandle);
         NtClose(ProcessInformation->ThreadHandle);
