@@ -926,15 +926,14 @@ CsrSbApiPortInitialize(VOID)
     CsrSbApiPortName.Buffer = RtlAllocateHeap(CsrHeap, 0, Size);
     if (!CsrSbApiPortName.Buffer) return STATUS_NO_MEMORY;
 
-    /* Setup the rest of the empty string */
+    /* Setup the Port Name string */
     CsrSbApiPortName.Length = 0;
     CsrSbApiPortName.MaximumLength = (USHORT)Size;
-
-    /* Now append the full port name */
     RtlAppendUnicodeStringToString(&CsrSbApiPortName, &CsrDirectoryName);
-    RtlAppendUnicodeToString(&CsrSbApiPortName, UNICODE_PATH_SEP);
+    RtlAppendUnicodeToString(&CsrSbApiPortName, L"\\");
     RtlAppendUnicodeToString(&CsrSbApiPortName, SB_PORT_NAME);
-    if (CsrDebug & 2) DPRINT1("CSRSS: Creating %wZ port and associated thread\n", &CsrSbApiPortName);
+    if (CsrDebug & 2)
+        DPRINT1("CSRSS: Creating %wZ port and associated thread\n", &CsrSbApiPortName);
 
     /* Create Security Descriptor for this Port */
     Status = CsrCreateLocalSystemSD(&PortSd);
