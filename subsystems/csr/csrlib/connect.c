@@ -31,16 +31,17 @@ ULONG_PTR CsrPortMemoryDelta;
 BOOLEAN InsideCsrProcess = FALSE;
 
 typedef NTSTATUS
-(NTAPI *PCSR_SERVER_API_ROUTINE)(IN PPORT_MESSAGE Request,
-                                 IN PPORT_MESSAGE Reply);
+(NTAPI *PCSR_SERVER_API_ROUTINE)(
+    _In_ PCSR_API_MESSAGE Request,
+    _Inout_ PCSR_API_MESSAGE Reply);
 
 PCSR_SERVER_API_ROUTINE CsrServerApiRoutine;
 
 /* FUNCTIONS ******************************************************************/
 
-NTSTATUS
-NTAPI
-CsrpConnectToServer(IN PWSTR ObjectDirectory)
+static NTSTATUS
+CsrpConnectToServer(
+    _In_ PCWSTR ObjectDirectory)
 {
     NTSTATUS Status;
     SIZE_T PortNameLength;
@@ -198,11 +199,12 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
  */
 NTSTATUS
 NTAPI
-CsrClientConnectToServer(IN PWSTR ObjectDirectory,
-                         IN ULONG ServerId,
-                         IN PVOID ConnectionInfo,
-                         IN OUT PULONG ConnectionInfoSize,
-                         OUT PBOOLEAN ServerToServerCall)
+CsrClientConnectToServer(
+    _In_ PCWSTR ObjectDirectory,
+    _In_ ULONG ServerId,
+    _In_ PVOID ConnectionInfo,
+    _Inout_ PULONG ConnectionInfoSize,
+    _Out_ PBOOLEAN ServerToServerCall)
 {
     NTSTATUS Status;
     PIMAGE_NT_HEADERS NtHeader;
@@ -367,10 +369,11 @@ C_ASSERT((sizeof(TEST) - sizeof(TEST_EMBEDDED)) != FIELD_OFFSET(TEST, Three));
  */
 NTSTATUS
 NTAPI
-CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
-                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
-                    IN CSR_API_NUMBER ApiNumber,
-                    IN ULONG DataLength)
+CsrClientCallServer(
+    _Inout_ PCSR_API_MESSAGE ApiMessage,
+    _Inout_opt_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_ CSR_API_NUMBER ApiNumber,
+    _In_ ULONG DataLength)
 {
     NTSTATUS Status;
 
@@ -484,8 +487,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
 
         /* Do a direct call */
-        Status = CsrServerApiRoutine(&ApiMessage->Header,
-                                     &ApiMessage->Header);
+        Status = CsrServerApiRoutine(ApiMessage, ApiMessage);
 
         /* Check for success */
         if (!NT_SUCCESS(Status))

@@ -64,8 +64,9 @@ CsrIdentifyAlertableThread(VOID)
  */
 NTSTATUS
 NTAPI
-CsrSetPriorityClass(IN HANDLE Process,
-                    IN OUT PULONG PriorityClass)
+CsrSetPriorityClass(
+    _In_ HANDLE Process,
+    _Inout_ PULONG PriorityClass)
 {
 #if (NTDDI_VERSION < NTDDI_WS03)
     NTSTATUS Status;

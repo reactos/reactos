@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
- * FILE:            include/reactos/subsys/csr/csr.h
- * PURPOSE:         Public definitions for CSR Clients
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Client/Server Runtime SubSystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Public definitions for CSR Clients
+ * COPYRIGHT:   Copyright 2005 Alex Ionescu <alex@relsoft.net>
+ *              Copyright 2012-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #ifndef _CSR_H
@@ -14,71 +13,88 @@
 
 NTSTATUS
 NTAPI
-CsrClientConnectToServer(IN PWSTR ObjectDirectory,
-                         IN ULONG ServerId,
-                         IN PVOID ConnectionInfo,
-                         IN OUT PULONG ConnectionInfoSize,
-                         OUT PBOOLEAN ServerToServerCall);
+CsrClientConnectToServer(
+    _In_ PCWSTR ObjectDirectory,
+    _In_ ULONG ServerId,
+    _In_ PVOID ConnectionInfo,
+    _Inout_ PULONG ConnectionInfoSize,
+    _Out_ PBOOLEAN ServerToServerCall);
 
 NTSTATUS
 NTAPI
-CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
-                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
-                    IN CSR_API_NUMBER ApiNumber,
-                    IN ULONG DataLength);
+CsrClientCallServer(
+    _Inout_ PCSR_API_MESSAGE ApiMessage,
+    _Inout_opt_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_ CSR_API_NUMBER ApiNumber,
+    _In_ ULONG DataLength);
 
 PCSR_CAPTURE_BUFFER
 NTAPI
-CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
-                         IN ULONG BufferSize);
+CsrAllocateCaptureBuffer(
+    _In_ ULONG ArgumentCount,
+    _In_ ULONG BufferSize);
 
 ULONG
 NTAPI
-CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                          IN ULONG MessageLength,
-                          OUT PVOID* CapturedData);
+CsrAllocateMessagePointer(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_ ULONG MessageLength,
+    _Out_ PVOID* CapturedData);
 
 VOID
 NTAPI
-CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN PVOID MessageBuffer OPTIONAL,
-                        IN ULONG MessageLength,
-                        OUT PVOID* CapturedData);
+CsrCaptureMessageBuffer(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_opt_ PVOID MessageBuffer,
+    _In_ ULONG MessageLength,
+    _Out_ PVOID* CapturedData);
 
 VOID
 NTAPI
-CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer);
+CsrFreeCaptureBuffer(
+    _In_ _Frees_ptr_ PCSR_CAPTURE_BUFFER CaptureBuffer);
 
 VOID
 NTAPI
-CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN PCSTR String OPTIONAL,
-                        IN ULONG StringLength,
-                        IN ULONG MaximumLength,
-                        OUT PSTRING CapturedString);
+CsrCaptureMessageString(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_opt_ PCSTR String,
+    _In_ ULONG StringLength,
+    _In_ ULONG MaximumLength,
+    _Out_ PSTRING CapturedString);
+
+VOID
+NTAPI
+CsrCaptureMessageUnicodeStringInPlace(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _Inout_ PUNICODE_STRING String);
 
 NTSTATUS
 NTAPI
-CsrCaptureMessageMultiUnicodeStringsInPlace(OUT PCSR_CAPTURE_BUFFER* CaptureBuffer,
-                                            IN ULONG StringsCount,
-                                            IN PUNICODE_STRING* MessageStrings);
+CsrCaptureMessageMultiUnicodeStringsInPlace(
+    _Inout_ PCSR_CAPTURE_BUFFER* CaptureBuffer,
+    _In_ ULONG StringsCount,
+    _In_ PUNICODE_STRING* MessageStrings);
 
 PLARGE_INTEGER
 NTAPI
-CsrCaptureTimeout(IN ULONG Milliseconds,
-                  OUT PLARGE_INTEGER Timeout);
+CsrCaptureTimeout(
+    _In_ ULONG Milliseconds,
+    _Out_ PLARGE_INTEGER Timeout);
 
 VOID
 NTAPI
-CsrProbeForRead(IN PVOID Address,
-                IN ULONG Length,
-                IN ULONG Alignment);
+CsrProbeForRead(
+    _In_ PVOID Address,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment);
 
 VOID
 NTAPI
-CsrProbeForWrite(IN PVOID Address,
-                 IN ULONG Length,
-                 IN ULONG Alignment);
+CsrProbeForWrite(
+    _In_ PVOID Address,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment);
 
 HANDLE
 NTAPI
@@ -94,8 +110,9 @@ CsrIdentifyAlertableThread(VOID);
 
 NTSTATUS
 NTAPI
-CsrSetPriorityClass(IN HANDLE Process,
-                    IN OUT PULONG PriorityClass);
+CsrSetPriorityClass(
+    _In_ HANDLE Process,
+    _Inout_ PULONG PriorityClass);
 
 #endif // _CSR_H
 

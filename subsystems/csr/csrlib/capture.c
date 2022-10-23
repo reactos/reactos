@@ -20,9 +20,10 @@
  */
 VOID
 NTAPI
-CsrProbeForRead(IN PVOID Address,
-                IN ULONG Length,
-                IN ULONG Alignment)
+CsrProbeForRead(
+    _In_ PVOID Address,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment)
 {
     volatile UCHAR *Pointer;
     UCHAR Data;
@@ -52,9 +53,10 @@ CsrProbeForRead(IN PVOID Address,
  */
 VOID
 NTAPI
-CsrProbeForWrite(IN PVOID Address,
-                 IN ULONG Length,
-                 IN ULONG Alignment)
+CsrProbeForWrite(
+    _In_ PVOID Address,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment)
 {
     volatile UCHAR *Pointer;
 
@@ -82,8 +84,9 @@ CsrProbeForWrite(IN PVOID Address,
  */
 PCSR_CAPTURE_BUFFER
 NTAPI
-CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
-                         IN ULONG BufferSize)
+CsrAllocateCaptureBuffer(
+    _In_ ULONG ArgumentCount,
+    _In_ ULONG BufferSize)
 {
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     ULONG OffsetsArraySize;
@@ -146,9 +149,10 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
  */
 ULONG
 NTAPI
-CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                          IN ULONG MessageLength,
-                          OUT PVOID* CapturedData)
+CsrAllocateMessagePointer(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_ ULONG MessageLength,
+    _Out_ PVOID* CapturedData)
 {
     if (MessageLength == 0)
     {
@@ -182,10 +186,11 @@ CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 VOID
 NTAPI
-CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN PVOID MessageBuffer OPTIONAL,
-                        IN ULONG MessageLength,
-                        OUT PVOID* CapturedData)
+CsrCaptureMessageBuffer(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_opt_ PVOID MessageBuffer,
+    _In_ ULONG MessageLength,
+    _Out_ PVOID* CapturedData)
 {
     /* Simply allocate a message pointer in the buffer */
     CsrAllocateMessagePointer(CaptureBuffer, MessageLength, CapturedData);
@@ -202,7 +207,8 @@ CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 VOID
 NTAPI
-CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer)
+CsrFreeCaptureBuffer(
+    _In_ _Frees_ptr_ PCSR_CAPTURE_BUFFER CaptureBuffer)
 {
     /* Free it from the heap */
     RtlFreeHeap(CsrPortHeap, 0, CaptureBuffer);
@@ -213,11 +219,12 @@ CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer)
  */
 VOID
 NTAPI
-CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN PCSTR String OPTIONAL,
-                        IN ULONG StringLength,
-                        IN ULONG MaximumLength,
-                        OUT PSTRING CapturedString)
+CsrCaptureMessageString(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _In_opt_ PCSTR String,
+    _In_ ULONG StringLength,
+    _In_ ULONG MaximumLength,
+    _Out_ PSTRING CapturedString)
 {
     ASSERT(CapturedString != NULL);
 
@@ -259,9 +266,11 @@ CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
         CapturedString->Buffer[CapturedString->Length] = ANSI_NULL;
 }
 
-static VOID
-CsrCaptureMessageUnicodeStringInPlace(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                                      IN PUNICODE_STRING String)
+VOID
+NTAPI
+CsrCaptureMessageUnicodeStringInPlace(
+    _Inout_ PCSR_CAPTURE_BUFFER CaptureBuffer,
+    _Inout_ PUNICODE_STRING String)
 {
     ASSERT(String != NULL);
 
@@ -282,9 +291,10 @@ CsrCaptureMessageUnicodeStringInPlace(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 NTSTATUS
 NTAPI
-CsrCaptureMessageMultiUnicodeStringsInPlace(OUT PCSR_CAPTURE_BUFFER* CaptureBuffer,
-                                            IN ULONG StringsCount,
-                                            IN PUNICODE_STRING* MessageStrings)
+CsrCaptureMessageMultiUnicodeStringsInPlace(
+    _Inout_ PCSR_CAPTURE_BUFFER* CaptureBuffer,
+    _In_ ULONG StringsCount,
+    _In_ PUNICODE_STRING* MessageStrings)
 {
     ULONG Count;
 
@@ -328,8 +338,9 @@ CsrCaptureMessageMultiUnicodeStringsInPlace(OUT PCSR_CAPTURE_BUFFER* CaptureBuff
  */
 PLARGE_INTEGER
 NTAPI
-CsrCaptureTimeout(IN ULONG Milliseconds,
-                  OUT PLARGE_INTEGER Timeout)
+CsrCaptureTimeout(
+    _In_ ULONG Milliseconds,
+    _Out_ PLARGE_INTEGER Timeout)
 {
     /* Validate the time */
     if (Milliseconds == -1) return NULL;
