@@ -54,8 +54,8 @@ ${_efisys_file} 1
 ")
 
 # ISO image identificator names
-set(ISO_MANUFACTURER "ReactOS Foundation")  # For both the publisher and the preparer
-set(ISO_VOLNAME      "ReactOS")             # For both the Volume ID and the Volume set ID
+set(ISO_MANUFACTURER "ReactOS Project") # For both the publisher and the preparer
+set(ISO_VOLNAME      "ReactOS")         # For both the Volume ID and the Volume set ID
 
 ## BootCD
 # Create the file list
