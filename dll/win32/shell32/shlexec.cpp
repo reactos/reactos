@@ -1430,24 +1430,14 @@ end:
     return r;
 }
 
-namespace
-{
-    struct CCoInit
-    {
-        CCoInit() { hres = CoInitialize(NULL); }
-        ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
-        HRESULT hres;
-    };
-}
-
 static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECUTEINFOW sei)
 {
     TRACE("%p %s %p\n", hkey, debugstr_guid(guid), sei);
 
     CCoInit coInit;
 
-    if (FAILED_UNEXPECTEDLY(coInit.hres))
-        return coInit.hres;
+    if (FAILED_UNEXPECTEDLY(coInit.hr))
+        return coInit.hr;
 
     CComPtr<IShellExtInit> obj;
     HRESULT hr = CoCreateInstance(*guid, NULL, CLSCTX_INPROC_SERVER,
@@ -1519,8 +1509,8 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
 
     CCoInit coInit;
 
-    if (FAILED_UNEXPECTEDLY(coInit.hres))
-        return coInit.hres;
+    if (FAILED_UNEXPECTEDLY(coInit.hr))
+        return coInit.hr;
 
     CComPtr<IContextMenu> cm;
     HRESULT hr = shellex_get_contextmenu(sei, cm);

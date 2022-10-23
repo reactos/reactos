@@ -129,9 +129,8 @@ IUnknown *CComCreatorCentralInstance<T>::s_pInstance = NULL;
 #define DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(x)                            \
 public:                                                                         \
     typedef CComCreatorCentralInstance< ATL::CComObject<x> > _CreatorClass;
-#endif
 
-#ifdef __cplusplus
+
 template <class Base>
 class CComDebugObject : public Base
 {
@@ -537,6 +536,22 @@ void DumpIdList(LPCITEMIDLIST pcidl)
     }
     DbgPrint("End IDList Dump.\n");
 }
+
+struct CCoInit
+{
+    CCoInit()
+    {
+        hr = CoInitialize(NULL);
+    }
+    ~CCoInit()
+    {
+        if (SUCCEEDED(hr))
+        {
+            CoUninitialize();
+        }
+    }
+    HRESULT hr;
+};
 
 #endif /* __cplusplus */
 

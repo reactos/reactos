@@ -14,20 +14,13 @@
 #include <stdio.h>
 #include <shellutils.h>
 
-struct CCoInit
-{
-    CCoInit() { hres = CoInitialize(NULL); }
-    ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
-    HRESULT hres;
-};
-
 START_TEST(IACLHistory)
 {
     CCoInit init;
-    ok_hex(init.hres, S_OK);
-    if (FAILED(init.hres))
+    ok_hex(init.hr, S_OK);
+    if (FAILED(init.hr))
     {
-        skip("CoInitialize failed with 0x%08lX\n", init.hres);
+        skip("CoInitialize failed with 0x%08lX\n", init.hr);
         return;
     }
 
