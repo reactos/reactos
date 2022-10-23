@@ -100,6 +100,12 @@ BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
 BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
+#if 0
+    #define UNEXPECTED() ASSERT(FALSE)
+#else
+    #define UNEXPECTED() 0
+#endif
+
 /*
  * Unexpected Condition Checkers
  * --- Examine the condition, and then generate trace log if necessary.
@@ -113,19 +119,19 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 #else /* on Debug */
 #define IS_NULL_UNEXPECTEDLY(p) \
     (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                         __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), TRUE) \
+                         __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), UNEXPECTED(), TRUE) \
           : FALSE)
 #define IS_ZERO_UNEXPECTEDLY(p) \
     (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                         __FILE__, __FUNCTION__, __LINE__, "%s was zero\n", #p), TRUE) \
+                         __FILE__, __FUNCTION__, __LINE__, "%s was zero\n", #p), UNEXPECTED(), TRUE) \
           : FALSE)
 #define IS_TRUE_UNEXPECTEDLY(x) \
     ((x) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                        __FILE__, __FUNCTION__, __LINE__, "%s was non-zero\n", #x), TRUE) \
+                        __FILE__, __FUNCTION__, __LINE__, "%s was non-zero\n", #x), UNEXPECTED(), TRUE) \
          : FALSE)
 #define IS_FALSE_UNEXPECTEDLY(x) \
     ((!(x)) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                           __FILE__, __FUNCTION__, __LINE__, "%s was FALSE\n", #x), TRUE) \
+                           __FILE__, __FUNCTION__, __LINE__, "%s was FALSE\n", #x), UNEXPECTED(), TRUE) \
             : FALSE)
 #define IS_ERROR_UNEXPECTEDLY(x) \
     ((x) != ERROR_SUCCESS ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
