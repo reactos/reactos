@@ -873,8 +873,11 @@ BOOL WINAPI ImmIsIME(HKL hKL)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return NULL;
+    }
 
     if (hWnd == NULL)
         return (HWND)NtUserGetThreadState(THREADSTATE_DEFAULTIMEWINDOW);

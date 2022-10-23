@@ -134,7 +134,6 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
                           : FALSE)
 #endif
 
-#define IS_NON_IMM_MODE_UNEXPECTEDLY() IS_FALSE_UNEXPECTEDLY(IS_IMM_MODE())
 #define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
 #define IS_CROSS_PROCESS_HWND(hWnd)    IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)

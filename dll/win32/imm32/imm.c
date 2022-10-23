@@ -492,8 +492,11 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 
     TRACE("(%p, %p)\n", hWnd, hIMC);
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return NULL;
+    }
 
     pWnd = ValidateHwnd(hWnd);
     if (IS_NULL_UNEXPECTEDLY(pWnd))
@@ -538,8 +541,11 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return FALSE;
+    }
 
     if (hIMC && !(dwFlags & IACE_DEFAULT) && IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
@@ -583,8 +589,11 @@ HIMC WINAPI ImmCreateContext(void)
 
     TRACE("()\n");
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return NULL;
+    }
 
     pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
     if (IS_NULL_UNEXPECTEDLY(pClientImc))
@@ -634,8 +643,14 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
-    if (IS_NULL_UNEXPECTEDLY(hIMC) || IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (IS_NULL_UNEXPECTEDLY(hIMC))
         return FALSE;
+
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
+        return FALSE;
+    }
 
     pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
     if (IS_NULL_UNEXPECTEDLY(pIMC))
@@ -897,8 +912,11 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return FALSE;
+    }
 
     if (IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
@@ -1149,8 +1167,11 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
 
-    if (IS_NON_IMM_MODE_UNEXPECTEDLY())
+    if (!IS_IMM_MODE())
+    {
+        WARN("\n");
         return FALSE;
+    }
 
     pClientImc = ImmLockClientImc(hIMC);
 
