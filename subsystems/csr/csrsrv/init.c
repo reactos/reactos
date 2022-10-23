@@ -31,6 +31,10 @@ PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort = NULL;
 HANDLE hSbApiPort = NULL;
 HANDLE CsrApiPort = NULL;
+#ifdef __REACTOS__
+BOOLEAN CsrWindowsControl;
+ULONG CsrSubSystemType; // Known as SessionFirstProcessImageType in Windows 7+
+#endif
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
 ULONG SessionId;
@@ -559,6 +563,10 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
     /* Set the Defaults */
     CsrTotalPerProcessDataLength = 0;
     CsrObjectDirectory = NULL;
+#ifdef __REACTOS__
+    CsrWindowsControl = FALSE;
+    CsrSubSystemType = IMAGE_SUBSYSTEM_UNKNOWN;
+#endif
     CsrMaxApiRequestThreads = 16;
 
     /* Save our Session ID, and create a Directory for it */
@@ -619,7 +627,36 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         }
         else if (_stricmp(ParameterName, "SubSystemType") == 0)
         {
+#ifdef __REACTOS__
+            /* Well-known subsystems, specified by names */
+            if (_stricmp(ParameterValue, "windows") == 0)
+            {
+                /* Behaviour compatible with Windows 7+ */
+                if (CsrWindowsControl)
+                    CsrSubSystemType = IMAGE_SUBSYSTEM_WINDOWS_GUI;
+                else
+                    CsrSubSystemType = IMAGE_SUBSYSTEM_WINDOWS_CUI;
+            }
+            else if (_stricmp(ParameterValue, "posix") == 0)
+            {
+                CsrSubSystemType = IMAGE_SUBSYSTEM_POSIX_CUI;
+            }
+            else if (_stricmp(ParameterValue, "os2") == 0)
+            {
+                CsrSubSystemType = IMAGE_SUBSYSTEM_OS2_CUI;
+            }
+            else if (_stricmp(ParameterValue, "native") == 0)
+            {
+                CsrSubSystemType = IMAGE_SUBSYSTEM_NATIVE;
+            }
+            else
+            {
+                /* Another subsystem type, specified by a numerical value */
+                Status = RtlCharToInteger(ParameterValue, 0, &CsrSubSystemType);
+            }
+#else
             /* Ignored */
+#endif
         }
         else if (_stricmp(ParameterName, "MaxRequestThreads") == 0)
         {
@@ -634,7 +671,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         }
         else if (_stricmp(ParameterName, "ProfileControl") == 0)
         {
-            /* Ignored */
+            /* Related functionality ignored since NT 3.5 */
         }
         else if (_stricmp(ParameterName, "SharedSection") == 0)
         {
@@ -661,7 +698,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
                 /* Check for the Entry Point */
                 if ((*ServerString == ':') && (!EntryPoint))
                 {
-                    /* Found it. Add a nullchar and save it */
+                    /* Found it. NULL-terminate and save it. */
                     *ServerString++ = ANSI_NULL;
                     EntryPoint = ServerString;
                 }
@@ -696,8 +733,11 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         }
         else if (_stricmp(ParameterName, "Windows") == 0)
         {
+#ifdef __REACTOS__
+            CsrWindowsControl = (_stricmp(ParameterValue, "On") == 0);
+#else
             /* Ignored */
-            // Check whether we want to start in pure GUI or pure CLI.
+#endif
         }
         else
         {
@@ -1042,6 +1082,10 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
+#ifdef __REACTOS__
+    if (CsrSubSystemType != IMAGE_SUBSYSTEM_UNKNOWN)
+    {
+#endif
     /* Initialize the API Port for SM communication */
     Status = CsrSbApiPortInitialize();
     if (!NT_SUCCESS(Status))
@@ -1054,7 +1098,11 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     /* We're all set! Connect to SM! */
     Status = SmConnectToSm(&CsrSbApiPortName,
                            CsrSbApiPort,
+#ifdef __REACTOS__
+                           CsrSubSystemType,
+#else
                            IMAGE_SUBSYSTEM_WINDOWS_GUI,
+#endif
                            &CsrSmApiPort);
     if (!NT_SUCCESS(Status))
     {
@@ -1062,6 +1110,9 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
+#ifdef __REACTOS__
+    }
+#endif
 
     /* Have us handle Hard Errors */
     Status = NtSetDefaultHardErrorPort(CsrApiPort);
