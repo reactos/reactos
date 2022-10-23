@@ -472,7 +472,7 @@ _main(IN INT argc,
     _SEH2_TRY
     {
         /* Initialize SMSS */
-        Status = SmpInit(&InitialCommand, Handles);
+        Status = SmpInit(&InitialCommand, &Handles[0]);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("SMSS: SmpInit return failure - Status == %x\n", Status);
