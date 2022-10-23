@@ -1105,9 +1105,9 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID)
         return TRUE;
 
     imm32 = LoadLibraryW(L"imm32.dll");
-    if (imm32)
+    if (imm32 == NULL)
     {
-        ERR("UPUIE: Imm32 not installed!\n");
+        ERR("Imm32 not installed!\n");
         ret = FALSE;
     }
 
