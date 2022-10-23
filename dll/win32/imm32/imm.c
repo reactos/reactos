@@ -646,7 +646,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (hIMC == NULL)
         return FALSE;
 
     if (!IS_IMM_MODE())
@@ -666,8 +666,11 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     }
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (pClientImc == NULL)
+    {
+        TRACE("pClientImc == NULL\n");
         goto Finish;
+    }
 
     if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
     {

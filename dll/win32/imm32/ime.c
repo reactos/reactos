@@ -273,8 +273,16 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     UINT uCodePage;
     LCID lcid;
 
-    if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL) ||
-        ImeInfoEx.fLoadFlag == 1)
+    if (!IS_IME_HKL(hKL))
+        return NULL;
+
+    if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
+    {
+        ERR("\n");
+        return NULL;
+    }
+
+    if (ImeInfoEx.fLoadFlag == 1)
     {
         ERR("\n");
         return NULL;
@@ -936,7 +944,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
             {
                 if (CtfImmIsTextFrameServiceDisabled() || !IS_CICERO_MODE() || IS_16BIT_MODE())
                 {
-                    WARN("\n");
+                    TRACE("\n");
                     return FALSE;
                 }
             }
@@ -947,7 +955,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         {
             if (!IS_IME_HKL(hKL))
             {
-                WARN("\n");
+                TRACE("\n");
                 return FALSE;
             }
         }
@@ -1056,7 +1064,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
     }
 
     pImeDpi = Imm32FindImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (pImeDpi == NULL)
         pImeDpi = Imm32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
 }
@@ -1079,7 +1087,10 @@ UINT WINAPI ImmGetDescriptionA(HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    if (!IS_IME_HKL(hKL))
+        return 0;
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
         return 0;
@@ -1103,7 +1114,10 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    if (!IS_IME_HKL(hKL))
+        return 0;
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
         return 0;
@@ -1127,7 +1141,14 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    if (!IS_IME_HKL(hKL))
+    {
+        if (uBufLen > 0)
+            lpszFileName[0] = 0;
+        return 0;
+    }
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
         if (uBufLen > 0)
@@ -1159,7 +1180,14 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    if (!IS_IME_HKL(hKL))
+    {
+        if (uBufLen > 0)
+            lpszFileName[0] = 0;
+        return 0;
+    }
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
         if (uBufLen > 0)
@@ -1191,6 +1219,9 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
     PIMEDPI pImeDpi = NULL;
 
     TRACE("(%p, %lu)\n", hKL, fdwIndex);
+
+    if (!IS_IME_HKL(hKL))
+        return FALSE;
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
