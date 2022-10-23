@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Diskpart
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -19,39 +25,39 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
-    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
-    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+    IDS_ACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția activă.\nAsigurați-vă că partiția este validă.\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca activă.\n"
+    IDS_ACTIVE_ALREADY "\nPartiția curentă este deja marcată ca activă.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
+    IDS_CLEAN_FAIL "\nDiskPart nu a putut să curețe discul.\nDatele de pe disc ar putea să fie irecuperabile.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart a reușit să curețe discul.\n"
     IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart nu a reușit să creeze partiția specificată.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
-    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart a șters cu succes partiția selectată.\n"
 END
 
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disc ID: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "ID-ul discului: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tip"
     IDS_DETAIL_INFO_STATUS "Stare"
     IDS_DETAIL_INFO_PATH   "Cale   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Țintă  : %hu\n"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "ID-ul LUN-ului : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Localizat în"
     IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă"
     IDS_DETAIL_INFO_RO "Nemodificabil"
@@ -60,18 +66,18 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Disc cu fișier de hibernare"
     IDS_DETAIL_INFO_CRASH_DSK "Disc cu fișier «crashdump»"
     IDS_DETAIL_INFO_CLST_DSK "Disc în «cluster»"
-    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
-    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
-    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
-    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
-    IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
-    IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
+    IDS_DETAIL_PARTITION_NUMBER "Partiție %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Tip            : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Ascuns         : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Activ          : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset în octet: %I64u\n"
+    IDS_DETAIL_NO_DISKS "\nNu există discuri atașate acestui volum.\n"
+    IDS_DETAIL_NO_VOLUME "\nNu există volum asociat cu această partiție.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
+    IDS_FILESYSTEMS_CURRENT "Fișierul de sistem curent\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
     IDS_FILESYSTEMS_TYPE "Type        : %s\n"
     IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
@@ -235,5 +241,5 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Eroare la deschiderea fișierului script: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Eroare la prelucrarea argumentului: %s\n"
     IDS_ERROR_INVALID_ARGS "Argumente nevalide\n"
-    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
+    IDS_ERROR_NO_MEDIUM "Fără mediu în dispozitiv.\n"
 END
