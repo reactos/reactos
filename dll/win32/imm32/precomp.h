@@ -7,7 +7,7 @@
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
  *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
- *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2020-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -96,25 +96,48 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
 BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
-
-static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
-{
-    DWORD dwImeThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
-    DWORD dwThreadId = GetCurrentThreadId();
-    return (dwImeThreadId != dwThreadId);
-}
-
-// Win: TestWindowProcess
-static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
-{
-    return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=
-            (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
-}
-
+BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
+BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
-#define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define IS_16BIT_MODE()             (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
+/*
+ * Unexpected Condition Checkers
+ * --- Examine the condition, and then generate trace log if necessary.
+ */
+#ifdef NDEBUG /* on Release */
+#define IS_NULL_UNEXPECTEDLY(p) (!(p))
+#define IS_ZERO_UNEXPECTEDLY(p) (!(p))
+#define IS_TRUE_UNEXPECTEDLY(x) (x)
+#define IS_FALSE_UNEXPECTEDLY(x) (!(x))
+#define IS_ERROR_UNEXPECTEDLY(x) (!(x))
+#else /* on Debug */
+#define IS_NULL_UNEXPECTEDLY(p) \
+    (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                         __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), TRUE) \
+          : FALSE)
+#define IS_ZERO_UNEXPECTEDLY(p) \
+    (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                         __FILE__, __FUNCTION__, __LINE__, "%s was zero\n", #p), TRUE) \
+          : FALSE)
+#define IS_TRUE_UNEXPECTEDLY(x) \
+    ((x) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                        __FILE__, __FUNCTION__, __LINE__, "%s was non-zero\n", #x), TRUE) \
+         : FALSE)
+#define IS_FALSE_UNEXPECTEDLY(x) \
+    ((!(x)) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                           __FILE__, __FUNCTION__, __LINE__, "%s was FALSE\n", #x), TRUE) \
+            : FALSE)
+#define IS_ERROR_UNEXPECTEDLY(x) \
+    ((x) != ERROR_SUCCESS ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                                          __FILE__, __FUNCTION__, __LINE__, \
+                                          "%s was 0x%X\n", #x, (x)), TRUE) \
+                          : FALSE)
+#endif
+
+#define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
+#define IS_CROSS_PROCESS_HWND(hWnd)    IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
+#define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+#define IS_16BIT_MODE()                (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
@@ -156,14 +179,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts);
 BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayoutText);
 HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
-
-/* Win: PtiCurrent */
-static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
-{
-    if (NtCurrentTeb()->Win32ThreadInfo == NULL)
-        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-    return NtCurrentTeb()->Win32ThreadInfo;
-}
+PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 
 HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
 BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);

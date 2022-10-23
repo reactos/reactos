@@ -16,7 +16,7 @@ DWORD APIENTRY
 Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
@@ -26,7 +26,7 @@ DWORD APIENTRY
 Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
@@ -52,7 +52,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     // clone the message list
     cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
     pTempList = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbTempList);
-    if (pTempList == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pTempList))
         return 0;
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 
@@ -188,19 +188,22 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
     LPCOMPOSITIONSTRING pCS;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return 0;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (pCS)
+    if (IS_NULL_UNEXPECTEDLY(pCS))
     {
-        if (wLang == LANG_JAPANESE)
-            ret = WINNLSTranslateMessageJ(dwCount, pEntries, pIC, pCS, bAnsi);
-        else if (wLang == LANG_KOREAN)
-            ret = WINNLSTranslateMessageK(dwCount, pEntries, pIC, pCS, bAnsi);
-        ImmUnlockIMCC(pIC->hCompStr);
+        ImmUnlockIMC(hIMC);
+        return 0;
     }
 
+    if (wLang == LANG_JAPANESE)
+        ret = WINNLSTranslateMessageJ(dwCount, pEntries, pIC, pCS, bAnsi);
+    else if (wLang == LANG_KOREAN)
+        ret = WINNLSTranslateMessageK(dwCount, pEntries, pIC, pCS, bAnsi);
+
+    ImmUnlockIMCC(pIC->hCompStr);
     ImmUnlockIMC(hIMC);
     return ret;
 }
