@@ -34,7 +34,7 @@ STRINGTABLE
 BEGIN
     IDS_CLEAN_FAIL "\nDiskPart nu a putut să curețe discul.\nDatele de pe disc ar putea să fie irecuperabile.\n"
     IDS_CLEAN_SUCCESS "\nDiskPart a reușit să curețe discul.\n"
-    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+    IDS_CLEAN_SYSTEM "\nDiscul selectat este necesar pentru funcționarea calculatorului dumneavoastră și este posibil să nu fie curățat.\n"
 END
 
 STRINGTABLE
@@ -45,7 +45,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart nu a reușit să șteargă partiția selectată.\nAsigurați-vă că partiția selectată este validă pentru ștergere.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart a șters cu succes partiția selectată.\n"
 END
 
@@ -78,9 +78,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Fișierul de sistem curent\n"
-    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+    IDS_FILESYSTEMS_FORMATTING "Fișiere de sistem disponibile pentru formatare\n"
+    IDS_FILESYSTEMS_TYPE "Tip        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Mărimea cluster-ului: %lu\n"
 END
 
 STRINGTABLE
@@ -90,24 +90,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
-    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
-    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+    IDS_INACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția inactivă.\nAsigurați-vă că partiția este validă.\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca inactivă.\n"
+    IDS_INACTIVE_ALREADY "\nPartiția curentă este deja marcată ca inactivă.\n"
 END
 
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "  Disc ###  Stare       Dimensiune  Liber    Dyn  Gpt\n"
+    IDS_LIST_DISK_HEAD "  Disc ###  Stare       Dimensiune  Liber    Din  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  ----------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c Disc %-3lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "  Partiție ###   Tip               Dim.     Depl.\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partiție  %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNu există niciun disc pentru a afișa partiții.\nSelectați un disc apoi reîncercați.\n\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_HEAD "  Volum  ###  Ltr  Etichetă     FS     Tip         Mărime   Stare    Informații\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "%c  Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "%c  Volum  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -129,15 +129,15 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nPartiție nevalidă.\n\n"
     IDS_SELECT_NO_VOLUME "\nMomentan nu există niciun volum selectat.\nSelectați un disc apoi reîncercați.\n\n"
     IDS_SELECT_VOLUME "\nVolumul %lu este selectat acum.\n\n"
-    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nVolum nevalid.\n\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
-    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
-    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
-    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+    IDS_SETID_FAIL "\nDiskPart nu a reușit să schimbe tipul partiției.\n"
+    IDS_SETID_SUCCESS "\nTipul partiției a fost schimbat cu succes.\n"
+    IDS_SETID_INVALID_FORMAT "\nFormatul tipului de partiție este nevalid.\n"
+    IDS_SETID_INVALID_TYPE "\nTipul partiției este nevalid.\n"
 END
 
 /* Disk Status */
@@ -174,26 +174,26 @@ BEGIN
     IDS_HELP_CONVERT                   "Convertește în diverse formate de disc.\n"
 
     IDS_HELP_CREATE                    "Crează un volum, o partiție, sau un disc virtual.\n"
-    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
-    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
-    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
-    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
-    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
-    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
-    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
-    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+    IDS_HELP_CREATE_PARTITION          "Creează o partiție.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Creați o partiție de sistem EFI.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Creează o partiție extinsă.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Creează un disc logic.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Creează o partiție MSR.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Creează o partiție primară.\n"
+    IDS_HELP_CREATE_VOLUME             "Creează un volum.\n"
+    IDS_HELP_CREATE_VDISK              "Creează un fișier de disc virtual.\n"
 
     IDS_HELP_DELETE                    "Elimină un obiect.\n"
-    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
-    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
-    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+    IDS_HELP_DELETE_DISK               "Elimină un disc.\n"
+    IDS_HELP_DELETE_PARTITION          "Elimină o partiție.\n"
+    IDS_HELP_DELETE_VOLUME             "Elimină un volum.\n"
 
     IDS_HELP_DETACH                    "Detașează un fișier de disc virtual.\n"
 
     IDS_HELP_DETAIL                    "Oferă detalii despre un obiect.\n"
-    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
-    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
-    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+    IDS_HELP_DETAIL_DISK               "Oferă detalii despre disc.\n"
+    IDS_HELP_DETAIL_PARTITION          "Oferă detalii despre partiție.\n"
+    IDS_HELP_DETAIL_VOLUME             "Oferă detalii despre volum.\n"
 
     IDS_HELP_EXIT                      "Ieșire din DiskPart.\n"
     IDS_HELP_EXPAND                    "Extinde dimensiunea maximă disponibilă a unui disc virtual.\n"
@@ -206,10 +206,10 @@ BEGIN
     IDS_HELP_INACTIVE                  "Desemnează partiția selectată ca inactivă.\n"
 
     IDS_HELP_LIST                      "Afișează o listă de obiecte.\n"
-    IDS_HELP_LIST_DISK                 "List disks.\n"
-    IDS_HELP_LIST_PARTITION            "List partitions.\n"
-    IDS_HELP_LIST_VOLUME               "List volumes.\n"
-    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+    IDS_HELP_LIST_DISK                 "Listează discurile.\n"
+    IDS_HELP_LIST_PARTITION            "Listează partițiile.\n"
+    IDS_HELP_LIST_VOLUME               "Listează volumele.\n"
+    IDS_HELP_LIST_VDISK                "Listează fișierele de disc virtuale.\n"
 
     IDS_HELP_MERGE                     "Unește discuri adiacente.\n"
     IDS_HELP_OFFLINE                   "Desemnează ca deconectat un disc conectat.\n"
@@ -223,10 +223,10 @@ BEGIN
     IDS_HELP_SAN                       "Afișează sau instituie politica SAN pentru SO încărcat la moment.\n"
 
     IDS_HELP_SELECT                    "Schimbă obiectul viitoarelor acțiuni.\n"
-    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
-    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
-    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
-    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+    IDS_HELP_SELECT_DISK               "Mută focalizarea pe disc.\n"
+    IDS_HELP_SELECT_PARTITION          "Mută focalizarea pe partiție.\n"
+    IDS_HELP_SELECT_VOLUME             "Mută focalizarea pe volum.\n"
+    IDS_HELP_SELECT_VDISK              "Mută focalizarea pe discul virtual.\n"
 
     IDS_HELP_SETID                     "Modifică tipul partiției.\n"
     IDS_HELP_SHRINK                    "Micșorează dimensiunea volumului selectat.\n"
