@@ -31,7 +31,10 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 
     status = RtlInitializeCriticalSection(&gcsImeDpi);
     if (NT_ERROR(status))
+    {
+        ERR("\n");
         return FALSE;
+    }
 
     gfImmInitialized = TRUE;
     return TRUE;
