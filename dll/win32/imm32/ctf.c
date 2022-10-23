@@ -20,7 +20,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 // Win: LoadCtfIme
 HMODULE APIENTRY Imm32LoadCtfIme(VOID)
 {
-    FIXME("()\n");
     return NULL;
 }
 
@@ -28,10 +27,8 @@ HMODULE APIENTRY Imm32LoadCtfIme(VOID)
 HRESULT APIENTRY Imm32CtfImeDestroyInputContext(HIMC hIMC)
 {
     if (!Imm32LoadCtfIme())
-    {
-        ERR("\n");
         return E_FAIL;
-    }
+
 #if 1
     FIXME("(%p)\n", hIMC);
     return E_NOTIMPL;
