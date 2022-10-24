@@ -125,32 +125,32 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 
     if (pImeInfo->fdwProperty & ~VALID_IME_PROP)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
     if (pImeInfo->fdwConversionCaps & ~VALID_CMODE_CAPS)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
     if (pImeInfo->fdwSentenceCaps & ~VALID_SMODE_CAPS)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
     if (pImeInfo->fdwUICaps & ~VALID_UI_CAPS)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
     if (pImeInfo->fdwSCSCaps & ~VALID_SCS_CAPS)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
     if (pImeInfo->fdwSelectCaps & ~VALID_SELECT_CAPS)
     {
-        ERR("\n");
+        ERR("Bad flags\n");
         return FALSE;
     }
 
@@ -223,7 +223,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
         else if (!(optional)) { \
-            ERR("'%s' not found in the IME module '%s'.\n", #name, debugstr_w(szPath)); \
+            ERR("'%s' not found in IME module '%s'.\n", #name, debugstr_w(szPath)); \
             goto Failed; \
         } \
     } while (0);
@@ -236,7 +236,6 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     }
     else
     {
-        ERR("Imm32InquireIme failed\n");
 Failed:
         ret = FALSE;
         FreeLibrary(pImeDpi->hInst);
@@ -274,7 +273,10 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     LCID lcid;
 
     if (!IS_IME_HKL(hKL))
+    {
+        TRACE("\n");
         return NULL;
+    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -344,7 +346,7 @@ PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 
     if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_16BIT_MODE()))
     {
-        ERR("\n");
+        TRACE("\n");
         return NULL;
     }
 
@@ -453,7 +455,10 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(HIMC hIMC)
 
     hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
     pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-    if (!pView || pView->dwVersion != 1)
+    if (IS_NULL_UNEXPECTEDLY(pView))
+        goto Quit;
+
+    if (pView->dwVersion != 1)
     {
         ERR("\n");
         goto Quit;
@@ -798,7 +803,10 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     if (cLayouts)
     {
         pLayouts = ImmLocalAlloc(0, cLayouts * sizeof(REG_IME));
-        if (!pLayouts || !Imm32GetImeLayout(pLayouts, cLayouts))
+        if (IS_NULL_UNEXPECTEDLY(pLayouts))
+            return NULL;
+
+        if (!Imm32GetImeLayout(pLayouts, cLayouts))
         {
             ERR("\n");
             ImmLocalFree(pLayouts);
@@ -883,7 +891,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
     if (!IS_IMM_MODE())
     {
-        WARN("\n");
+        TRACE("\n");
         return NULL;
     }
 
@@ -1088,7 +1096,10 @@ UINT WINAPI ImmGetDescriptionA(HKL hKL, LPSTR lpszDescription, UINT uBufLen)
     TRACE("(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
     if (!IS_IME_HKL(hKL))
+    {
+        TRACE("\n");
         return 0;
+    }
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -1115,7 +1126,10 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
     TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
     if (!IS_IME_HKL(hKL))
+    {
+        TRACE("\n");
         return 0;
+    }
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -1143,6 +1157,7 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
 
     if (!IS_IME_HKL(hKL))
     {
+        TRACE("\n");
         if (uBufLen > 0)
             lpszFileName[0] = 0;
         return 0;
@@ -1182,6 +1197,7 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 
     if (!IS_IME_HKL(hKL))
     {
+        TRACE("\n");
         if (uBufLen > 0)
             lpszFileName[0] = 0;
         return 0;
@@ -1221,7 +1237,10 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
     TRACE("(%p, %lu)\n", hKL, fdwIndex);
 
     if (!IS_IME_HKL(hKL))
+    {
+        TRACE("\n");
         return FALSE;
+    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {

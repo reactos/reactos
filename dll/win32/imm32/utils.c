@@ -73,7 +73,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     WORD wPrimary = PRIMARYLANGID(LangID);
     if (wPrimary != LANG_JAPANESE || wPrimary != LANG_KOREAN)
     {
-        WARN("\n");
+        WARN("The country has no special IME support\n");
         return FALSE;
     }
     return TRUE;
@@ -104,7 +104,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
     hbm = CreateDIBSection(NULL, (LPBITMAPINFO)pbmci, DIB_RGB_COLORS, &pvBits, NULL, 0);
     if (!hbm || !GetObject(hbm, sizeof(BITMAP), &bm))
     {
-        ERR("\n");
+        ERR("Invalid bitmap\n");
         return NULL;
     }
 
@@ -117,7 +117,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
             cColors = 0;
             break;
         default:
-            ERR("\n");
+            ERR("Invalid bitmap\n");
             DeleteObject(hbm);
             return NULL;
     }
@@ -131,7 +131,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
     ib += bm.bmWidthBytes * bm.bmHeight;
     if (ib > cbBytes)
     {
-        ERR("\n");
+        ERR("Invalid bitmap\n");
         DeleteObject(hbm);
         return NULL;
     }
@@ -153,7 +153,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
 
     if (!GetObject(hbm, sizeof(BITMAP), &bm))
     {
-        ERR("\n");
+        ERR("Invalid hbm\n");
         return FALSE;
     }
 
@@ -173,7 +173,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
             cColors = 0;
             break;
         default:
-            ERR("\n");
+            ERR("Invalid bitmap\n");
             return FALSE;
     }
 
@@ -183,7 +183,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
     cbBytes += bm.bmWidthBytes * bm.bmHeight;
     if (cbBytes > cbDataMax)
     {
-        ERR("\n");
+        ERR("Too small\n");
         return FALSE;
     }
 
@@ -287,7 +287,7 @@ BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileNam
 {
     if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
     {
-        ERR("\n");
+        ERR("Invalid filename\n");
         return FALSE;
     }
     StringCchCatW(pszPath, cchPath, L"\\");
@@ -345,7 +345,7 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 
     if (!NtUserValidateHandleSecure(hObject))
     {
-        WARN("\n");
+        WARN("Not a handle\n");
         return NULL;
     }
 
@@ -485,7 +485,7 @@ DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
 
     if (NT_ERROR(Status) || !dwCount)
     {
-        ERR("\n");
+        ERR("Abnormal status\n");
         ImmLocalFree(phNewList);
         return 0;
     }
@@ -633,7 +633,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     if (pSrc->dwVersion != 0)
     {
-        ERR("\n");
+        ERR("dwVersion must be zero\n");
         return 0;
     }
 
@@ -645,7 +645,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     if (pDest->dwSize < cbDest)
     {
-        ERR("\n");
+        ERR("Too small\n");
         return 0;
     }
 
@@ -705,7 +705,7 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     if (pDest->dwSize < cbDest)
     {
-        ERR("\n");
+        ERR("Too small\n");
         return 0;
     }
 
@@ -764,14 +764,14 @@ static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     VS_FIXEDFILEINFO *pFixed;
     if (!s_fnVerQueryValueW(pVerInfo, L"\\", (LPVOID*)&pFixed, &cbFixed) || !cbFixed)
     {
-        ERR("\n");
+        ERR("Fixed version info not available\n");
         return FALSE;
     }
 
     /* NOTE: The IME module must contain a version info of input method driver. */
     if (pFixed->dwFileType != VFT_DRV || pFixed->dwFileSubtype != VFT2_DRV_INPUTMETHOD)
     {
-        ERR("\n");
+        ERR("DLL is not an IME\n");
         return FALSE;
     }
 
@@ -811,7 +811,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     ret = s_fnVerQueryValueW(pVerInfo, L"\\VarFileInfo\\Translation", (LPVOID*)&pw, &cbData);
     if (!ret || !cbData)
     {
-        ERR("\n");
+        ERR("Translation not available\n");
         return FALSE;
     }
 
@@ -978,10 +978,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 
         lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
         if (IS_ERROR_UNEXPECTEDLY(lError))
-        {
-            WARN("\n");
             continue;
-        }
 
         /* Load the "Ime File" value */
         szImeFileName[0] = 0;
@@ -1000,7 +997,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 
         Imm32StrToUInt(szImeKey, &Value, 16);
         hKL = (HKL)(DWORD_PTR)Value;
-        if (!IS_IME_HKL(hKL))
+        if (!IS_IME_HKL(hKL)) /* Not an IME */
         {
             WARN("\n");
             continue;
@@ -1093,7 +1090,7 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
 
     if (iPreload >= MAX_PRELOAD) /* Not found */
     {
-        WARN("\n");
+        ERR("\n");
         RegCloseKey(hkeyPreload);
         return FALSE;
     }
