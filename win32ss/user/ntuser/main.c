@@ -452,6 +452,7 @@ UserThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
+/* Win: xxxCreateThreadInfo */
 NTSTATUS NTAPI
 InitThreadCallback(PETHREAD Thread)
 {

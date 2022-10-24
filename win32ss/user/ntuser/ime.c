@@ -1511,12 +1511,14 @@ BOOL IntDestroyInputContext(PIMC pIMC)
 
     if (pti != gptiCurrent)
     {
+        ERR("Thread mismatch\n");
         EngSetLastError(ERROR_ACCESS_DENIED);
         return FALSE;
     }
 
     if (pIMC == pti->spDefaultImc)
     {
+        ERR("Can't destroy default IMC\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -1575,11 +1577,17 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     }
 
     if (!pdesk) // No desktop?
+    {
+        ERR("!pdesk\n");
         return NULL;
+    }
 
     // pti->spDefaultImc should be already set if non-first time.
     if (dwClientImcData && !pti->spDefaultImc)
+    {
+        ERR("pti->spDefaultImc should be set on first time\n");
         return NULL;
+    }
 
     // Create an input context user object.
     pIMC = UserCreateObject(gHandleTable, pdesk, pti, NULL, TYPE_INPUTCONTEXT, sizeof(IMC));
@@ -1626,6 +1634,7 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 
     if (!dwClientImcData)
     {
+        ERR("Can't set NULL\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Quit;
     }
@@ -1657,12 +1666,21 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
     else
     {
         if (pIMC && pti != pIMC->head.pti)
+        {
+            ERR("Thread mismatch\n");
             return 2;
+        }
     }
 
-    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi ||
-        (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk))
+    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi)
     {
+        ERR("Process mismatch\n");
+        return 2;
+    }
+
+    if (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk)
+    {
+        ERR("Desktop mismatch\n");
         return 2;
     }
 
@@ -1722,7 +1740,10 @@ NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     pWnd = ValidateHwndNoErr(hWnd);
     if (!pWnd)
+    {
+        ERR("!pWnd\n");
         goto Quit;
+    }
 
     pIMC = (hIMC ? UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT) : NULL);
     ret = IntAssociateInputContextEx(pWnd, pIMC, dwFlags);
@@ -1739,21 +1760,28 @@ BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
     PTHREADINFO ptiIMC = pIMC->head.pti;
 
     if (pti->ppi != ptiIMC->ppi) // Different process?
+    {
+        ERR("Process mismatch\n");
         return FALSE;
+    }
 
     switch (dwType)
     {
         case UIC_CLIENTIMCDATA:
             if (pIMC->dwClientImcData)
+            {
+                ERR("Already set\n");
                 return FALSE; // Already set
-
+            }
             pIMC->dwClientImcData = dwValue;
             break;
 
         case UIC_IMEWINDOW:
             if (!ValidateHwndNoErr((HWND)dwValue))
+            {
+                ERR("Invalid HWND %p\n", (HWND)dwValue);
                 return FALSE; // Invalid HWND
-
+            }
             pIMC->hImeWnd = (HWND)dwValue;
             break;
 
@@ -1784,7 +1812,10 @@ NtUserUpdateInputContext(
 
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)
+    {
+        ERR("Invalid HIMC\n");
         goto Quit;
+    }
 
     ret = UserUpdateInputContext(pIMC, dwType, dwValue);
 
@@ -1811,7 +1842,10 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
 
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)
+    {
+        ERR("Invalid HIMC\n");
         goto Quit;
+    }
 
     ptiIMC = pIMC->head.pti;
 
@@ -1975,12 +2009,27 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     if (!(pti->spDefaultImc) && pid == gpidLogon)
         UserCreateInputContext(0);
 
-    if (!(pti->spDefaultImc) || IS_WND_IMELIKE(pwndTarget) || !(pti->rpdesk->pheapDesktop))
+    if (!(pti->spDefaultImc))
+    {
+        WARN("No default IMC\n");
         return NULL;
+    }
+
+    if (!(pti->rpdesk->pheapDesktop))
+    {
+        WARN("No desktop\n");
+        return NULL;
+    }
+
+    if (IS_WND_IMELIKE(pwndTarget))
+    {
+        return NULL;
+    }
 
     if (IS_WND_CHILD(pwndTarget) && !(pwndTarget->style & WS_VISIBLE) &&
         pwndTarget->spwndParent->head.pti->ppi != pti->ppi)
     {
+        WARN("Process mismatch and invisible child\n");
         return NULL;
     }
 
