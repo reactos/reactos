@@ -95,7 +95,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     if (dwType != REG_SZ)
     {
-        ERR("");
+        ERR("\n");
         return FALSE;
     }
 
