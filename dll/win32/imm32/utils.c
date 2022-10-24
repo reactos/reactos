@@ -153,7 +153,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
 
     if (!GetObject(hbm, sizeof(BITMAP), &bm))
     {
-        ERR("Invalid hbm\n");
+        ERR("Invalid bitmap\n");
         return FALSE;
     }
 
