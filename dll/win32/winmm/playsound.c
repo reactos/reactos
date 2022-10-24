@@ -54,42 +54,37 @@ static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
     return 0;
 }
 
-static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
+static HMMIO get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
 {
-    WCHAR	str[128];
-    LPWSTR	ptr, pszSnd;
-    HMMIO  	hmmio;
-    HKEY        hUserKey, hRegSnd, hRegApp, hScheme, hSnd;
-    DWORD       err, type, count;
+    WCHAR str[128];
+    LPWSTR ptr, pszSnd;
+    HMMIO hmmio;
+    HKEY hUserKey, hRegSnd, hRegApp, hScheme, hSnd;
+    DWORD err, type, count;
     BOOL bIsDefault;
-
-    static const WCHAR  wszSounds[] = {'S','o','u','n','d','s',0};
-    static const WCHAR  wszDefault[] = {'D','e','f','a','u','l','t',0};
-    static const WCHAR  wszKey[] = {'A','p','p','E','v','e','n','t','s','\\',
-                                    'S','c','h','e','m','e','s','\\',
-                                    'A','p','p','s',0};
-    static const WCHAR  wszDotDefault[] = {'.','D','e','f','a','u','l','t',0};
-    static const WCHAR  wszDotCurrent[] = {'.','C','u','r','r','e','n','t',0};
-    static const WCHAR  wszNull[] = {0};
 
     TRACE("searching in SystemSound list for %s\n", debugstr_w(lpszName));
 
     bIsDefault = (_wcsicmp(lpszName, L"SystemDefault") == 0);
 
-    GetProfileStringW(wszSounds,
-                      bIsDefault ? wszDefault : lpszName,
-                      wszNull,
+    GetProfileStringW(L"Sounds",
+                      bIsDefault ? L"Default" : lpszName,
+                      L"",
                       str,
-                      sizeof(str)/sizeof(str[0]));
+                      _countof(str));
     if (lstrlenW(str) == 0)
-    {
-        goto next;
-    }
-    for (ptr = str; *ptr && *ptr != ','; ptr++);
-    if (*ptr) *ptr = 0;
+        goto Next;
+
+    for (ptr = str; *ptr && *ptr != L','; ptr++);
+
+    if (*ptr)
+        *ptr = UNICODE_NULL;
+
     hmmio = mmioOpenW(str, NULL, MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
-    if (hmmio != 0) return hmmio;
- next:
+    if (hmmio)
+        return hmmio;
+
+Next:
     /* we look up the registry under
      *      HKCU\AppEvents\Schemes\Apps\.Default
      *      HKCU\AppEvents\Schemes\Apps\<AppName>
@@ -97,30 +92,30 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     err = RegOpenCurrentUser(KEY_READ, &hUserKey);
     if (err == ERROR_SUCCESS)
     {
-        err = RegOpenKeyW(hUserKey, wszKey, &hRegSnd);
-        
+        err = RegOpenKeyW(hUserKey, L"AppEvents\\Schemes\\Apps", &hRegSnd);
+
         RegCloseKey(hUserKey);
     }
 
     if (err != ERROR_SUCCESS)
-    {
-        goto none;
-    }
+        goto None;
 
     if (uFlags & SND_APPLICATION)
     {
         DWORD len;
 
-        err = 1; /* error */
-        len = GetModuleFileNameW(0, str, sizeof(str)/sizeof(str[0]));
-        if (len > 0 && len < sizeof(str)/sizeof(str[0]))
+        err = ERROR_FILE_NOT_FOUND; /* error */
+        len = GetModuleFileNameW(NULL, str, _countof(str));
+        if (len > 0 && len < _countof(str))
         {
             for (ptr = str + lstrlenW(str) - 1; ptr >= str; ptr--)
             {
-                if (*ptr == '.') *ptr = 0;
-                if (*ptr == '\\')
+                if (*ptr == L'.')
+                    *ptr = UNICODE_NULL;
+
+                if (*ptr == L'\\')
                 {
-                    err = RegOpenKeyW(hRegSnd, ptr+1, &hRegApp);
+                    err = RegOpenKeyW(hRegSnd, ptr + 1, &hRegApp);
                     break;
                 }
             }
@@ -128,47 +123,52 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     }
     else
     {
-        err = RegOpenKeyW(hRegSnd, wszDotDefault, &hRegApp);
+        err = RegOpenKeyW(hRegSnd, L".Default", &hRegApp);
     }
+
     RegCloseKey(hRegSnd);
-    if (err != 0) goto none;
+
+    if (err != ERROR_SUCCESS)
+        goto None;
+
     err = RegOpenKeyW(hRegApp,
-                      bIsDefault ? wszDotDefault : lpszName,
+                      bIsDefault ? L".Default" : lpszName,
                       &hScheme);
+
     RegCloseKey(hRegApp);
-    if (err != 0) goto none;
+
+    if (err != ERROR_SUCCESS)
+        goto None;
     
-    err = RegOpenKeyW(hScheme, wszDotCurrent, &hSnd);
+    err = RegOpenKeyW(hScheme, L".Current", &hSnd);
 
     RegCloseKey(hScheme);
 
     if (err != ERROR_SUCCESS)
-    {
-        goto none;
-    }
+        goto None;
 
     count = sizeof(str);
     err = RegQueryValueExW(hSnd, NULL, 0, &type, (LPBYTE)str, &count);
+
     RegCloseKey(hSnd);
-    if (err != 0 || !*str) goto none;
+
+    if (err != ERROR_SUCCESS || !*str)
+        goto None;
 
     if (type == REG_EXPAND_SZ)
     {
-        /* Get full path length, including the NULL terminator */
         count = ExpandEnvironmentStringsW(str, NULL, 0);
         if (count == 0)
-            goto none;
+            goto None;
 
-        /* Allocate a buffer for the path */
         pszSnd = HeapAlloc(GetProcessHeap(), 0, count * sizeof(WCHAR));
         if (!pszSnd)
-            goto none;
+            goto None;
 
-        /* Get the path */
         if (ExpandEnvironmentStringsW(str, pszSnd, count) == 0)
         {
             HeapFree(GetProcessHeap(), 0, pszSnd);
-            goto none;
+            goto None;
         }
     }
     else if (type == REG_SZ)
@@ -179,7 +179,7 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     else
     {
         /* Invalid type */
-        goto none;
+        goto None;
     }
 
     hmmio = mmioOpenW(pszSnd, NULL, MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
@@ -187,10 +187,12 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     if (type == REG_EXPAND_SZ)
         HeapFree(GetProcessHeap(), 0, pszSnd);
 
-    if (hmmio) return hmmio;
- none:
+    if (hmmio)
+        return hmmio;
+
+None:
     WARN("can't find SystemSound=%s !\n", debugstr_w(lpszName));
-    return 0;
+    return NULL;
 }
 
 static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
