@@ -77,26 +77,26 @@ Beispiel:
     ACTIVE
 .
 Language=Polish
-    On disks with master boot record (MBR) disk formatting, marks
-    the partition with focus as active.
+    Na dyskach zawierających formatowanie z głównym rekordem rozruchowym
+    (MBR) oznacza partycję, na której jest ustawiony fokus, jako aktywną.
 
-Syntax:  ACTIVE
+Składnia:  ACTIVE
 
-    Writes a value to the disk which is read by the basic input/output
-    system (BIOS) at boot. This value specifies that the partition is
-    a valid system partition.
+    Zapisuje na dysku wartość odczytywaną podczas rozruchu przez podstawowy
+    system wejścia/wyjścia (BIOS). Ta wartość oznacza, że dana partycja jest
+    prawidłową partycją systemową.
 
-    A partition must be selected for this operation to succeed.
+    Aby ta operacja powiodła się, partycja musi być wybrana.
 
-    Caution:
+    Uwaga:
 
-        DiskPart verifies only that the partition is capable of containing the
-        operating system startup files. DiskPart does not check the contents of
-        the partition. If you mistakenly mark a partition as active and it does
-        not contain the operating system startup files, your computer might not
-        start.
+        Program DiskPart sprawdza tylko, czy partycja może zawierać pliki
+        startowe systemu operacyjnego. Program DiskPart nie sprawdza zawartości
+        partycji. Jeśli przez pomyłkę jako aktywna zostanie oznaczona partycja
+        niezawierająca plików startowych systemu operacyjnego, komputer może się
+        nie uruchomić.
 
-Example:
+Przykład:
 
     ACTIVE
 .
@@ -534,23 +534,23 @@ Beispiel:
     CLEAN
 .
 Language=Polish
-    Removes any and all partition or volume formatting from the disk with
-    focus.
+    Usuwa wszelkie formatowanie partycji lub woluminów z dysku mającego
+    fokus.
 
-Syntax:  CLEAN [ALL]
+Składnia:  CLEAN [ALL]
 
-    ALL         Specifies that each and every byte\sector on the disk is set to
-                zero, which completely deletes all data contained on the disk.
+    ALL         Określa, że każdy bajt/sektor na dysku zostaje ustawiony
+                na zero, co całkowicie usuwa wszystkie dane zawarte na dysku.
 
-    On master boot record (MBR) disks, only the MBR partitioning information
-    and hidden sector information are overwritten. On GUID partition table
-    (GPT) disks, the GPT partitioning information, including the Protective
-    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
-    and the last 1MB of the disk are zeroed. This erases any disk formatting 
-    that had been previously applied to the disk. The disk's state after 
-    cleaning the disk is 'UNINITIALIZED'.
+    Na dyskach z głównym rekordem rozruchowym (MBR) są zastępowane tylko
+    informacje o partycjonowaniu MBR i ukrytych sektorach. Na dyskach
+    z tablicą partycji GUID (GPT) są zastępowane informacje
+    o partycjonowaniu GPT, łącznie z ochronnym rekordem MBR. Jeśli parametr
+    ALL nie zostanie użyty, 1 MB na początku i na końcu dysku jest zerowany. 
+    Powoduje to wymazanie formatowania poprzednio stosowanego na dysku. 
+    Stanem dysku po jego czyszczeniu jest stan 'NIEZAINICJOWANY'.
 
-Example:
+Przykład:
 
     CLEAN
 .
@@ -895,39 +895,42 @@ Beispiel:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Polish
-    Creates an extended partition on the disk with focus.
-    Applies to master boot record (MBR) disks only.
+    Tworzy partycję rozszerzoną na dysku mającym fokus.
+    Dotyczy tylko dysków z głównym rekordem rozruchowym (MBR).
 
-Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Składnia:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more free
-                space in the extended partition.
+    SIZE=<N>    Rozmiar partycji w megabajtach (MB). Jeśli nie podano
+                rozmiaru, partycja zajmuje całe wolne miejsce na partycji
+                rozszerzonej.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
-                created. If no offset is given, the partition will start
-                at the beginning of the first free space on the disk that
-                is large enough to hold the new partition.
+    OFFSET=<N>  Przesunięcie w kilobajtach (KB), przy którym zostanie
+                utworzona partycja. Jeśli nie podano przesunięcia, partycja
+                zostanie umieszczona na początku pierwszego wolnego miejsca
+                na dysku, w którym się zmieści.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Zazwyczaj używany z numerami jednostek logicznych (LUN)
+                sprzętowych macierzy RAID w celu poprawienia wydajności.
+                Przesunięcie partycji będzie wielokrotnością liczby <N>.
+                Jeśli nie określono parametru OFFSET, jest ono zaokrąglane
+                do najbliższej wielokrotności liczby <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program
+                DiskPart kontynuuje przetwarzanie poleceń tak, jakby błąd
+                nie wystąpił. W przypadku braku parametru NOERR błąd powoduje
+                zakończenie działania programu DiskPart i zwrócenie
+                kodu błędu.
 
-    After the partition has been created, the focus automatically shifts to the
-    new partition. Only one extended partition can be created per disk. This
-    command fails if you attempt to create an extended partition within another
-    extended partition. You must create an extended partition before you can
-    create logical partitions.
+    Po utworzeniu nowej partycji automatycznie otrzymuje ona fokus. Na każdym
+    dysku można utworzyć tylko jedną partycję rozszerzoną. To polecenie
+    zakończy się niepowodzeniem w przypadku próby utworzenia partycji
+    rozszerzonej w obrębie innej partycji rozszerzonej. Konieczne jest
+    utworzenie partycji rozszerzonej przed utworzeniem partycji logicznych.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Aby operacja została wykonana pomyślnie, musi być wybrany podstawowy
+    dysk MBR.
 
-Example:
+Przykład:
 
     CREATE PARTITION EXTENDED SIZE=1000
 .
@@ -1268,38 +1271,38 @@ Beispiel:
     CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Polish
-    Creates a logical partition in an extended partition.
-    Applies to master boot record (MBR) disks only.
+    Tworzy partycję logiczną w obrębie partycji rozszerzonej.
+    Dotyczy tylko dysków z głównym rekordem rozruchowym (MBR).
 
-Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Składnia:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
-                at least as big in bytes as the number specified by N. If you
-                specify a size for the logical partition, it must be smaller
-                than the extended partition. If no size is given, the partition
-                continues until there is no more free space in the extended
-                partition.
+    SIZE=<N>    Rozmiar partycji w megabajtach (MB). Partycja ma przynajmniej
+                taki rozmiar w bajtach, jak podana liczba N.
+                Określany rozmiar partycji logicznej musi być mniejszy od
+                rozmiaru partycji rozszerzonej. Jeśli nie podano rozmiaru,
+                partycja zajmuje całe wolne miejsce w bieżącym obszarze.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
-                If no offset is given, the partition is placed in the first disk
-                extent that is large enough to hold it.
+    OFFSET=<N>  Przesunięcie w kilobajtach (KB), przy którym zostanie utworzona
+                partycja. Jeśli nie podano przesunięcia, partycja zostanie
+                umieszczona w pierwszym zakresie dysku, w którym się zmieści.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Zazwyczaj używany z numerami jednostek logicznych (LUN)
+                sprzętowych macierzy RAID w celu poprawienia wydajności.
+                Przesunięcie partycji będzie wielokrotnością liczby <N>.
+                Jeśli nie określono parametru OFFSET, jest ono zaokrąglane
+                do najbliższej wielokrotności liczby <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program DiskPart
+                kontynuuje przetwarzanie poleceń tak, jakby błąd nie wystąpił.
+                W przypadku braku parametru NOERR błąd powoduje, zakończenie
+                działania programu DiskPart i zwrócenie kodu błędu.
 
-    After the partition has been created, the focus automatically shifts to the
-    new logical partition.
+    Po utworzeniu nowej partycji logicznej automatycznie otrzymuje ona fokus.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Aby operacja została wykonana pomyślnie, musi być wybrany podstawowy
+    dysk MBR.
 
-Example:
+Przykład:
 
     CREATE PARTITION LOGICAL SIZE=1000
 .
@@ -1814,105 +1817,113 @@ Beispiel:
     CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Polish
-    Creates a primary partition on the basic disk with focus.
+    Tworzy partycję podstawową na dysku podstawowym mającym fokus.
 
-Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+Składnia:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
             [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more
-                unallocated space in the current region.
+    SIZE=<N>    Rozmiar partycji w megabajtach (MB). Jeśli nie podano
+                rozmiaru, partycja zajmuje całe nieprzydzielone miejsce w
+                bieżącym obszarze.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
-                If no offset is given, the partition is placed in the first disk
-                extent that is large enough to hold it.
+    OFFSET=<N>  Przesunięcie w kilobajtach, przy którym zostanie utworzona.
+                partycja. Jeśli nie podano przesunięcia, partycja zostanie
+                umieszczona w pierwszym zakresie dysku, w którym się zmieści.
 
     ID={<BYTE> | <GUID>}
 
-                Specifies the partition type.
+                Określa typ partycji.
 
-                Intended for Original Equipment Manufacturer (OEM) use only.
+                Parametr przeznaczony tylko do użytku przez producentów
+                oryginalnego sprzętu (OEM).
 
-                For master boot record (MBR) disks, you can specify a partition
-                type byte, in hexadecimal form, for the partition. If this
-                parameter is not specified for an MBR disk, the command creates
-                a partition of type 0x06 (specifies no file system is installed).
+                W przypadku dysków z głównym rekordem rozruchowym (MBR) można
+                dla partycji określić bajt typu partycji (szesnastkowo). Jeśli
+                ten parametr nie zostanie określony dla dysku MBR, polecenie
+                powoduje utworzenie partycji typu 0x06 (określa, że brak jest
+                zainstalowanego systemu plików).
 
-                    LDM data partition:
+                    Partycja danych LDM:
                         0x42
 
-                    Recovery partition:
+                    Partycja odzyskiwania:
                         0x27
 
-                    Recognized OEM Ids:
+                    Rozpoznawane identyfikatory OEM:
                         0x12
                         0x84
                         0xDE
                         0xFE
                         0xA0
 
-                For GUID partition table (GPT) disks you can specify a
-                partition type GUID for the partition you want to create.
-                Recognized GUIDs include:
+                W przypadku dysków z tablicą partycji GUID (GPT) można
+                określić identyfikator GUID typu partycji, która ma zostać
+                utworzona. Rozpoznawane identyfikatory GUID są następujące:
 
-                    EFI System partition:
+                    Partycja systemowa EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Microsoft Reserved partition:
+                    Partycja zastrzeżona firmy Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215ae
 
-                    Basic data partition:
+                    Podstawowa partycja danych:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
-                    LDM Metadata partition on a dynamic disk:
+                    Partycja metadanych LDM na dysku dynamicznym:
                         5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
 
-                    LDM Data partition on a dynamic disk:
+                    Partycja danych LDM na dysku dynamicznym:
                         af9b60a0-1431-4f62-bc68-3311714a69ad
 
-                    Recovery partition:
+                    Partycja odzyskiwania:
                         de94bba4-06d1-4d40-a16a-bfd50179d6ac
 
-                If this parameter is not specified for a GPT disk, the command
-                creates a basic data partition.
+                Jeśli ten parametr nie zostanie określony dla dysku GPT,
+                polecenie utworzy podstawową partycję danych.
 
-                Any partition type byte or GUID can be specified with this
-                parameter. DiskPart does not check the partition type for
-                validity except to ensure that it is a byte in hexadecimal form
-                or a GUID.
+                Za pomocą tego parametru można określić dowolny bajt
+                typu partycji lub identyfikator GUID. Program DiskPart nie
+                sprawdza poprawności typu partycji. Sprawdza jedynie, czy
+                podana wartość ma postać szesnastkową lub jest
+                identyfikatorem GUID.
 
-                Caution:
+                Uwaga:
 
-                    Creating partitions with this parameter might cause your
-                    computer to fail or be unable to start up. Unless you are
-                    an OEM or an IT professional experienced with GPT disks, do
-                    not create partitions on GPT disks using this parameter.
-                    Instead, always use the CREATE PARTITION EFI command to
-                    create EFI System partitions, the CREATE PARTITION MSR
-                    command to create Microsoft Reserved partitions, and the
-                    CREATE PARTITION PRIMARY command without this parameter to
-                    create primary partitions on GPT disks.
+                    Tworzenie partycji z tym parametrem może sprawić, że
+                    komputer ulegnie awarii lub nie będzie można go
+                    uruchomić. Jeśli użytkownik nie jest producentem OEM ani
+                    informatykiem dysponującym doświadczeniem w zakresie
+                    dysków GPT, nie powinien tworzyć partycji na dyskach GPT
+                    przy użyciu tego parametru. Zamiast tego należy zawsze
+                    używać polecenia CREATE PARTITION EFI do tworzenia
+                    partycji systemowych EFI, polecenia CREATE PARTITION MSR
+                    do tworzenia partycji zastrzeżonej firmy Microsoft
+                    i polecenia CREATE PARTITION PRIMARY (bez opisywanego
+                    parametru) do tworzenia partycji podstawowych
+                    na dyskach GPT.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Zazwyczaj używany z numerami jednostek logicznych (LUN)
+                sprzętowych macierzy RAID w celu poprawienia wydajności.
+                Przesunięcie partycji będzie wielokrotnością liczby N.
+                Jeśli nie określono parametru OFFSET, jest ono zaokrąglane
+                do najbliższej wielokrotności liczby N.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program
+                DiskPart kontynuuje przetwarzanie poleceń tak, jakby błąd
+                nie wystąpił. W przypadku braku parametru NOERR błąd powoduje
+                zakończenie działania programu DiskPart i zwrócenie
+                kodu błędu.
 
-    After you create the partition, the focus automatically shifts to the new
-    partition. The partition does not receive a drive letter. You must use the
-    assign command to assign a drive letter to the partition.
+    Po utworzeniu partycji automatycznie otrzymuje ona fokus. Partycja nie
+    otrzymuje litery dysku. Aby przypisać partycji literę dysku,
+    należy użyć polecenia ASSIGN.
 
-    A basic disk must be selected for this operation to succeed.
+    Aby ta operacja się powiodła, musi być wybrany dysk podstawowy.
 
-    If a partition type is not specified, the disk is uninitialized and disk
-    size is greater than 2TB, it will be initialized to GPT.
+    Jeśli typ partycji nie jest określony, dysk jest niezainicjowany a rozmiar
+    rozmiar większy niż 2 TB, zostanie zainicjowany do GPT.
 
-Example:
+Przykład:
 
     CREATE PARTITION PRIMARY SIZE=1000
     CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
@@ -2751,28 +2762,30 @@ Beispiel:
     DELETE PARTITION
 .
 Language=Polish
-Deletes the partition with focus.
+Usuwa partycję, na której jest ustawiony fokus.
 
-Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+Składnia:  DELETE PARTITION [NOERR] [OVERRIDE]
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program
+                DiskPart kontynuuje przetwarzanie poleceń tak, jakby błąd
+                nie wystąpił. W przypadku braku parametru NOERR błąd powoduje
+                zakończenie działania programu DiskPart i zwrócenie
+                kodu błędu.
 
-    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
-                Typically, DiskPart only permits you to delete known data
-                partitions.
+    OVERRIDE    Umożliwia usunięcie przez program DiskPart każdej partycji bez
+                względu na jej typ. Zazwyczaj program DiskPart zezwala
+                na usunięcie wyłącznie znanych partycji zawierających dane.
 
-    You cannot delete the system partition, boot partition, or any partition
-    that contains the active paging file or crash dump (memory dump) filed.
+    Nie można usunąć partycji systemowej, partycji rozruchowej ani żadnej
+    partycji zawierającej aktywny plik stronicowania lub plik zrzutu
+    awaryjnego (zrzutu pamięci).
 
-    A partition must be selected for this operation to succeed.
+    Aby ta operacja się powiodła, musi być wybrana partycja.
 
-    Partitions cannot be deleted from dynamic disks or created on dynamic
-    disks.
+    Partycji nie można usuwać z dysków dynamicznych ani tworzyć ich na takich
+    dyskach.
 
-Example:
+Przykład:
 
     DELETE PARTITION
 .
@@ -3023,14 +3036,14 @@ Beispiel:
     DETAIL DISK
 .
 Language=Polish
-    Displays the properties of the selected disk and the list of volumes on
-    the disk.
+    Wyświetla właściwości wybranego dysku oraz listę znajdujących się na nim
+    woluminów.
 
-Syntax:  DETAIL DISK
+Składnia:  DETAIL DISK
 
-    A disk must be selected for this operation to succeed.
+    Do pomyślnego ukończenia operacji konieczne jest wybranie dysku.
 
-Example:
+Przykład:
 
     DETAIL DISK
 .
@@ -3146,13 +3159,13 @@ Beispiel:
     DETAIL PARTITION
 .
 Language=Polish
-    Displays the properties for the selected partition.
+    Wyświetla właściwości wybranej partycji.
 
-Syntax:  DETAIL PARTITION
+Składnia:  DETAIL PARTITION
 
-    A partition must be selected for this operation to succeed.
+    Do pomyślnego ukończenia operacji konieczne jest wybranie partycji.
 
-Example:
+Przykład:
 
     DETAIL PARTITION
 .
@@ -3264,14 +3277,14 @@ Beispiel:
     DETAIL VOLUME
 .
 Language=Polish
-    Displays the properties for the selected volume and the list of disks on
-    which the volume resides.
+    Wyświetla właściwości wybranego woluminu oraz listę dysków, na których
+    wolumin się znajduje.
 
-Syntax:  DETAIL VOLUME
+Składnia:  DETAIL VOLUME
 
-    A volume must be selected for this operation to succeed.
+    Do pomyślnego ukończenia operacji konieczne jest wybranie woluminu.
 
-Example:
+Przykład:
 
     DETAIL VOLUME
 .
@@ -3419,11 +3432,11 @@ Beispiel:
     EXIT
 .
 Language=Polish
-    Exits the DiskPart command interpreter.
+    Kończy działanie interpretera poleceń programu DiskPart.
 
-Syntax:  EXIT
+Składnia:  EXIT
 
-Example:
+Przykład:
 
     EXIT
 .
@@ -3595,14 +3608,14 @@ Beispiel:
     FILESYSTEMS
 .
 Language=Polish
-    Displays information about the current file system for the selected
-    volume, and the supported file systems for formatting the volume.
+    Wyświetla informacje o bieżącym systemie plików w wybranym woluminie
+    i systemach plików obsługiwanych przy formatowaniu woluminu.
 
-Syntax:  FILESYSTEMS
+Składnia:  FILESYSTEMS
 
-    A volume must be selected for this operation to succeed.
+    Aby ta operacja się powiodła, musi być wybrany wolumin.
 
-Example:
+Przykład:
 
     FILESYSTEMS
 .
@@ -4420,16 +4433,18 @@ Beispiel:
     HELP CREATE PARTITION PRIMARY
 .
 Language=Polish
-    Displays a list of the available commands or detailed help information for a
-    specified command.
+    Wyświetla listę dostępnych poleceń lub szczegółową pomoc dotyczącą
+    danego polecenia.
 
-Syntax:  HELP [<COMMAND>]
+Składnia:  HELP [<POLECENIE>]
 
-    <COMMAND>   The command for which to display detail help.
+    <POLECENIE>   Polecenie, dla którego ma zostać wyświetlona szczegółowa
+                  pomoc.
 
-    If no command is specified, HELP will display all possible commands.
+    Jeśli polecenie nie jest określone, polecenie HELP wyświetla
+    wszystkie możliwe polecenia.
 
-Example:
+Przykład:
 
     HELP
     HELP CREATE PARTITION PRIMARY
@@ -4630,25 +4645,26 @@ Beispiel:
     INACTIVE
 .
 Language=Polish
-    On disks with master boot record (MBR) disk formatting, marks
-    the partition with focus as inactive.
+    Na dyskach zawierających formatowanie z głównym rekordem rozruchowym (MBR)
+    oznacza partycję, na której jest ustawiony fokus, jako nieaktywną.
 
-Syntax:  INACTIVE
+Składnia:  INACTIVE
 
-    The computer may start from the next option specified in the BIOS such as a
-    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
-    environment (such as Remote Installation Services (RIS)) when you restart
-    the computer.
+    Podczas ponownego uruchamiania komputer może zostać uruchomiony według
+    następnej opcji określonej w systemie BIOS, takiej jak stacja dysków
+    CD-ROM lub środowisko rozruchowe oparte na środowisku PXE (Pre-Boot
+    eXecution Environment), na przykład usługi instalacji zdalnej (RIS).
 
-    A partition must be selected for this operation to succeed.
+    Aby operacja się powiodła, musi być wybrana partycja.
 
-    Caution:
+    Uwaga:
 
-        Your computer might not start without an active partition. Do not mark
-        a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        Komputer może nie zostać uruchomiony bez aktywnej partycji. Jeśli
+        użytkownik nie dysponuje doświadczeniem w zakresie zarządzania
+        magazynami systemu Windows, nie powinien oznaczać partycji systemowej
+        ani rozruchowej jako nieaktywnej.
 
-Example:
+Przykład:
 
     INACTIVE
 .
@@ -4872,27 +4888,28 @@ Beispiel:
     LIST DISK
 .
 Language=Polish
-    Displays a list of disks.
+    Wyświetla listę dysków.
 
-Syntax:  LIST DISK
+Składnia:  LIST DISK
 
-    Displays a list of disks and information about them, such as their
-    size, amount of available free space, whether the disk is a basic
-    or dynamic disk, and whether the disk uses the master boot record
-    (MBR) or GUID partition table (GPT) partition style. The disk marked
-    with an asterisk (*) has focus.
+    Wyświetla listę dysków oraz dotyczące ich informacje, takie jak rozmiar,
+    ilość dostępnego wolnego miejsca, informację, czy dysk jest podstawowy
+    lub dynamiczny oraz czy dysk używa głównego rekordu rozruchowego (MBR)
+    lub stylu partycji tabeli partycji identyfikatora GUID (GPT). Fokus jest
+    ustawiony na dysku oznaczonym gwiazdką (*).
 
-    Note that the FREE column does not display the total amount of free
-    space on the disk, but rather the amount of usable free space left
-    on the disk. For example, if you have a 10GB disk with 4 primary
-    partitions covering 5GB, there is no usable free space left (no
-    more partitions may be created). Another example would be you have
-    a 10GB disk with 3 primary partitions and an extended partition
-    covering 8GB. The exended partition is of size 3GB with one logical
-    drive of size 2GB. The disk will show only 1GB as free - the
-    1GB of free space in the extended partition.
+    Należy zauważyć, że w kolumnie WOLNE nie jest wyświetlana całkowita
+    ilość wolnego miejsca na dysku, ale ilość pozostałego wolnego miejsca
+    na dysku zdatnego do użytku. Jeśli na przykład dysk o pojemności 10 GB
+    zawiera 4 partycje główne zajmujące 5 GB, na dysku nie ma wolnego
+    miejsca (nie można utworzyć następnych partycji). W innym przykładzie
+    dysk o pojemności 10 GB zawiera 3 partycje główne oraz partycję
+    rozszerzoną zajmujące 8 GB. Partycja rozszerzona ma rozmiar 3 GB
+    przy jednym dysku logicznym o rozmiarze 2 GB. Na dysku zostanie
+    pokazany tylko 1 GB wolnego miejsca i jest to 1 GB wolnego miejsca
+    w partycji rozszerzonej.
 
-Example:
+Przykład:
 
     LIST DISK
 .
@@ -5106,17 +5123,18 @@ Beispiel:
     LIST PARTITION
 .
 Language=Polish
-    Displays a list of partitions in the partition table for the selected disk.
+    Wyświetla listę partycji znajdujących się w tabeli partycji wybranego
+    dysku.
 
-Syntax:  LIST PARTITION
+Składnia:  LIST PARTITION
 
-    On dynamic disks, the partitions do not neccessarily correspond to the
-    dynamic volumes on the disk. Partitions may not be created or deleted
-    on dynamic disks.
+    Na dyskach dynamicznych partycje nie muszą być zgodne z woluminami
+    dynamicznymi na dysku. Partycji nie można tworzyć na dyskach dynamicznych
+    ani ich usuwać z takich dysków.
 
-    A disk must be selected for this operation to succeed.
+    Aby ta operacja się powiodła, musi być wybrany dysk.
 
-Example:
+Przykład:
 
     LIST PARTITION
 .
@@ -5251,12 +5269,12 @@ Beispiel:
     LIST VOLUME
 .
 Language=Polish
-    Displays a list of basic and dynamic volumes which are installed on the local
-    machine.
+    Wyświetla listę woluminów podstawowych i dynamicznych zainstalowanych
+    w komputerze lokalnym.
 
-Syntax:  LIST VOLUME
+Składnia:  LIST VOLUME
 
-Example:
+Przykład:
 
     LIST VOLUME
 .
@@ -5554,16 +5572,16 @@ Beispiel:
     ASSIGN f:
 .
 Language=Polish
-    Provides a way to add comments to a script.
+    Umożliwia dodawanie komentarzy do skryptu.
 
-Syntax:  REM
+Składnia:  REM
 
-Example:
+Przykład:
 
-    In this example script, REM is used to provide a comment about what the
-    script does.
+    W tym przykładowym skrypcie polecenie REM zostało użyte w celu dodania
+    komentarza opisującego działanie skryptu.
 
-    REM These commands set up 3 drives.
+    REM Te polecenia konfigurują trzy dyski.
     CREATE PARTITION PRIMARY SIZE=2048
     ASSIGN d:
     CREATE PARTITION EXTEND
@@ -5802,11 +5820,11 @@ Beispiel:
     RESCAN
 .
 Language=Polish
-    Locates new disks that may have been added to the computer.
+    Lokalizuje nowe dyski, które można dodać do komputera.
 
-Syntax:  RESCAN
+Składnia:  RESCAN
 
-Example:
+Przykład:
 
     RESCAN
 .
@@ -6039,40 +6057,44 @@ Beispiele:
     SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Polish
-    Selects the specified disk and shifts the focus to it.
+    Wybiera określony dysk i przenosi na niego fokus.
 
-Syntax:  SELECT DISK=<N>
-         SELECT DISK=SYSTEM
-         SELECT DISK=NEXT
-         SELECT DISK=<Path>
+Składnia:  SELECT DISK=<N>
+           SELECT DISK=SYSTEM
+           SELECT DISK=NEXT
+           SELECT DISK=<Ścieżka>
 
     DISK=<N>
-                The DiskPart disk index number of the disk to receive
-                focus.
+                Numer indeksu dysku w programie DiskPart odpowiadający
+                dyskowi, na którym ma zostać ustawiony fokus.
 
-    DISK=<Path>
-                The location path of the disk to receive focus.
+    DISK=<Ścieżka>
+                Ścieżka lokalizacji dysku, na którym ma zostać
+                ustawiony fokus.
 
     DISK=SYSTEM
-                On BIOS machines, BIOS disk 0 will receive focus.
-                On EFI machines, the disk containing the ESP partition
-                used for the current boot will receive focus. On EFI
-                machines, if there is no ESP, or there is more than
-                one ESP present, or the machine is booted from Windows PE,
-                the command will fail.
+                Na komputerach z systemem BIOS fokus zostanie ustawiony na
+                dysku 0 systemu BIOS. Na komputerach z interfejsem EFI
+                fokus zostanie ustawiony na dysku zawierającym partycję ESP
+                użytą do wykonania bieżącego rozruchu. Wykonanie polecenia
+                nie powiedzie się na komputerach z interfejsem EFI,
+                na których nie ma partycji ESP lub jest kilka partycji ESP,
+                oraz gdy rozruch komputera nastąpił w środowisku Windows PE.
 
     DISK=NEXT
-                Once a disk is selected, this command is used to iterate
-                over all disks in the disk list. The next disk in the list
-                will receive focus. If the next disk is the start of the
-                enumeration, the command will fail and no disk will have
-                focus.
+                Po wybraniu dysku to polecenie jest używane do przejścia
+                przez wszystkie dyski znajdujące się na liście dysków.
+                Fokus zostanie ustawiony na następnym dysku na liście.
+                Jeśli następny dysk jest na początku wyliczania, wykonanie
+                polecenia nie powiedzie się i fokus nie zostanie ustawiony
+                na żadnym dysku.
 
-    If no options are specified, the select command lists the disk that
-    currently has the focus. You can view the DiskPart index numbers
-    for all disks on the computer by using the LIST DISK command.
+    Jeśli żadne opcje nie są określone, polecenie SELECT wyświetla dysk,
+    na którym obecnie jest ustawiony fokus. Numery indeksu w programie
+    DiskPart odpowiadające wszystkim dyskom w komputerze można wyświetlić
+    za pomocą polecenia LIST DISK.
 
-Example:
+Przykłady:
 
     SELECT DISK=1
     SELECT DISK=SYSTEM
@@ -6413,23 +6435,23 @@ Beispiel:
     SELECT PARTITION=1
 .
 Language=Polish
-    Selects the specified partition and shifts the focus to it.
+    Wybiera określoną partycję i przenosi na nią fokus.
 
-Syntax:  SELECT PARTITION=<N>
+Składnia:  SELECT PARTITION=<N>
 
     PARTITION=<N>
 
-                The number of the partition to receive the focus.
+                Numer partycji, na której ma zostać ustawiony fokus.
 
-    If no partition is specified, the select command lists the current
-    partition with focus. You can specify the partition by its number. You can
-    view the numbers of all partitions on the current disk by using the list
-    partition command.
+    Jeśli żadna partycja nie jest określona, polecenie SELECT wyświetla
+    partycję, na której obecnie jest ustawiony fokus. Partycję można
+    określić, podając jej numer. Wszystkie numery partycji na bieżącym dysku
+    można wyświetlić za pomocą polecenia LIST PARTITION.
 
-    You must first select a disk using the DiskPart select disk command before
-    you can select a partition.
+    Przed wybraniem partycji należy wybrać dysk przy użyciu polecenia
+    SELECT DISK programu DiskPart.
 
-Example:
+Przykład:
 
     SELECT PARTITION=1
 .
@@ -6632,22 +6654,23 @@ Beispiel:
     SELECT VOLUME=C:\\MountH
 .
 Language=Polish
-    Selects the specified volume and shifts the focus to it.
+    Wybiera określony wolumin i ustawia na nim fokus.
 
-Syntax:  SELECT VOLUME={<N> | <D>}
+Składnia:  SELECT VOLUME={<N> | <D>}
 
-    VOLUME=<N>  The number of the volume to receive the focus.
+    VOLUME=<N>  Numer woluminu, na którym ma zostać ustawiony fokus.
 
-    VOLUME=<D>  The drive letter or mounted folder path of the volume
-                to receive the focus.
+    VOLUME=<D>  Litera dysku lub ścieżka zainstalowanego folderu woluminu,
+                na którym ma zostać ustawiony fokus.
 
-    If no volume is specified, the select command lists the current volume with
-    focus. You can specify the volume by number, drive letter, or mounted folder
-    path. On a basic disk, selecting a volume also gives the corresponding
-    partition focus. You can view the numbers of all volumes on the computer by
-    using the list volume command.
+    Jeśli żaden wolumin nie jest określony, polecenie SELECT wyświetla
+    wolumin, na którym obecnie jest ustawiony fokus. Wolumin można określić,
+    podając jego numer, literę dysku lub ścieżkę zainstalowanego woluminu.
+    Na dysku podstawowym fokus jest ustawiany również na partycji
+    odpowiadającej woluminowi. Numery wszystkich woluminów na komputerze można
+    wyświetlić przy użyciu polecenia LIST VOLUME.
 
-Example:
+Przykład:
 
     SELECT VOLUME=1
     SELECT VOLUME=C
@@ -7024,84 +7047,92 @@ Beispiel:
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=Polish
-    Changes the partition type field for the partition with focus.
+    Zmienia zawartość pola typu partycji dla partycji, na której ustawiony
+    jest fokus.
 
-Syntax:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
+Składnia:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
     ID={<BYTE> | <GUID>}
 
-                Specifies the new partition type.
-                For master boot record (MBR) disks, you can specify a partition
-                type byte, in hexadecimal form, for the partition. Any
-                partition type byte can be specified with this parameter except
-                for type 0x42 (LDM partition). Note that the leading '0x' is 
-                omitted when specifying the hexadecimal partition type.
+                Określa nowy typ partycji.
+                W przypadku dysków z głównym rekordem rozruchowym (MBR)
+                można określić bajt typu partycji w formie szesnastkowej.
+                Za pomocą tego parametru można określić dowolny bajt typu
+                partycji z wyjątkiem typu 0x42 (partycja LDM). W przypadku
+                określania szesnastkowego typu partycji znaki '0x'
+                na początku są pomijane.
 
-                For GUID partition table (GPT) disks you can specify a
-                partition type GUID for the partition. Recognized GUIDs
-                include:
+                W przypadku dysków z tablicą partycji GUID (GPT) można
+                określić identyfikator GUID typu partycji. Rozpoznawane
+                identyfikatory GUID są następujące:
 
-                    EFI System partition:
+                    Partycja systemowa EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Basic data partition:
+                    Podstawowa partycja danych:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
-                Any partition type GUID can be specified with this parameter
-                except for the following:
+                Za pomocą tego parametru można określić dowolny identyfikator
+                GUID typu partycji z wyjątkiem następujących:
 
-                    Microsoft Reserved partition:
+                    Partycja zastrzeżona firmy Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215a
 
-                    LDM Metadata partition on a dynamic disk:
+                    Partycja metadanych LDM na dysku dynamicznym:
                         5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
 
-                    LDM Data partition on a dynamic disk:
+                    Partycja danych LDM na dysku dynamicznym:
                         af9b60a0-1431-4f62-bc68-3311714a69ad
 
-                    Cluster Metadata partition:
+                    Partycja metadanych klastra:
                         db97dba9-0840-4bae-97f0-ffb9a327c7e1
 
 
-                Other than the limitations mentioned, DiskPart otherwise does
-                not check the partition type for validity except to ensure that
-                it is a byte in hexadecimal form or a GUID.
+                Oprócz wspomnianych ograniczeń program DiskPart nie sprawdza
+                poprawności typu partycji. Sprawdza jedynie, czy podana
+                wartość ma postać szesnastkową lub jest identyfikatorem GUID.
 
-    OVERRIDE    Enables DiskPart to force the file system on the volume to
-                dismount before changing the partition type. When changing
-                the partition type, DiskPart will attempt to lock and dismount
-                the file system on the volume. If this parameter is not specified,
-                and the call to lock the file system fails, (because some other
-                application has an open handle to the volume), the entire
-                operation will fail. When this parameter is specified, the
-                dismount is forced even if the call to lock the file system
-                fails. When a file system is dismounted, all opened handles to
-                the volume will become invalid.
+    OVERRIDE    Powoduje, że przed zmianą typu partycji program DiskPart
+                wymusza odinstalowanie systemu plików w woluminie. Podczas
+                zmiany typu partycji program DiskPart podejmie próbę
+                zablokowania i odinstalowania systemu plików w woluminie.
+                Jeśli nie określono tego parametru, a wywołanie w celu
+                zablokowania systemu plików nie powiedzie się (ponieważ inna
+                aplikacja korzysta z otwartego dojścia do woluminu), cała
+                operacja zakończy się niepowodzeniem. Jeśli określono ten
+                parametr, odinstalowanie jest wymuszane nawet wtedy,
+                gdy wywołanie w celu zablokowania systemu plików nie
+                powiedzie się. Po odinstalowaniu systemu plików wszystkie
+                otwarte dojścia do woluminu staną się nieprawidłowe.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program
+                DiskPart kontynuuje przetwarzanie poleceń, tak jakby błąd.
+                nie wystąpił. W przypadku braku parametru NOERR błąd
+                powoduje zakończenie działania programu DiskPart
+                i zwrócenie kodu błędu.
 
-    Intended for Original Equipment Manufacturer (OEM) use only.
+    Polecenie przeznaczone tylko do użytku przez producentów oryginalnego
+    sprzętu (OEM).
 
-    A partition must be selected for this operation to succeed.
+    Aby ta operacja się powiodła, musi być wybrana partycja.
 
-    Caution:
+    Uwaga:
 
-        Changing partition type fields with this parameter might cause your
-        computer to fail or be unable to start up. Unless you are an OEM or an
-        IT professional experienced with GPT disks, do not change partition
-        type fields on GPT disks using this parameter. Instead, always use the
-        CREATE PARTITION EFI command to create EFI System partitions, the
-        CREATE PARTITION MSR command to create Microsoft Reserved partitions,
-        and the CREATE PARTITION PRIMARY command without the ID parameter to
-        create primary partitions on GPT disks.
+        Zmiana pól typu partycji z tym parametrem może sprawić, że komputer
+        ulegnie awarii lub nie będzie można go uruchomić. Jeśli użytkownik
+        nie jest producentem OEM ani informatykiem dysponującym
+        doświadczeniem w zakresie dysków GPT, nie powinien zmieniać pól typu
+        partycji na dyskach GPT przy użyciu tego parametru. Zamiast tego
+        należy zawsze używać polecenia CREATE PARTITION EFI do tworzenia
+        partycji systemowych EFI, polecenia CREATE PARTITION MSR
+        do tworzenia partycji zastrzeżonej firmy Microsoft oraz polecenia
+        CREATE PARTITION PRIMARY bez parametru ID do tworzenia partycji
+        podstawowych na dyskach GPT.
 
-    This command does not work on dynamic disks nor on Microsoft Reserved
-    partitions.
+    To polecenie nie działa na dyskach dynamicznych ani na partycjach
+    zastrzeżonych firmy Microsoft.
 
-Example:
+Przykłady:
     SET ID=07 OVERRIDE
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
@@ -7770,27 +7801,28 @@ Beispiel:
     UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Polish
-    Displays or sets the GUID partition table (GPT) identifier or master boot
-    record (MBR) signature for the disk with focus.
+    Wyświetla lub ustawia identyfikator tabeli partycji GUID (GPT) lub podpis
+    głównego rekordu rozruchowego (MBR) dla dysku z fokusem.
 
-Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+Składnia:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
 
     ID={<DWORD> | <GUID>}
 
-                For MBR disks, you can specify a four-byte (DWORD) value in
-                hexadecimal form for the signature.
+                Dla dysków MBR można określić czterobajtową wartość (DWORD)
+                podpisu w postaci szesnastkowej.
 
-                For GPT disks, specify a GUID for the identifier.
+                Dla dysków GPT należy określić ident. GUID jako identyfikator.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko dla skryptów. W przypadku wystąpienia błędu program
+                DiskPart kontynuuje przetwarzanie poleceń, tak jakby błąd
+                nie wystąpił. W przypadku braku parametru NOERR błąd
+                powoduje zakończenie działania programu DiskPart i zwrócenie
+                kodu błędu.
 
-    A disk must be selected for this operation to succeed.  This command works
-    on basic and dynamic disks.
+    Aby ta operacja powiodła się, musi być wybrany dysk. To polecenie działa
+    dla dysków podstawowych i dynamicznych.
 
-Example:
+Przykład:
 
     UNIQUEID DISK
     UNIQUEID DISK ID=5f1b2c36
