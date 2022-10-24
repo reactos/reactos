@@ -1571,16 +1571,10 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     PDESKTOP pdesk = pti->rpdesk;
 
     if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME)) // Disabled?
-    {
-        ERR("IME is disabled\n");
         return NULL;
-    }
 
     if (!pdesk) // No desktop?
-    {
-        ERR("!pdesk\n");
         return NULL;
-    }
 
     // pti->spDefaultImc should be already set if non-first time.
     if (dwClientImcData && !pti->spDefaultImc)
