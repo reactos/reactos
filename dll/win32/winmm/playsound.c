@@ -61,6 +61,7 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     HMMIO  	hmmio;
     HKEY        hUserKey, hRegSnd, hRegApp, hScheme, hSnd;
     DWORD       err, type, count;
+    BOOL bIsDefault;
 
     static const WCHAR  wszSounds[] = {'S','o','u','n','d','s',0};
     static const WCHAR  wszDefault[] = {'D','e','f','a','u','l','t',0};
@@ -72,12 +73,17 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     static const WCHAR  wszNull[] = {0};
 
     TRACE("searching in SystemSound list for %s\n", debugstr_w(lpszName));
-    GetProfileStringW(wszSounds, lpszName, wszNull, str, sizeof(str)/sizeof(str[0]));
+
+    bIsDefault = (_wcsicmp(lpszName, L"SystemDefault") == 0);
+
+    GetProfileStringW(wszSounds,
+                      bIsDefault ? wszDefault : lpszName,
+                      wszNull,
+                      str,
+                      sizeof(str)/sizeof(str[0]));
     if (lstrlenW(str) == 0)
     {
-	if (uFlags & SND_NODEFAULT) goto next;
-	GetProfileStringW(wszSounds, wszDefault, wszNull, str, sizeof(str)/sizeof(str[0]));
-	if (lstrlenW(str) == 0) goto next;
+        goto next;
     }
     for (ptr = str; *ptr && *ptr != ','; ptr++);
     if (*ptr) *ptr = 0;
@@ -126,7 +132,9 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     }
     RegCloseKey(hRegSnd);
     if (err != 0) goto none;
-    err = RegOpenKeyW(hRegApp, lpszName, &hScheme);
+    err = RegOpenKeyW(hRegApp,
+                      bIsDefault ? wszDotDefault : lpszName,
+                      &hScheme);
     RegCloseKey(hRegApp);
     if (err != 0) goto none;
     
@@ -187,43 +195,42 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
 
 static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
 {
-    PVOID data;
-    HMMIO hmmio;
+    BOOL bIsDefault = FALSE;
+    HMMIO hmmio = NULL;
 
     TRACE("SoundName=%s !\n", debugstr_w(pszSound));
 
-    /* if resource, grab it */
-    if ((fdwSound & SND_RESOURCE) == SND_RESOURCE)
-    {
-        HRSRC hRes;
-        HGLOBAL hGlob;
-
-        hRes = FindResourceW(hMod, pszSound, L"WAVE");
-        hGlob = LoadResource(hMod, hRes);
-        if (!hRes || !hGlob)
-        {
-            return NULL;
-        }
-
-        data = LockResource(hGlob);
-        if (!data)
-        {
-            FreeResource(hGlob);
-            return NULL;
-        }
-
-        FreeResource(hGlob);
-    }
-    else
-    {
-        data = (PVOID)pszSound;
-    }
-
-    /* construct an MMIO stream (either in memory, or from a file
-     * NOTE: SND_RESOURCE has the SND_MEMORY bit set */
     if (fdwSound & SND_MEMORY)
     {
+        PVOID data;
         MMIOINFO mminfo;
+
+        /* NOTE: SND_RESOURCE has the SND_MEMORY bit set */
+        if ((fdwSound & SND_RESOURCE) == SND_RESOURCE)
+        {
+            HRSRC hRes;
+            HGLOBAL hGlob;
+
+            hRes = FindResourceW(hMod, pszSound, L"WAVE");
+            hGlob = LoadResource(hMod, hRes);
+            if (!hRes || !hGlob)
+            {
+                goto Quit;
+            }
+
+            data = LockResource(hGlob);
+            if (!data)
+            {
+                FreeResource(hGlob);
+                goto Quit;
+            }
+
+            FreeResource(hGlob);
+        }
+        else
+        {
+            data = (PVOID)pszSound;
+        }
         
         ZeroMemory(&mminfo, sizeof(mminfo));
         mminfo.fccIOProc = FOURCC_MEM;
@@ -236,10 +243,11 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
     }
     else if (fdwSound & SND_ALIAS)
     {
+        LPWSTR pszName;
+
+        /* NOTE: SND_ALIAS_ID has the SND_ALIAS bit set */
         if ((fdwSound & SND_ALIAS_ID) == SND_ALIAS_ID)
         {
-            LPWSTR pszName;
-
             if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMASTERISK)
                 pszName = L"SystemAsterisk";
             else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMDEFAULT)
@@ -257,14 +265,15 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
             else if (pszSound == (LPCWSTR)SND_ALIAS_SYSTEMWELCOME)
                 pszName = L"SystemWelcome";
             else
-                return NULL;
-
-            hmmio = get_mmioFromProfile(fdwSound & ~(SND_ALIAS_ID ^ SND_ALIAS), pszName);
+                goto Quit;
         }
         else
         {
-            hmmio = get_mmioFromProfile(fdwSound, pszSound);
+            pszName = (LPWSTR)pszSound;
         }
+
+        bIsDefault = (_wcsicmp(pszName, L"SystemDefault") == 0);
+        hmmio = get_mmioFromProfile(fdwSound, pszName);
     }
     else if (fdwSound & SND_FILENAME)
     {
@@ -272,13 +281,34 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
     }
     else
     {
-        hmmio = get_mmioFromProfile(fdwSound | SND_NODEFAULT, pszSound);
+        hmmio = get_mmioFromProfile(fdwSound, pszSound);
         if (!hmmio)
         {
             hmmio = get_mmioFromFile(pszSound);
-            if (!hmmio)
+        }
+    }
+
+Quit:
+    if (!hmmio && !(fdwSound & SND_NODEFAULT))
+    {
+        if (fdwSound & SND_APPLICATION)
+        {
+            if (!bIsDefault)
             {
-                hmmio = get_mmioFromProfile(fdwSound, pszSound);
+                /* Find application-defined default sound */
+                hmmio = get_mmioFromProfile(fdwSound, L"SystemDefault");
+                if (hmmio)
+                    return hmmio;
+            }
+
+            /* Find system default sound */
+            hmmio = get_mmioFromProfile(fdwSound & ~SND_APPLICATION, L"SystemDefault");
+        }
+        else
+        {
+            if (!bIsDefault)
+            {
+                hmmio = get_mmioFromProfile(fdwSound, L"SystemDefault");
             }
         }
     }
@@ -387,6 +417,7 @@ static WINE_PLAYSOUND* PlaySound_AllocAndGetMMIO(const void* pszSound, HMODULE h
     wps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wps));
     if (wps)
     {
+        /* construct an MMIO stream (either in memory, or from a file) */
         wps->hmmio = PlaySound_GetMMIO(pszSoundW, hmod, fdwSound);
         if (!wps->hmmio)
         {
