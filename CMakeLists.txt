@@ -147,9 +147,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     endif()
     add_subdirectory(sdk/include/host)
 
-    if(NOT MSVC)
-        add_subdirectory(dll/win32/dbghelp)
-    endif()
+    add_subdirectory(dll/win32/dbghelp)
     add_subdirectory(sdk/tools)
     add_subdirectory(sdk/lib)
 

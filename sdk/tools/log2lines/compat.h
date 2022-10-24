@@ -2,6 +2,10 @@
 
 #if defined(_WIN32)
 
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
+
 #include <direct.h>
 
 #define POPEN           _popen
@@ -30,5 +34,9 @@
 #define DIR_FMT         "find %s -type f > %s"
 
 #endif /* not defined (_WIN32) */
+
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
 
 /* EOF */
