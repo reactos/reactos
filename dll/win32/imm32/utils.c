@@ -73,7 +73,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     WORD wPrimary = PRIMARYLANGID(LangID);
     if (wPrimary != LANG_JAPANESE || wPrimary != LANG_KOREAN)
     {
-        WARN("The country has no special IME support\n");
+        TRACE("The country has no special IME support\n");
         return FALSE;
     }
     return TRUE;
