@@ -633,7 +633,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     if (pSrc->dwVersion != 0)
     {
-        ERR("dwVersion must be zero\n");
+        ERR("\n");
         return 0;
     }
 
@@ -695,7 +695,10 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     LPSTR pchDest;
 
     if (pSrc->dwVersion != 0)
+    {
+        ERR("\n");
         return 0;
+    }
 
     cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
                                   NULL, 0, NULL, NULL);
