@@ -895,39 +895,42 @@ Beispiel:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Polish
-    Creates an extended partition on the disk with focus.
-    Applies to master boot record (MBR) disks only.
+    Tworzy partycję rozszerzoną na dysku mającym fokus.
+    Dotyczy tylko dysków z głównym rekordem rozruchowym (MBR).
 
-Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Składnia:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more free
-                space in the extended partition.
+    SIZE=<N>    Rozmiar partycji w megabajtach (MB). Jeśli nie podano
+                rozmiaru, partycja zajmuje całe wolne miejsce na partycji
+                rozszerzonej.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
-                created. If no offset is given, the partition will start
-                at the beginning of the first free space on the disk that
-                is large enough to hold the new partition.
+    OFFSET=<N>  Przesunięcie w kilobajtach (KB), przy którym zostanie
+                utworzona partycja. Jeśli nie podano przesunięcia, partycja
+                zostanie umieszczona na początku pierwszego wolnego miejsca
+                na dysku, w którym się zmieści.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Zazwyczaj używany z numerami jednostek logicznych (LUN)
+                sprzętowych macierzy RAID w celu poprawienia wydajności.
+                Przesunięcie partycji będzie wielokrotnością liczby <N>.
+                Jeśli nie określono parametru OFFSET, jest ono zaokrąglane
+                do najbliższej wielokrotności liczby <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program
+                DiskPart kontynuuje przetwarzanie poleceń tak, jakby błąd
+                nie wystąpił. W przypadku braku parametru NOERR błąd powoduje
+                zakończenie działania programu DiskPart i zwrócenie
+                kodu błędu.
 
-    After the partition has been created, the focus automatically shifts to the
-    new partition. Only one extended partition can be created per disk. This
-    command fails if you attempt to create an extended partition within another
-    extended partition. You must create an extended partition before you can
-    create logical partitions.
+    Po utworzeniu nowej partycji automatycznie otrzymuje ona fokus. Na każdym
+    dysku można utworzyć tylko jedną partycję rozszerzoną. To polecenie
+    zakończy się niepowodzeniem w przypadku próby utworzenia partycji
+    rozszerzonej w obrębie innej partycji rozszerzonej. Konieczne jest
+    utworzenie partycji rozszerzonej przed utworzeniem partycji logicznych.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Aby operacja została wykonana pomyślnie, musi być wybrany podstawowy
+    dysk MBR.
 
-Example:
+Przykład:
 
     CREATE PARTITION EXTENDED SIZE=1000
 .
@@ -1268,38 +1271,38 @@ Beispiel:
     CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Polish
-    Creates a logical partition in an extended partition.
-    Applies to master boot record (MBR) disks only.
+    Tworzy partycję logiczną w obrębie partycji rozszerzonej.
+    Dotyczy tylko dysków z głównym rekordem rozruchowym (MBR).
 
-Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Składnia:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
-                at least as big in bytes as the number specified by N. If you
-                specify a size for the logical partition, it must be smaller
-                than the extended partition. If no size is given, the partition
-                continues until there is no more free space in the extended
-                partition.
+    SIZE=<N>    Rozmiar partycji w megabajtach (MB). Partycja ma przynajmniej
+                taki rozmiar w bajtach, jak podana liczba N.
+                Określany rozmiar partycji logicznej musi być mniejszy od
+                rozmiaru partycji rozszerzonej. Jeśli nie podano rozmiaru,
+                partycja zajmuje całe wolne miejsce w bieżącym obszarze.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
-                If no offset is given, the partition is placed in the first disk
-                extent that is large enough to hold it.
+    OFFSET=<N>  Przesunięcie w kilobajtach (KB), przy którym zostanie utworzona
+                partycja. Jeśli nie podano przesunięcia, partycja zostanie
+                umieszczona w pierwszym zakresie dysku, w którym się zmieści.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Zazwyczaj używany z numerami jednostek logicznych (LUN)
+                sprzętowych macierzy RAID w celu poprawienia wydajności.
+                Przesunięcie partycji będzie wielokrotnością liczby <N>.
+                Jeśli nie określono parametru OFFSET, jest ono zaokrąglane
+                do najbliższej wielokrotności liczby <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Tylko do obsługi skryptów. Po wystąpieniu błędu program DiskPart
+                kontynuuje przetwarzanie poleceń tak, jakby błąd nie wystąpił.
+                W przypadku braku parametru NOERR błąd powoduje, zakończenie
+                działania programu DiskPart i zwrócenie kodu błędu.
 
-    After the partition has been created, the focus automatically shifts to the
-    new logical partition.
+    Po utworzeniu nowej partycji logicznej automatycznie otrzymuje ona fokus.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Aby operacja została wykonana pomyślnie, musi być wybrany podstawowy
+    dysk MBR.
 
-Example:
+Przykład:
 
     CREATE PARTITION LOGICAL SIZE=1000
 .
