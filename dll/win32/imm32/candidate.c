@@ -400,7 +400,7 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     }
     else
     {
-        ERR("Invalid form index\n");
+        ERR("Out of boundary\n");
     }
 
     ImmUnlockIMC(hIMC);
