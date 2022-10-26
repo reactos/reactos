@@ -764,7 +764,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else /* Idle time! */
+        else /* Idle time! We spend gracefully this time */
         {
             if (GetTickCount() - dwOldTick >= 700)
             {
@@ -773,6 +773,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
                 else
                     Sleep(300); /* Not changed */
                 dwOldTick = GetTickCount();
+            }
+            else
+            {
+                Sleep(100);
             }
         }
     }
