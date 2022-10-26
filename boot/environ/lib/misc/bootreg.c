@@ -318,6 +318,7 @@ BiInitializeAndValidateHive (
     )
 {
     ULONG HiveSize;
+    CM_CHECK_REGISTRY_STATUS CmStatusCode;
     NTSTATUS Status;
 
     /* Make sure the hive is at least the size of a base block */
@@ -351,7 +352,12 @@ BiInitializeAndValidateHive (
     if (NT_SUCCESS(Status))
     {
         /* Cleanup volatile/old data */
-        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry
+        CmStatusCode = CmCheckRegistry(Hive->Hive, CM_CHECK_REGISTRY_BOOTLOADER_PURGE_VOLATILES | CM_CHECK_REGISTRY_VALIDATE_HIVE);
+        if (!CM_CHECK_REGISTRY_SUCCESS(CmStatusCode))
+        {
+            return STATUS_REGISTRY_CORRUPT;
+        }
+
         Status = STATUS_SUCCESS;
     }
 
