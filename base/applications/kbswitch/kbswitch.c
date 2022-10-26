@@ -66,6 +66,17 @@ GetLayoutID(LPCTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength)
 }
 
 static BOOL
+GetSystemLibraryPath(LPTSTR szPath, SIZE_T cchPath, LPCTSTR FileName)
+{
+    if (!GetSystemDirectory(szPath, cchPath))
+        return FALSE;
+
+    StringCchCat(szPath, cchPath, TEXT("\\"));
+    StringCchCat(szPath, cchPath, FileName);
+    return TRUE;
+}
+
+static BOOL
 GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
 {
     HKEY hKey;
@@ -131,18 +142,82 @@ GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
     /* Otherwise, use "Layout Text" value as an entry name */
     dwBufLen = NameLength * sizeof(TCHAR);
     if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL,
-                        (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
+                        (LPBYTE)szName, &dwBufLen) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
-        return TRUE;
+        return FALSE;
     }
 
     RegCloseKey(hKey);
-    return FALSE;
+    return TRUE;
+}
+
+static BOOL GetImeFile(LPTSTR szImeFile, SIZE_T cchImeFile, LPCTSTR szLCID)
+{
+    HKEY hKey;
+    DWORD dwBufLen;
+    TCHAR szBuf[MAX_PATH];
+
+    szImeFile[0] = UNICODE_NULL;
+
+    if ((szLCID[0] != TEXT('E') && szLCID[0] != TEXT('e')) || lstrlen(szLCID) != 8)
+        return FALSE;
+
+    StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
+                    _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    if (szLCID[0] == L'E' || szLCID[0] == L'e')
+    {
+        dwBufLen = cchImeFile * sizeof(TCHAR);
+        if (RegQueryValueEx(hKey, _T("IME File"), NULL, NULL,
+                            (LPBYTE)szImeFile, &dwBufLen) != ERROR_SUCCESS)
+        {
+            szImeFile[0] = UNICODE_NULL;
+        }
+    }
+
+    RegCloseKey(hKey);
+
+    return (szImeFile[0] != UNICODE_NULL);
+}
+
+typedef struct tagLOAD_ICON
+{
+    INT cxIcon, cyIcon;
+    HICON hIcon;
+} LOAD_ICON, *PLOAD_ICON;
+
+static BOOL CALLBACK
+EnumResNameProc(
+    HMODULE hModule,
+    LPCTSTR lpszType,
+    LPTSTR lpszName,
+    LPARAM lParam)
+{
+    PLOAD_ICON pLoadIcon = (PLOAD_ICON)lParam;
+    pLoadIcon->hIcon = (HICON)LoadImage(hModule, lpszName, IMAGE_ICON,
+                                        pLoadIcon->cxIcon, pLoadIcon->cyIcon, 0);
+    if (pLoadIcon->hIcon)
+        return FALSE;
+    return TRUE;
+}
+
+static HICON FakeExtractIcon(LPCTSTR szIconPath, INT cxIcon, INT cyIcon)
+{
+    LOAD_ICON LoadIcon = { cxIcon, cyIcon, NULL };
+    HMODULE hInst = LoadLibraryEx(szIconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    EnumResourceNames(hInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&LoadIcon);
+    FreeLibrary(hInst);
+    return LoadIcon.hIcon;
 }
 
 static HICON
-CreateTrayIcon(LPTSTR szLCID)
+CreateTrayIcon(LPTSTR szLCID, LPCTSTR szImeFile OPTIONAL)
 {
     LANGID LangID;
     TCHAR szBuf[4];
@@ -155,6 +230,13 @@ CreateTrayIcon(LPTSTR szLCID)
     HICON hIcon;
     INT cxIcon = GetSystemMetrics(SM_CXSMICON);
     INT cyIcon = GetSystemMetrics(SM_CYSMICON);
+    TCHAR szPath[MAX_PATH];
+
+    if (szImeFile && szImeFile[0])
+    {
+        GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), szImeFile);
+        return FakeExtractIcon(szPath, cxIcon, cyIcon);
+    }
 
     /* Getting "EN", "FR", etc. from English, French, ... */
     LangID = LANGIDFROMLCID(_tcstoul(szLCID, NULL, 16));
@@ -236,12 +318,14 @@ AddTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szLCID[CCH_LAYOUT_ID + 1], szName[MAX_PATH];
+    TCHAR szImeFile[50];
 
     GetLayoutID(_T("1"), szLCID, ARRAYSIZE(szLCID));
     GetLayoutName(_T("1"), szName, ARRAYSIZE(szName));
+    GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szLCID);
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
-    tnid.hIcon = CreateTrayIcon(szLCID);
+    tnid.hIcon = CreateTrayIcon(szLCID, szImeFile);
     StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
@@ -268,9 +352,11 @@ static VOID
 UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
+    TCHAR szImeFile[50];
+    GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szLCID);
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
-    tnid.hIcon = CreateTrayIcon(szLCID);
+    tnid.hIcon = CreateTrayIcon(szLCID, szImeFile);
     StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
@@ -455,12 +541,15 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 }
 
 LRESULT
-UpdateLanguageDisplayCurrent(HWND hwnd, WPARAM wParam)
+UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
 {
-    DWORD dwThreadID = GetWindowThreadProcessId((HWND)wParam, 0);
+    DWORD dwThreadID = GetWindowThreadProcessId(hwndFore, NULL);
     HKL hKL = GetKeyboardLayout(dwThreadID);
     return UpdateLanguageDisplay(hwnd, hKL);
 }
+
+#define TIMER_ID 999
+#define TIMER_INTERVAL 800
 
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -469,6 +558,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     static UINT s_uTaskbarRestart;
     POINT pt;
     HMENU hLeftPopupMenu;
+    LRESULT ret = 0;
+    HWND hwndFore;
 
     switch (Message)
     {
@@ -481,12 +572,27 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+
+            SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+            break;
+        }
+
+        case WM_TIMER:
+        {
+            static TCHAR s_szOldName[16] = TEXT("");
+            TCHAR szNewName[16] = TEXT("");
+            if (GetKeyboardLayoutName(szNewName) && lstrcmp(szNewName, s_szOldName) != 0)
+            {
+                UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
+                CopyMemory(s_szOldName, szNewName, sizeof(s_szOldName));
+            }
             break;
         }
 
         case WM_LANG_CHANGED:
         {
-            return UpdateLanguageDisplay(hwnd, (HKL)lParam);
+            UpdateLanguageDisplay(hwnd, (HKL)lParam);
+            break;
         }
 
         case WM_LOAD_LAYOUT:
@@ -499,7 +605,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOW_ACTIVATE:
         {
-            return UpdateLanguageDisplayCurrent(hwnd, wParam);
+            hwndFore = GetForegroundWindow();
+            ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+            break;
         }
 
         case WM_NOTIFYICONMSG:
@@ -576,17 +684,20 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETDEFAULTINPUTLANG)
             {
-                //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
+                hwndFore = GetForegroundWindow();
+                ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             }
-            if (wParam == SPI_SETNONCLIENTMETRICS)
+            else if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                return UpdateLanguageDisplayCurrent(hwnd, wParam);
+                hwndFore = GetForegroundWindow();
+                ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             }
         }
         break;
 
         case WM_DESTROY:
         {
+            KillTimer(hwnd, 999);
             DeleteHooks();
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
@@ -610,7 +721,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return 0;
+    return ret;
 }
 
 INT WINAPI
@@ -654,7 +765,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         return 1;
     }
 
-    hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    hwnd = CreateWindow(szKbSwitcherName, NULL, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
     RegisterShellHookWindow(hwnd);
 
