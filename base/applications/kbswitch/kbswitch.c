@@ -532,13 +532,16 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 {
     TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
     LANGID LangID;
+    static HKL s_hOldKL = NULL;
+    BOOL bChanged = (s_hOldKL != hKl);
 
     GetLayoutIDByHkl(hKl, szLCID, ARRAYSIZE(szLCID));
     LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
 
-    return 0;
+    s_hOldKL = hKl;
+    return bChanged;
 }
 
 LRESULT
@@ -761,12 +764,14 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
+        else /* Idle time! */
         {
             if (GetTickCount() - dwOldTick >= 700)
             {
-                UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
-                Sleep(300);
+                if (UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow()))
+                    Sleep(600); /* Changed */
+                else
+                    Sleep(300); /* Not changed */
                 dwOldTick = GetTickCount();
             }
         }
