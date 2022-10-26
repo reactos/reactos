@@ -1,8 +1,9 @@
 /*
- * PROJECT:   Registry manipulation library
- * LICENSE:   GPL - See COPYING in the top level directory
- * COPYRIGHT: Copyright 2005 Filip Navara <navaraf@reactos.org>
- *            Copyright 2001 - 2005 Eric Kohl
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Configuration Manager Library - CMLIB header
+ * COPYRIGHT:   Copyright 2001 - 2005 Eric Kohl
+ *              Copyright 2022 George Bișoc <george.bisoc@reactos.org>
  */
 
 #ifndef _CMLIB_H_
@@ -59,7 +60,9 @@
     #define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
     #define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
     #define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
+    #define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000D)
     #define STATUS_REGISTRY_CORRUPT          ((NTSTATUS)0xC000014C)
+    #define STATUS_REGISTRY_IO_FAILED        ((NTSTATUS)0xC000014D)
     #define STATUS_NOT_REGISTRY_FILE         ((NTSTATUS)0xC000015C)
     #define STATUS_REGISTRY_RECOVERED        ((NTSTATUS)0x40000009)
 
