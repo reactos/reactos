@@ -1473,6 +1473,7 @@ extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;
+extern BOOLEAN HvShutdownComplete;
 
 //
 // Inlined functions
