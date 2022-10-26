@@ -8,6 +8,7 @@
  */
 
 #include "kbswitch.h"
+#include <imm.h>
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
@@ -548,7 +549,9 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 LRESULT
 UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
 {
-    DWORD dwThreadID = GetWindowThreadProcessId(hwndFore, NULL);
+    HWND hIME = ImmGetDefaultIMEWnd(hwndFore);
+    HWND hwndTarget = (hIME ? hIME : hwndFore);
+    DWORD dwThreadID = GetWindowThreadProcessId(hwndTarget, NULL);
     HKL hKL = GetKeyboardLayout(dwThreadID);
     return UpdateLanguageDisplay(hwnd, hKL);
 }
