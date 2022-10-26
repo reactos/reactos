@@ -560,7 +560,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     POINT pt;
     HMENU hLeftPopupMenu;
     LRESULT ret = 0;
-    HWND hwndFore;
 
     switch (Message)
     {
@@ -592,7 +591,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOW_ACTIVATE:
         {
-            hwndFore = GetForegroundWindow();
+            HWND hwndFore = GetForegroundWindow();
             ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             break;
         }

@@ -453,7 +453,7 @@ InputList_Process(VOID)
     /* Change the default keyboard language */
     if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
     {
-        DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS; /* confirmed in 2k and xp */
+        DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
 
         BroadcastSystemMessageW(BSF_POSTMESSAGE,
                                 &dwRecipients,
