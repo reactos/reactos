@@ -423,6 +423,9 @@ InputList_Process(VOID)
         {
             bRet = InputList_SetFontSubstitutes(pCurrent->pLocale->dwId);
             InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, 1, pCurrent);
+
+            /* Activate the DEFAULT entry */
+            ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
             break;
         }
     }
@@ -445,19 +448,6 @@ InputList_Process(VOID)
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         pCurrent->wFlags &= ~(INPUT_LIST_NODE_FLAG_ADDED | INPUT_LIST_NODE_FLAG_EDITED);
-    }
-
-    /* Activate the DEFAULT entry */
-    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
-    {
-        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
-            continue;
-
-        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
-        {
-            ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
-            break;
-        }
     }
 
     /* Change the default keyboard language */
