@@ -160,7 +160,10 @@ static BOOL GetImeFile(LPTSTR szImeFile, SIZE_T cchImeFile, LPCTSTR szLCID)
 
     szImeFile[0] = UNICODE_NULL;
 
-    if ((szLCID[0] != TEXT('E') && szLCID[0] != TEXT('e')) || lstrlen(szLCID) != 8)
+    if (_tcslen(szLCID) != CCH_LAYOUT_ID)
+        return FALSE;
+
+    if (szLCID[0] != TEXT('E') && szLCID[0] != TEXT('e'))
         return FALSE;
 
     StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
@@ -350,6 +353,7 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szImeFile[50];
+
     GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szLCID);
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
