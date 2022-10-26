@@ -504,8 +504,16 @@ SetHooks(VOID)
 VOID
 DeleteHooks(VOID)
 {
-    if (KbSwitchDeleteHooks) KbSwitchDeleteHooks();
-    if (g_hHookDLL) FreeLibrary(g_hHookDLL);
+    if (KbSwitchDeleteHooks)
+    {
+        KbSwitchDeleteHooks();
+        KbSwitchDeleteHooks = NULL;
+    }
+    if (g_hHookDLL)
+    {
+        FreeLibrary(g_hHookDLL);
+        g_hHookDLL = NULL;
+    }
 }
 
 ULONG
