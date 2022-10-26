@@ -1443,13 +1443,6 @@ HvInitialize(
         }
     }
 
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* HACK: ROS: Init root key cell and prepare the hive */
-    // r31253
-    // if (OperationType == HINIT_CREATE) CmCreateRootNode(Hive, L"");
-    if (OperationType != HINIT_CREATE) CmPrepareHive(Hive);
-
     return Status;
 }
 

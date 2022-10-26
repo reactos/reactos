@@ -637,11 +637,6 @@ CmCreateRootNode(
    PHHIVE Hive,
    PCWSTR Name);
 
-VOID CMAPI
-CmPrepareHive(
-   PHHIVE RegistryHive);
-
-
 /* NT-style Public Cm functions */
 
 //
