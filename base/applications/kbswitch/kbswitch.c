@@ -201,7 +201,8 @@ EnumResNameProc(
 {
     PLOAD_ICON pLoadIcon = (PLOAD_ICON)lParam;
     pLoadIcon->hIcon = (HICON)LoadImage(hModule, lpszName, IMAGE_ICON,
-                                        pLoadIcon->cxIcon, pLoadIcon->cyIcon, 0);
+                                        pLoadIcon->cxIcon, pLoadIcon->cyIcon,
+                                        LR_DEFAULTCOLOR);
     if (pLoadIcon->hIcon)
         return FALSE;
     return TRUE;
@@ -771,6 +772,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
                     Sleep(600); /* Changed */
                 else
                     Sleep(300); /* Not changed */
+
                 dwOldTick = GetTickCount();
             }
             else
