@@ -289,7 +289,7 @@ GetLayoutIDByHkl(HKL hKl, LPTSTR szLayoutID, SIZE_T LayoutIDLength)
 static BOOL CALLBACK
 EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 1, lParam);
+    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, INPUTLANGCHANGE_SYSCHARSET, lParam);
     return TRUE;
 }
 

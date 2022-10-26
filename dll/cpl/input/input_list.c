@@ -468,7 +468,7 @@ InputList_Process(VOID)
         BroadcastSystemMessageW(BSF_POSTMESSAGE,
                                 &dwRecipients,
                                 WM_INPUTLANGCHANGEREQUEST,
-                                1,
+                                INPUTLANGCHANGE_SYSCHARSET,
                                 (LPARAM)pCurrent->hkl);
     }
 
