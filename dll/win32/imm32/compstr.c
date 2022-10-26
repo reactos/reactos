@@ -272,7 +272,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("\n");
+                FIXME("0x%X\n", dwIndex);
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -357,7 +357,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("\n");
+                FIXME("0x%X\n", dwIndex);
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -449,7 +449,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("\n");
+                FIXME("0x%X\n", dwIndex);
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -506,7 +506,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             default:
-                FIXME("\n");
+                FIXME("0x%X\n", dwIndex);
                 return IMM_ERROR_GENERAL;
         }
     }
@@ -532,7 +532,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId != GetCurrentThreadId())
     {
-        ERR("\n");
+        ERR("Thread mismatch\n");
         return FALSE;
     }
 
@@ -554,7 +554,7 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 break;
             /* FALL THROUGH */
         default:
-            ERR("\n");
+            ERR("0x%X\n", dwIndex);
             ImmUnlockImeDpi(pImeDpi);
             return FALSE;
     }
@@ -569,7 +569,6 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
 
     if (!Imm32OpenICAndCS(hIMC, &pIC, &pCS))
     {
-        ERR("\n");
         ImmUnlockImeDpi(pImeDpi);
         return FALSE;
     }

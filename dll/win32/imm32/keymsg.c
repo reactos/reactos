@@ -457,7 +457,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
 
     if (dwCommand == 0 || dwCommand > IMR_DOCUMENTFEED)
     {
-        ERR("\n");
+        ERR("Out of boundary\n");
         return 0; /* Out of range */
     }
 
@@ -475,7 +475,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             pRS = pData;
             if (pRS && (pRS->dwVersion != 0 || pRS->dwSize < sizeof(RECONVERTSTRING)))
             {
-                ERR("\n");
+                ERR("Invalid pRS\n");
                 return 0;
             }
             break;
@@ -484,17 +484,14 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             pRS = pData;
             if (!pRS || pRS->dwVersion != 0)
             {
-                ERR("\n");
+                ERR("Invalid pRS\n");
                 return 0;
             }
             break;
 
         default:
-            if (!pData)
-            {
-                ERR("\n");
+            if (IS_NULL_UNEXPECTEDLY(pData))
                 return 0;
-            }
             break;
     }
 
@@ -585,7 +582,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             break;
 
         default:
-            WARN("\n");
+            WARN("0x%X\n", dwCommand);
             break;
     }
 
@@ -634,7 +631,7 @@ DoIt:
             break;
 
         default:
-            WARN("\n");
+            WARN("0x%X\n", dwCommand);
             break;
     }
 
@@ -884,7 +881,7 @@ LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
             return CtfImmSetLangBand((HWND)lParam, (wParam == IMS_SETLANGBAND));
 
         default:
-            WARN("\n");
+            WARN("%p\n", wParam);
             return 0;
     }
 }

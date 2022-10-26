@@ -180,9 +180,15 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
         return 0;
     }
 
-    if (pCI->dwSize < sizeof(CANDIDATEINFO) || pCI->dwCount <= dwIndex)
+    if (pCI->dwSize < sizeof(CANDIDATEINFO))
     {
-        ERR("\n");
+        ERR("Too small\n");
+        goto Quit;
+    }
+
+    if (pCI->dwCount <= dwIndex)
+    {
+        ERR("Out of boundary\n");
         goto Quit;
     }
 
@@ -276,7 +282,7 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
 
     if (pCI->dwSize < sizeof(CANDIDATEINFO))
     {
-        ERR("\n");
+        ERR("Too small\n");
         goto Quit;
     }
 
@@ -378,7 +384,7 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
 
     if (dwIndex >= MAX_CANDIDATEFORM) /* Windows didn't check but we do for security reason */
     {
-        ERR("\n");
+        ERR("Out of boundary\n");
         return FALSE;
     }
 
@@ -394,7 +400,7 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     }
     else
     {
-        ERR("\n");
+        ERR("Out of boundary\n");
     }
 
     ImmUnlockIMC(hIMC);
@@ -414,7 +420,7 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 
     if (lpCandidate->dwIndex >= MAX_CANDIDATEFORM)
     {
-        ERR("\n");
+        ERR("Out of boundary\n");
         return FALSE;
     }
 
