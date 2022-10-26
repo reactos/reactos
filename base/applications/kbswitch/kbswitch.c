@@ -556,6 +556,9 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
     return UpdateLanguageDisplay(hwnd, hKL);
 }
 
+#define TIMER_ID 999
+#define TIMER_INTERVAL 700
+
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -576,6 +579,19 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+
+            SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+            break;
+        }
+
+        case WM_TIMER:
+        {
+            if (wParam == TIMER_ID)
+            {
+                KillTimer(hwnd, TIMER_ID);
+                UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
+                SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+            }
             break;
         }
 
@@ -685,6 +701,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
+            KillTimer(hwnd, TIMER_ID);
             DeleteHooks();
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
@@ -718,7 +735,6 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     MSG msg;
     HANDLE hMutex;
     HWND hwnd;
-    DWORD dwOldTick;
 
     switch (GetUserDefaultUILanguage())
     {
@@ -766,22 +782,6 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        }
-        else /* Idle time! We spend gracefully this time */
-        {
-            if (GetTickCount() - dwOldTick >= 700)
-            {
-                if (UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow()))
-                    Sleep(600); /* Changed */
-                else
-                    Sleep(300); /* Not changed */
-
-                dwOldTick = GetTickCount();
-            }
-            else
-            {
-                Sleep(100);
-            }
         }
     }
 
