@@ -297,6 +297,12 @@ SmExecPgm(
 
 NTSTATUS
 NTAPI
+SmLoadDeferedSubsystem(
+    _In_ HANDLE SmApiPort,
+    _In_ PUNICODE_STRING DeferedSubsystem);
+
+NTSTATUS
+NTAPI
 SmStartCsr(
     _In_ HANDLE SmApiPort,
     _Out_ PULONG pMuSessionId,

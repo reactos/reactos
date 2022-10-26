@@ -91,9 +91,10 @@ extern UNICODE_STRING SmpSystemRoot;
 extern PWCHAR SmpDefaultEnvironment;
 extern UNICODE_STRING SmpDefaultLibPath;
 extern LIST_ENTRY SmpSetupExecuteList;
-extern LIST_ENTRY SmpSubSystemsToLoad;
-extern LIST_ENTRY SmpExecuteList;
 extern LIST_ENTRY SmpSubSystemList;
+extern LIST_ENTRY SmpSubSystemsToLoad;
+extern LIST_ENTRY SmpSubSystemsToDefer;
+extern LIST_ENTRY SmpExecuteList;
 extern ULONG AttachedSessionId;
 extern BOOLEAN SmpDebug;
 
