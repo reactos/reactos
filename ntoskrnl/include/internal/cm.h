@@ -1236,10 +1236,10 @@ CmpFileWrite(
 BOOLEAN
 NTAPI
 CmpFileSetSize(
-    IN PHHIVE RegistryHive,
-    IN ULONG FileType,
-    IN ULONG FileSize,
-    IN ULONG OldFileSize
+    _In_ PHHIVE RegistryHive,
+    _In_ ULONG FileType,
+    _In_ ULONG FileSize,
+    _In_ ULONG OldFileSize
 );
 
 BOOLEAN
