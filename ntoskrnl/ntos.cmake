@@ -48,7 +48,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmalloc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmapi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmcheck.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmconfig.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmcontrl.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmdata.c

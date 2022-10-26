@@ -596,16 +596,6 @@ CmpCompareNewValueDataAgainstKCBCache(
 );
 
 //
-// Registry Validation Functions
-//
-ULONG
-NTAPI
-CmCheckRegistry(
-    IN PCMHIVE Hive,
-    IN ULONG Flags
-);
-
-//
 // Hive List Routines
 //
 BOOLEAN
