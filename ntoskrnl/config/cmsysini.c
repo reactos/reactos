@@ -912,7 +912,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL,
                                NULL,
                                &HiveName,
-                               HiveBase ? 2 : 0);
+                               HiveBase ? CM_CHECK_REGISTRY_PURGE_VOLATILES : CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -936,7 +936,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Disable self-healing internally and check if boot type wanted it */
         CmpSelfHeal = FALSE;
-        if (CmpBootType & 4)
+        if (CmpBootType & HBOOT_TYPE_SELF_HEAL)
         {
             /* We're disabled, so bugcheck */
             KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO,
@@ -1245,7 +1245,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
                                      CmpMachineHiveList[i].HHiveFlags,
                                      &CmHive,
                                      &CmpMachineHiveList[i].Allocate,
-                                     0);
+                                     CM_CHECK_REGISTRY_PURGE_VOLATILES);
         if (!(NT_SUCCESS(Status)) ||
             (!(CmpShareSystemHives) && !(CmHive->FileHandles[HFILE_TYPE_LOG])))
         {
@@ -1565,7 +1565,7 @@ CmInitSystem1(VOID)
                                NULL,
                                NULL,
                                NULL,
-                               0);
+                               CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -1656,7 +1656,7 @@ CmInitSystem1(VOID)
                                NULL,
                                NULL,
                                NULL,
-                               0);
+                               CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */

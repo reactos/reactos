@@ -201,8 +201,8 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
         (OperationType == HINIT_MAPFILE))
     {
         /* Verify integrity */
-        ULONG CheckStatus = CmCheckRegistry(Hive, CheckFlags);
-        if (CheckStatus != 0)
+        CM_CHECK_REGISTRY_STATUS CheckStatus = CmCheckRegistry(Hive, CheckFlags);
+        if (!CM_CHECK_REGISTRY_SUCCESS(CheckStatus))
         {
             /* Cleanup allocations and fail */
             ExDeleteResourceLite(Hive->FlusherLock);
