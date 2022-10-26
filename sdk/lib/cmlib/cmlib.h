@@ -511,6 +511,11 @@ HvWriteHive(
 
 BOOLEAN
 CMAPI
+HvSyncHiveFromRecover(
+    _In_ PHHIVE RegistryHive);
+
+BOOLEAN
+CMAPI
 HvTrackCellRef(
     IN OUT PHV_TRACK_CELL_REF CellRef,
     IN PHHIVE Hive,
@@ -545,6 +550,11 @@ HvpCreateHiveFreeCellList(
 ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
+
+BOOLEAN CMAPI
+HvpVerifyHiveHeader(
+    _In_ PHBASE_BLOCK BaseBlock,
+    _In_ ULONG FileType);
 
 //
 // Registry Self-Heal Routines
