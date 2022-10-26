@@ -482,6 +482,79 @@ ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
 
+//
+// Registry Self-Heal Routines
+//
+BOOLEAN
+CMAPI
+CmIsSelfHealEnabled(
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairParentKey(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX TargetKey,
+    _In_ HCELL_INDEX ParentKey,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairParentNode(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _In_ HCELL_INDEX ParentCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairKeyNodeSignature(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairClassOfNodeKey(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairValueList(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairValueListCount(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ ULONG ListCountIndex,
+    _Inout_ PCELL_DATA ValueListData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairSubKeyCounts(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ ULONG Count,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairSubKeyList(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
 
 /* Old-style Public "Cmlib" functions */
 

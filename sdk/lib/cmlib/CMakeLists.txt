@@ -5,6 +5,7 @@ add_definitions(
 
 list(APPEND SOURCE
     cminit.c
+    cmheal.c
     cmindex.c
     cmkeydel.c
     cmname.c
