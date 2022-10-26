@@ -582,7 +582,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             static TCHAR s_szOldName[16] = TEXT("");
             TCHAR szNewName[16] = TEXT("");
-            if (GetKeyboardLayoutName(szNewName) && lstrcmp(szNewName, s_szOldName) != 0)
+            if (wParam == TIMER_ID &&
+                GetKeyboardLayoutName(szNewName) && lstrcmp(szNewName, s_szOldName) != 0)
             {
                 UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
                 CopyMemory(s_szOldName, szNewName, sizeof(s_szOldName));
