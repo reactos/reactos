@@ -312,9 +312,9 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
-    if (hKL)
+    if (hKl)
     {
-        ActivateKeyboardLayout(pNode->hkl, KLF_RESET);
+        ActivateKeyboardLayout(hKl, KLF_RESET);
     }
 
     /* Post WM_INPUTLANGCHANGEREQUEST to every top-level window */
