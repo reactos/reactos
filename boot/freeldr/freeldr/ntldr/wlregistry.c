@@ -31,14 +31,22 @@ static BOOLEAN
 WinLdrScanRegistry(
     IN OUT PLIST_ENTRY BootDriverListHead);
 
+typedef enum _BAD_HIVE_REASON
+{
+    GoodHive = 1,
+    CorruptHive,
+    NoHive,
+    NoHiveAlloc
+} BAD_HIVE_REASON, *PBAD_HIVE_REASON;
 
 /* FUNCTIONS **************************************************************/
 
 static BOOLEAN
 WinLdrLoadSystemHive(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCSTR DirectoryPath,
-    IN PCSTR HiveName)
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCSTR HiveName,
+    _Out_ PBAD_HIVE_REASON Reason)
 {
     ULONG FileId;
     CHAR FullHiveName[MAX_PATH];
@@ -49,6 +57,9 @@ WinLdrLoadSystemHive(
     PVOID HiveDataVirtual;
     ULONG BytesRead;
 
+    /* Do not setup any bad reason for now */
+    *Reason = GoodHive;
+
     /* Concatenate path and filename to get the full name */
     RtlStringCbCopyA(FullHiveName, sizeof(FullHiveName), DirectoryPath);
     RtlStringCbCatA(FullHiveName, sizeof(FullHiveName), HiveName);
@@ -58,6 +69,7 @@ WinLdrLoadSystemHive(
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FullHiveName, Status);
+        *Reason = NoHive;
         return FALSE;
     }
 
@@ -66,6 +78,7 @@ WinLdrLoadSystemHive(
     if (Status != ESUCCESS)
     {
         WARN("Hive file has 0 size!\n");
+        *Reason = CorruptHive;
         ArcClose(FileId);
         return FALSE;
     }
@@ -79,6 +92,7 @@ WinLdrLoadSystemHive(
     if (HiveDataPhysical == NULL)
     {
         WARN("Could not alloc memory for hive!\n");
+        *Reason = NoHiveAlloc;
         ArcClose(FileId);
         return FALSE;
     }
@@ -95,6 +109,7 @@ WinLdrLoadSystemHive(
     if (Status != ESUCCESS)
     {
         WARN("Error while reading '%s', Status: %u\n", FullHiveName, Status);
+        *Reason = CorruptHive;
         ArcClose(FileId);
         return FALSE;
     }
@@ -113,9 +128,12 @@ WinLdrInitSystemHive(
     IN BOOLEAN Setup)
 {
     CHAR SearchPath[1024];
+    PVOID ChunkBase;
     PCSTR HiveName;
     BOOLEAN Success;
+    BAD_HIVE_REASON Reason;
 
+    /* Load the corresponding text-mode setup system hive or the standard hive */
     if (Setup)
     {
         RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
@@ -123,30 +141,82 @@ WinLdrInitSystemHive(
     }
     else
     {
-        // There is a simple logic here: try to load usual hive (system), if it
-        // fails, then give system.alt a try, and finally try a system.sav
-
-        // FIXME: For now we only try system
         RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
         RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\config\\");
         HiveName = "SYSTEM";
     }
 
     TRACE("WinLdrInitSystemHive: loading hive %s%s\n", SearchPath, HiveName);
-    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName);
+    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName, &Reason);
     if (!Success)
     {
+        /* Check whether the SYSTEM hive does not exist or is too corrupt to be read */
+        if (Reason == CorruptHive || Reason == NoHive)
+        {
+            /* Try loading the alternate hive, the main hive should be recovered later */
+            goto LoadAlternateHive;
+        }
+
+        /* We are failing for other reason, bail out */
         UiMessageBox("Could not load %s hive!", HiveName);
         return FALSE;
     }
 
     /* Import what was loaded */
-    Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
+    Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength, SearchPath, FALSE);
     if (!Success)
     {
-        UiMessageBox("Importing binary hive failed!");
-        return FALSE;
+        /*
+         * Importing of the SYSTEM hive failed. The scenarios that would
+         * have made this possible are the following:
+         *
+         * 1. The primary hive is corrupt beyond repair (such as when
+         *    core FS structures are total toast);
+         *
+         * 2. Repairing the hive could with a LOG could not recover it
+         *    to the fullest. This is the case when the hive and LOG have
+         *    diverged too much, or are mismatched, or the containing healthy
+         *    data in the LOG was not marked as dirty that could be copied
+         *    into the primary hive;
+         *
+         * 3. LOG is bad (e.g. corrupt dirty vector);
+         *
+         * 4. LOG does not physically exist on the backing storage.
+         *
+         * 5. SYSTEM hive does not physically exist or it is a 0 bytes file
+         *    (the latter case still counts as corruption).
+         *
+         * With the hope to boot the system, load the mirror counterpart
+         * of the main hive, the alternate. The kernel should be able to recover
+         * the main hive later on as soon as it starts writing to it.
+         */
+LoadAlternateHive:
+        HiveName = "SYSTEM.ALT";
+        Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName, &Reason);
+        if (!Success)
+        {
+            UiMessageBox("Could not load %s hive!", HiveName);
+            return FALSE;
+        }
+
+        /* Retry importing it again */
+        Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength, SearchPath, TRUE);
+        if (!Success)
+        {
+            UiMessageBox("Importing binary hive failed!");
+            return FALSE;
+        }
+
+        /*
+         * Acknowledge the kernel we recovered the SYSTEM hive
+         * on our side by loading the alternate variant of the hive.
+         */
+        WARN("SYSTEM hive does not exist or is corrupt and SYSTEM.ALT has been loaded!\n");
+        ChunkBase = VaToPa(LoaderBlock->RegistryBase);
+        ((PHBASE_BLOCK)ChunkBase)->BootRecover = HBOOT_BOOT_RECOVERED_BY_ALTERNATE_HIVE;
     }
+
+    // FIXME: Load SYSTEM.SAV if GUI setup installation is still in progress
 
     /* Initialize the 'CurrentControlSet' link */
     if (!RegInitCurrentControlSet(FALSE))
