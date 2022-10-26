@@ -289,7 +289,7 @@ GetLayoutIDByHkl(HKL hKl, LPTSTR szLayoutID, SIZE_T LayoutIDLength)
 static BOOL CALLBACK
 EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 1, lParam);
     return TRUE;
 }
 
@@ -312,6 +312,10 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
+    if (hKL)
+    {
+        ActivateKeyboardLayout(pNode->hkl, KLF_RESET);
+    }
 
     /* Post WM_INPUTLANGCHANGEREQUEST to every top-level window */
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);

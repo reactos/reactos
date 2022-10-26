@@ -447,15 +447,28 @@ InputList_Process(VOID)
         pCurrent->wFlags &= ~(INPUT_LIST_NODE_FLAG_ADDED | INPUT_LIST_NODE_FLAG_EDITED);
     }
 
+    /* Activate the DEFAULT entry */
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
+            continue;
+
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+        {
+            ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
+            break;
+        }
+    }
+
     /* Change the default keyboard language */
     if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
     {
-        DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
+        DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS; /* confirmed in 2k and xp */
 
         BroadcastSystemMessageW(BSF_POSTMESSAGE,
                                 &dwRecipients,
                                 WM_INPUTLANGCHANGEREQUEST,
-                                0,
+                                1,
                                 (LPARAM)pCurrent->hkl);
     }
 
