@@ -549,9 +549,6 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
     return UpdateLanguageDisplay(hwnd, hKL);
 }
 
-#define TIMER_ID 999
-#define TIMER_INTERVAL 800
-
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -573,21 +570,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
-
-            SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
-            break;
-        }
-
-        case WM_TIMER:
-        {
-            static TCHAR s_szOldName[16] = TEXT("");
-            TCHAR szNewName[16] = TEXT("");
-            if (wParam == TIMER_ID &&
-                GetKeyboardLayoutName(szNewName) && lstrcmp(szNewName, s_szOldName) != 0)
-            {
-                UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
-                CopyMemory(s_szOldName, szNewName, sizeof(s_szOldName));
-            }
             break;
         }
 
@@ -686,20 +668,17 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETDEFAULTINPUTLANG)
             {
-                hwndFore = GetForegroundWindow();
-                ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+                ret = UpdateLanguageDisplay(hwnd, (HKL)wParam);
             }
             else if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                hwndFore = GetForegroundWindow();
-                ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+                ret = UpdateLanguageDisplayCurrent(hwnd, (HWND)wParam);
             }
         }
         break;
 
         case WM_DESTROY:
         {
-            KillTimer(hwnd, 999);
             DeleteHooks();
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
@@ -733,6 +712,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     MSG msg;
     HANDLE hMutex;
     HWND hwnd;
+    DWORD dwOldTick;
 
     switch (GetUserDefaultUILanguage())
     {
@@ -771,10 +751,25 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
     RegisterShellHookWindow(hwnd);
 
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (TRUE)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            if (!GetMessage(&msg, NULL, 0, 0))
+                break;
+
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else
+        {
+            if (GetTickCount() - dwOldTick >= 700)
+            {
+                UpdateLanguageDisplayCurrent(hwnd, GetForegroundWindow());
+                Sleep(300);
+                dwOldTick = GetTickCount();
+            }
+        }
     }
 
     CloseHandle(hMutex);
