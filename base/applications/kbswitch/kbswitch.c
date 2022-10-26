@@ -171,14 +171,11 @@ static BOOL GetImeFile(LPTSTR szImeFile, SIZE_T cchImeFile, LPCTSTR szLCID)
         return FALSE;
     }
 
-    if (szLCID[0] == L'E' || szLCID[0] == L'e')
+    dwBufLen = cchImeFile * sizeof(TCHAR);
+    if (RegQueryValueEx(hKey, _T("IME File"), NULL, NULL,
+                        (LPBYTE)szImeFile, &dwBufLen) != ERROR_SUCCESS)
     {
-        dwBufLen = cchImeFile * sizeof(TCHAR);
-        if (RegQueryValueEx(hKey, _T("IME File"), NULL, NULL,
-                            (LPBYTE)szImeFile, &dwBufLen) != ERROR_SUCCESS)
-        {
-            szImeFile[0] = UNICODE_NULL;
-        }
+        szImeFile[0] = UNICODE_NULL;
     }
 
     RegCloseKey(hKey);
