@@ -124,11 +124,6 @@ public:
         return TRUE;
     }
 
-    LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        return MA_NOACTIVATE;
-    }
-
     BOOL GetMinimumSize(IN OUT PSIZE pSize)
     {
         SIZE szClock = { 0, 0 };
@@ -350,7 +345,6 @@ public:
 
     BEGIN_MSG_MAP(CTrayNotifyWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
