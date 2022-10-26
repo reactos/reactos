@@ -735,7 +735,7 @@ GdiFixUpHandle(HGDIOBJ hGdiObj)
 {
     PGDI_TABLE_ENTRY Entry;
 
-    if (((ULONG_PTR)(hGdiObj)) & GDI_HANDLE_UPPER_MASK )
+    if (GDI_HANDLE_GET_UPPER(hGdiObj))
     {
         return hGdiObj;
     }
