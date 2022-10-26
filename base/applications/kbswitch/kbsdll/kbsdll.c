@@ -21,31 +21,23 @@ PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
-    INT id;
-
     if (code < 0)
     {
         return CallNextHookEx(hShellHook, code, wParam, lParam);
     }
 
-    id = GlobalAddAtom(_T("KBSWITCH"));
-
     switch (code)
     {
         case HCBT_SETFOCUS:
         {
-            if ((HWND)wParam != NULL)
+            HWND hwndFocus = (HWND)wParam;
+            if (hwndFocus && hwndFocus != hKbSwitchWnd)
             {
-                if ((HWND)wParam != hKbSwitchWnd)
-                {
-                    PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
-                }
+                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
             }
         }
         break;
     }
-
-    GlobalDeleteAtom(id);
 
     return CallNextHookEx(hWinHook, code, wParam, lParam);
 }
