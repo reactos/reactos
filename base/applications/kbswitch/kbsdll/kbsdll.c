@@ -13,15 +13,22 @@ HINSTANCE hInstance = NULL;
 HWND hKbSwitchWnd = NULL;
 
 static VOID
-SendMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
+PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
 }
 
 LRESULT CALLBACK
-WinHookProc(int code, WPARAM wParam, LPARAM lParam)
+WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
-    int id = GlobalAddAtom(_T("KBSWITCH"));
+    INT id;
+
+    if (code < 0)
+    {
+        return CallNextHookEx(hShellHook, code, wParam, lParam);
+    }
+
+    id = GlobalAddAtom(_T("KBSWITCH"));
 
     switch (code)
     {
@@ -31,7 +38,7 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
             {
                 if ((HWND)wParam != hKbSwitchWnd)
                 {
-                    SendMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
+                    PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
                 }
             }
         }
@@ -44,13 +51,18 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
 }
 
 LRESULT CALLBACK
-ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
+ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
+    if (code < 0)
+    {
+        return CallNextHookEx(hShellHook, code, wParam, lParam);
+    }
+
     switch (code)
     {
         case HSHELL_LANGUAGE:
         {
-            SendMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
+            PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
         }
         break;
     }
