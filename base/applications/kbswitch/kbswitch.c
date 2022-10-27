@@ -761,7 +761,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                               DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
                     if (hwndTarget &&
                         GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass)) &&
-                        _tcscmp(szClass, TEXT("ConsoleWindowClass")) == 0)
+                        _tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
                     {
                         bCONWND = TRUE;
                         hwndTargetSave = hwndTarget;
