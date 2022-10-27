@@ -19,11 +19,11 @@ PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 }
 
 LRESULT CALLBACK
-WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
+WinHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
     {
-        return CallNextHookEx(hShellHook, code, wParam, lParam);
+        return CallNextHookEx(hWinHook, code, wParam, lParam);
     }
 
     switch (code)
@@ -43,7 +43,7 @@ WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 }
 
 LRESULT CALLBACK
-ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
+ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
     {
