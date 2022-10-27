@@ -162,10 +162,10 @@ static BOOL GetImeFile(LPTSTR szImeFile, SIZE_T cchImeFile, LPCTSTR szLCID)
     szImeFile[0] = UNICODE_NULL;
 
     if (_tcslen(szLCID) != CCH_LAYOUT_ID)
-        return FALSE;
+        return FALSE; /* Invalid LCID */
 
     if (szLCID[0] != TEXT('E') && szLCID[0] != TEXT('e'))
-        return FALSE;
+        return FALSE; /* Not an IME HKL */
 
     StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
                     _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
@@ -212,9 +212,12 @@ EnumResNameProc(
 static HICON FakeExtractIcon(LPCTSTR szIconPath, INT cxIcon, INT cyIcon)
 {
     LOAD_ICON LoadIcon = { cxIcon, cyIcon, NULL };
-    HMODULE hInst = LoadLibraryEx(szIconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
-    EnumResourceNames(hInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&LoadIcon);
-    FreeLibrary(hInst);
+    HMODULE hImeDLL = LoadLibraryEx(szIconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hImeDLL)
+    {
+        EnumResourceNames(hImeDLL, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&LoadIcon);
+        FreeLibrary(hImeDLL);
+    }
     return LoadIcon.hIcon;
 }
 
