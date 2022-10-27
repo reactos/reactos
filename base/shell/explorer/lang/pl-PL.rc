@@ -207,3 +207,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Paska zadań i menu Start"
     IDS_RESTORE_ALL "&Pokaż otwarte okna"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+END

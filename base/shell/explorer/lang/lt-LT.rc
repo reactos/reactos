@@ -199,3 +199,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar and Start Menu"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+END

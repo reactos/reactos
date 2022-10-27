@@ -102,6 +102,8 @@
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
 #define IDS_RESTORE_ALL                    811
+#define IDS_TRAYWND_UNDO_CASCADE           812
+#define IDS_TRAYWND_UNDO_TILE              813
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

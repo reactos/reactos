@@ -201,3 +201,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Vlastnosti panela úloh a ponuky Štart"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+END

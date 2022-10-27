@@ -196,3 +196,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Proprietà della Barra delle applicazioni e del Menú di avvio"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+END

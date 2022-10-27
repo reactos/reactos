@@ -205,3 +205,9 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "任务栏和开始菜单属性"
     IDS_RESTORE_ALL "显示打开的窗口(&S)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
+    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+END
