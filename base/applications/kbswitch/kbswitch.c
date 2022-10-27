@@ -591,7 +591,7 @@ GetTargetWindow(HWND hwndFore)
         hwndTarget = GetForegroundWindow();
 
     GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass));
-    if (lstrcmpi(szClass, szKbSwitcherName) == 0)
+    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
         hwndTarget = g_hwndLastActive;
 
     hwndIME = ImmGetDefaultIMEWnd(hwndTarget);
@@ -635,15 +635,15 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
     if (!IsWindowVisible(hwndFore) || !GetClassName(hwndFore, szClass, ARRAYSIZE(szClass)))
         return FALSE;
 
-    if (lstrcmpi(szClass, szKbSwitcherName) == 0 ||
-        lstrcmpi(szClass, TEXT("Shell_TrayWnd")) == 0)
+    if (_tcsicmp(szClass, szKbSwitcherName) == 0 ||
+        _tcsicmp(szClass, TEXT("Shell_TrayWnd")) == 0)
     {
         return FALSE; /* Special window */
     }
 
     /* FIXME: CONWND is multithreaded but KLF_SETFORPROCESS and
               DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
-    if (lstrcmpi(szClass, TEXT("ConsoleWindowClass")) == 0)
+    if (_tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
     {
         HKL hKL = GetKeyboardLayout(0);
         UpdateLanguageDisplay(hwnd, hKL);
@@ -761,7 +761,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                               DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
                     if (hwndTarget &&
                         GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass)) &&
-                        lstrcmp(szClass, TEXT("ConsoleWindowClass")) == 0)
+                        _tcscmp(szClass, TEXT("ConsoleWindowClass")) == 0)
                     {
                         bCONWND = TRUE;
                         hwndTargetSave = hwndTarget;
