@@ -424,9 +424,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL)
 
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
     if (hKl)
-    {
         ActivateKeyboardLayout(hKl, KLF_SETFORPROCESS);
-    }
 
     /* Post WM_INPUTLANGCHANGEREQUEST */
     if (hwndTarget)
