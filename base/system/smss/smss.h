@@ -36,6 +36,9 @@
 
 #include <ntstrsafe.h>
 
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
+
 /* SM Protocol Header */
 #include <sm/smmsg.h>
 
@@ -241,6 +244,11 @@ SmpTerminate(
     _In_reads_(ParameterCount) PULONG_PTR Parameters,
     _In_ ULONG ParameterMask,
     _In_ ULONG ParameterCount);
+
+LONG
+NTAPI
+SmpUnhandledExceptionFilter(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo);
 
 /* smsubsys.c */
 
