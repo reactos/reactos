@@ -560,8 +560,10 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 LRESULT
 UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
 {
-    HWND hIME = ImmGetDefaultIMEWnd(hwndFore);
-    HWND hwndTarget = (hIME ? hIME : hwndFore);
+    /* The IME might be running in a different thread.
+       To get the correct layout ID, use hwndIME. */
+    HWND hwndIME = ImmGetDefaultIMEWnd(hwndFore);
+    HWND hwndTarget = (hwndIME ? hwndIME : hwndFore);
     DWORD dwThreadID = GetWindowThreadProcessId(hwndTarget, NULL);
     HKL hKL = GetKeyboardLayout(dwThreadID);
     return UpdateLanguageDisplay(hwnd, hKL);
@@ -577,7 +579,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     static UINT s_uTaskbarRestart;
     POINT pt;
     HMENU hLeftPopupMenu;
-    LRESULT ret = 0;
 
     switch (Message)
     {
@@ -623,8 +624,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_WINDOW_ACTIVATE:
         {
             HWND hwndFore = GetForegroundWindow();
-            ret = UpdateLanguageDisplayCurrent(hwnd, hwndFore);
-            break;
+            return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
         }
 
         case WM_NOTIFYICONMSG:
@@ -701,11 +701,11 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETDEFAULTINPUTLANG)
             {
-                ret = UpdateLanguageDisplay(hwnd, (HKL)wParam);
+                return UpdateLanguageDisplay(hwnd, (HKL)wParam);
             }
-            else if (wParam == SPI_SETNONCLIENTMETRICS)
+            if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                ret = UpdateLanguageDisplayCurrent(hwnd, (HWND)wParam);
+                return UpdateLanguageDisplayCurrent(hwnd, (HWND)wParam);
             }
         }
         break;
@@ -736,7 +736,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return ret;
+    return 0;
 }
 
 INT WINAPI
