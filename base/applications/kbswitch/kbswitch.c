@@ -12,6 +12,14 @@
 
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
+ * However, there are some differences.
+ *
+ * Comparing with WinNT4 ActivateKeyboardLayout, WinXP ActivateKeyboardLayout has
+ * process boundary, so we cannot activate the keyboard layout from the outer process.
+ * It needs special care.
+ *
+ * We use global hook by our kbsdll.dll, to watch the shell and the windows.
+ *
  * It might not work correctly on Vista+ because keyboard layout change notification
  * won't be generated in Vista+.
  */
@@ -410,10 +418,14 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL)
     /* Switch to the new keyboard layout */
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
-    hKl = LoadKeyboardLayout(szLCID, KLF_REPLACELANG);
-    if (hKl && !hwndTarget)
+
+    if (hwndTarget)
+        SetForegroundWindow(hwndTarget);
+
+    hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
+    if (hKl)
     {
-        ActivateKeyboardLayout(hKl, KLF_RESET);
+        ActivateKeyboardLayout(hKl, KLF_SETFORPROCESS);
     }
 
     /* Post WM_INPUTLANGCHANGEREQUEST */
@@ -572,10 +584,15 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 HWND
 GetTargetWindow(HWND hwndFore)
 {
+    TCHAR szClass[64];
     HWND hwndIME;
     HWND hwndTarget = hwndFore;
     if (hwndTarget == NULL)
         hwndTarget = GetForegroundWindow();
+
+    GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass));
+    if (lstrcmpi(szClass, szKbSwitcherName) == 0)
+        hwndTarget = g_hwndLastActive;
 
     hwndIME = ImmGetDefaultIMEWnd(hwndTarget);
     return (hwndIME ? hwndIME : hwndTarget);
