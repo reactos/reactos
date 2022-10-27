@@ -15,7 +15,7 @@
  * However, there are some differences.
  *
  * Comparing with WinNT4 ActivateKeyboardLayout, WinXP ActivateKeyboardLayout has
- * process boundary, so we cannot activate the keyboard layout from the outer process.
+ * process boundary, so we cannot activate the IME keyboard layout from the outer process.
  * It needs special care.
  *
  * We use global hook by our kbsdll.dll, to watch the shell and the windows.
