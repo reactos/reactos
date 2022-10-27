@@ -630,6 +630,8 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
 {
     TCHAR szClass[64];
 
+    hwndFore = GetAncestor(hwndFore, GA_ROOT);
+
     if (!IsWindowVisible(hwndFore) || !GetClassName(hwndFore, szClass, ARRAYSIZE(szClass)))
         return FALSE;
 
