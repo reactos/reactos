@@ -782,16 +782,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
     RegisterShellHookWindow(hwnd);
 
-    while (TRUE)
+    while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-        {
-            if (!GetMessage(&msg, NULL, 0, 0))
-                break;
-
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
     CloseHandle(hMutex);
