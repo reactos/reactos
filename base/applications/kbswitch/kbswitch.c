@@ -205,7 +205,7 @@ EnumResNameProc(
                                         pLoadIcon->cxIcon, pLoadIcon->cyIcon,
                                         LR_DEFAULTCOLOR);
     if (pLoadIcon->hIcon)
-        return FALSE;
+        return FALSE; /* Stop enumeration */
     return TRUE;
 }
 
@@ -239,8 +239,8 @@ CreateTrayIcon(LPTSTR szLCID, LPCTSTR szImeFile OPTIONAL)
 
     if (szImeFile && szImeFile[0])
     {
-        GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), szImeFile);
-        return FakeExtractIcon(szPath, cxIcon, cyIcon);
+        if (GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), szImeFile))
+            return FakeExtractIcon(szPath, cxIcon, cyIcon);
     }
 
     /* Getting "EN", "FR", etc. from English, French, ... */
@@ -323,7 +323,7 @@ AddTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szLCID[CCH_LAYOUT_ID + 1], szName[MAX_PATH];
-    TCHAR szImeFile[50];
+    TCHAR szImeFile[80];
 
     GetLayoutID(_T("1"), szLCID, ARRAYSIZE(szLCID));
     GetLayoutName(_T("1"), szName, ARRAYSIZE(szName));
@@ -357,7 +357,7 @@ static VOID
 UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
-    TCHAR szImeFile[50];
+    TCHAR szImeFile[80];
 
     GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szLCID);
 
@@ -545,16 +545,13 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKl)
 {
     TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
     LANGID LangID;
-    static HKL s_hOldKL = NULL;
-    BOOL bChanged = (s_hOldKL != hKl);
 
     GetLayoutIDByHkl(hKl, szLCID, ARRAYSIZE(szLCID));
     LangID = (LANGID)_tcstoul(szLCID, NULL, 16);
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
 
-    s_hOldKL = hKl;
-    return bChanged;
+    return 0;
 }
 
 LRESULT
@@ -592,12 +589,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             ActivateLayout(hwnd, ulCurrentLayoutNum);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
-            SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+            SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL); /* Start watching */
             break;
         }
 
         case WM_TIMER:
         {
+            /* In some cases, we cannot detect the keyboard correctly. Watching is needed */
             if (wParam == TIMER_ID)
             {
                 KillTimer(hwnd, TIMER_ID);
