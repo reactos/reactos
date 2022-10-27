@@ -595,7 +595,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_TIMER:
         {
-            /* In some cases, we cannot detect the keyboard correctly. Watching is needed */
+            /* In some cases, we couldn't detect the keyboard correctly. Watching is needed */
             if (wParam == TIMER_ID)
             {
                 KillTimer(hwnd, TIMER_ID);
