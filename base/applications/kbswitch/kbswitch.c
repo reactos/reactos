@@ -595,8 +595,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_TIMER:
         {
-            /* HSHELL_LANGUAGE couldn't catch keyboard change correctly in some cases.
-               Watching is needed. */
+            /* HSHELL_LANGUAGE couldn't catch keyboard change correctly in some
+               cases (i.e. Commpand Prompt). Watching is needed. */
             if (wParam == TIMER_ID)
             {
                 KillTimer(hwnd, TIMER_ID);
