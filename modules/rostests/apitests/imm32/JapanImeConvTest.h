@@ -16,6 +16,7 @@
 #include <stdio.h>
 
 #define INTERVAL 200
+#define WM_PRESS_KEY_COMPLETE (WM_USER + 100)
 
 static WNDPROC s_fnOldEditWndProc = NULL;
 
@@ -51,7 +52,7 @@ static const TEST_ENTRY s_entries[] =
 };
 
 static INT s_iEntry = 0;
-static INT s_cWM_IME_COMPOSITION = 0;
+static INT s_cWM_IME_ENDCOMPOSITION = 0;
 
 #ifdef UNICODE
 static LPSTR WideToAnsi(INT nCodePage, LPCWSTR pszWide)
@@ -67,19 +68,24 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-    case WM_IME_COMPOSITION:
-        if ((lParam & GCS_RESULTSTR) == GCS_RESULTSTR)
+    case WM_IME_ENDCOMPOSITION:
         {
             const TEST_ENTRY *entry = &s_entries[s_iEntry];
             HIMC hIMC;
-            ++s_cWM_IME_COMPOSITION;
+            LONG cbResult;
+            LPTSTR pszResult;
+
             hIMC = ImmGetContext(hwnd);
-            if (hIMC)
+            cbResult = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
+            trace("cbResult: %ld\n", cbResult);
+            if (cbResult > 0) /* Ignore zero string */
             {
-                LONG cchResult = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
-                LPTSTR pszResult = (LPTSTR)calloc(cchResult + 1, sizeof(TCHAR));
+                ok(hIMC != NULL, "hIMC was NULL\n");
+                ++s_cWM_IME_ENDCOMPOSITION;
+
+                pszResult = (LPTSTR)calloc(cbResult + 1, sizeof(TCHAR));
                 ok(pszResult != NULL, "pszResult was NULL\n");
-                ImmGetCompositionString(hIMC, GCS_RESULTSTR, pszResult, cchResult);
+                ImmGetCompositionString(hIMC, GCS_RESULTSTR, pszResult, cbResult);
 #ifdef UNICODE
                 printf("%s\n", WideToAnsi(CP_ACP, (LPTSTR)pszResult));
 #else
@@ -87,15 +93,14 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
                 ok(lstrcmp(pszResult, (LPTSTR)entry->pvResult) == 0, "pszResult differs\n");
                 free(pszResult);
-
-                ImmReleaseContext(hwnd, hIMC);
             }
-        }
-        /* FALL THROUGH */
 
-    default:
-        return CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
+            ImmReleaseContext(hwnd, hIMC);
+        }
+        break;
     }
+
+    return CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 #define STAGE_1 10001
@@ -108,7 +113,7 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
     HWND hEdt1 = GetDlgItem(hwnd, edt1);
     s_fnOldEditWndProc = (WNDPROC)SetWindowLongPtr(hEdt1, GWLP_WNDPROC, (LONG_PTR)EditWindowProc);
-    PostMessage(hwnd, WM_TIMER, STAGE_1, 0);
+    SetTimer(hwnd, STAGE_1, INTERVAL, 0);
     return TRUE;
 }
 
@@ -133,6 +138,7 @@ static void OnTimer(HWND hwnd, UINT id)
 {
     HIMC hIMC;
     INT i;
+    HWND hImeWnd;
     const TEST_ENTRY *entry = &s_entries[s_iEntry];
     static DWORD dwOldConversion, dwOldSentence;
 
@@ -141,7 +147,6 @@ static void OnTimer(HWND hwnd, UINT id)
     switch (id)
     {
         case STAGE_1:
-            s_cWM_IME_COMPOSITION = 0;
             ok(GetFocus() == GetDlgItem(hwnd, edt1), "GetFocus() was %p\n", GetFocus());
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
@@ -152,8 +157,15 @@ static void OnTimer(HWND hwnd, UINT id)
                 ImmSetConversionStatus(hIMC,
                                        IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE,
                                        IME_SMODE_SINGLECONVERT);
+
+                /* Don't show candidate list */
+                hImeWnd = ImmGetDefaultIMEWnd(hwnd);
+                ImmIsUIMessage(hImeWnd, WM_IME_SETCONTEXT, TRUE,
+                               ISC_SHOWUICOMPOSITIONWINDOW /* | ISC_SHOWUICANDIDATEWINDOW*/);
+
                 ImmReleaseContext(hwnd, hIMC);
             }
+            s_cWM_IME_ENDCOMPOSITION = 0;
             SetTimer(hwnd, STAGE_2, INTERVAL, NULL);
             break;
 
@@ -162,7 +174,7 @@ static void OnTimer(HWND hwnd, UINT id)
             {
                 PressKey(entry->pKeys[i]);
             }
-            SetTimer(hwnd, STAGE_3, INTERVAL, NULL);
+            PostMessage(hwnd, WM_PRESS_KEY_COMPLETE, 0, 0);
             break;
 
         case STAGE_3:
@@ -177,8 +189,8 @@ static void OnTimer(HWND hwnd, UINT id)
             break;
 
         case STAGE_4:
-            ok_int(s_cWM_IME_COMPOSITION, entry->cWM_IME_COMPOSITION);
-            for (i = s_cWM_IME_COMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
+            ok_int(s_cWM_IME_ENDCOMPOSITION, entry->cWM_IME_COMPOSITION);
+            for (i = s_cWM_IME_ENDCOMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
             {
                 /* Add failures if skipped */
                 ok_int(0, 1);
@@ -202,6 +214,9 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_INITDIALOG, OnInitDialog);
         HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
+    case WM_PRESS_KEY_COMPLETE:
+        SetTimer(hwnd, STAGE_3, INTERVAL, NULL);
+        break;
     }
     return 0;
 }
