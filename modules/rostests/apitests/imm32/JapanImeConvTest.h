@@ -195,6 +195,7 @@ static void OnTimer(HWND hwnd, UINT id)
                 /* Add failures if skipped */
                 ok_int(0, 1);
                 ok_int(0, 1);
+                ok_int(0, 1);
             }
 
             ++s_iEntry;
