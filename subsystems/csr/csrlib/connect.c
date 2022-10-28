@@ -386,10 +386,13 @@ CsrClientCallServer(
 
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength = (CSHORT)DataLength +
-        sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+    /* DataLength = user_data_size + anything between
+     * header and data, including intermediate padding */
     ApiMessage->Header.u1.s1.DataLength = (CSHORT)DataLength +
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header); // ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header);
+    /* TotalLength = header_size + DataLength + any structure trailing padding */
+    ApiMessage->Header.u1.s1.TotalLength = (CSHORT)DataLength +
+        sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
