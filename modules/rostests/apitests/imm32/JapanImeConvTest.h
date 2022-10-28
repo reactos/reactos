@@ -16,7 +16,6 @@
 #include <stdio.h>
 
 #define INTERVAL 200
-#define SMALL_INTERVAL 80
 
 static WNDPROC s_fnOldEditWndProc = NULL;
 
@@ -126,7 +125,6 @@ static VOID PressKey(UINT vk)
 {
     keybd_event(vk, 0, 0, 0);
     keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);
-    Sleep(SMALL_INTERVAL);
 }
 
 static void OnTimer(HWND hwnd, UINT id)
