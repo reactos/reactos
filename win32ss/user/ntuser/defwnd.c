@@ -960,7 +960,7 @@ IntDefWindowProc(
                     if (hwndSwitch)
                     {
 #define ID_NEXTLAYOUT 10003
-                        UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, 0);
+                        UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, (LPARAM)UserHMGetHandle(Wnd));
                     }
                 }
             }

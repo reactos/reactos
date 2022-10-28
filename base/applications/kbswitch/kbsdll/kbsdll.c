@@ -13,7 +13,7 @@ HINSTANCE hInstance = NULL;
 HWND hKbSwitchWnd = NULL;
 
 static VOID
-SendMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
+PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
 }
@@ -21,24 +21,23 @@ SendMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 WinHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
-    int id = GlobalAddAtom(_T("KBSWITCH"));
+    if (code < 0)
+    {
+        return CallNextHookEx(hWinHook, code, wParam, lParam);
+    }
 
     switch (code)
     {
         case HCBT_SETFOCUS:
         {
-            if ((HWND)wParam != NULL)
+            HWND hwndFocus = (HWND)wParam;
+            if (hwndFocus && hwndFocus != hKbSwitchWnd)
             {
-                if ((HWND)wParam != hKbSwitchWnd)
-                {
-                    SendMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
-                }
+                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
             }
         }
         break;
     }
-
-    GlobalDeleteAtom(id);
 
     return CallNextHookEx(hWinHook, code, wParam, lParam);
 }
@@ -46,11 +45,16 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
+    if (code < 0)
+    {
+        return CallNextHookEx(hShellHook, code, wParam, lParam);
+    }
+
     switch (code)
     {
         case HSHELL_LANGUAGE:
         {
-            SendMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
+            PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
         }
         break;
     }
@@ -75,8 +79,16 @@ KbSwitchSetHooks(VOID)
 VOID WINAPI
 KbSwitchDeleteHooks(VOID)
 {
-    if (hWinHook) UnhookWindowsHookEx(hWinHook);
-    if (hShellHook) UnhookWindowsHookEx(hShellHook);
+    if (hWinHook)
+    {
+        UnhookWindowsHookEx(hWinHook);
+        hWinHook = NULL;
+    }
+    if (hShellHook)
+    {
+        UnhookWindowsHookEx(hShellHook);
+        hShellHook = NULL;
+    }
 }
 
 BOOL WINAPI
