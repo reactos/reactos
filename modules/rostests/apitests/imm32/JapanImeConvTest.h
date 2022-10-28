@@ -96,11 +96,17 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 }
 
+#define STAGE_1 10001
+#define STAGE_2 10002
+#define STAGE_3 10003
+#define STAGE_4 10004
+#define STAGE_5 10005
+
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
     HWND hEdt1 = GetDlgItem(hwnd, edt1);
     s_fnOldEditWndProc = (WNDPROC)SetWindowLongPtr(hEdt1, GWLP_WNDPROC, (LONG_PTR)EditWindowProc);
-    SetTimer(hwnd, 111, 200, NULL);
+    SetTimer(hwnd, STAGE_1, INTERVAL, NULL);
     return TRUE;
 }
 
@@ -133,7 +139,7 @@ static void OnTimer(HWND hwnd, UINT id)
 
     switch (id)
     {
-        case 111:
+        case STAGE_1:
             s_cWM_IME_COMPOSITION = 0;
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
@@ -144,18 +150,18 @@ static void OnTimer(HWND hwnd, UINT id)
                 ImmSetConversionStatus(hIMC, IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE, IME_SMODE_SINGLECONVERT);
                 ImmReleaseContext(hwnd, hIMC);
             }
-            SetTimer(hwnd, 222, INTERVAL, NULL);
+            SetTimer(hwnd, STAGE_2, INTERVAL, NULL);
             break;
 
-        case 222:
+        case STAGE_2:
             for (i = 0; i < entry->cKeys; ++i)
             {
                 PressKey(entry->pKeys[i]);
             }
-            SetTimer(hwnd, 333, INTERVAL, NULL);
+            SetTimer(hwnd, STAGE_3, INTERVAL, NULL);
             break;
 
-        case 333:
+        case STAGE_3:
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
             if (hIMC)
@@ -163,10 +169,10 @@ static void OnTimer(HWND hwnd, UINT id)
                 ImmSetConversionStatus(hIMC, dwOldConversion, dwOldSentence);
                 ImmReleaseContext(hwnd, hIMC);
             }
-            SetTimer(hwnd, 444, INTERVAL, NULL);
+            SetTimer(hwnd, STAGE_4, INTERVAL, NULL);
             break;
 
-        case 444:
+        case STAGE_4:
             ok_int(s_cWM_IME_COMPOSITION, entry->cWM_IME_COMPOSITION);
             for (i = s_cWM_IME_COMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
                 ok_int(0, 1);
@@ -175,7 +181,7 @@ static void OnTimer(HWND hwnd, UINT id)
             if (s_iEntry == _countof(s_entries))
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
             else
-                SetTimer(hwnd, 111, INTERVAL, NULL);
+                SetTimer(hwnd, STAGE_1, INTERVAL, NULL);
             break;
     }
 }
