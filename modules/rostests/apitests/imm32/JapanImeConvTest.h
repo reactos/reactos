@@ -106,7 +106,7 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
     HWND hEdt1 = GetDlgItem(hwnd, edt1);
     s_fnOldEditWndProc = (WNDPROC)SetWindowLongPtr(hEdt1, GWLP_WNDPROC, (LONG_PTR)EditWindowProc);
-    SetTimer(hwnd, STAGE_1, INTERVAL, NULL);
+    PostMessage(hwnd, WM_TIMER, STAGE_1, 0);
     return TRUE;
 }
 
