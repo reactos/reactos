@@ -90,7 +90,8 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ImmReleaseContext(hwnd, hIMC);
             }
         }
-        // FALL THROUGH
+        /* FALL THROUGH */
+
     default:
         return CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
     }
@@ -176,7 +177,11 @@ static void OnTimer(HWND hwnd, UINT id)
         case STAGE_4:
             ok_int(s_cWM_IME_COMPOSITION, entry->cWM_IME_COMPOSITION);
             for (i = s_cWM_IME_COMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
+            {
+                /* Add failures if skipped */
                 ok_int(0, 1);
+                ok_int(0, 1);
+            }
 
             ++s_iEntry;
             if (s_iEntry == _countof(s_entries))
