@@ -44,8 +44,10 @@ static const UINT s_keys2[] =
 
 static const TEST_ENTRY s_entries[] =
 {
-    { s_keys1, _countof(s_keys1), AorW("\x83\x65\x83\x58\x83\x67", L"\x30C6\x30B9\x30C8"), 1 }, // "テスト"
-    { s_keys2, _countof(s_keys2), AorW("\x92\xB2\x8D\xB8\x88\xF5", L"\x8ABF\x67FB\x54E1"), 1 }, // "調査員"
+    // "テスト"
+    { s_keys1, _countof(s_keys1), AorW("\x83\x65\x83\x58\x83\x67", L"\x30C6\x30B9\x30C8"), 1 },
+    // "調査員"
+    { s_keys2, _countof(s_keys2), AorW("\x92\xB2\x8D\xB8\x88\xF5", L"\x8ABF\x67FB\x54E1"), 1 },
 };
 
 static INT s_iEntry = 0;
@@ -147,7 +149,9 @@ static void OnTimer(HWND hwnd, UINT id)
             {
                 ImmSetOpenStatus(hIMC, TRUE);
                 ImmGetConversionStatus(hIMC, &dwOldConversion, &dwOldSentence);
-                ImmSetConversionStatus(hIMC, IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE, IME_SMODE_SINGLECONVERT);
+                ImmSetConversionStatus(hIMC,
+                                       IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE,
+                                       IME_SMODE_SINGLECONVERT);
                 ImmReleaseContext(hwnd, hIMC);
             }
             SetTimer(hwnd, STAGE_2, INTERVAL, NULL);
