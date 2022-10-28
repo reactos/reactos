@@ -133,47 +133,50 @@ static void OnTimer(HWND hwnd, UINT id)
 
     switch (id)
     {
-    case 111:
-        s_cWM_IME_COMPOSITION = 0;
-        hIMC = ImmGetContext(hwnd);
-        ok(hIMC != NULL, "hIMC was NULL");
-        if (hIMC)
-        {
-            ImmSetOpenStatus(hIMC, TRUE);
-            ImmGetConversionStatus(hIMC, &dwOldConversion, &dwOldSentence);
-            ImmSetConversionStatus(hIMC, IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE, IME_SMODE_SINGLECONVERT);
-            ImmReleaseContext(hwnd, hIMC);
-        }
-        SetTimer(hwnd, 222, INTERVAL, NULL);
-        break;
-    case 222:
-        for (i = 0; i < entry->cKeys; ++i)
-        {
-            PressKey(entry->pKeys[i]);
-        }
-        SetTimer(hwnd, 333, INTERVAL, NULL);
-        break;
-    case 333:
-        hIMC = ImmGetContext(hwnd);
-        ok(hIMC != NULL, "hIMC was NULL");
-        if (hIMC)
-        {
-            ImmSetConversionStatus(hIMC, dwOldConversion, dwOldSentence);
-            ImmReleaseContext(hwnd, hIMC);
-        }
-        SetTimer(hwnd, 444, INTERVAL, NULL);
-        break;
-    case 444:
-        ok_int(s_cWM_IME_COMPOSITION, entry->cWM_IME_COMPOSITION);
-        for (i = s_cWM_IME_COMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
-            ok_int(0, 1);
+        case 111:
+            s_cWM_IME_COMPOSITION = 0;
+            hIMC = ImmGetContext(hwnd);
+            ok(hIMC != NULL, "hIMC was NULL");
+            if (hIMC)
+            {
+                ImmSetOpenStatus(hIMC, TRUE);
+                ImmGetConversionStatus(hIMC, &dwOldConversion, &dwOldSentence);
+                ImmSetConversionStatus(hIMC, IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE, IME_SMODE_SINGLECONVERT);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+            SetTimer(hwnd, 222, INTERVAL, NULL);
+            break;
 
-        ++s_iEntry;
-        if (s_iEntry == _countof(s_entries))
-            PostMessage(hwnd, WM_CLOSE, 0, 0);
-        else
-            SetTimer(hwnd, 111, INTERVAL, NULL);
-        break;
+        case 222:
+            for (i = 0; i < entry->cKeys; ++i)
+            {
+                PressKey(entry->pKeys[i]);
+            }
+            SetTimer(hwnd, 333, INTERVAL, NULL);
+            break;
+
+        case 333:
+            hIMC = ImmGetContext(hwnd);
+            ok(hIMC != NULL, "hIMC was NULL");
+            if (hIMC)
+            {
+                ImmSetConversionStatus(hIMC, dwOldConversion, dwOldSentence);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+            SetTimer(hwnd, 444, INTERVAL, NULL);
+            break;
+
+        case 444:
+            ok_int(s_cWM_IME_COMPOSITION, entry->cWM_IME_COMPOSITION);
+            for (i = s_cWM_IME_COMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
+                ok_int(0, 1);
+
+            ++s_iEntry;
+            if (s_iEntry == _countof(s_entries))
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+            else
+                SetTimer(hwnd, 111, INTERVAL, NULL);
+            break;
     }
 }
 
