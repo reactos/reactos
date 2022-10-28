@@ -25,7 +25,7 @@ typedef struct tagTEST_ENTRY
     const UINT *pKeys;
     UINT cKeys;
     const void *pvResult;
-    INT cWM_IME_COMPOSITION;
+    INT cWM_IME_ENDCOMPOSITION;
 } TEST_ENTRY, *PTEST_ENTRY;
 
 static const UINT s_keys1[] =
@@ -189,8 +189,8 @@ static void OnTimer(HWND hwnd, UINT id)
             break;
 
         case STAGE_4:
-            ok_int(s_cWM_IME_ENDCOMPOSITION, entry->cWM_IME_COMPOSITION);
-            for (i = s_cWM_IME_ENDCOMPOSITION; i < entry->cWM_IME_COMPOSITION; ++i)
+            ok_int(s_cWM_IME_ENDCOMPOSITION, entry->cWM_IME_ENDCOMPOSITION);
+            for (i = s_cWM_IME_ENDCOMPOSITION; i < entry->cWM_IME_ENDCOMPOSITION; ++i)
             {
                 /* Add failures if skipped */
                 ok_int(0, 1);
