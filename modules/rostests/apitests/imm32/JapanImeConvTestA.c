@@ -5,5 +5,5 @@
  * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#undef UNICODE
+#undef UNICODE /* ANSI */
 #include "JapanImeConvTest.h"

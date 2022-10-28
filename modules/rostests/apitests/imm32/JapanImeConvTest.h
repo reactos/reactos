@@ -5,21 +5,21 @@
  * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
 #include <windows.h>
 #include <windowsx.h>
 #include <imm.h>
-//#include <ddk/immdev.h>
 #include <wine/test.h>
-//#include <pseh/pseh2.h>
-#include <stdio.h>
+
+/*
+ * We emulate some keyboard typing on dialog box and watch the conversion of Japanese IME.
+ * This program needs Japanese environment and Japanese IME.
+ * Tested on Japanese WinXP and Japanese Win10.
+ */
 
 #define INTERVAL 200
 #define WM_PRESS_KEY_COMPLETE (WM_USER + 100)
 
-static WNDPROC s_fnOldEditWndProc = NULL;
-
+/* The test entry structure */
 typedef struct tagTEST_ENTRY
 {
     const UINT *pKeys;
@@ -28,10 +28,12 @@ typedef struct tagTEST_ENTRY
     INT cWM_IME_ENDCOMPOSITION;
 } TEST_ENTRY, *PTEST_ENTRY;
 
+// The Japanese word "テスト" conversion in Romaji
 static const UINT s_keys1[] =
 {
     'T', 'E', 'S', 'U', 'T', 'O', VK_SPACE, VK_RETURN
 };
+// The Japanese word "調査員" conversion in Romaji
 static const UINT s_keys2[] =
 {
     'C', 'H', 'O', 'U', 'S', 'A', 'I', 'N', 'N', VK_SPACE, VK_RETURN
@@ -43,6 +45,7 @@ static const UINT s_keys2[] =
     #define AorW(a, w) a
 #endif
 
+/* The test entries */
 static const TEST_ENTRY s_entries[] =
 {
     // "テスト"
@@ -53,6 +56,7 @@ static const TEST_ENTRY s_entries[] =
 
 static INT s_iEntry = 0;
 static INT s_cWM_IME_ENDCOMPOSITION = 0;
+static WNDPROC s_fnOldEditWndProc = NULL;
 
 #ifdef UNICODE
 static LPSTR WideToAnsi(INT nCodePage, LPCWSTR pszWide)
@@ -63,6 +67,7 @@ static LPSTR WideToAnsi(INT nCodePage, LPCWSTR pszWide)
 }
 #endif
 
+/* The window procedure for textbox to watch the IME conversion */
 static LRESULT CALLBACK
 EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -75,6 +80,7 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             LONG cbResult;
             LPTSTR pszResult;
 
+            /* Check conversion results of composition string */
             hIMC = ImmGetContext(hwnd);
             cbResult = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
             trace("cbResult: %ld\n", cbResult);
@@ -83,13 +89,13 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ok(hIMC != NULL, "hIMC was NULL\n");
                 ++s_cWM_IME_ENDCOMPOSITION;
 
-                pszResult = (LPTSTR)calloc(cbResult + 1, sizeof(TCHAR));
+                pszResult = (LPTSTR)calloc(cbResult + sizeof(WCHAR), sizeof(BYTE));
                 ok(pszResult != NULL, "pszResult was NULL\n");
                 ImmGetCompositionString(hIMC, GCS_RESULTSTR, pszResult, cbResult);
 #ifdef UNICODE
-                printf("%s\n", WideToAnsi(CP_ACP, (LPTSTR)pszResult));
+                trace("%s\n", WideToAnsi(CP_ACP, (LPTSTR)pszResult));
 #else
-                printf("%s\n", (LPTSTR)pszResult);
+                trace("%s\n", (LPTSTR)pszResult);
 #endif
                 ok(lstrcmp(pszResult, (LPTSTR)entry->pvResult) == 0, "pszResult differs\n");
                 free(pszResult);
@@ -103,20 +109,26 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
 }
 
+/* Timer IDs */
 #define STAGE_1 10001
 #define STAGE_2 10002
 #define STAGE_3 10003
 #define STAGE_4 10004
 #define STAGE_5 10005
 
+/* WM_INITDIALOG */
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
+    /* Subclass the textbox to watch the IME conversion */
     HWND hEdt1 = GetDlgItem(hwnd, edt1);
     s_fnOldEditWndProc = (WNDPROC)SetWindowLongPtr(hEdt1, GWLP_WNDPROC, (LONG_PTR)EditWindowProc);
+
+    /* Go to first stage */
     SetTimer(hwnd, STAGE_1, INTERVAL, 0);
     return TRUE;
 }
 
+/* WM_COMMAND */
 static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
     switch (id)
@@ -128,6 +140,7 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
+/* Emulate keyboard typing */
 static VOID PressKey(UINT vk)
 {
     INPUT inputs[2];
@@ -140,6 +153,7 @@ static VOID PressKey(UINT vk)
     SendInput(_countof(inputs), inputs, sizeof(INPUT));
 }
 
+/* WM_TIMER */
 static void OnTimer(HWND hwnd, UINT id)
 {
     HIMC hIMC;
@@ -153,13 +167,18 @@ static void OnTimer(HWND hwnd, UINT id)
     switch (id)
     {
         case STAGE_1:
+            /* Check focus. See WM_INITDIALOG return code. */
             ok(GetFocus() == GetDlgItem(hwnd, edt1), "GetFocus() was %p\n", GetFocus());
+
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
             if (hIMC)
             {
+                /* Open the IME */
                 ImmSetOpenStatus(hIMC, TRUE);
+                /* Save the IME conversion status */
                 ImmGetConversionStatus(hIMC, &dwOldConversion, &dwOldSentence);
+                /* Modify the IME conversion status */
                 ImmSetConversionStatus(hIMC,
                                        IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE,
                                        IME_SMODE_SINGLECONVERT);
@@ -171,19 +190,24 @@ static void OnTimer(HWND hwnd, UINT id)
 
                 ImmReleaseContext(hwnd, hIMC);
             }
+            /* Initialize the counter */
             s_cWM_IME_ENDCOMPOSITION = 0;
+            /* Go to next stage */
             SetTimer(hwnd, STAGE_2, INTERVAL, NULL);
             break;
 
         case STAGE_2:
+            /* Emulate keyboard typing */
             for (i = 0; i < entry->cKeys; ++i)
             {
                 PressKey(entry->pKeys[i]);
             }
+            /* Wait for message queue processed */
             PostMessage(hwnd, WM_PRESS_KEY_COMPLETE, 0, 0);
             break;
 
         case STAGE_3:
+            /* Revert the IME conversion status */
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
             if (hIMC)
@@ -191,28 +215,29 @@ static void OnTimer(HWND hwnd, UINT id)
                 ImmSetConversionStatus(hIMC, dwOldConversion, dwOldSentence);
                 ImmReleaseContext(hwnd, hIMC);
             }
+            /* Go to next stage */
             SetTimer(hwnd, STAGE_4, INTERVAL, NULL);
             break;
 
         case STAGE_4:
+            /* Check the counter */
             ok_int(s_cWM_IME_ENDCOMPOSITION, entry->cWM_IME_ENDCOMPOSITION);
-            for (i = s_cWM_IME_ENDCOMPOSITION; i < entry->cWM_IME_ENDCOMPOSITION; ++i)
+            if (s_cWM_IME_ENDCOMPOSITION < entry->cWM_IME_ENDCOMPOSITION)
             {
-                /* Add failures if skipped */
-                ok_int(0, 1);
-                ok_int(0, 1);
-                ok_int(0, 1);
+                skip("Some tests were skipped.\n");
             }
 
+            /* Go to next test entry */
             ++s_iEntry;
             if (s_iEntry == _countof(s_entries))
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
+                PostMessage(hwnd, WM_CLOSE, 0, 0); /* No more entry */
             else
                 SetTimer(hwnd, STAGE_1, INTERVAL, NULL);
             break;
     }
 }
 
+/* Dialog procedure */
 static INT_PTR CALLBACK
 DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -221,7 +246,9 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_INITDIALOG, OnInitDialog);
         HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
+
     case WM_PRESS_KEY_COMPLETE:
+        /* Message queue is processed. Go to next stage. */
         SetTimer(hwnd, STAGE_3, INTERVAL, NULL);
         break;
     }
@@ -234,18 +261,21 @@ START_TEST(JapanImeConvTestW)
 START_TEST(JapanImeConvTestA)
 #endif
 {
+    /* Is the system Japanese? */
     if (PRIMARYLANGID(GetSystemDefaultLangID()) != LANG_JAPANESE)
     {
-        skip("Non-Japanese\n");
+        skip("This testcase is for Japanese only.\n");
         return;
     }
 
+    /* Is IMM enabled? */
     if (!GetSystemMetrics(SM_IMMENABLED))
     {
-        skip("SM_IMMENABLED is OFF\n");
+        skip("SM_IMMENABLED is OFF.\n");
         return;
     }
 
+    /* Check the current keyboard layout is IME */
     if (!ImmIsIME(GetKeyboardLayout(0)))
     {
         skip("The IME keyboard layout was not default\n");
@@ -255,5 +285,5 @@ START_TEST(JapanImeConvTestA)
     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(1), NULL, DialogProc);
 
     if (s_iEntry < _countof(s_entries))
-        skip("Skipped\n");
+        skip("Some tests were skipped.\n");
 }
