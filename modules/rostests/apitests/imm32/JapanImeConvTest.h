@@ -16,7 +16,7 @@
  * Tested on Japanese WinXP and Japanese Win10.
  */
 
-#define INTERVAL 200
+#define INTERVAL 300
 #define WM_PRESS_KEY_COMPLETE (WM_USER + 100)
 
 /* The test entry structure */
@@ -77,7 +77,7 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             const TEST_ENTRY *entry = &s_entries[s_iEntry];
             HIMC hIMC;
-            LONG cbResult;
+            LONG cbResult, cbBuffer;
             LPTSTR pszResult;
 
             /* Check conversion results of composition string */
@@ -89,9 +89,10 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ok(hIMC != NULL, "hIMC was NULL\n");
                 ++s_cWM_IME_ENDCOMPOSITION;
 
-                pszResult = (LPTSTR)calloc(cbResult + sizeof(WCHAR), sizeof(BYTE));
+                cbBuffer = cbResult + sizeof(WCHAR);
+                pszResult = (LPTSTR)calloc(cbBuffer, sizeof(BYTE)); /* Zero-fill */
                 ok(pszResult != NULL, "pszResult was NULL\n");
-                ImmGetCompositionString(hIMC, GCS_RESULTSTR, pszResult, cbResult);
+                ImmGetCompositionString(hIMC, GCS_RESULTSTR, pszResult, cbBuffer);
 #ifdef UNICODE
                 trace("%s\n", WideToAnsi(CP_ACP, (LPTSTR)pszResult));
 #else
@@ -158,7 +159,6 @@ static void OnTimer(HWND hwnd, UINT id)
 {
     HIMC hIMC;
     INT i;
-    HWND hImeWnd;
     const TEST_ENTRY *entry = &s_entries[s_iEntry];
     static DWORD dwOldConversion, dwOldSentence;
 
@@ -182,11 +182,6 @@ static void OnTimer(HWND hwnd, UINT id)
                 ImmSetConversionStatus(hIMC,
                                        IME_CMODE_FULLSHAPE | IME_CMODE_ROMAN | IME_CMODE_NATIVE,
                                        IME_SMODE_SINGLECONVERT);
-
-                /* Don't show candidate list */
-                hImeWnd = ImmGetDefaultIMEWnd(hwnd);
-                ImmIsUIMessage(hImeWnd, WM_IME_SETCONTEXT, TRUE,
-                               ISC_SHOWUICOMPOSITIONWINDOW /* | ISC_SHOWUICANDIDATEWINDOW*/);
 
                 ImmReleaseContext(hwnd, hIMC);
             }
