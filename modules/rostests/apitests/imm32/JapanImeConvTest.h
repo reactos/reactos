@@ -141,6 +141,7 @@ static void OnTimer(HWND hwnd, UINT id)
     {
         case STAGE_1:
             s_cWM_IME_COMPOSITION = 0;
+            ok(GetFocus() == GetDlgItem(hwnd, edt1), "GetFocus() was %p\n", GetFocus());
             hIMC = ImmGetContext(hwnd);
             ok(hIMC != NULL, "hIMC was NULL");
             if (hIMC)
