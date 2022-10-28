@@ -130,8 +130,14 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 static VOID PressKey(UINT vk)
 {
-    keybd_event(vk, 0, 0, 0);
-    keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);
+    INPUT inputs[2];
+    ZeroMemory(inputs, sizeof(inputs));
+    inputs[0].type = INPUT_KEYBOARD;
+    inputs[0].ki.wVk = vk;
+    inputs[1].type = INPUT_KEYBOARD;
+    inputs[1].ki.wVk = vk;
+    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(_countof(inputs), inputs, sizeof(INPUT));
 }
 
 static void OnTimer(HWND hwnd, UINT id)
