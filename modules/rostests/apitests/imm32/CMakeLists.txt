@@ -7,7 +7,10 @@ list(APPEND SOURCE
     imcc.c
     ImmGetImeInfoEx.c
     ImmIsUIMessage.c
-    testlist.c)
+    JapanImeConvTestA.c
+    JapanImeConvTestW.c
+    testlist.c
+    resource.rc)
 
 add_executable(imm32_apitest ${SOURCE})
 target_link_libraries(imm32_apitest wine ${PSEH_LIB})
