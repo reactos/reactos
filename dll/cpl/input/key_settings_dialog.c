@@ -228,10 +228,8 @@ KeySettingsDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             OnInitKeySettingsDialog(hwndDlg);
-        }
-        break;
+            return TRUE;
 
         case WM_COMMAND:
         {

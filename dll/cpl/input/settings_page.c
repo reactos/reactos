@@ -650,7 +650,7 @@ SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
             OnInitSettingsPage(hwndDlg);
-            break;
+            return TRUE;
 
         case WM_DESTROY:
             OnDestroySettingsPage(hwndDlg);

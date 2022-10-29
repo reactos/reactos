@@ -63,8 +63,8 @@ ChangeKeySeqDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                 }
             }
+            return TRUE;
         }
-        break;
 
         case WM_COMMAND:
         {
