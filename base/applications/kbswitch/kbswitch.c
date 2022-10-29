@@ -603,9 +603,6 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
     HKL hKL = GetKeyboardLayout(dwThreadID);
     UpdateLanguageDisplay(hwnd, hKL);
 
-    if (IsWindow(g_hwndLastActive))
-        SetForegroundWindow(g_hwndLastActive);
-
     return 0;
 }
 
