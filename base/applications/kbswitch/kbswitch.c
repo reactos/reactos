@@ -248,16 +248,13 @@ static HBITMAP BitmapFromIcon(HICON hIcon)
 
     ReleaseDC(NULL, hdcScreen);
 
-    if (hbm == NULL)
+    if (hbm != NULL)
     {
-        DeleteDC(hdc);
-        return NULL;
+        hbmOld = SelectObject(hdc, hbm);
+        hbr = GetSysColorBrush(COLOR_MENU);
+        DrawIconEx(hdc, 0, 0, hIcon, cxIcon, cyIcon, 0, hbr, DI_NORMAL);
+        SelectObject(hdc, hbmOld);
     }
-
-    hbmOld = SelectObject(hdc, hbm);
-    hbr = GetSysColorBrush(COLOR_MENU);
-    DrawIconEx(hdc, 0, 0, hIcon, cxIcon, cyIcon, 0, hbr, DI_NORMAL);
-    SelectObject(hdc, hbmOld);
 
     DeleteDC(hdc);
     return hbm;
