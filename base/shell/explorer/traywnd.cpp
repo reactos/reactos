@@ -850,11 +850,20 @@ public:
         return TRUE;
     }
 
+    VOID HideStartMenu()
+    {
+        HWND hwndStartMenu = NULL;
+        IUnknown_GetWindow(m_StartMenuPopup, &hwndStartMenu);
+        if (::IsWindowVisible(hwndStartMenu))
+            ::ShowWindow(hwndStartMenu, SW_HIDE);
+    }
+
     LRESULT HandleHotKey(DWORD id)
     {
         switch (id)
         {
         case IDHK_RUN:
+            HideStartMenu();
             DisplayRunFileDlg();
             break;
         case IDHK_HELP:
@@ -903,6 +912,7 @@ public:
                 // TODO:
                 break;
             case TRAYCMD_RUN_DIALOG:
+                HideStartMenu();
                 DisplayRunFileDlg();
                 break;
             case TRAYCMD_LOGOFF_DIALOG:
