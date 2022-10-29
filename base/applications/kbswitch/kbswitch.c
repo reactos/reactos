@@ -501,8 +501,9 @@ BuildLeftPopupMenu(VOID)
             hIcon = CreateTrayIcon(szLCID, szImeFile);
             if (hIcon)
             {
-                mii.fMask |= MIIM_BITMAP;
                 mii.hbmpItem = BitmapFromIcon(hIcon);
+                if (mii.hbmpItem)
+                    mii.fMask |= MIIM_BITMAP;
             }
 
             InsertMenuItem(hMenu, -1, TRUE, &mii);
