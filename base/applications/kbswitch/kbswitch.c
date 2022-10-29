@@ -236,6 +236,33 @@ static HICON FakeExtractIcon(LPCTSTR szIconPath, INT cxIcon, INT cyIcon)
     return LoadIcon.hIcon;
 }
 
+static HBITMAP BitmapFromIcon(HICON hIcon)
+{
+    HDC hdcScreen = GetDC(NULL);
+    HDC hdc = CreateCompatibleDC(hdcScreen);
+    INT cxIcon = GetSystemMetrics(SM_CXSMICON);
+    INT cyIcon = GetSystemMetrics(SM_CYSMICON);
+    HBITMAP hbm = CreateCompatibleBitmap(hdcScreen, cxIcon, cyIcon);
+    HGDIOBJ hbmOld;
+    HBRUSH hbr;
+
+    ReleaseDC(NULL, hdcScreen);
+
+    if (hbm == NULL)
+    {
+        DeleteDC(hdc);
+        return NULL;
+    }
+
+    hbmOld = SelectObject(hdc, hbm);
+    hbr = GetSysColorBrush(COLOR_MENU);
+    DrawIconEx(hdc, 0, 0, hIcon, cxIcon, cyIcon, 0, hbr, DI_NORMAL);
+    SelectObject(hdc, hbmOld);
+
+    DeleteDC(hdc);
+    return hbm;
+}
+
 static HICON
 CreateTrayIcon(LPTSTR szLCID, LPCTSTR szImeFile OPTIONAL)
 {
@@ -447,6 +474,9 @@ BuildLeftPopupMenu(VOID)
     HKEY hKey;
     DWORD dwIndex, dwSize;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szName[MAX_PATH];
+    TCHAR szLCID[CCH_LAYOUT_ID + 1], szImeFile[80];
+    HICON hIcon;
+    MENUITEMINFO mii = { sizeof(mii) };
 
     /* Add the keyboard layouts to the popup menu */
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
@@ -461,10 +491,25 @@ BuildLeftPopupMenu(VOID)
                 break;
             }
 
+            GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID));
+            GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szLCID);
+
             if (!GetLayoutName(szLayoutNum, szName, ARRAYSIZE(szName)))
                 continue;
 
-            AppendMenu(hMenu, MF_STRING, _ttoi(szLayoutNum), szName);
+            mii.fMask       = MIIM_ID | MIIM_STRING;
+            mii.wID         = _ttoi(szLayoutNum);
+            mii.dwTypeData  = szName;
+
+            hIcon = CreateTrayIcon(szLCID, szImeFile);
+            if (hIcon)
+            {
+                mii.fMask |= MIIM_BITMAP;
+                mii.hbmpItem = BitmapFromIcon(hIcon);
+            }
+
+            InsertMenuItem(hMenu, -1, TRUE, &mii);
+            DestroyIcon(hIcon);
         }
 
         CheckMenuItem(hMenu, ulCurrentLayoutNum, MF_CHECKED);
