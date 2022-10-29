@@ -852,10 +852,7 @@ public:
 
     VOID HideStartMenu()
     {
-        HWND hwndStartMenu = NULL;
-        IUnknown_GetWindow(m_StartMenuPopup, &hwndStartMenu);
-        if (::IsWindowVisible(hwndStartMenu))
-            ::ShowWindow(hwndStartMenu, SW_HIDE);
+        m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
     }
 
     LRESULT HandleHotKey(DWORD id)
