@@ -244,19 +244,16 @@ static HBITMAP BitmapFromIcon(HICON hIcon)
     INT cyIcon = GetSystemMetrics(SM_CYSMICON);
     HBITMAP hbm = CreateCompatibleBitmap(hdcScreen, cxIcon, cyIcon);
     HGDIOBJ hbmOld;
-    HBRUSH hbr;
-
-    ReleaseDC(NULL, hdcScreen);
 
     if (hbm != NULL)
     {
         hbmOld = SelectObject(hdc, hbm);
-        hbr = GetSysColorBrush(COLOR_MENU);
-        DrawIconEx(hdc, 0, 0, hIcon, cxIcon, cyIcon, 0, hbr, DI_NORMAL);
+        DrawIconEx(hdc, 0, 0, hIcon, cxIcon, cyIcon, 0, GetSysColorBrush(COLOR_MENU), DI_NORMAL);
         SelectObject(hdc, hbmOld);
     }
 
     DeleteDC(hdc);
+    ReleaseDC(NULL, hdcScreen);
     return hbm;
 }
 
