@@ -708,7 +708,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             AddTrayIcon(hwnd);
 
-            ActivateLayout(hwnd, ulCurrentLayoutNum, NULL, FALSE);
+            ActivateLayout(hwnd, ulCurrentLayoutNum, NULL, TRUE);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
             break;
         }
