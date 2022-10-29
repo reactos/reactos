@@ -401,7 +401,7 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
 }
 
 static VOID
-ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL)
+ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL, BOOL bNoActivate)
 {
     HKL hKl;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1], szLCID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
@@ -419,7 +419,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL)
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szLCID, szLangName);
 
-    if (hwndTarget)
+    if (hwndTarget && !bNoActivate)
         SetForegroundWindow(hwndTarget);
 
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
@@ -671,7 +671,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             AddTrayIcon(hwnd);
 
-            ActivateLayout(hwnd, ulCurrentLayoutNum, NULL);
+            ActivateLayout(hwnd, ulCurrentLayoutNum, NULL, FALSE);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
             break;
         }
@@ -775,13 +775,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                             ulCurrentLayoutNum = uNum;
                     }
 
-                    ActivateLayout(hwnd, GetNextLayout(), hwndTarget);
+                    ActivateLayout(hwnd, GetNextLayout(), hwndTarget, TRUE);
 
                     /* FIXME: CONWND is multithreaded but KLF_SETFORPROCESS and
                               DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
                     if (bCONWND)
                     {
-                        ActivateLayout(hwnd, ulCurrentLayoutNum, hwndTargetSave);
+                        ActivateLayout(hwnd, ulCurrentLayoutNum, hwndTargetSave, TRUE);
                     }
                     break;
                 }
@@ -794,7 +794,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                         {
                             g_hwndLastActive = NULL;
                         }
-                        ActivateLayout(hwnd, LOWORD(wParam), g_hwndLastActive);
+                        ActivateLayout(hwnd, LOWORD(wParam), g_hwndLastActive, FALSE);
                     }
                     break;
                 }
