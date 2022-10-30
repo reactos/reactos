@@ -856,12 +856,12 @@ public:
 
         /* Process redrawing */
         MSG msg;
-        while (PeekMessageW(&msg, NULL, WM_SHOWWINDOW, WM_SHOWWINDOW, PM_REMOVE) ||
-               PeekMessageW(&msg, NULL, WM_ERASEBKGND, WM_ERASEBKGND, PM_REMOVE) ||
-               PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
+        while (::PeekMessageW(&msg, NULL, WM_SHOWWINDOW, WM_SHOWWINDOW, PM_REMOVE) ||
+               ::PeekMessageW(&msg, NULL, WM_ERASEBKGND, WM_ERASEBKGND, PM_REMOVE) ||
+               ::PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
         {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
+            ::TranslateMessage(&msg);
+            ::DispatchMessageW(&msg);
         }
     }
 
