@@ -57,12 +57,88 @@ BOOL WINAPI
 GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize);
 
 NTSTATUS
-CreateNlsDirectorySecurity(_Out_ PSECURITY_DESCRIPTOR *NlsSecurityDescriptor);
-
-NTSTATUS WINAPI
-CreateNlsSecurityDescriptor(_Out_ PSECURITY_DESCRIPTOR *SecurityDescriptor, _In_ SIZE_T DescriptorSize, _In_ ULONG AccessMask);
+WINAPI
+CreateNlsSecurityDescriptor(
+    _Out_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ SIZE_T DescriptorSize,
+    _In_ ULONG AccessMask);
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+/**
+ * @brief
+ * Creates a security descriptor for the NLS object directory.
+ *
+ * @param[out]  SecurityDescriptor
+ * @param[in]   DescriptorSize
+ * Same parameters as for CreateNlsSecurityDescriptor().
+ *
+ * @remark
+ * Everyone (World SID) is given read access to the NLS directory,
+ * whereas Admins are given full access.
+ */
+static NTSTATUS
+CreateNlsDirectorySecurity(
+    _Out_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ SIZE_T DescriptorSize)
+{
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    NTSTATUS Status;
+    PSID AdminsSid;
+    PACL Dacl;
+    BOOLEAN DaclPresent, DaclDefaulted;
+
+    /* Give everyone basic directory access */
+    Status = CreateNlsSecurityDescriptor(SecurityDescriptor,
+                                         DescriptorSize,
+                                         DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create basic NLS SD (Status 0x%08x)\n", Status);
+        return Status;
+    }
+
+    /* Create the Admins SID */
+    // NOTE: Win <= 2k3 uses SYSTEM instead (SECURITY_LOCAL_SYSTEM_RID with one SubAuthority)
+    Status = RtlAllocateAndInitializeSid(&NtAuthority,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &AdminsSid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create Admins SID (Status 0x%08x)\n", Status);
+        goto Quit;
+    }
+
+    /* Retrieve the DACL from the descriptor */
+    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
+                                          &DaclPresent,
+                                          &Dacl,
+                                          &DaclDefaulted);
+    if (!NT_SUCCESS(Status) || !DaclPresent || !Dacl)
+    {
+        DPRINT1("Failed to get DACL from descriptor (Status 0x%08x)\n", Status);
+        goto Quit;
+    }
+
+    /* Add an allowed access ACE to the Admins SID with full access.
+     * The function verifies the DACL is large enough to accommodate it. */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    DIRECTORY_ALL_ACCESS,
+                                    AdminsSid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to add allowed access ACE for Admins SID (Status 0x%08x)\n", Status);
+        goto Quit;
+    }
+
+Quit:
+    RtlFreeSid(AdminsSid);
+    return Status;
+}
 
 /**
  * @name NlsInit
@@ -74,11 +150,12 @@ BOOL
 FASTCALL
 NlsInit(VOID)
 {
+    NTSTATUS Status;
     UNICODE_STRING DirName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    PSECURITY_DESCRIPTOR NlsDirSd;
     HANDLE Handle;
-    NTSTATUS Status;
+    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE +
+                             NLS_SIZEOF_ACE_AND_SIDS(2)];
 
     InitializeListHead(&CodePageListHead);
     RtlInitializeCriticalSection(&CodePageListLock);
@@ -86,12 +163,13 @@ NlsInit(VOID)
     /*
      * FIXME: Eventually this should be done only for the NLS Server
      * process, but since we don't have anything like that (yet?) we
-     * always try to create the "\Nls" directory here.
+     * always try to create the "\NLS" directory here.
      */
-    RtlInitUnicodeString(&DirName, L"\\Nls");
+    RtlInitUnicodeString(&DirName, L"\\NLS");
 
-    /* Create a security descriptor for NLS directory */
-    Status = CreateNlsDirectorySecurity(&NlsDirSd);
+    /* Create a security descriptor for the NLS directory */
+    Status = CreateNlsDirectorySecurity(&SecurityDescriptor,
+                                        sizeof(SecurityDescriptor));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create NLS directory security (Status 0x%08x)\n", Status);
@@ -102,9 +180,12 @@ NlsInit(VOID)
                                &DirName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               NlsDirSd);
+                               &SecurityDescriptor);
 
-    if (NT_SUCCESS(NtCreateDirectoryObject(&Handle, DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT, &ObjectAttributes)))
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT,
+                                     &ObjectAttributes);
+    if (NT_SUCCESS(Status))
     {
         NtClose(Handle);
     }
@@ -128,7 +209,6 @@ NlsInit(VOID)
     OemCodePage.CodePage = OemCodePage.CodePageTable.CodePage;
     InsertTailList(&CodePageListHead, &OemCodePage.Entry);
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NlsDirSd);
     return TRUE;
 }
 
@@ -212,17 +292,18 @@ PCODEPAGE_ENTRY
 FASTCALL
 IntGetCodePageEntry(UINT CodePage)
 {
-    CHAR SectionName[40];
     NTSTATUS Status;
+    CHAR SectionName[40];
     HANDLE SectionHandle = INVALID_HANDLE_VALUE, FileHandle;
     PBYTE SectionMapping;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
     ANSI_STRING AnsiName;
     UNICODE_STRING UnicodeName;
     WCHAR FileName[MAX_PATH + 1];
     UINT FileNamePos;
     PCODEPAGE_ENTRY CodePageEntry;
-    PSECURITY_DESCRIPTOR NlsSd;
+
     if (CodePage == CP_ACP)
     {
         return &AnsiCodePage;
@@ -294,17 +375,26 @@ IntGetCodePageEntry(UINT CodePage)
      * However since we do not do that, let the kernel32 do the job
      * by assigning security to NLS section names for the time being...
      */
-    Status = CreateNlsSecurityDescriptor(&NlsSd, sizeof(SECURITY_DESCRIPTOR), SECTION_MAP_READ);
+    Status = CreateNlsSecurityDescriptor(&SecurityDescriptor,
+                                         sizeof(SecurityDescriptor),
+                                         SECTION_MAP_READ);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("CreateNlsSecurityDescriptor FAILED! (Status 0x%08x)\n", Status);
         RtlLeaveCriticalSection(&CodePageListLock);
         return NULL;
     }
 
-    InitializeObjectAttributes(&ObjectAttributes, &UnicodeName, 0, NULL, NlsSd);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UnicodeName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               SecurityDescriptor);
 
     /* Try to open the section first */
-    Status = NtOpenSection(&SectionHandle, SECTION_MAP_READ, &ObjectAttributes);
+    Status = NtOpenSection(&SectionHandle,
+                           SECTION_MAP_READ,
+                           &ObjectAttributes);
 
     /* If the section doesn't exist, try to create it. */
     if (Status == STATUS_UNSUCCESSFUL ||
@@ -349,7 +439,6 @@ IntGetCodePageEntry(UINT CodePage)
         }
     }
     RtlFreeUnicodeString(&UnicodeName);
-    HeapFree(GetProcessHeap(), 0, NlsSd);
 
     if (!NT_SUCCESS(Status))
     {
@@ -2274,33 +2363,49 @@ IsDBCSLeadByte(BYTE TestByte)
 
 /**
  * @brief
- * Creates a security descriptor for the NLS object directory
- * name.
+ * Creates a security descriptor for each NLS section. Typically used by
+ * BASESRV to give Everyone (World SID) read access to the sections.
  *
- * @param[out] SecurityDescriptor
- * A pointer to an allocated and created security descriptor
- * that is given to the caller.
+ * @param[out]  SecurityDescriptor
+ * A pointer to a correctly sized user-allocated buffer, that receives
+ * a security descriptor containing one ACL with one World SID.
+ * Its size should be at least equal to NLS_SECTION_SECURITY_DESCRIPTOR_SIZE.
+ *
+ * @param[in]   DescriptorSize
+ * Size (in bytes) of the user-provided SecurityDescriptor buffer.
+ *
+ * @param[in]   AccessMask
+ * An access mask that grants Everyone an access specific to that mask.
  *
  * @return
  * STATUS_SUCCESS is returned if the function has successfully
  * created a security descriptor for a NLS section name. Otherwise
  * a NTSTATUS failure code is returned.
  *
- * @remarks
- * Everyone (aka World SID) is given read access to the NLS directory
- * whereas admins are given full power.
- */
+ * @remark
+ * This implementation has to be made compatible with NT <= 5.2 in order
+ * to inter-operate with BASESRV. In particular, the security descriptor
+ * is a user-provided buffer correctly sized. The caller is responsible
+ * to submit the exact size of the descriptor.
+ **/
 NTSTATUS
-CreateNlsDirectorySecurity(_Out_ PSECURITY_DESCRIPTOR *NlsSecurityDescriptor)
+WINAPI
+CreateNlsSecurityDescriptor(
+    _Out_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ SIZE_T DescriptorSize,
+    _In_ ULONG AccessMask)
 {
-    NTSTATUS Status;
-    PACL Dacl;
-    PSID WorldSid = NULL, AdminsSid = NULL;
-    ULONG DaclSize, RelSdSize = 0;
-    PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    SECURITY_DESCRIPTOR AbsoluteSd;
     static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
-    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    NTSTATUS Status;
+    PSID WorldSid;
+    PACL Dacl;
+    ULONG DaclSize;
+
+    if (DescriptorSize < NLS_SECTION_SECURITY_DESCRIPTOR_SIZE)
+    {
+        DPRINT1("Security descriptor size too small\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
 
     /* Create the World SID */
     Status = RtlAllocateAndInitializeSid(&WorldAuthority,
@@ -2310,304 +2415,49 @@ CreateNlsDirectorySecurity(_Out_ PSECURITY_DESCRIPTOR *NlsSecurityDescriptor)
                                          &WorldSid);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to create world SID (Status 0x%08x)\n", Status);
+        DPRINT1("Failed to create World SID (Status 0x%08x)\n", Status);
         return Status;
     }
 
-    /* Create the admins SID */
-    Status = RtlAllocateAndInitializeSid(&NtAuthority,
-                                         2,
-                                         SECURITY_BUILTIN_DOMAIN_RID,
-                                         DOMAIN_ALIAS_RID_ADMINS,
-                                         0, 0, 0, 0, 0, 0,
-                                         &AdminsSid);
+    /* Initialize the security descriptor */
+    Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to create admins SID (Status 0x%08x)\n", Status);
+        DPRINT1("Failed to create security descriptor (Status 0x%08x)\n", Status);
         goto Quit;
     }
 
-    /* Build up the size of our DACL, including the World and admins SIDs */
-    DaclSize = sizeof(ACL) +
-               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(WorldSid) +
-               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(AdminsSid);
-
-    /* Allocate memory for our DACL */
-    Dacl = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
-    if (Dacl == NULL)
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Could not allocate memory for DACL, not enough memory!\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Quit;
-    }
+    /* The DACL follows the security descriptor, and includes the World SID */
+    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR));
+    DaclSize = DescriptorSize - sizeof(SECURITY_DESCRIPTOR);
 
     /* Create the DACL */
     Status = RtlCreateAcl(Dacl, DaclSize, ACL_REVISION);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to create the DACL (Status 0x%08x)\n", Status);
+        DPRINT1("Failed to create DACL (Status 0x%08x)\n", Status);
         goto Quit;
     }
 
-    /* Give everyone basic directory access */
-    Status = RtlAddAccessAllowedAce(Dacl,
-                                    ACL_REVISION,
-                                    DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT,
-                                    WorldSid);
+    /* Add an allowed access ACE to the World SID */
+    Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, AccessMask, WorldSid);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to insert allowed access ACE to DACL for World SID (Status 0x%08x)\n", Status);
+        DPRINT1("Failed to add allowed access ACE for World SID (Status 0x%08x)\n", Status);
         goto Quit;
     }
 
-    /* Give admins full power */
-    Status = RtlAddAccessAllowedAce(Dacl,
-                                    ACL_REVISION,
-                                    DIRECTORY_ALL_ACCESS,
-                                    AdminsSid);
+    /* Set the DACL to the descriptor */
+    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Dacl, FALSE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to insert allowed access ACE to DACL for admins SID (Status 0x%08x)\n", Status);
+        DPRINT1("Failed to set DACL into descriptor (Status 0x%08x)\n", Status);
         goto Quit;
     }
-
-    /* Initialize the security descriptor */
-    Status = RtlCreateSecurityDescriptor(&AbsoluteSd,
-                                         SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to initialize the security descriptor (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Set the DACL to descriptor */
-    Status = RtlSetDaclSecurityDescriptor(&AbsoluteSd,
-                                          TRUE,
-                                          Dacl,
-                                          FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to insert DACL into the descriptor (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Determine how much size is needed to convert the absolute SD into self-relative one */
-    Status = RtlAbsoluteToSelfRelativeSD(&AbsoluteSd,
-                                         NULL,
-                                         &RelSdSize);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Unexpected status code, must be STATUS_BUFFER_TOO_SMALL (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Allocate buffer for relative SD */
-    RelativeSd = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, RelSdSize);
-    if (RelativeSd == NULL)
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Could not allocate memory for relative SD, not enough memory!\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Quit;
-    }
-
-    /* Convert it now */
-    Status = RtlAbsoluteToSelfRelativeSD(&AbsoluteSd,
-                                         RelativeSd,
-                                         &RelSdSize);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsDirectorySecurity(): Failed to convert absolute SD to self-relative format (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Give the security descriptor to the caller */
-    *NlsSecurityDescriptor = RelativeSd;
 
 Quit:
-    if (WorldSid != NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
-    }
-
-    if (AdminsSid != NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminsSid);
-    }
-
-    if (Dacl != NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        if (RelativeSd != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSd);
-        }
-    }
-
-    return Status;
-}
-
-/**
- * @brief
- * Creates a security descriptor for each NLS section
- * name.
- *
- * @param[in] AccessMask
- * An access mask bit to supply to the function. This
- * access mask grants everyone access specific to that
- * bit mask.
- *
- * @param[out] SecurityDescriptor
- * A pointer to an allocated and created security descriptor
- * that is given to the caller.
- *
- * @return
- * STATUS_SUCCESS is returned if the function has successfully
- * created a security descriptor for a NLS section name. Otherwise
- * a NTSTATUS failure code is returned.
- *
- * @remarks
- * The implementation of CreateNlsSecurityDescriptor on Windows Server
- * 2003 is slightly different compared to ours. The second parameter
- * takes the size of a security descriptor, in bytes. This is implied
- * that on Windows the caller is responsible to submit the exact
- * size of the descriptor. On ReactOS we're going to do it different,
- * let the function be responsible for security descriptor creation
- * and its size. DescriptorSize will act like a dummy parameter for us
- * in this case. Everyone (aka World SID) is given read access to each
- * NLS section name.
- */
-NTSTATUS WINAPI CreateNlsSecurityDescriptor(_Out_ PSECURITY_DESCRIPTOR *SecurityDescriptor, _In_ SIZE_T DescriptorSize, _In_ ULONG AccessMask)
-{
-    NTSTATUS Status;
-    PACL Dacl;
-    PSID WorldSid = NULL;
-    ULONG DaclSize, RelSdSize = 0;
-    PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    SECURITY_DESCRIPTOR AbsoluteSd;
-    static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
-
-    /* DescriptorSize is just a dummy parameter */
-    UNREFERENCED_PARAMETER(DescriptorSize);
-
-    /* Create the World SID */
-    Status = RtlAllocateAndInitializeSid(&WorldAuthority,
-                                         1,
-                                         SECURITY_WORLD_RID,
-                                         0, 0, 0, 0, 0, 0, 0,
-                                         &WorldSid);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to create world SID (Status 0x%08x)\n", Status);
-        return Status;
-    }
-
-    /* Build up the size of our DACL, including the World SID */
-    DaclSize = sizeof(ACL) +
-               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(WorldSid);
-
-    /* Allocate memory for our DACL */
-    Dacl = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
-    if (Dacl == NULL)
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Could not allocate memory for DACL, not enough memory!\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Quit;
-    }
-
-    /* Create the DACL */
-    Status = RtlCreateAcl(Dacl, DaclSize, ACL_REVISION);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to create the DACL (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Add a ACE with allow access to the World SID */
-    Status = RtlAddAccessAllowedAce(Dacl,
-                                    ACL_REVISION,
-                                    AccessMask,
-                                    WorldSid);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to insert allowed access ACE to DACL for World SID (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Initialize the security descriptor */
-    Status = RtlCreateSecurityDescriptor(&AbsoluteSd,
-                                         SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to insert allowed access ACE to DACL for World SID (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Set the DACL to descriptor */
-    Status = RtlSetDaclSecurityDescriptor(&AbsoluteSd,
-                                          TRUE,
-                                          Dacl,
-                                          FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to insert DACL into the descriptor (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Determine how much size is needed to convert the absolute SD into self-relative one */
-    Status = RtlAbsoluteToSelfRelativeSD(&AbsoluteSd,
-                                         NULL,
-                                         &RelSdSize);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Unexpected status code, must be STATUS_BUFFER_TOO_SMALL (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Allocate buffer for relative SD */
-    RelativeSd = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, RelSdSize);
-    if (RelativeSd == NULL)
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Could not allocate memory for relative SD, not enough memory!\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Quit;
-    }
-
-    /* Convert it now */
-    Status = RtlAbsoluteToSelfRelativeSD(&AbsoluteSd,
-                                         RelativeSd,
-                                         &RelSdSize);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CreateNlsSecurityDescriptor(): Failed to convert absolute SD to self-relative format (Status 0x%08x)\n", Status);
-        goto Quit;
-    }
-
-    /* Give the security descriptor to the caller */
-    *SecurityDescriptor = RelativeSd;
-
-Quit:
-    if (WorldSid != NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
-    }
-
-    if (Dacl != NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        if (RelativeSd != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSd);
-        }
-    }
-
+    RtlFreeSid(WorldSid);
     return Status;
 }
 

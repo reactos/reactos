@@ -33,7 +33,12 @@ PVALIDATE_LOCALE pValidateLocale;
 PGET_NLS_SECTION_NAME pGetNlsSectionName;
 PVOID /*PGET_USER_DEFAULT_LANGID*/ pGetUserDefaultLangID;
 PGET_CP_FILE_NAME_FROM_REGISTRY pGetCPFileNameFromRegistry;
-PCREATE_NLS_SECURTY_DESCRIPTOR pCreateNlsSecurityDescriptor;
+
+NTSTATUS
+(WINAPI *pCreateNlsSecurityDescriptor)(
+    _Out_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ SIZE_T DescriptorSize,
+    _In_ ULONG AccessMask);
 
 BASESRV_KERNEL_IMPORTS BaseSrvKernel32Imports[10] =
 {
@@ -161,7 +166,7 @@ CSR_API(BaseSrvNlsCreateSection)
     ULONG LocaleId;
     UNICODE_STRING NlsSectionName;
     PWCHAR NlsFileName;
-    PSECURITY_DESCRIPTOR NlsSd;
+    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
     OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR FileNameBuffer[32];
     WCHAR NlsSectionNameBuffer[32];
@@ -271,8 +276,8 @@ CSR_API(BaseSrvNlsCreateSection)
     }
 
     /* Create an SD for the section object */
-    Status = pCreateNlsSecurityDescriptor(&NlsSd,
-                                          sizeof(SECURITY_DESCRIPTOR),
+    Status = pCreateNlsSecurityDescriptor(&SecurityDescriptor,
+                                          sizeof(SecurityDescriptor),
                                           SECTION_MAP_READ);
     if (!NT_SUCCESS(Status))
     {
@@ -286,7 +291,7 @@ CSR_API(BaseSrvNlsCreateSection)
                                &NlsSectionName,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT | OBJ_OPENIF,
                                NULL,
-                               NlsSd);
+                               &SecurityDescriptor);
     Status = NtCreateSection(&SectionHandle,
                              SECTION_MAP_READ,
                              &ObjectAttributes,
@@ -295,7 +300,6 @@ CSR_API(BaseSrvNlsCreateSection)
                              SEC_COMMIT,
                              FileHandle);
     NtClose(FileHandle);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NlsSd);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NLS: Failed to create section! %lx\n", Status);
