@@ -285,20 +285,11 @@ DesktopOnInitDialog(IN HWND hwndDlg, IN PDESKTOP_DATA pData)
         if (SHGetValue(HKEY_CURRENT_USER, szClassPath, IconChange[i].IconName, &dwType,
                        pData->LocalIcon[i].szTitle, &cbData) != ERROR_SUCCESS || dwType != REG_SZ)
         {
-            /* Try loading system-defined class icon title */
-            StringCchCopy(szClassPath, _countof(szClassPath), szSysClass);
-            StringCchCat(szClassPath, _countof(szClassPath), IconChange[i].CLSID);
-            cbData = sizeof(pData->LocalIcon[i].szTitle);
-
-            if (SHGetValue(HKEY_CLASSES_ROOT, szClassPath, IconChange[i].IconName, &dwType,
-                           pData->LocalIcon[i].szTitle, &cbData) != ERROR_SUCCESS || dwType != REG_SZ)
-            {
-                /* Fallback to predefined strings */
-                LoadString(GetModuleHandle(TEXT("shell32.dll")),
-                           IconChange[i].TitleId,
-                           pData->LocalIcon[i].szTitle,
-                           _countof(pData->LocalIcon[i].szTitle));
-            }
+            /* Fallback to predefined strings */
+            LoadString(GetModuleHandle(TEXT("shell32.dll")),
+                       IconChange[i].TitleId,
+                       pData->LocalIcon[i].szTitle,
+                       _countof(pData->LocalIcon[i].szTitle));
         }
 
         hIcon = GetIconFromLocation(pData->LocalIcon[i].szPath);
