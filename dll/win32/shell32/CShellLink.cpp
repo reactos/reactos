@@ -2224,8 +2224,12 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             }
             else
             {
+                /* It might contain double backslashes (CORE-18080). Canonicalize the path. */
+                WCHAR szFullPath[MAX_PATH];
+                GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
+
                 hr = S_OK;
-                pidlNew = SHSimpleIDListFromPathW(szPath);
+                pidlNew = SHSimpleIDListFromPathW(szFullPath);
                 // NOTE: Don't make it failed here even if pidlNew was NULL.
                 // We don't fail on purpose even if SHSimpleIDListFromPathW returns NULL.
                 // This behaviour has been verified with tests.
