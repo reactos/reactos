@@ -51,7 +51,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Tms Rmn",0x
 ; FIXME: I do suspect that all substitutions to "Verdana" in this section and in the corresponding Greek section in
 ; base/setup/lib/muifonts.h are a hack actually. I suspect that actually "Tahoma" would be correct for all of them.
 ; Using "Tahoma" looks bold erroneously. Using "Verdana" looks blurry, but (at least) not bold.
-; see https://github.com/reactos/reactos/pull/4829 for some pictures
+; See https://github.com/reactos/reactos/pull/4829 for some pictures.
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Courier",0x00000000,"FreeMono"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Fixedsys",0x00000000,"Fixedsys Excelsior 3.01-L2"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Helv",0x00000000,"Verdana"
