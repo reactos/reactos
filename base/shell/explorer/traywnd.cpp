@@ -853,16 +853,6 @@ public:
     VOID HideStartMenu()
     {
         m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
-
-        /* Process redrawing */
-        MSG msg;
-        while (::PeekMessageW(&msg, NULL, WM_SHOWWINDOW, WM_SHOWWINDOW, PM_REMOVE) ||
-               ::PeekMessageW(&msg, NULL, WM_ERASEBKGND, WM_ERASEBKGND, PM_REMOVE) ||
-               ::PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
-        {
-            ::TranslateMessage(&msg);
-            ::DispatchMessageW(&msg);
-        }
     }
 
     LRESULT HandleHotKey(DWORD id)
@@ -923,7 +913,6 @@ public:
                 DisplayRunFileDlg();
                 break;
             case TRAYCMD_LOGOFF_DIALOG:
-                HideStartMenu();
                 LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
                 break;
             case TRAYCMD_CASCADE:
@@ -971,7 +960,6 @@ public:
                 // TODO:
                 break;
             case TRAYCMD_SHUTDOWN_DIALOG:
-                HideStartMenu();
                 DoExitWindows();
                 break;
             case TRAYCMD_PRINTERS_AND_FAXES:
@@ -3081,13 +3069,9 @@ HandleTrayContextMenu:
             return FALSE;
 
         if (::IsWindowVisible(hwndStartMenu))
-        {
-            m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
-        }
+            HideStartMenu();
         else
-        {
             PopupStartMenu();
-        }
 
         return TRUE;
     }
