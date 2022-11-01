@@ -164,7 +164,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     /* Build the root-like path on pszPath, and set pchTemp */
     if (PathIsUNCW(szTemp)) /* UNC path: Begins with double backslash */
     {
-        /* FIXME: Short pathname */
+        /* FIXME: Support non-LFN */
         pszPath[2] = UNICODE_NULL; /* Cut off */
         pchTemp = &szTemp[2];
     }
