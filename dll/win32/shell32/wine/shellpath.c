@@ -263,7 +263,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 
     PathRemoveBackslashW(pszPath); /* The trailing backslash should be removed */
 
-    if (!(dwFlags & 1)) /* Remove the last dot? */
+    if (!(dwFlags & 1)) /* Remove the trailing dot? */
     {
         pchPath = CharPrevW(pszPath, pszPath + lstrlenW(pszPath));
         if (*pchPath == L'.')
