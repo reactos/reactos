@@ -154,8 +154,6 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
     PWCHAR pchTemp, pchPath, pchPathEnd;
 
-    /* FIXME: Short pathname */
-
     /* Save pszPath path into szTemp for rebuilding the path later */
     if (FAILED(StringCchCopyW(szTemp, _countof(szTemp), pszPath)))
         return;
@@ -166,6 +164,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     /* Build the root-like path on pszPath, and set pchTemp */
     if (PathIsUNCW(szTemp)) /* UNC path: Begins with double backslash */
     {
+        /* FIXME: Short pathname */
         pszPath[2] = UNICODE_NULL; /* Cut off */
         pchTemp = &szTemp[2];
     }
