@@ -760,7 +760,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
     if (PathIsURLW(path)) /* URL? */
         return FALSE;
 
-    /* Quialify the path */
+    /* Qualify the path */
     PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 1);
 
     if (flags & PRF_VERIFYEXISTS) /* Verify the existence? */
