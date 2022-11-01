@@ -207,7 +207,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     /* Start appending the path components of szTemp to pszPath. */
     while (*pchTemp && pchPath < pchPathEnd)
     {
-        if (pchTemp[0] == L'.') /* Dot? */
+        /* Collapse any .\ and ..\ parts in the path */
+        if (pchTemp[0] == L'.')
         {
             BOOL bDots = FALSE; /* '..' or '.' ? */
 
