@@ -735,15 +735,11 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 
     if (PathIsRootW(path)) /* Root path */
     {
-        if (path[0] == L'\\' && path[1] == UNICODE_NULL &&
-            !PathIsUNCServerW(path) &&
-            !PathIsUNCServerShareW(path))
-        {
-            PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 0);
-        }
+        if (path[0] == L'\\' && path[1] == UNICODE_NULL) /* '\' only? */
+            PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 0); /* Qualify */
 
         if (flags & PRF_VERIFYEXISTS)
-            return PathFileExistsAndAttributesW(path, NULL);
+            return PathFileExistsAndAttributesW(path, NULL); /* Check the existence */
 
         return TRUE;
     }
