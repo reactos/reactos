@@ -156,7 +156,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 
     /* FIXME: Short pathname */
 
-    /* Copy path to szTemp */
+    /* Save pszPath path into szTemp for rebuilding the path later */
     if (FAILED(StringCchCopyW(szTemp, _countof(szTemp), pszPath)))
         return;
 
@@ -729,7 +729,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
     if (flags & PRF_VERIFYEXISTS)
         SetLastError(ERROR_FILE_NOT_FOUND); /* We set this error code at first in verification */
 
-    PathUnquoteSpacesW(path); /* Unquote the path */
+    PathUnquoteSpacesW(path);
 
     if (PathIsRootW(path)) /* Root path */
     {
