@@ -26,8 +26,8 @@ static PATHRESOLVE  s_pPathResolve = NULL;
 static ISLFNDRIVEW  s_pIsLFNDriveW = NULL;
 static WCHAR        s_TestDir[MAX_PATH];
 static WCHAR        s_ShortcutLongName[MAX_PATH];
-static WCHAR        s_ShortcutShortName[MAX_PATH];
 static WCHAR        s_LinkTarget[MAX_PATH];
+static WCHAR        s_LinkTargetDoubleBackslash[MAX_PATH];
 static LPWSTR       s_Dirs[2] = { s_TestDir, NULL };
 
 /* PathResolve flags */
@@ -222,6 +222,36 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS11, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS12, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS13, s_Dirs },
+    /* 2PRONG.txt (double backslash) */
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS4 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS5 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS6 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS10 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS11 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS12 },
+    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS13 },
+    /* 2PRONG.txt with dirs (double backslash) */
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS13, s_Dirs },
     /* 2PRONG.txt (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS1 },
@@ -602,7 +632,9 @@ static void TestMain_PathResolve(void)
     if (SetEnvironmentVariableW(L"PATHEXT", NULL))
     {
         for (i = 0; i < cEntries; ++i)
+        {
             DoEntry(2, pEntries[i].LineNumber, &pEntries[i]);
+        }
     }
     else
     {
@@ -613,7 +645,9 @@ static void TestMain_PathResolve(void)
     if (SetEnvironmentVariableW(L"PATHEXT", L".COM;.EXE;.BAT"))
     {
         for (i = 0; i < cEntries; ++i)
+        {
             DoEntry(3, pEntries[i].LineNumber, &pEntries[i]);
+        }
     }
     else
     {
@@ -624,7 +658,9 @@ static void TestMain_PathResolve(void)
     if (SetEnvironmentVariableW(L"PATHEXT", L".TXT"))
     {
         for (i = 0; i < cEntries; ++i)
+        {
             DoEntry(4, pEntries[i].LineNumber, &pEntries[i]);
+        }
     }
     else
     {
@@ -669,6 +705,11 @@ START_TEST(PathResolve)
     fclose(_wfopen(s_LinkTarget, L"wb"));
     ok(GetFileAttributesW(s_LinkTarget) != INVALID_FILE_ATTRIBUTES, "s_LinkTarget not found\n");
 
+    /* Build s_LinkTargetDoubleBackslash path */
+    lstrcpyW(s_LinkTargetDoubleBackslash, s_TestDir);
+    lstrcatW(s_LinkTargetDoubleBackslash, L"\\\\");
+    lstrcatW(s_LinkTargetDoubleBackslash, L"2PRONG.txt");
+
     /* Build s_ShortcutLongName path */
     lstrcpyW(s_ShortcutLongName, s_TestDir);
     lstrcatW(s_ShortcutLongName, L"\\");
@@ -678,17 +719,6 @@ START_TEST(PathResolve)
     ok(CreateShortcut(s_ShortcutLongName, s_LinkTarget),
        "CreateShortcut(%s, %s) failed.\n",
        wine_dbgstr_w(s_ShortcutLongName), wine_dbgstr_w(s_LinkTarget));
-
-    /* Build s_ShortcutShortName path */
-    lstrcpyW(s_ShortcutShortName, s_TestDir);
-    lstrcatW(s_ShortcutShortName, L"\\");
-    GetShortPathNameW(s_ShortcutShortName, s_ShortcutShortName, _countof(s_ShortcutShortName));
-    lstrcatW(s_ShortcutShortName, L"CmdLineU.lnk"); /* in Short File Name */
-
-    /* Create s_ShortcutShortName shortcut file */
-    ok(CreateShortcut(s_ShortcutShortName, s_LinkTarget),
-       "CreateShortcut(%s, %s) failed.\n",
-       wine_dbgstr_w(s_ShortcutShortName), wine_dbgstr_w(s_LinkTarget));
 
     /* Load shell32.dll */
     s_hShell32 = LoadLibraryA("shell32");
@@ -730,7 +760,6 @@ START_TEST(PathResolve)
 Cleanup:
     DeleteFileW(s_LinkTarget);
     DeleteFileW(s_ShortcutLongName);
-    DeleteFileW(s_ShortcutShortName);
     RemoveDirectoryW(s_TestDir);
     FreeLibrary(s_hShell32);
 }
