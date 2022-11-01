@@ -750,7 +750,20 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
             return TRUE; /* Found */
         }
 
-        return PathFindOnPathW(path, dirs); /* Try to find the filename in the directories */
+        if (PathFindOnPathW(path, dirs)) /* Try to find the filename in the directories */
+        {
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+            if (!(flags & PRF_REQUIREABSOLUTE))
+                return TRUE;
+
+            if (!PathIsAbsoluteW(path))
+                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+#else
+            return TRUE; /* Found */
+#endif
+        }
+
+        return FALSE; /* Not found */
     }
 
     if (PathIsURLW(path)) /* URL? */
@@ -767,8 +780,14 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
             return TRUE; /* Found */
         }
 
-        return PathFileExistsAndAttributesW(path, NULL); /* Check the existence */
+        if (!PathFileExistsAndAttributesW(path, NULL)) /* Check the existence */
+            return FALSE; /* Not found */
     }
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
+        return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+#endif
 
     return TRUE; /* Done */
 }
