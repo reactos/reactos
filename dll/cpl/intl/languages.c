@@ -1,15 +1,31 @@
 #include "intl.h"
 
 #include <shellapi.h>
+#include <shlobj.h>
 #include <strsafe.h>
 
-/* Is there any Japanese input method? */
-BOOL HasJapaneseIME(VOID)
+/* Where is the uninstaller of "ReactOS JPN Package"? */
+BOOL GetJapaneseUninstallPath(HWND hwnd, LPWSTR pszPath, SIZE_T cchPath)
 {
-    WCHAR szImePath[MAX_PATH];
-    GetSystemDirectoryW(szImePath, _countof(szImePath));
-    StringCchCatW(szImePath, _countof(szImePath), L"\\mzimeja.ime");
-    return GetFileAttributesW(szImePath) != INVALID_FILE_ATTRIBUTES;
+    SHGetSpecialFolderPathW(hwnd, pszPath, CSIDL_PROGRAM_FILES, FALSE);
+    StringCchCatW(pszPath, cchPath, L"\\ReactOS JPN Package\\unins000.exe");
+    if (GetFileAttributesW(pszPath) != INVALID_FILE_ATTRIBUTES)
+        return TRUE;
+
+    SHGetSpecialFolderPathW(hwnd, pszPath, CSIDL_PROGRAM_FILESX86, FALSE);
+    StringCchCatW(pszPath, cchPath, L"\\ReactOS JPN Package\\unins000.exe");
+    if (GetFileAttributesW(pszPath) != INVALID_FILE_ATTRIBUTES)
+        return TRUE;
+
+    pszPath[0] = UNICODE_NULL;
+    return FALSE;
+}
+
+/* Is there any "ReactOS JPN Package"? */
+BOOL HasJapanesePackage(HWND hwnd)
+{
+    WCHAR szPath[MAX_PATH];
+    return GetJapaneseUninstallPath(hwnd, szPath, _countof(szPath));
 }
 
 /* Property page dialog callback */
@@ -40,9 +56,8 @@ LanguagesPageProc(HWND hwndDlg,
             switch (PRIMARYLANGID(GetUserDefaultLangID()))
             {
                 case LANG_JAPANESE:
-                    if (HasJapaneseIME())
+                    if (HasJapanesePackage(hwndDlg))
                     {
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
                         CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
                     }
                     break;
@@ -82,32 +97,36 @@ LanguagesPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY) /* Apply changes */
             {
-                /* Apply changes */
-                if (IsDlgButtonChecked(hwndDlg, IDC_INST_FILES_FOR_ASIAN) == BST_CHECKED)
+                /* EAST ASIAN specific */
+                switch (PRIMARYLANGID(GetUserDefaultLangID()))
                 {
-                    /* EAST ASIAN specific */
-                    switch (PRIMARYLANGID(GetUserDefaultLangID()))
-                    {
-                        case LANG_JAPANESE:
-                            if (HasJapaneseIME())
+                    case LANG_JAPANESE:
+                        if (IsDlgButtonChecked(hwndDlg, IDC_INST_FILES_FOR_ASIAN) == BST_CHECKED)
+                        {
+                            if (!HasJapanesePackage(hwndDlg))
                             {
-                                EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
-                                CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
-                            }
-                            else
-                            {
-                                ShellExecuteW(hwndDlg, NULL, L"rapps.exe", L"/INSTALL mzimeja",
+                                /* Install now */
+                                ShellExecuteW(hwndDlg, NULL, L"rapps.exe", L"/INSTALL jpn-package",
                                               NULL, SW_SHOWNORMAL);
                             }
-                            break;
+                        }
+                        else
+                        {
+                            WCHAR szUninstall[MAX_PATH];
+                            if (GetJapaneseUninstallPath(hwndDlg, szUninstall, _countof(szUninstall)))
+                            {
+                                /* Uninstall now */
+                                ShellExecuteW(hwndDlg, NULL, szUninstall, L"", NULL, SW_SHOWNORMAL);
+                            }
+                        }
+                        break;
 
-                        case LANG_CHINESE: /* Not supported yet */
-                        case LANG_KOREAN: /* Not supported yet */
-                        default:
-                            break;
-                    }
+                    case LANG_CHINESE: /* Not supported yet */
+                    case LANG_KOREAN: /* Not supported yet */
+                    default:
+                        break;
                 }
 
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
