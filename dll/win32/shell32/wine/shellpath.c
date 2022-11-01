@@ -152,7 +152,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 {
     INT iDrive;
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
-    LPWSTR pchTemp, pchPath, pchPathEnd;
+    PWCHAR pchTemp, pchPath, pchPathEnd;
 
     /* FIXME: Short pathname */
 
