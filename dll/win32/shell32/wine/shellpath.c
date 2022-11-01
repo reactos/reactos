@@ -199,7 +199,7 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
             StringCchCopyW(pszPath, MAX_PATH, szRoot);
         }
     }
-    /* Now pszPath is a root path or an empty string. */
+    /* Now pszPath is a root path-like or an empty string. */
 
     pchPath = &pszPath[lstrlenW(pszPath)];
     pchPathEnd = pszPath + MAX_PATH;
@@ -231,9 +231,15 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
             {
                 /* Go to next component */
                 while (*pchTemp && *pchTemp != L'\\')
+                {
                     ++pchTemp;
+                }
+
                 if (*pchTemp == L'\\')
+                {
                     ++pchTemp;
+                }
+
                 continue;
             }
         }
