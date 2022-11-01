@@ -344,11 +344,13 @@ MmAllocSwapPage(VOID)
     return(0);
 }
 
-NTSTATUS NTAPI
-NtCreatePagingFile(IN PUNICODE_STRING FileName,
-                   IN PLARGE_INTEGER MinimumSize,
-                   IN PLARGE_INTEGER MaximumSize,
-                   IN ULONG Reserved)
+NTSTATUS
+NTAPI
+NtCreatePagingFile(
+    _In_ PUNICODE_STRING FileName,
+    _In_ PLARGE_INTEGER MinimumSize,
+    _In_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG Reserved)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
