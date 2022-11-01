@@ -111,9 +111,12 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 	########## Combining and Constructing paths ##########
 */
 
-/* @implemented */
 static BOOL WINAPI
-PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD dwWhich)
+PathSearchOnExtensionsW(
+    _Inout_ LPWSTR pszPath,
+    _In_ LPCWSTR *ppszDirs,
+    _In_ BOOL bDoSearch,
+    _In_ DWORD dwWhich)
 {
     if (*PathFindExtensionW(pszPath) != 0)
         return FALSE;
@@ -125,14 +128,12 @@ PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD
 }
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-/* @implemented */
-static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
+static BOOL WINAPI PathIsAbsoluteW(_In_ LPCWSTR path)
 {
     return PathIsUNCW(path) || (PathGetDriveNumberW(path) != -1 && path[2] == L'\\');
 }
 
-/* @implemented */
-static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
+static BOOL WINAPI PathMakeAbsoluteW(_Inout_ LPWSTR path)
 {
     WCHAR path1[MAX_PATH];
     DWORD cch;
@@ -146,8 +147,8 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 }
 #endif
 
-/* @implemented */
-static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
+static VOID WINAPI
+PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dwFlags)
 {
     INT iDrive;
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
@@ -719,7 +720,7 @@ Cleanup:
     return ret;
 }
 
-BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
+BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DWORD flags)
 {
     DWORD dwWhich = WHICH_DEFAULT; /* The extensions to be searched */
 
