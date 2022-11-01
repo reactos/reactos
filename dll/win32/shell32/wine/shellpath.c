@@ -114,7 +114,7 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 static BOOL WINAPI
 PathSearchOnExtensionsW(
     _Inout_ LPWSTR pszPath,
-    _In_ LPCWSTR *ppszDirs,
+    _In_opt_ LPCWSTR *ppszDirs,
     _In_ BOOL bDoSearch,
     _In_ DWORD dwWhich)
 {
