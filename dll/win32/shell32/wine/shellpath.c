@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018-2021 Katayama Hirofumi MZ
+ * Copyright 2018-2022 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,8 +57,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
 
-#ifdef __REACTOS__
-
 /* FIXME: Remove this */
 typedef enum _NT_PRODUCT_TYPE
 {
@@ -104,8 +102,6 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     RegCloseKey(hKey);
     return TRUE;
 }
-
-#endif // __REACTOS__
 
 /*
 	########## Combining and Constructing paths ##########
