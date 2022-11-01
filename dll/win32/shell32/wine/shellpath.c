@@ -218,13 +218,10 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                 pchPath = &pszPath[lstrlenW(pszPath)];
                 bDots = TRUE;
             }
-            else
+            else if (pchTemp[1] == UNICODE_NULL || pchTemp[1] == L'\\')
             {
                 /* Component '.' */
-                if (pchTemp[1] == UNICODE_NULL || pchTemp[1] == L'\\')
-                {
-                    bDots = TRUE;
-                }
+                bDots = TRUE;
             }
 
             if (bDots) /* '..' or '.' ? */
