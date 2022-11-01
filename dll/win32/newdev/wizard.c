@@ -586,7 +586,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
     {
         case BFFM_INITIALIZED:
         {
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            LPCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
+            SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) pszPath);
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(NULL, (LPWSTR)pszPath));
             break;
         }
 
@@ -683,7 +685,11 @@ CHSourceDlgProc(
                     BROWSEINFO bi = { 0 };
                     LPITEMIDLIST pidl;
                     WCHAR Title[MAX_PATH];
+                    WCHAR CustomSearchPath[MAX_PATH];
+                    INT idx = SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETCURSEL, 0, 0);
                     LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
+                    SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXT, idx, (LPARAM)CustomSearchPath);
+                    DevInstData->CustomSearchPath = CustomSearchPath;
 
                     bi.hwndOwner = hwndDlg;
                     bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
