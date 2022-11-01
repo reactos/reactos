@@ -58,7 +58,7 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                   sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
 
         /* Allocate the ACL */
-        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, 'lcaD');
+        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_DACL);
         if (Dacl == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -117,7 +117,7 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                   sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
 
         /* Allocate the ACL */
-        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, 'lcaD');
+        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_DACL);
         if (Dacl == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -168,7 +168,7 @@ ObpFreeDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
     ASSERT(NT_SUCCESS(Status));
     ASSERT(DaclPresent);
     ASSERT(Dacl != NULL);
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 }
 
 CODE_SEG("INIT")

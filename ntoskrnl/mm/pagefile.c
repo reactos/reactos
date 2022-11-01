@@ -476,7 +476,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* Create the DACL: we will only allow two SIDs */
     Count = sizeof(ACL) + (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
                           (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
-    Dacl = ExAllocatePoolWithTag(PagedPool, Count, 'lcaD');
+    Dacl = ExAllocatePoolWithTag(PagedPool, Count, TAG_DACL);
     if (Dacl == NULL)
     {
         ExFreePoolWithTag(Buffer, TAG_MM);
@@ -487,7 +487,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Status = RtlCreateAcl(Dacl, Count, ACL_REVISION);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -496,7 +496,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeAliasAdminsSid);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -505,7 +505,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeLocalSystemSid);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -514,7 +514,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl, FALSE);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -573,7 +573,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                               SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return Status;
         }
@@ -590,7 +590,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         if (!NT_SUCCESS(Status))
         {
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return Status;
         }
@@ -625,7 +625,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return STATUS_NOT_FOUND;
         }
@@ -636,7 +636,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return STATUS_INVALID_PARAMETER_2;
         }
@@ -646,7 +646,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return STATUS_INVALID_PARAMETER_3;
         }
@@ -657,7 +657,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         KeReleaseGuardedMutex(&MmPageFileCreationLock);
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return STATUS_NOT_IMPLEMENTED;
     }
@@ -665,7 +665,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed creating page file: %lx\n", Status);
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -676,17 +676,17 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         Status = ZwSetSecurityObject(FileHandle, DACL_SECURITY_INFORMATION, &SecurityDescriptor);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Dacl, 'lcaD');
             ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return Status;
         }
     }
 
     /* DACL is no longer needed, free it */
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 
-    /* FIXME: To enable once page file managment is moved to ARM3 */
+    /* FIXME: To enable once page file management is moved to ARM3 */
 #if 0
     /* Check we won't overflow commit limit with the page file */
     if (MmTotalCommitLimitMaximum + (SafeMaximumSize.QuadPart >> PAGE_SHIFT) <= MmTotalCommitLimitMaximum)

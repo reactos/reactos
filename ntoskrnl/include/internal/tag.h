@@ -165,6 +165,7 @@
 #define TAG_SID_AND_ATTRIBUTES  'aSeS'
 #define TAG_SID_VALIDATE        'vSeS'
 #define TAG_ACCESS_CHECK_RIGHT  'rCeS'
+#define TAG_DACL                'lcaD'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE         'McpL'
