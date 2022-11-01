@@ -79,6 +79,14 @@ RECT text_rect;
 RECT text2_rect;
 RECT cli;
 
+typedef LPVOID (WINAPI *OpenThemeDataT)(HWND hwnd, LPCWSTR pszClassList);
+typedef HRESULT(WINAPI *CloseThemeDataT)(LPVOID);
+typedef HRESULT(WINAPI *DrawThemeBackgT)(LPVOID, HDC, int, int, const RECT *, const RECT *);
+
+static OpenThemeDataT   pOpenThemeData  = NULL;
+static CloseThemeDataT  pCloseThemeData = NULL;
+static DrawThemeBackgT  pDrawThemeBackg = NULL;
+
 int
 APIENTRY
 _tWinMain(HINSTANCE hInstance,
@@ -93,6 +101,14 @@ _tWinMain(HINSTANCE hInstance,
     HACCEL hAccelTable;
 
     s_info.cbSize = sizeof( NONCLIENTMETRICS );
+
+    HMODULE hUxThemeDll = LoadLibrary(TEXT("UxTheme.dll"));
+    if(hUxThemeDll)
+    {
+        pOpenThemeData   = (OpenThemeDataT)GetProcAddress(hUxThemeDll, "OpenThemeData");
+        pCloseThemeData  = (CloseThemeDataT)GetProcAddress(hUxThemeDll, "CloseThemeData");
+        pDrawThemeBackg  = (DrawThemeBackgT)GetProcAddress(hUxThemeDll, "DrawThemeBackground");
+    }
 
     InitCommonControls();
 
@@ -736,8 +752,8 @@ WndProc(HWND hWnd,
                 case BUTSTOP_ID:
                 case BUTREC_ID:
                 {
-                    CloseThemeData (buttontheme[(UINT)wParam]);
-                    buttontheme[(UINT)wParam] = OpenThemeData (hWnd, L"Button");
+                    pCloseThemeData(buttontheme[(UINT)wParam]);
+                    buttontheme[(UINT)wParam] = pOpenThemeData(hWnd, L"Button");
                     return TRUE;
                 }
                 break;
@@ -880,7 +896,7 @@ WndProc(HWND hWnd,
             {
                 if (buttontheme[i])
                 {
-                    CloseThemeData(buttontheme[i]);
+                    pCloseThemeData(buttontheme[i]);
                 }
             }
             PostQuitMessage(0);
@@ -947,7 +963,7 @@ void CreateButtons(HWND hWnd, HFONT hfButtonCaption)
             return;
         }
 
-        buttontheme[i] = OpenThemeData(buttons[i], L"Button");
+        buttontheme[i] = pOpenThemeData(buttons[i], L"Button");
 
         /* Use Marlett font on this button */
         SendMessage(buttons[i], WM_SETFONT, (WPARAM)hfButtonCaption, (LPARAM)TRUE);
@@ -1002,7 +1018,7 @@ void DrawButton(UINT ButtonID, LPARAM lParam)
             ButtonStyle = PBS_DISABLED;
             SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
         }
-        DrawThemeBackground(buttontheme[ButtonID], lpdis->hDC, BP_PUSHBUTTON, ButtonStyle, &lpdis->rcItem, 0);
+        pDrawThemeBackg(buttontheme[ButtonID], lpdis->hDC, BP_PUSHBUTTON, ButtonStyle, &lpdis->rcItem, 0);
     }
     else
     {
