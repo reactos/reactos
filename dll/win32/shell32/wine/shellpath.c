@@ -146,8 +146,6 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 }
 #endif
 
-BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath);
-
 /* @implemented */
 static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
 {
@@ -163,7 +161,7 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
 
     FixSlashesAndColonW(szTemp); /* every '/' --> '\' */
 
-    /* Build the root path-like on pszPath, and set pchTemp */
+    /* Build the root-like path on pszPath, and set pchTemp */
     if (PathIsUNCW(szTemp)) /* UNC path: Begins with double backslash */
     {
         pszPath[2] = UNICODE_NULL; /* Cut off */
@@ -194,12 +192,12 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
 
             pchTemp = szTemp;
             if (pchTemp[0] == L'\\')
-                ++pchTemp;
+                ++pchTemp; /* The '\' only is a root */
 
             StringCchCopyW(pszPath, MAX_PATH, szRoot);
         }
     }
-    /* Now pszPath is a root path-like or an empty string. */
+    /* Now pszPath is a root-like path or an empty string. */
 
     pchPath = &pszPath[lstrlenW(pszPath)];
     pchPathEnd = pszPath + MAX_PATH;
@@ -207,14 +205,14 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
     /* Start appending the path components of szTemp to pszPath. */
     while (*pchTemp && pchPath < pchPathEnd)
     {
-        if (pchTemp[0] == L'.') // Dot?
+        if (pchTemp[0] == L'.') /* Dot? */
         {
-            BOOL bDots = FALSE;
+            BOOL bDots = FALSE; /* '..' or '.' ? */
 
             /* Component '..' */
             if (pchTemp[1] == L'.' && (pchTemp[2] == UNICODE_NULL || pchTemp[2] == L'\\'))
             {
-                PathRemoveFileSpecW(pszPath);
+                PathRemoveFileSpecW(pszPath); /* Remove the last component from pszPath */
                 pchPath = &pszPath[lstrlenW(pszPath)];
                 bDots = TRUE;
             }
@@ -227,7 +225,7 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
                 }
             }
 
-            if (bDots)
+            if (bDots) /* '..' or '.' ? */
             {
                 /* Go to next component */
                 while (*pchTemp && *pchTemp != L'\\')
@@ -245,7 +243,8 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
         }
 
         /* Otherwise, copy the other path component */
-        if (!PathAddBackslashW(pszPath))
+
+        if (!PathAddBackslashW(pszPath)) /* Append a backslash at the end */
             break;
 
         while (*pchPath == L'\\') /* Backslash is added. Go forward */
@@ -269,15 +268,13 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
     if (pchPath < pchPathEnd)
         *pchPath = UNICODE_NULL; /* Keep null-terminated */
 
-    PathRemoveBackslashW(pszPath);
+    PathRemoveBackslashW(pszPath); /* The trailing backslash should be removed */
 
-    if (!(dwFlags & 1))
+    if (!(dwFlags & 1)) /* Remove the last dot? */
     {
         pchPath = CharPrevW(pszPath, pszPath + lstrlenW(pszPath));
         if (*pchPath == L'.')
-        {
             *pchPath = UNICODE_NULL;
-        }
     }
 }
 
@@ -724,19 +721,19 @@ Cleanup:
 
 BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 {
-    DWORD dwWhich = WHICH_DEFAULT;
+    DWORD dwWhich = WHICH_DEFAULT; /* The extensions to be searched */
 
     TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
 
     if (flags & PRF_DONTFINDLNK)
-        dwWhich &= ~WHICH_LNK;
+        dwWhich &= ~WHICH_LNK; /* Don't search '.LNK' (shortcut) */
 
     if (flags & PRF_VERIFYEXISTS)
-        SetLastError(ERROR_FILE_NOT_FOUND);
+        SetLastError(ERROR_FILE_NOT_FOUND); /* We set this error code at first in verification */
 
-    PathUnquoteSpacesW(path);
+    PathUnquoteSpacesW(path); /* Unquote the path */
 
-    if (PathIsRootW(path))
+    if (PathIsRootW(path)) /* Root path */
     {
         if (path[0] == L'\\' && path[1] == UNICODE_NULL &&
             !PathIsUNCServerW(path) &&
@@ -746,36 +743,40 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
         }
 
         if (flags & PRF_VERIFYEXISTS)
-            return PathFileExistsAndAttributesW(path, 0);
+            return PathFileExistsAndAttributesW(path, NULL);
 
         return TRUE;
     }
 
-    if (PathIsFileSpecW(path))
+    if (PathIsFileSpecW(path)) /* Filename only */
     {
-        if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
-            PathSearchOnExtensionsW(path, dirs, TRUE, dwWhich))
+        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && /* Try to find a program? */
+            PathSearchOnExtensionsW(path, dirs, TRUE, dwWhich)) /* Search it */
         {
-            return TRUE;
+            return TRUE; /* Found */
         }
 
-        return PathFindOnPathW(path,dirs);
+        return PathFindOnPathW(path, dirs); /* Try to find the filename in the directories */
     }
 
-    if (PathIsURLW(path))
+    if (PathIsURLW(path)) /* URL? */
         return FALSE;
 
+    /* Quialify the path */
     PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 1);
 
-    if (flags & PRF_VERIFYEXISTS)
+    if (flags & PRF_VERIFYEXISTS) /* Verify the existence? */
     {
-        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
-            return TRUE;
+        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && /* Try to find a program? */
+            PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich)) /* Search it */
+        {
+            return TRUE; /* Found */
+        }
 
-        return PathFileExistsAndAttributesW(path, 0);
+        return PathFileExistsAndAttributesW(path, NULL); /* Check the existence */
     }
 
-    return TRUE;
+    return TRUE; /* Done */
 }
 
 /*************************************************************************
