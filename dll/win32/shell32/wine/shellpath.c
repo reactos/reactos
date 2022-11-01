@@ -160,7 +160,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     if (FAILED(StringCchCopyW(szTemp, _countof(szTemp), pszPath)))
         return;
 
-    FixSlashesAndColonW(szTemp); /* every '/' --> '\' */
+    /* Replace every '/' by '\' */
+    FixSlashesAndColonW(szTemp);
 
     /* Build the root-like path on pszPath, and set pchTemp */
     if (PathIsUNCW(szTemp)) /* UNC path: Begins with double backslash */
