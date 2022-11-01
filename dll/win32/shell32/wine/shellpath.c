@@ -224,9 +224,9 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                 bDots = TRUE;
             }
 
-            if (bDots) /* '..' or '.' ? */
+            /* If a '..' or '.' was encountered, skip to next component */
+            if (bDots)
             {
-                /* Go to next component */
                 while (*pchTemp && *pchTemp != L'\\')
                 {
                     ++pchTemp;
