@@ -436,7 +436,7 @@ CreateShortcut(LPCWSTR pszLnkFileName,
 }
 
 static BOOL
-CreateRegAppPath(INT LineNumber, const WCHAR* Name, const WCHAR* Value)
+CreateRegAppPath(INT SectionNumber, INT LineNumber, const WCHAR* Name, const WCHAR* Value)
 {
     HKEY RegistryKey;
     LONG Result;
@@ -449,13 +449,15 @@ CreateRegAppPath(INT LineNumber, const WCHAR* Name, const WCHAR* Value)
         0, KEY_WRITE, NULL, &RegistryKey, &Disposition);
     if (Result != ERROR_SUCCESS)
     {
-        trace("#%d: Could not create test key. Status: %lu\n", LineNumber, Result);
+        trace("Section %d, Line %d: Could not create test key. Status: %lu\n",
+              SectionNumber, LineNumber, Result);
         return FALSE;
     }
     Result = RegSetValueW(RegistryKey, NULL, REG_SZ, Value, 0);
     if (Result != ERROR_SUCCESS)
     {
-        trace("#%d: Could not set value of the test key. Status: %lu\n", LineNumber, Result);
+        trace("Section %d, Line %d: Could not set value of the test key. Status: %lu\n",
+              SectionNumber, LineNumber, Result);
         RegCloseKey(RegistryKey);
         return FALSE;
     }
@@ -464,7 +466,7 @@ CreateRegAppPath(INT LineNumber, const WCHAR* Name, const WCHAR* Value)
 }
 
 static BOOL
-DeleteRegAppPath(INT LineNumber, const WCHAR* Name)
+DeleteRegAppPath(INT SectionNumber, INT LineNumber, const WCHAR* Name)
 {
     LONG Result;
     WCHAR Buffer[1024];
@@ -473,7 +475,8 @@ DeleteRegAppPath(INT LineNumber, const WCHAR* Name)
     Result = RegDeleteKeyW(HKEY_LOCAL_MACHINE, Buffer);
     if (Result != ERROR_SUCCESS)
     {
-        trace("#%d: Could not remove the test key. Status: %lu\n", LineNumber, Result);
+        trace("Section %d, Line %d: Could not remove the test key. Status: %lu\n",
+              SectionNumber, LineNumber, Result);
         return FALSE;
     }
     return TRUE;
@@ -526,7 +529,7 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
 
     if (pEntry->EF_ & EF_APP_PATH)
     {
-        if (!CreateRegAppPath(LineNumber, pEntry->NameBefore, PathExpected))
+        if (!CreateRegAppPath(SectionNumber, LineNumber, pEntry->NameBefore, PathExpected))
         {
             skip("Section %d, Line %d: CreateRegAppPath failure\n", SectionNumber, LineNumber);
             return;
@@ -555,7 +558,7 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
 
     if (pEntry->EF_ & EF_APP_PATH)
     {
-        ok(DeleteRegAppPath(LineNumber, pEntry->NameBefore),
+        ok(DeleteRegAppPath(SectionNumber, LineNumber, pEntry->NameBefore),
            "Section %d, Line %d: DeleteRegAppPath failed\n", SectionNumber, LineNumber);
     }
 
