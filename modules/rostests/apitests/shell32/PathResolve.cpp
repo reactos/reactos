@@ -25,10 +25,13 @@ static HINSTANCE    s_hShell32 = NULL;
 static PATHRESOLVE  s_pPathResolve = NULL;
 static ISLFNDRIVEW  s_pIsLFNDriveW = NULL;
 static WCHAR        s_TestDir[MAX_PATH];
+static WCHAR        s_TestDirWithBackslash[MAX_PATH];
 static WCHAR        s_ShortcutLongName[MAX_PATH];
 static WCHAR        s_LinkTarget[MAX_PATH];
+static WCHAR        s_LinkTargetWithBackslash[MAX_PATH];
 static WCHAR        s_LinkTargetDoubleBackslash[MAX_PATH];
 static LPWSTR       s_Dirs[2] = { s_TestDir, NULL };
+static LPWSTR       s_DirsWithBackslash[2] = { s_TestDirWithBackslash, NULL };
 
 /* PathResolve flags */
 #ifndef PRF_VERIFYEXISTS
@@ -104,19 +107,19 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, NULL, NULL, FLAGS13 },
     /* empty path */
     { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"", NULL, FLAGS0 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS1 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS2 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS3 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS4 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS5 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS6 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS7 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS8 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS9 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS10 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS11 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS12 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS13 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS1 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS2 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS3 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS4 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS5 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS6 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS7 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS8 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS9 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS10 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS11 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS12 },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"", NULL, FLAGS13 },
     /* invalid name */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS1 },
@@ -132,7 +135,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS11 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS12 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS13 },
-    /* testdata/2PRONG (path) */
+    /* testdir/2PRONG (path) */
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS1 },
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS2 },
@@ -147,7 +150,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS11 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS12 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS13 },
-    /* testdata/2PRONG (name only) */
+    /* testdir/2PRONG (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS1 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS2 },
@@ -162,7 +165,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS11 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS12 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS13 },
-    /* testdata/2PRONG with dirs (name only) */
+    /* testdir/2PRONG with dirs (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS0, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS1, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS2, s_Dirs },
@@ -177,7 +180,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS11, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS12, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS13, s_Dirs },
-    /* testdata/2PRONG (name only, app path) */
+    /* testdir/2PRONG (name only, app path) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS1 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS2 },
@@ -222,36 +225,111 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS11, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS12, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS13, s_Dirs },
+    /* 2PRONG.txt with dirs (path) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS13, s_Dirs },
+    /* 2PRONG.txt (with a trailing backslash) */
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS0 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS1 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS2 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS3 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS4 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS5 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS6 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS7 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS8 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS9 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS10 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS11 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS12 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetWithBackslash, NULL, FLAGS13 },
+    /* 2PRONG.txt with dirs (with a trailing backslash) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS13, s_Dirs },
+    /* 2PRONG.txt with dirs (with a trailing backslash) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"2PRONG.txt", s_LinkTarget, FLAGS13, s_Dirs },
+    /* 2PRONG.txt with dirs (with a trailing backslash) (s_DirsWithBackslash) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS0, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS1, s_DirsWithBackslash },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS2, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS3, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS4, s_DirsWithBackslash },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS5, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS6, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS7, s_DirsWithBackslash },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS8, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS9, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS10, s_DirsWithBackslash },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS11, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS12, s_DirsWithBackslash },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetWithBackslash, s_LinkTarget, FLAGS13, s_DirsWithBackslash },
     /* 2PRONG.txt (double backslash) */
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0 },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1 },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2 },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS4 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS5 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS6 },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7 },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8 },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS10 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS11 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS12 },
-    { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS13 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS4 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS5 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS6 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7 },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8 },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS10 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS11 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS12 },
+    { __LINE__, RAISED, ERR_DEAD, EF_FULLPATH, s_LinkTargetDoubleBackslash, NULL, FLAGS13 },
     /* 2PRONG.txt with dirs (double backslash) */
-    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1, s_Dirs },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS4, s_Dirs },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS5, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS6, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7, s_Dirs },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS10, s_Dirs },
-    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS11, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS12, s_Dirs },
-    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS13, s_Dirs },
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkTargetDoubleBackslash, s_LinkTarget, FLAGS13, s_Dirs },
     /* 2PRONG.txt (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS1 },
@@ -282,22 +360,22 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS11, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS12, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS13, s_Dirs },
-    /* testdata/CmdLineUtils (path) */
+    /* testdir/CmdLineUtils (path) */
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS0 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS1 },
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS1 },
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS2 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS3 },
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS3 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS4 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS5 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS6 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS7 },
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS7 },
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS8 },
-    { __LINE__, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS9 },
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS9 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS10 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS11 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS12 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS13 },
-    /* testdata/CmdLineUtils with PRF_DONTFINDLNK (path) */
+    /* testdir/CmdLineUtils with PRF_DONTFINDLNK (path) */
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS0 | PRF_DONTFINDLNK },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS1 | PRF_DONTFINDLNK },
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS2 | PRF_DONTFINDLNK },
@@ -312,7 +390,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS11 | PRF_DONTFINDLNK },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS12 | PRF_DONTFINDLNK },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS13 | PRF_DONTFINDLNK },
-    /* testdata/CmdLineUtils (name only) */
+    /* testdir/CmdLineUtils (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS1 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS2 },
@@ -327,7 +405,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS11 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS12 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS13 },
-    /* testdata/CmdLineUtils.exe (path) */
+    /* testdir/CmdLineUtils.exe (path) */
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS1 },
     { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS2 },
@@ -342,7 +420,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS11 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS12 },
     { __LINE__, RAISED, ERR_DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS13 },
-    /* testdata/CmdLineUtils.exe (name only) */
+    /* testdir/CmdLineUtils.exe (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2 },
@@ -357,7 +435,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13 },
-    /* testdata/CmdLineUtils.exe with dirs (name only) */
+    /* testdir/CmdLineUtils.exe with dirs (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2, s_Dirs },
@@ -372,7 +450,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13, s_Dirs },
-    /* testdata/CmdLineUtils.exe with dirs (name only) */
+    /* testdir/CmdLineUtils.exe with dirs (name only) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2, s_Dirs },
@@ -387,7 +465,7 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12, s_Dirs },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13, s_Dirs },
-    /* GhostProgram.exe -> testdata/CmdLineUtils.exe (name only, app path) */
+    /* GhostProgram.exe -> testdir/CmdLineUtils.exe (name only, app path) */
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS0 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS1 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS2 },
@@ -525,36 +603,40 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
 
     switch (pEntry->EF_ & EF_TYPE_MASK)
     {
-    case EF_FULLPATH:
-        if (pEntry->NameBefore)
-        {
-            lstrcpyW(Path, pEntry->NameBefore);
-        }
-        if (pEntry->NameExpected)
-        {
-            lstrcpyW(PathExpected, pEntry->NameExpected);
-        }
-        break;
+        case EF_FULLPATH:
+            if (pEntry->NameBefore)
+            {
+                lstrcpyW(Path, pEntry->NameBefore);
+            }
+            if (pEntry->NameExpected)
+            {
+                lstrcpyW(PathExpected, pEntry->NameExpected);
+            }
+            break;
 
-    case EF_TESTDATA:
-        if (pEntry->EF_ & EF_NAME_ONLY)
-        {
-            lstrcpyW(Path, pEntry->NameBefore);
-        }
-        else
-        {
-            lstrcpyW(Path, s_TestDir);
-            lstrcatW(Path, L"\\");
-            lstrcatW(Path, pEntry->NameBefore);
-        }
+        case EF_TESTDATA:
+            if (pEntry->EF_ & EF_NAME_ONLY)
+            {
+                lstrcpyW(Path, pEntry->NameBefore);
+            }
+            else
+            {
+                lstrcpyW(Path, s_TestDir);
+                lstrcatW(Path, L"\\");
+                lstrcatW(Path, pEntry->NameBefore);
+            }
 
-        if (pEntry->NameExpected)
-        {
-            lstrcpyW(PathExpected, s_TestDir);
-            lstrcatW(PathExpected, L"\\");
-            lstrcatW(PathExpected, pEntry->NameExpected);
-        }
-        break;
+            if (pEntry->NameExpected)
+            {
+                lstrcpyW(PathExpected, s_TestDir);
+                lstrcatW(PathExpected, L"\\");
+                lstrcatW(PathExpected, pEntry->NameExpected);
+            }
+            break;
+
+        default:
+            assert(0);
+            break;
     }
 
     if (pEntry->EF_ & EF_APP_PATH)
@@ -602,7 +684,7 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
 
     if (pEntry->NameExpected && !(pEntry->EF_ & EF_APP_PATH))
     {
-        ok(lstrcmpW(Path, PathExpected) == 0, "Section %d, Line%d: Path expected %s, was %s.\n",
+        ok(lstrcmpW(Path, PathExpected) == 0, "Section %d, Line %d: Path expected %s, was %s.\n",
            SectionNumber, LineNumber, wine_dbgstr_w(PathExpected), wine_dbgstr_w(Path));
     }
 }
@@ -679,22 +761,26 @@ START_TEST(PathResolve)
     /* Get this program's path */
     GetModuleFileNameW(NULL, s_TestDir, _countof(s_TestDir));
 
-    /* Add '\testdata' to the path */
+    /* Add '\testdir' to the path */
     pch = wcsrchr(s_TestDir, L'\\');
     if (pch == NULL)
     {
         skip("GetModuleFileName and/or wcsrchr are insane.\n");
         return;
     }
-    lstrcpyW(pch, L"\\testdata");
+    lstrcpyW(pch, L"\\testdir");
 
-    /* Create the testdata directory */
+    /* Create the testdir directory */
     CreateDirectoryW(s_TestDir, NULL);
     if (GetFileAttributesW(s_TestDir) == INVALID_FILE_ATTRIBUTES)
     {
-        skip("testdata is not found.\n");
+        skip("testdir is not found.\n");
         return;
     }
+
+    /* Build s_TestDirWithBackslash path */
+    lstrcpyW(s_TestDirWithBackslash, s_TestDir);
+    lstrcatW(s_TestDirWithBackslash, L"\\");
 
     /* Build s_LinkTarget path */
     lstrcpyW(s_LinkTarget, s_TestDir);
@@ -704,6 +790,12 @@ START_TEST(PathResolve)
     /* Create the file */
     fclose(_wfopen(s_LinkTarget, L"wb"));
     ok(GetFileAttributesW(s_LinkTarget) != INVALID_FILE_ATTRIBUTES, "s_LinkTarget not found\n");
+
+    /* Build s_LinkTargetWithBackslash path */
+    lstrcpyW(s_LinkTargetWithBackslash, s_TestDir);
+    lstrcatW(s_LinkTargetWithBackslash, L"\\");
+    lstrcatW(s_LinkTargetWithBackslash, L"2PRONG.txt");
+    lstrcatW(s_LinkTargetWithBackslash, L"\\");
 
     /* Build s_LinkTargetDoubleBackslash path */
     lstrcpyW(s_LinkTargetDoubleBackslash, s_TestDir);
