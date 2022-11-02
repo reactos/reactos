@@ -850,11 +850,17 @@ public:
         return TRUE;
     }
 
+    VOID HideStartMenu()
+    {
+        m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
+    }
+
     LRESULT HandleHotKey(DWORD id)
     {
         switch (id)
         {
         case IDHK_RUN:
+            HideStartMenu();
             DisplayRunFileDlg();
             break;
         case IDHK_HELP:
@@ -903,6 +909,7 @@ public:
                 // TODO:
                 break;
             case TRAYCMD_RUN_DIALOG:
+                HideStartMenu();
                 DisplayRunFileDlg();
                 break;
             case TRAYCMD_LOGOFF_DIALOG:
@@ -3062,13 +3069,9 @@ HandleTrayContextMenu:
             return FALSE;
 
         if (::IsWindowVisible(hwndStartMenu))
-        {
-            m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
-        }
+            HideStartMenu();
         else
-        {
             PopupStartMenu();
-        }
 
         return TRUE;
     }
