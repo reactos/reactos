@@ -1,4 +1,9 @@
-/* Translated by Jose Jesus  <zecarlos1957@hotmail.com> */
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2022 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
