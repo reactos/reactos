@@ -32,6 +32,11 @@ static LPWSTR pathBuffer;
 
 #define NUM_ICONS   3
 
+/* External resources in shell32.dll */
+#define IDI_SHELL_FOLDER             4
+#define IDI_SHELL_FOLDER_OPEN        5
+#define IDI_SHELL_MY_COMPUTER       16
+
 static BOOL get_item_path(HWND hwndTV, HTREEITEM hItem, HKEY* phKey, LPWSTR* pKeyPath, int* pPathLen, int* pMaxLen)
 {
     TVITEMW item;
@@ -441,42 +446,43 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     HICON hico;       /* handle to icon  */
     INT cx = GetSystemMetrics(SM_CXSMICON);
     INT cy = GetSystemMetrics(SM_CYSMICON);
+    HMODULE hShell32 = GetModuleHandleW(L"shell32.dll");
 
     /* Create the image list.  */
     if ((himl = ImageList_Create(cx, cy, ILC_MASK | ILC_COLOR32, 0, NUM_ICONS)) == NULL)
         return FALSE;
 
     /* Add the open file, closed file, and document bitmaps.  */
-    hico = LoadImageW(hInst,
-                      MAKEINTRESOURCEW(IDI_OPEN_FILE),
+    hico = LoadImageW(hShell32,
+                      MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPEN),
                       IMAGE_ICON,
-                      GetSystemMetrics(SM_CXSMICON),
-                      GetSystemMetrics(SM_CYSMICON),
-                      0);
+                      cx,
+                      cy,
+                      LR_DEFAULTCOLOR);
     if (hico)
     {
         Image_Open = ImageList_AddIcon(himl, hico);
         DestroyIcon(hico);
     }
 
-    hico = LoadImageW(hInst,
-                      MAKEINTRESOURCEW(IDI_CLOSED_FILE),
+    hico = LoadImageW(hShell32,
+                      MAKEINTRESOURCEW(IDI_SHELL_FOLDER),
                       IMAGE_ICON,
-                      GetSystemMetrics(SM_CXSMICON),
-                      GetSystemMetrics(SM_CYSMICON),
-                      0);
+                      cx,
+                      cy,
+                      LR_DEFAULTCOLOR);
     if (hico)
     {
         Image_Closed = ImageList_AddIcon(himl, hico);
         DestroyIcon(hico);
     }
 
-    hico = LoadImageW(hInst,
-                      MAKEINTRESOURCEW(IDI_ROOT),
+    hico = LoadImageW(hShell32,
+                      MAKEINTRESOURCEW(IDI_SHELL_MY_COMPUTER),
                       IMAGE_ICON,
-                      GetSystemMetrics(SM_CXSMICON),
-                      GetSystemMetrics(SM_CYSMICON),
-                      0);
+                      cx,
+                      cy,
+                      LR_DEFAULTCOLOR);
     if (hico)
     {
         Image_Root = ImageList_AddIcon(himl, hico);
