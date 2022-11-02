@@ -1,3 +1,6 @@
+tahoma.ttf Version 0.019 khmz
+tahomabd.ttf Version 0.021 khmz
+
 Fonts are based on (c) Bitstream (see below). Changes are in public domain.
 Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
 Katayama Hirofumi MZ added Greek and Hebrew glyphs and made improvements to the font.
