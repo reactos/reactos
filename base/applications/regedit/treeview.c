@@ -443,7 +443,7 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     INT cy = GetSystemMetrics(SM_CYSMICON);
 
     /* Create the image list.  */
-    if ((himl = ImageList_Create(cx, cy, ILC_MASK, 0, NUM_ICONS)) == NULL)
+    if ((himl = ImageList_Create(cx, cy, ILC_MASK | ILC_COLOR32, 0, NUM_ICONS)) == NULL)
         return FALSE;
 
     /* Add the open file, closed file, and document bitmaps.  */
