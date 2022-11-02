@@ -53,6 +53,7 @@ typedef struct _MAP
     PCELL pActiveCell;
     HFONT hFont;
     LOGFONTW CurrentFont;
+    INT CaretX, CaretY;
     INT iYStart;
     INT NumRows;
     INT CharMap;

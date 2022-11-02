@@ -17,7 +17,6 @@ static const WCHAR szLrgCellWndClass[] = L"LrgCellWnd";
 
 #define MAX_ROWS (0xFFFF / XCELLS) + 1 - YCELLS
 
-
 static
 VOID
 SetGrid(PMAP infoPtr)
@@ -90,6 +89,28 @@ DrawGrid(PMAP infoPtr,
     }
 }
 
+static
+VOID
+UpdateCells(PMAP infoPtr)
+{
+    INT x, y, i = XCELLS * infoPtr->iYStart;
+    WCHAR ch;
+    PCELL Cell;
+
+    for (y = 0; y < YCELLS; ++y)
+    {
+        for (x = 0; x < XCELLS; ++x, ++i)
+        {
+            if (i >= infoPtr->NumValidGlyphs)
+                return;
+
+            ch = (WCHAR)infoPtr->ValidGlyphs[i];
+
+            Cell = &infoPtr->Cells[y][x];
+            Cell->ch = ch;
+        }
+    }
+}
 
 static
 VOID
@@ -97,48 +118,35 @@ FillGrid(PMAP infoPtr,
          PAINTSTRUCT *ps)
 {
     HFONT hOldFont;
-    WCHAR ch;
     INT x, y;
     RECT rc;
     PCELL Cell;
-    INT i, added;
+    INT i;
 
-    hOldFont = SelectObject(ps->hdc,
-                            infoPtr->hFont);
+    UpdateCells(infoPtr);
+
+    hOldFont = SelectObject(ps->hdc, infoPtr->hFont);
 
     i = XCELLS * infoPtr->iYStart;
 
-    added = 0;
-
     for (y = 0; y < YCELLS; y++)
-    for (x = 0; x < XCELLS; x++)
     {
-        if (i >= infoPtr->NumValidGlyphs) break;
-
-        ch = (WCHAR)infoPtr->ValidGlyphs[i];
-
-        Cell = &infoPtr->Cells[y][x];
-
-        if (IntersectRect(&rc,
-                            &ps->rcPaint,
-                            &Cell->CellExt))
+        for (x = 0; x < XCELLS; x++, i++)
         {
-            Cell->ch = ch;
+            if (i >= infoPtr->NumValidGlyphs)
+                break;
 
-            DrawTextW(ps->hdc,
-                        &ch,
-                        1,
-                        &Cell->CellInt,
-                        DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            Cell = &infoPtr->Cells[y][x];
 
-            added++;
+            if (IntersectRect(&rc, &ps->rcPaint, &Cell->CellExt))
+            {
+                DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
+                          DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
         }
-
-        i++;
-        ch = (WCHAR)i;
     }
-    SelectObject(ps->hdc,
-                 hOldFont);
+
+    SelectObject(ps->hdc, hOldFont);
 }
 
 
@@ -202,7 +210,7 @@ MoveLargeCell(PMAP infoPtr)
                rLarge.top,
                rLarge.right - rLarge.left,
                rLarge.bottom - rLarge.top,
-               TRUE);
+               FALSE);
 
     InvalidateRect(infoPtr->hLrgWnd,
                    NULL,
@@ -452,6 +460,74 @@ MapOnCreate(PMAP infoPtr,
 
 static
 VOID
+LimitCaretXY(PMAP infoPtr, INT *pX, INT *pY)
+{
+    INT i, X = *pX, Y = *pY, iYStart = infoPtr->iYStart;
+
+    i = XCELLS * (iYStart + Y) + X;
+    while (i >= infoPtr->NumValidGlyphs)
+    {
+        if (X > 0)
+        {
+            --X;
+        }
+        else
+        {
+            X = XCELLS - 1;
+            --Y;
+        }
+        i = XCELLS * (iYStart + Y) + X;
+    }
+
+    *pX = X;
+    *pY = Y;
+}
+
+static
+VOID
+SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge)
+{
+    LimitCaretXY(infoPtr, &X, &Y);
+    UpdateCells(infoPtr);
+
+    /* set previous active cell to inactive */
+    infoPtr->pActiveCell = &infoPtr->Cells[infoPtr->CaretY][infoPtr->CaretX];
+    InvalidateRect(infoPtr->hMapWnd,
+                   &infoPtr->pActiveCell->CellInt,
+                   FALSE);
+
+    infoPtr->CaretX = X;
+    infoPtr->CaretY = Y;
+
+    /* set new cell to active */
+    infoPtr->pActiveCell = &infoPtr->Cells[Y][X];
+    infoPtr->pActiveCell->bActive = TRUE;
+    infoPtr->pActiveCell->bLarge = bLarge;
+    InvalidateRect(infoPtr->hMapWnd,
+                   &infoPtr->pActiveCell->CellInt,
+                   FALSE);
+    if (!bLarge)
+    {
+        /* Destroy large window */
+        if (infoPtr->hLrgWnd)
+        {
+            DestroyWindow(infoPtr->hLrgWnd);
+            infoPtr->hLrgWnd = NULL;
+        }
+    }
+    else
+    {
+        if (infoPtr->hLrgWnd)
+            MoveLargeCell(infoPtr);
+        else
+            CreateLargeCell(infoPtr);
+    }
+
+    UpdateStatusBar(infoPtr->pActiveCell->ch);
+}
+
+static
+VOID
 OnVScroll(PMAP infoPtr,
           INT Value,
           INT Pos)
@@ -480,12 +556,14 @@ OnVScroll(PMAP infoPtr,
             infoPtr->iYStart = Pos;
             break;
 
-       default:
+        default:
             break;
-       }
+    }
 
     infoPtr->iYStart = max(0, infoPtr->iYStart);
     infoPtr->iYStart = min(infoPtr->iYStart, infoPtr->NumRows);
+
+    UpdateCells(infoPtr);
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
@@ -579,6 +657,120 @@ OnPaint(PMAP infoPtr,
     }
 }
 
+static
+VOID
+MoveUpDown(PMAP infoPtr, INT DY, BOOL bLarge)
+{
+    INT Y = infoPtr->CaretY;
+
+    if (DY < 0) /* Move Up */
+    {
+        if (Y <= 0)
+        {
+            SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            return;
+        }
+
+        Y -= 1;
+    }
+    else if (DY > 0) /* Move Down */
+    {
+        if (Y + 1 >= YCELLS)
+        {
+            SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+            return;
+        }
+
+        Y += 1;
+    }
+
+    SetCaretXY(infoPtr, infoPtr->CaretX, Y, bLarge);
+}
+
+static
+VOID
+MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
+{
+    INT X = infoPtr->CaretX;
+    INT Y = infoPtr->CaretY;
+
+    if (DX < 0) /* Move Left */
+    {
+        if (X <= 0) /* at left edge */
+        {
+            if (Y == 0) /* at top */
+            {
+                if (infoPtr->iYStart > 0)
+                    X = XCELLS - 1;
+                SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+            else
+            {
+                X = XCELLS - 1;
+                Y -= 1;
+            }
+        }
+        else /* Not at left edge */
+        {
+            X -= 1;
+        }
+    }
+    else if (DX > 0) /* Move Right */
+    {
+        if (X + 1 >= XCELLS) /* at right edge */
+        {
+            if (Y + 1 >= YCELLS) /* at bottom */
+            {
+                if (infoPtr->iYStart < infoPtr->NumRows)
+                    X = 0;
+                SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+            }
+            else
+            {
+                X = 0;
+                Y += 1;
+            }
+        }
+        else
+        {
+            X += 1;
+        }
+    }
+
+    SetCaretXY(infoPtr, X, Y, bLarge);
+}
+
+static
+VOID
+OnKeyDown(PMAP infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    switch (wParam)
+    {
+        case VK_UP:
+            MoveUpDown(infoPtr, -1, FALSE);
+            break;
+
+        case VK_DOWN:
+            MoveUpDown(infoPtr, +1, FALSE);
+            break;
+
+        case VK_LEFT:
+            MoveLeftRight(infoPtr, -1, FALSE);
+            break;
+
+        case VK_RIGHT:
+            MoveLeftRight(infoPtr, +1, FALSE);
+            break;
+
+        case VK_PRIOR: /* Page Up */
+            SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_PAGEUP, 0), 0);
+            break;
+
+        case VK_NEXT: /* Page Down */
+            SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_PAGEDOWN, 0), 0);
+            break;
+    }
+}
 
 LRESULT
 CALLBACK
@@ -605,6 +797,12 @@ MapWndProc(HWND hwnd,
                 return (LRESULT)-1;
             }
 
+            break;
+        }
+
+        case WM_KEYDOWN:
+        {
+            OnKeyDown(infoPtr, wParam, lParam);
             break;
         }
 
@@ -658,6 +856,7 @@ MapWndProc(HWND hwnd,
         }
 
         case FM_SETCHARMAP:
+            infoPtr->CaretX = infoPtr->CaretY = infoPtr->iYStart = 0;
             infoPtr->CharMap = LOWORD(wParam);
             wcsncpy(lfFaceName,
                     infoPtr->CurrentFont.lfFaceName,
@@ -666,6 +865,7 @@ MapWndProc(HWND hwnd,
             break;
 
         case FM_SETFONT:
+            infoPtr->CaretX = infoPtr->CaretY = infoPtr->iYStart = 0;
             SetFont(infoPtr, (LPWSTR)lParam);
             break;
 
@@ -695,6 +895,11 @@ MapWndProc(HWND hwnd,
                               0,
                               (DWORD_PTR)NULL);
             break;
+        }
+
+        case WM_GETDLGCODE:
+        {
+            return DLGC_WANTARROWS;
         }
 
         default:
