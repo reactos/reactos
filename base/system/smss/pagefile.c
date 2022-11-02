@@ -395,15 +395,15 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
                          SizeInfo.SectorsPerAllocationUnit;
     FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
 
-    /* Check if there's less than 32MB free so we don't starve the disk */
+    /* Check if there is less than 32 MB free so we don't starve the disk */
     if (FinalFreeSpace.QuadPart <= MINIMUM_TO_KEEP_FREE)
     {
-        /* In this case, act as if there's no free space  */
+        /* In this case, act as if there is no free space */
         Volume->FreeSpace.QuadPart = 0;
     }
     else
     {
-        /* Trim off 32MB to give the disk a bit of breathing room */
+        /* Trim off 32 MB to give the disk a bit of breathing room */
         Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart -
                                      MINIMUM_TO_KEEP_FREE;
     }
@@ -456,14 +456,14 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
     Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
     if (NT_SUCCESS(Status))
     {
-        DPRINT("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded.\n",
+        DPRINT("SMSS:PFILE: NtCreatePagingFile(%wZ, 0x%I64X, 0x%I64X) succeeded.\n",
                 Name,
                 MinSize->QuadPart,
                 MaxSize->QuadPart);
     }
     else
     {
-        DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) failed with %X\n",
+        DPRINT1("SMSS:PFILE: NtCreatePagingFile(%wZ, 0x%I64X, 0x%I64X) failed with %X\n",
                 Name,
                 MinSize->QuadPart,
                 MaxSize->QuadPart,
@@ -517,7 +517,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
             }
             else
             {
-                DPRINT("Queried free space for boot volume `%wC: %I64x'\n",
+                DPRINT("Queried free space for boot volume `%wC: 0x%I64x'\n",
                         Volume->DriveLetter, Volume->FreeSpace.QuadPart);
             }
 
@@ -541,10 +541,10 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     /* Check how big we can make the pagefile */
     Status = SmpGetPagingFileSize(&Descriptor->Name, &PageFileSize);
     if (NT_SUCCESS(Status) && PageFileSize.QuadPart > 0) ShouldDelete = TRUE;
-    DPRINT("SMSS:PFILE: Detected size %I64X for future paging file `%wZ'\n",
+    DPRINT("SMSS:PFILE: Detected size 0x%I64X for future paging file `%wZ'\n",
             PageFileSize,
             &Descriptor->Name);
-    DPRINT("SMSS:PFILE: Free space on volume `%wC' is %I64X\n",
+    DPRINT("SMSS:PFILE: Free space on volume `%wC' is 0x%I64X\n",
             Volume->DriveLetter,
             Volume->FreeSpace.QuadPart);
 
@@ -558,7 +558,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     {
         Descriptor->ActualMaxSize = PageFileSize;
     }
-    DPRINT("SMSS:PFILE: min %I64X, max %I64X, real min %I64X\n",
+    DPRINT("SMSS:PFILE: min 0x%I64X, max 0x%I64X, real min 0x%I64X\n",
             Descriptor->ActualMinSize.QuadPart,
             Descriptor->ActualMaxSize.QuadPart,
             MinimumSize->QuadPart);
@@ -595,7 +595,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
             /* FIXFIX: Windows Vista does this, and it seems like we should too, so try to see if this fixes KVM */
             Volume->FreeSpace.QuadPart = PageFileSize.QuadPart;
         }
-        DPRINT1("SMSS:PFILE: Failing for min %I64X, max %I64X, real min %I64X\n",
+        DPRINT1("SMSS:PFILE: Failing for min 0x%I64X, max 0x%I64X, real min 0x%I64X\n",
                 Descriptor->ActualMinSize.QuadPart,
                 Descriptor->ActualMaxSize.QuadPart,
                 MinimumSize->QuadPart);
@@ -648,7 +648,7 @@ VOID
 NTAPI
 SmpMakeDefaultPagingFileDescriptor(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
 {
-    /* The default descriptor uses 128MB as a pagefile size */
+    /* The default descriptor uses 128 MB as a pagefile size */
     Descriptor->Flags |= SMP_PAGEFILE_DEFAULT;
     Descriptor->MinSize.QuadPart = 128 * MEGABYTE;
     Descriptor->MaxSize.QuadPart = 128 * MEGABYTE;
@@ -675,7 +675,7 @@ SmpMakeSystemManagedPagingFileDescriptor(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
         return;
     }
 
-    /* Chekc how much RAM we have and set three times this amount as maximum */
+    /* Check how much RAM we have and set three times this amount as maximum */
     Ram = BasicInfo.NumberOfPhysicalPages * BasicInfo.PageSize;
     MaximumSize = 3 * Ram;
 
@@ -699,8 +699,9 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     /* Capture the min and max */
     MinSize = Descriptor->MinSize.QuadPart;
     MaxSize = Descriptor->MaxSize.QuadPart;
-    DPRINT("SMSS:PFILE: Validating sizes for `%wZ' %I64X %I64X\n",
-             &Descriptor->Name, MinSize, MaxSize);
+
+    DPRINT("SMSS:PFILE: Validating sizes for `%wZ' 0x%I64X 0x%I64X\n",
+            &Descriptor->Name, MinSize, MaxSize);
 
     /* Don't let minimum be bigger than maximum */
     if (MinSize > MaxSize) MaxSize = MinSize;
@@ -713,27 +714,23 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     }
     else
     {
-        /* Check if the minimum is more then 4095 MB */
+        /* Validate the minimum and maximum and trim them if they are too large */
         if (MinSize > MAXIMUM_PAGEFILE_SIZE)
         {
-            /* Trim it, this isn't allowed */
             WasTooBig = TRUE;
             MinSize = MAXIMUM_PAGEFILE_SIZE;
         }
 
-        /* Check if the maximum is more then 4095 MB */
         if (MaxSize > MAXIMUM_PAGEFILE_SIZE)
         {
-            /* Trim it, this isn't allowed */
             WasTooBig = TRUE;
             MaxSize = MAXIMUM_PAGEFILE_SIZE;
         }
     }
 
-    /* Did we trim? */
+    /* If we trimmed, write a flag in the descriptor */
     if (WasTooBig)
     {
-        /* Notify debugger output and write a flag in the descriptor */
         DPRINT("SMSS:PFILE: Trimmed size of `%wZ' to maximum allowed\n",
                 &Descriptor->Name);
         Descriptor->Flags |= SMP_PAGEFILE_WAS_TOO_BIG;
@@ -752,7 +749,7 @@ SmpCreateSystemManagedPagingFile(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
 {
     LARGE_INTEGER FuzzFactor, Size;
 
-    /* Make sure there's at least 1 paging file and that we are system-managed */
+    /* Make sure there is at least 1 paging file and that we are system-managed */
     ASSERT(SmpNumberOfPagingFiles >= 1);
     ASSERT(!IsListEmpty(&SmpPagingFileDescriptorList));
     ASSERT(Descriptor->Flags & SMP_PAGEFILE_SYSTEM_MANAGED); // Descriptor->SystemManaged == 1 in ASSERT.
@@ -764,10 +761,10 @@ SmpCreateSystemManagedPagingFile(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     SmpMakeSystemManagedPagingFileDescriptor(Descriptor);
     SmpValidatePagingFileSizes(Descriptor);
 
-    /* Use either the minimum size in the descriptor, or 16MB in minimal mode */
+    /* Use either the minimum size in the descriptor, or 16 MB in minimal mode */
     Size.QuadPart = DecreaseSize ? 16 * MEGABYTE : Descriptor->MinSize.QuadPart;
 
-    /* Check if this should be a fixed pagefile or an any pagefile*/
+    /* Check if this should be a fixed pagefile or an any pagefile */
     if (Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] == '?')
     {
         /* Find a disk for it */
@@ -965,15 +962,15 @@ SmpCreateVolumeDescriptors(VOID)
                              SizeInfo.SectorsPerAllocationUnit;
         FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
 
-        /* Check if there's less than 32MB free so we don't starve the disk */
+        /* Check if there is less than 32 MB free so we don't starve the disk */
         if (FinalFreeSpace.QuadPart <= MINIMUM_TO_KEEP_FREE)
         {
-            /* In this case, act as if there's no free space  */
+            /* In this case, act as if there is no free space */
             Volume->FreeSpace.QuadPart = 0;
         }
         else
         {
-            /* Trim off 32MB to give the disk a bit of breathing room */
+            /* Trim off 32 MB to give the disk a bit of breathing room */
             Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart -
                                          MINIMUM_TO_KEEP_FREE;
         }
