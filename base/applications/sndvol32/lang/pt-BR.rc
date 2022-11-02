@@ -1,4 +1,9 @@
-/* Translated by Mateus de Lima (aka wavemaster) <mateusloliveira [@] hotmail.com> */
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Portuguese (Brazil) resource file
+ * TRANSLATOR:  Copyright 2007 Mateus de Lima (aka wavemaster) <mateusloliveira@hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
