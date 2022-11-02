@@ -20,8 +20,63 @@
 //
 #define STANDARD_PAGING_FILE_NAME       L"\\??\\?:\\pagefile.sys"
 #define STANDARD_DRIVE_LETTER_OFFSET    4
-#define MEGABYTE                        0x100000UL
-#define MAXIMUM_PAGEFILE_SIZE           (4095 * MEGABYTE)
+#define MAX_PAGING_FILES                16  // See also ntoskrnl/include/internal/mm.h
+#define MEGABYTE                        (1024 * 1024)
+
+/* Minimum pagefile size is 256 pages (1 MB) */
+// #define MINIMUM_PAGEFILE_SIZE           (256ULL * PAGE_SIZE)
+
+/* Maximum pagefile sizes for different architectures */
+#define GIGABYTE                        (1024ULL * MEGABYTE)
+#define TERABYTE                        (1024ULL * GIGABYTE)
+
+// NOTE: No changes for NTDDI_WIN10
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+#define MAXIMUM_PAGEFILE_SIZE32         ((1ULL * 1024 * 1024 - 1) * PAGE_SIZE)
+                                     // PAGE_ROUND_DOWN(4ULL * GIGABYTE - 1)
+#else
+/* 4095 MB */
+#define MAXIMUM_PAGEFILE_SIZE32         (4095ULL * MEGABYTE)
+#endif
+
+// NOTE: No changes for NTDDI_WIN10
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+#define MAXIMUM_PAGEFILE_SIZE64         ((4ULL * 1024 * 1024 * 1024 - 1) * PAGE_SIZE)
+                                     // PAGE_ROUND_DOWN(16ULL * TERABYTE - 1)
+#else
+/* 16 TB */
+#define MAXIMUM_PAGEFILE_SIZE64         (16ULL * TERABYTE)
+#endif
+
+#if defined(_M_IX86)
+    #define MAXIMUM_PAGEFILE_SIZE       MAXIMUM_PAGEFILE_SIZE32
+    /* PAE uses the same size as x64 */
+    #define MAXIMUM_PAGEFILE_SIZE_PAE   MAXIMUM_PAGEFILE_SIZE64
+#elif defined (_M_AMD64) || defined(_M_ARM64)
+    #define MAXIMUM_PAGEFILE_SIZE       MAXIMUM_PAGEFILE_SIZE64
+#elif defined (_M_IA64)
+/* 32 TB */
+    #define MAXIMUM_PAGEFILE_SIZE       (32ULL * TERABYTE)
+#elif defined(_M_ARM)
+/* Around 2 GB */
+    // NOTE: No changes for NTDDI_WIN10
+    #if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+    #define MAXIMUM_PAGEFILE_SIZE       ((512ULL * 1024 - 1) * PAGE_SIZE)
+                                     // PAGE_ROUND_DOWN(2ULL * GIGABYTE - 1)
+    #else
+/* 4095 MB */
+    #define MAXIMUM_PAGEFILE_SIZE       MAXIMUM_PAGEFILE_SIZE32
+    #endif
+#else
+/* On unknown architectures, default to either one of the 32 or 64 bit sizes */
+#pragma message("Unknown architecture")
+    #ifdef _WIN64
+    #define MAXIMUM_PAGEFILE_SIZE       MAXIMUM_PAGEFILE_SIZE64
+    #else
+    #define MAXIMUM_PAGEFILE_SIZE       MAXIMUM_PAGEFILE_SIZE32
+    #endif
+#endif
+
 /* This should be 32 MB, but we need more than that for 2nd stage setup */
 #define MINIMUM_TO_KEEP_FREE            (256 * MEGABYTE)
 #define FUZZ_FACTOR                     (16 * MEGABYTE)
@@ -93,7 +148,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     UNICODE_STRING PageFileName, Arguments, SecondArgument;
 
     /* Make sure we don't have too many */
-    if (SmpNumberOfPagingFiles >= 16)
+    if (SmpNumberOfPagingFiles >= MAX_PAGING_FILES)
     {
         DPRINT1("SMSS:PFILE: Too many paging files specified - %lu\n",
                 SmpNumberOfPagingFiles);
@@ -110,7 +165,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("SMSS:PFILE: SmpParseCommandLine( %wZ ) failed - Status == %lx\n",
+        DPRINT1("SMSS:PFILE: SmpParseCommandLine(%wZ) failed - Status == %lx\n",
                 PageFileToken, Status);
         return Status;
     }
@@ -198,7 +253,8 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     Descriptor->Name = PageFileName;
     Descriptor->MinSize.QuadPart = MinSize * MEGABYTE;
     Descriptor->MaxSize.QuadPart = MaxSize * MEGABYTE;
-    if (SystemManaged) Descriptor->Flags |= SMP_PAGEFILE_SYSTEM_MANAGED;
+    if (SystemManaged)
+        Descriptor->Flags |= SMP_PAGEFILE_SYSTEM_MANAGED;
     Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] =
     RtlUpcaseUnicodeChar(Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET]);
     if (Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] == '?')
@@ -659,7 +715,7 @@ NTAPI
 SmpMakeSystemManagedPagingFileDescriptor(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
 {
     NTSTATUS Status;
-    LONGLONG MinimumSize, MaximumSize, Ram;
+    ULONGLONG MinimumSize, MaximumSize, Ram;
     SYSTEM_BASIC_INFORMATION BasicInfo;
 
     /* Query the page size of the system, and the amount of RAM */
@@ -693,8 +749,15 @@ NTAPI
 SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONGLONG MinSize, MaxSize;
     BOOLEAN WasTooBig = FALSE;
+    ULONGLONG MinSize, MaxSize;
+#ifdef _M_IX86
+    ULONGLONG MaxPageFileSize =
+        (SharedUserData->ProcessorFeatures[PF_PAE_ENABLED])
+            ? MAXIMUM_PAGEFILE_SIZE_PAE : MAXIMUM_PAGEFILE_SIZE;
+#else
+    static const ULONGLONG MaxPageFileSize = MAXIMUM_PAGEFILE_SIZE;
+#endif
 
     /* Capture the min and max */
     MinSize = Descriptor->MinSize.QuadPart;
@@ -704,28 +767,19 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
             &Descriptor->Name, MinSize, MaxSize);
 
     /* Don't let minimum be bigger than maximum */
-    if (MinSize > MaxSize) MaxSize = MinSize;
+    if (MinSize > MaxSize)
+        MaxSize = MinSize;
 
-    /* On PAE we can have bigger pagefiles... */
-    if (SharedUserData->ProcessorFeatures[PF_PAE_ENABLED])
+    /* Validate the minimum and maximum and trim them if they are too large */
+    if (MinSize > MaxPageFileSize)
     {
-        /* But we don't support that yet */
-        DPRINT1("ReactOS does not support PAE yet... assuming sizes OK\n");
+        WasTooBig = TRUE;
+        MinSize = MaxPageFileSize;
     }
-    else
+    if (MaxSize > MaxPageFileSize)
     {
-        /* Validate the minimum and maximum and trim them if they are too large */
-        if (MinSize > MAXIMUM_PAGEFILE_SIZE)
-        {
-            WasTooBig = TRUE;
-            MinSize = MAXIMUM_PAGEFILE_SIZE;
-        }
-
-        if (MaxSize > MAXIMUM_PAGEFILE_SIZE)
-        {
-            WasTooBig = TRUE;
-            MaxSize = MAXIMUM_PAGEFILE_SIZE;
-        }
+        WasTooBig = TRUE;
+        MaxSize = MaxPageFileSize;
     }
 
     /* If we trimmed, write a flag in the descriptor */
@@ -752,7 +806,7 @@ SmpCreateSystemManagedPagingFile(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     /* Make sure there is at least 1 paging file and that we are system-managed */
     ASSERT(SmpNumberOfPagingFiles >= 1);
     ASSERT(!IsListEmpty(&SmpPagingFileDescriptorList));
-    ASSERT(Descriptor->Flags & SMP_PAGEFILE_SYSTEM_MANAGED); // Descriptor->SystemManaged == 1 in ASSERT.
+    ASSERT(Descriptor->Flags & SMP_PAGEFILE_SYSTEM_MANAGED);
 
     /* Keep decreasing the pagefile by this amount if we run out of space */
     FuzzFactor.QuadPart = FUZZ_FACTOR;
