@@ -16,7 +16,7 @@ CAPTION "Kompozycje"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kompozycja to Tapeta, zestaw dźwięków, ikon i innych elementów, które pomogą Ci spersonalizować komputer za pomocą jednego kliknięcia.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Kompozycja to tapeta, zestaw dźwięków, ikon i innych elementów, które pomogają spersonalizować komputer za pomocą jednego kliknięcia.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "Kompozycja:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Z&apisz jako...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
@@ -84,7 +84,7 @@ END
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Ustawienia zaawansowane"
+CAPTION "Wygląd zaawansowany"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
@@ -270,9 +270,9 @@ STRINGTABLE
 BEGIN
     IDS_COLOR_4BIT "16 kolorów"
     IDS_COLOR_8BIT "256 kolorów"
-    IDS_COLOR_16BIT "High Color (16 Bitów)"
-    IDS_COLOR_24BIT "True Color (24 Bity)"
-    IDS_COLOR_32BIT "True Color (32 Bity)"
+    IDS_COLOR_16BIT "Średnia (16 Bitów)"
+    IDS_COLOR_24BIT "Wysoka (24 Bity)"
+    IDS_COLOR_32BIT "Najwyższa (32 Bity)"
     IDS_PIXEL "%lux%lu pikseli"
 END
 
