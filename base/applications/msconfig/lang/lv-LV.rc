@@ -1,4 +1,9 @@
-/* Latvian language resource file (github.com/Coool, 2022-11-02) */
+/*
+* PROJECT:     ReactOS System Configuration Tool
+* LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+* PURPOSE:     Latvian resource file
+* TRANSLATOR:  Copyright 2022 Coool (github.com/Coool) <coool@mail.lv>
+*/
 
 LANGUAGE LANG_LATVIAN, SUBLANG_DEFAULT
 
