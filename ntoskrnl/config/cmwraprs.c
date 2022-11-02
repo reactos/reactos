@@ -79,6 +79,8 @@ CmpFileRead(IN PHHIVE RegistryHive,
     PCMHIVE CmHive = (PCMHIVE)RegistryHive;
     HANDLE HiveHandle = CmHive->FileHandles[FileType];
     LARGE_INTEGER _FileOffset;
+    HANDLE EventHandle;
+    PKEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
@@ -86,9 +88,35 @@ CmpFileRead(IN PHHIVE RegistryHive,
     if (HiveHandle == NULL)
         return TRUE;
 
+    /* Create the event to wait for I/O completion */
+    Status = CmpCreateEvent(SynchronizationEvent, &EventHandle, &Event);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
     _FileOffset.QuadPart = *FileOffset;
-    Status = ZwReadFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
-                        Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    Status = ZwReadFile(HiveHandle,
+                        EventHandle,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        Buffer,
+                        (ULONG)BufferLength,
+                        &_FileOffset,
+                        NULL);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for completion */
+        Status = KeWaitForSingleObject(Event,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        NT_ASSERT(Status == STATUS_SUCCESS);
+        Status = IoStatusBlock.Status;
+    }
+    NT_VERIFY(NT_SUCCESS(ObCloseHandle(EventHandle, KernelMode)));
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -103,6 +131,8 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     PCMHIVE CmHive = (PCMHIVE)RegistryHive;
     HANDLE HiveHandle = CmHive->FileHandles[FileType];
     LARGE_INTEGER _FileOffset;
+    HANDLE EventHandle;
+    PKEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
@@ -114,9 +144,35 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     if (CmpNoWrite)
         return TRUE;
 
+    /* Create the event to wait for I/O completion */
+    Status = CmpCreateEvent(SynchronizationEvent, &EventHandle, &Event);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
     _FileOffset.QuadPart = *FileOffset;
-    Status = ZwWriteFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
-                         Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    Status = ZwWriteFile(HiveHandle,
+                         EventHandle,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         Buffer,
+                         (ULONG)BufferLength,
+                         &_FileOffset,
+                         NULL);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for completion */
+        Status = KeWaitForSingleObject(Event,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        NT_ASSERT(Status == STATUS_SUCCESS);
+        Status = IoStatusBlock.Status;
+    }
+    NT_VERIFY(NT_SUCCESS(ObCloseHandle(EventHandle, KernelMode)));
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -178,5 +234,10 @@ CmpFileFlush(IN PHHIVE RegistryHive,
         return TRUE;
 
     Status = ZwFlushBuffersFile(HiveHandle, &IoStatusBlock);
+
+    /* This operation is always synchronous */
+    ASSERT(Status != STATUS_PENDING);
+    ASSERT(Status == IoStatusBlock.Status);
+
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
