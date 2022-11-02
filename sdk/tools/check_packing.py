@@ -1,14 +1,14 @@
 '''
 PROJECT:     ReactOS code linter
 LICENSE:     MIT (https://spdx.org/licenses/MIT)
-PURPOSE:     Verifies that there are no headers included when packing is modified
+PURPOSE:     Verifies that there are no headers included where packing is modified
 COPYRIGHT:   Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
 '''
 from pathlib import Path
 import re
 
 DEFAULT_SUFFIXES = [
-    '.cpp', '.cxx', '.cc', '.c', '.idl'
+    '.cpp', '.cxx', '.cc', '.c', '.idl',
     '.hpp', '.h', '.inc'
 ]
 
