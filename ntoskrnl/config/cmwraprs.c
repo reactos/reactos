@@ -89,6 +89,8 @@ CmpFileRead(IN PHHIVE RegistryHive,
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwReadFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                         Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    /* We do synchronous I/O for simplicity - see CmpOpenHiveFiles. */
+    ASSERT(Status != STATUS_PENDING);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -117,6 +119,11 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwWriteFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                          Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    /* We do synchronous I/O for simplicity - see CmpOpenHiveFiles.
+     * Windows optimizes here by starting an async write for each 64k chunk,
+     * then waiting for all writes to complete at once.
+     */
+    ASSERT(Status != STATUS_PENDING);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -178,5 +185,10 @@ CmpFileFlush(IN PHHIVE RegistryHive,
         return TRUE;
 
     Status = ZwFlushBuffersFile(HiveHandle, &IoStatusBlock);
+
+    /* This operation is always synchronous */
+    ASSERT(Status != STATUS_PENDING);
+    ASSERT(Status == IoStatusBlock.Status);
+
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
