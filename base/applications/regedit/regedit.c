@@ -34,6 +34,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(regedit);
 
 static void output_writeconsole(const WCHAR *str, DWORD wlen)
 {
+#ifdef __REACTOS__
+    /* This is win32gui application, don't ever try writing to console.
+     * For the console version we have a separate reg.exe application. */
+    WCHAR AppStr[255];
+    LoadStringW(hInst, IDS_APP_TITLE, AppStr, ARRAY_SIZE(AppStr));
+    MessageBoxW(NULL, str, AppStr, MB_OK | MB_ICONINFORMATION);
+#else
     DWORD count;
 
     if (!WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), str, wlen, &count, NULL))
@@ -52,6 +59,7 @@ static void output_writeconsole(const WCHAR *str, DWORD wlen)
         WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), msgA, len, &count, FALSE);
         free(msgA);
     }
+#endif
 }
 
 static void output_formatstring(const WCHAR *fmt, va_list va_args)

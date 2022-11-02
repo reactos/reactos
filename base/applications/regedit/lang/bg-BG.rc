@@ -37,7 +37,7 @@ Options:\n\
                  be imported. When used with [/E], this option specifies the\n\
                  file location where registry information will be exported.\n\
   [reg_key]      The registry key to be modified.\n\
-n\
+\n\
 Usage examples:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
