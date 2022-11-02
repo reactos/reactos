@@ -2,30 +2,45 @@
 
 #include <shellapi.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <strsafe.h>
 
-/* Where is the uninstaller of "ReactOS JPN Package"? */
-BOOL GetJapaneseUninstallPath(HWND hwnd, LPWSTR pszPath, SIZE_T cchPath)
+/* What is the uninstallation command line of "ReactOS JPN Package"? */
+BOOL GetJapaneseUninstallCmdLine(HWND hwnd, LPWSTR pszCmdLine, SIZE_T cchCmdLine)
 {
-    SHGetSpecialFolderPathW(hwnd, pszPath, CSIDL_PROGRAM_FILES, FALSE);
-    StringCchCatW(pszPath, cchPath, L"\\ReactOS JPN Package\\unins000.exe");
-    if (GetFileAttributesW(pszPath) != INVALID_FILE_ATTRIBUTES)
-        return TRUE;
+    HKEY hKey;
+    LONG error;
+    DWORD dwSize;
 
-    SHGetSpecialFolderPathW(hwnd, pszPath, CSIDL_PROGRAM_FILESX86, FALSE);
-    StringCchCatW(pszPath, cchPath, L"\\ReactOS JPN Package\\unins000.exe");
-    if (GetFileAttributesW(pszPath) != INVALID_FILE_ATTRIBUTES)
-        return TRUE;
+    pszCmdLine[0] = UNICODE_NULL;
 
-    pszPath[0] = UNICODE_NULL;
-    return FALSE;
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+                          L"{80F03D6E-0549-4202-BE81-FF583F56A7A8}_is1",
+                          0,
+                          KEY_READ,
+                          &hKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSize = cchCmdLine * sizeof(WCHAR);
+    error = RegQueryValueExW(hKey, L"UninstallString", NULL, NULL, (LPBYTE)pszCmdLine, &dwSize);
+    if (error != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    pszCmdLine[cchCmdLine - 1] = UNICODE_NULL;
+    RegCloseKey(hKey);
+    return TRUE;
 }
 
-/* Is there any "ReactOS JPN Package"? */
+/* Is there any installed "ReactOS JPN Package"? */
 BOOL HasJapanesePackage(HWND hwnd)
 {
     WCHAR szPath[MAX_PATH];
-    return GetJapaneseUninstallPath(hwnd, szPath, _countof(szPath));
+    return GetJapaneseUninstallCmdLine(hwnd, szPath, _countof(szPath));
 }
 
 /* Property page dialog callback */
@@ -115,10 +130,20 @@ LanguagesPageProc(HWND hwndDlg,
                         else
                         {
                             WCHAR szUninstall[MAX_PATH];
-                            if (GetJapaneseUninstallPath(hwndDlg, szUninstall, _countof(szUninstall)))
+                            if (GetJapaneseUninstallCmdLine(hwndDlg, szUninstall, _countof(szUninstall)))
                             {
+                                /* Go to arguments of command line */
+                                PWCHAR pchArgs = PathGetArgsW(szUninstall);
+                                if (pchArgs && *pchArgs)
+                                {
+                                    --pchArgs;
+                                    *pchArgs = UNICODE_NULL; /* Cut the C string */
+                                    ++pchArgs;
+                                }
+                                PathUnquoteSpacesW(szUninstall);
+
                                 /* Uninstall now */
-                                ShellExecuteW(hwndDlg, NULL, szUninstall, L"", NULL, SW_SHOWNORMAL);
+                                ShellExecuteW(hwndDlg, NULL, szUninstall, pchArgs, NULL, SW_SHOWNORMAL);
                             }
                         }
                         break;
