@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS API tests
- * LICENSE:     0BSD (https://spdx.org/licenses/0BSD.html)
+ * LICENSE:     0BSD (https://spdx.org/licenses/0BSD)
  * PURPOSE:     Test for RtlxUnicodeStringToAnsiSize
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou <jerome.gardou@reactos.org>
  */

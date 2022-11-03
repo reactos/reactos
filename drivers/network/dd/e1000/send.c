@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Intel PRO/1000 Driver
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Sending packets
  * COPYRIGHT:   Copyright 2018 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2019 Victor Perevertkin <victor.perevertkin@reactos.org>

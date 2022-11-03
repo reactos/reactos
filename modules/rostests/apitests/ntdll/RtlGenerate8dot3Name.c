@@ -3,7 +3,7 @@
 // To revert conversion, please execute "code7bit -r <file>".
 /*
  * PROJECT:     ReactOS API tests
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for RtlGenerate8dot3Name
  * COPYRIGHT:   Copyright 2015-2016 Pierre Schweitzer <pierre@reactos.org>
  *              Copyright 2021 Jérôme Gardou <jerome.gardou@reactos.org>
