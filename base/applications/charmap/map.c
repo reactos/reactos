@@ -93,11 +93,8 @@ FillGrid(PMAP infoPtr,
             if (!IntersectRect(&rc, &ps->rcPaint, &Cell->CellExt))
                 continue;
 
-            Rectangle(ps->hdc,
-                      Cell->CellExt.left,
-                      Cell->CellExt.top,
-                      Cell->CellExt.right,
-                      Cell->CellExt.bottom);
+            rc = Cell->CellExt;
+            Rectangle(ps->hdc, rc.left, rc.top, rc.right, rc.bottom);
 
             if (i < infoPtr->NumValidGlyphs)
             {
