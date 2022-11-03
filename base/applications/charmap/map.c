@@ -447,6 +447,7 @@ OnVScroll(PMAP infoPtr,
           INT Pos)
 {
     INT iYDiff, iOldYStart = infoPtr->iYStart;
+    INT X, Y;
 
     switch (Value)
     {
@@ -489,7 +490,10 @@ OnVScroll(PMAP infoPtr,
 
     UpdateCells(infoPtr);
 
-    LimitCaretXY(infoPtr, &infoPtr->CaretX, &infoPtr->CaretY);
+    X = infoPtr->CaretX;
+    Y = infoPtr->CaretY;
+    LimitCaretXY(infoPtr, &X, &Y);
+    SetCaretXY(infoPtr, X, Y, FALSE, FALSE);
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
