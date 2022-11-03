@@ -489,6 +489,8 @@ OnVScroll(PMAP infoPtr,
 
     UpdateCells(infoPtr);
 
+    LimitCaretXY(infoPtr, &infoPtr->CaretX, &infoPtr->CaretY);
+
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
     {
@@ -662,22 +664,36 @@ static
 VOID
 OnKeyDown(PMAP infoPtr, WPARAM wParam, LPARAM lParam)
 {
+    BOOL bCtrlDown = (GetKeyState(VK_CONTROL) < 0);
+
     switch (wParam)
     {
         case VK_UP:
-            MoveUpDown(infoPtr, -1);
+            if (bCtrlDown)
+                SetCaretXY(infoPtr, infoPtr->CaretX, 0, FALSE, FALSE);
+            else
+                MoveUpDown(infoPtr, -1);
             break;
 
         case VK_DOWN:
-            MoveUpDown(infoPtr, +1);
+            if (bCtrlDown)
+                SetCaretXY(infoPtr, infoPtr->CaretX, YCELLS - 1, FALSE, FALSE);
+            else
+                MoveUpDown(infoPtr, +1);
             break;
 
         case VK_LEFT:
-            MoveLeftRight(infoPtr, -1);
+            if (bCtrlDown)
+                SetCaretXY(infoPtr, 0, infoPtr->CaretY, FALSE, FALSE);
+            else
+                MoveLeftRight(infoPtr, -1);
             break;
 
         case VK_RIGHT:
-            MoveLeftRight(infoPtr, +1);
+            if (bCtrlDown)
+                SetCaretXY(infoPtr, XCELLS - 1, infoPtr->CaretY, FALSE, FALSE);
+            else
+                MoveLeftRight(infoPtr, +1);
             break;
 
         case VK_PRIOR: /* Page Up */
@@ -689,14 +705,14 @@ OnKeyDown(PMAP infoPtr, WPARAM wParam, LPARAM lParam)
             break;
 
         case VK_HOME:
-            if (GetKeyState(VK_CONTROL) < 0)
+            if (bCtrlDown)
                 SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_TOP, 0), 0);
             else
                 SetCaretXY(infoPtr, 0, infoPtr->CaretY, FALSE, FALSE);
             break;
 
         case VK_END:
-            if (GetKeyState(VK_CONTROL) < 0)
+            if (bCtrlDown)
                 SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_BOTTOM, 0), 0);
             else
                 SetCaretXY(infoPtr, XCELLS - 1, infoPtr->CaretY, FALSE, FALSE);
