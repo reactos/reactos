@@ -791,7 +791,7 @@ MapWndProc(HWND hwnd,
         case WM_DESTROY:
             DeleteObject(infoPtr->hFont);
             HeapFree(GetProcessHeap(), 0, infoPtr);
-            SetWindowLongPtrW(hwnd, 0, (LONG_PT)NULL);
+            SetWindowLongPtrW(hwnd, 0, (LONG_PTR)NULL);
             break;
 
         case WM_GETDLGCODE:

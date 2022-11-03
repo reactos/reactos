@@ -58,7 +58,6 @@ typedef struct _MAP
 
     USHORT ValidGlyphs[MAX_GLYPHS];
     USHORT NumValidGlyphs;
-
 } MAP, *PMAP;
 
 typedef struct {
