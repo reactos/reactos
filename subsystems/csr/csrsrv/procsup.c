@@ -127,7 +127,7 @@ CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
     if (CsrProcess->NtSession)
     {
         /* Dereference the Session */
-        CsrDereferenceNtSession(CsrProcess->NtSession, 0);
+        CsrDereferenceNtSession(CsrProcess->NtSession, STATUS_SUCCESS);
     }
 
     /* Close the Client Port if there is one */
@@ -136,7 +136,7 @@ CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
     /* Close the process handle */
     NtClose(CsrProcess->ProcessHandle);
 
-    /* Free the Proces Object */
+    /* Free the Process Object */
     CsrDeallocateProcess(CsrProcess);
 }
 
