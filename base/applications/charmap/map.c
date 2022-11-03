@@ -458,37 +458,27 @@ MapOnCreate(PMAP infoPtr,
     RECT rc;
     BOOL Ret = FALSE;
 
-    infoPtr = HeapAlloc(GetProcessHeap(),
-                        0,
-                        sizeof(MAP));
+    infoPtr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MAP));
     if (infoPtr)
     {
-        SetLastError(0);
-        SetWindowLongPtrW(hwnd,
-                          0,
-                          (DWORD_PTR)infoPtr);
-        if (GetLastError() == 0)
-        {
-            ZeroMemory(infoPtr,
-                       sizeof(MAP));
+        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)infoPtr);
 
-            infoPtr->hMapWnd = hwnd;
-            infoPtr->hParent = hParent;
+        infoPtr->hMapWnd = hwnd;
+        infoPtr->hParent = hParent;
 
-            GetClientRect(hwnd, &rc);
-            infoPtr->ClientSize.cx = rc.right;
-            infoPtr->ClientSize.cy = rc.bottom;
-            infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
-            infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
+        GetClientRect(hwnd, &rc);
+        infoPtr->ClientSize.cx = rc.right;
+        infoPtr->ClientSize.cy = rc.bottom;
+        infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
+        infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
 
-            infoPtr->pActiveCell = &infoPtr->Cells[0][0];
+        infoPtr->pActiveCell = &infoPtr->Cells[0][0];
 
-            SetGrid(infoPtr);
+        SetGrid(infoPtr);
 
-            SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
+        SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
 
-            Ret = TRUE;
-        }
+        Ret = TRUE;
     }
 
     return Ret;
