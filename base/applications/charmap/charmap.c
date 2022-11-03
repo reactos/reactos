@@ -715,8 +715,10 @@ wWinMain(HINSTANCE hInst,
                 /* NOTE: CreateDialog needs IsDialogMessage call in message loop */
                 if (hCharmapDlg && IsDialogMessage(hCharmapDlg, &Msg))
                     continue;
+#ifndef REMOVE_ADVANCED
                 if (hAdvancedDlg && IsDialogMessage(hAdvancedDlg, &Msg))
                     continue;
+#endif
 
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);
