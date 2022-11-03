@@ -103,17 +103,19 @@ FillGrid(PMAP infoPtr,
                 if (Cell == infoPtr->pActiveCell)
                 {
                     rc = Cell->CellInt;
+
+                    /* Draw gray box */
+                    SelectObject(ps->hdc, GetStockObject(NULL_BRUSH));
+                    SelectObject(ps->hdc, hPenGray);
+                    Rectangle(ps->hdc, rc.left, rc.top, rc.right, rc.bottom);
+                    SelectObject(ps->hdc, hOldPen);
+                    SelectObject(ps->hdc, hOldBrush);
+
                     if (GetFocus() == infoPtr->hMapWnd)
                     {
+                        /* Draw focus rectangle */
+                        InflateRect(&rc, -1, -1);
                         DrawFocusRect(ps->hdc, &rc);
-                    }
-                    else
-                    {
-                        SelectObject(ps->hdc, GetStockObject(NULL_BRUSH));
-                        SelectObject(ps->hdc, hPenGray);
-                        Rectangle(ps->hdc, rc.left, rc.top, rc.right, rc.bottom);
-                        SelectObject(ps->hdc, hOldPen);
-                        SelectObject(ps->hdc, hOldBrush);
                     }
                 }
             }
@@ -810,7 +812,8 @@ MapWndProc(HWND hwnd,
 
         case WM_SETFOCUS:
         case WM_KILLFOCUS:
-            InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
+            if (!infoPtr->hLrgWnd)
+                InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
             break;
 
         default:
