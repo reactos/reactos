@@ -493,7 +493,7 @@ OnVScroll(PMAP infoPtr,
     X = infoPtr->CaretX;
     Y = infoPtr->CaretY;
     LimitCaretXY(infoPtr, &X, &Y);
-    SetCaretXY(infoPtr, X, Y, FALSE, FALSE);
+    SetCaretXY(infoPtr, X, Y, IsWindow(infoPtr->hLrgWnd), FALSE);
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
