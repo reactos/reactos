@@ -202,23 +202,19 @@ MoveLargeCell(PMAP infoPtr)
 
     MapWindowPoints(infoPtr->hMapWnd,
                     infoPtr->hParent,
-                    (VOID*)&rLarge,
+                    (LPPOINT)&rLarge,
                     2);
 
-    InflateRect(&rLarge,
-                XLARGE - XCELLS,
-                YLARGE - YCELLS);
+    InflateRect(&rLarge, XLARGE - XCELLS, YLARGE - YCELLS);
 
     MoveWindow(infoPtr->hLrgWnd,
                rLarge.left,
                rLarge.top,
                rLarge.right - rLarge.left,
                rLarge.bottom - rLarge.top,
-               FALSE);
+               TRUE);
 
-    InvalidateRect(infoPtr->hLrgWnd,
-                   NULL,
-                   TRUE);
+    InvalidateRect(infoPtr->hLrgWnd, NULL, TRUE);
 }
 
 
@@ -287,11 +283,6 @@ SetFont(PMAP infoPtr,
     InvalidateRect(infoPtr->hMapWnd,
                    NULL,
                    TRUE);
-
-    if (infoPtr->pActiveCell)
-        infoPtr->pActiveCell->bActive = FALSE;
-    infoPtr->pActiveCell = &infoPtr->Cells[0][0];
-    infoPtr->pActiveCell->bActive = TRUE;
 
     // Get all the valid glyphs in this font
 
@@ -403,20 +394,11 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
 
     /* set new cell to active */
     infoPtr->pActiveCell = &infoPtr->Cells[Y][X];
-    infoPtr->pActiveCell->bActive = TRUE;
-    infoPtr->pActiveCell->bLarge = bLarge;
     if (!bInvalidateAll)
     {
         InvalidateRect(infoPtr->hMapWnd,
                        &infoPtr->pActiveCell->CellInt,
                        FALSE);
-    }
-
-    /* Destroy large window */
-    if (infoPtr->hLrgWnd)
-    {
-        DestroyWindow(infoPtr->hLrgWnd);
-        infoPtr->hLrgWnd = NULL;
     }
 
     /* Create if needed */
@@ -426,6 +408,15 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
             MoveLargeCell(infoPtr);
         else
             CreateLargeCell(infoPtr);
+    }
+    else
+    {
+        /* Destroy large window */
+        if (infoPtr->hLrgWnd)
+        {
+            DestroyWindow(infoPtr->hLrgWnd);
+            infoPtr->hLrgWnd = NULL;
+        }
     }
 
     if (bInvalidateAll)
@@ -490,7 +481,7 @@ MapOnCreate(PMAP infoPtr,
             infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
             infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
 
-            infoPtr->pActiveCell = NULL;
+            infoPtr->pActiveCell = &infoPtr->Cells[0][0];
 
             SetGrid(infoPtr);
 
@@ -570,7 +561,7 @@ OnVScroll(PMAP infoPtr,
             RECT rect;
 
             /* Invalidate the rect around the active cell since a new cell will become active */
-            if (infoPtr->pActiveCell && infoPtr->pActiveCell->bActive)
+            if (infoPtr->pActiveCell)
             {
                 InvalidateRect(infoPtr->hMapWnd,
                                &infoPtr->pActiveCell->CellExt,
@@ -645,7 +636,7 @@ OnPaint(PMAP infoPtr,
 
 static
 VOID
-MoveUpDown(PMAP infoPtr, INT DY, BOOL bLarge)
+MoveUpDown(PMAP infoPtr, INT DY)
 {
     INT Y = infoPtr->CaretY;
 
@@ -670,12 +661,12 @@ MoveUpDown(PMAP infoPtr, INT DY, BOOL bLarge)
         Y += 1;
     }
 
-    SetCaretXY(infoPtr, infoPtr->CaretX, Y, bLarge, FALSE);
+    SetCaretXY(infoPtr, infoPtr->CaretX, Y, IsWindow(infoPtr->hLrgWnd), FALSE);
 }
 
 static
 VOID
-MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
+MoveLeftRight(PMAP infoPtr, INT DX)
 {
     INT X = infoPtr->CaretX;
     INT Y = infoPtr->CaretY;
@@ -725,7 +716,7 @@ MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
         }
     }
 
-    SetCaretXY(infoPtr, X, Y, bLarge, FALSE);
+    SetCaretXY(infoPtr, X, Y, IsWindow(infoPtr->hLrgWnd), FALSE);
 }
 
 static
@@ -735,19 +726,19 @@ OnKeyDown(PMAP infoPtr, WPARAM wParam, LPARAM lParam)
     switch (wParam)
     {
         case VK_UP:
-            MoveUpDown(infoPtr, -1, FALSE);
+            MoveUpDown(infoPtr, -1);
             break;
 
         case VK_DOWN:
-            MoveUpDown(infoPtr, +1, FALSE);
+            MoveUpDown(infoPtr, +1);
             break;
 
         case VK_LEFT:
-            MoveLeftRight(infoPtr, -1, FALSE);
+            MoveLeftRight(infoPtr, -1);
             break;
 
         case VK_RIGHT:
-            MoveLeftRight(infoPtr, +1, FALSE);
+            MoveLeftRight(infoPtr, +1);
             break;
 
         case VK_PRIOR: /* Page Up */
@@ -837,13 +828,11 @@ MapWndProc(HWND hwnd,
                                     FM_SETCHAR,
                                     infoPtr->pActiveCell->ch);
 
-            if (infoPtr->pActiveCell->bLarge)
+            if (infoPtr->hLrgWnd)
             {
                 DestroyWindow(infoPtr->hLrgWnd);
                 infoPtr->hLrgWnd = NULL;
             }
-
-            infoPtr->pActiveCell->bLarge = FALSE;
             break;
         }
 
@@ -904,15 +893,7 @@ MapWndProc(HWND hwnd,
         }
 
         case WM_SETFOCUS:
-            InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
-            break;
-
         case WM_KILLFOCUS:
-            if (infoPtr->hLrgWnd)
-            {
-                DestroyWindow(infoPtr->hLrgWnd);
-                infoPtr->hLrgWnd = NULL;
-            }
             InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
             break;
 

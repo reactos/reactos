@@ -37,8 +37,6 @@ typedef struct _CELL
 {
     RECT CellExt;
     RECT CellInt;
-    BOOL bActive;
-    BOOL bLarge;
     WCHAR ch;
 } CELL, *PCELL;
 
