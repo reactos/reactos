@@ -202,10 +202,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Ataza-barra eta Hasi menuaren propietateak"
     IDS_RESTORE_ALL "E&rakutsi irekitako leihoak"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
-    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END

@@ -197,10 +197,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Меню ""Пуск"" и панель задач"
     IDS_RESTORE_ALL "&Показать окна"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_TRAYWND_UNDO_CASCADE "Undo &Cascade Windows"
-    IDS_TRAYWND_UNDO_TILE "Undo &Tile Windows"
+    IDS_TRAYWND_UNDO_CASCADE "&Отменить Каскадом"
+    IDS_TRAYWND_UNDO_TILE "&Отменить Окна рядом"
 END
