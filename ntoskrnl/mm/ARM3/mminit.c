@@ -1264,7 +1264,7 @@ MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                  RtlLengthSid(SeWorldSid);
 
     /* Allocate space for the DACL */
-    Dacl = ExAllocatePoolWithTag(PagedPool, DaclLength, 'lcaD');
+    Dacl = ExAllocatePoolWithTag(PagedPool, DaclLength, TAG_DACL);
     if (!Dacl) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Setup the ACL inside it */
@@ -1314,7 +1314,7 @@ MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                            FALSE);
 CleanUp:
     /* Free the DACL */
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 
     /* Check if this is the success path */
     if (NT_SUCCESS(Status))

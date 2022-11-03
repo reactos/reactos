@@ -101,7 +101,7 @@ extern void LoadSettings(void)
             ShowWindow(hFrameWnd, SW_SHOWNORMAL);
 
         /* Restore key position */
-        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
         {
             SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
         }
@@ -132,7 +132,7 @@ extern void SaveSettings(void)
         rootName = get_root_key_name(hRootKey);
 
         /* Load "My Computer" string and complete it */
-        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
+        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, ARRAY_SIZE(szBuffer)) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))

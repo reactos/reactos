@@ -33,9 +33,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_OPEN_FILE ICON "res/folderopen.ico"
-IDI_CLOSED_FILE ICON "res/folder.ico"
-IDI_ROOT ICON "res/computer.ico"
 IDI_STRING ICON "res/string.ico"
 IDI_BIN ICON "res/bin.ico"
 IDI_REGEDIT ICON "res/regedit.ico"

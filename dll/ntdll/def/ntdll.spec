@@ -277,7 +277,7 @@
 @ stdcall NtCreateMailslotFile(long long long long long long long long)
 @ stdcall NtCreateMutant(ptr long ptr long)
 @ stdcall NtCreateNamedPipeFile(ptr long ptr ptr long long long long long long long long long ptr)
-@ stdcall NtCreatePagingFile(long long long long)
+@ stdcall NtCreatePagingFile(ptr ptr ptr long)
 @ stdcall NtCreatePort(ptr ptr long long ptr)
 @ stub -version=0x600+ NtCreatePrivateNamespace
 @ stdcall NtCreateProcess(ptr long ptr ptr long ptr ptr ptr)
@@ -1438,7 +1438,7 @@
 @ stdcall ZwCreateMailslotFile(long long long long long long long long)
 @ stdcall ZwCreateMutant(ptr long ptr long)
 @ stdcall ZwCreateNamedPipeFile(ptr long ptr ptr long long long long long long long long long ptr)
-@ stdcall ZwCreatePagingFile(long long long long)
+@ stdcall ZwCreatePagingFile(ptr ptr ptr long)
 @ stdcall ZwCreatePort(ptr ptr long long long)
 @ stdcall ZwCreateProcess(ptr long ptr ptr long ptr ptr ptr)
 @ stdcall ZwCreateProcessEx(ptr long ptr ptr long ptr ptr ptr long)

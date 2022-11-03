@@ -686,7 +686,7 @@ BOOL FindNext(HWND hWnd)
 
     if (fSuccess)
     {
-        GetKeyName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
+        GetKeyName(szFullKey, ARRAY_SIZE(szFullKey), hKeyRoot, pszFoundSubKey);
         SelectNode(g_pChildWnd->hTreeWnd, szFullKey);
         free(pszFoundSubKey);
 
@@ -785,7 +785,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
                 if (hControl)
-                    GetWindowTextW(hControl, s_szFindWhat, COUNT_OF(s_szFindWhat));
+                    GetWindowTextW(hControl, s_szFindWhat, ARRAY_SIZE(s_szFindWhat));
                 EndDialog(hDlg, 1);
                 break;
 
@@ -799,7 +799,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
             switch(LOWORD(wParam))
             {
             case IDC_FINDWHAT:
-                GetWindowTextW((HWND) lParam, s_szSavedFindValue, COUNT_OF(s_szSavedFindValue));
+                GetWindowTextW((HWND) lParam, s_szSavedFindValue, ARRAY_SIZE(s_szSavedFindValue));
                 hControl = GetDlgItem(hDlg, IDOK);
                 if (hControl)
                 {
@@ -825,8 +825,8 @@ void FindNextMessageBox(HWND hWnd)
     {
         WCHAR msg[128], caption[128];
 
-        LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
-        LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
+        LoadStringW(hInst, IDS_FINISHEDFIND, msg, ARRAY_SIZE(msg));
+        LoadStringW(hInst, IDS_APP_TITLE, caption, ARRAY_SIZE(caption));
         MessageBoxW(hWnd, msg, caption, MB_ICONINFORMATION);
     }
 }

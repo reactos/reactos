@@ -477,6 +477,12 @@ SmpConfigureKnownDlls(IN PWSTR ValueName,
     }
 }
 
+/**
+ * @remark
+ * SmpConfigureEnvironment() should be called twice in order to resolve
+ * forward references to environment variables.
+ * See the two L"Environment" entries in SmpRegistryConfigurationTable[].
+ **/
 NTSTATUS
 NTAPI
 SmpConfigureEnvironment(IN PWSTR ValueName,
@@ -493,7 +499,7 @@ SmpConfigureEnvironment(IN PWSTR ValueName,
     RtlInitUnicodeString(&ValueString, ValueName);
     RtlInitUnicodeString(&DataString, ValueData);
     DPRINT("Setting %wZ = %wZ\n", &ValueString, &DataString);
-    Status = RtlSetEnvironmentVariable(0, &ValueString, &DataString);
+    Status = RtlSetEnvironmentVariable(NULL, &ValueString, &DataString);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: 'SET %wZ = %wZ' failed - Status == %lx\n",
@@ -716,6 +722,13 @@ SmpRegistryConfigurationTable[] =
         0
     },
 
+    /**
+     * @remark
+     * SmpConfigureEnvironment() is expected to be called twice
+     * (see SmpCalledConfigEnv) in order to resolve forward references
+     * to environment variables (e.g. EnvVar1 referring to EnvVar2,
+     * before EnvVar2 is defined).
+     **/
     {
         SmpConfigureEnvironment,
         RTL_QUERY_REGISTRY_SUBKEY,
@@ -725,6 +738,17 @@ SmpRegistryConfigurationTable[] =
         NULL,
         0
     },
+
+    {
+        SmpConfigureEnvironment,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"Environment",
+        NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+    /****/
 
     {
         SmpConfigureSubSystems,
