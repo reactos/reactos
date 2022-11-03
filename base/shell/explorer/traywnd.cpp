@@ -58,6 +58,47 @@ void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam
 
 static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
+enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
+
+struct WINDOWPOSBACKUPDATA
+{
+    HWND hwnd;
+    WINDOWPLACEMENT wplt;
+};
+CSimpleArray<WINDOWPOSBACKUPDATA> g_WindowPosBackup;
+
+static BOOL CALLBACK BackupWindowsPosProc(HWND hwnd, LPARAM lParam)
+{
+    WINDOWPOSBACKUPDATA wposdata;
+    HWND hDesk = GetDesktopWindow();
+    if (IsWindowVisible(hwnd) && !IsIconic(hwnd) && (hwnd != hDesk))
+    {
+        wposdata.hwnd = hwnd;
+        wposdata.wplt.length = sizeof(wposdata.wplt);
+        GetWindowPlacement(hwnd, &(wposdata.wplt));
+        g_WindowPosBackup.Add(wposdata);
+    }
+
+    return TRUE;
+}
+
+VOID BackupWindowPos()
+{
+    EnumWindows(BackupWindowsPosProc, NULL);
+}
+
+VOID RestoreWindowPos()
+{
+    g_Arrangement = NONE;
+
+    for (INT i = g_WindowPosBackup.GetSize() - 1; i >= 0; --i)
+    {
+        SetWindowPlacement(g_WindowPosBackup[i].hwnd, &(g_WindowPosBackup[i].wplt));
+    }
+
+    g_WindowPosBackup.RemoveAll();
+}
+
 struct EFFECTIVE_INFO
 {
     HWND hwndFound;
@@ -805,6 +846,7 @@ public:
             break;
 
         case ID_SHELL_CMD_UNDO_ACTION:
+            RestoreWindowPos();
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
@@ -813,20 +855,35 @@ public:
 
         case ID_SHELL_CMD_TILE_WND_H:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (g_Arrangement == NONE)
+            {
+                BackupWindowPos();
+            }
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_TILE_WND_V:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (g_Arrangement == NONE)
+            {
+                BackupWindowPos();
+            }
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_CASCADE_WND:
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            if (g_Arrangement == NONE)
+            {
+                BackupWindowPos();
+            }
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
             appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            g_Arrangement = CASCADED;
             break;
 
         case ID_SHELL_CMD_CUST_NOTIF:
@@ -3281,12 +3338,30 @@ HandleTrayContextMenu:
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_ENABLED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_ENABLED);
+            if (g_Arrangement != NONE)
+            {
+                CStringW strCaption((g_Arrangement == TILED) ? MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_TILE)
+                                                             : MAKEINTRESOURCEW(IDS_TRAYWND_UNDO_CASCADE));
+                MENUITEMINFOW mii = { sizeof(mii) };
+                ::GetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
+                mii.fMask = MIIM_TYPE;
+                mii.fType = MFT_STRING;
+                mii.dwTypeData = const_cast<LPWSTR>(&strCaption[0]);
+                ::SetMenuItemInfoW(hMenu, ID_SHELL_CMD_UNDO_ACTION, FALSE, &mii);
+            }
+            else
+            {
+                ::DeleteMenu(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND);
+            }
         }
         else
         {
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_GRAYED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_GRAYED);
             ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_GRAYED);
+            ::DeleteMenu(hMenu, ID_SHELL_CMD_UNDO_ACTION, MF_BYCOMMAND);
+            g_Arrangement = NONE;
+            g_WindowPosBackup.RemoveAll();
         }
         return 0;
     }

@@ -197,4 +197,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barra de Tarefas e Menu Iniciar"
     IDS_RESTORE_ALL "&Mostrar janelas abertas"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END
