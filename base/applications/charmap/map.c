@@ -23,36 +23,34 @@ VOID
 SetGrid(PMAP infoPtr)
 {
     INT x, y;
+    PCELL Cell;
 
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
-        infoPtr->Cells[y][x].CellExt.left = x * infoPtr->CellSize.cx + 1;
-        infoPtr->Cells[y][x].CellExt.top = y * infoPtr->CellSize.cy + 1;
-        infoPtr->Cells[y][x].CellExt.right = (x + 1) * infoPtr->CellSize.cx + 2;
-        infoPtr->Cells[y][x].CellExt.bottom = (y + 1) * infoPtr->CellSize.cy + 2;
+        Cell = &infoPtr->Cells[y][x];
+        Cell->CellExt.left = x * infoPtr->CellSize.cx + 1;
+        Cell->CellExt.top = y * infoPtr->CellSize.cy + 1;
+        Cell->CellExt.right = (x + 1) * infoPtr->CellSize.cx + 2;
+        Cell->CellExt.bottom = (y + 1) * infoPtr->CellSize.cy + 2;
 
-        CopyRect(&infoPtr->Cells[y][x].CellInt,
-                 &infoPtr->Cells[y][x].CellExt);
+        Cell->CellInt = Cell->CellExt;
 
-        InflateRect(&infoPtr->Cells[y][x].CellInt,
-                    -1,
-                    -1);
+        InflateRect(&Cell->CellInt, -1, -1);
     }
 }
-
 
 static
 VOID
 DrawActiveCell(PMAP infoPtr,
                HDC hdc)
 {
+    PCELL Cell = infoPtr->pActiveCell;
     Rectangle(hdc,
-              infoPtr->pActiveCell->CellInt.left,
-              infoPtr->pActiveCell->CellInt.top,
-              infoPtr->pActiveCell->CellInt.right,
-              infoPtr->pActiveCell->CellInt.bottom);
-
+              Cell->CellInt.left,
+              Cell->CellInt.top,
+              Cell->CellInt.right,
+              Cell->CellInt.bottom);
 }
 
 
