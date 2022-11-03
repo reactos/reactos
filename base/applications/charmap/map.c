@@ -93,7 +93,8 @@ static
 VOID
 UpdateCells(PMAP infoPtr)
 {
-    INT x, y, i = XCELLS * infoPtr->iYStart;
+    INT x, y;
+    INT i = XCELLS * infoPtr->iYStart;
     WCHAR ch;
     PCELL Cell;
 
