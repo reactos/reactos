@@ -75,7 +75,7 @@ FillGrid(PMAP infoPtr,
     PCELL Cell;
     INT i;
     HBRUSH hOldBrush, hbrGray = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
-    HPEN hOldPen;
+    HPEN hOldPen, hPenGray = CreatePen(PS_SOLID, 1, RGB(140, 140, 140));
 
     UpdateCells(infoPtr);
 
@@ -103,10 +103,21 @@ FillGrid(PMAP infoPtr,
             {
                 DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
                           DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                if (Cell == infoPtr->pActiveCell && GetFocus() == infoPtr->hMapWnd)
+                if (Cell == infoPtr->pActiveCell)
                 {
                     rc = Cell->CellInt;
-                    DrawFocusRect(ps->hdc, &rc);
+                    if (GetFocus() == infoPtr->hMapWnd)
+                    {
+                        DrawFocusRect(ps->hdc, &rc);
+                    }
+                    else
+                    {
+                        SelectObject(ps->hdc, GetStockObject(NULL_BRUSH));
+                        SelectObject(ps->hdc, hPenGray);
+                        Rectangle(ps->hdc, rc.left, rc.top, rc.right, rc.bottom);
+                        SelectObject(ps->hdc, hOldPen);
+                        SelectObject(ps->hdc, hOldBrush);
+                    }
                 }
             }
             else
@@ -119,6 +130,7 @@ FillGrid(PMAP infoPtr,
     SelectObject(ps->hdc, hOldFont);
     SelectObject(ps->hdc, hOldPen);
     SelectObject(ps->hdc, hOldBrush);
+    DeleteObject(hPenGray);
 }
 
 
