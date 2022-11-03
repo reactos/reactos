@@ -1037,6 +1037,20 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
     return Ret;
 }
 
+static
+BOOL
+CheckAndLockCursorIcon(PCURICON_OBJECT *ppcur)
+{
+    PCURICON_OBJECT pcur;
+
+    pcur = UserValidateHandleNoError(*ppcur, TYPE_CURSOR);
+    if (!pcur)
+        return FALSE;
+
+    UserAssignmentLock((PVOID*)ppcur, pcur);
+    return TRUE;
+}
+
 PCLS
 FASTCALL
 IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
@@ -1054,10 +1068,6 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     WNDPROC WndProc;
     PWSTR pszMenuName = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    TRACE("lpwcx=%p ClassName=%wZ MenuName=%wZ dwFlags=%08x Desktop=%p pi=%p\n",
-        lpwcx, ClassName, MenuName, dwFlags, Desktop, pi);
-
     if (!IntRegisterClassAtom(ClassName,
                               &Atom))
     {
@@ -1128,7 +1138,8 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->cbwndExtra = lpwcx->cbWndExtra;
             Class->hModule = lpwcx->hInstance;
             Class->spicn = lpwcx->hIcon ? UserGetCurIconObject(lpwcx->hIcon) : NULL;
-            Class->spcur = lpwcx->hCursor ? UserGetCurIconObject(lpwcx->hCursor) : NULL;
+            CheckAndLockCursorIcon(&Class->spcur);
+            //Class->spcur = lpwcx->hCursor ? UserGetCurIconObject(lpwcx->hCursor) : NULL;
             Class->spicnSm = lpwcx->hIconSm ? UserGetCurIconObject(lpwcx->hIconSm) : NULL;
             ////
             Class->hbrBackground = lpwcx->hbrBackground;
@@ -2357,18 +2368,8 @@ UserRegisterSystemClasses(VOID)
         wc.hIcon = NULL;
 
         //// System Cursors should be initilized!!!
-        wc.hCursor = NULL;
-        if (DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL)
-        {
-            if (SYSTEMCUR(ARROW) == NULL)
-            {
-                ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
-            }
-            else
-            {
-                wc.hCursor = UserHMGetHandle(SYSTEMCUR(ARROW));
-            }
-        }
+        ERR("SYTEMCUR(ARROW) == %p\n", SYSTEMCUR(ARROW));
+        wc.hCursor = SYSTEMCUR(ARROW) != NULL ? UserHMGetHandle(SYSTEMCUR(ARROW)) : NULL;
 
         hBrush = DefaultServerClasses[i].hBrush;
         if (hBrush <= (HBRUSH)COLOR_MENUBAR)

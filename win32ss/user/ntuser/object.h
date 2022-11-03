@@ -20,6 +20,8 @@ void DbgUserDumpHandleTable();
 PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type);
 BOOLEAN UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner);
 BOOL FASTCALL UserMarkObjectDestroy(PVOID);
+PVOID FASTCALL UserValidateHandle(HANDLE handle, UINT Type);
+PVOID FASTCALL UserValidateHandleNoError(HANDLE handle, UINT Type);
 PVOID FASTCALL UserAssignmentLock(PVOID *ppvObj, PVOID pvNew);
 PVOID FASTCALL UserAssignmentUnlock(PVOID *ppvObj);
 

@@ -471,6 +471,8 @@ NtUserNotifyProcessCreate(
     return FALSE;
 }
 
+extern SHAREDINFO gSharedInfo;
+
 NTSTATUS
 APIENTRY
 NtUserProcessConnect(
@@ -527,6 +529,8 @@ NtUserProcessConnect(
             (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
             (ULONG_PTR)W32Process->HeapMappings.UserMapping;
 
+        gSharedInfo.ulSharedDelta = pUserConnect->siClient.ulSharedDelta;
+
 #define SERVER_TO_CLIENT(ptr) \
     ((PVOID)((ULONG_PTR)ptr - pUserConnect->siClient.ulSharedDelta))
 
@@ -540,15 +544,15 @@ NtUserProcessConnect(
         // NOTE: kernel server should also have a SHAREDINFO gSharedInfo;
         // FIXME: These USER window-proc data should be used somehow!
 
-        pUserConnect->siClient.DefWindowMsgs.maxMsgs     = 0;
-        pUserConnect->siClient.DefWindowMsgs.abMsgs      = NULL;
-        pUserConnect->siClient.DefWindowSpecMsgs.maxMsgs = 0;
-        pUserConnect->siClient.DefWindowSpecMsgs.abMsgs  = NULL;
+        pUserConnect->siClient.DefWindowMsgs.maxMsgs     = gSharedInfo.DefWindowMsgs.maxMsgs;
+        pUserConnect->siClient.DefWindowMsgs.abMsgs      = SERVER_TO_CLIENT(gSharedInfo.DefWindowMsgs.abMsgs);
+        pUserConnect->siClient.DefWindowSpecMsgs.maxMsgs = gSharedInfo.DefWindowSpecMsgs.maxMsgs;
+        pUserConnect->siClient.DefWindowSpecMsgs.abMsgs  = SERVER_TO_CLIENT(gSharedInfo.DefWindowSpecMsgs.abMsgs);
 
         for (i = 0; i < ARRAYSIZE(pUserConnect->siClient.awmControl); ++i)
         {
-            pUserConnect->siClient.awmControl[i].maxMsgs = 0;
-            pUserConnect->siClient.awmControl[i].abMsgs  = NULL;
+            pUserConnect->siClient.awmControl[i].maxMsgs = gSharedInfo.awmControl[i].maxMsgs;
+            pUserConnect->siClient.awmControl[i].abMsgs  = SERVER_TO_CLIENT(gSharedInfo.awmControl[i].abMsgs);
         }
 #undef SERVER_TO_CLIENT
     }

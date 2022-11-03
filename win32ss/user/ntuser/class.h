@@ -73,5 +73,10 @@ UserGetClassName(IN PCLS Class,
                  IN OUT PUNICODE_STRING ClassName,
                  IN RTL_ATOM Atom,
                  IN BOOL Ansi);
+ULONG_PTR
+UserSetClassLongPtr(IN PCLS Class,
+                    IN INT Index,
+                    IN ULONG_PTR NewLong,
+                    IN BOOL Ansi);
 
 /* EOF */

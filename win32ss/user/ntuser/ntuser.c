@@ -12,6 +12,7 @@ BOOL FASTCALL RegisterControlAtoms(VOID);
 
 /* GLOBALS ********************************************************************/
 
+SHAREDINFO gSharedInfo = { NULL };
 PTHREADINFO gptiCurrent = NULL;
 PPROCESSINFO gppiInputProvider = NULL;
 BOOL g_AlwaysDisplayVersion = FALSE;
@@ -198,6 +199,11 @@ NtUserInitialize(
 
     /* Save the EPROCESS of CSRSS */
     InitCsrProcess(/*PsGetCurrentProcess()*/);
+
+    /* Initialize global shared info */
+    gSharedInfo.psi = gpsi;
+    gSharedInfo.aheList = gHandleTable;
+    gSharedInfo.pDispInfo = NULL; // gpDispInfo
 
 // Initialize Power Request List (use hPowerRequestEvent).
 // Initialize Media Change (use hMediaRequestEvent).

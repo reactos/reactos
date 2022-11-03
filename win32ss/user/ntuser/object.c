@@ -9,6 +9,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserObj);
 
+extern SHAREDINFO gSharedInfo;
 //int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
@@ -834,6 +835,157 @@ NtUserValidateHandleSecure(
 CLEANUP:
    UserLeave();
    END_CLEANUP;
+}
+
+/*
+ * Decide whether an object is located on the desktop or shared heap
+ */
+static const BOOL g_ObjectHeapTypeShared[TYPE_CTYPES] =
+{
+    FALSE, /* TYPE_FREE (not used) */
+    FALSE, /* TYPE_WINDOW */
+    FALSE, /* TYPE_MENU */
+    TRUE,  /* TYPE_CURSOR */
+    TRUE,  /* TYPE_SETWINDOWPOS */
+    FALSE, /* TYPE_HOOK */
+    TRUE,  /* TYPE_CLIPDATA */
+    FALSE, /* TYPE_CALLPROC */
+    TRUE,  /* TYPE_ACCELTABLE */
+    FALSE, /* TYPE_DDEACCESS */
+    FALSE, /* TYPE_DDECONV */
+    FALSE, /* TYPE_DDEXACT */
+    TRUE,  /* TYPE_MONITOR */
+    TRUE,  /* TYPE_KBDLAYOUT */
+    TRUE,  /* TYPE_KBDFILE */
+    TRUE,  /* TYPE_WINEVENTHOOK */
+    TRUE,  /* TYPE_TIMER */
+    FALSE, /* TYPE_INPUTCONTEXT */
+    FALSE, /* TYPE_HIDDATA */
+    FALSE, /* TYPE_DEVICEINFO */
+    FALSE, /* TYPE_TOUCHINPUTINFO */
+    FALSE, /* TYPE_GESTUREINFOOBJ */
+};
+
+static
+PVOID
+FASTCALL
+SharedPtrToUser(PVOID Ptr)
+{
+    ASSERT(Ptr != NULL);
+    ASSERT(gSharedInfo.ulSharedDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - gSharedInfo.ulSharedDelta);
+}
+
+static
+PVOID
+FASTCALL
+DesktopPtrToUser(PVOID Ptr)
+{
+    PCLIENTINFO pci;
+    PDESKTOPINFO pdi;
+    GetW32ThreadInfo();
+    pci = GetWin32ClientInfo();
+    pdi = pci->pDeskInfo;
+
+    ASSERT(Ptr != NULL);
+    ASSERT(pdi != NULL);
+    if ((ULONG_PTR)Ptr >= (ULONG_PTR)pdi->pvDesktopBase &&
+        (ULONG_PTR)Ptr < (ULONG_PTR)pdi->pvDesktopLimit)
+    {
+        return (PVOID)((ULONG_PTR)Ptr - pci->ulClientDelta);
+    }
+    else
+    {
+        return (PVOID)NtUserCallOneParam((DWORD_PTR)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
+    }
+}
+
+// Win: HMValidateHandle
+PVOID
+FASTCALL
+UserValidateHandle(HANDLE handle, UINT Type)
+{
+    PVOID ret;
+    PUSER_HANDLE_ENTRY Entry;
+
+    ASSERT(Type < TYPE_CTYPES);
+
+    if (!(Entry = handle_to_entry(gHandleTable, handle)))
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    if (Entry && Type == 0)
+        Type = Entry->type;
+
+    // Must have an entry and must be the same type!
+    if ( (!Entry) ||
+          (Entry->type != Type) ||
+          !Entry->ptr ||
+          (Entry->flags & HANDLEENTRY_DESTROY) || (Entry->flags & HANDLEENTRY_INDESTROY) )
+    {
+        switch (Type)
+        {   // Test (with wine too) confirms these results!
+            case TYPE_WINDOW:
+                EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+                break;
+            case TYPE_MENU:
+                EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+                break;
+            case TYPE_CURSOR:
+                EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+                break;
+            case TYPE_SETWINDOWPOS:
+                EngSetLastError(ERROR_INVALID_DWP_HANDLE);
+                break;
+            case TYPE_HOOK:
+                EngSetLastError(ERROR_INVALID_HOOK_HANDLE);
+                break;
+            case TYPE_ACCELTABLE:
+                EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
+                break;
+            default:
+                EngSetLastError(ERROR_INVALID_HANDLE);
+                break;
+        }
+        return NULL;
+    }
+
+    if (g_ObjectHeapTypeShared[Type])
+        ret = SharedPtrToUser(Entry->ptr);
+    else
+        ret = DesktopPtrToUser(Entry->ptr);
+
+    return ret;
+}
+
+// Win: HMValidateHandleNoRip
+PVOID
+FASTCALL
+UserValidateHandleNoError(HANDLE handle, UINT Type)
+{
+    PVOID ret;
+    PUSER_HANDLE_ENTRY Entry;
+
+    ASSERT(Type < TYPE_CTYPES);
+
+    Entry = handle_to_entry(gHandleTable, handle);
+
+    if (Entry && Type == 0)
+        Type = Entry->type;
+
+    // Must have an entry and must be the same type!
+    if ((!Entry) || (Entry->type != Type) || !Entry->ptr)
+        return NULL;
+
+    if (g_ObjectHeapTypeShared[Type])
+        ret = SharedPtrToUser(Entry->ptr);
+    else
+        ret = DesktopPtrToUser(Entry->ptr);
+
+
+    return ret;
 }
 
 // Win: HMAssignmentLock

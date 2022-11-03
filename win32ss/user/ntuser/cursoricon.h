@@ -48,9 +48,6 @@ BOOLEAN
 IntDestroyCurIconObject(
     _In_ PVOID Object);
 
-VOID FASTCALL
-IntCleanupCurIconCache(PPROCESSINFO Win32Process);
-
 VOID
 FreeCurIconObject(
     _In_ PVOID Object);
@@ -129,7 +126,9 @@ extern SYSTEMCURICO gasyscur[];
 #define SYSTEMCUR(func) (gasyscur[ROCR_ ## func].handle)
 #define SYSTEMICO(func) (gasysico[ROIC_ ## func].handle)
 
-VOID IntLoadSystenIcons(HICON,DWORD);
+VOID IntLoadSystemCursors(HICON,DWORD);
+VOID IntLoadSystemIcons(HICON,DWORD);
+VOID IntUnloadSystemCursorsAndIcons(VOID);
 
 BOOL InitCursorImpl(VOID);
 HANDLE IntCreateCurIconHandle(BOOLEAN Anim);

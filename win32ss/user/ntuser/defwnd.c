@@ -241,123 +241,149 @@ co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
 LRESULT
 DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
-   PWND pwndPopUP = NULL;
-   WORD Msg = HIWORD(lParam);
+    PWND pwndHit = NULL, pwndParent = NULL, pwndPopUP = NULL;
+    WORD Msg = HIWORD(lParam);
 
-   /* Not for child windows. */
-   if (UserHMGetHandle(pWnd) != (HWND)wParam)
-   {
-      return FALSE;
-   }
+    if (pWnd->style & WS_CHILD)
+    {
+        /* with the exception of the border around a resizable wnd,
+         * give the parent first chance to set the cursor */
+        if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
+        {
+            pwndParent = IntGetParent(pWnd);
+            if (pwndParent != UserGetDesktopWindow() &&
+                co_IntSendMessage(UserHMGetHandle(pwndParent), WM_SETCURSOR, wParam, lParam))
+                return TRUE;
+        }
+    }
 
-   switch((short)LOWORD(lParam))
-   {
-      case HTERROR:
-      {
-         //// This is the real fix for CORE-6129! This was a "Code hole".
-         USER_REFERENCE_ENTRY Ref;
+    switch((short)LOWORD(lParam))
+    {
+        case HTNOWHERE:
+        case HTERROR:
+        {
+            //// This is the real fix for CORE-6129! This was a "Code hole".
+            USER_REFERENCE_ENTRY Ref;
 
-         if (Msg == WM_LBUTTONDOWN)
-         {
-            // Find a pop up window to bring active.
-            pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pWnd);
-            if (pwndPopUP)
+            if (Msg == WM_LBUTTONDOWN)
             {
-               // Not a child pop up from desktop.
-               if ( pwndPopUP != UserGetDesktopWindow()->spwndChild )
-               {
-                  // Get original active window.
-                  PWND pwndOrigActive = gpqForeground->spwndActive;
+                // Find a pop up window to bring active.
+                pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pWnd);
+                if (pwndPopUP)
+                {
+                    // Not a child pop up from desktop.
+                    if ( pwndPopUP != UserGetDesktopWindow()->spwndChild )
+                    {
+                        // Get original active window.
+                        PWND pwndOrigActive = gpqForeground->spwndActive;
 
-                  co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                        co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-                  UserRefObjectCo(pwndPopUP, &Ref);
-                  //UserSetActiveWindow(pwndPopUP);
-                  co_IntSetForegroundWindow(pwndPopUP); // HACK
-                  UserDerefObjectCo(pwndPopUP);
+                        UserRefObjectCo(pwndPopUP, &Ref);
+                        //UserSetActiveWindow(pwndPopUP);
+                        co_IntSetForegroundWindow(pwndPopUP); // HACK
+                        UserDerefObjectCo(pwndPopUP);
 
-                  // If the change was made, break out.
-                  if (pwndOrigActive != gpqForeground->spwndActive)
-                     break;
-               }
+                        // If the change was made, break out.
+                        if (pwndOrigActive != gpqForeground->spwndActive)
+                        break;
+                    }
+                }
             }
-         }
-         ////
-	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	 {
-             if (pwndPopUP)
-             {
-                 FLASHWINFO fwi =
-                    {sizeof(FLASHWINFO),
-                     UserHMGetHandle(pwndPopUP),
-                     FLASHW_ALL,
-                     gspv.dwForegroundFlashCount,
-                     (gpsi->dtCaretBlink >> 3)};
+            ////
+            if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+                Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+            {
+                if (pwndPopUP)
+                {
+                    FLASHWINFO fwi = {sizeof(FLASHWINFO),
+                                      UserHMGetHandle(pwndPopUP),
+                                      FLASHW_ALL,
+                                      gspv.dwForegroundFlashCount,
+                                      (gpsi->dtCaretBlink >> 3)};
 
-                 // Now shake that window!
-                 IntFlashWindowEx(pwndPopUP, &fwi);
-             }
-	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
-	 }
-	 break;
-      }
-
-      case HTCLIENT:
-      {
-         if (pWnd->pcls->spcur)
-         {
-            IntSystemSetCursor(pWnd->pcls->spcur);
-	 }
-	 return FALSE;
-      }
-
-      case HTLEFT:
-      case HTRIGHT:
-      {
-         if (pWnd->style & WS_MAXIMIZE)
-         {
+                    // Now shake that window!
+                    IntFlashWindowEx(pwndPopUP, &fwi);
+                }
+                UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+            }
             break;
-         }
-         IntSystemSetCursor(SYSTEMCUR(SIZEWE));
-         return TRUE;
-      }
+        }
 
-      case HTTOP:
-      case HTBOTTOM:
-      {
-         if (pWnd->style & WS_MAXIMIZE)
-         {
-            break;
-         }
-         IntSystemSetCursor(SYSTEMCUR(SIZENS));
-         return TRUE;
-       }
+        case HTCLIENT:
+        {
+            pwndHit = ValidateHwndNoErr((HWND)wParam);
+            if (!pwndHit)
+            {
+                return FALSE;
+            }
+            if (pwndHit->pcls->spcur)
+            {
+                IntSystemSetCursor(pwndHit->pcls->spcur);
+            }
+            return TRUE;
+        }
 
-       case HTTOPLEFT:
-       case HTBOTTOMRIGHT:
-       {
-         if (pWnd->style & WS_MAXIMIZE)
-         {
-            break;
-         }
-         IntSystemSetCursor(SYSTEMCUR(SIZENWSE));
-         return TRUE;
-       }
+        case HTLEFT:
+        case HTRIGHT:
+        {
+            if (pWnd->style & WS_MAXIMIZE)
+            {
+                break;
+            }
+            IntSystemSetCursor(SYSTEMCUR(SIZEWE));
+            return TRUE;
+        }
 
-       case HTBOTTOMLEFT:
-       case HTTOPRIGHT:
-       {
-         if (pWnd->style & WS_MAXIMIZE)
-         {
-            break;
-         }
-         IntSystemSetCursor(SYSTEMCUR(SIZENESW));
-         return TRUE;
-       }
-   }
-   IntSystemSetCursor(SYSTEMCUR(ARROW));
-   return FALSE;
+        case HTTOP:
+        case HTBOTTOM:
+        {
+            if (pWnd->style & WS_MAXIMIZE)
+            {
+                break;
+            }
+            IntSystemSetCursor(SYSTEMCUR(SIZENS));
+            return TRUE;
+        }
+
+        case HTTOPLEFT:
+        case HTBOTTOMRIGHT:
+        {
+            if (pWnd->style & WS_MAXIMIZE)
+            {
+                break;
+            }
+            IntSystemSetCursor(SYSTEMCUR(SIZENWSE));
+            return TRUE;
+        }
+
+        case HTBOTTOMLEFT:
+        case HTTOPRIGHT:
+        {
+            if (pWnd->style & WS_MAXIMIZE)
+            {
+                break;
+            }
+            IntSystemSetCursor(SYSTEMCUR(SIZENESW));
+            return TRUE;
+        }
+        case HTGROWBOX:
+        {
+            IntSystemSetCursor(SYSTEMCUR(SIZEALL));
+            return TRUE;
+        }
+        case HTHELP:
+        {
+            if (pWnd->style & WS_MAXIMIZE)
+            {
+                break;
+            }
+            IntSystemSetCursor(SYSTEMCUR(HELP));
+            return TRUE;
+        }
+    }
+    IntSystemSetCursor(SYSTEMCUR(ARROW));
+    return TRUE;
 }
 
 VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
@@ -1037,21 +1063,7 @@ IntDefWindowProc(
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
       case WM_SETCURSOR:
-      {
-         if (Wnd->style & WS_CHILD)
-         {
-             /* with the exception of the border around a resizable wnd,
-              * give the parent first chance to set the cursor */
-             if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
-             {
-                 PWND parent = Wnd->spwndParent;//IntGetParent( Wnd );
-                 if (parent != UserGetDesktopWindow() &&
-                     co_IntSendMessage( UserHMGetHandle(parent), WM_SETCURSOR, wParam, lParam))
-                    return TRUE;
-             }
-         }
-         return DefWndHandleSetCursor(Wnd, wParam, lParam);
-      }
+           return DefWndHandleSetCursor(Wnd, wParam, lParam);
 
       case WM_MOUSEACTIVATE:
          if (Wnd->style & WS_CHILD)

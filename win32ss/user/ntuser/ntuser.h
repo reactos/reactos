@@ -18,6 +18,7 @@ typedef struct _TL
     TL_FN_FREE pfnFree;
 } TL, *PTL;
 
+extern SHAREDINFO gSharedInfo;
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
 extern PPROCESSINFO gppiList;
