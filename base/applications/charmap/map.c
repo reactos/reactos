@@ -144,7 +144,11 @@ FillGrid(PMAP infoPtr,
                     DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
                               DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     if (Cell == infoPtr->pActiveCell && GetFocus() == infoPtr->hMapWnd)
-                        DrawFocusRect(ps->hdc, &Cell->CellInt);
+                    {
+                        rc = Cell->CellInt;
+                        InflateRect(&rc, -1, -1);
+                        DrawFocusRect(ps->hdc, &rc);
+                    }
                 }
                 else
                 {
