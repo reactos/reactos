@@ -103,10 +103,10 @@ UpdateCells(PMAP infoPtr)
     {
         for (x = 0; x < XCELLS; ++x, ++i)
         {
-            if (i >= infoPtr->NumValidGlyphs)
-                return;
-
-            ch = (WCHAR)infoPtr->ValidGlyphs[i];
+            if (i < infoPtr->NumValidGlyphs)
+                ch = (WCHAR)infoPtr->ValidGlyphs[i];
+            else
+                ch = 0xFFFF;
 
             Cell = &infoPtr->Cells[y][x];
             Cell->ch = ch;
@@ -124,6 +124,7 @@ FillGrid(PMAP infoPtr,
     RECT rc;
     PCELL Cell;
     INT i;
+    HBRUSH hbrGray = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
 
     UpdateCells(infoPtr);
 
@@ -135,15 +136,18 @@ FillGrid(PMAP infoPtr,
     {
         for (x = 0; x < XCELLS; x++, i++)
         {
-            if (i >= infoPtr->NumValidGlyphs)
-                break;
-
             Cell = &infoPtr->Cells[y][x];
-
             if (IntersectRect(&rc, &ps->rcPaint, &Cell->CellExt))
             {
-                DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
-                          DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (i < infoPtr->NumValidGlyphs)
+                {
+                    DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
+                              DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                }
+                else
+                {
+                    FillRect(ps->hdc, &Cell->CellInt, hbrGray);
+                }
             }
         }
     }
@@ -487,16 +491,19 @@ LimitCaretXY(PMAP infoPtr, INT *pX, INT *pY)
 
 static
 VOID
-SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge)
+SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
 {
     LimitCaretXY(infoPtr, &X, &Y);
     UpdateCells(infoPtr);
 
     /* set previous active cell to inactive */
     infoPtr->pActiveCell = &infoPtr->Cells[infoPtr->CaretY][infoPtr->CaretX];
-    InvalidateRect(infoPtr->hMapWnd,
-                   &infoPtr->pActiveCell->CellInt,
-                   FALSE);
+    if (!bInvalidateAll)
+    {
+        InvalidateRect(infoPtr->hMapWnd,
+                       &infoPtr->pActiveCell->CellInt,
+                       FALSE);
+    }
 
     infoPtr->CaretX = X;
     infoPtr->CaretY = Y;
@@ -505,9 +512,13 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge)
     infoPtr->pActiveCell = &infoPtr->Cells[Y][X];
     infoPtr->pActiveCell->bActive = TRUE;
     infoPtr->pActiveCell->bLarge = bLarge;
-    InvalidateRect(infoPtr->hMapWnd,
-                   &infoPtr->pActiveCell->CellInt,
-                   FALSE);
+    if (!bInvalidateAll)
+    {
+        InvalidateRect(infoPtr->hMapWnd,
+                       &infoPtr->pActiveCell->CellInt,
+                       FALSE);
+    }
+
     if (!bLarge)
     {
         /* Destroy large window */
@@ -523,6 +534,11 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge)
             MoveLargeCell(infoPtr);
         else
             CreateLargeCell(infoPtr);
+    }
+
+    if (bInvalidateAll)
+    {
+        InvalidateRect(infoPtr->hMapWnd, NULL, FALSE);
     }
 
     UpdateStatusBar(infoPtr->pActiveCell->ch);
@@ -556,6 +572,16 @@ OnVScroll(PMAP infoPtr,
 
         case SB_THUMBTRACK:
             infoPtr->iYStart = Pos;
+            break;
+
+        case SB_TOP:
+            infoPtr->iYStart = 0;
+            SetCaretXY(infoPtr, 0, 0, FALSE, TRUE);
+            return;
+
+        case SB_BOTTOM:
+            infoPtr->iYStart = infoPtr->NumRows;
+            SetCaretXY(infoPtr, XCELLS - 1, YCELLS - 1, FALSE, TRUE);
             break;
 
         default:
@@ -686,7 +712,7 @@ MoveUpDown(PMAP infoPtr, INT DY, BOOL bLarge)
         Y += 1;
     }
 
-    SetCaretXY(infoPtr, infoPtr->CaretX, Y, bLarge);
+    SetCaretXY(infoPtr, infoPtr->CaretX, Y, bLarge, FALSE);
 }
 
 static
@@ -739,7 +765,7 @@ MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
         }
     }
 
-    SetCaretXY(infoPtr, X, Y, bLarge);
+    SetCaretXY(infoPtr, X, Y, bLarge, FALSE);
 }
 
 static
@@ -770,6 +796,20 @@ OnKeyDown(PMAP infoPtr, WPARAM wParam, LPARAM lParam)
 
         case VK_NEXT: /* Page Down */
             SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_PAGEDOWN, 0), 0);
+            break;
+
+        case VK_HOME:
+            if (GetKeyState(VK_CONTROL) < 0)
+                SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_TOP, 0), 0);
+            else
+                SetCaretXY(infoPtr, 0, infoPtr->CaretY, FALSE, FALSE);
+            break;
+
+        case VK_END:
+            if (GetKeyState(VK_CONTROL) < 0)
+                SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_BOTTOM, 0), 0);
+            else
+                SetCaretXY(infoPtr, XCELLS - 1, infoPtr->CaretY, FALSE, FALSE);
             break;
     }
 }
