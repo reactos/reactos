@@ -424,7 +424,7 @@
 @ stdcall GetConsoleWindow()
 @ stdcall GetCurrencyFormatA(long long str ptr str long)
 @ stub -version=0x600+ GetCurrencyFormatEx
-@ stdcall GetCurrencyFormatW(long long str ptr str long)
+@ stdcall GetCurrencyFormatW(long long wstr ptr wstr long)
 @ stdcall GetCurrentActCtx(ptr)
 @ stdcall GetCurrentConsoleFont(long long ptr)
 @ stub -version=0x600+ GetCurrentConsoleFontEx
@@ -774,7 +774,7 @@
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
 @ stub -version=0x600+ LeaveCriticalSectionWhenCallbackReturns
 @ stdcall LoadLibraryA(str)
-@ stdcall LoadLibraryExA( str long long)
+@ stdcall LoadLibraryExA(str long long)
 @ stdcall LoadLibraryExW(wstr long long)
 @ stdcall LoadLibraryW(wstr)
 @ stdcall LoadModule(str ptr)

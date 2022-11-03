@@ -41,17 +41,10 @@ extern WCHAR Suggestions[256];
 
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
-    RECT rt;
-    /*
-    	if (IsWindowVisible(hToolBar)) {
-    		SendMessageW(hToolBar, WM_SIZE, 0, 0);
-    		GetClientRect(hToolBar, &rt);
-    		prect->top = rt.bottom+3;
-    		prect->bottom -= rt.bottom+3;
-    	}
-     */
     if (IsWindowVisible(hStatusBar))
     {
+        RECT rt;
+
         SetupStatusBar(hWnd, TRUE);
         GetWindowRect(hStatusBar, &rt);
         prect->bottom -= rt.bottom - rt.top;
@@ -100,7 +93,7 @@ static void OnInitMenu(HWND hWnd)
     dwIndex = 0;
     do
     {
-        cbValueName = COUNT_OF(szValueName);
+        cbValueName = ARRAY_SIZE(szValueName);
         cbValueData = sizeof(abValueData);
         lResult = RegEnumValueW(hKey, dwIndex, szValueName, &cbValueName, NULL, &dwType, abValueData, &cbValueData);
         if ((lResult == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -281,7 +274,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[2].FilterID = IDS_FLT_REGEDIT4_FLT;
     FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
     FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, FilterPairs, COUNT_OF(FilterPairs));
+    BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs));
 
     pofn->lpstrFilter = Filter;
     pofn->lpstrFile = FileNameBuffer;
@@ -368,7 +361,7 @@ static BOOL LoadHive(HWND hWnd)
     BuildFilterStrings(Filter, &filter, 1);
     ofn.lpstrFilter = Filter;
     /* load and set the caption and flags for dialog */
-    LoadStringW(hInst, IDS_LOAD_HIVE, Caption, COUNT_OF(Caption));
+    LoadStringW(hInst, IDS_LOAD_HIVE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
     /*    ofn.lCustData = ;*/
@@ -416,7 +409,7 @@ static BOOL UnloadHive(HWND hWnd)
     /* get the item key to unload */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* load and set the caption and flags for dialog */
-    LoadStringW(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
+    LoadStringW(hInst, IDS_UNLOAD_HIVE, Caption, ARRAY_SIZE(Caption));
 
     /* Enable the 'restore' privilege, unload the hive, disable the privilege */
     EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
@@ -450,7 +443,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 
     InitOpenFileName(hWnd, &ofn);
-    LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, COUNT_OF(Caption));
+    LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
     /*    ofn.lCustData = ;*/
@@ -461,22 +454,22 @@ static BOOL ImportRegistryFile(HWND hWnd)
             _wcsicmp(ofn.lpstrFile + ofn.nFileExtension, L"reg") == 0) /* REGEDIT4 or Windows Registry Editor Version 5.00 */
         {
             /* Open the file */
-            FILE* fp = _wfopen(ofn.lpstrFile, L"r");
+            FILE* fp = _wfopen(ofn.lpstrFile, L"rb");
 
             /* Import it */
             if (fp == NULL || !import_registry_file(fp))
             {
                 /* Error opening the file */
-                LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-                LoadStringW(hInst, IDS_IMPORT_ERROR, szText, COUNT_OF(szText));
+                LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+                LoadStringW(hInst, IDS_IMPORT_ERROR, szText, ARRAY_SIZE(szText));
                 InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
                 bRet = FALSE;
             }
             else
             {
                 /* Show successful import */
-                LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-                LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
+                LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+                LoadStringW(hInst, IDS_IMPORT_OK, szText, ARRAY_SIZE(szText));
                 InfoMessageBox(hWnd, MB_OK | MB_ICONINFORMATION, szTitle, szText, ofn.lpstrFile);
                 bRet = TRUE;
             }
@@ -486,8 +479,8 @@ static BOOL ImportRegistryFile(HWND hWnd)
         }
         else /* Registry Hive Files */
         {
-            LoadStringW(hInst, IDS_QUERY_IMPORT_HIVE_CAPTION, szTitle, COUNT_OF(szTitle));
-            LoadStringW(hInst, IDS_QUERY_IMPORT_HIVE_MSG, szText, COUNT_OF(szText));
+            LoadStringW(hInst, IDS_QUERY_IMPORT_HIVE_CAPTION, szTitle, ARRAY_SIZE(szTitle));
+            LoadStringW(hInst, IDS_QUERY_IMPORT_HIVE_MSG, szText, ARRAY_SIZE(szText));
 
             /* Display a confirmation message */
             if (MessageBoxW(g_pChildWnd->hWnd, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDYES)
@@ -595,10 +588,10 @@ BOOL ExportRegistryFile(HWND hWnd)
 
     /* Figure out which key path we are exporting */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-    GetKeyName(ExportKeyPath, COUNT_OF(ExportKeyPath), hKeyRoot, pszKeyPath);
+    GetKeyName(ExportKeyPath, ARRAY_SIZE(ExportKeyPath), hKeyRoot, pszKeyPath);
 
     InitOpenFileName(hWnd, &ofn);
-    LoadStringW(hInst, IDS_EXPORT_REG_FILE, Caption, COUNT_OF(Caption));
+    LoadStringW(hInst, IDS_EXPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
 
     /* Only set the path if a key (not the root node) is selected */
@@ -672,8 +665,8 @@ BOOL ExportRegistryFile(HWND hWnd)
                                                                 : REG_FORMAT_5)))
                 {
                     /* Error creating the file */
-                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-                    LoadStringW(hInst, IDS_EXPORT_ERROR, szText, COUNT_OF(szText));
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+                    LoadStringW(hInst, IDS_EXPORT_ERROR, szText, ARRAY_SIZE(szText));
                     InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
                     bRet = FALSE;
                 }
@@ -803,7 +796,7 @@ BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
     if (!EmptyClipboard())
         goto done;
 
-    if (!GetKeyName(szBuffer, COUNT_OF(szBuffer), hRootKey, keyName))
+    if (!GetKeyName(szBuffer, ARRAY_SIZE(szBuffer), hRootKey, keyName))
         goto done;
 
     hGlobal = GlobalAlloc(GMEM_MOVEABLE, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
@@ -838,7 +831,7 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
                       &hKey) != ERROR_SUCCESS)
         return FALSE;
 
-    LoadStringW(hInst, IDS_NEW_VALUE, szNewValueFormat, COUNT_OF(szNewValueFormat));
+    LoadStringW(hInst, IDS_NEW_VALUE, szNewValueFormat, ARRAY_SIZE(szNewValueFormat));
 
     do
     {
@@ -937,7 +930,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
 
         InitInfo.cbSize = sizeof(InitInfo);
         InitInfo.pwzTargetComputer = NULL;
-        InitInfo.cDsScopeInfos = COUNT_OF(Scopes);
+        InitInfo.cDsScopeInfos = ARRAY_SIZE(Scopes);
         InitInfo.aDsScopeInfos = Scopes;
         InitInfo.flOptions = 0;
         InitInfo.cAttributesToFetch = 0;
@@ -1068,7 +1061,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
                                                         hWnd,
                                                         szComputerName,
-                                                        COUNT_OF(szComputerName));
+                                                        ARRAY_SIZE(szComputerName));
                 if (hRet == S_OK)
                 {
                     /* FIXME - connect to the registry */
@@ -1094,7 +1087,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         return TRUE;
     case ID_HELP_HELPTOPICS:
-        WinHelpW(hWnd, getAppName(), HELP_FINDER, 0);
+        WinHelpW(hWnd, L"regedit", HELP_FINDER, 0);
         return TRUE;
     case ID_HELP_ABOUT:
         ShowAboutBox(hWnd);
@@ -1169,8 +1162,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if(nSelected >= 1)
             {
                 WCHAR msg[128], caption[128];
-                LoadStringW(hInst, IDS_QUERY_DELETE_CONFIRM, caption, COUNT_OF(caption));
-                LoadStringW(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, COUNT_OF(msg));
+                LoadStringW(hInst, IDS_QUERY_DELETE_CONFIRM, caption, ARRAY_SIZE(caption));
+                LoadStringW(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, ARRAY_SIZE(msg));
                 if(MessageBoxW(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
                 {
                     int ni, errs;
@@ -1190,8 +1183,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
                     if(errs > 0)
                     {
-                        LoadStringW(hInst, IDS_ERR_DELVAL_CAPTION, caption, COUNT_OF(caption));
-                        LoadStringW(hInst, IDS_ERR_DELETEVALUE, msg, COUNT_OF(msg));
+                        LoadStringW(hInst, IDS_ERR_DELVAL_CAPTION, caption, ARRAY_SIZE(caption));
+                        LoadStringW(hInst, IDS_ERR_DELETEVALUE, msg, ARRAY_SIZE(msg));
                         MessageBoxW(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
                     }
                 }
@@ -1304,7 +1297,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             mii.fMask = MIIM_TYPE;
             mii.fType = MFT_STRING;
             mii.dwTypeData = szFavorite;
-            mii.cch = COUNT_OF(szFavorite);
+            mii.cch = ARRAY_SIZE(szFavorite);
 
             if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
             {
@@ -1390,7 +1383,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         SendMessageW(g_pChildWnd->hTreeWnd, WM_SYSCOLORCHANGE, 0, 0);
         break;
     case WM_DESTROY:
-        WinHelpW(hWnd, getAppName(), HELP_QUIT, 0);
+        WinHelpW(hWnd, L"regedit", HELP_QUIT, 0);
         SaveSettings();
         PostQuitMessage(0);
     default:
