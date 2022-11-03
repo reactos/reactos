@@ -4,7 +4,6 @@
  * FILE:        base/applications/charmap/charmap.c
  * PURPOSE:     main dialog implementation
  * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
- *              Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"

@@ -4,6 +4,7 @@
  * FILE:        base/applications/charmap/map.c
  * PURPOSE:     class implementation for painting glyph region
  * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
+ *              Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  */
 
