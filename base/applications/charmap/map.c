@@ -340,8 +340,6 @@ static
 VOID
 SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
 {
-    LimitCaretXY(infoPtr, &X, &Y);
-    UpdateCells(infoPtr);
 
     /* set previous active cell to inactive */
     if (!bInvalidateAll)
@@ -351,8 +349,10 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
                        FALSE);
     }
 
+    LimitCaretXY(infoPtr, &X, &Y);
     infoPtr->CaretX = X;
     infoPtr->CaretY = Y;
+    UpdateCells(infoPtr);
 
     /* set new cell to active */
     infoPtr->pActiveCell = &infoPtr->Cells[Y][X];
@@ -536,6 +536,8 @@ OnVScroll(PMAP infoPtr,
             ShowWindow(infoPtr->hLrgWnd, SW_SHOW);
         }
     }
+
+    UpdateStatusBar(infoPtr->pActiveCell->ch);
 }
 
 
