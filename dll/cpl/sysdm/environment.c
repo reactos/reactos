@@ -11,9 +11,6 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <string.h>
-#include <strsafe.h>
-
-#define MAX_STR_LENGTH  128
 
 typedef struct _VARIABLE_DATA
 {
@@ -986,16 +983,11 @@ EditVariableDlgProc(HWND hwndDlg,
 
                 case IDC_BUTTON_EDIT_TEXT:
                 {
-                    TCHAR szStr[MAX_STR_LENGTH] = _T("");
-                    TCHAR szStr2[MAX_STR_LENGTH] = _T("");
-
-                    LoadString(hApplet, IDS_ENVIRONMENT_WARNING, szStr, _countof(szStr));
-                    LoadString(hApplet, IDS_ENVIRONMENT_WARNING_TITLE, szStr2, _countof(szStr2));
-
-                    if (MessageBox(hwndDlg,
-                                   szStr,
-                                   szStr2,
-                                   MB_OKCANCEL | MB_ICONWARNING | MB_DEFBUTTON1) == IDOK)
+                    if (ResourceMessageBox(hApplet,
+                                           hwndDlg,
+                                           MB_OKCANCEL | MB_ICONWARNING | MB_DEFBUTTON1,
+                                           IDS_ENVIRONMENT_WARNING_TITLE,
+                                           IDS_ENVIRONMENT_WARNING) == IDOK)
                     {
                         EndDialog(hwndDlg, -1);
                     }

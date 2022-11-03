@@ -12,6 +12,29 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _PAGEFILE
+{
+    TCHAR  szDrive[3];
+    LPTSTR pszVolume;
+    INT    OldMinSize;
+    INT    OldMaxSize;
+    INT    NewMinSize;
+    INT    NewMaxSize;
+    UINT   FreeSize;
+    BOOL   bUsed;
+} PAGEFILE, *PPAGEFILE;
+
+typedef struct _VIRTMEM
+{
+    HWND   hSelf;
+    HWND   hListBox;
+    LPTSTR szPagingFiles;
+    INT    Count;
+    BOOL   bModified;
+    PAGEFILE  Pagefile[26];
+} VIRTMEM, *PVIRTMEM;
+
+
 static BOOL OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem);
 static LPCTSTR lpKey = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
 

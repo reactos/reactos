@@ -23,22 +23,30 @@ APPLET Applets[NUM_APPLETS] =
 #define MAX_SYSTEM_PAGES    32
 
 
-INT
+INT __cdecl
 ResourceMessageBox(
-    IN HINSTANCE hInstance,
-    IN HWND hwnd,
-    IN UINT uType,
-    IN UINT uCaption,
-    IN UINT uText)
+    _In_opt_ HINSTANCE hInstance,
+    _In_opt_ HWND hwnd,
+    _In_ UINT uType,
+    _In_ UINT uCaption,
+    _In_ UINT uText,
+    ...)
 {
-    WCHAR szCaption[256];
-    WCHAR szText[256];
+    va_list args;
+    WCHAR szCaption[MAX_STR_LENGTH];
+    WCHAR szText[MAX_STR_LENGTH];
+    WCHAR szCookedText[2*MAX_STR_LENGTH];
 
-    LoadStringW(hInstance, uCaption, szCaption, 256);
-    LoadStringW(hInstance, uText, szText, 256);
+    LoadStringW(hInstance, uCaption, szCaption, _countof(szCaption));
+    LoadStringW(hInstance, uText, szText, _countof(szText));
+
+    va_start(args, uText);
+    StringCchVPrintfW(szCookedText, _countof(szCookedText),
+                      szText, args);
+    va_end(args);
 
     return MessageBoxW(hwnd,
-                       szText,
+                       szCookedText,
                        szCaption,
                        uType);
 }

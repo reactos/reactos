@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-#include <strsafe.h>
 #include <udmihelp.h>
 
 typedef struct GENERIC_NAME

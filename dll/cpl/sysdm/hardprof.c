@@ -121,13 +121,17 @@ CopyProfileDlgProc(
                                    pProfileNames->szDestinationName,
                                    PROFILE_NAME_LENGTH);
                     if (IsProfileNameInUse(pProfileNames, FALSE))
+                    {
                         ResourceMessageBox(hApplet,
-                                           NULL,
+                                           hwndDlg,
                                            MB_OK | MB_ICONERROR,
                                            IDS_HWPROFILE_WARNING,
                                            IDS_HWPROFILE_ALREADY_IN_USE);
+                    }
                     else
+                    {
                         EndDialog(hwndDlg, IDOK);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -238,13 +242,17 @@ RenameProfileDlgProc(
                                    pProfileNames->szDestinationName,
                                    PROFILE_NAME_LENGTH);
                     if (IsProfileNameInUse(pProfileNames, TRUE))
+                    {
                         ResourceMessageBox(hApplet,
-                                           NULL,
+                                           hwndDlg,
                                            MB_OK | MB_ICONERROR,
                                            IDS_HWPROFILE_WARNING,
                                            IDS_HWPROFILE_ALREADY_IN_USE);
+                    }
                     else
+                    {
                         EndDialog(hwndDlg, IDOK);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -303,23 +311,20 @@ DeleteHardwareProfile(
     HWND hwndDlg,
     PPROFILEDATA pProfileData)
 {
-    WCHAR szMessage[256];
-    WCHAR szBuffer[128];
-    WCHAR szCaption[80];
     PPROFILE pProfiles;
     PPROFILE pProfile;
 
     pProfile = &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex];
 
-    LoadStringW(hApplet, IDS_HWPROFILE_CONFIRM_DELETE_TITLE, szCaption, sizeof(szCaption) / sizeof(WCHAR));
-    LoadStringW(hApplet, IDS_HWPROFILE_CONFIRM_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
-    swprintf(szMessage, szBuffer, pProfile->szFriendlyName);
-
-    if (MessageBox(NULL,
-                   szMessage,
-                   szCaption,
-                   MB_YESNO | MB_ICONQUESTION) != IDYES)
+    if (ResourceMessageBox(hApplet,
+                           hwndDlg,
+                           MB_YESNO | MB_ICONQUESTION,
+                           IDS_HWPROFILE_CONFIRM_DELETE_TITLE,
+                           IDS_HWPROFILE_CONFIRM_DELETE,
+                           pProfile->szFriendlyName) != IDYES)
+    {
         return;
+    }
 
     SendDlgItemMessageW(hwndDlg, IDC_HRDPROFLSTBOX, LB_DELETESTRING, pProfileData->dwSelectedProfileIndex, 0);
 
