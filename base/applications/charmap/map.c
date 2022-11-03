@@ -335,7 +335,6 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
     UpdateCells(infoPtr);
 
     /* set previous active cell to inactive */
-    infoPtr->pActiveCell = &infoPtr->Cells[infoPtr->CaretY][infoPtr->CaretX];
     if (!bInvalidateAll)
     {
         InvalidateRect(infoPtr->hMapWnd,
@@ -374,9 +373,7 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
     }
 
     if (bInvalidateAll)
-    {
         InvalidateRect(infoPtr->hMapWnd, NULL, FALSE);
-    }
 
     UpdateStatusBar(infoPtr->pActiveCell->ch);
 }
@@ -387,8 +384,6 @@ OnClick(PMAP infoPtr,
         WORD ptx,
         WORD pty)
 {
-    INT x, y;
-
     /*
      * Find the cell the mouse pointer is over.
      * Since each cell is the same size, this can be done quickly using CellSize.
@@ -396,8 +391,8 @@ OnClick(PMAP infoPtr,
      * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer
      * multiple of infoPtr.CellSize .
      */
-    x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
-    y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
+    INT x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
+    INT y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
 
     SetCaretXY(infoPtr, x, y, TRUE, FALSE);
 }
@@ -410,32 +405,28 @@ MapOnCreate(PMAP infoPtr,
             HWND hParent)
 {
     RECT rc;
-    BOOL Ret = FALSE;
 
     infoPtr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MAP));
-    if (infoPtr)
-    {
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)infoPtr);
+    if (!infoPtr)
+        return FALSE;
 
-        infoPtr->hMapWnd = hwnd;
-        infoPtr->hParent = hParent;
+    SetWindowLongPtrW(hwnd, 0, (LONG_PTR)infoPtr);
 
-        GetClientRect(hwnd, &rc);
-        infoPtr->ClientSize.cx = rc.right;
-        infoPtr->ClientSize.cy = rc.bottom;
-        infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
-        infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
+    infoPtr->hMapWnd = hwnd;
+    infoPtr->hParent = hParent;
 
-        infoPtr->pActiveCell = &infoPtr->Cells[0][0];
+    GetClientRect(hwnd, &rc);
+    infoPtr->ClientSize.cx = rc.right;
+    infoPtr->ClientSize.cy = rc.bottom;
+    infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
+    infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
 
-        SetGrid(infoPtr);
+    infoPtr->pActiveCell = &infoPtr->Cells[0][0];
 
-        SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
+    SetGrid(infoPtr);
 
-        Ret = TRUE;
-    }
-
-    return Ret;
+    SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
+    return TRUE;
 }
 
 static
@@ -549,22 +540,16 @@ OnPaint(PMAP infoPtr,
 
     if (wParam != 0)
     {
-        if (!GetUpdateRect(infoPtr->hMapWnd,
-                           &ps.rcPaint,
-                           TRUE))
-        {
+        if (!GetUpdateRect(infoPtr->hMapWnd, &ps.rcPaint, TRUE))
             return;
-        }
+
         ps.hdc = (HDC)wParam;
     }
     else
     {
-        hdc = BeginPaint(infoPtr->hMapWnd,
-                         &ps);
+        hdc = BeginPaint(infoPtr->hMapWnd, &ps);
         if (hdc == NULL)
-        {
             return;
-        }
     }
 
     FillGrid(infoPtr, &ps);
@@ -713,12 +698,9 @@ MapWndProc(HWND hwnd,
            WPARAM wParam,
            LPARAM lParam)
 {
-    PMAP infoPtr;
+    PMAP infoPtr = (PMAP)GetWindowLongPtrW(hwnd, 0);
     LRESULT Ret = 0;
     WCHAR lfFaceName[LF_FACESIZE];
-
-    infoPtr = (PMAP)GetWindowLongPtrW(hwnd,
-                                      0);
 
     switch (uMsg)
     {
@@ -743,9 +725,7 @@ MapWndProc(HWND hwnd,
         case WM_LBUTTONDOWN:
         {
             SetFocus(hwnd);
-            OnClick(infoPtr,
-                    LOWORD(lParam),
-                    HIWORD(lParam));
+            OnClick(infoPtr, LOWORD(lParam), HIWORD(lParam));
             break;
         }
 
@@ -753,9 +733,7 @@ MapWndProc(HWND hwnd,
         {
             if (wParam & MK_LBUTTON)
             {
-                OnClick(infoPtr,
-                        LOWORD(lParam),
-                        HIWORD(lParam));
+                OnClick(infoPtr, LOWORD(lParam), HIWORD(lParam));
             }
             break;
         }
@@ -779,10 +757,7 @@ MapWndProc(HWND hwnd,
 
         case WM_VSCROLL:
         {
-            OnVScroll(infoPtr,
-                      LOWORD(wParam),
-                      HIWORD(wParam));
-
+            OnVScroll(infoPtr, LOWORD(wParam), HIWORD(wParam));
             break;
         }
 
@@ -810,28 +785,17 @@ MapWndProc(HWND hwnd,
             return (LRESULT)infoPtr->hFont;
 
         case WM_PAINT:
-        {
-            OnPaint(infoPtr,
-                    wParam);
+            OnPaint(infoPtr, wParam);
             break;
-        }
 
         case WM_DESTROY:
-        {
             DeleteObject(infoPtr->hFont);
-            HeapFree(GetProcessHeap(),
-                     0,
-                     infoPtr);
-            SetWindowLongPtrW(hwnd,
-                              0,
-                              (DWORD_PTR)NULL);
+            HeapFree(GetProcessHeap(), 0, infoPtr);
+            SetWindowLongPtrW(hwnd, 0, (LONG_PT)NULL);
             break;
-        }
 
         case WM_GETDLGCODE:
-        {
             return DLGC_WANTARROWS;
-        }
 
         case WM_SETFOCUS:
         case WM_KILLFOCUS:
@@ -839,13 +803,8 @@ MapWndProc(HWND hwnd,
             break;
 
         default:
-        {
-            Ret = DefWindowProcW(hwnd,
-                                 uMsg,
-                                 wParam,
-                                 lParam);
+            Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
             break;
-        }
     }
 
     return Ret;
@@ -881,9 +840,6 @@ RegisterMapClasses(HINSTANCE hInstance)
 VOID
 UnregisterMapClasses(HINSTANCE hInstance)
 {
-    UnregisterClassW(szMapWndClass,
-                    hInstance);
-
-    UnregisterClassW(szLrgCellWndClass,
-                    hInstance);
+    UnregisterClassW(szMapWndClass, hInstance);
+    UnregisterClassW(szLrgCellWndClass, hInstance);
 }
