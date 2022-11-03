@@ -42,54 +42,6 @@ SetGrid(PMAP infoPtr)
 
 static
 VOID
-DrawActiveCell(PMAP infoPtr,
-               HDC hdc)
-{
-    PCELL Cell = infoPtr->pActiveCell;
-    Rectangle(hdc,
-              Cell->CellInt.left,
-              Cell->CellInt.top,
-              Cell->CellInt.right,
-              Cell->CellInt.bottom);
-}
-
-
-static
-VOID
-DrawGrid(PMAP infoPtr,
-         PAINTSTRUCT *ps)
-{
-    INT x, y;
-    RECT rc;
-    PCELL Cell;
-
-    for (y = 0; y < YCELLS; y++)
-    for (x = 0; x < XCELLS; x++)
-    {
-        Cell = &infoPtr->Cells[y][x];
-
-        if (!IntersectRect(&rc,
-                           &ps->rcPaint,
-                           &Cell->CellExt))
-        {
-            continue;
-        }
-
-        Rectangle(ps->hdc,
-                  Cell->CellExt.left,
-                  Cell->CellExt.top,
-                  Cell->CellExt.right,
-                  Cell->CellExt.bottom);
-
-        if (infoPtr->pActiveCell == Cell)
-        {
-            DrawActiveCell(infoPtr, ps->hdc);
-        }
-    }
-}
-
-static
-VOID
 UpdateCells(PMAP infoPtr)
 {
     INT x, y;
@@ -122,11 +74,14 @@ FillGrid(PMAP infoPtr,
     RECT rc;
     PCELL Cell;
     INT i;
-    HBRUSH hbrGray = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
+    HBRUSH hOldBrush, hbrGray = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
+    HPEN hOldPen;
 
     UpdateCells(infoPtr);
 
     hOldFont = SelectObject(ps->hdc, infoPtr->hFont);
+    hOldPen = SelectObject(ps->hdc, GetStockObject(BLACK_PEN));
+    hOldBrush = SelectObject(ps->hdc, GetStockObject(WHITE_BRUSH));
 
     i = XCELLS * infoPtr->iYStart;
 
@@ -135,28 +90,35 @@ FillGrid(PMAP infoPtr,
         for (x = 0; x < XCELLS; x++, i++)
         {
             Cell = &infoPtr->Cells[y][x];
-            if (IntersectRect(&rc, &ps->rcPaint, &Cell->CellExt))
+            if (!IntersectRect(&rc, &ps->rcPaint, &Cell->CellExt))
+                continue;
+
+            Rectangle(ps->hdc,
+                      Cell->CellExt.left,
+                      Cell->CellExt.top,
+                      Cell->CellExt.right,
+                      Cell->CellExt.bottom);
+
+            if (i < infoPtr->NumValidGlyphs)
             {
-                if (i < infoPtr->NumValidGlyphs)
+                DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
+                          DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (Cell == infoPtr->pActiveCell && GetFocus() == infoPtr->hMapWnd)
                 {
-                    DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
-                              DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                    if (Cell == infoPtr->pActiveCell && GetFocus() == infoPtr->hMapWnd)
-                    {
-                        rc = Cell->CellInt;
-                        InflateRect(&rc, -1, -1);
-                        DrawFocusRect(ps->hdc, &rc);
-                    }
+                    rc = Cell->CellInt;
+                    DrawFocusRect(ps->hdc, &rc);
                 }
-                else
-                {
-                    FillRect(ps->hdc, &Cell->CellInt, hbrGray);
-                }
+            }
+            else
+            {
+                FillRect(ps->hdc, &Cell->CellInt, hbrGray);
             }
         }
     }
 
     SelectObject(ps->hdc, hOldFont);
+    SelectObject(ps->hdc, hOldPen);
+    SelectObject(ps->hdc, hOldBrush);
 }
 
 
@@ -166,14 +128,9 @@ CreateLargeCell(PMAP infoPtr)
 {
     RECT rLarge = infoPtr->pActiveCell->CellExt;
 
-    MapWindowPoints(infoPtr->hMapWnd,
-                    infoPtr->hParent,
-                    (VOID*)&rLarge,
-                    2);
+    MapWindowPoints(infoPtr->hMapWnd, infoPtr->hParent, (LPPOINT)&rLarge, 2);
 
-    InflateRect(&rLarge,
-                XLARGE - XCELLS,
-                YLARGE - YCELLS);
+    InflateRect(&rLarge, XLARGE - XCELLS, YLARGE - YCELLS);
 
     infoPtr->hLrgWnd = CreateWindowExW(0,
                                        szLrgCellWndClass,
@@ -200,10 +157,7 @@ MoveLargeCell(PMAP infoPtr)
 {
     RECT rLarge = infoPtr->pActiveCell->CellExt;
 
-    MapWindowPoints(infoPtr->hMapWnd,
-                    infoPtr->hParent,
-                    (LPPOINT)&rLarge,
-                    2);
+    MapWindowPoints(infoPtr->hMapWnd, infoPtr->hParent, (LPPOINT)&rLarge, 2);
 
     InflateRect(&rLarge, XLARGE - XCELLS, YLARGE - YCELLS);
 
@@ -224,7 +178,7 @@ GetPossibleCharacters(WCHAR* ch, INT chLen, INT codePageIdx)
 {
     INT i, j;
 
-    memset(ch, 0, sizeof(ch[0]) * chLen);
+    ZeroMemory(ch, sizeof(ch[0]) * chLen);
 
     if (codePageIdx <= 0 || codePageIdx > SIZEOF(codePages))
     {
@@ -613,14 +567,11 @@ OnPaint(PMAP infoPtr,
         }
     }
 
-    DrawGrid(infoPtr, &ps);
-
     FillGrid(infoPtr, &ps);
 
     if (wParam == 0)
     {
-        EndPaint(infoPtr->hMapWnd,
-                 &ps);
+        EndPaint(infoPtr->hMapWnd, &ps);
     }
 }
 
