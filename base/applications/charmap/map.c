@@ -143,6 +143,8 @@ FillGrid(PMAP infoPtr,
                 {
                     DrawTextW(ps->hdc, &Cell->ch, 1, &Cell->CellInt,
                               DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    if (Cell == infoPtr->pActiveCell && GetFocus() == infoPtr->hMapWnd)
+                        DrawFocusRect(ps->hdc, &Cell->CellInt);
                 }
                 else
                 {
@@ -943,6 +945,11 @@ MapWndProc(HWND hwnd,
         {
             return DLGC_WANTARROWS;
         }
+
+        case WM_SETFOCUS:
+        case WM_KILLFOCUS:
+            InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
+            break;
 
         default:
         {
