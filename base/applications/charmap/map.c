@@ -164,10 +164,7 @@ static
 BOOL
 CreateLargeCell(PMAP infoPtr)
 {
-    RECT rLarge;
-
-    CopyRect(&rLarge,
-             &infoPtr->pActiveCell->CellExt);
+    RECT rLarge = infoPtr->pActiveCell->CellExt;
 
     MapWindowPoints(infoPtr->hMapWnd,
                     infoPtr->hParent,
@@ -201,10 +198,7 @@ static
 VOID
 MoveLargeCell(PMAP infoPtr)
 {
-    RECT rLarge;
-
-    CopyRect(&rLarge,
-             &infoPtr->pActiveCell->CellExt);
+    RECT rLarge = infoPtr->pActiveCell->CellExt;
 
     MapWindowPoints(infoPtr->hMapWnd,
                     infoPtr->hParent,
@@ -618,7 +612,6 @@ OnPaint(PMAP infoPtr,
     PAINTSTRUCT ps;
     HDC hdc;
 
-
     if (wParam != 0)
     {
         if (!GetUpdateRect(infoPtr->hMapWnd,
@@ -691,8 +684,9 @@ MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
     {
         if (X <= 0) /* at left edge */
         {
-            if (Y == 0) /* at top */
+            if (Y <= 0) /* at top */
             {
+                Y = 0;
                 if (infoPtr->iYStart > 0)
                     X = XCELLS - 1;
                 SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
@@ -714,6 +708,7 @@ MoveLeftRight(PMAP infoPtr, INT DX, BOOL bLarge)
         {
             if (Y + 1 >= YCELLS) /* at bottom */
             {
+                Y = YCELLS - 1;
                 if (infoPtr->iYStart < infoPtr->NumRows)
                     X = 0;
                 SendMessageW(infoPtr->hMapWnd, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
