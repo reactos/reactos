@@ -830,7 +830,7 @@ MapWndProc(HWND hwnd,
 
         case WM_LBUTTONDBLCLK:
         {
-            if (!infoPtr->pActiveCell)
+            if (!infoPtr->pActiveCell || GetFocus() != hwnd)
                 break;
 
             NotifyParentOfSelection(infoPtr,
@@ -844,7 +844,6 @@ MapWndProc(HWND hwnd,
             }
 
             infoPtr->pActiveCell->bLarge = FALSE;
-
             break;
         }
 
@@ -905,7 +904,15 @@ MapWndProc(HWND hwnd,
         }
 
         case WM_SETFOCUS:
+            InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
+            break;
+
         case WM_KILLFOCUS:
+            if (infoPtr->hLrgWnd)
+            {
+                DestroyWindow(infoPtr->hLrgWnd);
+                infoPtr->hLrgWnd = NULL;
+            }
             InvalidateRect(hwnd, &(infoPtr->pActiveCell->CellInt), FALSE);
             break;
 
