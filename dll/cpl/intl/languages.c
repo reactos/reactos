@@ -137,7 +137,9 @@ LanguagesPageProc(HWND hwndDlg,
                                 if (pchArgs && *pchArgs)
                                 {
                                     --pchArgs;
-                                    *pchArgs = UNICODE_NULL; /* Cut the C string */
+                                    /* pchArgs pointer is inside szUninstall,
+                                     * so we have to split both strings */
+                                    *pchArgs = UNICODE_NULL;
                                     ++pchArgs;
                                 }
                                 PathUnquoteSpacesW(szUninstall);
