@@ -367,111 +367,6 @@ NotifyParentOfSelection(PMAP infoPtr,
 
 static
 VOID
-OnClick(PMAP infoPtr,
-        WORD ptx,
-        WORD pty)
-{
-    INT x, y, i;
-
-    /*
-     * Find the cell the mouse pointer is over.
-     * Since each cell is the same size, this can be done quickly using CellSize.
-     * Clamp to XCELLS - 1 and YCELLS - 1 because the map can sometimes be slightly
-     * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer
-     * multiple of infoPtr.CellSize .
-     */
-    x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
-    y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
-
-    /* Make sure the mouse is within a valid glyph */
-    i = XCELLS * infoPtr->iYStart + y * XCELLS + x;
-    if (i >= infoPtr->NumValidGlyphs)
-    {
-        if (infoPtr->pActiveCell)
-            infoPtr->pActiveCell->bActive = FALSE;
-        infoPtr->pActiveCell = NULL;
-        return;
-    }
-
-    /* if the cell is not already active */
-    if (!infoPtr->Cells[y][x].bActive)
-    {
-        /* set previous active cell to inactive */
-        if (infoPtr->pActiveCell)
-        {
-            /* invalidate normal cells, required when
-             * moving a small active cell via keyboard */
-            if (!infoPtr->pActiveCell->bLarge)
-            {
-                InvalidateRect(infoPtr->hMapWnd,
-                               &infoPtr->pActiveCell->CellInt,
-                               TRUE);
-            }
-
-            infoPtr->pActiveCell->bActive = FALSE;
-            infoPtr->pActiveCell->bLarge = FALSE;
-        }
-
-        /* set new cell to active */
-        infoPtr->pActiveCell = &infoPtr->Cells[y][x];
-        infoPtr->pActiveCell->bActive = TRUE;
-        infoPtr->pActiveCell->bLarge = TRUE;
-        if (infoPtr->hLrgWnd)
-            MoveLargeCell(infoPtr);
-        else
-            CreateLargeCell(infoPtr);
-    }
-}
-
-
-static
-BOOL
-MapOnCreate(PMAP infoPtr,
-            HWND hwnd,
-            HWND hParent)
-{
-    RECT rc;
-    BOOL Ret = FALSE;
-
-    infoPtr = HeapAlloc(GetProcessHeap(),
-                        0,
-                        sizeof(MAP));
-    if (infoPtr)
-    {
-        SetLastError(0);
-        SetWindowLongPtrW(hwnd,
-                          0,
-                          (DWORD_PTR)infoPtr);
-        if (GetLastError() == 0)
-        {
-            ZeroMemory(infoPtr,
-                       sizeof(MAP));
-
-            infoPtr->hMapWnd = hwnd;
-            infoPtr->hParent = hParent;
-
-            GetClientRect(hwnd, &rc);
-            infoPtr->ClientSize.cx = rc.right;
-            infoPtr->ClientSize.cy = rc.bottom;
-            infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
-            infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
-
-            infoPtr->pActiveCell = NULL;
-
-            SetGrid(infoPtr);
-
-            SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
-
-            Ret = TRUE;
-        }
-    }
-
-    return Ret;
-}
-
-
-static
-VOID
 LimitCaretXY(PMAP infoPtr, INT *pX, INT *pY)
 {
     INT i, X = *pX, Y = *pY, iYStart = infoPtr->iYStart;
@@ -525,16 +420,15 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
                        FALSE);
     }
 
-    if (!bLarge)
+    /* Destroy large window */
+    if (infoPtr->hLrgWnd)
     {
-        /* Destroy large window */
-        if (infoPtr->hLrgWnd)
-        {
-            DestroyWindow(infoPtr->hLrgWnd);
-            infoPtr->hLrgWnd = NULL;
-        }
+        DestroyWindow(infoPtr->hLrgWnd);
+        infoPtr->hLrgWnd = NULL;
     }
-    else
+
+    /* Create if needed */
+    if (bLarge)
     {
         if (infoPtr->hLrgWnd)
             MoveLargeCell(infoPtr);
@@ -548,6 +442,73 @@ SetCaretXY(PMAP infoPtr, INT X, INT Y, BOOL bLarge, BOOL bInvalidateAll)
     }
 
     UpdateStatusBar(infoPtr->pActiveCell->ch);
+}
+
+static
+VOID
+OnClick(PMAP infoPtr,
+        WORD ptx,
+        WORD pty)
+{
+    INT x, y;
+
+    /*
+     * Find the cell the mouse pointer is over.
+     * Since each cell is the same size, this can be done quickly using CellSize.
+     * Clamp to XCELLS - 1 and YCELLS - 1 because the map can sometimes be slightly
+     * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer
+     * multiple of infoPtr.CellSize .
+     */
+    x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
+    y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
+
+    SetCaretXY(infoPtr, x, y, TRUE, FALSE);
+}
+
+
+static
+BOOL
+MapOnCreate(PMAP infoPtr,
+            HWND hwnd,
+            HWND hParent)
+{
+    RECT rc;
+    BOOL Ret = FALSE;
+
+    infoPtr = HeapAlloc(GetProcessHeap(),
+                        0,
+                        sizeof(MAP));
+    if (infoPtr)
+    {
+        SetLastError(0);
+        SetWindowLongPtrW(hwnd,
+                          0,
+                          (DWORD_PTR)infoPtr);
+        if (GetLastError() == 0)
+        {
+            ZeroMemory(infoPtr,
+                       sizeof(MAP));
+
+            infoPtr->hMapWnd = hwnd;
+            infoPtr->hParent = hParent;
+
+            GetClientRect(hwnd, &rc);
+            infoPtr->ClientSize.cx = rc.right;
+            infoPtr->ClientSize.cy = rc.bottom;
+            infoPtr->CellSize.cx = infoPtr->ClientSize.cx / XCELLS;
+            infoPtr->CellSize.cy = infoPtr->ClientSize.cy / YCELLS;
+
+            infoPtr->pActiveCell = NULL;
+
+            SetGrid(infoPtr);
+
+            SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
+
+            Ret = TRUE;
+        }
+    }
+
+    return Ret;
 }
 
 static
@@ -856,10 +817,10 @@ MapWndProc(HWND hwnd,
 
         case WM_LBUTTONDOWN:
         {
+            SetFocus(hwnd);
             OnClick(infoPtr,
                     LOWORD(lParam),
                     HIWORD(lParam));
-
             break;
         }
 
