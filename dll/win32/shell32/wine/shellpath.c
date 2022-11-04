@@ -246,7 +246,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         if (!PathAddBackslashW(pszPath)) /* Append a backslash at the end */
             break;
 
-        while (*pchPath == L'\\') /* Backslash is added. Go forward */
+        /* Backslash is added. Skip any consecutive ones. */
+        while (*pchPath == L'\\')
         {
             ++pchPath;
         }
