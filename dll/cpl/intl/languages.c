@@ -1,15 +1,46 @@
 #include "intl.h"
 
 #include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <strsafe.h>
 
-/* Is there any Japanese input method? */
-BOOL HasJapaneseIME(VOID)
+/* What is the uninstallation command line of "ReactOS JPN Package"? */
+BOOL GetJapaneseUninstallCmdLine(HWND hwnd, LPWSTR pszCmdLine, SIZE_T cchCmdLine)
 {
-    WCHAR szImePath[MAX_PATH];
-    GetSystemDirectoryW(szImePath, _countof(szImePath));
-    StringCchCatW(szImePath, _countof(szImePath), L"\\mzimeja.ime");
-    return GetFileAttributesW(szImePath) != INVALID_FILE_ATTRIBUTES;
+    HKEY hKey;
+    LONG error;
+    DWORD dwSize;
+
+    pszCmdLine[0] = UNICODE_NULL;
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+                          L"{80F03D6E-0549-4202-BE81-FF583F56A7A8}_is1",
+                          0,
+                          KEY_READ,
+                          &hKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSize = cchCmdLine * sizeof(WCHAR);
+    error = RegQueryValueExW(hKey, L"UninstallString", NULL, NULL, (LPBYTE)pszCmdLine, &dwSize);
+    if (error != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    pszCmdLine[cchCmdLine - 1] = UNICODE_NULL;
+    RegCloseKey(hKey);
+    return TRUE;
+}
+
+/* Is there any installed "ReactOS JPN Package"? */
+BOOL HasJapanesePackage(HWND hwnd)
+{
+    WCHAR szPath[MAX_PATH];
+    return GetJapaneseUninstallCmdLine(hwnd, szPath, _countof(szPath));
 }
 
 /* Property page dialog callback */
@@ -40,9 +71,8 @@ LanguagesPageProc(HWND hwndDlg,
             switch (PRIMARYLANGID(GetUserDefaultLangID()))
             {
                 case LANG_JAPANESE:
-                    if (HasJapaneseIME())
+                    if (HasJapanesePackage(hwndDlg))
                     {
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
                         CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
                     }
                     break;
@@ -82,32 +112,48 @@ LanguagesPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY) /* Apply changes */
             {
-                /* Apply changes */
-                if (IsDlgButtonChecked(hwndDlg, IDC_INST_FILES_FOR_ASIAN) == BST_CHECKED)
+                /* EAST ASIAN specific */
+                switch (PRIMARYLANGID(GetUserDefaultLangID()))
                 {
-                    /* EAST ASIAN specific */
-                    switch (PRIMARYLANGID(GetUserDefaultLangID()))
-                    {
-                        case LANG_JAPANESE:
-                            if (HasJapaneseIME())
+                    case LANG_JAPANESE:
+                        if (IsDlgButtonChecked(hwndDlg, IDC_INST_FILES_FOR_ASIAN) == BST_CHECKED)
+                        {
+                            if (!HasJapanesePackage(hwndDlg))
                             {
-                                EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
-                                CheckDlgButton(hwndDlg, IDC_INST_FILES_FOR_ASIAN, BST_CHECKED);
-                            }
-                            else
-                            {
-                                ShellExecuteW(hwndDlg, NULL, L"rapps.exe", L"/INSTALL mzimeja",
+                                /* Install now */
+                                ShellExecuteW(hwndDlg, NULL, L"rapps.exe", L"/INSTALL jpn-package",
                                               NULL, SW_SHOWNORMAL);
                             }
-                            break;
+                        }
+                        else
+                        {
+                            WCHAR szUninstall[MAX_PATH];
+                            if (GetJapaneseUninstallCmdLine(hwndDlg, szUninstall, _countof(szUninstall)))
+                            {
+                                /* Go to arguments of command line */
+                                PWCHAR pchArgs = PathGetArgsW(szUninstall);
+                                if (pchArgs && *pchArgs)
+                                {
+                                    --pchArgs;
+                                    /* pchArgs pointer is inside szUninstall,
+                                     * so we have to split both strings */
+                                    *pchArgs = UNICODE_NULL;
+                                    ++pchArgs;
+                                }
+                                PathUnquoteSpacesW(szUninstall);
 
-                        case LANG_CHINESE: /* Not supported yet */
-                        case LANG_KOREAN: /* Not supported yet */
-                        default:
-                            break;
-                    }
+                                /* Uninstall now */
+                                ShellExecuteW(hwndDlg, NULL, szUninstall, pchArgs, NULL, SW_SHOWNORMAL);
+                            }
+                        }
+                        break;
+
+                    case LANG_CHINESE: /* Not supported yet */
+                    case LANG_KOREAN: /* Not supported yet */
+                    default:
+                        break;
                 }
 
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
