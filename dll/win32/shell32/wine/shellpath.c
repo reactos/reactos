@@ -182,7 +182,6 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
              */
             PathBuildRootW(pszPath, iDrive);
             pchTemp = &szTemp[2];
-
             if (*pchTemp == L'\\')
                 ++pchTemp;
         }
