@@ -185,7 +185,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             if (*pchTemp == L'\\')
                 ++pchTemp;
         }
-        else /* Drive is not specified */
+        else
         {
             if (!pszDir || FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszDir)))
             {
