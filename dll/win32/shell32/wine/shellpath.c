@@ -209,6 +209,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 
             StringCchCopyW(pszPath, MAX_PATH, szRoot);
         }
+
+        /* FIXME: Support non-LFN */
     }
     /* Now pszPath is a root-like path or an empty string. */
 
