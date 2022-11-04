@@ -766,7 +766,8 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
             return TRUE; /* Found */
         }
 
-        if (PathFindOnPathW(path, dirs)) /* Try to find the filename in the directories */
+        /* Try to find the filename in the directories */
+        if (PathFindOnPathW(path, dirs))
         {
 #if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
             if (!(flags & PRF_REQUIREABSOLUTE))
