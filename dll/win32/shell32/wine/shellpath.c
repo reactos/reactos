@@ -173,7 +173,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
          * Determine and normalize the root drive.
          */
         iDrive = PathGetDriveNumberW(szTemp);
-        if (iDrive != -1) /* Drive is specified */
+        if (iDrive != -1)
         {
             /*
              * A drive is specified in the path, that can be either of the
