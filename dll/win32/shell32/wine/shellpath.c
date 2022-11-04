@@ -123,7 +123,7 @@ PathSearchOnExtensionsW(
         return PathFileExistsDefExtW(pszPath, dwWhich);
 }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
 static BOOL WINAPI PathIsAbsoluteW(_In_ LPCWSTR path)
 {
     return PathIsUNCW(path) || (PathGetDriveNumberW(path) != -1 && path[2] == L'\\');
