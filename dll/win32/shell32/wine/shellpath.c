@@ -175,7 +175,12 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         iDrive = PathGetDriveNumberW(szTemp);
         if (iDrive != -1) /* Drive is specified */
         {
-            PathBuildRootW(pszPath, iDrive); /* 'C:\' */
+            /*
+             * A drive is specified in the path, that can be either of the
+             * form 'C:\xxx' or of the form 'C:xxx' (relative path). Isolate
+             * the root part 'C:' and the rest of the path 'xxx' in pchTemp.
+             */
+            PathBuildRootW(pszPath, iDrive);
             pchTemp = &szTemp[2];
 
             if (*pchTemp == L'\\')
