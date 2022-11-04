@@ -189,9 +189,10 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         {
             if (!pszDir || FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszDir)))
             {
-                /* pszDir was invalid or NULL */
-                szRoot[0] = 0;
-                GetWindowsDirectoryW(szRoot, _countof(szRoot)); /* fallback to Windows directory */
+                /* pszDir was invalid or NULL. Fall back to the
+                 * Windows directory and find its root. */
+                szRoot[0] = UNICODE_NULL;
+                GetWindowsDirectoryW(szRoot, _countof(szRoot));
                 iDrive = PathGetDriveNumberW(szRoot);
                 if (iDrive != -1)
                     PathBuildRootW(szRoot, iDrive);
