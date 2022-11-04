@@ -166,7 +166,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         pszPath[2] = UNICODE_NULL; /* Cut off */
         pchTemp = &szTemp[2];
     }
-    else /* Non-UNC path */
+    else
     {
         iDrive = PathGetDriveNumberW(szTemp);
         if (iDrive != -1) /* Drive is specified */
