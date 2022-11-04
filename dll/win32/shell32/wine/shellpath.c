@@ -785,16 +785,16 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
         if (!PathFileExistsAndAttributesW(path, NULL)) /* Check the existence */
             return FALSE; /* Not found */
-    }
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
-    if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
-    {
-        if (!PathMakeAbsoluteW(path))
-            return FALSE;
-        return PathFileExistsAndAttributesW(path, NULL);
-    }
+        if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
+        {
+            if (!PathMakeAbsoluteW(path))
+                return FALSE;
+            return PathFileExistsAndAttributesW(path, NULL);
+        }
 #endif
+    }
 
     return TRUE; /* Done */
 }
