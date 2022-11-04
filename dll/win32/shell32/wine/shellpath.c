@@ -267,7 +267,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     if (pchPath < pchPathEnd)
         *pchPath = UNICODE_NULL; /* Keep null-terminated */
 
-    PathRemoveBackslashW(pszPath); /* The trailing backslash should be removed */
+    /* Remove any trailing backslash */
+    PathRemoveBackslashW(pszPath);
 
     if (!(dwFlags & 1)) /* Remove the trailing dot? */
     {
