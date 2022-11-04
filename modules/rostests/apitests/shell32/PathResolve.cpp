@@ -81,6 +81,8 @@ typedef struct tagTEST_ENTRY
 #define EF_NAME_ONLY    0x10
 #define EF_APP_PATH     0x20
 
+#define RET_IGNORE 0x00BEF00D
+
 /* Special error codes */
 #define ERR_NO_CHANGE 0xBEEF      /* Error Code 48879 */
 #define ERR_DEAD      0xDEAD      /* Error Code 57005 */
@@ -345,6 +347,66 @@ static const TEST_ENTRY s_LFNEntries[] =
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS11 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS12 },
     { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS13 },
+    /* .\2PRONG.txt with dirs (path) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS0, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS2, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS6, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS8, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\2PRONG.txt", NULL, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\2PRONG.txt", s_LinkTarget, FLAGS13, s_Dirs },
+    /* .\\2PRONG.txt with dirs (path) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS0, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS2, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS6, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS8, s_Dirs },
+    { __LINE__, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L".\\\\2PRONG.txt", NULL, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L".\\\\2PRONG.txt", s_LinkTarget, FLAGS13, s_Dirs },
+    /* .\..\.\testdir\..\testdir\2PRONG.txt with dirs */
+    { __LINE__, 1, ERR_IGNORE, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS0, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS2, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS6, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS8, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L".\\..\\.\\testdir\\..\\testdir\\2PRONG.txt", L"2PRONG.txt", FLAGS13, s_Dirs },
+    /* ..\testdir\.\..\testdir\.\.\2PRONG.txt with dirs (path) */
+    { __LINE__, 1, ERR_IGNORE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS0, s_Dirs },
+    { __LINE__, RET_IGNORE, ERR_IGNORE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS1, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS2, s_Dirs },
+    { __LINE__, RET_IGNORE, ERR_IGNORE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS3, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS4, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS5, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS6, s_Dirs },
+    { __LINE__, RET_IGNORE, ERR_IGNORE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS7, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS8, s_Dirs },
+    { __LINE__, RET_IGNORE, ERR_IGNORE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", NULL, FLAGS9, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS10, s_Dirs },
+    { __LINE__, 1, ERR_NO_CHANGE, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS11, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS12, s_Dirs },
+    { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"..\\testdir\\.\\..\\testdir\\.\\.\\2PRONG.txt", s_LinkTarget, FLAGS13, s_Dirs },
     /* 2PRONG.txt with dirs (name only) */
     { __LINE__, 1, ERR_IGNORE, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS0, s_Dirs },
     { __LINE__, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS1, s_Dirs },
@@ -674,8 +736,12 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
            "Section %d, Line %d: DeleteRegAppPath failed\n", SectionNumber, LineNumber);
     }
 
-    ok(Ret == pEntry->Ret, "Section %d, Line %d: Ret expected %d, was %d.\n",
-       SectionNumber, LineNumber, pEntry->Ret, Ret);
+    if (pEntry->Ret != RET_IGNORE)
+    {
+        ok(Ret == pEntry->Ret, "Section %d, Line %d: Ret expected %d, was %d.\n",
+           SectionNumber, LineNumber, pEntry->Ret, Ret);
+    }
+
     if (pEntry->Error != ERR_IGNORE)
     {
         ok(Error == pEntry->Error, "Section %d, Line %d: last error expected %ld, was %ld.\n",
