@@ -544,14 +544,14 @@ NtCreatePagingFile(
                           FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN,
                           FILE_SHARE_WRITE,
                           FILE_SUPERSEDE,
-                          FILE_DELETE_ON_CLOSE | FILE_NO_COMPRESSION | FILE_NO_INTERMEDIATE_BUFFERING,
+                          FILE_NO_COMPRESSION | FILE_NO_INTERMEDIATE_BUFFERING,
                           NULL,
                           0,
                           CreateFileTypeNone,
                           NULL,
                           SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
     /* If we failed, relax a bit constraints, someone may be already holding the
-     * the file, so share write, don't attempt to replace and don't delete on close
+     * the file, so share write, don't attempt to replace
      * (basically, don't do anything conflicting)
      * This can happen if the caller attempts to extend a page file.
      */
