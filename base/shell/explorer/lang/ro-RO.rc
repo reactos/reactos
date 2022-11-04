@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -84,14 +90,14 @@ END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Meniul „Pornire”"
+CAPTION "Meniul de „Pornire”"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "Meniul „&Pornire”", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    AUTORADIOBUTTON "Meniul de „&Pornire”", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
-    AUTORADIOBUTTON "Meniul „Pornire” &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    AUTORADIOBUTTON "Meniul de „Pornire” &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Acest model de meniu vă oferă aspectul și funcționalitatea clasică", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Pa&rticularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
@@ -99,7 +105,7 @@ END
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Particularizare notificări"
+CAPTION "Particularizarea notificărilor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT            "ReactOS afișează pictograme pentru notificări active și urgente și le ascunde pe cele inactive. Puteți altera acest comportament pentru elementele din lista de mai jos.", IDC_STATIC, 6, 6, 220, 30
@@ -113,10 +119,10 @@ END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Particularizare meniu de Pornire clasic"
+CAPTION "Particularizarea meniului de Pornire clasic"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Meniul „Pornire”", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "Meniul de „Pornire”", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Puteți particulariza meniul „Pornire” prin adăugarea sau eliminarea de elemente.", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "A&dăugare…", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
@@ -172,7 +178,7 @@ BEGIN
     AUTORADIOBUTTON  "Pictograme m&ari", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "Pictograme &mici", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programe ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "Meniul „Pornire” conține scurtături la programele cele mai utilizate.  Curățând lista de scurtături nu va șterge programele.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "Meniul de „Pornire” conține scurtături la programele cele mai utilizate.  Curățând lista de scurtături nu va șterge programele.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "N&umărul de programe în meniul „Pornire”:", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
@@ -197,4 +203,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
     IDS_RESTORE_ALL "&Afișează ferestrele deschise"
+    IDS_TRAYWND_UNDO_CASCADE "&Anulează cascada"
+    IDS_TRAYWND_UNDO_TILE "&Anulează aranjarea"
 END
