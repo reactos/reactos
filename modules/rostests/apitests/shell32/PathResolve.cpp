@@ -658,6 +658,9 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
     INT Ret;
     DWORD Error;
 
+    ZeroMemory(Path, sizeof(Path));
+    ZeroMemory(PathExpected, sizeof(PathExpected));
+
     if (pEntry->NameBefore == NULL)
     {
         assert(pEntry->NameExpected == NULL);
@@ -750,8 +753,14 @@ static void DoEntry(INT SectionNumber, INT LineNumber, const TEST_ENTRY *pEntry)
 
     if (pEntry->NameExpected && !(pEntry->EF_ & EF_APP_PATH))
     {
+        char expected[MAX_PATH];
+        char path[MAX_PATH];
+
+        lstrcpynA(expected, wine_dbgstr_w(PathExpected), _countof(expected));
+        lstrcpynA(path, wine_dbgstr_w(Path), _countof(path));
+
         ok(lstrcmpW(Path, PathExpected) == 0, "Section %d, Line %d: Path expected %s, was %s.\n",
-           SectionNumber, LineNumber, wine_dbgstr_w(PathExpected), wine_dbgstr_w(Path));
+           SectionNumber, LineNumber, expected, path);
     }
 }
 
