@@ -789,7 +789,11 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
-        return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+    {
+        if (!PathMakeAbsoluteW(path))
+            return FALSE;
+        return PathFileExistsAndAttributesW(path, NULL);
+    }
 #endif
 
     return TRUE; /* Done */
