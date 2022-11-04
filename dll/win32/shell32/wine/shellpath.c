@@ -754,7 +754,11 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
                 return TRUE;
 
             if (!PathIsAbsoluteW(path))
-                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+            {
+                if (!PathMakeAbsoluteW(path))
+                    return FALSE;
+                return PathFileExistsAndAttributesW(path, NULL);
+            }
 #else
             return TRUE; /* Found */
 #endif
