@@ -749,7 +749,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
         if (PathFindOnPathW(path, dirs)) /* Try to find the filename in the directories */
         {
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
             if (!(flags & PRF_REQUIREABSOLUTE))
                 return TRUE;
 
@@ -787,7 +787,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
             return FALSE; /* Not found */
     }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
     if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
     {
         if (!PathMakeAbsoluteW(path))
