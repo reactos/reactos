@@ -768,19 +768,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
         /* Try to find the filename in the directories */
         if (PathFindOnPathW(path, dirs))
-        {
-#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
-            if (!(flags & PRF_REQUIREABSOLUTE) || PathIsAbsoluteW(path))
-                return TRUE;
-
-            if (!PathMakeAbsoluteW(path))
-                return FALSE;
-
-            return PathFileExistsAndAttributesW(path, NULL);
-#else
-            return TRUE; /* Found */
-#endif
-        }
+            goto CheckAbsoluteAndFinish;
 
         return FALSE; /* Not found */
     }
@@ -804,6 +792,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
             return FALSE; /* Not found */
     }
 
+CheckAbsoluteAndFinish:
 #if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
     if (!(flags & PRF_REQUIREABSOLUTE) || PathIsAbsoluteW(path))
         return TRUE;
