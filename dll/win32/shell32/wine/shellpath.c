@@ -770,15 +770,13 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
         if (PathFindOnPathW(path, dirs))
         {
 #if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
-            if (!(flags & PRF_REQUIREABSOLUTE))
+            if (!(flags & PRF_REQUIREABSOLUTE) || PathIsAbsoluteW(path))
                 return TRUE;
 
-            if (!PathIsAbsoluteW(path))
-            {
-                if (!PathMakeAbsoluteW(path))
-                    return FALSE;
-                return PathFileExistsAndAttributesW(path, NULL);
-            }
+            if (!PathMakeAbsoluteW(path))
+                return FALSE;
+
+            return PathFileExistsAndAttributesW(path, NULL);
 #else
             return TRUE; /* Found */
 #endif
@@ -795,29 +793,28 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
     TRACE("(%s)\n", debugstr_w(path));
 
-    if (flags & PRF_VERIFYEXISTS) /* Verify the existence? */
+    if (!(flags & PRF_VERIFYEXISTS)) /* Don't verify the existence? */
+        return TRUE;
+
+    /* Try to find the path with program extensions applied? */
+    if (!(flags & PRF_TRYPROGRAMEXTENSIONS) ||
+        !PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
     {
-        /* Try to find the path with program extensions applied? */
-        if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
-            PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
-        {
-            return TRUE; /* Found */
-        }
-
-        if (!PathFileExistsAndAttributesW(path, NULL)) /* Check the existence */
+        if (!PathFileExistsAndAttributesW(path, NULL))
             return FALSE; /* Not found */
-
-#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
-        if ((flags & PRF_REQUIREABSOLUTE) && !PathIsAbsoluteW(path))
-        {
-            if (!PathMakeAbsoluteW(path))
-                return FALSE;
-            return PathFileExistsAndAttributesW(path, NULL);
-        }
-#endif
     }
 
-    return TRUE; /* Done */
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
+    if (!(flags & PRF_REQUIREABSOLUTE) || PathIsAbsoluteW(path))
+        return TRUE;
+
+    if (!PathMakeAbsoluteW(path))
+        return FALSE;
+
+    return PathFileExistsAndAttributesW(path, NULL);
+#else
+    return TRUE; /* Found */
+#endif
 }
 
 /*************************************************************************
