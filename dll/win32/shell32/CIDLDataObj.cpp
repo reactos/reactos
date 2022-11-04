@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     IEnumFORMATETC, IDataObject implementation
  * COPYRIGHT:   Copyright 1998, 1999 <juergen.schmied@metronet.de>
- *              Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2019-2022 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "precomp.h"

@@ -576,6 +576,7 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 
 DECLSPEC_SELECTANY CLIPFORMAT g_cfHIDA = NULL;
 DECLSPEC_SELECTANY CLIPFORMAT g_cfShellIdListOffsets = NULL;
+DECLSPEC_SELECTANY CLIPFORMAT g_cfPreferredDropEffect = NULL;
 
 // Allow to use the HIDA from an IDataObject without copying it
 struct CDataObjectHIDA
@@ -723,6 +724,30 @@ DataObject_SetOffset(IDataObject* pDataObject, POINT* point)
     }
 
     return DataObject_SetData(pDataObject, g_cfShellIdListOffsets, point, sizeof(point[0]));
+}
+
+inline HRESULT
+DataObject_GetPreferredDropEffect(IDataObject *pDataObject, DWORD* dwPreferredEffect)
+{
+    if (g_cfPreferredDropEffect == NULL)
+    {
+        g_cfPreferredDropEffect = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECTW);
+    }
+
+    *dwPreferredEffect = 0;
+
+    return DataObject_GetData(pDataObject, g_cfPreferredDropEffect, dwPreferredEffect, sizeof(dwPreferredEffect[0]));
+}
+
+inline HRESULT
+DataObject_SetPreferredDropEffect(IDataObject *pDataObject, DWORD dwPreferredEffect)
+{
+    if (g_cfPreferredDropEffect == NULL)
+    {
+        g_cfPreferredDropEffect = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECTW);
+    }
+
+    return DataObject_SetData(pDataObject, g_cfPreferredDropEffect, &dwPreferredEffect, sizeof(dwPreferredEffect));
 }
 
 #endif

@@ -705,27 +705,14 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    FORMATETC formatetc2;
-    STGMEDIUM medium2;
-    InitFormatEtc(formatetc2, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-
-    DWORD dwKey= 0;
-
-    if (SUCCEEDED(pda->GetData(&formatetc2, &medium2)))
+    DWORD dwKey = 0;
+    DWORD dwPreferredEffect;
+    if (!FAILED_UNEXPECTEDLY(DataObject_GetPreferredDropEffect(pda, &dwPreferredEffect)))
     {
-        DWORD * pdwFlag = (DWORD*)GlobalLock(medium2.hGlobal);
-        if (pdwFlag)
-        {
-            if (*pdwFlag == DROPEFFECT_COPY)
-                dwKey = MK_CONTROL;
-            else
-                dwKey = MK_SHIFT;
-        }
+        if (dwPreferredEffect & DROPEFFECT_COPY)
+            dwKey = MK_CONTROL;
         else
-        {
-            ERR("No drop effect obtained\n");
-        }
-        GlobalUnlock(medium2.hGlobal);
+            dwKey = MK_SHIFT;
     }
 
     if (bLink)
@@ -791,19 +778,11 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCo
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
-    FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-    STGMEDIUM medium = {0};
-    medium.tymed = TYMED_HGLOBAL;
-    medium.hGlobal = GlobalAlloc(GHND, sizeof(DWORD));
-    DWORD* pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
-    if (pdwFlag)
-        *pdwFlag = bCopy ? DROPEFFECT_COPY : DROPEFFECT_MOVE;
-    GlobalUnlock(medium.hGlobal);
-    m_pDataObj->SetData(&formatetc, &medium, TRUE);
+    HRESULT hr;
+    if (FAILED_UNEXPECTEDLY(hr = DataObject_SetPreferredDropEffect(m_pDataObj, bCopy ? DROPEFFECT_COPY : DROPEFFECT_MOVE)))
+        return hr;
 
-    HRESULT hr = OleSetClipboard(m_pDataObj);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED_UNEXPECTEDLY(hr = OleSetClipboard(m_pDataObj)))
         return hr;
 
     return S_OK;

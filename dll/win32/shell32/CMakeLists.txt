@@ -40,6 +40,7 @@ list(APPEND SOURCE
     folders.cpp
     iconcache.cpp
     shell32.cpp
+    shell32_private.cpp
     CShellItem.cpp
     CShellLink.cpp
     CFolderOptions.cpp

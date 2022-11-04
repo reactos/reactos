@@ -64,6 +64,12 @@ struct __wine_debug_channel
 };
 
 #define UNIMPLEMENTED WINE_FIXME("%s is UNIMPLEMENTED!\n", __FUNCTION__)
+#define UNIMPLEMENTED_DBGBREAK                                                                                         \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        UNIMPLEMENTED;                                                                                                 \
+        DbgBreakPoint();                                                                                               \
+    } while (0)
 
 #ifndef WINE_NO_TRACE_MSGS
 # define __WINE_GET_DEBUGGING_TRACE(dbch) ((dbch)->flags & (1 << __WINE_DBCL_TRACE))

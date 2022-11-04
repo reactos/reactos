@@ -24,7 +24,6 @@ class CDefViewBckgrndMenu :
         UINT m_LastFolderCMId;
 
         BOOL _bIsDesktopBrowserMenu();
-        BOOL _bCanPaste();
     public:
         CDefViewBckgrndMenu();
         ~CDefViewBckgrndMenu();
@@ -80,33 +79,6 @@ BOOL CDefViewBckgrndMenu::_bIsDesktopBrowserMenu()
         return FALSE;
 
     return ((FolderSettings.fFlags & FWF_DESKTOP) == FWF_DESKTOP);
-}
-
-BOOL CDefViewBckgrndMenu::_bCanPaste()
-{
-    /* If the folder doesn't have a drop target we can't paste */
-    CComPtr<IDropTarget> pdt;
-    HRESULT hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
-    if (FAILED(hr))
-        return FALSE;
-
-    /* We can only paste if CFSTR_SHELLIDLIST is present in the clipboard */
-    CComPtr<IDataObject> pDataObj;
-    hr = OleGetClipboard(&pDataObj);
-    if (FAILED(hr))
-        return FALSE;
-
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-
-    /* Set the FORMATETC structure*/
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pDataObj->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return FALSE;
-
-    ReleaseStgMedium(&medium);
-    return TRUE;
 }
 
 HRESULT
@@ -193,11 +165,11 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         }
 
         /* Disable the paste options if it is not possible */
-        if (!_bCanPaste())
-        {
+        DWORD dwDropEffect = Clipboard_GetDropEffect(m_psf);
+        if (!(dwDropEffect & DROPEFFECT_MOVE))
             EnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERT, MF_BYCOMMAND | MF_GRAYED);
+        if (!(dwDropEffect & DROPEFFECT_LINK))
             EnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERTLINK, MF_BYCOMMAND | MF_GRAYED);
-        }
 
         /* merge general background context menu in */
         Shell_MergeMenus(hMenu, GetSubMenu(hMenuPart, 0), indexMenu, 0, idCmdLast, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
@@ -299,17 +271,8 @@ HRESULT
 WINAPI
 CDefViewBckgrndMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if(m_folderCM)
-    {
-        CComPtr<IContextMenu2> pfolderCM2;
-        HRESULT hr = m_folderCM->QueryInterface(IID_PPV_ARG(IContextMenu2, &pfolderCM2));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        return pfolderCM2->HandleMenuMsg(uMsg, wParam, lParam);
-    }
-
-    return E_NOTIMPL;
+    LRESULT lResult;    // Discard
+    return HandleMenuMsg2(uMsg, wParam, lParam, &lResult);
 }
 
 HRESULT
@@ -318,12 +281,7 @@ CDefViewBckgrndMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRE
 {
     if(m_folderCM)
     {
-        CComPtr<IContextMenu3> pfolderCM3;
-        HRESULT hr = m_folderCM->QueryInterface(IID_PPV_ARG(IContextMenu3, &pfolderCM3));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        return pfolderCM3->HandleMenuMsg2(uMsg, wParam, lParam, plResult);
+        return IContextMenu_HandleMenuMsg2(m_folderCM, uMsg, wParam, lParam, plResult);
     }
 
     return E_NOTIMPL;

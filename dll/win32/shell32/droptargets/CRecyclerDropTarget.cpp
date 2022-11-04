@@ -114,7 +114,7 @@ class CRecyclerDropTarget :
             /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
             fAcceptFmt = TRUE;
 
-            *pdwEffect = DROPEFFECT_MOVE;
+            *pdwEffect &= DROPEFFECT_MOVE;
             return S_OK;
         }
 
@@ -125,7 +125,7 @@ class CRecyclerDropTarget :
             if (!pdwEffect)
                 return E_INVALIDARG;
 
-            *pdwEffect = DROPEFFECT_MOVE;
+            *pdwEffect &= DROPEFFECT_MOVE;
 
             return S_OK;
         }
@@ -164,6 +164,7 @@ class CRecyclerDropTarget :
                  * TODO call SetData on the data object with format CFSTR_TARGETCLSID
                  * set to the Recycle Bin's class identifier CLSID_RecycleBin.
                  */
+                UNIMPLEMENTED_DBGBREAK;
             }
             return S_OK;
         }
