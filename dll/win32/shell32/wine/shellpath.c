@@ -194,7 +194,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                 GetWindowsDirectoryW(szRoot, _countof(szRoot)); /* fallback to Windows directory */
                 iDrive = PathGetDriveNumberW(szRoot);
                 if (iDrive != -1)
-                    PathBuildRootW(szRoot, iDrive); /* 'C:\' */
+                    PathBuildRootW(szRoot, iDrive);
             }
 
             pchTemp = szTemp;
