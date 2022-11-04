@@ -143,12 +143,15 @@ static BOOL WINAPI PathMakeAbsoluteW(_Inout_ LPWSTR path)
 }
 #endif
 
+BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath);
+
 static VOID WINAPI
 PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dwFlags)
 {
-    INT iDrive;
+    INT iDrive, cchPathLeft;
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
-    PWCHAR pchTemp, pchPath, pchPathEnd;
+    PWCHAR pchTemp = szTemp, pchPath;
+    BOOL bLFN = TRUE;
 
     TRACE("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszDir), dwFlags);
 
@@ -159,33 +162,17 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     /* Replace every '/' by '\' */
     FixSlashesAndColonW(szTemp);
 
+    cchPathLeft = MAX_PATH;
+
     /* Build the root-like path on pszPath, and set pchTemp */
-    if (PathIsUNCW(szTemp)) /* UNC path: Begins with double backslash */
-    {
-        /* FIXME: Support non-LFN */
-        pszPath[2] = UNICODE_NULL; /* Cut off */
-        pchTemp = &szTemp[2];
-    }
-    else
+    if (!PathIsUNCW(szTemp))
     {
         /*
          * Non-UNC path.
          * Determine and normalize the root drive.
          */
         iDrive = PathGetDriveNumberW(szTemp);
-        if (iDrive != -1)
-        {
-            /*
-             * A drive is specified in the path, that can be either of the
-             * form 'C:\xxx' or of the form 'C:xxx' (relative path). Isolate
-             * the root part 'C:' and the rest of the path 'xxx' in pchTemp.
-             */
-            PathBuildRootW(pszPath, iDrive);
-            pchTemp = &szTemp[2];
-            if (*pchTemp == L'\\')
-                ++pchTemp;
-        }
-        else
+        if (iDrive == -1)
         {
             /*
              * No drive was specified in the path. Try to find one from the
@@ -203,42 +190,71 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                     PathBuildRootW(szRoot, iDrive);
             }
 
-            pchTemp = szTemp;
-            if (pchTemp[0] == L'\\')
-                ++pchTemp; /* The '\' only is a root */
-
-            StringCchCopyW(pszPath, MAX_PATH, szRoot);
+            if (szTemp[0] == L'\\')
+            {
+                PathStripToRootW(szRoot);
+            }
+        }
+        else
+        {
+            /*
+             * A drive is specified in the path, that can be either of the
+             * form 'C:\xxx' or of the form 'C:xxx' (relative path). Isolate
+             * the root part 'C:' and the rest of the path 'xxx' in pchTemp.
+             */
+            PathBuildRootW(szRoot, iDrive);
+            pchTemp += 2;
+            if (*pchTemp == L'\\')
+                ++pchTemp;
         }
 
-        /* FIXME: Support non-LFN */
+#if 0 // FIXME: IsLFNDriveW has a bug
+        bLFN = IsLFNDriveW(szRoot);
+#endif
+        if (!bLFN)
+        {
+            /* FIXME: Support non-LFN */
+        }
+
+        StringCchCopyW(pszPath, MAX_PATH, szRoot);
+        cchPathLeft -= lstrlenW(pszPath) + 1;
+    }
+    else /* UNC path: Begins with double backslash */
+    {
+#if 0 // FIXME: IsLFNDriveW has a bug
+        bLFN = IsLFNDriveW(pchTemp);
+#endif
+        if (!bLFN)
+        {
+            /* FIXME: Support non-LFN */
+        }
+        pszPath[2] = UNICODE_NULL; /* Cut off */
+        cchPathLeft -= (2 + 1);
+        pchTemp += 2;
     }
     /* Now pszPath is a root-like path or an empty string. */
 
-    pchPath = &pszPath[lstrlenW(pszPath)];
-    pchPathEnd = pszPath + MAX_PATH;
-
     /* Start appending the path components of szTemp to pszPath. */
-    while (*pchTemp && pchPath < pchPathEnd)
+    while (*pchTemp && cchPathLeft > 0)
     {
         /* Collapse any .\ and ..\ parts in the path */
-        if (pchTemp[0] == L'.')
+        if (*pchTemp == L'.')
         {
-            BOOL bDots = FALSE; /* '..' or '.' ? */
+            BOOL bDots = FALSE; /* '.' or '..' ? */
 
-            /* Component '..' */
-            if (pchTemp[1] == L'.' && (pchTemp[2] == UNICODE_NULL || pchTemp[2] == L'\\'))
-            {
-                PathRemoveFileSpecW(pszPath); /* Remove the last component from pszPath */
-                pchPath = &pszPath[lstrlenW(pszPath)];
-                bDots = TRUE;
-            }
-            else if (pchTemp[1] == UNICODE_NULL || pchTemp[1] == L'\\')
+            if (pchTemp[1] == UNICODE_NULL || pchTemp[1] == L'\\')
             {
                 /* Component '.' */
                 bDots = TRUE;
             }
+            else if (pchTemp[1] == L'.' && (pchTemp[2] == UNICODE_NULL || pchTemp[2] == L'\\'))
+            {
+                /* Component '..' */
+                PathRemoveFileSpecW(pszPath); /* Remove the last component from pszPath */
+                bDots = TRUE;
+            }
 
-            /* If a '..' or '.' was encountered, skip to the next component */
+            /* If a '.' or '..' was encountered, skip to the next component */
             if (bDots)
             {
                 while (*pchTemp && *pchTemp != L'\\')
@@ -246,8 +262,10 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                     ++pchTemp;
                 }
 
-                if (*pchTemp == L'\\')
+                while (*pchTemp == L'\\')
+                {
                     ++pchTemp;
+                }
 
                 continue;
             }
@@ -258,27 +276,33 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         if (!PathAddBackslashW(pszPath)) /* Append a backslash at the end */
             break;
 
-        /* Backslash is added. Skip any consecutive ones. */
-        while (*pchPath == L'\\')
+        --cchPathLeft;
+
+        pchPath = &pszPath[lstrlenW(pszPath)];
+
+        if (!bLFN)
         {
-            ++pchPath;
+            /* FIXME: Support non-LFN */
+        }
+        else
+        {
+            /* Copy the component up to the next separator */
+            while (*pchTemp != UNICODE_NULL && *pchTemp != L'\\' && cchPathLeft > 0)
+            {
+                *pchPath++ = *pchTemp++;
+                --cchPathLeft;
+            }
         }
 
-        /* Copy the component up to the next separator */
-        while (*pchTemp && *pchTemp != L'\\' && pchPath < pchPathEnd)
+        /* Skip the backslashes */
+        while (*pchTemp == L'\\')
         {
-            *pchPath++ = *pchTemp++;
+            ++pchTemp;
         }
 
-        if (*pchTemp == L'\\')
-            ++pchTemp; /* Go to next component */
-
-        if (pchPath < pchPathEnd)
-            *pchPath = UNICODE_NULL; /* Keep null-terminated */
+        /* Keep null-terminated */
+        *pchPath = UNICODE_NULL;
     }
-
-    if (pchPath < pchPathEnd)
-        *pchPath = UNICODE_NULL; /* Keep null-terminated */
 
     /* Remove any trailing backslash */
     PathRemoveBackslashW(pszPath);
