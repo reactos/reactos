@@ -150,6 +150,8 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
     PWCHAR pchTemp, pchPath, pchPathEnd;
 
+    TRACE("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszDir), dwFlags);
+
     /* Save pszPath path into szTemp for rebuilding the path later */
     if (FAILED(StringCchCopyW(szTemp, _countof(szTemp), pszPath)))
         return;
@@ -673,7 +675,7 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     DWORD iDir, cDirs, cbDirs;
     WCHAR pathW[MAX_PATH];
 
-    TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
+    TRACE("(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
 
     if (dirs)
     {
@@ -716,7 +718,7 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 {
     DWORD dwWhich = WHICH_DEFAULT; /* The extensions to be searched */
 
-    TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
+    TRACE("(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
 
     if (flags & PRF_DONTFINDLNK)
         dwWhich &= ~WHICH_LNK; /* Don't search '.LNK' (shortcut) */
@@ -766,6 +768,8 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
     /* Qualify the path */
     PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 1);
+
+    TRACE("(%s)\n", debugstr_w(path));
 
     if (flags & PRF_VERIFYEXISTS) /* Verify the existence? */
     {
