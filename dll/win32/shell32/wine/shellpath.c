@@ -252,7 +252,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             ++pchPath;
         }
 
-        /* Copy the component upto backslash */
+        /* Copy the component up to the next separator */
         while (*pchTemp && *pchTemp != L'\\' && pchPath < pchPathEnd)
         {
             *pchPath++ = *pchTemp++;
