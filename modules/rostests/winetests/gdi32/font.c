@@ -5590,7 +5590,6 @@ static void test_fullname2_helper(const char *Family)
 static void test_fullname2(void)
 {
     test_fullname2_helper("Arial");
-    test_fullname2_helper("DejaVu Sans");
     test_fullname2_helper("Lucida Sans");
     test_fullname2_helper("Tahoma");
     test_fullname2_helper("Webdings");

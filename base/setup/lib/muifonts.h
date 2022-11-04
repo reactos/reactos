@@ -77,13 +77,12 @@ MUI_SUBFONT GreekFonts[] =
     { L"Courier New Greek,161",  L"Courier New,161" },
     { L"Courier New TUR,162",    L"Courier New,162" },
     { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
-    { L"Helv",                   L"DejaVu Sans" },
+    { L"Helv",                   L"Tahoma" },
     { L"Helvetica",              L"Arial" },
-    { L"MS Sans Serif",          L"DejaVu Sans" },
-    { L"MS Shell Dlg",           L"DejaVu Sans" },
-    { L"MS Shell Dlg 2",         L"DejaVu Sans" },
+    { L"MS Sans Serif",          L"Tahoma" },
+    { L"MS Shell Dlg",           L"Tahoma" },
+    { L"MS Shell Dlg 2",         L"Tahoma" },
     { L"System",                 L"FreeSans" },
-    { L"Tahoma",                 L"DejaVu Sans" },
     { L"Terminal",               L"DejaVu Sans Mono" },
     { L"Times",                  L"Times New Roman" },
     { L"Times New Roman Baltic,186",   L"Times New Roman,186" },
@@ -97,7 +96,6 @@ MUI_SUBFONT GreekFonts[] =
 
 MUI_SUBFONT HebrewFonts[] =
 {
-    { L"Arial",                  L"DejaVu Sans" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -343,7 +341,6 @@ MUI_SUBFONT KoreanFonts[] =
 
 MUI_SUBFONT UnicodeFonts[] =
 {
-    { L"Arial",                  L"DejaVu Sans" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -357,13 +354,8 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Courier New Greek,161",  L"Courier New,161" },
     { L"Courier New TUR,162",    L"Courier New,162" },
     { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
-    { L"Helv",                   L"DejaVu Sans" },
     { L"Helvetica",              L"Arial" },
-    { L"MS Sans Serif",          L"DejaVu Sans" },
-    { L"MS Shell Dlg",           L"DejaVu Sans" },
-    { L"MS Shell Dlg 2",         L"DejaVu Sans" },
     { L"System",                 L"FreeSans" },
-    { L"Tahoma",                 L"DejaVu Sans" },
     { L"Terminal",               L"DejaVu Sans Mono" },
     { L"Times",                  L"Times New Roman" },
     { L"Times New Roman Baltic,186",   L"Times New Roman,186" },
