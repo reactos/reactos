@@ -168,6 +168,10 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     }
     else
     {
+        /*
+         * Non-UNC path.
+         * Determine and normalize the root drive.
+         */
         iDrive = PathGetDriveNumberW(szTemp);
         if (iDrive != -1) /* Drive is specified */
         {
