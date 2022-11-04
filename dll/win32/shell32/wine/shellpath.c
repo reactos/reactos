@@ -187,6 +187,11 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         }
         else
         {
+            /*
+             * No drive was specified in the path. Try to find one from the
+             * optional directory (if this fails, fall back to the one of the
+             * Windows directory).
+             */
             if (!pszDir || FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszDir)))
             {
                 /* pszDir was invalid or NULL. Fall back to the
