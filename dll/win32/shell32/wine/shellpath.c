@@ -796,8 +796,9 @@ BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DW
 
     if (flags & PRF_VERIFYEXISTS) /* Verify the existence? */
     {
-        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && /* Try to find a program? */
-            PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich)) /* Search it */
+        /* Try to find the path with program extensions applied? */
+        if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
+            PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
         {
             return TRUE; /* Found */
         }
