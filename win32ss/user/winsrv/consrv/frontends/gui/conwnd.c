@@ -1393,8 +1393,9 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
                                SW_INVALIDATE);
                 if (NewScrollX >= 0)
                 {
+                    BOOL bRedraw = (Buff->ScreenBufferSize.X > Buff->ViewSize.X);
                     sInfo.nPos = NewScrollX;
-                    SetScrollInfo(GuiData->hWindow, SB_HORZ, &sInfo, TRUE);
+                    SetScrollInfo(GuiData->hWindow, SB_HORZ, &sInfo, bRedraw);
                 }
                 if (NewScrollY >= 0)
                 {
