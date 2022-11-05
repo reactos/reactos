@@ -593,6 +593,26 @@ static LPWSTR SHELL_BuildEnvW( const WCHAR *path )
     return new_env;
 }
 
+static LPWSTR SHELL_ExpandEnvironmentStrings(LPCWSTR psz)
+{
+    LPWSTR ret;
+    DWORD cchBuff = ExpandEnvironmentStringsW(psz, NULL, 0);
+    if (cchBuff == 0)
+        return NULL;
+
+    ++cchBuff;
+    ret = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchBuff * sizeof(WCHAR));
+    if (!ret)
+        return NULL;
+
+    if (!ExpandEnvironmentStringsW(psz, ret, cchBuff))
+    {
+        HeapFree(GetProcessHeap(), 0, ret);
+        ret = NULL;
+    }
+
+    return ret;
+}
 
 /***********************************************************************
  *           SHELL_TryAppPathW    [Internal]
@@ -605,8 +625,8 @@ static LPWSTR SHELL_BuildEnvW( const WCHAR *path )
 static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
 {
     HKEY hkApp = 0;
-    WCHAR buffer[1024];
-    LONG len;
+    WCHAR buffer[1024], szPath[MAX_PATH];
+    DWORD len, dwType;
     LONG res;
     BOOL found = FALSE;
 
@@ -624,16 +644,38 @@ static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
         if (res) goto end;
     }
 
-    len = MAX_PATH * sizeof(WCHAR);
-    res = RegQueryValueW(hkApp, NULL, lpResult, &len);
-    if (res) goto end;
+    len = sizeof(szPath);
+    res = RegQueryValueExW(hkApp, NULL, NULL, &dwType, (LPBYTE)szPath, &len);
+    if (res || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
+        goto end;
+
+    if (dwType == REG_EXPAND_SZ)
+        ExpandEnvironmentStringsW(szPath, lpResult, MAX_PATH);
+    else
+        lstrcpynW(lpResult, szPath, MAX_PATH);
+
     found = TRUE;
 
     if (env)
     {
-        DWORD count = sizeof(buffer);
-        if (!RegQueryValueExW(hkApp, L"Path", NULL, NULL, (LPBYTE)buffer, &count) && buffer[0])
-            *env = SHELL_BuildEnvW(buffer);
+        len = sizeof(buffer);
+        if (!RegQueryValueExW(hkApp, L"Path", NULL, &dwType, (LPBYTE)buffer, &len) &&
+            (dwType == REG_SZ || dwType == REG_EXPAND_SZ) && buffer[0])
+        {
+            if (dwType == REG_EXPAND_SZ)
+            {
+                LPWSTR pszExpanded = SHELL_ExpandEnvironmentStrings(buffer);
+                if (pszExpanded)
+                {
+                    *env = SHELL_BuildEnvW(pszExpanded);
+                    HeapFree(GetProcessHeap(), 0, pszExpanded);
+                }
+            }
+            else
+            {
+                *env = SHELL_BuildEnvW(buffer);
+            }
+        }
     }
 
 end:
