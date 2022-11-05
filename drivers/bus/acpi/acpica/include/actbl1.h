@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -466,17 +466,23 @@ typedef struct acpi_cedt_cfmws
 
 } ACPI_CEDT_CFMWS;
 
+typedef struct acpi_cedt_cfmws_target_element
+{
+    UINT32                  InterleaveTarget;
+
+} ACPI_CEDT_CFMWS_TARGET_ELEMENT;
+
 /* Values for Interleave Arithmetic field above */
 
-#define ACPI_CEDT_CFMWS_ARITHMETIC_MODULO	(0)
+#define ACPI_CEDT_CFMWS_ARITHMETIC_MODULO   (0)
 
 /* Values for Restrictions field above */
 
-#define ACPI_CEDT_CFMWS_RESTRICT_TYPE2		(1)
-#define ACPI_CEDT_CFMWS_RESTRICT_TYPE3		(1<<1)
-#define ACPI_CEDT_CFMWS_RESTRICT_VOLATILE	(1<<2)
-#define ACPI_CEDT_CFMWS_RESTRICT_PMEM		(1<<3)
-#define ACPI_CEDT_CFMWS_RESTRICT_FIXED		(1<<4)
+#define ACPI_CEDT_CFMWS_RESTRICT_TYPE2      (1)
+#define ACPI_CEDT_CFMWS_RESTRICT_TYPE3      (1<<1)
+#define ACPI_CEDT_CFMWS_RESTRICT_VOLATILE   (1<<2)
+#define ACPI_CEDT_CFMWS_RESTRICT_PMEM       (1<<3)
+#define ACPI_CEDT_CFMWS_RESTRICT_FIXED      (1<<4)
 
 
 /*******************************************************************************
@@ -739,7 +745,8 @@ enum AcpiDmarType
     ACPI_DMAR_TYPE_ROOT_ATS             = 2,
     ACPI_DMAR_TYPE_HARDWARE_AFFINITY    = 3,
     ACPI_DMAR_TYPE_NAMESPACE            = 4,
-    ACPI_DMAR_TYPE_RESERVED             = 5     /* 5 and greater are reserved */
+    ACPI_DMAR_TYPE_SATC                 = 5,
+    ACPI_DMAR_TYPE_RESERVED             = 6     /* 6 and greater are reserved */
 };
 
 
@@ -854,6 +861,18 @@ typedef struct acpi_dmar_andd
 } ACPI_DMAR_ANDD;
 
 
+/* 5: SoC Integrated Address Translation Cache (SATC)  */
+
+typedef struct acpi_dmar_satc
+{
+    ACPI_DMAR_HEADER        Header;
+    UINT8                   Flags;
+    UINT8                   Reserved;
+    UINT16                  Segment;
+
+} ACPI_DMAR_SATC
+
+;
 /*******************************************************************************
  *
  * DRTM - Dynamic Root of Trust for Measurement table

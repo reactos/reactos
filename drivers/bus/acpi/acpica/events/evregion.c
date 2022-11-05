@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -212,14 +212,14 @@ AcpiEvAddressSpaceDispatch (
             return_ACPI_STATUS (AE_NOT_EXIST);
         }
 
-	if (RegionObj->Region.SpaceId == ACPI_ADR_SPACE_PLATFORM_COMM)
-	{
-	    ACPI_PCC_INFO *Ctx = HandlerDesc->AddressSpace.Context;
+        if (RegionObj->Region.SpaceId == ACPI_ADR_SPACE_PLATFORM_COMM)
+        {
+            ACPI_PCC_INFO *Ctx = HandlerDesc->AddressSpace.Context;
 
-	    Ctx->InternalBuffer = FieldObj->Field.InternalPccBuffer;
-	    Ctx->Length = (UINT16) RegionObj->Region.Length;
-	    Ctx->SubspaceId = (UINT8) RegionObj->Region.Address;
-	}
+            Ctx->InternalBuffer = FieldObj->Field.InternalPccBuffer;
+            Ctx->Length = (UINT16) RegionObj->Region.Length;
+            Ctx->SubspaceId = (UINT8) RegionObj->Region.Address;
+        }
 
         /*
          * We must exit the interpreter because the region setup will
