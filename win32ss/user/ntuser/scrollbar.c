@@ -668,13 +668,13 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
       switch (nBar)
       {
          case SB_HORZ:
-            bVisible = !!(Window->style & WS_HSCROLL);
+            bVisible = (Window->style & WS_HSCROLL);
             break;
          case SB_VERT:
-            bVisible = !!(Window->style & WS_VSCROLL);
+            bVisible = (Window->style & WS_VSCROLL);
             break;
          case SB_CTL:
-            bVisible = !!(Window->style & WS_VISIBLE);
+            bVisible = (Window->style & WS_VISIBLE);
             break;
          default:
             bVisible = FALSE;
