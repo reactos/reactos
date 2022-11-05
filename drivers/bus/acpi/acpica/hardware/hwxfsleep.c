@@ -363,6 +363,12 @@ AcpiEnterSleepStatePrep (
         return_ACPI_STATUS (Status);
     }
 
+    Status = AcpiGetSleepTypeData (ACPI_STATE_S0,
+        &AcpiGbl_SleepTypeAS0, &AcpiGbl_SleepTypeBS0);
+    if (ACPI_FAILURE (Status)) {
+        AcpiGbl_SleepTypeAS0 = ACPI_SLEEP_TYPE_INVALID;
+    }
+
     /* Execute the _PTS method (Prepare To Sleep) */
 
     ArgList.Count = 1;
