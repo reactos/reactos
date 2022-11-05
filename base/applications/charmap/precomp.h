@@ -37,8 +37,6 @@ typedef struct _CELL
 {
     RECT CellExt;
     RECT CellInt;
-    BOOL bActive;
-    BOOL bLarge;
     WCHAR ch;
 } CELL, *PCELL;
 
@@ -53,13 +51,13 @@ typedef struct _MAP
     PCELL pActiveCell;
     HFONT hFont;
     LOGFONTW CurrentFont;
+    INT CaretX, CaretY;
     INT iYStart;
     INT NumRows;
     INT CharMap;
 
     USHORT ValidGlyphs[MAX_GLYPHS];
     USHORT NumValidGlyphs;
-
 } MAP, *PMAP;
 
 typedef struct {

@@ -4,7 +4,6 @@
  * FILE:        base/applications/charmap/charmap.c
  * PURPOSE:     main dialog implementation
  * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
- *
  */
 
 #include "precomp.h"
@@ -567,6 +566,8 @@ PanelOnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
     }
 
+    SetFocus(hCharmapDlg);
+
     return 0;
 }
 
@@ -709,6 +710,14 @@ wWinMain(HINSTANCE hInst,
                     Ret = Msg.wParam;
                     break;
                 }
+
+                /* NOTE: CreateDialog needs IsDialogMessage call in message loop */
+                if (hCharmapDlg && IsDialogMessage(hCharmapDlg, &Msg))
+                    continue;
+#ifndef REMOVE_ADVANCED
+                if (hAdvancedDlg && IsDialogMessage(hAdvancedDlg, &Msg))
+                    continue;
+#endif
 
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);
