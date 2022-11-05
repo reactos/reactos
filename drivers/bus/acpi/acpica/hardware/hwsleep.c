@@ -367,6 +367,16 @@ AcpiHwLegacyWake (
             AcpiGbl_FixedEventInfo[ACPI_EVENT_SLEEP_BUTTON].StatusRegisterId,
             ACPI_CLEAR_STATUS);
 
+    /* Enable pcie wake event if support */
+    if ((AcpiGbl_FADT.Flags & ACPI_FADT_PCI_EXPRESS_WAKE)) {
+        (void) AcpiWriteBitRegister (
+		AcpiGbl_FixedEventInfo[ACPI_EVENT_PCIE_WAKE].EnableRegisterId,
+		ACPI_DISABLE_EVENT);
+        (void) AcpiWriteBitRegister (
+		AcpiGbl_FixedEventInfo[ACPI_EVENT_PCIE_WAKE].StatusRegisterId,
+		ACPI_CLEAR_STATUS);
+    }
+
     AcpiHwExecuteSleepMethod (METHOD_PATHNAME__SST, ACPI_SST_WORKING);
     return_ACPI_STATUS (Status);
 }

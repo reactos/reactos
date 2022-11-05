@@ -221,6 +221,14 @@ AcpiEvAddressSpaceDispatch (
             Ctx->SubspaceId = (UINT8) RegionObj->Region.Address;
         }
 
+        if (RegionObj->Region.SpaceId == ACPI_ADR_SPACE_FIXED_HARDWARE)
+        {
+            ACPI_FFH_INFO *Ctx = HandlerDesc->AddressSpace.Context;
+
+            Ctx->Length = RegionObj->Region.Length;
+            Ctx->Offset = RegionObj->Region.Address;
+        }
+
         /*
          * We must exit the interpreter because the region setup will
          * potentially execute control methods (for example, the _REG method

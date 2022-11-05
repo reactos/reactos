@@ -237,16 +237,6 @@ AcpiTbPrintTableHeader(
     ACPI_PHYSICAL_ADDRESS   Address,
     ACPI_TABLE_HEADER       *Header);
 
-UINT8
-AcpiTbChecksum (
-    UINT8                   *Buffer,
-    UINT32                  Length);
-
-ACPI_STATUS
-AcpiTbVerifyChecksum (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length);
-
 void
 AcpiTbCheckDsdtHeader (
     void);

@@ -765,7 +765,8 @@ typedef UINT32                          ACPI_EVENT_TYPE;
 #define ACPI_EVENT_POWER_BUTTON         2
 #define ACPI_EVENT_SLEEP_BUTTON         3
 #define ACPI_EVENT_RTC                  4
-#define ACPI_EVENT_MAX                  4
+#define ACPI_EVENT_PCIE_WAKE            5
+#define ACPI_EVENT_MAX                  5
 #define ACPI_NUM_FIXED_EVENTS           ACPI_EVENT_MAX + 1
 
 /*
@@ -1227,6 +1228,12 @@ typedef struct acpi_pcc_info {
     UINT8                           *InternalBuffer;
 } ACPI_PCC_INFO;
 
+/* Special Context data for FFH Opregion (ACPI 6.5) */
+
+typedef struct acpi_ffh_info {
+    UINT64                          Offset;
+    UINT64                          Length;
+} ACPI_FFH_INFO;
 
 typedef
 ACPI_STATUS (*ACPI_ADR_SPACE_SETUP) (

@@ -210,6 +210,31 @@ AcpiUtCheckAndRepairAscii (
 
 
 /*
+ * utcksum - Checksum utilities
+ */
+UINT8
+AcpiUtGenerateChecksum (
+    void                    *Table,
+    UINT32                  Length,
+    UINT8                   OriginalChecksum);
+
+UINT8
+AcpiUtChecksum (
+    UINT8                   *Buffer,
+    UINT32                  Length);
+
+ACPI_STATUS
+AcpiUtVerifyCdatChecksum (
+    ACPI_TABLE_CDAT         *CdatTable,
+    UINT32                  Length);
+
+ACPI_STATUS
+AcpiUtVerifyChecksum (
+    ACPI_TABLE_HEADER       *Table,
+    UINT32                  Length);
+
+
+/*
  * utnonansi - Non-ANSI C library functions
  */
 void

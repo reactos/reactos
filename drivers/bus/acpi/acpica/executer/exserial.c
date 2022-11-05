@@ -376,6 +376,12 @@ AcpiExWriteSerialBus (
         Function = ACPI_WRITE;
         break;
 
+    case ACPI_ADR_SPACE_FIXED_HARDWARE:
+
+        BufferLength = ACPI_FFH_INPUT_BUFFER_SIZE;
+        Function = ACPI_WRITE;
+        break;
+
     default:
         return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
     }

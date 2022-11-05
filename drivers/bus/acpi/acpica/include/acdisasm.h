@@ -152,6 +152,7 @@ typedef enum
     ACPI_DMT_AEST_XRUPT,
     ACPI_DMT_AGDI,
     ACPI_DMT_ASF,
+    ACPI_DMT_CDAT,
     ACPI_DMT_CEDT,
     ACPI_DMT_DMAR,
     ACPI_DMT_DMAR_SCOPE,
@@ -294,6 +295,16 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBdat[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBoot[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBert[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBgrt[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCcel[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdatTableHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdatHeader[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat1[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat2[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat3[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat4[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdat5[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCdatEntries[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCedtHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCedt0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCedt1[];
@@ -637,6 +648,14 @@ AcpiDmDumpApmt (
 
 void
 AcpiDmDumpAsf (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpCcel (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpCdat (
     ACPI_TABLE_HEADER       *Table);
 
 void
