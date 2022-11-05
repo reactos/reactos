@@ -392,7 +392,8 @@ AcpiTbParseRootTable (
         }
 
         Status = AcpiTbInstallStandardTable (Address,
-            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE, &TableIndex);
+            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, TRUE,
+            &TableIndex);
 
         if (ACPI_SUCCESS (Status) &&
             ACPI_COMPARE_NAMESEG (

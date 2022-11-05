@@ -153,7 +153,8 @@ AcpiTbPrintTableHeader (
             Header->Signature, ACPI_FORMAT_UINT64 (Address),
             Header->Length));
     }
-    else if (ACPI_VALIDATE_RSDP_SIG (Header->Signature))
+    else if (ACPI_VALIDATE_RSDP_SIG (ACPI_CAST_PTR (ACPI_TABLE_RSDP,
+        Header)->Signature))
     {
         /* RSDP has no common fields */
 

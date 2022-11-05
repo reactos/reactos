@@ -60,6 +60,7 @@
  * file. Useful because they make it more difficult to inadvertently type in
  * the wrong signature.
  */
+#define ACPI_SIG_AGDI           "AGDI"      /* Arm Generic Diagnostic Dump and Reset Device Interface */
 #define ACPI_SIG_BDAT           "BDAT"      /* BIOS Data ACPI Table */
 #define ACPI_SIG_IORT           "IORT"      /* IO Remapping Table */
 #define ACPI_SIG_IVRS           "IVRS"      /* I/O Virtualization Reporting Structure */
@@ -84,6 +85,7 @@
 #define ACPI_SIG_SDEI           "SDEI"      /* Software Delegated Exception Interface Table */
 #define ACPI_SIG_SDEV           "SDEV"      /* Secure Devices table */
 #define ACPI_SIG_SVKL           "SVKL"      /* Storage Volume Key Location Table */
+#define ACPI_SIG_TDEL           "TDEL"      /* TD Event Log Table */
 
 
 /*
@@ -201,7 +203,7 @@ typedef struct              acpi_aest_processor_tlb
 
 typedef struct              acpi_aest_processor_generic
 {
-    UINT8                   *Resource;
+    UINT32                   Resource;
 
 } ACPI_AEST_PROCESSOR_GENERIC;
 
@@ -290,6 +292,28 @@ typedef struct              acpi_aest_node_interrupt
 #define ACPI_AEST_NODE_FAULT_HANDLING       0
 #define ACPI_AEST_NODE_ERROR_RECOVERY       1
 #define ACPI_AEST_XRUPT_RESERVED            2   /* 2 and above are reserved */
+
+
+/*******************************************************************************
+ * AGDI - Arm Generic Diagnostic Dump and Reset Device Interface
+ *
+ * Conforms to "ACPI for Arm Components 1.1, Platform Design Document"
+ * ARM DEN0093 v1.1
+ *
+ ******************************************************************************/
+typedef struct acpi_table_agdi
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT8                   Flags;
+    UINT8                   Reserved[3];
+    UINT32                  SdeiEvent;
+    UINT32                  Gsiv;
+
+} ACPI_TABLE_AGDI;
+
+/* Mask for Flags field above */
+
+#define ACPI_AGDI_SIGNALING_MODE (1)
 
 
 /*******************************************************************************
@@ -1688,6 +1712,12 @@ typedef struct acpi_table_nhlt
 
 } ACPI_TABLE_NHLT;
 
+typedef struct acpi_table_nhlt_endpoint_count
+{
+    UINT8                   EndpointCount;
+
+} ACPI_TABLE_NHLT_ENDPOINT_COUNT;
+
 typedef struct acpi_nhlt_endpoint
 {
     UINT32                  DescriptorLength;
@@ -1744,6 +1774,8 @@ typedef struct acpi_nhlt_endpoint
 #define ACPI_NHLT_DIR_RENDER_FEEDBACK       3
 #define ACPI_NHLT_DIR_RESERVED              4   /* 4 and above are reserved */
 
+/* Capabilities = 2 */
+
 typedef struct acpi_nhlt_device_specific_config
 {
     UINT32                  CapabilitiesSize;
@@ -1751,6 +1783,8 @@ typedef struct acpi_nhlt_device_specific_config
     UINT8                   ConfigType;
 
 } ACPI_NHLT_DEVICE_SPECIFIC_CONFIG;
+
+/* Capabilities = 3 */
 
 typedef struct acpi_nhlt_device_specific_config_a
 {
@@ -1761,14 +1795,24 @@ typedef struct acpi_nhlt_device_specific_config_a
 
 } ACPI_NHLT_DEVICE_SPECIFIC_CONFIG_A;
 
+/* Capabilities = 3 */
+
+typedef struct acpi_nhlt_device_specific_config_d
+{
+    UINT8                   VirtualSlot;
+    UINT8                   ConfigType;
+    UINT8                   ArrayType;
+
+} ACPI_NHLT_DEVICE_SPECIFIC_CONFIG_D;
+
 /* Values for Config Type above */
 
-#define ACPI_NHLT_TYPE_MIC_ARRAY            0x01
-#define ACPI_NHLT_TYPE_GENERIC              0x00
+#define ACPI_NHLT_CONFIG_TYPE_GENERIC              0x00
+#define ACPI_NHLT_CONFIG_TYPE_MIC_ARRAY            0x01
+#define ACPI_NHLT_CONFIG_TYPE_RENDER_FEEDBACK      0x03
+#define ACPI_NHLT_CONFIG_TYPE_RESERVED             0x04   /* 4 and above are reserved */
 
-/* Mask for Extension field of ArrayType */
-
-#define ACPI_NHLT_ARRAY_TYPE_MASK           0x10
+/* Capabilities = 0 */
 
 typedef struct acpi_nhlt_device_specific_config_b
 {
@@ -1776,12 +1820,21 @@ typedef struct acpi_nhlt_device_specific_config_b
 
 } ACPI_NHLT_DEVICE_SPECIFIC_CONFIG_B;
 
+/* Capabilities = 1 */
+
 typedef struct acpi_nhlt_device_specific_config_c
 {
     UINT32                  CapabilitiesSize;
     UINT8                   VirtualSlot;
 
 } ACPI_NHLT_DEVICE_SPECIFIC_CONFIG_C;
+
+typedef struct acpi_nhlt_render_device_specific_config
+{
+    UINT32                  CapabilitiesSize;
+    UINT8                   VirtualSlot;
+
+} ACPI_NHLT_RENDER_DEVICE_SPECIFIC_CONFIG;
 
 typedef struct acpi_nhlt_wave_extensible
 {
@@ -1855,18 +1908,24 @@ typedef struct acpi_nhlt_mic_device_specific_config
 
 /* Values for ArrayTypeExt above */
 
-#define SMALL_LINEAR_2ELEMENT               0x0A
-#define BIG_LINEAR_2ELEMENT                 0x0B
-#define FIRST_GEOMETRY_LINEAR_4ELEMENT      0x0C
-#define PLANAR_LSHAPED_4ELEMENT             0x0D
-#define SECOND_GEOMETRY_LINEAR_4ELEMENT     0x0E
-#define VENDOR_DEFINED                      0x0F
-#define ARRAY_TYPE_MASK                     0x0F
-#define ARRAY_TYPE_EXT_MASK                 0x10
+#define ACPI_NHLT_ARRAY_TYPE_RESERVED               0x09 // 9 and below are reserved
+#define ACPI_NHLT_SMALL_LINEAR_2ELEMENT             0x0A
+#define ACPI_NHLT_BIG_LINEAR_2ELEMENT               0x0B
+#define ACPI_NHLT_FIRST_GEOMETRY_LINEAR_4ELEMENT    0x0C
+#define ACPI_NHLT_PLANAR_LSHAPED_4ELEMENT           0x0D
+#define ACPI_NHLT_SECOND_GEOMETRY_LINEAR_4ELEMENT   0x0E
+#define ACPI_NHLT_VENDOR_DEFINED                    0x0F
+#define ACPI_NHLT_ARRAY_TYPE_MASK                   0x0F
+#define ACPI_NHLT_ARRAY_TYPE_EXT_MASK               0x10
 
-#define NO_EXTENSION                        0x0
-#define MIC_SNR_SENSITIVITY_EXT             0x1
+#define ACPI_NHLT_NO_EXTENSION                      0x0
+#define ACPI_NHLT_MIC_SNR_SENSITIVITY_EXT           (1<<4)
 
+typedef struct acpi_nhlt_vendor_mic_count
+{
+    UINT8                           MicrophoneCount;
+
+} ACPI_NHLT_VENDOR_MIC_COUNT;
 
 typedef struct acpi_nhlt_vendor_mic_config
 {
@@ -1888,22 +1947,25 @@ typedef struct acpi_nhlt_vendor_mic_config
 
 /* Values for Type field above */
 
-#define MIC_OMNIDIRECTIONAL                 0
-#define MIC_SUBCARDIOID                     1
-#define MIC_CARDIOID                        2
-#define MIC_SUPER_CARDIOID                  3
-#define MIC_HYPER_CARDIOID                  4
-#define MIC_8_SHAPED                        5
-#define MIC_VENDOR_DEFINED                  7
+#define ACPI_NHLT_MIC_OMNIDIRECTIONAL       0
+#define ACPI_NHLT_MIC_SUBCARDIOID           1
+#define ACPI_NHLT_MIC_CARDIOID              2
+#define ACPI_NHLT_MIC_SUPER_CARDIOID        3
+#define ACPI_NHLT_MIC_HYPER_CARDIOID        4
+#define ACPI_NHLT_MIC_8_SHAPED              5
+#define ACPI_NHLT_MIC_RESERVED6             6 // 6 is reserved
+#define ACPI_NHLT_MIC_VENDOR_DEFINED        7
+#define ACPI_NHLT_MIC_RESERVED              8 // 8 and above are reserved
 
 /* Values for Panel field above */
 
-#define MIC_TOP                             0
-#define MIC_BOTTOM                          1
-#define MIC_LEFT                            2
-#define MIC_RIGHT                           3
-#define MIC_FRONT                           4
-#define MIC_REAR                            5
+#define ACPI_NHLT_MIC_POSITION_TOP          0
+#define ACPI_NHLT_MIC_POSITION_BOTTOM       1
+#define ACPI_NHLT_MIC_POSITION_LEFT         2
+#define ACPI_NHLT_MIC_POSITION_RIGHT        3
+#define ACPI_NHLT_MIC_POSITION_FRONT        4
+#define ACPI_NHLT_MIC_POSITION_BACK         5
+#define ACPI_NHLT_MIC_POSITION_RESERVED     6 // 6 and above are reserved
 
 typedef struct acpi_nhlt_vendor_mic_device_specific_config
 {
@@ -1922,9 +1984,10 @@ typedef struct acpi_nhlt_mic_snr_sensitivity_extension
 
 } ACPI_NHLT_MIC_SNR_SENSITIVITY_EXTENSION;
 
+/* Render device with feedback */
+
 typedef struct acpi_nhlt_render_feedback_device_specific_config
 {
-    ACPI_NHLT_DEVICE_SPECIFIC_CONFIG    DeviceConfig;
     UINT8                               FeedbackVirtualSlot;    // Render slot in case of capture
     UINT16                              FeedbackChannels;       // Informative only
     UINT16                              FeedbackValidBitsPerSample;
@@ -1944,9 +2007,14 @@ typedef struct acpi_nhlt_linux_specific_data
     UINT8                               DeviceId[16];
     UINT8                               DeviceInstanceId;
     UINT8                               DevicePortId;
-    UINT8                               Filler[18];
 
 } ACPI_NHLT_LINUX_SPECIFIC_DATA;
+
+typedef struct acpi_nhlt_linux_specific_data_b
+{
+    UINT8                               SpecificData[18];
+
+} ACPI_NHLT_LINUX_SPECIFIC_DATA_B;
 
 typedef struct acpi_nhlt_table_terminator
 {
@@ -2899,6 +2967,24 @@ enum acpi_svkl_format
     ACPI_SVKL_FORMAT_RESERVED   = 1 /* 1 and greater are reserved */
 };
 
+
+/*******************************************************************************
+ *
+ * TDEL - TD-Event Log
+ *        From: "Guest-Host-Communication Interface (GHCI) for Intel
+ *        Trust Domain Extensions (Intel TDX)".
+ *        September 2020
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_tdel
+{
+    ACPI_TABLE_HEADER       Header; /* Common ACPI table header */
+    UINT32                  Reserved;
+    UINT64                  LogAreaMinimumLength;
+    UINT64                  LogAreaStartAddress;
+
+} ACPI_TABLE_TDEL;
 
 /* Reset to default packing */
 

@@ -350,6 +350,13 @@ AcpiEvPciBarRegionSetup (
     void                    **RegionContext);
 
 ACPI_STATUS
+AcpiEvDataTableRegionSetup (
+    ACPI_HANDLE             Handle,
+    UINT32                  Function,
+    void                    *HandlerContext,
+    void                    **RegionContext);
+
+ACPI_STATUS
 AcpiEvDefaultRegionSetup (
     ACPI_HANDLE             Handle,
     UINT32                  Function,

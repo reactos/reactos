@@ -342,6 +342,7 @@ AcpiExCreateRegion (
     ObjDesc->Region.SpaceId = SpaceId;
     ObjDesc->Region.Address = 0;
     ObjDesc->Region.Length = 0;
+    ObjDesc->Region.Pointer = NULL;
     ObjDesc->Region.Node = Node;
     ObjDesc->Region.Handler = NULL;
     ObjDesc->Common.Flags &=

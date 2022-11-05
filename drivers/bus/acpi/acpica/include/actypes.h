@@ -552,7 +552,6 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_TO_POINTER(i)              ACPI_CAST_PTR (void, (ACPI_SIZE) (i))
 #define ACPI_TO_INTEGER(p)              ACPI_PTR_DIFF (p, (void *) 0)
 #define ACPI_OFFSET(d, f)               ACPI_PTR_DIFF (&(((d *) 0)->f), (void *) 0)
-#define ACPI_PHYSADDR_TO_PTR(i)         ACPI_TO_POINTER(i)
 #define ACPI_PTR_TO_PHYSADDR(i)         ACPI_TO_INTEGER(i)
 
 /* Optimizations for 4-character (32-bit) ACPI_NAME manipulation */
@@ -579,9 +578,14 @@ typedef UINT64                          ACPI_INTEGER;
  * Can be used with AccessSize field of ACPI_GENERIC_ADDRESS and
  * ACPI_RESOURCE_GENERIC_REGISTER.
  */
-#define ACPI_ACCESS_BIT_WIDTH(AccessSize)   (1 << ((AccessSize) + 2))
-#define ACPI_ACCESS_BYTE_WIDTH(AccessSize)  (1 << ((AccessSize) - 1))
-
+#define ACPI_ACCESS_BIT_SHIFT		2
+#define ACPI_ACCESS_BYTE_SHIFT		-1
+#define ACPI_ACCESS_BIT_MAX		(31 - ACPI_ACCESS_BIT_SHIFT)
+#define ACPI_ACCESS_BYTE_MAX		(31 - ACPI_ACCESS_BYTE_SHIFT)
+#define ACPI_ACCESS_BIT_DEFAULT		(8 - ACPI_ACCESS_BIT_SHIFT)
+#define ACPI_ACCESS_BYTE_DEFAULT	(8 - ACPI_ACCESS_BYTE_SHIFT)
+#define ACPI_ACCESS_BIT_WIDTH(size)	(1 << ((size) + ACPI_ACCESS_BIT_SHIFT))
+#define ACPI_ACCESS_BYTE_WIDTH(size)	(1 << ((size) + ACPI_ACCESS_BYTE_SHIFT))
 
 /*******************************************************************************
  *
@@ -1211,6 +1215,14 @@ typedef struct acpi_connection_info
 
 } ACPI_CONNECTION_INFO;
 
+/* Special Context data for PCC Opregion (ACPI 6.3) */
+
+typedef struct acpi_pcc_info {
+    UINT8                           SubspaceId;
+    UINT16                          Length;
+    UINT8                           *InternalBuffer;
+} ACPI_PCC_INFO;
+
 
 typedef
 ACPI_STATUS (*ACPI_ADR_SPACE_SETUP) (
@@ -1349,6 +1361,12 @@ typedef struct acpi_mem_space_context
     ACPI_MEM_MAPPING                *FirstMm;
 
 } ACPI_MEM_SPACE_CONTEXT;
+
+typedef struct acpi_data_table_space_context
+{
+    void                            *Pointer;
+
+} ACPI_DATA_TABLE_MAPPING;
 
 
 /*

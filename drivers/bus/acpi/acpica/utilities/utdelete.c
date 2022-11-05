@@ -486,6 +486,7 @@ AcpiUtUpdateRefCount (
             ACPI_WARNING ((AE_INFO,
                 "Obj %p, Reference Count is already zero, cannot decrement\n",
                 Object));
+            return;
         }
 
         ACPI_DEBUG_PRINT_RAW ((ACPI_DB_ALLOCATIONS,

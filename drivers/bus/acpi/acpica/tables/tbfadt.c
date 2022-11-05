@@ -378,7 +378,7 @@ AcpiTbParseFadt (
 
     AcpiTbInstallStandardTable (
         (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XDsdt,
-        ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+        ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, TRUE,
         &AcpiGbl_DsdtIndex);
 
     /* If Hardware Reduced flag is set, there is no FACS */
@@ -389,14 +389,14 @@ AcpiTbParseFadt (
         {
             AcpiTbInstallStandardTable (
                 (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.Facs,
-                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, TRUE,
                 &AcpiGbl_FacsIndex);
         }
         if (AcpiGbl_FADT.XFacs)
         {
             AcpiTbInstallStandardTable (
                 (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XFacs,
-                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, TRUE,
                 &AcpiGbl_XFacsIndex);
         }
     }
