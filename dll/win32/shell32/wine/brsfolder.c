@@ -122,12 +122,23 @@ static inline DWORD BrowseFlagsToSHCONTF(UINT ulFlags)
     return SHCONTF_FOLDERS | (ulFlags & BIF_BROWSEINCLUDEFILES ? SHCONTF_NONFOLDERS : 0);
 }
 
+#ifndef __REACTOS__
 static void browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
                                    UINT msg, LPARAM param )
+#else
+static BOOL browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
+                                   UINT msg, LPARAM param )
+#endif
 {
+#ifndef __REACTOS__
     if (!lpBrowseInfo->lpfn)
         return;
     lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
+#else
+    if (!lpBrowseInfo->lpfn)
+        return FALSE;
+    return lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
+#endif
 }
 
 #ifndef __REACTOS__ /* Defined in "layout.h" */
@@ -493,11 +504,19 @@ static inline BOOL PIDLIsType(LPCITEMIDLIST pidl, PIDLTYPE type)
     return (data->type == type);
 }
 
+#ifndef __REACTOS__
 static void BrsFolder_CheckValidSelection( browse_info *info, LPTV_ITEMDATA lptvid )
+#else
+static void BrsFolder_CheckValidSelection( browse_info *info, LPTV_ITEMDATA lptvid, BOOL bDirValid)
+#endif
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
     LPCITEMIDLIST pidl = lptvid->lpi;
+#ifndef __REACTOS__
     BOOL bEnabled = TRUE;
+#else
+    BOOL bEnabled = bDirValid;
+#endif
     DWORD dwAttributes;
     HRESULT r;
 
@@ -584,15 +603,25 @@ static HRESULT BrsFolder_Treeview_Changed( browse_info *info, NMTREEVIEWW *pnmtv
     LPTV_ITEMDATA lptvid = (LPTV_ITEMDATA) pnmtv->itemNew.lParam;
     WCHAR name[MAX_PATH];
 
+#ifdef __REACTOS__
+    BOOL bBtnState;
+#endif
     ILFree(info->pidlRet);
     info->pidlRet = ILClone(lptvid->lpifq);
 
     if (GetName(lptvid->lpsfParent, lptvid->lpi, SHGDN_NORMAL, name))
             SetWindowTextW( GetDlgItem(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), name );
-
+#ifndef __REACTOS__
     browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
                            (LPARAM)info->pidlRet );
+
     BrsFolder_CheckValidSelection( info, lptvid );
+#else
+    bBtnState = browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
+                           (LPARAM)info->pidlRet );
+
+    BrsFolder_CheckValidSelection( info, lptvid, bBtnState);
+#endif
     return S_OK;
 }
 

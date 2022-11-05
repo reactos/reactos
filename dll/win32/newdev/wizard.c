@@ -598,11 +598,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
             {
                 PDEVINSTDATA DevInstData = (PDEVINSTDATA)lpData;
-                SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(DevInstData, szDir));
-            }
-            else
-            {
-                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+                return CheckBestDriver(DevInstData, szDir);
             }
             break;
         }
