@@ -1,0 +1,13 @@
+AUTHORS
+
+Current Contributors (sorted alphabetically):
+  - Katayama Hirofumi MZ
+
+Previous Contributors
+  - Pravin Satpute  <psatpute at redhat dot com>
+      Project Owner (Current)
+      Red Hat, Inc.
+
+  - Steve Matteson
+      Original Designer
+      Ascender, Inc.
