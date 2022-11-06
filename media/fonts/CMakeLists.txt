@@ -17,10 +17,6 @@ list(APPEND FONT_FILES
     DejaVuSansMono.ttf
     framd.ttf
     framdit.ttf
-    FreeMono.ttf
-    FreeMonoBold.ttf
-    FreeMonoBoldOblique.ttf
-    FreeMonoOblique.ttf
     FreeSans.ttf
     FreeSansBold.ttf
     FreeSansBoldOblique.ttf
