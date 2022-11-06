@@ -1745,7 +1745,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueData,
-                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1783,7 +1783,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueData,
-                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1801,7 +1801,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1927,7 +1927,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1945,7 +1945,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -2001,7 +2001,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                                    0,
                                    REG_SZ,
                                    ValueBuffer,
-                                   (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
+                                   (ULONG)(wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
