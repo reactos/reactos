@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     AttachThreadInput.c
     ../include/msgtrace.c
+    CharFuncs.c
     CloseWindow.c
     CreateDialog.c
     CreateIconFromResourceEx.c
