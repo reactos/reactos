@@ -289,6 +289,23 @@ extern PTOKEN SeAnonymousLogonTokenNoEveryone;
     KeLeaveCriticalRegion();                                                   \
 }
 
+#if DBG
+//
+// Security Debug Utility Functions
+//
+VOID
+SepDumpSdDebugInfo(
+    _In_opt_ PISECURITY_DESCRIPTOR SecurityDescriptor);
+
+VOID
+SepDumpTokenDebugInfo(
+   _In_opt_ PTOKEN Token);
+
+VOID
+SepDumpAccessRightsStats(
+    _In_opt_ PACCESS_CHECK_RIGHTS AccessRights);
+#endif // DBG
+
 //
 // Token Functions
 //
