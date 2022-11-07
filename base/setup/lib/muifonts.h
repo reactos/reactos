@@ -354,7 +354,7 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Courier New TUR,162",    L"Courier New,162" },
     { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
     { L"Helvetica",              L"Arial" },
-    { L"System",                 L"Tahoma" },
+    { L"System",                 L"FreeSans" },
     { L"Terminal",               L"Courier New" },
     { L"Times",                  L"Times New Roman" },
     { L"Times New Roman Baltic,186",   L"Times New Roman,186" },
