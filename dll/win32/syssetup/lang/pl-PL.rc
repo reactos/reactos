@@ -178,7 +178,7 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Należy podać nazwę dla tego komputera oraz hasło administratora."
     IDS_LOCALETITLE "Opcje regionalne i językowe"
     IDS_LOCALESUBTITLE "System ReactOS można dostosować pod kątem języka i sposobu wyświetlania danych."
-    IDS_LOCALETEXT "Standardy i formaty jest ustawione na %s, a lokalizacja jest ustawiona na %s."
+    IDS_LOCALETEXT "Standardy i formaty są ustawione na %s, a lokalizacja jest ustawiona na %s."
     IDS_LAYOUTTEXT "Twój język i metodę wprowadzania tekstu określa układ klawiatury: %s"
     IDS_DATETIMETITLE "Data i godzina"
     IDS_DATETIMESUBTITLE "Ustaw prawidłową datę i godzinę."
