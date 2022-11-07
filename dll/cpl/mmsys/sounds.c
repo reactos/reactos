@@ -16,6 +16,8 @@
 
 #include <debug.h>
 
+#define ID_SOUND_TEST_TIMER 1
+
 typedef struct _LABEL_MAP
 {
     PWCHAR szName;
@@ -57,6 +59,8 @@ typedef struct _GLOBAL_DATA
     PLABEL_MAP pLabelMap;
     PAPP_MAP pAppMap;
     UINT NumWavOut;
+    HICON hPlayIcon;
+    HICON hStopIcon;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -1113,6 +1117,77 @@ InitImageList(UINT StartResource,
 }
 
 
+static
+ULONG
+GetSoundDuration(LPCWSTR pFileName)
+{
+    DWORD dwSize, dwError;
+    LPWSTR pszCmd;
+    WCHAR Buffer[32];
+
+    dwSize = (wcslen(pFileName) + 38 + 1) * sizeof(WCHAR);
+    pszCmd = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (!pszCmd)
+        return 0;
+
+    StringCbPrintfW(pszCmd, dwSize, L"open \"%s\" type waveaudio alias SoundFile", pFileName);
+
+    dwError = mciSendStringW(pszCmd, NULL, 0, NULL);
+    if (dwError != 0)
+    {
+        HeapFree(GetProcessHeap(), 0, pszCmd);
+        return 0;
+    }
+
+    dwError = mciSendStringW(L"set SoundFile time format milliseconds", NULL, 0, NULL);
+    if (dwError == 0)
+    {
+        dwError = mciSendStringW(L"status SoundFile length", Buffer, _countof(Buffer), NULL);
+    }
+
+    mciSendStringW(L"close SoundFile", NULL, 0, NULL);
+    HeapFree(GetProcessHeap(), 0, pszCmd);
+
+    if (dwError != 0)
+        return 0;
+
+    return wcstoul(Buffer, NULL, 10);
+}
+
+static
+BOOL
+StartSoundTest(HWND hwndDlg, LPCWSTR pszSound)
+{
+    ULONG uDuration;
+
+    uDuration = GetSoundDuration(pszSound);
+    if (uDuration == 0)
+        return FALSE;
+
+    if (PlaySoundW(pszSound, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT))
+    {
+        SetTimer(hwndDlg, ID_SOUND_TEST_TIMER, uDuration, NULL);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static
+BOOL
+StopSoundTest(HWND hwndDlg)
+{
+    /* Check if the sound is playing */
+    if (KillTimer(hwndDlg, ID_SOUND_TEST_TIMER))
+    {
+        /* Stop the sound */
+        PlaySoundW(NULL, NULL, SND_ASYNC);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* Sounds property page dialog callback */
 INT_PTR
 CALLBACK
@@ -1140,9 +1215,20 @@ SoundsDlgProc(HWND hwndDlg,
 
             pGlobalData->NumWavOut = waveOutGetNumDevs();
 
-            SendMessageW(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
-                         BM_SETIMAGE, (WPARAM)IMAGE_ICON,
-                         (LPARAM)(HANDLE)LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_PLAY_ICON)));
+            pGlobalData->hPlayIcon = LoadImageW(hApplet,
+                                                MAKEINTRESOURCEW(IDI_PLAY_ICON),
+                                                IMAGE_ICON,
+                                                32,
+                                                32,
+                                                LR_DEFAULTCOLOR);
+            pGlobalData->hStopIcon = LoadImageW(hApplet,
+                                                MAKEINTRESOURCEW(IDI_STOP_ICON),
+                                                IMAGE_ICON,
+                                                32,
+                                                32,
+                                                LR_DEFAULTCOLOR);
+            SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
 
             pGlobalData->hSoundsImageList = InitImageList(IDI_SOUND_SECTION,
                                                           IDI_SOUND_ASSIGNED,
@@ -1203,6 +1289,14 @@ SoundsDlgProc(HWND hwndDlg,
                 case IDC_PLAY_SOUND:
                 {
                     LRESULT lIndex;
+
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                        break;
+                    }
+
                     lIndex = ComboBox_GetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
                     if (lIndex == CB_ERR)
                     {
@@ -1212,7 +1306,11 @@ SoundsDlgProc(HWND hwndDlg,
                     lIndex = ComboBox_GetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                     if (lIndex != CB_ERR)
                     {
-                        PlaySoundW((PWCHAR)lIndex, NULL, SND_FILENAME);
+                        if (StartSoundTest(hwndDlg, (LPWSTR)lIndex))
+                        {
+                            SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                                IMAGE_ICON, (LPARAM)pGlobalData->hStopIcon);
+                        }
                     }
                     break;
                 }
@@ -1313,12 +1411,20 @@ SoundsDlgProc(HWND hwndDlg,
         }
         case WM_DESTROY:
         {
+            StopSoundTest(hwndDlg);
             FreeSoundFiles(hwndDlg);
             FreeSoundProfiles(hwndDlg);
             FreeAppMap(pGlobalData);
             FreeLabelMap(pGlobalData);
             if (pGlobalData->hSoundsImageList)
                 ImageList_Destroy(pGlobalData->hSoundsImageList);
+
+            if (pGlobalData->hStopIcon)
+                DestroyIcon(pGlobalData->hStopIcon);
+
+            if (pGlobalData->hPlayIcon)
+                DestroyIcon(pGlobalData->hPlayIcon);
+
             HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
         }
@@ -1336,10 +1442,26 @@ SoundsDlgProc(HWND hwndDlg,
                     ApplyChanges(hwndDlg);
                     break;
                 }
+                case PSN_KILLACTIVE:
+                {
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                    }
+
+                    break;
+                }
                 case TVN_SELCHANGED:
                 {
                     LPNMTREEVIEWW nm = (LPNMTREEVIEWW)lParam;
                     LRESULT lCount, lIndex, lResult;
+
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                    }
 
                     pLabelContext = (PLABEL_CONTEXT)nm->itemNew.lParam;
                     if (pLabelContext == NULL)
@@ -1398,8 +1520,19 @@ SoundsDlgProc(HWND hwndDlg,
                     break;
                 }
             }
+            break;
         }
-        break;
+        case WM_TIMER:
+        {
+            if (wParam == ID_SOUND_TEST_TIMER)
+            {
+                KillTimer(hwndDlg, ID_SOUND_TEST_TIMER);
+                SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                    IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+            }
+
+            break;
+        }
     }
 
     return FALSE;
