@@ -182,7 +182,7 @@ BEGIN
     IDS_LAYOUTTEXT "Domyślnym językiem i metodą wprowadzania tekstu jest układ klawiatury: %s"
     IDS_DATETIMETITLE "Data i godzina"
     IDS_DATETIMESUBTITLE "Ustaw prawidłową datę i godzinę."
-    IDS_PROCESSTITLE "Zakończenie instalacji"
+    IDS_PROCESSTITLE "Kończenie instalacji"
     IDS_PROCESSSUBTITLE "Poczekaj, aż Instalator wykona ostatnie kroki."
     IDS_THEMESELECTIONTITLE "Wygląd"
     IDS_THEMESELECTIONSUBTITLE "Wybierz motyw, który preferujesz."
