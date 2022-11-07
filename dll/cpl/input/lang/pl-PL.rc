@@ -1,10 +1,10 @@
 /*
- *    Translated by Caemyr - Olaf Siejka (Jan, March 2008)
- *    Translated by - Piotr Hetnarowicz (November 2022)
- *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011)
+ * PROJECT:     ReactOS Language Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008-2013 Olaf Siejka <caemyr@openmailbox.org>
+ *              Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2022 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
