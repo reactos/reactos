@@ -15,7 +15,7 @@ CAPTION "Ustawienia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Domyślny &język wprowadzania", -1, 5, 5, 246, 55
-    LTEXT "Wybierz jeden z zainstalowanych języków, który ma być używany podczas uruchamiania komputera.", -1, 15, 15, 230, 23
+    LTEXT "Wybierz jeden z zainstalowanych języków wprowadzania, który ma być używany podczas uruchamiania komputera.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Z&ainstalowane usługi", -1, 5, 65, 246, 125
     LTEXT "Wybierz usługi dla kadego używanego języka z listy. Listę można modyfikować przyciskami Dodaj i Usuń.", -1, 15, 78, 230, 25
