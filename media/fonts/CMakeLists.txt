@@ -11,10 +11,6 @@ list(APPEND FONT_FILES
     courbd.ttf
     courbi.ttf
     couri.ttf
-    DejaVuSansMono-Bold.ttf
-    DejaVuSansMono-BoldOblique.ttf
-    DejaVuSansMono-Oblique.ttf
-    DejaVuSansMono.ttf
     framd.ttf
     framdit.ttf
     FreeSans.ttf
