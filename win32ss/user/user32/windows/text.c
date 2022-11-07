@@ -148,13 +148,25 @@ LPSTR
 WINAPI
 CharPrevA(LPCSTR start, LPCSTR ptr)
 {
-    while (*start && (start < ptr))
+    if (ptr > start)
     {
-        LPCSTR next = CharNextA(start);
-        if (next >= ptr) break;
-        start = next;
+        --ptr;
+        if (gpsi->dwSRVIFlags & SRVINFO_DBCSENABLED)
+        {
+            LPCSTR ch;
+            BOOL dbl = FALSE;
+
+            for (ch = ptr - 1; ch >= start; --ch)
+            {
+                if (!IsDBCSLeadByte(*ch))
+                    break;
+
+                dbl = !dbl;
+            }
+            if (dbl) --ptr;
+        }
     }
-    return (LPSTR)start;
+    return (LPSTR)ptr;
 }
 
 /*
@@ -164,13 +176,22 @@ LPSTR
 WINAPI
 CharPrevExA(WORD codepage, LPCSTR start, LPCSTR ptr, DWORD flags)
 {
-    while (*start && (start < ptr))
+    if (ptr > start)
     {
-        LPCSTR next = CharNextExA(codepage, start, flags);
-        if (next >= ptr) break;
-        start = next;
+        LPCSTR ch;
+        BOOL dbl = FALSE;
+
+        --ptr;
+        for (ch = ptr - 1; ch >= start; --ch)
+        {
+            if (!IsDBCSLeadByteEx(codepage, *ch))
+                break;
+
+            dbl = !dbl;
+        }
+        if (dbl) --ptr;
     }
-    return (LPSTR)start;
+    return (LPSTR)ptr;
 }
 
 /*
