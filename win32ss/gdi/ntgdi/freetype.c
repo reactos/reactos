@@ -1067,9 +1067,6 @@ IntLoadSystemFonts(VOID)
     }
 }
 
-static FT_Error
-IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
-
 /* NOTE: If nIndex < 0 then return the number of charsets. */
 UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
 {
