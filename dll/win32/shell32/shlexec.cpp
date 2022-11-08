@@ -593,7 +593,6 @@ static LPWSTR SHELL_BuildEnvW( const WCHAR *path )
     return new_env;
 }
 
-
 /***********************************************************************
  *           SHELL_TryAppPathW    [Internal]
  *
@@ -604,9 +603,9 @@ static LPWSTR SHELL_BuildEnvW( const WCHAR *path )
  */
 static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
 {
-    HKEY hkApp = 0;
+    HKEY hkApp = NULL;
     WCHAR buffer[1024];
-    LONG len;
+    DWORD len, dwType;
     LONG res;
     BOOL found = FALSE;
 
@@ -625,14 +624,17 @@ static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
     }
 
     len = MAX_PATH * sizeof(WCHAR);
-    res = RegQueryValueW(hkApp, NULL, lpResult, &len);
-    if (res) goto end;
+    res = SHRegQueryValueExW(hkApp, NULL, NULL, &dwType, (LPBYTE)lpResult, &len);
+    if (res != ERROR_SUCCESS || dwType != REG_SZ)
+        goto end;
+
     found = TRUE;
 
     if (env)
     {
-        DWORD count = sizeof(buffer);
-        if (!RegQueryValueExW(hkApp, L"Path", NULL, NULL, (LPBYTE)buffer, &count) && buffer[0])
+        len = sizeof(buffer);
+        res = SHRegQueryValueExW(hkApp, L"Path", NULL, &dwType, (LPBYTE)buffer, &len);
+        if (res == ERROR_SUCCESS && dwType == REG_SZ && buffer[0])
             *env = SHELL_BuildEnvW(buffer);
     }
 
