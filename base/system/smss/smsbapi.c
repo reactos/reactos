@@ -23,7 +23,7 @@ const PCSTR SmpSubSystemNames[] =
     "Windows GUI",
     "Windows CUI",
     NULL,
-    "OS/2 CUI"
+    "OS/2 CUI",
     NULL,
     "Posix CUI"
 };
@@ -158,7 +158,7 @@ SmpSbCreateSession(IN PVOID Reserved,
         if (!SubSysName)
         {
             SubSysName = SubSysTypeName;
-            sprintf(SubSysTypeName, "Type 0x%08x", SubSystemType);
+            sprintf(SubSysTypeName, "Type 0x%08lx", SubSystemType);
         }
         DPRINT1("SMSS: %s SubSystem not found (either not started or destroyed).\n", SubSysName);
 #endif
