@@ -1349,10 +1349,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
     DPRINT("CharSet: %d\n", FontGDI->CharSet);
 
-    IntLockFreeType();
-    IntRequestFontSize(NULL, FontGDI, 0, 0);
-    IntUnLockFreeType();
-
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
     Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
@@ -3512,6 +3508,13 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     FT_WinFNT_HeaderRec WinFNT;
     LONG Ascent, Descent, Sum, EmHeight64;
 
+    if (FontGDI->Magic == FONTGDI_MAGIC &&
+        FontGDI->lfHeight == lfHeight &&
+        FontGDI->lfWidth == lfWidth)
+    {
+        return 0; /* Cached */
+    }
+
     lfWidth = abs(lfWidth);
     if (lfHeight == 0)
     {
@@ -3550,7 +3553,9 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->EmHeight           = FontGDI->tmHeight - FontGDI->tmInternalLeading;
         FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
         FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
-        FontGDI->Magic = FONTGDI_MAGIC;
+        FontGDI->Magic              = FONTGDI_MAGIC;
+        FontGDI->lfWidth            = lfWidth;
+        FontGDI->lfHeight           = lfHeight;
         return 0;
     }
 
@@ -3607,6 +3612,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
     FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
     FontGDI->Magic = FONTGDI_MAGIC;
+    FontGDI->lfWidth = lfWidth;
+    FontGDI->lfHeight = lfHeight;
 
     EmHeight64 = (FontGDI->EmHeight << 6);
 
@@ -5089,10 +5096,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         /* update FontObj if lowest penalty */
         if (Otm)
         {
-            IntLockFreeType();
-            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-            IntUnLockFreeType();
-
             OtmSize = IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
             if (!OtmSize)
                 continue;
@@ -5262,10 +5265,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         UNICODE_STRING Name;
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
         PSHARED_FACE SharedFace = FontGdi->SharedFace;
-
-        IntLockFreeType();
-        IntRequestFontSize(NULL, FontGdi, pLogFont->lfWidth, pLogFont->lfHeight);
-        IntUnLockFreeType();
 
         TextObj->TextFace[0] = UNICODE_NULL;
         if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
