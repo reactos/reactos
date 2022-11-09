@@ -60,7 +60,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Instalador Wine Gecko "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "O ReactOS não consegue encontrar o pacote Wine Gecko que é necessário para que os aplicativos HTML funcionem correctamente. O ReactOS pode fazer o download automático e instalar por si.",
+    CONTROL "O ReactOS não consegue encontrar o pacote Wine Gecko que é necessário para que as aplicações HTML funcionem correctamente. O ReactOS pode fazer o download automático e instalar por si.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
@@ -72,7 +72,7 @@ BEGIN
     IDS_CPLSYSTEMNAME "Adicionar/Remover Programas"
     IDS_CPLSYSTEMDESCRIPTION "Configura programas e cria atalhos."
     IDS_CREATE_SHORTCUT "Criar Atalho"
-    IDS_ERROR_NOT_FOUND "O arquivo %s não foi encontrado."
+    IDS_ERROR_NOT_FOUND "O ficheiro %s não foi encontrado."
 END
 
 STRINGTABLE
@@ -87,5 +87,5 @@ BEGIN
     IDS_NO_MEMORY "A memória não pode ser alocada!"
     IDS_NO_DIRECTORY "Sem directoria!"
     IDS_INVALID_PATH "O caminho é invalido!"
-    IDS_INVALID_NAME "O nome do atalho contém caracteres inválidos para nomes de arquivo ou é muito longo."
+    IDS_INVALID_NAME "O nome do atalho contém caracteres inválidos para nomes de ficheiro ou é muito longo."
 END
