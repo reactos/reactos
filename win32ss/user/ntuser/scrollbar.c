@@ -497,6 +497,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    static DWORD PrevPos[3] = { 0 };
    static DWORD PrevMax[3] = { 0 };
    static INT PrevAction[3] = { 0 };
+   BOOL bVisible;
 
    ASSERT_REFS_CO(Window);
 
@@ -663,7 +664,24 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
       if ( action & SA_SSI_SHOW )
          if ( co_UserShowScrollBar(Window, nBar, TRUE, TRUE) )
             return lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos; /* SetWindowPos() already did the painting */
-      if (bRedraw)
+
+      switch (nBar)
+      {
+         case SB_HORZ:
+            bVisible = (Window->style & WS_HSCROLL);
+            break;
+         case SB_VERT:
+            bVisible = (Window->style & WS_VSCROLL);
+            break;
+         case SB_CTL:
+            bVisible = (Window->style & WS_VISIBLE);
+            break;
+         default:
+            bVisible = FALSE;
+            break;
+      }
+
+      if (bRedraw && bVisible)
       {
          if (!(Info->fMask & SIF_THEMED)) /* Not Using Themes */
          {
