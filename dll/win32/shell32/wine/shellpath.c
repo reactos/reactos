@@ -334,7 +334,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             {
                 if (*pchTemp == L'.')
                 {
-                    pchDot = pchTemp;
+                    pchDot = pchTemp; /* Remember the last position */
 
                     /* Clear szDotExtension */
                     cchDotExtension = 0;
@@ -345,8 +345,6 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                 {
                     if (cchDotExtension < 1 + 3)
                         szDotExtension[cchDotExtension++] = *pchTemp;
-                    else
-                        break;
                 }
                 else
                 {
@@ -354,7 +352,6 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                         szTitle[cchTitle++] = *pchTemp;
                 }
 
-                ++cchTitle;
                 ++pchTemp;
             }
 
