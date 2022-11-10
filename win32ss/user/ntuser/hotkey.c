@@ -305,9 +305,9 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 
 
 /*
- * DefWndGetHotKey
+ * DefWndGetHotKey --- GetHotKey message support
  *
- * GetHotKey message support
+ * Win: DWP_GetHotKey
  */
 UINT FASTCALL
 DefWndGetHotKey(PWND pWnd)
@@ -332,9 +332,9 @@ DefWndGetHotKey(PWND pWnd)
 }
 
 /*
- * DefWndSetHotKey
+ * DefWndSetHotKey --- SetHotKey message support
  *
- * SetHotKey message support
+ * Win: DWP_SetHotKey
  */
 INT FASTCALL
 DefWndSetHotKey(PWND pWnd, WPARAM wParam)
