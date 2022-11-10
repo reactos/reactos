@@ -632,8 +632,8 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
     /* GetVolumeInformation requires a root path */
     if (!GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0))
     {
-        /* I don't want to return FALSE if GetVolumeInformationW fails. See below */
-        cchMaxFileName = MSDOS_8DOT3_LEN + 1;
+        /* Don't return FALSE when GetVolumeInformationW fails. */
+        return TRUE;
     }
 
     return cchMaxFileName > MSDOS_8DOT3_LEN;
