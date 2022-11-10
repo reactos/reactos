@@ -218,7 +218,24 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         bLFN = IsLFNDriveW(szRoot);
         if (!bLFN)
         {
-            /* FIXME: Support non-LFN */
+            PWCHAR pch;
+            for (pch = pchTemp; *pch != UNICODE_NULL; ++pch)
+            {
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
+#define VALID_SHORT_PATH_CHAR_CLASSES ( \
+    PATH_CHAR_CLASS_DOT | \
+    PATH_CHAR_CLASS_BACKSLASH | \
+    PATH_CHAR_CLASS_COLON | \
+    PATH_CHAR_CLASS_OTHER_VALID \
+)
+                if (!PathIsValidCharW(*pch, VALID_SHORT_PATH_CHAR_CLASSES))
+                {
+                    *pch = L'_';
+                }
+            }
         }
 
         StringCchCopyW(pszPath, MAX_PATH, szRoot);
@@ -227,13 +244,32 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     else /* UNC path: Begins with double backslash */
     {
         bLFN = IsLFNDriveW(pchTemp);
-        if (!bLFN)
+        if (bLFN)
         {
-            /* FIXME: Support non-LFN */
+            pszPath[2] = UNICODE_NULL; /* Cut off */
+            cchPathLeft -= (2 + 1);
+            pchTemp += 2;
         }
-        pszPath[2] = UNICODE_NULL; /* Cut off */
-        cchPathLeft -= (2 + 1);
-        pchTemp += 2;
+        else
+        {
+            PWCHAR pchSlash = StrChrW(&pszPath[2], L'\\');
+            if (pchSlash)
+                pchSlash = StrChrW(pchSlash + 1, L'\\');
+
+            if (pchSlash)
+            {
+                *(pchSlash + 1) = UNICODE_NULL;
+                pchTemp += pchSlash - pszPath;
+                cchPathLeft -= (INT)(SIZE_T)(pchSlash - pszPath) + 1;
+            }
+            else
+            {
+                bLFN = TRUE;
+                pszPath[2] = UNICODE_NULL;
+                cchPathLeft -= 3;
+                pchTemp += 2;
+            }
+        }
     }
     /* Now pszPath is a root-like path or an empty string. */
 
@@ -283,11 +319,63 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 
         pchPath = &pszPath[lstrlenW(pszPath)];
 
-        if (!bLFN)
+        if (!bLFN) /* Not LFN? */
         {
-            /* FIXME: Support non-LFN */
+            /* Copy MS-DOS 8.3 filename */
+            PWCHAR pchDot = NULL;
+            INT ich;
+            WCHAR szTitle[8 + 1] = L"";
+            INT cchTitle = 0;
+            WCHAR szDotExtension[1 + 3 + 1] = L"";
+            INT cchDotExtension = 0;
+
+            /* Copy the component to szTitle and szDotExtension... */
+            while (*pchTemp && *pchTemp != L'\\')
+            {
+                if (*pchTemp == L'.')
+                {
+                    pchDot = pchTemp;
+
+                    /* Clear szDotExtension */
+                    cchDotExtension = 0;
+                    ZeroMemory(szDotExtension, sizeof(szDotExtension));
+                }
+
+                if (pchDot)
+                {
+                    if (cchDotExtension < 1 + 3)
+                        szDotExtension[cchDotExtension++] = *pchTemp;
+                    else
+                        break;
+                }
+                else
+                {
+                    if (cchTitle < 8)
+                        szTitle[cchTitle++] = *pchTemp;
+                }
+
+                ++cchTitle;
+                ++pchTemp;
+            }
+
+            /* Add file title 'szTitle' to pchPath */
+            for (ich = 0; szTitle[ich] && cchPathLeft > 0; ++ich)
+            {
+                *pchPath++ = szTitle[ich];
+                --cchPathLeft;
+            }
+
+            /* Add file extension 'szDotExtension' to pchPath */
+            if (pchDot)
+            {
+                for (ich = 0; szDotExtension[ich] && cchPathLeft > 0; ++ich)
+                {
+                    *pchPath++ = szDotExtension[ich];
+                    --cchPathLeft;
+                }
+            }
         }
-        else
+        else /* LFN */
         {
             /* Copy the component up to the next separator */
             while (*pchTemp != UNICODE_NULL && *pchTemp != L'\\' && cchPathLeft > 0)
