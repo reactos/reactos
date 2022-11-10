@@ -623,7 +623,7 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
         }
     }
 
-#define MSDOS_8DOT3_LEN 12 /* MS-DOS 8.3 == length 12 */
+#define MSDOS_8DOT3_LEN 12 /* MS-DOS 8.3 filename == length 12 */
 
     /* GetVolumeInformation requires a root path */
     if (!GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0))
