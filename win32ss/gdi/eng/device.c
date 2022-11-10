@@ -99,6 +99,36 @@ EngpHasVgaDriver(
 }
 
 /*
+ * Add a device to gpGraphicsDeviceFirst/gpGraphicsDeviceLast list (if not already present).
+ */
+_Requires_lock_held_(ghsemGraphicsDeviceList)
+static
+VOID
+EngpLinkGraphicsDevice(
+    _In_ PGRAPHICS_DEVICE pToAdd)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+
+    TRACE("EngLinkGraphicsDevice(%p)\n", pToAdd);
+
+    /* Search if device is not already linked */
+    for (pGraphicsDevice = gpGraphicsDeviceFirst;
+         pGraphicsDevice;
+         pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
+    {
+        if (pGraphicsDevice == pToAdd)
+            return;
+    }
+
+    pToAdd->pNextGraphicsDevice = NULL;
+    if (gpGraphicsDeviceLast)
+        gpGraphicsDeviceLast->pNextGraphicsDevice = pToAdd;
+    gpGraphicsDeviceLast = pToAdd;
+    if (!gpGraphicsDeviceFirst)
+        gpGraphicsDeviceFirst = pToAdd;
+}
+
+/*
  * Remove a device from gpGraphicsDeviceFirst/gpGraphicsDeviceLast list.
  */
 _Requires_lock_held_(ghsemGraphicsDeviceList)
@@ -567,12 +597,7 @@ EngpRegisterGraphicsDevice(
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
     /* Insert the device into the global list */
-    pGraphicsDevice->pNextGraphicsDevice = NULL;
-    if (gpGraphicsDeviceLast)
-        gpGraphicsDeviceLast->pNextGraphicsDevice = pGraphicsDevice;
-    gpGraphicsDeviceLast = pGraphicsDevice;
-    if (!gpGraphicsDeviceFirst)
-        gpGraphicsDeviceFirst = pGraphicsDevice;
+    EngpLinkGraphicsDevice(pGraphicsDevice);
 
     /* Increment the device number */
     giDevNum++;
