@@ -260,14 +260,14 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
 
             if (pchSlash)
             {
-                *(pchSlash + 1) = UNICODE_NULL;
+                *(pchSlash + 1) = UNICODE_NULL; /* Cut off */
                 pchTemp += pchSlash - pszPath;
                 cchPathLeft -= (INT)(SIZE_T)(pchSlash - pszPath) + 1;
             }
             else
             {
                 bLFN = TRUE;
-                pszPath[2] = UNICODE_NULL;
+                pszPath[2] = UNICODE_NULL; /* Cut off */
                 cchPathLeft -= 2;
                 pchTemp += 2;
             }
