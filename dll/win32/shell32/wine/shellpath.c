@@ -268,7 +268,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             {
                 bLFN = TRUE;
                 pszPath[2] = UNICODE_NULL;
-                cchPathLeft -= 3;
+                cchPathLeft -= 2;
                 pchTemp += 2;
             }
         }
