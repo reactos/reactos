@@ -465,9 +465,9 @@ EngpRegisterGraphicsDevice(
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
     /* Allocate a GRAPHICS_DEVICE structure */
-    pGraphicsDevice = ExAllocatePoolWithTag(PagedPool,
-                                            sizeof(GRAPHICS_DEVICE),
-                                            GDITAG_GDEVICE);
+    pGraphicsDevice = ExAllocatePoolZero(PagedPool,
+                                         sizeof(GRAPHICS_DEVICE),
+                                         GDITAG_GDEVICE);
     if (!pGraphicsDevice)
     {
         ERR("ExAllocatePoolWithTag failed\n");
@@ -562,15 +562,6 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Buffer,
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
-
-    /* Initialize the pdevmodeInfo list */
-    pGraphicsDevice->pdevmodeInfo = NULL;
-
-    // FIXME: initialize state flags
-    pGraphicsDevice->StateFlags = 0;
-
-    /* Create the mode list */
-    pGraphicsDevice->pDevModeList = NULL;
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
