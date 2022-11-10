@@ -103,6 +103,13 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     return TRUE;
 }
 
+BOOL APIENTRY IsRemovableDrive(DWORD iDrive)
+{
+    WCHAR szRoot[] = L"C:\\";
+    szRoot[0] = (WCHAR)(L'A' + iDrive);
+    return GetDriveTypeW(szRoot) == DRIVE_REMOVABLE;
+}
+
 /*
 	########## Combining and Constructing paths ##########
 */
@@ -151,7 +158,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     INT iDrive, cchPathLeft;
     WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
     PWCHAR pchTemp = szTemp, pchPath;
-    BOOL bLFN = TRUE;
+    BOOL bLFN;
 
     TRACE("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszDir), dwFlags);
 
@@ -208,9 +215,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
                 ++pchTemp;
         }
 
-#if 0 // FIXME: IsLFNDriveW has a bug
         bLFN = IsLFNDriveW(szRoot);
-#endif
         if (!bLFN)
         {
             /* FIXME: Support non-LFN */
@@ -221,9 +226,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     }
     else /* UNC path: Begins with double backslash */
     {
-#if 0 // FIXME: IsLFNDriveW has a bug
         bLFN = IsLFNDriveW(pchTemp);
-#endif
         if (!bLFN)
         {
             /* FIXME: Support non-LFN */
@@ -490,11 +493,13 @@ BOOL WINAPI PathFileExistsAW (LPCVOID lpszPath)
  */
 BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
 {
-    DWORD	fnlen;
-
-    if (!GetVolumeInformationA(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
-	return FALSE;
-    return fnlen > 12;
+    WCHAR szBuffW[MAX_PATH], *pszW = NULL;
+    if (lpszPath)
+    {
+        SHAnsiToUnicode(lpszPath, szBuffW, _countof(szBuffW));
+        pszW = szBuffW;
+    }
+    return IsLFNDriveW(pszW);
 }
 
 /*************************************************************************
@@ -502,11 +507,40 @@ BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
  */
 BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
 {
-    DWORD	fnlen;
+    DWORD cchMaxFileName, iDrive;
+    WCHAR szRoot[MAX_PATH];
 
-    if (!GetVolumeInformationW(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
-	return FALSE;
-    return fnlen > 12;
+    if (lpszPath == NULL || lpszPath[0] == UNICODE_NULL)
+    {
+        szRoot[0] = 0;
+        GetWindowsDirectoryW(szRoot, _countof(szRoot));
+        lpszPath = szRoot;
+    }
+
+    if (PathIsUNCW(lpszPath))
+    {
+        StringCchCopyW(szRoot, _countof(szRoot), lpszPath);
+        PathStripToRootW(szRoot);
+
+        if (StrChrW(&szRoot[2], TEXT('\\')) == NULL)
+            return TRUE; /* LFN */
+
+        StringCchCatW(szRoot, _countof(szRoot), L"\\"); /* Add a backslash */
+    }
+    else /* Assuming absolute path... */
+    {
+        iDrive = ((lpszPath[0] - L'A') & 0x1F);
+        PathBuildRootW(szRoot, iDrive);
+
+        if (!IsRemovableDrive(iDrive))
+        {
+            /* FIXME: Cache correctly */
+        }
+    }
+
+    cchMaxFileName = 13;
+    GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0);
+    return cchMaxFileName > 12; /* MS-DOS 8.3 == length 12 */
 }
 
 /*************************************************************************
