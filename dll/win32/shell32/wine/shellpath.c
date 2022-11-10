@@ -538,9 +538,14 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
         }
     }
 
-    cchMaxFileName = 13;
+#define MSDOS_8DOT3_LEN 12 /* MS-DOS 8.3 == length 12 */
+
+    /* I don't want to return FALSE if GetVolumeInformationW fails. See below */
+    cchMaxFileName = MSDOS_8DOT3_LEN + 1;
+
+    /* GetVolumeInformation requires a root path */
     GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0);
-    return cchMaxFileName > 12; /* MS-DOS 8.3 == length 12 */
+    return cchMaxFileName > MSDOS_8DOT3_LEN;
 }
 
 /*************************************************************************
