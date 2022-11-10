@@ -40,6 +40,7 @@
 #include <strsafe.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <assert.h>
 
 #include <shlwapi_undoc.h>
 #include <shellutils.h>
@@ -106,6 +107,7 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 BOOL APIENTRY IsRemovableDrive(DWORD iDrive)
 {
     WCHAR szRoot[] = L"C:\\";
+    assert(L'A' + iDrive <= L'Z');
     szRoot[0] = (WCHAR)(L'A' + iDrive);
     return GetDriveTypeW(szRoot) == DRIVE_REMOVABLE;
 }
@@ -612,8 +614,10 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
 
         StringCchCatW(szRoot, _countof(szRoot), L"\\"); /* Add a backslash */
     }
-    else /* Assuming absolute path... */
+    else
     {
+        assert(!PathIsRelativeW(lpszPath)); /* Assuming absolute path... */
+
         iDrive = ((lpszPath[0] - L'A') & 0x1F);
         PathBuildRootW(szRoot, iDrive);
 
