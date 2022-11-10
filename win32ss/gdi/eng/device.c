@@ -152,6 +152,10 @@ EngpUnlinkGraphicsDevice(
         }
         else
         {
+            /* At first, link again associated VGA Device */
+            if (pGraphicsDevice->pVgaDevice)
+                EngpLinkGraphicsDevice(pGraphicsDevice->pVgaDevice);
+
             /* We need to remove current device */
             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice;
 
@@ -247,7 +251,7 @@ EngpUpdateGraphicsDeviceList(VOID)
         bFoundNewDevice = TRUE;
 
         /* Set the first one as primary device */
-        if (!gpPrimaryGraphicsDevice)
+        if (!gpPrimaryGraphicsDevice || EngpHasVgaDriver(gpPrimaryGraphicsDevice))
         {
             gpPrimaryGraphicsDevice = pGraphicsDevice;
             TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
@@ -256,6 +260,18 @@ EngpUpdateGraphicsDeviceList(VOID)
 
     /* Close the device map registry key */
     ZwClose(hkey);
+
+    /* Can we link VGA device to primary device? */
+    if (gpPrimaryGraphicsDevice &&
+        gpVgaGraphicsDevice &&
+        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
+        !gpPrimaryGraphicsDevice->pVgaDevice)
+    {
+        /* Yes. Remove VGA device from global list, and attach it to primary device */
+        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
+        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
+        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
+    }
 
     if (bFoundNewDevice && gbBaseVideo)
     {
