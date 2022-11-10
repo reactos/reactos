@@ -252,7 +252,7 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
         }
         else
         {
-            PWCHAR pchSlash = StrChrW(&pszPath[2], L'\\');
+            PWCHAR pchSlash = StrChrW(pszPath + 2, L'\\');
             if (pchSlash)
                 pchSlash = StrChrW(pchSlash + 1, L'\\');
 
@@ -607,7 +607,7 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
         StringCchCopyW(szRoot, _countof(szRoot), lpszPath);
         PathStripToRootW(szRoot);
 
-        if (StrChrW(&szRoot[2], TEXT('\\')) == NULL)
+        if (StrChrW(szRoot + 2, L'\\') == NULL)
             return TRUE; /* LFN */
 
         StringCchCatW(szRoot, _countof(szRoot), L"\\"); /* Add a backslash */
