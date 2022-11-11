@@ -70,7 +70,6 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Shell Dl
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Terminal",0x00000000,"Courier New"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Times",0x00000000,"Times New Roman"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Tms Rmn",0x00000000,"Times New Roman"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Ubuntu",0x00000000,"Tahoma"
 
 [Font.CJK.Reg]
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Courier",0x00000000,"Courier New"
@@ -89,7 +88,6 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Terminal",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Times",0x00000000,"Times New Roman"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Tms Rmn",0x00000000,"Times New Roman"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Trebuchet MS",0x00000000,"Droid Sans Fallback"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Ubuntu",0x00000000,"Droid Sans Fallback"
 
 [Font.Unicode.Reg]
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Courier",0x00000000,"Courier New"

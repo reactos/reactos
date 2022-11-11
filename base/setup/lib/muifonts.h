@@ -122,7 +122,6 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Ubuntu",                 L"Tahoma" },
     { NULL, NULL }
 };
 
@@ -169,7 +168,6 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
     { L"Trebuchet MS",           L"Droid Sans Fallback" },
-    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { CSF_LocalName0,            L"Droid Sans Fallback" },
     { CSF_LocalName1,            L"Droid Sans Fallback" },
@@ -222,7 +220,6 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",         L"Times New Roman" },
     { L"Trebuchet MS",    L"Droid Sans Fallback" },
-    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { CTF_LocalName0,     L"Droid Sans Fallback" },
     { CTF_LocalName1,     L"Droid Sans Fallback" },
@@ -273,7 +270,6 @@ MUI_SUBFONT JapaneseFonts[] =
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",         L"Times New Roman" },
     { L"Trebuchet MS",    L"Droid Sans Fallback" },
-    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { JF_LocalName0,      L"Droid Sans Fallback" },
     { JF_LocalName1,      L"Droid Sans Fallback" },
@@ -328,7 +324,6 @@ MUI_SUBFONT KoreanFonts[] =
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",         L"Times New Roman" },
     { L"Trebuchet MS",    L"Droid Sans Fallback" },
-    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { KF_LocalName0,      L"Droid Sans Fallback" },
     { KF_LocalName1,      L"Droid Sans Fallback" },
