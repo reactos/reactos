@@ -338,6 +338,39 @@ Quit:
     return hwndUI;
 }
 
+/* Win: ImeBroadCastMsg */
+static BOOL ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    ULONG cHwnd;
+    PWND pWnd;
+    HWND hWnd, *phwndList, *phwnd, *phwndLast;
+  
+    cHwnd = UserBuildHwndList(NULL, NULL, FALSE, GetCurrentThreadId(), &phwndList);
+    if (!cHwnd)
+        return FALSE;
+
+    phwndLast = &phwndList[cHwnd];
+    for (phwnd = phwndList; phwnd < phwndLast; ++phwnd)
+    {
+        hWnd = *phwnd;
+        if (hWnd == NULL)
+            continue;
+        pWnd = ValidateHandleNoErr(hWnd, TYPE_WINDOW);
+        if (!pWnd || pWnd->fnid != FNID_IME)
+            continue;
+        if ((pWnd->state2 & WNDS2_INDESTROY) || (pWnd->state & WNDS_DESTROYED))
+            continue;
+
+        if (uMsg == WM_DESTROY)
+            DestroyWindow(hWnd);
+        else
+            SendMessageW(hWnd, uMsg, wParam, lParam);
+    }
+
+    HeapFree(GetProcessHeap(), 0, phwndList);
+    return TRUE;
+}
+
 /* Initializes the default IME window. */
 /* Win: ImeWndCreateHandler */
 static INT ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
@@ -392,6 +425,9 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
     HWND hwndUI, hwndIMC = pimeui->hwndIMC;
+
+    if (pimeui->fDefault)
+        ImeWnd_BroadcastMsg(pimeui, WM_IME_SELECT, wParam, lParam);
 
     if (wParam)
     {
@@ -929,6 +965,16 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+/* WM_NCDESTROY handler of the default IME window */
+static VOID
+ImeWnd_OnNCDestroy(PIMEUI pimeui)
+{
+    if (pimeui->fDefault)
+        ImeWnd_BroadcastMsg(pimeui, WM_DESTROY, 0, 0);
+
+    HeapFree(GetProcessHeap(), 0, pimeui);
+}
+
 /* The window procedure of the default IME window */
 /* Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
@@ -1029,7 +1075,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             break;
 
         case WM_NCDESTROY:
-            HeapFree(GetProcessHeap(), 0, pimeui);
+            ImeWnd_OnNCDestroy(pimeui);
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             break;
 

@@ -2030,5 +2030,61 @@ DisableProcessWindowsGhosting(VOID)
     NtUserxEnableProcessWindowGhosting(FALSE);
 }
 
-/* EOF */
+/* Win: BuildHwndList */
+DWORD
+APIENTRY
+UserBuildHwndList(
+    HDESK hDesktop,
+    HWND hwndParent,
+    BOOL bChildren,
+    DWORD dwThreadId,
+    HWND **pphwndList)
+{
+    NTSTATUS Status;
+    DWORD i, cHwnd = 64;
+    HWND *phwndList;
 
+    phwndList = LocalAlloc(LMEM_FIXED, cHwnd * sizeof(HWND));
+    if (phwndList == NULL)
+        return 0;
+
+    Status = NtUserBuildHwndList(hDesktop,
+                                 hwndParent,
+                                 bChildren,
+                                 dwThreadId,
+                                 cHwnd,
+                                 phwndList,
+                                 &cHwnd);
+
+    i = 0;
+    while (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        LocalFree(phwndList);
+
+        if (i++ == 10)
+            return 0;
+
+        phwndList = LocalAlloc(LMEM_FIXED, cHwnd * sizeof(HWND));
+        if (phwndList == NULL)
+            return 0;
+
+        Status = NtUserBuildHwndList(hDesktop,
+                                     hwndParent,
+                                     bChildren,
+                                     dwThreadId,
+                                     cHwnd,
+                                     phwndList,
+                                     &cHwnd);
+    }
+
+    if (!NT_SUCCESS(Status) || cHwnd <= 1)
+    {
+        LocalFree(phwndList);
+        return 0;
+    }
+
+    *pphwndList = phwndList;
+    return cHwnd - 1;
+}
+
+/* EOF */

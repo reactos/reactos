@@ -133,4 +133,13 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID);
 VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL);
 VOID IntLoadPreloadKeyboardLayouts(VOID);
 
+DWORD
+APIENTRY
+UserBuildHwndList(
+    HDESK hDesktop,
+    HWND hwndParent,
+    BOOL bChildren,
+    DWORD dwThreadId,
+    HWND **pphwndList);
+
 /* EOF */
