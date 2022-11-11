@@ -339,7 +339,8 @@ Quit:
 }
 
 /* Win: ImeBroadCastMsg */
-static BOOL ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static BOOL APIENTRY
+ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     ULONG cHwnd;
     PWND pWnd;
