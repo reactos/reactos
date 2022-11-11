@@ -345,7 +345,8 @@ ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
     ULONG cHwnd;
     PWND pWnd;
     HWND hWnd, *phwndList, *phwnd, *phwndLast;
-  
+    PIMEUI pimeui2;
+
     cHwnd = UserBuildHwndList(NULL, NULL, FALSE, GetCurrentThreadId(), &phwndList);
     if (!cHwnd)
         return FALSE;
@@ -361,7 +362,11 @@ ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
             continue;
         if ((pWnd->state2 & WNDS2_INDESTROY) || (pWnd->state & WNDS_DESTROYED))
             continue;
-        if (pWnd->hImc == NULL || pWnd->hImc == pimeui->hIMC)
+        if (pWnd->hImc == NULL)
+            continue;
+
+        pimeui2 = (PIMEUI)GetWindowLongPtrW(hWnd, 0);
+        if (!pimeui2 || !pimeui2->fDefault)
             continue;
 
         if (uMsg == WM_DESTROY)
