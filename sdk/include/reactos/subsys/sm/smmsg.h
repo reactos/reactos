@@ -211,6 +211,10 @@ C_ASSERT(sizeof(SB_CREATE_PROCESS_MSG) == 0x18);
 C_ASSERT(sizeof(SB_CREATE_PROCESS_MSG) == 0x28);
 #endif
 
+#ifdef CreateProcess
+#undef CreateProcess
+#endif
+
 //
 // When the server connects to a client, this structure is exchanged
 //
@@ -239,7 +243,7 @@ typedef struct _SB_API_MSG
                 SB_TERMINATE_SESSION_MSG TerminateSession;
                 SB_FOREIGN_SESSION_COMPLETE_MSG ForeignSessionComplete;
                 SB_CREATE_PROCESS_MSG CreateProcess;
-            };
+            } u;
         };
     };
 } SB_API_MSG, *PSB_API_MSG;

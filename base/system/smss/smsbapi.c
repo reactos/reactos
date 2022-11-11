@@ -47,7 +47,7 @@ SmpSbCreateSession(IN PVOID Reserved,
     PSB_CREATE_SESSION_MSG CreateSessionMsg;
 
     /* Write out the create session message including its initial process */
-    CreateSessionMsg = &SbApiMsg.CreateSession;
+    CreateSessionMsg = &SbApiMsg.u.CreateSession;
     CreateSessionMsg->ProcessInfo = *ProcessInformation;
     CreateSessionMsg->MuSessionId = MuSessionId;
     if (DbgClientId)

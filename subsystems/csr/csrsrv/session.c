@@ -207,7 +207,7 @@ BOOLEAN
 NTAPI
 CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
 {
-    PSB_CREATE_SESSION_MSG CreateSession = &ApiMessage->CreateSession;
+    PSB_CREATE_SESSION_MSG CreateSession = &ApiMessage->u.CreateSession;
     HANDLE hProcess, hThread;
     PCSR_PROCESS CsrProcess;
     PCSR_THREAD CsrThread;

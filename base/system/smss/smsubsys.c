@@ -149,8 +149,8 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     RTL_USER_PROCESS_INFORMATION ProcessInformation;
     LARGE_INTEGER Timeout;
     PVOID State;
-    PSB_CREATE_PROCESS_MSG CreateProcess = &SbApiMsg.CreateProcess;
-    PSB_CREATE_SESSION_MSG CreateSession = &SbApiMsg.CreateSession;
+    PSB_CREATE_PROCESS_MSG CreateProcess = &SbApiMsg.u.CreateProcess;
+    PSB_CREATE_SESSION_MSG CreateSession = &SbApiMsg.u.CreateSession;
 
     /* Make sure this is a found subsystem */
     if (Flags & SMP_INVALID_PATH)
