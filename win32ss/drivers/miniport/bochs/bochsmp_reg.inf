@@ -1,4 +1,7 @@
 [AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1234&DEV_1111","Service",0x00000000,"bochsmp"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1234&DEV_1111","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
+
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp","ImagePath",0x00020000,"system32\drivers\bochsmp.sys"
