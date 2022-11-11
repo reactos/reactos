@@ -361,6 +361,8 @@ ImeWnd_BroadcastMsg(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
             continue;
         if ((pWnd->state2 & WNDS2_INDESTROY) || (pWnd->state & WNDS_DESTROYED))
             continue;
+        if (pWnd->hImc == NULL)
+            continue;
 
         if (uMsg == WM_DESTROY)
             DestroyWindow(hWnd);
