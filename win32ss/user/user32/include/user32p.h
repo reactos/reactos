@@ -136,10 +136,10 @@ VOID IntLoadPreloadKeyboardLayouts(VOID);
 DWORD
 APIENTRY
 UserBuildHwndList(
-    HDESK hDesktop,
-    HWND hwndParent,
-    BOOL bChildren,
-    DWORD dwThreadId,
-    HWND **pphwndList);
+    IN HDESK hDesktop,
+    IN HWND hwndParent,
+    IN BOOL bChildren,
+    IN DWORD dwThreadId,
+    OUT HWND **pphwndList);
 
 /* EOF */

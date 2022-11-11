@@ -2034,11 +2034,11 @@ DisableProcessWindowsGhosting(VOID)
 DWORD
 APIENTRY
 UserBuildHwndList(
-    HDESK hDesktop,
-    HWND hwndParent,
-    BOOL bChildren,
-    DWORD dwThreadId,
-    HWND **pphwndList)
+    IN HDESK hDesktop,
+    IN HWND hwndParent,
+    IN BOOL bChildren,
+    IN DWORD dwThreadId,
+    OUT HWND **pphwndList)
 {
     NTSTATUS Status;
     DWORD i, cHwnd = 64;
