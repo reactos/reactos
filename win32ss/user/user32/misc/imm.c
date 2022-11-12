@@ -930,7 +930,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* The window procedure of the default IME window */
-/* Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode) */
+/* Win: ImeWndProcWorker(pWnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
 ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
