@@ -204,9 +204,9 @@ typedef struct _W32HEAP_USER_MAPPING
 
 
 /*
- Information from STARTUPINFOW, psdk/winbase.h.
- Set from PsGetCurrentProcess()->Peb->ProcessParameters.
- See also: https://reactos.org/wiki/Techwiki:Win32k/PROCESSINFO
+ * Information from STARTUPINFOW, psdk/winbase.h.
+ * Set from PsGetCurrentProcess()->Peb->ProcessParameters.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/PROCESSINFO
 */
 typedef struct tagUSERSTARTUPINFO
 {
