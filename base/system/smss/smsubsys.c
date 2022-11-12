@@ -87,7 +87,7 @@ SmpLocateKnownSubSysByCid(IN PCLIENT_ID ClientId)
             break;
         }
 
-        /* Reset the current pointer and keep earching */
+        /* Reset the current pointer and keep searching */
         Subsystem = NULL;
         NextEntry = NextEntry->Flink;
     }
@@ -123,7 +123,7 @@ SmpLocateKnownSubSysByType(IN ULONG MuSessionId,
             break;
         }
 
-        /* Reset the current pointer and keep earching */
+        /* Reset the current pointer and keep searching */
         Subsystem = NULL;
         NextEntry = NextEntry->Flink;
     }
@@ -499,7 +499,7 @@ Quickie2:
     if (!NT_SUCCESS(Status))
     {
         RemoveEntryList(&NewSubsystem->Entry);
-        NtSetEvent(NewSubsystem->Event, 0);
+        NtSetEvent(NewSubsystem->Event, NULL);
         SmpDereferenceSubsystem(NewSubsystem);
     }
 
@@ -619,7 +619,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
         }
         if (!NT_SUCCESS(Status))
         {
-            DbgPrint("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
+            DPRINT1("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
             return Status;
         }
 

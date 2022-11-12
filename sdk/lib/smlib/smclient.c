@@ -280,9 +280,7 @@ SmExecPgm(
 #endif
 
     /* Set the message data */
-    RtlCopyMemory(&ExecPgm->ProcessInformation,
-                  ProcessInformation,
-                  sizeof(ExecPgm->ProcessInformation));
+    ExecPgm->ProcessInformation = *ProcessInformation;
     ExecPgm->DebugFlag = DebugFlag;
 
     /* Send the message and wait for a reply */
@@ -420,7 +418,7 @@ SmStartCsr(
     SmApiMsg.ApiNumber = SmpStartCsrApi;
     Status = SmSendMsgToSm(SmApiPort, &SmApiMsg);
 
-    /* Give back informations to caller */
+    /* Give back information to caller */
     *pMuSessionId = StartCsr->MuSessionId;
     *pWindowsSubSysProcessId = StartCsr->WindowsSubSysProcessId;
     *pInitialCommandProcessId = StartCsr->SmpInitialCommandProcessId;

@@ -1282,14 +1282,14 @@ SmpInitializeDosDevices(VOID)
     PSMP_REGISTRY_VALUE RegEntry;
     SECURITY_DESCRIPTOR_CONTROL OldFlag = 0;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING DestinationString;
+    UNICODE_STRING GlobalName;
     HANDLE DirHandle;
     PLIST_ENTRY NextEntry, Head;
 
-    /* Open the GLOBAL?? directory */
-    RtlInitUnicodeString(&DestinationString, L"\\??");
+    /* Open the \GLOBAL?? directory */
+    RtlInitUnicodeString(&GlobalName, L"\\??");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &DestinationString,
+                               &GlobalName,
                                OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
                                NULL,
                                NULL);
@@ -1299,7 +1299,7 @@ SmpInitializeDosDevices(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Unable to open %wZ directory - Status == %lx\n",
-                &DestinationString, Status);
+                &GlobalName, Status);
         return Status;
     }
 
@@ -1426,7 +1426,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
                                IN PUNICODE_STRING Path)
 {
     HANDLE DirFileHandle, DirHandle, SectionHandle, FileHandle, LinkHandle;
-    UNICODE_STRING NtPath, DestinationString;
+    UNICODE_STRING NtPath, SymLinkName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status, Status1;
     PLIST_ENTRY NextEntry;
@@ -1499,9 +1499,9 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     }
 
     /* Create a symbolic link to the directory in the object manager */
-    RtlInitUnicodeString(&DestinationString, L"KnownDllPath");
+    RtlInitUnicodeString(&SymLinkName, L"KnownDllPath");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &DestinationString,
+                               &SymLinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
                                DirHandle,
                                SmpPrimarySecurityDescriptor);
@@ -1518,7 +1518,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     {
         /* It wasn't, so bail out since the OS needs it to exist */
         DPRINT1("SMSS: Unable to create %wZ symbolic link - Status == %lx\n",
-                &DestinationString, Status);
+                &SymLinkName, Status);
         LinkHandle = NULL;
         goto Quickie;
     }
@@ -1653,12 +1653,12 @@ SmpInitializeKnownDlls(VOID)
 {
     NTSTATUS Status;
     PSMP_REGISTRY_VALUE RegEntry;
-    UNICODE_STRING DestinationString;
+    UNICODE_STRING KnownDllsName;
     PLIST_ENTRY Head, NextEntry;
 
     /* Call the internal function */
-    RtlInitUnicodeString(&DestinationString, L"\\KnownDlls");
-    Status = SmpInitializeKnownDllsInternal(&DestinationString, &SmpKnownDllPath);
+    RtlInitUnicodeString(&KnownDllsName, L"\\KnownDlls");
+    Status = SmpInitializeKnownDllsInternal(&KnownDllsName, &SmpKnownDllPath);
 
     /* Wipe out the list regardless of success */
     Head = &SmpKnownDllsList;
@@ -2268,6 +2268,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     InitializeListHead(&SmpSubSystemsToLoad);
     InitializeListHead(&SmpSubSystemsToDefer);
     InitializeListHead(&SmpExecuteList);
+
     SmpPagingFileInitialize();
 
     /* Initialize the SMSS environment */
@@ -2479,7 +2480,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
 
     /* Initialize session parameters */
     SmpNextSessionId = 1;
-    SmpNextSessionIdScanMode = 0;
+    SmpNextSessionIdScanMode = FALSE;
     SmpDbgSsLoaded = FALSE;
 
     /* Create the initial security descriptors */
@@ -2557,7 +2558,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
     {
         /* Autochk should've run now. Set the event and save the CSRSS handle */
         *ProcessHandle = SmpWindowsSubSysProcess;
-        NtSetEvent(EventHandle, 0);
+        NtSetEvent(EventHandle, NULL);
         NtClose(EventHandle);
     }
 

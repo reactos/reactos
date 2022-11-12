@@ -17,10 +17,10 @@
 
 typedef struct _SMP_CLIENT_CONTEXT
 {
-    PVOID Subsystem;
+    PSMP_SUBSYSTEM Subsystem;
     HANDLE ProcessHandle;
     HANDLE PortHandle;
-    ULONG dword10;
+    PVOID Reserved;
 } SMP_CLIENT_CONTEXT, *PSMP_CLIENT_CONTEXT;
 
 typedef
@@ -277,7 +277,7 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
     HANDLE PortHandle, ProcessHandle;
     ULONG SessionId;
     UNICODE_STRING SubsystemPort;
-    SMP_CLIENT_CONTEXT *ClientContext;
+    PSMP_CLIENT_CONTEXT ClientContext;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     REMOTE_PORT_VIEW PortView;
@@ -343,13 +343,13 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
         {
             ClientContext->ProcessHandle = ProcessHandle;
             ClientContext->Subsystem = CidSubsystem;
-            ClientContext->dword10 = 0;
+            ClientContext->Reserved = NULL;
             ClientContext->PortHandle = NULL;
         }
         else
         {
             /* Failed to allocate a client context, so reject the connection */
-            DPRINT1("Rejecting connectiond due to lack of memory\n");
+            DPRINT1("Rejecting connection due to lack of memory\n");
             Accept = FALSE;
         }
     }

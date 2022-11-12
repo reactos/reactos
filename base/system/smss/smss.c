@@ -65,7 +65,7 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
     }
 
     /* Set the size field as required */
-    ProcessInfo->Size = sizeof(RTL_USER_PROCESS_INFORMATION);
+    ProcessInfo->Size = sizeof(*ProcessInfo);
 
     /* Check if the debug flag was requested */
     if (Flags & SMP_DEBUG_FLAG)
@@ -88,7 +88,7 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
     /* And always force NX for anything that SMSS launches */
     ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_NX;
 
-    /* Now create the process */
+    /* Now create the process in suspended state */
     Status = RtlCreateUserProcess(FileName,
                                   OBJ_CASE_INSENSITIVE,
                                   ProcessParameters,
@@ -134,7 +134,7 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
         /* This image is invalid, so kill it, close our handles, and fail */
         Status = STATUS_INVALID_IMAGE_FORMAT;
         NtTerminateProcess(ProcessInfo->ProcessHandle, Status);
-        NtWaitForSingleObject(ProcessInfo->ThreadHandle, 0, 0);
+        NtWaitForSingleObject(ProcessInfo->ThreadHandle, FALSE, NULL);
         NtClose(ProcessInfo->ThreadHandle);
         NtClose(ProcessInfo->ProcessHandle);
         DPRINT1("SMSS: Not an NT image - %wZ\n", FileName);
@@ -255,7 +255,7 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
     }
     else
     {
-        /* An actual image name was present -- execute it */
+        /* An actual image name was present, execute it */
         Status = SmpExecuteImage(&FileName,
                                  &Directory,
                                  CommandLine,
@@ -265,7 +265,7 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
     }
 
     /* Free all the token parameters */
-    if (FileName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+    if (FileName.Buffer)  RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
     if (Directory.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Directory.Buffer);
     if (Arguments.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Arguments.Buffer);
 
@@ -287,7 +287,7 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 {
     NTSTATUS Status;
     RTL_USER_PROCESS_INFORMATION ProcessInfo;
-    UNICODE_STRING Arguments, ImageFileDirectory, ImageFileName;
+    UNICODE_STRING Arguments, Directory, FileName;
     ULONG Flags = 0;
 
     /* Check if we haven't yet connected to ourselves */
@@ -305,14 +305,14 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
     /* Parse the initial command line */
     Status = SmpParseCommandLine(InitialCommand,
                                  &Flags,
-                                 &ImageFileName,
-                                 &ImageFileDirectory,
+                                 &FileName,
+                                 &Directory,
                                  &Arguments);
     if (Flags & SMP_INVALID_PATH)
     {
         /* Fail if it doesn't exist */
-        DPRINT1("SMSS: Initial command image (%wZ) not found\n", &ImageFileName);
-        if (ImageFileName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileName.Buffer);
+        DPRINT1("SMSS: Initial command image (%wZ) not found\n", &FileName);
+        if (FileName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -324,23 +324,17 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
         return Status;
     }
 
-    /* Execute the initial command -- but defer its full execution */
-    Status = SmpExecuteImage(&ImageFileName,
-                             &ImageFileDirectory,
+    /* Execute the initial command, but defer its full execution */
+    Status = SmpExecuteImage(&FileName,
+                             &Directory,
                              InitialCommand,
                              MuSessionId,
                              SMP_DEFERRED_FLAG,
                              &ProcessInfo);
 
-    /* Free any buffers we had lying around */
-    if (ImageFileName.Buffer)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileName.Buffer);
-    }
-    if (ImageFileDirectory.Buffer)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileDirectory.Buffer);
-    }
+    /* Free all the token parameters */
+    if (FileName.Buffer)  RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+    if (Directory.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Directory.Buffer);
     if (Arguments.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Arguments.Buffer);
 
     /* Bail out if we couldn't execute the initial command */
@@ -409,7 +403,7 @@ LONG
 SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
     ULONG_PTR Parameters[4];
-    UNICODE_STRING DestinationString;
+    UNICODE_STRING ErrorString;
 
     /* Print and breakpoint into the debugger */
     DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %p\n",
@@ -421,8 +415,8 @@ SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     DbgBreakPoint();
 
     /* Build the hard error and terminate */
-    RtlInitUnicodeString(&DestinationString, L"Unhandled Exception in Session Manager");
-    Parameters[0] = (ULONG_PTR)&DestinationString;
+    RtlInitUnicodeString(&ErrorString, L"Unhandled Exception in Session Manager");
+    Parameters[0] = (ULONG_PTR)&ErrorString;
     Parameters[1] = ExceptionInfo->ExceptionRecord->ExceptionCode;
     Parameters[2] = (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress;
     Parameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
