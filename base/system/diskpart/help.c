@@ -133,8 +133,6 @@ BOOL help_main(INT argc, LPWSTR *argv)
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
     {
-    
-    
         if ((cmdptr1 == NULL) &&
             (cmdptr->cmd1 != NULL && wcsicmp(argv[1], cmdptr->cmd1) == 0))
         {
