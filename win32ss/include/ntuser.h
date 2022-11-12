@@ -126,6 +126,10 @@ RtlLargeStringToUnicodeString(
 
 #define NB_HOOKS (WH_MAXHOOK - WH_MINHOOK + 1)
 
+/*
+ * DESKTOPINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/DESKTOP
+ */
 typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
@@ -157,6 +161,10 @@ typedef struct _DESKTOPINFO
 #define CTI_THREADSYSLOCK 0x0001
 #define CTI_INSENDMESSAGE 0x0002
 
+/*
+ * CLIENTTHREADINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/CLIENTTHREADINFO
+ */
 typedef struct _CLIENTTHREADINFO
 {
     DWORD CTI_flags;
@@ -297,6 +305,10 @@ typedef struct _CALLBACKWND
 #define CI_IMMACTIVATE       0x00000040
 #define CI_TFSDISABLED       0x00000400
 
+/*
+ * CLIENTINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/CLIENTINFO
+ */
 typedef struct _CLIENTINFO
 {
     ULONG_PTR CI_flags;
@@ -669,6 +681,10 @@ typedef struct _SBINFOEX
 #define WPF_MININIT 0x0008
 #define WPF_MAXINIT 0x0010
 
+/*
+ * WND structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/WND
+ */
 typedef struct _WND
 {
     THRDESKHEAD head;
@@ -975,6 +991,10 @@ typedef struct tagDPISERVERINFO
 #define PUSIF_LISTBOXSMOOTHSCROLLING 0x08
 #define PUSIF_KEYBOARDCUES           0x20
 
+/*
+ * PERUSERSERVERINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/SERVERINFO
+ */
 typedef struct _PERUSERSERVERINFO
 {
     INT aiSysMet[SM_CMETRICS];
@@ -1017,6 +1037,10 @@ typedef struct _PERUSERSERVERINFO
     DWORD dwRIPFlags;
 } PERUSERSERVERINFO, *PPERUSERSERVERINFO;
 
+/*
+ * SERVERINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/SERVERINFO
+ */
 typedef struct tagSERVERINFO
 {
     DWORD dwSRVIFlags;
@@ -1092,6 +1116,10 @@ typedef struct _WNDMSG
     PINT abMsgs;
 } WNDMSG, *PWNDMSG;
 
+/*
+ * SHAREDINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/SHAREDINFO
+ */
 typedef struct _SHAREDINFO
 {
     PSERVERINFO psi;         /* Global Server Info */

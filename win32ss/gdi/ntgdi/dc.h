@@ -88,7 +88,10 @@ typedef struct _DCLEVEL
   SIZE              sizl;
 } DCLEVEL, *PDCLEVEL;
 
-/* The DC object structure */
+/*
+ * The DC object structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/DC
+ */
 typedef struct _DC
 {
   /* Header for all gdi objects in the handle table.

@@ -284,6 +284,10 @@ typedef struct _LDC
     DWORD dwData[5];
 } LDC, *PLDC;
 
+/*
+ * DC_ATTR structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/DC_ATTR
+ */
 typedef struct _DC_ATTR
 {
     PVOID pvLDC;
