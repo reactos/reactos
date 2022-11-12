@@ -743,7 +743,7 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
     {
         WCHAR Check = (Radio) ? 'i' : 'b';
 
-        IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWTEXT));
+        IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_WINDOWTEXT));
         GreTextOutW(dc, myr.left, myr.top, &Check, 1);
     }
 
