@@ -1311,7 +1311,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 BOOL
 WINAPI
 ImmDllInitialize(
-    _In_ HANDLE hDll,
+    _In_ HINSTANCE hDll,
     _In_ ULONG dwReason,
     _In_opt_ PVOID pReserved)
 {
