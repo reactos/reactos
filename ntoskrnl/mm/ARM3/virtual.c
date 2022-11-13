@@ -4492,7 +4492,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     PMEMORY_AREA MemoryArea;
-    PMMVAD Vad = NULL, FoundVad;
+    PMMVAD_LONG Vad = NULL;
+    PMMVAD FoundVad;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID PBaseAddress;
@@ -4793,7 +4794,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         // Insert the VAD
         //
-        Status = MiInsertVadEx(Vad,
+        Status = MiInsertVadEx((PMMVAD)Vad,
                                &StartingAddress,
                                PRegionSize,
                                HighestAddress,
@@ -5233,7 +5234,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     LONG_PTR FirstCommit;
     ULONG_PTR StartingAddress, EndingAddress;
     PMMVAD Vad;
-    PMMVAD NewVad;
+    PMMVAD_LONG NewVad;
     NTSTATUS Status;
     PEPROCESS Process;
     PMMSUPPORT AddressSpace;
@@ -5590,7 +5591,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     // so insert the new one.
                     // ReactOS: This will take care of creating a second MEMORY_AREA.
                     //
-                    MiInsertVad(NewVad, &Process->VadRoot);
+                    MiInsertVad((PMMVAD)NewVad, &Process->VadRoot);
 
                     //
                     // Calculate the commit charge for the first split.
