@@ -1080,7 +1080,6 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             break;
     }
 
-
 Finish:
     if (unicode)
         return DefWindowProcW(hwnd, msg, wParam, lParam);
