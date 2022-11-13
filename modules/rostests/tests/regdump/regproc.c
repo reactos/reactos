@@ -1276,7 +1276,9 @@ void export_hkey(FILE *file, HKEY key,
 #define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
 #define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
 #define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
-
+// TODO: Add support for REG_QWORD*.
+#define REG_QWORD_LITTLE_ENDIAN     ( 11 )
+#define REG_QWORD                   ( 11 )
  */
 /******************************************************************************
  * Open file for export.
@@ -1488,4 +1490,3 @@ void delete_registry_key(TCHAR* reg_key_name)
     }
     HeapFree(GetProcessHeap(), 0, branch_name);
 }
-
