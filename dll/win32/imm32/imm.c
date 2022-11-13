@@ -10,6 +10,7 @@
  */
 
 #include "precomp.h"
+#include <ndk/exfuncs.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -17,11 +18,13 @@ HMODULE ghImm32Inst = NULL; // Win: ghInst
 PSERVERINFO gpsi = NULL; // Win: gpsi
 SHAREDINFO gSharedInfo = { NULL }; // Win: gSharedInfo
 BYTE gfImmInitialized = FALSE; // Win: gfInitialized
+ULONG_PTR gHighestUserAddress = 0;
 
 // Win: ImmInitializeGlobals
 static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
+    SYSTEM_BASIC_INFORMATION SysInfo;
 
     if (hMod)
         ghImm32Inst = hMod;
@@ -35,6 +38,14 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
         ERR("\n");
         return FALSE;
     }
+
+    status = NtQuerySystemInformation(SystemBasicInformation, &SysInfo, sizeof(SysInfo), NULL);
+    if (NT_ERROR(status))
+    {
+        ERR("\n");
+        return FALSE;
+    }
+    gHighestUserAddress = SysInfo.MaximumUserModeAddress;
 
     gfImmInitialized = TRUE;
     return TRUE;
