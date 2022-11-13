@@ -19,15 +19,27 @@ ImcEnumProc(HIMC hImc, LPARAM lParam)
     switch (s_nCounter)
     {
         case 0:
+            ok_long((LONG)lParam, 0xDEADBEEF);
+            ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            break;
         case 1:
-        case 3:
-        case 4:
+            ok_long((LONG)lParam, 0xDEADFACE);
             ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
             break;
         case 2:
+            ok_long((LONG)lParam, 0xDEADFACE);
             ok(hImc == s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc1);
             break;
+        case 3:
+            ok_long((LONG)lParam, 0xBEEFCAFE);
+            ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            break;
+        case 4:
+            ok_long((LONG)lParam, 0xAC1DFACE);
+            ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            break;
         default:
+            ok_long(0, 1);
             ok_int(0, 1);
             break;
     }
@@ -43,25 +55,25 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     s_hImc1 = ImmGetContext(hwnd);
     ok(s_hImc1 != NULL, "s_hImc1 was NULL\n");
 
-    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0), TRUE);
+    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xDEADBEEF), TRUE);
     ok_int(s_nCounter, 1);
 
-    ok_int(ImmEnumInputContext(1, ImcEnumProc, 0), FALSE);
+    ok_int(ImmEnumInputContext(1, ImcEnumProc, 0xFEEDF00D), FALSE);
     ok_int(s_nCounter, 1);
 
     s_hImc2 = ImmCreateContext();
     ok(s_hImc2 != NULL, "s_hImc1 was NULL\n");
 
-    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0), TRUE);
+    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xDEADFACE), TRUE);
     ok_int(s_nCounter, 3);
 
     ok_int(ImmDestroyContext(s_hImc2), TRUE);
     s_hImc2 = NULL;
 
-    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0), TRUE);
+    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xBEEFCAFE), TRUE);
     ok_int(s_nCounter, 4);
 
-    ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0), TRUE);
+    ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0xAC1DFACE), TRUE);
     ok_int(s_nCounter, 5);
 
     PostMessageW(hwnd, WM_COMMAND, IDYES, 0);
