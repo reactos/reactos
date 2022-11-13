@@ -759,7 +759,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         {
             TCHAR Check = (Radio) ? 'i' : 'b';
 
-            SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+            SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_WINDOWTEXT));
             TextOut(dc, X, Y, &Check, 1);
         }
     }
