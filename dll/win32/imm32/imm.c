@@ -1296,9 +1296,64 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     return ImmSetActiveContext(hwnd, hIMC, fFlag);
 }
 
+/************************************************************************/
+/* IMM_SECURITY */
+
+#ifdef IMM_SECURITY
+
+DWORD __security_cookie = 0x0000BB40;
+DWORD __security_cookie_complement = 0xFFFF44BF;
+
+static VOID Imm32GenerateSecurityCookie(VOID)
+{
+    DWORD dwValue, dwPID, dwTID, dwTick;
+    LARGE_INTEGER LargeInt;
+    FILETIME ft;
+
+    if (__security_cookie == 0 || __security_cookie == 0x0000BB40)
+    {
+        GetSystemTimeAsFileTime(&ft);
+        dwPID = GetCurrentProcessId();
+        dwTID = GetCurrentThreadId();
+        dwTick = GetTickCount();
+        QueryPerformanceCounter(&LargeInt);
+
+        dwValue = LargeInt.HighPart;
+        dwValue ^= LargeInt.LowPart;
+        dwValue ^= ft.dwHighDateTime;
+        dwValue ^= ft.dwLowDateTime;
+        dwValue ^= dwPID;
+        dwValue ^= dwTID;
+        dwValue ^= dwTick;
+        dwValue = LOWORD(dwValue);
+        __security_cookie = dwValue;
+        if (__security_cookie == 0)
+            __security_cookie = 0x0000BB40;
+    }
+
+    __security_cookie_complement = ~__security_cookie;
+
+    ASSERT((__security_cookie ^ __security_cookie_complement) == 0xFFFFFFFF);
+}
+
+static VOID Imm32InitSecurity(HINSTANCE hDll, BOOL bInitCookie)
+{
+    if (bInitCookie)
+        Imm32GenerateSecurityCookie();
+}
+
+#endif /* def IMM_SECURITY */
+
+/************************************************************************/
+/* Unit test */
+
 #ifndef NDEBUG
 VOID APIENTRY Imm32UnitTest(VOID)
 {
+#ifdef IMM_SECURITY
+    ASSERT((__security_cookie ^ __security_cookie_complement) == 0xFFFFFFFF);
+#endif
+
     if (0)
     {
         DWORD dwValue;
@@ -1317,6 +1372,9 @@ VOID APIENTRY Imm32UnitTest(VOID)
 }
 #endif
 
+/************************************************************************/
+/* ImmDllInitialize */
+
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
 BOOL
@@ -1334,6 +1392,10 @@ ImmDllInitialize(
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+#ifdef IMM_SECURITY
+            Imm32InitSecurity(hDll, TRUE);
+#endif
+
             if (!ImmInitializeGlobals(hDll))
             {
                 ERR("ImmInitializeGlobals failed\n");
