@@ -114,9 +114,6 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
     if (Buffer)
     {
-        /* Clear the memory */
-        RtlZeroMemory(Buffer, Size);
-
         /* Check if we have a process to charge quota */
         if (Process)
         {
@@ -128,6 +125,9 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
                 return NULL;
             }
         }
+
+        /* Clear the memory */
+        RtlZeroMemory(Buffer, Size);
     }
 
     /* Return the allocated memory */
@@ -355,9 +355,6 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
         }
     }
 
-    /* Clear the table */
-    RtlZeroMemory(HandleTable, sizeof(HANDLE_TABLE));
-
     /* Now allocate the first level structures */
     HandleTableTable = ExpAllocateTablePagedPoolNoZero(Process, PAGE_SIZE);
     if (!HandleTableTable)
@@ -373,6 +370,9 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
 
         return NULL;
     }
+
+    /* Clear the table */
+    RtlZeroMemory(HandleTable, sizeof(*HandleTable));
 
     /* Write the pointer to our first level structures */
     HandleTable->TableCode = (ULONG_PTR)HandleTableTable;
