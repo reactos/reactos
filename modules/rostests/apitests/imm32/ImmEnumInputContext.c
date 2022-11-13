@@ -8,9 +8,11 @@
 #include "precomp.h"
 #include <windowsx.h>
 
+static HWND s_hwnd = NULL;
 static INT s_nCounter = 0;
 static HIMC s_hImc1 = NULL;
 static HIMC s_hImc2 = NULL;
+static HIMC s_hImc3 = NULL;
 
 static BOOL CALLBACK
 ImcEnumProc(HIMC hImc, LPARAM lParam)
@@ -38,6 +40,25 @@ ImcEnumProc(HIMC hImc, LPARAM lParam)
             ok_long((LONG)lParam, 0xAC1DFACE);
             ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
             break;
+        case 5:
+            ok_long((LONG)lParam, 0xDEADBEEF);
+            ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
+            break;
+        case 6:
+            ok_long((LONG)lParam, 0xBEEFCAFE);
+            ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
+            break;
+        case 7:
+            ok_long((LONG)lParam, 0xDEADFACE);
+            ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
+            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
+            break;
+        case 8:
+            ok_long((LONG)lParam, 0xDEADFACE);
+            ok(hImc == s_hImc3, "hImc was %p, s_hImc3 was %p\n", hImc, s_hImc3);
+            break;
         default:
             ok_long(0, 1);
             ok_int(0, 1);
@@ -47,9 +68,32 @@ ImcEnumProc(HIMC hImc, LPARAM lParam)
     return TRUE;
 }
 
+static DWORD WINAPI AnotherThreadFunc(LPVOID arg)
+{
+    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xDEADBEEF), TRUE);
+    ok_int(s_nCounter, 6);
+
+    ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0xBEEFCAFE), TRUE);
+    ok_int(s_nCounter, 7);
+
+    s_hImc3 = ImmCreateContext();
+
+    ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xDEADFACE), TRUE);
+    ok_int(s_nCounter, 9);
+
+    ok_int(ImmDestroyContext(s_hImc3), TRUE);
+    s_hImc3 = NULL;
+
+    PostMessageW(s_hwnd, WM_COMMAND, IDYES, 0);
+    return 0;
+}
+
 /* WM_INITDIALOG */
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
+    HANDLE hThread;
+
+    s_hwnd = hwnd;
     s_nCounter = 0;
 
     s_hImc1 = ImmGetContext(hwnd);
@@ -76,11 +120,18 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0xAC1DFACE), TRUE);
     ok_int(s_nCounter, 5);
 
-    PostMessageW(hwnd, WM_COMMAND, IDYES, 0);
+    hThread = CreateThread(NULL, 0, AnotherThreadFunc, NULL, 0, NULL);
+    if (hThread == NULL)
+    {
+        skip("hThread was NULL\n");
+        PostMessageW(hwnd, WM_COMMAND, IDNO, 0);
+    }
+    CloseHandle(hThread);
 
     return TRUE;
 }
 
+/* WM_COMMAND */
 static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
     switch (id)
