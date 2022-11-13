@@ -75,10 +75,10 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
     switch (id)
     {
-    case IDOK:
-    case IDCANCEL:
-        EndDialog(hwnd, id);
-        break;
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwnd, id);
+            break;
     }
 }
 
