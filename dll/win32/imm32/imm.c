@@ -1342,6 +1342,11 @@ static VOID Imm32InitSecurity(HINSTANCE hDll, BOOL bInitCookie)
         Imm32GenerateSecurityCookie();
 }
 
+DWORD_PTR FASTCALL __security_check_cookie(DWORD_PTR eax)
+{
+    /* FIXME */
+    return eax;
+}
 #endif /* def IMM_SECURITY */
 
 /************************************************************************/

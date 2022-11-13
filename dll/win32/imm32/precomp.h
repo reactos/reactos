@@ -195,6 +195,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 #ifdef IMM_SECURITY
 extern DWORD __security_cookie;
 extern DWORD __security_cookie_complement;
+DWORD_PTR FASTCALL __security_check_cookie(DWORD_PTR eax);
 #endif
 
 #ifndef NDEBUG
