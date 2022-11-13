@@ -475,6 +475,7 @@ const TCHAR * CRegistryKey::GetValueTypeName(DWORD dwType)
 	case REG_BINARY:
 		return _T("REG_BINARY");
 	case REG_DWORD_LITTLE_ENDIAN:
+	// case REG_DWORD:
 		return _T("REG_DWORD_LITTLE_ENDIAN");
 	case REG_DWORD_BIG_ENDIAN:
 		return _T("REG_DWORD_BIG_ENDIAN");
@@ -488,6 +489,10 @@ const TCHAR * CRegistryKey::GetValueTypeName(DWORD dwType)
 		return _T("REG_FULL_RESOURCE_DESCRIPTOR");
 	case REG_RESOURCE_REQUIREMENTS_LIST:
 		return _T("REG_RESOURCE_REQUIREMENTS_LIST");
+	// TODO: Add support for REG_QWORD* elsewhere too.
+	case REG_QWORD_LITTLE_ENDIAN:
+	// case REG_QWORD:
+		return _T("REG_QWORD_LITTLE_ENDIAN");
 	default:
 		return _T("Unkown Type");
 	}
