@@ -1342,6 +1342,12 @@ static VOID Imm32InitSecurity(HINSTANCE hDll, BOOL bInitCookie)
         Imm32GenerateSecurityCookie();
 }
 
+/*
+ * This function detects stack corruption.
+ *
+ * The parameter of this function must be a variable that saved the __security_cookie value
+ * in caller's prologue.
+ */
 VOID FASTCALL __security_check_cookie(DWORD_PTR ecx)
 {
     if (ecx == __security_cookie && (ecx & 0xFFFF0000) == 0)
