@@ -20,14 +20,12 @@ ImcEnumProc(HIMC hImc, LPARAM lParam)
     {
         case 0:
         case 1:
+        case 3:
+        case 4:
             ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
             break;
         case 2:
             ok(hImc == s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc1);
-            break;
-        case 3:
-        case 4:
-            ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
             break;
         default:
             ok_int(0, 1);
