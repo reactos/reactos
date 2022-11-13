@@ -7,8 +7,9 @@
 
 #pragma once
 
-#define UDP_STARTING_PORT 0x8000
-#define UDP_DYNAMIC_PORTS 0x8000
+// TODO: Support MaxUserPort registry key.
+#define UDP_STARTING_PORT 49152
+#define UDP_DYNAMIC_PORTS (65535 - UDP_STARTING_PORT + 1)
 
 /* UDPv4 header structure */
 #include <pshpack1.h>
