@@ -266,7 +266,7 @@ Failed:
 // Win: LoadImeDpi
 PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
-    IMM_SECURITY_BEGIN();
+    STACK_CHECK_BEGIN();
     IMEINFOEX ImeInfoEx;
     CHARSETINFO ci;
     PIMEDPI pImeDpiNew, pImeDpiFound;
@@ -341,7 +341,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 
 Finish:
-    IMM_SECURITY_END();
+    STACK_CHECK_END();
     return ret;
 }
 
@@ -885,14 +885,14 @@ Quit:
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
-    IMM_SECURITY_BEGIN();
+    STACK_CHECK_BEGIN();
     BOOL ret;
     IMEINFOEX info;
 
     TRACE("(%p)\n", hKL);
     ret = !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayoutTFS, &hKL);
 
-    IMM_SECURITY_END();
+    STACK_CHECK_END();
     return ret;
 }
 

@@ -67,7 +67,7 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
  */
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
-    IMM_SECURITY_BEGIN();
+    STACK_CHECK_BEGIN();
     DWORD cbData, dwType;
     HKEY hLayoutKey;
     LONG error;
@@ -116,7 +116,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     ret = Imm32LoadImeVerInfo(pImeInfoEx);
 
 Finish:
-    IMM_SECURITY_END();
+    STACK_CHECK_END();
     return ret;
 }
 
@@ -125,7 +125,7 @@ Finish:
  */
 BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
-    IMM_SECURITY_BEGIN();
+    STACK_CHECK_BEGIN();
     WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
     HKL hOldKL, hNewKL, *pList;
@@ -193,7 +193,7 @@ Retry:
     }
 
 Finish:
-    IMM_SECURITY_END();
+    STACK_CHECK_END();
     return ret;
 }
 

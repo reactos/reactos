@@ -193,17 +193,18 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
 BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 
 #ifdef IMM_SECURITY
-extern DWORD_PTR __security_cookie;
-VOID FASTCALL __security_check_cookie(DWORD_PTR ecx);
-#define IMM_SECURITY_BEGIN()    DWORD_PTR SecurityCookieSaved = __security_cookie
-#define IMM_SECURITY_END()      __security_check_cookie(SecurityCookieSaved)
+    extern DWORD_PTR __security_cookie;
+    VOID FASTCALL __security_check_cookie(DWORD_PTR ecx);
+
+    #define STACK_CHECK_BEGIN()     DWORD_PTR SecurityCookieSaved = __security_cookie
+    #define STACK_CHECK_END()       __security_check_cookie(SecurityCookieSaved)
 #else
-#define IMM_SECURITY_BEGIN()    /* empty */
-#define IMM_SECURITY_END()      /* empty */
+    #define STACK_CHECK_BEGIN()     /* empty */
+    #define STACK_CHECK_END()       /* empty */
 #endif
 
 #ifndef NDEBUG
-VOID APIENTRY Imm32UnitTest(VOID);
+    VOID APIENTRY Imm32UnitTest(VOID);
 #else
-#define Imm32UnitTest() /* empty */
+    #define Imm32UnitTest() /* empty */
 #endif
