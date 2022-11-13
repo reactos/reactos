@@ -1350,7 +1350,7 @@ VOID FASTCALL __security_check_cookie(DWORD_PTR ecx)
 #ifndef NDEBUG
     DebugBreak();
 #endif
-    TerminateProcess(GetCurrentProcess(), 0xC0000409); // STATUS_STACK_BUFFER_OVERRUN
+    TerminateProcess(GetCurrentProcess(), STATUS_STACK_BUFFER_OVERRUN);
 }
 #endif /* def IMM_SECURITY */
 
