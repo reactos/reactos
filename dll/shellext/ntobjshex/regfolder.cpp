@@ -71,6 +71,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolderExtractIcon::GetIconLocation(
         *pwFlags = flags;
         return S_OK;
     case REG_ENTRY_VALUE:
+    case REG_ENTRY_VALUE_WITH_CONTENT:
         GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
         *piIndex = -IDI_REGISTRYVALUE;
         *pwFlags = flags;
@@ -293,7 +294,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
                 return MakeStrRetFromString(L"Key", &(psd->str));
             }
 
-            return MakeStrRetFromString(RegistryTypeNames[info->entryType], &(psd->str));
+            return MakeStrRetFromString(RegistryTypeNames[info->contentType], &(psd->str));
 
         case REGISTRY_COLUMN_VALUE:
             psd->fmt = LVCFMT_LEFT;
@@ -448,7 +449,7 @@ HRESULT CRegistryFolder::FormatValueData(DWORD contentType, PVOID td, DWORD cont
 {
     switch (contentType)
     {
-    case 0:
+    case REG_NONE:
     {
         PCWSTR strTodo = L"";
         DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
