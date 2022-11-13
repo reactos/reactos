@@ -1301,8 +1301,8 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 
 #ifdef IMM_SECURITY
 
-DWORD __security_cookie = 0x0000BB40;
-DWORD __security_cookie_complement = 0xFFFF44BF;
+DWORD_PTR __security_cookie = 0x0000BB40;
+DWORD_PTR __security_cookie_complement = 0xFFFF44BF;
 
 static VOID Imm32GenerateSecurityCookie(VOID)
 {
@@ -1331,7 +1331,7 @@ static VOID Imm32GenerateSecurityCookie(VOID)
             __security_cookie = 0x0000BB40;
     }
 
-    __security_cookie_complement = ~__security_cookie;
+    __security_cookie_complement = (DWORD)~__security_cookie;
 
     ASSERT((__security_cookie ^ __security_cookie_complement) == 0xFFFFFFFF);
 }
@@ -1342,10 +1342,15 @@ static VOID Imm32InitSecurity(HINSTANCE hDll, BOOL bInitCookie)
         Imm32GenerateSecurityCookie();
 }
 
-DWORD_PTR FASTCALL __security_check_cookie(DWORD_PTR eax)
+VOID FASTCALL __security_check_cookie(DWORD_PTR ecx)
 {
-    /* FIXME */
-    return eax;
+    if (ecx == __security_cookie && (ecx & 0xFFFF0000) == 0)
+        return;
+
+#ifndef NDEBUG
+    DebugBreak();
+#endif
+    TerminateProcess(GetCurrentProcess(), 0xC0000409); // STATUS_STACK_BUFFER_OVERRUN
 }
 #endif /* def IMM_SECURITY */
 
@@ -1355,10 +1360,6 @@ DWORD_PTR FASTCALL __security_check_cookie(DWORD_PTR eax)
 #ifndef NDEBUG
 VOID APIENTRY Imm32UnitTest(VOID)
 {
-#ifdef IMM_SECURITY
-    ASSERT((__security_cookie ^ __security_cookie_complement) == 0xFFFFFFFF);
-#endif
-
     if (0)
     {
         DWORD dwValue;
