@@ -683,7 +683,7 @@ NTAPI
 ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                             OUT PEXHANDLE NewHandle)
 {
-    ULONG OldValue, NewValue, NewValue1;
+    ULONG OldValue, NewValue, OldValue1;
     PHANDLE_TABLE_ENTRY Entry;
     EXHANDLE Handle, OldHandle;
     BOOLEAN Result;
@@ -760,7 +760,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         /* Now get the next value and do the compare */
         NewValue = *(volatile ULONG*)&Entry->NextFreeTableEntry;
-        NewValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
+        OldValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
                                                NewValue,
                                                OldValue);
 
@@ -769,19 +769,16 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         KeLeaveCriticalRegion();
 
         /* Check if the compare was successful */
-        if (NewValue1 == OldValue)
+        if (OldValue1 == OldValue)
         {
             /* Make sure that the new handle is in range, and break out */
             ASSERT((NewValue & FREE_HANDLE_MASK) <
                    HandleTable->NextHandleNeedingPool);
             break;
         }
-        else
-        {
-            /* The compare failed, make sure we expected it */
-            ASSERT((NewValue1 & FREE_HANDLE_MASK) !=
-                   (OldValue & FREE_HANDLE_MASK));
-        }
+
+        /* The compare failed, make sure we expected it, then try again */
+        ASSERT((OldValue1 & FREE_HANDLE_MASK) != (OldValue & FREE_HANDLE_MASK));
     }
 
     /* Increase the number of handles */
