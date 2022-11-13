@@ -47,6 +47,8 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         goto FailPath;
     }
 
+    // TODO? RtlZeroMemory(Vad, sizeof(*Vad));
+
     /* Setup the primary flags with the size, and make it commited, private, RW */
     Vad->u.LongFlags = 0;
     Vad->u.VadFlags.CommitCharge = BYTES_TO_PAGES(Size);
@@ -885,6 +887,8 @@ MiInsertSharedUserPageVad(
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto FailPath;
     }
+
+    // TODO? RtlZeroMemory(Vad, sizeof(*Vad));
 
     /* Setup the primary flags with the size, and make it private, RO */
     Vad->u.LongFlags = 0;

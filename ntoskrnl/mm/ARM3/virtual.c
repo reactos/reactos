@@ -5537,7 +5537,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     // split the VAD into two new VADs and compute the commit
                     // charges for each of them, and reinsert new charges.
                     //
-                    NewVad = ExAllocatePoolZero(NonPagedPool, sizeof(MMVAD_LONG), 'SdaV');
+                    NewVad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'SdaV');
                     if (NewVad == NULL)
                     {
                         DPRINT1("Failed to allocate a VAD!\n");
@@ -5547,7 +5547,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
                     // Charge quota for the new VAD
                     Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
-
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("Ran out of process quota whilst creating new VAD!\n");
@@ -5555,6 +5554,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                         Status = STATUS_QUOTA_EXCEEDED;
                         goto FailPath;
                     }
+
+                    RtlZeroMemory(NewVad, sizeof(*NewVad));
 
                     //
                     // This new VAD describes the second chunk, so we keep the end
