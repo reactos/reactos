@@ -939,10 +939,12 @@ int chmc_crunch_lzx(struct chmcFile *chm, int sect_id)
 
 	assert(chm);
 
+#ifndef __REACTOS__
 	if ((wsize_code < 15) || (wsize_code > 21)) {
 		fprintf(stderr, "window size must be between 15 and 21 inclusive\n");
 		return CHMC_EINVAL;
 	}
+#endif
 
 	lzx_info.chm = chm;
 	lzx_info.section = chm->sections[sect_id];
