@@ -12,8 +12,6 @@
 
 #pragma once
 
-#undef IMM_SECURITY
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -192,7 +190,9 @@ PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
 BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 
-#ifdef IMM_SECURITY
+#undef STACK_CHECK
+
+#ifdef STACK_CHECK
     extern DWORD_PTR __security_cookie;
     VOID FASTCALL __security_check_cookie(DWORD_PTR ecx);
 

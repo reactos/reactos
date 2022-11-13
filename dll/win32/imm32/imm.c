@@ -1310,9 +1310,9 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 }
 
 /************************************************************************/
-/* IMM_SECURITY */
+/* STACK_CHECK */
 
-#ifdef IMM_SECURITY
+#ifdef STACK_CHECK
 
 DWORD_PTR __security_cookie = 0x0000BB40;
 DWORD_PTR __security_cookie_complement = 0xFFFF44BF;
@@ -1371,7 +1371,7 @@ VOID FASTCALL __security_check_cookie(DWORD_PTR ecx)
 #endif
     TerminateProcess(GetCurrentProcess(), STATUS_STACK_BUFFER_OVERRUN);
 }
-#endif /* def IMM_SECURITY */
+#endif /* def STACK_CHECK */
 
 /************************************************************************/
 /* Unit test */
@@ -1417,7 +1417,7 @@ ImmDllInitialize(
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-#ifdef IMM_SECURITY
+#ifdef STACK_CHECK
             Imm32InitSecurity(hDll, TRUE);
 #endif
 
