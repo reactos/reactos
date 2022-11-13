@@ -728,16 +728,12 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             KeLeaveCriticalRegion();
             OldValue = HandleTable->FirstFree;
 
-            /* Check if allocation failed */
-            if (!Result)
+            /* Check if allocation failed and nobody else went through here */
+            if (!Result && !OldValue)
             {
-                /* Check if nobody else went through here */
-                if (!OldValue)
-                {
-                    /* We're still the only thread around, so fail */
-                    NewHandle->GenericHandleOverlay = NULL;
-                    return NULL;
-                }
+                /* We're still the only thread around, so fail */
+                NewHandle->GenericHandleOverlay = NULL;
+                return NULL;
             }
         }
 
