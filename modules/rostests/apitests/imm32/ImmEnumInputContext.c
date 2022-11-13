@@ -64,7 +64,7 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0), TRUE);
     ok_int(s_nCounter, 5);
 
-    PostMessageW(hwnd, WM_COMMAND, IDOK, 0);
+    PostMessageW(hwnd, WM_COMMAND, IDYES, 0);
 
     return TRUE;
 }
@@ -75,6 +75,7 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     {
         case IDOK:
         case IDCANCEL:
+        case IDYES:
             EndDialog(hwnd, id);
             break;
     }
@@ -95,7 +96,7 @@ START_TEST(ImmEnumInputContext)
 {
     INT_PTR id;
     id = DialogBoxW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(1), NULL, DialogProc);
-    if (id != IDOK)
+    if (id != IDYES)
     {
         skip("Tests skipped\n");
     }
