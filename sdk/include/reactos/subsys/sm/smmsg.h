@@ -159,9 +159,9 @@ typedef struct _SB_CREATE_SESSION_MSG
 {
     ULONG SessionId;
     RTL_USER_PROCESS_INFORMATION ProcessInfo;
-    PVOID Unknown;
-    ULONG MuSessionId;
-    CLIENT_ID ClientId;
+    PVOID Reserved;
+    ULONG DbgSessionId;
+    CLIENT_ID DbgUiClientId;
 } SB_CREATE_SESSION_MSG, *PSB_CREATE_SESSION_MSG;
 #ifndef _WIN64
 C_ASSERT(sizeof(SB_CREATE_SESSION_MSG) == 0x58);

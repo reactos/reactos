@@ -168,8 +168,8 @@ SmpSbCreateSession(
     IN PVOID Reserved,
     IN PSMP_SUBSYSTEM OtherSubsystem,
     IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
-    IN ULONG MuSessionId,
-    IN PCLIENT_ID DbgClientId
+    IN ULONG DbgSessionId,
+    IN PCLIENT_ID DbgUiClientId
 );
 
 /* smsessn.c */
