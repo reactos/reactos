@@ -146,8 +146,8 @@ getVKNum(IN PCHAR p)
     if ((*p == '0') && ((*(p + 1) == 'x') || (*(p + 1) == 'X')))
     {
         /* Get the key number from the hex string */
-        *(p + 1) = 'x';
-        if (sscanf(p, "0x%x", &KeyNumber) == 1) return KeyNumber;
+        if (sscanf(p + 2, "%x", &KeyNumber) == 1 && KeyNumber <= 0xFF)
+            return KeyNumber;
     }
 
     /* No hope: fail */
@@ -801,7 +801,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 }
 
                 /* Check if there is a valid virtual key */
-                if (ScVk[i].VirtualKey == 0xFFFF)
+                if (ScVk[i].VirtualKey == 0xFF)
                 {
                     /* Fail */
                     printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
@@ -825,7 +825,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 Entry->VirtualKey, Entry->OriginalVirtualKey, Entry->ScanCode, Entry->Name);
 
         /* Make sure it's valid */
-        if (Entry->VirtualKey == 0xFFFF)
+        if (Entry->VirtualKey == 0xFF)
         {
             /* Warn the user */
             if (Verbose) printf("An invalid Virtual Key '%s' was defined.\n", Token);
