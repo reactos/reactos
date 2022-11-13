@@ -266,33 +266,35 @@ Failed:
 // Win: LoadImeDpi
 PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
+    IMM_SECURITY_BEGIN();
     IMEINFOEX ImeInfoEx;
     CHARSETINFO ci;
     PIMEDPI pImeDpiNew, pImeDpiFound;
     UINT uCodePage;
     LCID lcid;
+    PIMEDPI ret = NULL;
 
     if (!IS_IME_HKL(hKL))
     {
         TRACE("\n");
-        return NULL;
+        goto Finish;
     }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
-        return NULL;
+        goto Finish;
     }
 
     if (ImeInfoEx.fLoadFlag == 1)
     {
         ERR("\n");
-        return NULL;
+        goto Finish;
     }
 
     pImeDpiNew = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
     if (IS_NULL_UNEXPECTEDLY(pImeDpiNew))
-        return NULL;
+        goto Finish;
 
     pImeDpiNew->hKL = hKL;
 
@@ -307,7 +309,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     {
         ERR("\n");
         ImmLocalFree(pImeDpiNew);
-        return FALSE;
+        goto Finish;
     }
 
     RtlEnterCriticalSection(&gcsImeDpi);
@@ -321,7 +323,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
         RtlLeaveCriticalSection(&gcsImeDpi);
         Imm32FreeIME(pImeDpiNew, FALSE);
         ImmLocalFree(pImeDpiNew);
-        return pImeDpiFound;
+        ret = pImeDpiFound;
     }
     else
     {
@@ -335,8 +337,12 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
         gpImeDpiList = pImeDpiNew;
 
         RtlLeaveCriticalSection(&gcsImeDpi);
-        return pImeDpiNew;
+        ret = pImeDpiNew;
     }
+
+Finish:
+    IMM_SECURITY_END();
+    return ret;
 }
 
 // Win: FindOrLoadImeDpi
@@ -879,9 +885,15 @@ Quit:
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
+    IMM_SECURITY_BEGIN();
+    BOOL ret;
     IMEINFOEX info;
+
     TRACE("(%p)\n", hKL);
-    return !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayoutTFS, &hKL);
+    ret = !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayoutTFS, &hKL);
+
+    IMM_SECURITY_END();
+    return ret;
 }
 
 /***********************************************************************

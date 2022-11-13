@@ -67,10 +67,12 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
  */
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
+    IMM_SECURITY_BEGIN();
     DWORD cbData, dwType;
     HKEY hLayoutKey;
     LONG error;
     WCHAR szLayout[MAX_PATH];
+    BOOL ret = FALSE;
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
@@ -83,13 +85,13 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
         if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+            goto Finish;
     }
     else
     {
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
         if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+            goto Finish;
     }
 
     cbData = sizeof(pImeInfoEx->wszImeFile);
@@ -102,16 +104,20 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     pImeInfoEx->fLoadFlag = 0;
 
     if (IS_ERROR_UNEXPECTEDLY(error))
-        return FALSE;
+        goto Finish;
 
     if (dwType != REG_SZ)
     {
         ERR("\n");
-        return FALSE;
+        goto Finish;
     }
 
     pImeInfoEx->hkl = hKL;
-    return Imm32LoadImeVerInfo(pImeInfoEx);
+    ret = Imm32LoadImeVerInfo(pImeInfoEx);
+
+Finish:
+    IMM_SECURITY_END();
+    return ret;
 }
 
 /***********************************************************************
@@ -119,11 +125,13 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
  */
 BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
+    IMM_SECURITY_BEGIN();
     WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
     HKL hOldKL, hNewKL, *pList;
     PIMEDPI pImeDpi;
     LANGID LangID;
+    BOOL ret = TRUE;
 
     TRACE("(0x%lX)\n", dwUnknown);
 
@@ -132,7 +140,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
     if (dwUnknown == 1)
     {
         if (!IS_IME_HKL(hOldKL))
-            return TRUE;
+            goto Finish;
 
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
 
@@ -141,7 +149,10 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
         {
             pList = ImmLocalAlloc(0, cKLs * sizeof(HKL));
             if (IS_NULL_UNEXPECTEDLY(pList))
-                return FALSE;
+            {
+                ret = FALSE;
+                goto Finish;
+            }
 
             cKLs = GetKeyboardLayoutList(cKLs, pList);
             for (iKL = 0; iKL < cKLs; ++iKL)
@@ -181,7 +192,9 @@ Retry:
             Imm32ReleaseIME(hNewKL);
     }
 
-    return TRUE;
+Finish:
+    IMM_SECURITY_END();
+    return ret;
 }
 
 // Win: SelectInputContext
