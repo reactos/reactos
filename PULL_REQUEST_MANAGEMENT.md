@@ -14,3 +14,9 @@ In addition, in order to avoid coming off as rude to helpful contributors, pleas
 - Asking the contributor to do unrelated work
 - Closing without providing a reason
 - Merging with the intention to rewrite that code soon after
+
+Before merging a PR, make sure it follows the [contributing rules](CONTRIBUTING.md#rules-and-recommendations), but more importantly:
+- Make sure the author does not use a nickname or alias, but a full legal name instead, and have specified a real e-mail in all PR commits
+- Make sure the author does have full name set in GitHub profile that matches one in commits
+- By pressing "Squash and merge" button in a PR you can make sure the author does not use no-reply e-mail -
+  under the commit message there will be a text label saying: `This commit will be authored by <address@email.com>`
