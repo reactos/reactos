@@ -13,6 +13,7 @@ static INT s_nCounter = 0;
 static HIMC s_hImc1 = NULL;
 static HIMC s_hImc2 = NULL;
 static HIMC s_hImc3 = NULL;
+static HIMC s_hImc4 = NULL;
 
 static BOOL CALLBACK
 ImcEnumProc(HIMC hImc, LPARAM lParam)
@@ -42,22 +43,28 @@ ImcEnumProc(HIMC hImc, LPARAM lParam)
             break;
         case 5:
             ok_long((LONG)lParam, 0xDEADBEEF);
+            s_hImc3 = hImc;
             ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
-            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
             break;
         case 6:
             ok_long((LONG)lParam, 0xBEEFCAFE);
-            ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
-            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
+            ok(hImc == s_hImc3, "hImc was %p, s_hImc3 was %p\n", hImc, s_hImc3);
             break;
         case 7:
             ok_long((LONG)lParam, 0xDEADFACE);
-            ok(hImc != s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
-            ok(hImc != s_hImc2, "hImc was %p, s_hImc2 was %p\n", hImc, s_hImc2);
+            ok(hImc == s_hImc3, "hImc was %p, s_hImc3 was %p\n", hImc, s_hImc3);
             break;
         case 8:
             ok_long((LONG)lParam, 0xDEADFACE);
+            ok(hImc == s_hImc4, "hImc was %p, s_hImc4 was %p\n", hImc, s_hImc4);
+            break;
+        case 9:
+            ok_long((LONG)lParam, 0xFEEDF00D);
             ok(hImc == s_hImc3, "hImc was %p, s_hImc3 was %p\n", hImc, s_hImc3);
+            break;
+        case 10:
+            ok_long((LONG)lParam, 0xFEEDF00D);
+            ok(hImc == s_hImc1, "hImc was %p, s_hImc1 was %p\n", hImc, s_hImc1);
             break;
         default:
             ok_long(0, 1);
@@ -76,13 +83,16 @@ static DWORD WINAPI AnotherThreadFunc(LPVOID arg)
     ok_int(ImmEnumInputContext(GetCurrentThreadId(), ImcEnumProc, 0xBEEFCAFE), TRUE);
     ok_int(s_nCounter, 7);
 
-    s_hImc3 = ImmCreateContext();
+    s_hImc4 = ImmCreateContext();
 
     ok_int(ImmEnumInputContext(0, ImcEnumProc, 0xDEADFACE), TRUE);
     ok_int(s_nCounter, 9);
 
-    ok_int(ImmDestroyContext(s_hImc3), TRUE);
-    s_hImc3 = NULL;
+    ok_int(ImmDestroyContext(s_hImc4), TRUE);
+    s_hImc4 = NULL;
+
+    ok_int(ImmEnumInputContext((DWORD)-1, ImcEnumProc, 0xFEEDF00D), TRUE);
+    ok_int(s_nCounter, 11);
 
     PostMessageW(s_hwnd, WM_COMMAND, IDYES, 0);
     return 0;
