@@ -1117,6 +1117,17 @@ InitImageList(UINT StartResource,
 }
 
 
+/**
+ * @brief
+ * Get the duration of a waveform audio file.
+ *
+ * @param[in]  pFileName
+ * The file name or full path of the file.
+ *
+ * @return
+ * The duration of the sound, in milliseconds.
+ * Returns 0 in case of failure.
+ **/
 static
 ULONG
 GetSoundDuration(LPCWSTR pFileName)
