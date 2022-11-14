@@ -5,6 +5,7 @@ list(APPEND SOURCE
     clientimc.c
     himc.c
     imcc.c
+    ImmEnumInputContext.c
     ImmGetImeInfoEx.c
     ImmIsUIMessage.c
     JapanImeConvTestA.c
