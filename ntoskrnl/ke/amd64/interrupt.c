@@ -82,6 +82,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 {
     PVOID CurrentHandler;
     PKINTERRUPT ConnectedInterrupt;
+    KIRQL OldIrql;
 
     ASSERT(Interrupt->Vector >= PRIMARY_VECTOR_BASE);
     ASSERT(Interrupt->Vector <= MAXIMUM_IDTVECTOR);
@@ -92,6 +93,10 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 
     /* Check if its already connected */
     if (Interrupt->Connected) return TRUE;
+
+    /* Set the system affinity and acquire the dispatcher lock */
+    KeSetSystemAffinityThread(1ULL << Interrupt->Number);
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Query the current handler */
     CurrentHandler = KeQueryInterruptHandler(Interrupt->Vector);
@@ -118,7 +123,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             /* Didn't work, restore old handler */
             DPRINT1("HalEnableSystemInterrupt failed\n");
             KeRegisterInterruptHandler(Interrupt->Vector, CurrentHandler);
-            return FALSE;
+            goto exit;
         }
     }
     else
@@ -131,7 +136,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             (ConnectedInterrupt->ShareVector == 0) ||
             (Interrupt->Mode != ConnectedInterrupt->Mode))
         {
-            return FALSE;
+            goto exit;
         }
 
         /* Insert the new interrupt into the connected interrupt's list */
@@ -141,22 +146,92 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 
     /* Mark as connected */
     Interrupt->Connected = TRUE;
-
-    return TRUE;
+exit:
+    /* Release the dispatcher lock and restore the thread affinity */
+    KiReleaseDispatcherLock(OldIrql);
+    KeRevertToUserAffinityThread();
+    return Interrupt->Connected;
 }
 
 BOOLEAN
 NTAPI
 KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 {
-    /* If the interrupt wasn't connected, there's nothing to do */
-    if (!Interrupt->Connected)
+    KIRQL OldIrql;
+    PVOID VectorHandler;
+    PKINTERRUPT VectorFirstInterrupt, NextInterrupt;
+    PLIST_ENTRY HandlerHead, Blink, Flink;
+
+    /* Set the system affinity and acquire the dispatcher lock */
+    KeSetSystemAffinityThread(1ULL << Interrupt->Number);
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Check if the interrupt was connected - otherwise there's nothing to do */
+    if (Interrupt->Connected)
     {
-        return FALSE;
+        /* Get the handler for this interrupt vector */
+        VectorHandler = KeQueryInterruptHandler(Interrupt->Vector);
+
+        /* Get the first interrupt for this handler */
+        VectorFirstInterrupt = CONTAINING_RECORD(VectorHandler, KINTERRUPT, DispatchCode);
+
+        /* The first interrupt list entry is the interrupt list head */
+        HandlerHead = &VectorFirstInterrupt->InterruptListEntry;
+
+        /* If the list is empty, this is the only interrupt for this vector */
+        if (IsListEmpty(HandlerHead))
+        {
+            /* If the list is empty, and the head is not from this interrupt,
+             * this interrupt is somehow incorrectly connected */
+            ASSERT(HandlerHead == &Interrupt->InterruptListEntry);
+
+            /* This is the only interrupt, the handler can be disconnected */
+            HalDisableSystemInterrupt(Interrupt->Vector, Interrupt->Irql);
+            KeRegisterInterruptHandler(Interrupt->Vector, KiUnexpectedRange);
+        }
+        /* If the interrupt to be disconnected is the list head, but some others follow */
+        else if (HandlerHead == &Interrupt->InterruptListEntry)
+        {
+            Blink = HandlerHead->Blink;
+            Flink = HandlerHead->Flink;
+
+            /* Get the next interrupt */
+            NextInterrupt = CONTAINING_RECORD(HandlerHead,
+                                              KINTERRUPT,
+                                              InterruptListEntry);
+
+            /* Relocate the head to the next element */
+            HandlerHead = Flink;
+            HandlerHead->Blink = Blink;
+            HandlerHead->Flink = HandlerHead;
+
+            /* Set the next interrupt */
+            KeRegisterInterruptHandler(Interrupt->Vector,
+                                       NextInterrupt->DispatchCode);
+        }
+        /* If the interrupt to be disconnected is not the list head */
+        else
+        {
+            /* Get the next interrupt */
+            NextInterrupt = CONTAINING_RECORD(Interrupt->InterruptListEntry.Flink,
+                                              KINTERRUPT,
+                                              InterruptListEntry);
+
+            /* Remove the to be disconnected interrupt from the interrupt list */
+            RemoveEntryList(&Interrupt->InterruptListEntry);
+
+            /* Set the next interrupt as the handler for this vector */
+            KeRegisterInterruptHandler(Interrupt->Vector,
+                                       NextInterrupt->DispatchCode);
+        }
+        
+        Interrupt->Connected = FALSE;
     }
 
-    UNIMPLEMENTED;
-    __debugbreak();
+    /* Release the dispatcher lock and restore the thread affinity */
+    KiReleaseDispatcherLock(OldIrql);
+    KeRevertToUserAffinityThread();
+
     return TRUE;
 }
 
