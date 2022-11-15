@@ -158,9 +158,9 @@ NTAPI
 KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 {
     KIRQL OldIrql;
-    PVOID VectorHandler;
+    PVOID VectorHandler, UnexpectedHandler;
     PKINTERRUPT VectorFirstInterrupt, NextInterrupt;
-    PLIST_ENTRY HandlerHead, Blink, Flink;
+    PLIST_ENTRY HandlerHead, Blink, Flink; 
 
     /* Set the system affinity and acquire the dispatcher lock */
     KeSetSystemAffinityThread(1ULL << Interrupt->Number);
@@ -185,10 +185,11 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
              * this interrupt is somehow incorrectly connected */
             ASSERT(HandlerHead == &Interrupt->InterruptListEntry);
 
+            UnexpectedHandler = &((PKI_INTERRUPT_DISPATCH_ENTRY)KiUnexpectedRange)[Interrupt->Vector]._Op_push;
+
             /* This is the only interrupt, the handler can be disconnected */
             HalDisableSystemInterrupt(Interrupt->Vector, Interrupt->Irql);
-            KeRegisterInterruptHandler(Interrupt->Vector, KiUnexpectedRange);
-            
+            KeRegisterInterruptHandler(Interrupt->Vector, UnexpectedHandler);
         }
         /* If the interrupt to be disconnected is the list head, but some others follow */
         else if (HandlerHead == &Interrupt->InterruptListEntry)
