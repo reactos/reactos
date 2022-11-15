@@ -14,14 +14,24 @@ static BOOL Setup = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL UserIsIMMEnabled(VOID)
+BOOL FASTCALL UserIsDBCSEnabled(VOID)
 {
-    WCHAR szLoadIMM[] = L"LoadIMM";
+    return NLS_MB_CODE_PAGE_TAG;
+}
+
+BOOL FASTCALL UserIsIMMEnabled(VOID)
+{
+    static WCHAR s_szLoadIMM[] = L"LoadIMM";
 
     if (NLS_MB_CODE_PAGE_TAG)
         return TRUE;
 
-    return !!RegGetSectionDWORD(L"IMM", szLoadIMM, TRUE);
+    return !!RegGetSectionDWORD(L"IMM", s_szLoadIMM, TRUE);
+}
+
+BOOL FASTCALL UserIsCiceroEnabled(VOID)
+{
+    return FALSE; /* FIXME: Cicero is not supported yet */
 }
 
 BOOL
@@ -179,13 +189,14 @@ InitMetrics(VOID)
     piSysMet[90] = 0;
 #endif
 
-    if (NLS_MB_CODE_PAGE_TAG) /* Is the system multi-byte codepage? */
+    if (UserIsDBCSEnabled())
         gpsi->dwSRVIFlags |= SRVINFO_DBCSENABLED; /* DBCS Support */
 
     if (UserIsIMMEnabled())
         gpsi->dwSRVIFlags |= SRVINFO_IMM32; /* IME Support */
 
-    /*gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED;*/ /* Cicero is not supported yet */
+    if (UserIsCiceroEnabled())
+        gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED; /* Cicero support */
 
     Setup = TRUE;
 
