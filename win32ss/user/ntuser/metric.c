@@ -14,6 +14,16 @@ static BOOL Setup = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL UserIsIMMEnabled(VOID)
+{
+    WCHAR szLoadIMM[] = L"LoadIMM";
+
+    if (NLS_MB_CODE_PAGE_TAG)
+        return TRUE;
+
+    return !!RegGetSectionDWORD(L"IMM", szLoadIMM, TRUE);
+}
+
 BOOL
 NTAPI
 InitMetrics(VOID)
@@ -169,12 +179,13 @@ InitMetrics(VOID)
     piSysMet[90] = 0;
 #endif
 
-    /*gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED;*/ /* Cicero is not supported yet */
-
     if (NLS_MB_CODE_PAGE_TAG) /* Is the system multi-byte codepage? */
-    {
-        gpsi->dwSRVIFlags |= (SRVINFO_DBCSENABLED | SRVINFO_IMM32); /* DBCS+IME Support */
-    }
+        gpsi->dwSRVIFlags |= SRVINFO_DBCSENABLED; /* DBCS Support */
+
+    if (UserIsIMMEnabled())
+        gpsi->dwSRVIFlags |= SRVINFO_IMM32; /* IME Support */
+
+    /*gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED;*/ /* Cicero is not supported yet */
 
     Setup = TRUE;
 

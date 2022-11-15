@@ -83,6 +83,7 @@ NTSTATUS FASTCALL InitSessionImpl(VOID);
 
 BOOL NTAPI InitMetrics(VOID);
 LONG NTAPI UserGetSystemMetrics(ULONG Index);
+BOOL UserIsIMMEnabled(VOID);
 
 /*************** KEYBOARD.C ***************/
 
