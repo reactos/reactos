@@ -188,6 +188,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
             /* This is the only interrupt, the handler can be disconnected */
             HalDisableSystemInterrupt(Interrupt->Vector, Interrupt->Irql);
             KeRegisterInterruptHandler(Interrupt->Vector, KiUnexpectedRange);
+            
         }
         /* If the interrupt to be disconnected is the list head, but some others follow */
         else if (HandlerHead == &Interrupt->InterruptListEntry)
@@ -195,7 +196,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
             Blink = HandlerHead->Blink;
             Flink = HandlerHead->Flink;
 
-            /* Get the next interrupt */
+            /* Get the next interrupt from the list head */
             NextInterrupt = CONTAINING_RECORD(HandlerHead,
                                               KINTERRUPT,
                                               InterruptListEntry);
@@ -205,14 +206,14 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
             HandlerHead->Blink = Blink;
             HandlerHead->Flink = HandlerHead;
 
-            /* Set the next interrupt */
+            /* Set the next interrupt as the handler for this vector */
             KeRegisterInterruptHandler(Interrupt->Vector,
                                        NextInterrupt->DispatchCode);
         }
         /* If the interrupt to be disconnected is not the list head */
         else
         {
-            /* Get the next interrupt */
+            /* Get the next interrupt in the list */
             NextInterrupt = CONTAINING_RECORD(Interrupt->InterruptListEntry.Flink,
                                               KINTERRUPT,
                                               InterruptListEntry);
@@ -225,6 +226,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
                                        NextInterrupt->DispatchCode);
         }
         
+        /* Mark as not connected */
         Interrupt->Connected = FALSE;
     }
 
