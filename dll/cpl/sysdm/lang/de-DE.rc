@@ -366,7 +366,7 @@ BEGIN
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
     IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
     IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei muss zwischen 2 MB und %lu MB auf dem gewählten Laufwerk sein."
-    IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße sein, und muss kleiner als %lu MB auf dem gewählten Laufwerk sein."
+    IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße und muss kleiner als %lu MB auf dem gewählten Laufwerk sein."
     IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "Keine"
     IDS_PAGEFILE_SYSTEM "Systemverwaltet"

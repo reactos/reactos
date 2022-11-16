@@ -512,7 +512,7 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
     Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
     if (NT_SUCCESS(Status))
     {
-        DPRINT("SMSS:PFILE: NtCreatePagingFile(%wZ, 0x%I64X, 0x%I64X) succeeded.\n",
+        DPRINT("SMSS:PFILE: NtCreatePagingFile(%wZ, 0x%I64X, 0x%I64X) succeeded\n",
                 Name,
                 MinSize->QuadPart,
                 MaxSize->QuadPart);
