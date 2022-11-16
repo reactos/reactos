@@ -11,7 +11,6 @@
 #include "devmgmt.h"
 #include "MainWindow.h"
 
-
 /* DATA *****************************************************/
 
 #define BTN_PROPERTIES      0
@@ -37,16 +36,15 @@ static const MENU_HINT MainMenuHintTable[] =
     { IDC_SCAN_HARDWARE, IDS_HINT_SCAN },
     { IDC_ENABLE_DRV, IDS_HINT_ENABLE },
     { IDC_DISABLE_DRV, IDS_HINT_DISABLE },
-    { IDC_UPDATE_DRV, IDS_HINT_UPDATE },  
+    { IDC_UPDATE_DRV, IDS_HINT_UPDATE },
     { IDC_UNINSTALL_DRV, IDS_HINT_UNINSTALL },
     { IDC_ADD_HARDWARE, IDS_HINT_ADD },
-    
 
     // View Menu
-    { IDC_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
-    { IDC_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
-    { IDC_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
-    { IDC_RESBYCONN, IDS_HINT_RES_BY_TYPE},
+    { IDC_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE },
+    { IDC_DEVBYCONN, IDS_HINT_DEV_BY_CONN },
+    { IDC_RESBYTYPE, IDS_HINT_RES_BY_TYPE },
+    { IDC_RESBYCONN, IDS_HINT_RES_BY_CONN },
     { IDC_SHOWHIDDEN, IDS_HINT_SHOW_HIDDEN },
 
     { IDC_ABOUT, IDS_HINT_ABOUT }
@@ -177,14 +175,14 @@ CDeviceManager::Initialize(_In_z_ LPCTSTR lpCaption,
                                      this);
     }
 
-    // Return creation result 
+    // Return creation result
     return !!(m_hMainWnd);
 }
 
 void
 CDeviceManager::Uninitialize(void)
 {
-    // Unregister the window class 
+    // Unregister the window class
     UnregisterClassW(m_szMainWndClass, g_hThisInstance);
 }
 
@@ -193,7 +191,7 @@ CDeviceManager::Run(void)
 {
     MSG Msg;
 
-    // Pump the message queue 
+    // Pump the message queue
     while (GetMessageW(&Msg, NULL, 0, 0 ) != 0)
     {
         TranslateMessage(&Msg);
