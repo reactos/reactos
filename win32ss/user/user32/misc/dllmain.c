@@ -1,5 +1,6 @@
 #include <user32.h>
 #include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
 #include <strsafe.h>
 
 #define MAX_USER_MODE_DRV_BUFFER 526
@@ -35,6 +36,7 @@ BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
 BOOLEAN gfFirstThread   = TRUE;
 HICON hIconSmWindows = NULL, hIconWindows = NULL;
+ULONG_PTR gHighestUserAddress = 0;
 
 WCHAR szAppInit[KEY_LENGTH];
 
@@ -386,6 +388,7 @@ BOOL
 Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    SYSTEM_BASIC_INFORMATION SysInfo;
 
     TRACE("user32::Init(0x%p) -->\n", UserCon);
 
@@ -399,6 +402,14 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
     gfServerProcess = FALSE;
     gfFirstThread   = TRUE;
     //// End of HACK!! ///
+
+    if (NT_SUCCESS(NtQuerySystemInformation(SystemBasicInformation,
+                                            &SysInfo,
+                                            sizeof(SysInfo),
+                                            NULL)))
+    {
+        gHighestUserAddress = SysInfo.MaximumUserModeAddress;
+    }
 
     /*
      * Retrieve data from the connect info structure if the initializing
@@ -466,7 +477,7 @@ Cleanup(VOID)
     DeleteFrameBrushes();
 }
 
-// UserClientDllInitialize
+// Win: UserClientDllInitialize
 BOOL
 WINAPI
 DllMain(
