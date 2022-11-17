@@ -2395,4 +2395,11 @@ BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow)
     return TRUE;
 }
 
+/* Win: xxxCheckImeShowStatusInThread */
+VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd)
+{
+    if (IS_IMM_MODE() && !(pImeWnd->state2 & WNDS2_INDESTROY))
+        IntCheckImeShowStatus(pImeWnd, pImeWnd->head.pti);
+}
+
 /* EOF */

@@ -670,7 +670,7 @@ NtUserCallHwndLock(
             break;
 
         case HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD:
-            // TODO:
+            IntCheckImeShowStatusInThread(Window);
             break;
     }
 
