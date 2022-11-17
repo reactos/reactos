@@ -2968,6 +2968,26 @@ ProcessSetupInf(
     }
 #endif
 
+    WCHAR szData[MAX_PATH] = L"";
+    LPWSTR pData = szData;
+    size_t pcchLength;
+
+    GetWindowsDirectoryW(szData, ARRAYSIZE(szData));
+    StringCchCatW(szData, ARRAYSIZE(szData), L"\\inf");
+    if (FAILED(StringCchLengthW(szData, ARRAYSIZE(szData), &pcchLength)))
+    {
+        return;
+    }
+    pData += pcchLength + 1;
+    pcchLength = (ARRAYSIZE(szData) - pcchLength - 1);
+    StringCchCopyW(pData, pcchLength, pSetupData->SourcePath);
+    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szData), &pcchLength)))
+    {
+        return;
+    }
+    pData += pcchLength + 1;
+    *pData = UNICODE_NULL;
+
     res = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Setup",
                           0, NULL,
@@ -2978,10 +2998,6 @@ ProcessSetupInf(
                           NULL);
     if (res == ERROR_SUCCESS)
     {
-        WCHAR szData[MAX_PATH] = L"";
-        LPWSTR pData = szData;
-        size_t pcchLength;
-
         res = RegSetValueExW(hKey,
                              L"SourcePath",
                              0,
@@ -2996,28 +3012,12 @@ ProcessSetupInf(
                              (LPBYTE)pSetupData->SourcePath,
                              (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
 
-        GetWindowsDirectoryW(szData, ARRAYSIZE(szData));
-        StringCchCatW(szData, ARRAYSIZE(szData), L"\\inf");
-        if (FAILED(StringCchLengthW(szData, ARRAYSIZE(szData), &pcchLength)))
-        {
-            return;
-        }
-        pData += pcchLength + 1;
-        pcchLength = (ARRAYSIZE(szData) - pcchLength - 1);
-        StringCchCopyW(pData, pcchLength, pSetupData->SourcePath);
-        if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szData), &pcchLength)))
-        {
-            return;
-        }
-        pData += pcchLength + 1;
-        *pData = UNICODE_NULL;
-
         res = RegSetValueExW(hKey,
                              L"Installation Sources",
                              0,
                              REG_MULTI_SZ,
                              (LPBYTE)szData,
-                             ((DWORD)(pData - szData) * sizeof(WCHAR)));
+                             (DWORD)((pData - szData) * sizeof(WCHAR)));
         RegCloseKey(hKey);
     }
 

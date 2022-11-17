@@ -587,8 +587,8 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
         case BFFM_INITIALIZED:
         {
             LPCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
-            SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) pszPath);
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver(NULL, (LPWSTR)pszPath));
+            SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)pszPath);
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver((PDEVINSTDATA)lpData, (LPWSTR)pszPath));
             break;
         }
 
@@ -597,8 +597,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             WCHAR szDir[MAX_PATH];
             if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
             {
-                PDEVINSTDATA DevInstData = (PDEVINSTDATA)lpData;
-                return CheckBestDriver(DevInstData, szDir);
+                return CheckBestDriver((PDEVINSTDATA)lpData, szDir);
             }
             break;
         }
@@ -678,7 +677,7 @@ CHSourceDlgProc(
 
                 case IDC_BROWSE:
                 {
-                    BROWSEINFO bi = { 0 };
+                    BROWSEINFOW bi = { 0 };
                     LPITEMIDLIST pidl;
                     WCHAR Title[MAX_PATH];
                     WCHAR CustomSearchPath[MAX_PATH];
@@ -692,7 +691,7 @@ CHSourceDlgProc(
                     bi.lpszTitle = Title;
                     bi.lpfn = BrowseCallbackProc;
                     bi.lParam = (LPARAM)DevInstData;
-                    pidl = SHBrowseForFolder(&bi);
+                    pidl = SHBrowseForFolderW(&bi);
                     if (pidl)
                     {
                         WCHAR Directory[MAX_PATH];
