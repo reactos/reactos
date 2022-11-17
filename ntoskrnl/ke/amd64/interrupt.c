@@ -196,7 +196,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
         {
             /* Relocate the head to the next element */
             HandlerHead = HandlerHead->Flink;
-            RemoveTailList(&HandlerHead);
+            RemoveTailList(HandlerHead);
 
             /* Get the next interrupt from the list head */
             NextInterrupt = CONTAINING_RECORD(HandlerHead,
