@@ -17,8 +17,8 @@
 #include <debug.h>
 
 extern UCHAR KiInterruptDispatchTemplate[16];
-extern UCHAR KiUnexpectedRange[];
-extern UCHAR KiUnexpectedRangeEnd[];
+extern KI_INTERRUPT_DISPATCH_ENTRY KiUnexpectedRange[256];
+extern KI_INTERRUPT_DISPATCH_ENTRY KiUnexpectedRangeEnd[];
 void KiInterruptDispatch(void);
 
 
@@ -160,7 +160,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
     KIRQL OldIrql;
     PVOID VectorHandler, UnexpectedHandler;
     PKINTERRUPT VectorFirstInterrupt, NextInterrupt;
-    PLIST_ENTRY HandlerHead, Blink, Flink; 
+    PLIST_ENTRY HandlerHead;
 
     /* Set the system affinity and acquire the dispatcher lock */
     KeSetSystemAffinityThread(1ULL << Interrupt->Number);
@@ -183,29 +183,25 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
         {
             /* If the list is empty, and the head is not from this interrupt,
              * this interrupt is somehow incorrectly connected */
-            ASSERT(HandlerHead == &Interrupt->InterruptListEntry);
+            ASSERT(VectorFirstInterrupt == Interrupt);
 
-            UnexpectedHandler = &((PKI_INTERRUPT_DISPATCH_ENTRY)KiUnexpectedRange)[Interrupt->Vector]._Op_push;
+            UnexpectedHandler = &KiUnexpectedRange[Interrupt->Vector]._Op_push;
 
             /* This is the only interrupt, the handler can be disconnected */
             HalDisableSystemInterrupt(Interrupt->Vector, Interrupt->Irql);
             KeRegisterInterruptHandler(Interrupt->Vector, UnexpectedHandler);
         }
         /* If the interrupt to be disconnected is the list head, but some others follow */
-        else if (HandlerHead == &Interrupt->InterruptListEntry)
+        else if (VectorFirstInterrupt == Interrupt)
         {
-            Blink = HandlerHead->Blink;
-            Flink = HandlerHead->Flink;
+            /* Relocate the head to the next element */
+            HandlerHead = HandlerHead->Flink;
+            RemoveTailList(&HandlerHead);
 
             /* Get the next interrupt from the list head */
             NextInterrupt = CONTAINING_RECORD(HandlerHead,
                                               KINTERRUPT,
                                               InterruptListEntry);
-
-            /* Relocate the head to the next element */
-            HandlerHead = Flink;
-            HandlerHead->Blink = Blink;
-            HandlerHead->Flink = HandlerHead;
 
             /* Set the next interrupt as the handler for this vector */
             KeRegisterInterruptHandler(Interrupt->Vector,
@@ -221,10 +217,6 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 
             /* Remove the to be disconnected interrupt from the interrupt list */
             RemoveEntryList(&Interrupt->InterruptListEntry);
-
-            /* Set the next interrupt as the handler for this vector */
-            KeRegisterInterruptHandler(Interrupt->Vector,
-                                       NextInterrupt->DispatchCode);
         }
         
         /* Mark as not connected */
