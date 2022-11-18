@@ -237,7 +237,14 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
     else if (BootPhase == 1)
     {
         /* Allocate a buffer for debug log */
-        KdpDebugBuffer = ExAllocatePool(NonPagedPool, KdpBufferSize);
+        KdpDebugBuffer = ExAllocatePoolZero(NonPagedPool,
+                                            KdpBufferSize,
+                                            TAG_KDBG);
+        if (!KdpDebugBuffer)
+        {
+            KdpDebugMode.File = FALSE;
+            return;
+        }
         KdpFreeBytes = KdpBufferSize;
 
         /* Initialize spinlock */
@@ -519,8 +526,10 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
          * see kdbp_cli.c:KdbpCmdDmesg()/2
          */
-        KdpDmesgBuffer = ExAllocatePool(NonPagedPool, KdpDmesgBufferSize + 1);
-        RtlZeroMemory(KdpDmesgBuffer, KdpDmesgBufferSize + 1);
+        KdpDmesgBuffer = ExAllocatePoolZero(NonPagedPool,
+                                            KdpDmesgBufferSize + 1,
+                                            TAG_KDBG);
+        /* Ignore failure if KdpDmesgBuffer is NULL */
         KdpDmesgFreeBytes = KdpDmesgBufferSize;
         KdbDmesgTotalWritten = 0;
 
