@@ -768,17 +768,17 @@ EndFriendlyDialog(
 {
     MSGINACLOSETHEMEDATA msCloseThemeData = NULL;
     int i;
-    
+
+    if (pContext->bTimer)
+    {
+        KillTimer(hDlg, pContext->iTimer);
+    }
+
     if (pContext->hUxtheme)
     {
         msCloseThemeData = (MSGINACLOSETHEMEDATA)GetProcAddress(pContext->hUxtheme, "CloseThemeData");
         if (!msCloseThemeData)
             return;
-    }
-
-    if (pContext->bTimer)
-    {
-        KillTimer(hDlg, pContext->iTimer);
     }
 
     for (i = 0; i < DLG_BITMAP_CUSTOMIZABLE; i++)
