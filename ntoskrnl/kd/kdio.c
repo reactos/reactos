@@ -49,10 +49,15 @@ KDP_DEBUG_MODE KdpDebugMode;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
-PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
-                                         KdpSerialInit,
-                                         KdpDebugLogInit,
-                                         KdpKdbgInit};
+PKDP_INIT_ROUTINE InitRoutines[KdMax] =
+{
+    KdpScreenInit,
+    KdpSerialInit,
+    KdpDebugLogInit,
+#ifdef KDBG
+    KdpKdbgInit
+#endif
+};
 
 static ULONG KdbgNextApiNumber = DbgKdContinueApi;
 static CONTEXT KdbgContext;
@@ -155,7 +160,7 @@ KdpLoggerThread(PVOID Context)
 static VOID
 NTAPI
 KdpPrintToLogFile(PCHAR String,
-                  ULONG StringLength)
+                  ULONG Length)
 {
     KIRQL OldIrql;
     ULONG beg, end, num;
@@ -168,8 +173,8 @@ KdpPrintToLogFile(PCHAR String,
 
     beg = KdpCurrentPosition;
     num = KdpFreeBytes;
-    if (StringLength < num)
-        num = StringLength;
+    if (Length < num)
+        num = Length;
 
     if (num != 0)
     {
@@ -222,8 +227,6 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
 
     if (BootPhase == 0)
     {
-        KdComPortInUse = NULL;
-
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpDebugLogInit;
         DispatchTable->KdpPrintRoutine = KdpPrintToLogFile;
@@ -303,19 +306,19 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
 
 /* SERIAL FUNCTIONS **********************************************************/
 
-VOID
+static VOID
 NTAPI
-KdpSerialDebugPrint(PCHAR Message,
-                    ULONG Length)
+KdpSerialPrint(PCHAR String,
+               ULONG Length)
 {
-    PCHAR pch = (PCHAR)Message;
+    PCHAR pch = String;
     KIRQL OldIrql;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
 
-    /* Output the message */
-    while (pch < Message + Length && *pch != '\0')
+    /* Output the string */
+    while (pch < String + Length && *pch)
     {
         if (*pch == '\n')
         {
@@ -340,7 +343,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
     {
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpSerialInit;
-        DispatchTable->KdpPrintRoutine = KdpSerialDebugPrint;
+        DispatchTable->KdpPrintRoutine = KdpSerialPrint;
 
         /* Initialize the Port */
         if (!KdPortInitializeEx(&SerialPortInfo, SerialPortNumber))
@@ -396,21 +399,21 @@ KdpScreenRelease(VOID)
 }
 
 /*
- * Screen debug logger function KdpScreenPrint() writes text messages into
+ * Screen debug logger function KdpScreenPrint() writes text strings into
  * KdpDmesgBuffer, using it as a circular buffer. KdpDmesgBuffer contents could
  * be later (re)viewed using dmesg command of kdbg. KdpScreenPrint() protects
  * KdpDmesgBuffer from simultaneous writes by use of KdpDmesgLogSpinLock.
  */
 static VOID
 NTAPI
-KdpScreenPrint(PCHAR Message,
+KdpScreenPrint(PCHAR String,
                ULONG Length)
 {
-    PCHAR pch = (PCHAR)Message;
+    PCHAR pch = String;
     KIRQL OldIrql;
     ULONG beg, end, num;
 
-    while (pch < Message + Length && *pch)
+    while (pch < String + Length && *pch)
     {
         if (*pch == '\b')
         {
@@ -453,7 +456,7 @@ KdpScreenPrint(PCHAR Message,
         KdpScreenLineBufferPos = KdpScreenLineLength;
     }
 
-    /* Dmesg: store Message in the buffer to show it later */
+    /* Dmesg: store the string in the buffer to show it later */
     if (KdbpIsInDmesgMode)
        return;
 
@@ -473,12 +476,12 @@ KdpScreenPrint(PCHAR Message,
         end = (beg + num) % KdpDmesgBufferSize;
         if (end > beg)
         {
-            RtlCopyMemory(KdpDmesgBuffer + beg, Message, Length);
+            RtlCopyMemory(KdpDmesgBuffer + beg, String, Length);
         }
         else
         {
-            RtlCopyMemory(KdpDmesgBuffer + beg, Message, KdpDmesgBufferSize - beg);
-            RtlCopyMemory(KdpDmesgBuffer, Message + (KdpDmesgBufferSize - beg), end);
+            RtlCopyMemory(KdpDmesgBuffer + beg, String, KdpDmesgBufferSize - beg);
+            RtlCopyMemory(KdpDmesgBuffer, String + (KdpDmesgBufferSize - beg), end);
         }
         KdpDmesgCurrentPosition = end;
 
@@ -491,7 +494,7 @@ KdpScreenPrint(PCHAR Message,
 
     /* Optional step(?): find out a way to notify about buffer exhaustion,
      * and possibly fall into kbd to use dmesg command: user will read
-     * debug messages before they will be wiped over by next writes.
+     * debug strings before they will be wiped over by next writes.
      */
 }
 
@@ -530,6 +533,25 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
         HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
     }
 }
+
+#ifdef KDBG
+/* KDBG FUNCTIONS ************************************************************/
+
+/* NOTE: This may be moved completely into kdb_symbols.c */
+VOID NTAPI
+KdbInitialize(PKD_DISPATCH_TABLE DispatchTable, ULONG BootPhase);
+
+VOID
+NTAPI
+KdpKdbgInit(
+    PKD_DISPATCH_TABLE DispatchTable,
+    ULONG BootPhase)
+{
+    /* Forward the call */
+    KdbInitialize(DispatchTable, BootPhase);
+}
+#endif
+
 
 /* GENERAL FUNCTIONS *********************************************************/
 
