@@ -191,7 +191,7 @@ BOOL TranslateChildTabMessage(PMSG msg)
 
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
-    PostMessageW(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
+    PostMessageW(hFrameWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
     return TRUE;
 }
 

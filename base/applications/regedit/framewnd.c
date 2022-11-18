@@ -1279,8 +1279,18 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
     case ID_SWITCH_PANELS:
-        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
-        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
+        {
+            BOOL bShiftDown = GetKeyState(VK_SHIFT) < 0;
+            HWND hwndItem = GetNextDlgTabItem(g_pChildWnd->hWnd, GetFocus(), bShiftDown);
+            if (hwndItem == g_pChildWnd->hAddressBarWnd)
+                PostMessageW(hwndItem, EM_SETSEL, 0, -1);
+            SetFocus(hwndItem);
+        }
+        break;
+
+    case ID_ADDRESS_FOCUS:
+        SendMessageW(g_pChildWnd->hAddressBarWnd, EM_SETSEL, 0, -1);
+        SetFocus(g_pChildWnd->hAddressBarWnd);
         break;
 
     default:

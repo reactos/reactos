@@ -157,6 +157,7 @@
 #define ID_TREE_SUGGESTION_MAX       32887
 #define ID_TREE_EXPORT               32888
 #define ID_TREE_PERMISSIONS          32889
+#define ID_ADDRESS_FOCUS             32890
 
 #define IDS_FLT_REGFILE      31000
 #define IDS_FLT_REGFILES     31001
