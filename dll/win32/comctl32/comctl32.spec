@@ -167,7 +167,7 @@
 403 stdcall -ordinal EnumMRUListW(long long ptr long)
 404 stdcall -noname CreateMRUListLazyW(ptr long long long)
 410 stdcall -ordinal SetWindowSubclass(long ptr long long)
-411 stdcall -noname GetWindowSubclass(long ptr long ptr)
+411 stdcall -ordinal GetWindowSubclass(long ptr long ptr)
 412 stdcall -ordinal RemoveWindowSubclass(long ptr long)
 413 stdcall -ordinal DefSubclassProc(long long long long)
 414 stdcall -noname MirrorIcon(ptr ptr)

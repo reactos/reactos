@@ -12,6 +12,7 @@
     <windowClass versioned="no">NativeFontCtl</windowClass>
     <windowClass versioned="no">ReBarWindow32</windowClass>
     <windowClass versioned="no">ScrollBar</windowClass>
+    <windowClass versioned="no">Static</windowClass>
     <windowClass versioned="no">SysAnimate32</windowClass>
     <windowClass versioned="no">SysDateTimePick32</windowClass>
     <windowClass versioned="no">SysHeader32</windowClass>

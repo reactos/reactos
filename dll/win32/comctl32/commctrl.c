@@ -129,64 +129,6 @@ static WCHAR* GetManifestPath(BOOL create, BOOL bV6)
     return pwszBuf;
 }
 
-static BOOL create_manifest(BOOL install, BOOL bV6)
-{
-    WCHAR *pwszBuf;
-    HRSRC hResInfo;
-    HGLOBAL hResData;
-    PVOID pManifest;
-    DWORD cbManifest, cbWritten;
-    HANDLE hFile;
-    BOOL bRet = FALSE;
-
-    if (bV6)
-        hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", (LPWSTR)RT_MANIFEST);
-    else
-        hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFESTV5", (LPWSTR)RT_MANIFEST);
-
-    if (!hResInfo)
-        return FALSE;
-
-    cbManifest = SizeofResource(COMCTL32_hModule, hResInfo);
-    if (!cbManifest)
-        return FALSE;
-
-    hResData = LoadResource(COMCTL32_hModule, hResInfo);
-    if (!hResData)
-        return FALSE;
-
-    pManifest = LockResource(hResData);
-    if (!pManifest)
-        return FALSE;
-
-    pwszBuf = GetManifestPath(TRUE, bV6);
-    if (!pwszBuf)
-        return FALSE;
-
-    if (install)
-    {
-        hFile = CreateFileW(pwszBuf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-        if (hFile != INVALID_HANDLE_VALUE)
-        {
-            if (WriteFile(hFile, pManifest, cbManifest, &cbWritten, NULL) && cbWritten == cbManifest)
-                bRet = TRUE;
-
-            CloseHandle(hFile);
-
-            if (!bRet)
-                DeleteFileW(pwszBuf);
-            else
-                TRACE("created %s\n", debugstr_w(pwszBuf));
-        }
-    }
-    else
-        bRet = DeleteFileW(pwszBuf);
-
-    HeapFree(GetProcessHeap(), 0, pwszBuf);
-
-    return bRet;
-}
-
 static HANDLE CreateComctl32ActCtx(BOOL bV6)
 {
     HANDLE ret;
@@ -237,6 +179,8 @@ static void RegisterControls(BOOL bV6)
     else
     {
         BUTTON_Register();
+        STATIC_Register ();
+
         TOOLBARv6_Register();
     }
 }
@@ -333,7 +277,7 @@ BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
     return TRUE;
 }
 
-#endif
+#endif /* __REACTOS__ */
 
 /***********************************************************************
  * DllMain [Internal]
@@ -394,6 +338,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TRACKBAR_Register ();
             TREEVIEW_Register ();
             UPDOWN_Register ();
+
+            STATIC_Register ();
 
             /* subclass user32 controls */
             THEMING_Initialize ();
@@ -1178,22 +1124,6 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
-
-#ifdef __REACTOS__
-
-    if (!create_manifest(bInstall, TRUE))
-    {
-        ERR("Failed to install comctl32 v6 manifest!\n");
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-    if (!create_manifest(bInstall, FALSE))
-    {
-        ERR("Failed to install comctl32 v5 manifest!\n");
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-#endif
-
     return S_OK;
 }
 

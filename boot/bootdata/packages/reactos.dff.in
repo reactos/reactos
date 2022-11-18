@@ -70,6 +70,8 @@ Signature = "$ReactOS$"
 51 = system32\CatRoot
 52 = system32\CatRoot2
 53 = AppPatch
+54 = winsxs
+55 = winsxs\manifests
 
 .InfEnd
 
