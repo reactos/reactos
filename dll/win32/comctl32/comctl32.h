@@ -141,6 +141,8 @@ INT  WINAPI Str_GetPtrW (LPCWSTR, LPWSTR, INT);
 LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet);
 BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2);
 
+HRGN set_control_clipping(HDC hdc, const RECT *rect) DECLSPEC_HIDDEN;
+
 extern void ANIMATE_Register(void) DECLSPEC_HIDDEN;
 extern void ANIMATE_Unregister(void) DECLSPEC_HIDDEN;
 extern void COMBOEX_Register(void) DECLSPEC_HIDDEN;
@@ -167,6 +169,7 @@ extern void PROGRESS_Register(void) DECLSPEC_HIDDEN;
 extern void PROGRESS_Unregister(void) DECLSPEC_HIDDEN;
 extern void REBAR_Register(void) DECLSPEC_HIDDEN;
 extern void REBAR_Unregister(void) DECLSPEC_HIDDEN;
+extern void STATIC_Register(void) DECLSPEC_HIDDEN;
 extern void STATUS_Register(void) DECLSPEC_HIDDEN;
 extern void STATUS_Unregister(void) DECLSPEC_HIDDEN;
 extern void SYSLINK_Register(void) DECLSPEC_HIDDEN;

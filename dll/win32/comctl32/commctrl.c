@@ -179,6 +179,8 @@ static void RegisterControls(BOOL bV6)
     else
     {
         BUTTON_Register();
+        STATIC_Register ();
+
         TOOLBARv6_Register();
     }
 }
@@ -336,6 +338,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TRACKBAR_Register ();
             TREEVIEW_Register ();
             UPDOWN_Register ();
+
+            STATIC_Register ();
 
             /* subclass user32 controls */
             THEMING_Initialize ();
