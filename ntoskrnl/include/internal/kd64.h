@@ -81,8 +81,8 @@ BOOLEAN
 BOOLEAN
 NTAPI
 KdInitSystem(
-    ULONG Reserved,
-    PLOADER_PARAMETER_BLOCK LoaderBlock
+    _In_ ULONG BootPhase,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 VOID

@@ -62,13 +62,6 @@ VOID
 
 /* INIT ROUTINES *************************************************************/
 
-BOOLEAN
-NTAPI
-KdInitSystem(
-    ULONG Reserved,
-    PLOADER_PARAMETER_BLOCK LoaderBlock
-);
-
 VOID
 KdpScreenAcquire(VOID);
 
