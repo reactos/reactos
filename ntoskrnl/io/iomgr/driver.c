@@ -1731,7 +1731,8 @@ try_again:
  */
 VOID
 NTAPI
-IoDeleteDriver(IN PDRIVER_OBJECT DriverObject)
+IoDeleteDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     /* Simply dereference the Object */
     ObDereferenceObject(DriverObject);
