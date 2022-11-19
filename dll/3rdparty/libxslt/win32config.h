@@ -77,15 +77,7 @@ static int isnan (double d) {
 #endif /* _MSC_VER */
 
 #include <direct.h>
-#ifdef __REACTOS__
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#define mkdir(p,m) _mkdir(p)
-#define snprintf _snprintf
-#if _MSC_VER < 1500
-#define vsnprintf(b,c,f,a) _vsnprintf(b,c,f,a)
-#endif
-#endif
-#else /* __REACTOS__ */
+
 /* snprintf emulation taken from http://stackoverflow.com/a/8712996/1956010 */
 #if defined(_MSC_VER) && _MSC_VER < 1900
 
@@ -120,7 +112,6 @@ __inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
 }
 
 #endif /* defined(_MSC_VER) && _MSC_VER < 1900 */
-#endif /* __REACTOS__ */
 
 #define HAVE_SYS_STAT_H
 #define HAVE__STAT

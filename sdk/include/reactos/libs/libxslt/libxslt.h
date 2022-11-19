@@ -27,12 +27,10 @@
 #endif
 #endif
 
-#ifndef __REACTOS__
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <io.h>
 #include <direct.h>
 #define mkdir(p,m) _mkdir(p)
 #endif
-#endif /* __REACTOS__ */
 
 #endif /* ! __XSLT_LIBXSLT_H__ */
