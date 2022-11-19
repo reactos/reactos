@@ -5,8 +5,9 @@
  * PURPOSE:         Internal header for the Configuration Manager
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
-#define _HDL_
-#include <cportlib/cportlib.h>
+
+#pragma once
+
 #include <ndk/extypes.h>
 
 //

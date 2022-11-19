@@ -1,15 +1,16 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/inbv/inbvport.c
- * PURPOSE:         Serial Port Boot Driver for Headless Terminal Support
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Serial Port Boot Driver for Headless Terminal Support
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group
+ *              Copyright 2022-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <debug.h>
+#include <cportlib/cportlib.h>
+#include <cportlib/uartinfo.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -85,97 +86,49 @@ InbvPortInitialize(
     /* Not yet supported */
     ASSERT(IsMMIODevice == FALSE);
 
-#if defined(SARCH_PC98)
-    /* Set default baud rate */
-    if (BaudRate == 0) BaudRate = 9600;
+    /* Set the default baud rate */
+    if (BaudRate == 0)
+        BaudRate = DEFAULT_BAUD_RATE;
 
-    /* Check if port or address given */
+    /* Check if the port or address is given */
     if (PortNumber)
     {
         /* Pick correct address for port */
         if (!PortAddress)
         {
-            if (PortNumber == 1)
-            {
-                PortAddress = (PUCHAR)0x30;
-            }
-            else
-            {
-                PortAddress = (PUCHAR)0x238;
-                PortNumber = 2;
-            }
+            if (PortNumber < 1 || PortNumber > MAX_COM_PORTS)
+                PortNumber = MAX_COM_PORTS;
+            PortAddress = UlongToPtr(BaseArray[PortNumber]);
         }
     }
     else
     {
         /* Pick correct port for address */
-        PortAddress = (PUCHAR)0x30;
+#if defined(SARCH_PC98)
+        static const ULONG TestPorts[] = {1, 2};
+#else
+        static const ULONG TestPorts[] = {2, 1};
+#endif
+        PortAddress = UlongToPtr(BaseArray[TestPorts[0]]);
         if (CpDoesPortExist(PortAddress))
         {
-            PortNumber = 1;
+            PortNumber = TestPorts[0];
         }
         else
         {
-            PortAddress = (PUCHAR)0x238;
+            PortAddress = UlongToPtr(BaseArray[TestPorts[1]]);
             if (!CpDoesPortExist(PortAddress))
                 return FALSE;
-
-            PortNumber = 2;
+            PortNumber = TestPorts[1];
         }
     }
-#else
-    /* Set default baud rate */
-    if (BaudRate == 0) BaudRate = 19200;
 
-    /* Check if port or address given */
-    if (PortNumber)
-    {
-        /* Pick correct address for port */
-        if (!PortAddress)
-        {
-            switch (PortNumber)
-            {
-                case 1:
-                    PortAddress = (PUCHAR)0x3F8;
-                    break;
-
-                case 2:
-                    PortAddress = (PUCHAR)0x2F8;
-                    break;
-
-                case 3:
-                    PortAddress = (PUCHAR)0x3E8;
-                    break;
-
-                default:
-                    PortNumber = 4;
-                    PortAddress = (PUCHAR)0x2E8;
-            }
-        }
-    }
-    else
-    {
-        /* Pick correct port for address */
-        PortAddress = (PUCHAR)0x2F8;
-        if (CpDoesPortExist(PortAddress))
-        {
-            PortNumber = 2;
-        }
-        else
-        {
-            PortAddress = (PUCHAR)0x3F8;
-            if (!CpDoesPortExist(PortAddress)) return FALSE;
-            PortNumber = 1;
-        }
-    }
-#endif
-
-    /* Initialize the port unless it's already up, and then return it */
-    if (Port[PortNumber - 1].Address) return FALSE;
+    /* Initialize the port unless it's already up and return it */
+    if (Port[PortNumber - 1].Address)
+        return FALSE;
 
     CpInitialize(&Port[PortNumber - 1], PortAddress, BaudRate);
     *PortId = PortNumber - 1;
-
     return TRUE;
 }
 
