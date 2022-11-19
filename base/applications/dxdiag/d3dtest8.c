@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-BOOL D3D8Test(HWND hWnd)
+BOOL D3D8Test(GUID *lpDevice, HWND hWnd)
 {
     return FALSE;
 }

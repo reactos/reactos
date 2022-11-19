@@ -389,9 +389,9 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     GetWindowRect(hMainDialog, &rect);
                     /* FIXME log result errors */
                     if (IDC_BUTTON_TESTDD == LOWORD(wParam))
-                        DDTests();
+                        DDTests(&pDisplay->guid);
                     else if (IDC_BUTTON_TEST3D == LOWORD(wParam))
-                        D3DTests();
+                        D3DTests(&pDisplay->guid);
                     SetWindowPos(hMainDialog, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
                     break;
             }
