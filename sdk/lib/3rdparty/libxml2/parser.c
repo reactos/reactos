@@ -2194,7 +2194,8 @@ xmlSkipBlankChars(xmlParserCtxtPtr ctxt) {
      * It's Okay to use CUR/NEXT here since all the blanks are on
      * the ASCII range.
      */
-    if (ctxt->instate != XML_PARSER_DTD) {
+    if (((ctxt->inputNr == 1) && (ctxt->instate != XML_PARSER_DTD)) ||
+        (ctxt->instate == XML_PARSER_START)) {
 	const xmlChar *cur;
 	/*
 	 * if we are in the document content, go really fast
@@ -4587,6 +4588,9 @@ xmlParseCharDataComplex(xmlParserCtxtPtr ctxt, int cdata) {
 	    }
 	}
 	COPY_BUF(l,buf,nbchar,cur);
+	/* move current position before possible calling of ctxt->sax->characters */
+	NEXTL(l);
+	cur = CUR_CHAR(l);
 	if (nbchar >= XML_PARSER_BIG_BUFFER_SIZE) {
 	    buf[nbchar] = 0;
 
@@ -4620,8 +4624,6 @@ xmlParseCharDataComplex(xmlParserCtxtPtr ctxt, int cdata) {
             if (ctxt->instate == XML_PARSER_EOF)
 		return;
 	}
-	NEXTL(l);
-	cur = CUR_CHAR(l);
     }
     if (nbchar != 0) {
         buf[nbchar] = 0;
@@ -4980,7 +4982,7 @@ get_more:
 		ctxt->input->cur = in;
 		in++;
 		ctxt->input->line++; ctxt->input->col = 1;
-		continue; /* while */
+		goto get_more;
 	    }
 	    in--;
 	}
@@ -10657,16 +10659,16 @@ xmlParseXMLDecl(xmlParserCtxtPtr ctxt) {
 
 void
 xmlParseMisc(xmlParserCtxtPtr ctxt) {
-    while ((ctxt->instate != XML_PARSER_EOF) &&
-           (((RAW == '<') && (NXT(1) == '?')) ||
-            (CMP4(CUR_PTR, '<', '!', '-', '-')) ||
-            IS_BLANK_CH(CUR))) {
+    while (ctxt->instate != XML_PARSER_EOF) {
+        SKIP_BLANKS;
+        GROW;
         if ((RAW == '<') && (NXT(1) == '?')) {
 	    xmlParsePI(ctxt);
-	} else if (IS_BLANK_CH(CUR)) {
-	    NEXT;
-	} else
+        } else if (CMP4(CUR_PTR, '<', '!', '-', '-')) {
 	    xmlParseComment(ctxt);
+        } else {
+            break;
+        }
     }
 }
 
@@ -10772,7 +10774,6 @@ xmlParseDocument(xmlParserCtxtPtr ctxt) {
     /*
      * The Misc part of the Prolog
      */
-    GROW;
     xmlParseMisc(ctxt);
 
     /*
@@ -12625,6 +12626,7 @@ xmlCreateIOParserCtxt(xmlSAXHandlerPtr sax, void *user_data,
 	    xmlFree(ctxt->sax);
 	ctxt->sax = (xmlSAXHandlerPtr) xmlMalloc(sizeof(xmlSAXHandler));
 	if (ctxt->sax == NULL) {
+	    xmlFreeParserInputBuffer(buf);
 	    xmlErrMemory(ctxt, NULL);
 	    xmlFreeParserCtxt(ctxt);
 	    return(NULL);
@@ -14672,7 +14674,8 @@ xmlInitParser(void) {
 	return;
 
 #if defined(_WIN32) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
-	atexit(xmlCleanupParser);
+    if (xmlFree == free)
+        atexit(xmlCleanupParser);
 #endif
 
 #ifdef LIBXML_THREAD_ENABLED

@@ -1546,8 +1546,10 @@ xmlNewInputFromFile(xmlParserCtxtPtr ctxt, const char *filename) {
     }
 
     inputStream = xmlNewInputStream(ctxt);
-    if (inputStream == NULL)
+    if (inputStream == NULL) {
+	xmlFreeParserInputBuffer(buf);
 	return(NULL);
+    }
 
     inputStream->buf = buf;
     inputStream = xmlCheckHTTPInput(ctxt, inputStream);

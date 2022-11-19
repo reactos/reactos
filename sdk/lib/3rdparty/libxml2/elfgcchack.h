@@ -7973,6 +7973,18 @@ extern __typeof (xmlPopInputCallbacks) xmlPopInputCallbacks__internal_alias __at
 #endif
 #endif
 
+#if defined(LIBXML_OUTPUT_ENABLED)
+#ifdef bottom_xmlIO
+#undef xmlPopOutputCallbacks
+extern __typeof (xmlPopOutputCallbacks) xmlPopOutputCallbacks __attribute((alias("xmlPopOutputCallbacks__internal_alias")));
+#else
+#ifndef xmlPopOutputCallbacks
+extern __typeof (xmlPopOutputCallbacks) xmlPopOutputCallbacks__internal_alias __attribute((visibility("hidden")));
+#define xmlPopOutputCallbacks xmlPopOutputCallbacks__internal_alias
+#endif
+#endif
+#endif
+
 #if defined(LIBXML_TREE_ENABLED)
 #ifdef bottom_tree
 #undef xmlPreviousElementSibling

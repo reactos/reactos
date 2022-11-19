@@ -3654,6 +3654,7 @@ xmlRelaxNGParseData(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
 
     def = xmlRelaxNGNewDefine(ctxt, node);
     if (def == NULL) {
+        xmlFree(library);
         xmlFree(type);
         return (NULL);
     }
@@ -6838,6 +6839,7 @@ xmlRelaxNGNewDocParserCtxt(xmlDocPtr doc)
         (xmlRelaxNGParserCtxtPtr) xmlMalloc(sizeof(xmlRelaxNGParserCtxt));
     if (ret == NULL) {
         xmlRngPErrMemory(NULL, "building parser\n");
+        xmlFreeDoc(copy);
         return (NULL);
     }
     memset(ret, 0, sizeof(xmlRelaxNGParserCtxt));

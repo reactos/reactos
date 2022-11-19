@@ -214,32 +214,17 @@ static void usershell(void) {
 		}
 	    }
 	} else if (!strcmp(command, "add")) {
-	    if (sgml) {
-		if ((nbargs != 3) && (nbargs != 2)) {
-		    printf("add requires 2 or 3 arguments\n");
-		} else {
-		    if (argv[2] == NULL)
-			ret = xmlCatalogAdd(BAD_CAST argv[0], NULL,
-					    BAD_CAST argv[1]);
-		    else
-			ret = xmlCatalogAdd(BAD_CAST argv[0], BAD_CAST argv[1],
-					    BAD_CAST argv[2]);
-		    if (ret != 0)
-			printf("add command failed\n");
-		}
+	    if ((nbargs != 3) && (nbargs != 2)) {
+		printf("add requires 2 or 3 arguments\n");
 	    } else {
-		if ((nbargs != 3) && (nbargs != 2)) {
-		    printf("add requires 2 or 3 arguments\n");
-		} else {
-		    if (argv[2] == NULL)
-			ret = xmlCatalogAdd(BAD_CAST argv[0], NULL,
-					    BAD_CAST argv[1]);
-		    else
-			ret = xmlCatalogAdd(BAD_CAST argv[0], BAD_CAST argv[1],
-					    BAD_CAST argv[2]);
-		    if (ret != 0)
-			printf("add command failed\n");
-		}
+		if (argv[2] == NULL)
+		ret = xmlCatalogAdd(BAD_CAST argv[0], NULL,
+				    BAD_CAST argv[1]);
+		else
+		    ret = xmlCatalogAdd(BAD_CAST argv[0], BAD_CAST argv[1],
+					BAD_CAST argv[2]);
+		if (ret != 0)
+		    printf("add command failed\n");
 	    }
 	} else if (!strcmp(command, "del")) {
 	    if (nbargs != 1) {

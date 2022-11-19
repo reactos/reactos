@@ -1892,6 +1892,12 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
  * then X and Y are semantically equivalent and X can be eliminated
  * If X is the start state then make Y the start state, else replace the
  * target of all transitions to X by transitions to Y.
+ *
+ * If X is a final state, skip it.
+ * Otherwise it would be necessary to manipulate counters for this case when
+ * eliminating state 2:
+ * State 1 has a transition with an atom to state 2.
+ * State 2 is final and has an epsilon transition to state 1.
  */
 static void
 xmlFAEliminateSimpleEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
@@ -1904,7 +1910,8 @@ xmlFAEliminateSimpleEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
 	    continue;
 	if (state->nbTrans != 1)
 	    continue;
-	if (state->type == XML_REGEXP_UNREACH_STATE)
+       if (state->type == XML_REGEXP_UNREACH_STATE ||
+           state->type == XML_REGEXP_FINAL_STATE)
 	    continue;
 	/* is the only transition out a basic transition */
 	if ((state->trans[0].atom == NULL) &&
