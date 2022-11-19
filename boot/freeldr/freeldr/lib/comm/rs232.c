@@ -24,35 +24,13 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
-#include <cportlib/cportlib.h>
 
 #if DBG
 
+#include <cportlib/cportlib.h>
+#include <cportlib/uartinfo.h>
+
 /* STATIC VARIABLES ***********************************************************/
-
-#if defined(SARCH_PC98)
-#define DEFAULT_BAUD_RATE   9600
-#else
-#define DEFAULT_BAUD_RATE   19200
-#endif
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-#if defined(SARCH_PC98)
-static const ULONG BaseArray[] = {0, 0x30, 0x238};
-#else
-static const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-#endif
-#elif defined(_M_PPC)
-static const ULONG BaseArray[] = {0, 0x800003F8};
-#elif defined(_M_MIPS)
-static const ULONG BaseArray[] = {0, 0x80006000, 0x80007000};
-#elif defined(_M_ARM)
-static const ULONG BaseArray[] = {0, 0xF1012000};
-#else
-#error Unknown architecture
-#endif
-
-#define MAX_COM_PORTS   (sizeof(BaseArray) / sizeof(BaseArray[0]) - 1)
 
 /* The COM port must only be initialized once! */
 static ULONG Rs232ComPort = 0;

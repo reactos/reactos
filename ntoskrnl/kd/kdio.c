@@ -16,6 +16,7 @@
 #ifdef KDBG
 #include "../kdbg/kdb.h"
 #endif
+#include <cportlib/uartinfo.h>
 
 #define NDEBUG
 #include <debug.h>
