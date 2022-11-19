@@ -614,7 +614,8 @@ htmlSkipBlankChars(xmlParserCtxtPtr ctxt) {
 	    if (*ctxt->input->cur == 0)
 		xmlParserInputGrow(ctxt->input, INPUT_CHUNK);
 	}
-	res++;
+	if (res < INT_MAX)
+	    res++;
     }
     return(res);
 }
@@ -3960,26 +3961,6 @@ htmlParseStartTag(htmlParserCtxtPtr ctxt) {
 	htmlParseErr(ctxt, XML_ERR_NAME_REQUIRED,
 	             "htmlParseStartTag: invalid element name\n",
 		     NULL, NULL);
-        /*
-         * The recovery code is disabled for now as it can result in
-         * quadratic behavior with the push parser. htmlParseStartTag
-         * must consume all content up to the final '>' in order to avoid
-         * rescanning for this terminator.
-         *
-         * For a proper fix in line with HTML5, htmlParseStartTag and
-         * htmlParseElement should only be called when there's an ASCII
-         * alpha character following the initial '<'. Otherwise, the '<'
-         * should be emitted as text (unless followed by '!', '/' or '?').
-         */
-#if 0
-	/* if recover preserve text on classic misconstructs */
-	if ((ctxt->recovery) && ((IS_BLANK_CH(CUR)) || (CUR == '<') ||
-	    (CUR == '=') || (CUR == '>') || (((CUR >= '0') && (CUR <= '9'))))) {
-	    htmlParseCharDataInternal(ctxt, '<');
-	    return(-1);
-	}
-#endif
-
 	/* Dump the bogus tag like browsers do */
 	while ((CUR != 0) && (CUR != '>') &&
                (ctxt->instate != XML_PARSER_EOF))
@@ -4432,8 +4413,14 @@ htmlParseContent(htmlParserCtxtPtr ctxt) {
 	    /*
 	     * Third case :  a sub-element.
 	     */
-	    else if (CUR == '<') {
+	    else if ((CUR == '<') && IS_ASCII_LETTER(NXT(1))) {
 		htmlParseElement(ctxt);
+	    }
+	    else if (CUR == '<') {
+                if ((ctxt->sax != NULL) && (!ctxt->disableSAX) &&
+                    (ctxt->sax->characters != NULL))
+                    ctxt->sax->characters(ctxt->userData, BAD_CAST "<", 1);
+                NEXT;
 	    }
 
 	    /*
@@ -4831,13 +4818,19 @@ htmlParseContentInternal(htmlParserCtxtPtr ctxt) {
 	    /*
 	     * Third case :  a sub-element.
 	     */
-	    else if (CUR == '<') {
+	    else if ((CUR == '<') && IS_ASCII_LETTER(NXT(1))) {
 		htmlParseElementInternal(ctxt);
 		if (currentNode != NULL) xmlFree(currentNode);
 
 		currentNode = xmlStrdup(ctxt->name);
 		depth = ctxt->nameNr;
 	    }
+	    else if (CUR == '<') {
+                if ((ctxt->sax != NULL) && (!ctxt->disableSAX) &&
+                    (ctxt->sax->characters != NULL))
+                    ctxt->sax->characters(ctxt->userData, BAD_CAST "<", 1);
+                NEXT;
+            }
 
 	    /*
 	     * Fourth case : a reference. If if has not been resolved,
@@ -6004,7 +5997,7 @@ htmlParseTryOrFinish(htmlParserCtxtPtr ctxt, int terminate) {
 				"HPP: entering END_TAG\n");
 #endif
 			break;
-		    } else if (cur == '<') {
+		    } else if ((cur == '<') && IS_ASCII_LETTER(next)) {
                         if ((!terminate) && (next == 0))
                             goto done;
                         ctxt->instate = XML_PARSER_START_TAG;
@@ -6014,6 +6007,12 @@ htmlParseTryOrFinish(htmlParserCtxtPtr ctxt, int terminate) {
                                 "HPP: entering START_TAG\n");
 #endif
 			break;
+		    } else if (cur == '<') {
+                        if ((ctxt->sax != NULL) && (!ctxt->disableSAX) &&
+                            (ctxt->sax->characters != NULL))
+			    ctxt->sax->characters(ctxt->userData,
+						  BAD_CAST "<", 1);
+                        NEXT;
 		    } else {
 		        /*
 			 * check that the text sequence is complete

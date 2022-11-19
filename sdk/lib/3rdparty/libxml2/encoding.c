@@ -1738,6 +1738,10 @@ xmlFindCharEncodingHandler(const char *name) {
     } else if ((icv_in != (iconv_t) -1) || icv_out != (iconv_t) -1) {
 	    xmlEncodingErr(XML_ERR_INTERNAL_ERROR,
 		    "iconv : problems with filters for '%s'\n", name);
+	    if (icv_in != (iconv_t) -1)
+		iconv_close(icv_in);
+	    else
+		iconv_close(icv_out);
     }
 #endif /* LIBXML_ICONV_ENABLED */
 #ifdef LIBXML_ICU_ENABLED

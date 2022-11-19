@@ -525,8 +525,6 @@ xmlXIncludeAddNode(xmlXIncludeCtxtPtr ctxt, xmlNodePtr cur) {
 	if (href == NULL)
 	    return(-1);
     }
-    if ((href[0] == '#') || (href[0] == 0))
-	local = 1;
     parse = xmlXIncludeGetProp(ctxt, cur, XINCLUDE_PARSE);
     if (parse != NULL) {
 	if (xmlStrEqual(parse, XINCLUDE_PARSE_XML))
@@ -622,6 +620,9 @@ xmlXIncludeAddNode(xmlXIncludeCtxtPtr ctxt, xmlNodePtr cur) {
 	    xmlFree(fragment);
 	return(-1);
     }
+
+    if (xmlStrEqual(URL, ctxt->doc->URL))
+	local = 1;
 
     /*
      * If local and xml then we need a fragment

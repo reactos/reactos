@@ -2756,6 +2756,7 @@ xmlXPtrStringRangeFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(set->nodesetval);
 	xmlXPathFreeObject(set);
+        set = NULL;
 	if (tmp == NULL) {
             xmlXPathErr(ctxt, XPATH_MEMORY_ERROR);
             goto error;

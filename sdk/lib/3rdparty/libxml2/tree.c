@@ -7104,6 +7104,8 @@ xmlBufferPtr
 xmlBufferCreateSize(size_t size) {
     xmlBufferPtr ret;
 
+    if (size >= UINT_MAX)
+        return(NULL);
     ret = (xmlBufferPtr) xmlMalloc(sizeof(xmlBuffer));
     if (ret == NULL) {
 	xmlTreeErrMemory("creating buffer");
@@ -7111,7 +7113,7 @@ xmlBufferCreateSize(size_t size) {
     }
     ret->use = 0;
     ret->alloc = xmlBufferAllocScheme;
-    ret->size = (size ? size+2 : 0);         /* +1 for ending null */
+    ret->size = (size ? size + 1 : 0);         /* +1 for ending null */
     if (ret->size){
         ret->content = (xmlChar *) xmlMallocAtomic(ret->size * sizeof(xmlChar));
         if (ret->content == NULL) {
@@ -7170,6 +7172,8 @@ xmlBufferCreateStatic(void *mem, size_t size) {
     xmlBufferPtr ret;
 
     if ((mem == NULL) || (size == 0))
+        return(NULL);
+    if (size > UINT_MAX)
         return(NULL);
 
     ret = (xmlBufferPtr) xmlMalloc(sizeof(xmlBuffer));
@@ -7318,28 +7322,23 @@ xmlBufferShrink(xmlBufferPtr buf, unsigned int len) {
  */
 int
 xmlBufferGrow(xmlBufferPtr buf, unsigned int len) {
-    int size;
+    unsigned int size;
     xmlChar *newbuf;
 
     if (buf == NULL) return(-1);
 
     if (buf->alloc == XML_BUFFER_ALLOC_IMMUTABLE) return(0);
-    if (len + buf->use < buf->size) return(0);
+    if (len < buf->size - buf->use)
+        return(0);
+    if (len > UINT_MAX - buf->use)
+        return(-1);
 
-    /*
-     * Windows has a BIG problem on realloc timing, so we try to double
-     * the buffer size (if that's enough) (bug 146697)
-     * Apparently BSD too, and it's probably best for linux too
-     * On an embedded system this may be something to change
-     */
-#if 1
-    if (buf->size > len)
-        size = buf->size * 2;
-    else
-        size = buf->use + len + 100;
-#else
-    size = buf->use + len + 100;
-#endif
+    if (buf->size > (size_t) len) {
+        size = buf->size > UINT_MAX / 2 ? UINT_MAX : buf->size * 2;
+    } else {
+        size = buf->use + len;
+        size = size > UINT_MAX - 100 ? UINT_MAX : size + 100;
+    }
 
     if ((buf->alloc == XML_BUFFER_ALLOC_IO) && (buf->contentIO != NULL)) {
         size_t start_buf = buf->content - buf->contentIO;
@@ -7466,7 +7465,10 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
 	case XML_BUFFER_ALLOC_IO:
 	case XML_BUFFER_ALLOC_DOUBLEIT:
 	    /*take care of empty case*/
-	    newSize = (buf->size ? buf->size : size + 10);
+            if (buf->size == 0)
+                newSize = (size > UINT_MAX - 10 ? UINT_MAX : size + 10);
+            else
+                newSize = buf->size;
 	    while (size > newSize) {
 	        if (newSize > UINT_MAX / 2) {
 	            xmlTreeErrMemory("growing buffer");
@@ -7476,7 +7478,7 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
 	    }
 	    break;
 	case XML_BUFFER_ALLOC_EXACT:
-	    newSize = size+10;
+	    newSize = (size > UINT_MAX - 10 ? UINT_MAX : size + 10);;
 	    break;
         case XML_BUFFER_ALLOC_HYBRID:
             if (buf->use < BASE_BUFFER_SIZE)
@@ -7494,7 +7496,7 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
             break;
 
 	default:
-	    newSize = size+10;
+	    newSize = (size > UINT_MAX - 10 ? UINT_MAX : size + 10);;
 	    break;
     }
 
@@ -7580,8 +7582,10 @@ xmlBufferAdd(xmlBufferPtr buf, const xmlChar *str, int len) {
     if (len < 0) return -1;
     if (len == 0) return 0;
 
-    needSize = buf->use + len + 2;
-    if (needSize > buf->size){
+    if ((unsigned) len >= buf->size - buf->use) {
+        if ((unsigned) len >= UINT_MAX - buf->use)
+            return XML_ERR_NO_MEMORY;
+        needSize = buf->use + len + 1;
         if (!xmlBufferResize(buf, needSize)){
 	    xmlTreeErrMemory("growing buffer");
             return XML_ERR_NO_MEMORY;
@@ -7694,29 +7698,7 @@ xmlBufferCat(xmlBufferPtr buf, const xmlChar *str) {
  */
 int
 xmlBufferCCat(xmlBufferPtr buf, const char *str) {
-    const char *cur;
-
-    if (buf == NULL)
-        return(-1);
-    if (buf->alloc == XML_BUFFER_ALLOC_IMMUTABLE) return -1;
-    if (str == NULL) {
-#ifdef DEBUG_BUFFER
-        xmlGenericError(xmlGenericErrorContext,
-		"xmlBufferCCat: str == NULL\n");
-#endif
-	return -1;
-    }
-    for (cur = str;*cur != 0;cur++) {
-        if (buf->use  + 10 >= buf->size) {
-            if (!xmlBufferResize(buf, buf->use+10)){
-		xmlTreeErrMemory("growing buffer");
-                return XML_ERR_NO_MEMORY;
-            }
-        }
-        buf->content[buf->use++] = *cur;
-    }
-    buf->content[buf->use] = 0;
-    return 0;
+    return xmlBufferCat(buf, (const xmlChar *) str);
 }
 
 /**

@@ -1,12 +1,36 @@
 
         NEWS file for libxml2
 
-The change log at 
-ChangeLog.html
- describes the recents commits
-to the GIT at 
-https://gitlab.gnome.org/GNOME/libxml2
- code base.Here is the list of public releases:
+v2.9.14: May 02 2022:
+   - Security:
+  [CVE-2022-29824] Integer overflow in xmlBuf and xmlBuffer
+  Fix potential double-free in xmlXPtrStringRangeFunction
+  Fix memory leak in xmlFindCharEncodingHandler
+  Normalize XPath strings in-place
+  Prevent integer-overflow in htmlSkipBlankChars() and xmlSkipBlankChars()
+    (David Kilzer)
+  Fix leak of xmlElementContent (David Kilzer)
+
+   - Bug fixes:
+  Fix parsing of subtracted regex character classes
+  Fix recursion check in xinclude.c
+  Reset last error in xmlCleanupGlobals
+  Fix certain combinations of regex range quantifiers
+  Fix range quantifier on subregex
+
+   - Improvements:
+  Fix recovery from invalid HTML start tags
+
+   - Build system, portability:
+  Define LFS macros before including system headers
+  Initialize XPath floating-point globals
+  configure: check for icu DEFS (James Hilliard)
+  configure.ac: produce tar.xz only (GNOME policy) (David Seifert)
+  CMakeLists.txt: Fix LIBXML_VERSION_NUMBER
+  Fix build with older Python versions
+  Fix --without-valid build
+
+
 v2.9.13: Feb 19 2022:
    - Security:
   [CVE-2022-23308] Use-after-free of ID and IDREF attributes
