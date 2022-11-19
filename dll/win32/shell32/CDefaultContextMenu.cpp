@@ -842,7 +842,7 @@ CDefaultContextMenu::DoProperties(
     HRESULT hr = _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
 
     // We are asked to run the default property sheet
-    if (hr != S_FALSE)
+    if (hr == S_FALSE)
     {
         return Shell_DefaultContextMenuCallBack(m_psf, m_pDataObj);
     }
