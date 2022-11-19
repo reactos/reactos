@@ -28,10 +28,15 @@
 
 typedef struct
 {
+    HWND hDisplayWnd;
+} DXDIAG_DISPLAY, *PDXDIAG_DISPLAY;
+
+typedef struct
+{
     HWND hMainDialog;
     HWND hTabCtrl;
     ULONG NumDisplayAdapter;
-    HWND * hDisplayWnd;
+    PDXDIAG_DISPLAY * DisplayAdapters;
     ULONG NumSoundAdapter;
     HWND * hSoundWnd;
     HWND hDialogs[5];
