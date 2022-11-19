@@ -249,7 +249,7 @@ xsltCheckFilename (const char *path)
 #if defined(_WIN32) && !defined(__CYGWIN__)
     DWORD dwAttrs;
 
-    dwAttrs = GetFileAttributes(path);
+    dwAttrs = GetFileAttributesA(path);
     if (dwAttrs != INVALID_FILE_ATTRIBUTES) {
         if (dwAttrs & FILE_ATTRIBUTE_DIRECTORY) {
             return 2;

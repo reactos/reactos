@@ -45,7 +45,7 @@ URL: http://www.simplesystems.org/libtiff/
 
 Title: Libxslt
 Path: dll/3rdparty/libxslt
-Used Version: 1.1.34
+Used Version: 1.1.35
 License: MIT (https://spdx.org/licenses/MIT.html)
 URL: http://xmlsoft.org
 
