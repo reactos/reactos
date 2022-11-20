@@ -611,10 +611,10 @@ static HRESULT BrsFolder_Treeview_Changed( browse_info *info, NMTREEVIEWW *pnmtv
 
     if (GetName(lptvid->lpsfParent, lptvid->lpi, SHGDN_NORMAL, name))
             SetWindowTextW( GetDlgItem(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), name );
+
 #ifndef __REACTOS__
     browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
                            (LPARAM)info->pidlRet );
-
     BrsFolder_CheckValidSelection( info, lptvid );
 #else
     bBtnState = browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
