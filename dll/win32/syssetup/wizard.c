@@ -2890,6 +2890,8 @@ ProcessSetupInf(
     DWORD LineLength;
     HKEY hKey;
     LONG res;
+    LPWSTR pData;
+    size_t pcchLength;
 
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
@@ -2968,23 +2970,26 @@ ProcessSetupInf(
     }
 #endif
 
-    WCHAR szData[MAX_PATH] = L"";
-    LPWSTR pData = szData;
-    size_t pcchLength;
+    *szValue = UNICODE_NULL;
+    pData = szValue;
 
-    GetWindowsDirectoryW(szData, ARRAYSIZE(szData));
-    StringCchCatW(szData, ARRAYSIZE(szData), L"\\inf");
-    if (FAILED(StringCchLengthW(szData, ARRAYSIZE(szData), &pcchLength)))
+    GetWindowsDirectoryW(szValue, ARRAYSIZE(szValue));
+    StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
+
+    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &pcchLength)))
     {
         return;
     }
+
     pData += pcchLength + 1;
-    pcchLength = (ARRAYSIZE(szData) - pcchLength - 1);
+    pcchLength = (ARRAYSIZE(szValue) - pcchLength - 1);
     StringCchCopyW(pData, pcchLength, pSetupData->SourcePath);
-    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szData), &pcchLength)))
+
+    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szValue), &pcchLength)))
     {
         return;
     }
+
     pData += pcchLength + 1;
     *pData = UNICODE_NULL;
 
@@ -3016,8 +3021,8 @@ ProcessSetupInf(
                              L"Installation Sources",
                              0,
                              REG_MULTI_SZ,
-                             (LPBYTE)szData,
-                             (DWORD)((pData - szData) * sizeof(WCHAR)));
+                             (LPBYTE)szValue,
+                             (DWORD)((pData - szValue) * sizeof(WCHAR)));
         RegCloseKey(hKey);
     }
 

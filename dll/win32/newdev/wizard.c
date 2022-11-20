@@ -586,9 +586,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
     {
         case BFFM_INITIALIZED:
         {
-            LPCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
+            PCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
             SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)pszPath);
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver((PDEVINSTDATA)lpData, (LPWSTR)pszPath));
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver((PDEVINSTDATA)lpData, pszPath));
             break;
         }
 
