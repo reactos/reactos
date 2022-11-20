@@ -6231,18 +6231,6 @@ IntExtTextOutW(
     if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc) ;
 
-    if (!face->units_per_EM)
-    {
-        thickness = 1;
-    }
-    else
-    {
-        thickness = face->underline_thickness *
-            face->size->metrics.y_ppem / face->units_per_EM;
-        if (thickness <= 0)
-            thickness = 1;
-    }
-
     if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
@@ -6252,9 +6240,7 @@ IntExtTextOutW(
         DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
-        {
             IntUpdateBoundsRect(dc, &DestRect);
-        }
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
@@ -6262,18 +6248,17 @@ IntExtTextOutW(
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
         psurf = dc->dclevel.pSurface;
-        IntEngBitBlt(
-            &psurf->SurfObj,
-            NULL,
-            NULL,
-            (CLIPOBJ *)&dc->co,
-            NULL,
-            &DestRect,
-            &SourcePoint,
-            &SourcePoint,
-            &dc->eboBackground.BrushObject,
-            &BrushOrigin,
-            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        IntEngBitBlt(&psurf->SurfObj,
+                     NULL,
+                     NULL,
+                     (CLIPOBJ *)&dc->co,
+                     NULL,
+                     &DestRect,
+                     &SourcePoint,
+                     &SourcePoint,
+                     &dc->eboBackground.BrushObject,
+                     &BrushOrigin,
+                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawEnd(dc->ppdev);
@@ -6480,47 +6465,64 @@ Cleanup:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 
-    if (plf->lfUnderline)
+    if (bResult)
     {
-        INT i, position;
-
         if (!face->units_per_EM)
         {
-            position = 0;
+            thickness = 1;
         }
         else
         {
-            position = face->underline_position *
+            thickness = face->underline_thickness *
                 face->size->metrics.y_ppem / face->units_per_EM;
+            if (thickness <= 0)
+                thickness = 1;
         }
-        for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
-        {
-            EngLineTo(SurfObj,
-                      (CLIPOBJ *)&dc->co,
-                      &dc->eboText.BrushObject,
-                      (RealXStart + 32) >> 6,
-                      TextTop + yoff - position + i,
-                      (RealXStart + TextWidth + 32) >> 6,
-                      TextTop + yoff - position + i,
-                      NULL,
-                      ROP2_TO_MIX(R2_COPYPEN));
-        }
-    }
 
-    if (plf->lfStrikeOut)
-    {
-        INT i;
-        for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+        /* Draw underline */
+        if (plf->lfUnderline)
         {
-            EngLineTo(SurfObj,
-                      (CLIPOBJ *)&dc->co,
-                      &dc->eboText.BrushObject,
-                      (RealXStart + 32) >> 6,
-                      TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                      (RealXStart + TextWidth + 32) >> 6,
-                      TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                      NULL,
-                      ROP2_TO_MIX(R2_COPYPEN));
+            INT i, position;
+
+            if (!face->units_per_EM)
+            {
+                position = 0;
+            }
+            else
+            {
+                position = face->underline_position *
+                    face->size->metrics.y_ppem / face->units_per_EM;
+            }
+            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+            {
+                EngLineTo(SurfObj,
+                          (CLIPOBJ *)&dc->co,
+                          &dc->eboText.BrushObject,
+                          (RealXStart + 32) >> 6,
+                          TextTop + yoff - position + i,
+                          (RealXStart + TextWidth + 32) >> 6,
+                          TextTop + yoff - position + i,
+                          NULL,
+                          ROP2_TO_MIX(R2_COPYPEN));
+            }
+        }
+
+        /* Draw strike-out */
+        if (plf->lfStrikeOut)
+        {
+            INT i;
+            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+            {
+                EngLineTo(SurfObj,
+                          (CLIPOBJ *)&dc->co,
+                          &dc->eboText.BrushObject,
+                          (RealXStart + 32) >> 6,
+                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                          (RealXStart + TextWidth + 32) >> 6,
+                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                          NULL,
+                          ROP2_TO_MIX(R2_COPYPEN));
+            }
         }
     }
 
