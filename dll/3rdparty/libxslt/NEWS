@@ -1,5 +1,19 @@
 NEWS file for libxslt
 
+v1.1.37: Aug 29 2022
+
+### Improvements
+
+- Don't use deprecated libxml2 macros
+- Don't mess with xmlDefaultSAXHandler
+
+### Build system
+
+- Require automake-1.16.3 or later
+- Remove generated files from distribution
+- Add missing compile definition for static builds to Autotools (Mike Dalessio)
+
+
 v1.1.36: Aug 17 2022
 
 ### Removals and deprecations
