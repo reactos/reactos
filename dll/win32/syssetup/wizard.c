@@ -2891,7 +2891,7 @@ ProcessSetupInf(
     HKEY hKey;
     LONG res;
     LPWSTR pData;
-    size_t pcchLength;
+    size_t cchLength;
 
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
@@ -2976,21 +2976,21 @@ ProcessSetupInf(
     GetWindowsDirectoryW(szValue, ARRAYSIZE(szValue));
     StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
 
-    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &pcchLength)))
+    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength)))
     {
         return;
     }
 
-    pData += pcchLength + 1;
-    pcchLength = (ARRAYSIZE(szValue) - pcchLength - 1);
-    StringCchCopyW(pData, pcchLength, pSetupData->SourcePath);
+    pData += cchLength + 1;
+    cchLength = (ARRAYSIZE(szValue) - cchLength - 1);
+    StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
 
-    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szValue), &pcchLength)))
+    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szValue), &cchLength)))
     {
         return;
     }
 
-    pData += pcchLength + 1;
+    pData += cchLength + 1;
     *pData = UNICODE_NULL;
 
     res = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
