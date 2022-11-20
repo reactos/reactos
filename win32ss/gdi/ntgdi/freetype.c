@@ -5880,9 +5880,7 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-/*
- * Calculate width of the text.
- */
+/* Calculate width of the text. */
 BOOL
 APIENTRY
 IntCalculateTextWidth(
@@ -5961,9 +5959,7 @@ IntCalculateTextWidth(
         TextLeft += realglyph->root.advance.x >> 10;
 
         if (EmuBold || EmuItalic)
-        {
             FT_Done_Glyph((FT_Glyph)realglyph);
-        }
 
         previous = glyph_index;
         String++;
@@ -6213,14 +6209,11 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
+    /* Adjust the text position by alignment */
     if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
-    {
         RealXStart -= TextWidth / 2;
-    }
     else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
-    {
         RealXStart -= TextWidth;
-    }
 
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
