@@ -2892,6 +2892,7 @@ ProcessSetupInf(
     LONG res;
     LPWSTR pData;
     size_t cchLength;
+    HRESULT hr;
 
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
@@ -2974,18 +2975,20 @@ ProcessSetupInf(
     pData = szValue;
 
     GetWindowsDirectoryW(szValue, ARRAYSIZE(szValue));
-    StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
+    hr = StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
 
-    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength)))
+    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength))
+        || FAILED(hr))
     {
         return;
     }
 
     pData += cchLength + 1;
     cchLength = (ARRAYSIZE(szValue) - cchLength - 1);
-    StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
+    hr = StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
 
-    if (FAILED(StringCchLengthW(pData, cchLength, &cchLength)))
+    if (FAILED(StringCchLengthW(pData, cchLength, &cchLength))
+        || FAILED(hr))
     {
         return;
     }
