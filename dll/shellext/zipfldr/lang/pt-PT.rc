@@ -23,10 +23,10 @@ END
 
 IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Extracção Completa"
+CAPTION "Extracção completa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Os arquivos foram extraídos para o seguinte diretório:",IDC_STATIC,86,12,157,18
+    LTEXT           "Os ficheiros foram extraídos para o seguinte diretório:",IDC_STATIC,86,12,157,18
     LTEXT           "%s",IDC_DESTDIR,86,36,157,8
     CONTROL         "Mostrar ficheiros extraidos",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,98,10
     LTEXT           "Clique em ""Concluir"" para continuar.",IDC_STATIC,86,84,116,8
@@ -53,7 +53,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,74,42,106,13,ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,186,6,54,14
-    PUSHBUTTON      "Saltar Ficheiro",IDSKIP,186,24,54,14
+    PUSHBUTTON      "Saltar ficheiro",IDSKIP,186,24,54,14
     PUSHBUTTON      "Cancelar",IDCANCEL,186,42,54,14
     LTEXT           "Estático",IDC_MESSAGE,24,6,156,30
     LTEXT           "Palavra-passe:",IDC_STATIC,24,44,50,8
@@ -71,16 +71,16 @@ BEGIN
     IDS_YES "Sim"
     IDS_NO "Não"
     IDS_ERRORTITLE "Erro de pastas compactadas (zipadas)"
-    IDS_CANTSTARTTHREAD "Não é possível iniciar o  compactador de arquivos."
+    IDS_CANTSTARTTHREAD "Não é possível iniciar o  compactador de ficheiros."
     IDS_NOFILES "O directório especificado '%s' está vazio; portanto, as pastas compactadas (zipadas) não podem adicioná-lo ao arquivo."
     IDS_CANTCREATEZIP "Falha ao criar a pasta compactada '%s' (Erro: %d)."
-    IDS_CANTREADFILE "Não é possível ler o arquivo '%s'."
+    IDS_CANTREADFILE "Não é possível ler o ficheiro '%s'."
     IDS_EXTRACTING "A extrair..."
-    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
-    IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTEXTRACTFILE "Não é possível extrair o ficheiro '%1'."
+    IDS_DECOMPRESSERROR "Método de compressão %d não suportado. Pretende continuar?"
+    IDS_UNKNOWNERROR "Erro desconhecido 0x%08x."
 
-    IDS_WIZ_TITLE "Assistente de extração"
+    IDS_WIZ_TITLE "Assistente de extracção"
     IDS_WIZ_DEST_TITLE "Seleccione um destino"
     IDS_WIZ_DEST_SUBTITLE "Os ficheiros no arquivo zip serão extraídos para o local especificado."
     IDS_WIZ_COMPL_TITLE "Extracção completa"
