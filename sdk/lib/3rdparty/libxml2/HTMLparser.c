@@ -5056,8 +5056,7 @@ htmlInitParserCtxt(htmlParserCtxtPtr ctxt)
         htmlErrMemory(NULL, "htmlInitParserCtxt: out of memory\n");
 	return(-1);
     }
-    else
-        memset(sax, 0, sizeof(htmlSAXHandler));
+    memset(sax, 0, sizeof(htmlSAXHandler));
 
     /* Allocate the Input stack */
     ctxt->inputTab = (htmlParserInputPtr *)
@@ -5116,11 +5115,9 @@ htmlInitParserCtxt(htmlParserCtxtPtr ctxt)
     ctxt->nodeInfoNr  = 0;
     ctxt->nodeInfoMax = 0;
 
-    if (sax == NULL) ctxt->sax = (xmlSAXHandlerPtr) &htmlDefaultSAXHandler;
-    else {
-        ctxt->sax = sax;
-	memcpy(sax, &htmlDefaultSAXHandler, sizeof(xmlSAXHandlerV1));
-    }
+    ctxt->sax = sax;
+    xmlSAX2InitHtmlDefaultSAXHandler(sax);
+
     ctxt->userData = ctxt;
     ctxt->myDoc = NULL;
     ctxt->wellFormed = 1;
@@ -7116,22 +7113,10 @@ htmlDocPtr
 htmlCtxtReadDoc(htmlParserCtxtPtr ctxt, const xmlChar * cur,
                const char *URL, const char *encoding, int options)
 {
-    xmlParserInputPtr stream;
-
     if (cur == NULL)
         return (NULL);
-    if (ctxt == NULL)
-        return (NULL);
-    xmlInitParser();
-
-    htmlCtxtReset(ctxt);
-
-    stream = xmlNewStringInputStream(ctxt, cur);
-    if (stream == NULL) {
-        return (NULL);
-    }
-    inputPush(ctxt, stream);
-    return (htmlDoRead(ctxt, URL, encoding, options, 1));
+    return (htmlCtxtReadMemory(ctxt, (const char *) cur, xmlStrlen(cur), URL,
+                               encoding, options));
 }
 
 /**

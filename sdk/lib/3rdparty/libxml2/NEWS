@@ -1,5 +1,29 @@
 NEWS file for libxml2
 
+v2.10.1: Aug 25 2022
+
+### Regressions
+
+- Fix xmlCtxtReadDoc with encoding
+
+### Bug fixes
+
+- Fix HTML parser with threads and --without-legacy
+
+### Build system
+
+- Fix build with Python 3.10
+- cmake: Disable version script on macOS
+- Remove Makefile rule to build testapi.c
+
+### Documentation
+
+- Switch back to HTML output for API documentation
+- Port doc/examples/index.py to Python 3
+- Fix order of exports in libxml2-api.xml
+- Remove libxml2-refs.xml
+
+
 v2.10.0: Aug 17 2022
 
 ### Security
