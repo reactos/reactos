@@ -123,7 +123,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             /* Didn't work, restore old handler */
             DPRINT1("HalEnableSystemInterrupt failed\n");
             KeRegisterInterruptHandler(Interrupt->Vector, CurrentHandler);
-            goto exit;
+            goto Cleanup;
         }
     }
     else
@@ -136,7 +136,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             (ConnectedInterrupt->ShareVector == 0) ||
             (Interrupt->Mode != ConnectedInterrupt->Mode))
         {
-            goto exit;
+            goto Cleanup;
         }
 
         /* Insert the new interrupt into the connected interrupt's list */
@@ -146,7 +146,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 
     /* Mark as connected */
     Interrupt->Connected = TRUE;
-exit:
+Cleanup:
     /* Release the dispatcher lock and restore the thread affinity */
     KiReleaseDispatcherLock(OldIrql);
     KeRevertToUserAffinityThread();
