@@ -175,7 +175,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
 
     CDataObjectHIDA cida(pDataObj);
     if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return cida.hr();
+        return FAILED(cida.hr());
 
     RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
     POINT pt;

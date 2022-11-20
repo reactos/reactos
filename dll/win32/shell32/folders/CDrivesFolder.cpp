@@ -345,7 +345,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         {
             // pdtobj should be valid at this point!
             ATLASSERT(pdtobj);
-            hr = SH_ShowDriveProperties(wszBuf, pdtobj);
+            hr = SH_ShowDriveProperties(wszBuf, pdtobj) ? S_OK : E_UNEXPECTED;
             if (FAILED(hr))
             {
                 dwError = ERROR_CAN_NOT_COMPLETE;
