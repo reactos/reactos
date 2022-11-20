@@ -2985,7 +2985,7 @@ ProcessSetupInf(
     cchLength = (ARRAYSIZE(szValue) - cchLength - 1);
     StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
 
-    if (FAILED(StringCchLengthW(pData, ARRAYSIZE(szValue), &cchLength)))
+    if (FAILED(StringCchLengthW(pData, cchLength, &cchLength)))
     {
         return;
     }
