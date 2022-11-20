@@ -1,5 +1,22 @@
 NEWS file for libxml2
 
+v2.10.2: Aug 29 2022
+
+### Improvements
+
+- Remove set-but-unused variable in xmlXPathScanName
+- Silence -Warray-bounds warning
+
+### Build system
+
+- build: require automake-1.16.3 or later (Xi Ruoyao)
+- Remove generated files from distribution
+
+### Test suite
+
+- Don't create missing.xml when running testapi
+
+
 v2.10.1: Aug 25 2022
 
 ### Regressions
