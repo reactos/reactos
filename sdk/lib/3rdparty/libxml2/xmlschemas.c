@@ -24634,6 +24634,7 @@ xmlSchemaValidateQName(xmlSchemaValidCtxtPtr vctxt,
 		       int valNeeded)
 {
     int ret;
+    xmlChar *stripped;
     const xmlChar *nsName;
     xmlChar *local, *prefix = NULL;
 
@@ -24650,7 +24651,10 @@ xmlSchemaValidateQName(xmlSchemaValidCtxtPtr vctxt,
     * NOTE: xmlSplitQName2 will always return a duplicated
     * strings.
     */
-    local = xmlSplitQName2(value, &prefix);
+    /* TODO: Export and use xmlSchemaStrip instead */
+    stripped = xmlSchemaCollapseString(value);
+    local = xmlSplitQName2(stripped ? stripped : value, &prefix);
+    xmlFree(stripped);
     if (local == NULL)
 	local = xmlStrdup(value);
     /*
@@ -26463,13 +26467,15 @@ default_psvi:
 	    normValue = xmlSchemaNormalizeValue(inode->typeDef,
 		inode->decl->value);
 	    if (normValue != NULL) {
-		textChild = xmlNewText(BAD_CAST normValue);
+		textChild = xmlNewDocText(inode->node->doc,
+                        BAD_CAST normValue);
 		xmlFree(normValue);
 	    } else
-		textChild = xmlNewText(inode->decl->value);
+		textChild = xmlNewDocText(inode->node->doc,
+                        inode->decl->value);
 	    if (textChild == NULL) {
 		VERROR_INT("xmlSchemaValidatorPopElem",
-		    "calling xmlNewText()");
+		    "calling xmlNewDocText()");
 		goto internal_error;
 	    } else
 		xmlAddChild(inode->node, textChild);
@@ -27815,17 +27821,6 @@ xmlSchemaClearValidCtxt(xmlSchemaValidCtxtPtr vctxt)
 	} while (cur != NULL);
 	vctxt->aidcs = NULL;
     }
-    if (vctxt->idcMatcherCache != NULL) {
-	xmlSchemaIDCMatcherPtr matcher = vctxt->idcMatcherCache, tmp;
-
-	while (matcher) {
-	    tmp = matcher;
-	    matcher = matcher->nextCached;
-	    xmlSchemaIDCFreeMatcherList(tmp);
-	}
-	vctxt->idcMatcherCache = NULL;
-    }
-
 
     if (vctxt->idcNodes != NULL) {
 	int i;
@@ -27891,6 +27886,21 @@ xmlSchemaClearValidCtxt(xmlSchemaValidCtxtPtr vctxt)
     if (vctxt->filename != NULL) {
         xmlFree(vctxt->filename);
 	vctxt->filename = NULL;
+    }
+
+    /*
+     * Note that some cleanup functions can move items to the cache,
+     * so the cache shouldn't be freed too early.
+     */
+    if (vctxt->idcMatcherCache != NULL) {
+	xmlSchemaIDCMatcherPtr matcher = vctxt->idcMatcherCache, tmp;
+
+	while (matcher) {
+	    tmp = matcher;
+	    matcher = matcher->nextCached;
+	    xmlSchemaIDCFreeMatcherList(tmp);
+	}
+	vctxt->idcMatcherCache = NULL;
     }
 }
 
@@ -29170,6 +29180,4 @@ xmlSchemaValidCtxtGetParserCtxt(xmlSchemaValidCtxtPtr ctxt)
     return (ctxt->parserCtxt);
 }
 
-#define bottom_xmlschemas
-#include "elfgcchack.h"
 #endif /* LIBXML_SCHEMAS_ENABLED */

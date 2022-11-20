@@ -44,6 +44,11 @@ configure and build the library:
     ./configure [possible options]
     make
 
+Note that by default, no optimization options are used. You have to
+enable them manually, for example with:
+
+    CFLAGS='-O2 -fno-semantic-interposition' ./configure
+
 Now you can run the test suite with:
 
     make check

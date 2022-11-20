@@ -23,12 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 #include <libxml/tree.h>
 #include <libxml/parserInternals.h>
@@ -36,9 +31,6 @@
 #include <libxml/xmlautomata.h>
 #include <libxml/xmlunicode.h>
 
-#ifndef INT_MAX
-#define INT_MAX 123456789 /* easy to flag and big enough for our needs */
-#endif
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t) -1)
 #endif
@@ -4908,6 +4900,47 @@ xmlFAParseCharProp(xmlRegParserCtxtPtr ctxt) {
     }
 }
 
+static int parse_escaped_codeunit(xmlRegParserCtxtPtr ctxt)
+{
+    int val = 0, i, cur;
+    for (i = 0; i < 4; i++) {
+	NEXT;
+	val *= 16;
+	cur = CUR;
+	if (cur >= '0' && cur <= '9') {
+	    val += cur - '0';
+	} else if (cur >= 'A' && cur <= 'F') {
+	    val += cur - 'A' + 10;
+	} else if (cur >= 'a' && cur <= 'f') {
+	    val += cur - 'a' + 10;
+	} else {
+	    ERROR("Expecting hex digit");
+	    return -1;
+	}
+    }
+    return val;
+}
+
+static int parse_escaped_codepoint(xmlRegParserCtxtPtr ctxt)
+{
+    int val = parse_escaped_codeunit(ctxt);
+    if (0xD800 <= val && val <= 0xDBFF) {
+	NEXT;
+	if (CUR == '\\') {
+	    NEXT;
+	    if (CUR == 'u') {
+		int low = parse_escaped_codeunit(ctxt);
+		if (0xDC00 <= low && low <= 0xDFFF) {
+		    return (val - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+		}
+	    }
+	}
+	ERROR("Invalid low surrogate pair code unit");
+	val = -1;
+    }
+    return val;
+}
+
 /**
  * xmlFAParseCharClassEsc:
  * @ctxt:  a regexp parser context
@@ -4970,7 +5003,25 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 	(cur == '|') || (cur == '.') || (cur == '?') || (cur == '*') ||
 	(cur == '+') || (cur == '(') || (cur == ')') || (cur == '{') ||
 	(cur == '}') || (cur == 0x2D) || (cur == 0x5B) || (cur == 0x5D) ||
-	(cur == 0x5E)) {
+	(cur == 0x5E) ||
+
+	/* Non-standard escape sequences:
+	 *                  Java 1.8|.NET Core 3.1|MSXML 6 */
+	(cur == '!') ||     /*   +  |     +       |    +   */
+	(cur == '"') ||     /*   +  |     +       |    +   */
+	(cur == '#') ||     /*   +  |     +       |    +   */
+	(cur == '$') ||     /*   +  |     +       |    +   */
+	(cur == '%') ||     /*   +  |     +       |    +   */
+	(cur == ',') ||     /*   +  |     +       |    +   */
+	(cur == '/') ||     /*   +  |     +       |    +   */
+	(cur == ':') ||     /*   +  |     +       |    +   */
+	(cur == ';') ||     /*   +  |     +       |    +   */
+	(cur == '=') ||     /*   +  |     +       |    +   */
+	(cur == '>') ||     /*      |     +       |    +   */
+	(cur == '@') ||     /*   +  |     +       |    +   */
+	(cur == '`') ||     /*   +  |     +       |    +   */
+	(cur == '~') ||     /*   +  |     +       |    +   */
+	(cur == 'u')) {     /*      |     +       |    +   */
 	if (ctxt->atom == NULL) {
 	    ctxt->atom = xmlRegNewAtom(ctxt, XML_REGEXP_CHARVAL);
 	    if (ctxt->atom != NULL) {
@@ -4983,6 +5034,13 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 			break;
 		    case 't':
 		        ctxt->atom->codepoint = '\t';
+			break;
+		    case 'u':
+			cur = parse_escaped_codepoint(ctxt);
+			if (cur < 0) {
+			    return;
+			}
+			ctxt->atom->codepoint = cur;
 			break;
 		    default:
 			ctxt->atom->codepoint = cur;
@@ -8267,6 +8325,5 @@ xmlExpCtxtNbCons(xmlExpCtxtPtr ctxt) {
 }
 
 #endif /* LIBXML_EXPR_ENABLED */
-#define bottom_xmlregexp
-#include "elfgcchack.h"
+
 #endif /* LIBXML_REGEXP_ENABLED */

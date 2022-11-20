@@ -12,13 +12,8 @@
 #ifdef LIBXML_HTML_ENABLED
 
 #include <string.h> /* for memset() only ! */
-
-#ifdef HAVE_CTYPE_H
 #include <ctype.h>
-#endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 
 #include <libxml/xmlmemory.h>
 #include <libxml/HTMLparser.h>
@@ -304,7 +299,7 @@ create:
  * output as <option selected>, as per XSLT 1.0 16.2 "HTML Output Method"
  *
  */
-static const char* htmlBooleanAttrs[] = {
+static const char* const htmlBooleanAttrs[] = {
   "checked", "compact", "declare", "defer", "disabled", "ismap",
   "multiple", "nohref", "noresize", "noshade", "nowrap", "readonly",
   "selected", NULL
@@ -992,7 +987,14 @@ void
 htmlDocContentDumpFormatOutput(xmlOutputBufferPtr buf, xmlDocPtr cur,
 	                       const char *encoding ATTRIBUTE_UNUSED,
                                int format) {
+    int type = 0;
+    if (cur) {
+        type = cur->type;
+        cur->type = XML_HTML_DOCUMENT_NODE;
+    }
     htmlNodeDumpFormatOutput(buf, cur, (xmlNodePtr) cur, NULL, format);
+    if (cur)
+        cur->type = (xmlElementType) type;
 }
 
 /**
@@ -1195,6 +1197,4 @@ htmlSaveFileEnc(const char *filename, xmlDocPtr cur, const char *encoding) {
 
 #endif /* LIBXML_OUTPUT_ENABLED */
 
-#define bottom_HTMLtree
-#include "elfgcchack.h"
 #endif /* LIBXML_HTML_ENABLED */

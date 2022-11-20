@@ -14,9 +14,7 @@
 #ifdef LIBXML_C14N_ENABLED
 #ifdef LIBXML_OUTPUT_ENABLED
 
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 #include <string.h>
 
 #include <libxml/tree.h>
@@ -1659,9 +1657,6 @@ xmlC14NProcessNode(xmlC14NCtxPtr ctx, xmlNodePtr cur)
             break;
         case XML_DOCUMENT_NODE:
         case XML_DOCUMENT_FRAG_NODE:   /* should be processed as document? */
-#ifdef LIBXML_DOCB_ENABLED
-        case XML_DOCB_DOCUMENT_NODE:   /* should be processed as document? */
-#endif
 #ifdef LIBXML_HTML_ENABLED
         case XML_HTML_DOCUMENT_NODE:   /* should be processed as document? */
 #endif
@@ -2229,6 +2224,5 @@ xmlC11NNormalizeString(const xmlChar * input,
     return (buffer);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
-#define bottom_c14n
-#include "elfgcchack.h"
+
 #endif /* LIBXML_C14N_ENABLED */
