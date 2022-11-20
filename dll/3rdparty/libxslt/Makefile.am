@@ -1,10 +1,9 @@
-SUBDIRS = \
-	libxslt \
-	libexslt \
-	xsltproc \
-	doc \
-	$(PYTHON_SUBDIR) \
-	tests
+ACLOCAL_AMFLAGS = -I m4
+
+SUBDIRS = libxslt libexslt xsltproc doc tests
+if WITH_PYTHON
+SUBDIRS += python
+endif
 
 DIST_SUBDIRS = libxslt libexslt xsltproc python doc tests
 
@@ -17,16 +16,13 @@ dist-hook: cleanup libxslt.spec
 	touch $(distdir)/doc/*.xml
 	touch $(distdir)/doc/EXSLT/*.xml
 	touch $(distdir)/libxslt/*.syms
-	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn win32 vms examples) | (cd $(distdir); tar xf -)
-
-CVS_EXTRA_DIST =
+	(cd $(srcdir) ; tar -cf - win32 vms examples) | (cd $(distdir); tar xf -)
 
 EXTRA_DIST = xsltConf.sh.in xslt-config.in libxslt.spec libxslt.spec.in \
              FEATURES TODO Copyright libxslt.m4 \
 	     win32/libxslt/libxslt.def win32/libxslt/libxslt.dsw \
 	     win32/libxslt/libxslt_so.dsp win32/libxslt/xsltproc.dsp \
-	     CMakeLists.txt config.h.cmake.in FindGcrypt.cmake libxslt-config.cmake.in libxslt-config.cmake.cmake.in \
-	     $(CVS_EXTRA_DIST)
+	     CMakeLists.txt config.h.cmake.in FindGcrypt.cmake libxslt-config.cmake.in libxslt-config.cmake.cmake.in
 
 ## We create xsltConf.sh here and not from configure because we want
 ## to get the paths expanded correctly.  Macros like srcdir are given
@@ -53,7 +49,9 @@ tests: dummy
 	@echo '## Running the regression test suite'
 	@(cd tests ; $(MAKE) -s tests)
 	@(cd xsltproc ; $(MAKE) -s tests)
-	@(if [ "$(PYTHON_SUBDIR)" != "" ] ; then cd python ; $(MAKE) -s tests ; fi)
+if WITH_PYTHON
+	@cd python && $(MAKE) tests
+endif
 
 valgrind:
 	@echo '## Running the regression tests under Valgrind'

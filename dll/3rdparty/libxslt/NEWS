@@ -1,10 +1,70 @@
+NEWS file for libxslt
 
-        NEWS file for libxslt
+v1.1.36: Aug 17 2022
 
-See the git page at 
-https://gitlab.gnome.org/GNOME/libxslt
+### Removals and deprecations
 
-to get a description of the recent commits.
+- Remove SVN keyword anchors
+- Remove CVS and SVN-related code
+- Remove README.cvs-commits
+- Remove ChangeLog
+- Remove xsltwin32config.h
+
+### Improvements
+
+- Simplify xsltexports.h and exsltexports.h
+- Don't overlink executables with gcrypt
+- Fix quadratic behavior with variables and parameters
+- Remove case labels with XPointer location types
+- Add configure~ to .gitignore
+- Stop calling deprecated libxml2 functions
+
+### Portability
+
+- Use portable python shebangs (David Seifert)
+- Remove useless __CYGWIN__ checks
+- Remove cruft from win32config.h
+- crypto.c: Silence a compiler warning on Windows (Chun-wei Fan)
+
+### Build system
+
+- Add missing compile definition for static builds to CMake
+- Avoid obsolescent `test -a` constructs (David Seifert)
+- Only link libxml2 statically in purely static build
+- Set AC_CONFIG_MACRO_DIR
+- Allow AM_MAINTAINER_MODE to be disabled
+- Streamline and fix documentation installation
+- Don't try to recreate COPYING symlink
+- Remove special configuration for certain maintainers
+- configure.ac: produce tar.xz only (GNOME policy) (David Seifert)
+- Detect libm using libtool's macros (David Seifert)
+- configure.ac: disable static libraries by default (David Seifert)
+- python/Makefile.am: nest python docs in $(docdir) (David Seifert)
+- python/Makefile.am: rely on global AM_INIT_AUTOMAKE (David Seifert)
+- configure.ac: remove useless AC_SUBST (David Seifert)
+- Use AM_PATH_PYTHON/PKG_CHECK_MODULES for python bindings (David Seifert)
+- Change libxml2 Python config
+- Don't check for standard C89 library functions
+- Don't check for standard C89 headers
+- Remove --with-html-dir option
+- Also check for glibtoolize in autogen.sh
+- Rework documentation build system
+- Remove old website
+- CMake: Relax check for enabling crypto support on Windows (Chun-wei Fan)
+- Remove obsolete AC_HEADER_STDC autoconf macro (Vadim Zeitlin)
+- Remove special configuration for old maintainers
+
+### Test suite, CI
+
+- Remove test involving XPointer range-to function
+- Test recursion in EXSLT dynamic functions
+- Add CI job for static build
+
+### Documentation
+
+- Move tutorial images
+
+
 v1.1.35: Feb 16 2022:
    - Security:
   [CVE-2021-30560] Fix use-after-free in xsltApplyTemplates

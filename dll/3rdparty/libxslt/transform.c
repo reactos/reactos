@@ -602,7 +602,6 @@ xsltNewTransformContext(xsltStylesheetPtr style, xmlDocPtr doc) {
     cur->prof = 0;
 
     cur->style = style;
-    xmlXPathInit();
     cur->xpathCtxt = xmlXPathNewContext(doc);
     if (cur->xpathCtxt == NULL) {
 	xsltTransformError(NULL, NULL, (xmlNodePtr) doc,
