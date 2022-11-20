@@ -12,9 +12,13 @@
 #define HAVE_STDINT_H
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#if defined(_MSC_VER)
+#if _MSC_VER < 1900
 #define snprintf _snprintf
-#define vsnprintf _vsnprintf
+#endif
+#if _MSC_VER < 1500
+#define vsnprintf(b,c,f,a) _vsnprintf(b,c,f,a)
+#endif
 #endif
 
 #endif /* __LIBXML_WIN32_CONFIG__ */

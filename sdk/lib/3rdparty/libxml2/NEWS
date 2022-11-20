@@ -1,5 +1,22 @@
 NEWS file for libxml2
 
+v2.10.3: Oct 14 2022
+
+### Security
+
+- [CVE-2022-40304] Fix dict corruption caused by entity reference cycles
+- [CVE-2022-40303] Fix integer overflows with XML_PARSE_HUGE
+- Fix overflow check in SAX2.c
+
+### Portability
+
+- win32: Fix build with VS2013
+
+### Build system
+
+- cmake: Set SOVERSION
+
+
 v2.10.2: Aug 29 2022
 
 ### Improvements

@@ -186,7 +186,7 @@
 /* #undef VA_LIST_IS_ARRAY */
 
 /* Version number of package */
-#define VERSION "2.10.2"
+#define VERSION "2.10.3"
 
 /* Determine what socket length (socklen_t) data type is */
 #define XML_SOCKLEN_T int
