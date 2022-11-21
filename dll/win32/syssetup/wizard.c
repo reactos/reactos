@@ -20,6 +20,7 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <tzlib.h>
 #include <strsafe.h>
 
@@ -2880,6 +2881,97 @@ ProcessUnattendSection(
     }
 }
 
+static VOID
+AddInstallationSource(
+    IN HKEY hKey,
+    IN LPWSTR lpPath)
+{
+    LONG res;
+    DWORD dwRegType;
+    DWORD dwPathLength = 0;
+    DWORD dwNewLength = 0;
+    LPWSTR Buffer = NULL;
+    LPWSTR Path;
+
+    res = RegQueryValueExW(
+        hKey,
+        L"Installation Sources",
+        NULL,
+        &dwRegType,
+        NULL,
+        &dwPathLength);
+
+    if (res != ERROR_SUCCESS ||
+        dwRegType != REG_MULTI_SZ ||
+        dwPathLength == 0 ||
+        dwPathLength % sizeof(WCHAR) != 0)
+    {
+        dwPathLength = 0;
+        goto set;
+    }
+
+    /* Reserve space for existing data + new string */
+    dwNewLength = dwPathLength + (wcslen(lpPath) + 1) * sizeof(WCHAR);
+    Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
+    if (!Buffer)
+        return;
+
+    ZeroMemory(Buffer, dwNewLength);
+
+    res = RegQueryValueExW(
+        hKey,
+        L"Installation Sources",
+        NULL,
+        NULL,
+        (LPBYTE)Buffer,
+        &dwPathLength);
+
+    if (res != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        dwPathLength = 0;
+        goto set;
+    }
+
+    /* Sanity check, these should already be zeros */
+    Buffer[dwPathLength / sizeof(WCHAR) - 2] = UNICODE_NULL;
+    Buffer[dwPathLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+
+    for (Path = Buffer; *Path; Path += wcslen(Path) + 1)
+    {
+        /* Check if path is already added */
+        if (PathIsSameRootW(Path, lpPath) && wcslen(Path) == wcslen(lpPath))
+            goto cleanup;
+    }
+
+    Path = Buffer + dwPathLength / sizeof(WCHAR) - 1;
+
+set:
+    if (dwPathLength == 0)
+    {
+        dwNewLength = (wcslen(lpPath) + 1 + 1) * sizeof(WCHAR);
+        Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
+        if (!Buffer)
+            return;
+
+        Path = Buffer;
+    }
+
+    StringCbCopyW(Path, dwNewLength - (Path - Buffer) * sizeof(WCHAR), lpPath);
+    Buffer[dwNewLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+
+    RegSetValueExW(
+        hKey,
+        L"Installation Sources",
+        0,
+        REG_MULTI_SZ,
+        (LPBYTE)Buffer,
+        dwNewLength);
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, Buffer);
+}
+
 VOID
 ProcessSetupInf(
     IN OUT PSETUPDATA pSetupData)
@@ -2890,9 +2982,6 @@ ProcessSetupInf(
     DWORD LineLength;
     HKEY hKey;
     LONG res;
-    LPWSTR pData;
-    size_t cchLength;
-    HRESULT hr;
 
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
@@ -2971,31 +3060,6 @@ ProcessSetupInf(
     }
 #endif
 
-    *szValue = UNICODE_NULL;
-    pData = szValue;
-
-    GetWindowsDirectoryW(szValue, ARRAYSIZE(szValue));
-    hr = StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
-
-    if (FAILED(hr) || FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength)))
-    {
-        DPRINT1("Failed to initialize installation sources path!\n");
-        return;
-    }
-
-    pData += cchLength + 1;
-    cchLength = (ARRAYSIZE(szValue) - cchLength - 1);
-    hr = StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
-
-    if (FAILED(hr) || FAILED(StringCchLengthW(pData, cchLength, &cchLength)))
-    {
-        DPRINT1("Failed to initialize installation sources path!\n");
-        return;
-    }
-
-    pData += cchLength + 1;
-    *pData = UNICODE_NULL;
-
     res = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Setup",
                           0, NULL,
@@ -3006,6 +3070,8 @@ ProcessSetupInf(
                           NULL);
     if (res == ERROR_SUCCESS)
     {
+        AddInstallationSource(hKey, pSetupData->SourcePath);
+
         res = RegSetValueExW(hKey,
                              L"SourcePath",
                              0,
@@ -3020,12 +3086,6 @@ ProcessSetupInf(
                              (LPBYTE)pSetupData->SourcePath,
                              (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
 
-        res = RegSetValueExW(hKey,
-                             L"Installation Sources",
-                             0,
-                             REG_MULTI_SZ,
-                             (LPBYTE)szValue,
-                             (DWORD)((pData - szValue + 1) * sizeof(WCHAR)));
         RegCloseKey(hKey);
     }
 
