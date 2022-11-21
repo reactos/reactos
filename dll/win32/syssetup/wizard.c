@@ -2884,7 +2884,7 @@ ProcessUnattendSection(
 static BOOL
 PathIsEqual(
     IN LPCWSTR lpPath1,
-    IN LPWSTR lpPath2)
+    IN LPCWSTR lpPath2)
 {
     WCHAR szPath1[MAX_PATH];
     WCHAR szPath2[MAX_PATH];
