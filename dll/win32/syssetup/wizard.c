@@ -2881,6 +2881,32 @@ ProcessUnattendSection(
     }
 }
 
+static BOOL
+PathIsEqual(
+    IN LPWSTR lpPath1,
+    IN LPWSTR lpPath2)
+{
+    WCHAR szPath1[MAX_PATH];
+    WCHAR szPath2[MAX_PATH];
+
+    /* If something goes wrong, better return TRUE,
+     * so the calling function returns early.
+     */
+    if (!PathCanonicalizeW(szPath1, lpPath1))
+        return TRUE;
+
+    if (!PathAddBackslashW(szPath1))
+        return TRUE;
+
+    if (!PathCanonicalizeW(szPath2, lpPath2))
+        return TRUE;
+
+    if (!PathAddBackslashW(szPath2))
+        return TRUE;
+
+    return (_wcsicmp(szPath1, szPath2) == 0);
+}
+
 static VOID
 AddInstallationSource(
     IN HKEY hKey,
@@ -2940,7 +2966,7 @@ AddInstallationSource(
     for (Path = Buffer; *Path; Path += wcslen(Path) + 1)
     {
         /* Check if path is already added */
-        if (PathIsSameRootW(Path, lpPath) && wcslen(Path) == wcslen(lpPath))
+        if (PathIsEqual(Path, lpPath))
             goto cleanup;
     }
 
