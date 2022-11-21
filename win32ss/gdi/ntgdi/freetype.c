@@ -6190,8 +6190,7 @@ IntExtTextOutW(
 
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) ||
-        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)) ||
-        plf->lfUnderline || plf->lfStrikeOut)
+        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
         if (!IntCalculateTextWidth(&TextWidth,
                                    String,
@@ -6450,6 +6449,7 @@ IntExtTextOutW(
     {
         /* Calculate the position and the thickness */
         INT i, underline_position, thickness;
+
         if (!face->units_per_EM)
         {
             underline_position = 0;
@@ -6474,7 +6474,7 @@ IntExtTextOutW(
                           &dc->eboText.BrushObject,
                           (RealXStart + 32) >> 6,
                           TextTop + yoff - underline_position + i,
-                          (RealXStart + TextWidth + 32) >> 6,
+                          (TextLeft + 32) >> 6,
                           TextTop + yoff - underline_position + i,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
@@ -6490,7 +6490,7 @@ IntExtTextOutW(
                           &dc->eboText.BrushObject,
                           (RealXStart + 32) >> 6,
                           TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                          (RealXStart + TextWidth + 32) >> 6,
+                          (TextLeft + 32) >> 6,
                           TextTop + yoff - (fixAscender >> 6) / 3 + i,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
