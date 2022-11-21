@@ -686,10 +686,22 @@ CHSourceDlgProc(
                     BROWSEINFOW bi = { 0 };
                     LPITEMIDLIST pidl;
                     WCHAR Title[MAX_PATH];
-                    WCHAR CustomSearchPath[MAX_PATH];
-                    INT idx = SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETCURSEL, 0, 0);
+                    WCHAR CustomSearchPath[MAX_PATH] = { 0 };
+                    INT len, idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETCURSEL, 0, 0);
                     LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
-                    SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXT, idx, (LPARAM)CustomSearchPath);
+
+                    if (idx == CB_ERR)
+                        len = GetWindowTextLengthW(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
+                    else
+                        len = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXTLEN, idx, 0);
+
+                    if (len < _countof(CustomSearchPath))
+                    {
+                        if (idx == CB_ERR)
+                            GetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), CustomSearchPath, _countof(CustomSearchPath));
+                        else
+                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXT, idx, (LPARAM)CustomSearchPath);
+                    }
                     DevInstData->CustomSearchPath = CustomSearchPath;
 
                     bi.hwndOwner = hwndDlg;

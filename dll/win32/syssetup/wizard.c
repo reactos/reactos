@@ -3025,7 +3025,7 @@ ProcessSetupInf(
                              0,
                              REG_MULTI_SZ,
                              (LPBYTE)szValue,
-                             (DWORD)((pData - szValue) * sizeof(WCHAR)));
+                             (DWORD)((pData - szValue + 1) * sizeof(WCHAR)));
         RegCloseKey(hKey);
     }
 
