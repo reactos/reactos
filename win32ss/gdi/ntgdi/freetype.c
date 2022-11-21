@@ -6194,26 +6194,32 @@ IntExtTextOutW(
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
 
-    if (!IntCalculateTextWidth(&TextWidth,
-                               String,
-                               Count,
-                               face,
-                               plf,
-                               fuOptions,
-                               RenderMode,
-                               pmxWorldToDevice,
-                               EmuBold, EmuItalic))
+    /* Calculate the text width if necessary */
+    if ((fuOptions & ETO_OPAQUE) ||
+        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)) ||
+        plf->lfUnderline || plf->lfStrikeOut)
     {
-        IntUnLockFreeType();
-        bResult = FALSE;
-        goto Cleanup;
-    }
+        if (!IntCalculateTextWidth(&TextWidth,
+                                   String,
+                                   Count,
+                                   face,
+                                   plf,
+                                   fuOptions,
+                                   RenderMode,
+                                   pmxWorldToDevice,
+                                   EmuBold, EmuItalic))
+        {
+            IntUnLockFreeType();
+            bResult = FALSE;
+            goto Cleanup;
+        }
 
-    /* Adjust the text position by alignment */
-    if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
-        RealXStart -= TextWidth / 2;
-    else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
-        RealXStart -= TextWidth;
+        /* Adjust the horizontal position by horizontal alignment */
+        if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
+            RealXStart -= TextWidth / 2;
+        else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
+            RealXStart -= TextWidth;
+    }
 
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
