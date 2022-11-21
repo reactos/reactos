@@ -2977,9 +2977,9 @@ ProcessSetupInf(
     GetWindowsDirectoryW(szValue, ARRAYSIZE(szValue));
     hr = StringCchCatW(szValue, ARRAYSIZE(szValue), L"\\inf");
 
-    if (FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength))
-        || FAILED(hr))
+    if (FAILED(hr) || FAILED(StringCchLengthW(szValue, ARRAYSIZE(szValue), &cchLength)))
     {
+        DPRINT1("Failed to initialize installation sources path!\n");
         return;
     }
 
@@ -2987,9 +2987,9 @@ ProcessSetupInf(
     cchLength = (ARRAYSIZE(szValue) - cchLength - 1);
     hr = StringCchCopyW(pData, cchLength, pSetupData->SourcePath);
 
-    if (FAILED(StringCchLengthW(pData, cchLength, &cchLength))
-        || FAILED(hr))
+    if (FAILED(hr) || FAILED(StringCchLengthW(pData, cchLength, &cchLength)))
     {
+        DPRINT1("Failed to initialize installation sources path!\n");
         return;
     }
 
