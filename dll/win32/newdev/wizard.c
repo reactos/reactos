@@ -604,7 +604,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             {
                 bValid = CheckBestDriver((PDEVINSTDATA)lpData, szDir);
             }
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
+            PostMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
             break;
         }
     }
