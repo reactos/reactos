@@ -5896,13 +5896,13 @@ IntCalculateTextWidth(
     BOOL EmuItalic)
 {
     LONGLONG TextLeft = 0;
-    INT i, glyph_index, error;
+    INT glyph_index, error;
     FT_BitmapGlyph realglyph;
     FT_GlyphSlot glyph;
     FT_Bool use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
 
-    for (i = 0; i < Count; i++)
+    while (Count-- > 0)
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
 
