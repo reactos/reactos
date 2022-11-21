@@ -5901,6 +5901,7 @@ IntCalculateTextWidth(
     FT_GlyphSlot glyph;
     FT_Bool use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
+    FT_Vector delta;
 
     while (Count-- > 0)
     {
@@ -5951,7 +5952,6 @@ IntCalculateTextWidth(
         /* Retrieve kerning distance */
         if (use_kerning && previous && glyph_index)
         {
-            FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft += delta.x;
         }
