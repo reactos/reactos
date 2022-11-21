@@ -5990,21 +5990,19 @@ IntExtTextOutW(
      */
 
     PDC_ATTR pdcattr;
-    SURFOBJ *SurfObj;
+    SURFOBJ *SurfObj, *SourceGlyphSurf;
     SURFACE *psurf = NULL;
-    int error, glyph_index, i;
+    INT error, glyph_index, i, yoff;
     FT_Face face;
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft, RealXStart;
+    LONGLONG TextLeft, RealXStart, TextWidth = 0;
     ULONG TextTop, previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
-    SURFOBJ *SourceGlyphSurf;
     SIZEL bitSize;
-    INT yoff;
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
@@ -6012,15 +6010,12 @@ IntExtTextOutW(
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
     POINT Start;
-    BOOL DoBreak = FALSE;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
     LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL EmuBold, EmuItalic;
-    BOOL bResult;
-    LONGLONG TextWidth = 0;
+    BOOL EmuBold, EmuItalic, bResult, DoBreak = FALSE;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6448,27 +6443,29 @@ IntExtTextOutW(
         }
     }
 
+    if (pdcattr->flTextAlign & TA_UPDATECP)
+        pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
+
     if (plf->lfUnderline || plf->lfStrikeOut) /* Underline or strike-out? */
     {
-        /* Calculate the position and thickness */
-        INT thickness, underline_position;
+        /* Calculate the position and the thickness */
+        INT i, underline_position, thickness;
         if (!face->units_per_EM)
         {
-            thickness = 1;
             underline_position = 0;
+            thickness = 1;
         }
         else
         {
+            underline_position =
+                face->underline_position * face->size->metrics.y_ppem / face->units_per_EM;
             thickness =
                 face->underline_thickness * face->size->metrics.y_ppem / face->units_per_EM;
             if (thickness <= 0)
                 thickness = 1;
-            underline_position =
-                face->underline_position * face->size->metrics.y_ppem / face->units_per_EM;
         }
 
-        /* Draw underline */
-        if (plf->lfUnderline)
+        if (plf->lfUnderline) /* Draw underline */
         {
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
@@ -6484,8 +6481,7 @@ IntExtTextOutW(
             }
         }
 
-        /* Draw strike-out */
-        if (plf->lfStrikeOut)
+        if (plf->lfStrikeOut) /* Draw strike-out */
         {
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
@@ -6503,10 +6499,6 @@ IntExtTextOutW(
     }
 
     IntUnLockFreeType();
-
-    if (pdcattr->flTextAlign & TA_UPDATECP) {
-        pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
-    }
 
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
     EXLATEOBJ_vCleanup(&exloDst2RGB);
