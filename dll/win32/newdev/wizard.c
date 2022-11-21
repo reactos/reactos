@@ -582,23 +582,29 @@ AutoDriver(HWND Dlg, BOOL Enabled)
 static INT CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
+    BOOL bValid = FALSE;
+
     switch (uMsg)
     {
         case BFFM_INITIALIZED:
         {
             PCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
+
+            bValid = CheckBestDriver((PDEVINSTDATA)lpData, pszPath);
             SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)pszPath);
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, CheckBestDriver((PDEVINSTDATA)lpData, pszPath));
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
             break;
         }
 
         case BFFM_SELCHANGED:
         {
             WCHAR szDir[MAX_PATH];
+
             if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
             {
-                return CheckBestDriver((PDEVINSTDATA)lpData, szDir);
+                bValid = CheckBestDriver((PDEVINSTDATA)lpData, szDir);
             }
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
             break;
         }
     }
