@@ -6449,6 +6449,64 @@ IntExtTextOutW(
         }
     }
 
+    if (!face->units_per_EM)
+    {
+        thickness = 1;
+    }
+    else
+    {
+        thickness = face->underline_thickness *
+            face->size->metrics.y_ppem / face->units_per_EM;
+        if (thickness <= 0)
+            thickness = 1;
+    }
+
+    /* Draw underline */
+    if (plf->lfUnderline)
+    {
+        INT position;
+
+        if (!face->units_per_EM)
+        {
+            position = 0;
+        }
+        else
+        {
+            position = face->underline_position *
+                face->size->metrics.y_ppem / face->units_per_EM;
+        }
+
+        for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+        {
+            EngLineTo(SurfObj,
+                      (CLIPOBJ *)&dc->co,
+                      &dc->eboText.BrushObject,
+                      (RealXStart + 32) >> 6,
+                      TextTop + yoff - position + i,
+                      (RealXStart + TextWidth + 32) >> 6,
+                      TextTop + yoff - position + i,
+                      NULL,
+                      ROP2_TO_MIX(R2_COPYPEN));
+        }
+    }
+
+    /* Draw strike-out */
+    if (plf->lfStrikeOut)
+    {
+        for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+        {
+            EngLineTo(SurfObj,
+                      (CLIPOBJ *)&dc->co,
+                      &dc->eboText.BrushObject,
+                      (RealXStart + 32) >> 6,
+                      TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                      (RealXStart + TextWidth + 32) >> 6,
+                      TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                      NULL,
+                      ROP2_TO_MIX(R2_COPYPEN));
+        }
+    }
+
     IntUnLockFreeType();
 
     if (pdcattr->flTextAlign & TA_UPDATECP) {
@@ -6463,67 +6521,6 @@ Cleanup:
 
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-
-    if (bResult)
-    {
-        if (!face->units_per_EM)
-        {
-            thickness = 1;
-        }
-        else
-        {
-            thickness = face->underline_thickness *
-                face->size->metrics.y_ppem / face->units_per_EM;
-            if (thickness <= 0)
-                thickness = 1;
-        }
-
-        /* Draw underline */
-        if (plf->lfUnderline)
-        {
-            INT i, position;
-
-            if (!face->units_per_EM)
-            {
-                position = 0;
-            }
-            else
-            {
-                position = face->underline_position *
-                    face->size->metrics.y_ppem / face->units_per_EM;
-            }
-            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
-            {
-                EngLineTo(SurfObj,
-                          (CLIPOBJ *)&dc->co,
-                          &dc->eboText.BrushObject,
-                          (RealXStart + 32) >> 6,
-                          TextTop + yoff - position + i,
-                          (RealXStart + TextWidth + 32) >> 6,
-                          TextTop + yoff - position + i,
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
-            }
-        }
-
-        /* Draw strike-out */
-        if (plf->lfStrikeOut)
-        {
-            INT i;
-            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
-            {
-                EngLineTo(SurfObj,
-                          (CLIPOBJ *)&dc->co,
-                          &dc->eboText.BrushObject,
-                          (RealXStart + 32) >> 6,
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                          (RealXStart + TextWidth + 32) >> 6,
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
-            }
-        }
-    }
 
     return bResult;
 }
