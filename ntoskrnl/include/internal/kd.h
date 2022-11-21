@@ -94,10 +94,6 @@ KdpKdbgInit(
 
 BOOLEAN
 NTAPI
-KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
-
-BOOLEAN
-NTAPI
 KdpSafeReadMemory(
     IN ULONG_PTR Addr,
     IN LONG Len,
