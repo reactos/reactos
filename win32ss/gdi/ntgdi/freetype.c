@@ -6131,7 +6131,7 @@ IntExtTextOutW(
     }
 
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
-    if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
+    if (pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
@@ -6229,7 +6229,7 @@ IntExtTextOutW(
     /* Assume success */
     bResult = TRUE;
 
-    if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+    if (pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc);
 
     /*
