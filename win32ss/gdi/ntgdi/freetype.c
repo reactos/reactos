@@ -5988,10 +5988,11 @@ IntExtTextOutW(
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
-    LONG fixAscender, fixDescender;
+    LONG lfHeight, fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
+    FT_Vector delta;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6109,6 +6110,7 @@ IntExtTextOutW(
     face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+    lfHeight = plf->lfHeight;
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -6161,7 +6163,7 @@ IntExtTextOutW(
         if (!ftGdiGetTextWidth(&TextWidth64,
                                String, Count,
                                face,
-                               plf->lfHeight,
+                               lfHeight,
                                fuOptions,
                                RenderMode,
                                pmxWorldToDevice,
@@ -6231,9 +6233,9 @@ IntExtTextOutW(
     DoBreak = FALSE;
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
 
-        realglyph = ftGdiGetRealGlyph(face, glyph_index, plf->lfHeight, RenderMode,
+        realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
                                       pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
         {
@@ -6244,23 +6246,21 @@ IntExtTextOutW(
         /* retrieve kerning distance and move pen position */
         if (use_kerning && previous && glyph_index && NULL == Dx)
         {
-            FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft64 += delta.x;
         }
+
         DPRINT("TextLeft64: %I64d\n", TextLeft64);
         DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
-        DestRect.left = ((TextLeft64 + 32) >> 6) + realglyph->left;
-        DestRect.right = DestRect.left + realglyph->bitmap.width;
-        DestRect.top = TextTop + yoff - realglyph->top;
-        DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
-
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
-        MaskRect.right = realglyph->bitmap.width;
-        MaskRect.bottom = realglyph->bitmap.rows;
+
+        DestRect.left   = ((TextLeft64 + 32) >> 6) + realglyph->left;
+        DestRect.right  = DestRect.left + bitSize.cx;
+        DestRect.top    = TextTop + yoff - realglyph->top;
+        DestRect.bottom = DestRect.top + bitSize.cy;
 
         /* Check if the bitmap has any pixels */
         if ((bitSize.cx != 0) && (bitSize.cy != 0))
@@ -6293,23 +6293,28 @@ IntExtTextOutW(
              * Use the font data as a mask to paint onto the DCs surface using a
              * brush.
              */
-            if (lprc && (fuOptions & ETO_CLIPPED) &&
-                    DestRect.right >= lprc->right + dc->ptlDCOrig.x)
+            if (lprc && (fuOptions & ETO_CLIPPED))
             {
-                // We do the check '>=' instead of '>' to possibly save an iteration
-                // through this loop, since it's breaking after the drawing is done,
-                // and x is always incremented.
-                DestRect.right = lprc->right + dc->ptlDCOrig.x;
-                DoBreak = TRUE;
-            }
-            if (lprc && (fuOptions & ETO_CLIPPED) &&
-                    DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
-            {
-                DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+                if (DestRect.right >= lprc->right + dc->ptlDCOrig.x)
+                {
+                    // We do the check '>=' instead of '>' to possibly save an iteration
+                    // through this loop, since it's breaking after the drawing is done,
+                    // and x is always incremented.
+                    DestRect.right = lprc->right + dc->ptlDCOrig.x;
+                    DoBreak = TRUE;
+                }
+
+                if (DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+                {
+                    DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+                }
             }
 
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+
+            MaskRect.right = realglyph->bitmap.width;
+            MaskRect.bottom = realglyph->bitmap.rows;
 
             if (!IntEngMaskBlt(SurfObj,
                                SourceGlyphSurf,
@@ -6349,7 +6354,7 @@ IntExtTextOutW(
             /* do the shift before multiplying to preserve precision */
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
             TextLeft64 += FLOATOBJ_GetLong(&Scale);
-            DPRINT("New TextLeft2: %I64d\n", TextLeft64);
+            DPRINT("New TextLeft64 2: %I64d\n", TextLeft64);
         }
 
         if (DxShift)
