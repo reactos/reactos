@@ -210,11 +210,6 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
         /* If the interrupt to be disconnected is not the list head */
         else
         {
-            /* Get the next interrupt in the list */
-            NextInterrupt = CONTAINING_RECORD(Interrupt->InterruptListEntry.Flink,
-                                              KINTERRUPT,
-                                              InterruptListEntry);
-
             /* Remove the to be disconnected interrupt from the interrupt list */
             RemoveEntryList(&Interrupt->InterruptListEntry);
         }
