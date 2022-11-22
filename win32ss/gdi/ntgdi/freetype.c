@@ -5917,6 +5917,8 @@ ftGdiGetTextWidth(
     ULONG previous = 0;
     FT_Vector delta;
 
+    ASSERT_FREETYPE_LOCK_HELD();
+
     while (Count-- > 0)
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
