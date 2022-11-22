@@ -4241,7 +4241,9 @@ ftGdiGetGlyphOutline(
     return needed;
 }
 
+#if 0
 static inline
+#endif
 FT_BitmapGlyph
 APIENTRY
 ftGdiGetRealGlyph(
@@ -5895,7 +5897,9 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 }
 
 /* Calculate width of the text. */
+#if 0
 static inline
+#endif
 BOOL
 APIENTRY
 ftGdiGetTextWidth(
