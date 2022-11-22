@@ -33,6 +33,7 @@ list(APPEND SOURCE
     propsheet.c
     rebar.c
     smoothscroll.c
+    static.c
     status.c
     string.c
     syslink.c
