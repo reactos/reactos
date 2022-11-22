@@ -6400,7 +6400,6 @@ IntExtTextOutW(
         if (EmuBold || EmuItalic)
         {
             FT_Done_Glyph((FT_Glyph)realglyph);
-            realglyph = NULL;
         }
     }
 
