@@ -4365,8 +4365,7 @@ TextIntGetTextExtentPoint(PDC dc,
                                      plf->lfHeight,
                                      RenderMode,
                                      pmxWorldToDevice,
-                                     EmuBold,
-                                     EmuItalic);
+                                     EmuBold, EmuItalic);
         if (!realglyph)
             break;
 
@@ -5938,8 +5937,7 @@ IntCalculateTextWidth(
                                      lfHeight,
                                      RenderMode,
                                      pmxWorldToDevice,
-                                     EmuBold,
-                                     EmuItalic);
+                                     EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -6186,8 +6184,7 @@ IntExtTextOutW(
         (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
         if (!IntCalculateTextWidth(&TextWidth,
-                                   String,
-                                   Count,
+                                   String, Count,
                                    face,
                                    plf->lfHeight,
                                    fuOptions,
@@ -6266,8 +6263,7 @@ IntExtTextOutW(
                                      plf->lfHeight,
                                      RenderMode,
                                      pmxWorldToDevice,
-                                     EmuBold,
-                                     EmuItalic);
+                                     EmuBold, EmuItalic);
         if (!realglyph)
         {
             bResult = FALSE;
