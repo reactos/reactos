@@ -4243,6 +4243,7 @@ ftGdiGetGlyphOutline(
 
 static inline
 FT_BitmapGlyph
+APIENTRY
 ft_get_realglyph(
     FT_Face face,
     INT glyph_index,
@@ -5906,6 +5907,7 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 }
 
 /* Calculate width of the text. */
+static inline
 BOOL
 APIENTRY
 IntCalculateTextWidth(
