@@ -4318,7 +4318,7 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_Render_Mode RenderMode;
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
-    BOOL Render, use_kerning, EmuBold, EmuItalic;
+    BOOL use_kerning, EmuBold, EmuItalic;
     LONG ascender, descender;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -4337,8 +4337,7 @@ TextIntGetTextExtentPoint(PDC dc,
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
-    Render = IntIsFontRenderingEnabled();
-    if (Render)
+    if (IntIsFontRenderingEnabled())
         RenderMode = IntGetFontRenderMode(plf);
     else
         RenderMode = FT_RENDER_MODE_MONO;
@@ -5990,7 +5989,7 @@ IntExtTextOutW(
     LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL Render, use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
+    BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6111,8 +6110,7 @@ IntExtTextOutW(
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
-    Render = IntIsFontRenderingEnabled();
-    if (Render)
+    if (IntIsFontRenderingEnabled())
         RenderMode = IntGetFontRenderMode(plf);
     else
         RenderMode = FT_RENDER_MODE_MONO;
