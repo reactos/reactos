@@ -5999,8 +5999,6 @@ IntExtTextOutW(
         return FALSE;
     }
 
-    Render = IntIsFontRenderingEnabled();
-
     if (PATH_IsPathOpen(dc->dclevel))
     {
         bResult = PATH_ExtTextOut(dc,
@@ -6023,18 +6021,19 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
-    pdcattr = dc->pdcattr;
-
     if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
     {
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
+    pdcattr = dc->pdcattr;
     if (pdcattr->flTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
-    } else {
+    }
+    else
+    {
         Start.x = XStart;
         Start.y = YStart;
     }
@@ -6043,19 +6042,16 @@ IntExtTextOutW(
     RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
-    SourcePoint.x = 0;
-    SourcePoint.y = 0;
-    MaskRect.left = 0;
-    MaskRect.top = 0;
-    BrushOrigin.x = 0;
-    BrushOrigin.y = 0;
+    RtlZeroMemory(&MaskRect, sizeof(MaskRect));
+    RtlZeroMemory(&SourcePoint, sizeof(SourcePoint));
+    RtlZeroMemory(&BrushOrigin, sizeof(BrushOrigin));
+
+    psurf = dc->dclevel.pSurface;
+    SurfObj = &psurf->SurfObj;
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = lprc->left;
-        DestRect.top    = lprc->top;
-        DestRect.right  = lprc->right;
-        DestRect.bottom = lprc->bottom;
+        RtlCopyMemory(&DestRect, lprc, sizeof(DestRect));
 
         DestRect.left   += dc->ptlDCOrig.x;
         DestRect.top    += dc->ptlDCOrig.y;
@@ -6063,28 +6059,25 @@ IntExtTextOutW(
         DestRect.bottom += dc->ptlDCOrig.y;
 
         if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-        {
-           IntUpdateBoundsRect(dc, &DestRect);
-        }
+            IntUpdateBoundsRect(dc, &DestRect);
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
+
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-        psurf = dc->dclevel.pSurface;
-        IntEngBitBlt(
-            &psurf->SurfObj,
-            NULL,
-            NULL,
-            (CLIPOBJ *)&dc->co,
-            NULL,
-            &DestRect,
-            &SourcePoint,
-            &SourcePoint,
-            &dc->eboBackground.BrushObject,
-            &BrushOrigin,
-            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        IntEngBitBlt(SurfObj,
+                     NULL,
+                     NULL,
+                     (CLIPOBJ *)&dc->co,
+                     NULL,
+                     &DestRect,
+                     &SourcePoint,
+                     &SourcePoint,
+                     &dc->eboBackground.BrushObject,
+                     &BrushOrigin,
+                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawEnd(dc->ppdev);
@@ -6118,6 +6111,7 @@ IntExtTextOutW(
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
+    Render = IntIsFontRenderingEnabled();
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
     else
@@ -6187,9 +6181,6 @@ IntExtTextOutW(
         else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
             RealXStart -= TextWidth;
     }
-
-    psurf = dc->dclevel.pSurface;
-    SurfObj = &psurf->SurfObj ;
 
     if (fuOptions & ETO_OPAQUE) /* Fill background */
     {
@@ -6320,16 +6311,15 @@ IntExtTextOutW(
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-            if (!IntEngMaskBlt(
-                SurfObj,
-                SourceGlyphSurf,
-                (CLIPOBJ *)&dc->co,
-                &exloRGB2Dst.xlo,
-                &exloDst2RGB.xlo,
-                &DestRect,
-                (PPOINTL)&MaskRect,
-                &dc->eboText.BrushObject,
-                &BrushOrigin))
+            if (!IntEngMaskBlt(SurfObj,
+                               SourceGlyphSurf,
+                               (CLIPOBJ *)&dc->co,
+                               &exloRGB2Dst.xlo,
+                               &exloDst2RGB.xlo,
+                               &DestRect,
+                               (PPOINTL)&MaskRect,
+                               &dc->eboText.BrushObject,
+                               &BrushOrigin))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
