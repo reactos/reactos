@@ -5981,7 +5981,7 @@ IntExtTextOutW(
     SIZEL bitSize;
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
-    PTEXTOBJ TextObj = NULL;
+    PTEXTOBJ TextObj;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
     POINT Start;
@@ -5990,7 +5990,7 @@ IntExtTextOutW(
     LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL Render, use_kerning, EmuBold, EmuItalic, bResult, DoBreak = FALSE;
+    BOOL Render, use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6228,6 +6228,7 @@ IntExtTextOutW(
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     use_kerning = FT_HAS_KERNING(face);
+    DoBreak = FALSE;
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
