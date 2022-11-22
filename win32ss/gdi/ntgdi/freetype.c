@@ -6003,15 +6003,14 @@ IntExtTextOutW(
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
-        bResult = PATH_ExtTextOut(dc,
-                              XStart,
-                              YStart,
-                              fuOptions,
-                              (const RECTL *)lprc,
-                              String,
-                              Count,
-                              (const INT *)Dx);
-        return bResult;
+        return PATH_ExtTextOut(dc,
+                               XStart,
+                               YStart,
+                               fuOptions,
+                               (const RECTL *)lprc,
+                               String,
+                               Count,
+                               (const INT *)Dx);
     }
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
@@ -6114,10 +6113,7 @@ IntExtTextOutW(
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
-    if (IntIsFontRenderingEnabled())
-        RenderMode = IntGetFontRenderMode(plf);
-    else
-        RenderMode = FT_RENDER_MODE_MONO;
+    RenderMode = (IntIsFontRenderingEnabled() ? IntGetFontRenderMode(plf) : FT_RENDER_MODE_MONO);
 
     if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
@@ -6157,7 +6153,6 @@ IntExtTextOutW(
 #undef VALIGN_MASK
 
     /* Calculate the text width if necessary */
-    TextWidth64 = 0;
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
         if (!ftGdiGetTextWidth(&TextWidth64,
@@ -6179,38 +6174,42 @@ IntExtTextOutW(
             RealXStart64 -= TextWidth64 / 2;
         else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
             RealXStart64 -= TextWidth64;
-    }
 
-    if (fuOptions & ETO_OPAQUE) /* Fill background */
-    {
-        DestRect.left   = (RealXStart64 + 32) >> 6;
-        DestRect.top    = YStart;
-        DestRect.right  = (RealXStart64 + TextWidth64 + 32) >> 6;
-        DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
+        /* Fill background */
+        if (fuOptions & ETO_OPAQUE)
+        {
+            DestRect.left   = (RealXStart64 + 32) >> 6;
+            DestRect.right  = (RealXStart64 + TextWidth64 + 32) >> 6;
+            DestRect.top    = YStart;
+            DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
 
-        if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
-            IntUpdateBoundsRect(dc, &DestRect);
+            if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
+                IntUpdateBoundsRect(dc, &DestRect);
 
-        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-            DC_vUpdateBackgroundBrush(dc);
+            if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+                DC_vUpdateBackgroundBrush(dc);
 
-        if (dc->dctype == DCTYPE_DIRECT)
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            if (dc->dctype == DCTYPE_DIRECT)
+            {
+                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top,
+                                       DestRect.right, DestRect.bottom);
+            }
 
-        IntEngBitBlt(SurfObj,
-                     NULL,
-                     NULL,
-                     (CLIPOBJ *)&dc->co,
-                     NULL,
-                     &DestRect,
-                     &SourcePoint,
-                     &SourcePoint,
-                     &dc->eboBackground.BrushObject,
-                     &BrushOrigin,
-                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+            IntEngBitBlt(SurfObj,
+                         NULL,
+                         NULL,
+                         (CLIPOBJ *)&dc->co,
+                         NULL,
+                         &DestRect,
+                         &SourcePoint,
+                         &SourcePoint,
+                         &dc->eboBackground.BrushObject,
+                         &BrushOrigin,
+                         ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 
-        if (dc->dctype == DCTYPE_DIRECT)
-            MouseSafetyOnDrawEnd(dc->ppdev);
+            if (dc->dctype == DCTYPE_DIRECT)
+                MouseSafetyOnDrawEnd(dc->ppdev);
+        }
     }
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
