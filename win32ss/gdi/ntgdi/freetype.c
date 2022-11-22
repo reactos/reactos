@@ -6210,12 +6210,6 @@ IntExtTextOutW(
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
 
-    if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
-        DC_vUpdateBackgroundBrush(dc) ;
-
-    if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
-        DC_vUpdateTextBrush(dc) ;
-
     if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
@@ -6253,6 +6247,9 @@ IntExtTextOutW(
 
     /* Assume success */
     bResult = TRUE;
+
+    if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(dc);
 
     /*
      * The main rendering loop.
