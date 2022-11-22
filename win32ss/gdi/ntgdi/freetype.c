@@ -4288,12 +4288,8 @@ ft_get_realglyph(
     }
     else
     {
-        realglyph = ftGdiGlyphCacheSet(face,
-                                       glyph_index,
-                                       lfHeight,
-                                       pmxWorldToDevice,
-                                       glyph,
-                                       RenderMode);
+        realglyph = ftGdiGlyphCacheSet(face, glyph_index, lfHeight,
+                                       pmxWorldToDevice, glyph, RenderMode);
     }
 
     if (!realglyph)
@@ -4360,12 +4356,8 @@ TextIntGetTextExtentPoint(PDC dc,
     {
         glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
-        realglyph = ft_get_realglyph(face,
-                                     glyph_index,
-                                     plf->lfHeight,
-                                     RenderMode,
-                                     pmxWorldToDevice,
-                                     EmuBold, EmuItalic);
+        realglyph = ft_get_realglyph(face, glyph_index, plf->lfHeight, RenderMode,
+                                     pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
             break;
 
@@ -5932,12 +5924,8 @@ IntCalculateTextWidth(
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
 
-        realglyph = ft_get_realglyph(face,
-                                     glyph_index,
-                                     lfHeight,
-                                     RenderMode,
-                                     pmxWorldToDevice,
-                                     EmuBold, EmuItalic);
+        realglyph = ft_get_realglyph(face, glyph_index, lfHeight, RenderMode,
+                                     pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -5989,7 +5977,6 @@ IntExtTextOutW(
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart, TextWidth = 0;
     ULONG TextTop, previous;
-    FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
@@ -6006,7 +5993,7 @@ IntExtTextOutW(
     LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL EmuBold, EmuItalic, bResult, DoBreak = FALSE;
+    BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak = FALSE;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6207,9 +6194,8 @@ IntExtTextOutW(
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
 
-    if (fuOptions & ETO_OPAQUE)
+    if (fuOptions & ETO_OPAQUE) /* Fill background */
     {
-        /* Draw background */
         DestRect.left   = (RealXStart + 32) >> 6;
         DestRect.top    = YStart;
         DestRect.right  = (RealXStart + TextWidth + 32) >> 6;
@@ -6220,6 +6206,7 @@ IntExtTextOutW(
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
+
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
@@ -6258,12 +6245,8 @@ IntExtTextOutW(
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-        realglyph = ft_get_realglyph(face,
-                                     glyph_index,
-                                     plf->lfHeight,
-                                     RenderMode,
-                                     pmxWorldToDevice,
-                                     EmuBold, EmuItalic);
+        realglyph = ft_get_realglyph(face, glyph_index, plf->lfHeight, RenderMode,
+                                     pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
         {
             bResult = FALSE;
