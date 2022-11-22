@@ -5899,7 +5899,7 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 static inline
 BOOL
 APIENTRY
-ftGdiCalculateTextWidth(
+ftGdiGetTextWidth(
     LONGLONG *pTextWidth,
     LPCWSTR String,
     INT Count,
@@ -5914,7 +5914,7 @@ ftGdiCalculateTextWidth(
     LONGLONG TextLeft = 0;
     INT glyph_index;
     FT_BitmapGlyph realglyph;
-    FT_Bool use_kerning = FT_HAS_KERNING(face);
+    BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta;
 
@@ -5969,11 +5969,11 @@ IntExtTextOutW(
 
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj, *SourceGlyphSurf;
-    SURFACE *psurf = NULL;
+    SURFACE *psurf;
     INT glyph_index, i, yoff;
     FT_Face face;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft, RealXStart, TextWidth = 0;
+    LONGLONG TextLeft, RealXStart, TextWidth;
     ULONG TextTop, previous;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
@@ -6154,21 +6154,18 @@ IntExtTextOutW(
         yoff = fixAscender >> 6;
 #undef VALIGN_MASK
 
-    use_kerning = FT_HAS_KERNING(face);
-    previous = 0;
-
     /* Calculate the text width if necessary */
-    if ((fuOptions & ETO_OPAQUE) ||
-        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
+    TextWidth = 0;
+    if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!ftGdiCalculateTextWidth(&TextWidth,
-                                     String, Count,
-                                     face,
-                                     plf->lfHeight,
-                                     fuOptions,
-                                     RenderMode,
-                                     pmxWorldToDevice,
-                                     EmuBold, EmuItalic))
+        if (!ftGdiGetTextWidth(&TextWidth,
+                               String, Count,
+                               face,
+                               plf->lfHeight,
+                               fuOptions,
+                               RenderMode,
+                               pmxWorldToDevice,
+                               EmuBold, EmuItalic))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6229,6 +6226,8 @@ IntExtTextOutW(
     TextLeft = RealXStart;
     TextTop = YStart;
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
+    previous = 0;
+    use_kerning = FT_HAS_KERNING(face);
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
