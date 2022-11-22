@@ -4315,12 +4315,10 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_BitmapGlyph realglyph;
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
-    BOOL use_kerning;
     FT_Render_Mode RenderMode;
-    BOOLEAN Render;
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
-    BOOL EmuBold, EmuItalic;
+    BOOL Render, use_kerning, EmuBold, EmuItalic;
     LONG ascender, descender;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -5986,14 +5984,13 @@ IntExtTextOutW(
     PTEXTOBJ TextObj = NULL;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
-    BOOLEAN Render;
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
     LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak = FALSE;
+    BOOL Render, use_kerning, EmuBold, EmuItalic, bResult, DoBreak = FALSE;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
