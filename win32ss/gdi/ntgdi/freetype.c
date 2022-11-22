@@ -4241,6 +4241,66 @@ ftGdiGetGlyphOutline(
     return needed;
 }
 
+static inline
+FT_BitmapGlyph
+ft_get_realglyph(
+    FT_Face face,
+    INT glyph_index,
+    LONG lfHeight,
+    FT_Render_Mode RenderMode,
+    PMATRIX pmxWorldToDevice,
+    BOOL EmuBold,
+    BOOL EmuItalic)
+{
+    FT_GlyphSlot glyph;
+    FT_BitmapGlyph realglyph = NULL;
+    INT error;
+
+    if (EmuBold || EmuItalic)
+    {
+        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+    }
+    else
+    {
+        realglyph = ftGdiGlyphCacheGet(face, glyph_index, lfHeight,
+                                       RenderMode, pmxWorldToDevice);
+        if (realglyph)
+            return realglyph;
+
+        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    }
+
+    if (error)
+    {
+        DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+        return NULL;
+    }
+
+    glyph = face->glyph;
+    if (EmuBold || EmuItalic)
+    {
+        if (EmuBold)
+            FT_GlyphSlot_Embolden(glyph);
+        if (EmuItalic)
+            FT_GlyphSlot_Oblique(glyph);
+        realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
+    }
+    else
+    {
+        realglyph = ftGdiGlyphCacheSet(face,
+                                       glyph_index,
+                                       lfHeight,
+                                       pmxWorldToDevice,
+                                       glyph,
+                                       RenderMode);
+    }
+
+    if (!realglyph)
+        DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
+
+    return realglyph;
+}
+
 BOOL
 FASTCALL
 TextIntGetTextExtentPoint(PDC dc,
@@ -4255,9 +4315,8 @@ TextIntGetTextExtentPoint(PDC dc,
 {
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
-    INT error, glyph_index, i, previous;
+    INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
     BOOL use_kerning;
     FT_Render_Mode RenderMode;
@@ -4300,49 +4359,15 @@ TextIntGetTextExtentPoint(PDC dc,
     {
         glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
-        if (EmuBold || EmuItalic)
-            realglyph = NULL;
-        else
-            realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           RenderMode, pmxWorldToDevice);
-
-        if (EmuBold || EmuItalic || !realglyph)
-        {
-            if (EmuItalic)
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
-            else
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
-                break;
-            }
-
-            glyph = face->glyph;
-            if (EmuBold || EmuItalic)
-            {
-                if (EmuBold)
-                    FT_GlyphSlot_Embolden(glyph);
-                if (EmuItalic)
-                    FT_GlyphSlot_Oblique(glyph);
-                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            }
-            else
-            {
-                realglyph = ftGdiGlyphCacheSet(face,
-                                               glyph_index,
-                                               plf->lfHeight,
-                                               pmxWorldToDevice,
-                                               glyph,
-                                               RenderMode);
-            }
-
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                break;
-            }
-        }
+        realglyph = ft_get_realglyph(face,
+                                     glyph_index,
+                                     plf->lfHeight,
+                                     RenderMode,
+                                     pmxWorldToDevice,
+                                     EmuBold,
+                                     EmuItalic);
+        if (!realglyph)
+            break;
 
         /* Retrieve kerning distance */
         if (use_kerning && previous && glyph_index)
@@ -5896,9 +5921,8 @@ IntCalculateTextWidth(
     BOOL EmuItalic)
 {
     LONGLONG TextLeft = 0;
-    INT glyph_index, error;
+    INT glyph_index;
     FT_BitmapGlyph realglyph;
-    FT_GlyphSlot glyph;
     FT_Bool use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta;
@@ -5907,47 +5931,15 @@ IntCalculateTextWidth(
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
 
-        if (EmuBold || EmuItalic)
-            realglyph = NULL;
-        else
-            realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           RenderMode, pmxWorldToDevice);
+        realglyph = ft_get_realglyph(face,
+                                     glyph_index,
+                                     plf->lfHeight,
+                                     RenderMode,
+                                     pmxWorldToDevice,
+                                     EmuBold,
+                                     EmuItalic);
         if (!realglyph)
-        {
-            if (EmuItalic)
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
-            else
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
-            }
-
-            glyph = face->glyph;
-            if (EmuBold || EmuItalic)
-            {
-                if (EmuBold)
-                    FT_GlyphSlot_Embolden(glyph);
-                if (EmuItalic)
-                    FT_GlyphSlot_Oblique(glyph);
-                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            }
-            else
-            {
-                realglyph = ftGdiGlyphCacheSet(face,
-                                               glyph_index,
-                                               plf->lfHeight,
-                                               pmxWorldToDevice,
-                                               glyph,
-                                               RenderMode);
-            }
-
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                return FALSE;
-            }
-        }
+            return FALSE;
 
         /* Retrieve kerning distance */
         if (use_kerning && previous && glyph_index)
@@ -5992,9 +5984,8 @@ IntExtTextOutW(
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj, *SourceGlyphSurf;
     SURFACE *psurf = NULL;
-    INT error, glyph_index, i, yoff;
+    INT glyph_index, i, yoff;
     FT_Face face;
-    FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart, TextWidth = 0;
     ULONG TextTop, previous;
@@ -6272,48 +6263,17 @@ IntExtTextOutW(
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-        if (EmuBold || EmuItalic)
-            realglyph = NULL;
-        else
-            realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           RenderMode, pmxWorldToDevice);
+        realglyph = ft_get_realglyph(face,
+                                     glyph_index,
+                                     plf->lfHeight,
+                                     RenderMode,
+                                     pmxWorldToDevice,
+                                     EmuBold,
+                                     EmuItalic);
         if (!realglyph)
         {
-            if (EmuItalic)
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
-            else
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
-                bResult = FALSE;
-                break;
-            }
-
-            glyph = face->glyph;
-            if (EmuBold || EmuItalic)
-            {
-                if (EmuBold)
-                    FT_GlyphSlot_Embolden(glyph);
-                if (EmuItalic)
-                    FT_GlyphSlot_Oblique(glyph);
-                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            }
-            else
-            {
-                realglyph = ftGdiGlyphCacheSet(face,
-                                               glyph_index,
-                                               plf->lfHeight,
-                                               pmxWorldToDevice,
-                                               glyph,
-                                               RenderMode);
-            }
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                bResult = FALSE;
-                break;
-            }
+            bResult = FALSE;
+            break;
         }
 
         /* retrieve kerning distance and move pen position */
