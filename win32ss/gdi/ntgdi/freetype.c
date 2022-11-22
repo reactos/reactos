@@ -4252,9 +4252,9 @@ ft_get_realglyph(
     BOOL EmuBold,
     BOOL EmuItalic)
 {
-    FT_GlyphSlot glyph;
-    FT_BitmapGlyph realglyph = NULL;
     INT error;
+    FT_GlyphSlot glyph;
+    FT_BitmapGlyph realglyph;
 
     if (EmuBold || EmuItalic)
     {
