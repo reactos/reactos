@@ -4244,7 +4244,7 @@ ftGdiGetGlyphOutline(
 static inline
 FT_BitmapGlyph
 APIENTRY
-ft_get_realglyph(
+IntGetRealGlyph(
     FT_Face face,
     INT glyph_index,
     LONG lfHeight,
@@ -4354,8 +4354,8 @@ TextIntGetTextExtentPoint(PDC dc,
     {
         glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
-        realglyph = ft_get_realglyph(face, glyph_index, plf->lfHeight, RenderMode,
-                                     pmxWorldToDevice, EmuBold, EmuItalic);
+        realglyph = IntGetRealGlyph(face, glyph_index, plf->lfHeight, RenderMode,
+                                    pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
             break;
 
@@ -5922,8 +5922,8 @@ IntCalculateTextWidth(
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
 
-        realglyph = ft_get_realglyph(face, glyph_index, lfHeight, RenderMode,
-                                     pmxWorldToDevice, EmuBold, EmuItalic);
+        realglyph = IntGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
+                                    pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -6233,8 +6233,8 @@ IntExtTextOutW(
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-        realglyph = ft_get_realglyph(face, glyph_index, plf->lfHeight, RenderMode,
-                                     pmxWorldToDevice, EmuBold, EmuItalic);
+        realglyph = IntGetRealGlyph(face, glyph_index, plf->lfHeight, RenderMode,
+                                    pmxWorldToDevice, EmuBold, EmuItalic);
         if (!realglyph)
         {
             bResult = FALSE;
