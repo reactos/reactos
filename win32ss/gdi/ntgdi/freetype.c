@@ -6050,7 +6050,7 @@ IntExtTextOutW(
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj;
 
-    if ((fuOptions & ETO_OPAQUE) && lprc)
+    if (lprc && (fuOptions & ETO_OPAQUE))
     {
         RtlCopyMemory(&DestRect, lprc, sizeof(DestRect));
 
