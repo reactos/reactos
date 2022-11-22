@@ -5899,7 +5899,7 @@ static inline
 BOOL
 APIENTRY
 ftGdiGetTextWidth(
-    LONGLONG *pTextWidth,
+    LONGLONG *pTextWidth64,
     LPCWSTR String,
     INT Count,
     FT_Face face,
@@ -5910,7 +5910,7 @@ ftGdiGetTextWidth(
     BOOL EmuBold,
     BOOL EmuItalic)
 {
-    LONGLONG TextLeft = 0;
+    LONGLONG TextLeft64 = 0;
     INT glyph_index;
     FT_BitmapGlyph realglyph;
     BOOL use_kerning = FT_HAS_KERNING(face);
@@ -5932,10 +5932,10 @@ ftGdiGetTextWidth(
         if (use_kerning && previous && glyph_index)
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextLeft += delta.x;
+            TextLeft64 += delta.x;
         }
 
-        TextLeft += realglyph->root.advance.x >> 10;
+        TextLeft64 += realglyph->root.advance.x >> 10;
 
         if (EmuBold || EmuItalic)
             FT_Done_Glyph((FT_Glyph)realglyph);
@@ -5944,7 +5944,7 @@ ftGdiGetTextWidth(
         String++;
     }
 
-    *pTextWidth = TextLeft;
+    *pTextWidth64 = TextLeft64;
     return TRUE;
 }
 
@@ -5974,7 +5974,7 @@ IntExtTextOutW(
     INT glyph_index, i, yoff;
     FT_Face face;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft, RealXStart, TextWidth;
+    LONGLONG TextLeft64, RealXStart64, TextWidth64;
     ULONG TextTop, previous;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
@@ -6040,7 +6040,7 @@ IntExtTextOutW(
     }
 
     IntLPtoDP(dc, &Start, 1);
-    RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
+    RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
     RtlZeroMemory(&MaskRect, sizeof(MaskRect));
@@ -6155,10 +6155,10 @@ IntExtTextOutW(
 #undef VALIGN_MASK
 
     /* Calculate the text width if necessary */
-    TextWidth = 0;
+    TextWidth64 = 0;
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!ftGdiGetTextWidth(&TextWidth,
+        if (!ftGdiGetTextWidth(&TextWidth64,
                                String, Count,
                                face,
                                plf->lfHeight,
@@ -6174,16 +6174,16 @@ IntExtTextOutW(
 
         /* Adjust the horizontal position by horizontal alignment */
         if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
-            RealXStart -= TextWidth / 2;
+            RealXStart64 -= TextWidth64 / 2;
         else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
-            RealXStart -= TextWidth;
+            RealXStart64 -= TextWidth64;
     }
 
     if (fuOptions & ETO_OPAQUE) /* Fill background */
     {
-        DestRect.left   = (RealXStart + 32) >> 6;
+        DestRect.left   = (RealXStart64 + 32) >> 6;
         DestRect.top    = YStart;
-        DestRect.right  = (RealXStart + TextWidth + 32) >> 6;
+        DestRect.right  = (RealXStart64 + TextWidth64 + 32) >> 6;
         DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
@@ -6223,7 +6223,7 @@ IntExtTextOutW(
     /*
      * The main rendering loop.
      */
-    TextLeft = RealXStart;
+    TextLeft64 = RealXStart64;
     TextTop = YStart;
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
@@ -6246,13 +6246,13 @@ IntExtTextOutW(
         {
             FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextLeft += delta.x;
+            TextLeft64 += delta.x;
         }
-        DPRINT("TextLeft: %I64d\n", TextLeft);
+        DPRINT("TextLeft64: %I64d\n", TextLeft64);
         DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
-        DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
+        DestRect.left = ((TextLeft64 + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
         DestRect.top = TextTop + yoff - realglyph->top;
         DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
@@ -6336,8 +6336,8 @@ IntExtTextOutW(
 
         if (NULL == Dx)
         {
-            TextLeft += realglyph->root.advance.x >> 10;
-            DPRINT("New TextLeft: %I64d\n", TextLeft);
+            TextLeft64 += realglyph->root.advance.x >> 10;
+            DPRINT("New TextLeft64: %I64d\n", TextLeft64);
         }
         else
         {
@@ -6348,8 +6348,8 @@ IntExtTextOutW(
 
             /* do the shift before multiplying to preserve precision */
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
-            TextLeft += FLOATOBJ_GetLong(&Scale);
-            DPRINT("New TextLeft2: %I64d\n", TextLeft);
+            TextLeft64 += FLOATOBJ_GetLong(&Scale);
+            DPRINT("New TextLeft2: %I64d\n", TextLeft64);
         }
 
         if (DxShift)
@@ -6395,9 +6395,9 @@ IntExtTextOutW(
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          (RealXStart + 32) >> 6,
+                          (RealXStart64 + 32) >> 6,
                           TextTop + yoff - underline_position + i,
-                          (TextLeft + 32) >> 6,
+                          (TextLeft64 + 32) >> 6,
                           TextTop + yoff - underline_position + i,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
@@ -6411,9 +6411,9 @@ IntExtTextOutW(
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          (RealXStart + 32) >> 6,
+                          (RealXStart64 + 32) >> 6,
                           TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                          (TextLeft + 32) >> 6,
+                          (TextLeft64 + 32) >> 6,
                           TextTop + yoff - (fixAscender >> 6) / 3 + i,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
