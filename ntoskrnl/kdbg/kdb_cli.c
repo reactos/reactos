@@ -2923,27 +2923,28 @@ KdbpPagerInternal(
     {
         TerminalInitialized = TRUE;
 
-        KdpDprintf("\x1b[7h");      /* Enable linewrap */
+        /* Enable line-wrap */
+        KdpDprintf("\x1b[?7h");
 
-        /* Query terminal type */
-        /*DbgPrint("\x1b[Z");*/
-        KdpDprintf("\x05");
-
-        Length = 0;
+        /*
+         * Query terminal type.
+         * Historically it was done with CTRL-E ('\x05'), however nowadays
+         * terminals respond to it with an empty (or a user-configurable)
+         * string. Instead, use the VT52-compatible 'ESC Z' sequence or the
+         * VT100-compatible 'ESC[c' one.
+         */
+        KdpDprintf("\x1b[c");
         KeStallExecutionProcessor(100000);
 
+        Length = 0;
         for (;;)
         {
+            /* Verify we get an answer, but don't care about it */
             c = KdbpTryGetCharSerial(5000);
             if (c == -1)
                 break;
-
-            InBuffer[Length++] = c;
-            if (Length >= (sizeof(InBuffer) - 1))
-                break;
+            ++Length;
         }
-
-        InBuffer[Length] = '\0';
         if (Length > 0)
             TerminalConnected = TRUE;
     }
@@ -2953,21 +2954,34 @@ KdbpPagerInternal(
         /* Refresh terminal size each time when number of rows printed is 0 */
         (KdbNumberOfRowsPrinted) == 0)
     {
-        if ((KdbDebugState & KD_DEBUG_KDSERIAL) && TerminalConnected && TerminalReportsSize)
+        /* Retrieve the size of the serial terminal only when it is the
+         * controlling terminal: serial output is enabled *and* KDSERIAL
+         * is set (i.e. user input through serial). */
+        BOOLEAN SerialTerminal =
+#if 0
+        // Old logic where KDSERIAL also enables serial output.
+        (KdbDebugState & KD_DEBUG_KDSERIAL) ||
+        (KdpDebugMode.Serial && !KdpDebugMode.Screen);
+#else
+        // New logic where KDSERIAL does not necessarily enable serial output.
+        KdpDebugMode.Serial &&
+        ((KdbDebugState & KD_DEBUG_KDSERIAL) || !KdpDebugMode.Screen);
+#endif
+
+        if (SerialTerminal && TerminalConnected && TerminalReportsSize)
         {
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
-            KeStallExecutionProcessor(100000);
             KdpDprintf("\x1b[18t");
-            c = KdbpTryGetCharSerial(5000);
+            KeStallExecutionProcessor(100000);
 
+            c = KdbpTryGetCharSerial(5000);
             if (c == KEY_ESC)
             {
                 c = KdbpTryGetCharSerial(5000);
                 if (c == '[')
                 {
                     Length = 0;
-
                     for (;;)
                     {
                         c = KdbpTryGetCharSerial(5000);
@@ -2978,15 +2992,15 @@ KdbpPagerInternal(
                         if (isalpha(c) || Length >= (sizeof(InBuffer) - 1))
                             break;
                     }
-
                     InBuffer[Length] = '\0';
+
                     if (InBuffer[0] == '8' && InBuffer[1] == ';')
                     {
                         for (i = 2; (i < Length) && (InBuffer[i] != ';'); i++);
 
-                        if (Buffer[i] == ';')
+                        if (InBuffer[i] == ';')
                         {
-                            Buffer[i++] = '\0';
+                            InBuffer[i++] = '\0';
 
                             /* Number of rows is now at Buffer + 2 and number of cols at Buffer + i */
                             KdbNumberOfRowsTerminal = strtoul(InBuffer + 2, NULL, 0);
@@ -3003,19 +3017,22 @@ KdbpPagerInternal(
         if (KdbNumberOfRowsTerminal <= 0)
         {
             /* Set number of rows to the default */
-            if (!DoPage)
-                KdbNumberOfRowsTerminal = 23; //Mna.: for SCREEN debugport
+            if (KdpDebugMode.Screen && !SerialTerminal)
+                KdbNumberOfRowsTerminal = (SCREEN_HEIGHT / (13 /*BOOTCHAR_HEIGHT*/ + 1));
             else
                 KdbNumberOfRowsTerminal = 24;
         }
-        else if (KdbNumberOfColsTerminal <= 0)
+        if (KdbNumberOfColsTerminal <= 0)
         {
             /* Set number of cols to the default */
-            if (!DoPage)
-                KdbNumberOfColsTerminal = 75; //Mna.: for SCREEN debugport
+            if (KdpDebugMode.Screen && !SerialTerminal)
+                KdbNumberOfColsTerminal = (SCREEN_WIDTH / 8 /*BOOTCHAR_WIDTH*/);
             else
                 KdbNumberOfColsTerminal = 80;
         }
+
+        // KdpDprintf("Cols/Rows: %dx%d\n",
+                   // KdbNumberOfColsTerminal, KdbNumberOfRowsTerminal);
     }
 
     /* Loop through the strings */
@@ -3398,7 +3415,7 @@ KdbpReadCommand(
             if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
                 NextKey = '\0';
 
-            KdbpPrint("\n");
+            KdpDprintf("\n");
 
             /*
              * Repeat the last command if the user presses enter. Reduces the
@@ -3425,9 +3442,9 @@ KdbpReadCommand(
                 *Buffer = 0;
 
                 if (EchoOn)
-                    KdbpPrint("%c %c", KEY_BS, KEY_BS);
+                    KdpDprintf("%c %c", KEY_BS, KEY_BS);
                 else
-                    KdbpPrint(" %c", KEY_BS);
+                    KdpDprintf(" %c", KEY_BS);
             }
         }
         else if (ScanCode == KEY_SCAN_UP)
@@ -3459,16 +3476,16 @@ KdbpReadCommand(
                     *Buffer = 0;
 
                     if (EchoOn)
-                        KdbpPrint("%c %c", KEY_BS, KEY_BS);
+                        KdpDprintf("%c %c", KEY_BS, KEY_BS);
                     else
-                        KdbpPrint(" %c", KEY_BS);
+                        KdpDprintf(" %c", KEY_BS);
                 }
 
                 i = min(strlen(KdbCommandHistory[CmdHistIndex]), Size - 1);
                 memcpy(Orig, KdbCommandHistory[CmdHistIndex], i);
                 Orig[i] = '\0';
                 Buffer = Orig + i;
-                KdbpPrint("%s", Orig);
+                KdpDprintf("%s", Orig);
             }
         }
         else if (ScanCode == KEY_SCAN_DOWN)
@@ -3488,23 +3505,23 @@ KdbpReadCommand(
                         *Buffer = 0;
 
                         if (EchoOn)
-                            KdbpPrint("%c %c", KEY_BS, KEY_BS);
+                            KdpDprintf("%c %c", KEY_BS, KEY_BS);
                         else
-                            KdbpPrint(" %c", KEY_BS);
+                            KdpDprintf(" %c", KEY_BS);
                     }
 
                     i = min(strlen(KdbCommandHistory[CmdHistIndex]), Size - 1);
                     memcpy(Orig, KdbCommandHistory[CmdHistIndex], i);
                     Orig[i] = '\0';
                     Buffer = Orig + i;
-                    KdbpPrint("%s", Orig);
+                    KdpDprintf("%s", Orig);
                 }
             }
         }
         else
         {
             if (EchoOn)
-                KdbpPrint("%c", Key);
+                KdpDprintf("%c", Key);
 
             *Buffer = Key;
             Buffer++;
