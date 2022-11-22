@@ -214,6 +214,7 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
             /* Remove the to be disconnected interrupt from the interrupt list */
             RemoveEntryList(&Interrupt->InterruptListEntry);
         }
+
         /* Mark as not connected */
         Interrupt->Connected = FALSE;
     }
