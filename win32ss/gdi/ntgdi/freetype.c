@@ -6232,8 +6232,7 @@ IntExtTextOutW(
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-        psurf = dc->dclevel.pSurface;
-        IntEngBitBlt(&psurf->SurfObj,
+        IntEngBitBlt(SurfObj,
                      NULL,
                      NULL,
                      (CLIPOBJ *)&dc->co,
