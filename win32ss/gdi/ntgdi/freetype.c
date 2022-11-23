@@ -6029,9 +6029,7 @@ IntExtTextOutW(
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
-    }
-    else
-    {
+    } else {
         Start.x = XStart;
         Start.y = YStart;
     }
@@ -6068,17 +6066,18 @@ IntExtTextOutW(
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-        IntEngBitBlt(SurfObj,
-                     NULL,
-                     NULL,
-                     (CLIPOBJ *)&dc->co,
-                     NULL,
-                     &DestRect,
-                     &SourcePoint,
-                     &SourcePoint,
-                     &dc->eboBackground.BrushObject,
-                     &BrushOrigin,
-                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        IntEngBitBlt(
+            SurfObj,
+            NULL,
+            NULL,
+            (CLIPOBJ *)&dc->co,
+            NULL,
+            &DestRect,
+            &SourcePoint,
+            &SourcePoint,
+            &dc->eboBackground.BrushObject,
+            &BrushOrigin,
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawEnd(dc->ppdev);
@@ -6319,15 +6318,16 @@ IntExtTextOutW(
             MaskRect.right = bitSize.cx;
             MaskRect.bottom = bitSize.cy;
 
-            if (!IntEngMaskBlt(SurfObj,
-                               SourceGlyphSurf,
-                               (CLIPOBJ *)&dc->co,
-                               &exloRGB2Dst.xlo,
-                               &exloDst2RGB.xlo,
-                               &DestRect,
-                               (PPOINTL)&MaskRect,
-                               &dc->eboText.BrushObject,
-                               &BrushOrigin))
+            if (!IntEngMaskBlt(
+                SurfObj,
+                SourceGlyphSurf,
+                (CLIPOBJ *)&dc->co,
+                &exloRGB2Dst.xlo,
+                &exloDst2RGB.xlo,
+                &DestRect,
+                (PPOINTL)&MaskRect,
+                &dc->eboText.BrushObject,
+                &BrushOrigin))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
