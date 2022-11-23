@@ -6040,7 +6040,6 @@ IntExtTextOutW(
     IntLPtoDP(dc, &Start, 1);
     RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
-    YEnd = YStart + ((fixAscender + fixDescender) >> 6);
 
     RtlZeroMemory(&MaskRect, sizeof(MaskRect));
     RtlZeroMemory(&SourcePoint, sizeof(SourcePoint));
@@ -6138,6 +6137,8 @@ IntExtTextOutW(
         fixAscender = FontGDI->tmAscent << 6;
         fixDescender = FontGDI->tmDescent << 6;
     }
+
+    YEnd = YStart + ((fixAscender + fixDescender) >> 6);
 
     /*
      * Process the vertical alignment and determine the yoff.
