@@ -6000,14 +6000,15 @@ IntExtTextOutW(
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
-        return PATH_ExtTextOut(dc,
-                               XStart,
-                               YStart,
-                               fuOptions,
-                               (const RECTL *)lprc,
-                               String,
-                               Count,
-                               (const INT *)Dx);
+        bResult = PATH_ExtTextOut(dc,
+                              XStart,
+                              YStart,
+                              fuOptions,
+                              (const RECTL *)lprc,
+                              String,
+                              Count,
+                              (const INT *)Dx);
+        return bResult;
     }
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
