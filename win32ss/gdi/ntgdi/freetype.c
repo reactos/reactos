@@ -6262,6 +6262,9 @@ IntExtTextOutW(
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
 
+        MaskRect.right = realglyph->bitmap.width;
+        MaskRect.bottom = realglyph->bitmap.rows;
+
         DestRect.left   = ((TextLeft64 + 32) >> 6) + realglyph->left;
         DestRect.right  = DestRect.left + bitSize.cx;
         DestRect.top    = TextTop + yoff - realglyph->top;
@@ -6320,9 +6323,6 @@ IntExtTextOutW(
 
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-
-            MaskRect.right = bitSize.cx;
-            MaskRect.bottom = bitSize.cy;
 
             if (!IntEngMaskBlt(
                 SurfObj,
