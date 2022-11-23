@@ -6289,8 +6289,8 @@ IntExtTextOutW(
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
             if ( !SourceGlyphSurf )
             {
-                DPRINT1("WARNING: EngLockSurface() failed!\n");
                 EngDeleteSurface((HSURF)HSourceGlyph);
+                DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
                 if (EmuBold || EmuItalic)
                     FT_Done_Glyph((FT_Glyph)realglyph);
