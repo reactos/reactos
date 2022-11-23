@@ -6115,7 +6115,10 @@ IntExtTextOutW(
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
-    RenderMode = (IntIsFontRenderingEnabled() ? IntGetFontRenderMode(plf) : FT_RENDER_MODE_MONO);
+    if (IntIsFontRenderingEnabled())
+        RenderMode = IntGetFontRenderMode(plf);
+    else
+        RenderMode = FT_RENDER_MODE_MONO;
 
     if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
