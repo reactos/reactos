@@ -6273,16 +6273,19 @@ IntExtTextOutW(
             if ( !HSourceGlyph )
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
-                // FT_Done_Glyph(realglyph);
                 bResult = FALSE;
+                if (EmuBold || EmuItalic)
+                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
             if ( !SourceGlyphSurf )
             {
-                EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
+                EngDeleteSurface((HSURF)HSourceGlyph);
                 bResult = FALSE;
+                if (EmuBold || EmuItalic)
+                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
 
@@ -6334,7 +6337,11 @@ IntExtTextOutW(
         }
 
         if (DoBreak)
+        {
+            if (EmuBold || EmuItalic)
+                FT_Done_Glyph((FT_Glyph)realglyph);
             break;
+        }
 
         if (NULL == Dx)
         {
