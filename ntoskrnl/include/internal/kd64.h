@@ -523,6 +523,11 @@ NTAPI
 KdpPrintString(
     _In_ PSTRING Output);
 
+VOID
+NTAPI
+KdLogDbgPrint(
+    _In_ PSTRING String);
+
 //
 // Global KD Data
 //
@@ -558,7 +563,15 @@ extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 
 extern CHAR KdpMessageBuffer[KDP_MSG_BUFFER_SIZE];
 extern CHAR KdpPathBuffer[KDP_MSG_BUFFER_SIZE];
+
 extern CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
+extern PCHAR KdPrintWritePointer;
+extern ULONG KdPrintRolloverCount;
+extern PCHAR KdPrintCircularBuffer;
+extern ULONG KdPrintBufferSize;
+extern ULONG KdPrintBufferChanges;
+extern KSPIN_LOCK KdpPrintSpinLock;
+
 extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
 extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
