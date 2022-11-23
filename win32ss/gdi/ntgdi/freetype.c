@@ -6040,9 +6040,12 @@ IntExtTextOutW(
     RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
-    RtlZeroMemory(&MaskRect, sizeof(MaskRect));
-    RtlZeroMemory(&SourcePoint, sizeof(SourcePoint));
-    RtlZeroMemory(&BrushOrigin, sizeof(BrushOrigin));
+    SourcePoint.x = 0;
+    SourcePoint.y = 0;
+    MaskRect.left = 0;
+    MaskRect.top = 0;
+    BrushOrigin.x = 0;
+    BrushOrigin.y = 0;
 
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj;
