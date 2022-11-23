@@ -124,8 +124,8 @@ LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 //
 // Buffers
 //
-CHAR KdpMessageBuffer[0x1000];
-CHAR KdpPathBuffer[0x1000];
+CHAR KdpMessageBuffer[KDP_MSG_BUFFER_SIZE];
+CHAR KdpPathBuffer[KDP_MSG_BUFFER_SIZE];
 
 //
 // KdPrint Buffers
@@ -593,7 +593,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     PtrToUL64(&MmSystemRangeStart),
     PtrToUL64(&MmUserProbeAddress),
     PtrToUL64(KdPrintDefaultCircularBuffer),
-    PtrToUL64(KdPrintDefaultCircularBuffer + 1),
+    PtrToUL64(KdPrintDefaultCircularBuffer + sizeof(KdPrintDefaultCircularBuffer)),
     PtrToUL64(&KdPrintWritePointer),
     PtrToUL64(&KdPrintRolloverCount),
     PtrToUL64(&MmLoadedUserImageList),
@@ -636,7 +636,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     FIELD_OFFSET(KPRCB, ProcessorState.ContextFrame),
     FIELD_OFFSET(KPRCB, Number),
     sizeof(ETHREAD),
-    PtrToUL64(&KdPrintDefaultCircularBuffer),
+    PtrToUL64(&KdPrintCircularBuffer),
     PtrToUL64(&KdPrintBufferSize),
     PtrToUL64(&KeLoaderBlock),
     sizeof(KPCR),

@@ -18,6 +18,11 @@
 #endif
 
 //
+// Default size of the Message and Path buffers
+//
+#define KDP_MSG_BUFFER_SIZE 0x1000
+
+//
 // Maximum supported number of breakpoints
 //
 #define KD_BREAKPOINT_MAX   32
@@ -511,8 +516,7 @@ VOID
 __cdecl
 KdpDprintf(
     _In_ PCHAR Format,
-    ...
-);
+    ...);
 
 BOOLEAN
 NTAPI
@@ -552,7 +556,8 @@ extern BOOLEAN KdpContextSent;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 
-extern CHAR KdpMessageBuffer[0x1000], KdpPathBuffer[0x1000];
+extern CHAR KdpMessageBuffer[KDP_MSG_BUFFER_SIZE];
+extern CHAR KdpPathBuffer[KDP_MSG_BUFFER_SIZE];
 extern CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
 extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
 extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
