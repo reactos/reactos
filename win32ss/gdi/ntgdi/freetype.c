@@ -6059,7 +6059,9 @@ IntExtTextOutW(
         DestRect.bottom += dc->ptlDCOrig.y;
 
         if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            IntUpdateBoundsRect(dc, &DestRect);
+        {
+           IntUpdateBoundsRect(dc, &DestRect);
+        }
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
