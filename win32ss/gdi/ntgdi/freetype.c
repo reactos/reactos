@@ -6292,11 +6292,11 @@ IntExtTextOutW(
              */
             if (lprc && (fuOptions & ETO_CLIPPED))
             {
+                // We do the check '>=' instead of '>' to possibly save an iteration
+                // through this loop, since it's breaking after the drawing is done,
+                // and x is always incremented.
                 if (DestRect.right >= lprc->right + dc->ptlDCOrig.x)
                 {
-                    // We do the check '>=' instead of '>' to possibly save an iteration
-                    // through this loop, since it's breaking after the drawing is done,
-                    // and x is always incremented.
                     DestRect.right = lprc->right + dc->ptlDCOrig.x;
                     DoBreak = TRUE;
                 }
