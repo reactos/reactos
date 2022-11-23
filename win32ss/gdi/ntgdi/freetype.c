@@ -4241,6 +4241,9 @@ ftGdiGetGlyphOutline(
     return needed;
 }
 
+#if 0
+static inline
+#endif
 FT_BitmapGlyph
 APIENTRY
 ftGdiGetRealGlyph(
@@ -5948,7 +5951,6 @@ ftGdiGetTextWidth(
 }
 #endif
 
-
 BOOL
 APIENTRY
 IntExtTextOutW(
@@ -5971,7 +5973,7 @@ IntExtTextOutW(
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj, *SourceGlyphSurf;
     SURFACE *psurf;
-    INT glyph_index, i, yoff, YEnd, iClipped;
+    INT glyph_index, i, yoff;
     FT_Face face;
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft64, RealXStart64, TextWidth64;
@@ -5991,7 +5993,7 @@ IntExtTextOutW(
     LONG lfHeight, fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
-    BOOL use_kerning, EmuBold, EmuItalic, bResult;
+    BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
     FT_Vector delta;
 
     /* Check if String is valid */
@@ -6140,9 +6142,6 @@ IntExtTextOutW(
         fixDescender = FontGDI->tmDescent << 6;
     }
 
-    YEnd = YStart + ((fixAscender + fixDescender) >> 6);
-    use_kerning = FT_HAS_KERNING(face);
-
     /*
      * Process the vertical alignment and determine the yoff.
      */
@@ -6155,6 +6154,8 @@ IntExtTextOutW(
         yoff = fixAscender >> 6;
 #undef VALIGN_MASK
 
+    use_kerning = FT_HAS_KERNING(face);
+
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
@@ -6163,8 +6164,8 @@ IntExtTextOutW(
         INT cchText = Count;
         FT_BitmapGlyph realglyph;
 
-        TextWidth64 = 0;
         previous = 0;
+        TextWidth64 = 0;
 
         while (cchText-- > 0)
         {
@@ -6173,11 +6174,7 @@ IntExtTextOutW(
             realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
                                           pmxWorldToDevice, EmuBold, EmuItalic);
             if (!realglyph)
-            {
-                IntUnLockFreeType();
-                bResult = FALSE;
-                goto Cleanup;
-            }
+                return FALSE;
 
             /* Retrieve kerning distance */
             if (use_kerning && previous && glyph_index)
@@ -6221,7 +6218,7 @@ IntExtTextOutW(
             DestRect.left   = (RealXStart64 + 32) >> 6;
             DestRect.right  = (RealXStart64 + TextWidth64 + 32) >> 6;
             DestRect.top    = YStart;
-            DestRect.bottom = YEnd;
+            DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
 
             if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
                 IntUpdateBoundsRect(dc, &DestRect);
@@ -6252,32 +6249,14 @@ IntExtTextOutW(
         }
     }
 
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
+
     /* Assume success */
     bResult = TRUE;
 
-    /* Clipping */
-    if (lprc && (fuOptions & ETO_CLIPPED) && !(pdcattr->flTextAlign & TA_UPDATECP))
-    {
-        iClipped = 1;
-
-        if (dc->ptlDCOrig.x + lprc->right <= (RealXStart64 >> 6) ||
-            dc->ptlDCOrig.y + lprc->bottom <= YStart ||
-            YEnd <= dc->ptlDCOrig.y + lprc->top)
-        {
-            IntUnLockFreeType();
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        iClipped = 0;
-    }
-
     if (pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc);
-
-    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
-    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
     /*
      * The main rendering loop.
@@ -6286,6 +6265,7 @@ IntExtTextOutW(
     TextTop = YStart;
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
+    DoBreak = FALSE;
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
@@ -6318,7 +6298,7 @@ IntExtTextOutW(
         DestRect.bottom = DestRect.top + bitSize.cy;
 
         /* Check if the bitmap has any pixels */
-        if (bitSize.cx > 0 && bitSize.cy > 0 && iClipped <= 1)
+        if ((bitSize.cx != 0) && (bitSize.cy != 0))
         {
             /*
              * We should create the bitmap out of the loop at the biggest possible
@@ -6344,24 +6324,29 @@ IntExtTextOutW(
                 break;
             }
 
-            if (iClipped == 1)
+            /*
+             * Use the font data as a mask to paint onto the DCs surface using a
+             * brush.
+             */
+            if (lprc && (fuOptions & ETO_CLIPPED))
             {
-                if (DestRect.right >= dc->ptlDCOrig.x + lprc->right)
+                if (DestRect.right >= lprc->right + dc->ptlDCOrig.x)
                 {
-                    DestRect.right = dc->ptlDCOrig.x + lprc->right;
-                    iClipped = 2;
+                    // We do the check '>=' instead of '>' to possibly save an iteration
+                    // through this loop, since it's breaking after the drawing is done,
+                    // and x is always incremented.
+                    DestRect.right = lprc->right + dc->ptlDCOrig.x;
+                    DoBreak = TRUE;
                 }
 
-                if (DestRect.bottom >= dc->ptlDCOrig.y + lprc->bottom)
-                    DestRect.bottom = dc->ptlDCOrig.y + lprc->bottom;
+                if (DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+                {
+                    DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+                }
             }
 
             if (dc->dctype == DCTYPE_DIRECT)
-            {
-                MouseSafetyOnDrawStart(dc->ppdev,
-                                       DestRect.left, DestRect.top,
-                                       DestRect.right, DestRect.bottom);
-            }
+                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
             MaskRect.right = bitSize.cx;
             MaskRect.bottom = bitSize.cy;
@@ -6385,6 +6370,9 @@ IntExtTextOutW(
             EngUnlockSurface(SourceGlyphSurf);
             EngDeleteSurface((HSURF)HSourceGlyph);
         }
+
+        if (DoBreak)
+            break;
 
         if (NULL == Dx)
         {
@@ -6418,7 +6406,7 @@ IntExtTextOutW(
     }
 
     if (pdcattr->flTextAlign & TA_UPDATECP)
-        pdcattr->ptlCurrent.x = ((TextLeft64 + 32) >> 6) - dc->ptlDCOrig.x;
+        pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
 
     if (plf->lfUnderline || plf->lfStrikeOut) /* Underline or strike-out? */
     {
