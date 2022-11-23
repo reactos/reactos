@@ -6174,7 +6174,11 @@ IntExtTextOutW(
             realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
                                           pmxWorldToDevice, EmuBold, EmuItalic);
             if (!realglyph)
-                return FALSE;
+            {
+                IntUnLockFreeType();
+                bResult = FALSE;
+                goto Cleanup;
+            }
 
             /* Retrieve kerning distance */
             if (use_kerning && previous && glyph_index)
