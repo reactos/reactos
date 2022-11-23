@@ -5893,7 +5893,7 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-#if 1
+#if 0
 /* Calculate width of the text. */
 BOOL
 APIENTRY
@@ -6156,7 +6156,7 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-#if 0
+#if 1
         LPCWSTR pchText = String;
         INT cchText = Count;
         FT_BitmapGlyph realglyph;
