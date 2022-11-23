@@ -17,6 +17,14 @@
 
 /* GLOBALS ******************************************************************/
 
+const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
+PCHAR KdpDmesgBuffer = NULL;
+volatile ULONG KdpDmesgCurrentPosition = 0;
+volatile ULONG KdpDmesgFreeBytes = 0;
+volatile ULONG KdbDmesgTotalWritten = 0;
+volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
+static KSPIN_LOCK KdpDmesgLogSpinLock;
+
 typedef struct _IMAGE_SYMBOL_INFO_CACHE
 {
     LIST_ENTRY ListEntry;
@@ -30,6 +38,47 @@ static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolsToLoad;
 static KSPIN_LOCK SymbolsToLoadLock;
 static KEVENT SymbolsToLoadEvent;
+
+/* LOCKING FUNCTIONS *********************************************************/
+
+KIRQL
+NTAPI
+KdbAcquireLock(IN PKSPIN_LOCK SpinLock)
+{
+    KIRQL OldIrql;
+
+    /* Acquire the spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Loop until the spinlock becomes available */
+        while (!KeTestSpinLock(SpinLock));
+
+        /* Spinlock is free, raise IRQL to high level */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(SpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    return OldIrql;
+}
+
+VOID
+NTAPI
+KdbReleaseLock(IN PKSPIN_LOCK SpinLock,
+               IN KIRQL OldIrql)
+{
+    /* Release the spinlock */
+    KiReleaseSpinLock(SpinLock);
+    // KeReleaseSpinLockFromDpcLevel(SpinLock);
+
+    /* Restore the old IRQL */
+    KeLowerIrql(OldIrql);
+}
 
 /* FUNCTIONS ****************************************************************/
 
@@ -330,13 +379,61 @@ KdbSymProcessSymbols(
     KeSetEvent(&SymbolsToLoadEvent, IO_NO_INCREMENT, FALSE);
 }
 
+/*
+ * Debug logger function KdbDebugPrint() writes text messages into
+ * KdpDmesgBuffer, using it as a circular buffer. KdpDmesgBuffer contents could
+ * be later (re)viewed using dmesg command of kdbg. KdbDebugPrint() protects
+ * KdpDmesgBuffer from simultaneous writes by use of KdpDmesgLogSpinLock.
+ */
 VOID
 NTAPI
 KdbDebugPrint(
     PCH Message,
     ULONG Length)
 {
-    /* Nothing here */
+    KIRQL OldIrql;
+    ULONG beg, end, num;
+
+    /* Dmesg: store Message in the buffer to show it later */
+    if (KdbpIsInDmesgMode)
+       return;
+
+    if (KdpDmesgBuffer == NULL)
+      return;
+
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    OldIrql = KdbAcquireLock(&KdpDmesgLogSpinLock);
+
+    /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
+     * set num to min(KdpDmesgFreeBytes, Length).
+     */
+    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes;
+    beg = KdpDmesgCurrentPosition;
+    if (num != 0)
+    {
+        end = (beg + num) % KdpDmesgBufferSize;
+        if (end > beg)
+        {
+            RtlCopyMemory(KdpDmesgBuffer + beg, Message, Length);
+        }
+        else
+        {
+            RtlCopyMemory(KdpDmesgBuffer + beg, Message, KdpDmesgBufferSize - beg);
+            RtlCopyMemory(KdpDmesgBuffer, Message + (KdpDmesgBufferSize - beg), end);
+        }
+        KdpDmesgCurrentPosition = end;
+
+        /* Counting the total bytes written */
+        KdbDmesgTotalWritten += num;
+    }
+
+    /* Release the spinlock */
+    KdbReleaseLock(&KdpDmesgLogSpinLock, OldIrql);
+
+    /* Optional step(?): find out a way to notify about buffer exhaustion,
+     * and possibly fall into kbd to use dmesg command: user will read
+     * debug messages before they will be wiped over by next writes.
+     */
 }
 
 
@@ -425,6 +522,19 @@ KdbInitialize(
         HANDLE Thread;
         NTSTATUS Status;
         KIRQL OldIrql;
+
+        /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
+         * see kdbp_cli.c:KdbpCmdDmesg()/2
+         */
+        KdpDmesgBuffer = ExAllocatePoolZero(NonPagedPool,
+                                            KdpDmesgBufferSize + 1,
+                                            TAG_KDBG);
+        /* Ignore failure if KdpDmesgBuffer is NULL */
+        KdpDmesgFreeBytes = KdpDmesgBufferSize;
+        KdbDmesgTotalWritten = 0;
+
+        /* Initialize spinlock */
+        KeInitializeSpinLock(&KdpDmesgLogSpinLock);
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);

@@ -88,13 +88,36 @@
 #define NOEXTAPI
 #include <windbgkd.h>
 #include <wdbgexts.h>
+#include <kddll.h>
 #ifdef KDBG
+NTSTATUS
+NTAPI
+KdpDebuggerInitialize0(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL);
+NTSTATUS
+NTAPI
+KdpDebuggerInitialize1(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL);
+VOID
+NTAPI
+KdpSendPacket(
+    IN ULONG PacketType,
+    IN PSTRING MessageHeader,
+    IN PSTRING MessageData,
+    IN OUT PKD_CONTEXT KdContext);
+KDSTATUS
+NTAPI
+KdpReceivePacket(
+    IN ULONG PacketType,
+    OUT PSTRING MessageHeader,
+    OUT PSTRING MessageData,
+    OUT PULONG DataLength,
+    IN OUT PKD_CONTEXT Context);
 #define KdDebuggerInitialize0 KdpDebuggerInitialize0
 #define KdDebuggerInitialize1 KdpDebuggerInitialize1
 #define KdSendPacket KdpSendPacket
 #define KdReceivePacket KdpReceivePacket
 #endif
-#include <kddll.h>
 #ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>
 #endif

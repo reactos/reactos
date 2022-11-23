@@ -11,6 +11,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef KdDebuggerInitialize0
+#undef KdDebuggerInitialize1
+#undef KdSendPacket
+#undef KdReceivePacket
+
 /* VARIABLES ***************************************************************/
 
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
@@ -82,7 +87,7 @@ KdpGetDebugMode(PCHAR Currentp2)
 
 NTSTATUS
 NTAPI
-KdDebuggerInitialize0(
+KdpDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     ULONG i;
@@ -97,10 +102,8 @@ KdDebuggerInitialize0(
             /* Upcase it */
             _strupr(CommandLine);
 
-#ifdef KDBG
             /* Get the KDBG Settings */
             KdbpGetCommandLineSettings(CommandLine);
-#endif
 
             /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");
@@ -132,12 +135,12 @@ KdDebuggerInitialize0(
         InitRoutines[i](&DispatchTable[i], 0);
     }
 
-    return STATUS_SUCCESS;
+    return KdDebuggerInitialize0(LoaderBlock);
 }
 
 NTSTATUS
 NTAPI
-KdDebuggerInitialize1(
+KdpDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     PLIST_ENTRY CurrentEntry;
@@ -161,7 +164,7 @@ KdDebuggerInitialize1(
 
     NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
 
-    return STATUS_SUCCESS;
+    return KdDebuggerInitialize1(LoaderBlock);
 }
 
  /* EOF */
