@@ -513,6 +513,11 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     0
 };
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+C_ASSERT(sizeof(KDDEBUGGER_DATA64) >= 0x318);
+#endif
+
 KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 {
     {{0}},
@@ -690,4 +695,8 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 #endif
     {(ULONG_PTR)&IopNumTriageDumpDataBlocks},
     {(ULONG_PTR)IopTriageDumpDataBlocks},
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#error KdDebuggerDataBlock requires other fields for this NT version!
+#endif
 };

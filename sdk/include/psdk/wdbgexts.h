@@ -1,6 +1,12 @@
 #ifndef _WDBGEXTS_
 #define _WDBGEXTS_
 
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum
 {
     DBGKD_SIMULATION_NONE,
@@ -242,8 +248,14 @@ typedef struct _KDDEBUGGER_DATA64
     GCC_ULONG64 KdPrintWritePointer;
     GCC_ULONG64 KdPrintRolloverCount;
     GCC_ULONG64 MmLoadedUserImageList;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
     GCC_ULONG64 NtBuildLab;
     GCC_ULONG64 KiNormalSystemCall;
+#endif
+
+/* NOTE: Documented as "NT 5.0 hotfix (QFE) addition" */
+#if (NTDDI_VERSION >= NTDDI_WIN2KSP4)
     GCC_ULONG64 KiProcessorBlock;
     GCC_ULONG64 MmUnloadedDrivers;
     GCC_ULONG64 MmLastUnloadedDriver;
@@ -255,10 +267,16 @@ typedef struct _KDDEBUGGER_DATA64
     GCC_ULONG64 MmPeakCommitment;
     GCC_ULONG64 MmTotalCommitLimitMaximum;
     GCC_ULONG64 CmNtCSDVersion;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
     GCC_ULONG64 MmPhysicalMemoryBlock;
     GCC_ULONG64 MmSessionBase;
     GCC_ULONG64 MmSessionSize;
     GCC_ULONG64 MmSystemParentTablePage;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
     GCC_ULONG64 MmVirtualTranslationBase;
     USHORT OffsetKThreadNextProcessor;
     USHORT OffsetKThreadTeb;
@@ -306,11 +324,53 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT Gdt64R3CmTeb;
     GCC_ULONG64 IopNumTriageDumpDataBlocks;
     GCC_ULONG64 IopTriageDumpDataBlocks;
-#if 0 // Longhorn/Vista and later
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     GCC_ULONG64 VfCrashDataBlock;
     GCC_ULONG64 MmBadPagesDetected;
     GCC_ULONG64 MmZeroedPageSingleBitErrorsDetected;
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    GCC_ULONG64 EtwpDebuggerData;
+    USHORT OffsetPrcbContext;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    USHORT OffsetPrcbMaxBreakpoints;
+    USHORT OffsetPrcbMaxWatchpoints;
+    ULONG OffsetKThreadStackLimit;
+    ULONG OffsetKThreadStackBase;
+    ULONG OffsetKThreadQueueListEntry;
+    ULONG OffsetEThreadIrpList;
+    USHORT OffsetPrcbIdleThread;
+    USHORT OffsetPrcbNormalDpcState;
+    USHORT OffsetPrcbDpcStack;
+    USHORT OffsetPrcbIsrStack;
+    USHORT SizeKDPC_STACK_FRAME;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+    USHORT OffsetKPriQueueThreadListHead;
+    USHORT OffsetKThreadWaitReason;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+    USHORT Padding;
+    GCC_ULONG64 PteBase;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    GCC_ULONG64 RetpolineStubFunctionTable;
+    ULONG RetpolineStubFunctionTableSize;
+    ULONG RetpolineStubOffset;
+    ULONG RetpolineStubSize;
+#endif
 } KDDEBUGGER_DATA64, *PKDDEBUGGER_DATA64;
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // _WDBGEXTS_
