@@ -5893,7 +5893,6 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-#if 0
 /* Calculate width of the text. */
 BOOL
 APIENTRY
@@ -5946,7 +5945,6 @@ ftGdiGetTextWidth(
     *pTextWidth64 = TextLeft64;
     return TRUE;
 }
-#endif
 
 BOOL
 APIENTRY
@@ -6156,42 +6154,6 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-#if 1
-        LPCWSTR pchText = String;
-        INT cchText = Count;
-        FT_BitmapGlyph realglyph;
-
-        previous = 0;
-        TextWidth64 = 0;
-
-        while (cchText-- > 0)
-        {
-            glyph_index = get_glyph_index_flagged(face, *pchText++, ETO_GLYPH_INDEX, fuOptions);
-
-            realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
-                                          pmxWorldToDevice, EmuBold, EmuItalic);
-            if (!realglyph)
-            {
-                IntUnLockFreeType();
-                bResult = FALSE;
-                goto Cleanup;
-            }
-
-            /* Retrieve kerning distance */
-            if (use_kerning && previous && glyph_index)
-            {
-                FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextWidth64 += delta.x;
-            }
-
-            TextWidth64 += realglyph->root.advance.x >> 10;
-
-            if (EmuBold || EmuItalic)
-                FT_Done_Glyph((FT_Glyph)realglyph);
-
-            previous = glyph_index;
-        }
-#else
         if (!ftGdiGetTextWidth(&TextWidth64,
                                String, Count,
                                face,
@@ -6205,7 +6167,6 @@ IntExtTextOutW(
             bResult = FALSE;
             goto Cleanup;
         }
-#endif
 
         /* Adjust the horizontal position by horizontal alignment */
         if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
