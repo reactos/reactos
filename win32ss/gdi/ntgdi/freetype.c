@@ -4241,9 +4241,6 @@ ftGdiGetGlyphOutline(
     return needed;
 }
 
-#if 0
-static inline
-#endif
 FT_BitmapGlyph
 APIENTRY
 ftGdiGetRealGlyph(
