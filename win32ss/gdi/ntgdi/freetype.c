@@ -748,6 +748,7 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = pmat->xx;
 }
 
+static inline
 VOID FASTCALL
 FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
 {
@@ -769,35 +770,6 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
     ef = pmx->efM22;
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->yy = FLOATOBJ_GetLong(&ef);
-}
-
-VOID
-FtSetCoordinateTransform(
-    FT_Face face,
-    PMATRIX pmx)
-{
-    FT_Matrix ftmatrix;
-    FLOATOBJ efTemp;
-
-    /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-    efTemp = pmx->efM11;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM12;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM21;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM22;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
-
-    /* Set the transformation matrix */
-    FT_Set_Transform(face, &ftmatrix, 0);
 }
 
 static BOOL
@@ -3135,25 +3107,13 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
-static
-BOOL
-SameScaleMatrix(
-    PMATRIX pmx1,
-    PMATRIX pmx2)
-{
-    return (FLOATOBJ_Equal(&pmx1->efM11, &pmx2->efM11) &&
-            FLOATOBJ_Equal(&pmx1->efM12, &pmx2->efM12) &&
-            FLOATOBJ_Equal(&pmx1->efM21, &pmx2->efM21) &&
-            FLOATOBJ_Equal(&pmx1->efM22, &pmx2->efM22));
-}
-
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
     FT_Render_Mode RenderMode,
-    PMATRIX pmx)
+    FT_Matrix *pmat)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3169,7 +3129,7 @@ ftGdiGlyphCacheGet(
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
             (FontEntry->RenderMode == RenderMode) &&
-            (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
+            (RtlCompareMemory(&FontEntry->mat, pmat, sizeof(*pmat)) == sizeof(*pmat)))
             break;
     }
 
@@ -3230,7 +3190,7 @@ ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
-    PMATRIX pmx,
+    FT_Matrix *pmat,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -3284,7 +3244,7 @@ ftGdiGlyphCacheSet(
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
     NewEntry->RenderMode = RenderMode;
-    NewEntry->mxWorldToDevice = *pmx;
+    NewEntry->mat = *pmat;
 
     InsertHeadList(&g_FontCacheListHead, &NewEntry->ListEntry);
     if (++g_FontCacheNumEntries > MAX_FONT_CACHE)
@@ -3776,7 +3736,7 @@ ftGdiGetGlyphOutline(
     INT left, right, top = 0, bottom = 0;
     FT_Int load_flags = FT_LOAD_DEFAULT | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
     FLOATOBJ eM11, widthRatio, eTemp;
-    FT_Matrix transMat = identityMat;
+    FT_Matrix mat, transMat = identityMat;
     BOOL needsTransform = FALSE;
     INT orientation;
     LONG aveWidth;
@@ -3829,7 +3789,8 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
-    FtSetCoordinateTransform(ft_face, DC_pmxWorldToDevice(dc));
+    FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
+    FT_Set_Transform(ft_face, &mat, 0);
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -4238,7 +4199,7 @@ ftGdiGetRealGlyph(
     INT glyph_index,
     LONG lfHeight,
     FT_Render_Mode RenderMode,
-    PMATRIX pmxWorldToDevice,
+    FT_Matrix *pmat,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
@@ -4253,7 +4214,7 @@ ftGdiGetRealGlyph(
     else
     {
         realglyph = ftGdiGlyphCacheGet(face, glyph_index, lfHeight,
-                                       RenderMode, pmxWorldToDevice);
+                                       RenderMode, pmat);
         if (realglyph)
             return realglyph;
 
@@ -4278,7 +4239,7 @@ ftGdiGetRealGlyph(
     else
     {
         realglyph = ftGdiGlyphCacheSet(face, glyph_index, lfHeight,
-                                       pmxWorldToDevice, glyph, RenderMode);
+                                       pmat, glyph, RenderMode);
     }
 
     if (!realglyph)
@@ -4305,6 +4266,7 @@ TextIntGetTextExtentPoint(PDC dc,
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
     FT_Render_Mode RenderMode;
+    FT_Matrix mat;
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic;
@@ -4333,7 +4295,8 @@ TextIntGetTextExtentPoint(PDC dc,
 
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    FtSetCoordinateTransform(face, pmxWorldToDevice);
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    FT_Set_Transform(face, &mat, 0);
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -4343,7 +4306,7 @@ TextIntGetTextExtentPoint(PDC dc,
         glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
         realglyph = ftGdiGetRealGlyph(face, glyph_index, plf->lfHeight, RenderMode,
-                                      pmxWorldToDevice, EmuBold, EmuItalic);
+                                      &mat, EmuBold, EmuItalic);
         if (!realglyph)
             break;
 
@@ -4585,6 +4548,7 @@ ftGdiGetTextMetricsW(
     ULONG Error;
     NTSTATUS Status = STATUS_SUCCESS;
     LOGFONTW *plf;
+    FT_Matrix mat;
 
     if (!ptmwi)
     {
@@ -4609,7 +4573,8 @@ ftGdiGetTextMetricsW(
 
         IntLockFreeType();
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
+        FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
+        FT_Set_Transform(Face, &mat, 0);
         IntUnLockFreeType();
 
         if (0 != Error)
@@ -5894,7 +5859,7 @@ ftGdiGetTextWidth(
     LONG lfHeight,
     UINT fuOptions,
     FT_Render_Mode RenderMode,
-    PMATRIX pmxWorldToDevice,
+    FT_Matrix *pmat,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
@@ -5912,7 +5877,7 @@ ftGdiGetTextWidth(
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
 
         realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
-                                      pmxWorldToDevice, EmuBold, EmuItalic);
+                                      pmat, EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -5972,6 +5937,7 @@ IntExtTextOutW(
     PTEXTOBJ TextObj;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
+    FT_Matrix mat;
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
@@ -6119,7 +6085,8 @@ IntExtTextOutW(
     if (pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
+        FtMatrixFromMx(&mat, pmxWorldToDevice);
+        FT_Set_Transform(face, &mat, 0);
 
         fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
         fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
@@ -6127,7 +6094,8 @@ IntExtTextOutW(
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
+        FtMatrixFromMx(&mat, pmxWorldToDevice);
+        FT_Set_Transform(face, &mat, 0);
 
         fixAscender = FontGDI->tmAscent << 6;
         fixDescender = FontGDI->tmDescent << 6;
@@ -6156,7 +6124,7 @@ IntExtTextOutW(
                                lfHeight,
                                fuOptions,
                                RenderMode,
-                               pmxWorldToDevice,
+                               &mat,
                                EmuBold, EmuItalic))
         {
             IntUnLockFreeType();
@@ -6229,7 +6197,7 @@ IntExtTextOutW(
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
 
         realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
-                                      pmxWorldToDevice, EmuBold, EmuItalic);
+                                      &mat, EmuBold, EmuItalic);
         if (!realglyph)
         {
             bResult = FALSE;
@@ -6626,6 +6594,7 @@ NtGdiGetCharABCWidthsW(
     PFONTGDI FontGDI;
     FT_Face face;
     FT_CharMap charmap, found = NULL;
+    FT_Matrix mat;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -6701,6 +6670,8 @@ NtGdiGetCharABCWidthsW(
 
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    FT_Set_Transform(face, &mat, 0);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
@@ -6749,7 +6720,8 @@ NtGdiGetCharABCWidthsW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FtSetCoordinateTransform(face, pmxWorldToDevice);
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    FT_Set_Transform(face, &mat, 0);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -6831,6 +6803,7 @@ NtGdiGetCharWidthW(
     PFONTGDI FontGDI;
     FT_Face face;
     FT_CharMap charmap, found = NULL;
+    FT_Matrix mat;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     PMATRIX pmxWorldToDevice;
@@ -6939,7 +6912,8 @@ NtGdiGetCharWidthW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FtSetCoordinateTransform(face, pmxWorldToDevice);
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    FT_Set_Transform(face, &mat, 0);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
