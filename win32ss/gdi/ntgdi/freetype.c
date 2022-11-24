@@ -771,13 +771,11 @@ FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->yy = FLOATOBJ_GetLong(&ef);
 
-    /* (*1): Y direction is mirrored as follows:
-     *
-     * [  M11 -M21 ]   [  X ]    [   M11*X + M21*Y  ]
-     * [           ] * [    ] == [                  ]
-     * [ -M12  M22 ]   [ -Y ]    [ -(M12*X + M22*Y) ].
-     *
-     */
+    // (*1): Y direction is mirrored as follows:
+    //
+    // [  M11  -M21 ]   [  X ]    [   M11*X + M21*Y  ]
+    // [            ] * [    ] == [                  ]
+    // [ -M12   M22 ]   [ -Y ]    [ -(M12*X + M22*Y) ].
 }
 
 static BOOL
