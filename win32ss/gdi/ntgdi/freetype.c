@@ -761,11 +761,11 @@ FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 
     ef = pmx->efM21;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->xy = FLOATOBJ_GetLong(&ef);
+    pmat->xy = -FLOATOBJ_GetLong(&ef); /* Y direction is mirrored */
 
     ef = pmx->efM12;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->yx = FLOATOBJ_GetLong(&ef);
+    pmat->yx = -FLOATOBJ_GetLong(&ef); /* Y direction is mirrored */
 
     ef = pmx->efM22;
     FLOATOBJ_MulLong(&ef, 0x00010000);
