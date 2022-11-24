@@ -3113,7 +3113,7 @@ ftGdiGlyphCacheGet(
     INT GlyphIndex,
     INT Height,
     FT_Render_Mode RenderMode,
-    FT_Matrix *pmat)
+    const FT_Matrix *pmat)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3190,7 +3190,7 @@ ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
-    FT_Matrix *pmat,
+    const FT_Matrix *pmat,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -6670,8 +6670,6 @@ NtGdiGetCharABCWidthsW(
 
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    FtMatrixFromMx(&mat, pmxWorldToDevice);
-    FT_Set_Transform(face, &mat, 0);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
