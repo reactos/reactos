@@ -5992,7 +5992,7 @@ IntExtTextOutW(
     FT_Vector delta;
 
     /* Check if String is valid */
-    if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
+    if (Count > 0xFFFF || (Count > 0 && String == NULL))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -6000,15 +6000,12 @@ IntExtTextOutW(
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
-        bResult = PATH_ExtTextOut(dc,
-                              XStart,
-                              YStart,
-                              fuOptions,
-                              (const RECTL *)lprc,
-                              String,
-                              Count,
-                              (const INT *)Dx);
-        return bResult;
+        return PATH_ExtTextOut(dc,
+                               XStart, YStart,
+                               fuOptions,
+                               lprc,
+                               String, Count,
+                               Dx);
     }
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
@@ -6030,7 +6027,9 @@ IntExtTextOutW(
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
-    } else {
+    }
+    else
+    {
         Start.x = XStart;
         Start.y = YStart;
     }
@@ -6060,7 +6059,7 @@ IntExtTextOutW(
 
         if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
         {
-           IntUpdateBoundsRect(dc, &DestRect);
+            IntUpdateBoundsRect(dc, &DestRect);
         }
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
@@ -6069,18 +6068,17 @@ IntExtTextOutW(
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-        IntEngBitBlt(
-            SurfObj,
-            NULL,
-            NULL,
-            (CLIPOBJ *)&dc->co,
-            NULL,
-            &DestRect,
-            &SourcePoint,
-            &SourcePoint,
-            &dc->eboBackground.BrushObject,
-            &BrushOrigin,
-            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        IntEngBitBlt(SurfObj,
+                     NULL,
+                     NULL,
+                     (CLIPOBJ *)&dc->co,
+                     NULL,
+                     &DestRect,
+                     &SourcePoint,
+                     &SourcePoint,
+                     &dc->eboBackground.BrushObject,
+                     &BrushOrigin,
+                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawEnd(dc->ppdev);
@@ -6281,7 +6279,7 @@ IntExtTextOutW(
             HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
                                            BMF_8BPP, BMF_TOPDOWN,
                                            realglyph->bitmap.buffer);
-            if ( !HSourceGlyph )
+            if (!HSourceGlyph)
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 bResult = FALSE;
@@ -6289,8 +6287,9 @@ IntExtTextOutW(
                     FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
+
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-            if ( !SourceGlyphSurf )
+            if (!SourceGlyphSurf)
             {
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
@@ -6324,16 +6323,15 @@ IntExtTextOutW(
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
-            if (!IntEngMaskBlt(
-                SurfObj,
-                SourceGlyphSurf,
-                (CLIPOBJ *)&dc->co,
-                &exloRGB2Dst.xlo,
-                &exloDst2RGB.xlo,
-                &DestRect,
-                (PPOINTL)&MaskRect,
-                &dc->eboText.BrushObject,
-                &BrushOrigin))
+            if (!IntEngMaskBlt(SurfObj,
+                               SourceGlyphSurf,
+                               (CLIPOBJ *)&dc->co,
+                               &exloRGB2Dst.xlo,
+                               &exloDst2RGB.xlo,
+                               &DestRect,
+                               (PPOINTL)&MaskRect,
+                               &dc->eboText.BrushObject,
+                               &BrushOrigin))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
