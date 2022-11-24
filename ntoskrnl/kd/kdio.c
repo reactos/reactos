@@ -69,7 +69,8 @@ static NTSTATUS KdbgContinueStatus = STATUS_SUCCESS;
 
 KIRQL
 NTAPI
-KdpAcquireLock(IN PKSPIN_LOCK SpinLock)
+KdbpAcquireLock(
+    _In_ PKSPIN_LOCK SpinLock)
 {
     KIRQL OldIrql;
 
@@ -95,8 +96,9 @@ KdpAcquireLock(IN PKSPIN_LOCK SpinLock)
 
 VOID
 NTAPI
-KdpReleaseLock(IN PKSPIN_LOCK SpinLock,
-               IN KIRQL OldIrql)
+KdbpReleaseLock(
+    _In_ PKSPIN_LOCK SpinLock,
+    _In_ KIRQL OldIrql)
 {
     /* Release the spinlock */
     KiReleaseSpinLock(SpinLock);
@@ -169,7 +171,7 @@ KdpPrintToLogFile(PCHAR String,
     if (KdpDebugBuffer == NULL) return;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpDebugLogSpinLock);
+    OldIrql = KdbpAcquireLock(&KdpDebugLogSpinLock);
 
     beg = KdpCurrentPosition;
     num = KdpFreeBytes;
@@ -198,7 +200,7 @@ KdpPrintToLogFile(PCHAR String,
     {
         DoReinit = TRUE;
     }
-    KdpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
+    KdbpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
 
     if (DoReinit)
     {
@@ -322,7 +324,7 @@ KdpSerialPrint(PCHAR String,
     KIRQL OldIrql;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
+    OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
 
     /* Output the string */
     while (pch < String + Length && *pch)
@@ -336,7 +338,7 @@ KdpSerialPrint(PCHAR String,
     }
 
     /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+    KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
 }
 
 VOID
@@ -471,7 +473,7 @@ KdpScreenPrint(PCHAR String,
       return;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpDmesgLogSpinLock);
+    OldIrql = KdbpAcquireLock(&KdpDmesgLogSpinLock);
 
     /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
      * set num to min(KdpDmesgFreeBytes, Length).
@@ -497,7 +499,7 @@ KdpScreenPrint(PCHAR String,
     }
 
     /* Release the spinlock */
-    KdpReleaseLock(&KdpDmesgLogSpinLock, OldIrql);
+    KdbpReleaseLock(&KdpDmesgLogSpinLock, OldIrql);
 
     /* Optional step(?): find out a way to notify about buffer exhaustion,
      * and possibly fall into kbd to use dmesg command: user will read
@@ -738,7 +740,7 @@ KdReceivePacket(
     // TODO: Use an improved KdbpReadCommand() function for our purposes.
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
+    OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdDisableMouse();
@@ -795,13 +797,13 @@ KdReceivePacket(
 
         /* Write it back and print it to the log */
         *(PCHAR)(ResponseString.Buffer + i) = Response;
-        KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+        KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
         KdpPrintString(&StringChar);
-        OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
+        OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
     }
 
     /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+    KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
 
     /* Print a new line */
     *StringChar.Buffer = '\n';
