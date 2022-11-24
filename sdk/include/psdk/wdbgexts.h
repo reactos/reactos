@@ -175,7 +175,8 @@ typedef struct _DBGKD_DEBUG_DATA_HEADER64
 } DBGKD_DEBUG_DATA_HEADER64, *PDBGKD_DEBUG_DATA_HEADER64;
 
 /* Self-documenting type: stores a pointer as a 64-bit quantity */
-#if defined(__GNUC__) && defined(_M_IX86) // See commit b9cd3f2d9 (r25845)
+#if !defined(_WIN64) && (defined(__GNUC__) || defined(__clang__))
+/* Minimal hackery for GCC/Clang, see commit b9cd3f2d9 (r25845) and de81021ba */
 typedef union _ULPTR64
 {
     ULONG_PTR ptr;

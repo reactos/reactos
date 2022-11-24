@@ -519,8 +519,8 @@ DBGKD_GET_VERSION64 KdVersionBlock =
 C_ASSERT(sizeof(KDDEBUGGER_DATA64) >= 0x318);
 #endif
 
-/* Minimal hackery for GCC, see commit b9cd3f2d9 (r25845) */
-#if defined(__GNUC__) && defined(_M_IX86)
+#if !defined(_WIN64) && (defined(__GNUC__) || defined(__clang__))
+/* Minimal hackery for GCC/Clang, see commit b9cd3f2d9 (r25845) and de81021ba */
 #define PtrToUL64(x)    ((ULPTR64)(ULONG_PTR)(x))
 #else
 #define PtrToUL64(x)    ((ULPTR64)(x))
