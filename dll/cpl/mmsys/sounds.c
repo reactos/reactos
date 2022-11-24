@@ -875,7 +875,6 @@ VOID
 FreeSoundFiles(HWND hwndDlg)
 {
     LRESULT lCount, lIndex, lResult;
-    PWCHAR pSoundPath;
     HWND hwndComboBox;
 
     hwndComboBox = GetDlgItem(hwndDlg, IDC_SOUND_LIST);
@@ -891,8 +890,7 @@ FreeSoundFiles(HWND hwndDlg)
             continue;
         }
 
-        pSoundPath = (PWCHAR)lResult;
-        free(pSoundPath);
+        free((PVOID)lResult);
     }
 }
 
