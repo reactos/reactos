@@ -4199,7 +4199,7 @@ ftGdiGetRealGlyph(
     INT glyph_index,
     LONG lfHeight,
     FT_Render_Mode RenderMode,
-    FT_Matrix *pmat,
+    const FT_Matrix *pmat,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
@@ -5859,7 +5859,7 @@ ftGdiGetTextWidth(
     LONG lfHeight,
     UINT fuOptions,
     FT_Render_Mode RenderMode,
-    FT_Matrix *pmat,
+    const FT_Matrix *pmat,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
