@@ -162,9 +162,7 @@ typedef struct _FONTGDI {
   LONG          tmAscent;
   LONG          tmDescent;
   LONG          tmInternalLeading;
-  LONG          EmHeight;
   LONG          Magic;
-  LONG          lfWidth;
   LONG          lfHeight;
 } FONTGDI, *PFONTGDI;
 

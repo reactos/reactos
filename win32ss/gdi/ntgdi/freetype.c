@@ -3503,14 +3503,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec WinFNT;
-    LONG Ascent, Descent, Sum, EmHeight64;
-
-    if (FontGDI->Magic == FONTGDI_MAGIC &&
-        FontGDI->lfHeight == lfHeight &&
-        FontGDI->lfWidth == lfWidth)
-    {
-        return 0; /* Cached */
-    }
+    LONG Ascent, Descent, Sum, EmHeight;
 
     lfWidth = abs(lfWidth);
     if (lfHeight == 0)
@@ -3528,6 +3521,9 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 
     if (lfHeight == -1)
         lfHeight = -2;
+
+    if (FontGDI->Magic == FONTGDI_MAGIC && FontGDI->lfHeight == lfHeight)
+        return 0; /* Cached */
 
     ASSERT_FREETYPE_LOCK_HELD();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
@@ -3547,11 +3543,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmAscent           = WinFNT.ascent;
         FontGDI->tmDescent          = FontGDI->tmHeight - FontGDI->tmAscent;
         FontGDI->tmInternalLeading  = WinFNT.internal_leading;
-        FontGDI->EmHeight           = FontGDI->tmHeight - FontGDI->tmInternalLeading;
-        FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
-        FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
         FontGDI->Magic              = FONTGDI_MAGIC;
-        FontGDI->lfWidth            = lfWidth;
         FontGDI->lfHeight           = lfHeight;
         return 0;
     }
@@ -3605,18 +3597,16 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     }
 #undef FM_SEL_USE_TYPO_METRICS
 
-    FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
-    FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
-    FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
     FontGDI->Magic = FONTGDI_MAGIC;
-    FontGDI->lfWidth = lfWidth;
     FontGDI->lfHeight = lfHeight;
 
-    EmHeight64 = (FontGDI->EmHeight << 6);
+    EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
+    EmHeight = max(EmHeight, 1);
+    EmHeight = min(EmHeight, USHORT_MAX);
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = 0;
-    req.height         = EmHeight64;
+    req.height         = (EmHeight << 6);
     req.horiResolution = 0;
     req.vertResolution = 0;
     return FT_Request_Size(face, &req);
