@@ -3129,7 +3129,7 @@ ftGdiGlyphCacheGet(
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
             (FontEntry->RenderMode == RenderMode) &&
-            (RtlCompareMemory(&FontEntry->mat, pmat, sizeof(*pmat)) == sizeof(*pmat)))
+            (memcmp(&FontEntry->mat, pmat, sizeof(*pmat)) == 0))
             break;
     }
 
