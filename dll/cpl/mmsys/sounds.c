@@ -886,7 +886,7 @@ FreeSoundFiles(HWND hwndDlg)
     for (lIndex = 0; lIndex < lCount; lIndex++)
     {
         lResult = ComboBox_GetItemData(hwndComboBox, lIndex);
-        if (lResult == CB_ERR)
+        if (lResult == CB_ERR || lResult == 0)
         {
             continue;
         }
