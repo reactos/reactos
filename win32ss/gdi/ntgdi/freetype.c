@@ -773,9 +773,9 @@ FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 
     // (*1): Y direction is mirrored as follows:
     //
-    // [  M11  -M21 ]   [  X ]    [   M11*X + M21*Y  ]
+    // [  M11  -M12 ]   [  X ]    [   M11*X + M12*Y  ]
     // [            ] * [    ] == [                  ]
-    // [ -M12   M22 ]   [ -Y ]    [ -(M12*X + M22*Y) ].
+    // [ -M21   M22 ]   [ -Y ]    [ -(M21*X + M22*Y) ].
 }
 
 static BOOL
