@@ -761,15 +761,23 @@ FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 
     ef = pmx->efM21;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->xy = -FLOATOBJ_GetLong(&ef); /* Y direction is mirrored */
+    pmat->xy = -FLOATOBJ_GetLong(&ef); /* (*1) See below */
 
     ef = pmx->efM12;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->yx = -FLOATOBJ_GetLong(&ef); /* Y direction is mirrored */
+    pmat->yx = -FLOATOBJ_GetLong(&ef); /* (*1) See below */
 
     ef = pmx->efM22;
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->yy = FLOATOBJ_GetLong(&ef);
+
+    /* (*1): Y direction is mirrored as follows:
+     *
+     * [  M11 -M21 ]   [  X ]    [   M11*X + M21*Y  ]
+     * [           ] * [    ] == [                  ]
+     * [ -M12  M22 ]   [ -Y ]    [ -(M12*X + M22*Y) ].
+     *
+     */
 }
 
 static BOOL
