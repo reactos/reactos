@@ -748,7 +748,6 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = pmat->xx;
 }
 
-static inline
 VOID FASTCALL
 FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 {
