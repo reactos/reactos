@@ -750,7 +750,7 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 
 static inline
 VOID FASTCALL
-FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
+FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 {
     FLOATOBJ ef;
 
