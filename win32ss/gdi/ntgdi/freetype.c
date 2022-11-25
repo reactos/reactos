@@ -4314,7 +4314,6 @@ TextIntGetTextExtentPoint(PDC dc,
     for (i = 0; i < Count; i++)
     {
         glyph_index = get_glyph_index_flagged(Cache.Face, *String, GTEF_INDICES, fl);
-
         Cache.GlyphIndex = glyph_index;
 
         realglyph = ftGdiGetRealGlyph(&Cache, EmuBold, EmuItalic);
@@ -6194,7 +6193,6 @@ IntExtTextOutW(
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     DoBreak = FALSE;
-
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
