@@ -4211,7 +4211,7 @@ ftGdiGetRealGlyph(
     INT glyph_index,
     LONG lfHeight,
     FT_Render_Mode RenderMode,
-    const FT_Matrix *pmat,
+    const FT_Matrix *pmatTransform,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
@@ -4244,7 +4244,7 @@ ftGdiGetRealGlyph(
         CacheEntry.Face = face;
         CacheEntry.lfHeight = lfHeight;
         CacheEntry.RenderMode = RenderMode;
-        CacheEntry.matTransform = *pmat;
+        CacheEntry.matTransform = *pmatTransform;
 
         cdw = (sizeof(FONT_CACHE_ENTRY) - offsetof(FONT_CACHE_ENTRY, GlyphIndex)) / sizeof(DWORD);
         CacheEntry.dwHash = IntGetHash(&CacheEntry.GlyphIndex, cdw);
