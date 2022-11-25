@@ -3112,7 +3112,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
-static DWORD FASTCALL
+static DWORD APIENTRY
 IntGetHash(LPCVOID pv, DWORD cdw)
 {
     DWORD dwHash = cdw;
@@ -3120,15 +3120,15 @@ IntGetHash(LPCVOID pv, DWORD cdw)
 
     while (cdw-- > 0)
     {
-        dwHash ^= *pdw++;
         dwHash *= 3;
+        dwHash ^= *pdw++;
     }
 
     return dwHash;
 }
 
 FT_BitmapGlyph APIENTRY
-ftGdiGlyphCacheGet(PFONT_CACHE_ENTRY pCache)
+ftGdiGlyphCacheGet(const FONT_CACHE_ENTRY *pCache)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3204,7 +3204,7 @@ ftGdiGlyphSet(
     return BitmapGlyph;
 }
 
-FT_BitmapGlyph FASTCALL
+FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheSet(
     PFONT_CACHE_ENTRY Cache,
     FT_GlyphSlot GlyphSlot)
