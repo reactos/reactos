@@ -1010,7 +1010,7 @@ typedef struct _EFI_DRIVER_ENTRY
 #ifdef NTOS_MODE_USER
 
 //
-// APC Callback for NtCreateFile
+// APC Callback for NtReadFile, NtWriteFile
 //
 typedef VOID
 (NTAPI *PIO_APC_ROUTINE)(
