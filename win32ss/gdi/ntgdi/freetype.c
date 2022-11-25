@@ -5949,7 +5949,7 @@ IntExtTextOutW(
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
-    LONG lfHeight, fixAscender, fixDescender;
+    LONG fixAscender, fixDescender;
     FLOATOBJ Scale;
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
@@ -6074,7 +6074,7 @@ IntExtTextOutW(
     Cache.Face = face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    Cache.lfHeight = lfHeight = plf->lfHeight;
+    Cache.lfHeight = plf->lfHeight;
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
