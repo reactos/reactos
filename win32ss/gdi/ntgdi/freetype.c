@@ -5873,35 +5873,27 @@ ftGdiGetTextWidth(
     LONGLONG *pTextWidth64,
     LPCWSTR String,
     INT Count,
-    FT_Face face,
-    LONG lfHeight,
+    PFONT_CACHE_ENTRY Cache,
     UINT fuOptions,
-    FT_Render_Mode RenderMode,
-    const FT_Matrix *pmat,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
     LONGLONG TextLeft64 = 0;
     INT glyph_index;
     FT_BitmapGlyph realglyph;
+    FT_Face face = Cache->Face;
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta;
-    FONT_CACHE_ENTRY Cache;
 
     ASSERT_FREETYPE_LOCK_HELD();
-
-    Cache.Face = face;
-    Cache.lfHeight = lfHeight;
-    Cache.RenderMode = RenderMode;
-    Cache.matTransform = *pmat;
 
     while (Count-- > 0)
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
-        Cache.GlyphIndex = glyph_index;
+        Cache->GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(&Cache, EmuBold, EmuItalic);
+        realglyph = ftGdiGetRealGlyph(Cache, EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -6140,17 +6132,16 @@ IntExtTextOutW(
 
     use_kerning = FT_HAS_KERNING(face);
 
+    Cache.Face = face;
+    Cache.lfHeight = lfHeight;
+    Cache.RenderMode = RenderMode;
+    Cache.matTransform = mat;
+
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!ftGdiGetTextWidth(&TextWidth64,
-                               String, Count,
-                               face,
-                               lfHeight,
-                               fuOptions,
-                               RenderMode,
-                               &mat,
-                               EmuBold, EmuItalic))
+        if (!ftGdiGetTextWidth(&TextWidth64, String, Count,
+                               &Cache, fuOptions, EmuBold, EmuItalic))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6217,11 +6208,6 @@ IntExtTextOutW(
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     DoBreak = FALSE;
-
-    Cache.Face = face;
-    Cache.lfHeight = lfHeight;
-    Cache.RenderMode = RenderMode;
-    Cache.matTransform = mat;
 
     for (i = 0; i < Count; ++i)
     {
