@@ -5,8 +5,8 @@
 #
 #	List of PCI ID's
 #
-#	Version: 2020.11.14
-#	Date:    2020-11-14 03:15:02
+#	Version: 2022.11.25
+#	Date:    2022-11-25 03:15:01
 #
 #	Maintained by Albert Pool, Martin Mares, and other volunteers from
 #	the PCI ID Project at https://pci-ids.ucw.cz/.
@@ -87,6 +87,9 @@ C 04  Multimedia controller
 C 05  Memory controller
 	00  RAM memory
 	01  FLASH memory
+	02  CXL
+		00  CXL Memory Device - vendor specific
+		10  CXL Memory Device (CXL 2.x)
 	80  Memory controller
 C 06  Bridge
 	00  Host bridge
@@ -201,6 +204,7 @@ C 0c  Serial bus controller
 		02  BT (Block Transfer)
 	08  SERCOS interface
 	09  CANBUS
+	80  Serial bus controller
 C 0d  Wireless controller
 	00  IRDA controller
 	01  Consumer IR controller
@@ -229,8 +233,7 @@ C 11  Signal processing controller
 	80  Signal processing controller
 C 12  Processing accelerators
 	00  Processing accelerators
-# For the class of PCI attached devices which perform a function of Deep Learning Neural Network inference acceleration
-	01  AI Inference Accelerator
+	01  SNIA Smart Data Accelerator Interface (SDXI) controller
 C 13  Non-Essential Instrumentation
 C 40  Coprocessor
 C ff  Unassigned class
