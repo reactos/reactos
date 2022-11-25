@@ -3174,6 +3174,8 @@ ftGdiGlyphSet(
     FT_Bitmap AlignedBitmap;
     FT_BitmapGlyph BitmapGlyph;
 
+    ASSERT_FREETYPE_LOCK_HELD();
+
     error = FT_Get_Glyph(GlyphSlot, &Glyph);
     if (error)
     {
@@ -4215,6 +4217,8 @@ ftGdiGetRealGlyph(
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     DWORD cdw;
+
+    ASSERT_FREETYPE_LOCK_HELD();
 
     if (EmuBold || EmuItalic)
     {
