@@ -25,8 +25,8 @@ typedef struct _FONT_ENTRY_COLL_MEM
 
 typedef struct _EMULATION_BOLD_ITALIC
 {
-    BOOLEAN Bold;
-    BOOLEAN Italic;
+    BYTE Bold;
+    BYTE Italic;
 } EMULATION_BOLD_ITALIC, *PEMULATION_BOLD_ITALIC;
 
 #include <pshpack1.h> /* We don't like padding for this structure */
