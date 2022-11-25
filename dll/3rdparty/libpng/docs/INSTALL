@@ -192,11 +192,11 @@ test.  For more confidence, you can run another test by typing
 Also, you can run "pngtest -m contrib/pngsuite/*.png" and compare
 your output with the result shown in contrib/pngsuite/README.
 
-Most of the makefiles will allow you to run "make install" to
-put the library in its final resting place (if you want to
-do that, run "make install" in the zlib directory first if necessary).
-Some also allow you to run "make test-installed" after you have
-run "make install".
+Most of the makefiles used to allow you to run "make install" to put
+the library in its final resting place, but that feature is no longer
+supported.  The only tested and supported manners to install libpng are
+the conventional build and install procedures driven by the configure
+script or by the CMake file.
 
 VIII. Configuring for DOS and other 16-bit platforms
 

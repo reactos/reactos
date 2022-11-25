@@ -9,7 +9,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng version 1.6.36, December 2018, through 1.6.38 - September 2022
+ libpng version 1.6.36, December 2018, through 1.6.39 - November 2022
  Updated and distributed by Cosmin Truta
  Copyright (c) 2018-2022 Cosmin Truta
 
@@ -877,7 +877,7 @@ described below (the latter being the two common names for associated alpha
 color channels). Note that PNG files always contain non-associated color
 channels; png_set_alpha_mode() with one of the modes causes the decoder to
 convert the pixels to an associated form before returning them to your
-application. 
+application.
 
 Since it is not necessary to perform arithmetic on opaque color values so
 long as they are not to be resampled and are in the final color space it is

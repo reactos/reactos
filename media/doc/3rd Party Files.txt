@@ -33,7 +33,7 @@ URL: http://www.ijg.org/
 
 Title: libpng
 Path: dll/3rdparty/libpng
-Used Version: 1.6.38
+Used Version: 1.6.39
 License: PNG Reference Library version 2
 URL: http://libpng.sourceforge.net/
 
