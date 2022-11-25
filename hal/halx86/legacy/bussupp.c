@@ -679,7 +679,8 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
                 if (!HalpIsBridgeDevice(PciData)) continue;
 
                 /* Not supported */
-                if (!WarningsGiven[2]++) DPRINT1("Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
+                if (!WarningsGiven[2]++)
+                    DPRINT1("Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
                 continue;
             }
         }
@@ -708,7 +709,8 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
         while (ParentBus)
         {
             /* Should merge addresses */
-            if (!WarningsGiven[0]++) DPRINT1("Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
+            if (!WarningsGiven[0]++)
+                DPRINT1("Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
 
             /* Check the next parent */
             ParentBus = ParentBus->ParentHandler;
@@ -732,7 +734,8 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
                 if (ParentBus->InterfaceType == PCIBus)
                 {
                     /* Should trim addresses */
-                    if (!WarningsGiven[1]++) DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
+                    if (!WarningsGiven[1]++)
+                        DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
                 }
 
                 /* Check the next parent */
@@ -782,6 +785,7 @@ ShowSize(ULONG x)
  * These includes are required to define
  * the ClassTable and VendorTable arrays.
  */
+#define NEWLINE "\n" // "\r\n"
 #include "pci_classes.h"
 #include "pci_vendors.h"
 CODE_SEG("INIT")
@@ -813,8 +817,8 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
     {
         /* Isolate the subclass name */
         ClassName += strlen("C 00  ");
-        Boundary = strstr(ClassName, "\nC ");
-        sprintf(LookupString, "\n\t%02x  ", PciData->SubClass);
+        Boundary = strstr(ClassName, NEWLINE "C ");
+        sprintf(LookupString, NEWLINE "\t%02x  ", PciData->SubClass);
         SubClassName = strstr(ClassName, LookupString);
         if (Boundary && SubClassName > Boundary)
         {
@@ -826,33 +830,33 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
         }
         else
         {
-            SubClassName += strlen("\n\t00  ");
+            SubClassName += strlen(NEWLINE "\t00  ");
         }
         /* Copy the subclass into our buffer */
-        p = strpbrk(SubClassName, "\r\n");
+        p = strpbrk(SubClassName, NEWLINE);
         Length = p - SubClassName;
-        if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
+        Length = min(Length, sizeof(bSubClassName) - 1);
         strncpy(bSubClassName, SubClassName, Length);
         bSubClassName[Length] = '\0';
     }
 
     /* Isolate the vendor name */
-    sprintf(LookupString, "\r\n%04x  ", PciData->VendorID);
+    sprintf(LookupString, NEWLINE "%04x  ", PciData->VendorID);
     VendorName = strstr((PCHAR)VendorTable, LookupString);
     if (VendorName)
     {
         /* Copy the vendor name into our buffer */
-        VendorName += strlen("\r\n0000  ");
-        p = strpbrk(VendorName, "\r\n");
+        VendorName += strlen(NEWLINE "0000  ");
+        p = strpbrk(VendorName, NEWLINE);
         Length = p - VendorName;
-        if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;
+        Length = min(Length, sizeof(bVendorName) - 1);
         strncpy(bVendorName, VendorName, Length);
         bVendorName[Length] = '\0';
-        p += strlen("\r\n");
+        p += strlen(NEWLINE);
         while (*p == '\t' || *p == '#')
         {
-            p = strpbrk(p, "\r\n");
-            p += strlen("\r\n");
+            p = strpbrk(p, NEWLINE);
+            p += strlen(NEWLINE);
         }
         Boundary = p;
 
@@ -867,16 +871,16 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
         {
             /* Copy the product name into our buffer */
             ProductName += strlen("\t0000  ");
-            p = strpbrk(ProductName, "\r\n");
+            p = strpbrk(ProductName, NEWLINE);
             Length = p - ProductName;
-            if (Length >= sizeof(bProductName)) Length = sizeof(bProductName) - 1;
+            Length = min(Length, sizeof(bProductName) - 1);
             strncpy(bProductName, ProductName, Length);
             bProductName[Length] = '\0';
-            p += strlen("\r\n");
+            p += strlen(NEWLINE);
             while ((*p == '\t' && *(p + 1) == '\t') || *p == '#')
             {
-                p = strpbrk(p, "\r\n");
-                p += strlen("\r\n");
+                p = strpbrk(p, NEWLINE);
+                p += strlen(NEWLINE);
             }
             Boundary = p;
             SubVendorName = NULL;
@@ -898,9 +902,9 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
             {
                 /* Copy the subvendor name into our buffer */
                 SubVendorName += strlen("\t\t0000 0000  ");
-                p = strpbrk(SubVendorName, "\r\n");
+                p = strpbrk(SubVendorName, NEWLINE);
                 Length = p - SubVendorName;
-                if (Length >= sizeof(bSubVendorName)) Length = sizeof(bSubVendorName) - 1;
+                Length = min(Length, sizeof(bSubVendorName) - 1);
                 strncpy(bSubVendorName, SubVendorName, Length);
                 bSubVendorName[Length] = '\0';
             }
