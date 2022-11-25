@@ -4276,8 +4276,6 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_BitmapGlyph realglyph;
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
-    FT_Render_Mode RenderMode;
-    FT_Matrix mat;
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic;
@@ -4286,7 +4284,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-    face = FontGDI->SharedFace->Face;
+    Cache.Face = face = FontGDI->SharedFace->Face;
     if (NULL != Fit)
     {
         *Fit = 0;
@@ -4299,24 +4297,20 @@ TextIntGetTextExtentPoint(PDC dc,
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
+    Cache.lfHeight = plf->lfHeight;
 
     if (IntIsFontRenderingEnabled())
-        RenderMode = IntGetFontRenderMode(plf);
+        Cache.RenderMode = IntGetFontRenderMode(plf);
     else
-        RenderMode = FT_RENDER_MODE_MONO;
+        Cache.RenderMode = FT_RENDER_MODE_MONO;
 
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    FtMatrixFromMx(&mat, pmxWorldToDevice);
-    FT_Set_Transform(face, &mat, 0);
+    FtMatrixFromMx(&Cache.matTransform, pmxWorldToDevice);
+    FT_Set_Transform(face, &Cache.matTransform, 0);
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
-
-    Cache.Face = face;
-    Cache.lfHeight = plf->lfHeight;
-    Cache.RenderMode = RenderMode;
-    Cache.matTransform = mat;
 
     for (i = 0; i < Count; i++)
     {
@@ -5952,8 +5946,6 @@ IntExtTextOutW(
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
-    FT_Render_Mode RenderMode;
-    FT_Matrix mat;
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
@@ -6079,17 +6071,17 @@ IntExtTextOutW(
     ASSERT(FontGDI);
 
     IntLockFreeType();
-    face = FontGDI->SharedFace->Face;
+    Cache.Face = face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    lfHeight = plf->lfHeight;
+    Cache.lfHeight = lfHeight = plf->lfHeight;
     EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
     if (IntIsFontRenderingEnabled())
-        RenderMode = IntGetFontRenderMode(plf);
+        Cache.RenderMode = IntGetFontRenderMode(plf);
     else
-        RenderMode = FT_RENDER_MODE_MONO;
+        Cache.RenderMode = FT_RENDER_MODE_MONO;
 
     if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
@@ -6102,8 +6094,8 @@ IntExtTextOutW(
     if (pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-        FtMatrixFromMx(&mat, pmxWorldToDevice);
-        FT_Set_Transform(face, &mat, 0);
+        FtMatrixFromMx(&Cache.matTransform, pmxWorldToDevice);
+        FT_Set_Transform(face, &Cache.matTransform, 0);
 
         fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
         fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
@@ -6111,8 +6103,8 @@ IntExtTextOutW(
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
-        FtMatrixFromMx(&mat, pmxWorldToDevice);
-        FT_Set_Transform(face, &mat, 0);
+        FtMatrixFromMx(&Cache.matTransform, pmxWorldToDevice);
+        FT_Set_Transform(face, &Cache.matTransform, 0);
 
         fixAscender = FontGDI->tmAscent << 6;
         fixDescender = FontGDI->tmDescent << 6;
@@ -6131,11 +6123,6 @@ IntExtTextOutW(
 #undef VALIGN_MASK
 
     use_kerning = FT_HAS_KERNING(face);
-
-    Cache.Face = face;
-    Cache.lfHeight = lfHeight;
-    Cache.RenderMode = RenderMode;
-    Cache.matTransform = mat;
 
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
