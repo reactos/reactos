@@ -4298,9 +4298,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.lfHeight = plf->lfHeight;
+
     Cache.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
     ASSERT(Cache.Emu.Bold <= 1);
+
+    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
     ASSERT(Cache.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
@@ -6076,9 +6078,11 @@ IntExtTextOutW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.lfHeight = plf->lfHeight;
+
     Cache.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
     ASSERT(Cache.Emu.Bold <= 1);
+
+    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
     ASSERT(Cache.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
