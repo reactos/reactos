@@ -4272,7 +4272,6 @@ TextIntGetTextExtentPoint(PDC dc,
                           FLONG fl)
 {
     PFONTGDI FontGDI;
-    FT_Face face;
     FT_BitmapGlyph realglyph;
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
@@ -4284,7 +4283,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-    Cache.Face = face = FontGDI->SharedFace->Face;
+    Cache.Face = FontGDI->SharedFace->Face;
     if (NULL != Fit)
     {
         *Fit = 0;
@@ -4307,14 +4306,14 @@ TextIntGetTextExtentPoint(PDC dc,
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     FtMatrixFromMx(&Cache.matTransform, pmxWorldToDevice);
-    FT_Set_Transform(face, &Cache.matTransform, 0);
+    FT_Set_Transform(Cache.Face, &Cache.matTransform, 0);
 
-    use_kerning = FT_HAS_KERNING(face);
+    use_kerning = FT_HAS_KERNING(Cache.Face);
     previous = 0;
 
     for (i = 0; i < Count; i++)
     {
-        glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
+        glyph_index = get_glyph_index_flagged(Cache.Face, *String, GTEF_INDICES, fl);
 
         Cache.GlyphIndex = glyph_index;
 
@@ -4326,7 +4325,7 @@ TextIntGetTextExtentPoint(PDC dc,
         if (use_kerning && previous && glyph_index)
         {
             FT_Vector delta;
-            FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+            FT_Get_Kerning(Cache.Face, previous, glyph_index, 0, &delta);
             TotalWidth64 += delta.x;
         }
 
