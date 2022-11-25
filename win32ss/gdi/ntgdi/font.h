@@ -33,7 +33,7 @@ typedef struct _FONT_CACHE_ENTRY
     int Width;
     int Escapement;
     FT_Render_Mode RenderMode;
-    MATRIX mxWorldToDevice;
+    FT_Matrix matTransform;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 
 
