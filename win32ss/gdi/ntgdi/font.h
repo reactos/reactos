@@ -23,6 +23,12 @@ typedef struct _FONT_ENTRY_COLL_MEM
     FONT_ENTRY_MEM *Entry;
 } FONT_ENTRY_COLL_MEM, *PFONT_ENTRY_COLL_MEM;
 
+typedef struct _EMULATION_BOLD_ITALIC
+{
+    BOOLEAN Bold;
+    BOOLEAN Italic;
+} EMULATION_BOLD_ITALIC, *PEMULATION_BOLD_ITALIC;
+
 #include <pshpack1.h> /* We don't like padding for this structure */
 typedef struct _FONT_CACHE_ENTRY
 {
@@ -34,8 +40,10 @@ typedef struct _FONT_CACHE_ENTRY
     INT GlyphIndex;
     FT_Face Face;
     LONG lfHeight;
-    BOOLEAN EmuBold;
-    BOOLEAN EmuItalic;
+    _ANONYMOUS_UNION union {
+        EMULATION_BOLD_ITALIC Emu;
+        WORD EmuBoldItalic;
+    } DUMMYUNIONNAME;
     WORD RenderMode;
     FT_Matrix matTransform;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
