@@ -4207,65 +4207,54 @@ ftGdiGetGlyphOutline(
 FT_BitmapGlyph
 APIENTRY
 ftGdiGetRealGlyph(
-    FT_Face face,
-    INT glyph_index,
-    LONG lfHeight,
-    FT_Render_Mode RenderMode,
-    const FT_Matrix *pmatTransform,
+    PFONT_CACHE_ENTRY Cache,
     BOOL EmuBold,
     BOOL EmuItalic)
 {
     INT error;
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
-    FONT_CACHE_ENTRY CacheEntry;
     DWORD cdw;
 
     if (EmuBold || EmuItalic)
     {
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+        error = FT_Load_Glyph(Cache->Face, Cache->GlyphIndex, FT_LOAD_NO_BITMAP);
         if (error)
         {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->GlyphIndex);
             return NULL;
         }
 
-        glyph = face->glyph;
+        glyph = Cache->Face->glyph;
 
         if (EmuBold)
             FT_GlyphSlot_Embolden(glyph);
         if (EmuItalic)
             FT_GlyphSlot_Oblique(glyph);
-        realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
+        realglyph = ftGdiGlyphSet(Cache->Face, glyph, Cache->RenderMode);
     }
     else
     {
-        CacheEntry.GlyphIndex = glyph_index;
-        CacheEntry.Face = face;
-        CacheEntry.lfHeight = lfHeight;
-        CacheEntry.RenderMode = RenderMode;
-        CacheEntry.matTransform = *pmatTransform;
-
         cdw = (sizeof(FONT_CACHE_ENTRY) - offsetof(FONT_CACHE_ENTRY, GlyphIndex)) / sizeof(DWORD);
-        CacheEntry.dwHash = IntGetHash(&CacheEntry.GlyphIndex, cdw);
+        Cache->dwHash = IntGetHash(&Cache->GlyphIndex, cdw);
 
-        realglyph = ftGdiGlyphCacheGet(&CacheEntry);
+        realglyph = ftGdiGlyphCacheGet(Cache);
         if (realglyph)
             return realglyph;
 
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+        error = FT_Load_Glyph(Cache->Face, Cache->GlyphIndex, FT_LOAD_DEFAULT);
         if (error)
         {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->GlyphIndex);
             return NULL;
         }
 
-        glyph = face->glyph;
-        realglyph = ftGdiGlyphCacheSet(&CacheEntry, glyph);
+        glyph = Cache->Face->glyph;
+        realglyph = ftGdiGlyphCacheSet(Cache, glyph);
     }
 
     if (!realglyph)
-        DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
+        DPRINT1("Failed to render glyph! [index: %d]\n", Cache->GlyphIndex);
 
     return realglyph;
 }
@@ -4293,6 +4282,7 @@ TextIntGetTextExtentPoint(PDC dc,
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic;
     LONG ascender, descender;
+    FONT_CACHE_ENTRY Cache;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4323,12 +4313,18 @@ TextIntGetTextExtentPoint(PDC dc,
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
 
+    Cache.Face = face;
+    Cache.lfHeight = plf->lfHeight;
+    Cache.RenderMode = RenderMode;
+    Cache.matTransform = mat;
+
     for (i = 0; i < Count; i++)
     {
         glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
-        realglyph = ftGdiGetRealGlyph(face, glyph_index, plf->lfHeight, RenderMode,
-                                      &mat, EmuBold, EmuItalic);
+        Cache.GlyphIndex = glyph_index;
+
+        realglyph = ftGdiGetRealGlyph(&Cache, EmuBold, EmuItalic);
         if (!realglyph)
             break;
 
@@ -5891,15 +5887,21 @@ ftGdiGetTextWidth(
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta;
+    FONT_CACHE_ENTRY Cache;
 
     ASSERT_FREETYPE_LOCK_HELD();
+
+    Cache.Face = face;
+    Cache.lfHeight = lfHeight;
+    Cache.RenderMode = RenderMode;
+    Cache.matTransform = *pmat;
 
     while (Count-- > 0)
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
+        Cache.GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
-                                      pmat, EmuBold, EmuItalic);
+        realglyph = ftGdiGetRealGlyph(&Cache, EmuBold, EmuItalic);
         if (!realglyph)
             return FALSE;
 
@@ -5968,6 +5970,7 @@ IntExtTextOutW(
     LOGFONTW *plf;
     BOOL use_kerning, EmuBold, EmuItalic, bResult, DoBreak;
     FT_Vector delta;
+    FONT_CACHE_ENTRY Cache;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6214,12 +6217,18 @@ IntExtTextOutW(
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     DoBreak = FALSE;
+
+    Cache.Face = face;
+    Cache.lfHeight = lfHeight;
+    Cache.RenderMode = RenderMode;
+    Cache.matTransform = mat;
+
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        Cache.GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(face, glyph_index, lfHeight, RenderMode,
-                                      &mat, EmuBold, EmuItalic);
+        realglyph = ftGdiGetRealGlyph(&Cache, EmuBold, EmuItalic);
         if (!realglyph)
         {
             bResult = FALSE;
