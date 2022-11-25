@@ -82,6 +82,11 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
         if (!SH_ShowRecycleBinProperties(L'C'))
             hr = E_FAIL;
     }
+    else
+    {
+        /* Tell the caller to run the default action */
+        hr = S_FALSE;
+    }
 
     SHFree(pidlFolder);
     _ILFreeaPidl(apidl, cidl);
