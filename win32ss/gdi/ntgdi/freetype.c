@@ -3118,7 +3118,7 @@ ftGdiGlyphCacheGet(
     INT GlyphIndex,
     INT Height,
     FT_Render_Mode RenderMode,
-    const FT_Matrix *pmat)
+    const FT_Matrix *pmatTransform)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3134,7 +3134,7 @@ ftGdiGlyphCacheGet(
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
             (FontEntry->RenderMode == RenderMode) &&
-            (memcmp(&FontEntry->mat, pmat, sizeof(*pmat)) == 0))
+            (memcmp(&FontEntry->matTransform, pmatTransform, sizeof(*pmatTransform)) == 0))
             break;
     }
 
@@ -3195,7 +3195,7 @@ ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
-    const FT_Matrix *pmat,
+    const FT_Matrix *pmatTransform,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -3249,7 +3249,7 @@ ftGdiGlyphCacheSet(
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
     NewEntry->RenderMode = RenderMode;
-    NewEntry->mat = *pmat;
+    NewEntry->matTransform = *pmatTransform;
 
     InsertHeadList(&g_FontCacheListHead, &NewEntry->ListEntry);
     if (++g_FontCacheNumEntries > MAX_FONT_CACHE)
