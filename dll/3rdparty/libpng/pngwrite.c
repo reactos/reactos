@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Copyright (c) 2018-2019 Cosmin Truta
+ * Copyright (c) 2018-2022 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
  * Copyright (c) 1996-1997 Andreas Dilger
  * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
@@ -489,6 +489,16 @@ png_convert_from_time_t(png_timep ptime, time_t ttime)
    png_debug(1, "in png_convert_from_time_t");
 
    tbuf = gmtime(&ttime);
+   if (tbuf == NULL)
+   {
+      /* TODO: add a safe function which takes a png_ptr argument and raises
+       * a png_error if the ttime argument is invalid and the call to gmtime
+       * fails as a consequence.
+       */
+      memset(ptime, 0, sizeof(*ptime));
+      return;
+   }
+
    png_convert_from_struct_tm(ptime, tbuf);
 }
 #endif
