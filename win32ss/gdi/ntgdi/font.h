@@ -26,12 +26,13 @@ typedef struct _FONT_ENTRY_COLL_MEM
 typedef struct _FONT_CACHE_ENTRY
 {
     LIST_ENTRY ListEntry;
-    int GlyphIndex;
-    FT_Face Face;
     FT_BitmapGlyph BitmapGlyph;
-    int Height;
-    int Width;
-    int Escapement;
+    DWORD dwHash;
+
+    /* The following members are hashed */
+    INT GlyphIndex;
+    FT_Face Face;
+    LONG lfHeight;
     FT_Render_Mode RenderMode;
     FT_Matrix matTransform;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;

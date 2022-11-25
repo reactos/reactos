@@ -3112,16 +3112,27 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
+static DWORD FASTCALL
+IntGetHash(LPCVOID pv, DWORD cdw)
+{
+    DWORD dwHash = cdw;
+    const DWORD *pdw = pv;
+
+    while (cdw-- > 0)
+    {
+        dwHash ^= *pdw++;
+        dwHash *= 5;
+    }
+
+    return dwHash;
+}
+
 FT_BitmapGlyph APIENTRY
-ftGdiGlyphCacheGet(
-    FT_Face Face,
-    INT GlyphIndex,
-    INT Height,
-    FT_Render_Mode RenderMode,
-    const FT_Matrix *pmatTransform)
+ftGdiGlyphCacheGet(PFONT_CACHE_ENTRY pCache)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
+    DWORD dwHash = pCache->dwHash;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
@@ -3130,12 +3141,15 @@ ftGdiGlyphCacheGet(
          CurrentEntry = CurrentEntry->Flink)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        if ((FontEntry->Face == Face) &&
-            (FontEntry->GlyphIndex == GlyphIndex) &&
-            (FontEntry->Height == Height) &&
-            (FontEntry->RenderMode == RenderMode) &&
-            (memcmp(&FontEntry->matTransform, pmatTransform, sizeof(*pmatTransform)) == 0))
+        if (FontEntry->dwHash == dwHash &&
+            FontEntry->GlyphIndex == pCache->GlyphIndex &&
+            FontEntry->Face == pCache->Face &&
+            FontEntry->lfHeight == pCache->lfHeight &&
+            FontEntry->RenderMode == pCache->RenderMode &&
+            memcmp(&FontEntry->matTransform, &pCache->matTransform, sizeof(FT_Matrix)) == 0)
+        {
             break;
+        }
     }
 
     if (CurrentEntry == &g_FontCacheListHead)
@@ -3190,14 +3204,10 @@ ftGdiGlyphSet(
     return BitmapGlyph;
 }
 
-FT_BitmapGlyph APIENTRY
+FT_BitmapGlyph FASTCALL
 ftGdiGlyphCacheSet(
-    FT_Face Face,
-    INT GlyphIndex,
-    INT Height,
-    const FT_Matrix *pmatTransform,
-    FT_GlyphSlot GlyphSlot,
-    FT_Render_Mode RenderMode)
+    PFONT_CACHE_ENTRY Cache,
+    FT_GlyphSlot GlyphSlot)
 {
     FT_Glyph GlyphCopy;
     INT error;
@@ -3214,7 +3224,7 @@ ftGdiGlyphCacheSet(
         return NULL;
     };
 
-    error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
+    error = FT_Glyph_To_Bitmap(&GlyphCopy, Cache->RenderMode, 0, 1);
     if (error)
     {
         FT_Done_Glyph(GlyphCopy);
@@ -3244,12 +3254,9 @@ ftGdiGlyphCacheSet(
     FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
     BitmapGlyph->bitmap = AlignedBitmap;
 
-    NewEntry->GlyphIndex = GlyphIndex;
-    NewEntry->Face = Face;
     NewEntry->BitmapGlyph = BitmapGlyph;
-    NewEntry->Height = Height;
-    NewEntry->RenderMode = RenderMode;
-    NewEntry->matTransform = *pmatTransform;
+    RtlCopyMemory(&NewEntry->dwHash, &Cache->dwHash,
+                  sizeof(FONT_CACHE_ENTRY) - offsetof(FONT_CACHE_ENTRY, dwHash));
 
     InsertHeadList(&g_FontCacheListHead, &NewEntry->ListEntry);
     if (++g_FontCacheNumEntries > MAX_FONT_CACHE)
@@ -4211,30 +4218,20 @@ ftGdiGetRealGlyph(
     INT error;
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
+    FONT_CACHE_ENTRY CacheEntry;
+    DWORD cdw;
 
     if (EmuBold || EmuItalic)
     {
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
-    }
-    else
-    {
-        realglyph = ftGdiGlyphCacheGet(face, glyph_index, lfHeight,
-                                       RenderMode, pmat);
-        if (realglyph)
-            return realglyph;
+        if (error)
+        {
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+            return NULL;
+        }
 
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-    }
+        glyph = face->glyph;
 
-    if (error)
-    {
-        DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
-        return NULL;
-    }
-
-    glyph = face->glyph;
-    if (EmuBold || EmuItalic)
-    {
         if (EmuBold)
             FT_GlyphSlot_Embolden(glyph);
         if (EmuItalic)
@@ -4243,8 +4240,28 @@ ftGdiGetRealGlyph(
     }
     else
     {
-        realglyph = ftGdiGlyphCacheSet(face, glyph_index, lfHeight,
-                                       pmat, glyph, RenderMode);
+        CacheEntry.GlyphIndex = glyph_index;
+        CacheEntry.Face = face;
+        CacheEntry.lfHeight = lfHeight;
+        CacheEntry.RenderMode = RenderMode;
+        CacheEntry.matTransform = *pmat;
+
+        cdw = (sizeof(FONT_CACHE_ENTRY) - offsetof(FONT_CACHE_ENTRY, GlyphIndex)) / sizeof(DWORD);
+        CacheEntry.dwHash = IntGetHash(&CacheEntry.GlyphIndex, cdw);
+
+        realglyph = ftGdiGlyphCacheGet(&CacheEntry);
+        if (realglyph)
+            return realglyph;
+
+        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+        if (error)
+        {
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+            return NULL;
+        }
+
+        glyph = face->glyph;
+        realglyph = ftGdiGlyphCacheSet(&CacheEntry, glyph);
     }
 
     if (!realglyph)
