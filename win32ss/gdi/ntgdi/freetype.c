@@ -3121,7 +3121,7 @@ IntGetHash(LPCVOID pv, DWORD cdw)
     while (cdw-- > 0)
     {
         dwHash ^= *pdw++;
-        dwHash *= 5;
+        dwHash *= 3;
     }
 
     return dwHash;
