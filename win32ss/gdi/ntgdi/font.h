@@ -34,7 +34,9 @@ typedef struct _FONT_CACHE_ENTRY
     INT GlyphIndex;
     FT_Face Face;
     LONG lfHeight;
-    FT_Render_Mode RenderMode;
+    BOOLEAN EmuBold;
+    BOOLEAN EmuItalic;
+    WORD RenderMode;
     FT_Matrix matTransform;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 #include <poppack.h>
