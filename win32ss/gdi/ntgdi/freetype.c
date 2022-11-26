@@ -3145,8 +3145,7 @@ ftGdiGlyphCacheGet(const FONT_CACHE_ENTRY *pCache)
             FontEntry->GlyphIndex == pCache->GlyphIndex &&
             FontEntry->Face == pCache->Face &&
             FontEntry->lfHeight == pCache->lfHeight &&
-            FontEntry->EmuBoldItalic == pCache->EmuBoldItalic &&
-            FontEntry->RenderMode == pCache->RenderMode &&
+            FontEntry->AspectValue == pCache->AspectValue &&
             memcmp(&FontEntry->matTransform, &pCache->matTransform, sizeof(FT_Matrix)) == 0)
         {
             break;
@@ -3227,7 +3226,7 @@ ftGdiGlyphCacheSet(
         return NULL;
     };
 
-    error = FT_Glyph_To_Bitmap(&GlyphCopy, Cache->RenderMode, 0, 1);
+    error = FT_Glyph_To_Bitmap(&GlyphCopy, Cache->Aspect.RenderMode, 0, 1);
     if (error)
     {
         FT_Done_Glyph(GlyphCopy);
@@ -4219,7 +4218,7 @@ ftGdiGetRealGlyph(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (Cache->EmuBoldItalic)
+    if (Cache->Aspect.EmuBoldItalic)
     {
         error = FT_Load_Glyph(Cache->Face, Cache->GlyphIndex, FT_LOAD_NO_BITMAP);
         if (error)
@@ -4230,11 +4229,11 @@ ftGdiGetRealGlyph(
 
         glyph = Cache->Face->glyph;
 
-        if (Cache->Emu.Bold)
+        if (Cache->Aspect.Emu.Bold)
             FT_GlyphSlot_Embolden(glyph);
-        if (Cache->Emu.Italic)
+        if (Cache->Aspect.Emu.Italic)
             FT_GlyphSlot_Oblique(glyph);
-        realglyph = ftGdiGlyphSet(Cache->Face, glyph, Cache->RenderMode);
+        realglyph = ftGdiGlyphSet(Cache->Face, glyph, Cache->Aspect.RenderMode);
     }
     else
     {
@@ -4299,16 +4298,16 @@ TextIntGetTextExtentPoint(PDC dc,
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.lfHeight = plf->lfHeight;
 
-    Cache.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    ASSERT(Cache.Emu.Bold <= 1);
+    Cache.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
+    ASSERT(Cache.Aspect.Emu.Bold <= 1);
 
-    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    ASSERT(Cache.Emu.Italic <= 1);
+    Cache.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
+    ASSERT(Cache.Aspect.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
-        Cache.RenderMode = (BYTE)IntGetFontRenderMode(plf);
+        Cache.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);
     else
-        Cache.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
+        Cache.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
@@ -4347,7 +4346,7 @@ TextIntGetTextExtentPoint(PDC dc,
         }
 
         /* Bold and italic do not use the cache */
-        if (Cache.EmuBoldItalic)
+        if (Cache.Aspect.EmuBoldItalic)
         {
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
@@ -5903,7 +5902,7 @@ ftGdiGetTextWidth(
 
         TextLeft64 += realglyph->root.advance.x >> 10;
 
-        if (Cache->EmuBoldItalic)
+        if (Cache->Aspect.EmuBoldItalic)
             FT_Done_Glyph((FT_Glyph)realglyph);
 
         previous = glyph_index;
@@ -6079,16 +6078,16 @@ IntExtTextOutW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.lfHeight = plf->lfHeight;
 
-    Cache.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    ASSERT(Cache.Emu.Bold <= 1);
+    Cache.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
+    ASSERT(Cache.Aspect.Emu.Bold <= 1);
 
-    Cache.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    ASSERT(Cache.Emu.Italic <= 1);
+    Cache.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
+    ASSERT(Cache.Aspect.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
-        Cache.RenderMode = (BYTE)IntGetFontRenderMode(plf);
+        Cache.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);
     else
-        Cache.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
+        Cache.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
     if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
@@ -6250,7 +6249,7 @@ IntExtTextOutW(
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 bResult = FALSE;
-                if (Cache.EmuBoldItalic)
+                if (Cache.Aspect.EmuBoldItalic)
                     FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
@@ -6261,7 +6260,7 @@ IntExtTextOutW(
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
-                if (Cache.EmuBoldItalic)
+                if (Cache.Aspect.EmuBoldItalic)
                     FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
@@ -6312,7 +6311,7 @@ IntExtTextOutW(
 
         if (DoBreak)
         {
-            if (Cache.EmuBoldItalic)
+            if (Cache.Aspect.EmuBoldItalic)
                 FT_Done_Glyph((FT_Glyph)realglyph);
             break;
         }
@@ -6342,7 +6341,7 @@ IntExtTextOutW(
 
         previous = glyph_index;
 
-        if (Cache.EmuBoldItalic)
+        if (Cache.Aspect.EmuBoldItalic)
         {
             FT_Done_Glyph((FT_Glyph)realglyph);
         }

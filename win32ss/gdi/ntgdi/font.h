@@ -23,13 +23,23 @@ typedef struct _FONT_ENTRY_COLL_MEM
     FONT_ENTRY_MEM *Entry;
 } FONT_ENTRY_COLL_MEM, *PFONT_ENTRY_COLL_MEM;
 
+#include <pshpack1.h> /* We don't like padding for these structures */
+
 typedef struct _EMULATION_BOLD_ITALIC
 {
     BYTE Bold;
     BYTE Italic;
 } EMULATION_BOLD_ITALIC, *PEMULATION_BOLD_ITALIC;
 
-#include <pshpack1.h> /* We don't like padding for this structure */
+typedef struct _FONT_ASPECT
+{
+    _ANONYMOUS_UNION union {
+        EMULATION_BOLD_ITALIC Emu;
+        WORD EmuBoldItalic;
+    } DUMMYUNIONNAME;
+    WORD RenderMode;
+} FONT_ASPECT, *PFONT_ASPECT;
+
 typedef struct _FONT_CACHE_ENTRY
 {
     LIST_ENTRY ListEntry;
@@ -41,12 +51,12 @@ typedef struct _FONT_CACHE_ENTRY
     FT_Face Face;
     LONG lfHeight;
     _ANONYMOUS_UNION union {
-        EMULATION_BOLD_ITALIC Emu;
-        WORD EmuBoldItalic;
+        FONT_ASPECT Aspect;
+        DWORD AspectValue;
     } DUMMYUNIONNAME;
-    WORD RenderMode;
     FT_Matrix matTransform;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
+
 #include <poppack.h>
 
 C_ASSERT(offsetof(FONT_CACHE_ENTRY, GlyphIndex) % sizeof(DWORD) == 0);
