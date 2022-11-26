@@ -69,8 +69,8 @@ BEGIN
         MENUITEM "Co&lar", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Criar &atalho", IDM_CREATELINK
-        MENUITEM "&Apagar", IDM_DELETE
-        MENUITEM "&Alterar o nome", IDM_RENAME
+        MENUITEM "&Eliminar", IDM_DELETE
+        MENUITEM "&Mudar o nome", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Propriedades", IDM_PROPERTIES
     END
@@ -450,7 +450,7 @@ BEGIN
     LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 259, 115
     PUSHBUTTON "&Novo...", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
-    PUSHBUTTON "&Apagar...", IDC_FILETYPES_DELETE, 200, 140, 65, 14, WS_TABSTOP
+    PUSHBUTTON "&Eliminar...", IDC_FILETYPES_DELETE, 200, 140, 65, 14, WS_TABSTOP
     GROUPBOX "Detalhes para a extensão '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 259, 70
     LTEXT "Abre com:", -1, 12, 180, 40, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
@@ -617,8 +617,8 @@ BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
     GROUPBOX "Opções verificação do disco", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Reparar automáticamente erros nos ficheiros do sistema", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Procurar e tentar reparar sectores danificados", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "Corrigir erros do sistema de ficheiros automaticamente", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "&Procurar e tentar recuperar sectores danificados", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -786,12 +786,12 @@ BEGIN
     IDS_OPEN "Abrir"
     IDS_CREATELINK "Criar &Atalho"
     IDS_COPY "Copiar"
-    IDS_DELETE "Apagar"
+    IDS_DELETE "Eliminar"
     IDS_PROPERTIES "Propriedades"
     IDS_CUT "Cortar"
     IDS_RESTORE "Restaurar"
     IDS_FORMATDRIVE "Formatar..."
-    IDS_RENAME "Renomear"
+    IDS_RENAME "Mudar o nome"
     IDS_PASTE "Inserir"
     IDS_EJECT "Ejectar"
     IDS_DISCONNECT "Desligar"
@@ -800,7 +800,7 @@ BEGIN
 
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"
     IDS_COPYERRORTITLE "Erro ao copiar pasta ou ficheiro"
-    IDS_MOVEERRORSAMEFOLDER "Impossivel mover '%s': A paste de destino é a mesma da origem."
+    IDS_MOVEERRORSAMEFOLDER "Impossivel mover '%s': A pasta de destino é a mesma da origem."
     IDS_MOVEERRORSAME "Impossivel mover '%s': Os nomes dos ficheiros de origem e de destino são os mesmos."
     IDS_COPYERRORSAME "Impossivel copiar '%s': Os nomes dos ficheiros de origem e de destino são os mesmos."
     IDS_MOVEERRORSUBFOLDER "Impossivel mover '%s': A pasta de destino é uma subpasta da pasta de origem."
@@ -814,10 +814,10 @@ BEGIN
     IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
     IDS_DELETEITEM_TEXT "Tem a certeza que deseja excluir '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Tem a certeza que deseja excluir estes %1 itens?"
-    IDS_DELETESELECTED_TEXT "Tem a certeza que quer eliminar os item(s) seleccionado(s)?"
-    IDS_TRASHITEM_TEXT "Tem a certeza que quer enviar '%1' para a reciclagem?"
-    IDS_TRASHFOLDER_TEXT "Tem a certeza que quer enviar '%1' e todo o seu conteúdo para a reciclagem?"
-    IDS_TRASHMULTIPLE_TEXT "Tem a certeza que quer enviar este '%1' item para a reciclagem?"
+    IDS_DELETESELECTED_TEXT "Tem a certeza que pretende eliminar os item(s) seleccionado(s)?"
+    IDS_TRASHITEM_TEXT "Tem a certeza que pretende enviar '%1' para a reciclagem?"
+    IDS_TRASHFOLDER_TEXT "Tem a certeza que pretende enviar '%1' e todo o seu conteúdo para a reciclagem?"
+    IDS_TRASHMULTIPLE_TEXT "Tem a certeza que pretende enviar este '%1' item para a reciclagem?"
     IDS_CANTTRASH_TEXT "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
     IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
     IDS_OVERWRITEFILE_CAPTION "Confirmar substituição de ficheiro"
@@ -825,7 +825,7 @@ BEGIN
 
     IDS_FILEOOP_COPYING "A copiar..."
     IDS_FILEOOP_MOVING "A mover..."
-    IDS_FILEOOP_DELETING "A apagar..."
+    IDS_FILEOOP_DELETING "A eliminar..."
     IDS_FILEOOP_FROM_TO "De %1 para %2"
     IDS_FILEOOP_FROM "De %1"
     IDS_FILEOOP_PREFLIGHT "Comprovado"
@@ -847,7 +847,7 @@ BEGIN
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Não é possível abrir a caixa de diálogo ""Executar"" (erro interno)"
     IDS_RUNDLG_BROWSE_ERROR "Não é possível abrir a caixa de diálogo ""Procurar ficheiro"" (erro interno)"
-    IDS_RUNDLG_BROWSE_CAPTION "Procurar"
+    IDS_RUNDLG_BROWSE_CAPTION "Localizar"
     IDS_RUNDLG_BROWSE_FILTER "Ficheiros executáveis (*.exe)\0*.exe\0Todos (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
