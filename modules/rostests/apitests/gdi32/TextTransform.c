@@ -15,9 +15,7 @@ typedef struct tagBITMAPINFOEX
     RGBQUAD          bmiColors[256];
 } BITMAPINFOEX, FAR *LPBITMAPINFOEX;
 
-#ifndef DEBUGGING
-    #define SaveBitmapToFile(f, h)
-#else
+#ifdef DEBUGGING
 static BOOL SaveBitmapToFile(LPCWSTR pszFileName, HBITMAP hbm)
 {
     BOOL f;
@@ -400,9 +398,6 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
     INT i, j;
     BOOL ret;
     static const WCHAR s_szBlackBoxes[] = L"gg";
-#ifdef DEBUGGING
-    WCHAR szFileName[MAX_PATH];
-#endif
     LOGFONTA lf;
     HFONT hFont;
     HGDIOBJ hFontOld;
@@ -516,8 +511,11 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
     SelectObject(hDC, hbmOld);
 
 #ifdef DEBUGGING
-    StringCchPrintfW(szFileName, _countof(szFileName), L"Line%04u.bmp", entry->line);
-    SaveBitmapToFile(szFileName, hbm);
+    {
+        WCHAR szFileName[MAX_PATH];
+        StringCchPrintfW(szFileName, _countof(szFileName), L"Line%04u.bmp", entry->line);
+        SaveBitmapToFile(szFileName, hbm);
+    }
 #endif
 
     SelectObject(hDC, hFontOld);
