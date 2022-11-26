@@ -522,7 +522,7 @@ class CTrayWindow :
 
     HFONT m_Font;
 
-    HWND m_DesktopWnd;
+    HWND m_ProgMan;
     HWND m_Rebar;
     HWND m_TaskSwitch;
     HWND m_TrayNotify;
@@ -568,7 +568,7 @@ public:
         m_ShowDesktopButton(),
         m_Theme(NULL),
         m_Font(NULL),
-        m_DesktopWnd(NULL),
+        m_ProgMan(NULL),
         m_Rebar(NULL),
         m_TaskSwitch(NULL),
         m_TrayNotify(NULL),
@@ -2402,7 +2402,7 @@ ChangePos:
     BOOL STDMETHODCALLTYPE IsSpecialHWND(IN HWND hWnd)
     {
         return (m_hWnd == hWnd || hWnd == GetDesktopWindow() ||
-                (m_DesktopWnd != NULL && m_hWnd == m_DesktopWnd));
+                (m_ProgMan != NULL && m_hWnd == m_ProgMan));
     }
 
     BOOL STDMETHODCALLTYPE IsHorizontal()
@@ -3225,8 +3225,8 @@ HandleTrayContextMenu:
                 g_MinimizedAll[i] = NULL;
         }
 
-        ::SetForegroundWindow(m_DesktopWnd);
-        ::SetFocus(m_DesktopWnd);
+        ::SetForegroundWindow(m_ProgMan);
+        ::SetFocus(m_ProgMan);
     }
 
     VOID ShowDesktop()
@@ -3588,7 +3588,7 @@ HandleTrayContextMenu:
     {
         TRACE("IShellDesktopTray::RegisterDesktopWindow(0x%p)\n", hWndDesktop);
 
-        m_DesktopWnd = hWndDesktop;
+        m_ProgMan = hWndDesktop;
         return S_OK;
     }
 
