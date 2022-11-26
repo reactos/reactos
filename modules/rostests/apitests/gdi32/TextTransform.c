@@ -96,7 +96,7 @@ typedef struct TEST_ENTRY
     INT TextAlign;
     XFORM xform;
     BOOL xform_ok;
-    BYTE aCheckPoints[16];
+    BYTE aBlacks[16];
 } TEST_ENTRY;
 
 #define WIDTH 200
@@ -462,11 +462,11 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
                 COLORREF rgb = GetPixel(hDC, pt.x, pt.y);
                 BOOL bFound = FALSE;
                 INT m;
-                for (m = 0; m < _countof(entry->aCheckPoints); ++m)
+                for (m = 0; m < _countof(entry->aBlacks); ++m)
                 {
-                    if (entry->aCheckPoints[m] == 0)
+                    if (entry->aBlacks[m] == 0)
                         break;
-                    if (entry->aCheckPoints[m] == k)
+                    if (entry->aBlacks[m] == k)
                     {
                         bFound = TRUE;
                         break;
