@@ -411,7 +411,6 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
                     }
                 }
 
-#if 1
                 if (bFound)
                 {
                     ok(rgb == RGB(0, 0, 0), "Line %d: It was not black (k: %d)\n", entry->line, k);
@@ -420,7 +419,6 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
                 {
                     ok(rgb != RGB(0, 0, 0), "Line %d: It was black (k: %d)\n", entry->line, k);
                 }
-#endif
 
 #ifdef DEBUGGING
                 {
