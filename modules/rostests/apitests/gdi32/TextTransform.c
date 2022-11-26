@@ -467,7 +467,7 @@ START_TEST(TextTransform)
     UINT i;
 
     s_hWhiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    s_hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    s_hRedPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
 
     hDC = CreateCompatibleDC(NULL);
     ok(hDC != NULL, "hDC was NULL.\n");
