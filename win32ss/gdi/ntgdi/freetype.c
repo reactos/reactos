@@ -2059,7 +2059,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
  *   TRUE on success, FALSE on failure.
  *
  */
-static BOOLEAN APIENTRY
+static BOOLEAN
 IntTranslateCharsetInfo(PDWORD Src, /* [in]
                          if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
                          if flags == TCI_SRCCHARSET: a character set value
@@ -3112,8 +3112,8 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
-static DWORD APIENTRY
-IntGetHash(LPCVOID pv, DWORD cdw)
+static DWORD
+IntGetHash(IN LPCVOID pv, IN DWORD cdw)
 {
     DWORD dwHash = cdw;
     const DWORD *pdw = pv;
@@ -3127,8 +3127,8 @@ IntGetHash(LPCVOID pv, DWORD cdw)
     return dwHash;
 }
 
-FT_BitmapGlyph APIENTRY
-ftGdiGlyphCacheGet(const FONT_CACHE_ENTRY *pCache)
+static FT_BitmapGlyph
+ftGdiGlyphCacheGet(IN const FONT_CACHE_ENTRY *pCache)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3163,7 +3163,7 @@ ftGdiGlyphCacheGet(const FONT_CACHE_ENTRY *pCache)
 }
 
 /* no cache */
-FT_BitmapGlyph APIENTRY
+static FT_BitmapGlyph
 ftGdiGlyphSet(
     FT_Face Face,
     FT_GlyphSlot GlyphSlot,
@@ -3206,10 +3206,10 @@ ftGdiGlyphSet(
     return BitmapGlyph;
 }
 
-FT_BitmapGlyph APIENTRY
+static FT_BitmapGlyph
 ftGdiGlyphCacheSet(
-    PFONT_CACHE_ENTRY Cache,
-    FT_GlyphSlot GlyphSlot)
+    IN OUT PFONT_CACHE_ENTRY Cache,
+    IN FT_GlyphSlot GlyphSlot)
 {
     FT_Glyph GlyphCopy;
     INT error;
@@ -4206,10 +4206,9 @@ ftGdiGetGlyphOutline(
     return needed;
 }
 
-FT_BitmapGlyph
-APIENTRY
+static FT_BitmapGlyph
 ftGdiGetRealGlyph(
-    PFONT_CACHE_ENTRY Cache)
+    IN OUT PFONT_CACHE_ENTRY Cache)
 {
     INT error;
     FT_GlyphSlot glyph;
@@ -4299,10 +4298,7 @@ TextIntGetTextExtentPoint(PDC dc,
     Cache.lfHeight = plf->lfHeight;
 
     Cache.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    ASSERT(Cache.Aspect.Emu.Bold <= 1);
-
     Cache.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    ASSERT(Cache.Aspect.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
         Cache.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);
@@ -5865,8 +5861,7 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 }
 
 /* Calculate width of the text. */
-BOOL
-APIENTRY
+static BOOL
 ftGdiGetTextWidth(
     LONGLONG *pTextWidth64,
     LPCWSTR String,
@@ -6079,10 +6074,7 @@ IntExtTextOutW(
     Cache.lfHeight = plf->lfHeight;
 
     Cache.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
-    ASSERT(Cache.Aspect.Emu.Bold <= 1);
-
     Cache.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    ASSERT(Cache.Aspect.Emu.Italic <= 1);
 
     if (IntIsFontRenderingEnabled())
         Cache.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);

@@ -23,7 +23,7 @@ typedef struct _FONT_ENTRY_COLL_MEM
     FONT_ENTRY_MEM *Entry;
 } FONT_ENTRY_COLL_MEM, *PFONT_ENTRY_COLL_MEM;
 
-#include <pshpack1.h> /* We don't like padding for these structures */
+#include <pshpack1.h> /* We don't like padding for these structures for hashing */
 
 typedef struct _EMULATION_BOLD_ITALIC
 {
@@ -59,8 +59,8 @@ typedef struct _FONT_CACHE_ENTRY
 
 #include <poppack.h>
 
-C_ASSERT(offsetof(FONT_CACHE_ENTRY, GlyphIndex) % sizeof(DWORD) == 0);
-C_ASSERT(sizeof(FONT_CACHE_ENTRY) % sizeof(DWORD) == 0);
+C_ASSERT(FIELD_OFFSET(FONT_CACHE_ENTRY, GlyphIndex) % sizeof(DWORD) == 0); /* for hashing */
+C_ASSERT(sizeof(FONT_CACHE_ENTRY) % sizeof(DWORD) == 0); /* for hashing */
 
 /*
  * FONTSUBST_... --- constants for font substitutes
