@@ -25,16 +25,13 @@ typedef struct _FONT_ENTRY_COLL_MEM
 
 #include <pshpack1.h> /* We don't like padding for these structures for hashing */
 
-typedef struct _EMULATION_BOLD_ITALIC
-{
-    BYTE Bold;
-    BYTE Italic;
-} EMULATION_BOLD_ITALIC, *PEMULATION_BOLD_ITALIC;
-
 typedef struct _FONT_ASPECT
 {
     _ANONYMOUS_UNION union {
-        EMULATION_BOLD_ITALIC Emu;
+        struct {
+            BYTE Bold;
+            BYTE Italic;
+        } Emu;
         WORD EmuBoldItalic;
     } DUMMYUNIONNAME;
     WORD RenderMode;
