@@ -257,10 +257,6 @@ KdbEnterDebuggerException(IN PEXCEPTION_RECORD64 ExceptionRecord,
                           IN OUT PCONTEXT Context,
                           IN BOOLEAN FirstChance);
 
-KD_CONTINUE_TYPE
-KdbEnterDebuggerFirstChanceException(
-    IN OUT PKTRAP_FRAME TrapFrame);
-
 /* other functions */
 
 NTSTATUS

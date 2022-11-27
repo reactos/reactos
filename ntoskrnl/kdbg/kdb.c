@@ -1623,38 +1623,6 @@ continue_execution:
     return ContinueType;
 }
 
-KD_CONTINUE_TYPE
-KdbEnterDebuggerFirstChanceException(
-    IN OUT PKTRAP_FRAME TrapFrame)
-{
-    EXCEPTION_RECORD64 ExceptionRecord;
-    KD_CONTINUE_TYPE Return;
-    CONTEXT Context;
-
-    /* Copy TrapFrame to Context */
-    RtlZeroMemory(&Context, sizeof(CONTEXT));
-    Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS;
-#ifdef CONTEXT_EXTENDED_REGISTERS
-    Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
-#endif
-    KeTrapFrameToContext(TrapFrame, NULL, &Context);
-
-    /* Create ExceptionRecord (assume breakpoint) */
-    RtlZeroMemory(&ExceptionRecord, sizeof(EXCEPTION_RECORD64));
-    ExceptionRecord.ExceptionCode = STATUS_BREAKPOINT;
-
-    /* Call real function */
-    Return = KdbEnterDebuggerException(&ExceptionRecord,
-                                       KernelMode,
-                                       &Context,
-                                       TRUE);
-
-    /* Copy back Context to TrapFrame */
-    KeContextToTrapFrame(&Context, NULL, TrapFrame, Context.ContextFlags, KernelMode);
-
-    return Return;
-}
-
 VOID
 NTAPI
 KdbpGetCommandLineSettings(
