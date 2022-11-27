@@ -3258,8 +3258,8 @@ ftGdiGlyphCacheSet(
     BitmapGlyph->bitmap = AlignedBitmap;
 
     NewEntry->BitmapGlyph = BitmapGlyph;
-    RtlCopyMemory(&NewEntry->dwHash, &Cache->dwHash,
-                  sizeof(FONT_CACHE_ENTRY) - offsetof(FONT_CACHE_ENTRY, dwHash));
+    NewEntry->dwHash = Cache->dwHash;
+    NewEntry->Hashed = Cache->Hashed;
 
     InsertHeadList(&g_FontCacheListHead, &NewEntry->ListEntry);
     if (++g_FontCacheNumEntries > MAX_FONT_CACHE)
