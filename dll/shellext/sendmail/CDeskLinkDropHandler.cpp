@@ -87,13 +87,27 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
             CStringW strTitle;
+            LPCWSTR pszSourceExt;
+
             strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
 
             PathAppendW(szDest, strTitle);
             PathRemoveExtensionW(szDest);
             StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
-            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            pszSourceExt = PathFindExtensionW(szSrc);
+            if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
+            {
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            }
+            else
+            {
+                /* Set default working directory for the shortcut */
+                CStringW strWorkingDir(szSrc);
+                PathRemoveFileSpecW(strWorkingDir.GetBuffer());
+
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, strWorkingDir, NULL, -1, NULL);
+            }
         }
         else
         {
