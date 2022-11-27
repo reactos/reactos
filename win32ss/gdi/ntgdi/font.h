@@ -40,13 +40,8 @@ typedef struct _FONT_ASPECT
     WORD RenderMode;
 } FONT_ASPECT, *PFONT_ASPECT;
 
-typedef struct _FONT_CACHE_ENTRY
+typedef struct _FONT_CACHE_HASHED
 {
-    LIST_ENTRY ListEntry;
-    FT_BitmapGlyph BitmapGlyph;
-    DWORD dwHash;
-
-    /* The following members are hashed */
     INT GlyphIndex;
     FT_Face Face;
     LONG lfHeight;
@@ -55,12 +50,20 @@ typedef struct _FONT_CACHE_ENTRY
         DWORD AspectValue;
     } DUMMYUNIONNAME;
     FT_Matrix matTransform;
-} FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
+} FONT_CACHE_HASHED, *PFONT_CACHE_HASHED;
 
 #include <poppack.h>
 
-C_ASSERT(FIELD_OFFSET(FONT_CACHE_ENTRY, GlyphIndex) % sizeof(DWORD) == 0); /* for hashing */
-C_ASSERT(sizeof(FONT_CACHE_ENTRY) % sizeof(DWORD) == 0); /* for hashing */
+typedef struct _FONT_CACHE_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    FT_BitmapGlyph BitmapGlyph;
+    DWORD dwHash;
+    FONT_CACHE_HASHED Hashed;
+} FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
+
+C_ASSERT(FIELD_OFFSET(FONT_CACHE_ENTRY, Hashed) % sizeof(DWORD) == 0); /* for hashing */
+C_ASSERT(sizeof(FONT_CACHE_HASHED) % sizeof(DWORD) == 0); /* for hashing */
 
 /*
  * FONTSUBST_... --- constants for font substitutes
