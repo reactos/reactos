@@ -3333,28 +3333,39 @@ KdbpCommandHistoryAppend(
     }
 }
 
-/*!\brief Reads a line of user-input.
+/**
+ * @brief   Reads a line of user input from the terminal.
  *
- * \param Buffer  Buffer to store the input into. Trailing newlines are removed.
- * \param Size    Size of \a Buffer.
+ * @param[out]  Buffer
+ * Buffer where to store the input. Trailing newlines are removed.
  *
- * \note Accepts only \n newlines, \r is ignored.
- */
-static VOID
+ * @param[in]   Size
+ * Size of \a Buffer.
+ *
+ * @return
+ * Returns the number of characters stored, not counting the NULL terminator.
+ *
+ * @note Accepts only \n newlines, \r is ignored.
+ **/
+SIZE_T
 KdbpReadCommand(
-    OUT PCHAR Buffer,
-    IN  ULONG Size)
+    _Out_ PCHAR Buffer,
+    _In_ SIZE_T Size)
 {
-    CHAR Key;
     PCHAR Orig = Buffer;
     ULONG ScanCode = 0;
+    CHAR Key;
     BOOLEAN EchoOn;
     static CHAR LastCommand[1024];
     static CHAR NextKey = '\0';
     INT CmdHistIndex = -1;
     INT_PTR i;
 
-    EchoOn = !((KdbDebugState & KD_DEBUG_KDNOECHO) != 0);
+    /* Bail out if the buffer is zero-sized */
+    if (Size == 0)
+        return 0;
+
+    EchoOn = ((KdbDebugState & KD_DEBUG_KDNOECHO) == 0);
 
     for (;;)
     {
@@ -3393,27 +3404,25 @@ KdbpReadCommand(
             NextKey = '\0';
         }
 
-        if ((ULONG)(Buffer - Orig) >= (Size - 1))
+        /* Check for return or newline */
+        if ((Key == '\r') || (Key == '\n'))
         {
-            /* Buffer is full, accept only newlines */
-            if (Key != '\n')
-                continue;
-        }
+            if (Key == '\r')
+            {
+                /*
+                 * We might need to discard the next '\n' which most clients
+                 * should send after \r. Wait a bit to make sure we receive it.
+                 */
+                KeStallExecutionProcessor(100000);
 
-        if (Key == '\r')
-        {
-            /* Read the next char - this is to throw away a \n which most clients should
-             * send after \r.
-             */
-            KeStallExecutionProcessor(100000);
+                if (KdbDebugState & KD_DEBUG_KDSERIAL)
+                    NextKey = KdbpTryGetCharSerial(5);
+                else
+                    NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
 
-            if (KdbDebugState & KD_DEBUG_KDSERIAL)
-                NextKey = KdbpTryGetCharSerial(5);
-            else
-                NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
-
-            if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
-                NextKey = '\0';
+                if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
+                    NextKey = '\0';
+            }
 
             KdpDprintf("\n");
 
@@ -3432,14 +3441,14 @@ KdbpReadCommand(
             else
                 *Buffer = '\0';
 
-            return;
+            return (SIZE_T)(Buffer - Orig);
         }
         else if (Key == KEY_BS || Key == KEY_DEL)
         {
             if (Buffer > Orig)
             {
                 Buffer--;
-                *Buffer = 0;
+                *Buffer = '\0';
 
                 if (EchoOn)
                     KdpDprintf("%c %c", KEY_BS, KEY_BS);
@@ -3473,7 +3482,7 @@ KdbpReadCommand(
                 while (Buffer > Orig)
                 {
                     Buffer--;
-                    *Buffer = 0;
+                    *Buffer = '\0';
 
                     if (EchoOn)
                         KdpDprintf("%c %c", KEY_BS, KEY_BS);
@@ -3502,7 +3511,7 @@ KdbpReadCommand(
                     while (Buffer > Orig)
                     {
                         Buffer--;
-                        *Buffer = 0;
+                        *Buffer = '\0';
 
                         if (EchoOn)
                             KdpDprintf("%c %c", KEY_BS, KEY_BS);
@@ -3520,6 +3529,10 @@ KdbpReadCommand(
         }
         else
         {
+            /* Don't accept any key if the buffer is full */
+            if ((SIZE_T)(Buffer - Orig) >= (Size - 1))
+                continue;
+
             if (EchoOn)
                 KdpDprintf("%c", Key);
 
