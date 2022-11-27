@@ -86,14 +86,26 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         StringCbCopyW(szDest, sizeof(szDest), szDir);
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            CStringW strTitle;
             LPCWSTR pszSourceExt;
+            BOOL bIsLink;
 
-            strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+            pszSourceExt = PathFindExtensionW(szSrc);
+            bIsLink = ((_wcsicmp(pszSourceExt, L".lnk") == 0) ||
+                       (_wcsicmp(pszSourceExt, L".url") == 0));
 
-            PathAppendW(szDest, strTitle);
-            PathRemoveExtensionW(szDest);
-            StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            if (bIsLink)
+            {
+                PathAppendW(szDest, PathFindFileNameW(szSrc));
+            }
+            else
+            {
+                CStringW strTitle;
+                strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+
+                PathAppendW(szDest, strTitle);
+                PathRemoveExtensionW(szDest);
+                StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            }
 
             if (PathFileExistsW(szDest))
             {
@@ -101,8 +113,11 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
                 PathYetAnotherMakeUniqueName(szDest, szDir, NULL, strName);
             }
 
-            pszSourceExt = PathFindExtensionW(szSrc);
-            if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
+            if (bIsLink)
+            {
+                hr = (CopyFileW(szSrc, szDest, TRUE) ? S_OK : E_FAIL);
+            }
+            else if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
             {
                 hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
             }
