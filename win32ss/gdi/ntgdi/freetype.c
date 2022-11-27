@@ -703,7 +703,7 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+static LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 {
     LONG tmAveCharWidth;
     TT_OS2 *pOS2;
@@ -4276,11 +4276,11 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_BitmapGlyph realglyph;
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
-    PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL use_kerning;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
+    FT_Matrix mat;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4296,7 +4296,6 @@ TextIntGetTextExtentPoint(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.lfHeight = plf->lfHeight;
-
     Cache.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -4305,9 +4304,12 @@ TextIntGetTextExtentPoint(PDC dc,
     else
         Cache.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
-    /* Get the DC's world-to-device transformation matrix */
-    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    FtMatrixFromMx(&Cache.matTransform, pmxWorldToDevice);
+    // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
+    if (FT_IS_SCALABLE(Cache.Face) && plf->lfWidth != 0)
+        IntWidthMatrix(Cache.Face, &Cache.matTransform, plf->lfWidth);
+    else
+        Cache.matTransform = identityMat;
+
     FT_Set_Transform(Cache.Face, &Cache.matTransform, 0);
 
     use_kerning = FT_HAS_KERNING(Cache.Face);
@@ -4336,6 +4338,7 @@ TextIntGetTextExtentPoint(PDC dc,
         {
             *Fit = i + 1;
         }
+
         if (NULL != Dx)
         {
             Dx[i] = (TotalWidth64 + 32) >> 6;
