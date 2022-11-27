@@ -28,11 +28,11 @@ typedef struct _FONT_ENTRY_COLL_MEM
 typedef struct _FONT_ASPECT
 {
     _ANONYMOUS_UNION union {
+        WORD EmuBoldItalic;
         struct {
             BYTE Bold;
             BYTE Italic;
         } Emu;
-        WORD EmuBoldItalic;
     } DUMMYUNIONNAME;
     WORD RenderMode;
 } FONT_ASPECT, *PFONT_ASPECT;
@@ -43,8 +43,8 @@ typedef struct _FONT_CACHE_HASHED
     FT_Face Face;
     LONG lfHeight;
     _ANONYMOUS_UNION union {
-        FONT_ASPECT Aspect;
         DWORD AspectValue;
+        FONT_ASPECT Aspect;
     } DUMMYUNIONNAME;
     FT_Matrix matTransform;
 } FONT_CACHE_HASHED, *PFONT_CACHE_HASHED;
