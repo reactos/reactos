@@ -4280,7 +4280,6 @@ TextIntGetTextExtentPoint(PDC dc,
     BOOL use_kerning;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
-    FT_Matrix mat;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
