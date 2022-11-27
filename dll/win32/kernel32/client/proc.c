@@ -1625,14 +1625,13 @@ FatalExit(IN int ExitCode)
 {
 #if DBG
     /* On Checked builds, Windows gives the user a nice little debugger UI */
-    CHAR ch[2];
-    DbgPrint("FatalExit...\n");
-    DbgPrint("\n");
+    CHAR Action[2];
+    DbgPrint("FatalExit...\n\n");
 
     while (TRUE)
     {
-        DbgPrompt( "A (Abort), B (Break), I (Ignore)? ", ch, sizeof(ch));
-        switch (ch[0])
+        DbgPrompt("A (Abort), B (Break), I (Ignore)? ", Action, sizeof(Action));
+        switch (Action[0])
         {
             case 'B': case 'b':
                  DbgBreakPoint();
