@@ -5936,7 +5936,7 @@ IntExtTextOutW(
     SIZEL bitSize;
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
-    PTEXTOBJ TextObj;
+    PTEXTOBJ TextObj = NULL;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     POINT Start;
     USHORT DxShift;
