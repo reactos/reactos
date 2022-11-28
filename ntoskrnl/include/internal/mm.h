@@ -1490,16 +1490,15 @@ VOID
 NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
-/* Exported from NT 6.2 Onward. We keep it internal. */
+/* Exported from NT 6.2 onward. We keep it internal. */
 NTSTATUS
 NTAPI
-MmMapViewInSystemSpaceEx (
+MmMapViewInSystemSpaceEx(
     _In_ PVOID Section,
     _Outptr_result_bytebuffer_ (*ViewSize) PVOID *MappedBase,
     _Inout_ PSIZE_T ViewSize,
     _Inout_ PLARGE_INTEGER SectionOffset,
-    _In_ ULONG_PTR Flags
-    );
+    _In_ ULONG_PTR Flags);
 
 BOOLEAN
 NTAPI
@@ -1660,6 +1659,23 @@ VOID
 NTAPI
 MmFreeDriverInitialization(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+/* ReactOS-only, used by psmgr.c PspLookupSystemDllEntryPoint() as well */
+NTSTATUS
+NTAPI
+RtlpFindExportedRoutineByName(
+    _In_ PVOID ImageBase,
+    _In_ PCSTR ExportName,
+    _Out_ PVOID* Function,
+    _Out_opt_ PBOOLEAN IsForwarder,
+    _In_ NTSTATUS NotFoundStatus);
+
+/* Exported from NT 10.0 onward. We keep it internal. */
+PVOID
+NTAPI
+RtlFindExportedRoutineByName(
+    _In_ PVOID ImageBase,
+    _In_ PCSTR ExportName);
 
 /* procsup.c *****************************************************************/
 

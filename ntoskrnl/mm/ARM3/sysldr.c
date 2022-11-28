@@ -267,60 +267,163 @@ NameToOrdinal(
     return OrdinalTable[Mid];
 }
 
-PVOID
+/**
+ * @brief
+ * ReactOS-only helper routine for RtlFindExportedRoutineByName(),
+ * that provides a finer granularity regarding the nature of the
+ * export, and the failure reasons.
+ *
+ * @param[in]   ImageBase
+ * The base address of the loaded image.
+ *
+ * @param[in]   ExportName
+ * The name of the export, given as an ANSI NULL-terminated string.
+ *
+ * @param[out]  Function
+ * The address of the named exported routine, or NULL if not found.
+ * If the export is a forwarder (see @p IsForwarder below), this
+ * address points to the forwarder name.
+ *
+ * @param[out]  IsForwarder
+ * An optional pointer to a BOOLEAN variable, that is set to TRUE
+ * if the found export is a forwarder, and FALSE otherwise.
+ *
+ * @param[in]   NotFoundStatus
+ * The status code to return in case the export could not be found
+ * (examples: STATUS_ENTRYPOINT_NOT_FOUND, STATUS_PROCEDURE_NOT_FOUND).
+ *
+ * @return
+ * A status code as follows:
+ * - STATUS_SUCCESS if the named exported routine is found;
+ * - The custom @p NotFoundStatus if the export could not be found;
+ * - STATUS_INVALID_PARAMETER if the image is invalid or does not
+ *   contain an Export Directory.
+ *
+ * @note
+ * See RtlFindExportedRoutineByName() for more remarks.
+ * Used by psmgr.c PspLookupSystemDllEntryPoint() as well.
+ **/
+NTSTATUS
 NTAPI
-MiLocateExportName(IN PVOID DllBase,
-                   IN PCHAR ExportName)
+RtlpFindExportedRoutineByName(
+    _In_ PVOID ImageBase,
+    _In_ PCSTR ExportName,
+    _Out_ PVOID* Function,
+    _Out_opt_ PBOOLEAN IsForwarder,
+    _In_ NTSTATUS NotFoundStatus)
 {
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
     PULONG NameTable;
     PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    USHORT Ordinal;
-    PVOID Function;
     ULONG ExportSize;
+    USHORT Ordinal;
     PULONG ExportTable;
+    ULONG_PTR FunctionAddress;
+
     PAGED_CODE();
 
     /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+    ExportDirectory = RtlImageDirectoryEntryToData(ImageBase,
                                                    TRUE,
                                                    IMAGE_DIRECTORY_ENTRY_EXPORT,
                                                    &ExportSize);
-    if (!ExportDirectory) return NULL;
+    if (!ExportDirectory)
+        return STATUS_INVALID_PARAMETER;
 
     /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
+    NameTable = (PULONG)RVA(ImageBase, ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)RVA(ImageBase, ExportDirectory->AddressOfNameOrdinals);
 
     /* Get the ordinal */
     Ordinal = NameToOrdinal(ExportName,
-                            DllBase,
+                            ImageBase,
                             ExportDirectory->NumberOfNames,
                             NameTable,
                             OrdinalTable);
 
     /* Check if we couldn't find it */
-    if (Ordinal == -1) return NULL;
+    if (Ordinal == -1)
+        return NotFoundStatus;
 
     /* Validate the ordinal */
-    if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
+    if (Ordinal >= ExportDirectory->NumberOfFunctions)
+        return NotFoundStatus;
 
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+    /* Resolve the function's address */
+    ExportTable = (PULONG)RVA(ImageBase, ExportDirectory->AddressOfFunctions);
+    FunctionAddress = (ULONG_PTR)RVA(ImageBase, ExportTable[Ordinal]);
 
     /* Check if the function is actually a forwarder */
-    if (((ULONG_PTR)Function > (ULONG_PTR)ExportDirectory) &&
-        ((ULONG_PTR)Function < ((ULONG_PTR)ExportDirectory + ExportSize)))
+    if (IsForwarder)
     {
-        /* It is, fail */
+        *IsForwarder = FALSE;
+        if ((FunctionAddress > (ULONG_PTR)ExportDirectory) &&
+            (FunctionAddress < (ULONG_PTR)ExportDirectory + ExportSize))
+        {
+            /* It is, and points to the forwarder name */
+            *IsForwarder = TRUE;
+        }
+    }
+
+    /* We've found it */
+    *Function = (PVOID)FunctionAddress;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Finds the address of a given named exported routine in a loaded image.
+ * Note that this function does not support forwarders.
+ *
+ * @param[in]   ImageBase
+ * The base address of the loaded image.
+ *
+ * @param[in]   ExportName
+ * The name of the export, given as an ANSI NULL-terminated string.
+ *
+ * @return
+ * The address of the named exported routine, or NULL if not found.
+ * If the export is a forwarder, this function returns NULL as well.
+ *
+ * @note
+ * This routine was originally named MiLocateExportName(), with a separate
+ * duplicated MiFindExportedRoutineByName() one (taking a PANSI_STRING)
+ * on Windows <= 2003. Both routines have been then merged and renamed
+ * to MiFindExportedRoutineByName() on Windows 8 (taking a PCSTR instead),
+ * and finally renamed and exported as RtlFindExportedRoutineByName() on
+ * Windows 10.
+ *
+ * @see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/mm/sysload/mmgetsystemroutineaddress.htm
+ **/
+PVOID
+NTAPI
+RtlFindExportedRoutineByName(
+    _In_ PVOID ImageBase,
+    _In_ PCSTR ExportName)
+{
+    NTSTATUS Status;
+    BOOLEAN IsForwarder = FALSE;
+    PVOID Function;
+
+    PAGED_CODE();
+
+    /* Call the internal API */
+    Status = RtlpFindExportedRoutineByName(ImageBase,
+                                           ExportName,
+                                           &Function,
+                                           &IsForwarder,
+                                           STATUS_ENTRYPOINT_NOT_FOUND);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    /* If the export is actually a forwarder, log the error and fail */
+    if (IsForwarder)
+    {
+        DPRINT1("RtlFindExportedRoutineByName does not support forwarders!\n", FALSE);
         return NULL;
     }
 
-    /* We found it */
+    /* We've found the export */
     return Function;
 }
 
@@ -340,8 +443,8 @@ MmCallDllInitialize(
     PAGED_CODE();
 
     /* Try to see if the image exports a DllInitialize routine */
-    DllInit = (PMM_DLL_INITIALIZE)MiLocateExportName(LdrEntry->DllBase,
-                                                     "DllInitialize");
+    DllInit = (PMM_DLL_INITIALIZE)
+        RtlFindExportedRoutineByName(LdrEntry->DllBase, "DllInitialize");
     if (!DllInit)
         return STATUS_SUCCESS;
 
@@ -399,7 +502,8 @@ MiCallDllUnloadAndUnloadDll(
     PAGED_CODE();
 
     /* Retrieve the DllUnload routine */
-    DllUnload = (PMM_DLL_UNLOAD)MiLocateExportName(LdrEntry->DllBase, "DllUnload");
+    DllUnload = (PMM_DLL_UNLOAD)
+        RtlFindExportedRoutineByName(LdrEntry->DllBase, "DllUnload");
     if (!DllUnload)
         return FALSE;
 
@@ -510,58 +614,6 @@ MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     /* Otherwise, free the import list */
     ExFreePoolWithTag(LdrEntry->LoadedImports, TAG_LDR_IMPORTS);
     LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
-}
-
-PVOID
-NTAPI
-MiFindExportedRoutineByName(IN PVOID DllBase,
-                            IN PANSI_STRING ExportName)
-{
-    PULONG NameTable;
-    PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    USHORT Ordinal;
-    PVOID Function;
-    ULONG ExportSize;
-    PULONG ExportTable;
-    PAGED_CODE();
-
-    /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
-                                                   TRUE,
-                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                                   &ExportSize);
-    if (!ExportDirectory) return NULL;
-
-    /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
-
-    /* Get the ordinal */
-    Ordinal = NameToOrdinal(ExportName->Buffer,
-                            DllBase,
-                            ExportDirectory->NumberOfNames,
-                            NameTable,
-                            OrdinalTable);
-
-    /* Check if we couldn't find it */
-    if (Ordinal == -1) return NULL;
-
-    /* Validate the ordinal */
-    if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
-
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
-
-    /* We found it! */
-    ASSERT((Function < (PVOID)ExportDirectory) ||
-           (Function > (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
-
-    return Function;
 }
 
 VOID
@@ -720,6 +772,7 @@ MiSnapThunk(IN PVOID DllBase,
     PIMAGE_IMPORT_BY_NAME ForwardName;
     SIZE_T ForwardLength;
     IMAGE_THUNK_DATA ForwardThunk;
+
     PAGED_CODE();
 
     /* Check if this is an ordinal */
@@ -740,7 +793,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Copy the procedure name */
         RtlStringCbCopyA(*MissingApi,
                          MAXIMUM_FILENAME_LENGTH,
-                         (PCHAR)&NameImport->Name[0]);
+                         (PCHAR)NameImport->Name);
 
         /* Setup name tables */
         DPRINT("Import name: %s\n", NameImport->Name);
@@ -775,10 +828,10 @@ MiSnapThunk(IN PVOID DllBase,
         }
     }
 
-    /* Check if the ordinal is invalid */
+    /* Check if the ordinal is valid */
     if (Ordinal >= ExportDirectory->NumberOfFunctions)
     {
-        /* Fail */
+        /* It's not, fail */
         Status = STATUS_DRIVER_ORDINAL_NOT_FOUND;
     }
     else
@@ -796,7 +849,7 @@ MiSnapThunk(IN PVOID DllBase,
 
         /* Check if the function is actually a forwarder */
         if ((Address->u1.Function > (ULONG_PTR)ExportDirectory) &&
-            (Address->u1.Function < ((ULONG_PTR)ExportDirectory + ExportSize)))
+            (Address->u1.Function < (ULONG_PTR)ExportDirectory + ExportSize))
         {
             /* Now assume failure in case the forwarder doesn't exist */
             Status = STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
@@ -3594,8 +3647,8 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
         if (Found)
         {
             /* Find the procedure name */
-            ProcAddress = MiFindExportedRoutineByName(LdrEntry->DllBase,
-                                                      &AnsiRoutineName);
+            ProcAddress = RtlFindExportedRoutineByName(LdrEntry->DllBase,
+                                                       AnsiRoutineName.Buffer);
 
             /* Break out if we found it or if we already tried both modules */
             if (ProcAddress) break;

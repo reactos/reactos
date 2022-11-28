@@ -134,12 +134,6 @@ PsLocateSystemDll(
     VOID
 );
 
-NTSTATUS
-NTAPI
-PspGetSystemDllEntryPoints(
-    VOID
-);
-
 VOID
 NTAPI
 PsChangeQuantumTable(

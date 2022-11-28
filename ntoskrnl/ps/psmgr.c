@@ -62,80 +62,22 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-USHORT
-NTAPI
-NameToOrdinal(
-    _In_ PCSTR ExportName,
-    _In_ PVOID ImageBase,
-    _In_ ULONG NumberOfNames,
-    _In_ PULONG NameTable,
-    _In_ PUSHORT OrdinalTable);
-
-CODE_SEG("INIT")
+static CODE_SEG("INIT")
 NTSTATUS
-NTAPI
-LookupEntryPoint(IN PVOID DllBase,
-                 IN PCHAR Name,
-                 OUT PVOID *EntryPoint)
+PspLookupSystemDllEntryPoint(
+    _In_ PCSTR Name,
+    _Out_ PVOID* EntryPoint)
 {
-    PULONG NameTable;
-    PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    ULONG ExportSize;
-    CHAR Buffer[64];
-    USHORT Ordinal;
-    PULONG ExportTable;
-
-    /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
-                                                   TRUE,
-                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                                   &ExportSize);
-
-    /* Validate the name and copy it */
-    if (strlen(Name) > sizeof(Buffer) - 2) return STATUS_INVALID_PARAMETER;
-    strcpy(Buffer, Name);
-
-    /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
-
-    /* Get the ordinal */
-    Ordinal = NameToOrdinal(Buffer,
-                            DllBase,
-                            ExportDirectory->NumberOfNames,
-                            NameTable,
-                            OrdinalTable);
-
-    /* Make sure the ordinal is valid */
-    if (Ordinal >= ExportDirectory->NumberOfFunctions)
-    {
-        /* It's not, fail */
-        return STATUS_PROCEDURE_NOT_FOUND;
-    }
-
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    *EntryPoint = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
-    return STATUS_SUCCESS;
+    /* Call the internal API */
+    return RtlpFindExportedRoutineByName(PspSystemDllBase,
+                                         Name,
+                                         EntryPoint,
+                                         NULL,
+                                         STATUS_PROCEDURE_NOT_FOUND);
 }
 
-CODE_SEG("INIT")
+static CODE_SEG("INIT")
 NTSTATUS
-NTAPI
-PspLookupSystemDllEntryPoint(IN PCHAR Name,
-                             IN PVOID *EntryPoint)
-{
-    /* Call the LDR Routine */
-    return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
-}
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
