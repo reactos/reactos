@@ -1141,20 +1141,29 @@ KdbpAttachToProcess(
     return KdbpAttachToThread(Thread->Cid.UniqueThread);
 }
 
-/*!\brief Calls the main loop ...
- */
+/**
+ * @brief   Calls the main interactive debugger loop.
+ **/
 static VOID
 KdbpCallMainLoop(VOID)
 {
     KdbpCliMainLoop(KdbEnteredOnSingleStep);
 }
 
-/*!\brief Internal function to enter KDB.
+/**
+ * @brief
+ * Internal function to enter KDBG and run the specified procedure.
  *
  * Disables interrupts, releases display ownership, ...
- */
+ *
+ * @param[in]   Procedure
+ * The procedure to execute under the KDBG environment.
+ * Either execute the main interactive debugger loop (KdbpCallMainLoop)
+ * or run the KDBinit file (KdbpCliInterpretInitFile).
+ **/
 static VOID
-KdbpInternalEnter(VOID)
+KdbpInternalEnter(
+    _In_ VOID (*Procedure)(VOID))
 {
     PETHREAD Thread;
     PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
@@ -1166,7 +1175,7 @@ KdbpInternalEnter(VOID)
     if (KdpDebugMode.Screen)
         KdpScreenAcquire();
 
-    /* Call the interface's main loop on a different stack */
+    /* Call the specified debugger procedure on a different stack */
     Thread = PsGetCurrentThread();
     SavedInitialStack = Thread->Tcb.InitialStack;
     SavedStackBase = Thread->Tcb.StackBase;
@@ -1179,7 +1188,7 @@ KdbpInternalEnter(VOID)
     // KdbPrintf("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n",
     //           Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
 
-    KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - KDB_STACK_RESERVE, KdbpCallMainLoop);
+    KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - KDB_STACK_RESERVE, Procedure);
 
     Thread->Tcb.InitialStack = SavedInitialStack;
     Thread->Tcb.StackBase = SavedStackBase;
@@ -1276,6 +1285,7 @@ KdbEnterDebuggerException(
     ULONG OldEflags;
     KIRQL OldIrql;
     NTSTATUS ExceptionCode;
+    VOID (*EntryPoint)(VOID) = KdbpCallMainLoop;
 
     ExceptionCode = (ExceptionRecord ? ExceptionRecord->ExceptionCode : STATUS_BREAKPOINT);
 
@@ -1481,11 +1491,15 @@ KdbEnterDebuggerException(
     }
     else if (ExceptionCode == STATUS_BREAKPOINT)
     {
+        /* Do the condition check and banner display only if we enter
+         * from a true code breakpoint. We skip those when running the
+         * KDBinit file, because it is done via an artificial breakpoint. */
         if (KdbInitFileBuffer)
         {
-            KdbpCliInterpretInitFile();
-            EnterConditionMet = FALSE;
+            EntryPoint = KdbpCliInterpretInitFile;
+            goto EnterKdbg;
         }
+
         if (!EnterConditionMet)
         {
             return kdHandleException;
@@ -1493,6 +1507,7 @@ KdbEnterDebuggerException(
 
         KdbPrintf("\nEntered debugger on embedded INT3 at 0x%04x:0x%p.\n",
                   Context->SegCs & 0xffff, KeGetContextPc(Context));
+EnterKdbg:;
     }
     else
     {
@@ -1543,8 +1558,8 @@ KdbEnterDebuggerException(
         return kdHandleException;
     }
 
-    /* Call the main loop */
-    KdbpInternalEnter();
+    /* Enter KDBG proper and run either the main loop or the KDBinit file */
+    KdbpInternalEnter(EntryPoint);
 
     /* Check if we should single step */
     if (KdbNumSingleSteps > 0)

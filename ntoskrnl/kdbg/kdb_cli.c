@@ -134,7 +134,7 @@ static ULONG KdbNumberOfColsPrinted = 0;
 static BOOLEAN KdbOutputAborted = FALSE;
 static BOOLEAN KdbRepeatLastCommand = FALSE;
 
-PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
+volatile PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
 BOOLEAN KdbpBugCheckRequested = FALSE;
 
 /* Variables for Dmesg */
@@ -3330,20 +3330,28 @@ KdbpCliMainLoop(
     }
 }
 
-/*!\brief This function is called by KdbEnterDebuggerException...
+/**
+ * @brief
+ * Interprets the KDBinit file from the \SystemRoot\System32\drivers\etc
+ * directory, that has been loaded by KdbpCliInit().
  *
- * Used to interpret the init file in a context with a trapframe setup
- * (KdbpCliInit call KdbEnter which will call KdbEnterDebuggerException which will
- * call this function if KdbInitFileBuffer is not NULL.
- */
+ * This function is used to interpret the init file in the debugger context
+ * with a trap frame set up. KdbpCliInit() enters the debugger by calling
+ * DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C). In turn, this will call
+ * KdbEnterDebuggerException() which will finally call this function if
+ * KdbInitFileBuffer is not NULL.
+ **/
 VOID
 KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
 
+    p1 = InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, NULL);
+    if (!p1)
+        return;
+
     /* Execute the commands in the init file */
-    DPRINT("KDB: Executing KDBinit file...\n");
-    p1 = KdbInitFileBuffer;
+    KdbPuts("KDB: Executing KDBinit file...\n");
     while (p1[0] != '\0')
     {
         size_t i = strcspn(p1, "\r\n");
@@ -3360,11 +3368,12 @@ KdbpCliInterpretInitFile(VOID)
             if (strncmp(p2, "break", sizeof("break")-1) == 0 &&
                 (p2[sizeof("break")-1] == '\0' || isspace(p2[sizeof("break")-1])))
             {
-                /* break into the debugger */
+                /* Run the interactive debugger loop */
                 KdbpCliMainLoop(FALSE);
             }
             else if (p2[0] != '#' && p2[0] != '\0') /* Ignore empty lines and comments */
             {
+                /* Invoke the command */
                 KdbpDoCommand(p1);
             }
 
@@ -3375,14 +3384,14 @@ KdbpCliInterpretInitFile(VOID)
         while (p1[0] == '\r' || p1[0] == '\n')
             p1++;
     }
-    DPRINT("KDB: KDBinit executed\n");
+    KdbPuts("KDB: KDBinit executed\n");
 }
 
 /**
  * @brief   Called when KDB is initialized.
  *
- * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory
- * and executes it.
+ * Loads the KDBinit file from the \SystemRoot\System32\drivers\etc
+ * directory and interprets it, by calling back into the debugger.
  **/
 NTSTATUS
 KdbpCliInit(VOID)
@@ -3393,9 +3402,8 @@ KdbpCliInit(VOID)
     IO_STATUS_BLOCK Iosb;
     FILE_STANDARD_INFORMATION FileStdInfo;
     HANDLE hFile = NULL;
-    INT FileSize;
+    ULONG FileSize;
     PCHAR FileBuffer;
-    ULONG OldEflags;
 
     /* Don't load the KDBinit file if its buffer is already lying around */
     if (KdbInitFileBuffer)
@@ -3416,7 +3424,7 @@ KdbpCliInit(VOID)
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%lx)\n", Status);
+        DPRINT("Could not open %wZ (Status 0x%lx)\n", &FileName, Status);
         return Status;
     }
 
@@ -3427,22 +3435,23 @@ KdbpCliInit(VOID)
     if (!NT_SUCCESS(Status))
     {
         ZwClose(hFile);
-        DPRINT1("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%lx)\n", Status);
+        DPRINT1("Could not query size of %wZ (Status 0x%lx)\n", &FileName, Status);
         return Status;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;
 
-    /* Allocate memory for the file */
-    FileBuffer = ExAllocatePool(PagedPool, FileSize + 1); /* add 1 byte for terminating '\0' */
+    /* Allocate memory for the file (add 1 byte for terminating NUL) */
+    FileBuffer = ExAllocatePool(NonPagedPool, FileSize + 1);
     if (!FileBuffer)
     {
         ZwClose(hFile);
-        DPRINT1("Could not allocate %d bytes for KDBinit file\n", FileSize);
+        DPRINT1("Could not allocate %lu bytes for KDBinit file\n", FileSize);
         return Status;
     }
 
     /* Load file into memory */
-    Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb, FileBuffer, FileSize, NULL, NULL);
+    Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb,
+                        FileBuffer, FileSize, NULL, NULL);
     ZwClose(hFile);
 
     if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
@@ -3452,20 +3461,13 @@ KdbpCliInit(VOID)
         return Status;
     }
 
-    FileSize = min(FileSize, (INT)Iosb.Information);
-    FileBuffer[FileSize] = '\0';
+    FileSize = min(FileSize, (ULONG)Iosb.Information);
+    FileBuffer[FileSize] = ANSI_NULL;
 
-    /* Enter critical section */
-    OldEflags = __readeflags();
-    _disable();
-
-    /* Interpret the init file... */
-    KdbInitFileBuffer = FileBuffer;
-    //KdbEnter(); // FIXME, see commit baa47fa5e
-    KdbInitFileBuffer = NULL;
-
-    /* Leave critical section */
-    __writeeflags(OldEflags);
+    /* Interpret the KDBinit file by calling back into the debugger */
+    InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, FileBuffer);
+    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, NULL);
 
     ExFreePool(FileBuffer);
 
@@ -3607,7 +3609,7 @@ KdbInitialize(
 
     if (BootPhase >= 2)
     {
-        /* I/O is now set up for disk access: Read KDB Data */
+        /* I/O is now set up for disk access: load the KDBinit file */
         NTSTATUS Status = KdbpCliInit();
 
         /* Schedule an I/O reinitialization if needed */
