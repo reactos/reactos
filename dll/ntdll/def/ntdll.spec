@@ -917,7 +917,7 @@
 @ stub -version=0x600+ RtlIdnToAscii
 @ stub -version=0x600+ RtlIdnToNameprepUnicode
 @ stub -version=0x600+ RtlIdnToUnicode
-@ stdcall RtlImageDirectoryEntryToData(long long long ptr)
+@ stdcall RtlImageDirectoryEntryToData(ptr long long ptr)
 @ stdcall RtlImageNtHeader(long)
 @ stdcall RtlImageNtHeaderEx(long ptr double ptr)
 @ stdcall RtlImageRvaToSection(ptr long long)
