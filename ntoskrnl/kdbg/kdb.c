@@ -12,9 +12,6 @@
 #include <ntoskrnl.h>
 #include "kdb.h"
 
-#define NDEBUG
-#include <debug.h>
-
 /* TYPES *********************************************************************/
 
 /* DEFINES *******************************************************************/
@@ -242,7 +239,7 @@ KdbpShouldStepOverInstruction(
 
     if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
     {
-        KdbpPrint("Couldn't access memory at 0x%p\n", Eip);
+        KdbPrintf("Couldn't access memory at 0x%p\n", Eip);
         return FALSE;
     }
 
@@ -312,7 +309,7 @@ KdbpStepIntoInstruction(
     /* Read memory */
     if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
     {
-        /*KdbpPrint("Couldn't access memory at 0x%p\n", Eip);*/
+        // KdbPrintf("Couldn't access memory at 0x%p\n", Eip);
         return FALSE;
     }
 
@@ -336,14 +333,14 @@ KdbpStepIntoInstruction(
     __sidt(&Idtr.Limit);
     if (IntVect >= (Idtr.Limit + 1) / 8)
     {
-        /*KdbpPrint("IDT does not contain interrupt vector %d.\n", IntVect);*/
+        // KdbPrintf("IDT does not contain interrupt vector %d.\n", IntVect);
         return TRUE;
     }
 
     /* Get the interrupt descriptor */
     if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)((ULONG_PTR)Idtr.Base + (IntVect * 8)), sizeof(IntDesc))))
     {
-        /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
+        // KdbPrintf("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));
         return FALSE;
     }
 
@@ -499,13 +496,13 @@ KdbpInsertBreakPoint(
     {
         if ((Address % Size) != 0)
         {
-            KdbpPrint("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
+            KdbPrintf("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
             return STATUS_UNSUCCESSFUL;
         }
 
         if (AccessType == KdbAccessExec && Size != 1)
         {
-            KdbpPrint("Size must be 1 for execution breakpoints.\n");
+            KdbPuts("Size must be 1 for execution breakpoints.\n");
             return STATUS_UNSUCCESSFUL;
         }
     }
@@ -515,16 +512,16 @@ KdbpInsertBreakPoint(
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Parse conditon expression string and duplicate it */
+    /* Parse condition expression string and duplicate it */
     if (ConditionExpression)
     {
         Condition = KdbpRpnParseExpression(ConditionExpression, &ErrOffset, ErrMsg);
         if (!Condition)
         {
             if (ErrOffset >= 0)
-                KdbpPrint("Couldn't parse expression: %s at character %d\n", ErrMsg, ErrOffset);
+                KdbPrintf("Couldn't parse expression: %s at character %d\n", ErrMsg, ErrOffset);
             else
-                KdbpPrint("Couldn't parse expression: %s", ErrMsg);
+                KdbPrintf("Couldn't parse expression: %s", ErrMsg);
 
             return STATUS_UNSUCCESSFUL;
         }
@@ -578,7 +575,7 @@ KdbpInsertBreakPoint(
     KdbBreakPointCount++;
 
     if (Type != KdbBreakPointTemporary)
-        KdbpPrint("Breakpoint %d inserted.\n", i);
+        KdbPrintf("Breakpoint %d inserted.\n", i);
 
     /* Try to enable the breakpoint */
     KdbpEnableBreakPoint(i, NULL);
@@ -611,7 +608,7 @@ KdbpDeleteBreakPoint(
 
     if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
@@ -622,7 +619,7 @@ KdbpDeleteBreakPoint(
 
     if (BreakPoint->Type == KdbBreakPointNone)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
@@ -630,7 +627,7 @@ KdbpDeleteBreakPoint(
         return FALSE;
 
     if (BreakPoint->Type != KdbBreakPointTemporary)
-        KdbpPrint("Breakpoint %d deleted.\n", BreakPointNr);
+        KdbPrintf("Breakpoint %d deleted.\n", BreakPointNr);
 
     BreakPoint->Type = KdbBreakPointNone;
     KdbBreakPointCount--;
@@ -718,7 +715,7 @@ KdbpEnableBreakPoint(
 
     if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
@@ -729,13 +726,13 @@ KdbpEnableBreakPoint(
 
     if (BreakPoint->Type == KdbBreakPointNone)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
     if (BreakPoint->Enabled)
     {
-        KdbpPrint("Breakpoint %d is already enabled.\n", BreakPointNr);
+        KdbPrintf("Breakpoint %d is already enabled.\n", BreakPointNr);
         return TRUE;
     }
 
@@ -744,7 +741,7 @@ KdbpEnableBreakPoint(
     {
         if (KdbSwBreakPointCount >= KDB_MAXIMUM_SW_BREAKPOINT_COUNT)
         {
-            KdbpPrint("Maximum number of SW breakpoints (%d) used. "
+            KdbPrintf("Maximum number of SW breakpoints (%d) used. "
                       "Disable another breakpoint in order to enable this one.\n",
                       KDB_MAXIMUM_SW_BREAKPOINT_COUNT);
             return FALSE;
@@ -754,7 +751,7 @@ KdbpEnableBreakPoint(
                                           0xCC, &BreakPoint->Data.SavedInstruction);
         if (!NT_SUCCESS(Status))
         {
-            KdbpPrint("Couldn't access memory at 0x%p\n", BreakPoint->Address);
+            KdbPrintf("Couldn't access memory at 0x%p\n", BreakPoint->Address);
             return FALSE;
         }
 
@@ -769,10 +766,9 @@ KdbpEnableBreakPoint(
 
         if (KdbHwBreakPointCount >= KDB_MAXIMUM_HW_BREAKPOINT_COUNT)
         {
-            KdbpPrint("Maximum number of HW breakpoints (%d) already used. "
+            KdbPrintf("Maximum number of HW breakpoints (%d) already used. "
                       "Disable another breakpoint in order to enable this one.\n",
                       KDB_MAXIMUM_HW_BREAKPOINT_COUNT);
-
             return FALSE;
         }
 
@@ -853,7 +849,7 @@ KdbpEnableBreakPoint(
 
     BreakPoint->Enabled = TRUE;
     if (BreakPoint->Type != KdbBreakPointTemporary)
-        KdbpPrint("Breakpoint %d enabled.\n", BreakPointNr);
+        KdbPrintf("Breakpoint %d enabled.\n", BreakPointNr);
 
     return TRUE;
 }
@@ -884,7 +880,7 @@ KdbpDisableBreakPoint(
 
     if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
@@ -895,13 +891,13 @@ KdbpDisableBreakPoint(
 
     if (BreakPoint->Type == KdbBreakPointNone)
     {
-        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        KdbPrintf("Invalid breakpoint: %d\n", BreakPointNr);
         return FALSE;
     }
 
     if (BreakPoint->Enabled == FALSE)
     {
-        KdbpPrint("Breakpoint %d is not enabled.\n", BreakPointNr);
+        KdbPrintf("Breakpoint %d is not enabled.\n", BreakPointNr);
         return TRUE;
     }
 
@@ -914,7 +910,7 @@ KdbpDisableBreakPoint(
 
         if (!NT_SUCCESS(Status))
         {
-            KdbpPrint("Couldn't restore original instruction.\n");
+            KdbPuts("Couldn't restore original instruction.\n");
             return FALSE;
         }
 
@@ -959,7 +955,7 @@ KdbpDisableBreakPoint(
 
     BreakPoint->Enabled = FALSE;
     if (BreakPoint->Type != KdbBreakPointTemporary)
-        KdbpPrint("Breakpoint %d disabled.\n", BreakPointNr);
+        KdbPrintf("Breakpoint %d disabled.\n", BreakPointNr);
 
     return TRUE;
 }
@@ -1180,7 +1176,7 @@ KdbpInternalEnter(VOID)
     Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
     Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-    // KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
+    // KdbPrintf("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
 
     KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - KDB_STACK_RESERVE, KdbpCallMainLoop);
 
@@ -1318,7 +1314,7 @@ KdbEnterDebuggerException(
             if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address,
                                                      BreakPoint->Data.SavedInstruction, NULL)))
             {
-                KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
+                KdbPuts("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
                 KeBugCheck(0); // FIXME: Proper bugcode!
             }
 
@@ -1402,17 +1398,17 @@ KdbEnterDebuggerException(
 
         if (BreakPoint->Type == KdbBreakPointSoftware)
         {
-            KdbpPrint("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%p\n",
+            KdbPrintf("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%p\n",
                       KdbLastBreakPointNr, Context->SegCs & 0xffff, KeGetContextPc(Context));
         }
         else if (BreakPoint->Type == KdbBreakPointHardware)
         {
-            KdbpPrint("\nEntered debugger on breakpoint #%d: %s 0x%08x\n",
+            KdbPrintf("\nEntered debugger on breakpoint #%d: %s 0x%08x\n",
                       KdbLastBreakPointNr,
-                     (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
-                     ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
-                     ((BreakPoint->Data.Hw.AccessType == KdbAccessReadWrite) ? "RDWR" : "EXEC")),
-                     BreakPoint->Address);
+                      (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
+                      ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
+                      ((BreakPoint->Data.Hw.AccessType == KdbAccessReadWrite) ? "RDWR" : "EXEC")),
+                      BreakPoint->Address);
         }
     }
     else if (ExceptionCode == STATUS_SINGLE_STEP)
@@ -1433,7 +1429,7 @@ KdbEnterDebuggerException(
             if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address, 0xCC,
                                                      &BreakPoint->Data.SavedInstruction)))
             {
-                KdbpPrint("Warning: Couldn't reenable breakpoint %d\n",
+                KdbPrintf("Warning: Couldn't reenable breakpoint %d\n",
                           BreakPoint - KdbBreakPoints);
             }
 
@@ -1481,7 +1477,7 @@ KdbEnterDebuggerException(
                 return kdHandleException;
             }
 
-            KdbpPrint("\nEntered debugger on unexpected debug trap!\n");
+            KdbPuts("\nEntered debugger on unexpected debug trap!\n");
         }
     }
     else if (ExceptionCode == STATUS_BREAKPOINT)
@@ -1496,31 +1492,28 @@ KdbEnterDebuggerException(
             return kdHandleException;
         }
 
-        KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%p.\n",
+        KdbPrintf("\nEntered debugger on embedded INT3 at 0x%04x:0x%p.\n",
                   Context->SegCs & 0xffff, KeGetContextPc(Context));
     }
     else
     {
         const CHAR *ExceptionString = (ExpNr < RTL_NUMBER_OF(ExceptionNrToString)) ?
-                                      (ExceptionNrToString[ExpNr]) :
-                                      ("Unknown/User defined exception");
+                                      ExceptionNrToString[ExpNr] :
+                                      "Unknown/User defined exception";
 
         if (!EnterConditionMet)
         {
             return ContinueType;
         }
 
-        KdbpPrint("\nEntered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
+        KdbPrintf("\nEntered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
                   FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
 
         if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
             ExceptionRecord && ExceptionRecord->NumberParameters != 0)
         {
-            ULONG_PTR TrapCr2;
-
-            TrapCr2 = __readcr2();
-
-            KdbpPrint("Memory at 0x%p could not be accessed\n", TrapCr2);
+            ULONG_PTR TrapCr2 = __readcr2();
+            KdbPrintf("Memory at 0x%p could not be accessed\n", TrapCr2);
         }
     }
 
