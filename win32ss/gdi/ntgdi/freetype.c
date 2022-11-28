@@ -4276,7 +4276,6 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_BitmapGlyph realglyph;
     INT glyph_index, i, previous;
     ULONGLONG TotalWidth64 = 0;
-    PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL use_kerning;
     LONG ascender, descender;
