@@ -4295,7 +4295,6 @@ TextIntGetTextExtentPoint(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
-
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -6074,7 +6073,6 @@ IntExtTextOutW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
-
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
