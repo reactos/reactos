@@ -703,7 +703,7 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+static LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 {
     LONG tmAveCharWidth;
     TT_OS2 *pOS2;
