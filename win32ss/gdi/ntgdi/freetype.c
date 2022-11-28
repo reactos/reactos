@@ -4304,12 +4304,12 @@ TextIntGetTextExtentPoint(PDC dc,
         Cache.Hashed.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
-    if (FT_IS_SCALABLE(Cache.Face) && plf->lfWidth != 0)
-        IntWidthMatrix(Cache.Face, &Cache.matTransform, plf->lfWidth);
+    if (FT_IS_SCALABLE(Cache.Hashed.Face) && plf->lfWidth != 0)
+        IntWidthMatrix(Cache.Hashed.Face, &Cache.Hashed.matTransform, plf->lfWidth);
     else
-        Cache.matTransform = identityMat;
+        Cache.Hashed.matTransform = identityMat;
 
-    FT_Set_Transform(Cache.Face, &Cache.matTransform, 0);
+    FT_Set_Transform(Cache.Hashed.Face, &Cache.Hashed.matTransform, 0);
 
     use_kerning = FT_HAS_KERNING(Cache.Hashed.Face);
     previous = 0;
