@@ -459,6 +459,11 @@ TestIrpHandler(
         ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
         OrigBuffer = Buffer = MapAndLockUserBuffer(Irp, Length);
         ok(Buffer != NULL, "Null pointer!\n");
+        if (Buffer == NULL)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            goto Exit;
+        }
 
         if (Offset.QuadPart < Fcb->Header.FileSize.QuadPart)
         {
@@ -545,6 +550,7 @@ TestIrpHandler(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
+Exit:
     FsRtlExitFileSystem();
 
     return Status;
