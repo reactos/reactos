@@ -4585,8 +4585,15 @@ ftGdiGetTextMetricsW(
         Face = FontGDI->SharedFace->Face;
 
         IntLockFreeType();
+
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
+
+        // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
+        if (FT_IS_SCALABLE(Cache.Hashed.Face) && plf->lfWidth != 0)
+            IntWidthMatrix(Cache.Hashed.Face, &mat, plf->lfWidth);
+        else
+            mat = identityMat;
+
         FT_Set_Transform(Face, &mat, 0);
         IntUnLockFreeType();
 
@@ -4597,7 +4604,6 @@ ftGdiGetTextMetricsW(
         }
         else
         {
-            FT_Face Face = FontGDI->SharedFace->Face;
             Status = STATUS_SUCCESS;
 
             IntLockFreeType();
