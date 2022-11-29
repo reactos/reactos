@@ -4589,8 +4589,8 @@ ftGdiGetTextMetricsW(
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
-        if (FT_IS_SCALABLE(Cache.Hashed.Face) && plf->lfWidth != 0)
-            IntWidthMatrix(Cache.Hashed.Face, &mat, plf->lfWidth);
+        if (FT_IS_SCALABLE(Face) && plf->lfWidth != 0)
+            IntWidthMatrix(Face, &mat, plf->lfWidth);
         else
             mat = identityMat;
 
