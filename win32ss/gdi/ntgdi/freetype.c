@@ -5855,7 +5855,10 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-/* Calculate width of the text. */
+/*
+ * Calculate X and Y disposition of the text.
+ * NOTE: The disposition can be negative.
+ */
 static BOOL
 ftGdiGetTextDisposition(
     LONGLONG *pX64,
