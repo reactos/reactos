@@ -4590,11 +4590,15 @@ ftGdiGetTextMetricsW(
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         if (FT_IS_SCALABLE(Face) && plf->lfWidth != 0)
+        {
             IntWidthMatrix(Face, &mat, plf->lfWidth);
+            FT_Set_Transform(Face, &mat, 0);
+        }
         else
-            mat = identityMat;
+        {
+            FT_Set_Transform(Face, &identityMat, 0);
+        }
 
-        FT_Set_Transform(Face, &mat, 0);
         IntUnLockFreeType();
 
         if (0 != Error)
