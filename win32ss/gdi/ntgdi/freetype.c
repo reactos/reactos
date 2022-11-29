@@ -6143,9 +6143,15 @@ IntExtTextOutW(
 
         /* Adjust the horizontal position by horizontal alignment */
         if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
+        {
             RealXStart64 -= DeltaX64 / 2;
+            RealYStart64 -= DeltaY64 / 2;
+        }
         else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
+        {
             RealXStart64 -= DeltaX64;
+            RealYStart64 -= DeltaY64;
+        }
 
         /* Fill background */
         if (fuOptions & ETO_OPAQUE)
