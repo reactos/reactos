@@ -95,6 +95,12 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             PathRemoveExtensionW(szDest);
             StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
+            if (PathFileExistsW(szDest))
+            {
+                CStringW strName(PathFindFileNameW(szDest));
+                PathYetAnotherMakeUniqueName(szDest, szDir, NULL, strName);
+            }
+
             pszSourceExt = PathFindExtensionW(szSrc);
             if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
             {
