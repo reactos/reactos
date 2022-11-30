@@ -3554,16 +3554,10 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     EmHeight = max(EmHeight, 1);
     EmHeight = min(EmHeight, USHORT_MAX);
 
-    if (FT_IS_SCALABLE(face) && lfWidth > 0)
-    {
-        Width64 = (lfWidth * 96) / 72;      /* pixels to points */
-        Width64 <<= 6;                      /* 64 times */
-        Width64 = (Width64 * 167) / 100;    /* ??? FIXME */
-    }
+    if (pOS2 && lfWidth > 0)
+        Width64 = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
     else
-    {
         Width64 = 0;
-    }
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = Width64;
