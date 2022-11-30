@@ -703,6 +703,14 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
+static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
+{
+    nTenthsOfDegrees %= 360 * 10;
+    if (nTenthsOfDegrees >= 0)
+        return nTenthsOfDegrees;
+    return nTenthsOfDegrees + 360 * 10;
+}
+
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
     FT_Vector vecAngle;
@@ -4254,10 +4262,10 @@ TextIntGetTextExtentPoint(PDC dc,
 {
     PFONTGDI FontGDI;
     FT_BitmapGlyph realglyph;
-    INT glyph_index, i, previous;
+    INT glyph_index, i, previous, nTenthsOfDegrees;
     ULONGLONG TotalWidth64 = 0;
     LOGFONTW *plf;
-    BOOL use_kerning;
+    BOOL use_kerning, bVerticalWriting;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
 
@@ -4274,6 +4282,10 @@ TextIntGetTextExtentPoint(PDC dc,
     Cache.Hashed.lfWidth = plf->lfWidth;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
+
+    // Check vertical writing (tategaki)
+    nTenthsOfDegrees = IntNormalizeAngle(labs(plf->lfEscapement - plf->lfOrientation));
+    bVerticalWriting = ((nTenthsOfDegrees == 90 * 10) || (nTenthsOfDegrees == 270 * 10));
 
     if (IntIsFontRenderingEnabled())
         Cache.Hashed.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);
@@ -4331,8 +4343,16 @@ TextIntGetTextExtentPoint(PDC dc,
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
 
-    Size->cx = (TotalWidth64 + 32) >> 6;
-    Size->cy = ascender + descender;
+    if (bVerticalWriting)
+    {
+        Size->cx = ascender + descender;
+        Size->cy = (TotalWidth64 + 32) >> 6;
+    }
+    else
+    {
+        Size->cx = (TotalWidth64 + 32) >> 6;
+        Size->cy = ascender + descender;
+    }
 
     return TRUE;
 }
