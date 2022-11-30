@@ -2155,12 +2155,13 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
                                     - ((Ascent + Descent)
                                        - (pHori->Ascender - pHori->Descender)),
                                     YScale) + 32) >> 6);
+    if (FontGDI->lfWidth != 0)
+        TM->tmAveCharWidth = FontGDI->lfWidth;
+    else
+        TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
 
-    TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
     if (TM->tmAveCharWidth == 0)
-    {
         TM->tmAveCharWidth = 1;
-    }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
@@ -3553,10 +3554,16 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     EmHeight = max(EmHeight, 1);
     EmHeight = min(EmHeight, USHORT_MAX);
 
-    if (FT_IS_SCALABLE(face))
-        Width64 = min(lfWidth, USHORT_MAX) << 6;
+    if (FT_IS_SCALABLE(face) && lfWidth > 0)
+    {
+        Width64 = (lfWidth * 96) / 72;      /* pixels to points */
+        Width64 <<= 6;                      /* 64 times */
+        Width64 = (Width64 * 167) / 100;    /* ??? FIXME */
+    }
     else
+    {
         Width64 = 0;
+    }
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = Width64;
