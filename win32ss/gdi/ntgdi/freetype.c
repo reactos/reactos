@@ -3445,7 +3445,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec WinFNT;
-    LONG Ascent, Descent, Sum, EmHeight, Width;
+    LONG Ascent, Descent, Sum, EmHeight, Width64;
 
     lfWidth = abs(lfWidth);
     if (lfHeight == 0)
@@ -3553,22 +3553,12 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     EmHeight = min(EmHeight, USHORT_MAX);
 
     if (FT_IS_SCALABLE(face))
-    {
-        FT_Fixed XScale = face->size->metrics.x_scale;
-        LONG tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
-        if (tmAveCharWidth == 0)
-        {
-            tmAveCharWidth = 1;
-        }
-        Width = (lfWidth << 6) / tmAveCharWidth;
-    }
+        Width64 = min(lfWidth, USHORT_MAX) << 6;
     else
-    {
-        Width = 0;
-    }
+        Width64 = 0;
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
-    req.width          = Width;
+    req.width          = Width64;
     req.height         = (EmHeight << 6);
     req.horiResolution = 0;
     req.vertResolution = 0;
