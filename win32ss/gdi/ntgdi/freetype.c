@@ -703,37 +703,12 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-static LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
 {
-    LONG tmAveCharWidth;
-    TT_OS2 *pOS2;
-    FT_Fixed XScale;
-
-    *pmat = identityMat;
-
-    if (lfWidth == 0)
-        return 0;
-
-    ASSERT_FREETYPE_LOCK_HELD();
-    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
-    if (!pOS2)
-        return 0;
-
-    XScale = face->size->metrics.x_scale;
-    tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
-    if (tmAveCharWidth == 0)
-    {
-        tmAveCharWidth = 1;
-    }
-
-    if (lfWidth == tmAveCharWidth)
-        return 0;
-
-    pmat->xx = INT_TO_FIXED(lfWidth) / tmAveCharWidth;
-    pmat->xy = 0;
-    pmat->yx = 0;
-    pmat->yy = INT_TO_FIXED(1);
-    return lfWidth;
+    nTenthsOfDegrees %= 360 * 10;
+    if (nTenthsOfDegrees >= 0)
+        return nTenthsOfDegrees;
+    return nTenthsOfDegrees + 360 * 10;
 }
 
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
@@ -2188,12 +2163,13 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
                                     - ((Ascent + Descent)
                                        - (pHori->Ascender - pHori->Descender)),
                                     YScale) + 32) >> 6);
+    if (FontGDI->lfWidth != 0)
+        TM->tmAveCharWidth = FontGDI->lfWidth;
+    else
+        TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
 
-    TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
     if (TM->tmAveCharWidth == 0)
-    {
         TM->tmAveCharWidth = 1;
-    }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
@@ -3145,6 +3121,7 @@ ftGdiGlyphCacheGet(IN const FONT_CACHE_ENTRY *pCache)
             FontEntry->Hashed.GlyphIndex == pCache->Hashed.GlyphIndex &&
             FontEntry->Hashed.Face == pCache->Hashed.Face &&
             FontEntry->Hashed.lfHeight == pCache->Hashed.lfHeight &&
+            FontEntry->Hashed.lfWidth == pCache->Hashed.lfWidth &&
             FontEntry->Hashed.AspectValue == pCache->Hashed.AspectValue &&
             memcmp(&FontEntry->Hashed.matTransform, &pCache->Hashed.matTransform,
                    sizeof(FT_Matrix)) == 0)
@@ -3478,7 +3455,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec WinFNT;
-    LONG Ascent, Descent, Sum, EmHeight;
+    LONG Ascent, Descent, Sum, EmHeight, Width64;
 
     lfWidth = abs(lfWidth);
     if (lfHeight == 0)
@@ -3497,8 +3474,12 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     if (lfHeight == -1)
         lfHeight = -2;
 
-    if (FontGDI->Magic == FONTGDI_MAGIC && FontGDI->lfHeight == lfHeight)
+    if (FontGDI->Magic == FONTGDI_MAGIC &&
+        FontGDI->lfHeight == lfHeight &&
+        FontGDI->lfWidth == lfWidth)
+    {
         return 0; /* Cached */
+    }
 
     ASSERT_FREETYPE_LOCK_HELD();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
@@ -3520,6 +3501,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmInternalLeading  = WinFNT.internal_leading;
         FontGDI->Magic              = FONTGDI_MAGIC;
         FontGDI->lfHeight           = lfHeight;
+        FontGDI->lfWidth            = lfWidth;
         return 0;
     }
 
@@ -3574,13 +3556,19 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 
     FontGDI->Magic = FONTGDI_MAGIC;
     FontGDI->lfHeight = lfHeight;
+    FontGDI->lfWidth = lfWidth;
 
     EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     EmHeight = max(EmHeight, 1);
     EmHeight = min(EmHeight, USHORT_MAX);
 
+    if (pOS2 && lfWidth > 0)
+        Width64 = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
+    else
+        Width64 = 0;
+
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
-    req.width          = 0;
+    req.width          = Width64;
     req.height         = (EmHeight << 6);
     req.horiResolution = 0;
     req.vertResolution = 0;
@@ -3805,7 +3793,7 @@ ftGdiGetGlyphOutline(
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
     FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
-    FT_Set_Transform(ft_face, &mat, 0);
+    FT_Set_Transform(ft_face, &mat, NULL);
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -4274,10 +4262,10 @@ TextIntGetTextExtentPoint(PDC dc,
 {
     PFONTGDI FontGDI;
     FT_BitmapGlyph realglyph;
-    INT glyph_index, i, previous;
+    INT glyph_index, i, previous, nTenthsOfDegrees;
     ULONGLONG TotalWidth64 = 0;
     LOGFONTW *plf;
-    BOOL use_kerning;
+    BOOL use_kerning, bVerticalWriting;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
 
@@ -4289,14 +4277,15 @@ TextIntGetTextExtentPoint(PDC dc,
         *Fit = 0;
     }
 
-    IntLockFreeType();
-
-    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
-
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
+    Cache.Hashed.lfWidth = plf->lfWidth;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
+
+    // Check vertical writing (tategaki)
+    nTenthsOfDegrees = IntNormalizeAngle(plf->lfEscapement - plf->lfOrientation);
+    bVerticalWriting = ((nTenthsOfDegrees == 90 * 10) || (nTenthsOfDegrees == 270 * 10));
 
     if (IntIsFontRenderingEnabled())
         Cache.Hashed.Aspect.RenderMode = (BYTE)IntGetFontRenderMode(plf);
@@ -4304,12 +4293,10 @@ TextIntGetTextExtentPoint(PDC dc,
         Cache.Hashed.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
-    if (FT_IS_SCALABLE(Cache.Hashed.Face) && plf->lfWidth != 0)
-        IntWidthMatrix(Cache.Hashed.Face, &Cache.Hashed.matTransform, plf->lfWidth);
-    else
-        Cache.Hashed.matTransform = identityMat;
-
-    FT_Set_Transform(Cache.Hashed.Face, &Cache.Hashed.matTransform, 0);
+    IntLockFreeType();
+    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    Cache.Hashed.matTransform = identityMat;
+    FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
     use_kerning = FT_HAS_KERNING(Cache.Hashed.Face);
     previous = 0;
@@ -4356,8 +4343,16 @@ TextIntGetTextExtentPoint(PDC dc,
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
 
-    Size->cx = (TotalWidth64 + 32) >> 6;
-    Size->cy = ascender + descender;
+    if (bVerticalWriting)
+    {
+        Size->cx = ascender + descender;
+        Size->cy = (TotalWidth64 + 32) >> 6;
+    }
+    else
+    {
+        Size->cx = (TotalWidth64 + 32) >> 6;
+        Size->cy = ascender + descender;
+    }
 
     return TRUE;
 }
@@ -4561,7 +4556,6 @@ ftGdiGetTextMetricsW(
     ULONG Error;
     NTSTATUS Status = STATUS_SUCCESS;
     LOGFONTW *plf;
-    FT_Matrix mat;
 
     if (!ptmwi)
     {
@@ -4584,10 +4578,11 @@ ftGdiGetTextMetricsW(
 
         Face = FontGDI->SharedFace->Face;
 
+        // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         IntLockFreeType();
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
-        FT_Set_Transform(Face, &mat, 0);
+        FT_Set_Transform(Face, NULL, NULL);
+
         IntUnLockFreeType();
 
         if (0 != Error)
@@ -4597,7 +4592,6 @@ ftGdiGetTextMetricsW(
         }
         else
         {
-            FT_Face Face = FontGDI->SharedFace->Face;
             Status = STATUS_SUCCESS;
 
             IntLockFreeType();
@@ -6073,6 +6067,7 @@ IntExtTextOutW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
+    Cache.Hashed.lfWidth = plf->lfWidth;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -6093,7 +6088,7 @@ IntExtTextOutW(
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, 0);
+        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
         fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
         fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
@@ -6102,7 +6097,7 @@ IntExtTextOutW(
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
         FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, 0);
+        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
         fixAscender = FontGDI->tmAscent << 6;
         fixDescender = FontGDI->tmDescent << 6;
@@ -6594,11 +6589,9 @@ NtGdiGetCharABCWidthsW(
     PFONTGDI FontGDI;
     FT_Face face;
     FT_CharMap charmap, found = NULL;
-    FT_Matrix mat;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    PMATRIX pmxWorldToDevice;
     PWCHAR Safepwch = NULL;
     LOGFONTW *plf;
 
@@ -6668,8 +6661,6 @@ NtGdiGetCharABCWidthsW(
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
 
-    /* Get the DC's world-to-device transformation matrix */
-    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
@@ -6716,10 +6707,11 @@ NtGdiGetCharABCWidthsW(
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+
+    // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
     IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FtMatrixFromMx(&mat, pmxWorldToDevice);
-    FT_Set_Transform(face, &mat, 0);
+    FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -6801,10 +6793,8 @@ NtGdiGetCharWidthW(
     PFONTGDI FontGDI;
     FT_Face face;
     FT_CharMap charmap, found = NULL;
-    FT_Matrix mat;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
-    PMATRIX pmxWorldToDevice;
     PWCHAR Safepwc = NULL;
     LOGFONTW *plf;
 
@@ -6861,8 +6851,6 @@ NtGdiGetCharWidthW(
     pdcattr = dc->pdcattr;
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
-    /* Get the DC's world-to-device transformation matrix */
-    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
@@ -6908,10 +6896,11 @@ NtGdiGetCharWidthW(
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+
+    // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
     IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FtMatrixFromMx(&mat, pmxWorldToDevice);
-    FT_Set_Transform(face, &mat, 0);
+    FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
