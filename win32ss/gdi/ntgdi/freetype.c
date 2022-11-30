@@ -4283,7 +4283,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
     Cache.Hashed.matTransform = identityMat;
-    FT_Set_Transform(Cache.Hashed.Face, &Cache.Hashed.matTransform, 0);
+    FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
     use_kerning = FT_HAS_KERNING(Cache.Hashed.Face);
     previous = 0;
@@ -4561,7 +4561,7 @@ ftGdiGetTextMetricsW(
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FT_Set_Transform(Face, (FT_Matrix*)&identityMat, 0);
+        FT_Set_Transform(Face, NULL, NULL);
 
         IntUnLockFreeType();
 
@@ -6067,7 +6067,7 @@ IntExtTextOutW(
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, 0);
+        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
         fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
         fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
@@ -6076,7 +6076,7 @@ IntExtTextOutW(
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
         FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, 0);
+        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
         fixAscender = FontGDI->tmAscent << 6;
         fixDescender = FontGDI->tmDescent << 6;
@@ -6690,7 +6690,7 @@ NtGdiGetCharABCWidthsW(
 
     // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FT_Set_Transform(face, (FT_Matrix*)&identityMat, 0);
+    FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -6879,7 +6879,7 @@ NtGdiGetCharWidthW(
 
     // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-    FT_Set_Transform(face, (FT_Matrix*)&identityMat, 0);
+    FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
