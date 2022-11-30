@@ -3783,7 +3783,7 @@ ftGdiGetGlyphOutline(
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
     FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
-    FT_Set_Transform(ft_face, &mat, 0);
+    FT_Set_Transform(ft_face, &mat, NULL);
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -4267,10 +4267,6 @@ TextIntGetTextExtentPoint(PDC dc,
         *Fit = 0;
     }
 
-    IntLockFreeType();
-
-    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
-
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
@@ -4282,6 +4278,8 @@ TextIntGetTextExtentPoint(PDC dc,
         Cache.Hashed.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
+    IntLockFreeType();
+    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
@@ -4325,7 +4323,7 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
-    ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
+
     ascender = FontGDI->tmAscent; /* Units above baseline */
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
@@ -4557,9 +4555,8 @@ ftGdiGetTextMetricsW(
 
         Face = FontGDI->SharedFace->Face;
 
-        IntLockFreeType();
-
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
+        IntLockFreeType();
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
         FT_Set_Transform(Face, NULL, NULL);
 
@@ -6686,9 +6683,9 @@ NtGdiGetCharABCWidthsW(
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    IntLockFreeType();
 
     // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
+    IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
 
@@ -6875,9 +6872,9 @@ NtGdiGetCharWidthW(
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    IntLockFreeType();
 
     // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
+    IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
 
