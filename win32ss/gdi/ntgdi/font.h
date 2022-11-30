@@ -42,6 +42,7 @@ typedef struct _FONT_CACHE_HASHED
     INT GlyphIndex;
     FT_Face Face;
     LONG lfHeight;
+    LONG lfWidth;
     _ANONYMOUS_UNION union {
         DWORD AspectValue;
         FONT_ASPECT Aspect;

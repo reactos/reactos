@@ -3112,6 +3112,7 @@ ftGdiGlyphCacheGet(IN const FONT_CACHE_ENTRY *pCache)
             FontEntry->Hashed.GlyphIndex == pCache->Hashed.GlyphIndex &&
             FontEntry->Hashed.Face == pCache->Hashed.Face &&
             FontEntry->Hashed.lfHeight == pCache->Hashed.lfHeight &&
+            FontEntry->Hashed.lfWidth == pCache->Hashed.lfWidth &&
             FontEntry->Hashed.AspectValue == pCache->Hashed.AspectValue &&
             memcmp(&FontEntry->Hashed.matTransform, &pCache->Hashed.matTransform,
                    sizeof(FT_Matrix)) == 0)
@@ -4269,6 +4270,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
+    Cache.Hashed.lfWidth = plf->lfWidth;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -4323,7 +4325,7 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
-
+    ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
     ascender = FontGDI->tmAscent; /* Units above baseline */
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
@@ -6044,6 +6046,7 @@ IntExtTextOutW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
+    Cache.Hashed.lfWidth = plf->lfWidth;
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
