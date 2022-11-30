@@ -4284,7 +4284,7 @@ TextIntGetTextExtentPoint(PDC dc,
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
     // Check vertical writing (tategaki)
-    nTenthsOfDegrees = IntNormalizeAngle(labs(plf->lfEscapement - plf->lfOrientation));
+    nTenthsOfDegrees = IntNormalizeAngle(plf->lfEscapement - plf->lfOrientation);
     bVerticalWriting = ((nTenthsOfDegrees == 90 * 10) || (nTenthsOfDegrees == 270 * 10));
 
     if (IntIsFontRenderingEnabled())
