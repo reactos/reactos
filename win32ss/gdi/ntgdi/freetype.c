@@ -6037,7 +6037,6 @@ IntExtTextOutW(
     LONGLONG X64, Y64, RealXStart64, RealYStart64, DeltaX64, DeltaY64;
     ULONG previous;
     RECTL DestRect, MaskRect;
-    POINTL BrushOrigin;
     HBITMAP HSourceGlyph;
     SIZEL bitSize;
     FONTOBJ *FontObj;
@@ -6101,8 +6100,6 @@ IntExtTextOutW(
 
     MaskRect.left = 0;
     MaskRect.top = 0;
-    BrushOrigin.x = 0;
-    BrushOrigin.y = 0;
 
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj;
@@ -6398,7 +6395,7 @@ IntExtTextOutW(
                                &DestRect,
                                (PPOINTL)&MaskRect,
                                &dc->eboText.BrushObject,
-                               &BrushOrigin))
+                               &PointZero))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
