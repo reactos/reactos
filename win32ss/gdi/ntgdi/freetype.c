@@ -5861,12 +5861,12 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
  */
 static BOOL
 ftGdiGetTextDisposition(
-    LONGLONG *pX64,
-    LONGLONG *pY64,
-    LPCWSTR String,
-    INT Count,
-    PFONT_CACHE_ENTRY Cache,
-    UINT fuOptions)
+    OUT LONGLONG *pX64,
+    OUT LONGLONG *pY64,
+    IN LPCWSTR String,
+    IN INT Count,
+    IN OUT PFONT_CACHE_ENTRY Cache,
+    IN UINT fuOptions)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT glyph_index;
@@ -6099,19 +6099,20 @@ IntExtTextOutW(
     else
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
 
+    /* Apply the world transformation */
     FtMatrixFromMx(&mat, pmxWorldToDevice);
     FT_Matrix_Multiply(&mat, &Cache.Hashed.matTransform);
     FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
+    /* Calculate the ascent point and the descent point */
     vecAscent64.x = 0;
     vecAscent64.y = FontGDI->tmAscent << 6;
     FT_Vector_Transform(&vecAscent64, &Cache.Hashed.matTransform);
-
     vecDescent64.x = 0;
     vecDescent64.y = FontGDI->tmDescent << 6;
     FT_Vector_Transform(&vecDescent64, &Cache.Hashed.matTransform);
 
-    /* Process the vertical alignment. */
+    /* Process the vertical alignment and fix the real starting point. */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
     if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
     {
@@ -6124,7 +6125,7 @@ IntExtTextOutW(
     }
     else /* TA_TOP */
     {
-        RealXStart64 -= vecDescent64.y;
+        RealXStart64 -= vecAscent64.x;
         RealYStart64 += vecAscent64.y;
     }
 #undef VALIGN_MASK
