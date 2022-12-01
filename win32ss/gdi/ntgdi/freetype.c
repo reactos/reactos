@@ -5860,16 +5860,17 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
  * NOTE: The disposition can be negative.
  */
 static BOOL
-ftGdiGetTextDisposition(
+IntGetTextDisposition(
     OUT LONGLONG *pX64,
     OUT LONGLONG *pY64,
     IN LPCWSTR String,
     IN INT Count,
+    IN OPTIONAL LPINT Dx,
     IN OUT PFONT_CACHE_ENTRY Cache,
     IN UINT fuOptions)
 {
     LONGLONG X64 = 0, Y64 = 0;
-    INT glyph_index;
+    INT i, glyph_index;
     FT_BitmapGlyph realglyph;
     FT_Face face = Cache->Hashed.Face;
     BOOL use_kerning = FT_HAS_KERNING(face);
@@ -5878,7 +5879,7 @@ ftGdiGetTextDisposition(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    while (Count-- > 0)
+    for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
         Cache->Hashed.GlyphIndex = glyph_index;
@@ -5892,10 +5893,28 @@ ftGdiGetTextDisposition(
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             X64 += delta.x;
+            Y64 += delta.y;
         }
 
-        X64 += realglyph->root.advance.x >> 10;
-        Y64 += realglyph->root.advance.y >> 10;
+        if (NULL == Dx)
+        {
+            X64 += realglyph->root.advance.x >> 10;
+            Y64 += realglyph->root.advance.y >> 10;
+        }
+        else if (fuOptions & ETO_PDY)
+        {
+            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
+            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            X64 += vec.x;
+            Y64 += vec.y;
+        }
+        else
+        {
+            FT_Vector vec = { Dx[i] << 6, 0 };
+            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            X64 += vec.x;
+            Y64 += vec.y;
+        }
 
         if (Cache->Hashed.Aspect.EmuBoldItalic)
             FT_Done_Glyph((FT_Glyph)realglyph);
@@ -6088,6 +6107,7 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
+    /* Apply lfEscapement */
     if (FT_IS_SCALABLE(face) && plf->lfEscapement != 0)
         IntEscapeMatrix(&Cache.Hashed.matTransform, plf->lfEscapement);
     else
@@ -6106,7 +6126,7 @@ IntExtTextOutW(
 
     /* Calculate the ascent point and the descent point */
     vecAscent64.x = 0;
-    vecAscent64.y = FontGDI->tmAscent << 6;
+    vecAscent64.y = -(FontGDI->tmAscent << 6);
     FT_Vector_Transform(&vecAscent64, &Cache.Hashed.matTransform);
     vecDescent64.x = 0;
     vecDescent64.y = FontGDI->tmDescent << 6;
@@ -6135,7 +6155,7 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!ftGdiGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, &Cache, fuOptions))
+        if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache, fuOptions))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6225,6 +6245,7 @@ IntExtTextOutW(
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             X64 += delta.x;
+            Y64 += delta.y;
         }
 
         DPRINT("X64: %I64d\n", X64);
@@ -6324,8 +6345,26 @@ IntExtTextOutW(
             break;
         }
 
-        X64 += realglyph->root.advance.x >> 10;
-        Y64 += realglyph->root.advance.y >> 10;
+        if (NULL == Dx)
+        {
+            X64 += realglyph->root.advance.x >> 10;
+            Y64 += realglyph->root.advance.y >> 10;
+        }
+        else if (fuOptions & ETO_PDY)
+        {
+            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
+            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            X64 += vec.x;
+            Y64 += vec.y;
+        }
+        else
+        {
+            FT_Vector vec = { Dx[i] << 6, 0 };
+            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            X64 += vec.x;
+            Y64 += vec.y;
+        }
+
         DPRINT("New X64: %I64d, New Y64: %I64d\n", X64, Y64);
 
         if (DxShift)
