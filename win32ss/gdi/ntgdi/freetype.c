@@ -5893,7 +5893,7 @@ IntGetTextDisposition(
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             X64 += delta.x;
-            Y64 += delta.y;
+            Y64 -= delta.y;
         }
 
         if (NULL == Dx)
@@ -6242,7 +6242,7 @@ IntExtTextOutW(
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             X64 += delta.x;
-            Y64 += delta.y;
+            Y64 -= delta.y;
         }
 
         DPRINT("X64, Y64: %I64d, %I64d\n", X64, Y64);
