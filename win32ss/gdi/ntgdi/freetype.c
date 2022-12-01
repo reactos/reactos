@@ -6245,9 +6245,8 @@ IntExtTextOutW(
             Y64 += delta.y;
         }
 
-        DPRINT("X64: %I64d\n", X64);
-        DPRINT("Y64: %I64d\n", Y64);
-        DPRINT("Advance: %d\n", realglyph->root.advance.x);
+        DPRINT("X64, Y64: %I64d, %I64d\n", X64, Y64);
+        DPRINT("Advance: %d, %d\n", realglyph->root.advance.x, realglyph->root.advance.y);
 
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
@@ -6362,7 +6361,7 @@ IntExtTextOutW(
             Y64 -= vec.y;
         }
 
-        DPRINT("New X64: %I64d, New Y64: %I64d\n", X64, Y64);
+        DPRINT("New X64, New Y64: %I64d, %I64d\n", X64, Y64);
 
         previous = glyph_index;
 
