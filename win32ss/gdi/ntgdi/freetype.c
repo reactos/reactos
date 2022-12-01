@@ -711,7 +711,7 @@ static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
     return nTenthsOfDegrees + 360 * 10;
 }
 
-VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
+static VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
     FT_Vector vecAngle;
     /* Convert the angle in tenths of degrees into degrees as a 16.16 fixed-point value */
@@ -723,7 +723,7 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = pmat->xx;
 }
 
-VOID FASTCALL
+static VOID FASTCALL
 FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 {
     FLOATOBJ ef;
@@ -5857,14 +5857,15 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 
 /* Calculate width of the text. */
 static BOOL
-ftGdiGetTextWidth(
-    LONGLONG *pTextWidth64,
+ftGdiGetTextDisposition(
+    LONGLONG *pX64,
+    LONGLONG *pY64,
     LPCWSTR String,
     INT Count,
     PFONT_CACHE_ENTRY Cache,
     UINT fuOptions)
 {
-    LONGLONG TextLeft64 = 0;
+    LONGLONG X64 = 0, Y64 = 0;
     INT glyph_index;
     FT_BitmapGlyph realglyph;
     FT_Face face = Cache->Hashed.Face;
@@ -5887,10 +5888,11 @@ ftGdiGetTextWidth(
         if (use_kerning && previous && glyph_index)
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextLeft64 += delta.x;
+            X64 += delta.x;
         }
 
-        TextLeft64 += realglyph->root.advance.x >> 10;
+        X64 += realglyph->root.advance.x >> 10;
+        Y64 += realglyph->root.advance.y >> 10;
 
         if (Cache->Hashed.Aspect.EmuBoldItalic)
             FT_Done_Glyph((FT_Glyph)realglyph);
@@ -5899,7 +5901,8 @@ ftGdiGetTextWidth(
         String++;
     }
 
-    *pTextWidth64 = TextLeft64;
+    *pX64 = X64;
+    *pY64 = Y64;
     return TRUE;
 }
 
@@ -5925,11 +5928,11 @@ IntExtTextOutW(
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj, *SourceGlyphSurf;
     SURFACE *psurf;
-    INT glyph_index, i, yoff;
+    INT glyph_index, i;
     FT_Face face;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft64, RealXStart64, TextWidth64;
-    ULONG TextTop, previous;
+    LONGLONG X64, Y64, RealXStart64, RealYStart64, DeltaX64, DeltaY64;
+    ULONG previous;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
@@ -5941,12 +5944,11 @@ IntExtTextOutW(
     POINT Start;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
-    LONG fixAscender, fixDescender;
-    FLOATOBJ Scale;
+    FT_Vector delta, vecAscent64, vecDescent64;
     LOGFONTW *plf;
     BOOL use_kerning, bResult, DoBreak;
-    FT_Vector delta;
     FONT_CACHE_ENTRY Cache;
+    FT_Matrix mat;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -5993,7 +5995,7 @@ IntExtTextOutW(
 
     IntLPtoDP(dc, &Start, 1);
     RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
-    YStart = Start.y + dc->ptlDCOrig.y;
+    RealYStart64 = ((LONGLONG)Start.y + dc->ptlDCOrig.y) << 6;
 
     SourcePoint.x = 0;
     SourcePoint.y = 0;
@@ -6083,36 +6085,45 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
+    if (FT_IS_SCALABLE(face) && plf->lfEscapement != 0)
+        IntEscapeMatrix(&Cache.Hashed.matTransform, plf->lfEscapement);
+    else
+        Cache.Hashed.matTransform = identityMat;
+
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
     if (pdcattr->iGraphicsMode == GM_ADVANCED)
-    {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-        FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
-
-        fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
-        fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
-    }
     else
-    {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
-        FtMatrixFromMx(&Cache.Hashed.matTransform, pmxWorldToDevice);
-        FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
-        fixAscender = FontGDI->tmAscent << 6;
-        fixDescender = FontGDI->tmDescent << 6;
-    }
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    FT_Matrix_Multiply(&mat, &Cache.Hashed.matTransform);
+    FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
-    /*
-     * Process the vertical alignment and determine the yoff.
-     */
+    vecAscent64.x = 0;
+    vecAscent64.y = FontGDI->tmAscent << 6;
+    FT_Vector_Transform(&vecAscent64, &Cache.Hashed.matTransform);
+
+    vecDescent64.x = 0;
+    vecDescent64.y = FontGDI->tmDescent << 6;
+    FT_Vector_Transform(&vecDescent64, &Cache.Hashed.matTransform);
+
+    /* Process the vertical alignment. */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
     if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
-        yoff = 0;
+    {
+        NOTHING;
+    }
     else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
-        yoff = -(fixDescender >> 6);
+    {
+        RealXStart64 += vecDescent64.x;
+        RealYStart64 -= vecDescent64.y;
+    }
     else /* TA_TOP */
-        yoff = fixAscender >> 6;
+    {
+        RealXStart64 -= vecDescent64.y;
+        RealYStart64 += vecAscent64.y;
+    }
 #undef VALIGN_MASK
 
     use_kerning = FT_HAS_KERNING(face);
@@ -6120,7 +6131,7 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!ftGdiGetTextWidth(&TextWidth64, String, Count, &Cache, fuOptions))
+        if (!ftGdiGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, &Cache, fuOptions))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6129,17 +6140,17 @@ IntExtTextOutW(
 
         /* Adjust the horizontal position by horizontal alignment */
         if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
-            RealXStart64 -= TextWidth64 / 2;
+            RealXStart64 -= DeltaX64 / 2;
         else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
-            RealXStart64 -= TextWidth64;
+            RealXStart64 -= DeltaX64;
 
         /* Fill background */
         if (fuOptions & ETO_OPAQUE)
         {
             DestRect.left   = (RealXStart64 + 32) >> 6;
-            DestRect.right  = (RealXStart64 + TextWidth64 + 32) >> 6;
-            DestRect.top    = YStart;
-            DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
+            DestRect.right  = (RealXStart64 + DeltaX64 + 32) >> 6;
+            DestRect.top    = (RealYStart64 - vecAscent64.y + 32) >> 6;
+            DestRect.bottom = (RealYStart64 + vecDescent64.y + 32) >> 6;
 
             if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
                 IntUpdateBoundsRect(dc, &DestRect);
@@ -6182,8 +6193,8 @@ IntExtTextOutW(
     /*
      * The main rendering loop.
      */
-    TextLeft64 = RealXStart64;
-    TextTop = YStart;
+    X64 = RealXStart64;
+    Y64 = RealYStart64;
     DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     DoBreak = FALSE;
@@ -6203,11 +6214,11 @@ IntExtTextOutW(
         if (use_kerning && previous && glyph_index && NULL == Dx)
         {
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextLeft64 += delta.x;
+            X64 += delta.x;
         }
 
-        DPRINT("TextLeft64: %I64d\n", TextLeft64);
-        DPRINT("TextTop: %lu\n", TextTop);
+        DPRINT("X64: %I64d\n", X64);
+        DPRINT("Y64: %I64d\n", Y64);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
         bitSize.cx = realglyph->bitmap.width;
@@ -6216,9 +6227,9 @@ IntExtTextOutW(
         MaskRect.right = realglyph->bitmap.width;
         MaskRect.bottom = realglyph->bitmap.rows;
 
-        DestRect.left   = ((TextLeft64 + 32) >> 6) + realglyph->left;
+        DestRect.left   = ((X64 + 32) >> 6) + realglyph->left;
         DestRect.right  = DestRect.left + bitSize.cx;
-        DestRect.top    = TextTop + yoff - realglyph->top;
+        DestRect.top    = ((Y64 + 32) >> 6) - realglyph->top;
         DestRect.bottom = DestRect.top + bitSize.cy;
 
         /* Check if the bitmap has any pixels */
@@ -6303,27 +6314,13 @@ IntExtTextOutW(
             break;
         }
 
-        if (NULL == Dx)
-        {
-            TextLeft64 += realglyph->root.advance.x >> 10;
-            DPRINT("New TextLeft64: %I64d\n", TextLeft64);
-        }
-        else
-        {
-            // FIXME this should probably be a matrix transform with TextTop as well.
-            Scale = pdcattr->mxWorldToDevice.efM11;
-            if (FLOATOBJ_Equal0(&Scale))
-                FLOATOBJ_Set1(&Scale);
-
-            /* do the shift before multiplying to preserve precision */
-            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
-            TextLeft64 += FLOATOBJ_GetLong(&Scale);
-            DPRINT("New TextLeft64 2: %I64d\n", TextLeft64);
-        }
+        X64 += realglyph->root.advance.x >> 10;
+        Y64 += realglyph->root.advance.y >> 10;
+        DPRINT("New X64: %I64d, New Y64: %I64d\n", X64, Y64);
 
         if (DxShift)
         {
-            TextTop -= Dx[2 * i + 1] << 6;
+            Y64 -= Dx[2 * i + 1];
         }
 
         previous = glyph_index;
@@ -6361,13 +6358,11 @@ IntExtTextOutW(
         {
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
+                INT Y = ((RealYStart64 + 32) >> 6) - underline_position + i;
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          (RealXStart64 + 32) >> 6,
-                          TextTop + yoff - underline_position + i,
-                          (TextLeft64 + 32) >> 6,
-                          TextTop + yoff - underline_position + i,
+                          ((RealXStart64 + 32) >> 6), Y, ((X64 + 32) >> 6), Y,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
@@ -6377,13 +6372,11 @@ IntExtTextOutW(
         {
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
+                INT Y = ((RealYStart64 - (vecAscent64.y / 3) + 32) >> 6) + i;
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          (RealXStart64 + 32) >> 6,
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
-                          (TextLeft64 + 32) >> 6,
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                          ((RealXStart64 + 32) >> 6), Y, ((X64 + 32) >> 6), Y,
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
