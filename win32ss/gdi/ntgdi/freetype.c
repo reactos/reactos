@@ -6117,21 +6117,18 @@ IntExtTextOutW(
 
     if (lprc && (fuOptions & ETO_OPAQUE))
     {
-        RtlCopyMemory(&DestRect, lprc, sizeof(DestRect));
-
         if (FLOATOBJ_Equal0(&pmxWorldToDevice->efM12) &&
             FLOATOBJ_Equal0(&pmxWorldToDevice->efM21))
         {
-            IntLPtoDP(dc, (POINT*)&DestRect, 2);
-
-            DestRect.left   += dc->ptlDCOrig.x;
-            DestRect.right  += dc->ptlDCOrig.x;
-            DestRect.top    += dc->ptlDCOrig.y;
-            DestRect.bottom += dc->ptlDCOrig.y;
+            IntLPtoDP(dc, (POINT*)lprc, 2);
+            lprc->left   += dc->ptlDCOrig.x;
+            lprc->right  += dc->ptlDCOrig.x;
+            lprc->top    += dc->ptlDCOrig.y;
+            lprc->bottom += dc->ptlDCOrig.y;
 
             IntEngFillBox(dc,
-                          DestRect.left, DestRect.top,
-                          DestRect.right - DestRect.left, DestRect.bottom - DestRect.top,
+                          lprc->left, lprc->top,
+                          lprc->right - lprc->left, lprc->bottom - lprc->top,
                           &dc->eboBackground.BrushObject);
         }
         else
@@ -6139,10 +6136,10 @@ IntExtTextOutW(
             UINT i;
             POINT pts[4] =
             {
-                { DestRect.left, DestRect.top },
-                { DestRect.right, DestRect.top },
-                { DestRect.right, DestRect.bottom },
-                { DestRect.left, DestRect.bottom },
+                { lprc->left, lprc->top },
+                { lprc->right, lprc->top },
+                { lprc->right, lprc->bottom },
+                { lprc->left, lprc->bottom },
             };
 
             IntLPtoDP(dc, pts, 4);
