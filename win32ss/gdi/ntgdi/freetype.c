@@ -48,6 +48,7 @@
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
+static POINTL PointZero = { 0, 0 };
 
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
@@ -5935,7 +5936,6 @@ IntEngFillPolygon(
     IN BRUSHOBJ *BrushObj)
 {
     SURFACE *psurf = dc->dclevel.pSurface;
-    POINTL BrushOrigin = { 0, 0 };
     RECT Rect;
     UINT i;
     INT x, y;
@@ -5960,7 +5960,7 @@ IntEngFillPolygon(
             Rect.bottom = y;
     }
 
-    IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &BrushOrigin);
+    IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &PointZero);
 }
 
 VOID
@@ -5975,7 +5975,6 @@ IntEngFillBox(
 {
     RECTL DestRect;
     SURFACE *psurf = dc->dclevel.pSurface;
-    POINTL BrushOrigin = { 0, 0 };
 
     ASSERT_DC_PREPARED(dc);
     ASSERT(psurf != NULL);
@@ -6006,7 +6005,7 @@ IntEngFillBox(
                  NULL,
                  NULL,
                  BrushObj,
-                 &BrushOrigin,
+                 &PointZero,
                  ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 }
 
@@ -6038,7 +6037,7 @@ IntExtTextOutW(
     LONGLONG X64, Y64, RealXStart64, RealYStart64, DeltaX64, DeltaY64;
     ULONG previous;
     RECTL DestRect, MaskRect;
-    POINTL SourcePoint, BrushOrigin;
+    POINTL BrushOrigin;
     HBITMAP HSourceGlyph;
     SIZEL bitSize;
     FONTOBJ *FontObj;
@@ -6100,8 +6099,6 @@ IntExtTextOutW(
     RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     RealYStart64 = ((LONGLONG)Start.y + dc->ptlDCOrig.y) << 6;
 
-    SourcePoint.x = 0;
-    SourcePoint.y = 0;
     MaskRect.left = 0;
     MaskRect.top = 0;
     BrushOrigin.x = 0;
@@ -6110,6 +6107,11 @@ IntExtTextOutW(
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj;
 
+    if (pdcattr->iGraphicsMode == GM_ADVANCED)
+        pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+    else
+        pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
+
     if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
         DC_vUpdateBackgroundBrush(dc);
 
@@ -6117,33 +6119,41 @@ IntExtTextOutW(
     {
         RtlCopyMemory(&DestRect, lprc, sizeof(DestRect));
 
-        DestRect.left   += dc->ptlDCOrig.x;
-        DestRect.top    += dc->ptlDCOrig.y;
-        DestRect.right  += dc->ptlDCOrig.x;
-        DestRect.bottom += dc->ptlDCOrig.y;
-
-        if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        if (FLOATOBJ_Equal0(&pmxWorldToDevice->efM12) &&
+            FLOATOBJ_Equal0(&pmxWorldToDevice->efM21))
         {
-            IntUpdateBoundsRect(dc, &DestRect);
+            IntLPtoDP(dc, (POINT*)&DestRect, 2);
+
+            DestRect.left   += dc->ptlDCOrig.x;
+            DestRect.right  += dc->ptlDCOrig.x;
+            DestRect.top    += dc->ptlDCOrig.y;
+            DestRect.bottom += dc->ptlDCOrig.y;
+
+            IntEngFillBox(dc,
+                          DestRect.left, DestRect.top,
+                          DestRect.right - DestRect.left, DestRect.bottom - DestRect.top,
+                          &dc->eboBackground.BrushObject);
         }
+        else
+        {
+            UINT i;
+            POINT pts[4] =
+            {
+                { DestRect.left, DestRect.top },
+                { DestRect.right, DestRect.top },
+                { DestRect.right, DestRect.bottom },
+                { DestRect.left, DestRect.bottom },
+            };
 
-        if (dc->dctype == DCTYPE_DIRECT)
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            IntLPtoDP(dc, pts, 4);
+            for (i = 0; i < 4; ++i)
+            {
+                pts[i].x += dc->ptlDCOrig.x;
+                pts[i].y += dc->ptlDCOrig.y;
+            }
 
-        IntEngBitBlt(SurfObj,
-                     NULL,
-                     NULL,
-                     (CLIPOBJ *)&dc->co,
-                     NULL,
-                     &DestRect,
-                     &SourcePoint,
-                     &SourcePoint,
-                     &dc->eboBackground.BrushObject,
-                     &BrushOrigin,
-                     ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-
-        if (dc->dctype == DCTYPE_DIRECT)
-            MouseSafetyOnDrawEnd(dc->ppdev);
+            IntEngFillPolygon(dc, pts, 4, &dc->eboBackground.BrushObject);
+        }
 
         fuOptions &= ~ETO_OPAQUE;
     }
@@ -6193,11 +6203,6 @@ IntExtTextOutW(
         IntEscapeMatrix(&Cache.Hashed.matTransform, plf->lfEscapement);
     else
         Cache.Hashed.matTransform = identityMat;
-
-    if (pdcattr->iGraphicsMode == GM_ADVANCED)
-        pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-    else
-        pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
 
     /* Apply the world transformation */
     FtMatrixFromMx(&mat, pmxWorldToDevice);
@@ -6269,8 +6274,8 @@ IntExtTextOutW(
             else
             {
                 INT DY = (DeltaY64 >> 6);
-                INT X1 = X0 + (vecAscent64.x - vecDescent64.x + 32) >> 6;
-                INT Y1 = Y0 + (vecDescent64.y - vecAscent64.y + 32) >> 6;
+                INT X1 = X0 + ((vecAscent64.x - vecDescent64.x + 32) >> 6);
+                INT Y1 = Y0 + ((vecDescent64.y - vecAscent64.y + 32) >> 6);
                 POINT pts[4];
                 pts[0].x = X0;
                 pts[0].y = Y0;
