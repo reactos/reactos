@@ -5964,7 +5964,6 @@ IntExtTextOutW(
     PTEXTOBJ TextObj;
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     POINT Start;
-    USHORT DxShift;
     PMATRIX pmxWorldToDevice;
     FT_Vector delta, vecAscent64, vecDescent64;
     LOGFONTW *plf;
@@ -6225,7 +6224,6 @@ IntExtTextOutW(
      */
     X64 = RealXStart64;
     Y64 = RealYStart64;
-    DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     previous = 0;
     DoBreak = FALSE;
     for (i = 0; i < Count; ++i)
@@ -6366,11 +6364,6 @@ IntExtTextOutW(
         }
 
         DPRINT("New X64: %I64d, New Y64: %I64d\n", X64, Y64);
-
-        if (DxShift)
-        {
-            Y64 -= Dx[2 * i + 1];
-        }
 
         previous = glyph_index;
 
