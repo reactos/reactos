@@ -6379,6 +6379,8 @@ IntExtTextOutW(
         /* Calculate the position and the thickness */
         INT i, underline_position, thickness;
 
+        DeltaY64 = Y64 - RealYStart64;
+
         if (!face->units_per_EM)
         {
             underline_position = 0;
@@ -6402,7 +6404,10 @@ IntExtTextOutW(
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          ((RealXStart64 + 32) >> 6), Y, ((X64 + 32) >> 6), Y,
+                          ((RealXStart64 + 32) >> 6),
+                          Y,
+                          ((X64 + 32) >> 6),
+                          Y + ((DeltaY64 + 32) >> 6),
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
@@ -6416,7 +6421,10 @@ IntExtTextOutW(
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          ((RealXStart64 + 32) >> 6), Y, ((X64 + 32) >> 6), Y,
+                          ((RealXStart64 + 32) >> 6),
+                          Y,
+                          ((X64 + 32) >> 6),
+                          Y + ((DeltaY64 + 32) >> 6),
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
