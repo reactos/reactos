@@ -6259,8 +6259,7 @@ IntExtTextOutW(
             INT X0 = (RealXStart64 - vecAscent64.x + 32) >> 6;
             INT Y0 = (RealYStart64 + vecAscent64.y + 32) >> 6;
             INT DX = (DeltaX64 >> 6);
-            if (Cache.Hashed.matTransform.xy == 0 &&
-                Cache.Hashed.matTransform.yx == 0)
+            if (Cache.Hashed.matTransform.xy == 0 && Cache.Hashed.matTransform.yx == 0)
             {
                 INT CY = (vecDescent64.y - vecAscent64.y + 32) >> 6;
                 IntEngFillBox(dc, X0, Y0, DX, CY, &dc->eboBackground.BrushObject);
@@ -6450,8 +6449,9 @@ IntExtTextOutW(
     if (plf->lfUnderline || plf->lfStrikeOut) /* Underline or strike-out? */
     {
         /* Calculate the position and the thickness */
-        INT i, underline_position, thickness;
+        INT underline_position, thickness;
 
+        DeltaX64 = X64 - RealXStart64;
         DeltaY64 = Y64 - RealYStart64;
 
         if (!face->units_per_EM)
@@ -6471,35 +6471,71 @@ IntExtTextOutW(
 
         if (plf->lfUnderline) /* Draw underline */
         {
-            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+            FT_Vector vecA64, vecB64;
+            vecA64.x = 0;
+            vecA64.y = (-underline_position - thickness / 2) << 6;
+            vecB64.x = 0;
+            vecB64.y = vecA64.y + (thickness << 6);
+            FT_Vector_Transform(&vecA64, &Cache.Hashed.matTransform);
+            FT_Vector_Transform(&vecB64, &Cache.Hashed.matTransform);
             {
-                INT Y = ((RealYStart64 + 32) >> 6) - underline_position + i;
-                EngLineTo(SurfObj,
-                          (CLIPOBJ *)&dc->co,
-                          &dc->eboText.BrushObject,
-                          ((RealXStart64 + 32) >> 6),
-                          Y,
-                          ((X64 + 32) >> 6),
-                          Y + ((DeltaY64 + 32) >> 6),
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
+                INT X0 = (RealXStart64 - vecA64.x + 32) >> 6;
+                INT Y0 = (RealYStart64 + vecA64.y + 32) >> 6;
+                INT DX = (DeltaX64 >> 6);
+                if (Cache.Hashed.matTransform.xy == 0 && Cache.Hashed.matTransform.yx == 0)
+                {
+                    INT CY = (vecB64.y - vecA64.y + 32) >> 6;
+                    IntEngFillBox(dc, X0, Y0, DX, CY, &dc->eboText.BrushObject);
+                }
+                else
+                {
+                    INT DY = (DeltaY64 >> 6);
+                    INT X1 = X0 + ((vecA64.x - vecB64.x + 32) >> 6);
+                    INT Y1 = Y0 + ((vecB64.y - vecA64.y + 32) >> 6);
+                    POINT pts[4] =
+                    {
+                        { X0,       Y0      },
+                        { X0 + DX,  Y0 + DY },
+                        { X1 + DX,  Y1 + DY },
+                        { X1,       Y1      },
+                    };
+                    IntEngFillPolygon(dc, pts, 4, &dc->eboText.BrushObject);
+                }
             }
         }
 
         if (plf->lfStrikeOut) /* Draw strike-out */
         {
-            for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
+            FT_Vector vecC64, vecD64;
+            vecC64.x = 0;
+            vecC64.y = -(FontGDI->tmAscent << 6) / 3;
+            vecD64.x = 0;
+            vecD64.y = vecC64.y + (thickness << 6);
+            FT_Vector_Transform(&vecC64, &Cache.Hashed.matTransform);
+            FT_Vector_Transform(&vecD64, &Cache.Hashed.matTransform);
             {
-                INT Y = ((RealYStart64 + (vecAscent64.y / 3) + 32) >> 6) + i;
-                EngLineTo(SurfObj,
-                          (CLIPOBJ *)&dc->co,
-                          &dc->eboText.BrushObject,
-                          ((RealXStart64 + 32) >> 6),
-                          Y,
-                          ((X64 + 32) >> 6),
-                          Y + ((DeltaY64 + 32) >> 6),
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
+                INT X0 = (RealXStart64 - vecC64.x + 32) >> 6;
+                INT Y0 = (RealYStart64 + vecC64.y + 32) >> 6;
+                INT DX = (DeltaX64 >> 6);
+                if (Cache.Hashed.matTransform.xy == 0 && Cache.Hashed.matTransform.yx == 0)
+                {
+                    INT CY = (vecD64.y - vecC64.y + 32) >> 6;
+                    IntEngFillBox(dc, X0, Y0, DX, CY, &dc->eboText.BrushObject);
+                }
+                else
+                {
+                    INT DY = (DeltaY64 >> 6);
+                    INT X1 = X0 + ((vecC64.x - vecD64.x + 32) >> 6);
+                    INT Y1 = Y0 + ((vecD64.y - vecC64.y + 32) >> 6);
+                    POINT pts[4] =
+                    {
+                        { X0,       Y0      },
+                        { X0 + DX,  Y0 + DY },
+                        { X1 + DX,  Y1 + DY },
+                        { X1,       Y1      },
+                    };
+                    IntEngFillPolygon(dc, pts, 4, &dc->eboText.BrushObject);
+                }
             }
         }
     }
