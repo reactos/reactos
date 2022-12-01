@@ -6273,15 +6273,13 @@ IntExtTextOutW(
                 INT DY = (DeltaY64 >> 6);
                 INT X1 = X0 + ((vecAscent64.x - vecDescent64.x + 32) >> 6);
                 INT Y1 = Y0 + ((vecDescent64.y - vecAscent64.y + 32) >> 6);
-                POINT pts[4];
-                pts[0].x = X0;
-                pts[0].y = Y0;
-                pts[1].x = X0 + DX;
-                pts[1].y = Y0 + DY;
-                pts[2].x = X1 + DX;
-                pts[2].y = Y1 + DY;
-                pts[3].x = X1;
-                pts[3].y = Y1;
+                POINT pts[4] =
+                {
+                    { X0,       Y0      },
+                    { X0 + DX,  Y0 + DY },
+                    { X1 + DX,  Y1 + DY },
+                    { X1,       Y1      },
+                };
                 IntEngFillPolygon(dc, pts, 4, &dc->eboBackground.BrushObject);
             }
         }
