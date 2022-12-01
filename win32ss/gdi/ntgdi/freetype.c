@@ -5881,7 +5881,7 @@ IntGetTextDisposition(
 
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, *String, ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = ftGdiGetRealGlyph(Cache);
@@ -5899,28 +5899,27 @@ IntGetTextDisposition(
         if (NULL == Dx)
         {
             X64 += realglyph->root.advance.x >> 10;
-            Y64 += realglyph->root.advance.y >> 10;
+            Y64 -= realglyph->root.advance.y >> 10;
         }
         else if (fuOptions & ETO_PDY)
         {
             FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
             FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
-            Y64 += vec.y;
+            Y64 -= vec.y;
         }
         else
         {
             FT_Vector vec = { Dx[i] << 6, 0 };
             FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
-            Y64 += vec.y;
+            Y64 -= vec.y;
         }
 
         if (Cache->Hashed.Aspect.EmuBoldItalic)
             FT_Done_Glyph((FT_Glyph)realglyph);
 
         previous = glyph_index;
-        String++;
     }
 
     *pX64 = X64;
@@ -6128,7 +6127,7 @@ IntExtTextOutW(
     vecAscent64.y = -(FontGDI->tmAscent << 6);
     FT_Vector_Transform(&vecAscent64, &Cache.Hashed.matTransform);
     vecDescent64.x = 0;
-    vecDescent64.y = FontGDI->tmDescent << 6;
+    vecDescent64.y = (FontGDI->tmDescent << 6);
     FT_Vector_Transform(&vecDescent64, &Cache.Hashed.matTransform);
 
     /* Process the vertical alignment and fix the real starting point. */
@@ -6144,8 +6143,8 @@ IntExtTextOutW(
     }
     else /* TA_TOP */
     {
-        RealXStart64 -= vecAscent64.x;
-        RealYStart64 += vecAscent64.y;
+        RealXStart64 += vecAscent64.x;
+        RealYStart64 -= vecAscent64.y;
     }
 #undef VALIGN_MASK
 
@@ -6178,7 +6177,7 @@ IntExtTextOutW(
         {
             DestRect.left   = (RealXStart64 + 32) >> 6;
             DestRect.right  = (RealXStart64 + DeltaX64 + 32) >> 6;
-            DestRect.top    = (RealYStart64 - vecAscent64.y + 32) >> 6;
+            DestRect.top    = (RealYStart64 + vecAscent64.y + 32) >> 6;
             DestRect.bottom = (RealYStart64 + vecDescent64.y + 32) >> 6;
 
             if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
@@ -6346,21 +6345,21 @@ IntExtTextOutW(
         if (NULL == Dx)
         {
             X64 += realglyph->root.advance.x >> 10;
-            Y64 += realglyph->root.advance.y >> 10;
+            Y64 -= realglyph->root.advance.y >> 10;
         }
         else if (fuOptions & ETO_PDY)
         {
             FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
             FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
-            Y64 += vec.y;
+            Y64 -= vec.y;
         }
         else
         {
             FT_Vector vec = { Dx[i] << 6, 0 };
             FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
-            Y64 += vec.y;
+            Y64 -= vec.y;
         }
 
         DPRINT("New X64: %I64d, New Y64: %I64d\n", X64, Y64);
@@ -6414,7 +6413,7 @@ IntExtTextOutW(
         {
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
-                INT Y = ((RealYStart64 - (vecAscent64.y / 3) + 32) >> 6) + i;
+                INT Y = ((RealYStart64 + (vecAscent64.y / 3) + 32) >> 6) + i;
                 EngLineTo(SurfObj,
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
