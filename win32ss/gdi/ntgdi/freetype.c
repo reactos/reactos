@@ -5927,6 +5927,89 @@ IntGetTextDisposition(
     return TRUE;
 }
 
+VOID APIENTRY
+IntEngFillPolygon(
+    IN OUT PDC dc,
+    IN POINTL *pPoints,
+    IN UINT cPoints,
+    IN BRUSHOBJ *BrushObj)
+{
+    SURFACE *psurf = dc->dclevel.pSurface;
+    POINTL BrushOrigin = { 0, 0 };
+    RECT Rect;
+    UINT i;
+    INT x, y;
+
+    ASSERT_DC_PREPARED(dc);
+    ASSERT(psurf != NULL);
+
+    Rect.left = Rect.right = pPoints[0].x;
+    Rect.top = Rect.bottom = pPoints[0].y;
+    for (i = 1; i < cPoints; ++i)
+    {
+        x = pPoints[i].x;
+        if (x < Rect.left)
+            Rect.left = x;
+        else if (Rect.right < x)
+            Rect.right = x;
+
+        y = pPoints[i].y;
+        if (y < Rect.top)
+            Rect.top = y;
+        else if (Rect.bottom < y)
+            Rect.bottom = y;
+    }
+
+    IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &BrushOrigin);
+}
+
+VOID
+FASTCALL
+IntEngFillBox(
+    IN OUT PDC dc,
+    IN INT X,
+    IN INT Y,
+    IN INT Width,
+    IN INT Height,
+    IN BRUSHOBJ *BrushObj)
+{
+    RECTL DestRect;
+    SURFACE *psurf = dc->dclevel.pSurface;
+    POINTL BrushOrigin = { 0, 0 };
+
+    ASSERT_DC_PREPARED(dc);
+    ASSERT(psurf != NULL);
+
+    if (Width < 0)
+    {
+        X += Width;
+        Width = -Width;
+    }
+
+    if (Height < 0)
+    {
+        Y += Height;
+        Height = -Height;
+    }
+
+    DestRect.left = X;
+    DestRect.right = X + Width;
+    DestRect.top = Y;
+    DestRect.bottom = Y + Height;
+
+    IntEngBitBlt(&psurf->SurfObj,
+                 NULL,
+                 NULL,
+                 (CLIPOBJ *)&dc->co,
+                 NULL,
+                 &DestRect,
+                 NULL,
+                 NULL,
+                 BrushObj,
+                 &BrushOrigin,
+                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+}
+
 BOOL
 APIENTRY
 IntExtTextOutW(
@@ -6027,6 +6110,9 @@ IntExtTextOutW(
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj;
 
+    if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+        DC_vUpdateBackgroundBrush(dc);
+
     if (lprc && (fuOptions & ETO_OPAQUE))
     {
         RtlCopyMemory(&DestRect, lprc, sizeof(DestRect));
@@ -6040,9 +6126,6 @@ IntExtTextOutW(
         {
             IntUpdateBoundsRect(dc, &DestRect);
         }
-
-        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-            DC_vUpdateBackgroundBrush(dc);
 
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
@@ -6111,7 +6194,6 @@ IntExtTextOutW(
     else
         Cache.Hashed.matTransform = identityMat;
 
-    /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
     if (pdcattr->iGraphicsMode == GM_ADVANCED)
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     else
@@ -6175,37 +6257,32 @@ IntExtTextOutW(
         /* Fill background */
         if (fuOptions & ETO_OPAQUE)
         {
-            DestRect.left   = (RealXStart64 + 32) >> 6;
-            DestRect.right  = (RealXStart64 + DeltaX64 + 32) >> 6;
-            DestRect.top    = (RealYStart64 + vecAscent64.y + 32) >> 6;
-            DestRect.bottom = (RealYStart64 + vecDescent64.y + 32) >> 6;
-
-            if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
-                IntUpdateBoundsRect(dc, &DestRect);
-
-            if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-                DC_vUpdateBackgroundBrush(dc);
-
-            if (dc->dctype == DCTYPE_DIRECT)
+            INT X0 = (RealXStart64 - vecAscent64.x + 32) >> 6;
+            INT Y0 = (RealYStart64 + vecAscent64.y + 32) >> 6;
+            if (Cache.Hashed.matTransform.xy == 0 &&
+                Cache.Hashed.matTransform.yx == 0)
             {
-                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top,
-                                       DestRect.right, DestRect.bottom);
+                INT CY = (vecDescent64.y - vecAscent64.y + 32) >> 6;
+                INT DX = (DeltaX64 >> 6);
+                IntEngFillBox(dc, X0, Y0, DX, CY, &dc->eboBackground.BrushObject);
             }
-
-            IntEngBitBlt(SurfObj,
-                         NULL,
-                         NULL,
-                         (CLIPOBJ *)&dc->co,
-                         NULL,
-                         &DestRect,
-                         &SourcePoint,
-                         &SourcePoint,
-                         &dc->eboBackground.BrushObject,
-                         &BrushOrigin,
-                         ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawEnd(dc->ppdev);
+            else
+            {
+                INT X1 = X0 + (vecAscent64.x - vecDescent64.x + 32) >> 6;
+                INT Y1 = Y0 + (vecDescent64.y - vecAscent64.y + 32) >> 6;
+                INT DX = (DeltaX64 >> 6);
+                INT DY = (DeltaY64 >> 6);
+                POINT pts[4];
+                pts[0].x = X0;
+                pts[0].y = Y0;
+                pts[1].x = X0 + DX;
+                pts[1].y = Y0 + DY;
+                pts[2].x = X1 + DX;
+                pts[2].y = Y1 + DY;
+                pts[3].x = X1;
+                pts[3].y = Y1;
+                IntEngFillPolygon(dc, pts, 4, &dc->eboBackground.BrushObject);
+            }
         }
     }
 
