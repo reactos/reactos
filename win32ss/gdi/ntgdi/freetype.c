@@ -6205,10 +6205,10 @@ IntExtTextOutW(
 
     /* Calculate the ascent point and the descent point */
     vecAscent64.x = 0;
-    vecAscent64.y = -(FontGDI->tmAscent << 6);
+    vecAscent64.y = (FontGDI->tmAscent << 6);
     FT_Vector_Transform(&vecAscent64, &Cache.Hashed.matTransform);
     vecDescent64.x = 0;
-    vecDescent64.y = (FontGDI->tmDescent << 6);
+    vecDescent64.y = -(FontGDI->tmDescent << 6);
     FT_Vector_Transform(&vecDescent64, &Cache.Hashed.matTransform);
 
     /* Process the vertical alignment and fix the real starting point. */
@@ -6219,13 +6219,13 @@ IntExtTextOutW(
     }
     else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
-        RealXStart64 += vecDescent64.x;
-        RealYStart64 -= vecDescent64.y;
+        RealXStart64 -= vecDescent64.x;
+        RealYStart64 += vecDescent64.y;
     }
     else /* TA_TOP */
     {
-        RealXStart64 += vecAscent64.x;
-        RealYStart64 -= vecAscent64.y;
+        RealXStart64 -= vecAscent64.x;
+        RealYStart64 += vecAscent64.y;
     }
 #undef VALIGN_MASK
 
@@ -6256,19 +6256,19 @@ IntExtTextOutW(
         /* Fill background */
         if (fuOptions & ETO_OPAQUE)
         {
-            INT X0 = (RealXStart64 - vecAscent64.x + 32) >> 6;
-            INT Y0 = (RealYStart64 + vecAscent64.y + 32) >> 6;
+            INT X0 = (RealXStart64 + vecAscent64.x + 32) >> 6;
+            INT Y0 = (RealYStart64 - vecAscent64.y + 32) >> 6;
             INT DX = (DeltaX64 >> 6);
             if (Cache.Hashed.matTransform.xy == 0 && Cache.Hashed.matTransform.yx == 0)
             {
-                INT CY = (vecDescent64.y - vecAscent64.y + 32) >> 6;
+                INT CY = (vecAscent64.y - vecDescent64.y + 32) >> 6;
                 IntEngFillBox(dc, X0, Y0, DX, CY, &dc->eboBackground.BrushObject);
             }
             else
             {
                 INT DY = (DeltaY64 >> 6);
-                INT X1 = X0 + ((vecAscent64.x - vecDescent64.x + 32) >> 6);
-                INT Y1 = Y0 + ((vecDescent64.y - vecAscent64.y + 32) >> 6);
+                INT X1 = ((RealXStart64 + vecDescent64.x + 32) >> 6);
+                INT Y1 = ((RealYStart64 - vecDescent64.y + 32) >> 6);
                 POINT pts[4] =
                 {
                     { X0,       Y0      },
