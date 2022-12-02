@@ -3563,8 +3563,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     EmHeight = max(EmHeight, 1);
     EmHeight = min(EmHeight, USHORT_MAX);
 
-    if (pOS2 && lfWidth > 0)
-        Width64 = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
+    if (lfWidth != 0)
+        Width64 = ((lfWidth * 96 / 72 * 5 / 3) << 6); /* ??? FIXME */
     else
         Width64 = 0;
 
