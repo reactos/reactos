@@ -6009,6 +6009,7 @@ IntEngFillBox(
                  ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
 }
 
+
 BOOL
 APIENTRY
 IntExtTextOutW(
@@ -6077,11 +6078,6 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
-    if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-    {
-        IntLPtoDP(dc, (POINT *)lprc, 2);
-    }
-
     pdcattr = dc->pdcattr;
     if (pdcattr->flTextAlign & TA_UPDATECP)
     {
@@ -6112,43 +6108,21 @@ IntExtTextOutW(
     if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
         DC_vUpdateBackgroundBrush(dc);
 
+    if (lprc && (fuOptions & (ETO_CLIPPED | ETO_OPAQUE)))
+    {
+        IntLPtoDP(dc, (POINT*)lprc, 2);
+        lprc->left   += dc->ptlDCOrig.x;
+        lprc->top    += dc->ptlDCOrig.y;
+        lprc->right  += dc->ptlDCOrig.x;
+        lprc->bottom += dc->ptlDCOrig.y;
+    }
+
     if (lprc && (fuOptions & ETO_OPAQUE))
     {
-        if (FLOATOBJ_Equal0(&pmxWorldToDevice->efM12) &&
-            FLOATOBJ_Equal0(&pmxWorldToDevice->efM21))
-        {
-            IntLPtoDP(dc, (POINT*)lprc, 2);
-            lprc->left   += dc->ptlDCOrig.x;
-            lprc->right  += dc->ptlDCOrig.x;
-            lprc->top    += dc->ptlDCOrig.y;
-            lprc->bottom += dc->ptlDCOrig.y;
-
-            IntEngFillBox(dc,
-                          lprc->left, lprc->top,
-                          lprc->right - lprc->left, lprc->bottom - lprc->top,
-                          &dc->eboBackground.BrushObject);
-        }
-        else
-        {
-            UINT i;
-            POINT pts[4] =
-            {
-                { lprc->left, lprc->top },
-                { lprc->right, lprc->top },
-                { lprc->right, lprc->bottom },
-                { lprc->left, lprc->bottom },
-            };
-
-            IntLPtoDP(dc, pts, 4);
-            for (i = 0; i < 4; ++i)
-            {
-                pts[i].x += dc->ptlDCOrig.x;
-                pts[i].y += dc->ptlDCOrig.y;
-            }
-
-            IntEngFillPolygon(dc, pts, 4, &dc->eboBackground.BrushObject);
-        }
-
+        IntEngFillBox(dc,
+                      lprc->left, lprc->top,
+                      lprc->right - lprc->left, lprc->bottom - lprc->top,
+                      &dc->eboBackground.BrushObject);
         fuOptions &= ~ETO_OPAQUE;
     }
     else
@@ -6269,14 +6243,14 @@ IntExtTextOutW(
                 INT DY = (DeltaY64 >> 6);
                 INT X1 = ((RealXStart64 + vecDescent64.x + 32) >> 6);
                 INT Y1 = ((RealYStart64 - vecDescent64.y + 32) >> 6);
-                POINT pts[4] =
+                POINT Points[4] =
                 {
                     { X0,       Y0      },
                     { X0 + DX,  Y0 + DY },
                     { X1 + DX,  Y1 + DY },
                     { X1,       Y1      },
                 };
-                IntEngFillPolygon(dc, pts, 4, &dc->eboBackground.BrushObject);
+                IntEngFillPolygon(dc, Points, 4, &dc->eboBackground.BrushObject);
             }
         }
     }
@@ -6371,15 +6345,15 @@ IntExtTextOutW(
                 // We do the check '>=' instead of '>' to possibly save an iteration
                 // through this loop, since it's breaking after the drawing is done,
                 // and x is always incremented.
-                if (DestRect.right >= lprc->right + dc->ptlDCOrig.x)
+                if (DestRect.right >= lprc->right)
                 {
-                    DestRect.right = lprc->right + dc->ptlDCOrig.x;
+                    DestRect.right = lprc->right;
                     DoBreak = TRUE;
                 }
 
-                if (DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+                if (DestRect.bottom >= lprc->bottom)
                 {
-                    DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+                    DestRect.bottom = lprc->bottom;
                 }
             }
 
@@ -6492,14 +6466,14 @@ IntExtTextOutW(
                     INT DY = (DeltaY64 >> 6);
                     INT X1 = X0 + ((vecA64.x - vecB64.x + 32) >> 6);
                     INT Y1 = Y0 + ((vecB64.y - vecA64.y + 32) >> 6);
-                    POINT pts[4] =
+                    POINT Points[4] =
                     {
                         { X0,       Y0      },
                         { X0 + DX,  Y0 + DY },
                         { X1 + DX,  Y1 + DY },
                         { X1,       Y1      },
                     };
-                    IntEngFillPolygon(dc, pts, 4, &dc->eboText.BrushObject);
+                    IntEngFillPolygon(dc, Points, 4, &dc->eboText.BrushObject);
                 }
             }
         }
@@ -6526,14 +6500,14 @@ IntExtTextOutW(
                     INT DY = (DeltaY64 >> 6);
                     INT X1 = X0 + ((vecA64.x - vecB64.x + 32) >> 6);
                     INT Y1 = Y0 + ((vecB64.y - vecA64.y + 32) >> 6);
-                    POINT pts[4] =
+                    POINT Points[4] =
                     {
                         { X0,       Y0      },
                         { X0 + DX,  Y0 + DY },
                         { X1 + DX,  Y1 + DY },
                         { X1,       Y1      },
                     };
-                    IntEngFillPolygon(dc, pts, 4, &dc->eboText.BrushObject);
+                    IntEngFillPolygon(dc, Points, 4, &dc->eboText.BrushObject);
                 }
             }
         }
