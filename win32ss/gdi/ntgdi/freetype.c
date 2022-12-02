@@ -6357,9 +6357,6 @@ IntExtTextOutW(
                 }
             }
 
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-
             if (!IntEngMaskBlt(SurfObj,
                                SourceGlyphSurf,
                                (CLIPOBJ *)&dc->co,
@@ -6372,9 +6369,6 @@ IntExtTextOutW(
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawEnd(dc->ppdev) ;
 
             EngUnlockSurface(SourceGlyphSurf);
             EngDeleteSurface((HSURF)HSourceGlyph);
