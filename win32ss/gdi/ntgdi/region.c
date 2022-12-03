@@ -3295,6 +3295,7 @@ REGION_SetPolyPolygonRgn(
     POINTBLOCK *tmpPtBlock;
     UINT numFullPtBlocks = 0;
     UINT poly, total;
+    BOOL bResult = FALSE;
 
     /* Check if iMode is valid */
     if ((iMode != ALTERNATE) && (iMode != WINDING))
@@ -3370,8 +3371,7 @@ REGION_SetPolyPolygonRgn(
                     if (tmpPtBlock == NULL)
                     {
                         DPRINT1("Can't alloc tmpPtBlock\n");
-                        ExFreePoolWithTag(pETEs, TAG_REGION);
-                        return FALSE;
+                        goto Cleanup;
                     }
 
                     curPtBlock->next = tmpPtBlock;
@@ -3426,8 +3426,7 @@ REGION_SetPolyPolygonRgn(
                         if (tmpPtBlock == NULL)
                         {
                             DPRINT1("Can't alloc tPB\n");
-                            ExFreePoolWithTag(pETEs, TAG_REGION);
-                            return FALSE;
+                            goto Cleanup;
                         }
                         curPtBlock->next = tmpPtBlock;
                         curPtBlock = tmpPtBlock;
@@ -3452,8 +3451,11 @@ REGION_SetPolyPolygonRgn(
         }
     }
 
-    REGION_FreeStorage(SLLBlock.next);
     REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, prgn);
+    bResult = TRUE;
+
+Cleanup:
+    REGION_FreeStorage(SLLBlock.next);
 
     for (curPtBlock = FirstPtBlock.next; numFullPtBlocks-- > 0;)
     {
@@ -3463,7 +3465,7 @@ REGION_SetPolyPolygonRgn(
     }
 
     ExFreePoolWithTag(pETEs, TAG_REGION);
-    return TRUE;
+    return bResult;
 }
 
 HRGN
