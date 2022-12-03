@@ -3564,11 +3564,14 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     EmHeight = min(EmHeight, USHORT_MAX);
 
 #if 1
+    /* I think this is wrong implementation but its test result is better. */
     if (lfWidth != 0)
         Width64 = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
     else
         Width64 = 0;
 #else
+    /* I think this is correct implementation but it is mismatching to the
+       other metric functions. The test result is bad. */
     if (lfWidth != 0)
         Width64 = (FT_MulDiv(lfWidth, 96 * 5, 72 * 3) << 6); /* ??? FIXME */
     else
