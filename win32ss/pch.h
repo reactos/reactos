@@ -74,6 +74,12 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
+/* The native x64 definition of FLOATOBJ_GetFloat in winddi.h is retarded. Use this instead. */
+#ifndef _M_IX86
+#undef FLOATOBJ_GetFloat
+#define FLOATOBJ_GetFloat(pf) (*(pf))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
