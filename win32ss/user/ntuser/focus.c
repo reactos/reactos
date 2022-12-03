@@ -1667,7 +1667,6 @@ NtUserSetActiveWindow(HWND hWnd)
    HWND hWndPrev;
    PWND Window, pwndPrev;
    DECLARE_RETURN(HWND);
-   BOOL bActivated;
 
    TRACE("Enter NtUserSetActiveWindow(%p)\n", hWnd);
    UserEnterExclusive();
@@ -1688,11 +1687,9 @@ NtUserSetActiveWindow(HWND hWnd)
       pwndPrev = gptiCurrent->MessageQueue->spwndActive;
       hWndPrev = (pwndPrev ? UserHMGetHandle(pwndPrev) : NULL);
       if (Window) UserRefObjectCo(Window, &Ref);
-      bActivated = UserSetActiveWindow(Window);
+      UserSetActiveWindow(Window);
       if (Window) UserDerefObjectCo(Window);
-      if (!bActivated)
-         RETURN(NULL);
-      RETURN(hWndPrev ? hWndPrev : hWnd);
+      RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
    }
    RETURN( NULL);
 
