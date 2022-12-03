@@ -590,7 +590,7 @@ ENDFUNC
 PUBLIC KiApcInterrupt
 .PROC KiApcInterrupt
    /* No error code */
-    EnterTrap (TF_VOLATILES or TF_IRQL)
+    EnterTrap (TF_SAVE_ALL or TF_IRQL)
 
     /* Raise to APC_LEVEL */
     mov rax, APC_LEVEL
@@ -617,7 +617,7 @@ PUBLIC KiApcInterrupt
     mov cr8, rax
 
     /* Return */
-    ExitTrap (TF_VOLATILES or TF_IRQL)
+    ExitTrap (TF_SAVE_ALL or TF_IRQL)
 .ENDP
 
 /*
@@ -659,20 +659,20 @@ PUBLIC KiRetireDpcListInDpcStack
 PUBLIC KiDpcInterrupt
 .PROC KiDpcInterrupt
    /* No error code */
-    EnterTrap (TF_VOLATILES or TF_IRQL)
+    EnterTrap (TF_SAVE_ALL or TF_IRQL)
 
     /* Call the worker routine */
     call KiDpcInterruptHandler
 
     /* Return, but don't send an EOI! */
-    ExitTrap (TF_VOLATILES or TF_IRQL)
+    ExitTrap (TF_SAVE_ALL or TF_IRQL)
 .ENDP
 
 
 PUBLIC KiIpiInterrupt
 .PROC KiIpiInterrupt
    /* No error code */
-    EnterTrap (TF_VOLATILES or TF_IRQL)
+    EnterTrap (TF_SAVE_ALL or TF_IRQL)
 
     /* Raise to IPI_LEVEL */
     mov rax, IPI_LEVEL
@@ -684,7 +684,7 @@ PUBLIC KiIpiInterrupt
     int 3
 
     /* Return */
-    ExitTrap (TF_VOLATILES or TF_IRQL)
+    ExitTrap (TF_SAVE_ALL or TF_IRQL)
 .ENDP
 
 
