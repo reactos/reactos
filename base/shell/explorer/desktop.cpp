@@ -26,6 +26,7 @@ private:
     CComPtr<ITrayWindow> m_Tray;
     HANDLE m_hInitEvent;
     HANDLE m_hThread;
+    DWORD m_ThreadId;
 
     DWORD DesktopThreadProc();
     static DWORD WINAPI s_DesktopThreadProc(LPVOID lpParameter);
@@ -43,7 +44,8 @@ public:
 CDesktopThread::CDesktopThread():
     m_Tray(NULL),
     m_hInitEvent(NULL),
-    m_hThread(NULL)
+    m_hThread(NULL),
+    m_ThreadId(0)
 {
 }
 
@@ -68,7 +70,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     }
 
     m_Tray = pTray;
-    m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, NULL);
+    m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, &m_ThreadId);
 
     if (!m_hThread)
     {
@@ -99,6 +101,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         {
             CloseHandle(m_hThread);
             m_hThread = NULL;
+            m_ThreadId = 0;
 
             CloseHandle(m_hInitEvent);
             m_hInitEvent = NULL;
@@ -119,12 +122,13 @@ void CDesktopThread::Destroy()
         if (WaitResult == WAIT_TIMEOUT)
         {
             /* Send WM_QUIT message to the thread and wait for it to terminate */
-            PostThreadMessageW(GetThreadId(m_hThread), WM_QUIT, 0, 0);
+            PostThreadMessageW(m_ThreadId, WM_QUIT, 0, 0);
             WaitForSingleObject(m_hThread, INFINITE);
         }
 
         CloseHandle(m_hThread);
         m_hThread = NULL;
+        m_ThreadId = 0;
     }
 
     if (m_hInitEvent)
