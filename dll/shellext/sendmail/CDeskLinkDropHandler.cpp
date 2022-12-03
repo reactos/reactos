@@ -86,14 +86,49 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         StringCbCopyW(szDest, sizeof(szDest), szDir);
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            CStringW strTitle;
-            strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+            LPCWSTR pszSourceExt;
+            BOOL bIsLink;
 
-            PathAppendW(szDest, strTitle);
-            PathRemoveExtensionW(szDest);
-            StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            pszSourceExt = PathFindExtensionW(szSrc);
+            bIsLink = ((_wcsicmp(pszSourceExt, L".lnk") == 0) ||
+                       (_wcsicmp(pszSourceExt, L".url") == 0));
 
-            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            if (bIsLink)
+            {
+                PathAppendW(szDest, PathFindFileNameW(szSrc));
+            }
+            else
+            {
+                CStringW strTitle;
+                strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+
+                PathAppendW(szDest, strTitle);
+                PathRemoveExtensionW(szDest);
+                StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            }
+
+            if (PathFileExistsW(szDest))
+            {
+                CStringW strName(PathFindFileNameW(szDest));
+                PathYetAnotherMakeUniqueName(szDest, szDir, NULL, strName);
+            }
+
+            if (bIsLink)
+            {
+                hr = (CopyFileW(szSrc, szDest, TRUE) ? S_OK : E_FAIL);
+            }
+            else if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
+            {
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            }
+            else
+            {
+                /* Set default working directory for the shortcut */
+                CStringW strWorkingDir(szSrc);
+                PathRemoveFileSpecW(strWorkingDir.GetBuffer());
+
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, strWorkingDir, NULL, -1, NULL);
+            }
         }
         else
         {
