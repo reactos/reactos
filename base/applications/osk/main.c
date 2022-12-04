@@ -550,9 +550,6 @@ int OSK_Timer(void)
     hWndActiveWindow = GetForegroundWindow();
     if (hWndActiveWindow != NULL && hWndActiveWindow != Globals.hMainWnd)
     {
-        /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-        Globals.hActiveWnd = hWndActiveWindow;
-
         /* Grab the current keyboard layout from the foreground window */
         dwThread = GetWindowThreadProcessId(hWndActiveWindow, NULL);
         hKeyboardLayout = GetKeyboardLayout(dwThread);
@@ -628,19 +625,6 @@ BOOL OSK_Command(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyUp;
     LONG WindowStyle;
     INT i;
-
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    if (Globals.hActiveWnd)
-    {
-        MSG msg;
-
-        SetForegroundWindow(Globals.hActiveWnd);
-        while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
 
     /* KeyDown and/or KeyUp ? */
     WindowStyle = GetWindowLongW(hWndControl, GWL_STYLE);
