@@ -896,6 +896,33 @@ FreeSoundFiles(HWND hwndDlg)
     }
 }
 
+static
+LRESULT
+FindSoundFileInList(HWND hwndDlg, LPCWSTR pSoundPath)
+{
+    LRESULT lCount, lIndex, lResult;
+    LPWSTR pszPath;
+    HWND hwndComboBox;
+
+    hwndComboBox = GetDlgItem(hwndDlg, IDC_SOUND_LIST);
+    lCount = ComboBox_GetCount(hwndComboBox);
+    if (lCount == CB_ERR)
+        return CB_ERR;
+
+    for (lIndex = 0; lIndex < lCount; lIndex++)
+    {
+        lResult = ComboBox_GetItemData(hwndComboBox, lIndex);
+        if (lResult == CB_ERR || lResult == 0)
+            continue;
+
+        pszPath = (LPWSTR)lResult;
+        if (_wcsicmp(pszPath, pSoundPath) == 0)
+            return lIndex;
+    }
+
+    return CB_ERR;
+}
+
 BOOL
 ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
 {
@@ -1182,7 +1209,13 @@ SoundsDlgProc(HWND hwndDlg,
 
                     if (GetOpenFileNameW(&ofn))
                     {
-                        // FIXME search if list already contains that sound
+                        // search if list already contains that sound
+                        lResult = FindSoundFileInList(hwndDlg, filename);
+                        if (lResult != CB_ERR)
+                        {
+                            SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)lResult, 0);
+                            break;
+                        }
 
                         // extract file name
                         pFileName = wcsrchr(filename, L'\\');
