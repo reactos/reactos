@@ -725,7 +725,7 @@ static VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 }
 
 static VOID FASTCALL
-FtMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
+IntMatrixFromMx(FT_Matrix *pmat, const MATRIX *pmx)
 {
     FLOATOBJ ef;
 
@@ -3105,7 +3105,7 @@ IntGetHash(IN LPCVOID pv, IN DWORD cdw)
 }
 
 static FT_BitmapGlyph
-ftGdiGlyphCacheGet(IN const FONT_CACHE_ENTRY *pCache)
+IntFindGlyphCache(IN const FONT_CACHE_ENTRY *pCache)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -3143,7 +3143,7 @@ ftGdiGlyphCacheGet(IN const FONT_CACHE_ENTRY *pCache)
 
 /* no cache */
 static FT_BitmapGlyph
-ftGdiGlyphSet(
+IntGetBitmapGlyphNoCache(
     FT_Face Face,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
@@ -3186,7 +3186,7 @@ ftGdiGlyphSet(
 }
 
 static FT_BitmapGlyph
-ftGdiGlyphCacheSet(
+IntGetBitmapGlyphWithCache(
     IN OUT PFONT_CACHE_ENTRY Cache,
     IN FT_GlyphSlot GlyphSlot)
 {
@@ -3803,7 +3803,7 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
-    FtMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
+    IntMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
     FT_Set_Transform(ft_face, &mat, NULL);
 
     TEXTOBJ_UnlockText(TextObj);
@@ -3886,7 +3886,7 @@ ftGdiGetGlyphOutline(
         PMATRIX pmx = DC_pmxWorldToDevice(dc);
 
         /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-        FtMatrixFromMx(&ftmatrix, pmx);
+        IntMatrixFromMx(&ftmatrix, pmx);
 
         if (memcmp(&ftmatrix, &identityMat, sizeof(identityMat)) != 0)
         {
@@ -4207,7 +4207,7 @@ ftGdiGetGlyphOutline(
 }
 
 static FT_BitmapGlyph
-ftGdiGetRealGlyph(
+IntGetRealGlyph(
     IN OUT PFONT_CACHE_ENTRY Cache)
 {
     INT error;
@@ -4232,13 +4232,13 @@ ftGdiGetRealGlyph(
             FT_GlyphSlot_Embolden(glyph);
         if (Cache->Hashed.Aspect.Emu.Italic)
             FT_GlyphSlot_Oblique(glyph);
-        realglyph = ftGdiGlyphSet(Cache->Hashed.Face, glyph, Cache->Hashed.Aspect.RenderMode);
+        realglyph = IntGetBitmapGlyphNoCache(Cache->Hashed.Face, glyph, Cache->Hashed.Aspect.RenderMode);
     }
     else
     {
         Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
 
-        realglyph = ftGdiGlyphCacheGet(Cache);
+        realglyph = IntFindGlyphCache(Cache);
         if (realglyph)
             return realglyph;
 
@@ -4250,7 +4250,7 @@ ftGdiGetRealGlyph(
         }
 
         glyph = Cache->Hashed.Face->glyph;
-        realglyph = ftGdiGlyphCacheSet(Cache, glyph);
+        realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
     }
 
     if (!realglyph)
@@ -4317,7 +4317,7 @@ TextIntGetTextExtentPoint(PDC dc,
         glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, *String, GTEF_INDICES, fl);
         Cache.Hashed.GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(&Cache);
+        realglyph = IntGetRealGlyph(&Cache);
         if (!realglyph)
             break;
 
@@ -5895,7 +5895,7 @@ IntGetTextDisposition(
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
         Cache->Hashed.GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(Cache);
+        realglyph = IntGetRealGlyph(Cache);
         if (!realglyph)
             return FALSE;
 
@@ -6183,7 +6183,7 @@ IntExtTextOutW(
         Cache.Hashed.matTransform = identityMat;
 
     /* Apply the world transformation */
-    FtMatrixFromMx(&mat, pmxWorldToDevice);
+    IntMatrixFromMx(&mat, pmxWorldToDevice);
     FT_Matrix_Multiply(&mat, &Cache.Hashed.matTransform);
     FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
@@ -6286,7 +6286,7 @@ IntExtTextOutW(
         glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
         Cache.Hashed.GlyphIndex = glyph_index;
 
-        realglyph = ftGdiGetRealGlyph(&Cache);
+        realglyph = IntGetRealGlyph(&Cache);
         if (!realglyph)
         {
             bResult = FALSE;
