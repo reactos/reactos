@@ -1192,7 +1192,7 @@ VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOwner)
     pwndParent = pwndNode->spwndParent;
     if (!pwndParent || pwndOwner != pwndNode)
     {
-        pImeWnd->spwndOwner = pwndNode;
+        WndSetOwner(pImeWnd, pwndNode);
         return;
     }
 
@@ -1218,7 +1218,7 @@ VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOwner)
         }
     }
 
-    pImeWnd->spwndOwner = pwndNode;
+    WndSetOwner(pImeWnd, pwndNode);
 }
 
 // Get the last non-IME-like top-most window on the desktop.
@@ -1401,7 +1401,7 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
             }
         }
 
-        pImeWnd->spwndOwner = pwndTopLevel;
+        WndSetOwner(pImeWnd, pwndTopLevel);
         IntImeCheckTopmost(pImeWnd);
     }
     else
@@ -1413,7 +1413,7 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
         {
             if (pwndActive && ptiIme == pwndActive->head.pti && !IS_WND_IMELIKE(pwndActive))
             {
-                pImeWnd->spwndOwner = pwndActive;
+                WndSetOwner(pImeWnd, pwndActive);
             }
             else
             {
@@ -2127,7 +2127,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     if (pImeWnd->spwndOwner && pwndTarget != pImeWnd->spwndOwner)
         return FALSE;
 
-    pImeWnd->spwndOwner = NULL;
+    WndSetOwner(pImeWnd, NULL);
     return TRUE;
 }
 
