@@ -3,7 +3,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 /* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Documentos e definições"
+    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
     IDS_APPDATA "Dados de Programas"
     IDS_DESKTOP "Ambiente de trabalho"
     IDS_FAVORITES "Favoritos"
@@ -15,7 +15,7 @@ BEGIN
     IDS_TEMPLATES "Modelos"
     IDS_STARTMENU "Menu Iniciar"
     IDS_PROGRAMS "Menu Iniciar\\Programas"
-    IDS_STARTUP "Menu Iniciar\\Programas\\Inicializar"
+    IDS_STARTUP "Menu Iniciar\\Programas\\Iniciar"
     IDS_LOCALSETTINGS "Configurações locais"
     IDS_LOCALAPPDATA "Configurações locais\\Dados de Programas"
     IDS_TEMP "Configurações locais\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
