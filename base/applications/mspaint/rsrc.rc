@@ -40,7 +40,7 @@ IDI_VERTSTRETCH ICON "icons/vertstretch.ico"
 IDI_HORZSKEW ICON "icons/horzskew.ico"
 IDI_VERTSKEW ICON "icons/vertskew.ico"
 
-#include <reactos/manifest_exe.rc>
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "mspaint.exe.manifest"
 
 /* UTF-8 */
 #pragma code_page(65001)
