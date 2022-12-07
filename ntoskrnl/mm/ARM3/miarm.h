@@ -220,24 +220,14 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MI_INITIAL_SESSION_IDS  64
 
-#if defined(_M_IX86) || defined(_M_ARM)
-//
-// PFN List Sentinel
-//
-#define LIST_HEAD 0xFFFFFFFF
+#define LIST_HEAD ULONG_PTR_MAX
 
 //
 // Because GCC cannot automatically downcast 0xFFFFFFFF to lesser-width bits,
 // we need a manual definition suited to the number of bits in the PteFrame.
 // This is used as a LIST_HEAD for the colored list
 //
-#define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
-#elif defined(_M_AMD64)
-#define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
-#define COLORED_LIST_HEAD ((1ULL << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
-#else
-#error Define these please!
-#endif
+#define COLORED_LIST_HEAD (((ULONG_PTR)1 << MI_PTE_FRAME_BITS) - 1)
 
 //
 // Returns the color of a page
