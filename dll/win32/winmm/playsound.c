@@ -245,7 +245,7 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
     }
     else if (fdwSound & SND_ALIAS)
     {
-        LPWSTR pszName;
+        LPCWSTR pszName;
 
         /* NOTE: SND_ALIAS_ID has the SND_ALIAS bit set */
         if ((fdwSound & SND_ALIAS_ID) == SND_ALIAS_ID)
@@ -271,7 +271,7 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
         }
         else
         {
-            pszName = (LPWSTR)pszSound;
+            pszName = pszSound;
         }
 
         bIsDefault = (_wcsicmp(pszName, L"SystemDefault") == 0);
@@ -397,7 +397,7 @@ static WINE_PLAYSOUND* PlaySound_AllocAndGetMMIO(const void* pszSound, HMODULE h
                                                  DWORD fdwSound, BOOL bUnicode)
 {
     BOOL bIsString;
-    LPWSTR pszSoundW;
+    LPCWSTR pszSoundW;
     UNICODE_STRING usBuffer;
     WINE_PLAYSOUND* wps;
 
@@ -413,7 +413,7 @@ static WINE_PLAYSOUND* PlaySound_AllocAndGetMMIO(const void* pszSound, HMODULE h
     }
     else
     {
-        pszSoundW = (LPWSTR)pszSound;
+        pszSoundW = pszSound;
     }
 
     wps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wps));
