@@ -46,7 +46,7 @@ BEGIN
     LTEXT "&Schrift", IDC_STATIC, 10, 105, 35, 10
     AUTOCHECKBOX "&Fette Schriften", IDC_CHECK_BOLD_FONTS, 45, 105, 60, 10
     LISTBOX IDC_LBOX_FONTTYPE, 10, 120, 110, 50, LBS_SORT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Selected Font", IDC_GROUPBOX_FONT_NAME, 7, 156, 240, 50
+    GROUPBOX "Gewählte Schrift", IDC_GROUPBOX_FONT_NAME, 7, 156, 240, 50
     CONTROL "", IDC_STATIC_SELECT_FONT_PREVIEW, "Static", SS_OWNERDRAW | SS_SUNKEN, 12, 166, 104, 35, WS_EX_CLIENTEDGE
     LTEXT "Jedes Zeichen ist:", IDC_STATIC, 125, 166, 85, 10
     LTEXT "Bildschirmpixel breit\nBildschirmpixel hoch", IDC_STATIC, 138, 180, 100, 20
@@ -152,5 +152,5 @@ BEGIN
     IDS_CPLDESCRIPTION "Konfiguriert die Konsoleneigenschaften."
     IDS_APPLY_SHORTCUT_ALL "Modifiziere die &Verknüpfung, die das Fenster startete"
     IDS_RASTERFONTS "Rasterschriften"
-    IDS_GROUPBOX_FONT_NAME "Selected Font: "
+    IDS_GROUPBOX_FONT_NAME "Gewählte Schrift: "
 END
