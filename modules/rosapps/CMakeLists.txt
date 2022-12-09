@@ -3,7 +3,10 @@ add_subdirectory(demos)
 add_subdirectory(drivers)
 add_subdirectory(include)
 add_subdirectory(lib)
-add_subdirectory(templates)
+
+if(ENABLE_ROSAPPS_TEMPLATES)
+    add_subdirectory(templates)
+endif()
 
 list(APPEND ROSAPPS_INF_FILES rosapps_shortcuts.inf)
 
