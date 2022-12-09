@@ -395,26 +395,14 @@ FUNC KiGeneralProtectionFault
 
     /* Dispatch privileged instruction fault */
     DispatchException eax, 0, 0, 0, 0
-    jmp KiGpfFatal
+    jmp KiGpfExit
 
 DispatchAccessViolation:
 
     /* Dispatch access violation */
     DispatchException eax, 2, 0, -1, 0
 
-KiGpfFatal:
-
-    /* Bugcheck */
-    mov ecx, UNEXPECTED_KERNEL_MODE_TRAP
-    mov rdx, HEX(000D) // EXCEPTION_GP_FAULT
-    xor r8, r8
-    mov r9, [rbp + KTRAP_FRAME_ErrorCode] // error code
-    sub rsp, 8
-    mov [rsp + KTRAP_FRAME_P5+8], rbp // trap frame
-    call KeBugCheckWithTf
-
 KiGpfExit:
-    /* Return */
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC
