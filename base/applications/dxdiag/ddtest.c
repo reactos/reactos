@@ -13,7 +13,6 @@ BOOL DDPrimarySurfaceTest(HWND hWnd);
 BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen);
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface);
 VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE lpDDBackBuffer, BOOL Fullscreen, INT *posX, INT *posY, INT *gainX, INT *gainY, RECT *rectDD);
-static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #define TEST_DURATION 10000 
 #define WIDTH 640
@@ -79,7 +78,7 @@ VOID DDTests()
 
     winClass.cbSize = sizeof(WNDCLASSEX);
     winClass.style = CS_DBLCLKS | CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-    winClass.lpfnWndProc = WindowProc;
+    winClass.lpfnWndProc = DefWindowProc;
     winClass.cbClsExtra = 0;
     winClass.cbWndExtra = 0;
     winClass.hInstance = hInstance;
@@ -364,9 +363,4 @@ VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE l
             lpDDPrimarySurface->lpVtbl->Blt(lpDDPrimarySurface, rectDD, lpDDBackBuffer, NULL, DDBLT_WAIT, NULL);
         }
     }
-}
-
-static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    return DefWindowProc(hWnd, msg, wParam, lParam);
 }
