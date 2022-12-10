@@ -204,5 +204,5 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
     IDS_RESTORE_ALL "&Afișează ferestrele deschise"
     IDS_TRAYWND_UNDO_CASCADE "&Anulează cascada"
-    IDS_TRAYWND_UNDO_TILE "&Anulează aranjarea"
+    IDS_TRAYWND_UNDO_TILE "An&ulează aranjarea"
 END
