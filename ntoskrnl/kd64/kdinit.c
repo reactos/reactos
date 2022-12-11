@@ -139,11 +139,12 @@ KdRegisterDebuggerDataBlock(IN ULONG Tag,
 
 BOOLEAN
 NTAPI
-KdInitSystem(IN ULONG BootPhase,
-             IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KdInitSystem(
+    _In_ ULONG BootPhase,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable;
-    LPSTR CommandLine, DebugLine, DebugOptionStart, DebugOptionEnd;
+    PSTR CommandLine, DebugLine, DebugOptionStart, DebugOptionEnd;
     STRING ImageName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;

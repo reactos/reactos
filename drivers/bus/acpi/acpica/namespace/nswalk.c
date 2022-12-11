@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -214,6 +214,10 @@ AcpiNsWalkNamespace (
     if (StartNode == ACPI_ROOT_OBJECT)
     {
         StartNode = AcpiGbl_RootNode;
+        if (!StartNode)
+        {
+            return_ACPI_STATUS (AE_NO_NAMESPACE);
+        }
     }
 
     /* Null child means "get first node" */

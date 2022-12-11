@@ -104,9 +104,78 @@ RtlInterlockedPushListSList(
     _In_ ULONG Count)
 {
 #ifdef _WIN64
-    UNIMPLEMENTED;
-    DbgBreakPoint();
-    return NULL;
+    SLIST_HEADER OldSListHead, NewSListHead;
+    PSLIST_ENTRY FirstEntry;
+
+    ASSERT(((ULONG_PTR)SListHead & 0xF) == 0);
+    ASSERT(((ULONG_PTR)List & 0xF) == 0);
+
+    if (RtlpUse16ByteSLists)
+    {
+         BOOLEAN exchanged;
+
+        do
+        {
+            /* Capture the current SListHead */
+            OldSListHead = *SListHead;
+
+            /* Link the last list entry */
+            FirstEntry = (PSLIST_ENTRY)(SListHead->Region & ~0xFLL);
+            ListEnd->Next = FirstEntry;
+
+            /* Set up new SListHead */
+            NewSListHead = OldSListHead;
+            NewSListHead.Header16.Depth += Count;
+            NewSListHead.Header16.Sequence++;
+            NewSListHead.Region = (ULONG64)List;
+            NewSListHead.Header16.HeaderType = 1;
+            NewSListHead.Header16.Init = 1;
+
+            /* Atomically exchange the SlistHead with the new one */
+            exchanged = _InterlockedCompareExchange128((PULONG64)SListHead,
+                                                       NewSListHead.Region,
+                                                       NewSListHead.Alignment,
+                                                       (PULONG64)&OldSListHead);
+        } while (!exchanged);
+
+        return FirstEntry;
+    }
+    else
+    {
+        ULONG64 Compare;
+
+        /* ListHead and List must be in the same region */
+        ASSERT(((ULONG64)SListHead & 0xFFFFF80000000000ull) ==
+               ((ULONG64)List & 0xFFFFF80000000000ull));
+
+        /* Read the header */
+        OldSListHead = *SListHead;
+
+        do
+        {
+            /* Construct the address from the header bits and the list head pointer */
+            FirstEntry = (PSLIST_ENTRY)((OldSListHead.Header8.NextEntry << 4) |
+                                        ((ULONG64)SListHead & 0xFFFFF80000000000ull));
+
+            /* Link the last list entry */
+            ListEnd->Next = FirstEntry;
+
+            /* Create a new header */
+            NewSListHead = OldSListHead;
+            NewSListHead.Header8.NextEntry = (ULONG64)List >> 4;
+            NewSListHead.Header8.Depth += Count;
+            NewSListHead.Header8.Sequence++;
+
+            /* Try to exchange atomically */
+            Compare = OldSListHead.Alignment;
+            OldSListHead.Alignment = InterlockedCompareExchange64((PLONG64)&SListHead->Alignment,
+                                                                  NewSListHead.Alignment,
+                                                                  Compare);
+        } while (OldSListHead.Alignment != Compare);
+
+        /* Return the old first entry */
+        return FirstEntry;
+    }
 #else
     SLIST_HEADER OldHeader, NewHeader;
     ULONGLONG Compare;

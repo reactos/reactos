@@ -16,7 +16,7 @@ list(APPEND SOURCE
 
 add_library(ntdll_vista MODULE ${SOURCE})
 set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
-target_link_libraries(ntdll_vista rtl_vista)
+target_link_libraries(ntdll_vista smlib rtl_vista)
 if(ARCH STREQUAL "arm")
     target_link_libraries(ntdll_vista chkstk)
 endif()

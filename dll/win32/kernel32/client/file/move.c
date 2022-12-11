@@ -7,17 +7,13 @@
  *                  Gerhard W. Gruber (sparhawk_at_gmx.at)
  *                  Dmitry Philippov (shedon@mail.ru)
  *                  Pierre Schweitzer (pierre@reactos.org)
- * UPDATE HISTORY:
- *                  Created 01/11/98
- *                  DP (29/07/2006)
- *                      Fix some bugs in the add_boot_rename_entry function
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
 #include <malloc.h>
-#include <strsafe.h>
+
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
@@ -33,15 +29,67 @@ typedef struct _COPY_PROGRESS_CONTEXT
 } COPY_PROGRESS_CONTEXT, *PCOPY_PROGRESS_CONTEXT;
 
 /* FUNCTIONS ****************************************************************/
-/*
+
+/**
+ * @brief
+ * Adds an entry in the "PendingFileRenameOperations" registry value, that is
+ * parsed at boot-time by SMSS.EXE to check whether there are some files to be
+ * renamed/moved or deleted.
+ *
+ * @param[in]   ExistingPath
+ * Full NT path to the file to rename/move or delete.
+ *
+ * @param[in]   NewPath
+ * Full NT path to the moved/renamed file; or an empty string if the file is
+ * to be deleted.
+ *
+ * @param[in]   KeyId
+ * Selects an alternate "PendingFileRenameOperationsXXX" registry value.
+ *
+ * @param[in]   CreateIfNotFound
+ * TRUE if the file needs to be created if it does not already exist,
+ * FALSE if not.
+ *
+ * @remark
+ * If both ExistingPath and NewPath strings are non-empty, the file is moved,
+ * otherwise it is deleted.
+ *
+ * @note
+ * The registry value is a list of NULL-terminated strings, which is itself
+ * terminated with an empty NULL-terminated string (single 0-byte).
+ * When a new entry is added, if NewPath is empty, then the second entry is
+ * simply a single NULL. Otherwise the second file path goes there.
+ * Each path is in NT format (e.g. path prepended with \??\) and the second
+ * file path gets also a '!' as the first character if MOVEFILE_REPLACE_EXISTING
+ * is specified.
+ *
+ * Examples:
+ *
+ * \??\D:\test\file1[0]
+ * !\??\D:\test\file1_renamed[0]
+ * \??\D:\test\delete[0]
+ * [0]                        <- file is to be deleted, second string empty
+ * \??\D:\test\file2[0]
+ * !\??\D:\test\file2_renamed[0]
+ * [0]                        <- indicates end of strings
+ *
+ * or:
+ *
+ * \??\D:\test\file1[0]
+ * !\??\D:\test\file1_renamed[0]
+ * \??\D:\test\delete[0]
+ * [0]                        <- file is to be deleted, second string empty
+ * [0]                        <- indicates end of strings
+ *
  * @implemented
- */
+ **/
 NTSTATUS
 WINAPI
-BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
-                     IN PUNICODE_STRING NewPath,
-                     IN INT KeyId,
-                     IN BOOL CreateIfNotFound)
+BasepMoveFileDelayed(
+    _In_ PUNICODE_STRING ExistingPath,
+    _In_ PUNICODE_STRING NewPath,
+    _In_ INT KeyId,
+    _In_ BOOL CreateIfNotFound)
 {
 #define STRING_LENGTH 0x400
     NTSTATUS Status;
@@ -54,7 +102,8 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     /* +6 because a INT shouldn't take more than 6 chars. Especially given the call path */
     WCHAR PendingOperationsBuffer[sizeof(L"PendingFileRenameOperations") / sizeof(WCHAR) + 6];
 
-    RtlInitUnicodeString(&SessionManagerString, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager");
+    RtlInitUnicodeString(&SessionManagerString,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager");
 
     /* Select appropriate key for adding our file */
     if (KeyId == 1)
@@ -63,7 +112,9 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     }
     else
     {
-        StringCbPrintfW(PendingOperationsBuffer, sizeof(PendingOperationsBuffer), L"PendingFileRenameOperations%d", KeyId);
+        RtlStringCbPrintfW(PendingOperationsBuffer,
+                           sizeof(PendingOperationsBuffer),
+                           L"PendingFileRenameOperations%d", KeyId);
         PendingOperations = PendingOperationsBuffer;
     }
     RtlInitUnicodeString(&PendingOperationsString, PendingOperations);
@@ -91,7 +142,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
         return Status;
     }
 
-    /* Reserve enough to read previous string + to append our with required null chars */
+    /* Reserve enough to read previous string + to append ours with required null chars */
     BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(UNICODE_NULL);
 
     while (TRUE)
@@ -113,7 +164,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
             break;
         }
 
-        /* If buffer was too small, then, reallocate one which is big enough */
+        /* If buffer was too small, reallocate one which is big enough */
         StringLength = DataSize;
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
         BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(UNICODE_NULL);
@@ -125,7 +176,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
         }
     }
 
-    /* Check if it existed - if not, create only IF asked to */
+    /* Check if it existed; if not, create only IF asked to */
     if (!NT_SUCCESS(Status) && (Status != STATUS_OBJECT_NAME_NOT_FOUND || !CreateIfNotFound))
     {
         NtClose(KeyHandle);
@@ -135,7 +186,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
 
     if (!NT_SUCCESS(Status))
     {
-        /* We didn't find any - ie, we create, so use complete buffer */
+        /* We didn't find any: we create, so use complete buffer */
         BufferBegin = Buffer;
         BufferWrite = Buffer;
     }
@@ -143,9 +194,9 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     {
         PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
 
-        /* Get data, our buffer begin and then where we should append data
-         * (- null char, this is REG_MULTI_SZ, it already includes double termination, we keep only one)
-         */
+        /* Get data, the buffer beginning, and where data should be appended
+         * (minus NULL char: this is REG_MULTI_SZ, it already includes double
+         * termination, but we keep only one). */
         BufferBegin = PartialInfo->Data;
         BufferWrite = (PWSTR)((ULONG_PTR)PartialInfo->Data + PartialInfo->DataLength - sizeof(UNICODE_NULL));
     }
@@ -191,12 +242,13 @@ BasepGetComputerNameFromNtPath(IN PUNICODE_STRING NewPath,
     WCHAR Letter;
     PWSTR AbsolutePath, EndOfName;
     USHORT AbsolutePathLength, NameLength;
-    WCHAR TargetDevice[0x105];
+    WCHAR TargetDevice[MAX_PATH + 1];
     WCHAR DeviceName[] = {'A', ':', '\0'}; /* Init to something, will be set later */
     UNICODE_STRING UncString = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
     UNICODE_STRING GlobalString = RTL_CONSTANT_STRING(L"\\??\\");
 
-    DPRINT("BasepGetComputerNameFromNtPath(%wZ, %p, %p, %lu)\n", NewPath, NewHandle, ComputerName, ComputerNameLength);
+    DPRINT("BasepGetComputerNameFromNtPath(%wZ, %p, %p, %lu)\n",
+           NewPath, NewHandle, ComputerName, ComputerNameLength);
 
     /* If it's an UNC path */
     if (RtlPrefixUnicodeString(&UncString, NewPath, TRUE))
@@ -241,7 +293,7 @@ BasepGetComputerNameFromNtPath(IN PUNICODE_STRING NewPath,
                 TargetDevice[27] == ':')
             {
                 /* Check for the path begin, computer name is before */
-                PWSTR Path = wcschr(&TargetDevice[28], '\\');
+                PWSTR Path = wcschr(&TargetDevice[28], L'\\');
                 if (Path == NULL)
                 {
                     return ERROR_BAD_PATHNAME;
@@ -299,12 +351,12 @@ BasepGetComputerNameFromNtPath(IN PUNICODE_STRING NewPath,
         for (NameLength = 0; NameLength < AbsolutePathLength; NameLength += sizeof(WCHAR))
         {
             /* Look for the next \, it will be the end of computer name */
-            if (EndOfName[0] == '\\')
+            if (EndOfName[0] == L'\\')
             {
                 break;
             }
             /* Computer name cannot contain ., if we get to that point, something went wrong... */
-            else if (EndOfName[0] == '.')
+            else if (EndOfName[0] == L'.')
             {
                 return ERROR_BAD_PATHNAME;
             }
@@ -349,7 +401,7 @@ BasepNotifyTrackingService(IN OUT PHANDLE ExistingHandle,
     ULONG ComputerNameLength, FileAttributes;
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     OEM_STRING ComputerNameStringA;
-    CHAR ComputerNameStringBuffer[0x105];
+    CHAR ComputerNameStringBuffer[MAX_PATH + 1];
     UNICODE_STRING ComputerNameStringW;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileBasicInfo;
@@ -360,7 +412,8 @@ BasepNotifyTrackingService(IN OUT PHANDLE ExistingHandle,
         CHAR Buffer[(MAX_COMPUTERNAME_LENGTH + 1) * sizeof(WCHAR)];
     } FileTrackingInfo;
 
-    DPRINT("BasepNotifyTrackingService(%p, %p, %p, %wZ)\n", *ExistingHandle, ObjectAttributes, NewHandle, NewPath);
+    DPRINT("BasepNotifyTrackingService(%p, %p, %p, %wZ)\n",
+           *ExistingHandle, ObjectAttributes, NewHandle, NewPath);
 
     Status = STATUS_SUCCESS;
     ComputerNameLength = ARRAYSIZE(ComputerName);
@@ -374,19 +427,19 @@ BasepNotifyTrackingService(IN OUT PHANDLE ExistingHandle,
     else
     {
         /* Convert the retrieved computer name to ANSI and attach it to the notification */
-        ComputerNameStringA.Length = 0;
-        ComputerNameStringA.MaximumLength = ARRAYSIZE(ComputerNameStringBuffer);
-        ComputerNameStringA.Buffer = ComputerNameStringBuffer;
+        RtlInitEmptyAnsiString(&ComputerNameStringA,
+                               ComputerNameStringBuffer,
+                               sizeof(ComputerNameStringBuffer));
 
         RtlInitUnicodeString(&ComputerNameStringW, ComputerName);
-        Status = RtlUnicodeStringToOemString(&ComputerNameStringA, &ComputerNameStringW, 0);
+        Status = RtlUnicodeStringToOemString(&ComputerNameStringA, &ComputerNameStringW, FALSE);
         if (!NT_SUCCESS(Status))
         {
             return Status;
         }
 
         RtlCopyMemory(FileTrackingInfo.ObjectInformation, ComputerNameStringA.Buffer, ComputerNameStringA.Length);
-        FileTrackingInfo.ObjectInformation[ComputerNameStringA.Length] = 0;
+        FileTrackingInfo.ObjectInformation[ComputerNameStringA.Length] = ANSI_NULL;
         FileTrackingInfo.ObjectInformationLength = ComputerNameStringA.Length + 1;
     }
 
@@ -406,7 +459,7 @@ BasepNotifyTrackingService(IN OUT PHANDLE ExistingHandle,
 
     /* If we get here, we got access denied error, this comes from a
      * read-only flag. So, close the file, in order to reopen it with enough
-     * rights to remove said flag and reattempt notification
+     * rights to remove said flag and reattempt notification.
      */
     CloseHandle(*ExistingHandle);
 
@@ -511,9 +564,7 @@ BasepOpenFileForMove(IN LPCWSTR File,
     _SEH2_TRY
     {
         /* Zero output */
-        RelativeNtName->Length =
-        RelativeNtName->MaximumLength = 0;
-        RelativeNtName->Buffer = NULL;
+        RtlInitEmptyUnicodeString(RelativeNtName, NULL, 0);
         *NtName = NULL;
 
         if (!RtlDosPathNameToRelativeNtPathName_U(File, RelativeNtName, NULL, &RelativeName))
@@ -533,7 +584,7 @@ BasepOpenFileForMove(IN LPCWSTR File,
         }
         else
         {
-            RelativeName.ContainingDirectory = 0;
+            RelativeName.ContainingDirectory = NULL;
         }
 
         InitializeObjectAttributes(ObjectAttributes,
@@ -558,7 +609,7 @@ BasepOpenFileForMove(IN LPCWSTR File,
             Status = NtQueryInformationFile(*FileHandle,
                                             &IoStatusBlock,
                                             &TagInfo,
-                                            sizeof(FILE_ATTRIBUTE_TAG_INFORMATION),
+                                            sizeof(TagInfo),
                                             FileAttributeTagInformation);
 
             /* Return if failure with a status that wouldn't mean the FSD cannot support reparse points */
@@ -677,11 +728,12 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
     OBJECT_ATTRIBUTES ObjectAttributes;
     PFILE_RENAME_INFORMATION RenameInfo;
     UNICODE_STRING NewPathU, ExistingPathU;
-    FILE_ATTRIBUTE_TAG_INFORMATION FileAttrTagInfo;
+    FILE_ATTRIBUTE_TAG_INFORMATION TagInfo;
     HANDLE SourceHandle = INVALID_HANDLE_VALUE, NewHandle, ExistingHandle;
     BOOL Ret = FALSE, ReplaceIfExists, DelayUntilReboot, AttemptReopenWithoutReparse;
 
-    DPRINT("MoveFileWithProgressW(%S, %S, %p, %p, %x)\n", lpExistingFileName, lpNewFileName, lpProgressRoutine, lpData, dwFlags);
+    DPRINT("MoveFileWithProgressW(%S, %S, %p, %p, %x)\n",
+           lpExistingFileName, lpNewFileName, lpProgressRoutine, lpData, dwFlags);
 
     NewPathU.Buffer = NULL;
     ExistingPathU.Buffer = NULL;
@@ -732,9 +784,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             if (DelayUntilReboot &&
                 (Status == STATUS_SHARING_VIOLATION || Status == STATUS_OBJECT_NAME_NOT_FOUND || Status == STATUS_OBJECT_PATH_NOT_FOUND))
             {
-                /* Here we don't fail completely, as we postpone the operation to reboot
-                 * File might exist afterwards, and we don't need a handle here
-                 */
+                /* Here we don't fail completely, as we postpone the operation to reboot.
+                 * File might exist afterwards, and we don't need a handle here. */
                 SourceHandle = INVALID_HANDLE_VALUE;
                 AttemptReopenWithoutReparse = FALSE;
             }
@@ -750,8 +801,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             /* We managed to open, so query information */
             Status = NtQueryInformationFile(SourceHandle,
                                             &IoStatusBlock,
-                                            &FileAttrTagInfo,
-                                            sizeof(FILE_ATTRIBUTE_TAG_INFORMATION),
+                                            &TagInfo,
+                                            sizeof(TagInfo),
                                             FileAttributeTagInformation);
             if (!NT_SUCCESS(Status))
             {
@@ -766,8 +817,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                 AttemptReopenWithoutReparse = FALSE;
             }
             /* Validate the reparse point (do we support it?) */
-            else if (FileAttrTagInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT &&
-                     FileAttrTagInfo.ReparseTag != IO_REPARSE_TAG_MOUNT_POINT)
+            else if ((TagInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) &&
+                     (TagInfo.ReparseTag != IO_REPARSE_TAG_MOUNT_POINT))
             {
                 NtClose(SourceHandle);
                 SourceHandle = INVALID_HANDLE_VALUE;
@@ -798,10 +849,10 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         /* Nullify string if we're to use it */
         if (DelayUntilReboot && !lpNewFileName)
         {
-            RtlInitUnicodeString(&NewPathU, 0);
+            RtlInitUnicodeString(&NewPathU, NULL);
         }
         /* Check whether path exists */
-        else if (!RtlDosPathNameToNtPathName_U(lpNewFileName, &NewPathU, 0, 0))
+        else if (!RtlDosPathNameToNtPathName_U(lpNewFileName, &NewPathU, NULL, NULL))
         {
             BaseSetLastNTError(STATUS_OBJECT_PATH_NOT_FOUND);
             _SEH2_LEAVE;
@@ -829,7 +880,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             }
 
             /* Check whether 'copy' renaming is allowed if required */
-            if (RtlDetermineDosPathNameType_U(lpExistingFileName) == RtlPathTypeUncAbsolute || dwFlags & MOVEFILE_COPY_ALLOWED)
+            if ((RtlDetermineDosPathNameType_U(lpExistingFileName) == RtlPathTypeUncAbsolute) ||
+                (dwFlags & MOVEFILE_COPY_ALLOWED))
             {
                 Status = STATUS_INVALID_PARAMETER;
             }
@@ -841,7 +893,6 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                 {
                     /* If doesn't exist, append to first key first, creating it if it doesn't exist */
                     Status = BasepMoveFileDelayed(&ExistingPathU, &NewPathU, 1, TRUE);
-
                     if (Status == STATUS_INSUFFICIENT_RESOURCES)
                     {
                         /* If it failed because it's too big, then create 2nd key and put it there */
@@ -865,7 +916,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         ASSERT(SourceHandle != INVALID_HANDLE_VALUE);
 
         /* Allocate renaming buffer and fill it */
-        RenameInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, NewPathU.Length + sizeof(FILE_RENAME_INFORMATION));
+        RenameInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                     NewPathU.Length + sizeof(FILE_RENAME_INFORMATION));
         if (RenameInfo == NULL)
         {
             BaseSetLastNTError(STATUS_NO_MEMORY);
@@ -874,7 +926,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
 
         RtlCopyMemory(&RenameInfo->FileName, NewPathU.Buffer, NewPathU.Length);
         RenameInfo->ReplaceIfExists = ReplaceIfExists;
-        RenameInfo->RootDirectory = 0;
+        RenameInfo->RootDirectory = NULL;
         RenameInfo->FileNameLength = NewPathU.Length;
 
         /* Attempt to rename the file */
@@ -882,7 +934,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                                       &IoStatusBlock,
                                       RenameInfo,
                                       NewPathU.Length + sizeof(FILE_RENAME_INFORMATION),
-                                      ((dwFlags & MOVEFILE_CREATE_HARDLINK) ? FileLinkInformation : FileRenameInformation));
+                                      ((dwFlags & MOVEFILE_CREATE_HARDLINK)
+                                        ? FileLinkInformation : FileRenameInformation));
         RtlFreeHeap(RtlGetProcessHeap(), 0, RenameInfo);
         if (NT_SUCCESS(Status))
         {
@@ -890,14 +943,13 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             Ret = TRUE;
             _SEH2_LEAVE;
         }
-        /* If we failed for any other reason than not the same device, fail
-         * If we failed because of different devices, only allow renaming if user allowed copy
+        /* If we failed for any other reason than not the same device, fail.
+         * If we failed because of different devices, only allow renaming if user allowed copy.
          */
         if (Status != STATUS_NOT_SAME_DEVICE || !(dwFlags & MOVEFILE_COPY_ALLOWED))
         {
-            /* ReactOS hack! To be removed once all FSD have proper renaming support
-             * Just leave status to error and leave
-             */
+            /* ReactOS HACK! To be removed once all FSD have proper renaming support.
+             * Just leave status to error and leave. */
             if (Status == STATUS_NOT_IMPLEMENTED)
             {
                 DPRINT1("Forcing copy, renaming not supported by FSD\n");
@@ -925,7 +977,8 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                                BasepMoveFileCopyProgress,
                                &CopyContext,
                                NULL,
-                               (ReplaceIfExists == 0) | COPY_FILE_OPEN_SOURCE_FOR_WRITE,
+                               (!ReplaceIfExists ? COPY_FILE_FAIL_IF_EXISTS : 0)
+                                    | COPY_FILE_OPEN_SOURCE_FOR_WRITE,
                                0,
                                &ExistingHandle,
                                &NewHandle);
@@ -943,7 +996,10 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             if (NewHandle != INVALID_HANDLE_VALUE)
             {
                 /* If copying succeed, notify */
-                Status = BasepNotifyTrackingService(&ExistingHandle, &ObjectAttributes, NewHandle, &NewPathU);
+                Status = BasepNotifyTrackingService(&ExistingHandle,
+                                                    &ObjectAttributes,
+                                                    NewHandle,
+                                                    &NewPathU);
                 if (!NT_SUCCESS(Status))
                 {
                     /* Fail in case it had to succeed */
@@ -1027,7 +1083,11 @@ MoveFileWithProgressA(IN LPCSTR lpExistingFileName,
         NewFileNameW.Buffer = NULL;
     }
 
-    Ret = MoveFileWithProgressW(ExistingFileNameW.Buffer, NewFileNameW.Buffer, lpProgressRoutine, lpData, dwFlags);
+    Ret = MoveFileWithProgressW(ExistingFileNameW.Buffer,
+                                NewFileNameW.Buffer,
+                                lpProgressRoutine,
+                                lpData,
+                                dwFlags);
 
     RtlFreeUnicodeString(&ExistingFileNameW);
     RtlFreeUnicodeString(&NewFileNameW);
@@ -1062,10 +1122,10 @@ MoveFileExW(IN LPCWSTR lpExistingFileName,
             IN DWORD dwFlags)
 {
     return MoveFileWithProgressW(lpExistingFileName,
-	                         lpNewFileName,
-	                         NULL,
-	                         NULL,
-	                         dwFlags);
+                                 lpNewFileName,
+                                 NULL,
+                                 NULL,
+                                 dwFlags);
 }
 
 
@@ -1079,8 +1139,8 @@ MoveFileA(IN LPCSTR lpExistingFileName,
 {
     return MoveFileWithProgressA(lpExistingFileName,
                                  lpNewFileName,
-	                         NULL,
-	                         NULL,
+                                 NULL,
+                                 NULL,
                                  MOVEFILE_COPY_ALLOWED);
 }
 
@@ -1116,7 +1176,8 @@ ReplaceFileA(IN LPCSTR lpReplacedFileName,
     BOOL Ret;
     UNICODE_STRING ReplacedFileNameW, ReplacementFileNameW, BackupFileNameW;
 
-    if (!lpReplacedFileName || !lpReplacementFileName || lpExclude || lpReserved || dwReplaceFlags & ~(REPLACEFILE_WRITE_THROUGH | REPLACEFILE_IGNORE_MERGE_ERRORS))
+    if (!lpReplacedFileName || !lpReplacementFileName || lpExclude || lpReserved ||
+        (dwReplaceFlags & ~(REPLACEFILE_WRITE_THROUGH | REPLACEFILE_IGNORE_MERGE_ERRORS)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -1147,7 +1208,10 @@ ReplaceFileA(IN LPCSTR lpReplacedFileName,
         BackupFileNameW.Buffer = NULL;
     }
 
-    Ret = ReplaceFileW(ReplacedFileNameW.Buffer, ReplacementFileNameW.Buffer, BackupFileNameW.Buffer, dwReplaceFlags, 0, 0);
+    Ret = ReplaceFileW(ReplacedFileNameW.Buffer,
+                       ReplacementFileNameW.Buffer,
+                       BackupFileNameW.Buffer,
+                       dwReplaceFlags, 0, 0);
 
     if (lpBackupFileName)
     {
@@ -1334,14 +1398,10 @@ PrivMoveFileIdentityW(IN LPCWSTR lpSource, IN LPCWSTR lpDestination, IN DWORD dw
     DPRINT("PrivMoveFileIdentityW(%S, %S, %x)\n", lpSource, lpDestination, dwFlags);
 
     SourceHandle = INVALID_HANDLE_VALUE;
-    NtSource.Length =
-    NtSource.MaximumLength = 0;
-    NtSource.Buffer = NULL;
+    RtlInitEmptyUnicodeString(&NtSource, NULL, 0);
     RelativeSource = NULL;
     DestinationHandle = INVALID_HANDLE_VALUE;
-    NtDestination.Length =
-    NtDestination.MaximumLength = 0;
-    NtDestination.Buffer = NULL;
+    RtlInitEmptyUnicodeString(&NtDestination, NULL, 0);
     RelativeDestination = NULL;
 
     /* FILE_WRITE_DATA is required for later on notification */
@@ -1354,10 +1414,10 @@ PrivMoveFileIdentityW(IN LPCWSTR lpSource, IN LPCWSTR lpDestination, IN DWORD dw
     _SEH2_TRY
     {
         /* We will loop twice:
-         * First we attempt to open with FILE_WRITE_DATA for notification
+         * First we attempt to open with FILE_WRITE_DATA for notification.
          * If it fails and we have flag for non-trackable files, we retry
          * without FILE_WRITE_DATA.
-         * If that one fails, then, we quit for real
+         * If that one fails, then, we quit for real.
          */
         while (TRUE)
         {
@@ -1404,9 +1464,8 @@ PrivMoveFileIdentityW(IN LPCWSTR lpSource, IN LPCWSTR lpDestination, IN DWORD dw
         }
 
         DestAccess = FILE_WRITE_ATTRIBUTES;
-        /* If we could preserve FILE_WRITE_DATA for source, attempt to get it for destination
-         * Still for notification purposes
-         */
+        /* If we could preserve FILE_WRITE_DATA for source, attempt to
+         * get it for destination, still for notification purposes. */
         if (SourceAccess & FILE_WRITE_DATA)
         {
             DestAccess |= FILE_WRITE_DATA;

@@ -133,7 +133,7 @@ START_TEST(bind)
     int Error;
     CHAR LocalHostName[128];
     struct hostent *Hostent;
-    IN_ADDR Address;
+    IN_ADDR Address = { 0 };
     SOCKET Socket;
     struct sockaddr_in Addr = { AF_INET };
 

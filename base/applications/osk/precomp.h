@@ -57,8 +57,6 @@ typedef struct
     HWND*      hKeys;
     HFONT      hFont;
     WCHAR      szTitle[MAX_PATH];
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND       hActiveWnd;
 
     /* On-Screen Keyboard registry settings */
     BOOL       bShowWarning;

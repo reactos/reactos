@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20210730
+#define ACPI_CA_VERSION                 0x20221020
 
 #include "acconfig.h"
 #include "actypes.h"
@@ -550,8 +550,12 @@ AcpiDecodePldBuffer (
 ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiInstallTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    BOOLEAN                 Physical))
+    ACPI_TABLE_HEADER       *Table))
+
+ACPI_EXTERNAL_RETURN_STATUS (
+ACPI_STATUS ACPI_INIT_FUNCTION
+AcpiInstallPhysicalTable (
+    ACPI_PHYSICAL_ADDRESS   Address))
 
 ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS

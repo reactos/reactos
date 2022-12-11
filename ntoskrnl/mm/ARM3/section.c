@@ -135,24 +135,6 @@ MiIsProtectionCompatible(IN ULONG SectionPageProtection,
     return ((CompatibleMask | NewSectionPageProtection) == CompatibleMask);
 }
 
-ACCESS_MASK
-NTAPI
-MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection)
-{
-    ULONG ProtectionMask;
-
-    /* Calculate the protection mask and make sure it's valid */
-    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
-    if (ProtectionMask == MM_INVALID_PROTECTION)
-    {
-        DPRINT1("Invalid protection mask\n");
-        return STATUS_INVALID_PAGE_PROTECTION;
-    }
-
-    /* Now convert it to the required file access */
-    return MmMakeFileAccess[ProtectionMask & 0x7];
-}
-
 ULONG
 NTAPI
 MiMakeProtectionMask(IN ULONG Protect)
@@ -2521,11 +2503,16 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
              (SectionPageProtection & PAGE_NOACCESS)));
 
     /* Convert section flag to page flag */
-    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
+    if (AllocationAttributes & SEC_NOCACHE)
+        SectionPageProtection |= PAGE_NOCACHE;
 
     /* Check to make sure the protection is correct. Nt* does this already */
     ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
-    if (ProtectionMask == MM_INVALID_PROTECTION) return STATUS_INVALID_PAGE_PROTECTION;
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
 
     /* Check if this is going to be a data or image backed file section */
     if ((FileHandle) || (FileObject))

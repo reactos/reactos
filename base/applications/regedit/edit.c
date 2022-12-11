@@ -49,14 +49,14 @@ void error(HWND hwnd, INT resId, ...)
 
     hInstance = GetModuleHandle(0);
 
-    if (!LoadStringW(hInstance, IDS_ERROR, title, COUNT_OF(title)))
+    if (!LoadStringW(hInstance, IDS_ERROR, title, ARRAY_SIZE(title)))
         wcscpy(title, L"Error");
 
-    if (!LoadStringW(hInstance, resId, errfmt, COUNT_OF(errfmt)))
+    if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
         wcscpy(errfmt, L"Unknown error string!");
 
     va_start(ap, resId);
-    _vsnwprintf(errstr, COUNT_OF(errstr), errfmt, ap);
+    _vsnwprintf(errstr, ARRAY_SIZE(errstr), errfmt, ap);
     va_end(ap);
 
     MessageBoxW(hwnd, errstr, title, MB_OK | MB_ICONERROR);
@@ -65,7 +65,7 @@ void error(HWND hwnd, INT resId, ...)
 static void error_code_messagebox(HWND hwnd, DWORD error_code)
 {
     WCHAR title[256];
-    if (!LoadStringW(hInst, IDS_ERROR, title, COUNT_OF(title)))
+    if (!LoadStringW(hInst, IDS_ERROR, title, ARRAY_SIZE(title)))
         wcscpy(title, L"Error");
     ErrorMessageBox(hwnd, title, error_code);
 }
@@ -80,14 +80,14 @@ void warning(HWND hwnd, INT resId, ...)
 
     hInstance = GetModuleHandle(0);
 
-    if (!LoadStringW(hInstance, IDS_WARNING, title, COUNT_OF(title)))
+    if (!LoadStringW(hInstance, IDS_WARNING, title, ARRAY_SIZE(title)))
         wcscpy(title, L"Warning");
 
-    if (!LoadStringW(hInstance, resId, errfmt, COUNT_OF(errfmt)))
+    if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
         wcscpy(errfmt, L"Unknown error string!");
 
     va_start(ap, resId);
-    _vsnwprintf(errstr, COUNT_OF(errstr), errfmt, ap);
+    _vsnwprintf(errstr, ARRAY_SIZE(errstr), errfmt, ap);
     va_end(ap);
 
     MessageBoxW(hwnd, errstr, title, MB_OK | MB_ICONSTOP);
@@ -111,7 +111,7 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
@@ -180,7 +180,7 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
@@ -300,7 +300,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
@@ -402,7 +402,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
@@ -456,13 +456,13 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = (rc.right - rc.left) / 2;
-    LoadStringW(hInst, IDS_DMA_CHANNEL, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_DMA_CHANNEL, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
     lvC.cx = (rc.right - rc.left) - lvC.cx;
-    LoadStringW(hInst, IDS_DMA_PORT, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_DMA_PORT, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
@@ -476,23 +476,23 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_INTERRUPT_VECTOR, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_VECTOR, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_INTERRUPT_LEVEL, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_LEVEL, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
-    LoadStringW(hInst, IDS_INTERRUPT_AFFINITY, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_AFFINITY, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 3;
     lvC.cx = (rc.right - rc.left) - 3 * width;
-    LoadStringW(hInst, IDS_INTERRUPT_TYPE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_TYPE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 3, &lvC) == -1)
         return FALSE;
 
@@ -506,18 +506,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_MEMORY_ADDRESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_ADDRESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_MEMORY_LENGTH, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_LENGTH, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_MEMORY_ACCESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_ACCESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -531,18 +531,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_PORT_ADDRESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_ADDRESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_PORT_LENGTH, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_LENGTH, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_PORT_ACCESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_ACCESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -555,18 +555,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_SPECIFIC_RESERVED1, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_RESERVED1, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_SPECIFIC_RESERVED2, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_RESERVED2, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_SPECIFIC_DATASIZE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_DATASIZE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -725,9 +725,9 @@ ParseResources(HWND hwnd)
                     ListView_SetItemText(hwndLV, iItem, 1, buffer);
 
                     if (pDescriptor->Flags & CM_RESOURCE_PORT_IO)
-                        LoadStringW(hInst, IDS_PORT_PORT_IO, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_PORT_PORT_IO, buffer, ARRAY_SIZE(buffer));
                     else
-                        LoadStringW(hInst, IDS_PORT_MEMORY_IO, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_PORT_MEMORY_IO, buffer, ARRAY_SIZE(buffer));
                     ListView_SetItemText(hwndLV, iItem, 2, buffer);
                 }
                 break;
@@ -756,9 +756,9 @@ ParseResources(HWND hwnd)
                     ListView_SetItemText(hwndLV, iItem, 2, buffer);
 
                     if (pDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
-                        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, buffer, ARRAY_SIZE(buffer));
                     else
-                        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, buffer, ARRAY_SIZE(buffer));
 
                     ListView_SetItemText(hwndLV, iItem, 3, buffer);
                 }
@@ -791,15 +791,15 @@ ParseResources(HWND hwnd)
                     switch (pDescriptor->Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY))
                     {
                         case CM_RESOURCE_MEMORY_READ_ONLY:
-                            LoadStringW(hInst, IDS_MEMORY_READ_ONLY, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_READ_ONLY, buffer, ARRAY_SIZE(buffer));
                             break;
 
                         case CM_RESOURCE_MEMORY_WRITE_ONLY:
-                            LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, buffer, ARRAY_SIZE(buffer));
                             break;
 
                         default:
-                            LoadStringW(hInst, IDS_MEMORY_READ_WRITE, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_READ_WRITE, buffer, ARRAY_SIZE(buffer));
                             break;
                     }
 
@@ -961,13 +961,13 @@ static BOOL CreateResourceListColumns(HWND hWndListView)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = (rc.right - rc.left) / 2;
-    LoadStringW(hInst, IDS_BUSNUMBER, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_BUSNUMBER, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hWndListView, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
     lvC.cx = (rc.right - rc.left) - lvC.cx;
-    LoadStringW(hInst, IDS_INTERFACE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERFACE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hWndListView, 1, &lvC) == -1)
         return FALSE;
 
@@ -1467,8 +1467,8 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCWSTR keyPath)
         return FALSE;
     }
 
-    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, COUNT_OF(caption));
-    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, COUNT_OF(msg));
+    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, ARRAY_SIZE(caption));
+    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, ARRAY_SIZE(msg));
 
     if (MessageBoxW(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) != IDYES)
         goto done;

@@ -52,7 +52,7 @@ static INT g_iSortedColumn = 0;
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };  /* in percents */
 static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
-LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
+WCHAR *GetValueName(HWND hwndLV, int iStartAt)
 {
     int item;
     LVITEMW LVItem;
@@ -181,7 +181,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             {
                 WCHAR buffer[255];
                 /* load (value not set) string */
-                LoadStringW(hInst, IDS_VALUE_NOT_SET, buffer, COUNT_OF(buffer));
+                LoadStringW(hInst, IDS_VALUE_NOT_SET, buffer, ARRAY_SIZE(buffer));
                 ListView_SetItemText(hwndLV, index, 2, buffer);
             }
             break;
@@ -213,6 +213,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         }
         break;
         case REG_DWORD:
+        case REG_NONE:
         {
             WCHAR buf[200];
             if(dwCount == sizeof(DWORD))
@@ -221,7 +222,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             }
             else
             {
-                LoadStringW(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
+                LoadStringW(hInst, IDS_INVALID_DWORD, buf, ARRAY_SIZE(buf));
             }
             ListView_SetItemText(hwndLV, index, 2, buf);
         }
@@ -246,7 +247,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             else
             {
                 WCHAR szText[128];
-                LoadStringW(hInst, IDS_BINARY_EMPTY, szText, COUNT_OF(szText));
+                LoadStringW(hInst, IDS_BINARY_EMPTY, szText, ARRAY_SIZE(szText));
                 ListView_SetItemText(hwndLV, index, 2, szText);
             }
         }
@@ -271,7 +272,7 @@ static BOOL CreateListColumns(HWND hWndListView, INT cxTotal)
         lvC.iSubItem = index;
         lvC.cx = (cxTotal * default_column_widths[index]) / 100;
         lvC.fmt = column_alignment[index];
-        LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
+        LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, ARRAY_SIZE(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
     }
     return TRUE;
@@ -319,7 +320,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     switch (plvdi->item.iSubItem)
     {
     case 0:
-        LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+        LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
         plvdi->item.pszText = buffer;
         break;
     case 1:
@@ -364,7 +365,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
             default:
             {
                 WCHAR buf2[200];
-                LoadStringW(hInst, IDS_UNKNOWN_TYPE, buf2, COUNT_OF(buf2));
+                LoadStringW(hInst, IDS_UNKNOWN_TYPE, buf2, ARRAY_SIZE(buf2));
                 wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
                 plvdi->item.pszText = buffer;
                 break;
@@ -597,8 +598,8 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 {
                     WCHAR msg[128], caption[128];
 
-                    LoadStringW(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, COUNT_OF(msg));
-                    LoadStringW(hInst, IDS_ERR_RENVAL_CAPTION, caption, COUNT_OF(caption));
+                    LoadStringW(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, ARRAY_SIZE(msg));
+                    LoadStringW(hInst, IDS_ERR_RENVAL_CAPTION, caption, ARRAY_SIZE(caption));
                     MessageBoxW(0, msg, caption, 0);
                     *Result = TRUE;
                 }

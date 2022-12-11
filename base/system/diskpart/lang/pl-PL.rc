@@ -17,28 +17,28 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
-    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
-    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+    IDS_ACTIVE_FAIL "\nDiskPart nie mógł oznaczyć partycji jako aktywnej.\nUpewnij się, że partycja jest prawidłowa.\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart oznaczył bieżącą partycję jako aktywną.\n"
+    IDS_ACTIVE_ALREADY "\nBieżąca partycja jest już oznaczona jako aktywna.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
-    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+    IDS_CLEAN_FAIL "\nDiskPart nie może wyczyścić dysku.\nDane na dysku mogą nie nadawać się do odzyskania.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart pomyślnie oczyścił dysk.\n"
+    IDS_CLEAN_SYSTEM "\nWybrany dysk jest niezbędny do działania tego komputera, nie może być wyczyszczony.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
-    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart nie może utworzyć określonej partycji.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart pomyślnie utworzył określoną partycję.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
-    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart nie może usunąć wybranej partycji.\nUpewnij się, że wybrana partycja nadaje się do usunięcia.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart pomyślnie usunął wybraną partycję.\n"
 END
 
 /* Disk Information Labels */
@@ -69,10 +69,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
-    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+    IDS_FILESYSTEMS_CURRENT "Bieżący system plików\n"
+    IDS_FILESYSTEMS_FORMATTING "Systemy plików obsługiwane przy formatowaniu\n"
+    IDS_FILESYSTEMS_TYPE "Typ            : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Rozmiar klastra: %lu\n"
 END
 
 STRINGTABLE
@@ -82,9 +82,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
-    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
-    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+    IDS_INACTIVE_FAIL "\nDiskPart nie może oznaczyć partycji jako nieaktywnej.\nUpewnij się, że partycja jest prawidłowa.\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart oznaczył bieżącą partycję jako nieaktywną.\n"
+    IDS_INACTIVE_ALREADY "\nBieżąca partycja jest już oznaczona jako nieaktywna.\n"
 END
 
 /* Detail header titles */
@@ -126,10 +126,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
-    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
-    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
-    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+    IDS_SETID_FAIL "\nDiskPart nie może zmienić typu partycji.\n"
+    IDS_SETID_SUCCESS "\nTyp partycji został pomyślnie zmieniony.\n"
+    IDS_SETID_INVALID_FORMAT "\nFormat typu partycji jest nieprawidłowy.\n"
+    IDS_SETID_INVALID_TYPE "\nTyp partycji jest nieprawidłowy.\n"
 END
 
 /* Disk Status */
@@ -154,54 +154,54 @@ END
 /* Help Command Descriptions */
 STRINGTABLE
 BEGIN
-    IDS_HELP_ACTIVE                    "Oznacza bieżącą partycję podstawową jako aktywną.\n"
+    IDS_HELP_ACTIVE                    "Oznacz wybraną partycję jako aktywną.\n"
     IDS_HELP_ADD                       "Dodaje dublowanie do woluminu prostego.\n"
     IDS_HELP_ASSIGN                    "Przypisz literę dysku lub punkt instalacji dla wybranego\n              woluminu.\n"
     IDS_HELP_ATTACH                    "Dołącza wirtualny dysk.\n"
     IDS_HELP_ATTRIBUTES                "Manipuluje atrybutami woluminu lub dysku.\n"
-    IDS_HELP_AUTOMOUNT                 "Włącza i wyłącza automatyczne instalowanie woluminów\n              podstawowych.\n"
+    IDS_HELP_AUTOMOUNT                 "Włącz i wyłącz automatyczne instalowanie woluminów\n              podstawowych.\n"
     IDS_HELP_BREAK                     "Dzieli zestaw dublowania.\n"
     IDS_HELP_CLEAN                     "Usuń informacje o konfiguracji lub wszystkie informacje\n              z dysku.\n"
     IDS_HELP_COMPACT                   "Próbuje zmniejszyć fizyczny rozmiaru pliku.\n"
     IDS_HELP_CONVERT                   "Konwertuje między różnymi formatami dysków.\n"
 
     IDS_HELP_CREATE                    "Tworzy wolumin, partycję, lub dysk wirtualny.\n"
-    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
-    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
-    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
-    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
-    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
-    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
-    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
-    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+    IDS_HELP_CREATE_PARTITION          "Tworzy partycję.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Tworzy partycję systemową EFI.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Tworzy partycję rozszerzoną.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Tworzy dysk logiczny.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Tworzy zastrzeżoną partycję MSR.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Tworzy partycję podstawową.\n"
+    IDS_HELP_CREATE_VOLUME             "Tworzy wolumin.\n"
+    IDS_HELP_CREATE_VDISK              "Tworzy plik dysku wirtualnego.\n"
 
-    IDS_HELP_DELETE                    "Usuń obiekt.\n"
-    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
-    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
-    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+    IDS_HELP_DELETE                    "Usuwanie obiektu.\n"
+    IDS_HELP_DELETE_DISK               "Usuwanie dysku.\n"
+    IDS_HELP_DELETE_PARTITION          "Usuwanie wybranej partycji.\n"
+    IDS_HELP_DELETE_VOLUME             "Usuwanie wybranego woluminu.\n"
 
     IDS_HELP_DETACH                    "Odłącza wirtualny dysk.\n"
 
     IDS_HELP_DETAIL                    "Podaj szczegółowe informacje o obiekcie.\n"
-    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
-    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
-    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+    IDS_HELP_DETAIL_DISK               "Wyświetl właściwości wybranego dysku.\n"
+    IDS_HELP_DETAIL_PARTITION          "Wyświetl właściwości wybranej partycji.\n"
+    IDS_HELP_DETAIL_VOLUME             "Wyświetl właściwości wybranego woluminu.\n"
 
     IDS_HELP_EXIT                      "Zakończ program DiskPart.\n"
     IDS_HELP_EXPAND                    "Zwiększa maksymalny rozmiar dysku wirtualnego.\n"
     IDS_HELP_EXTEND                    "Rozszerz wolumin.\n"
-    IDS_HELP_FILESYSTEMS               "Drukuj obecne i obsługiwane systemy plików na tym woluminie.\n"
-    IDS_HELP_FORMAT                    "Formatuje wolumin lub partycję.\n"
-    IDS_HELP_GPT                       "Przypisuje atrybuty do wybranej partycji GPT.\n"
-    IDS_HELP_HELP                      "Drukuje listę poleceń.\n"
-    IDS_HELP_IMPORT                    "Importuje grupę dysków.\n"
-    IDS_HELP_INACTIVE                  "Oznacza bieżącą partycję podstawową jako nieaktywną.\n"
+    IDS_HELP_FILESYSTEMS               "Wyświetl obecne i obsługiwane systemy plików w woluminie.\n"
+    IDS_HELP_FORMAT                    "Formatuj wolumin lub partycję.\n"
+    IDS_HELP_GPT                       "Przypisz atrybuty do wybranej partycji GPT.\n"
+    IDS_HELP_HELP                      "Wyświetl listę poleceń.\n"
+    IDS_HELP_IMPORT                    "Importuj grupę dysków.\n"
+    IDS_HELP_INACTIVE                  "Oznacza wybraną partycję jako nieaktywną.\n"
 
-    IDS_HELP_LIST                      "Drukuje listę obiektów.\n"
-    IDS_HELP_LIST_DISK                 "List disks.\n"
-    IDS_HELP_LIST_PARTITION            "List partitions.\n"
-    IDS_HELP_LIST_VOLUME               "List volumes.\n"
-    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+    IDS_HELP_LIST                      "Wyświetl listę obiektów.\n"
+    IDS_HELP_LIST_DISK                 "Wyświetl listę dysków.\n"
+    IDS_HELP_LIST_PARTITION            "Wyświetl listę partycji na wybranym dysku.\n"
+    IDS_HELP_LIST_VOLUME               "Wyświetl listę woluminów.\n"
+    IDS_HELP_LIST_VDISK                "Wyświetl listę dysków wirtualnych.\n"
 
     IDS_HELP_MERGE                     "Scala dysk podrzędny z dyskami nadrzędnymi.\n"
     IDS_HELP_OFFLINE                   "Przęłącz do trybu offline obiekt będący w trybie online.\n"
@@ -214,11 +214,11 @@ BEGIN
     IDS_HELP_RETAIN                    "Umieść zachowaną partycję w woluminie prostym.\n"
     IDS_HELP_SAN                       "Wyświetla lub ustawia zasady SAN dla aktualnie uruchomionego\n              systemu operacyjnego.\n"
 
-    IDS_HELP_SELECT                    "Przenieś fokus na jeden z obiektów.\n"
-    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
-    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
-    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
-    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+    IDS_HELP_SELECT                    "Przenieś fokus na obiekt.\n"
+    IDS_HELP_SELECT_DISK               "Przenieś fokus na dysk.\n"
+    IDS_HELP_SELECT_PARTITION          "Przenieś fokus na partycję.\n"
+    IDS_HELP_SELECT_VOLUME             "Przenieś fokus na wolumin.\n"
+    IDS_HELP_SELECT_VDISK              "Przenieś fokus na dysk wirtualny.\n"
 
     IDS_HELP_SETID                     "Zmien typ partycji.\n"
     IDS_HELP_SHRINK                    "Zmniejsz rozmiar wybranego woluminu.\n"

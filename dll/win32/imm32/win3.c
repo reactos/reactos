@@ -11,20 +11,22 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #ifdef IMM_WIN3_SUPPORT /* 3.x support */
 
+/* Win: JTransCompositionA */
 DWORD APIENTRY
-ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
+Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
 
+/* Win: JTransCompositionW */
 DWORD APIENTRY
-ImmNt3JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
+Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    // FIXME
+    FIXME("\n");
     *pDest = *pSrc;
     return 1;
 }
@@ -32,8 +34,8 @@ ImmNt3JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
 
 DWORD APIENTRY
-ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
-             LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
+                        LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     DWORD ret = 0;
     HWND hWnd, hwndDefIME;
@@ -50,7 +52,7 @@ ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     // clone the message list
     cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
     pTempList = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbTempList);
-    if (pTempList == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pTempList))
         return 0;
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 
@@ -114,9 +116,9 @@ ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
 
             case WM_IME_COMPOSITION:
                 if (bAnsi)
-                    dwNumber = ImmNt3JTransCompA(pIC, pCS, pEntry, pTrans);
+                    dwNumber = Imm32JTransCompA(pIC, pCS, pEntry, pTrans);
                 else
-                    dwNumber = ImmNt3JTransCompW(pIC, pCS, pEntry, pTrans);
+                    dwNumber = Imm32JTransCompW(pIC, pCS, pEntry, pTrans);
 
                 ret += dwNumber;
                 pTrans += dwNumber;
@@ -171,33 +173,37 @@ DoDefault:
 }
 
 DWORD APIENTRY
-ImmNt3KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
-             LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
+                        LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
-    return dwCount; // FIXME
+    FIXME("(0x%X, %p, %p, %p, %d)\n", dwCount, pEntries, pIC, pCS, bAnsi);
+    return dwCount;
 }
 
 DWORD APIENTRY
-ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
+WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
     LPINPUTCONTEXTDX pIC;
     LPCOMPOSITIONSTRING pCS;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (IS_NULL_UNEXPECTEDLY(pIC))
         return 0;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (pCS)
+    if (IS_NULL_UNEXPECTEDLY(pCS))
     {
-        if (wLang == LANG_JAPANESE)
-            ret = ImmNt3JTrans(dwCount, pEntries, pIC, pCS, bAnsi);
-        else if (wLang == LANG_KOREAN)
-            ret = ImmNt3KTrans(dwCount, pEntries, pIC, pCS, bAnsi);
-        ImmUnlockIMCC(pIC->hCompStr);
+        ImmUnlockIMC(hIMC);
+        return 0;
     }
 
+    if (wLang == LANG_JAPANESE)
+        ret = WINNLSTranslateMessageJ(dwCount, pEntries, pIC, pCS, bAnsi);
+    else if (wLang == LANG_KOREAN)
+        ret = WINNLSTranslateMessageK(dwCount, pEntries, pIC, pCS, bAnsi);
+
+    ImmUnlockIMCC(pIC->hCompStr);
     ImmUnlockIMC(hIMC);
     return ret;
 }

@@ -1245,6 +1245,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    return 0; // For WM_NCPAINT message, return 0.
 }
 
+/* Win: xxxCalcClientRect */
 LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspended )
 {
    LRESULT Result = 0;

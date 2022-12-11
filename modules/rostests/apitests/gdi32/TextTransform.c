@@ -7,15 +7,15 @@
 
 #include "precomp.h"
 
+//#define DEBUGGING
+
 typedef struct tagBITMAPINFOEX
 {
     BITMAPINFOHEADER bmiHeader;
     RGBQUAD          bmiColors[256];
 } BITMAPINFOEX, FAR *LPBITMAPINFOEX;
 
-#if 1
-    #define SaveBitmapToFile(f, h)
-#else
+#ifdef DEBUGGING
 static BOOL SaveBitmapToFile(LPCWSTR pszFileName, HBITMAP hbm)
 {
     BOOL f;
@@ -89,183 +89,237 @@ static BOOL SaveBitmapToFile(LPCWSTR pszFileName, HBITMAP hbm)
 typedef struct TEST_ENTRY
 {
     INT line;               // line number
+    LONG lfWidth;           // LOGFONT.lfWidth
+    LONG lfEscapement;      // LOGFONT.lfEscapement
     INT GraphicsMode;       // GM_COMPATIBLE or GM_ADVANCED
     POINT ptRef;            // reference point
     INT TextAlign;
     XFORM xform;
     BOOL xform_ok;
-    LPCWSTR filename;
-    INT cWhitePoints;       // number of white points
-    POINT WhitePoints[4];
-    INT cBlackPoints;       // number of black points
-    POINT BlackPoints[4];
+    BYTE aBlacks[16];
 } TEST_ENTRY;
 
-#define WIDTH 400
-#define HEIGHT 400
+#define WIDTH 200
+#define HEIGHT 200
 #define XCENTER (WIDTH / 2)
 #define YCENTER (HEIGHT / 2)
 #define BLACK RGB(0, 0, 0)
 #define WHITE RGB(255, 255, 255)
-#define LFHEIGHT -100
+#define LFHEIGHT -50
+#define LFWIDTH1 100
+#define LFESCAPE1 (-90 * 10)
 
 static const RECT s_rc = {0, 0, WIDTH, HEIGHT};
 static HBRUSH s_hWhiteBrush = NULL;
 static HPEN s_hRedPen = NULL;
 
-#define POS(ix, iy) {XCENTER + (ix) * WIDTH/8, YCENTER + (iy) * HEIGHT/8}
-
-#define NO_TRANS_1 \
-    3, {POS(1, 1), POS(-1, 1), POS(-1, -1)}, 1, {POS(1, -1)}
-
-#define NO_TRANS_2 \
-    3, {POS(1, -1), POS(-1, 1), POS(-1, -1)}, 1, {POS(1, 1)}
-
 static const TEST_ENTRY s_entries[] =
 {
     // GM_COMPATIBLE TA_BOTTOM
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, L"000.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1.5, 0, 0, 1, 0, 0}, FALSE, L"001.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1.5, 0, 0}, FALSE, L"002.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, L"003.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, L"004.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, L"005.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, 1, 0, 0, 0}, FALSE, L"006.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, -1, 0, 0, 0}, FALSE, L"007.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, L"009.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 0, 1, 0, 0}, FALSE, L"009.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, L"010.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, L"011.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 1000, 0}, FALSE, L"012.bmp", NO_TRANS_1},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 1000}, FALSE, L"013.bmp", NO_TRANS_1},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {11, 15}},
 
     // GM_COMPATIBLE TA_TOP
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, L"100.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1.5, 0, 0, 1, 0, 0}, FALSE, L"101.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1.5, 0, 0}, FALSE, L"102.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, L"103.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, L"104.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, L"105.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, 1, 0, 0, 0}, FALSE, L"106.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, -1, 0, 0, 0}, FALSE, L"107.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, L"109.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 0, 1, 0, 0}, FALSE, L"109.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, L"110.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, L"111.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 1000, 0}, FALSE, L"112.bmp", NO_TRANS_2},
-    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 1000}, FALSE, L"113.bmp", NO_TRANS_2},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, 0, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, {11, 12}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, {10, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, {10, 14}},
 
     // GM_ADVANCED TA_LEFT TA_BOTTOM
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, TRUE, L"200.bmp", NO_TRANS_1},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1.5, 0, 0, 1, 0, 0}, TRUE, L"201.bmp",
-        4, {POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1)}, 1, {POS(3, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1.5, 0, 0}, TRUE, L"202.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, TRUE, L"203.bmp",
-        3, {POS(1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, TRUE, L"204.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, TRUE, L"205.bmp",
-        3, {POS(-1, -1), POS(1, 1), POS(1, -1)}, 1, {POS(-1, 1)}},
-    {__LINE__, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, 1, 0, 0, 0}, TRUE, L"206.bmp",
-        3, {POS(-1, 1), POS(1, 1), POS(1, -1)}, 1, {POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, -1, 0, 0, 0}, TRUE, L"207.bmp",
-        3, {POS(-1, 1), POS(-1, -1), POS(1, -1)}, 1, {POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, TRUE, L"208.bmp",
-        3, {POS(-1, 1), POS(-1, -1), POS(1, 1)}, 1, {POS(1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 0, 1, 0, 0}, FALSE, L"209.bmp", NO_TRANS_1},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, L"210.bmp", NO_TRANS_1},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, L"211.bmp", NO_TRANS_1},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 1000, 0}, FALSE, L"212.bmp", NO_TRANS_1},
-    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 1000}, FALSE, L"213.bmp", NO_TRANS_1},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, TRUE, {7, 8}},
+    {__LINE__, 0, 0, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, TRUE, {5, 6}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, TRUE, {11, 12}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, TRUE, {10, 14}},
+    {__LINE__, 0, 0, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, TRUE, {3, 7}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, TRUE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, TRUE, {5, 6}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, TRUE, {11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, TRUE, {10, 14}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, TRUE, {3, 7}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {7, 8}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, TRUE, {10, 11, 14, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, TRUE, {10, 11, 14, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, TRUE, {2, 3, 6, 7}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, TRUE, {7, 8, 11, 12}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, TRUE, {5, 6, 9, 10}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {10, 11, 14, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {10, 11, 14, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, WIDTH/8, 0}, TRUE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, WIDTH/8, 0}, TRUE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, WIDTH/8, 0}, TRUE, {3, 7}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, HEIGHT/8}, TRUE, {11, 12}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, -1, 0, 0, HEIGHT/8}, TRUE, {9, 10}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, HEIGHT/8}, TRUE, {9, 10}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER + WIDTH/8, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, {11, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER - WIDTH/8, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, {10, 14}},
 
     // GM_ADVANCED TA_LEFT TA_TOP
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, L"300.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-1, -3)}},
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, L"301.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-3, -1)}},
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, L"302.bmp",
-        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(1, -3)}},
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"303.bmp",
-        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, L"304.bmp",
-        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -1), POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, HEIGHT/4}, TRUE, L"305.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -1), POS(-3, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, L"306.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 1), POS(-1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, -HEIGHT/2}, TRUE, L"307.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 3), POS(-3, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, L"308.bmp",
-        2, {POS(-1, -1), POS(1, -1)}, 2, {POS(-1, 1), POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, L"309.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, 1), POS(-1, 3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, L"310.bmp",
-        4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 3), POS(-1, 3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, -HEIGHT/2}, TRUE, L"311.bmp",
-        4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 3), POS(-3, 1)}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, {1, 2, 3, 4}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, {1, 2, 5, 6}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, {2, 3, 4}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, {5, 6, 7, 8}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, HEIGHT/4}, TRUE, {5, 6, 9, 10}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, {9, 10, 11, 12}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, {10, 11, 12}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, {10, 11, 14, 15}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, {13, 14, 15, 16}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, 0}, TRUE, {1, 2, 4}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, {1, 2, 3, 4, 5, 6, 7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, WIDTH/4, 0}, TRUE, {2, 3}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, HEIGHT/4}, TRUE, {5, 6, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, HEIGHT/4}, TRUE, {5, 6, 7, 8, 9, 10, 11, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, 0}, TRUE, {9, 10, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, WIDTH/4, 0}, TRUE, {10, 11}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, {10, 11, 12, 14, 15, 16}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, HEIGHT/4}, TRUE, {13, 14, 16}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, 0}, TRUE, {5, 9}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, {9, 13}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, WIDTH/4, 0}, TRUE, {5, 6, 9, 10}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, HEIGHT/4}, TRUE, {9, 13}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, HEIGHT/4}, TRUE, {13}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, 0, 0}, TRUE, {13}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, WIDTH/4, 0}, TRUE, {13, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, {5, 9}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, {5, 6, 9, 10}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, {9, 13}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/8, HEIGHT/4}, TRUE, {13}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, {13, 14}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_LEFT | TA_TOP, {1.25, 0, 0, 1, WIDTH/8, 0}, TRUE, {13}},
 
     // GM_ADVANCED TA_CENTER TA_TOP
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, L"400.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(1, -3), POS(3, -3)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, 0}, TRUE, L"401.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -3), POS(1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, L"402.bmp",
-        2, {POS(-1, 1), POS(-1, -1)}, 4, {POS(1, -1), POS(3, -1), POS(1, 1), POS(3, 1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, 0}, TRUE, L"403.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -1), POS(1, -3)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, L"404.bmp",
-        2, {POS(-1, 1), POS(1, 1)}, 2, {POS(1, -1), POS(3, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, HEIGHT/4}, TRUE, L"405.bmp",
-        2, {POS(-1, -1), POS(-1, 1)}, 2, {POS(1, -1), POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, -HEIGHT/2}, TRUE, L"406.bmp",
-        4, {POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(-3, 1), POS(-3, 3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {2, 0, 0, 1, WIDTH/4, -HEIGHT/2}, TRUE, L"407.bmp",
-        4, {POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(-3, -3), POS(-1, -3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {2, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, L"408.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 4, {POS(-3, 3), POS(-3, 1), POS(-3, 1), POS(-1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, -HEIGHT/2}, TRUE, L"409.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 3), POS(-3, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {2, 0, 0, 1, WIDTH/4, -HEIGHT/2}, TRUE, L"410.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-1, -3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, -HEIGHT/2}, TRUE, L"411.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, 1), POS(-3, 3)}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, {2, 3, 4}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, -WIDTH/4, 0}, TRUE, {1, 2, 5, 6}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, {5, 6, 9, 10}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {6, 7, 8}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, -WIDTH/4, HEIGHT/8}, TRUE, {5, 6}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER/2, YCENTER}, TA_CENTER | TA_TOP, {2, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, {10, 11, 12, 14, 15, 16}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER/2, YCENTER/2}, TA_CENTER | TA_TOP, {1, 0, 0, 2, 0, -HEIGHT/2}, TRUE, {1, 2, 5, 6}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, WIDTH/8, 0}, TRUE, {2, 3, 4}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, 0}, TRUE, {2, 4, 6, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1.25, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {5, 7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, HEIGHT/4}, TRUE, {6, 8, 10, 12}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {1.25, 0, 0, 2, WIDTH/8, -HEIGHT/2}, TRUE, {10, 11, 14, 15}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/4, -HEIGHT/2}, TRUE, {9, 10, 11, 13, 14, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/8, 0}, TRUE, {3, 4, 7, 8}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 1.25, 0, 0}, TRUE, {2, 3, 6, 7}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, {2, 3, 6, 7, 10, 11, 14, 15}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1.25, 0, 0, 1, -WIDTH/8, HEIGHT/4}, TRUE, {6, 7, 10, 11}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 1.25, WIDTH/8, HEIGHT/4}, TRUE, {7, 11}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, {3, 4, 7, 8}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, HEIGHT/8}, TRUE, {7, 15}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, -HEIGHT/8}, TRUE, {3, 11}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {7, 8, 11, 12}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 1, WIDTH/8, HEIGHT/4}, TRUE, {7, 11}},
 
     // GM_ADVANCED TA_RIGHT TA_TOP
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, L"500.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(1, -3)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"501.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -3), POS(1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, L"502.bmp",
-        0, {POS(0, 0)}, 4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"503.bmp",
-        3, {POS(-1, 1), POS(1, 1), POS(-1, -1)}, 2, {POS(1, -1), POS(1, -3)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, L"504.bmp",
-        2, {POS(-1, 1), POS(1, 1)}, 2, {POS(-1, -1), POS(1, -1)}},
-    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, L"505.bmp",
-        2, {POS(-1, -1), POS(-1, 1)}, 2, {POS(1, -1), POS(1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, WIDTH/2, -HEIGHT/2}, TRUE, L"506.bmp",
-        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-1, -3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/2, -HEIGHT/2}, TRUE, L"507.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, 3), POS(-1, 1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, L"508.bmp",
-        3, {POS(-1, -1), POS(-1, 1), POS(1, -1)}, 4, {POS(1, 1), POS(3, 1), POS(1, 3), POS(3, 3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/2, -HEIGHT/2}, TRUE, L"509.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, 1), POS(-1, 3)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, WIDTH/2, -HEIGHT/4}, TRUE, L"510.bmp",
-        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -1), POS(-1, -1)}},
-    {__LINE__, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/2, -HEIGHT/2}, TRUE, L"511.bmp",
-        3, {POS(-1, -1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, 1), POS(-1, 3)}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, {1, 2, 3}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {5, 6, 7}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, {6, 7, 10, 11}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, WIDTH/2, -HEIGHT/2}, TRUE, {1, 2}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, {9, 10, 11, 12, 13, 14, 15, 16}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, -WIDTH/4, 0}, TRUE, {1}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {5}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, {5, 6, 7, 9, 10, 11}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, WIDTH/2, -HEIGHT/2}, TRUE, {1, 2}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, {9, 11, 12, 13, 15, 16}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, -WIDTH/8, 0}, TRUE, {2, 3}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, -WIDTH/8, HEIGHT/4}, TRUE, {2, 3, 6, 7}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 1.25, WIDTH/4, HEIGHT/4}, TRUE, {3, 4, 7, 8}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1, WIDTH/2, -HEIGHT/4}, TRUE, {2, 3, 6, 7}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {1.25, 0, 0, 1.25, WIDTH, -HEIGHT/8}, TRUE, {8, 12}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, {3, 4}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {3, 4, 7, 8}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 1.25, WIDTH/8, HEIGHT/4}, TRUE, {3, 7}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, WIDTH/2, -HEIGHT/2}, TRUE, {2, 3}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_TOP, {2, 0, 0, 1.25, WIDTH, -HEIGHT/8}, TRUE, {8, 12}},
+
+    // GM_ADVANCED TA_BASELINE TA_BASELINE
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {1, 2, 3}},
+    {__LINE__, 0, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, {2, 3}},
+    {__LINE__, 0, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_BASELINE, {2, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, {1, 2, 3, 4, 5, 6, 7, 8}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {1.25, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {1}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, {1, 2, 3}},
+    {__LINE__, LFWIDTH1, 0, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_BASELINE, {1.25, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, {1, 3, 4, 5, 7, 8}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {2, 0, 0, 1, -WIDTH/8, HEIGHT/4}, TRUE, {3, 4}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {1, 0, 0, 1.25, WIDTH/8, HEIGHT/4}, TRUE, {3}},
+    {__LINE__, LFWIDTH1, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_BASELINE, {1.25, 0, 0, 2, WIDTH, -HEIGHT/2}, TRUE, {4, 8}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_BASELINE, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, {3, 4}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_BASELINE, {1.25, 0, 0, 1, WIDTH/8, HEIGHT/4}, TRUE, {5, 9}},
+    {__LINE__, 0, LFESCAPE1, GM_ADVANCED, {0, YCENTER}, TA_RIGHT | TA_BASELINE, {2, 0, 0, 2, 0, -HEIGHT/8}, TRUE, {1, 9}},
 };
-static const INT s_entry_count = (INT)(sizeof(s_entries) / sizeof(s_entries[0]));
 
 static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
 {
     HGDIOBJ hbmOld, hPenOld;
-    INT i;
-    COLORREF rgb;
+    INT i, j;
     BOOL ret;
-    static const WCHAR s_chBlackBox = L'g';
+    static const WCHAR s_szBlackBoxes[] = L"gg";
+    LOGFONTA lf;
+    HFONT hFont;
+    HGDIOBJ hFontOld;
+
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfHeight = LFHEIGHT;
+    lf.lfWidth = entry->lfWidth;
+    lf.lfEscapement = entry->lfEscapement;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpyA(lf.lfFaceName, "Marlett");
+    hFont = CreateFontIndirectA(&lf);
+    ok(hFont != NULL, "hFont was NULL.\n");
+    hFontOld = SelectObject(hDC, hFont);
 
     SetGraphicsMode(hDC, entry->GraphicsMode);
 
@@ -302,27 +356,77 @@ static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
 
         SetTextAlign(hDC, entry->TextAlign);
 
-        TextOutW(hDC, entry->ptRef.x, entry->ptRef.y, &s_chBlackBox, 1);
+        TextOutW(hDC, entry->ptRef.x, entry->ptRef.y, s_szBlackBoxes, lstrlenW(s_szBlackBoxes));
 
         ModifyWorldTransform(hDC, NULL, MWT_IDENTITY);
 
-        for (i = 0; i < entry->cWhitePoints; ++i)
-        {
-            rgb = GetPixel(hDC, entry->WhitePoints[i].x, entry->WhitePoints[i].y);
-            ok(rgb == WHITE, "Line %d: %d: (%ld, %ld) is not white\n", entry->line, i,
-               entry->WhitePoints[i].x, entry->WhitePoints[i].y);
-        }
+#define POS(ix, iy) {(ix) * WIDTH/4 + WIDTH/8, (iy) * HEIGHT/4 + HEIGHT/8}
 
-        for (i = 0; i < entry->cBlackPoints; ++i)
+        for (j = 0; j < 4; ++j)
         {
-            rgb = GetPixel(hDC, entry->BlackPoints[i].x, entry->BlackPoints[i].y);
-            ok(rgb == BLACK, "Line %d: %d: (%ld, %ld) is not black\n", entry->line, i,
-               entry->BlackPoints[i].x, entry->BlackPoints[i].y);
+            for (i = 0; i < 4; ++i)
+            {
+                POINT pt = POS(i, j);
+                INT k = j * 4 + i + 1;
+                COLORREF rgb = GetPixel(hDC, pt.x, pt.y);
+                BOOL bFound = FALSE;
+                INT m;
+                for (m = 0; m < _countof(entry->aBlacks); ++m)
+                {
+                    if (entry->aBlacks[m] == 0)
+                        break;
+                    if (entry->aBlacks[m] == k)
+                    {
+                        bFound = TRUE;
+                        break;
+                    }
+                }
+
+                if (bFound)
+                {
+                    ok(rgb == RGB(0, 0, 0), "Line %d: It was not black (k: %d)\n", entry->line, k);
+                }
+                else
+                {
+                    ok(rgb != RGB(0, 0, 0), "Line %d: It was black (k: %d)\n", entry->line, k);
+                }
+
+#ifdef DEBUGGING
+                {
+                    WCHAR sz[8];
+                    RECT rc;
+                    COLORREF colorOld;
+                    HGDIOBJ hFontOld = SelectObject(hDC, GetStockObject(DEFAULT_GUI_FONT));
+                    if (rgb == RGB(0, 0, 0))
+                    {
+                        if (!bFound)
+                            printf("Line %d: k: %d\n", entry->line, k);
+                    }
+                    Ellipse(hDC, pt.x - 10, pt.y - 10, pt.x + 10, pt.y + 10);
+                    SetRect(&rc, pt.x - 10, pt.y - 10, pt.x + 10, pt.y + 10);
+                    StringCchPrintfW(sz, _countof(sz), L"%d", k);
+                    colorOld = SetTextColor(hDC, RGB(255, 0, 0));
+                    SetTextAlign(hDC, TA_LEFT | TA_TOP | TA_NOUPDATECP);
+                    DrawTextW(hDC, sz, -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+                    SetTextColor(hDC, colorOld);
+                    SelectObject(hDC, hFontOld);
+                }
+#endif
+            }
         }
     }
     SelectObject(hDC, hbmOld);
 
-    SaveBitmapToFile(entry->filename, hbm);
+#ifdef DEBUGGING
+    {
+        WCHAR szFileName[MAX_PATH];
+        StringCchPrintfW(szFileName, _countof(szFileName), L"Line%04u.bmp", entry->line);
+        SaveBitmapToFile(szFileName, hbm);
+    }
+#endif
+
+    SelectObject(hDC, hFontOld);
+    DeleteObject(hFont);
 }
 
 START_TEST(TextTransform)
@@ -331,19 +435,15 @@ START_TEST(TextTransform)
     BITMAPINFO bmi;
     LPVOID pvBits;
     HBITMAP hbm;
-    LOGFONTA lf;
-    HFONT hFont;
-    HGDIOBJ hFontOld;
-    INT i;
+    UINT i;
 
     s_hWhiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    s_hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    s_hRedPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
 
     hDC = CreateCompatibleDC(NULL);
     ok(hDC != NULL, "hDC was NULL.\n");
 
     SetBkMode(hDC, TRANSPARENT);
-    SetMapMode(hDC, MM_ANISOTROPIC);
 
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -354,21 +454,11 @@ START_TEST(TextTransform)
     hbm = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
     ok(hbm != NULL, "hbm was NULL.\n");
 
-    ZeroMemory(&lf, sizeof(lf));
-    lf.lfHeight = LFHEIGHT;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lstrcpyA(lf.lfFaceName, "Marlett");
-    hFont = CreateFontIndirectA(&lf);
-    ok(hFont != NULL, "hFont was NULL.\n");
-
-    hFontOld = SelectObject(hDC, hFont);
-    for (i = 0; i < s_entry_count; ++i)
+    for (i = 0; i < _countof(s_entries); ++i)
     {
         DoTestEntry(&s_entries[i], hDC, hbm);
     }
-    SelectObject(hDC, hFontOld);
 
-    DeleteObject(hFont);
     DeleteObject(hbm);
 
     DeleteObject(s_hWhiteBrush);

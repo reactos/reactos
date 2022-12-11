@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -200,7 +200,7 @@ AcpiUtRepairName (
         return;
     }
 
-    ACPI_COPY_NAMESEG (&OriginalName, Name);
+    ACPI_COPY_NAMESEG (&OriginalName, &Name[0]);
 
     /* Check each character in the name */
 
@@ -213,10 +213,10 @@ AcpiUtRepairName (
 
         /*
          * Replace a bad character with something printable, yet technically
-         * still invalid. This prevents any collisions with existing "good"
+         * "odd". This prevents any collisions with existing "good"
          * names in the namespace.
          */
-        Name[i] = '*';
+        Name[i] = '_';
         FoundBadChar = TRUE;
     }
 
@@ -227,8 +227,8 @@ AcpiUtRepairName (
         if (!AcpiGbl_EnableInterpreterSlack)
         {
             ACPI_WARNING ((AE_INFO,
-                "Invalid character(s) in name (0x%.8X), repaired: [%4.4s]",
-                OriginalName, Name));
+                "Invalid character(s) in name (0x%.8X) %p, repaired: [%4.4s]",
+                OriginalName, Name, &Name[0]));
         }
         else
         {

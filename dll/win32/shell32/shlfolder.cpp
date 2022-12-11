@@ -26,23 +26,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static
-HRESULT WINAPI _SHBindToFolder(LPCITEMIDLIST path, IShellFolder** newFolder)
-{
-    CComPtr<IShellFolder>                   desktop;
-
-    HRESULT hr = ::SHGetDesktopFolder(&desktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-    if (path == NULL || path->mkid.cb == 0)
-    {
-        *newFolder = desktop;
-        desktop.p->AddRef();
-        return S_OK;
-    }
-    return desktop->BindToObject(path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
-}
-
 
 /***************************************************************************
  *  GetNextElement (internal function)
@@ -460,25 +443,14 @@ _ShowPropertiesDialogThread(LPVOID lpParameter)
         return E_FAIL;
     }
 
-    PCUIDLIST_ABSOLUTE pidlFolder = HIDA_GetPIDLFolder(cida);
-    CComPtr<IShellFolder> psfParent;
-    HRESULT hr = _SHBindToFolder(pidlFolder, &psfParent);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CComHeapPtr<ITEMIDLIST> completePidl(ILCombine(HIDA_GetPIDLFolder(cida), HIDA_GetPIDLItem(cida, 0)));
+    CComHeapPtr<WCHAR> wszName;
+    if (FAILED_UNEXPECTEDLY(SHGetNameFromIDList(completePidl, SIGDN_PARENTRELATIVEPARSING, &wszName)))
+        return 0;
 
-    STRRET strFile;
-    PCUIDLIST_RELATIVE apidl = HIDA_GetPIDLItem(cida, 0);
-    hr = psfParent->GetDisplayNameOf(apidl, SHGDN_FORPARSING, &strFile);
-    if (!FAILED_UNEXPECTEDLY(hr))
-    {
-        BOOL bSuccess = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, &apidl);
-        if (!bSuccess)
-            ERR("SH_ShowPropertiesDialog failed\n");
-    }
-    else
-    {
-        ERR("Failed to get display name\n");
-    }
+    BOOL bSuccess = SH_ShowPropertiesDialog(wszName, pDataObject);
+    if (!bSuccess)
+        ERR("SH_ShowPropertiesDialog failed\n");
 
     return 0;
 }

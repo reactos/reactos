@@ -98,10 +98,7 @@
 # include <stdarg.h>
 #endif
 #include <stddef.h>
-
-#if defined( HAVE_ERRNO_H ) || defined( __VMS )
 #include <errno.h>
-#endif
 
 #ifndef NULL
 # define NULL 0

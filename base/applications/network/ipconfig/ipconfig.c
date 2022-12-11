@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winuser.h>
 #include <winreg.h>
 #include <stdio.h>
@@ -235,6 +236,70 @@ PTCHAR PrintMacAddr(PBYTE Mac)
         Mac[0], Mac[1], Mac[2], Mac[3], Mac[4],  Mac[5]);
 
     return MacAddr;
+}
+
+
+/* convert time_t to localized string */
+_Ret_opt_z_ PTSTR timeToStr(_In_ time_t TimeStamp)
+{
+    struct tm* ptm;
+    SYSTEMTIME SystemTime;
+    INT DateCchSize, TimeCchSize, TotalCchSize, i;
+    PTSTR DateTimeString, psz;
+
+    /* Convert Unix time to SYSTEMTIME */
+    /* localtime_s may be preferred if available */
+    ptm = localtime(&TimeStamp);
+    if (!ptm)
+    {
+        return NULL;
+    }
+    SystemTime.wYear = ptm->tm_year + 1900;
+    SystemTime.wMonth = ptm->tm_mon + 1;
+    SystemTime.wDay = ptm->tm_mday;
+    SystemTime.wHour = ptm->tm_hour;
+    SystemTime.wMinute = ptm->tm_min;
+    SystemTime.wSecond = ptm->tm_sec;
+
+    /* Get total size in characters required of buffer */
+    DateCchSize = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &SystemTime, NULL, NULL, 0);
+    if (!DateCchSize)
+    {
+        return NULL;
+    }
+    TimeCchSize = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &SystemTime, NULL, NULL, 0);
+    if (!TimeCchSize)
+    {
+        return NULL;
+    }
+    /* Two terminating null are included, the first one will be replaced by space */
+    TotalCchSize = DateCchSize + TimeCchSize;
+
+    /* Allocate buffer and format datetime string */
+    DateTimeString = (PTSTR)HeapAlloc(ProcessHeap, 0, TotalCchSize * sizeof(TCHAR));
+    if (!DateTimeString)
+    {
+        return NULL;
+    }
+
+    /* Get date string */
+    i = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &SystemTime, NULL, DateTimeString, TotalCchSize);
+    if (i)
+    {
+        /* Append space and move pointer */
+        DateTimeString[i - 1] = _T(' ');
+        psz = DateTimeString + i;
+        TotalCchSize -= i;
+
+        /* Get time string */
+        if (GetTimeFormat(LOCALE_USER_DEFAULT, 0, &SystemTime, NULL, psz, TotalCchSize))
+        {
+            return DateTimeString;
+        }
+    }
+
+    HeapFree(ProcessHeap, 0, DateTimeString);
+    return NULL;
 }
 
 
@@ -686,8 +751,19 @@ VOID ShowInfo(BOOL bAll)
 
             if (pAdapter->DhcpEnabled && _tcscmp(pAdapter->DhcpServer.IpAddress.String, _T("255.255.255.255")))
             {
-                _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseObtained)));
-                _tprintf(_T("\tLease Expires . . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseExpires)));
+                PTSTR DateTimeString;
+                DateTimeString = timeToStr(pAdapter->LeaseObtained);
+                _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s\n"), DateTimeString ? DateTimeString : _T("N/A"));
+                if (DateTimeString)
+                {
+                    HeapFree(ProcessHeap, 0, DateTimeString);
+                }
+                DateTimeString = timeToStr(pAdapter->LeaseExpires);
+                _tprintf(_T("\tLease Expires . . . . . . . . . . : %s\n"), DateTimeString ? DateTimeString : _T("N/A"));
+                if (DateTimeString)
+                {
+                    HeapFree(ProcessHeap, 0, DateTimeString);
+                }
             }
         }
         _tprintf(_T("\n"));

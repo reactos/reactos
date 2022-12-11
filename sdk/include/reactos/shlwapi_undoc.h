@@ -168,6 +168,7 @@ ShellMessageBoxWrapW(
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
+BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 
 #ifdef __cplusplus
 } /* extern "C" */

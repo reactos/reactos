@@ -1,21 +1,9 @@
 /*
- *  FreeLoader
- *  Copyright (C) 2003  Eric Kohl
- *  Copyright (C) 2011 Timo Kreuzer
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     PnP BIOS helper functions
+ * COPYRIGHT:   Copyright 2003 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2011 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 #include <asm.inc>
@@ -167,6 +155,39 @@ PnpBiosGetDeviceNode:
     mov [rcx], al
 
     mov eax, [BSS_PnpResult]
+
+    ret
+
+
+/*
+ * U32 PnpBiosGetDockStationInformation(U8 *DockingStationInfo<rcx>);
+ *
+ * RETURNS:
+ */
+PUBLIC PnpBiosGetDockStationInformation
+PnpBiosGetDockStationInformation:
+
+    /* Convert pointer to info structure to segment/offset */
+    mov rax, rcx
+    shr eax, 4
+    mov word ptr [BSS_PnpBiosBufferSegment], ax
+    mov rax, rcx
+    and eax, HEX(0f)
+    mov word ptr [BSS_PnpBiosBufferOffset], ax
+
+    /* Save registers */
+    push rcx
+    push rbx
+
+    /* Call the real mode function */
+    mov bx, FNID_PnpBiosGetDockStationInformation
+    call CallRealMode
+
+    /* Restore registers */
+    pop rbx
+    pop rcx
+
+    mov eax, dword ptr [BSS_PnpResult]
 
     ret
 

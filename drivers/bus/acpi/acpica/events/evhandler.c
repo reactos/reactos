@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -455,7 +455,7 @@ AcpiEvInstallSpaceHandler (
         case ACPI_ADR_SPACE_DATA_TABLE:
 
             Handler = AcpiExDataTableSpaceHandler;
-            Setup   = NULL;
+            Setup   = AcpiEvDataTableRegionSetup;
             break;
 
         default:

@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS header files
- * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0.html)
+ * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0)
  * PURPOSE:     Win32API message dumping
  * COPYRIGHT:   Copyright 2018-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */

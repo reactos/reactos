@@ -423,6 +423,9 @@ InputList_Process(VOID)
         {
             bRet = InputList_SetFontSubstitutes(pCurrent->pLocale->dwId);
             InputList_AddInputMethodToUserRegistry(hPreloadKey, hSubstKey, 1, pCurrent);
+
+            /* Activate the DEFAULT entry */
+            ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
             break;
         }
     }
@@ -450,12 +453,12 @@ InputList_Process(VOID)
     /* Change the default keyboard language */
     if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
     {
-        DWORD dwRecipients = BSM_ALLCOMPONENTS | BSM_ALLDESKTOPS;
+        DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
 
         BroadcastSystemMessageW(BSF_POSTMESSAGE,
                                 &dwRecipients,
                                 WM_INPUTLANGCHANGEREQUEST,
-                                0,
+                                INPUTLANGCHANGE_SYSCHARSET,
                                 (LPARAM)pCurrent->hkl);
     }
 

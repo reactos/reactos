@@ -1578,7 +1578,13 @@ IntCreateDIBitmap(
             Surface = SURFACE_ShareLockSurface(handle);
             ASSERT(Surface);
             Palette = CreateDIBPalette(data, Dc, coloruse);
-            ASSERT(Palette);
+            if (Palette == NULL)
+            {
+                SURFACE_ShareUnlockSurface(Surface);
+                GreDeleteObject(handle);
+                return NULL;
+            }
+
             SURFACE_vSetPalette(Surface, Palette);
 
             PALETTE_ShareUnlockPalette(Palette);

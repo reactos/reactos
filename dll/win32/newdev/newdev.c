@@ -359,7 +359,7 @@ SearchDriverRecursive(
         wcscat(DirPath, L"\\");
 
     wcscpy(PathWithPattern, DirPath);
-    wcscat(PathWithPattern, L"\\*");
+    wcscat(PathWithPattern, L"*");
 
     for (hFindFile = FindFirstFileW(PathWithPattern, &wfd);
         ok && hFindFile != INVALID_HANDLE_VALUE;
@@ -406,6 +406,14 @@ SearchDriverRecursive(
     if (hFindFile != INVALID_HANDLE_VALUE)
         FindClose(hFindFile);
     return retval;
+}
+
+BOOL
+CheckBestDriver(
+    _In_ PDEVINSTDATA DevInstData,
+    _In_ PCWSTR pszDir)
+{
+    return SearchDriverRecursive(DevInstData, pszDir);
 }
 
 BOOL

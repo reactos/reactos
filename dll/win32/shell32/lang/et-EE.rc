@@ -987,6 +987,11 @@ BEGIN
     IDS_OBJECTS "%d objekti"
     IDS_OBJECTS_SELECTED "%d objekti valitud"
 
+    IDS_TITLE_MYCOMP "Minu arvuti"
+    IDS_TITLE_MYNET "Minu võrgukohad"
+    IDS_TITLE_BIN_1 "Prügikast (täis)"
+    IDS_TITLE_BIN_0 "Prügikast (tühi)"
+
     IDS_ADVANCED_FOLDER "Failid ja kaustad"
     IDS_ADVANCED_NET_CRAWLER "Otsi automaatselt võrgukaustu ja -printereid"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Kuva kausta kohtspikrites teave failimahu kohta"

@@ -259,8 +259,8 @@ GetVersionSendHandler(
     RtlCopyMemory(&KdVersion, &State->u.GetVersion64, sizeof(KdVersion));
     DebuggerDataList = (LIST_ENTRY*)(ULONG_PTR)KdVersion.DebuggerDataList;
     KdDebuggerDataBlock = CONTAINING_RECORD(DebuggerDataList->Flink, KDDEBUGGER_DATA64, Header.List);
-    ProcessListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsActiveProcessHead.Pointer;
-    ModuleListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsLoadedModuleList.Pointer;
+    ProcessListHead = (LIST_ENTRY*)(ULONG_PTR)KdDebuggerDataBlock->PsActiveProcessHead;
+    ModuleListHead = (LIST_ENTRY*)(ULONG_PTR)KdDebuggerDataBlock->PsLoadedModuleList;
 
     /* Now we can get the context for the current state */
     KdpSendPacketHandler = NULL;

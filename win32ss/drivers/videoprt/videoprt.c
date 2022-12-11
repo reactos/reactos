@@ -244,9 +244,7 @@ IntVideoPortCreateAdapterDeviceObject(
     if (!NT_SUCCESS(Status))
     {
         WARN_(VIDEOPRT, "IntCreateRegistryPath() call failed with status 0x%08x\n", Status);
-        IoDeleteDevice(*DeviceObject);
-        *DeviceObject = NULL;
-        return Status;
+        goto Failure;
     }
 
     if (PhysicalDeviceObject != NULL)
@@ -314,9 +312,7 @@ IntVideoPortCreateAdapterDeviceObject(
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT, "IntCreateNewRegistryPath() failed with status 0x%08x\n", Status);
-        IoDeleteDevice(*DeviceObject);
-        *DeviceObject = NULL;
-        return Status;
+        goto Failure;
     }
 
     IntSetupDeviceSettingsKey(DeviceExtension);
@@ -329,9 +325,7 @@ IntVideoPortCreateAdapterDeviceObject(
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT, "IntVideoPortAddDeviceMapLink() failed with status 0x%08x\n", Status);
-        IoDeleteDevice(*DeviceObject);
-        *DeviceObject = NULL;
-        return Status;
+        goto Failure;
     }
 
     if (DisplayNumber == 0)
@@ -340,6 +334,13 @@ IntVideoPortCreateAdapterDeviceObject(
     }
 
     return STATUS_SUCCESS;
+
+Failure:
+    if (DeviceExtension->NextDeviceObject)
+        IoDetachDevice(DeviceExtension->NextDeviceObject);
+    IoDeleteDevice(*DeviceObject);
+    *DeviceObject = NULL;
+    return Status;
 }
 
 

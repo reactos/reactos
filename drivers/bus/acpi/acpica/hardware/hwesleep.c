@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -153,7 +153,10 @@ AcpiHwExtendedSleep (
 
     /* Flush caches, as per ACPI specification */
 
-    ACPI_FLUSH_CPU_CACHE ();
+    if (SleepState < ACPI_STATE_S4)
+    {
+        ACPI_FLUSH_CPU_CACHE ();
+    }
 
     Status = AcpiOsEnterSleep (SleepState, SleepControl, 0);
     if (Status == AE_CTRL_TERMINATE)
@@ -204,18 +207,15 @@ ACPI_STATUS
 AcpiHwExtendedWakePrep (
     UINT8                   SleepState)
 {
-    ACPI_STATUS             Status;
     UINT8                   SleepTypeValue;
 
 
     ACPI_FUNCTION_TRACE (HwExtendedWakePrep);
 
 
-    Status = AcpiGetSleepTypeData (ACPI_STATE_S0,
-        &AcpiGbl_SleepTypeA, &AcpiGbl_SleepTypeB);
-    if (ACPI_SUCCESS (Status))
+    if (AcpiGbl_SleepTypeAS0 != ACPI_SLEEP_TYPE_INVALID)
     {
-        SleepTypeValue = ((AcpiGbl_SleepTypeA << ACPI_X_SLEEP_TYPE_POSITION) &
+        SleepTypeValue = ((AcpiGbl_SleepTypeAS0 << ACPI_X_SLEEP_TYPE_POSITION) &
             ACPI_X_SLEEP_TYPE_MASK);
 
         (void) AcpiWrite ((UINT64) (SleepTypeValue | ACPI_X_SLEEP_ENABLE),

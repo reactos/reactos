@@ -1740,7 +1740,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.dwCaretWidth, fl);
 
         case SPI_SETCARETWIDTH:
-            return SpiSetInt(&gspv.dwCaretWidth, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.dwCaretWidth, PtrToUlong(pvParam), KEY_DESKTOP, VAL_CARETWIDTH, fl);
 
         case SPI_GETMOUSECLICKLOCKTIME:
             return SpiGetInt(pvParam, &gspv.dwMouseClickLockTime, fl);

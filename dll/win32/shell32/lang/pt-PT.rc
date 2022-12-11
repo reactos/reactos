@@ -979,6 +979,11 @@ BEGIN
     IDS_OBJECTS "%d Objetos"
     IDS_OBJECTS_SELECTED "%d Objectos Seleccionados"
 
+    IDS_TITLE_MYCOMP "O Meu Computador"
+    IDS_TITLE_MYNET "Os Meus Locais da Rede"
+    IDS_TITLE_BIN_1 "Reciclagem (cheia)"
+    IDS_TITLE_BIN_0 "Reciclagem (vazia)"
+
     IDS_ADVANCED_FOLDER "Pastas e ficheiros"
     IDS_ADVANCED_NET_CRAWLER "Pesquisar automaticamente pastas e impressoras de rede"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Mostrar informações de tamanho de arquivo nas informações de pastas"

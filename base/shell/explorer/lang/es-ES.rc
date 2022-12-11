@@ -207,4 +207,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propiedades de la Barra de tareas y del Menú Inicio"
     IDS_RESTORE_ALL "&Mostrar ventanas abiertas"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END

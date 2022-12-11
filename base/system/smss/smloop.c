@@ -17,19 +17,18 @@
 
 typedef struct _SMP_CLIENT_CONTEXT
 {
-    PVOID Subsystem;
+    PSMP_SUBSYSTEM Subsystem;
     HANDLE ProcessHandle;
     HANDLE PortHandle;
-    ULONG dword10;
+    PVOID Reserved;
 } SMP_CLIENT_CONTEXT, *PSMP_CLIENT_CONTEXT;
 
 typedef
 NTSTATUS
 (NTAPI *PSM_API_HANDLER)(
-     IN PSM_API_MSG SmApiMsg,
-     IN PSMP_CLIENT_CONTEXT ClientContext,
-     IN HANDLE SmApiPort
-);
+    _In_ PSM_API_MSG SmApiMsg,
+    _In_ PSMP_CLIENT_CONTEXT ClientContext,
+    _In_ HANDLE SmApiPort);
 
 volatile LONG SmTotalApiThreads;
 HANDLE SmUniqueProcessId;
@@ -139,12 +138,65 @@ SmpExecPgm(IN PSM_API_MSG SmApiMsg,
 
 NTSTATUS
 NTAPI
-SmpLoadDeferedSubsystem(IN PSM_API_MSG SmApiMsg,
-                        IN PSMP_CLIENT_CONTEXT ClientContext,
-                        IN HANDLE SmApiPort)
+SmpLoadDeferedSubsystem(
+    _In_ PSM_API_MSG SmApiMsg,
+    _In_ PSMP_CLIENT_CONTEXT ClientContext,
+    _In_ HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    PSM_LOAD_DEFERED_SUBSYSTEM_MSG SmLoadDefered = &SmApiMsg->u.LoadDefered;
+    UNICODE_STRING DeferedSubsystem;
+    ULONG MuSessionId;
+    PLIST_ENTRY NextEntry;
+    PSMP_REGISTRY_VALUE RegEntry;
+
+    /* Validate DeferedSubsystem's length */
+    if ((SmLoadDefered->Length <= 0) ||
+        (SmLoadDefered->Length > sizeof(SmLoadDefered->Buffer)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the name of the subsystem to start */
+    DeferedSubsystem.Length = (USHORT)SmLoadDefered->Length;
+    DeferedSubsystem.MaximumLength = DeferedSubsystem.Length;
+    DeferedSubsystem.Buffer = SmLoadDefered->Buffer;
+
+    /* Find a subsystem responsible for this session */
+    SmpGetProcessMuSessionId(ClientContext->ProcessHandle, &MuSessionId);
+    if (!SmpCheckDuplicateMuSessionId(MuSessionId))
+    {
+        DPRINT1("SMSS: Deferred subsystem load (%wZ) for MuSessionId %u, status=0x%x\n",
+                &DeferedSubsystem, MuSessionId, Status);
+        return Status;
+    }
+
+    /* Now process the deferred subsystems list */
+    for (NextEntry = SmpSubSystemsToDefer.Flink;
+         NextEntry != &SmpSubSystemsToDefer;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get each entry and check if it's the subsystem we are looking for */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        if (RtlEqualUnicodeString(&RegEntry->Name, &DeferedSubsystem, TRUE))
+        {
+            // TODO: One may want to extra-flag the command for
+            // specific POSIX or OS2 processing...
+
+            /* Load the deferred subsystem */
+            Status = SmpExecuteCommand(&RegEntry->Value,
+                                       MuSessionId,
+                                       NULL,
+                                       SMP_SUBSYSTEM_FLAG);
+            if (!NT_SUCCESS(Status))
+                DPRINT1("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
+
+            break;
+        }
+    }
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -225,7 +277,7 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
     HANDLE PortHandle, ProcessHandle;
     ULONG SessionId;
     UNICODE_STRING SubsystemPort;
-    SMP_CLIENT_CONTEXT *ClientContext;
+    PSMP_CLIENT_CONTEXT ClientContext;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     REMOTE_PORT_VIEW PortView;
@@ -291,13 +343,13 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
         {
             ClientContext->ProcessHandle = ProcessHandle;
             ClientContext->Subsystem = CidSubsystem;
-            ClientContext->dword10 = 0;
+            ClientContext->Reserved = NULL;
             ClientContext->PortHandle = NULL;
         }
         else
         {
             /* Failed to allocate a client context, so reject the connection */
-            DPRINT1("Rejecting connectiond due to lack of memory\n");
+            DPRINT1("Rejecting connection due to lack of memory\n");
             Accept = FALSE;
         }
     }

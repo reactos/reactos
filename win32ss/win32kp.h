@@ -67,6 +67,7 @@ typedef struct _DC *PDC;
 #include "user/ntuser/accelerator.h"
 #include "user/ntuser/hook.h"
 #include "user/ntuser/clipboard.h"
+#include "user/ntuser/display.h"
 #include "user/ntuser/winsta.h"
 #include "user/ntuser/msgqueue.h"
 #include "user/ntuser/desktop.h"

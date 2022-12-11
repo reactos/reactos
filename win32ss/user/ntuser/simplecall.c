@@ -124,16 +124,11 @@ NtUserCallNoParam(DWORD Routine)
             break;
 
         case NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING:
-            // TODO: This should also check the registry!
-            // see https://www.pctipsbox.com/fix-available-for-ie7-memory-leaks-on-xp-sp3/ for more information
-            if (NLS_MB_CODE_PAGE_TAG)
-            {
+            if (UserIsIMMEnabled())
                 gpsi->dwSRVIFlags |= SRVINFO_IMM32;
-            }
             else
-            {
                 gpsi->dwSRVIFlags &= ~SRVINFO_IMM32;
-            }
+
             Result = TRUE; // Always return TRUE.
             break;
 
@@ -675,7 +670,7 @@ NtUserCallHwndLock(
             break;
 
         case HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD:
-            // TODO:
+            IntCheckImeShowStatusInThread(Window);
             break;
     }
 

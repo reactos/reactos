@@ -368,7 +368,7 @@ KdbInitialize(
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
-        DispatchTable->KdpInitRoutine = KdpKdbgInit;
+        DispatchTable->KdpInitRoutine = KdbInitialize;
         DispatchTable->KdpPrintRoutine = KdbDebugPrint;
 
         /* Register as a Provider */
@@ -382,7 +382,7 @@ KdbInitialize(
         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
         ASSERT(KeLoaderBlock);
         p1 = KeLoaderBlock->LoadOptions;
-        while('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
+        while ('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
         {
             p2++;
             Found = 0;

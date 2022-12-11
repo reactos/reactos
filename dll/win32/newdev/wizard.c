@@ -579,6 +579,38 @@ AutoDriver(HWND Dlg, BOOL Enabled)
     IncludePath(Dlg, Enabled & IsDlgButtonChecked(Dlg, IDC_CHECK_PATH));
 }
 
+static INT CALLBACK
+BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+    BOOL bValid = FALSE;
+
+    switch (uMsg)
+    {
+        case BFFM_INITIALIZED:
+        {
+            PCWSTR pszPath = ((PDEVINSTDATA)lpData)->CustomSearchPath;
+
+            bValid = CheckBestDriver((PDEVINSTDATA)lpData, pszPath);
+            SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)pszPath);
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
+            break;
+        }
+
+        case BFFM_SELCHANGED:
+        {
+            WCHAR szDir[MAX_PATH];
+
+            if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
+            {
+                bValid = CheckBestDriver((PDEVINSTDATA)lpData, szDir);
+            }
+            PostMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
+            break;
+        }
+    }
+    return 0;
+}
+
 static INT_PTR CALLBACK
 CHSourceDlgProc(
     IN HWND hwndDlg,
@@ -651,15 +683,33 @@ CHSourceDlgProc(
 
                 case IDC_BROWSE:
                 {
-                    BROWSEINFO bi = { 0 };
+                    BROWSEINFOW bi = { 0 };
                     LPITEMIDLIST pidl;
                     WCHAR Title[MAX_PATH];
+                    WCHAR CustomSearchPath[MAX_PATH] = { 0 };
+                    INT len, idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETCURSEL, 0, 0);
                     LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
+
+                    if (idx == CB_ERR)
+                        len = GetWindowTextLengthW(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
+                    else
+                        len = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXTLEN, idx, 0);
+
+                    if (len < _countof(CustomSearchPath))
+                    {
+                        if (idx == CB_ERR)
+                            GetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), CustomSearchPath, _countof(CustomSearchPath));
+                        else
+                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXT, idx, (LPARAM)CustomSearchPath);
+                    }
+                    DevInstData->CustomSearchPath = CustomSearchPath;
 
                     bi.hwndOwner = hwndDlg;
                     bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
                     bi.lpszTitle = Title;
-                    pidl = SHBrowseForFolder(&bi);
+                    bi.lpfn = BrowseCallbackProc;
+                    bi.lParam = (LPARAM)DevInstData;
+                    pidl = SHBrowseForFolderW(&bi);
                     if (pidl)
                     {
                         WCHAR Directory[MAX_PATH];

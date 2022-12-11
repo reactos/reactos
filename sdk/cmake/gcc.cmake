@@ -160,6 +160,7 @@ endif()
 
 # Other
 if(ARCH STREQUAL "amd64")
+    add_compile_options(-mcx16) # Generate CMPXCHG16
     add_definitions(-U_X86_ -UWIN32)
 elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)
@@ -466,8 +467,37 @@ function(allow_warnings __module)
     #target_compile_options(${__module} PRIVATE "-Wno-error")
 endfunction()
 
+function(convert_asm_file _source_file _target_file)
+    get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+    get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
+    set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/${_target_file})
+    add_custom_command(
+        OUTPUT ${_preprocessed_asm_file}
+        COMMAND native-asmpp ${_source_file_full_path} > ${_preprocessed_asm_file}
+        DEPENDS native-asmpp ${_source_file_full_path})
+
+endfunction()
+
+function(convert_asm_files)
+    foreach(_source_file ${ARGN})
+        convert_asm_file(${_source_file} ${_source_file}.s)
+    endforeach()
+endfunction()
+
 macro(add_asm_files _target)
-    list(APPEND ${_target} ${ARGN})
+    foreach(_source_file ${ARGN})
+        get_filename_component(_extension ${_source_file} EXT)
+        get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+        if (${_extension} STREQUAL ".asm")
+            convert_asm_file(${_source_file} ${_source_file}.s)
+            list(APPEND ${_target} ${CMAKE_CURRENT_BINARY_DIR}/${_source_file}.s)
+        elseif (${_extension} STREQUAL ".inc")
+            convert_asm_file(${_source_file} ${_source_file}.h)
+            list(APPEND ${_target} ${CMAKE_CURRENT_BINARY_DIR}/${_source_file}.h)
+        else()
+            list(APPEND ${_target} ${_source_file})
+        endif()
+    endforeach()
 endmacro()
 
 function(add_linker_script _target _linker_script_file)

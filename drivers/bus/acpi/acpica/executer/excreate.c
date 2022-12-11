@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -342,6 +342,7 @@ AcpiExCreateRegion (
     ObjDesc->Region.SpaceId = SpaceId;
     ObjDesc->Region.Address = 0;
     ObjDesc->Region.Length = 0;
+    ObjDesc->Region.Pointer = NULL;
     ObjDesc->Region.Node = Node;
     ObjDesc->Region.Handler = NULL;
     ObjDesc->Common.Flags &=

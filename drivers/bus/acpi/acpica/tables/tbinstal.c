@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -119,6 +119,8 @@ AcpiTbInstallTableWithOverride (
  * PARAMETERS:  Address             - Address of the table (might be a virtual
  *                                    address depending on the TableFlags)
  *              Flags               - Flags for the table
+ *              Table               - Pointer to the table (required for virtual
+ *                                    origins, optional for physical)
  *              Reload              - Whether reload should be performed
  *              Override            - Whether override should be performed
  *              TableIndex          - Where the table index is returned
@@ -137,6 +139,7 @@ ACPI_STATUS
 AcpiTbInstallStandardTable (
     ACPI_PHYSICAL_ADDRESS   Address,
     UINT8                   Flags,
+    ACPI_TABLE_HEADER       *Table,
     BOOLEAN                 Reload,
     BOOLEAN                 Override,
     UINT32                  *TableIndex)
@@ -151,7 +154,7 @@ AcpiTbInstallStandardTable (
 
     /* Acquire a temporary table descriptor for validation */
 
-    Status = AcpiTbAcquireTempTable (&NewTableDesc, Address, Flags);
+    Status = AcpiTbAcquireTempTable (&NewTableDesc, Address, Flags, Table);
     if (ACPI_FAILURE (Status))
     {
         ACPI_ERROR ((AE_INFO,
@@ -261,7 +264,7 @@ AcpiTbOverrideTable (
     if (ACPI_SUCCESS (Status) && Table)
     {
         AcpiTbAcquireTempTable (&NewTableDesc, ACPI_PTR_TO_PHYSADDR (Table),
-            ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL);
+            ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL, Table);
         ACPI_ERROR_ONLY (OverrideType = "Logical");
         goto FinishOverride;
     }
@@ -273,7 +276,7 @@ AcpiTbOverrideTable (
     if (ACPI_SUCCESS (Status) && Address && Length)
     {
         AcpiTbAcquireTempTable (&NewTableDesc, Address,
-            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL);
+            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL);
         ACPI_ERROR_ONLY (OverrideType = "Physical");
         goto FinishOverride;
     }
@@ -349,7 +352,8 @@ AcpiTbUninstallTable (
     if ((TableDesc->Flags & ACPI_TABLE_ORIGIN_MASK) ==
         ACPI_TABLE_ORIGIN_INTERNAL_VIRTUAL)
     {
-        ACPI_FREE (ACPI_PHYSADDR_TO_PTR (TableDesc->Address));
+        ACPI_FREE (TableDesc->Pointer);
+        TableDesc->Pointer = NULL;
     }
 
     TableDesc->Address = ACPI_PTR_TO_PHYSADDR (NULL);

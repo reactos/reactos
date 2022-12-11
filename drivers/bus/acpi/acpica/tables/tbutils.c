@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -363,7 +363,7 @@ AcpiTbParseRootTable (
 
     /* Validate the root table checksum */
 
-    Status = AcpiTbVerifyChecksum (Table, Length);
+    Status = AcpiUtVerifyChecksum (Table, Length);
     if (ACPI_FAILURE (Status))
     {
         AcpiOsUnmapMemory (Table, Length);
@@ -392,7 +392,8 @@ AcpiTbParseRootTable (
         }
 
         Status = AcpiTbInstallStandardTable (Address,
-            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE, &TableIndex);
+            ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, TRUE,
+            &TableIndex);
 
         if (ACPI_SUCCESS (Status) &&
             ACPI_COMPARE_NAMESEG (

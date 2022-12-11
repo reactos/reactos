@@ -16,19 +16,13 @@
 #include <atlsimpcoll.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <shellutils.h>
 
 //#define MANUAL_DEBUGGING
 
 // compare wide strings
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
-
-struct CCoInit
-{
-    CCoInit() { hr = CoInitialize(NULL); }
-    ~CCoInit() { if (SUCCEEDED(hr)) { CoUninitialize(); } }
-    HRESULT hr;
-};
 
 // create an EDIT control
 static HWND MyCreateEditCtrl(INT x, INT y, INT cx, INT cy)

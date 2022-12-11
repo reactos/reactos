@@ -545,7 +545,7 @@ BOOLEAN  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
 BOOLEAN  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
                         OUT PSTATUS_BLOCK  StatusBlock)
 {
-  if(RequestedMode->RequestedMode == 12)
+  if(RequestedMode->RequestedMode == 2)
   {
     InitVGAMode();
     return TRUE;

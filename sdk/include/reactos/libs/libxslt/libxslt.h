@@ -10,7 +10,7 @@
 #ifndef __XSLT_LIBXSLT_H__
 #define __XSLT_LIBXSLT_H__
 
-#if defined(_WIN32) && !defined (__CYGWIN__) && !defined (__MINGW32__)
+#if defined(_WIN32) && !defined (__MINGW32__)
 #include <win32config.h>
 #else
 #include "config.h"
@@ -27,12 +27,10 @@
 #endif
 #endif
 
-#ifndef __REACTOS__
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <io.h>
 #include <direct.h>
 #define mkdir(p,m) _mkdir(p)
 #endif
-#endif /* __REACTOS__ */
 
 #endif /* ! __XSLT_LIBXSLT_H__ */

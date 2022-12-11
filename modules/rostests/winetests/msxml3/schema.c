@@ -1132,27 +1132,28 @@ static void test_regex(void)
     struct regex_test {
         const WCHAR *regex;
         const WCHAR *input;
-        BOOL todo;
     };
 
     struct regex_test tests[] = {
-        { L"\\!", L"!", TRUE },
-        { L"\\\"", L"\"", TRUE },
-        { L"\\#", L"#", TRUE },
-        { L"\\$", L"$", TRUE },
-        { L"\\%", L"%", TRUE },
-        { L"\\,", L",", TRUE },
-        { L"\\/", L"/", TRUE },
-        { L"\\:", L":", TRUE },
-        { L"\\;", L";", TRUE },
-        { L"\\=", L"=", TRUE },
-        { L"\\>", L">", TRUE },
-        { L"\\@", L"@", TRUE },
-        { L"\\`", L"`", TRUE },
-        { L"\\~", L"~", TRUE },
-        { L"\\uCAFE", L"\xCAFE", TRUE },
+        { L"\\!", L"!" },
+        { L"\\\"", L"\"" },
+        { L"\\#", L"#" },
+        { L"\\$", L"$" },
+        { L"\\%", L"%" },
+        { L"\\,", L"," },
+        { L"\\/", L"/" },
+        { L"\\:", L":" },
+        { L"\\;", L";" },
+        { L"\\=", L"=" },
+        { L"\\>", L">" },
+        { L"\\@", L"@" },
+        { L"\\`", L"`" },
+        { L"\\~", L"~" },
+        { L"\\uCAFE", L"\xCAFE" },
         /* non-BMP character in surrogate pairs: */
-        { L"\\uD83D\\uDE00", L"\xD83D\xDE00", TRUE }
+        { L"\\uD83D\\uDE00", L"\xD83D\xDE00" },
+        /* "x{,2}" is non-standard and only works on libxml2 <= v2.9.10 */
+        { L"x{0,2}", L"x" }
     };
 
     int i;
@@ -1173,15 +1174,13 @@ static void test_regex(void)
         if (doc60 && schema60 && cache60)
         {
             HRESULT hr = validate_regex_document(doc60, schema60, cache60, tests[i].regex, tests[i].input);
-            todo_wine_if(tests[i].todo)
-                ok(hr == S_OK, "got 0x%08x for version 60 regex %s input %s\n",
-                    hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
+            ok(hr == S_OK, "got 0x%08x for for version 60 regex %s input %s\n",
+               hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
             if (doc40 && schema40 && cache40)
             {
                 hr = validate_regex_document(doc40, schema40, cache40, tests[i].regex, tests[i].input);
-                todo_wine_if(tests[i].todo)
-                    ok(hr == S_OK, "got 0x%08x for version 40 regex %s input %s\n",
-                        hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
+                ok(hr == S_OK, "got 0x%08x version 40 regex %s input %s\n",
+                   hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
             }
         }
         else

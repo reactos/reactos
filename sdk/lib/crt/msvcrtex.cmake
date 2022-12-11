@@ -3,6 +3,7 @@ include_directories(include/internal/mingw-w64)
 
 list(APPEND MSVCRTEX_SOURCE
     ${CRT_STARTUP_SOURCE}
+    math/sincos.c
     misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -207,6 +207,31 @@ AcpiUtCheckAndRepairAscii (
     UINT8                   *Name,
     char                    *RepairedName,
     UINT32                  Count);
+
+
+/*
+ * utcksum - Checksum utilities
+ */
+UINT8
+AcpiUtGenerateChecksum (
+    void                    *Table,
+    UINT32                  Length,
+    UINT8                   OriginalChecksum);
+
+UINT8
+AcpiUtChecksum (
+    UINT8                   *Buffer,
+    UINT32                  Length);
+
+ACPI_STATUS
+AcpiUtVerifyCdatChecksum (
+    ACPI_TABLE_CDAT         *CdatTable,
+    UINT32                  Length);
+
+ACPI_STATUS
+AcpiUtVerifyChecksum (
+    ACPI_TABLE_HEADER       *Table,
+    UINT32                  Length);
 
 
 /*

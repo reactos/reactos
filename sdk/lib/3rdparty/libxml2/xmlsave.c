@@ -474,6 +474,7 @@ xmlBufDumpNotationTable(xmlBufPtr buf, xmlNotationTablePtr table) {
          */
         return;
     }
+    xmlBufferSetAllocationScheme(buffer, XML_BUFFER_ALLOC_DOUBLEIT);
     xmlDumpNotationTable(buffer, table);
     xmlBufMergeBuffer(buf, buffer);
 }
@@ -497,6 +498,7 @@ xmlBufDumpElementDecl(xmlBufPtr buf, xmlElementPtr elem) {
          */
         return;
     }
+    xmlBufferSetAllocationScheme(buffer, XML_BUFFER_ALLOC_DOUBLEIT);
     xmlDumpElementDecl(buffer, elem);
     xmlBufMergeBuffer(buf, buffer);
 }
@@ -520,6 +522,7 @@ xmlBufDumpAttributeDecl(xmlBufPtr buf, xmlAttributePtr attr) {
          */
         return;
     }
+    xmlBufferSetAllocationScheme(buffer, XML_BUFFER_ALLOC_DOUBLEIT);
     xmlDumpAttributeDecl(buffer, attr);
     xmlBufMergeBuffer(buf, buffer);
 }
@@ -542,6 +545,7 @@ xmlBufDumpEntityDecl(xmlBufPtr buf, xmlEntityPtr ent) {
          */
         return;
     }
+    xmlBufferSetAllocationScheme(buffer, XML_BUFFER_ALLOC_DOUBLEIT);
     xmlDumpEntityDecl(buffer, ent);
     xmlBufMergeBuffer(buf, buffer);
 }
@@ -847,7 +851,7 @@ htmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 static void
 xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
     int format = ctxt->format;
-    xmlNodePtr tmp, root, unformattedNode = NULL;
+    xmlNodePtr tmp, root, unformattedNode = NULL, parent;
     xmlAttrPtr attr;
     xmlChar *start, *end;
     xmlOutputBufferPtr buf;
@@ -856,6 +860,7 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
     buf = ctxt->buf;
 
     root = cur;
+    parent = cur->parent;
     while (1) {
         switch (cur->type) {
         case XML_DOCUMENT_NODE:
@@ -868,7 +873,9 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
             break;
 
         case XML_DOCUMENT_FRAG_NODE:
-            if (cur->children != NULL) {
+            /* Always validate cur->parent when descending. */
+            if ((cur->parent == parent) && (cur->children != NULL)) {
+                parent = cur;
                 cur = cur->children;
                 continue;
             }
@@ -887,11 +894,22 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
             break;
 
         case XML_ELEMENT_NODE:
-	    if ((cur != root) && (ctxt->format == 1) && (xmlIndentTreeOutput))
+	    if ((cur != root) && (ctxt->format == 1) &&
+                (xmlIndentTreeOutput))
 		xmlOutputBufferWrite(buf, ctxt->indent_size *
 				     (ctxt->level > ctxt->indent_nr ?
 				      ctxt->indent_nr : ctxt->level),
 				     ctxt->indent);
+
+            /*
+             * Some users like lxml are known to pass nodes with a corrupted
+             * tree structure. Fall back to a recursive call to handle this
+             * case.
+             */
+            if ((cur->parent != parent) && (cur->children != NULL)) {
+                xmlNodeDumpOutputInternal(ctxt, cur);
+                break;
+            }
 
             xmlOutputBufferWrite(buf, 1, "<");
             if ((cur->ns != NULL) && (cur->ns->prefix != NULL)) {
@@ -942,6 +960,7 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
                 xmlOutputBufferWrite(buf, 1, ">");
                 if (ctxt->format == 1) xmlOutputBufferWrite(buf, 1, "\n");
                 if (ctxt->level >= 0) ctxt->level++;
+                parent = cur;
                 cur = cur->children;
                 continue;
             }
@@ -1058,13 +1077,9 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
                 break;
             }
 
-            /*
-             * The parent should never be NULL here but we want to handle
-             * corrupted documents gracefully.
-             */
-            if (cur->parent == NULL)
-                return;
-            cur = cur->parent;
+            cur = parent;
+            /* cur->parent was validated when descending. */
+            parent = cur->parent;
 
             if (cur->type == XML_ELEMENT_NODE) {
                 if (ctxt->level > 0) ctxt->level--;
@@ -1364,7 +1379,7 @@ xhtmlAttrListDumpOutput(xmlSaveCtxtPtr ctxt, xmlAttrPtr cur) {
 		 (htmlIsBooleanAttr(cur->name))) {
 	    if (cur->children != NULL)
 		xmlFreeNode(cur->children);
-	    cur->children = xmlNewText(cur->name);
+	    cur->children = xmlNewDocText(cur->doc, cur->name);
 	    if (cur->children != NULL)
 		cur->children->parent = (xmlNodePtr) cur;
 	}
@@ -2720,5 +2735,3 @@ xmlSaveFile(const char *filename, xmlDocPtr cur) {
 
 #endif /* LIBXML_OUTPUT_ENABLED */
 
-#define bottom_xmlsave
-#include "elfgcchack.h"

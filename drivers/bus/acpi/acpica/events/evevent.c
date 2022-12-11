@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,7 +204,8 @@ AcpiEvFixedEventInitialize (
         {
             Status = AcpiWriteBitRegister (
                 AcpiGbl_FixedEventInfo[i].EnableRegisterId,
-                ACPI_DISABLE_EVENT);
+                (i == ACPI_EVENT_PCIE_WAKE) ?
+                ACPI_ENABLE_EVENT : ACPI_DISABLE_EVENT);
             if (ACPI_FAILURE (Status))
             {
                 return (Status);
@@ -252,6 +253,11 @@ AcpiEvFixedEventDetect (
     {
         return (IntStatus);
     }
+
+    if (FixedEnable & ACPI_BITMASK_PCIEXP_WAKE_DISABLE)
+         FixedEnable &= ~ACPI_BITMASK_PCIEXP_WAKE_DISABLE;
+    else
+         FixedEnable |= ACPI_BITMASK_PCIEXP_WAKE_DISABLE;
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INTERRUPTS,
         "Fixed Event Block: Enable %08X Status %08X\n",
@@ -323,7 +329,8 @@ AcpiEvFixedEventDispatch (
     {
         (void) AcpiWriteBitRegister (
             AcpiGbl_FixedEventInfo[Event].EnableRegisterId,
-            ACPI_DISABLE_EVENT);
+            (Event == ACPI_EVENT_PCIE_WAKE) ?
+	    ACPI_ENABLE_EVENT : ACPI_DISABLE_EVENT);
 
         ACPI_ERROR ((AE_INFO,
             "No installed handler for fixed event - %s (%u), disabling",

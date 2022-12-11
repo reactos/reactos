@@ -6,7 +6,7 @@ CAPTION "Opções regionais"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Padrões e formatos", -1, 5, 5, 234, 162
-    LTEXT "Esta opção influencia a forma como alguns programas formatam números, unidades monetárias, datas e horas.", -1, 14, 17, 220, 25
+    LTEXT "Esta opção influência a forma como alguns programas formatam números, unidades monetárias, datas e horas.", -1, 14, 17, 220, 25
     LTEXT "Selecci&one um item para definir as suas preferências ou clique em 'Personalizar' para escolher seus próprios formatos:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Personalizar...", IDC_SETUP_BUTTON, 178, 56, 52, 13

@@ -200,4 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Görev Çubuğu ve Başlat Menüsü"
     IDS_RESTORE_ALL "&Açık Pencereleri Göster"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END

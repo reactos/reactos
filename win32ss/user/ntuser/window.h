@@ -122,5 +122,6 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget);
 BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget);
 BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow);
 VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd);
+VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd);
 
 /* EOF */

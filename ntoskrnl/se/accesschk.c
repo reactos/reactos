@@ -479,22 +479,19 @@ SepAccessCheck(
     _Out_ PNTSTATUS AccessStatusList)
 {
     ACCESS_MASK RemainingAccess;
-    PACCESS_CHECK_RIGHTS AccessCheckRights;
-    PACCESS_TOKEN Token;
     ULONG ResultListLength;
     ULONG ResultListIndex;
     PACL Dacl;
     BOOLEAN Present;
     BOOLEAN Defaulted;
     NTSTATUS Status;
+    PACCESS_TOKEN Token = NULL;
+    PACCESS_CHECK_RIGHTS AccessCheckRights = NULL;
 
     PAGED_CODE();
 
     /* A security descriptor must be expected for access checks */
     ASSERT(SecurityDescriptor);
-
-    /* Assume no access check rights first */
-    AccessCheckRights = NULL;
 
     /* Check for no access desired */
     if (!DesiredAccess)
@@ -766,6 +763,16 @@ ReturnCommonStatus:
         GrantedAccessList[ResultListIndex] = PreviouslyGrantedAccess;
         AccessStatusList[ResultListIndex] = Status;
     }
+
+#if DBG
+    /* Dump security debug info on access denied case */
+    if (Status == STATUS_ACCESS_DENIED)
+    {
+        SepDumpSdDebugInfo(SecurityDescriptor);
+        SepDumpTokenDebugInfo(Token);
+        SepDumpAccessRightsStats(AccessCheckRights);
+    }
+#endif
 
     /* Free the allocated access check rights */
     SepFreeAccessCheckRights(AccessCheckRights);

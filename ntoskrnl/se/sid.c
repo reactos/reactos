@@ -616,8 +616,23 @@ SepGetSidFromAce(
             break;
         }
 
-        default:
+        case SYSTEM_AUDIT_ACE_TYPE:
+        {
+            Sid = (PSID)&((PSYSTEM_AUDIT_ACE)Ace)->SidStart;
             break;
+        }
+
+        case SYSTEM_ALARM_ACE_TYPE:
+        {
+            Sid = (PSID)&((PSYSTEM_ALARM_ACE)Ace)->SidStart;
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("SepGetSidFromAce(): Unknown ACE type (Ace 0x%p, Type %u)\n", Ace, AceType);
+            break;
+        }
     }
 
     return Sid;

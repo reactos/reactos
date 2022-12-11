@@ -366,7 +366,10 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     /* Default attributes */
     AttributeFlags = FILE_ATTRIBUTE_NORMAL;
 
-    /* Now create the file */
+    /* Now create the file.
+     * Note: We use FILE_SYNCHRONOUS_IO_NONALERT here to simplify CmpFileRead/CmpFileWrite.
+     *       Windows does async I/O and therefore does not use this flag (or SYNCHRONIZE).
+     */
     Status = ZwCreateFile(Primary,
                           DesiredAccess | SYNCHRONIZE,
                           &ObjectAttributes,
@@ -543,16 +546,19 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         AttributeFlags |= FILE_ATTRIBUTE_HIDDEN;
     }
 
-    /* Now create the file */
+    /* Now create the file.
+     * Note: We use FILE_SYNCHRONOUS_IO_NONALERT here to simplify CmpFileRead/CmpFileWrite.
+     *       Windows does async I/O and therefore does not use this flag (or SYNCHRONIZE).
+     */
     Status = ZwCreateFile(Log,
-                          DesiredAccess,
+                          DesiredAccess | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
                           AttributeFlags,
                           ShareMode,
                           CreateDisposition,
-                          IoFlags,
+                          FILE_SYNCHRONOUS_IO_NONALERT | IoFlags,
                           NULL,
                           0);
     if ((NT_SUCCESS(Status)) && (MarkAsSystemHive))

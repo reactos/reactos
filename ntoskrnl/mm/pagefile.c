@@ -1,29 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/pagefile.c
- * PURPOSE:         Paging file functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- *                  Pierre Schweitzer
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Paging file functions
+ * COPYRIGHT:   Copyright 1998-2003 David Welch <welch@mcmail.com>
+ *              Copyright 2010-2018 Pierre Schweitzer <pierre@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -34,7 +14,44 @@
 
 /* GLOBALS *******************************************************************/
 
-#define PAIRS_PER_RUN (1024)
+/* Minimum pagefile size is 256 pages (1 MB) */
+#define MINIMUM_PAGEFILE_SIZE       (256ULL * PAGE_SIZE)
+
+/* Maximum pagefile sizes for different architectures */
+#if defined(_M_IX86) && !defined(_X86PAE_)
+/* Around 4 GB */
+    #define MAXIMUM_PAGEFILE_SIZE   ((1ULL * 1024 * 1024 - 1) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(4ULL * GIGABYTE - 1)
+/* PAE uses the same size as x64 */
+#elif (defined(_M_IX86) && defined(_X86PAE_)) || defined (_M_AMD64) || defined(_M_ARM64)
+/* Around 16 TB */
+    #if (NTDDI_VERSION >= NTDDI_WIN10)
+    #define MAXIMUM_PAGEFILE_SIZE   ((4ULL * 1024 * 1024 * 1024 - 2) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(16ULL * TERABYTE - PAGE_SIZE - 1)
+    #else
+    #define MAXIMUM_PAGEFILE_SIZE   ((4ULL * 1024 * 1024 * 1024 - 1) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(16ULL * TERABYTE - 1)
+    #endif
+#elif defined (_M_IA64)
+/* Around 32 TB */
+    #define MAXIMUM_PAGEFILE_SIZE   ((8ULL * 1024 * 1024 * 1024 - 1) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(32ULL * TERABYTE - 1)
+#elif defined(_M_ARM)
+/* Around 2 GB */
+    #if (NTDDI_VERSION >= NTDDI_WIN10)
+    #define MAXIMUM_PAGEFILE_SIZE   ((512ULL * 1024 - 2) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(2ULL * GIGABYTE - PAGE_SIZE - 1)
+    #elif (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+    #define MAXIMUM_PAGEFILE_SIZE   ((512ULL * 1024 - 1) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(2ULL * GIGABYTE - 1)
+    #else
+/* Around 4 GB */
+    #define MAXIMUM_PAGEFILE_SIZE   ((1ULL * 1024 * 1024 - 1) * PAGE_SIZE)
+                                 // PAGE_ROUND_DOWN(4ULL * GIGABYTE - 1)
+    #endif
+#else
+#error Unknown architecture
+#endif
 
 /* List of paging files, both used and free */
 PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
@@ -344,11 +361,13 @@ MmAllocSwapPage(VOID)
     return(0);
 }
 
-NTSTATUS NTAPI
-NtCreatePagingFile(IN PUNICODE_STRING FileName,
-                   IN PLARGE_INTEGER MinimumSize,
-                   IN PLARGE_INTEGER MaximumSize,
-                   IN ULONG Reserved)
+NTSTATUS
+NTAPI
+NtCreatePagingFile(
+    _In_ PUNICODE_STRING FileName,
+    _In_ PLARGE_INTEGER MinimumSize,
+    _In_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG Reserved)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -407,33 +426,32 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     }
 
     /*
-     * Pagefiles can't be larger than 4GB and of course
-     * the minimum should be smaller than the maximum.
+     * Pagefiles cannot be larger than the platform-specific memory addressable
+     * limits, and of course the minimum should be smaller than the maximum.
      */
-    // TODO: Actually validate the lower bound of these sizes!
-    if (0 != SafeMinimumSize.u.HighPart)
+    if (SafeMinimumSize.QuadPart < MINIMUM_PAGEFILE_SIZE ||
+        SafeMinimumSize.QuadPart > MAXIMUM_PAGEFILE_SIZE)
     {
         return STATUS_INVALID_PARAMETER_2;
     }
-    if (0 != SafeMaximumSize.u.HighPart)
+    if (SafeMaximumSize.QuadPart < SafeMinimumSize.QuadPart ||
+        SafeMaximumSize.QuadPart > MAXIMUM_PAGEFILE_SIZE)
     {
         return STATUS_INVALID_PARAMETER_3;
-    }
-    if (SafeMaximumSize.u.LowPart < SafeMinimumSize.u.LowPart)
-    {
-        return STATUS_INVALID_PARAMETER_MIX;
     }
 
     /* Validate the name length */
     if ((PageFileName.Length == 0) ||
-        (PageFileName.Length > 128 * sizeof(WCHAR)))
+        (PageFileName.Length > MAXIMUM_FILENAME_LENGTH))
     {
         return STATUS_OBJECT_NAME_INVALID;
     }
 
-    /* We don't care about any potential UNICODE_NULL */
+    /* Allocate a buffer to keep the name copy. Note that it is kept only
+     * for information purposes, so it gets allocated in the paged pool,
+     * even if it will be stored in the PagingFile structure, that is
+     * allocated from non-paged pool (see below). */
     PageFileName.MaximumLength = PageFileName.Length;
-    /* Allocate a buffer to keep the name copy */
     Buffer = ExAllocatePoolWithTag(PagedPool, PageFileName.Length, TAG_MM);
     if (Buffer == NULL)
     {
@@ -476,7 +494,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* Create the DACL: we will only allow two SIDs */
     Count = sizeof(ACL) + (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
                           (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
-    Dacl = ExAllocatePoolWithTag(PagedPool, Count, 'lcaD');
+    Dacl = ExAllocatePoolWithTag(PagedPool, Count, TAG_DACL);
     if (Dacl == NULL)
     {
         ExFreePoolWithTag(Buffer, TAG_MM);
@@ -486,42 +504,26 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* Initialize the DACL */
     Status = RtlCreateAcl(Dacl, Count, ACL_REVISION);
     if (!NT_SUCCESS(Status))
-    {
-        ExFreePoolWithTag(Dacl, 'lcaD');
-        ExFreePoolWithTag(Buffer, TAG_MM);
-        return Status;
-    }
+        goto EarlyQuit;
 
     /* Grant full access to admins */
     Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeAliasAdminsSid);
     if (!NT_SUCCESS(Status))
-    {
-        ExFreePoolWithTag(Dacl, 'lcaD');
-        ExFreePoolWithTag(Buffer, TAG_MM);
-        return Status;
-    }
+        goto EarlyQuit;
 
     /* Grant full access to SYSTEM */
     Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeLocalSystemSid);
     if (!NT_SUCCESS(Status))
-    {
-        ExFreePoolWithTag(Dacl, 'lcaD');
-        ExFreePoolWithTag(Buffer, TAG_MM);
-        return Status;
-    }
+        goto EarlyQuit;
 
     /* Attach the DACL to the security descriptor */
     Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl, FALSE);
     if (!NT_SUCCESS(Status))
-    {
-        ExFreePoolWithTag(Dacl, 'lcaD');
-        ExFreePoolWithTag(Buffer, TAG_MM);
-        return Status;
-    }
+        goto EarlyQuit;
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &PageFileName,
-                               OBJ_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                &SecurityDescriptor);
 
@@ -547,10 +549,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                           0,
                           CreateFileTypeNone,
                           NULL,
-                          SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+                          IO_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
     /* If we failed, relax a bit constraints, someone may be already holding the
      * the file, so share write, don't attempt to replace and don't delete on close
-     * (basically, don't do anything conflicting)
+     * (basically, don't do anything conflicting).
      * This can happen if the caller attempts to extend a page file.
      */
     if (!NT_SUCCESS(Status))
@@ -570,13 +572,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                               0,
                               CreateFileTypeNone,
                               NULL,
-                              SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+                              IO_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
         if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(Dacl, 'lcaD');
-            ExFreePoolWithTag(Buffer, TAG_MM);
-            return Status;
-        }
+            goto EarlyQuit;
 
         /* We opened it! Check we are that "someone" ;-)
          * First, get the opened file object.
@@ -590,33 +588,22 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         if (!NT_SUCCESS(Status))
         {
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
-            ExFreePoolWithTag(Buffer, TAG_MM);
-            return Status;
+            goto EarlyQuit;
         }
 
         /* Find if it matches a previous page file */
         PagingFile = NULL;
 
-        /* FIXME: should be calling unsafe instead,
-         * we should already be in a guarded region
-         */
         KeAcquireGuardedMutex(&MmPageFileCreationLock);
-        if (MmNumberOfPagingFiles > 0)
+
+        for (i = 0; i < MmNumberOfPagingFiles; ++i)
         {
-            i = 0;
-
-            while (MmPagingFile[i]->FileObject->SectionObjectPointer != FileObject->SectionObjectPointer)
+            if (MmPagingFile[i]->FileObject->SectionObjectPointer == FileObject->SectionObjectPointer)
             {
-                ++i;
-                if (i >= MmNumberOfPagingFiles)
-                {
-                    break;
-                }
+                /* Same object pointer: this is the matching page file */
+                PagingFile = MmPagingFile[i];
+                break;
             }
-
-            /* This is the matching page file */
-            PagingFile = MmPagingFile[i];
         }
 
         /* If we didn't find the page file, fail */
@@ -625,9 +612,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
-            ExFreePoolWithTag(Buffer, TAG_MM);
-            return STATUS_NOT_FOUND;
+            Status = STATUS_NOT_FOUND;
+            goto EarlyQuit;
         }
 
         /* Don't allow page file shrinking */
@@ -636,9 +622,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
-            ExFreePoolWithTag(Buffer, TAG_MM);
-            return STATUS_INVALID_PARAMETER_2;
+            Status = STATUS_INVALID_PARAMETER_2;
+            goto EarlyQuit;
         }
 
         if ((SafeMaximumSize.QuadPart >> PAGE_SHIFT) < PagingFile->MaximumSize)
@@ -646,9 +631,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
-            ExFreePoolWithTag(Dacl, 'lcaD');
-            ExFreePoolWithTag(Buffer, TAG_MM);
-            return STATUS_INVALID_PARAMETER_3;
+            Status = STATUS_INVALID_PARAMETER_3;
+            goto EarlyQuit;
         }
 
         /* FIXME: implement parameters checking and page file extension */
@@ -657,15 +641,15 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         KeReleaseGuardedMutex(&MmPageFileCreationLock);
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
-        ExFreePoolWithTag(Dacl, 'lcaD');
-        ExFreePoolWithTag(Buffer, TAG_MM);
-        return STATUS_NOT_IMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto EarlyQuit;
     }
 
     if (!NT_SUCCESS(Status))
     {
+EarlyQuit:
         DPRINT1("Failed creating page file: %lx\n", Status);
-        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Dacl, TAG_DACL);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
@@ -676,17 +660,17 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         Status = ZwSetSecurityObject(FileHandle, DACL_SECURITY_INFORMATION, &SecurityDescriptor);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Dacl, 'lcaD');
             ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, TAG_DACL);
             ExFreePoolWithTag(Buffer, TAG_MM);
             return Status;
         }
     }
 
     /* DACL is no longer needed, free it */
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 
-    /* FIXME: To enable once page file managment is moved to ARM3 */
+    /* FIXME: To enable once page file management is moved to ARM3 */
 #if 0
     /* Check we won't overflow commit limit with the page file */
     if (MmTotalCommitLimitMaximum + (SafeMaximumSize.QuadPart >> PAGE_SHIFT) <= MmTotalCommitLimitMaximum)
@@ -725,8 +709,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     /* Only allow page file on a few device types */
     DeviceType = IoGetRelatedDeviceObject(FileObject)->DeviceType;
-    if (DeviceType != FILE_DEVICE_DISK_FILE_SYSTEM && DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM &&
-        DeviceType != FILE_DEVICE_DFS_VOLUME && DeviceType != FILE_DEVICE_DFS_FILE_SYSTEM)
+    if (DeviceType != FILE_DEVICE_DISK_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_DFS_VOLUME &&
+        DeviceType != FILE_DEVICE_DFS_FILE_SYSTEM)
     {
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
@@ -736,7 +722,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     /* Deny page file creation on a floppy disk */
     FsDeviceInfo.Characteristics = 0;
-    IoQueryVolumeInformation(FileObject, FileFsDeviceInformation, sizeof(FsDeviceInfo), &FsDeviceInfo, &Count);
+    IoQueryVolumeInformation(FileObject, FileFsDeviceInformation,
+                             sizeof(FsDeviceInfo), &FsDeviceInfo, &Count);
     if (BooleanFlagOn(FsDeviceInfo.Characteristics, FILE_FLOPPY_DISKETTE))
     {
         ObDereferenceObject(FileObject);
@@ -745,7 +732,27 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_FLOPPY_VOLUME;
     }
 
-    PagingFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PagingFile), TAG_MM);
+    /*
+     * Missing validation steps TODO:
+     * (see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/mm/modwrite/create.htm )
+     *
+     * - Verify that no file system driver or any filter driver has done file
+     *   I/O while opening the file.
+     *   Verify that nothing of the paging file is yet in memory. Specifically,
+     *   the file object must either have no SectionObjectPointer or the latter
+     *   must have neither a DataSectionObject nor an ImageSectionObject.
+     *   Otherwise, we should fail, returning STATUS_INCOMPATIBLE_FILE_MAP.
+     *
+     * - Inform all the applicable drivers to prepare for the possibility of
+     *   paging I/O. Much of the point to paging I/O is to resolve page faults.
+     *   Especially important is that drivers that handle paging I/O do not
+     *   cause more page faults. All the code and data that each driver might
+     *   ever use for access to the paging file must be locked into physical
+     *   memory. This can’t be left until paging I/O actually occurs.
+     *   It must be done in advance.
+     */
+
+    PagingFile = ExAllocatePoolZero(NonPagedPool, sizeof(*PagingFile), TAG_MM);
     if (PagingFile == NULL)
     {
         ObDereferenceObject(FileObject);
@@ -754,17 +761,15 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(PagingFile, sizeof(*PagingFile));
-
     PagingFile->FileHandle = FileHandle;
     PagingFile->FileObject = FileObject;
-    PagingFile->MaximumSize = (SafeMaximumSize.QuadPart >> PAGE_SHIFT);
     PagingFile->Size = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
-    PagingFile->MinimumSize = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
+    PagingFile->MinimumSize = PagingFile->Size;
+    PagingFile->MaximumSize = (SafeMaximumSize.QuadPart >> PAGE_SHIFT);
     /* First page is never used: it's the header
      * TODO: write it
      */
-    PagingFile->FreeSpace = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE) - 1;
+    PagingFile->FreeSpace = PagingFile->Size - 1;
     PagingFile->CurrentUsage = 0;
     PagingFile->PageFileName = PageFileName;
     ASSERT(PagingFile->Size == PagingFile->FreeSpace + PagingFile->CurrentUsage + 1);
@@ -787,10 +792,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                         (ULONG)(PagingFile->MaximumSize));
     RtlClearAllBits(PagingFile->Bitmap);
 
-    /* FIXME: should be calling unsafe instead,
-     * we should already be in a guarded region
-     */
+    /* Insert the new paging file information into the list */
     KeAcquireGuardedMutex(&MmPageFileCreationLock);
+    /* Ensure the corresponding slot is empty yet */
     ASSERT(MmPagingFile[MmNumberOfPagingFiles] == NULL);
     MmPagingFile[MmNumberOfPagingFiles] = PagingFile;
     MmNumberOfPagingFiles++;

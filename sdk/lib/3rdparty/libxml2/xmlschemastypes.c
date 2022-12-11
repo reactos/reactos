@@ -18,6 +18,9 @@
 #ifdef LIBXML_SCHEMAS_ENABLED
 
 #include <string.h>
+#include <math.h>
+#include <float.h>
+
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
@@ -29,13 +32,6 @@
 #include <libxml/xmlschemas.h>
 #include <libxml/schemasInternals.h>
 #include <libxml/xmlschemastypes.h>
-
-#ifdef HAVE_MATH_H
-#include <math.h>
-#endif
-#ifdef HAVE_FLOAT_H
-#include <float.h>
-#endif
 
 #define DEBUG
 
@@ -626,6 +622,11 @@ xmlSchemaFreeTypeEntry(void *type, const xmlChar *name ATTRIBUTE_UNUSED) {
 
 /**
  * xmlSchemaCleanupTypes:
+ *
+ * DEPRECATED: This function will be made private. Call xmlCleanupParser
+ * to free global state but see the warnings there. xmlCleanupParser
+ * should be only called once at program exit. In most cases, you don't
+ * have call cleanup functions at all.
  *
  * Cleanup the default XML Schemas type library
  */
@@ -3308,6 +3309,8 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
 
                 if (cur == NULL)
                     goto return1;
+		if (normOnTheFly)
+		    while IS_WSP_BLANK_CH(*cur) cur++;
                 if (*cur == '-') {
                     sign = 1;
                     cur++;
@@ -3316,6 +3319,8 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
                 ret = xmlSchemaParseUInt(&cur, &lo, &mi, &hi);
                 if (ret < 0)
                     goto return1;
+		if (normOnTheFly)
+		    while IS_WSP_BLANK_CH(*cur) cur++;
                 if (*cur != 0)
                     goto return1;
                 if (type->builtInType == XML_SCHEMAS_LONG) {
@@ -3380,9 +3385,13 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
 
                 if (cur == NULL)
                     goto return1;
+		if (normOnTheFly)
+		    while IS_WSP_BLANK_CH(*cur) cur++;
                 ret = xmlSchemaParseUInt(&cur, &lo, &mi, &hi);
                 if (ret < 0)
                     goto return1;
+		if (normOnTheFly)
+		    while IS_WSP_BLANK_CH(*cur) cur++;
                 if (*cur != 0)
                     goto return1;
                 if (type->builtInType == XML_SCHEMAS_ULONG) {
@@ -5431,7 +5440,6 @@ xmlSchemaValidateFacetInternal(xmlSchemaFacetPtr facet,
 			       xmlSchemaWhitespaceValueType ws)
 {
     int ret;
-    int stringType;
 
     if (facet == NULL)
 	return(-1);
@@ -5449,10 +5457,16 @@ xmlSchemaValidateFacetInternal(xmlSchemaFacetPtr facet,
 	    * the datatype.
 	    * See https://www.w3.org/TR/xmlschema-2/#rf-pattern
 	    */
-	    stringType = val && ((val->type >= XML_SCHEMAS_STRING && val->type <= XML_SCHEMAS_NORMSTRING)
-			      || (val->type >= XML_SCHEMAS_TOKEN && val->type <= XML_SCHEMAS_NCNAME));
-	    ret = xmlRegexpExec(facet->regexp,
-	                        (stringType && val->value.str) ? val->value.str : value);
+	    if (val &&
+                val->value.str &&
+                ((val->type >= XML_SCHEMAS_STRING &&
+                  val->type <= XML_SCHEMAS_NORMSTRING) ||
+                 (val->type >= XML_SCHEMAS_TOKEN &&
+                  val->type <= XML_SCHEMAS_ENTITIES &&
+                  val->type != XML_SCHEMAS_QNAME))) {
+                value = val->value.str;
+            }
+	    ret = xmlRegexpExec(facet->regexp, value);
 	    if (ret == 1)
 		return(0);
 	    if (ret == 0)
@@ -6271,6 +6285,4 @@ xmlSchemaGetValType(xmlSchemaValPtr val)
     return (val->type);
 }
 
-#define bottom_xmlschemastypes
-#include "elfgcchack.h"
 #endif /* LIBXML_SCHEMAS_ENABLED */

@@ -45,7 +45,10 @@ typedef struct _RWNDOBJ {
   SURFOBJ *psoOwner;
 } RWNDOBJ;
 
-/* EXtended CLip and Window Region Objects */
+/*
+ * XCLIPOBJ structure --- EXtended CLip and Window Region Objects.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/XCLIPOBJ
+ */
 #ifdef __cplusplus
 typedef struct _XCLIPOBJ : _CLIPOBJ, _RWNDOBJ
 {
@@ -159,8 +162,9 @@ typedef struct _FONTGDI {
   LONG          tmAscent;
   LONG          tmDescent;
   LONG          tmInternalLeading;
-  LONG          EmHeight;
   LONG          Magic;
+  LONG          lfHeight;
+  LONG          lfWidth;
 } FONTGDI, *PFONTGDI;
 
 /* The initialized 'Magic' value in FONTGDI */

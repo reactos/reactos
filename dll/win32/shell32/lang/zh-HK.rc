@@ -988,6 +988,11 @@ BEGIN
     IDS_OBJECTS "%d 個物件"
     IDS_OBJECTS_SELECTED "已選擇 %d 個物件"
 
+    IDS_TITLE_MYCOMP "我的電腦"
+    IDS_TITLE_MYNET "網絡上的芳鄰"
+    IDS_TITLE_BIN_1 "Recycle Bin (full)"
+    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+
     IDS_ADVANCED_FOLDER "檔案和資料夾"
     IDS_ADVANCED_NET_CRAWLER "自動搜尋網絡資料夾和印表機"
     IDS_ADVANCED_FOLDER_SIZE_TIP "在資料夾提示中顯示檔案大小的資訊"

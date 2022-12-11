@@ -108,7 +108,6 @@ shdocvw dll\win32\shdocvw
 shell32 dll\win32\shell32
 shfolder dll\win32\shfolder
 shlwapi dll\win32\shlwapi
-smdll dll\win32\smdll
 snmpapi dll\win32\snmpapi
 syssetup dll\win32\syssetup
 twain_32 dll\win32\twain_32

@@ -294,6 +294,10 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c)
 
+if(DBG)
+    list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/se/debug.c)
+endif()
+
 list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/ex/zw.S)
 
 if(ARCH STREQUAL "i386")
@@ -411,7 +415,6 @@ if(NOT _WINKD_)
     endif()
 
     list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
 

@@ -56,6 +56,12 @@ IoCreateDriver(
     _In_ PDRIVER_INITIALIZE InitializationFunction
 );
 
+VOID
+NTAPI
+IoDeleteDriver(
+    _In_ PDRIVER_OBJECT DriverObject
+);
+
 NTSTATUS
 NTAPI
 IoReportHalResourceUsage(

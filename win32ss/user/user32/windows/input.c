@@ -345,19 +345,19 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"Control Panel\\Input Method\\Hot Keys",
                           0,
-                          KEY_ALL_ACCESS,
+                          KEY_READ,
                           &hKey);
     if (error != ERROR_SUCCESS)
         return ret;
 
-    for (dwIndex = 0; ; ++dwIndex)
+    for (dwIndex = 0; dwIndex < 1000; ++dwIndex)
     {
         cchKeyName = _countof(szKeyName);
         error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cchKeyName, NULL, NULL, NULL, NULL);
-        if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
+        if (error != ERROR_SUCCESS)
             break;
 
-        szKeyName[_countof(szKeyName) - 1] = 0;
+        szKeyName[_countof(szKeyName) - 1] = 0; /* Avoid stack overrun */
 
         if (CliSetSingleHotKey(szKeyName, hKey))
             ret = TRUE;
@@ -369,7 +369,7 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
 
 VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 {
-    WCHAR szValueName[8], szValue[16];
+    WCHAR szValueName[33], szValue[16];
     UNICODE_STRING ustrValue;
     DWORD dwKL, cbValue, dwType;
     UINT iNumber;
@@ -382,14 +382,17 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
+        _ultow(iNumber, szValueName, 10);
 
         cbValue = sizeof(szValue);
         error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (error != ERROR_SUCCESS || dwType != REG_SZ)
+        if (error != ERROR_SUCCESS)
             break;
 
-        szValue[_countof(szValue) - 1] = 0;
+        if (dwType != REG_SZ)
+            continue;
+
+        szValue[_countof(szValue) - 1] = 0; /* Avoid stack overrun */
 
         RtlInitUnicodeString(&ustrValue, szValue);
         RtlUnicodeStringToInteger(&ustrValue, 16, &dwKL);
@@ -428,11 +431,11 @@ VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
     BYTE bFlags = 0;
     BOOL bCheck;
 
-    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_DELETEALL);
+    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_INITIALIZE);
 
     bCheck = CliGetImeHotKeysFromRegistry();
 
-    if (dwAction == SETIMEHOTKEY_DELETEALL)
+    if (dwAction == SETIMEHOTKEY_INITIALIZE)
     {
         LangID = LANGIDFROMLCID(GetUserDefaultLCID());
         IntSetFeKeyboardFlags(LangID, &bFlags);
@@ -796,6 +799,7 @@ IntLoadKeyboardLayout(
             {
                 bIsIME = FALSE;
                 wHigh = 0;
+                ERR("0x%X\n", dwKLID);
             }
             else
             {
@@ -810,6 +814,7 @@ IntLoadKeyboardLayout(
                 {
                     bIsIME = FALSE;
                     wHigh = 0;
+                    ERR("'%s'\n", debugstr_w(szPath));
                 }
             }
         }

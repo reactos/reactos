@@ -195,4 +195,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bilah Tugas dan Menu Mulai"
     IDS_RESTORE_ALL "&Tampilkan Semua Jendela"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END

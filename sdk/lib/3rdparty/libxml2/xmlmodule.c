@@ -301,7 +301,7 @@ xmlModulePlatformSymbol(void *handle, const char *name, void **symbol)
 #endif /* HAVE_SHLLOAD */
 #endif /* ! HAVE_DLOPEN */
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -341,14 +341,7 @@ static int
 xmlModulePlatformSymbol(void *handle, const char *name, void **symbol)
 {
 XML_IGNORE_PEDANTIC_WARNINGS
-#ifdef _WIN32_WCE
-    /*
-     * GetProcAddressA seems only available on WinCE
-     */
-    *symbol = GetProcAddressA(handle, name);
-#else
     *symbol = GetProcAddress(handle, name);
-#endif
     return (NULL == *symbol) ? -1 : 0;
 XML_POP_WARNINGS
 }
@@ -463,6 +456,4 @@ xmlModulePlatformSymbol(void *handle, const char *name, void **symbol)
 
 #endif /* HAVE_OS2 */
 
-#define bottom_xmlmodule
-#include "elfgcchack.h"
 #endif /* LIBXML_MODULES_ENABLED */

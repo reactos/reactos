@@ -375,7 +375,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KeEnterCriticalRegion();
     ExAcquirePushLockExclusive(&Process->ProcessLock);
 
-    /* Make sure the proces didn't just die on us */
+    /* Make sure the process didn't just die on us */
     if (Process->ProcessDelete) goto Quickie;
 
     /* Check if the thread was ours, terminated and it was user mode */

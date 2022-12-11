@@ -530,8 +530,8 @@ static const shvheader GenericSFHeader[] = {
     {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
-    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 0},
-    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
+    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10}
 };
 
 #define GENERICSHELLVIEWCOLUMNS 6
@@ -987,11 +987,11 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
             if (result == 0)
                 result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             break;
-        case 4: /* Comments */
+        case 4: /* Attributes */
+            return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+        case 5: /* Comments */
             result = 0;
             break;
-        case 5: /* Attributes */
-            return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
 
     if (result == 0)
@@ -1541,11 +1541,11 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
             case 3:                /* date */
                 _ILGetFileDate(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 4:                /* FIXME: comments */
-                psd->str.cStr[0] = 0;
-                break;
-            case 5:                /* attributes */
+            case 4:                /* attributes */
                 _ILGetFileAttributes(pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 5:                /* FIXME: comments */
+                psd->str.cStr[0] = 0;
                 break;
         }
     }
@@ -1811,14 +1811,24 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
         {
-            PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(m_pidlRoot));
-            LPITEMIDLIST pidlParent = ILClone(m_pidlRoot);
+            // Create an data object
+            CComHeapPtr<ITEMID_CHILD> pidlChild(ILClone(ILFindLastID(m_pidlRoot)));
+            CComHeapPtr<ITEMIDLIST> pidlParent(ILClone(m_pidlRoot));
             ILRemoveLastID(pidlParent);
-            BOOL bSuccess = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
-            if (!bSuccess)
-                ERR("SH_ShowPropertiesDialog failed\n");
-            ILFree(pidlChild);
-            ILFree(pidlParent);
+
+            CComPtr<IDataObject> pDataObj;
+            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+            if (!FAILED_UNEXPECTEDLY(hr))
+            {
+                // Ask for a title to display
+                CComHeapPtr<WCHAR> wszName;
+                if (!FAILED_UNEXPECTEDLY(SHGetNameFromIDList(m_pidlRoot, SIGDN_PARENTRELATIVEPARSING, &wszName)))
+                {
+                    BOOL bSuccess = SH_ShowPropertiesDialog(wszName, pDataObj);
+                    if (!bSuccess)
+                        ERR("SH_ShowPropertiesDialog failed\n");
+                }
+            }
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {

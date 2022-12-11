@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS API tests
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for RtlUnicodeStringToCountedOemString
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou <jerome.gardou@reactos.org>
  */

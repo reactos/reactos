@@ -17,6 +17,93 @@
 
 /* FUNCTIONS *****************************************************************/
 
+KIRQL
+NTAPI
+KdpAcquireLock(
+    _In_ PKSPIN_LOCK SpinLock)
+{
+    KIRQL OldIrql;
+
+    /* Acquire the spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Loop until the spinlock becomes available */
+        while (!KeTestSpinLock(SpinLock));
+
+        /* Spinlock is free, raise IRQL to high level */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(SpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    return OldIrql;
+}
+
+VOID
+NTAPI
+KdpReleaseLock(
+    _In_ PKSPIN_LOCK SpinLock,
+    _In_ KIRQL OldIrql)
+{
+    /* Release the spinlock */
+    KiReleaseSpinLock(SpinLock);
+    // KeReleaseSpinLockFromDpcLevel(SpinLock);
+
+    /* Restore the old IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+VOID
+NTAPI
+KdLogDbgPrint(
+    _In_ PSTRING String)
+{
+    SIZE_T Length, Remaining;
+    KIRQL OldIrql;
+
+    /* If the string is empty, bail out */
+    if (!String->Buffer || (String->Length == 0))
+        return;
+
+    /* If no log buffer available, bail out */
+    if (!KdPrintCircularBuffer /*|| (KdPrintBufferSize == 0)*/)
+        return;
+
+    /* Acquire the log spinlock without waiting at raised IRQL */
+    OldIrql = KdpAcquireLock(&KdpPrintSpinLock);
+
+    Length = min(String->Length, KdPrintBufferSize);
+    Remaining = KdPrintCircularBuffer + KdPrintBufferSize - KdPrintWritePointer;
+
+    if (Length < Remaining)
+    {
+        KdpMoveMemory(KdPrintWritePointer, String->Buffer, Length);
+        KdPrintWritePointer += Length;
+    }
+    else
+    {
+        KdpMoveMemory(KdPrintWritePointer, String->Buffer, Remaining);
+        Length -= Remaining;
+        if (Length > 0)
+            KdpMoveMemory(KdPrintCircularBuffer, String->Buffer + Remaining, Length);
+
+        KdPrintWritePointer = KdPrintCircularBuffer + Length;
+
+        /* Got a rollover, update count (handle wrapping, must always be >= 1) */
+        ++KdPrintRolloverCount;
+        if (KdPrintRolloverCount == 0)
+            ++KdPrintRolloverCount;
+    }
+
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpPrintSpinLock, OldIrql);
+}
+
 BOOLEAN
 NTAPI
 KdpPrintString(
@@ -270,7 +357,7 @@ KdpPrompt(
     ResponseBuffer.MaximumLength = MaximumResponseLength;
 
     /* Log the print */
-    //KdLogDbgPrint(&PromptBuffer);
+    KdLogDbgPrint(&PromptBuffer);
 
     /* Enter the debugger */
     Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
@@ -405,7 +492,7 @@ KdpPrint(
     OutputString.Length = OutputString.MaximumLength = Length;
 
     /* Log the print */
-    //KdLogDbgPrint(&OutputString);
+    KdLogDbgPrint(&OutputString);
 
     /* Check for a debugger */
     if (KdDebuggerNotPresent)

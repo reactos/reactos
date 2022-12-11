@@ -980,6 +980,11 @@ BEGIN
     IDS_OBJECTS "%d об'єктів"
     IDS_OBJECTS_SELECTED "Обрано %d об'єктів"
 
+    IDS_TITLE_MYCOMP "Мій комп'ютер"
+    IDS_TITLE_MYNET "Мережне оточення"
+    IDS_TITLE_BIN_1 "Кошик (повний)"
+    IDS_TITLE_BIN_0 "Кошик (порожній)"
+
     IDS_ADVANCED_FOLDER "Файли та папки"
     IDS_ADVANCED_NET_CRAWLER "Автоматично знаходити мережеві папки і принтери"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Показувати розмір файлу в підказках папки"

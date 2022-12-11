@@ -137,6 +137,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utascii.c
     acpica/utilities/utbuffer.c
     acpica/utilities/utcache.c
+    acpica/utilities/utcksum.c
     # acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
     # acpica/utilities/utdebug.c

@@ -360,6 +360,7 @@ LongModeEntryPoint:
     int HEX(16)
     jmp Reboot
 
+/* FNID_* functions */
 CallbackTable:
     .word Int386
     .word Reboot
@@ -367,6 +368,7 @@ CallbackTable:
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
+    .word PnpBiosGetDockStationInformation
 
     /* 16-bit stack pointer */
 stack16:

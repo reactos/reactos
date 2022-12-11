@@ -400,6 +400,9 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     DWORD        dwDebuggerSize;
     HKEY         hKey;
 
+    if (dwProcessId == 0)
+        return;
+
     memset(&si, 0, sizeof(SYSTEM_INFO));
 
     GetCursorPos(&pt);

@@ -79,6 +79,12 @@ typedef struct _ACPI_BIOS_DATA
     BIOS_MEMORY_MAP MemoryMap[1]; /* Count of BIOS memory map entries */
 } ACPI_BIOS_DATA, *PACPI_BIOS_DATA;
 
+typedef struct _DOCKING_STATE_INFORMATION
+{
+    USHORT Unused[5];
+    USHORT ReturnCode;
+} DOCKING_STATE_INFORMATION, *PDOCKING_STATE_INFORMATION;
+
 #include <pshpack1.h>
 typedef struct
 {

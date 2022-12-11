@@ -21,7 +21,7 @@ BEGIN
     PUSHBUTTON "D&odaj", 1013, 7, 187, 70, 14
     PUSHBUTTON "&Edytuj", 1016, 81, 187, 70, 14
     PUSHBUTTON "&Usuń", 1014, 154, 187, 70, 14
-    AUTOCHECKBOX "&Jeżeli numer nie działa, użyj kolejego", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Jeżeli numer nie działa, użyj kolejnego", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Przenieś sprawdzony numer na początek listy", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 122, 245, 60, 14
     PUSHBUTTON "Anuluj", 2, 188, 245, 60, 14
@@ -236,7 +236,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
@@ -259,7 +259,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
@@ -282,7 +282,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 10, 100, 92, 8
     EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
@@ -306,7 +306,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
@@ -1280,7 +1280,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połączenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje tą usługę podczas łączenia.", -1, 10, 7, 301, 25
+    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje tę usługę podczas łączenia.", -1, 10, 7, 301, 25
     LTEXT "&Nazwa Usługi (opcjonalnie):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1411,7 +1411,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 11, 81, 90, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
@@ -1440,7 +1440,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 10, 104, 92, 8
     EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
@@ -2349,7 +2349,7 @@ BEGIN
     7377 "Którego urządzenia chcesz użyć w tym połączeniu?\0"
     7378 "Nie ma obecnie żadnych urządzeń zainstalowanych, które byłyby w stanie przyjąć połączenia przychodzące.\0"
     7379 "Ostrzeżenie o nowym połączeniu przychodzącym\0"
-    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tą maszynę tak by akceptowała połączenia przychodzące.  Anulować zmiany i włączyć tą konsolę?\n\0"
+    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące.  Anulować zmiany i włączyć tę konsolę?\n\0"
     7381 "Przydziel &numer adresu automagicznie\0"
     7382 "Przydziel n&umer adresu automagicznie\0"
     7383 "Połączenia przychodzące nie mogą używać adresów IPX o numerach 00000000 lub FFFFFFFF. Proszę zmienić przydzielone numery adresów albo ustawić automagiczne przydzielanie numerów.\0"

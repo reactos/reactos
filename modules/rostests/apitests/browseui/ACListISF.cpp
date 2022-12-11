@@ -722,19 +722,12 @@ static void GetEnvStatus()
     trace("Show hidden folders: %s\n", g_ShowHidden ? "yes" : "no");
 }
 
-struct CCoInit
-{
-    CCoInit() { hres = CoInitialize(NULL); }
-    ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
-    HRESULT hres;
-};
-
 START_TEST(ACListISF)
 {
     GetEnvStatus();
     CCoInit init;
-    ok_hr(init.hres, S_OK);
-    if (!SUCCEEDED(init.hres))
+    ok_hr(init.hr, S_OK);
+    if (!SUCCEEDED(init.hr))
     {
         skip("CoInitialize failed\n");
         return;

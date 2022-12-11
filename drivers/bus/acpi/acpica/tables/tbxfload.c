@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -288,9 +288,7 @@ UnlockAndExit:
  *
  * FUNCTION:    AcpiInstallTable
  *
- * PARAMETERS:  Address             - Address of the ACPI table to be installed.
- *              Physical            - Whether the address is a physical table
- *                                    address or not
+ * PARAMETERS:  Table               - Pointer to the ACPI table to be installed.
  *
  * RETURN:      Status
  *
@@ -302,33 +300,56 @@ UnlockAndExit:
 
 ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiInstallTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    BOOLEAN                 Physical)
+    ACPI_TABLE_HEADER       *Table)
 {
     ACPI_STATUS             Status;
-    UINT8                   Flags;
     UINT32                  TableIndex;
 
 
     ACPI_FUNCTION_TRACE (AcpiInstallTable);
 
 
-    if (Physical)
-    {
-        Flags = ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL;
-    }
-    else
-    {
-        Flags = ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL;
-    }
-
-    Status = AcpiTbInstallStandardTable (Address, Flags,
-        FALSE, FALSE, &TableIndex);
+    Status = AcpiTbInstallStandardTable (ACPI_PTR_TO_PHYSADDR (Table),
+        ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL, Table, FALSE, FALSE, &TableIndex);
 
     return_ACPI_STATUS (Status);
 }
 
 ACPI_EXPORT_SYMBOL_INIT (AcpiInstallTable)
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiInstallPhysicalTable
+ *
+ * PARAMETERS:  Address             - Address of the ACPI table to be installed.
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Dynamically install an ACPI table.
+ *              Note: This function should only be invoked after
+ *                    AcpiInitializeTables() and before AcpiLoadTables().
+ *
+ ******************************************************************************/
+
+ACPI_STATUS ACPI_INIT_FUNCTION
+AcpiInstallPhysicalTable (
+    ACPI_PHYSICAL_ADDRESS   Address)
+{
+    ACPI_STATUS             Status;
+    UINT32                  TableIndex;
+
+
+    ACPI_FUNCTION_TRACE (AcpiInstallPhysicalTable);
+
+
+    Status = AcpiTbInstallStandardTable (Address,
+        ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, NULL, FALSE, FALSE, &TableIndex);
+
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL_INIT (AcpiInstallPhysicalTable)
 
 
 /*******************************************************************************
@@ -373,7 +394,7 @@ AcpiLoadTable (
 
     ACPI_INFO (("Host-directed Dynamic ACPI Table Load:"));
     Status = AcpiTbInstallAndLoadTable (ACPI_PTR_TO_PHYSADDR (Table),
-        ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL, FALSE, &TableIndex);
+        ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL, Table, FALSE, &TableIndex);
     if (TableIdx)
     {
         *TableIdx = TableIndex;

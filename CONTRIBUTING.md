@@ -2,9 +2,9 @@
 
 There are several ways to contribute to the development of ReactOS. The most often encountered problem is not knowing where to begin or what to do. If you are able to program or understand the technical information that is pertinent to this project, helping the development can be easy.
 
-- [What To Do?](#what-to-do?)
-- [How To Contribute?](#how-to-contribute?)
-- [Where To Start?](#where-to-start?)
+- [What To Do?](#what-to-do)
+- [How To Contribute?](#how-to-contribute)
+- [Where To Start?](#where-to-start)
 
 **Legal notice:** If you have seen Microsoft Windows source code, your contribution won't be accepted because of potential copyright violation. Before contributing, you must affirm that the following is true:
 >I hereby swear that I have not used nor seen the source code to any version of the Windows operating system

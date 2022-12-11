@@ -155,6 +155,36 @@ RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
     return NT_SUCCESS(Status);
 }
 
+NTSTATUS
+NTAPI
+RegOpenSectionKey(
+    LPCWSTR pszSection,
+    PHKEY phkey)
+{
+    WCHAR szKey[MAX_PATH] =
+        L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\";
+
+    RtlStringCchCatW(szKey, _countof(szKey), pszSection);
+    return RegOpenKey(szKey, phkey);
+}
+
+DWORD
+NTAPI
+RegGetSectionDWORD(LPCWSTR pszSection, LPWSTR pszValue, DWORD dwDefault)
+{
+    HKEY hKey;
+    DWORD dwValue;
+
+    if (NT_ERROR(RegOpenSectionKey(pszSection, &hKey)))
+        return dwDefault;
+
+    if (!RegReadDWORD(hKey, pszValue, &dwValue))
+        dwValue = dwDefault;
+
+    ZwClose(hKey);
+    return dwValue;
+}
+
 _Success_(return!=FALSE)
 BOOL
 NTAPI

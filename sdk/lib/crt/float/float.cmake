@@ -32,7 +32,6 @@ elseif(ARCH STREQUAL "amd64")
     )
     list(APPEND CRT_FLOAT_ASM_SOURCE
         float/amd64/getsetfpcw.S
-        float/amd64/logb.S
     )
 elseif(ARCH STREQUAL "arm")
     list(APPEND CRT_FLOAT_SOURCE

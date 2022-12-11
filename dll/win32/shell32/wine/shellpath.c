@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018-2021 Katayama Hirofumi MZ
+ * Copyright 2018-2022 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,7 @@
 #include <strsafe.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <assert.h>
 
 #include <shlwapi_undoc.h>
 #include <shellutils.h>
@@ -56,8 +57,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
-
-#ifdef __REACTOS__
 
 /* FIXME: Remove this */
 typedef enum _NT_PRODUCT_TYPE
@@ -105,15 +104,24 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     return TRUE;
 }
 
-#endif // __REACTOS__
+BOOL APIENTRY IsRemovableDrive(DWORD iDrive)
+{
+    WCHAR szRoot[] = L"C:\\";
+    assert(L'A' + iDrive <= L'Z');
+    szRoot[0] = (WCHAR)(L'A' + iDrive);
+    return GetDriveTypeW(szRoot) == DRIVE_REMOVABLE;
+}
 
 /*
 	########## Combining and Constructing paths ##########
 */
 
-/* @implemented */
 static BOOL WINAPI
-PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD dwWhich)
+PathSearchOnExtensionsW(
+    _Inout_ LPWSTR pszPath,
+    _In_opt_ LPCWSTR *ppszDirs,
+    _In_ BOOL bDoSearch,
+    _In_ DWORD dwWhich)
 {
     if (*PathFindExtensionW(pszPath) != 0)
         return FALSE;
@@ -124,15 +132,13 @@ PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD
         return PathFileExistsDefExtW(pszPath, dwWhich);
 }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-/* @implemented */
-static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
+static BOOL WINAPI PathIsAbsoluteW(_In_ LPCWSTR path)
 {
     return PathIsUNCW(path) || (PathGetDriveNumberW(path) != -1 && path[2] == L'\\');
 }
 
-/* @implemented */
-static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
+static BOOL WINAPI PathMakeAbsoluteW(_Inout_ LPWSTR path)
 {
     WCHAR path1[MAX_PATH];
     DWORD cch;
@@ -146,90 +152,257 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 }
 #endif
 
-/* NOTE: GetShortPathName fails if the pathname didn't exist.
-         GetShortPathNameAbsentW should set the short path name that even doesn't exist. */
-static DWORD GetShortPathNameAbsentW(LPCWSTR pszLong, LPWSTR pszShort, DWORD cchShort)
-{
-    FIXME("GetShortPathNameAbsentW(%ls, %p, %ld): stub\n", pszLong, pszShort, cchShort);
-    StringCchCopyW(pszShort, cchShort, pszLong);
-    return lstrlenW(pszShort);
-}
-
 BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath);
 
-/* @unconfirmed */
-static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
+static VOID WINAPI
+PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dwFlags)
 {
-    WCHAR szRoot[MAX_PATH], szCopy[MAX_PATH], szCurDir[MAX_PATH];
-    LPWSTR pch;
-    LONG cch;
-    BOOL bCheckLFN;
+    INT iDrive, cchPathLeft;
+    WCHAR szTemp[MAX_PATH], szRoot[MAX_PATH];
+    PWCHAR pchTemp = szTemp, pchPath;
+    BOOL bLFN;
 
-    if (FAILED(StringCchCopyW(szCopy, _countof(szCopy), pszPath)))
+    TRACE("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszDir), dwFlags);
+
+    /* Save pszPath path into szTemp for rebuilding the path later */
+    if (FAILED(StringCchCopyW(szTemp, _countof(szTemp), pszPath)))
         return;
 
-    FixSlashesAndColonW(szCopy);
+    /* Replace every '/' by '\' */
+    FixSlashesAndColonW(szTemp);
 
-    if (pszDir)
+    cchPathLeft = MAX_PATH;
+
+    /* Build the root-like path on pszPath, and set pchTemp */
+    if (!PathIsUNCW(szTemp))
     {
-        cch = GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
-        if (cch <= 0 || cch >= _countof(szCurDir) || !SetCurrentDirectoryW(pszDir))
-            pszDir = NULL;
-    }
-
-    if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
-        goto Quit;
-
-    if (PathIsUNCW(szRoot)) /* it begins with double backslash */
-    {
-        pch = StrChrW(&szRoot[2], L'\\');
-        if (pch)
+        /*
+         * Non-UNC path.
+         * Determine and normalize the root drive.
+         */
+        iDrive = PathGetDriveNumberW(szTemp);
+        if (iDrive == -1)
         {
-            pch = StrChrW(&pch[1], L'\\');
-            if (pch)
-                *pch = 0;
-            if (!PathAddBackslashW(szRoot))
-                goto Quit;
-            /* szRoot is like \\MyServer\MyShare\ */
-            bCheckLFN = TRUE;
+            /*
+             * No drive was specified in the path. Try to find one from the
+             * optional directory (if this fails, fall back to the one of the
+             * Windows directory).
+             */
+            if (!pszDir || FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszDir)))
+            {
+                /* pszDir was invalid or NULL. Fall back to the
+                 * Windows directory and find its root. */
+                szRoot[0] = UNICODE_NULL;
+                GetWindowsDirectoryW(szRoot, _countof(szRoot));
+                iDrive = PathGetDriveNumberW(szRoot);
+                if (iDrive != -1)
+                    PathBuildRootW(szRoot, iDrive);
+            }
+
+            if (szTemp[0] == L'\\')
+            {
+                PathStripToRootW(szRoot);
+            }
         }
         else
         {
-            bCheckLFN = FALSE;
+            /*
+             * A drive is specified in the path, that can be either of the
+             * form 'C:\xxx' or of the form 'C:xxx' (relative path). Isolate
+             * the root part 'C:' and the rest of the path 'xxx' in pchTemp.
+             */
+            PathBuildRootW(szRoot, iDrive);
+            pchTemp += 2;
+            if (*pchTemp == L'\\')
+                ++pchTemp;
         }
-    }
-    else
-    {
-        if (!PathStripToRootW(szRoot) || !PathAddBackslashW(szRoot))
-            goto Quit;
-        /* szRoot is like X:\ */
-        bCheckLFN = TRUE;
-    }
 
-    if (bCheckLFN && !IsLFNDriveW(szRoot)) /* not a long filename drive */
-    {
-        if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
-            goto Quit;
-        if (!GetShortPathNameW(szRoot, szCopy, _countof(szCopy)) &&
-            !GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy)))
+        bLFN = IsLFNDriveW(szRoot);
+        if (!bLFN)
         {
-            goto Quit;
+            PWCHAR pch;
+            for (pch = pchTemp; *pch != UNICODE_NULL; ++pch)
+            {
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
+#define VALID_SHORT_PATH_CHAR_CLASSES ( \
+    PATH_CHAR_CLASS_DOT | \
+    PATH_CHAR_CLASS_BACKSLASH | \
+    PATH_CHAR_CLASS_COLON | \
+    PATH_CHAR_CLASS_OTHER_VALID \
+)
+                if (!PathIsValidCharW(*pch, VALID_SHORT_PATH_CHAR_CLASSES))
+                {
+                    *pch = L'_';
+                }
+            }
+        }
+
+        StringCchCopyW(pszPath, MAX_PATH, szRoot);
+        cchPathLeft -= lstrlenW(pszPath) + 1;
+    }
+    else /* UNC path: Begins with double backslash */
+    {
+        bLFN = IsLFNDriveW(pchTemp);
+        if (bLFN)
+        {
+            pszPath[2] = UNICODE_NULL; /* Cut off */
+            cchPathLeft -= (2 + 1);
+            pchTemp += 2;
+        }
+        else
+        {
+            PWCHAR pchSlash = StrChrW(pszPath + 2, L'\\');
+            if (pchSlash)
+                pchSlash = StrChrW(pchSlash + 1, L'\\');
+
+            if (pchSlash)
+            {
+                *(pchSlash + 1) = UNICODE_NULL; /* Cut off */
+                pchTemp += pchSlash - pszPath;
+                cchPathLeft -= (INT)(SIZE_T)(pchSlash - pszPath) + 1;
+            }
+            else
+            {
+                bLFN = TRUE;
+                pszPath[2] = UNICODE_NULL; /* Cut off */
+                cchPathLeft -= 2;
+                pchTemp += 2;
+            }
         }
     }
+    /* Now pszPath is a root-like path or an empty string. */
 
-    PathRemoveBackslashW(szCopy);
-    StringCchCopyW(pszPath, MAX_PATH, szCopy);
-
-    if ((dwFlags & 1) == 0)
+    /* Start appending the path components of szTemp to pszPath. */
+    while (*pchTemp && cchPathLeft > 0)
     {
-        cch = lstrlenW(pszPath);
-        if (cch > 0 && pszPath[cch - 1] == L'.')
-            pszPath[cch - 1] = 0;
+        /* Collapse any .\ and ..\ parts in the path */
+        if (*pchTemp == L'.')
+        {
+            BOOL bDots = FALSE; /* '.' or '..' ? */
+
+            if (pchTemp[1] == UNICODE_NULL || pchTemp[1] == L'\\')
+            {
+                /* Component '.' */
+                bDots = TRUE;
+            }
+            else if (pchTemp[1] == L'.' && (pchTemp[2] == UNICODE_NULL || pchTemp[2] == L'\\'))
+            {
+                /* Component '..' */
+                PathRemoveFileSpecW(pszPath); /* Remove the last component from pszPath */
+                bDots = TRUE;
+            }
+
+            /* If a '.' or '..' was encountered, skip to the next component */
+            if (bDots)
+            {
+                while (*pchTemp && *pchTemp != L'\\')
+                {
+                    ++pchTemp;
+                }
+
+                while (*pchTemp == L'\\')
+                {
+                    ++pchTemp;
+                }
+
+                continue;
+            }
+        }
+
+        /* Otherwise, copy the other path component */
+
+        if (!PathAddBackslashW(pszPath)) /* Append a backslash at the end */
+            break;
+
+        --cchPathLeft;
+
+        pchPath = &pszPath[lstrlenW(pszPath)];
+
+        if (!bLFN) /* Not LFN? */
+        {
+            /* Copy MS-DOS 8.3 filename */
+            PWCHAR pchDot = NULL;
+            INT ich;
+            WCHAR szTitle[8 + 1] = L"";
+            INT cchTitle = 0;
+            WCHAR szDotExtension[1 + 3 + 1] = L"";
+            INT cchDotExtension = 0;
+
+            /* Copy the component to szTitle and szDotExtension... */
+            while (*pchTemp && *pchTemp != L'\\')
+            {
+                if (*pchTemp == L'.')
+                {
+                    pchDot = pchTemp; /* Remember the last position */
+
+                    /* Clear szDotExtension */
+                    cchDotExtension = 0;
+                    ZeroMemory(szDotExtension, sizeof(szDotExtension));
+                }
+
+                if (pchDot)
+                {
+                    if (cchDotExtension < 1 + 3)
+                        szDotExtension[cchDotExtension++] = *pchTemp;
+                }
+                else
+                {
+                    if (cchTitle < 8)
+                        szTitle[cchTitle++] = *pchTemp;
+                }
+
+                ++pchTemp;
+            }
+
+            /* Add file title 'szTitle' to pchPath */
+            for (ich = 0; szTitle[ich] && cchPathLeft > 0; ++ich)
+            {
+                *pchPath++ = szTitle[ich];
+                --cchPathLeft;
+            }
+
+            /* Add file extension 'szDotExtension' to pchPath */
+            if (pchDot)
+            {
+                for (ich = 0; szDotExtension[ich] && cchPathLeft > 0; ++ich)
+                {
+                    *pchPath++ = szDotExtension[ich];
+                    --cchPathLeft;
+                }
+            }
+        }
+        else /* LFN */
+        {
+            /* Copy the component up to the next separator */
+            while (*pchTemp != UNICODE_NULL && *pchTemp != L'\\' && cchPathLeft > 0)
+            {
+                *pchPath++ = *pchTemp++;
+                --cchPathLeft;
+            }
+        }
+
+        /* Skip the backslashes */
+        while (*pchTemp == L'\\')
+        {
+            ++pchTemp;
+        }
+
+        /* Keep null-terminated */
+        *pchPath = UNICODE_NULL;
     }
 
-Quit:
-    if (pszDir)
-        SetCurrentDirectoryW(szCurDir);
+    /* Remove any trailing backslash */
+    PathRemoveBackslashW(pszPath);
+
+    if (!(dwFlags & 1)) /* Remove the trailing dot? */
+    {
+        pchPath = CharPrevW(pszPath, pszPath + lstrlenW(pszPath));
+        if (*pchPath == L'.')
+            *pchPath = UNICODE_NULL;
+    }
 }
 
 /*************************************************************************
@@ -407,11 +580,13 @@ BOOL WINAPI PathFileExistsAW (LPCVOID lpszPath)
  */
 BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
 {
-    DWORD	fnlen;
-
-    if (!GetVolumeInformationA(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
-	return FALSE;
-    return fnlen > 12;
+    WCHAR szBuffW[MAX_PATH], *pszW = NULL;
+    if (lpszPath)
+    {
+        SHAnsiToUnicode(lpszPath, szBuffW, _countof(szBuffW));
+        pszW = szBuffW;
+    }
+    return IsLFNDriveW(pszW);
 }
 
 /*************************************************************************
@@ -419,11 +594,49 @@ BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
  */
 BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
 {
-    DWORD	fnlen;
+    DWORD cchMaxFileName, iDrive;
+    WCHAR szRoot[MAX_PATH];
 
-    if (!GetVolumeInformationW(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
-	return FALSE;
-    return fnlen > 12;
+    if (lpszPath == NULL || lpszPath[0] == UNICODE_NULL)
+    {
+        szRoot[0] = 0;
+        GetWindowsDirectoryW(szRoot, _countof(szRoot));
+        lpszPath = szRoot;
+    }
+
+    if (PathIsUNCW(lpszPath))
+    {
+        StringCchCopyW(szRoot, _countof(szRoot), lpszPath);
+        PathStripToRootW(szRoot);
+
+        if (StrChrW(szRoot + 2, L'\\') == NULL)
+            return TRUE; /* LFN */
+
+        StringCchCatW(szRoot, _countof(szRoot), L"\\"); /* Add a backslash */
+    }
+    else
+    {
+        assert(!PathIsRelativeW(lpszPath)); /* Assuming absolute path... */
+
+        iDrive = ((lpszPath[0] - L'A') & 0x1F);
+        PathBuildRootW(szRoot, iDrive);
+
+        if (!IsRemovableDrive(iDrive))
+        {
+            /* FIXME: Cache correctly */
+        }
+    }
+
+#define MSDOS_8DOT3_LEN 12 /* MS-DOS 8.3 filename == length 12 */
+
+    /* GetVolumeInformation requires a root path */
+    if (!GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0))
+    {
+        /* Don't return FALSE when GetVolumeInformationW fails. */
+        return TRUE;
+    }
+
+    return cchMaxFileName > MSDOS_8DOT3_LEN;
 }
 
 /*************************************************************************
@@ -634,7 +847,7 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     DWORD iDir, cDirs, cbDirs;
     WCHAR pathW[MAX_PATH];
 
-    TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
+    TRACE("(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
 
     if (dirs)
     {
@@ -673,81 +886,78 @@ Cleanup:
     return ret;
 }
 
-BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
+BOOL WINAPI PathResolveW(_Inout_ LPWSTR path, _Inout_opt_ LPCWSTR *dirs, _In_ DWORD flags)
 {
-    DWORD dwWhich = ((flags & PRF_DONTFINDLNK) ? (WHICH_DEFAULT & ~WHICH_LNK) : WHICH_DEFAULT);
+    DWORD dwWhich = WHICH_DEFAULT; /* The extensions to be searched */
 
-    TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
+    TRACE("(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
+
+    if (flags & PRF_DONTFINDLNK)
+        dwWhich &= ~WHICH_LNK; /* Don't search '.LNK' (shortcut) */
 
     if (flags & PRF_VERIFYEXISTS)
-        SetLastError(ERROR_FILE_NOT_FOUND);
+        SetLastError(ERROR_FILE_NOT_FOUND); /* We set this error code at first in verification */
 
     PathUnquoteSpacesW(path);
 
-    if (PathIsRootW(path))
+    if (PathIsRootW(path)) /* Root path */
     {
-        if ((path[0] == L'\\' && path[1] == 0) ||
-            PathIsUNCServerW(path) || PathIsUNCServerShareW(path))
-        {
-            if (flags & PRF_FIRSTDIRDEF)
-                PathQualifyExW(path, dirs[0], 0);
-            else
-                PathQualifyExW(path, NULL, 0);
-        }
+        if (path[0] == L'\\' && path[1] == UNICODE_NULL) /* '\' only? */
+            PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 0); /* Qualify */
 
         if (flags & PRF_VERIFYEXISTS)
-            return PathFileExistsAndAttributesW(path, NULL);
+            return PathFileExistsAndAttributesW(path, NULL); /* Check the existence */
+
         return TRUE;
     }
-    else if (PathIsFileSpecW(path))
-    {
-        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && PathSearchOnExtensionsW(path, dirs, TRUE, dwWhich))
-            return TRUE;
 
+    if (PathIsFileSpecW(path)) /* Filename only */
+    {
+        /* Try to find the path with program extensions applied? */
+        if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
+            PathSearchOnExtensionsW(path, dirs, TRUE, dwWhich))
+        {
+            return TRUE; /* Found */
+        }
+
+        /* Try to find the filename in the directories */
         if (PathFindOnPathW(path, dirs))
-        {
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-            if (!(flags & PRF_REQUIREABSOLUTE))
-                return TRUE;
+            goto CheckAbsoluteAndFinish;
 
-            if (!PathIsAbsoluteW(path))
-                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
-#else
-            return TRUE;
-#endif
-        }
+        return FALSE; /* Not found */
     }
-    else if (!PathIsURLW(path))
-    {
-        if (flags & PRF_FIRSTDIRDEF)
-            PathQualifyExW(path, *dirs, 1);
-        else
-            PathQualifyExW(path, NULL, 1);
 
-        if (flags & PRF_VERIFYEXISTS)
-        {
-            if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
-                PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
-            {
-                return TRUE;
-            }
-            else if (!PathFileExistsAndAttributesW(path, NULL))
-            {
-                return FALSE;
-            }
-        }
+    if (PathIsURLW(path)) /* URL? */
+        return FALSE;
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-        if (flags & PRF_REQUIREABSOLUTE)
-        {
-            if (!PathIsAbsoluteW(path))
-                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
-        }
-#endif
+    /* Qualify the path */
+    PathQualifyExW(path, ((flags & PRF_FIRSTDIRDEF) ? *dirs : NULL), 1);
+
+    TRACE("(%s)\n", debugstr_w(path));
+
+    if (!(flags & PRF_VERIFYEXISTS)) /* Don't verify the existence? */
         return TRUE;
+
+    /* Try to find the path with program extensions applied? */
+    if (!(flags & PRF_TRYPROGRAMEXTENSIONS) ||
+        !PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
+    {
+        if (!PathFileExistsAndAttributesW(path, NULL))
+            return FALSE; /* Not found */
     }
 
-    return FALSE;
+CheckAbsoluteAndFinish:
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03)
+    if (!(flags & PRF_REQUIREABSOLUTE) || PathIsAbsoluteW(path))
+        return TRUE;
+
+    if (!PathMakeAbsoluteW(path))
+        return FALSE;
+
+    return PathFileExistsAndAttributesW(path, NULL);
+#else
+    return TRUE; /* Found */
+#endif
 }
 
 /*************************************************************************

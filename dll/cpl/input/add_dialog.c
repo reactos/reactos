@@ -180,7 +180,7 @@ AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
             OnInitAddDialog(hwndDlg);
-            break;
+            return TRUE;
 
         case WM_COMMAND:
             OnCommandAddDialog(hwndDlg, wParam);

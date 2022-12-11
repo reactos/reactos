@@ -197,7 +197,7 @@ class CDefView :
         void OnDeactivate();
         void DoActivate(UINT uState);
         HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand);
+        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand, POINT* pt);
         LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
 
         // *** IOleWindow methods ***
@@ -308,7 +308,6 @@ class CDefView :
         LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-        LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -321,6 +320,8 @@ class CDefView :
         LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+        virtual VOID OnFinalMessage(HWND) override;
 
         static ATL::CWndClassInfo& GetWndClassInfo()
         {
@@ -358,7 +359,6 @@ class CDefView :
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
         MESSAGE_HANDLER(WM_NCCREATE, OnNCCreate)
-        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
@@ -1228,11 +1228,9 @@ LRESULT CDefView::OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     return 0;
 }
 
-LRESULT CDefView::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+VOID CDefView::OnFinalMessage(HWND)
 {
     this->Release();
-    bHandled = FALSE;
-    return 0;
 }
 
 /**********************************************************
@@ -1496,9 +1494,9 @@ UINT CDefView::GetSelections()
     return m_cidl;
 }
 
-HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand)
+HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand, POINT* pt)
 {
-    CMINVOKECOMMANDINFO cmi;
+    CMINVOKECOMMANDINFOEX cmi;
 
     ZeroMemory(&cmi, sizeof(cmi));
     cmi.cbSize = sizeof(cmi);
@@ -1511,7 +1509,13 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCom
     if (GetKeyState(VK_CONTROL) & 0x8000)
         cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
 
-    HRESULT hr = pCM->InvokeCommand(&cmi);
+    if (pt)
+    {
+        cmi.fMask |= CMIC_MASK_PTINVOKE;
+        cmi.ptInvoke = *pt;
+    }
+
+    HRESULT hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmi);
     // Most of our callers will do this, but in case they don't do that (File menu!)
     IUnknown_SetSite(pCM, NULL);
     pCM.Release();
@@ -1560,7 +1564,7 @@ HRESULT CDefView::OpenSelectedItems()
         return E_FAIL;
     }
 
-    InvokeContextMenuCommand(pCM, uCommand);
+    InvokeContextMenuCommand(pCM, uCommand, NULL);
 
     return hResult;
 }
@@ -1570,7 +1574,7 @@ HRESULT CDefView::OpenSelectedItems()
  */
 LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    int     x, y;
+    POINT pt;
     UINT    uCommand;
     HRESULT hResult;
 
@@ -1588,10 +1592,10 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     if (lParam != ~0)   // unless app key (menu key) was pressed
     {
-        x = GET_X_LPARAM(lParam);
-        y = GET_Y_LPARAM(lParam);
+        pt.x = GET_X_LPARAM(lParam);
+        pt.y = GET_Y_LPARAM(lParam);
 
-        LV_HITTESTINFO hittest = { { x, y } };
+        LV_HITTESTINFO hittest = { pt };
         ScreenToClient(&hittest.pt);
         m_ListView.HitTest(&hittest);
 
@@ -1621,7 +1625,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     {
         HWND hFocus = ::GetFocus();
         int lvIndex = -1;
-        POINT pt;
 
         if (hFocus == m_ListView.m_hWnd || m_ListView.IsChild(hFocus))
         {
@@ -1648,21 +1651,19 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         }
 
         m_ListView.ClientToScreen(&pt);
-        x = pt.x;
-        y = pt.y;
     }
 
     // This runs the message loop, calling back to us with f.e. WM_INITPOPUP (hence why m_hContextMenu and m_pCM exist) 
     uCommand = TrackPopupMenu(m_hContextMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
-                              x, y, 0, m_hWnd, NULL);
+                              pt.x, pt.y, 0, m_hWnd, NULL);
     if (uCommand == 0)
         return 0;
 
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         return 0;
 
-    InvokeContextMenuCommand(m_pCM, uCommand - CONTEXT_MENU_BASE_ID);
+    InvokeContextMenuCommand(m_pCM, uCommand - CONTEXT_MENU_BASE_ID, &pt);
 
     return 0;
 }
@@ -1710,7 +1711,8 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
             return 0;
     }
 
-    InvokeContextMenuCommand(pCM, uCommand);
+    // FIXME: We should probably use the objects position?
+    InvokeContextMenuCommand(pCM, uCommand, NULL);
     return 0;
 }
 
@@ -1950,7 +1952,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             {
                 HMENU Dummy = NULL;
                 MenuCleanup _(m_pFileMenu, Dummy);
-                InvokeContextMenuCommand(m_pFileMenu, dwCmdID);
+                InvokeContextMenuCommand(m_pFileMenu, dwCmdID, NULL);
             }
     }
 

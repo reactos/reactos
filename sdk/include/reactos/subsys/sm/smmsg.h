@@ -1,17 +1,19 @@
 /*
- * PROJECT:         ReactOS Windows-Compatible Session Manager
- * LICENSE:         BSD 2-Clause License
- * FILE:            include/reactos/subsys/sm/smmsg.h
- * PURPOSE:         SMSS (SB and SM) Message Format
- * PROGRAMMERS:     Alex Ionescu
+ * PROJECT:     ReactOS NT-Compatible Session Manager
+ * LICENSE:     BSD 2-Clause License (https://spdx.org/licenses/BSD-2-Clause)
+ * PURPOSE:     SMSS Client (SB and SM) Message Format
+ * COPYRIGHT:   Copyright 2012-2013 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2021 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
-#pragma once
+
 #ifndef _SM_MSG_
 #define _SM_MSG_
 
+#pragma once
+
 //
 // There are the APIs that a Client (such as CSRSS) can send to the SMSS Server.
-//
 // These are called "SM" APIs.
 //
 // The exact names are not known, but we are basing them on the SmpApiName array
@@ -20,7 +22,6 @@
 //
 // The enumeration finishes with an enumeratee holding the maximum API number.
 // Its name is based on BasepMaxApiNumber, UserpMaxApiNumber...
-//
 //
 typedef enum _SMSRV_API_NUMBER
 {
@@ -62,6 +63,8 @@ typedef struct _SM_EXEC_PGM_MSG
 } SM_EXEC_PGM_MSG, *PSM_EXEC_PGM_MSG;
 #ifndef _WIN64
 C_ASSERT(sizeof(SM_EXEC_PGM_MSG) == 0x48);
+#else
+C_ASSERT(sizeof(SM_EXEC_PGM_MSG) == 0x70);
 #endif
 
 typedef struct _SM_LOAD_DEFERED_SUBSYSTEM_MSG
@@ -78,14 +81,23 @@ typedef struct _SM_START_CSR_MSG
     HANDLE WindowsSubSysProcessId;
     HANDLE SmpInitialCommandProcessId;
 } SM_START_CSR_MSG, *PSM_START_CSR_MSG;
+#ifndef _WIN64
+C_ASSERT(sizeof(SM_START_CSR_MSG) == 0x110);
+#else
+C_ASSERT(sizeof(SM_START_CSR_MSG) == 0x118);
+#endif
 
 typedef struct _SM_STOP_CSR_MSG
 {
     ULONG MuSessionId;
 } SM_STOP_CSR_MSG, *PSM_STOP_CSR_MSG;
 
+#if defined(__REACTOS__) && DBG
+#include "smrosdbg.h"
+#endif
+
 //
-// This is the actual packet structure sent over LCP to the \SmApiPort
+// This is the actual packet structure sent over LPC to the \SmApiPort
 //
 typedef struct _SM_API_MSG
 {
@@ -101,6 +113,10 @@ typedef struct _SM_API_MSG
         SM_LOAD_DEFERED_SUBSYSTEM_MSG LoadDefered;
         SM_START_CSR_MSG StartCsr;
         SM_STOP_CSR_MSG StopCsr;
+
+#if defined(__REACTOS__) && DBG
+        SM_QUERYINFO_MSG QueryInfo;
+#endif
     } u;
 } SM_API_MSG, *PSM_API_MSG;
 
@@ -109,11 +125,12 @@ typedef struct _SM_API_MSG
 //
 #ifndef _WIN64
 C_ASSERT(sizeof(SM_API_MSG) == 0x130);
+#else
+C_ASSERT(sizeof(SM_API_MSG) == 0x148);
 #endif
 
 //
 // There are the APIs that the SMSS Server can send to a client (such as CSRSS).
-//
 // These are called "SB" APIs.
 //
 // The exact names are unknown but we are basing them on the CsrServerSbApiName
@@ -123,7 +140,6 @@ C_ASSERT(sizeof(SM_API_MSG) == 0x130);
 //
 // The enumeration finishes with an enumeratee holding the maximum API number.
 // Its name is based on BasepMaxApiNumber, UserpMaxApiNumber...
-//
 //
 typedef enum _SB_API_NUMBER
 {
@@ -143,10 +159,15 @@ typedef struct _SB_CREATE_SESSION_MSG
 {
     ULONG SessionId;
     RTL_USER_PROCESS_INFORMATION ProcessInfo;
-    ULONG Unknown;
-    ULONG MuSessionId;
-    CLIENT_ID ClientId;
+    PVOID Reserved;
+    ULONG DbgSessionId;
+    CLIENT_ID DbgUiClientId;
 } SB_CREATE_SESSION_MSG, *PSB_CREATE_SESSION_MSG;
+#ifndef _WIN64
+C_ASSERT(sizeof(SB_CREATE_SESSION_MSG) == 0x58);
+#else
+C_ASSERT(sizeof(SB_CREATE_SESSION_MSG) == 0x90);
+#endif
 
 typedef struct _SB_TERMINATE_SESSION_MSG
 {
@@ -184,6 +205,15 @@ typedef struct _SB_CREATE_PROCESS_MSG
         } Out;
     };
 } SB_CREATE_PROCESS_MSG, *PSB_CREATE_PROCESS_MSG;
+#ifndef _WIN64
+C_ASSERT(sizeof(SB_CREATE_PROCESS_MSG) == 0x18);
+#else
+C_ASSERT(sizeof(SB_CREATE_PROCESS_MSG) == 0x28);
+#endif
+
+#ifdef CreateProcess
+#undef CreateProcess
+#endif
 
 //
 // When the server connects to a client, this structure is exchanged
@@ -195,7 +225,7 @@ typedef struct _SB_CONNECTION_INFO
 } SB_CONNECTION_INFO, *PSB_CONNECTION_INFO;
 
 //
-// This is the actual packet structure sent over LCP to the \SbApiPort
+// This is the actual packet structure sent over LPC to the \SbApiPort
 //
 typedef struct _SB_API_MSG
 {
@@ -213,7 +243,7 @@ typedef struct _SB_API_MSG
                 SB_TERMINATE_SESSION_MSG TerminateSession;
                 SB_FOREIGN_SESSION_COMPLETE_MSG ForeignSessionComplete;
                 SB_CREATE_PROCESS_MSG CreateProcess;
-            };
+            } u;
         };
     };
 } SB_API_MSG, *PSB_API_MSG;
@@ -222,8 +252,9 @@ typedef struct _SB_API_MSG
 // This is the size that Server 2003 SP1 SMSS expects, so make sure we conform.
 //
 #ifndef _WIN64
-C_ASSERT(sizeof(SB_CONNECTION_INFO) == 0xF4);
 C_ASSERT(sizeof(SB_API_MSG) == 0x110);
+#else
+C_ASSERT(sizeof(SB_API_MSG) == 0x120);
 #endif
 
 //
@@ -232,52 +263,61 @@ C_ASSERT(sizeof(SB_API_MSG) == 0x110);
 typedef
 BOOLEAN
 (NTAPI *PSB_API_ROUTINE)(
-    IN PSB_API_MSG SbApiMsg
+    _In_ PSB_API_MSG SbApiMsg
 );
 
 //
-// The actual server functions that a client linking with smlib can call
+// The actual server functions that a client linking with SMLIB can call.
 //
+/* NTDLL!RtlConnectToSm */
 NTSTATUS
 NTAPI
 SmConnectToSm(
-    IN PUNICODE_STRING SbApiPortName,
-    IN HANDLE SbApiPort,
-    IN ULONG ImageType,
-    OUT PHANDLE SmApiPort
-);
+    _In_opt_ PUNICODE_STRING SbApiPortName,
+    _In_opt_ HANDLE SbApiPort,
+    _In_opt_ ULONG ImageType,
+    _Out_ PHANDLE SmApiPort);
 
+/* NTDLL!RtlSendMsgToSm */
 NTSTATUS
 NTAPI
-SmExecPgm(
-    IN HANDLE SmApiPort,
-    IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
-    IN BOOLEAN DebugFlag
-);
+SmSendMsgToSm(
+    _In_ HANDLE SmApiPort,
+    _Inout_ PSM_API_MSG SmApiMsg);
 
 NTSTATUS
 NTAPI
 SmSessionComplete(
-    IN HANDLE SmApiPort,
-    IN ULONG SessionId,
-    IN NTSTATUS SessionStatus
-);
+    _In_ HANDLE SmApiPort,
+    _In_ ULONG SessionId,
+    _In_ NTSTATUS SessionStatus);
+
+NTSTATUS
+NTAPI
+SmExecPgm(
+    _In_ HANDLE SmApiPort,
+    _In_ PRTL_USER_PROCESS_INFORMATION ProcessInformation,
+    _In_ BOOLEAN DebugFlag);
+
+NTSTATUS
+NTAPI
+SmLoadDeferedSubsystem(
+    _In_ HANDLE SmApiPort,
+    _In_ PUNICODE_STRING DeferedSubsystem);
 
 NTSTATUS
 NTAPI
 SmStartCsr(
-    IN HANDLE SmApiPort,
-    OUT PULONG pMuSessionId,
-    IN PUNICODE_STRING CommandLine,
-    OUT PHANDLE pWindowsSubSysProcessId,
-    OUT PHANDLE pInitialCommandProcessId
-);
+    _In_ HANDLE SmApiPort,
+    _Out_ PULONG pMuSessionId,
+    _In_opt_ PUNICODE_STRING CommandLine,
+    _Out_ PHANDLE pWindowsSubSysProcessId,
+    _Out_ PHANDLE pInitialCommandProcessId);
 
 NTSTATUS
 NTAPI
 SmStopCsr(
-    IN HANDLE SmApiPort,
-    IN ULONG SessionId
-);
+    _In_ HANDLE SmApiPort,
+    _In_ ULONG MuSessionId);
 
-#endif
+#endif // _SM_MSG_

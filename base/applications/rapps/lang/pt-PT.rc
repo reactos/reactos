@@ -9,9 +9,9 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Arquivo"
+    POPUP "&Ficheiro"
     BEGIN
-        MENUITEM "Confi&gurações", ID_SETTINGS
+        MENUITEM "&Definições", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "Sa&ir", ID_EXIT
     END
@@ -21,11 +21,11 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "&Remover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Actualizar Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&uda"
     BEGIN
@@ -51,7 +51,7 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "&Remover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -65,17 +65,17 @@ CAPTION "Configurações"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Geral", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Salvar posição da janela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Actualizar esta lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Registo de instalação e remoção de programas", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Guardar posição da janela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Actualizar a lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Registar a instalação e remoção de programas", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "A carregar", -1, 4, 65, 240, 51
     LTEXT "Pasta de download:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Escolher", IDC_CHOOSE, 187, 85, 50, 14
+    PUSHBUTTON "&Seleccionar", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Apagar instalador após a instalação do programa", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Fonte do Software", -1, 4, 118, 240, 46
+    GROUPBOX "Origem do Software", -1, 4, 118, 240, 46
     CONTROL "Utilizar predefinição", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Fonte especificada", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    CONTROL "Origem especificada", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
     CONTROL "Configurações de proxy do sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -95,7 +95,7 @@ CAPTION "Instalação do programa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "&Instalar com uma mídia (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Instalar de (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Carregar e instalar", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 150, 78, 60, 14
@@ -103,7 +103,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
-CAPTION "Download %ls…"
+CAPTION "A carregar %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -134,21 +134,21 @@ BEGIN
     IDS_INFO_VERSION "\nVersão: "
     IDS_INFO_DESCRIPTION "\nDescrição: "
     IDS_INFO_PUBLISHER "\nAutor: "
-    IDS_INFO_HELPLINK "\nPágina de Ajuda: "
-    IDS_INFO_HELPPHONE "\nTelefone de Contacto: "
+    IDS_INFO_HELPLINK "\nPágina de ajuda: "
+    IDS_INFO_HELPPHONE "\nTelefone de contacto: "
     IDS_INFO_README "\nLeia-me: "
-    IDS_INFO_REGOWNER "\nProprietário Registado: "
-    IDS_INFO_PRODUCTID "\nID do Produto: "
+    IDS_INFO_REGOWNER "\nProprietário registado: "
+    IDS_INFO_PRODUCTID "\nID do produto: "
     IDS_INFO_CONTACT "\nContacto: "
-    IDS_INFO_UPDATEINFO "\nInformações de Actualização: "
-    IDS_INFO_INFOABOUT "\nInformações Sobre: "
+    IDS_INFO_UPDATEINFO "\nInformações de actualização: "
+    IDS_INFO_INFOABOUT "\nInformações sobre: "
     IDS_INFO_COMMENTS "\nComentários: "
-    IDS_INFO_INSTLOCATION "\nLocal de Instalação: "
-    IDS_INFO_INSTALLSRC "\nInstalar Código-Fonte: "
-    IDS_INFO_UNINSTALLSTR "\nDesinstalar String: "
-    IDS_INFO_MODIFYPATH "\nModificar Caminho: "
-    IDS_INFO_INSTALLDATE "\nData de Instalação: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_INFO_INSTLOCATION "\nLocal da instalação: "
+    IDS_INFO_INSTALLSRC "\nInstalar código-fonte: "
+    IDS_INFO_UNINSTALLSTR "\nDesinstalar cadeia: "
+    IDS_INFO_MODIFYPATH "\nModificar caminho: "
+    IDS_INFO_INSTALLDATE "\nData da instalação: "
+    IDS_AINFO_PACKAGE_NAME "\nNome do pacote: "
 END
 
 STRINGTABLE
@@ -167,7 +167,7 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Áudio"
     IDS_CAT_DEVEL "Desenvolvimento"
-    IDS_CAT_DRIVERS "Drivers"
+    IDS_CAT_DRIVERS "Controladores"
     IDS_CAT_EDU "Educação"
     IDS_CAT_ENGINEER "Engenharia"
     IDS_CAT_FINANCE "Financeiro"
@@ -185,30 +185,30 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Central de Aplicativos ReactOS"
+    IDS_APPTITLE "Central de aplicações ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Procurar…"
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
     IDS_MODIFY "Modificar"
-    IDS_APPS_COUNT "Número de aplicativos: %d; Seleccionados: %d"
-    IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!\n\n"
-    IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, então escolha um aplicativo para instalar ou desinstalar.\nWeb Site ReactOS: "
+    IDS_APPS_COUNT "Número de aplicações: %d; Seleccionadas: %d"
+    IDS_WELCOME_TITLE "Bem-vindo(a) à Central de aplicações ReactOS!\n\n"
+    IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, de seguida escolha uma aplicação para instalar ou desinstalar.\nWeb Site ReactOS: "
     IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Actualizações"
-    IDS_APPLICATIONS "Aplicativos"
-    IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
+    IDS_APPLICATIONS "Aplicações"
+    IDS_CHOOSE_FOLDER_TEXT "Seleccione uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
-    IDS_URL_INVALID "O URL que especificou é inválido ou não é suportado. Por favor corrija isso!"
+    IDS_URL_INVALID "O URL que especificou é inválido ou não é suportado. Por favor corrija!"
     IDS_APP_REG_REMOVE "Tem certeza que deseja apagar as informações do programa instalado do registo?"
     IDS_INFORMATION "Informações"
-    IDS_UNABLE_TO_DOWNLOAD "Não é possível fazer o download do pacote! Endereço não encontrado!"
+    IDS_UNABLE_TO_DOWNLOAD "Não é possível fazer o download do pacote! O endereço não foi encontrado!"
     IDS_UNABLE_TO_DOWNLOAD2 "Não é possível fazer o download do pacote! Verifique a ligação à Internet!"
-    IDS_UNABLE_TO_REMOVE "Não foi possível remover as informações do programa do registro!"
-    IDS_UNABLE_TO_INSTALL "Não é possivel abrir o Instalador!"
-    IDS_UNABLE_TO_QUERY_CERT "Não é possível recuperar as informações do certificado.\n\nDeseja continuar mesmo assim?"
+    IDS_UNABLE_TO_REMOVE "Não foi possível remover as informações do programa no registro!"
+    IDS_UNABLE_TO_INSTALL "Não é possivel abrir o instalador!"
+    IDS_UNABLE_TO_QUERY_CERT "Não foi possível recuperar as informações do certificado.\n\nDeseja continuar mesmo assim?"
     IDS_INTEG_CHECK_TITLE "A verificar a integridade do pacote…"
     IDS_INTEG_CHECK_FAIL "O pacote não passou na verificação de integridade, pode ter sido corrompido ou adulterado durante o download. A execução do software não é recomendada."
     IDS_INTERRUPTED_DOWNLOAD "O download foi interrompido. Verifique a ligação com a Internet."
@@ -218,10 +218,10 @@ BEGIN
     IDS_SELECTEDFORINST "Seleccionados para instalação"
     IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nEmissor: %s\nDeseja continuar mesmo assim?"
     IDS_UNABLE_PATH "Formato de caminho incorrecto."
-    IDS_APP_DISPLAY_DETAILS "Details"
-    IDS_APP_DISPLAY_LIST "List"
-    IDS_APP_DISPLAY_TILE "Tile"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_APP_DISPLAY_DETAILS "Detalhes"
+    IDS_APP_DISPLAY_LIST "Lista"
+    IDS_APP_DISPLAY_TILE "Cabeçalho"
+    IDS_NO_SEARCH_RESULTS "Busca sem resultados"
 END
 
 STRINGTABLE
@@ -229,7 +229,7 @@ BEGIN
     IDS_STATUS_INSTALLED "Instalados"
     IDS_STATUS_NOTINSTALLED "Não instalados"
     IDS_STATUS_DOWNLOADED "Transferidos"
-    IDS_STATUS_UPDATE_AVAILABLE "Atualização disponível"
+    IDS_STATUS_UPDATE_AVAILABLE "Actualização disponível"
     IDS_STATUS_DOWNLOADING "A transferir…"
     IDS_STATUS_INSTALLING "A Instalar…"
     IDS_STATUS_WAITING "A aguardar instalação…"
@@ -255,19 +255,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Base de dados de aplicativos"
+    IDS_DL_DIALOG_DB_DISP "Base de dados de aplicações"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizar base de dados…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "A actualizar Base de dados… (Fonte não oficial)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "A actualizar a base de dados… (Fonte não oficial)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_USAGE "Utilização: "
+    IDS_CMD_NEED_PACKAGE_NAME "Erro: A opção %1 espera um ou mais nomes de pacote.\n"
+    IDS_CMD_NEED_FILE_NAME "Erro: A opção %1 espera um nome de ficheiro.\n"
+    IDS_CMD_NEED_PARAMS "Erro: A opção %1 espera um ou mais parâmetros.\n"
+    IDS_CMD_INVALID_OPTION "Erro: A opção especificadada na linha de comando, é desconhecida ou inválida.\n"
     IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Falhou a procura do pacote %1.\n"
+    IDS_CMD_PACKAGE_INFO "Informações acerca do pacote %1:\n"
 END

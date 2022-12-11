@@ -74,6 +74,11 @@ NtfsCreateFCB(PCWSTR FileName,
     ASSERT(Vcb->Identifier.Type == NTFS_TYPE_VCB);
 
     Fcb = ExAllocateFromNPagedLookasideList(&NtfsGlobalData->FcbLookasideList);
+    if (Fcb == NULL)
+    {
+        return NULL;
+    }
+
     RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 
     Fcb->Identifier.Type = NTFS_TYPE_FCB;

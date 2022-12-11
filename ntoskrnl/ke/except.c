@@ -28,12 +28,16 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
     RtlCopyMemory(&LocalContext, Context, sizeof(CONTEXT));
     Context = &LocalContext;
 
+#ifdef _M_AMD64
+    KiSetTrapContext(TrapFrame, &LocalContext, UserMode);
+#else
     /* Convert the context into Exception/Trap Frames */
     KeContextToTrapFrame(&LocalContext,
                          ExceptionFrame,
                          TrapFrame,
                          LocalContext.ContextFlags,
                          UserMode);
+#endif
 }
 
 NTSTATUS
@@ -62,12 +66,16 @@ KiContinue(IN PCONTEXT Context,
         }
         else
         {
+#ifdef _M_AMD64
+            KiSetTrapContext(TrapFrame, Context, KernelMode);
+#else
             /* Convert the context into Exception/Trap Frames */
             KeContextToTrapFrame(Context,
                                  ExceptionFrame,
                                  TrapFrame,
                                  Context->ContextFlags,
                                  KernelMode);
+#endif
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

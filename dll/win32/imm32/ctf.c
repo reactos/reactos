@@ -20,7 +20,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 // Win: LoadCtfIme
 HMODULE APIENTRY Imm32LoadCtfIme(VOID)
 {
-    FIXME("()\n");
     return NULL;
 }
 
@@ -29,6 +28,7 @@ HRESULT APIENTRY Imm32CtfImeDestroyInputContext(HIMC hIMC)
 {
     if (!Imm32LoadCtfIme())
         return E_FAIL;
+
 #if 1
     FIXME("(%p)\n", hIMC);
     return E_NOTIMPL;
@@ -100,7 +100,7 @@ DWORD WINAPI CtfImmHideToolbarWnd(VOID)
  */
 LRESULT WINAPI CtfImmDispatchDefImeMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+    /* FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam); */
     return 0;
 }
 
@@ -126,7 +126,7 @@ BOOL WINAPI CtfImmIsGuidMapEnable(HIMC hIMC)
         return ret;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (!pImeDpi)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return ret;
 
     ret = pImeDpi->CtfImeIsGuidMapEnable(hIMC);
@@ -158,7 +158,7 @@ HRESULT WINAPI CtfImmGetGuidAtom(HIMC hIMC, DWORD dwUnknown, LPDWORD pdwGuidAtom
         return S_OK;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (!pImeDpi)
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return hr;
 
     hr = pImeDpi->CtfImeGetGuidAtom(hIMC, dwUnknown, pdwGuidAtom);

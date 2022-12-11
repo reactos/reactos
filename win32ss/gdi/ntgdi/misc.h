@@ -54,6 +54,10 @@ BOOL
 NTAPI
 RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData);
 
+DWORD
+NTAPI
+RegGetSectionDWORD(LPCWSTR pszSection, LPWSTR pszValue, DWORD dwDefault);
+
 VOID FASTCALL
 SetLastNtError(
   NTSTATUS Status);

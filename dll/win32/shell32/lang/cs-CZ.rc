@@ -986,6 +986,11 @@ BEGIN
     IDS_OBJECTS "Položek: %d"
     IDS_OBJECTS_SELECTED "Položek vybráno: %d"
 
+    IDS_TITLE_MYCOMP "Tento počítač"
+    IDS_TITLE_MYNET "Místa v síti"
+    IDS_TITLE_BIN_1 "Koš (plný)"
+    IDS_TITLE_BIN_0 "Koš (prázdný)"
+
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"

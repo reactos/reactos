@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
+ * LICENSE:         BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause)
  * FILE:            ntoskrnl/mm/ARM3/wslist.cpp
  * PURPOSE:         Working set list management
  * PROGRAMMERS:     Jérôme Gardou

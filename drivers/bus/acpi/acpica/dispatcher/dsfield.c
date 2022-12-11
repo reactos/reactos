@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -689,7 +689,7 @@ AcpiDsInitFieldObjects (
     }
 
 #ifdef ACPI_EXEC_APP
-        Flags |= ACPI_NS_OVERRIDE_IF_FOUND;
+    Flags |= ACPI_NS_OVERRIDE_IF_FOUND;
 #endif
     /*
      * Walk the list of entries in the FieldList

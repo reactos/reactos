@@ -930,7 +930,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* The window procedure of the default IME window */
-/* Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode) */
+/* Win: ImeWndProcWorker(pWnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
 ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
@@ -939,42 +939,43 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
     LRESULT ret;
 
     pWnd = ValidateHwnd(hwnd);
-    if (pWnd)
+    if (pWnd == NULL)
     {
-        if (IS_CICERO_MODE())
+        ERR("hwnd was %p\n", hwnd);
+        return 0;
+    }
+
+    if (!pWnd->fnid)
+    {
+        NtUserSetWindowFNID(hwnd, FNID_IME);
+    }
+    else if (pWnd->fnid != FNID_IME)
+    {
+        ERR("fnid was 0x%x\n", pWnd->fnid);
+        return 0;
+    }
+
+    pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
+    if (pimeui == NULL)
+    {
+        pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
+        if (pimeui == NULL)
         {
-            ret = IMM_FN(CtfImmDispatchDefImeMessage)(hwnd, msg, wParam, lParam);
-            if (ret)
-                return ret;
+            ERR("HeapAlloc failed\n");
+            NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+            DestroyWindow(hwnd);
+            return 0;
         }
 
-       if (!pWnd->fnid)
-       {
-          if (msg != WM_NCCREATE)
-          {
-             if (unicode)
-                return DefWindowProcW(hwnd, msg, wParam, lParam);
-             return DefWindowProcA(hwnd, msg, wParam, lParam);
-          }
-          NtUserSetWindowFNID(hwnd, FNID_IME);
-          pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
-          pimeui->spwnd = pWnd;
-          SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
-       }
-       else
-       {
-          if (pWnd->fnid != FNID_IME)
-          {
-             ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
-             return 0;
-          }
-          pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
-          if (pimeui == NULL)
-          {
-             ERR("Window is not set to IME!\n");
-             return 0;
-          }
-       }
+        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
+        pimeui->spwnd = pWnd;
+    }
+
+    if (IS_CICERO_MODE())
+    {
+        ret = IMM_FN(CtfImmDispatchDefImeMessage)(hwnd, msg, wParam, lParam);
+        if (ret)
+            return ret;
     }
 
     if (pimeui->nCntInIMEProc > 0)
@@ -1011,11 +1012,21 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
                 break;
 
             default:
-            {
-                if (unicode)
-                    return DefWindowProcW(hwnd, msg, wParam, lParam);
-                return DefWindowProcA(hwnd, msg, wParam, lParam);
-            }
+                goto Finish;
+        }
+    }
+
+    if ((pWnd->state2 & WNDS2_INDESTROY) || (pWnd->state & WNDS_DESTROYED))
+    {
+        switch (msg)
+        {
+            case WM_DESTROY:
+            case WM_NCDESTROY:
+            case WM_FINALDESTROY:
+                break;
+
+            default:
+                return 0;
         }
     }
 
@@ -1026,9 +1037,11 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
 
         case WM_DESTROY:
             User32DestroyImeUIWindow(pimeui);
-            break;
+            return 0;
 
         case WM_NCDESTROY:
+        case WM_FINALDESTROY:
+            pimeui->spwnd = NULL;
             HeapFree(GetProcessHeap(), 0, pimeui);
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             break;
@@ -1037,11 +1050,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             return TRUE;
 
         case WM_PAINT:
-            break;
-
-        case WM_COPYDATA:
-            // TODO:
-            break;
+            return 0;
 
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
@@ -1055,11 +1064,11 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             return ImeWnd_OnImeNotify(pimeui, wParam, lParam);
 
         case WM_IME_REQUEST:
-            break;
+            return 0;
 
         case WM_IME_SELECT:
             ImeWnd_OnImeSelect(pimeui, wParam, lParam);
-            break;
+            return (LRESULT)pimeui;
 
         case WM_IME_SETCONTEXT:
             return ImeWnd_OnImeSetContext(pimeui, wParam, lParam);
@@ -1068,14 +1077,13 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             return ImeWnd_OnImeSystem(pimeui, wParam, lParam);
 
         default:
-        {
-            if (unicode)
-                return DefWindowProcW(hwnd, msg, wParam, lParam);
-            return DefWindowProcA(hwnd, msg, wParam, lParam);
-        }
+            break;
     }
 
-    return 0;
+Finish:
+    if (unicode)
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
 // Win: ImeWndProcA
@@ -1105,9 +1113,9 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID)
         return TRUE;
 
     imm32 = LoadLibraryW(L"imm32.dll");
-    if (imm32)
+    if (imm32 == NULL)
     {
-        ERR("UPUIE: Imm32 not installed!\n");
+        ERR("Imm32 not installed!\n");
         ret = FALSE;
     }
 

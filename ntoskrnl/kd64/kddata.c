@@ -124,8 +124,8 @@ LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 //
 // Buffers
 //
-CHAR KdpMessageBuffer[0x1000];
-CHAR KdpPathBuffer[0x1000];
+CHAR KdpMessageBuffer[KDP_MSG_BUFFER_SIZE];
+CHAR KdpPathBuffer[KDP_MSG_BUFFER_SIZE];
 
 //
 // KdPrint Buffers
@@ -136,6 +136,7 @@ ULONG KdPrintRolloverCount;
 PCHAR KdPrintCircularBuffer = KdPrintDefaultCircularBuffer;
 ULONG KdPrintBufferSize = sizeof(KdPrintDefaultCircularBuffer);
 ULONG KdPrintBufferChanges = 0;
+KSPIN_LOCK KdpPrintSpinLock;
 
 //
 // Debug Filter Masks
@@ -513,11 +514,22 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     0
 };
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+C_ASSERT(sizeof(KDDEBUGGER_DATA64) >= 0x318);
+#endif
+
+#if !defined(_WIN64) && (defined(__GNUC__) || defined(__clang__))
+/* Minimal hackery for GCC/Clang, see commit b9cd3f2d9 (r25845) and de81021ba */
+#define PtrToUL64(x)    ((ULPTR64)(ULONG_PTR)(x))
+#else
+#define PtrToUL64(x)    ((ULPTR64)(x))
+#endif
 KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 {
     {{0}},
     0,
-    {(ULONG_PTR)RtlpBreakWithStatusInstruction},
+    PtrToUL64(RtlpBreakWithStatusInstruction),
     0,
     FIELD_OFFSET(KTHREAD, CallbackStack),
 #if defined(_M_ARM) || defined(_M_AMD64)
@@ -528,82 +540,82 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     FIELD_OFFSET(KCALLOUT_FRAME, CBSTACK_FRAME_POINTER),
 #endif
     FALSE,
-    {(ULONG_PTR)KiCallUserMode},
+    PtrToUL64(KiCallUserMode),
     0,
-    {(ULONG_PTR)&PsLoadedModuleList},
-    {(ULONG_PTR)&PsActiveProcessHead},
-    {(ULONG_PTR)&PspCidTable},
-    {(ULONG_PTR)&ExpSystemResourcesList},
-    {(ULONG_PTR)ExpPagedPoolDescriptor},
-    {(ULONG_PTR)&ExpNumberOfPagedPools},
-    {(ULONG_PTR)&KeTimeIncrement},
-    {(ULONG_PTR)&KeBugcheckCallbackListHead},
-    {(ULONG_PTR)KiBugCheckData},
-    {(ULONG_PTR)&IopErrorLogListHead},
-    {(ULONG_PTR)&ObpRootDirectoryObject},
-    {(ULONG_PTR)&ObpTypeObjectType},
-    {(ULONG_PTR)&MmSystemCacheStart},
-    {(ULONG_PTR)&MmSystemCacheEnd},
-    {(ULONG_PTR)&MmSystemCacheWs},
-    {(ULONG_PTR)&MmPfnDatabase},
-    {(ULONG_PTR)MmSystemPtesStart},
-    {(ULONG_PTR)MmSystemPtesEnd},
-    {(ULONG_PTR)&MmSubsectionBase},
-    {(ULONG_PTR)&MmNumberOfPagingFiles},
-    {(ULONG_PTR)&MmLowestPhysicalPage},
-    {(ULONG_PTR)&MmHighestPhysicalPage},
-    {(ULONG_PTR)&MmNumberOfPhysicalPages},
-    {(ULONG_PTR)&MmMaximumNonPagedPoolInBytes},
-    {(ULONG_PTR)&MmNonPagedSystemStart},
-    {(ULONG_PTR)&MmNonPagedPoolStart},
-    {(ULONG_PTR)&MmNonPagedPoolEnd},
-    {(ULONG_PTR)&MmPagedPoolStart},
-    {(ULONG_PTR)&MmPagedPoolEnd},
-    {(ULONG_PTR)&MmPagedPoolInfo},
+    PtrToUL64(&PsLoadedModuleList),
+    PtrToUL64(&PsActiveProcessHead),
+    PtrToUL64(&PspCidTable),
+    PtrToUL64(&ExpSystemResourcesList),
+    PtrToUL64(ExpPagedPoolDescriptor),
+    PtrToUL64(&ExpNumberOfPagedPools),
+    PtrToUL64(&KeTimeIncrement),
+    PtrToUL64(&KeBugcheckCallbackListHead),
+    PtrToUL64(KiBugCheckData),
+    PtrToUL64(&IopErrorLogListHead),
+    PtrToUL64(&ObpRootDirectoryObject),
+    PtrToUL64(&ObpTypeObjectType),
+    PtrToUL64(&MmSystemCacheStart),
+    PtrToUL64(&MmSystemCacheEnd),
+    PtrToUL64(&MmSystemCacheWs),
+    PtrToUL64(&MmPfnDatabase),
+    PtrToUL64(MmSystemPtesStart),
+    PtrToUL64(MmSystemPtesEnd),
+    PtrToUL64(&MmSubsectionBase),
+    PtrToUL64(&MmNumberOfPagingFiles),
+    PtrToUL64(&MmLowestPhysicalPage),
+    PtrToUL64(&MmHighestPhysicalPage),
+    PtrToUL64(&MmNumberOfPhysicalPages),
+    PtrToUL64(&MmMaximumNonPagedPoolInBytes),
+    PtrToUL64(&MmNonPagedSystemStart),
+    PtrToUL64(&MmNonPagedPoolStart),
+    PtrToUL64(&MmNonPagedPoolEnd),
+    PtrToUL64(&MmPagedPoolStart),
+    PtrToUL64(&MmPagedPoolEnd),
+    PtrToUL64(&MmPagedPoolInfo),
     PAGE_SIZE,
-    {(ULONG_PTR)&MmSizeOfPagedPoolInBytes},
-    {(ULONG_PTR)&MmTotalCommitLimit},
-    {(ULONG_PTR)&MmTotalCommittedPages},
-    {(ULONG_PTR)&MmSharedCommit},
-    {(ULONG_PTR)&MmDriverCommit},
-    {(ULONG_PTR)&MmProcessCommit},
-    {(ULONG_PTR)&MmPagedPoolCommit},
-    {0},
-    {(ULONG_PTR)&MmZeroedPageListHead},
-    {(ULONG_PTR)&MmFreePageListHead},
-    {(ULONG_PTR)&MmStandbyPageListHead},
-    {(ULONG_PTR)&MmModifiedPageListHead},
-    {(ULONG_PTR)&MmModifiedNoWritePageListHead},
-    {(ULONG_PTR)&MmAvailablePages},
-    {(ULONG_PTR)&MmResidentAvailablePages},
-    {(ULONG_PTR)&PoolTrackTable},
-    {(ULONG_PTR)&NonPagedPoolDescriptor},
-    {(ULONG_PTR)&MmHighestUserAddress},
-    {(ULONG_PTR)&MmSystemRangeStart},
-    {(ULONG_PTR)&MmUserProbeAddress},
-    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
-    {(ULONG_PTR)KdPrintDefaultCircularBuffer + 1},
-    {(ULONG_PTR)&KdPrintWritePointer},
-    {(ULONG_PTR)&KdPrintRolloverCount},
-    {(ULONG_PTR)&MmLoadedUserImageList},
-    {(ULONG_PTR)&NtBuildLab},
-    {0},
-    {(ULONG_PTR)KiProcessorBlock},
-    {(ULONG_PTR)&MmUnloadedDrivers},
-    {(ULONG_PTR)&MmLastUnloadedDrivers},
-    {(ULONG_PTR)&MmTriageActionTaken},
-    {(ULONG_PTR)&MmSpecialPoolTag},
-    {(ULONG_PTR)&KernelVerifier},
-    {(ULONG_PTR)&MmVerifierData},
-    {(ULONG_PTR)&MmAllocatedNonPagedPool},
-    {(ULONG_PTR)&MmPeakCommitment},
-    {(ULONG_PTR)&MmtotalCommitLimitMaximum},
-    {(ULONG_PTR)&CmNtCSDVersion},
-    {(ULONG_PTR)&MmPhysicalMemoryBlock},
-    {(ULONG_PTR)&MmSessionBase},
-    {(ULONG_PTR)&MmSessionSize},
-    {0},
-    {0},
+    PtrToUL64(&MmSizeOfPagedPoolInBytes),
+    PtrToUL64(&MmTotalCommitLimit),
+    PtrToUL64(&MmTotalCommittedPages),
+    PtrToUL64(&MmSharedCommit),
+    PtrToUL64(&MmDriverCommit),
+    PtrToUL64(&MmProcessCommit),
+    PtrToUL64(&MmPagedPoolCommit),
+    PtrToUL64(0),
+    PtrToUL64(&MmZeroedPageListHead),
+    PtrToUL64(&MmFreePageListHead),
+    PtrToUL64(&MmStandbyPageListHead),
+    PtrToUL64(&MmModifiedPageListHead),
+    PtrToUL64(&MmModifiedNoWritePageListHead),
+    PtrToUL64(&MmAvailablePages),
+    PtrToUL64(&MmResidentAvailablePages),
+    PtrToUL64(&PoolTrackTable),
+    PtrToUL64(&NonPagedPoolDescriptor),
+    PtrToUL64(&MmHighestUserAddress),
+    PtrToUL64(&MmSystemRangeStart),
+    PtrToUL64(&MmUserProbeAddress),
+    PtrToUL64(KdPrintDefaultCircularBuffer),
+    PtrToUL64(KdPrintDefaultCircularBuffer + sizeof(KdPrintDefaultCircularBuffer)),
+    PtrToUL64(&KdPrintWritePointer),
+    PtrToUL64(&KdPrintRolloverCount),
+    PtrToUL64(&MmLoadedUserImageList),
+    PtrToUL64(&NtBuildLab),
+    PtrToUL64(0),
+    PtrToUL64(KiProcessorBlock),
+    PtrToUL64(&MmUnloadedDrivers),
+    PtrToUL64(&MmLastUnloadedDrivers),
+    PtrToUL64(&MmTriageActionTaken),
+    PtrToUL64(&MmSpecialPoolTag),
+    PtrToUL64(&KernelVerifier),
+    PtrToUL64(&MmVerifierData),
+    PtrToUL64(&MmAllocatedNonPagedPool),
+    PtrToUL64(&MmPeakCommitment),
+    PtrToUL64(&MmtotalCommitLimitMaximum),
+    PtrToUL64(&CmNtCSDVersion),
+    PtrToUL64(&MmPhysicalMemoryBlock),
+    PtrToUL64(&MmSessionBase),
+    PtrToUL64(&MmSessionSize),
+    PtrToUL64(0),
+    PtrToUL64(0),
     FIELD_OFFSET(KTHREAD, NextProcessor),
     FIELD_OFFSET(KTHREAD, Teb),
     FIELD_OFFSET(KTHREAD, KernelStack),
@@ -625,9 +637,9 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     FIELD_OFFSET(KPRCB, ProcessorState.ContextFrame),
     FIELD_OFFSET(KPRCB, Number),
     sizeof(ETHREAD),
-    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
-    {(ULONG_PTR)&KdPrintBufferSize},
-    {(ULONG_PTR)&KeLoaderBlock},
+    PtrToUL64(&KdPrintCircularBuffer),
+    PtrToUL64(&KdPrintBufferSize),
+    PtrToUL64(&KeLoaderBlock),
     sizeof(KPCR),
     KPCR_SELF_PCR_OFFSET,
     KPCR_CURRENT_PRCB_OFFSET,
@@ -688,6 +700,10 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     0,
     0,
 #endif
-    {(ULONG_PTR)&IopNumTriageDumpDataBlocks},
-    {(ULONG_PTR)IopTriageDumpDataBlocks},
+    PtrToUL64(&IopNumTriageDumpDataBlocks),
+    PtrToUL64(IopTriageDumpDataBlocks),
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#error KdDebuggerDataBlock requires other fields for this NT version!
+#endif
 };

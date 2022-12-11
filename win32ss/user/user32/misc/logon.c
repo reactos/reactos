@@ -104,8 +104,8 @@ UpdatePerUserSystemParameters(DWORD dwReserved,
     // Update Imm support and load Imm32.dll.
     UpdatePerUserImmEnabling();
 
-    /* Delete all the IME hotkeys */
-    CliImmInitializeHotKeys(SETIMEHOTKEY_DELETEALL, NULL);
+    /* Initialize the IME hotkeys */
+    CliImmInitializeHotKeys(SETIMEHOTKEY_INITIALIZE, NULL);
 
     /* Load Preload keyboard layouts */
     IntLoadPreloadKeyboardLayouts();

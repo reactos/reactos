@@ -99,9 +99,14 @@ VOID
 KdbpCliInterpretInitFile(VOID);
 
 VOID
+KdbpPager(
+    _In_ PCHAR Buffer,
+    _In_ ULONG BufLength);
+
+VOID
 KdbpPrint(
-   IN PCHAR Format,
-   IN ...  OPTIONAL);
+    _In_ PSTR Format,
+    _In_ ...);
 
 VOID
 KdbpPrintUnicodeString(

@@ -7,7 +7,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Geral"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
     LTEXT "Sistema:", IDC_STATIC, 4, 116, 100, 9
@@ -30,7 +30,7 @@ END
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gestor de dispositivos", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
@@ -49,7 +49,7 @@ END
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avançado"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tem de ter a sessão iniciada como ""Administrador"" para fazer a maior parte destas configurações.", IDC_STATIC, 12, 5, 236, 17
     GROUPBOX "Performance", IDC_STATIC, 6, 28, 244, 50
@@ -67,12 +67,12 @@ BEGIN
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Definições de sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informações de versão", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "O ReactOS é construído como servidor de sistemas operativos e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "O ReactOS é construído como um sistema operativo servidor e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "&Comportamento de estação de trabalho", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "&OK", IDOK, 166, 83, 50, 14
 END
@@ -232,7 +232,7 @@ END
 IDD_VIRTMEM DIALOGEX 6, 6, 233, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Memória virtual"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Unidade [Nome de volume]", IDC_STATIC, 12, 5, 96, 9
     LTEXT "Tamanho do ficheiro de pag.(MB)", IDC_STATIC, 115, 5, 110, 9
@@ -264,7 +264,7 @@ END
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Variáveis de ambiente"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
     GROUPBOX "Variáveis do utilizador", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
@@ -286,7 +286,7 @@ END
 IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Editar variável"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
     LTEXT "&Nome da variável:", IDC_STATIC, 7, 14, 58, 8
@@ -295,32 +295,32 @@ BEGIN
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 314, 50, 50, 14
-    PUSHBUTTON "Browse &Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
-    PUSHBUTTON "Browse &Files...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+    PUSHBUTTON "Procurar &pasta...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Procurar &ficheiros...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
 END
 
 IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Editar variável"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
     CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
                 LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&New", IDC_BUTTON_NEW, 242, 10, 50, 14
-    PUSHBUTTON "&Edit", IDC_BUTTON_EDIT, 242, 30, 50, 14
-    PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
-    PUSHBUTTON "&Delete", IDC_BUTTON_DELETE, 242, 70, 50, 14
-    PUSHBUTTON "Move &Up", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
-    PUSHBUTTON "Move D&own", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
-    PUSHBUTTON "Edit &text...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
+    PUSHBUTTON "&Novo", IDC_BUTTON_NEW, 242, 10, 50, 14
+    PUSHBUTTON "&Editar", IDC_BUTTON_EDIT, 242, 30, 50, 14
+    PUSHBUTTON "&Procurar...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
+    PUSHBUTTON "&Eliminar", IDC_BUTTON_DELETE, 242, 70, 50, 14
+    PUSHBUTTON "Para &cima", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
+    PUSHBUTTON "Para &baixo", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
+    PUSHBUTTON "Editar &texto...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 242, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
 CAPTION "Licença"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
@@ -358,20 +358,20 @@ BEGIN
     IDS_USERPROFILE_ACCOUNT_DELETED "Conta excluida"
     IDS_USERPROFILE_TYPE_TEXT "Quando %s iniciar sessão neste computador, o sistema operativo deve usar o perfil móvel ou apenas a cópia em cache local do perfil móvel."
     IDS_MESSAGEBOXTITLE "Aplicação do painel de controle do sistema"
-    IDS_WARNINITIALSIZE "Digite um valor numérico para o tamanho inicial do arquivo de paginação."
-    IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do arquivo de paginação."
-    IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 2 MB e não deve exceder o espaço disponível na unidade seleccionada."
-    IDS_WARNMAXIMUMRANGE "O tamanho máximo do arquivo de paginação não deve ser menor que o tamanho inicial, não deve ser maior que 4095 MB e não deve exceder o espaço disponível na unidade seleccionada."
-    IDS_PAGEFILE_MB "%u MB"
+    IDS_WARNINITIALSIZE "Digite um valor numérico para o tamanho inicial do ficheiro de paginação."
+    IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do ficheiro de paginação."
+    IDS_WARNINITIALRANGE "O tamanho do ficheiro de paginação inicial deve estar entre 2 MB e %lu MB na unidade seleccionada."
+    IDS_WARNMAXIMUMRANGE "O tamanho máximo do ficheiro de paginação deve ser maior ou igual ao seu tamanho inicial e menor que %lu MB na unidade seleccionada."
+    IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "Nenhum"
-    IDS_PAGEFILE_SYSTEM "Gerenciado pelo sistema"
+    IDS_PAGEFILE_SYSTEM "Gerênciado pelo sistema"
     IDS_INFOREBOOT "Precisa reiniciar o computador para aplicar as alterações."
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar exclusão do perfil"
     IDS_HWPROFILE_CONFIRM_DELETE "Tem certeza de que deseja excluir o perfil de hardware ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "O nome do perfil já está em uso."
     IDS_HWPROFILE_PROFILE "Perfil"
     IDS_HWPROFILE_WARNING "Aviso"
-    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
-    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_ENVIRONMENT_WARNING "Quaisquer alterações feitas serão descartadas e o valor da variável será editado como texto."
+    IDS_ENVIRONMENT_WARNING_TITLE "Propriedades do sistema"
+    IDS_FILE_BROWSE_FILTER "Todos os ficheiros (*.*)\0*.*\0"
 END

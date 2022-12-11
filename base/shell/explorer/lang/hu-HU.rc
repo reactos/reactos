@@ -195,4 +195,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Tálca és Start menü"
     IDS_RESTORE_ALL "&Megnyitott ablakok megjelenítése"
+    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
+    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
 END

@@ -28,6 +28,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 
 #include <wine/debug.h>
 
@@ -73,16 +74,16 @@ HRESULT WINAPI SHRegQueryValueA(HKEY hkey, LPSTR lpSubKey, LPSTR lpValue, LPDWOR
  * SHRegQueryValueExA   [SHELL32.509]
  *
  */
-HRESULT WINAPI SHRegQueryValueExA(
+LONG WINAPI SHRegQueryValueExA(
 	HKEY hkey,
-	LPSTR lpValueName,
+	LPCSTR lpValueName,
 	LPDWORD lpReserved,
 	LPDWORD lpType,
 	LPBYTE lpData,
 	LPDWORD lpcbData)
 {
 	TRACE("%p %s %p %p %p %p\n", hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
-	return RegQueryValueExA (hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+	return SHQueryValueExA(hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 }
 
 /*************************************************************************
@@ -102,24 +103,18 @@ HRESULT WINAPI SHRegQueryValueW(
 
 /*************************************************************************
  * SHRegQueryValueExW	[SHELL32.511] NT4.0
- *
- * FIXME
- *  if the datatype REG_EXPAND_SZ then expand the string and change
- *  *pdwType to REG_SZ.
  */
-HRESULT WINAPI SHRegQueryValueExW (
+LONG WINAPI SHRegQueryValueExW(
 	HKEY hkey,
-	LPWSTR pszValue,
+	LPCWSTR pszValue,
 	LPDWORD pdwReserved,
 	LPDWORD pdwType,
 	LPVOID pvData,
 	LPDWORD pcbData)
 {
-	DWORD ret;
-	WARN("%p %s %p %p %p %p semi-stub\n",
+	TRACE("%p %s %p %p %p %p\n",
 		hkey, debugstr_w(pszValue), pdwReserved, pdwType, pvData, pcbData);
-	ret = RegQueryValueExW ( hkey, pszValue, pdwReserved, pdwType, pvData, pcbData);
-	return ret;
+	return SHQueryValueExW(hkey, pszValue, pdwReserved, pdwType, pvData, pcbData);
 }
 
 /*************************************************************************

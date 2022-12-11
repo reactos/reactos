@@ -23,7 +23,6 @@ list(APPEND SOURCE
     chvalid.c
     debugXML.c
     dict.c
-    DOCBparser.c
     encoding.c
     entities.c
     error.c

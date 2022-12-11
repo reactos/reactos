@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,7 @@ ACPI_GLOBAL (ACPI_TABLE_LIST,           AcpiGbl_RootTableList);
 
 ACPI_GLOBAL (ACPI_TABLE_HEADER *,       AcpiGbl_DSDT);
 ACPI_GLOBAL (ACPI_TABLE_HEADER,         AcpiGbl_OriginalDsdtHeader);
+ACPI_INIT_GLOBAL (char *,               AcpiGbl_CDAT, NULL);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_DsdtIndex, ACPI_INVALID_TABLE_INDEX);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_FacsIndex, ACPI_INVALID_TABLE_INDEX);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_XFacsIndex, ACPI_INVALID_TABLE_INDEX);
@@ -257,6 +258,8 @@ ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_LastListHead, NULL);
 extern ACPI_BIT_REGISTER_INFO           AcpiGbl_BitRegisterInfo[ACPI_NUM_BITREG];
 ACPI_GLOBAL (UINT8,                     AcpiGbl_SleepTypeA);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_SleepTypeB);
+ACPI_GLOBAL (UINT8,                     AcpiGbl_SleepTypeAS0);
+ACPI_GLOBAL (UINT8,                     AcpiGbl_SleepTypeBS0);
 
 
 /*****************************************************************************

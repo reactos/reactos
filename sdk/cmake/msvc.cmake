@@ -41,6 +41,9 @@ endif()
 add_compile_options(/GS-)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(ARCH STREQUAL "amd64")
+        add_compile_options(-mcx16) # Generate CMPXCHG16B
+    endif()
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
 
@@ -472,21 +475,26 @@ macro(add_asm_files _target)
     get_includes(_directory_includes)
     get_directory_property(_defines COMPILE_DEFINITIONS)
     foreach(_source_file ${ARGN})
-        get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
-        get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
-        set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.asm)
-        get_source_file_property(_defines_semicolon_list ${_source_file_full_path} COMPILE_DEFINITIONS)
-        unset(_source_file_defines)
-        foreach(_define ${_defines_semicolon_list})
-            if(NOT ${_define} STREQUAL "NOTFOUND")
-                list(APPEND _source_file_defines -D${_define})
-            endif()
-        endforeach()
-        add_custom_command(
-            OUTPUT ${_preprocessed_asm_file}
-            COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file}
-            DEPENDS ${_source_file_full_path})
-        list(APPEND ${_target} ${_preprocessed_asm_file})
+        get_filename_component(_extension ${_source_file} EXT)
+        if (("${_extension}" STREQUAL ".asm") OR ("${_extension}" STREQUAL ".inc"))
+            list(APPEND ${_target} ${_source_file})
+        else()
+            get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+            get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
+            set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.asm)
+            get_source_file_property(_defines_semicolon_list ${_source_file_full_path} COMPILE_DEFINITIONS)
+            unset(_source_file_defines)
+            foreach(_define ${_defines_semicolon_list})
+                if(NOT ${_define} STREQUAL "NOTFOUND")
+                    list(APPEND _source_file_defines -D${_define})
+                endif()
+            endforeach()
+            add_custom_command(
+                OUTPUT ${_preprocessed_asm_file}
+                COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file}
+                DEPENDS ${_source_file_full_path})
+            list(APPEND ${_target} ${_preprocessed_asm_file})
+        endif()
     endforeach()
 endmacro()
 

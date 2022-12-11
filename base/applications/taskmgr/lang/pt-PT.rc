@@ -13,7 +13,7 @@ BEGIN
     POPUP "&Opções"
     BEGIN
         MENUITEM "&Sempre visível", ID_OPTIONS_ALWAYSONTOP, CHECKED
-        MENUITEM "&Minimizar durante o uso", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Minimizar durante utilização", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ocultar ao minimizar", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "&Mostrar tarefas de 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
@@ -57,8 +57,8 @@ BEGIN
         MENUITEM "&Terminar sessão %s",        ID_SHUTDOWN_LOGOFF
         MENUITEM "&Mudar de utilizador\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "&Bloquear\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconetar",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Ejetar",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Desligar",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Ejectar",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Aj&uda"
     BEGIN
@@ -138,8 +138,8 @@ BEGIN
         END
         MENUITEM "Definir &afinidade...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "&Propriedades", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Abrir localização do ficheiro", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -319,7 +319,7 @@ BEGIN
     CONTROL "Bytes de gravação de E/S", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 127, 97, 10
     CONTROL "Outras E/S", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 138, 47, 10
     CONTROL "Outros bytes de E/S", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 149, 77, 10
-    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 160, 95, 10
+    CONTROL "&Linha de comandos", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 160, 95, 10
 END
 
 /* String Tables */
@@ -328,7 +328,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Gestor de tarefas"
     IDC_TASKMGR "Gestor de tarefas"
-    IDS_IDLE_PROCESS "Processo inativo do sistema"
+    IDS_IDLE_PROCESS "Processo inactivo do sistema"
 END
 
 STRINGTABLE
@@ -338,8 +338,8 @@ BEGIN
     ID_OPTIONS_MINIMIZEONUSE "O 'Gestor de tarefas' é minimizado toda vez que uma operação de alternância for executada"
     ID_OPTIONS_HIDEWHENMINIMIZED "Oculta o 'Gestor de tarefas' quando ele estiver minimizado"
     ID_VIEW_REFRESH "Força o 'Gestor de tarefas' a actualizar a ecrã agora, independentemente do parâmetro 'Velocidade de actualização'"
-    ID_VIEW_LARGE "Mostra as tarefas usando ícones grandes"
-    ID_VIEW_SMALL "Mostra as tarefas usando ícones pequenos"
+    ID_VIEW_LARGE "Mostra as tarefas utilizando ícones grandes"
+    ID_VIEW_SMALL "Mostra as tarefas utilizando ícones pequenos"
     ID_VIEW_DETAILS "Mostra as informações sobre cada tarefa"
     ID_VIEW_UPDATESPEED_HIGH "Actualiza a ecrã duas vezes por segundo"
     ID_VIEW_UPDATESPEED_NORMAL "Actualiza a ecrã a cada dois segundos"
@@ -359,9 +359,9 @@ BEGIN
     ID_HELP_ABOUT "Mostrar informações sobre o programa, o número da versão e os direitos autorais"
     ID_FILE_EXIT "Sair da aplicação 'Gestor de tarefas'"
     ID_OPTIONS_SHOW16BITTASKS "Mostra as tarefas de 16 bits do Windows sob o ficheiro ntvdm.exe associado"
-    ID_VIEW_SELECTCOLUMNS "Selecciona quais colunas serão visíveis na ecrã Processo"
+    ID_VIEW_SELECTCOLUMNS "Selecciona quais colunas serão visíveis na página Processo"
     ID_VIEW_SHOWKERNELTIMES "Mostrar o tempo do núcleo nos gráficos de desempenho"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico mostra o uso total de CPU"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico mostra a utilização total da CPU"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU possui o seu próprio gráfico"
     ID_APPLICATION_PAGE_SWITCHTO "Colocar a tarefa em primeiro plano e alternar o foco para si"
 END
@@ -370,7 +370,7 @@ STRINGTABLE
 BEGIN
     ID_ENDTASK "Fecha tarefa seleccionada"
     ID_GOTOPROCESS "Altera o foco para o processo da tarefa seleccionada"
-    ID_RESTORE "Tira o Restaura o ""Gestor de Tarefas"" do seu estado oculto."
+    ID_RESTORE "Restaura o Gestor de Tarefas do seu estado oculto"
     ID_PROCESS_PAGE_ENDPROCESS "Remover este processo do sistema"
     ID_PROCESS_PAGE_ENDPROCESSTREE "Remover este processo e todos os seus descendentes do sistema"
     ID_PROCESS_PAGE_DEBUG "Liga o depurador a este processo"
@@ -417,7 +417,7 @@ BEGIN
     IDS_TAB_IOOTHERBYTES "Outros Bytes de E/S"
     IDS_TAB_COMMANDLINE "Linha de comandos"
     IDS_MENU_SELECTCOLUMNS "&Seleccionar colunas..."
-    IDS_MENU_16BITTASK "&Exibir tarefas de 16 bits"
+    IDS_MENU_16BITTASK "&Mostrar tarefas de 16 bits"
     IDS_MENU_WINDOWS "&Janelas"
     IDS_MENU_LARGEICONS "Íco&nes grandes"
     IDS_MENU_SMALLICONS "Ícones &pequenos"
@@ -427,14 +427,14 @@ BEGIN
     IDS_MENU_CPUHISTORY "&Histórico de CPU"
     IDS_MENU_SHOWKERNELTIMES "&Mostrar tempos do núcleo"
     IDS_CREATENEWTASK "Executar nova tarefa"
-    IDS_CREATENEWTASK_DESC "Digite o nome de um programa, pasta, documento ou recurso da Internet e o 'Gestor de tarefas' abrirá para você."
+    IDS_CREATENEWTASK_DESC "Digite o nome de um programa, pasta, documento ou recurso da Internet e o 'Gestor de tarefas' o abrirá."
     IDS_MSG_ACCESSPROCESSAFF "Não é possível acessar ou definir afinidade de processo"
     IDS_MSG_PROCESSONEPRO "O processo deve ter afinidade com pelo menos um processador."
     IDS_MSG_INVALIDOPTION "Opção inválida"
-    IDS_MSG_UNABLEDEBUGPROCESS "Não é possível conectar o depurador"
-    IDS_MSG_WARNINGDEBUG "AVISO: a depuração deste processo pode resultar em perda de dados.\nTem certeza de que deseja conectar o depurador?"
+    IDS_MSG_UNABLEDEBUGPROCESS "Não é possível depurar o processo"
+    IDS_MSG_WARNINGDEBUG "AVISO: depurar este processo pode resultar em perda de dados.\nTem certeza de que deseja anexar o depurador?"
     IDS_MSG_TASKMGRWARNING "Aviso do 'Gestor de tarefas'"
-    IDS_MSG_WARNINGTERMINATING "AVISO: o encerramento de um processo pode causar\nefeitos indesejáveis, como perda de dados e\ninstabilidade do sistema. O processo não terá como\nsalvar seu estado e os dados antes de ser encerrado.\nTem certeza de que deseja encerrá-lo?"
+    IDS_MSG_WARNINGTERMINATING "AVISO: o encerramento de um processo pode causar\nefeitos indesejáveis, como perda de dados e\ninstabilidade do sistema. O processo não terá como\nsalvar seu estado e os dados antes de ser encerrado.\nTem certeza de que deseja encerrar este processo?"
     IDS_MSG_UNABLETERMINATEPRO "Não é possível finalizar o processo"
     IDS_MSG_CLOSESYSTEMPROCESS "Este é um processo crítico do sistema. O Gestor de tarefas não irá encerrar este processo"
     IDS_MSG_UNABLECHANGEPRIORITY "Não é possível alterar a prioridade"
@@ -444,5 +444,5 @@ BEGIN
     IDS_STATUS_CPUUSAGE "Uso de CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processo: %d"
     IDS_NOT_RESPONDING "Não responde"
-    IDS_RUNNING "A correr"
+    IDS_RUNNING "Em execução"
 END

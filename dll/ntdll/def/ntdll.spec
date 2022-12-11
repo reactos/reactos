@@ -156,7 +156,7 @@
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 @ stdcall -stub -version=0x600+ LdrGetProcedureAddressEx(ptr ptr long ptr long)
 @ stdcall -stub LdrHotPatchRoutine(ptr)
-@ stdcall -stub LdrInitShimEngineDynamic(ptr)
+@ stdcall LdrInitShimEngineDynamic(ptr)
 @ stdcall LdrInitializeThunk(long long long long)
 @ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stub -version=0x600+ LdrLoadAlternateResourceModuleEx
@@ -277,7 +277,7 @@
 @ stdcall NtCreateMailslotFile(long long long long long long long long)
 @ stdcall NtCreateMutant(ptr long ptr long)
 @ stdcall NtCreateNamedPipeFile(ptr long ptr ptr long long long long long long long long long ptr)
-@ stdcall NtCreatePagingFile(long long long long)
+@ stdcall NtCreatePagingFile(ptr ptr ptr long)
 @ stdcall NtCreatePort(ptr ptr long long ptr)
 @ stub -version=0x600+ NtCreatePrivateNamespace
 @ stdcall NtCreateProcess(ptr long ptr ptr long ptr ptr ptr)
@@ -688,7 +688,7 @@
 @ stdcall RtlComputeCrc32(long ptr long)
 @ stdcall RtlComputeImportTableHash(ptr ptr long)
 @ stdcall RtlComputePrivatizedDllName_U(ptr ptr ptr)
-@ stub -version=0x600+ RtlConnectToSm
+@ stdcall -stub -version=0x600+ RtlConnectToSm(ptr ptr long ptr)
 @ stdcall RtlConsoleMultiByteToUnicodeN(ptr long ptr ptr long ptr)
 @ stdcall RtlConvertExclusiveToShared(ptr)
 @ stub -version=0x600+ RtlConvertLCIDToString
@@ -1100,7 +1100,7 @@
 @ stdcall RtlRealPredecessor(ptr)
 @ stdcall RtlRealSuccessor(ptr)
 @ stdcall RtlRegisterSecureMemoryCacheCallback(ptr)
-@ stub -version=0x600+ RtlRegisterThreadWithCsrss
+@ stdcall -stub -version=0x600+ RtlRegisterThreadWithCsrss()
 @ stdcall RtlRegisterWait(ptr ptr ptr ptr long long)
 @ stdcall RtlReleaseActivationContext(ptr)
 @ stdcall RtlReleaseMemoryStream(ptr)
@@ -1133,7 +1133,7 @@
 @ stdcall RtlSeekMemoryStream(ptr int64 long ptr)
 @ stdcall RtlSelfRelativeToAbsoluteSD2(ptr ptr)
 @ stdcall RtlSelfRelativeToAbsoluteSD(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
-@ stub -version=0x600+ RtlSendMsgToSm
+@ stdcall -stub -version=0x600+ RtlSendMsgToSm(ptr ptr)
 @ stdcall RtlSetAllBits(ptr)
 @ stdcall RtlSetAttributesSecurityDescriptor(ptr long ptr)
 @ stdcall RtlSetBits(ptr long long)
@@ -1438,7 +1438,7 @@
 @ stdcall ZwCreateMailslotFile(long long long long long long long long)
 @ stdcall ZwCreateMutant(ptr long ptr long)
 @ stdcall ZwCreateNamedPipeFile(ptr long ptr ptr long long long long long long long long long ptr)
-@ stdcall ZwCreatePagingFile(long long long long)
+@ stdcall ZwCreatePagingFile(ptr ptr ptr long)
 @ stdcall ZwCreatePort(ptr ptr long long long)
 @ stdcall ZwCreateProcess(ptr long ptr ptr long ptr ptr ptr)
 @ stdcall ZwCreateProcessEx(ptr long ptr ptr long ptr ptr ptr long)

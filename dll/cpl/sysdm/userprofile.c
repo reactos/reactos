@@ -150,7 +150,6 @@ BOOL
 DeleteUserProfile(
     _In_ HWND hwndDlg)
 {
-    WCHAR szTitle[64], szRawText[128], szCookedText[256];
     HWND hwndListView;
     LVITEM Item;
     INT iSelected;
@@ -179,14 +178,12 @@ DeleteUserProfile(
     if (pProfileData->dwRefCount != 0)
         return FALSE;
 
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE, szRawText, ARRAYSIZE(szRawText));
-    swprintf(szCookedText, szRawText, pProfileData->pszFullName);
-
-    if (MessageBoxW(hwndDlg,
-                    szCookedText,
-                    szTitle,
-                    MB_ICONQUESTION | MB_YESNO) == IDYES)
+    if (ResourceMessageBox(hApplet,
+                           hwndDlg,
+                           MB_ICONQUESTION | MB_YESNO,
+                           IDS_USERPROFILE_CONFIRM_DELETE_TITLE,
+                           IDS_USERPROFILE_CONFIRM_DELETE,
+                           pProfileData->pszFullName) == IDYES)
     {
         /* FIXME: Delete the profile here! */
         return TRUE;

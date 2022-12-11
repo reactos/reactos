@@ -139,7 +139,7 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 
     ppdev->sizeSurf.cx = 640;
     ppdev->sizeSurf.cy = 480;
-    ppdev->ModeNum = 12;
+    ppdev->ModeNum = 2;
 
     /* Set the mode that was requested */
     if (EngDeviceIoControl(ppdev->KMDriver,

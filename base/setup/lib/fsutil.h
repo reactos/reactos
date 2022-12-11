@@ -68,6 +68,7 @@ FormatFileSystem(
 #define FAT_BOOTSECTOR_SIZE     (1 * SECTORSIZE)
 #define FAT32_BOOTSECTOR_SIZE   (1 * SECTORSIZE) // Counts only the primary sector.
 #define BTRFS_BOOTSECTOR_SIZE   (3 * SECTORSIZE)
+#define NTFS_BOOTSECTOR_SIZE   (16 * SECTORSIZE)
 
 typedef NTSTATUS
 (/*NTAPI*/ *PFS_INSTALL_BOOTCODE)(
@@ -92,6 +93,12 @@ InstallFat32BootCode(
 
 NTSTATUS
 InstallBtrfsBootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
+
+NTSTATUS
+InstallNtfsBootCode(
     IN PCWSTR SrcPath,
     IN HANDLE DstPath,
     IN HANDLE RootPartition);

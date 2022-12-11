@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -244,7 +244,8 @@ enum AcpiSratType
     ACPI_SRAT_TYPE_GICC_AFFINITY        = 3,
     ACPI_SRAT_TYPE_GIC_ITS_AFFINITY     = 4, /* ACPI 6.2 */
     ACPI_SRAT_TYPE_GENERIC_AFFINITY     = 5, /* ACPI 6.3 */
-    ACPI_SRAT_TYPE_RESERVED             = 6  /* 5 and greater are reserved */
+    ACPI_SRAT_TYPE_GENERIC_PORT_AFFINITY = 6, /* ACPI 6.4 */
+    ACPI_SRAT_TYPE_RESERVED              = 7  /* 7 and greater are reserved */
 };
 
 /*
@@ -339,8 +340,11 @@ typedef struct acpi_srat_gic_its_affinity
 
 } ACPI_SRAT_GIC_ITS_AFFINITY;
 
-
-/* 5: Generic Initiator Affinity Structure (ACPI 6.3) */
+/*
+ * Common structure for SRAT subtable types:
+ * 5: ACPI_SRAT_TYPE_GENERIC_AFFINITY
+ * 6: ACPI_SRAT_TYPE_GENERIC_PORT_AFFINITY
+ */
 
 typedef struct acpi_srat_generic_affinity
 {

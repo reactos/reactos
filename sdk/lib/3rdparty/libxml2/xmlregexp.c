@@ -23,12 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 #include <libxml/tree.h>
 #include <libxml/parserInternals.h>
@@ -36,9 +31,6 @@
 #include <libxml/xmlautomata.h>
 #include <libxml/xmlunicode.h>
 
-#ifndef INT_MAX
-#define INT_MAX 123456789 /* easy to flag and big enough for our needs */
-#endif
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t) -1)
 #endif
@@ -1693,12 +1685,12 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 		    counter = xmlRegGetCounter(ctxt);
 		    ctxt->counters[counter].min = atom->min - 1;
 		    ctxt->counters[counter].max = atom->max - 1;
-		    /* count the number of times we see it again */
-		    xmlFAGenerateCountedEpsilonTransition(ctxt, atom->stop,
-						   atom->start, counter);
 		    /* allow a way out based on the count */
 		    xmlFAGenerateCountedTransition(ctxt, atom->stop,
 			                           newstate, counter);
+		    /* count the number of times we see it again */
+		    xmlFAGenerateCountedEpsilonTransition(ctxt, atom->stop,
+						   atom->start, counter);
 		    /* and if needed allow a direct exit for 0 */
 		    if (atom->min == 0)
 			xmlFAGenerateEpsilonTransition(ctxt, atom->start0,
@@ -1892,6 +1884,12 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
  * then X and Y are semantically equivalent and X can be eliminated
  * If X is the start state then make Y the start state, else replace the
  * target of all transitions to X by transitions to Y.
+ *
+ * If X is a final state, skip it.
+ * Otherwise it would be necessary to manipulate counters for this case when
+ * eliminating state 2:
+ * State 1 has a transition with an atom to state 2.
+ * State 2 is final and has an epsilon transition to state 1.
  */
 static void
 xmlFAEliminateSimpleEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
@@ -1904,7 +1902,8 @@ xmlFAEliminateSimpleEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
 	    continue;
 	if (state->nbTrans != 1)
 	    continue;
-	if (state->type == XML_REGEXP_UNREACH_STATE)
+       if (state->type == XML_REGEXP_UNREACH_STATE ||
+           state->type == XML_REGEXP_FINAL_STATE)
 	    continue;
 	/* is the only transition out a basic transition */
 	if ((state->trans[0].atom == NULL) &&
@@ -3357,7 +3356,6 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 		    /*
 		     * this is a multiple input sequence
 		     * If there is a counter associated increment it now.
-		     * before potentially saving and rollback
 		     * do not increment if the counter is already over the
 		     * maximum limit in which case get to next transition
 		     */
@@ -3373,14 +3371,16 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 			counter = &exec->comp->counters[trans->counter];
 			if (exec->counts[trans->counter] >= counter->max)
 			    continue; /* for loop on transitions */
-
+                    }
+                    /* Save before incrementing */
+		    if (exec->state->nbTrans > exec->transno + 1) {
+			xmlFARegExecSave(exec);
+		    }
+		    if (trans->counter >= 0) {
 #ifdef DEBUG_REGEXP_EXEC
 			printf("Increasing count %d\n", trans->counter);
 #endif
 			exec->counts[trans->counter]++;
-		    }
-		    if (exec->state->nbTrans > exec->transno + 1) {
-			xmlFARegExecSave(exec);
 		    }
 		    exec->transcount = 1;
 		    do {
@@ -4900,6 +4900,47 @@ xmlFAParseCharProp(xmlRegParserCtxtPtr ctxt) {
     }
 }
 
+static int parse_escaped_codeunit(xmlRegParserCtxtPtr ctxt)
+{
+    int val = 0, i, cur;
+    for (i = 0; i < 4; i++) {
+	NEXT;
+	val *= 16;
+	cur = CUR;
+	if (cur >= '0' && cur <= '9') {
+	    val += cur - '0';
+	} else if (cur >= 'A' && cur <= 'F') {
+	    val += cur - 'A' + 10;
+	} else if (cur >= 'a' && cur <= 'f') {
+	    val += cur - 'a' + 10;
+	} else {
+	    ERROR("Expecting hex digit");
+	    return -1;
+	}
+    }
+    return val;
+}
+
+static int parse_escaped_codepoint(xmlRegParserCtxtPtr ctxt)
+{
+    int val = parse_escaped_codeunit(ctxt);
+    if (0xD800 <= val && val <= 0xDBFF) {
+	NEXT;
+	if (CUR == '\\') {
+	    NEXT;
+	    if (CUR == 'u') {
+		int low = parse_escaped_codeunit(ctxt);
+		if (0xDC00 <= low && low <= 0xDFFF) {
+		    return (val - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+		}
+	    }
+	}
+	ERROR("Invalid low surrogate pair code unit");
+	val = -1;
+    }
+    return val;
+}
+
 /**
  * xmlFAParseCharClassEsc:
  * @ctxt:  a regexp parser context
@@ -4962,7 +5003,25 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 	(cur == '|') || (cur == '.') || (cur == '?') || (cur == '*') ||
 	(cur == '+') || (cur == '(') || (cur == ')') || (cur == '{') ||
 	(cur == '}') || (cur == 0x2D) || (cur == 0x5B) || (cur == 0x5D) ||
-	(cur == 0x5E)) {
+	(cur == 0x5E) ||
+
+	/* Non-standard escape sequences:
+	 *                  Java 1.8|.NET Core 3.1|MSXML 6 */
+	(cur == '!') ||     /*   +  |     +       |    +   */
+	(cur == '"') ||     /*   +  |     +       |    +   */
+	(cur == '#') ||     /*   +  |     +       |    +   */
+	(cur == '$') ||     /*   +  |     +       |    +   */
+	(cur == '%') ||     /*   +  |     +       |    +   */
+	(cur == ',') ||     /*   +  |     +       |    +   */
+	(cur == '/') ||     /*   +  |     +       |    +   */
+	(cur == ':') ||     /*   +  |     +       |    +   */
+	(cur == ';') ||     /*   +  |     +       |    +   */
+	(cur == '=') ||     /*   +  |     +       |    +   */
+	(cur == '>') ||     /*      |     +       |    +   */
+	(cur == '@') ||     /*   +  |     +       |    +   */
+	(cur == '`') ||     /*   +  |     +       |    +   */
+	(cur == '~') ||     /*   +  |     +       |    +   */
+	(cur == 'u')) {     /*      |     +       |    +   */
 	if (ctxt->atom == NULL) {
 	    ctxt->atom = xmlRegNewAtom(ctxt, XML_REGEXP_CHARVAL);
 	    if (ctxt->atom != NULL) {
@@ -4975,6 +5034,13 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 			break;
 		    case 't':
 		        ctxt->atom->codepoint = '\t';
+			break;
+		    case 'u':
+			cur = parse_escaped_codepoint(ctxt);
+			if (cur < 0) {
+			    return;
+			}
+			ctxt->atom->codepoint = cur;
 			break;
 		    default:
 			ctxt->atom->codepoint = cur;
@@ -5100,7 +5166,7 @@ xmlFAParseCharRange(xmlRegParserCtxtPtr ctxt) {
     }
     NEXTL(len);
     cur = CUR;
-    if ((cur != '-') || (NXT(1) == ']')) {
+    if ((cur != '-') || (NXT(1) == '[') || (NXT(1) == ']')) {
         xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 		              XML_REGEXP_CHARVAL, start, end, NULL);
 	return;
@@ -8259,6 +8325,5 @@ xmlExpCtxtNbCons(xmlExpCtxtPtr ctxt) {
 }
 
 #endif /* LIBXML_EXPR_ENABLED */
-#define bottom_xmlregexp
-#include "elfgcchack.h"
+
 #endif /* LIBXML_REGEXP_ENABLED */

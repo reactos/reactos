@@ -183,7 +183,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
             continue;
 
         LangID = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
-        if (LangID != TargetLangId)
+        if (LangID != TargetLangId && LangID != 0)
             continue;
 
         uModifiers = pNode->uModifiers;
@@ -358,32 +358,33 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
     switch (dwAction)
     {
         case SETIMEHOTKEY_DELETE:
-            pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+            pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId); /* Find hotkey by ID */
             if (!pNode)
             {
                 ERR("dwHotKeyId: 0x%lX\n", dwHotKeyId);
                 return FALSE;
             }
 
-            IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
+            IntDeleteImeHotKey(&gpImeHotKeyList, pNode); /* Delete it */
             return TRUE;
 
         case SETIMEHOTKEY_ADD:
-            if (uVirtualKey == VK_PACKET)
+            if (LOWORD(uVirtualKey) == VK_PACKET) /* In case of VK_PACKET */
                 return FALSE;
 
             LangId = IntGetImeHotKeyLangId(dwHotKeyId);
             if (LangId == LANGID_KOREAN)
-                return FALSE;
+                return FALSE; /* Korean can't add IME hotkeys */
 
+            /* Find hotkey by key and language */
             pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
                                                 (uModifiers & MOD_KEYS),
                                                 (uModifiers & MOD_LEFT_RIGHT),
                                                 uVirtualKey, LangId);
-            if (!pNode)
-                pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+            if (pNode == NULL) /* If not found */
+                pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId); /* Find by ID */
 
-            if (pNode)
+            if (pNode) /* Already exists */
             {
                 pNode->uModifiers = uModifiers;
                 pNode->uVirtualKey = uVirtualKey;
@@ -391,23 +392,26 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
                 return TRUE;
             }
 
+            /* Allocate new hotkey */
             pNode = ExAllocatePoolWithTag(PagedPool, sizeof(IMEHOTKEY), USERTAG_IMEHOTKEY);
             if (!pNode)
                 return FALSE;
 
+            /* Populate */
             pNode->pNext = NULL;
             pNode->dwHotKeyId = dwHotKeyId;
             pNode->uModifiers = uModifiers;
             pNode->uVirtualKey = uVirtualKey;
             pNode->hKL = hKL;
-            IntAddImeHotKey(&gpImeHotKeyList, pNode);
+            IntAddImeHotKey(&gpImeHotKeyList, pNode); /* Add it */
             return TRUE;
 
-        case SETIMEHOTKEY_DELETEALL:
-            IntFreeImeHotKeys();
+        case SETIMEHOTKEY_INITIALIZE:
+            IntFreeImeHotKeys(); /* Delete all the IME hotkeys */
             return TRUE;
 
         default:
+            ERR("0x%lX\n", dwAction);
             return FALSE;
     }
 }
@@ -558,7 +562,7 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
     }
     else
     {
-        for (pti = GetW32ThreadInfo()->ppi->ptiList; pti; pti = pti->ptiSibling)
+        for (pti = gptiCurrent->ppi->ptiList; pti; pti = pti->ptiSibling)
         {
             for (pIMC = pti->spDefaultImc; pIMC; pIMC = pIMC->pImcNext)
             {
@@ -712,7 +716,7 @@ NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCo
 
     if (dwThreadId == 0)
     {
-        pti = GetW32ThreadInfo();
+        pti = gptiCurrent;
     }
     else if (dwThreadId == INVALID_THREAD_ID)
     {
@@ -2389,6 +2393,13 @@ BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow)
     gfIMEShowStatus = bShow;
     IntNotifyImeShowStatus(pImeWnd);
     return TRUE;
+}
+
+/* Win: xxxCheckImeShowStatusInThread */
+VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd)
+{
+    if (IS_IMM_MODE() && !(pImeWnd->state2 & WNDS2_INDESTROY))
+        IntCheckImeShowStatus(pImeWnd, pImeWnd->head.pti);
 }
 
 /* EOF */

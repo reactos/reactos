@@ -1,11 +1,12 @@
 /*
- *    Translated by Sebastian Gasiorek (2005-07-07) and Piotr_hh
- *    Updated by xrogers (13.04.2007)
- *    https://sourceforge.net/projects/reactospl
- *    Updated by Caemyr - Olaf Siejka (Jan-Feb, 2008)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (March, 2021)
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2005 Sebastian Gasiorek <sebastian.gasiorek@reactos.org>
+ *              Copyright 2007 Lech Groblewicz <xrogers@gmail.com>
+ *              Copyright 2008 Olaf Siejka <caemyr@openmailbox.org>
+ *              Copyright 2011 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2020-2022 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -15,7 +16,7 @@ CAPTION "Kompozycje"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kompozycja to Tapeta, zestaw dźwięków, ikon i innych elementów, które pomogą Ci spersonalizować komputer za pomocą jednego kliknięcia.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Kompozycja to tapeta, zestaw dźwięków, ikon i innych elementów, które pomagają spersonalizować komputer za pomocą jednego kliknięcia.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "Kompozycja:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Z&apisz jako...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
@@ -36,7 +37,7 @@ BEGIN
     PUSHBUTTON "&Kolor...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Położenie", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "&Dostosuj pulpit...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -83,7 +84,7 @@ END
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Ustawienia zaawansowane"
+CAPTION "Wygląd zaawansowany"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
@@ -164,23 +165,23 @@ END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
+    GROUPBOX "Ikony pulpitu", IDC_STATIC, 6, 4, 212, 40
+    CONTROL "Moje &dokumenty", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
+    CONTROL "Moje &miejsca sieciowe", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
+    CONTROL "Mój &komputer", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
+    CONTROL "&Przeglądarka internetowa", IDC_ICONS_INTERNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
-            6, 60, 212, 54
-    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+            6, 60, 212, 56
+    PUSHBUTTON "Z&mień ikonę...", IDC_ICONS_CHANGEICON, 80, 120, 60, 15
+    PUSHBUTTON "Pr&zywróć domyślną", IDC_ICONS_SETDEFAULT, 144, 120, 75, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -243,7 +244,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Elementy pulpitu"
 END
 
 STRINGTABLE
@@ -269,9 +270,9 @@ STRINGTABLE
 BEGIN
     IDS_COLOR_4BIT "16 kolorów"
     IDS_COLOR_8BIT "256 kolorów"
-    IDS_COLOR_16BIT "High Color (16 Bitów)"
-    IDS_COLOR_24BIT "True Color (24 Bity)"
-    IDS_COLOR_32BIT "True Color (32 Bity)"
+    IDS_COLOR_16BIT "Średnia (16 Bitów)"
+    IDS_COLOR_24BIT "Wysoka (24 Bity)"
+    IDS_COLOR_32BIT "Najwyższa (32 Bity)"
     IDS_PIXEL "%lux%lu pikseli"
 END
 

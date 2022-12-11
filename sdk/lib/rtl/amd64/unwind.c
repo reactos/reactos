@@ -303,6 +303,7 @@ __inline
 BOOLEAN
 RtlpTryToUnwindEpilog(
     _Inout_ PCONTEXT Context,
+    _In_ ULONG64 ControlPc,
     _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers,
     _In_ ULONG64 ImageBase,
     _In_ PRUNTIME_FUNCTION FunctionEntry)
@@ -316,7 +317,7 @@ RtlpTryToUnwindEpilog(
     /* Make a local copy of the context */
     LocalContext = *Context;
 
-    InstrPtr = (BYTE*)LocalContext.Rip;
+    InstrPtr = (BYTE*)ControlPc;
 
     /* Check if first instruction of epilog is "add rsp, x" */
     Instr = *(DWORD*)InstrPtr;
@@ -339,7 +340,10 @@ RtlpTryToUnwindEpilog(
     else if ( (Instr & 0x38fffe) == 0x208d48 )
     {
         /* Get the register */
-        Reg = ((Instr << 8) | (Instr >> 16)) & 0x7;
+        Reg = (Instr >> 16) & 0x7;
+
+        /* REX.R */
+        Reg += (Instr & 1) * 8;
 
         LocalContext.Rsp = GetReg(&LocalContext, Reg);
 
@@ -353,13 +357,13 @@ RtlpTryToUnwindEpilog(
         else if (Mod == 1)
         {
             /* 1 byte displacement */
-            LocalContext.Rsp += Instr >> 24;
+            LocalContext.Rsp += (LONG)(CHAR)(Instr >> 24);
             InstrPtr += 4;
         }
         else if (Mod == 2)
         {
             /* 4 bytes displacement */
-            LocalContext.Rsp += *(DWORD*)(InstrPtr + 3);
+            LocalContext.Rsp += *(LONG*)(InstrPtr + 3);
             InstrPtr += 7;
         }
     }
@@ -453,11 +457,17 @@ GetEstablisherFrame(
          i < UnwindInfo->CountOfCodes;
          i += UnwindOpSlots(UnwindInfo->UnwindCode[i]))
     {
+        /* Skip codes past our code offset */
+        if (UnwindInfo->UnwindCode[i].CodeOffset > CodeOffset)
+        {
+            continue;
+        }
+
         /* Check for SET_FPREG */
         if (UnwindInfo->UnwindCode[i].UnwindOp == UWOP_SET_FPREG)
         {
             return GetReg(Context, UnwindInfo->FrameRegister) -
-                   UnwindInfo->FrameOffset * 16;
+                       UnwindInfo->FrameOffset * 16;
         }
     }
 
@@ -477,18 +487,18 @@ RtlVirtualUnwind(
     _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
 {
     PUNWIND_INFO UnwindInfo;
-    ULONG_PTR CodeOffset;
+    ULONG_PTR ControlRva, CodeOffset;
     ULONG i, Offset;
     UNWIND_CODE UnwindCode;
     BYTE Reg;
     PULONG LanguageHandler;
 
-    /* Use relative virtual address */
-    ControlPc -= ImageBase;
+    /* Get relative virtual address */
+    ControlRva = ControlPc - ImageBase;
 
     /* Sanity checks */
-    if ( (ControlPc < FunctionEntry->BeginAddress) ||
-         (ControlPc >= FunctionEntry->EndAddress) )
+    if ( (ControlRva < FunctionEntry->BeginAddress) ||
+         (ControlRva >= FunctionEntry->EndAddress) )
     {
         return NULL;
     }
@@ -498,17 +508,16 @@ RtlVirtualUnwind(
 
     /* The language specific handler data follows the unwind info */
     LanguageHandler = ALIGN_UP_POINTER_BY(&UnwindInfo->UnwindCode[UnwindInfo->CountOfCodes], sizeof(ULONG));
-    *HandlerData = (LanguageHandler + 1);
 
     /* Calculate relative offset to function start */
-    CodeOffset = ControlPc - FunctionEntry->BeginAddress;
+    CodeOffset = ControlRva - FunctionEntry->BeginAddress;
 
     *EstablisherFrame = GetEstablisherFrame(Context, UnwindInfo, CodeOffset);
 
     /* Check if we are in the function epilog and try to finish it */
-    if (CodeOffset > UnwindInfo->SizeOfProlog)
+    if ((CodeOffset > UnwindInfo->SizeOfProlog) && (UnwindInfo->CountOfCodes > 0))
     {
-        if (RtlpTryToUnwindEpilog(Context, ContextPointers, ImageBase, FunctionEntry))
+        if (RtlpTryToUnwindEpilog(Context, ControlPc, ContextPointers, ImageBase, FunctionEntry))
         {
             /* There's no exception routine */
             return NULL;
@@ -565,7 +574,7 @@ RepeatChainedInfo:
 
             case UWOP_SAVE_NONVOL:
                 Reg = UnwindCode.OpInfo;
-                Offset = *(USHORT*)(&UnwindInfo->UnwindCode[i + 1]);
+                Offset = UnwindInfo->UnwindCode[i + 1].FrameOffset;
                 SetRegFromStackValue(Context, ContextPointers, Reg, (DWORD64*)Context->Rsp + Offset);
                 i += 2;
                 break;
@@ -588,15 +597,15 @@ RepeatChainedInfo:
 
             case UWOP_SAVE_XMM128:
                 Reg = UnwindCode.OpInfo;
-                Offset = *(USHORT*)(&UnwindInfo->UnwindCode[i + 1]);
-                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)(Context->Rsp + Offset));
+                Offset = UnwindInfo->UnwindCode[i + 1].FrameOffset;
+                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)Context->Rsp + Offset);
                 i += 2;
                 break;
 
             case UWOP_SAVE_XMM128_FAR:
                 Reg = UnwindCode.OpInfo;
                 Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i + 1]);
-                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)(Context->Rsp + Offset));
+                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)Context->Rsp + Offset);
                 i += 3;
                 break;
 
@@ -604,11 +613,8 @@ RepeatChainedInfo:
                 /* OpInfo is 1, when an error code was pushed, otherwise 0. */
                 Context->Rsp += UnwindCode.OpInfo * sizeof(DWORD64);
 
-                /* Now pop the MACHINE_FRAME (Yes, "magic numbers", deal with it) */
+                /* Now pop the MACHINE_FRAME (RIP/RSP only. And yes, "magic numbers", deal with it) */
                 Context->Rip = *(PDWORD64)(Context->Rsp + 0x00);
-                Context->SegCs = *(PDWORD64)(Context->Rsp + 0x08);
-                Context->EFlags = *(PDWORD64)(Context->Rsp + 0x10);
-                Context->SegSs = *(PDWORD64)(Context->Rsp + 0x20);
                 Context->Rsp = *(PDWORD64)(Context->Rsp + 0x18);
                 ASSERT((i + 1) == UnwindInfo->CountOfCodes);
                 goto Exit;
@@ -635,8 +641,9 @@ RepeatChainedInfo:
 Exit:
 
     /* Check if we have a handler and return it */
-    if (UnwindInfo->Flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER))
+    if (UnwindInfo->Flags & (HandlerType & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER)))
     {
+        *HandlerData = (LanguageHandler + 1);
         return RVA(ImageBase, *LanguageHandler);
     }
 
@@ -686,7 +693,7 @@ RtlpUnwindInternal(
     UnwindContext = *ContextRecord;
 
     /* Set up the constant fields of the dispatcher context */
-    DispatcherContext.ContextRecord = ContextRecord;
+    DispatcherContext.ContextRecord = &UnwindContext;
     DispatcherContext.HistoryTable = HistoryTable;
     DispatcherContext.TargetIp = (ULONG64)TargetIp;
 
@@ -771,7 +778,7 @@ RtlpUnwindInternal(
                 /* Call the language specific handler */
                 Disposition = ExceptionRoutine(ExceptionRecord,
                                                (PVOID)EstablisherFrame,
-                                               &UnwindContext,
+                                               ContextRecord,
                                                &DispatcherContext);
 
                 /* Clear exception flags for the next iteration */
@@ -884,6 +891,13 @@ RtlUnwindEx(
         ExceptionRecord = &LocalExceptionRecord;
     }
 
+    /* Set unwind flags */
+    ExceptionRecord->ExceptionFlags = EXCEPTION_UNWINDING;
+    if (TargetFrame == NULL)
+    {
+        ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
+    }
+
     /* Call the internal function */
     RtlpUnwindInternal(TargetFrame,
                        TargetIp,
@@ -897,13 +911,19 @@ RtlUnwindEx(
 VOID
 NTAPI
 RtlUnwind(
-  IN PVOID TargetFrame,
-  IN PVOID TargetIp,
-  IN PEXCEPTION_RECORD ExceptionRecord,
-  IN PVOID ReturnValue)
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue)
 {
-    UNIMPLEMENTED;
-    return;
+    CONTEXT Context;
+
+    RtlUnwindEx(TargetFrame,
+                TargetIp,
+                ExceptionRecord,
+                ReturnValue,
+                &Context,
+                NULL);
 }
 
 ULONG
@@ -984,7 +1004,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             }
 
             /* Check, if we have left our stack */
-            if ((Context.Rsp < StackLow) || (Context.Rsp > StackHigh))
+            if ((Context.Rsp <= StackLow) || (Context.Rsp >= StackHigh))
             {
                 break;
             }
@@ -1053,29 +1073,37 @@ RtlpCaptureNonVolatileContextPointers(
 
     do
     {
+        /* Make sure nothing fishy is going on. Currently this is for kernel mode only. */
+        ASSERT((LONG64)Context.Rip < 0);
+        ASSERT((LONG64)Context.Rsp < 0);
+
         /* Look up the function entry */
         FunctionEntry = RtlLookupFunctionEntry(Context.Rip, &ImageBase, NULL);
-        ASSERT(FunctionEntry != NULL);
+        if (FunctionEntry != NULL)
+        {
+            /* Do a virtual unwind to the caller and capture saved non-volatiles */
+            RtlVirtualUnwind(UNW_FLAG_EHANDLER,
+                             ImageBase,
+                             Context.Rip,
+                             FunctionEntry,
+                             &Context,
+                             &HandlerData,
+                             &EstablisherFrame,
+                             NonvolatileContextPointers);
 
-        /* Do a virtual unwind to the caller and capture saved non-volatiles */
-        RtlVirtualUnwind(UNW_FLAG_EHANDLER,
-                         ImageBase,
-                         Context.Rip,
-                         FunctionEntry,
-                         &Context,
-                         &HandlerData,
-                         &EstablisherFrame,
-                         NonvolatileContextPointers);
+            ASSERT(EstablisherFrame != 0);
+        }
+        else
+        {
+            Context.Rip = *(PULONG64)Context.Rsp;
+            Context.Rsp += 8;
+        }
 
-        /* Make sure nothing fishy is going on. Currently this is for kernel mode only. */
-        ASSERT(EstablisherFrame != 0);
-        ASSERT((LONG64)Context.Rip < 0);
+        /* Continue until we reach user mode */
+    } while ((LONG64)Context.Rip < 0);
 
-        /* Continue until we reached the target frame or user mode */
-    } while (EstablisherFrame < TargetFrame);
-
-    /* If the caller did the right thing, we should get exactly the target frame */
-    ASSERT(EstablisherFrame == TargetFrame);
+    /* If the caller did the right thing, we should get past the target frame */
+    ASSERT(EstablisherFrame >= TargetFrame);
 }
 
 VOID

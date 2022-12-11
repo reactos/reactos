@@ -127,7 +127,7 @@ BEGIN
     EDITTEXT IDC_USER_NEW_PASSWORD1, 107, 67, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Пароль:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "Пароль еще раз:", -1, 7, 88, 96, 8
+    RTEXT "Пароль ещё раз:", -1, 7, 88, 96, 8
     AUTOCHECKBOX "Потребовать смену пароля при следующем входе в систему", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 230, 10
     AUTOCHECKBOX "Запретить смену пароля пользователем", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Срок действия пароля не ограничен", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED

@@ -643,7 +643,7 @@ IopInitializeDriverModule(
         driverObject->Flags &= ~DRVO_LEGACY_DRIVER;
     }
 
-    // Windows does this fixup - keep it for compatibility
+    /* Windows does this fixup, keep it for compatibility */
     for (INT i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
         /*
@@ -1695,13 +1695,13 @@ try_again:
     if (!NT_SUCCESS(Status))
     {
         /* If it didn't work, then kill the object */
-        DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", DriverName, Status);
+        DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", &LocalDriverName, Status);
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
         return Status;
     }
 
-    // Windows does this fixup - keep it for compatibility
+    /* Windows does this fixup, keep it for compatibility */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
         /*
@@ -1731,7 +1731,8 @@ try_again:
  */
 VOID
 NTAPI
-IoDeleteDriver(IN PDRIVER_OBJECT DriverObject)
+IoDeleteDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     /* Simply dereference the Object */
     ObDereferenceObject(DriverObject);

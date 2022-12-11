@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2021, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -119,7 +119,7 @@ AcpiTbValidateRsdp (
 
     /* Check the standard checksum */
 
-    if (AcpiTbChecksum ((UINT8 *) Rsdp, ACPI_RSDP_CHECKSUM_LENGTH) != 0)
+    if (AcpiUtChecksum ((UINT8 *) Rsdp, ACPI_RSDP_CHECKSUM_LENGTH) != 0)
     {
         return (AE_BAD_CHECKSUM);
     }
@@ -127,7 +127,7 @@ AcpiTbValidateRsdp (
     /* Check extended checksum if table version >= 2 */
 
     if ((Rsdp->Revision >= 2) &&
-        (AcpiTbChecksum ((UINT8 *) Rsdp, ACPI_RSDP_XCHECKSUM_LENGTH) != 0))
+        (AcpiUtChecksum ((UINT8 *) Rsdp, ACPI_RSDP_XCHECKSUM_LENGTH) != 0))
     {
         return (AE_BAD_CHECKSUM);
     }
@@ -163,6 +163,7 @@ AcpiFindRootPointer (
     UINT8                   *TablePtr;
     UINT8                   *MemRover;
     UINT32                  PhysicalAddress;
+    UINT32                  EbdaWindowSize;
 
 
     ACPI_FUNCTION_TRACE (AcpiFindRootPointer);
@@ -191,27 +192,40 @@ AcpiFindRootPointer (
 
     /* EBDA present? */
 
-    if (PhysicalAddress > 0x400)
+    /*
+     * Check that the EBDA pointer from memory is sane and does not point
+     * above valid low memory
+     */
+    if (PhysicalAddress > 0x400 &&
+        PhysicalAddress < 0xA0000)
     {
         /*
-         * 1b) Search EBDA paragraphs (EBDA is required to be a
-         *     minimum of 1K length)
+         * Calculate the scan window size
+         * The EBDA is not guaranteed to be larger than a KiB and in case
+         * that it is smaller, the scanning function would leave the low
+         * memory and continue to the VGA range.
+         */
+        EbdaWindowSize = ACPI_MIN(ACPI_EBDA_WINDOW_SIZE,
+            0xA0000 - PhysicalAddress);
+
+        /*
+         * 1b) Search EBDA paragraphs
          */
         TablePtr = AcpiOsMapMemory (
             (ACPI_PHYSICAL_ADDRESS) PhysicalAddress,
-            ACPI_EBDA_WINDOW_SIZE);
+            EbdaWindowSize);
         if (!TablePtr)
         {
             ACPI_ERROR ((AE_INFO,
                 "Could not map memory at 0x%8.8X for length %u",
-                PhysicalAddress, ACPI_EBDA_WINDOW_SIZE));
+                PhysicalAddress, EbdaWindowSize));
 
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
 
         MemRover = AcpiTbScanMemoryForRsdp (
-            TablePtr, ACPI_EBDA_WINDOW_SIZE);
-        AcpiOsUnmapMemory (TablePtr, ACPI_EBDA_WINDOW_SIZE);
+            TablePtr, EbdaWindowSize);
+        AcpiOsUnmapMemory (TablePtr, EbdaWindowSize);
 
         if (MemRover)
         {

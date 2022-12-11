@@ -286,38 +286,52 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
 
 // custom command IDs
+#if 0 // Disabled until our menu building system is fixed
+#define CMDID_FORMAT        0
+#define CMDID_EJECT         1
+#define CMDID_DISCONNECT    2
+#else
+/* FIXME: These IDs should start from 0, however there is difference
+ * between ours and Windows' menu building systems, which should be fixed. */
 #define CMDID_FORMAT        1
 #define CMDID_EJECT         2
 #define CMDID_DISCONNECT    3
+#endif
 
     if (uMsg == DFM_MERGECONTEXTMENU)
     {
         QCMINFO *pqcminfo = (QCMINFO *)lParam;
 
         UINT idCmdFirst = pqcminfo->idCmdFirst;
+        UINT idCmd = 0;
         if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE)
         {
             /* add separator and Format */
-            UINT idCmd = idCmdFirst + CMDID_FORMAT;
+            idCmd = idCmdFirst + CMDID_FORMAT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
         }
         if (nDriveType == DRIVE_REMOVABLE || nDriveType == DRIVE_CDROM)
         {
             /* add separator and Eject */
-            UINT idCmd = idCmdFirst + CMDID_EJECT;
+            idCmd = idCmdFirst + CMDID_EJECT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_EJECT), MFS_ENABLED);
         }
         if (nDriveType == DRIVE_REMOTE)
         {
             /* add separator and Disconnect */
-            UINT idCmd = idCmdFirst + CMDID_DISCONNECT;
+            idCmd = idCmdFirst + CMDID_DISCONNECT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_DISCONNECT), MFS_ENABLED);
         }
 
-        pqcminfo->idCmdFirst += 3;
+        if (idCmd)
+#if 0 // see FIXME above
+            pqcminfo->idCmdFirst = ++idCmd;
+#else
+            pqcminfo->idCmdFirst = (idCmd + 2);
+#endif
     }
     else if (uMsg == DFM_INVOKECOMMAND)
     {
@@ -329,7 +343,9 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
 
         if (wParam == DFM_CMD_PROPERTIES)
         {
-            hr = SH_ShowDriveProperties(wszBuf, pidlFolder, apidl);
+            // pdtobj should be valid at this point!
+            ATLASSERT(pdtobj);
+            hr = SH_ShowDriveProperties(wszBuf, pdtobj) ? S_OK : E_UNEXPECTED;
             if (FAILED(hr))
             {
                 dwError = ERROR_CAN_NOT_COMPLETE;

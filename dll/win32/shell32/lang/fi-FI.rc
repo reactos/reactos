@@ -980,6 +980,11 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_TITLE_MYCOMP "Oma Tietokone"
+    IDS_TITLE_MYNET "My Network Places"
+    IDS_TITLE_BIN_1 "Recycle Bin (full)"
+    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"

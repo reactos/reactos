@@ -33,174 +33,139 @@ typedef struct _DBGSS_THREAD_DATA
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static
-HANDLE
-K32CreateDBMonMutex(void)
+static HANDLE
+K32CreateDBMonMutex(VOID)
 {
     static SID_IDENTIFIER_AUTHORITY siaNTAuth = {SECURITY_NT_AUTHORITY};
     static SID_IDENTIFIER_AUTHORITY siaWorldAuth = {SECURITY_WORLD_SID_AUTHORITY};
     HANDLE hMutex;
+    NTSTATUS Status;
 
     /* SIDs to be used in the DACL */
     PSID psidSystem = NULL;
     PSID psidAdministrators = NULL;
     PSID psidEveryone = NULL;
 
-    /* buffer for the DACL */
+    /* Buffer for the DACL */
     PVOID pDaclBuf = NULL;
 
-    /* minimum size of the DACL: an ACL descriptor and three ACCESS_ALLOWED_ACE
-       headers. We'll add the size of SIDs when we'll know it
-    */
+    /* Minimum size of the DACL: an ACL descriptor and three ACCESS_ALLOWED_ACE
+     * headers. We will add the size of SIDs when they are known. */
     SIZE_T nDaclBufSize =
-         sizeof(ACL) + (sizeof(ACCESS_ALLOWED_ACE) -
-                        sizeof(((ACCESS_ALLOWED_ACE*)0)->SidStart)) * 3;
+        sizeof(ACL) + 3 * FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart);
 
-    /* security descriptor of the mutex */
+    /* Security descriptor and attributes of the mutex */
     SECURITY_DESCRIPTOR sdMutexSecurity;
-
-    /* attributes of the mutex object we'll create */
     SECURITY_ATTRIBUTES saMutexAttribs = {sizeof(saMutexAttribs),
                                           &sdMutexSecurity,
                                           TRUE};
 
-    NTSTATUS nErrCode;
-
-    /* first, try to open the mutex */
-    hMutex = OpenMutexW (SYNCHRONIZE | READ_CONTROL | MUTANT_QUERY_STATE,
-                         TRUE,
-                         L"DBWinMutex");
-
+    /* Try to open the mutex */
+    hMutex = OpenMutexW(SYNCHRONIZE | READ_CONTROL | MUTANT_QUERY_STATE,
+                        TRUE,
+                        L"DBWinMutex");
     if (hMutex != NULL)
     {
-        /* success */
+        /* Success */
         return hMutex;
     }
-    /* error other than the mutex not being found */
+    /* Error other than the mutex not being found */
     else if (GetLastError() != ERROR_FILE_NOT_FOUND)
     {
-        /* failure */
+        /* Failure */
         return NULL;
     }
 
-    /* if the mutex doesn't exist, create it */
+    /* If the mutex does not exist, set up its security, then create it */
 
-    /* first, set up the mutex security */
-    /* allocate the NT AUTHORITY\SYSTEM SID */
-    nErrCode = RtlAllocateAndInitializeSid(&siaNTAuth,
-                                           1,
-                                           SECURITY_LOCAL_SYSTEM_RID,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           &psidSystem);
+    /* Allocate the NT AUTHORITY\SYSTEM SID */
+    Status = RtlAllocateAndInitializeSid(&siaNTAuth,
+                                         1,
+                                         SECURITY_LOCAL_SYSTEM_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &psidSystem);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
+    /* Allocate the BUILTIN\Administrators SID */
+    Status = RtlAllocateAndInitializeSid(&siaNTAuth,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &psidAdministrators);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* allocate the BUILTIN\Administrators SID */
-    nErrCode = RtlAllocateAndInitializeSid(&siaNTAuth,
-                                           2,
-                                           SECURITY_BUILTIN_DOMAIN_RID,
-                                           DOMAIN_ALIAS_RID_ADMINS,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           &psidAdministrators);
+    /* Allocate the Everyone SID */
+    Status = RtlAllocateAndInitializeSid(&siaWorldAuth,
+                                         1,
+                                         SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &psidEveryone);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* allocate the Everyone SID */
-    nErrCode = RtlAllocateAndInitializeSid(&siaWorldAuth,
-                                           1,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           &psidEveryone);
-
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* allocate space for the SIDs too */
+    /* Allocate space for the SIDs too */
     nDaclBufSize += RtlLengthSid(psidSystem);
     nDaclBufSize += RtlLengthSid(psidAdministrators);
     nDaclBufSize += RtlLengthSid(psidEveryone);
 
-    /* allocate the buffer for the DACL */
+    /* Allocate the buffer for the DACL */
     pDaclBuf = GlobalAlloc(GMEM_FIXED, nDaclBufSize);
+    if (pDaclBuf == NULL)
+        goto Cleanup;
 
-    /* failure */
-    if (pDaclBuf == NULL) goto l_Cleanup;
+    /* Create the DACL */
+    Status = RtlCreateAcl(pDaclBuf, nDaclBufSize, ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* create the DACL */
-    nErrCode = RtlCreateAcl(pDaclBuf, nDaclBufSize, ACL_REVISION);
+    /* Grant the minimum required access to Everyone */
+    Status = RtlAddAccessAllowedAce(pDaclBuf,
+                                    ACL_REVISION,
+                                    SYNCHRONIZE |
+                                    READ_CONTROL |
+                                    MUTANT_QUERY_STATE,
+                                    psidEveryone);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
+    /* Grant full access to BUILTIN\Administrators */
+    Status = RtlAddAccessAllowedAce(pDaclBuf,
+                                    ACL_REVISION,
+                                    MUTANT_ALL_ACCESS,
+                                    psidAdministrators);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* grant the minimum required access to Everyone */
-    nErrCode = RtlAddAccessAllowedAce(pDaclBuf,
-                                      ACL_REVISION,
-                                      SYNCHRONIZE |
-                                      READ_CONTROL |
-                                      MUTANT_QUERY_STATE,
-                                      psidEveryone);
+    /* Grant full access to NT AUTHORITY\SYSTEM */
+    Status = RtlAddAccessAllowedAce(pDaclBuf,
+                                    ACL_REVISION,
+                                    MUTANT_ALL_ACCESS,
+                                    psidSystem);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
+    /* Create the security descriptor */
+    Status = RtlCreateSecurityDescriptor(&sdMutexSecurity,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* grant full access to BUILTIN\Administrators */
-    nErrCode = RtlAddAccessAllowedAce(pDaclBuf,
-                                      ACL_REVISION,
-                                      MUTANT_ALL_ACCESS,
-                                      psidAdministrators);
+    /* Set the descriptor's DACL to the created ACL */
+    Status = RtlSetDaclSecurityDescriptor(&sdMutexSecurity,
+                                          TRUE,
+                                          pDaclBuf,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* grant full access to NT AUTHORITY\SYSTEM */
-    nErrCode = RtlAddAccessAllowedAce(pDaclBuf,
-                                      ACL_REVISION,
-                                      MUTANT_ALL_ACCESS,
-                                      psidSystem);
-
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* create the security descriptor */
-    nErrCode = RtlCreateSecurityDescriptor(&sdMutexSecurity,
-                                           SECURITY_DESCRIPTOR_REVISION);
-
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* set the descriptor's DACL to the ACL we created */
-    nErrCode = RtlSetDaclSecurityDescriptor(&sdMutexSecurity,
-                                            TRUE,
-                                            pDaclBuf,
-                                            FALSE);
-
-    /* failure */
-    if (!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
-    /* create the mutex */
+    /* Create the mutex */
     hMutex = CreateMutexW(&saMutexAttribs, FALSE, L"DBWinMutex");
 
-l_Cleanup:
-    /* free the buffers */
+Cleanup:
+    /* Free the buffers */
     if (pDaclBuf) GlobalFree(pDaclBuf);
     if (psidEveryone) RtlFreeSid(psidEveryone);
     if (psidAdministrators) RtlFreeSid(psidAdministrators);
