@@ -140,8 +140,7 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     IDataObject_Release(pdo);
 
 #ifdef _MSC_VER
-    if (hShell32)
-        FreeLibrary(hShell32);
+    FreeLibrary(hShell32);
 #endif
 
     return Ret;

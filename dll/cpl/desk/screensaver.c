@@ -236,6 +236,9 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
 
         if (WaitForSettingsDialog(hwndDlg, pi.hProcess))
             SetScreenSaverPreviewBox(hwndDlg, pData);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
     }
 }
 
