@@ -33,8 +33,8 @@ BEGIN
     CONTROL "&Passwort nach Reaktivierung", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "&Energiesparfunktionen des Monitors", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Um die Energieeinstellungen des Monitors zu editieren, wählen Sie Energieeinstellungen.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "Energieoptionen", IDC_SCREENS_POWER_BUTTON, 167, 166, 61, 13
+    LTEXT "Um die Energieoptionen des Monitors zu editieren, wählen Sie Energieoptionen.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "Energieoptionen...", IDC_SCREENS_POWER_BUTTON, 157, 166, 69, 13
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 202
@@ -146,7 +146,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilität", -1, 7, 67, 237, 97
-    LTEXT "Einige Programme könnten fehlerhaft arbeiten, wenn nach Änderung der Farbeinstellungen nicht neu gestartet wird.\r\n\nNach Änderung der Farbeinstellungen", -1, 12, 78, 228, 34
+    LTEXT "Einige Programme könnten fehlerhaft arbeiten, wenn nach Änderung der Farbeinstellungen nicht neu gestartet wird.\n\nNach Änderung der Farbeinstellungen", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Computer vor dem Anwenden der Farbeinstellungen neu starten.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "Farbeinstellungen ohne Neustart übernehmen.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Vor dem Anwenden der neuen Farbeinstellungen nachfragen.", IDC_ASKME_RB, 14, 146, 228, 10
