@@ -4,13 +4,13 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_BACKGROUND DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Fond d'écran"
+CAPTION "Bureau"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 78
-    LTEXT "Sélectionnez une image à utiliser comme fond d'écran", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Arrière-plan :", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Parcourir...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Couleur...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Position", IDC_STATIC, 188, 128, 55, 9
@@ -27,7 +27,7 @@ BEGIN
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Paramè&tres", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON "&Aperçu", IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT "Dé&lai ", IDC_WAITTEXT, 14, 125, 20, 9
+    LTEXT "Dé&lai", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 31, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
@@ -148,7 +148,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
-    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\r\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
+    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
     AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs.", IDC_RESTART_RB, 14, 116, 273, 10
     AUTORADIOBUTTON "Appliquer les nouveaux paramètres des couleurs sans redémarrer.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 243, 10
@@ -193,7 +193,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "Anticrénelage FreeType"
+    IDS_CLEARTYPEEFFECT "FreeType"
 END
 
 STRINGTABLE
