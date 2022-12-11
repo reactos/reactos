@@ -188,7 +188,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         ActivateThemeFile(pwszFile);
         goto cleanup;
     }
-    
+
     g_GlobalData.pwszFile = pwszFile;
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
