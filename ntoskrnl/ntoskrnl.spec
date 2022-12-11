@@ -1081,8 +1081,8 @@
 @ stdcall RtlConvertSidToUnicodeString(ptr ptr long)
 @ stdcall RtlConvertUlongToLargeInteger(long)
 @ stdcall RtlCopyLuid(ptr ptr)
-@ stdcall -arch=x86_64 RtlCopyMemory(ptr ptr int64) memmove
-@ stdcall -arch=x86_64 RtlCopyMemoryNonTemporal(ptr ptr int64) memmove
+@ stdcall -arch=x86_64,arm RtlCopyMemory(ptr ptr int64) memmove
+@ stdcall -arch=x86_64,arm RtlCopyMemoryNonTemporal(ptr ptr int64) memmove
 @ stdcall RtlCopyRangeList(ptr ptr)
 @ stdcall RtlCopySid(long ptr ptr)
 @ stdcall RtlCopyString(ptr ptr)
@@ -1228,7 +1228,7 @@
 @ stdcall RtlLookupElementGenericTableAvl(ptr ptr)
 @ stdcall RtlLookupElementGenericTableFull(ptr ptr ptr ptr)
 @ stdcall RtlLookupElementGenericTableFullAvl(ptr ptr ptr ptr)
-@ cdecl -arch=x86_64 RtlLookupFunctionEntry(double ptr ptr)
+@ cdecl -arch=x86_64,arm RtlLookupFunctionEntry(double ptr ptr)
 @ stdcall RtlMapGenericMask(ptr ptr)
 @ stdcall RtlMapSecurityErrorToNtStatus(long)
 @ stdcall RtlMergeRangeLists(ptr ptr ptr long)
@@ -1246,7 +1246,7 @@
 @ stdcall RtlOemStringToUnicodeSize(ptr) RtlxOemStringToUnicodeSize
 @ stdcall RtlOemStringToUnicodeString(ptr ptr long)
 @ stdcall RtlOemToUnicodeN(wstr long ptr ptr long)
-@ cdecl -arch=x86_64 RtlPcToFileHeader(ptr ptr)
+@ cdecl -arch=x86_64,arm RtlPcToFileHeader(ptr ptr)
 @ stdcall RtlPinAtomInAtomTable(ptr ptr)
 @ fastcall RtlPrefetchMemoryNonTemporal(ptr long)
 @ stdcall RtlPrefixString(ptr ptr long)
@@ -1261,7 +1261,7 @@
 @ stdcall RtlRealSuccessor(ptr)
 @ stdcall RtlRemoveUnicodePrefix(ptr ptr)
 @ stdcall RtlReserveChunk(long ptr ptr ptr long)
-@ cdecl -arch=x86_64 RtlRestoreContext(ptr ptr)
+@ cdecl -arch=x86_64,arm RtlRestoreContext(ptr ptr)
 @ stdcall RtlSecondsSince1970ToTime(long ptr)
 @ stdcall RtlSecondsSince1980ToTime(long ptr)
 @ stdcall RtlSelfRelativeToAbsoluteSD(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
@@ -1309,7 +1309,7 @@
 @ stdcall RtlUnicodeToOemN(ptr long ptr wstr long)
 @ stdcall RtlUnlockBootStatusData(ptr)
 @ stdcall RtlUnwind(ptr ptr ptr ptr)
-@ cdecl -arch=x86_64 RtlUnwindEx(double double ptr ptr ptr ptr)
+@ cdecl -arch=x86_64,arm RtlUnwindEx(double double ptr ptr ptr ptr)
 @ stdcall RtlUpcaseUnicodeChar(long)
 @ stdcall RtlUpcaseUnicodeString(ptr ptr long)
 @ stdcall RtlUpcaseUnicodeStringToAnsiString(ptr ptr long)
@@ -1325,7 +1325,7 @@
 @ stdcall RtlValidSecurityDescriptor(ptr)
 @ stdcall RtlValidSid(ptr)
 @ stdcall RtlVerifyVersionInfo(ptr long long long)
-@ cdecl -arch=x86_64 RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr)
+@ cdecl -arch=x86_64,arm RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr)
 @ stdcall RtlVolumeDeviceToDosName(ptr ptr) IoVolumeDeviceToDosName
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWriteRegistryValue(long wstr wstr long ptr long)
