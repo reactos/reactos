@@ -288,6 +288,9 @@ static void __stdcall do_xor_basic(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
     uint32_t j;
 
 #if defined(_ARM_) || defined(_ARM64_)
+#ifdef __REACTOS__
+    //TODO: Implement the NEON arm intrinsics
+#else
     uint64x2_t x1, x2;
 
     if (((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
@@ -302,6 +305,7 @@ static void __stdcall do_xor_basic(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
             len -= 16;
         }
     }
+#endif
 #endif
 
 #if defined(_AMD64_) || defined(_ARM64_)
