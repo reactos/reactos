@@ -1,7 +1,9 @@
 
 add_subdirectory(bochs)
-add_subdirectory(vbe)
-add_subdirectory(vga)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    add_subdirectory(vbe)
+    add_subdirectory(vga)
+endif()
 #add_subdirectory(vga_new)
 add_subdirectory(vmx_svga)
 
