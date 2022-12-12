@@ -7,6 +7,14 @@
         __assertfail
     LEAF_END call_method
 
+    LEAF_ENTRY call_float_method
+        __assertfail
+    LEAF_END call_float_method
+
+    LEAF_ENTRY call_double_method
+        __assertfail
+    LEAF_END call_double_method
+
 #elif defined(_M_AMD64)
 
 #include <asm.inc>
