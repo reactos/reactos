@@ -165,6 +165,16 @@ KeRestoreFloatingPointState(
     return STATUS_SUCCESS;
 }
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+FORCEINLINE
+ULONG
+NTAPI
+KeGetCurrentProcessorIndex(VOID)
+{
+    return 0; //TODO FIXME:
+}
+#endif
+
 VOID
 KeFlushIoBuffers(
     _In_ PMDL Mdl,
