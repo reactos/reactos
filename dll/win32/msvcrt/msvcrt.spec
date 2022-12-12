@@ -573,7 +573,7 @@
 @ cdecl _getdcwd(long str long)
 @ cdecl _getdiskfree(long ptr)
 @ cdecl -arch=i386 _getdllprocaddr(long str long)
-@ cdecl -arch=x86_64 -version=0x502 _getdllprocaddr(long str long)
+@ cdecl -arch=x86_64,arm -version=0x502 _getdllprocaddr(long str long)
 @ cdecl _getdrive()
 @ cdecl _getdrives() kernel32.GetLogicalDrives
 @ cdecl _getmaxstdio()
@@ -706,7 +706,7 @@
 @ cdecl _lfind(ptr ptr ptr long ptr)
 @ stub -version=0x600+ _lfind_s
 @ cdecl -arch=i386 _loaddll(str)
-@ cdecl -arch=x86_64 -version=0x502 _loaddll(str)
+@ cdecl -arch=x86_64,arm -version=0x502 _loaddll(str)
 @ cdecl -arch=x86_64 _local_unwind(ptr ptr)
 @ cdecl -arch=i386 _local_unwind2(ptr long)
 @ cdecl -arch=i386 -version=0x600+ _local_unwind4(ptr ptr long)
@@ -1074,7 +1074,7 @@
 # stub _ungetwch
 @ cdecl _unlink(str)
 @ cdecl -arch=i386 _unloaddll(ptr)
-@ cdecl -arch=x86_64 -version=0x502 _unloaddll(ptr)
+@ cdecl -arch=x86_64,arm -version=0x502 _unloaddll(ptr)
 @ cdecl _unlock(long)
 @ cdecl _utime(str ptr)
 @ stub -version=0x600+ _utime32
