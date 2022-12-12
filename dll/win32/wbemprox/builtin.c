@@ -3615,7 +3615,13 @@ extern void do_cpuid( unsigned int ax, unsigned int *p );
 #if defined(_MSC_VER)
 void do_cpuid( unsigned int ax, unsigned int *p )
 {
+#ifdef __REACTOS__
+#ifndef _M_ARM
     __cpuid( p, ax );
+#endif
+#else
+    __cpuid( p, ax );
+#endif
 }
 #elif defined(__i386__)
 __ASM_GLOBAL_FUNC( do_cpuid,
