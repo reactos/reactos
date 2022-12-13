@@ -1,11 +1,10 @@
 /*
  * PROJECT:     ReactOS Universal Serial Bus Human Interface Device Driver
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/hid/hidclass/hidclass.c
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
  * PURPOSE:     HID Class Driver
- * PROGRAMMERS:
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * COPYRIGHT:   Copyright  Michael Martin <michael.martin@reactos.org>
+ *              Copyright  Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2022 Roman Masanin <36927roma@gmail.com>
  */
 
 #include "precomp.h"
@@ -103,7 +102,7 @@ HidClassAddDevice(
 
     /* init device object */
     NewDeviceObject->Flags |= DO_BUFFERED_IO | DO_POWER_PAGABLE;
-    NewDeviceObject->Flags  &= ~DO_DEVICE_INITIALIZING;
+    NewDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* now call driver provided add device routine */
     ASSERT(DriverExtension->AddDevice != 0);
@@ -146,12 +145,12 @@ HidClass_Create(
     CommonDeviceExtension = DeviceObject->DeviceExtension;
     if (CommonDeviceExtension->IsFDO)
     {
-         //
-         // only supported for PDO
-         //
-         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_UNSUCCESSFUL;
+        //
+        // only supported for PDO
+        //
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_UNSUCCESSFUL;
     }
 
     //
@@ -496,9 +495,9 @@ PIRP
 HidClass_GetIrp(
     IN PHIDCLASS_FILEOP_CONTEXT Context)
 {
-   KIRQL OldLevel;
-   PIRP Irp = NULL;
-   PLIST_ENTRY ListEntry;
+    KIRQL OldLevel;
+    PIRP Irp = NULL;
+    PLIST_ENTRY ListEntry;
 
     //
     // acquire lock
@@ -622,13 +621,13 @@ HidClass_BuildIrp(
 
     if (Context->StopInProgress)
     {
-         //
-         // stop in progress
-         //
-         DPRINT1("[HIDCLASS] Stop In Progress\n");
-         Irp->IoStatus.Status = STATUS_CANCELLED;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_CANCELLED;
+        //
+        // stop in progress
+        //
+        DPRINT1("[HIDCLASS] Stop In Progress\n");
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_CANCELLED;
 
     }
 
@@ -794,7 +793,6 @@ HidClass_Read(
     //
     return STATUS_PENDING;
 }
-
 NTSTATUS
 NTAPI
 HidClass_Write(
@@ -1089,6 +1087,63 @@ HidClass_DeviceControl(
                 Status = IoStatusBlock.Status;
             }
             Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+        case IOCTL_HID_GET_MANUFACTURER_STRING:
+        case IOCTL_HID_GET_PRODUCT_STRING:
+        case IOCTL_HID_GET_SERIALNUMBER_STRING:
+        {
+            NTSTATUS Status;
+            UINT_PTR StringId;
+            UINT_PTR Lang = 0;
+            PIO_STACK_LOCATION SubIoStack;
+            PIRP SubIrp;
+
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < 1)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
+            {
+                case IOCTL_HID_GET_MANUFACTURER_STRING:
+                    StringId = HID_STRING_ID_IMANUFACTURER;
+                    break;
+                case IOCTL_HID_GET_SERIALNUMBER_STRING:
+                    StringId = HID_STRING_ID_ISERIALNUMBER;
+                    break;
+                default: //IOCTL_HID_GET_PRODUCT_STRING
+                    StringId = HID_STRING_ID_IPRODUCT;
+                    break;
+            }
+
+            SubIrp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+            if (!SubIrp)
+            {
+                Irp->IoStatus.Status = STATUS_NO_MEMORY;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            // Get next stack location
+            SubIoStack = IoGetNextIrpStackLocation(SubIrp);
+
+            // Setup request
+            SubIoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+            SubIoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_STRING;
+            SubIoStack->Parameters.DeviceIoControl.OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+            SubIoStack->Parameters.DeviceIoControl.InputBufferLength = 0;
+            SubIoStack->Parameters.DeviceIoControl.Type3InputBuffer = (PVOID)((Lang << 16) | StringId);
+            SubIrp->UserBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+
+            Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, SubIrp);
+
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = SubIrp->IoStatus.Information;
+            IoFreeIrp(SubIrp);
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
