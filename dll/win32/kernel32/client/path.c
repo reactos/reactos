@@ -2321,7 +2321,7 @@ GetSystemDirectoryW(OUT LPWSTR lpBuffer,
         RtlCopyMemory(lpBuffer,
                       BaseWindowsSystemDirectory.Buffer,
                       BaseWindowsSystemDirectory.Length);
-        lpBuffer[BaseWindowsSystemDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
+        lpBuffer[BaseWindowsSystemDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         ReturnLength = BaseWindowsSystemDirectory.Length;
     }
@@ -2405,7 +2405,7 @@ GetSystemWindowsDirectoryW(OUT LPWSTR lpBuffer,
         RtlCopyMemory(lpBuffer,
                       BaseWindowsDirectory.Buffer,
                       BaseWindowsDirectory.Length);
-        lpBuffer[BaseWindowsDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
+        lpBuffer[BaseWindowsDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         ReturnLength = BaseWindowsDirectory.Length;
     }
