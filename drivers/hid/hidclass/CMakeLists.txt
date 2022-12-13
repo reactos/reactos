@@ -4,7 +4,8 @@ spec2def(hidclass.sys hidclass.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     fdo.c
     hidclass.c
-    pdo.c)
+    pdo.c
+    cyclicbuffer.c)
 
 list(APPEND PCH_SKIP_SOURCE
     guid.c)
