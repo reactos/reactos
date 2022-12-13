@@ -3,6 +3,7 @@ spec2def(hid.dll hid.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     hid.c
+    hidd.c
     precomp.h)
 
 include_directories(
