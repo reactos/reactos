@@ -1516,7 +1516,7 @@ inline HRESULT __stdcall AtlInternalQueryInterface(void *pThis, const _ATL_INTMA
     ATLASSERT(pThis != NULL && pEntries != NULL);
     if (pThis == NULL || pEntries == NULL)
         return E_INVALIDARG;
-    ATLASSERT(ppvObject != NULL);
+
     if (ppvObject == NULL)
         return E_POINTER;
 
