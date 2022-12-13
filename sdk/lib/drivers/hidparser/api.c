@@ -1,11 +1,9 @@
 /*
  * PROJECT:     ReactOS HID Parser Library
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/hidparser/api.c
- * PURPOSE:     HID Parser
- * PROGRAMMERS:
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     HID Parser usages helpers
+ * COPYRIGHT:   Copyright  Michael Martin <michael.martin@reactos.org>
+ *              Copyright  Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "hidparser.h"
@@ -68,15 +66,11 @@ HidParser_GetScanCodeFromKbdUsage(
 {
     if (Usage < sizeof(KeyboardScanCodes) / sizeof(KeyboardScanCodes[0]))
     {
-        //
         // valid usage
-        //
         return KeyboardScanCodes[Usage];
     }
 
-    //
     // invalid usage
-    //
     return 0;
 }
 
@@ -86,23 +80,17 @@ HidParser_GetScanCodeFromCustUsage(
 {
     ULONG i;
 
-    //
     // find usage in array
-    //
     for (i = 0; i < sizeof(CustomerScanCodes) / sizeof(CustomerScanCodes[0]); ++i)
     {
         if (CustomerScanCodes[i].Usage == Usage)
         {
-            //
             // valid usage
-            //
             return CustomerScanCodes[i].ScanCode;
         }
     }
 
-    //
     // invalid usage
-    //
     return 0;
 }
 
@@ -113,45 +101,33 @@ HidParser_DispatchKey(
     IN PHIDP_INSERT_SCANCODES InsertCodesProcedure,
     IN PVOID InsertCodesContext)
 {
-    ULONG Index;
-    ULONG Length = 0;
+    ULONG index;
+    ULONG length = 0;
 
-    //
     // count code length
-    //
-    for(Index = 0; Index < sizeof(ULONG); Index++)
+    for(index = 0; index < sizeof(ULONG); index++)
     {
-        if (ScanCodes[Index] == 0)
+        if (ScanCodes[index] == 0)
         {
-            //
             // last scan code
-            //
             break;
         }
 
-        //
         // is this a key break
-        //
         if (KeyAction == HidP_Keyboard_Break)
         {
-            //
             // add break - see USB HID to PS/2 Scan Code Translation Table
-            //
-            ScanCodes[Index] |= 0x80;
+            ScanCodes[index] |= 0x80;
         }
 
-        //
         // more scan counts
-        //
-        Length++;
+        length++;
     }
 
-    if (Length > 0)
+    if (length > 0)
     {
-        //
-        // dispatch scan codes
-        //
-        InsertCodesProcedure(InsertCodesContext, ScanCodes, Length);
+         // dispatch scan codes
+         InsertCodesProcedure(InsertCodesContext, ScanCodes, length);
     }
 }
 
@@ -163,57 +139,46 @@ HidParser_TranslateKbdUsage(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    ULONG ScanCode;
-    CHAR FakeShift[] = {0xE0, 0x2A, 0x00};
-    CHAR FakeCtrl[] = {0xE1, 0x1D, 0x00};
+    ULONG scanCode;
+    CHAR fakeShift[] = {0xE0, 0x2A, 0x00};
+    CHAR fakeCtrl[] = {0xE1, 0x1D, 0x00};
 
-    //
     // get scan code
-    //
-    ScanCode = HidParser_GetScanCodeFromKbdUsage(Usage);
-    if (!ScanCode)
+    scanCode = HidParser_GetScanCodeFromKbdUsage(Usage);
+    if (!scanCode)
     {
-        //
         // invalid lookup or no scan code available
-        //
-        DPRINT1("No Scan code for Usage %x\n", Usage);
+        DPRINT("No Scan code for Usage %x\n", Usage);
         return HIDP_STATUS_I8042_TRANS_UNKNOWN;
     }
 
-    if (ScanCode & 0xFF00)
+    if (scanCode & 0xFF00)
     {
-        //
         // swap scan code
-        //
-        ScanCode = NTOHS(ScanCode);
+        scanCode = NTOHS(scanCode);
     }
 
     if (Usage == 0x46 && KeyAction == HidP_Keyboard_Make)
     {
         // Print Screen generates additional FakeShift
-        HidParser_DispatchKey(FakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
     if (Usage == 0x48)
     {
         // Pause/Break generates additional FakeCtrl. Note: it's always before key press/release.
-        HidParser_DispatchKey(FakeCtrl, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeCtrl, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
-    //
     // FIXME: translate modifier states
-    //
-    HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
+    HidParser_DispatchKey((PCHAR)&scanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
     if (Usage == 0x46 && KeyAction == HidP_Keyboard_Break)
     {
         // Print Screen generates additional FakeShift
-        HidParser_DispatchKey(FakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
-    //
-    // done
-    //
     return HIDP_STATUS_SUCCESS;
 }
 
@@ -225,37 +190,26 @@ HidParser_TranslateCustUsage(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    ULONG ScanCode;
+    ULONG scanCode;
 
-    //
     // get scan code
-    //
-    ScanCode = HidParser_GetScanCodeFromCustUsage(Usage);
-    if (!ScanCode)
+    scanCode = HidParser_GetScanCodeFromCustUsage(Usage);
+    if (!scanCode)
     {
-        //
         // invalid lookup or no scan code available
-        //
-        DPRINT1("No Scan code for Usage %x\n", Usage);
+        DPRINT("No Scan code for Usage %x\n", Usage);
         return HIDP_STATUS_I8042_TRANS_UNKNOWN;
     }
 
-    if (ScanCode & 0xFF00)
+    if (scanCode & 0xFF00)
     {
-        //
         // swap scan code
-        //
-        ScanCode = NTOHS(ScanCode);
+        scanCode = NTOHS(scanCode);
     }
 
-    //
     // FIXME: translate modifier states
-    //
-    HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
+    HidParser_DispatchKey((PCHAR)&scanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
-    //
-    // done
-    //
     return HIDP_STATUS_SUCCESS;
 }
 

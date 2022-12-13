@@ -1,11 +1,9 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/hidparse/hidparse.c
- * PURPOSE:     HID Parser
- * PROGRAMMERS:
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * PROJECT:     ReactOS HID Parser Library
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     HID Parser kernel mode
+ * COPYRIGHT:   Copyright  Michael Martin <michael.martin@reactos.org>
+ *              Copyright  Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "hidparse.h"
@@ -22,15 +20,10 @@ AllocFunction(
     PVOID Item = ExAllocatePoolWithTag(NonPagedPool, ItemSize, HIDPARSE_TAG);
     if (Item)
     {
-        //
         // zero item
-        //
         RtlZeroMemory(Item, ItemSize);
     }
 
-    //
-    // done
-    //
     return Item;
 }
 
@@ -39,9 +32,6 @@ NTAPI
 FreeFunction(
     IN PVOID Item)
 {
-    //
-    // free item
-    //
     ExFreePoolWithTag(Item, HIDPARSE_TAG);
 }
 
@@ -51,9 +41,6 @@ ZeroFunction(
     IN PVOID Item,
     IN ULONG ItemSize)
 {
-    //
-    // zero item
-    //
     RtlZeroMemory(Item, ItemSize);
 }
 
@@ -64,9 +51,6 @@ CopyFunction(
     IN PVOID Source,
     IN ULONG Length)
 {
-    //
-    // copy item
-    //
     RtlCopyMemory(Target, Source, Length);
 }
 

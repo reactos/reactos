@@ -1,30 +1,9 @@
 /*
- * ReactOS Hid User Library
- * Copyright (C) 2004-2005 ReactOS Team
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Hid User Library
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     ReactOS Hid User Library
+ * COPYRIGHT:   Copyright 2004 Thomas Weidenmueller <w3seek@reactos.com>
  */
- /*
-  * PROJECT:         ReactOS Hid User Library
-  * FILE:            lib/hid/hid.c
-  * PURPOSE:         ReactOS Hid User Library
-  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
-  *
-  * UPDATE HISTORY:
-  *      07/12/2004  Created
-  */
 
 #include "precomp.h"
 #include <hidpmem.h>
@@ -32,9 +11,6 @@
 #include <winbase.h>
 
 HINSTANCE hDllInstance;
-
-/* device interface GUID for HIDClass devices */
-const GUID HidClassGuid = {0x4D1E55B2, 0xF16F, 0x11CF, {0x88,0xCB,0x00,0x11,0x11,0x00,0x00,0x30}};
 
 PVOID
 NTAPI
