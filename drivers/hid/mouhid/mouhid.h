@@ -129,6 +129,8 @@ typedef struct
     //
     HIDP_VALUE_CAPS ValueCapsY;
 
+    volatile LONG ReferenceCount;
+
 } MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
 #define WHEEL_DELTA 120
