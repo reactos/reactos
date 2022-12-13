@@ -315,6 +315,9 @@ void CMenuToolbarBase::InvalidateDraw()
 
 HRESULT CMenuToolbarBase::ShowDW(BOOL fShow)
 {
+    if (m_hWnd == NULL)
+        return S_FALSE;
+
     ShowWindow(fShow ? SW_SHOW : SW_HIDE);
 
     // Ensure that the right image list is assigned to the toolbar
