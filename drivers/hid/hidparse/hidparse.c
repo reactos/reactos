@@ -9,7 +9,7 @@
  */
 
 #include "hidparse.h"
-#include "hidp.h"
+#include <hidpmem.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -68,23 +68,6 @@ CopyFunction(
     // copy item
     //
     RtlCopyMemory(Target, Source, Length);
-}
-
-VOID
-__cdecl
-DebugFunction(
-    IN LPCSTR FormatStr, ...)
-{
-#if HID_DBG
-    va_list args;
-    char printbuffer[1024];
-
-    va_start(args, FormatStr);
-    vsprintf(printbuffer, FormatStr, args);
-    va_end(args);
-
-    DbgPrint(printbuffer);
-#endif
 }
 
 NTSTATUS
