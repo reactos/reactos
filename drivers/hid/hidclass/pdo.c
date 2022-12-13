@@ -360,6 +360,8 @@ HidClassPDO_HandleQueryCompatibleId(
 {
     LPWSTR Buffer;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Buffer)
     {
@@ -567,9 +569,7 @@ HidClassPDO_PnP(
 
             ASSERT(PDODeviceExtension->Common.DriverExtension->DevicesArePolled == FALSE);
 
-            //
             // now register the device interface
-            //
             Status = IoRegisterDeviceInterface(
                                                DeviceObject,
                                                &GUID_DEVINTERFACE_HID,
@@ -578,9 +578,7 @@ HidClassPDO_PnP(
             DPRINT("[HIDCLASS] IRP_MN_START_DEVICE IoRegisterDeviceInterfaceState Status %x\n", Status);
             if (NT_SUCCESS(Status))
             {
-                //
                 // enable device interface
-                //
                 Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
                 DPRINT("[HIDCLASS] IRP_MN_START_DEVICE IoSetDeviceInterFaceState %x\n", Status);
             }

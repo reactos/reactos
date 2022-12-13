@@ -131,6 +131,8 @@ NTAPI
 HidClassDriverUnload(
     IN PDRIVER_OBJECT DriverObject)
 {
+    UNREFERENCED_PARAMETER(DriverObject);
+
     UNIMPLEMENTED;
 }
 
@@ -355,6 +357,7 @@ HidClass_Write(
     XferPacket.reportId = XferPacket.reportBuffer[0];
 
     CommonDeviceExtension = DeviceObject->DeviceExtension;
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
     SubIrp = IoBuildDeviceIoControlRequest(
         IOCTL_HID_WRITE_REPORT,
         CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
@@ -370,7 +373,6 @@ HidClass_Write(
         return STATUS_NOT_IMPLEMENTED;
     }
     SubIrp->UserBuffer = &XferPacket;
-    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
     Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
     if (Status == STATUS_PENDING)
     {
@@ -542,6 +544,7 @@ HidClass_DeviceControl(
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
+            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             SubIrp = IoBuildDeviceIoControlRequest(
                 IOCTL_HID_GET_FEATURE,
                 CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
@@ -557,7 +560,6 @@ HidClass_DeviceControl(
                 return STATUS_NOT_IMPLEMENTED;
             }
             SubIrp->UserBuffer = &XferPacket;
-            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
             if (Status == STATUS_PENDING)
             {
@@ -596,6 +598,7 @@ HidClass_DeviceControl(
             XferPacket.reportBuffer = Irp->AssociatedIrp.SystemBuffer;
             XferPacket.reportId = XferPacket.reportBuffer[0];
 
+            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             SubIrp = IoBuildDeviceIoControlRequest(
                 IOCTL_HID_SET_FEATURE,
                 CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
@@ -611,7 +614,6 @@ HidClass_DeviceControl(
                 return STATUS_NOT_IMPLEMENTED;
             }
             SubIrp->UserBuffer = &XferPacket;
-            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
             if (Status == STATUS_PENDING)
             {
@@ -695,6 +697,8 @@ HidClass_InternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     UNIMPLEMENTED;
     ASSERT(FALSE);
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;

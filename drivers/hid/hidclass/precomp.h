@@ -2,6 +2,7 @@
 #define _HIDCLASS_PCH_
 
 #define _HIDPI_NO_FUNCTION_MACROS_
+
 #include <wdm.h>
 #include <hidpddi.h>
 #include <stdio.h>
@@ -48,7 +49,6 @@ typedef struct
     // hid attributes
     //
     HID_DEVICE_ATTRIBUTES Attributes;
-
 } HIDCLASS_COMMON_DEVICE_EXTENSION, *PHIDCLASS_COMMON_DEVICE_EXTENSION;
 
 typedef struct

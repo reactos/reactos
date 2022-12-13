@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+// driver verifier
+IO_COMPLETION_ROUTINE HidClassFDO_QueryCapabilitiesCompletionRoutine;
+IO_COMPLETION_ROUTINE HidClassFDO_DispatchRequestSynchronousCompletion;
+IO_COMPLETION_ROUTINE HidClassFDO_ReadCompletion;
+
 NTSTATUS
 NTAPI
 HidClassFDO_QueryCapabilitiesCompletionRoutine(
@@ -19,9 +24,10 @@ HidClassFDO_QueryCapabilitiesCompletionRoutine(
     IN PIRP Irp,
     IN PVOID Context)
 {
-    //
-    // set event
-    //
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
+    ASSERT(Context != NULL);
+
     KeSetEvent(Context, 0, FALSE);
 
     //
@@ -130,14 +136,12 @@ HidClassFDO_DispatchRequestSynchronousCompletion(
     IN PIRP Irp,
     IN PVOID Context)
 {
-    //
-    // signal event
-    //
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
+    ASSERT(Context != NULL);
+
     KeSetEvent(Context, 0, FALSE);
 
-    //
-    // done
-    //
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
