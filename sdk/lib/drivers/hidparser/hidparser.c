@@ -1,814 +1,224 @@
 /*
  * PROJECT:     ReactOS HID Parser Library
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/hidparser/hidparser.c
- * PURPOSE:     HID Parser
- * PROGRAMMERS:
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     HID Parser common functions implementation
+ * COPYRIGHT:   Copyright 2022 Roman Masanin <36927roma@gmail.com>
  */
 
-#include "parser.h"
+#include "hidparser.h"
+#include "hidphelpers.h"
+#include "hidpmem.h"
 
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS
-NTAPI
-HidParser_GetCollectionDescription(
-    IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
-    IN ULONG DescLength,
-    IN POOL_TYPE PoolType,
-    OUT PHIDP_DEVICE_DESC DeviceDescription)
-{
-    NTSTATUS ParserStatus;
-    ULONG CollectionCount;
-    ULONG Index;
-    PVOID ParserContext;
-
-    //
-    // first parse the report descriptor
-    //
-    ParserStatus = HidParser_ParseReportDescriptor(ReportDesc, DescLength, &ParserContext);
-    if (ParserStatus != HIDP_STATUS_SUCCESS)
-    {
-        //
-        // failed to parse report descriptor
-        //
-        DebugFunction("[HIDPARSER] Failed to parse report descriptor with %x\n", ParserStatus);
-        return ParserStatus;
-    }
-
-    //
-    // get collection count
-    //
-    CollectionCount = HidParser_NumberOfTopCollections(ParserContext);
-    if (CollectionCount == 0)
-    {
-        //
-        // no top level collections found
-        //
-        ASSERT(FALSE);
-        return STATUS_NO_DATA_DETECTED;
-    }
-
-    //
-    // zero description
-    //
-    ZeroFunction(DeviceDescription, sizeof(HIDP_DEVICE_DESC));
-
-    //
-    // allocate collection
-    //
-    DeviceDescription->CollectionDesc = (PHIDP_COLLECTION_DESC)AllocFunction(sizeof(HIDP_COLLECTION_DESC) * CollectionCount);
-    if (!DeviceDescription->CollectionDesc)
-    {
-        //
-        // no memory
-        //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // allocate report description
-    //
-    DeviceDescription->ReportIDs = (PHIDP_REPORT_IDS)AllocFunction(sizeof(HIDP_REPORT_IDS) * CollectionCount);
-    if (!DeviceDescription->ReportIDs)
-    {
-        //
-        // no memory
-        //
-        FreeFunction(DeviceDescription->CollectionDesc);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    for(Index = 0; Index < CollectionCount; Index++)
-    {
-        //
-        // set preparsed data length
-        //
-        DeviceDescription->CollectionDesc[Index].PreparsedDataLength = HidParser_GetContextSize(ParserContext, Index);
-        ParserStatus = HidParser_BuildContext(ParserContext, Index, DeviceDescription->CollectionDesc[Index].PreparsedDataLength, (PVOID*)&DeviceDescription->CollectionDesc[Index].PreparsedData);
-        if (ParserStatus != HIDP_STATUS_SUCCESS)
-        {
-            //
-            // no memory
-            //
-            FreeFunction(DeviceDescription->CollectionDesc);
-            FreeFunction(DeviceDescription->ReportIDs);
-            return ParserStatus;
-        }
-
-        //
-        // init report description
-        //
-        DeviceDescription->ReportIDs[Index].CollectionNumber = Index + 1;
-        DeviceDescription->ReportIDs[Index].ReportID = Index; //FIXME
-        DeviceDescription->ReportIDs[Index].InputLength = HidParser_GetReportLength((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_INPUT);
-        DeviceDescription->ReportIDs[Index].OutputLength = HidParser_GetReportLength((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_OUTPUT);
-        DeviceDescription->ReportIDs[Index].FeatureLength = HidParser_GetReportLength((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE);
-
-
-        DeviceDescription->ReportIDs[Index].InputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_INPUT) ? 1 : 0);
-        DeviceDescription->ReportIDs[Index].OutputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_OUTPUT) ? 1 : 0);
-        DeviceDescription->ReportIDs[Index].FeatureLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE) ? 1 : 0);
-
-
-        //
-        // init collection description
-        //
-        DeviceDescription->CollectionDesc[Index].CollectionNumber = Index + 1;
-
-        //
-        // get collection usage page
-        //
-        ParserStatus = HidParser_GetCollectionUsagePage((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, &DeviceDescription->CollectionDesc[Index].Usage, &DeviceDescription->CollectionDesc[Index].UsagePage);
-        if (ParserStatus != HIDP_STATUS_SUCCESS)
-        {
-            // collection not found
-            FreeFunction(DeviceDescription->CollectionDesc);
-            FreeFunction(DeviceDescription->ReportIDs);
-            return ParserStatus;
-        }
-
-        //
-        // windows seems to prepend the report id, regardless if it is required
-        //
-        DeviceDescription->CollectionDesc[Index].CollectionNumber = Index + 1;
-        DeviceDescription->CollectionDesc[Index].InputLength = DeviceDescription->ReportIDs[Index].InputLength;
-        DeviceDescription->CollectionDesc[Index].OutputLength = DeviceDescription->ReportIDs[Index].OutputLength;
-        DeviceDescription->CollectionDesc[Index].FeatureLength = DeviceDescription->ReportIDs[Index].FeatureLength;
-
-        DeviceDescription->CollectionDesc[Index].InputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_INPUT) == FALSE ? 1 : 0);
-        DeviceDescription->CollectionDesc[Index].OutputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_OUTPUT) == FALSE ? 1 : 0);
-        DeviceDescription->CollectionDesc[Index].FeatureLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE) == FALSE ? 1 : 0);
-
-
-    }
-
-    //
-    // store collection & report count
-    //
-    DeviceDescription->CollectionDescLength = CollectionCount;
-    DeviceDescription->ReportIDsLength = CollectionCount;
-
-    //
-    // done
-    //
-    return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-HidParser_FreeCollectionDescription(
-    IN PHIDP_DEVICE_DESC   DeviceDescription)
-{
-    ULONG Index;
-
-    //
-    // first free all context
-    //
-    for(Index = 0; Index < DeviceDescription->CollectionDescLength; Index++)
-    {
-        //
-        // free collection context
-        //
-        FreeFunction(DeviceDescription->CollectionDesc[Index].PreparsedData);
-    }
-
-    //
-    // now free collection description
-    //
-    FreeFunction(DeviceDescription->CollectionDesc);
-
-    //
-    // free report description
-    //
-    FreeFunction(DeviceDescription->ReportIDs);
-}
+char PreparsedMagic[8] = {'H', 'i', 'd', 'P', ' ', 'K', 'D', 'R'};
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetCaps(
-    IN PVOID CollectionContext,
-    OUT PHIDP_CAPS  Capabilities)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    OUT PHIDP_CAPS Capabilities)
 {
-    //
+    USHORT index;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
     // zero capabilities
-    //
     ZeroFunction(Capabilities, sizeof(HIDP_CAPS));
 
-    //
     // init capabilities
-    //
-    HidParser_GetCollectionUsagePage(CollectionContext, &Capabilities->Usage, &Capabilities->UsagePage);
-    Capabilities->InputReportByteLength = HidParser_GetReportLength(CollectionContext, HID_REPORT_TYPE_INPUT);
-    Capabilities->OutputReportByteLength = HidParser_GetReportLength(CollectionContext, HID_REPORT_TYPE_OUTPUT);
-    Capabilities->FeatureReportByteLength = HidParser_GetReportLength(CollectionContext, HID_REPORT_TYPE_FEATURE);
+    Capabilities->UsagePage = PreparsedData->UsagePage;
+    Capabilities->Usage = PreparsedData->Usage;
+    Capabilities->InputReportByteLength = PreparsedData->InputReportByteLength;
+    Capabilities->OutputReportByteLength = PreparsedData->OutputReportByteLength;
+    Capabilities->FeatureReportByteLength = PreparsedData->FeatureReportByteLength;
+    Capabilities->NumberLinkCollectionNodes = PreparsedData->LinkCollectionCount;
 
-    //
-    // always pre-prend report id
-    //
-    Capabilities->InputReportByteLength = (Capabilities->InputReportByteLength > 0 ? Capabilities->InputReportByteLength + 1 : 0);
-    Capabilities->OutputReportByteLength = (Capabilities->OutputReportByteLength > 0 ? Capabilities->OutputReportByteLength + 1 : 0);
-    Capabilities->FeatureReportByteLength = (Capabilities->FeatureReportByteLength > 0 ? Capabilities->FeatureReportByteLength + 1 : 0);
+    Capabilities->NumberInputValueCaps = 0;
+    Capabilities->NumberInputButtonCaps = 0;
+    Capabilities->NumberInputDataIndices = 0;
+    Capabilities->NumberOutputValueCaps = 0;
+    Capabilities->NumberOutputButtonCaps = 0;
+    Capabilities->NumberOutputDataIndices = 0;
+    Capabilities->NumberFeatureValueCaps = 0;
+    Capabilities->NumberFeatureButtonCaps = 0;
+    Capabilities->NumberFeatureDataIndices = 0;
 
-    //
-    // get number of link collection nodes
-    //
-    Capabilities->NumberLinkCollectionNodes = HidParser_GetTotalCollectionCount(CollectionContext);
+    for (index = PreparsedData->InputCapsStart; index < PreparsedData->InputCapsEnd; index++)
+    {
+        if (PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            Capabilities->NumberInputButtonCaps++;
+        }
+        else
+        {
+            Capabilities->NumberInputValueCaps++;
+        }
+        Capabilities->NumberInputDataIndices += PreparsedData->ValueCaps[index].DataIndexMax - PreparsedData->ValueCaps[index].DataIndexMin + 1;
+    }
 
-    //
-    // get data indices
-    //
-    Capabilities->NumberInputDataIndices = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_INPUT, TRUE);
-    Capabilities->NumberOutputDataIndices = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_OUTPUT, TRUE);
-    Capabilities->NumberFeatureDataIndices = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_FEATURE, TRUE);
+    for (index = PreparsedData->OutputCapsStart; index < PreparsedData->OutputCapsEnd; index++)
+    {
+        if (PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            Capabilities->NumberOutputButtonCaps++;
+        }
+        else
+        {
+            Capabilities->NumberOutputValueCaps++;
+        }
+        Capabilities->NumberOutputDataIndices += PreparsedData->ValueCaps[index].DataIndexMax - PreparsedData->ValueCaps[index].DataIndexMin + 1;
+    }
 
-    //
-    // get value caps
-    //
-    Capabilities->NumberInputValueCaps = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_INPUT, FALSE);
-    Capabilities->NumberOutputValueCaps = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_OUTPUT, FALSE);
-    Capabilities->NumberFeatureValueCaps = HidParser_GetReportItemTypeCountFromReportType(CollectionContext, HID_REPORT_TYPE_FEATURE, FALSE);
+    for (index = PreparsedData->FeatureCapsStart; index < PreparsedData->FeatureCapsEnd; index++)
+    {
+        if (PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            Capabilities->NumberFeatureButtonCaps++;
+        }
+        else
+        {
+            Capabilities->NumberFeatureValueCaps++;
+        }
+        Capabilities->NumberFeatureDataIndices += PreparsedData->ValueCaps[index].DataIndexMax - PreparsedData->ValueCaps[index].DataIndexMin + 1;
+    }
 
-
-    //
-    // get button caps
-    //
-    Capabilities->NumberInputButtonCaps = HidParser_GetReportItemCountFromReportType(CollectionContext, HID_REPORT_TYPE_INPUT);
-    Capabilities->NumberOutputButtonCaps = HidParser_GetReportItemCountFromReportType(CollectionContext, HID_REPORT_TYPE_OUTPUT);
-    Capabilities->NumberFeatureButtonCaps = HidParser_GetReportItemCountFromReportType(CollectionContext, HID_REPORT_TYPE_FEATURE);
-
-    //
-    // done
-    //
     return HIDP_STATUS_SUCCESS;
-}
-
-HIDAPI
-ULONG
-NTAPI
-HidParser_MaxUsageListLength(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage  OPTIONAL)
-{
-    //
-    // FIXME test what should be returned when usage page is not defined
-    //
-    if (UsagePage == HID_USAGE_PAGE_UNDEFINED)
-    {
-        //
-        // implement me
-        //
-        UNIMPLEMENTED;
-
-        //
-        // invalid report
-        //
-        return 0;
-    }
-
-    if (ReportType == HidP_Input)
-    {
-        //
-        // input report
-        //
-        return HidParser_GetMaxUsageListLengthWithReportAndPage(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage);
-    }
-    else if (ReportType == HidP_Output)
-    {
-        //
-        // input report
-        //
-        return HidParser_GetMaxUsageListLengthWithReportAndPage(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage);
-    }
-    else if (ReportType == HidP_Feature)
-    {
-        //
-        // input report
-        //
-        return HidParser_GetMaxUsageListLengthWithReportAndPage(CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage);
-    }
-    else
-    {
-        //
-        // invalid report type
-        //
-        return 0;
-    }
-}
-
-#undef HidParser_GetButtonCaps
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_GetButtonCaps(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE ReportType,
-    IN PHIDP_BUTTON_CAPS ButtonCaps,
-    IN PUSHORT ButtonCapsLength)
-{
-    return HidParser_GetSpecificButtonCaps(CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_PAGE_UNDEFINED, ButtonCaps, (PULONG)ButtonCapsLength);
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetSpecificValueCaps(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PUSHORT  ValueCapsLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PHIDP_VALUE_CAPS ValueCaps,
+    IN OUT PUSHORT ValueCapsLength)
 {
-    NTSTATUS ParserStatus;
+    USHORT valueCapsLen;
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    USHORT count = 0;
 
-    //
-    // FIXME: implement searching in specific collection
-    //
-    ASSERT(LinkCollection == HIDP_LINK_COLLECTION_UNSPECIFIED);
-
-    if (ReportType == HidP_Input)
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
     {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
-    }
-    else if (ReportType == HidP_Output)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
-    }
-    else if (ReportType == HidP_Feature)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, Usage, ValueCaps, ValueCapsLength);
-    }
-    else
-    {
-        //
-        // invalid report type
-        //
-        return HIDP_STATUS_INVALID_REPORT_TYPE;
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
     }
 
-    //
-    // return status
-    //
-    return ParserStatus;
-}
+    valueCapsLen = *ValueCapsLength;
+    *ValueCapsLength = 0;
 
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_UsageListDifference(
-  IN PUSAGE  PreviousUsageList,
-  IN PUSAGE  CurrentUsageList,
-  OUT PUSAGE  BreakUsageList,
-  OUT PUSAGE  MakeUsageList,
-  IN ULONG  UsageListLength)
-{
-    ULONG Index, SubIndex, bFound, BreakUsageIndex = 0, MakeUsageIndex = 0;
-    USAGE CurrentUsage, Usage;
-
-    if (UsageListLength)
+    switch (ReportType)
     {
-        Index = 0;
-        do
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            // not documented but still returns
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    ZeroFunction(ValueCaps, valueCapsLen * sizeof(HIDP_VALUE_CAPS));
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (TRUE == PreparsedData->ValueCaps[index].Flags.IsButton)
         {
-            /* get current usage */
-            CurrentUsage = PreviousUsageList[Index];
-
-            /* is the end of list reached? */
-            if (!CurrentUsage)
-                break;
-
-            /* start searching in current usage list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage of current list */
-                Usage = CurrentUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (!Usage)
-                    break;
-
-                /* check if it matches the current one */
-                if (CurrentUsage == Usage)
-                {
-                    /* it does */
-                    bFound = TRUE;
-                    break;
-                }
-
-                /* move to next usage */
-                SubIndex++;
-            }while(SubIndex < UsageListLength);
-
-            /* was the usage found ?*/
-            if (!bFound)
-            {
-                /* store it in the break usage list */
-                BreakUsageList[BreakUsageIndex] = CurrentUsage;
-                BreakUsageIndex++;
-            }
-
-            /* move to next usage */
-            Index++;
-
-        }while(Index < UsageListLength);
-
-        /* now process the new items */
-        Index = 0;
-        do
-        {
-            /* get current usage */
-            CurrentUsage = CurrentUsageList[Index];
-
-            /* is the end of list reached? */
-            if (!CurrentUsage)
-                break;
-
-            /* start searching in current usage list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage of previous list */
-                Usage = PreviousUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (!Usage)
-                    break;
-
-                /* check if it matches the current one */
-                if (CurrentUsage == Usage)
-                {
-                    /* it does */
-                    bFound = TRUE;
-                    break;
-                }
-
-                /* move to next usage */
-                SubIndex++;
-            }while(SubIndex < UsageListLength);
-
-            /* was the usage found ?*/
-            if (!bFound)
-            {
-                /* store it in the make usage list */
-                MakeUsageList[MakeUsageIndex] = CurrentUsage;
-                MakeUsageIndex++;
-            }
-
-            /* move to next usage */
-            Index++;
-
-        }while(Index < UsageListLength);
-    }
-
-    /* does the break list contain empty entries */
-    if (BreakUsageIndex < UsageListLength)
-    {
-        /* zeroize entries */
-        RtlZeroMemory(&BreakUsageList[BreakUsageIndex], sizeof(USAGE) * (UsageListLength - BreakUsageIndex));
-    }
-
-    /* does the make usage list contain empty entries */
-    if (MakeUsageIndex < UsageListLength)
-    {
-        /* zeroize entries */
-        RtlZeroMemory(&MakeUsageList[MakeUsageIndex], sizeof(USAGE) * (UsageListLength - MakeUsageIndex));
-    }
-
-    /* done */
-    return HIDP_STATUS_SUCCESS;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_GetUsages(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    OUT USAGE  *UsageList,
-    IN OUT PULONG UsageLength,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
-{
-    NTSTATUS ParserStatus;
-
-    //
-    // FIXME: implement searching in specific collection
-    //
-    ASSERT(LinkCollection == HIDP_LINK_COLLECTION_UNSPECIFIED);
-
-    if (ReportType == HidP_Input)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Output)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Feature)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, UsageList, UsageLength, Report, ReportLength);
-    }
-    else
-    {
-        //
-        // invalid report type
-        //
-        return HIDP_STATUS_INVALID_REPORT_TYPE;
-    }
-
-    //
-    // return status
-    //
-    return ParserStatus;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_GetScaledUsageValue(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    IN USAGE  Usage,
-    OUT PLONG  UsageValue,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
-{
-    NTSTATUS ParserStatus;
-
-    //
-    // FIXME: implement searching in specific collection
-    //
-    ASSERT(LinkCollection == HIDP_LINK_COLLECTION_UNSPECIFIED);
-
-    if (ReportType == HidP_Input)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Output)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Feature)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else
-    {
-        //
-        // invalid report type
-        //
-        return HIDP_STATUS_INVALID_REPORT_TYPE;
-    }
-
-    //
-    // return status
-    //
-    return ParserStatus;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_TranslateUsageAndPagesToI8042ScanCodes(
-   IN PUSAGE_AND_PAGE  ChangedUsageList,
-   IN ULONG  UsageListLength,
-   IN HIDP_KEYBOARD_DIRECTION  KeyAction,
-   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
-   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
-   IN PVOID  InsertCodesContext)
-{
-    ULONG Index;
-    NTSTATUS Status = HIDP_STATUS_SUCCESS;
-
-    for(Index = 0; Index < UsageListLength; Index++)
-    {
-        //
-        // check current usage
-        //
-        if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_KEYBOARD)
-        {
-            //
-            // process keyboard usage
-            //
-            Status = HidParser_TranslateKbdUsage(ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
-        }
-        else if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_CONSUMER)
-        {
-            //
-            // process consumer usage
-            //
-            Status = HidParser_TranslateCustUsage(ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
-        }
-        else
-        {
-            //
-            // invalid page / end of usage list page
-            //
-            return HIDP_STATUS_I8042_TRANS_UNKNOWN;
+            continue;
         }
 
-        //
-        // check status
-        //
-        if (Status != HIDP_STATUS_SUCCESS)
+        if (FALSE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[index],
+                                              UsagePage,
+                                              Usage,
+                                              LinkCollection))
         {
-            //
-            // failed
-            //
-            return Status;
+            continue;
         }
-    }
 
-    //
-    // return status
-    //
-    return Status;
-}
-
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_GetUsagesEx(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USHORT  LinkCollection,
-    OUT PUSAGE_AND_PAGE  ButtonList,
-    IN OUT ULONG  *UsageLength,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
-{
-    return HidParser_GetUsages(CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, Report, ReportLength);
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_UsageAndPageListDifference(
-   IN PUSAGE_AND_PAGE  PreviousUsageList,
-   IN PUSAGE_AND_PAGE  CurrentUsageList,
-   OUT PUSAGE_AND_PAGE  BreakUsageList,
-   OUT PUSAGE_AND_PAGE  MakeUsageList,
-   IN ULONG  UsageListLength)
-{
-    ULONG Index, SubIndex, BreakUsageListIndex = 0, MakeUsageListIndex = 0, bFound;
-    PUSAGE_AND_PAGE CurrentUsage, Usage;
-
-    if (UsageListLength)
-    {
-        /* process removed usages */
-        Index = 0;
-        do
+        // if we have space then write
+        if (count < valueCapsLen)
         {
-            /* get usage from current index */
-            CurrentUsage = &PreviousUsageList[Index];
+            ValueCaps[count].UsagePage = PreparsedData->ValueCaps[index].UsagePage;
+            ValueCaps[count].BitField = PreparsedData->ValueCaps[index].BitField.Raw;
+            ValueCaps[count].BitSize = PreparsedData->ValueCaps[index].ReportSize;
+            ValueCaps[count].IsAbsolute = PreparsedData->ValueCaps[index].Flags.IsAbsolute;
+            ValueCaps[count].IsDesignatorRange = PreparsedData->ValueCaps[index].Flags.IsDesignatorRange;
+            ValueCaps[count].IsRange = PreparsedData->ValueCaps[index].Flags.IsRange;
+            ValueCaps[count].IsStringRange = PreparsedData->ValueCaps[index].Flags.IsStringRange;
+            ValueCaps[count].LinkCollection = PreparsedData->ValueCaps[index].LinkCollection;
+            ValueCaps[count].LinkUsage = PreparsedData->ValueCaps[index].LinkUsage;
+            ValueCaps[count].LinkUsagePage = PreparsedData->ValueCaps[index].LinkUsagePage;
+            ValueCaps[count].ReportID = PreparsedData->ValueCaps[index].ReportID;
+            ValueCaps[count].Units = PreparsedData->ValueCaps[index].Units;
+            ValueCaps[count].UnitsExp = PreparsedData->ValueCaps[index].UnitsExp;
 
-            /* end of list reached? */
-            if (CurrentUsage->Usage == 0 && CurrentUsage->UsagePage == 0)
-                break;
+            ValueCaps[count].ReportCount = PreparsedData->ValueCaps[index].ReportCount;
+            // TODO: implement
+            ValueCaps[count].IsAlias = FALSE;
+            ValueCaps[count].HasNull = PreparsedData->ValueCaps[index].Logical.Value.NullValue;
+            ValueCaps[count].LogicalMax = PreparsedData->ValueCaps[index].Logical.Value.Max;
+            ValueCaps[count].LogicalMin = PreparsedData->ValueCaps[index].Logical.Value.Min;
+            ValueCaps[count].PhysicalMax = PreparsedData->ValueCaps[index].PhysicalMax;
+            ValueCaps[count].PhysicalMin = PreparsedData->ValueCaps[index].PhysicalMin;
 
-            /* search in current list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
+            if (ValueCaps[count].IsRange)
             {
-                /* get usage */
-                Usage = &CurrentUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (Usage->Usage == 0 && Usage->UsagePage == 0)
-                    break;
-
-                /* does it match */
-                if (Usage->Usage == CurrentUsage->Usage && Usage->UsagePage == CurrentUsage->UsagePage)
-                {
-                    /* found match */
-                    bFound = TRUE;
-                }
-
-                /* move to next index */
-                SubIndex++;
-
-            }while(SubIndex < UsageListLength);
-
-            if (!bFound)
+                ValueCaps[count].Range.UsageMin = PreparsedData->ValueCaps[index].UsageMin;
+                ValueCaps[count].Range.UsageMax = PreparsedData->ValueCaps[index].UsageMax;
+                ValueCaps[count].Range.DataIndexMin = PreparsedData->ValueCaps[index].DataIndexMin;
+                ValueCaps[count].Range.DataIndexMax = PreparsedData->ValueCaps[index].DataIndexMax;
+            }
+            else
             {
-                /* store it in break usage list */
-                BreakUsageList[BreakUsageListIndex].Usage = CurrentUsage->Usage;
-                BreakUsageList[BreakUsageListIndex].UsagePage = CurrentUsage->UsagePage;
-                BreakUsageListIndex++;
+                ValueCaps[count].NotRange.Usage = PreparsedData->ValueCaps[index].UsageMin;
+                ValueCaps[count].NotRange.DataIndex = PreparsedData->ValueCaps[index].DataIndexMin;
             }
 
-            /* move to next index */
-            Index++;
-
-        }while(Index < UsageListLength);
-
-        /* process new usages */
-        Index = 0;
-        do
-        {
-            /* get usage from current index */
-            CurrentUsage = &CurrentUsageList[Index];
-
-            /* end of list reached? */
-            if (CurrentUsage->Usage == 0 && CurrentUsage->UsagePage == 0)
-                break;
-
-            /* search in current list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
+            if (ValueCaps[count].IsStringRange)
             {
-                /* get usage */
-                Usage = &PreviousUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (Usage->Usage == 0 && Usage->UsagePage == 0)
-                    break;
-
-                /* does it match */
-                if (Usage->Usage == CurrentUsage->Usage && Usage->UsagePage == CurrentUsage->UsagePage)
-                {
-                    /* found match */
-                    bFound = TRUE;
-                }
-
-                /* move to next index */
-                SubIndex++;
-
-            }while(SubIndex < UsageListLength);
-
-            if (!bFound)
+                ValueCaps[count].Range.StringMin = PreparsedData->ValueCaps[index].StringMin;
+                ValueCaps[count].Range.StringMax = PreparsedData->ValueCaps[index].StringMax;
+            }
+            else
             {
-                /* store it in break usage list */
-                MakeUsageList[MakeUsageListIndex].Usage = CurrentUsage->Usage;
-                MakeUsageList[MakeUsageListIndex].UsagePage = CurrentUsage->UsagePage;
-                MakeUsageListIndex++;
+                ValueCaps[count].NotRange.StringIndex = PreparsedData->ValueCaps[index].StringMin;
             }
 
-            /* move to next index */
-            Index++;
-        }while(Index < UsageListLength);
+            if (ValueCaps[count].IsDesignatorRange)
+            {
+                ValueCaps[count].Range.DesignatorMin = PreparsedData->ValueCaps[index].DesignatorMin;
+                ValueCaps[count].Range.DesignatorMax = PreparsedData->ValueCaps[index].DesignatorMax;
+            }
+            else
+            {
+                ValueCaps[count].NotRange.DesignatorIndex = PreparsedData->ValueCaps[index].DesignatorMin;
+            }
+        }
+
+        count++;
     }
 
-    /* are there remaining free list entries */
-    if (BreakUsageListIndex < UsageListLength)
-    {
-        /* zero them */
-        RtlZeroMemory(&BreakUsageList[BreakUsageListIndex], (UsageListLength - BreakUsageListIndex) * sizeof(USAGE_AND_PAGE));
-    }
+    *ValueCapsLength = count;
 
-    /* are there remaining free list entries */
-    if (MakeUsageListIndex < UsageListLength)
-    {
-        /* zero them */
-        RtlZeroMemory(&MakeUsageList[MakeUsageListIndex], (UsageListLength - MakeUsageListIndex) * sizeof(USAGE_AND_PAGE));
-    }
-
-    /* done */
     return HIDP_STATUS_SUCCESS;
 }
 
@@ -816,190 +226,1224 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetSpecificButtonCaps(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PHIDP_BUTTON_CAPS  ButtonCaps,
-    IN OUT PULONG  ButtonCapsLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PHIDP_BUTTON_CAPS ButtonCaps,
+    IN OUT PUSHORT ButtonCapsLength)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    USHORT buttonCapsLen;
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    USHORT count = 0;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    buttonCapsLen = *ButtonCapsLength;
+    *ButtonCapsLength = 0;
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            // not documented but still returns
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    ZeroFunction(ButtonCaps, buttonCapsLen * sizeof(HIDP_BUTTON_CAPS));
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (FALSE == PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            continue;
+        }
+
+        if (FALSE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[index],
+                                              UsagePage,
+                                              Usage,
+                                              LinkCollection))
+        {
+            continue;
+        }
+
+        // if we have space then write
+        if (count < buttonCapsLen)
+        {
+            ButtonCaps[count].UsagePage = PreparsedData->ValueCaps[index].UsagePage;
+            ButtonCaps[count].BitField = PreparsedData->ValueCaps[index].BitField.Raw;
+            ButtonCaps[count].IsAbsolute = PreparsedData->ValueCaps[index].Flags.IsAbsolute;
+            ButtonCaps[count].IsDesignatorRange = PreparsedData->ValueCaps[index].Flags.IsDesignatorRange;
+            ButtonCaps[count].IsRange = PreparsedData->ValueCaps[index].Flags.IsRange;
+            ButtonCaps[count].IsStringRange = PreparsedData->ValueCaps[index].Flags.IsStringRange;
+            ButtonCaps[count].LinkCollection = PreparsedData->ValueCaps[index].LinkCollection;
+            ButtonCaps[count].LinkUsage = PreparsedData->ValueCaps[index].LinkUsage;
+            ButtonCaps[count].LinkUsagePage = PreparsedData->ValueCaps[index].LinkUsagePage;
+            ButtonCaps[count].ReportID = PreparsedData->ValueCaps[index].ReportID;
+
+            ButtonCaps[count].IsAlias = FALSE;
+
+            // TO-DO check if needed
+            if (ButtonCaps[count].IsRange)
+            {
+                ButtonCaps[count].Range.UsageMin = PreparsedData->ValueCaps[index].UsageMin;
+                ButtonCaps[count].Range.UsageMax = PreparsedData->ValueCaps[index].UsageMax;
+                ButtonCaps[count].Range.DataIndexMin = PreparsedData->ValueCaps[index].DataIndexMin;
+                ButtonCaps[count].Range.DataIndexMax = PreparsedData->ValueCaps[index].DataIndexMax;
+            }
+            else
+            {
+                ButtonCaps[count].NotRange.Usage = PreparsedData->ValueCaps[index].UsageMin;
+                ButtonCaps[count].NotRange.DataIndex = PreparsedData->ValueCaps[index].DataIndexMin;
+            }
+            if (ButtonCaps[count].IsStringRange)
+            {
+                ButtonCaps[count].Range.StringMin = PreparsedData->ValueCaps[index].StringMin;
+                ButtonCaps[count].Range.StringMax = PreparsedData->ValueCaps[index].StringMax;
+            }
+            else
+            {
+                ButtonCaps[count].NotRange.StringIndex = PreparsedData->ValueCaps[index].StringMin;
+            }
+            if (ButtonCaps[count].IsDesignatorRange)
+            {
+                ButtonCaps[count].Range.DesignatorMin = PreparsedData->ValueCaps[index].DesignatorMin;
+                ButtonCaps[count].Range.DesignatorMax = PreparsedData->ValueCaps[index].DesignatorMax;
+            }
+            else
+            {
+                ButtonCaps[count].NotRange.DesignatorIndex = PreparsedData->ValueCaps[index].DesignatorMin;
+            }
+
+        }
+
+        count++;
+    }
+
+    *ButtonCapsLength = count;
+
+    return HIDP_STATUS_SUCCESS;
 }
 
+HIDAPI
+ULONG
+NTAPI
+HidParser_MaxUsageListLength(
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage OPTIONAL)
+{
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    ULONG count = 0;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+    case HidP_Input:
+        startIndex = PreparsedData->InputCapsStart;
+        endIndex = PreparsedData->InputCapsEnd;
+        break;
+    case HidP_Output:
+        startIndex = PreparsedData->OutputCapsStart;
+        endIndex = PreparsedData->OutputCapsEnd;
+        break;
+    case HidP_Feature:
+        startIndex = PreparsedData->FeatureCapsStart;
+        endIndex = PreparsedData->FeatureCapsEnd;
+        break;
+    default:
+        // not documented but still returns
+        return HIDP_STATUS_INVALID_REPORT_TYPE;
+        break;
+    }
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        // counting only buttons
+        if (FALSE == PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            continue;
+        }
+
+        // Arrays must be added only once
+        if (TRUE == PreparsedData->ValueCaps[index].Flags.ArrayHasMore)
+        {
+            continue;
+        }
+
+        if (UsagePage == HID_USAGE_PAGE_UNDEFINED || UsagePage == PreparsedData->ValueCaps[index].UsagePage)
+        {
+            count += PreparsedData->ValueCaps[index].ReportCount;
+        }
+    }
+
+    return count;
+}
+
+HIDAPI
+ULONG
+NTAPI
+HidParser_MaxDataListLength(
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType)
+{
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    ULONG count = 0;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            // not documented but still returns
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        // Arrays must be added only once
+        if (TRUE == PreparsedData->ValueCaps[index].Flags.ArrayHasMore)
+        {
+            continue;
+        }
+
+        count += PreparsedData->ValueCaps[index].ReportCount;
+    }
+
+    return count;
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidParser_GetUsages(
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection OPTIONAL,
+    OUT USAGE *UsageList,
+    IN OUT PULONG UsageLength,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
+{
+    USHORT arrayStart;
+    PULONG dataPtr;
+    ULONG stackBuffer[16];
+    USHORT i, j;
+
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    USHORT startIndex = 0;
+    USHORT endIndex = 0;
+    ULONG outputUsageLen = 0;
+    ULONG inputUsageLen = 0;
+    PULONG buffer = NULL;
+    PHIDPARSER_VALUE_CAPS valueCap = NULL;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    inputUsageLen = *UsageLength;
+    ZeroFunction(UsageList, inputUsageLen * sizeof(USAGE));
+    *UsageLength = 0;
+
+    for (i = startIndex; i < endIndex; i++)
+    {
+        if (FALSE == PreparsedData->ValueCaps[i].Flags.IsButton)
+        {
+            continue;
+        }
+
+        if (FALSE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[i],
+                                              UsagePage,
+                                              HID_USAGE_PAGE_UNDEFINED,
+                                              LinkCollection))
+        {
+            continue;
+        }
+
+        // Found
+        valueCap = &PreparsedData->ValueCaps[i];
+
+        // we have small buffer at the stack, if it too small, allocate new one
+        if (valueCap->ReportCount < sizeof(stackBuffer) / sizeof(stackBuffer[0]))
+        {
+            dataPtr = stackBuffer;
+            ZeroFunction(dataPtr, valueCap->ReportCount * sizeof(ULONG));
+        }
+        else
+        {
+            buffer = AllocFunction(sizeof(ULONG) * valueCap->ReportCount);
+            ASSERT(buffer != NULL);
+            dataPtr = buffer;
+        }
+
+        status = HidParser_GetValuesForCap(valueCap,
+                                           (PUCHAR)Report,
+                                           ReportLength,
+                                           dataPtr,
+                                           valueCap->ReportCount);
+
+        if (status != HIDP_STATUS_SUCCESS)
+        {
+            if (buffer != NULL)
+            {
+                FreeFunction(buffer);
+                buffer = NULL;
+            }
+            return status;
+        }
+
+        if (valueCap->Flags.ArrayHasMore) //array
+        {
+            arrayStart = i;
+            while (valueCap->Flags.ArrayHasMore)
+            {
+                // skip array item
+                i++;
+            }
+            // now i is index of last element of array;
+
+            for (j = 0; j < valueCap->ReportCount; j++)
+            {
+                // TO-DO: clip
+                if (dataPtr[j] > 0)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        UsageList[outputUsageLen] = PreparsedData->ValueCaps[dataPtr[j] + arrayStart].UsageMin;
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+        else if (valueCap->ReportSize == 1) // bitmap
+        {
+            for (j = 0; j < valueCap->ReportCount; j++)
+            {
+                if (dataPtr[j] == TRUE)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        UsageList[outputUsageLen] = valueCap->UsageMin + j;
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+        else // range
+        {
+            for (j = 0; j < valueCap->ReportCount; j++)
+            {
+                // TODO: clip
+                if (dataPtr[j] > 0)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        UsageList[outputUsageLen] = valueCap->UsageMin + dataPtr[j];
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+
+        if (buffer != NULL)
+        {
+            FreeFunction(buffer);
+            buffer = NULL;
+        }
+
+    }
+
+    // valueCap not setted, mean usage not found
+    if (valueCap == NULL)
+    {
+        status = HIDP_STATUS_USAGE_NOT_FOUND;
+    }
+
+    *UsageLength = outputUsageLen;
+
+    return status;
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidParser_GetScaledUsageValue(
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection OPTIONAL,
+    IN USAGE Usage,
+    OUT PLONG UsageValue,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
+{
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    ULONG mask = 0xFFFFFFFF;
+    PHIDPARSER_VALUE_CAPS valueCap = NULL;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (TRUE == PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            continue;
+        }
+
+        if (TRUE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[index],
+                                             UsagePage,
+                                             Usage,
+                                             LinkCollection))
+        {
+            // Found
+            valueCap = &PreparsedData->ValueCaps[index];
+            break;
+        }
+    }
+
+    if (valueCap == NULL)
+    {
+        return HIDP_STATUS_USAGE_NOT_FOUND;
+    }
+
+    // read one usage from the report
+    status = HidParser_GetValuesForCap(valueCap,
+                                       (PUCHAR)Report,
+                                       ReportLength,
+                                       (PULONG)UsageValue,
+                                       1);
+    if (status != HIDP_STATUS_SUCCESS)
+    {
+        return status;
+    }
+
+    if (valueCap->Logical.Value.Min > valueCap->Logical.Value.Max ||
+        valueCap->PhysicalMin > valueCap->PhysicalMax)
+    {
+        return HIDP_STATUS_BAD_LOG_PHY_VALUES;
+    }
+
+    if (valueCap->Logical.Value.Min < 0)
+    {
+        // make signed
+        mask = (mask << (valueCap->ReportSize - 1));
+        if ((mask & *UsageValue) != 0)
+        {
+            *UsageValue |= mask;
+        }
+    }
+
+    if (valueCap->Logical.Value.Min > (*UsageValue) ||
+        valueCap->Logical.Value.Max < (*UsageValue))
+    {
+        if (valueCap->Logical.Value.NullValue > 0)
+        {
+            return HIDP_STATUS_NULL;
+        }
+        else
+        {
+            return HIDP_STATUS_VALUE_OUT_OF_RANGE;
+        }
+    }
+
+    if (valueCap->PhysicalMax != valueCap->PhysicalMin)
+    {
+        // physical range is defined, remap the value
+        *UsageValue = HidParser_MapValue(*UsageValue,
+                                         valueCap->Logical.Value.Min,
+                                         valueCap->Logical.Value.Max,
+                                         valueCap->PhysicalMin,
+                                         valueCap->PhysicalMax);
+    }
+
+    return HIDP_STATUS_SUCCESS;
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidParser_GetUsagesEx(
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USHORT LinkCollection,
+    OUT PUSAGE_AND_PAGE ButtonList,
+    IN OUT ULONG  *UsageLength,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
+{
+    USHORT arrayStart;
+    PULONG dataPtr;
+    ULONG stackBuffer[16];
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT i, j;
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    ULONG outputUsageLen = 0;
+    ULONG inputUsageLen = 0;
+    PULONG buffer = NULL;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    inputUsageLen = *UsageLength;
+    ZeroFunction(ButtonList, inputUsageLen * sizeof(USAGE_AND_PAGE));
+    *UsageLength = 0;
+
+    for (i = startIndex; i < endIndex; i++)
+    {
+        if (FALSE == PreparsedData->ValueCaps[i].Flags.IsButton)
+        {
+            continue;
+        }
+
+        // we have small buffer at the stack, if it too small, allocate new one
+        if (PreparsedData->ValueCaps[i].ReportCount < sizeof(stackBuffer) / sizeof(stackBuffer[0]))
+        {
+            dataPtr = stackBuffer;
+            ZeroFunction(dataPtr, PreparsedData->ValueCaps[i].ReportCount * sizeof(ULONG));
+        }
+        else
+        {
+            buffer = AllocFunction(sizeof(ULONG) * PreparsedData->ValueCaps[i].ReportCount);
+            ASSERT(buffer != NULL);
+            dataPtr = buffer;
+        }
+
+        status = HidParser_GetValuesForCap(&PreparsedData->ValueCaps[i],
+                                           (PUCHAR)Report,
+                                           ReportLength,
+                                           dataPtr,
+                                           PreparsedData->ValueCaps[i].ReportCount);
+        if (status != HIDP_STATUS_SUCCESS)
+        {
+            if (buffer != NULL)
+            {
+                FreeFunction(buffer);
+                buffer = NULL;
+            }
+            return status;
+        }
+
+        if (PreparsedData->ValueCaps[i].Flags.ArrayHasMore)
+        {
+            arrayStart = i;
+            while (PreparsedData->ValueCaps[i].Flags.ArrayHasMore)
+            {
+                // skip array item
+                i++;
+            }
+            // now i is index of last element of array;
+
+            for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+            {
+                // TO-DO: clip
+                if (dataPtr[j] > 0)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        ButtonList[outputUsageLen].Usage = PreparsedData->ValueCaps[dataPtr[j] + arrayStart].UsageMin;
+                        ButtonList[outputUsageLen].UsagePage = PreparsedData->ValueCaps[dataPtr[j] + arrayStart].UsagePage;
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+        else if (PreparsedData->ValueCaps[i].ReportSize == 1) // bitmap
+        {
+            for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+            {
+                if (dataPtr[j] == TRUE)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        ButtonList[outputUsageLen].Usage = PreparsedData->ValueCaps[i].UsageMin + j;
+                        ButtonList[outputUsageLen].UsagePage = PreparsedData->ValueCaps[i].UsagePage;
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+        else // array of range
+        {
+            for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+            {
+                // TODO: clip
+                if (dataPtr[j] > 0)
+                {
+                    if (outputUsageLen < inputUsageLen)
+                    {
+                        ButtonList[outputUsageLen].Usage = PreparsedData->ValueCaps[i].UsageMin + dataPtr[j];
+                        ButtonList[outputUsageLen].UsagePage = PreparsedData->ValueCaps[i].UsagePage;
+                    }
+                    else
+                    {
+                        status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                    }
+                    outputUsageLen++;
+                }
+            }
+        }
+
+        if (buffer != NULL)
+        {
+            FreeFunction(buffer);
+            buffer = NULL;
+        }
+
+    }
+
+    *UsageLength = outputUsageLen;
+
+    return status;
+}
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetData(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    OUT PHIDP_DATA  DataList,
-    IN OUT PULONG  DataLength,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    OUT PHIDP_DATA DataList,
+    IN OUT PULONG DataLength,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    USHORT arrayStart;
+    PULONG dataPtr;
+    ULONG stackBuffer[16];
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT i, j;
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    ULONG outputUsageLen = 0;
+    ULONG inputUsageLen = 0;
+    PULONG buffer = NULL;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    inputUsageLen = *DataLength;
+    ZeroFunction(DataList, inputUsageLen * sizeof(HIDP_DATA));
+    *DataLength = 0;
+
+    if (startIndex == endIndex)
+    {
+        return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
+    }
+
+    for (i = startIndex; i < endIndex; i++)
+    {
+        // we have small buffer at the stack, if it too small, allocate new one
+        if (PreparsedData->ValueCaps[i].ReportCount < sizeof(stackBuffer) / sizeof(stackBuffer[0]))
+        {
+            dataPtr = stackBuffer;
+            ZeroFunction(dataPtr, PreparsedData->ValueCaps[i].ReportCount * sizeof(ULONG));
+        }
+        else
+        {
+            buffer = AllocFunction(sizeof(ULONG) * PreparsedData->ValueCaps[i].ReportCount);
+            ASSERT(buffer != NULL);
+            dataPtr = buffer;
+        }
+
+        status = HidParser_GetValuesForCap(&PreparsedData->ValueCaps[i],
+                                           (PUCHAR)Report,
+                                           ReportLength,
+                                           dataPtr,
+                                           PreparsedData->ValueCaps[i].ReportCount);
+
+        if (status != HIDP_STATUS_SUCCESS)
+        {
+            if (buffer != NULL)
+            {
+                FreeFunction(buffer);
+                buffer = NULL;
+            }
+            return status;
+        }
+
+        if (PreparsedData->ValueCaps[i].Flags.IsButton == FALSE)
+        {
+            for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+            {
+                if (outputUsageLen < inputUsageLen)
+                {
+                    DataList[outputUsageLen].DataIndex = PreparsedData->ValueCaps[i].DataIndexMin + j;
+                    DataList[outputUsageLen].RawValue = dataPtr[j];
+                }
+                else
+                {
+                    status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                }
+                outputUsageLen++;
+            }
+        }
+        else
+        {
+            if (PreparsedData->ValueCaps[i].Flags.ArrayHasMore)
+            {
+                arrayStart = i;
+                while (PreparsedData->ValueCaps[i].Flags.ArrayHasMore)
+                {
+                    // skip array item
+                    i++;
+                }
+                // now i is index of last element of array;
+
+                for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+                {
+                    // TO-DO: clip
+                    if (dataPtr[j] > 0)
+                    {
+                        if (outputUsageLen < inputUsageLen)
+                        {
+                            DataList[outputUsageLen].DataIndex = PreparsedData->ValueCaps[dataPtr[j] + arrayStart].DataIndexMin;
+                            DataList[outputUsageLen].On = TRUE;
+                        }
+                        else
+                        {
+                            status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                        }
+                        outputUsageLen++;
+                    }
+                }
+            }
+            else if (PreparsedData->ValueCaps[i].ReportSize == 1) // bitmap
+            {
+                for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+                {
+                    if (dataPtr[j] == TRUE)
+                    {
+                        if (outputUsageLen < inputUsageLen)
+                        {
+                            DataList[outputUsageLen].DataIndex = PreparsedData->ValueCaps[i].DataIndexMin + j;
+                            DataList[outputUsageLen].On = TRUE;
+                        }
+                        else
+                        {
+                            status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                        }
+                        outputUsageLen++;
+                    }
+                }
+            }
+            else // array of range
+            {
+                for (j = 0; j < PreparsedData->ValueCaps[i].ReportCount; j++)
+                {
+                    // TODO: clip
+                    if (dataPtr[j] > 0)
+                    {
+                        if (outputUsageLen < inputUsageLen)
+                        {
+                            DataList[outputUsageLen].DataIndex = PreparsedData->ValueCaps[i].DataIndexMin + dataPtr[j];
+                            DataList[outputUsageLen].On = TRUE;
+                        }
+                        else
+                        {
+                            status = HIDP_STATUS_BUFFER_TOO_SMALL;
+                        }
+                        outputUsageLen++;
+                    }
+                }
+            }
+        }
+
+        if (buffer != NULL)
+        {
+            FreeFunction(buffer);
+            buffer = NULL;
+        }
+
+    }
+
+    *DataLength = outputUsageLen;
+
+    return status;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetExtendedAttributes(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USHORT  DataIndex,
-    OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
-    IN OUT PULONG  LengthAttributes)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USHORT DataIndex,
+    OUT PHIDP_EXTENDED_ATTRIBUTES Attributes,
+    IN OUT PULONG LengthAttributes)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
+    ULONG attributesSize;
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    PHIDPARSER_VALUE_CAPS valueCap = NULL;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    attributesSize = *LengthAttributes;
+    *LengthAttributes = sizeof(HIDP_EXTENDED_ATTRIBUTES);
+    if (attributesSize < sizeof(HIDP_EXTENDED_ATTRIBUTES))
+    {
+        return HIDP_STATUS_BUFFER_TOO_SMALL;
+    }
+
+    ZeroFunction(Attributes, *LengthAttributes);
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (PreparsedData->ValueCaps[index].DataIndexMin <= DataIndex &&
+            PreparsedData->ValueCaps[index].DataIndexMax >= DataIndex)
+        {
+            valueCap = &PreparsedData->ValueCaps[index];
+            break;
+        }
+    }
+
+    if (valueCap == NULL)
+    {
+        return HIDP_STATUS_DATA_INDEX_NOT_FOUND;
+    }
+
+    if (valueCap->Flags.UnknownGlobalCount > 0)
+    {
+        Attributes->NumGlobalUnknowns = valueCap->Flags.UnknownGlobalCount;
+        // calculate how much bytes left;
+        attributesSize -= (sizeof(HIDP_EXTENDED_ATTRIBUTES) - sizeof(Attributes->Data));
+        if (attributesSize < sizeof(HIDP_UNKNOWN_TOKEN) * Attributes->NumGlobalUnknowns)
+        {
+            // not enought
+            status = HIDP_STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // too many
+            attributesSize = sizeof(HIDP_UNKNOWN_TOKEN) * Attributes->NumGlobalUnknowns;
+        }
+        CopyFunction(Attributes->Data, valueCap->UnknownGlobals, attributesSize);
+
+        // update the returning length
+        *LengthAttributes += sizeof(HIDP_UNKNOWN_TOKEN) * Attributes->NumGlobalUnknowns - sizeof(Attributes->Data);
+    }
+
+    return status;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetLinkCollectionNodes(
-    IN PVOID CollectionContext,
-    OUT PHIDP_LINK_COLLECTION_NODE  LinkCollectionNodes,
-    IN OUT PULONG  LinkCollectionNodesLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    OUT PHIDP_LINK_COLLECTION_NODE LinkCollectionNodes,
+    IN OUT PULONG LinkCollectionNodesLength)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    USHORT listSize;
+    USHORT index;
+    PHIDPARSER_LINK_COLLECTION_NODE nodesArray;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        // not documented
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    listSize = *LinkCollectionNodesLength;
+    *LinkCollectionNodesLength = PreparsedData->LinkCollectionCount;
+
+    if (listSize < PreparsedData->LinkCollectionCount)
+    {
+        return HIDP_STATUS_BUFFER_TOO_SMALL;
+    }
+
+    nodesArray = (PHIDPARSER_LINK_COLLECTION_NODE)(((PUCHAR)PreparsedData) + PreparsedData->CapsByteLength);
+
+    for (index = 0; index < PreparsedData->LinkCollectionCount; index++)
+    {
+        CopyFunction(&LinkCollectionNodes[index], &nodesArray[index], sizeof(HIDPARSER_LINK_COLLECTION_NODE));
+    }
+
+    return HIDP_STATUS_SUCCESS;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValue(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PULONG  UsageValue,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PULONG UsageValue,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
 {
-    NTSTATUS ParserStatus;
+    USHORT startIndex;
+    USHORT endIndex;
+    USHORT index;
 
-    //
-    // FIXME: implement searching in specific collection
-    //
-    ASSERT(LinkCollection == HIDP_LINK_COLLECTION_UNSPECIFIED);
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
 
-    if (ReportType == HidP_Input)
+    switch (ReportType)
     {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Output)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else if (ReportType == HidP_Feature)
-    {
-        //
-        // input report
-        //
-        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
-    }
-    else
-    {
-        //
-        // invalid report type
-        //
+    case HidP_Input:
+        startIndex = PreparsedData->InputCapsStart;
+        endIndex = PreparsedData->InputCapsEnd;
+        break;
+    case HidP_Output:
+        startIndex = PreparsedData->OutputCapsStart;
+        endIndex = PreparsedData->OutputCapsEnd;
+        break;
+    case HidP_Feature:
+        startIndex = PreparsedData->FeatureCapsStart;
+        endIndex = PreparsedData->FeatureCapsEnd;
+        break;
+    default:
         return HIDP_STATUS_INVALID_REPORT_TYPE;
+        break;
     }
 
-    //
-    // return status
-    //
-    return ParserStatus;
-}
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (PreparsedData->ValueCaps[index].Flags.IsButton == TRUE)
+        {
+            continue;
+        }
 
-NTSTATUS
-NTAPI
-HidParser_SysPowerEvent(
-    IN PVOID CollectionContext,
-    IN PCHAR HidPacket,
-    IN USHORT HidPacketLength,
-    OUT PULONG OutputBuffer)
-{
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
+        if (FALSE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[index],
+                                              UsagePage,
+                                              Usage,
+                                              LinkCollection))
+        {
+            continue;
+        }
 
-NTSTATUS
-NTAPI
-HidParser_SysPowerCaps (
-    IN PVOID CollectionContext,
-    OUT PULONG OutputBuffer)
-{
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+        // read one usage from the report
+        return HidParser_GetValuesForCap(&PreparsedData->ValueCaps[index],
+                                         (PUCHAR)Report,
+                                         ReportLength,
+                                         UsageValue,
+                                         1);
+    }
+
+    return HIDP_STATUS_USAGE_NOT_FOUND;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValueArray(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    IN USAGE  Usage,
-    OUT PCHAR  UsageValue,
-    IN USHORT  UsageValueByteLength,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection OPTIONAL,
+    IN USAGE Usage,
+    OUT PCHAR UsageValue,
+    IN USHORT UsageValueByteLength,
+    IN PCHAR Report,
+    IN ULONG ReportLength)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS status = HIDP_STATUS_SUCCESS;
+    USHORT startIndex = 0;
+    USHORT endIndex = 0;
+    PULONG buffer = NULL;
+    PHIDPARSER_VALUE_CAPS valueCap = NULL;
+    USHORT index;
+    USHORT bitsWrited = 0;
+    USHORT startBit = 0;
+    USHORT startByte = 0;
+
+    if (FALSE == HidParser_CheckPreparsedMagic(PreparsedData))
+    {
+        return HIDP_STATUS_INVALID_PREPARSED_DATA;
+    }
+
+    switch (ReportType)
+    {
+        case HidP_Input:
+            startIndex = PreparsedData->InputCapsStart;
+            endIndex = PreparsedData->InputCapsEnd;
+            break;
+        case HidP_Output:
+            startIndex = PreparsedData->OutputCapsStart;
+            endIndex = PreparsedData->OutputCapsEnd;
+            break;
+        case HidP_Feature:
+            startIndex = PreparsedData->FeatureCapsStart;
+            endIndex = PreparsedData->FeatureCapsEnd;
+            break;
+        default:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+            break;
+    }
+
+    ZeroFunction(UsageValue, UsageValueByteLength);
+
+    for (index = startIndex; index < endIndex; index++)
+    {
+        if (TRUE == PreparsedData->ValueCaps[index].Flags.IsButton)
+        {
+            continue;
+        }
+
+        if (FALSE == HidParser_FilterValueCap(&PreparsedData->ValueCaps[index],
+                                              UsagePage,
+                                              Usage,
+                                              LinkCollection))
+        {
+            continue;
+        }
+
+        valueCap = &PreparsedData->ValueCaps[index];
+        break;
+    }
+
+    if (valueCap == NULL)
+    {
+        return HIDP_STATUS_USAGE_NOT_FOUND;
+    }
+
+    buffer = AllocFunction(sizeof(ULONG) * valueCap->ReportCount);
+    ASSERT(buffer != NULL);
+
+    // read usage from the report
+    status = HidParser_GetValuesForCap(valueCap,
+                                       (PUCHAR)Report,
+                                       ReportLength,
+                                       buffer,
+                                       valueCap->ReportCount);
+    if (status != HIDP_STATUS_SUCCESS)
+    {
+        FreeFunction(buffer);
+        return status;
+    }
+
+    if (valueCap->ReportCount < 2)
+    {
+        status = HIDP_STATUS_NOT_VALUE_ARRAY;
+    }
+
+    for (index = 0; index < valueCap->ReportCount; index++)
+    {
+        bitsWrited += valueCap->ReportSize;
+        if (UsageValueByteLength < bitsWrited / 8)
+        {
+            FreeFunction(buffer);
+            return HIDP_STATUS_BUFFER_TOO_SMALL;
+        }
+
+        switch ((valueCap->ReportSize - 1) / 8)
+        {
+            case 3:
+                UsageValue[startByte + 4] |= buffer[index] >> (32 - startBit);
+            case 2:
+                UsageValue[startByte + 3] |= buffer[index] >> (24 - startBit);
+            case 1:
+                UsageValue[startByte + 2] |= buffer[index] >> (16 - startBit);
+            case 0:
+                UsageValue[startByte + 1] |= buffer[index] >> (8 - startBit);
+                UsageValue[startByte] |= buffer[index] << startBit;
+                break;
+            default:
+                break;
+        }
+
+        startBit = bitsWrited % 8;
+        startByte += (valueCap->ReportSize - 1) / 8;
+    }
+
+    FreeFunction(buffer);
+    return status;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_UnsetUsages(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN PUSAGE  UsageList,
-    IN OUT PULONG  UsageLength,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
-{
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_TranslateUsagesToI8042ScanCodes(
-  IN PUSAGE  ChangedUsageList,
-  IN ULONG  UsageListLength,
-  IN HIDP_KEYBOARD_DIRECTION  KeyAction,
-  IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
-  IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
-  IN PVOID  InsertCodesContext)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN PUSAGE UsageList,
+    IN OUT PULONG UsageLength,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
@@ -1010,14 +1454,14 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsages(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN PUSAGE  UsageList,
-    IN OUT PULONG  UsageLength,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN PUSAGE UsageList,
+    IN OUT PULONG UsageLength,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
@@ -1028,15 +1472,15 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValueArray(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    IN USAGE  Usage,
-    IN PCHAR  UsageValue,
-    IN USHORT  UsageValueByteLength,
-    OUT PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection OPTIONAL,
+    IN USAGE Usage,
+    IN PCHAR UsageValue,
+    IN USHORT UsageValueByteLength,
+    OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
@@ -1047,14 +1491,14 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValue(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    IN ULONG  UsageValue,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    IN ULONG UsageValue,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
@@ -1065,14 +1509,14 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetScaledUsageValue(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    IN USAGE  Usage,
-    IN LONG  UsageValue,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection OPTIONAL,
+    IN USAGE Usage,
+    IN LONG UsageValue,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
@@ -1083,55 +1527,27 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetData(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN PHIDP_DATA  DataList,
-    IN OUT PULONG  DataLength,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN PHIDP_DATA DataList,
+    IN OUT PULONG DataLength,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-ULONG
-NTAPI
-HidParser_MaxDataListLength(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType)
-{
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return 0;
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_InitializeReportForID(
-    IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN UCHAR  ReportID,
-    IN OUT PCHAR  Report,
-    IN ULONG  ReportLength)
-{
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-#undef HidParser_GetValueCaps
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_GetValueCaps(
-    IN PVOID CollectionContext,
-    HIDP_REPORT_TYPE ReportType,
-    PHIDP_VALUE_CAPS ValueCaps,
-    PULONG ValueCapsLength)
+    IN PHIDPARSER_PREPARSED_DATA PreparsedData,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN UCHAR ReportID,
+    IN OUT PCHAR Report,
+    IN ULONG ReportLength)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
