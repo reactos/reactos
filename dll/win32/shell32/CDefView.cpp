@@ -867,11 +867,15 @@ BOOL CDefView::_Sort()
 
 PCUITEMID_CHILD CDefView::_PidlByItem(int i)
 {
+    if (!m_ListView)
+        return nullptr;
     return reinterpret_cast<PCUITEMID_CHILD>(m_ListView.GetItemData(i));
 }
 
 PCUITEMID_CHILD CDefView::_PidlByItem(LVITEM& lvItem)
 {
+    if (!m_ListView)
+        return nullptr;
     return reinterpret_cast<PCUITEMID_CHILD>(lvItem.lParam);
 }
 
@@ -3112,6 +3116,9 @@ HRESULT STDMETHODCALLTYPE CDefView::RemoveObject(PITEMID_CHILD pidl, UINT *item)
 
     TRACE("(%p)->(%p %p)\n", this, pidl, item);
 
+    if (!m_ListView)
+        return E_FAIL;
+
     if (pidl)
     {
         *item = LV_FindItemByPidl(ILFindLastID(pidl));
@@ -3154,7 +3161,8 @@ HRESULT STDMETHODCALLTYPE CDefView::RefreshObject(PITEMID_CHILD pidl, UINT *item
 HRESULT STDMETHODCALLTYPE CDefView::SetRedraw(BOOL redraw)
 {
     TRACE("(%p)->(%d)\n", this, redraw);
-    m_ListView.SetRedraw(redraw);
+    if (m_ListView)
+        m_ListView.SetRedraw(redraw);
     return S_OK;
 }
 
