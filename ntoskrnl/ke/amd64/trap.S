@@ -781,6 +781,7 @@ PUBLIC KiSystemCallEntry64
     /* The unwind info pretends we have a machine frame */
     .PUSHFRAME
     .ALLOCSTACK (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE - MachineFrameLength)
+    .SAVEREG rbp, MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp
     .ENDPROLOG
 
     /* Swap gs to kernel, so we can access the PCR */
@@ -795,7 +796,7 @@ PUBLIC KiSystemCallEntry64
     /* Allocate a TRAP_FRAME and space for parameters */
     sub rsp, (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE)
 
-    /* Save volatile registers in the trap frame */
+    /* Save volatile registers and rbp in the trap frame */
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip], rcx
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx], rdx
@@ -803,6 +804,7 @@ PUBLIC KiSystemCallEntry64
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9], r9
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], r10
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], r11
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp], rbp
 
     /* Store user stack pointer in the trap frame */
     mov rax, gs:[PcUserRsp]
