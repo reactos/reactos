@@ -108,16 +108,6 @@ MACRO(EnterTrap, Flags)
     lea rbp, [rsp]
     .setframe rbp, 0
 
-    if (Flags AND TF_NONVOLATILES)
-        /* Save non-volatile registers */
-        mov [rbp + KTRAP_FRAME_Rbx], rbx
-        .savereg rbx, KTRAP_FRAME_Rbx
-        mov [rbp + KTRAP_FRAME_Rdi], rdi
-        .savereg rdi, KTRAP_FRAME_Rdi
-        mov [rbp + KTRAP_FRAME_Rsi], rsi
-        .savereg rsi, KTRAP_FRAME_Rsi
-    endif
-
     .endprolog
 
     if (Flags AND TF_VOLATILES)
@@ -242,13 +232,6 @@ MACRO(ExitTrap, Flags)
     swapgs
 
 kernel_mode_return:
-
-    if (Flags AND TF_NONVOLATILES)
-        /* Restore non-volatile registers */
-        mov rbx, [rbp + KTRAP_FRAME_Rbx]
-        mov rdi, [rbp + KTRAP_FRAME_Rdi]
-        mov rsi, [rbp + KTRAP_FRAME_Rsi]
-    endif
 
     if (Flags AND TF_VOLATILES)
         /* Restore volatile registers */
