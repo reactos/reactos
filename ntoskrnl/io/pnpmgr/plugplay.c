@@ -3,7 +3,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/plugplay.c
  * PURPOSE:         Plug-and-play interface routines
- * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
+ * PROGRAMMERS:     Eric Kohl <eric.kohl@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
