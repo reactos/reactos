@@ -3999,11 +3999,11 @@ StartScan:
         QuerySection = TRUE;
     }
 
-    /* Do we need to apply SxS to this image? */
+    /* Do we need to apply SxS to this image? (On x86 this flag is set by PeFmtCreateSection) */
     if (!(ImageInformation.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_ISOLATION))
     {
         /* Too bad, we don't support this yet */
-        DPRINT1("Image should receive SxS Fusion Isolation\n");
+        DPRINT("Image should receive SxS Fusion Isolation\n");
     }
 
     /* There's some SxS flag that we need to set if fusion flags have 1 set */
@@ -4226,7 +4226,7 @@ StartScan:
     /* Write the remote PEB address and clear it locally, we no longer use it */
     CreateProcessMsg->PebAddressNative = RemotePeb;
 #ifdef _WIN64
-    DPRINT1("TODO: WOW64 is not supported yet\n");
+    DPRINT("TODO: WOW64 is not supported yet\n");
     CreateProcessMsg->PebAddressWow64 = 0;
 #else
     CreateProcessMsg->PebAddressWow64 = (ULONG)RemotePeb;
