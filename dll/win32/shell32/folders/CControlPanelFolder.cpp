@@ -54,6 +54,12 @@ static const shvheader ControlPanelSFHeader[] = {
 
 #define CONROLPANELSHELLVIEWCOLUMNS 2
 
+enum controlpanel_columns
+{
+    CONTROLPANEL_COL_NAME,
+    CONTROLPANEL_COL_COMMENT,
+};
+
 CControlPanelEnum::CControlPanelEnum()
 {
 }
@@ -330,10 +336,10 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
     int result;
     switch(LOWORD(lParam))
     {
-        case 0:        /* name */
+        case CONTROLPANEL_COL_NAME:
             result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
-        case 1:        /* comment */
+        case CONTROLPANEL_COL_COMMENT:
             result = wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
@@ -579,9 +585,9 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
 
         switch(iColumn)
         {
-            case 0:        /* name */
+            case CONTROLPANEL_COL_NAME:
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
-            case 1:        /* comment */
+            case CONTROLPANEL_COL_COMMENT:
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
         }
     }
