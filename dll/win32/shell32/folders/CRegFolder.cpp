@@ -212,6 +212,15 @@ class CRegFolderEnum :
         END_COM_MAP()
 };
 
+#define REGISTRYSHELLVIEWCOLUMNS 2
+
+enum registry_columns
+{
+    REGISTRY_COL_NAME,
+    REGISTRY_COL_TYPE,
+    REGISTRY_COL_VALUE,
+};
+
 CRegFolderEnum::CRegFolderEnum()
 {
 }
@@ -723,7 +732,7 @@ HRESULT WINAPI CRegFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pD
 
 HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (iColumn >= 2)
+    if (iColumn > REGISTRYSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
     *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
     return S_OK;
@@ -749,11 +758,11 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
 
     switch(iColumn)
     {
-        case 0:        /* name */
+        case REGISTRY_COL_NAME:
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* type */
+        case REGISTRY_COL_TYPE:
             return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
-        case 4:        /* comments */
+        case REGISTRY_COL_VALUE:
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
                 return SHSetStrRet(&psd->str, "");
