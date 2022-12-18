@@ -90,7 +90,6 @@ ACPI\PNP0C0A.DeviceDesc = "ACPI-konforme Kontrollmethodenbatterie"
 ACPI\ACPI0003.DeviceDesc = "Netzteil"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 BatteryClassName = "Baterías"
 
 GenericMfg = "(Baterías genéricas)"
@@ -104,21 +103,18 @@ ACPI\PNP0C0A.DeviceDesc = "Batterie à méthode de contrôle compatible ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptateur secteur"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 BatteryClassName = "Baterie"
 GenericMfg = "(Standardowe baterie)"
 ACPI\PNP0C0A.DeviceDesc = "Bateria zgodna z ACPI"
 ACPI\ACPI0003.DeviceDesc = "Zasilacz"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 BatteryClassName = "Acumulatori"
 GenericMfg = "(acumulator generic)"
 ACPI\PNP0C0A.DeviceDesc = "Metodă de control acumulator conformă cu ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptor de curent alternativ"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 BatteryClassName = "Батареи"
 
 GenericMfg = "(Стандартные батареи)"
@@ -126,7 +122,6 @@ ACPI\PNP0C0A.DeviceDesc = "Батареи с ACPI-совместимым мет�
 ACPI\ACPI0003.DeviceDesc = "AC адаптер"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 BatteryClassName = "Piller"
 
 GenericMfg = "(Umûmî Piler)"
@@ -134,7 +129,6 @@ ACPI\PNP0C0A.DeviceDesc = "ACPI Uyumlu Denetim Yöntemi Pili"
 ACPI\ACPI0003.DeviceDesc = "AC Uyarlayıcı"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 BatteryClassName = "Батареї"
 GenericMfg = "(Стандартні батареї)"
 ACPI\PNP0C0A.DeviceDesc = "Батареї з ACPI-сумісним методом керування"
