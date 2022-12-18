@@ -448,8 +448,27 @@ HRESULT CNtObjectFolder::CompareIDs(LPARAM lParam, const NtPidlEntry * first, co
         return MAKE_COMPARE_HRESULT(second->objectType - first->objectType);
 
     case NTOBJECT_COLUMN_LINKTARGET:
-        // Can't sort by link target yet
-        return E_INVALIDARG;
+    {
+        if (first->objectType != SYMBOLICLINK_OBJECT && second->objectType != SYMBOLICLINK_OBJECT)
+            return CompareName(lParam, first, second);
+
+        if (first->objectType != SYMBOLICLINK_OBJECT || second->objectType != SYMBOLICLINK_OBJECT)
+            return first->objectType != SYMBOLICLINK_OBJECT ? S_GREATERTHAN : S_LESSTHAN;
+
+        WCHAR wbLink1[MAX_PATH] = { 0 }, wbLink2[MAX_PATH] = { 0 };
+        UNICODE_STRING firstLink, secondLink;
+        RtlInitEmptyUnicodeString(&firstLink, wbLink1, sizeof(wbLink1));
+
+        if (FAILED_UNEXPECTEDLY(GetNTObjectSymbolicLinkTarget(m_NtPath, first->entryName, &firstLink)))
+            return E_INVALIDARG;
+
+        RtlInitEmptyUnicodeString(&secondLink, wbLink2, sizeof(wbLink2));
+
+        if (FAILED_UNEXPECTEDLY(GetNTObjectSymbolicLinkTarget(m_NtPath, second->entryName, &secondLink)))
+            return E_INVALIDARG;
+
+        return MAKE_COMPARE_HRESULT(RtlCompareUnicodeString(&firstLink, &secondLink, TRUE));
+    }
     }
 
     DbgPrint("Unsupported sorting mode.\n");
