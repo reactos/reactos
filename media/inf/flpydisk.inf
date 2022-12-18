@@ -59,48 +59,36 @@ AddService = , 0x00000002
 
 [Strings]
 ReactOS = "ReactOS Team"
-
 FloppyClassName = "Floppy disk drives"
 GenericMfg = "(Generic floppy disk drives)"
 Floppy.DeviceDesc = "Generic floppy disk drive"
 
 [Strings.0405]
-ReactOS = "ReactOS Team"
-
 FloppyClassName = "Disketové jednotky"
 GenericMfg = "(Obecné disketové jednotky)"
 Floppy.DeviceDesc = "Obecná disketová jednotka"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 FloppyClassName = "Disqueteras"
 GenericMfg = "(Disqueteras genéricas)"
 Floppy.DeviceDesc = "Disquetera genérica"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
-
 FloppyClassName = "Stacje dyskietek"
 GenericMfg = "(Standardowe stacje dyskietek)"
 Floppy.DeviceDesc = "Standardowa stacja dyskietek"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 FloppyClassName = "Unitate de disc flexibil"
 GenericMfg = "(unități generice de disc flexibil)"
 Floppy.DeviceDesc = "Unitate de disc flexibil"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 FloppyClassName = "Дисководы гибких дисков"
 GenericMfg = "(Универсальные дисководы гибких дисков)"
 Floppy.DeviceDesc = "Универсальный дисковод гибких дисков"
 
-
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 FloppyClassName = "Yumuşak Disk Sürücüleri"
 GenericMfg = "(Umûmî Yumuşak Disk Sürücüleri)"
 Floppy.DeviceDesc = "Umûmî Yumuşak Disk Sürücüsü"
