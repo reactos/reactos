@@ -191,11 +191,7 @@ Pin.Name.IPV4="IPv4"
 Pin.Name.MPE="MPE"
 Pin.Name.NABTS="NABTS"
 
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 Category_BdaTuner=" Filtr źródła BDA"
 Category_BdaComponent="Komponent odbioru BDA"
 Category_BdaRenderer="Filtr odtwarzania BDA"
@@ -207,7 +203,6 @@ Pin.Name.MPE="MPE"
 Pin.Name.NABTS="NABTS"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 Category_BdaTuner="Filtru sursă BDA"
 Category_BdaComponent="Componentă receptor BDA"
 Category_BdaRenderer="Filtru de redare BDA"
@@ -216,7 +211,6 @@ PlugIn_BdaCA="Extensie BDA pentru acces condițional"
 Pin.Name.AtscTS="Transport MPEG2"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 Category_BdaTuner="Фильтр источника BDA"
 Category_BdaComponent="Компонент BDA-приемник"
 Category_BdaRenderer="Фильтр воспроизводителя BDA"
@@ -225,7 +219,6 @@ PlugIn_BdaCA="BDA-плагин условного доступа"
 Pin.Name.AtscTS="Транспорт MPEG2"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 Category_BdaTuner="BDA-Kaynak Süzgeci"
 Category_BdaComponent="BDA-Alıcı Bileşeni"
 Category_BdaRenderer="BDA-Yeniden Çalma Süzgeci"
@@ -237,7 +230,6 @@ Pin.Name.MPE="MPE"
 Pin.Name.NABTS="NABTS"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 Category_BdaTuner="Фільтр джерела BDA"
 Category_BdaComponent="Компонент BDA-приймач"
 Category_BdaRenderer="Фільтр відтворювача BDA"

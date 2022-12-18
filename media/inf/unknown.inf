@@ -27,25 +27,19 @@ UnknownClassName = "Ostatní zařízení"
 UnknownClassName = "Andere Geräte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 UnknownClassName = "Otros dispositivos"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 UnknownClassName = "Nieznane urządzenie"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 UnknownClassName = "Alte dispozitive"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 UnknownClassName = "Другие устройства"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 UnknownClassName = "Başka Aygıtlar"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 UnknownClassName = "Інші пристрої"

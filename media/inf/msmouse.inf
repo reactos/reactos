@@ -162,14 +162,11 @@ PS2_MOUSE.DeviceDesc = "Standardní PS/2 myš"
 HID_MOUSE.DeviceDesc = "HID myš"
 *PNP0F13.DeviceDesc = "PS/2 port pro PS/2 myši"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech sériová myš"
 *PNP0F12.DeviceDesc = "Logitech PS/2 myš"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft sériová myš"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 myš"
 
@@ -198,19 +195,15 @@ PS2_MOUSE.DeviceDesc = "Πρότυπο PS/2 Ποντίκι"
 HID_MOUSE.DeviceDesc = "Ποντίκι HID"
 *PNP0F13.DeviceDesc = "PS/2 θύρα για PS/2 ποντίκια"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech Σειριακό Ποντίκι"
 *PNP0F12.DeviceDesc = "Logitech PS/2 Ποντίκι"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft Σειριακό Ποντίκι"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 Ποντίκι"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 MouseClassName = "Ratones y otros dispositivos señaladores"
 LocationOverride = "se conecta al puerto de ratón PS/2"
 
@@ -220,14 +213,11 @@ PS2_MOUSE.DeviceDesc = "Ratón PS/2 estándar"
 HID_MOUSE.DeviceDesc = "Ratón oculto"
 *PNP0F13.DeviceDesc = "Puerto PS/2 para ratón PS/2"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "Trackpoint PS/2 de IBM"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Ratón serie de Logitech"
 *PNP0F12.DeviceDesc = "Ratón PS/2 de Logitech"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Ratón serie de Microsoft"
 *PNP0F03.DeviceDesc = "Ratón PS/2 de Microsoft"
 
@@ -244,7 +234,6 @@ HID_MOUSE.DeviceDesc = "Souris HID"
 *PNP0F08.DeviceDesc = "Souris série Logitech"
 *PNP0F12.DeviceDesc = "Souris PS/2 Logitech"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Souris série Microsoft"
 *PNP0F03.DeviceDesc = "Souris PS/2 Microsoft"
 
@@ -257,19 +246,15 @@ PS2_MOUSE.DeviceDesc = "スタンダード PS/2 マウス"
 HID_MOUSE.DeviceDesc = "HID マウス"
 *PNP0F13.DeviceDesc = "PS/2接続マウス用のPS/2 ポート"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 トラックポイント"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech シリアル マウス"
 *PNP0F12.DeviceDesc = "Logitech PS/2接続マウス"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft シリアル マウス"
 *PNP0F03.DeviceDesc = "Microsoft PS/2接続マウス"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 MouseClassName = "Mysz i inne urządzenia wskazujące"
 
 StdMfg = "(Standardowa mysz)"
@@ -278,14 +263,11 @@ PS2_MOUSE.DeviceDesc = "Standardowa mysz PS/2"
 HID_MOUSE.DeviceDesc = "Mysz zgodna z HID"
 *PNP0F13.DeviceDesc = "Port PS/2 dla myszki"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "Trackpoint PS/2 IBM"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Mysz szeregowa Logitech"
 *PNP0F12.DeviceDesc = "Mysz PS/2 Logitech"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Mysz szeregowa Microsoft"
 *PNP0F03.DeviceDesc = "Mysz PS/2 Microsoft"
 
@@ -298,19 +280,15 @@ PS2_MOUSE.DeviceDesc = "Mouse PS/2 padrão"
 HID_MOUSE.DeviceDesc = "Mouse interno"
 *PNP0F13.DeviceDesc = "Porta PS/2 para mouse PS/2"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "Trackpoint PS/2 IBM"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Mouse serial Logitech"
 *PNP0F12.DeviceDesc = "Mouse PS/2 Logitech"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Mouse serial Microsoft"
-*PNP0F03.DeviceDesc = Mouse PS/2 Microsoft"
+*PNP0F03.DeviceDesc = "Mouse PS/2 Microsoft"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 MouseClassName = "Șoricel și alte dispozitive de indicare"
 LocationOverride = "conectat la portul PS/2 pentru șoricel"
 StdMfg = "(șoricel standard)"
@@ -318,12 +296,9 @@ SERIAL_MOUSE.DeviceDesc = "Șoricel serial standard"
 PS2_MOUSE.DeviceDesc = "Șoricel PS/2 standard"
 HID_MOUSE.DeviceDesc = "Șoricel HID"
 *PNP0F13.DeviceDesc = "Port pentru șoricel PS/2"
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "Rotulă IBM PS/2"
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Șoricel serial Logitech"
 *PNP0F12.DeviceDesc = "Șoricel PS/2 Logitech"
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Șoricel serial Microsoft"
 *PNP0F03.DeviceDesc = "Șoricel PS/2 Microsoft"
 
@@ -358,7 +333,6 @@ HID_MOUSE.DeviceDesc = "HID myš"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 myš"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 MouseClassName = "Fâre ve Başka İmleme Aygıtları"
 LocationOverride = "PS/2 fâre girişine takılı"
 
@@ -368,19 +342,15 @@ PS2_MOUSE.DeviceDesc = "Ölçünlü PS/2 Fâre"
 HID_MOUSE.DeviceDesc = "HID Fâre"
 *PNP0F13.DeviceDesc = "PS/2 Türünde Fâre İçin PS/2 Girişi"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech Dizilik Fâre"
 *PNP0F12.DeviceDesc = "Logitech PS/2 Türünde Fâre"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft Dizilik Fâre"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 Türünde Fâre"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 MouseClassName = "Миші та інші вказівні пристрої"
 LocationOverride = "приєднано до порту миші PS/2"
 
@@ -407,14 +377,11 @@ PS2_MOUSE.DeviceDesc = "Standartinė PS/2 pelė"
 HID_MOUSE.DeviceDesc = "HID pelė"
 *PNP0F13.DeviceDesc = "PS/2 jungtis PS/2 tipo pelei"
 
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 rutulinis manipuliatorius"
 
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech nuoseklioji pelė"
 *PNP0F12.DeviceDesc = "Logitech PS/2 tipo pelė"
 
-MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft nuoseklioji pelė"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 tipo pelė"
 

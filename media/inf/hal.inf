@@ -53,7 +53,6 @@ acpipic_up.DeviceDesc = "Jednoprocesorové PC s ACPI rozhraním"
 e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 ComputerClassName = "Equipo"
 
 GenericMfg = "(Equipos genéricos)"
@@ -61,32 +60,25 @@ acpipic_up.DeviceDesc = "PC con uniprocesador ACPI"
 e_isa_up.DeviceDesc = "PC con uniprocesador estándar"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 ComputerClassName = "Komputer"
 GenericMfg = "(Komputery standardowe)"
 acpipic_up.DeviceDesc = "Komputer PC z interfejsem ACPI"
 e_isa_up.DeviceDesc = "Standardowy komputer PC"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 ComputerClassName = "Calculator"
 GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 ComputerClassName = "Компьютер"
 
 GenericMfg = "(Универсальный компьютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцессорный ПК"
 e_isa_up.DeviceDesc = "Стандартный однопроцессорный ПК"
 
-
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 ComputerClassName = "Bilgisayar"
 
 GenericMfg = "(Umûmî Bilgisayarlar)"
@@ -94,7 +86,6 @@ acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
 e_isa_up.DeviceDesc = "Ölçünlü Tek İşlemcili PC"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 ComputerClassName = "Комп'ютер"
 GenericMfg = "(Стандартний комп'ютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцесорний ПК"

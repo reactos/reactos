@@ -83,7 +83,6 @@ GenericMfg = "(Γενικοί ελεγκτές δισκέτας)"
 *PNP0700.DeviceDesc = "Γενικός ελεγκτής δισκέτας"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 FDCClassName = "Controladores de disquete"
 
 GenericMfg = "(Controlador estándar de disquetes)"
@@ -102,7 +101,6 @@ GenericMfg = "(標準フロッピー ディスク コントローラ)"
 *PNP0700.DeviceDesc = "標準フロッピー ディスク コントローラ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 FDCClassName = "Kontrolery stacji dyskietek"
 GenericMfg = "(Standardowowe kontrolery stacji dyskietek)"
 *PNP0700.DeviceDesc = "Standardowy kontroler stacji dyskietek"
@@ -114,13 +112,11 @@ GenericMfg = "(Unidades de disquete padrão)"
 *PNP0700.DeviceDesc = "Controlador padrão de disquete"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 FDCClassName = "Dispozitive de control disc flexibil"
 GenericMfg = "(dispozitiv generic de control disc flexibil)"
 *PNP0700.DeviceDesc = "Dispozitiv generic de control disc flexibil"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллеры гибких дисков"
 
 GenericMfg = "(Стандартные контроллеры гибких дисков)"
@@ -133,14 +129,12 @@ GenericMfg = "(Generické radiče disketových mechaník)"
 *PNP0700.DeviceDesc = "Generický radič disketovej mechaniky"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 FDCClassName = "Yumuşak Disk Denetleyicileri"
 
 GenericMfg = "(Umûmî Yumuşak Disk Denetleyicileri)"
 *PNP0700.DeviceDesc = "Umûmî Yumuşak Disk Denetleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллери гнучких дисків"
 
 GenericMfg = "(Стандартні контроллери гнучких дисків)"
