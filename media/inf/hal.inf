@@ -56,8 +56,6 @@ e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 ComputerClassName = "Equipo"
 
 GenericMfg = "(Equipos genéricos)"
@@ -66,8 +64,6 @@ e_isa_up.DeviceDesc = "PC con uniprocesador estándar"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 ComputerClassName = "Komputer"
 
 GenericMfg = "(Komputery standardowe)"
@@ -76,8 +72,6 @@ e_isa_up.DeviceDesc = "Standardowy komputer PC"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
-
 ComputerClassName = "Calculator"
 
 GenericMfg = "(calculatoare generice)"
@@ -86,8 +80,6 @@ e_isa_up.DeviceDesc = "PC uniprocesor standard"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-
 ComputerClassName = "Компьютер"
 
 GenericMfg = "(Универсальный компьютер)"
@@ -96,8 +88,6 @@ e_isa_up.DeviceDesc = "Стандартный однопроцессорный �
 xbox.DeviceDesc = "Оригинальный Xbox (на базе x86)"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 ComputerClassName = "Bilgisayar"
 
 GenericMfg = "(Umûmî Bilgisayarlar)"
@@ -106,8 +96,6 @@ e_isa_up.DeviceDesc = "Ölçünlü Tek İşlemcili PC"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
-
 ComputerClassName = "Комп'ютер"
 
 GenericMfg = "(Стандартний комп'ютер)"
