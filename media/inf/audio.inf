@@ -76,30 +76,24 @@ AUDIOClassName = "Řadiče zvuku a obrazu"
 AUDIOClassName = "Audio-, Video- und Gamecontroller"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 AUDIOClassName = "Dispositivos de sonido, vídeo y juegos"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 AUDIOClassName = "Kontrolery audio, wideo i gier"
 
 [Strings.0416]
 AUDIOClassName = "Controladores de som, vídeo e jogo"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 AUDIOClassName = "Dispozitive audio & video"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 AUDIOClassName = "Аудио и видео контроллер"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 AUDIOClassName = "Ses ve Vidyo Denetleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 AUDIOClassName = "Контроллер аудіо та відео"
 
 [Strings.0427]

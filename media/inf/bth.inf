@@ -61,26 +61,21 @@ BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
 BluetoothClassName="Bluetooth vysílače"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB genérica"
 BluetoothClassName="Radios Bluetooth"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 BTUSB.DeviceDesc="Standardowy odbiornik radiowy Bluetooth na USB"
 BluetoothClassName="Odbiorniki radiowe Bluetooth"
 
 [Strings.0418]
-ReactOS="Echipa ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB generic"
 BluetoothClassName="Radiouri Bluetooth"
 
 [Strings.0419]
-ReactOS="Команда ReactOS"
 BTUSB.DeviceDesc="Стандартный USB Bluetooth радиомодуль"
 BluetoothClassName="Радиомодули Bluetooth"
 
 [Strings.041f]
-ReactOS="ReactOS Takımı"
 BTUSB.DeviceDesc="Umûmî USB Bluetooth Radyo"
 BluetoothClassName="Bluetooth Radyoları"
