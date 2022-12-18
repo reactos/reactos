@@ -273,21 +273,3 @@ HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 [Strings]
 ReactOS = "ReactOS Team"
-
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
-[Strings.0415]
-ReactOS = "Ekipa ReactOS"
-
-[Strings.0418]
-ReactOS = "Echipa ReactOS"
-
-[Strings.0419]
-ReactOS = "Команда ReactOS"
-
-[Strings.041f]
-ReactOS = "ReactOS Takımı"
-
-[Strings.0422]
-ReactOS = "Команда ReactOS"

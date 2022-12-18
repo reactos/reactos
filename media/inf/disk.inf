@@ -1,6 +1,6 @@
 ; DISK.INF
 
-; Installation of DISK DRIVESs
+; Installation of DISK DRIVES
 
 [Version]
 Signature  = "$Windows NT$"
@@ -67,7 +67,6 @@ OpticalDisk.DeviceDesc = "Optická disková jednotka"
 Disk.ServiceDesc = "Ovladač disku"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 GenericMfg = "(Unidades de disco genéricas)"
 DiskClassName = "Unidades de disco"
 Disk.DeviceDesc = "Unidad de disco"
@@ -75,7 +74,6 @@ OpticalDisk.DeviceDesc = "Unidad de disco óptico"
 Disk.ServiceDesc = "Controlador de disco"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 GenericMfg = "(Standardowy dysk twardy)"
 DiskClassName = "Dyski twarde"
 Disk.DeviceDesc = "Dysk twardy"
@@ -83,7 +81,6 @@ OpticalDisk.DeviceDesc = "Dysk optyczny"
 Disk.ServiceDesc = "Sterownik dysku"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 GenericMfg = "(dispozitiv disc generic)"
 DiskClassName = "Dispozitive disc"
 Disk.DeviceDesc = "Dispozitiv disc"
@@ -91,7 +88,6 @@ OpticalDisk.DeviceDesc = "Dispozitiv disc optic"
 Disk.ServiceDesc = "Modúl-pilot de disc"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные дисковые накопители)"
 DiskClassName = "Дисковые устройства"
 Disk.DeviceDesc = "Дисковое устройство"
@@ -99,7 +95,6 @@ OpticalDisk.DeviceDesc = "Оптическое дисковое устройст
 Disk.ServiceDesc = "Драйвер диска"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 GenericMfg = "(Umûmî Disk Sürücüleri)"
 DiskClassName = "Disk Sürücüleri"
 Disk.DeviceDesc = "Disk Sürücüsü"
@@ -107,7 +102,6 @@ OpticalDisk.DeviceDesc = "Optik Disk Sürücüsü"
 Disk.ServiceDesc = "Disk Sürücüsü"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні приводи дисків)"
 DiskClassName = "Дискові приводи"
 Disk.DeviceDesc = "Дисковий привід"

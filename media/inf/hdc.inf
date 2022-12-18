@@ -708,7 +708,6 @@ PCI\CC_0105.DeviceDesc  = "Obecný řadič ATA"
 PCI\CC_0106.DeviceDesc  = "Obecný řadič Serial ATA"
 
 [Strings.0407]
-ReactOS = "ReactOS Team"
 HDCClassName = "IDE ATA/ATAPI Controller"
 GenericMfg = "(Generische Festplatten-Controller)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 Controller"
@@ -1023,7 +1022,6 @@ PCI\CC_0105.DeviceDesc  = "Generischer ATA Controller"
 PCI\CC_0106.DeviceDesc  = "Generischer Serial ATA Controller"
 
 [Strings.0a]
-ReactOS                 = "Equipo de ReactOS"
 HDCClassName            = "Controladores IDE ATA/ATAPI genéricos"
 GenericMfg              = "(Controladores de disco duro genéricos)"
 
@@ -1036,7 +1034,6 @@ PCI\CC_0105.DeviceDesc  = "Controlador ATA genérico"
 PCI\CC_0106.DeviceDesc  = "Controlador Serial ATA genérico"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 HDCClassName = "Kontrolery IDE ATA/ATAPI"
 GenericMfg = "(Standardowe kontrolery IDE ATA/ATAPI)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Kontroler Acard ATP850 ATA-33"
@@ -1351,7 +1348,6 @@ PCI\CC_0105.DeviceDesc  = "Standardowy kontroler ATA"
 PCI\CC_0106.DeviceDesc  = "Standardowy kontroler Serial ATA"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 HDCClassName = "Dispozitive de control IDE ATA/ATAPI"
 GenericMfg = "(dispozitive generice de control HDD)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Dispozitiv de control Acard ATP850 ATA-33"
@@ -1642,7 +1638,6 @@ PCI\CC_0105.DeviceDesc  = "Dispozitiv de control ATA generic"
 PCI\CC_0106.DeviceDesc  = "Dispozitiv de control Serial ATA generic"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 HDCClassName = "IDE ATA/ATAPI контроллеры"
 GenericMfg = "(Универсальный контроллер жесткого диска)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 контроллер"
@@ -1956,7 +1951,6 @@ PCI\CC_0104.DeviceDesc  = "Универсальный RAID IDE контролл�
 PCI\CC_0105.DeviceDesc  = "Универсальный ATA контроллер"
 PCI\CC_0106.DeviceDesc  = "Универсальный Serial ATA контроллер"
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 HDCClassName = "IDE ATA/ATAPI Denetleyicileri"
 GenericMfg = "(Umûmî Sâbit Disk Denetleyicileri)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 Denetleyicisi"
@@ -2271,7 +2265,6 @@ PCI\CC_0105.DeviceDesc  = "Umûmî ATA Denetleyicisi"
 PCI\CC_0106.DeviceDesc  = "Umûmî Dizilik ATA Denetleyicisi"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 HDCClassName = "Контроллери IDE ATA/ATAPI"
 GenericMfg = "(Стандартні контроллери жорстких дисків)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Контроллер Acard ATP850 ATA-33"
