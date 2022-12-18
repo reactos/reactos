@@ -63,8 +63,6 @@ GenericMfg = "(Generische Netzwerkkarten)"
 *PNP80D6.DeviceDesc = "NE2000 kompatible Netzwerkkarte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 GenericMfg = "(Tarjeta de red estándar)"
 *PNP80D6.DeviceDesc = "Compatible con NE2000"
 
@@ -77,7 +75,6 @@ GenericMfg = "(標準 ネットワーク カード)"
 *PNP80D6.DeviceDesc = "NE2000 互換"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe karty sieciowe)"
 *PNP80D6.DeviceDesc = "Karta sieciowa kompatybilna z NE2000"
 
@@ -86,12 +83,10 @@ GenericMfg = "(Adaptadores de rede padrão)"
 *PNP80D6.DeviceDesc = "Compatível com NE2000"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 GenericMfg = "(placă de rețea generică)"
 *PNP80D6.DeviceDesc = "Compatibile cu NE2000"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные сетевые адаптеры)"
 *PNP80D6.DeviceDesc = "NE2000-совместимые"
 
@@ -100,13 +95,10 @@ GenericMfg = "(Generické sieťové karty)"
 *PNP80D6.DeviceDesc = "NE2000 kompatibilná sieťová karta"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
 GenericMfg = "(Umûmî Ağ Kartları)"
 *PNP80D6.DeviceDesc = "NE2000 Uyumlu"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні мережеві адаптери)"
 *PNP80D6.DeviceDesc = "NE2000-сумісні"
 

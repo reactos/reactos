@@ -122,8 +122,6 @@ IntelE1000_1099.DeviceDesc = "Intel 82546GB Quad Copper PCI Ethernet Adapter"
 IntelE1000_10B5.DeviceDesc = "Intel 82546GB Quad Copper KSP3 PCI-X Ethernet Adapter"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 IntelE1000_1000.DeviceDesc = "Karta Intel 82542-based PCI Ethernet Adapter"
 IntelE1000_1001.DeviceDesc = "Karta Intel 82543GC Fiber PCI Ethernet Adapter"
 IntelE1000_1004.DeviceDesc = "Karta Intel 82543GC Copper PCI Ethernet Adapter"
@@ -160,4 +158,4 @@ IntelE1000_107B.DeviceDesc = "Karta Intel 82546GB SerDes PCI Ethernet Adapter"
 IntelE1000_107C.DeviceDesc = "Karta Intel 82541PI PCI Ethernet Adapter"
 IntelE1000_108A.DeviceDesc = "Karta Intel 82546GB PCI-E Ethernet Adapter"
 IntelE1000_1099.DeviceDesc = "Karta Intel 82546GB Quad Copper PCI Ethernet Adapter"
-IntelE1000_10B5.DeviceDesc = "Karta Intel 82546GB Quad Copper KSP3 PCI-X Ethernet Adapter
+IntelE1000_10B5.DeviceDesc = "Karta Intel 82546GB Quad Copper KSP3 PCI-X Ethernet Adapter"

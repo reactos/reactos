@@ -61,22 +61,5 @@ ReactOS = "ReactOS Team"
 AMDMfg = "Advanced Micro Devices (AMD)"
 PCNET.DeviceDesc = "AMD PCnet Am79C970 PCI Ethernet Adapter"
 
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 PCNET.DeviceDesc = "Karta AMD PCnet Am79C970 PCI Ethernet Adapter"
-
-[Strings.0418]
-ReactOS = "Echipa ReactOS"
-
-[Strings.0419]
-ReactOS = "Команда ReactOS"
-
-[Strings.041f]
-ReactOS = "ReactOS Takımı"
-
-[Strings.0422]
-ReactOS = "Команда ReactOS"

@@ -69,7 +69,6 @@ CDROMClassName = "DVD/CD-ROM Laufwerke"
 CDROMClassName = "Οδηγοί DVD/CD-ROM"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 CDROMClassName = "Unidades de DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Unidad CD-ROM"
 GenericMfg = "(Unidades de DVD/CD-ROM genéricas)"
@@ -81,32 +80,27 @@ CDROMClassName = "Lecteurs de DVD/CD-ROM"
 CDROMClassName = "DVD/CD-ROM mechaniky"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 CDROMClassName = "Stacje dysków DVD/CD-ROM"
 
 [Strings.0416]
 CDROMClassName = "Unidades de DVD/CD-ROM"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 CDROMClassName = "Dispozitive DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Dispozitiv CD-ROM"
 GenericMfg = "(dispozitive DVD/CD-ROM generice)"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 CDROMClassName = "DVD/CD-ROM приводы"
 GenCdRom.DeviceDesc = "CD-ROM привод"
 GenericMfg = "(Стандартные DVD/CD-ROM приводы)"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 CDROMClassName = "DVD/CD-ROM Aygıtları"
 GenCdRom.DeviceDesc = "CD-ROM Aygıtı"
 GenericMfg = "(Umûmî DVD/CD-ROM Aygıtları)"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 CDROMClassName = "Приводи DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Привід CD-ROM"
 GenericMfg = "(Стандартні приводи DVD/CD-ROM)"
