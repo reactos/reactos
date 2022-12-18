@@ -28,21 +28,16 @@ ReactOS = "ReactOS Team"
 ImageClassName = "Image"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 ImageClassName = "Imagen"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
 ImageClassName = "Obraz"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 ImageClassName = "Imagine"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 ImageClassName = "Образ"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
 ImageClassName = "Resim"
