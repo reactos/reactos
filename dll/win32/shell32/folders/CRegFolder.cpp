@@ -212,13 +212,12 @@ class CRegFolderEnum :
         END_COM_MAP()
 };
 
-#define REGISTRYSHELLVIEWCOLUMNS 2
-
 enum registry_columns
 {
     REGISTRY_COL_NAME,
     REGISTRY_COL_TYPE,
     REGISTRY_COL_VALUE,
+    REGISTRY_COL_COUNT,
 };
 
 CRegFolderEnum::CRegFolderEnum()
@@ -732,7 +731,7 @@ HRESULT WINAPI CRegFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pD
 
 HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (iColumn > REGISTRYSHELLVIEWCOLUMNS)
+    if (iColumn >= REGISTRY_COL_COUNT)
         return E_INVALIDARG;
     *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
     return S_OK;
