@@ -379,6 +379,7 @@ BOOL pcheck( LPCITEMIDLIST pidl )
                 case PT_YAGUID:
                 case PT_IESPECIAL2:
                 case PT_SHARE:
+                case PT_NETCONNECTION:
                     break;
                 default:
                     ERR("unknown IDLIST %p [%p] size=%u type=%x\n",

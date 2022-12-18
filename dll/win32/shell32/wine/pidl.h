@@ -101,6 +101,9 @@ extern "C" {
 #define PT_NETWORK	0x47
 #define PT_IESPECIAL1	0x61
 #define PT_YAGUID	0x70 /* yet another guid.. */
+#ifdef __REACTOS__
+#define PT_NETCONNECTION 0x99
+#endif
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
