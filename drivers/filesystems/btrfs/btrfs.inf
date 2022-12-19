@@ -129,7 +129,6 @@ VolumeName              = "Btrfs volume"
 ControllerName          = "Btrfs controller"
 
 [Strings.0404]
-Me                      = "Mark Harmstone"
 ServiceDescription      = "Btrfs 驅動程式"
 ServiceName             = "btrfs"
 DriverName              = "btrfs"
@@ -138,7 +137,6 @@ VolumeName              = "Btrfs 磁碟區"
 ControllerName          = "Btrfs 控制器"
 
 [Strings.0415]
-Me                      = "Mark Harmstone"
 ServiceDescription      = "Sterownik systemu plików Btrfs"
 ServiceName             = "btrfs"
 DriverName              = "btrfs"
@@ -147,7 +145,6 @@ VolumeName              = "Wolumin Btrfs"
 ControllerName          = "Kontroler Btrfs"
 
 [Strings.0804]
-Me                      = "Mark Harmstone"
 ServiceDescription      = "Btrfs 驱动程序"
 ServiceName             = "btrfs"
 DriverName              = "btrfs"
@@ -156,7 +153,6 @@ VolumeName              = "Btrfs 卷"
 ControllerName          = "Btrfs 控制器"
 
 [Strings.0c04]
-Me                      = "Mark Harmstone"
 ServiceDescription      = "Btrfs 驅動程式"
 ServiceName             = "btrfs"
 DriverName              = "btrfs"
