@@ -854,6 +854,22 @@ static void test_RpcBindingFree(void)
        status);
 }
 
+static void test_RpcStringFree(void)
+{
+    RPC_WSTR string = NULL;
+
+    string = HeapAlloc(GetProcessHeap(), 0, 10*sizeof(WCHAR));
+    if (string == NULL)
+    {
+        skip("Failed to allocate a string!\n");
+        return;
+    }
+
+    RpcStringFreeW(&string);
+
+    ok(string == NULL, "String is %p expected NULL!\n", string);
+}
+
 static void test_RpcServerInqDefaultPrincName(void)
 {
     RPC_STATUS ret;
@@ -1204,6 +1220,7 @@ START_TEST( rpc )
     test_UuidCreate();
     test_UuidCreateSequential();
     test_RpcBindingFree();
+    test_RpcStringFree();
     test_RpcServerInqDefaultPrincName();
     test_RpcServerRegisterAuthInfo();
 

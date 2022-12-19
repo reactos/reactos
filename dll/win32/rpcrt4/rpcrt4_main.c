@@ -158,6 +158,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 RPC_STATUS WINAPI RpcStringFreeA(RPC_CSTR* String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
+  if (String) *String = NULL;
 
   return RPC_S_OK;
 }
@@ -174,6 +175,7 @@ RPC_STATUS WINAPI RpcStringFreeA(RPC_CSTR* String)
 RPC_STATUS WINAPI RpcStringFreeW(RPC_WSTR* String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
+  if (String) *String = NULL;
 
   return RPC_S_OK;
 }
