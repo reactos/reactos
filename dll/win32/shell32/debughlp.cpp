@@ -370,6 +370,7 @@ BOOL pcheck( LPCITEMIDLIST pidl )
                 case PT_FOLDER:
                 case PT_VALUE:
                 case PT_VALUEW:
+                case PT_FOLDERW:
                 case PT_FOLDER1:
                 case PT_WORKGRP:
                 case PT_COMP:
