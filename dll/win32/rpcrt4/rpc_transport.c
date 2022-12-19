@@ -1257,6 +1257,18 @@ static size_t rpcrt4_ip_tcp_get_top_of_tower(unsigned char *tower_data,
     hints.ai_canonname      = NULL;
     hints.ai_next           = NULL;
 
+#ifdef __REACTOS__
+    static BOOL wsa_inited;
+    if (!wsa_inited)
+    {
+        WSADATA wsadata;
+        WSAStartup(MAKEWORD(2, 2), &wsadata);
+        /* Note: WSAStartup can be called more than once so we don't bother with
+         * making accesses to wsa_inited thread-safe */
+        wsa_inited = TRUE;
+    }
+#endif
+
     ret = getaddrinfo(networkaddr, endpoint, &hints, &ai);
     if (ret)
     {
