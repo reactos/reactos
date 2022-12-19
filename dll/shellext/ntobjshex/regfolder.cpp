@@ -396,11 +396,38 @@ HRESULT CRegistryFolder::CompareIDs(LPARAM lParam, const RegPidlEntry * first, c
         return CompareName(lParam, first, second);
 
     case REGISTRY_COLUMN_TYPE:
-        return MAKE_COMPARE_HRESULT(second->contentType - first->contentType);
+        if (first->entryType != second->entryType)
+            return MAKE_COMPARE_HRESULT(second->entryType - first->entryType);
+
+        if (first->entryType == REG_ENTRY_KEY)
+        {
+            if (first->contentsLength == 0 || second->contentsLength == 0)
+                return (first->contentsLength == 0) ? S_GREATERTHAN : S_LESSTHAN;
+
+            PWSTR firstKey = (PWSTR)(((PBYTE)first) + FIELD_OFFSET(RegPidlEntry, entryName) + first->entryNameLength + sizeof(WCHAR));
+            PWSTR secondKey = (PWSTR)(((PBYTE)second) + FIELD_OFFSET(RegPidlEntry, entryName) + second->entryNameLength + sizeof(WCHAR));
+            return MAKE_COMPARE_HRESULT(lstrcmpW(firstKey, secondKey));
+        }
+
+        return CompareName(lParam, first, second);
 
     case REGISTRY_COLUMN_VALUE:
-        // Can't sort by link target yet
-        return E_INVALIDARG;
+    {
+        PCWSTR firstContent, secondContent;
+
+        if (FAILED_UNEXPECTEDLY(FormatContentsForDisplay(first, m_hRoot, m_NtPath, &firstContent)))
+            return E_INVALIDARG;
+
+        if (FAILED_UNEXPECTEDLY(FormatContentsForDisplay(second, m_hRoot, m_NtPath, &secondContent)))
+            return E_INVALIDARG;
+
+        hr = MAKE_COMPARE_HRESULT(lstrcmpW(firstContent, secondContent));
+
+        CoTaskMemFree((LPVOID)firstContent);
+        CoTaskMemFree((LPVOID)secondContent);
+
+        return hr;
+    }
     }
 
     DbgPrint("Unsupported sorting mode.\n");
