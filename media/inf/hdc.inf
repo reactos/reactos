@@ -132,7 +132,6 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_8086&DEV_3a22.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a22
 %PCI\VEN_8086&DEV_3a23.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a23
 %PCI\VEN_8086&DEV_3a26.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a26
-
 %PCI\VEN_8086&DEV_3b20.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b20
 %PCI\VEN_8086&DEV_3b21.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b21
 %PCI\VEN_8086&DEV_3b22.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b22
@@ -143,16 +142,13 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_8086&DEV_3b2d.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2d
 %PCI\VEN_8086&DEV_3b2e.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2e
 %PCI\VEN_8086&DEV_3b2f.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2f
-
 ; %PCI\VEN_8086&DEV_3200.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3200
-
 %PCI\VEN_11ab&DEV_5040.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5040
 %PCI\VEN_11ab&DEV_5041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5041
 %PCI\VEN_11ab&DEV_5080.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5080
 %PCI\VEN_11ab&DEV_5081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5081
 %PCI\VEN_11ab&DEV_6041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6041
 %PCI\VEN_11ab&DEV_6081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6081
-
 %PCI\VEN_11ab&DEV_6101.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6101
 %PCI\VEN_11ab&DEV_6145.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6145
 %PCI\VEN_10de&DEV_01bc.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_01bc
@@ -208,7 +204,6 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_105a&DEV_6626.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6626
 %PCI\VEN_105a&DEV_6629.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6629
 %PCI\VEN_105a&DEV_6620.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6620
-
 %PCI\VEN_105a&DEV_6621.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6621
 %PCI\VEN_105a&DEV_6622.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6622
 %PCI\VEN_1166&DEV_0211.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0211
@@ -235,10 +230,8 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646&REV_07
 %PCI\VEN_1095&DEV_0646.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646
 %PCI\VEN_1095&DEV_0640.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0640
-
 ; %PCI\VEN_1039&DEV_0963.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0963
 ; %PCI\VEN_1039&DEV_0962.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0962
-
 ; %PCI\VEN_1039&DEV_0755.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0755
 ; %PCI\VEN_1039&DEV_0752.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0752
 ; %PCI\VEN_1039&DEV_0751.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0751
@@ -250,7 +243,6 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1039&DEV_0735.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0735
 ; %PCI\VEN_1039&DEV_0733.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0733
 ; %PCI\VEN_1039&DEV_0730.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0730
-
 ; %PCI\VEN_1039&DEV_0658.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0658
 ; %PCI\VEN_1039&DEV_0655.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0655
 ; %PCI\VEN_1039&DEV_0652.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0652
@@ -264,15 +256,12 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1039&DEV_0633.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0633
 ; %PCI\VEN_1039&DEV_0630.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0630
 ; %PCI\VEN_1039&DEV_0620.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0620
-
 ; %PCI\VEN_1039&DEV_0550.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0550
 ; %PCI\VEN_1039&DEV_0540.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0540
 ; %PCI\VEN_1039&DEV_0530.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0530
-
 %PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513&REV_c2
 %PCI\VEN_1039&DEV_5513.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513
 %PCI\VEN_1039&DEV_0601.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0601
-
 ; %PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0586&REV_41
 ; %PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0586&REV_40
 ; %PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0586&REV_02
@@ -287,38 +276,28 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1106&DEV_3109.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3109
 ; %PCI\VEN_1106&DEV_3147.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3147
 ; %PCI\VEN_1106&DEV_3177.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3177
-
 %PCI\VEN_1106&DEV_0571.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0571
 %PCI\VEN_1106&DEV_3164.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3164
 %PCI\VEN_1106&DEV_3149.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3149
 %PCI\VEN_1106&DEV_3249.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3249
 %PCI\VEN_1106&DEV_0591.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0591
 %PCI\VEN_1106&DEV_5337.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_5337
-
 %PCI\VEN_1106&DEV_3349.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3349
-
 %PCI\VEN_1080&DEV_c693.DeviceDesc%=PciIde_Inst, PCI\VEN_1080&DEV_c693
-
 ; %PCI\VEN_105a&DEV_4d68.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d68
 ; %PCI\VEN_105a&DEV_6268.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6268
-
 ; %PCI\VEN_105a&DEV_4d69.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d69
 ; %PCI\VEN_105a&DEV_5275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_5275
 ; %PCI\VEN_105a&DEV_6269.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6269
 ; %PCI\VEN_105a&DEV_7275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_7275
-
 ; %PCI\VEN_105a&DEV_4d33.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d33
-
 ; %PCI\VEN_105a&DEV_0d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d38
 ; %PCI\VEN_105a&DEV_4d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d38
-
 ; %PCI\VEN_105a&DEV_4d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d30
 ; %PCI\VEN_105a&DEV_0d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d30
-
 ; %PCI\VEN_1103&DEV_0004.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004
 ; %PCI\VEN_1103&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005
 ; %PCI\VEN_1103&DEV_0008.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0008
-
 %PCI\VEN_16ca&DEV_0001.DeviceDesc%=PciIde_Inst, PCI\VEN_16ca&DEV_0001
 %PCI\VEN_1078&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1078&DEV_0102
 %PCI\VEN_1042&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1042&DEV_0102
@@ -329,7 +308,6 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc%=PciIde_Inst, PCI\VEN_ffff&DEV_ffff&REV_ff
 
 ;Compatible adapters
-
 %PCI\CC_0101.DeviceDesc% = PciIde_Inst,PCI\CC_0101                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
 %PCI\CC_0104.DeviceDesc% = uniata_Inst,PCI\CC_0104                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
 %PCI\CC_0105.DeviceDesc% = uniata_Inst,PCI\CC_0105                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
@@ -358,7 +336,7 @@ ErrorControl   = 1
 ServiceBinary  = %12%\pciide.sys
 LoadOrderGroup = System Bus Extender
 
-;----------------------------- UNIATA DRIVER -----------------------------
+;----------------------------- UNIATA DRIVER ----------------------------
 
 [uniata_Inst.NT]
 CopyFiles = uniata_CopyFiles.NT
@@ -475,12 +453,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 controller"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 controller"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 controller"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 controller"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 controller"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 controller"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 controller"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 controller"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 controller"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 controller"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 controller"
@@ -489,7 +465,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 controller"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 controller"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 controller"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 controller"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 controller"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 controller"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 controller"
@@ -500,16 +475,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 controller"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 controller"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 controller"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 controller"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA controller"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA controller"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA controller"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA controller"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA controller"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA controller"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA controller"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 controller"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 controller"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 controller"
@@ -565,10 +537,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 controller"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 controller"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 controller"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 controller"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 controller"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 controller"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 controller"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 controller"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 controller"
@@ -593,10 +563,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 controller"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 controller"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA controller"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE controller"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE controller"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE controller"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE controller"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE controller"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE controller"
@@ -608,7 +576,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE controller"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE controller"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE controller"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE controller"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE controller"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE controller"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE controller"
@@ -622,15 +589,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE controller"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE controller"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE controller"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE controller"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE controller"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE controller"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE controller"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx controller"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx controller"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx controller"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B controller"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B controller"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B controller"
@@ -645,38 +609,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx controller"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C controller"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A controller"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 controller"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx controller"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 controller"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 controller"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 controller"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A controller"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S controller"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 controller"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA controller"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 controller"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 controller"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 controller"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 controller"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 controller"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 controller"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 controller"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 controller"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 controller"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 controller"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 controllers"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 controller"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 controller"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 controller"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA controller"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 controller"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE controller"
@@ -687,7 +641,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA controller"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE controller"
 
 ;Compatible adapters
-
 UniATA_Name = "Universal ATA Driver"
 *PNP0600.DeviceDesc     = "IDE/ESDI Hard Disk Controller"
 *PNP0600.PriDeviceDesc  = "Primary IDE Channel"
@@ -789,12 +742,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 控制器"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 控制器"
@@ -803,7 +754,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 控制器"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 控制器"
@@ -814,16 +764,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 控制器"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA 控制器"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA 控制器"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA 控制器"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA 控制器"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA 控制器"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA 控制器"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA 控制器"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 控制器"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 控制器"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 控制器"
@@ -879,10 +826,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 控制器"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 控制器"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 控制器"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 控制器"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 控制器"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 控制器"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 控制器"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 控制器"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 控制器"
@@ -907,10 +852,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 控制器"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 控制器"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA 控制器"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE 控制器"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE 控制器"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE 控制器"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE 控制器"
@@ -922,7 +865,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE 控制器"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE 控制器"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE 控制器"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE 控制器"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE 控制器"
@@ -936,15 +878,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE 控制器"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE 控制器"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE 控制器"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE 控制器"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE 控制器"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B 控制器"
@@ -959,38 +898,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C 控制器"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A 控制器"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 控制器"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx 控制器"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 控制器"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 控制器"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 控制器"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A 控制器"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S 控制器"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 控制器"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA 控制器"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 控制器"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 控制器"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 控制器"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 控制器"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 控制器"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 控制器"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 控制器"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 控制器"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 控制器"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 控制器"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 控制器"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA 控制器"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 控制器"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE 控制器"
@@ -1014,7 +943,6 @@ HDCClassName = "IDE řadiče ATA/ATAPI"
 GenericMfg = "(Obecné řadiče pevných disků)"
 
 ;Compatible adapters
-
 UniATA_Name = "Univerzální ATA ovladač"
 *PNP0600.PriDeviceDesc  = "Primární IDE kanál"
 *PNP0600.SecDeviceDesc  = "Sekundární IDE kanál"
@@ -1116,12 +1044,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 Controller"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 Controller"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 Controller"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 Controller"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 Controller"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 Controller"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 Controller"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 Controller"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 Controller"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 Controller"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 Controller"
@@ -1130,7 +1056,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 Controller"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 Controller"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 Controller"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 Controller"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 Controller"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 Controller"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 Controller"
@@ -1141,16 +1066,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 Controller"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 Controller"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 Controller"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 Controller"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA Controller"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA Controller"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA Controller"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA Controller"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA Controller"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA Controller"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA Controller"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 Controller"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 Controller"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 Controller"
@@ -1206,10 +1128,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 Controller"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 Controller"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 Controller"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 Controller"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 Controller"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 Controller"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 Controller"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 Controller"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 Controller"
@@ -1234,10 +1154,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 Controller"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 Controller"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA Controller"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Controller"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE Controller"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE Controller"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE Controller"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE Controller"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE Controller"
@@ -1249,7 +1167,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Controller"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE Controller"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE Controller"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE Controller"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE Controller"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE Controller"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE Controller"
@@ -1263,15 +1180,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Controller"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE Controller"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE Controller"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE Controller"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE Controller"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE Controller"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE Controller"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx Controller"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx Controller"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx Controller"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B Controller"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B Controller"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B Controller"
@@ -1286,38 +1200,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx Controller"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C Controller"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A Controller"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 Controller"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx Controller"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 Controller"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 Controller"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 Controller"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A Controller"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S Controller"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 Controller"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA Controller"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 Controller"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 Controller"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 Controller"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 Controller"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 Controller"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 Controller"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 Controller"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 Controller"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 Controller"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 Controller"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 Controllers"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 Controller"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 Controller"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 Controller"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA Controller"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 Controller"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE Controller"
@@ -1328,7 +1232,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA Controller"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE Controller"
 
 ;Compatible adapters
-
 UniATA_Name = "Universal ATA Treiber"
 *PNP0600.PriDeviceDesc  = "Primärer IDE Kanal"
 *PNP0600.SecDeviceDesc  = "Sekundärer IDE Kanal"
@@ -1336,7 +1239,6 @@ PCI\CC_0101.DeviceDesc  = "PCI BusMaster IDE Controller (2-kanalig)"
 PCI\CC_0104.DeviceDesc  = "Generischer RAID IDE Controller"
 PCI\CC_0105.DeviceDesc  = "Generischer ATA Controller"
 PCI\CC_0106.DeviceDesc  = "Generischer Serial ATA Controller"
-
 
 [Strings.0a]
 HDCClassName            = "Controladores IDE ATA/ATAPI genéricos"
@@ -1431,12 +1333,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Controlador Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Controlador Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Controlador Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Controlador Intel ICH9 SATA2"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Controlador Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Controlador Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Controlador Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Controlador Intel ICH9/M-E SATA2"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Controlador Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Controlador Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Controlador Intel ICH10 SATA2"
@@ -1445,7 +1345,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Controlador Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Controlador Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Controlador Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Controlador Intel ICH10 SATA2"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Controlador Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Controlador Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Controlador Intel PCH SATA2"
@@ -1456,16 +1355,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Controlador Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Controlador Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Controlador Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Controlador Intel PCH SATA2"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Controlador Intel 31244 SATA"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Controlador Marvell 88SX5040 ATA"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Controlador Marvell 88SX5041 ATA"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Controlador Marvell 88SX5080 ATA"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Controlador Marvell 88SX5081 ATA"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Controlador Marvell 88SX6041 ATA"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Controlador Marvell 88SX6081 ATA"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Controlador Marvell 88SX6101 ATA-133"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Controlador Marvell 88SX6145 ATA-133"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="Controlador nVidia nForce ATA-100"
@@ -1521,10 +1417,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Controlador Promise PDC20617 ATA-133"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Controlador Promise PDC20618 ATA-133"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Controlador Promise PDC20619 ATA-133"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Controlador Promise PDC20620 ATA-133"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Controlador Promise PDC20621 ATA-133"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Controlador Promise PDC20622 ATA-133"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="Controlador ServerWorks ROSB4 ATA-33"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="Controlador ServerWorks CSB5 ATA-100"
 PCI\VEN_1166&DEV_0212.DeviceDesc="Controlador ServerWorks CSB5 ATA-66"
@@ -1549,10 +1443,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="Controlador CMD 648 ATA-66"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="Controlador CMD 646U2 ATA-33"
 PCI\VEN_1095&DEV_0646.DeviceDesc="Controlador CMD 646 IDE DMA"
 PCI\VEN_1095&DEV_0640.DeviceDesc="Controlador CMD 640 IDE"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="Controlador SiS 963 IDE"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="Controlador SiS 640 IDE"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="Controlador SiS 755 IDE"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="Controlador SiS 752 IDE"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="Controlador SiS 751 IDE"
@@ -1564,7 +1456,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Controlador CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="Controlador SiS 735 IDE"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="Controlador SiS 733 IDE"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="Controlador SiS 730 IDE"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="Controlador SiS 658 IDE"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="Controlador SiS 655 IDE"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="Controlador SiS 652 IDE"
@@ -1578,15 +1469,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Controlador CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="Controlador SiS 633 IDE"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="Controlador SiS 630 IDE"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="Controlador SiS 620 IDE"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="Controlador SiS 550 IDE"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="Controlador SiS 540 IDE"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="Controlador SiS 530 IDE"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="Controlador SiS ATA-xxx"
 PCI\VEN_1039&DEV_5513.DeviceDesc="Controlador SiS ATA-xxx"
 PCI\VEN_1039&DEV_0601.DeviceDesc="Controlador SiS ATA-xxx"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="Controlador VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="Controlador VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="Controlador VIA 82C586B"
@@ -1601,38 +1489,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="Controlador SiS ATA-xxx"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="Controlador VIA 8233C"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="Controlador VIA 8233A"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="Controlador VIA 8235"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="Controlador VIA ATA-xxx"
 PCI\VEN_1106&DEV_3164.DeviceDesc="Controlador VIA 6410"
 PCI\VEN_1106&DEV_3149.DeviceDesc="Controlador VIA 6420"
 PCI\VEN_1106&DEV_3249.DeviceDesc="Controlador VIA 6421"
 PCI\VEN_1106&DEV_0591.DeviceDesc="Controlador VIA 8237A"
 PCI\VEN_1106&DEV_5337.DeviceDesc="Controlador VIA 8237S"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="Controlador VIA 8251"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Controlador Cypress 82C693 IDE DMA"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Controlador Promise TX2 ATA-100"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Controlador Promise TX2 ATA-100"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Controlador Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Controlador Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Controlador Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Controlador Promise TX2 ATA-133"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Controlador Promise Promise Ultra/FastTrak-33"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Controlador Promise Promise FastTrak-66"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Controlador Promise Promise Ultra/FastTrak-66"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Controlador Promise Promise Ultra/FastTrak-100"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Controlador Promise OEM ATA-100 controllers"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="Controlador HighPoint HPT366/368/370/372"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="Controlador HighPoint HPT372"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="Controlador HighPoint HPT374"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Controlador Cenatek Rocket Drive IDE DMA"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Controlador Cyrix 5530 ATA-33"
 PCI\VEN_1042&DEV_0102.DeviceDesc="Controlador RZ 100x IDE"
@@ -1643,7 +1521,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Controlador HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Controlador IDE"
 
 ;Compatible adapters
-
 UniATA_Name             = "Controlador ATA universal"
 *PNP0600.PriDeviceDesc  = "Canal IDE primario"
 *PNP0600.SecDeviceDesc  = "Canal IDE secundario"
@@ -1745,12 +1622,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Kontroler Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Kontroler Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Kontroler Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Kontroler Intel ICH9 SATA2"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Kontroler Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Kontroler Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Kontroler Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Kontroler Intel ICH9/M-E SATA2"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Kontroler Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Kontroler Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Kontroler Intel ICH10 SATA2"
@@ -1759,7 +1634,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Kontroler Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Kontroler Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Kontroler Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Kontroler Intel ICH10 SATA2"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Kontroler Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Kontroler Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Kontroler Intel PCH SATA2"
@@ -1770,16 +1644,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Kontroler Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Kontroler Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Kontroler Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Kontroler Intel PCH SATA2"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Kontroler Intel 31244 SATA"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Kontroler Marvell 88SX5040 ATA"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Kontroler Marvell 88SX5041 ATA"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Kontroler Marvell 88SX5080 ATA"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Kontroler Marvell 88SX5081 ATA"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Kontroler Marvell 88SX6041 ATA"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Kontroler Marvell 88SX6081 ATA"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Kontroler Marvell 88SX6101 ATA-133"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Kontroler Marvell 88SX6145 ATA-133"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="Kontroler nVidia nForce ATA-100"
@@ -1835,10 +1706,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Kontroler Promise PDC20617 ATA-133"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Kontroler Promise PDC20618 ATA-133"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Kontroler Promise PDC20619 ATA-133"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Kontroler Promise PDC20620 ATA-133"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Kontroler Promise PDC20621 ATA-133"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Kontroler Promise PDC20622 ATA-133"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="Kontroler ServerWorks ROSB4 ATA-33"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="Kontroler ServerWorks CSB5 ATA-100"
 PCI\VEN_1166&DEV_0212.DeviceDesc="Kontroler ServerWorks CSB5 ATA-66"
@@ -1863,10 +1732,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="Kontroler CMD 648 ATA-66"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="Kontroler CMD 646U2 ATA-33"
 PCI\VEN_1095&DEV_0646.DeviceDesc="Kontroler CMD 646 IDE DMA"
 PCI\VEN_1095&DEV_0640.DeviceDesc="Kontroler CMD 640 IDE"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="Kontroler SiS 963 IDE"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="Kontroler SiS 640 IDE"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="Kontroler SiS 755 IDE"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="Kontroler SiS 752 IDE"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="Kontroler SiS 751 IDE"
@@ -1878,7 +1745,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Kontroler CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="Kontroler SiS 735 IDE"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="Kontroler SiS 733 IDE"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="Kontroler SiS 730 IDE"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="Kontroler SiS 658 IDE"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="Kontroler SiS 655 IDE"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="Kontroler SiS 652 IDE"
@@ -1892,15 +1758,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Kontroler CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="Kontroler SiS 633 IDE"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="Kontroler SiS 630 IDE"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="Kontroler SiS 620 IDE"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="Kontroler SiS 550 IDE"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="Kontroler SiS 540 IDE"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="Kontroler SiS 530 IDE"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="Kontroler SiS ATA-xxx"
 PCI\VEN_1039&DEV_5513.DeviceDesc="Kontroler SiS ATA-xxx"
 PCI\VEN_1039&DEV_0601.DeviceDesc="Kontroler SiS ATA-xxx"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="Kontroler VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="Kontroler VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="Kontroler VIA 82C586B"
@@ -1915,38 +1778,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="Kontroler SiS ATA-xxx"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="Kontroler VIA 8233C"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="Kontroler VIA 8233A"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="Kontroler VIA 8235"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="Kontroler VIA ATA-xxx"
 PCI\VEN_1106&DEV_3164.DeviceDesc="Kontroler VIA 6410"
 PCI\VEN_1106&DEV_3149.DeviceDesc="Kontroler VIA 6420"
 PCI\VEN_1106&DEV_3249.DeviceDesc="Kontroler VIA 6421"
 PCI\VEN_1106&DEV_0591.DeviceDesc="Kontroler VIA 8237A"
 PCI\VEN_1106&DEV_5337.DeviceDesc="Kontroler VIA 8237S"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="Kontroler VIA 8251"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Kontroler Cypress 82C693 IDE DMA"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Kontroler Promise TX2 ATA-100"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Kontroler Promise TX2 ATA-100"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Kontroler Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Kontroler Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Kontroler Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Kontroler Promise TX2 ATA-133"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Kontroler Promise Promise Ultra/FastTrak-33"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Kontroler Promise Promise FastTrak-66"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Kontroler Promise Promise Ultra/FastTrak-66"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Kontroler Promise Promise Ultra/FastTrak-100"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Kontroler Promise OEM ATA-100s"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="Kontroler HighPoint HPT366/368/370/372"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="Kontroler HighPoint HPT372"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="Kontroler HighPoint HPT374"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Kontroler Cenatek Rocket Drive IDE DMA"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Kontroler Cyrix 5530 ATA-33"
 PCI\VEN_1042&DEV_0102.DeviceDesc="Kontroler RZ 100x IDE"
@@ -1957,7 +1810,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Kontroler HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Kontroler IDE"
 
 ;Compatible adapters
-
 UniATA_Name = "Uniwersalny sterownik ATA"
 *PNP0600.PriDeviceDesc  = "Podstawowy kanał IDE"
 *PNP0600.SecDeviceDesc  = "Pomocniczy kanał IDE"
@@ -2247,7 +2099,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Dispozitiv de control HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Dispozitiv de control IDE"
 
 ;Compatible adapters
-
 UniATA_Name = "Modúl-pilot ATA universal"
 *PNP0600.PriDeviceDesc  = "Dispozitiv de control IDE primar"
 *PNP0600.SecDeviceDesc  = "Dispozitiv de control IDE secundar"
@@ -2349,12 +2200,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 контроллер"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 контроллер"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 контроллер"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 контроллер"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 контроллер"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 контроллер"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 контроллер"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 контроллер"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 контроллер"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 контроллер"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 контроллер"
@@ -2363,7 +2212,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 контроллер"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 контроллер"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 контроллер"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 контроллер"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 контроллер"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 контроллер"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 контроллер"
@@ -2374,16 +2222,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 контроллер"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 контроллер"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 контроллер"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 контроллер"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA контроллер"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA контроллер"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA контроллер"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA контроллер"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA контроллер"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA контроллер"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA контроллер"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 контроллер"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 контроллер"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 контроллер"
@@ -2439,10 +2284,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 контроллер"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 контроллер"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 контроллер"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 контроллер"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 контроллер"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 контроллер"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 контроллер"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 контроллер"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 контроллер"
@@ -2467,10 +2310,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 контроллер"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 контроллер"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA контроллер"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE контроллер"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE контроллер"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE контроллер"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE контроллер"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE контроллер"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE контроллер"
@@ -2482,7 +2323,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE контроллер"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE контроллер"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE контроллер"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE контроллер"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE контроллер"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE контроллер"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE контроллер"
@@ -2496,15 +2336,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE контроллер"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE контроллер"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE контроллер"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE контроллер"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE контроллер"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE контроллер"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE контроллер"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx контроллер"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx контроллер"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx контроллер"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B контроллер"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B контроллер"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B контроллер"
@@ -2519,38 +2356,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx контроллер"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C контроллер"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A контроллер"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 контроллер"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx контроллер"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 контроллер"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 контроллер"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 контроллер"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A контроллер"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S контроллер"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 контроллер"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA контроллер"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 контроллер"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 контроллер"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 контроллер"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 контроллер"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 контроллер"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 контроллер"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 контроллер"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 контроллер"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 контроллер"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 контроллер"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 контроллерs"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 контроллер"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 контроллер"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 контроллер"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA контроллер"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 контроллер"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE контроллер"
@@ -2561,7 +2388,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA контроллер"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE контроллер"
 
 ;Compatible adapters
-
 UniATA_Name = "Универсальный ATA драйвер"
 *PNP0600.DeviceDesc     = "IDE/ESDI контроллер жёсткого диска"
 *PNP0600.PriDeviceDesc  = "Первичный канал IDE"
@@ -2571,7 +2397,6 @@ PCI\CC_0104.DeviceDesc  = "Универсальный RAID IDE контролл�
 PCI\CC_0105.DeviceDesc  = "Универсальный ATA контроллер"
 PCI\CC_0106.DeviceDesc  = "Универсальный Serial ATA контроллер"
 
-; Turkish
 [Strings.041f]
 HDCClassName = "IDE ATA/ATAPI Denetleyicileri"
 GenericMfg = "(Genel Sabit Disk Denetleyicileri)"
@@ -2665,12 +2490,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 Denetleyicisi"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 Denetleyicisi"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
@@ -2679,7 +2502,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 Denetleyicisi"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
@@ -2690,16 +2512,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 Denetleyicisi"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA Denetleyicisi"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA Denetleyicisi"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA Denetleyicisi"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA Denetleyicisi"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA Denetleyicisi"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA Denetleyicisi"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA Denetleyicisi"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 Denetleyicisi"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 Denetleyicisi"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 Denetleyicisi"
@@ -2755,10 +2574,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 Denetleyicisi"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 Denetleyicisi"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 Denetleyicisi"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 Denetleyicisi"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 Denetleyicisi"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 Denetleyicisi"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 Denetleyicisi"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 Denetleyicisi"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 Denetleyicisi"
@@ -2783,10 +2600,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 Denetleyicisi"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 Denetleyicisi"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA Denetleyicisi"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Denetleyicisi"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE Denetleyicisi"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE Denetleyicisi"
@@ -2798,7 +2613,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE Denetleyicisi"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE Denetleyicisi"
@@ -2812,15 +2626,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE Denetleyicisi"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE Denetleyicisi"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE Denetleyicisi"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx Denetleyicisi"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx Denetleyicisi"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx Denetleyicisi"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B Denetleyicisi"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B Denetleyicisi"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B Denetleyicisi"
@@ -2835,38 +2646,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx Denetleyicisi"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C Denetleyicisi"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A Denetleyicisi"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 Denetleyicisi"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx Denetleyicisi"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 Denetleyicisi"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 Denetleyicisi"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 Denetleyicisi"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A Denetleyicisi"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S Denetleyicisi"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 Denetleyicisi"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA Denetleyicisi"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 Denetleyicisi"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 Denetleyicisi"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 Denetleyicisi"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 Denetleyicisi"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 Denetleyicisi"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 Denetleyicisi"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 Denetleyicisi"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 Denetleyicisi"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 Denetleyicisi"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 Denetleyicisi"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 Denetleyicileri"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 Denetleyicisi"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 Denetleyicisi"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 Denetleyicisi"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA Denetleyicisi"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 Denetleyicisi"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE Denetleyicisi"
@@ -2877,7 +2678,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA Denetleyicisi"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE Denetleyicisi"
 
 ;Compatible adapters
-
 UniATA_Name = "Evrensel ATA Sürücüsü"
 *PNP0600.PriDeviceDesc  = "Birinci IDE Kanalı"
 *PNP0600.SecDeviceDesc  = "İkinci IDE Kanalı"
@@ -2979,12 +2779,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Контроллер Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Контроллер Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Контроллер Intel ICH9 SATA2"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Контроллер Intel ICH9 SATA2"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Контроллер Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Контроллер Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Контроллер Intel ICH9/M-E SATA2"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Контроллер Intel ICH9/M-E SATA2"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Контроллер Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Контроллер Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Контроллер Intel ICH10 SATA2"
@@ -2993,7 +2791,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Контроллер Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Контроллер Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Контроллер Intel ICH10 SATA2"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Контроллер Intel ICH10 SATA2"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Контроллер Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Контроллер Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Контроллер Intel PCH SATA2"
@@ -3004,16 +2801,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Контроллер Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Контроллер Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Контроллер Intel PCH SATA2"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Контроллер Intel PCH SATA2"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Контроллер Intel 31244 SATA"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Контроллер Marvell 88SX5040 ATA"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Контроллер Marvell 88SX5041 ATA"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Контроллер Marvell 88SX5080 ATA"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Контроллер Marvell 88SX5081 ATA"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Контроллер Marvell 88SX6041 ATA"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Контроллер Marvell 88SX6081 ATA"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Контроллер Marvell 88SX6101 ATA-133"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Контроллер Marvell 88SX6145 ATA-133"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="Контроллер nVidia nForce ATA-100"
@@ -3069,10 +2863,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Контроллер Promise PDC20617 ATA-133"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Контроллер Promise PDC20618 ATA-133"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Контроллер Promise PDC20619 ATA-133"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Контроллер Promise PDC20620 ATA-133"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Контроллер Promise PDC20621 ATA-133"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Контроллер Promise PDC20622 ATA-133"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="Контроллер ServerWorks ROSB4 ATA-33"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="Контроллер ServerWorks CSB5 ATA-100"
 PCI\VEN_1166&DEV_0212.DeviceDesc="Контроллер ServerWorks CSB5 ATA-66"
@@ -3097,10 +2889,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="Контроллер CMD 648 ATA-66"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="Контроллер CMD 646U2 ATA-33"
 PCI\VEN_1095&DEV_0646.DeviceDesc="Контроллер CMD 646 IDE DMA"
 PCI\VEN_1095&DEV_0640.DeviceDesc="Контроллер CMD 640 IDE"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="Контроллер SiS 963 IDE"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="Контроллер SiS 640 IDE"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="Контроллер SiS 755 IDE"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="Контроллер SiS 752 IDE"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="Контроллер SiS 751 IDE"
@@ -3112,7 +2902,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Контроллер CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="Контроллер SiS 735 IDE"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="Контроллер SiS 733 IDE"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="Контроллер SiS 730 IDE"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="Контроллер SiS 658 IDE"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="Контроллер SiS 655 IDE"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="Контроллер SiS 652 IDE"
@@ -3126,15 +2915,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="Контроллер CMD 640 IDE"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="Контроллер SiS 633 IDE"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="Контроллер SiS 630 IDE"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="Контроллер SiS 620 IDE"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="Контроллер SiS 550 IDE"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="Контроллер SiS 540 IDE"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="Контроллер SiS 530 IDE"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="Контроллер SiS ATA-xxx"
 PCI\VEN_1039&DEV_5513.DeviceDesc="Контроллер SiS ATA-xxx"
 PCI\VEN_1039&DEV_0601.DeviceDesc="Контроллер SiS ATA-xxx"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="Контроллер VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="Контроллер VIA 82C586B"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="Контроллер VIA 82C586B"
@@ -3149,38 +2935,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="Контроллер SiS ATA-xxx"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="Контроллер VIA 8233C"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="Контроллер VIA 8233A"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="Контроллер VIA 8235"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="Контроллер VIA ATA-xxx"
 PCI\VEN_1106&DEV_3164.DeviceDesc="Контроллер VIA 6410"
 PCI\VEN_1106&DEV_3149.DeviceDesc="Контроллер VIA 6420"
 PCI\VEN_1106&DEV_3249.DeviceDesc="Контроллер VIA 6421"
 PCI\VEN_1106&DEV_0591.DeviceDesc="Контроллер VIA 8237A"
 PCI\VEN_1106&DEV_5337.DeviceDesc="Контроллер VIA 8237S"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="Контроллер VIA 8251"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Контроллер Cypress 82C693 IDE DMA"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Контроллер Promise TX2 ATA-100"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Контроллер Promise TX2 ATA-100"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Контроллер Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Контроллер Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Контроллер Promise TX2 ATA-133"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Контроллер Promise TX2 ATA-133"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Контроллер Promise Promise Ultra/FastTrak-33"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Контроллер Promise Promise FastTrak-66"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Контроллер Promise Promise Ultra/FastTrak-66"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Контроллер Promise Promise Ultra/FastTrak-100"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Контроллер Promise OEM ATA-100"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="Контроллер HighPoint HPT366/368/370/372"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="Контроллер HighPoint HPT372"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="Контроллер HighPoint HPT374"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Контроллер Cenatek Rocket Drive IDE DMA"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Контроллер Cyrix 5530 ATA-33"
 PCI\VEN_1042&DEV_0102.DeviceDesc="Контроллер RZ 100x IDE"
@@ -3191,7 +2967,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Контроллер HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Контроллер IDE"
 
 ;Compatible adapters
-
 UniATA_Name = "Універсальний драйвер ATA"
 *PNP0600.PriDeviceDesc  = "Основний канал IDE"
 *PNP0600.SecDeviceDesc  = "Вторинний канал IDE"
@@ -3292,12 +3067,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 控制器"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 控制器"
@@ -3306,7 +3079,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 控制器"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 控制器"
@@ -3317,16 +3089,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 控制器"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA 控制器"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA 控制器"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA 控制器"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA 控制器"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA 控制器"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA 控制器"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA 控制器"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 控制器"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 控制器"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 控制器"
@@ -3382,10 +3151,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 控制器"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 控制器"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 控制器"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 控制器"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 控制器"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 控制器"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 控制器"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 控制器"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 控制器"
@@ -3410,10 +3177,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 控制器"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 控制器"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA 控制器"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE 控制器"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE 控制器"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE 控制器"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE 控制器"
@@ -3425,7 +3190,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE 控制器"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE 控制器"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE 控制器"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE 控制器"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE 控制器"
@@ -3439,15 +3203,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE 控制器"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE 控制器"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE 控制器"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE 控制器"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE 控制器"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B 控制器"
@@ -3462,38 +3223,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C 控制器"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A 控制器"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 控制器"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx 控制器"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 控制器"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 控制器"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 控制器"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A 控制器"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S 控制器"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 控制器"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA 控制器"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 控制器"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 控制器"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 控制器"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 控制器"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 控制器"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 控制器"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 控制器"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 控制器"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 控制器"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 控制器"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 控制器"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA 控制器"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 控制器"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE 控制器"
@@ -3504,7 +3255,6 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA 控制器"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE 控制器"
 
 ;Compatible adapters
-
 UniATA_Name = "通用 ATA 驱动"
 *PNP0600.PriDeviceDesc  = "主 IDE 通道"
 *PNP0600.SecDeviceDesc  = "次 IDE 通道"
@@ -3605,12 +3355,10 @@ PCI\VEN_8086&DEV_2921.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2926.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2923.DeviceDesc="Intel ICH9 SATA2 控制器"
 PCI\VEN_8086&DEV_2922.DeviceDesc="Intel ICH9 SATA2 控制器"
-
 PCI\VEN_8086&DEV_2928.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_2929.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292d.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
 PCI\VEN_8086&DEV_292e.DeviceDesc="Intel ICH9/M-E SATA2 控制器"
-
 PCI\VEN_8086&DEV_3a00.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a02.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a03.DeviceDesc="Intel ICH10 SATA2 控制器"
@@ -3619,7 +3367,6 @@ PCI\VEN_8086&DEV_3a20.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a22.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a23.DeviceDesc="Intel ICH10 SATA2 控制器"
 PCI\VEN_8086&DEV_3a26.DeviceDesc="Intel ICH10 SATA2 控制器"
-
 PCI\VEN_8086&DEV_3b20.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b21.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b22.DeviceDesc="Intel PCH SATA2 控制器"
@@ -3630,16 +3377,13 @@ PCI\VEN_8086&DEV_3b29.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2d.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2e.DeviceDesc="Intel PCH SATA2 控制器"
 PCI\VEN_8086&DEV_3b2f.DeviceDesc="Intel PCH SATA2 控制器"
-
 ; PCI\VEN_8086&DEV_3200.DeviceDesc="Intel 31244 SATA 控制器"
-
 PCI\VEN_11ab&DEV_5040.DeviceDesc="Marvell 88SX5040 ATA 控制器"
 PCI\VEN_11ab&DEV_5041.DeviceDesc="Marvell 88SX5041 ATA 控制器"
 PCI\VEN_11ab&DEV_5080.DeviceDesc="Marvell 88SX5080 ATA 控制器"
 PCI\VEN_11ab&DEV_5081.DeviceDesc="Marvell 88SX5081 ATA 控制器"
 PCI\VEN_11ab&DEV_6041.DeviceDesc="Marvell 88SX6041 ATA 控制器"
 PCI\VEN_11ab&DEV_6081.DeviceDesc="Marvell 88SX6081 ATA 控制器"
-
 PCI\VEN_11ab&DEV_6101.DeviceDesc="Marvell 88SX6101 ATA-133 控制器"
 PCI\VEN_11ab&DEV_6145.DeviceDesc="Marvell 88SX6145 ATA-133 控制器"
 PCI\VEN_10de&DEV_01bc.DeviceDesc="nVidia nForce ATA-100 控制器"
@@ -3695,10 +3439,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Promise PDC20617 ATA-133 控制器"
 PCI\VEN_105a&DEV_6626.DeviceDesc="Promise PDC20618 ATA-133 控制器"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Promise PDC20619 ATA-133 控制器"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Promise PDC20620 ATA-133 控制器"
-
 PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 控制器"
 PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 控制器"
-
 PCI\VEN_1166&DEV_0211.DeviceDesc="ServerWorks ROSB4 ATA-33 控制器"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="ServerWorks CSB5 ATA-100 控制器"
 PCI\VEN_1166&DEV_0212.DeviceDesc="ServerWorks CSB5 ATA-66 控制器"
@@ -3723,10 +3465,8 @@ PCI\VEN_1095&DEV_0648.DeviceDesc="CMD 648 ATA-66 控制器"
 PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc="CMD 646U2 ATA-33 控制器"
 PCI\VEN_1095&DEV_0646.DeviceDesc="CMD 646 IDE DMA 控制器"
 PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0963.DeviceDesc="SiS 963 IDE 控制器"
 ; PCI\VEN_1039&DEV_0962.DeviceDesc="SiS 640 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0755.DeviceDesc="SiS 755 IDE 控制器"
 ; PCI\VEN_1039&DEV_0752.DeviceDesc="SiS 752 IDE 控制器"
 ; PCI\VEN_1039&DEV_0751.DeviceDesc="SiS 751 IDE 控制器"
@@ -3738,7 +3478,6 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0735.DeviceDesc="SiS 735 IDE 控制器"
 ; PCI\VEN_1039&DEV_0733.DeviceDesc="SiS 733 IDE 控制器"
 ; PCI\VEN_1039&DEV_0730.DeviceDesc="SiS 730 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0658.DeviceDesc="SiS 658 IDE 控制器"
 ; PCI\VEN_1039&DEV_0655.DeviceDesc="SiS 655 IDE 控制器"
 ; PCI\VEN_1039&DEV_0652.DeviceDesc="SiS 652 IDE 控制器"
@@ -3752,15 +3491,12 @@ PCI\VEN_1095&DEV_0640.DeviceDesc="CMD 640 IDE 控制器"
 ; PCI\VEN_1039&DEV_0633.DeviceDesc="SiS 633 IDE 控制器"
 ; PCI\VEN_1039&DEV_0630.DeviceDesc="SiS 630 IDE 控制器"
 ; PCI\VEN_1039&DEV_0620.DeviceDesc="SiS 620 IDE 控制器"
-
 ; PCI\VEN_1039&DEV_0550.DeviceDesc="SiS 550 IDE 控制器"
 ; PCI\VEN_1039&DEV_0540.DeviceDesc="SiS 540 IDE 控制器"
 ; PCI\VEN_1039&DEV_0530.DeviceDesc="SiS 530 IDE 控制器"
-
 PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_5513.DeviceDesc="SiS ATA-xxx 控制器"
 PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
-
 ; PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc="VIA 82C586B 控制器"
 ; PCI\VEN_1106&DEV_0586&REV_02.DeviceDesc="VIA 82C586B 控制器"
@@ -3775,38 +3511,28 @@ PCI\VEN_1039&DEV_0601.DeviceDesc="SiS ATA-xxx 控制器"
 ; PCI\VEN_1106&DEV_3109.DeviceDesc="VIA 8233C 控制器"
 ; PCI\VEN_1106&DEV_3147.DeviceDesc="VIA 8233A 控制器"
 ; PCI\VEN_1106&DEV_3177.DeviceDesc="VIA 8235 控制器"
-
 PCI\VEN_1106&DEV_0571.DeviceDesc="VIA ATA-xxx 控制器"
 PCI\VEN_1106&DEV_3164.DeviceDesc="VIA 6410 控制器"
 PCI\VEN_1106&DEV_3149.DeviceDesc="VIA 6420 控制器"
 PCI\VEN_1106&DEV_3249.DeviceDesc="VIA 6421 控制器"
 PCI\VEN_1106&DEV_0591.DeviceDesc="VIA 8237A 控制器"
 PCI\VEN_1106&DEV_5337.DeviceDesc="VIA 8237S 控制器"
-
 PCI\VEN_1106&DEV_3349.DeviceDesc="VIA 8251 控制器"
-
 PCI\VEN_1080&DEV_c693.DeviceDesc="Cypress 82C693 IDE DMA 控制器"
-
 ; PCI\VEN_105a&DEV_4d68.DeviceDesc="Promise TX2 ATA-100 控制器"
 ; PCI\VEN_105a&DEV_6268.DeviceDesc="Promise TX2 ATA-100 控制器"
-
 ; PCI\VEN_105a&DEV_4d69.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_5275.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_6269.DeviceDesc="Promise TX2 ATA-133 控制器"
 ; PCI\VEN_105a&DEV_7275.DeviceDesc="Promise TX2 ATA-133 控制器"
-
 ; PCI\VEN_105a&DEV_4d33.DeviceDesc="Promise Promise Ultra/FastTrak-33 控制器"
-
 ; PCI\VEN_105a&DEV_0d38.DeviceDesc="Promise Promise FastTrak-66 控制器"
 ; PCI\VEN_105a&DEV_4d38.DeviceDesc="Promise Promise Ultra/FastTrak-66 控制器"
-
 ; PCI\VEN_105a&DEV_4d30.DeviceDesc="Promise Promise Ultra/FastTrak-100 控制器"
 ; PCI\VEN_105a&DEV_0d30.DeviceDesc="Promise OEM ATA-100 控制器"
-
 ; PCI\VEN_1103&DEV_0004.DeviceDesc="HighPoint HPT366/368/370/372 控制器"
 ; PCI\VEN_1103&DEV_0005.DeviceDesc="HighPoint HPT372 控制器"
 ; PCI\VEN_1103&DEV_0008.DeviceDesc="HighPoint HPT374 控制器"
-
 PCI\VEN_16ca&DEV_0001.DeviceDesc="Cenatek Rocket Drive IDE DMA 控制器"
 PCI\VEN_1078&DEV_0102.DeviceDesc="Cyrix 5530 ATA-33 控制器"
 PCI\VEN_1042&DEV_0102.DeviceDesc="RZ 100x IDE 控制器"
