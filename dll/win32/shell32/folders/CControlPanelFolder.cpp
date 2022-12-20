@@ -52,7 +52,12 @@ static const shvheader ControlPanelSFHeader[] = {
     {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 80},/*FIXME*/
 };
 
-#define CONROLPANELSHELLVIEWCOLUMNS 2
+enum controlpanel_columns
+{
+    CONTROLPANEL_COL_NAME,
+    CONTROLPANEL_COL_COMMENT,
+    CONTROLPANEL_COL_COUNT,
+};
 
 CControlPanelEnum::CControlPanelEnum()
 {
@@ -324,16 +329,16 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
     PIDLCPanelStruct *pData1 = _ILGetCPanelPointer(pidl1);
     PIDLCPanelStruct *pData2 = _ILGetCPanelPointer(pidl2);
 
-    if (!pData1 || !pData2 || LOWORD(lParam)>= CONROLPANELSHELLVIEWCOLUMNS)
+    if (!pData1 || !pData2 || LOWORD(lParam) >= CONTROLPANEL_COL_COUNT)
         return E_INVALIDARG;
 
     int result;
     switch(LOWORD(lParam))
     {
-        case 0:        /* name */
+        case CONTROLPANEL_COL_NAME:
             result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
-        case 4:        /* comment */
+        case CONTROLPANEL_COL_COMMENT:
             result = wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
@@ -544,7 +549,8 @@ HRESULT WINAPI CControlPanelFolder::GetDefaultColumnState(UINT iColumn, DWORD *p
 {
     TRACE("(%p)\n", this);
 
-    if (!pcsFlags || iColumn >= CONROLPANELSHELLVIEWCOLUMNS) return E_INVALIDARG;
+    if (!pcsFlags || iColumn >= CONTROLPANEL_COL_COUNT)
+        return E_INVALIDARG;
     *pcsFlags = ControlPanelSFHeader[iColumn].pcsFlags;
     return S_OK;
 }
@@ -557,7 +563,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHC
 
 HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    if (!psd || iColumn >= CONROLPANELSHELLVIEWCOLUMNS)
+    if (!psd || iColumn >= CONTROLPANEL_COL_COUNT)
         return E_INVALIDARG;
 
     if (!pidl)
@@ -579,14 +585,14 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
 
         switch(iColumn)
         {
-            case 0:        /* name */
+            case CONTROLPANEL_COL_NAME:
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
-            case 4:        /* comment */
+            case CONTROLPANEL_COL_COMMENT:
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
         }
     }
 
-    return S_OK;
+    return E_FAIL;
 }
 
 HRESULT WINAPI CControlPanelFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
