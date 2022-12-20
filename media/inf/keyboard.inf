@@ -50,7 +50,6 @@ kbdclass.sys
 AddService = kbdhid, 0x00000002,KbdHid_Service_Inst
 AddService = kbdclass,, kbdclass_Service_Inst
 
-
 [KbdHid_Service_Inst]
 ServiceType    = 1
 StartType      = 3
@@ -104,7 +103,7 @@ ReactOS = "ReactOS Project"
 
 ; Localizable
 KeyboardClassName = "Keyboards"
-HID.KeyboardDevice    = "HID-Keyboard"
+HID.KeyboardDevice = "HID-Keyboard"
 StdMfg = "(Standard keyboards)"
 LocationOverride = "plugged in to keyboard port"
 *PNP0303.DeviceDesc = "IBM PC/AT keyboard"
@@ -117,14 +116,14 @@ StdMfg = "(標準鍵盤)"
 
 [Strings.0405]
 KeyboardClassName = "Klávesnice"
-HID.KeyboardDevice    = "Klávesnice standardu HID"
+HID.KeyboardDevice = "Klávesnice standardu HID"
 StdMfg = "(Standardní klávesnice)"
 LocationOverride = "připojeno ke klávesnicovému portu"
 *PNP0303.DeviceDesc = "Klávesnice IBM PC/AT"
 
 [Strings.0407]
 KeyboardClassName = "Tastaturen"
-HID.KeyboardDevice    = "HID-Tastatur"
+HID.KeyboardDevice = "HID-Tastatur"
 StdMfg = "(Standard-Tastaturen)"
 LocationOverride = "eingesteckt in Tastaturanschluss"
 *PNP0303.DeviceDesc = "IBM PC/AT Tastatur"
@@ -153,7 +152,7 @@ StdMfg = "(スタンダード キーボード)"
 
 [Strings.0415]
 KeyboardClassName = "Klawiatury"
-HID.KeyboardDevice    = "Klawiatura HID"
+HID.KeyboardDevice = "Klawiatura HID"
 StdMfg = "(Klawiatury standardowe)"
 LocationOverride = "podłaczone do portu klawiatury"
 *PNP0303.DeviceDesc = "Klawiatura IBM PC/AT"
@@ -172,7 +171,7 @@ LocationOverride = "conectat la portul de tastatură"
 
 [Strings.0419]
 KeyboardClassName = "Клавиатуры"
-HID.KeyboardDevice    = "Клавиатура HID"
+HID.KeyboardDevice = "Клавиатура HID"
 StdMfg = "(Стандартные клавиатуры)"
 LocationOverride = "подключено к порту клавиатуры"
 *PNP0303.DeviceDesc = "Клавиатура IBM PC/AT"
@@ -184,14 +183,14 @@ StdMfg = "(Štandardné klávesnice)"
 
 [Strings.041f]
 KeyboardClassName = "Klavyeler"
-HID.KeyboardDevice    = "HID Klavyeler"
+HID.KeyboardDevice = "HID Klavyeler"
 StdMfg = "(Standart Klavyeler)"
 LocationOverride = "klavye girişine takılı"
 *PNP0303.DeviceDesc = "IBM PC/AT Klavye"
 
 [Strings.0422]
 KeyboardClassName = "Клавіатури"
-HID.KeyboardDevice    = "HID-Клавіатура"
+HID.KeyboardDevice = "HID-Клавіатура"
 StdMfg = "(Стандартні клавіатури)"
 LocationOverride = "приєднано до порту клавітури"
 *PNP0303.DeviceDesc = "Клавіатура IBM PC/AT"
@@ -202,7 +201,7 @@ StdMfg = "(Standartinė klaviatūra)"
 *PNP0303.DeviceDesc = "IBM PC/AT klaviatūra"
 
 [Strings.0804]
-HID.KeyboardDevice    = "HID 键盘"
+HID.KeyboardDevice = "HID 键盘"
 StdMfg = "(标准键盘)"
 *PNP0303.DeviceDesc = "IBM PC/AT 键盘"
 
@@ -213,6 +212,6 @@ StdMfg = "(Teclado padrão)"
 
 [Strings.0C04]
 KeyboardClassName = "鍵盤"
-HID.KeyboardDevice    = "HID 鍵盤"
+HID.KeyboardDevice = "HID 鍵盤"
 StdMfg = "(標準鍵盤)"
 *PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"
