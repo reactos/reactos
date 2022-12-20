@@ -1014,11 +1014,13 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
                                     &dwVolumeSerialNumber,
                                     &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
             pszPath[MAX_PATH-1] = L'\0';
+
             if (!wcslen(pszPath))
             {
                 UINT DriveType, ResourceId;
                 DriveType = GetDriveTypeW(wszDrive);
-                switch(DriveType)
+
+                switch (DriveType)
                 {
                     case DRIVE_FIXED:
                         ResourceId = IDS_DRIVE_FIXED;
@@ -1032,6 +1034,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
                     default:
                         ResourceId = 0;
                 }
+
                 if (ResourceId)
                 {
                     dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
