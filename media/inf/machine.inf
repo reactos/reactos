@@ -50,7 +50,6 @@ HKR, , Icon,           0, "-27"
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %*PNP0C15.DeviceDesc% = NO_DRV,*PNP0C15
 %SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
-
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %ISAPNP\ReadDataPort.DeviceDesc% = NO_DRV,ISAPNP\ReadDataPort
 %PCI\CC_0500.DeviceDesc% = NO_DRV,PCI\CC_0500
@@ -94,7 +93,6 @@ HKR, , Icon,           0, "-27"
 AddService = , 0x00000002
 
 [NO_DRV.HW]
-
 
 ;-------------------------- SWENUM BUS DRIVER -------------------------
 
@@ -171,7 +169,6 @@ nVidiaMfg = "nVidia"
 
 ; Localizable
 SystemClassName = "System devices"
-
 GenericMfg = "(Generic system devices)"
 *PNP0000.DeviceDesc = "Programmable interrupt controller"
 *PNP0001.DeviceDesc = "EISA programmable interrupt controller"
@@ -253,7 +250,6 @@ PCI\CC_0604.DeviceDesc = "標準 PCI - PCI 橋接器"
 *ThermalZone.DeviceDesc = "ACPI 溫度監控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
 SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
-
 *INT0800.DeviceDesc = "Intel 82802 韌體集線器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 橋接器"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI - ISA 橋接器"
@@ -261,7 +257,6 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB 電源管理控制器"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU - PCI 橋接器"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 橋接器"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 橋接器"
-
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI - ISA 橋接器"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce SMBus 控制器"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP - PCI 橋接器"
@@ -271,7 +266,6 @@ PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX 記憶體控制器"
 
 [Strings.0405]
 SystemClassName = "Systémová zařízení"
-
 GenericMfg = "(Obecná systémová zařízení)"
 *PNP0000.DeviceDesc = "Programovatelný řadič přerušení"
 *PNP0001.DeviceDesc = "EISA programovatelný řadič přerušení"
@@ -301,7 +295,6 @@ PCI\CC_0604.DeviceDesc = "Standardní most PCI na PCI"
 *ThermalZone.DeviceDesc = "ACPI teplotní zóna"
 PCI\CC_0C05.DeviceDesc = "SMBus řadič"
 SWENUM.DeviceDesc  = "Výčet zařízení podporujících Plug and Play"
-
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -314,7 +307,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Most Intel 82443BX/ZX/DX Pentium(R) II CPU n
 
 [Strings.0407]
 SystemClassName = "Systemgeräte"
-
 GenericMfg = "(Generische Systemgeräte)"
 *PNP0000.DeviceDesc = "Programmierbarer Interrupt-Controller"
 *PNP0001.DeviceDesc = "EISA programmierbarer Interrupt-Controller"
@@ -332,7 +324,6 @@ PCI\CC_0500.DeviceDesc = "Standard PCI RAM-Controller"
 PCI\CC_0600.DeviceDesc = "Standard CPU zu PCI Brücke"
 PCI\CC_0601.DeviceDesc = "Standard PCI zu ISA Brücke"
 PCI\CC_0604.DeviceDesc = "Standard PCI zu PCI Brücke"
-
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI zu ISA Brücke"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI zu ISA Brücke"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU zu PCI-Brücke"
@@ -341,7 +332,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU zu PCI
 
 [Strings.0408]
 SystemClassName = "Συσκευές συστήματος"
-
 GenericMfg = "(Πρότυπες συσκευές συστήματος)"
 *PNP0000.DeviceDesc = "Programmable interrupt controller"
 *PNP0001.DeviceDesc = "EISA programmable interrupt controller"
@@ -366,7 +356,6 @@ PCI\CC_0600.DeviceDesc = "Πρότυπη γέφυρα από CPU σε PCI"
 PCI\CC_0601.DeviceDesc = "Πρότυπη γέφυρα από PCI σε ISA"
 PCI\CC_0604.DeviceDesc = "Πρότυπη γέφυρα από PCI σε PCI"
 *ThermalZone.DeviceDesc = "ACPI thermal zone"
-
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -379,7 +368,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU σε P
 
 [Strings.0a]
 SystemClassName = "Dispositivos del sistema"
-
 GenericMfg = "(Dispositivos del sistema estándar)"
 *PNP0000.DeviceDesc = "Controlador de interrupciones programable"
 *PNP0001.DeviceDesc = "Controlador EISA de interrupciones programable"
@@ -421,7 +409,6 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Controlador de gestión de 
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II Puente CPU-PCI"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Puente CPU-PCI"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Puente CPU-PCI"
-
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce Puente PCI-ISA Bridge"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce Controlador SMBus"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce Puente AGP-PCI"
@@ -429,10 +416,8 @@ PCI\VEN_10DE&DEV_01B8.DeviceDesc = "nVidia nForce Puente PCI-PCI"
 PCI\VEN_10DE&DEV_02A5.DeviceDesc = "nVidia MCPX Puente CPU-PCI"
 PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX Controlador de PCI RAM"
 
-
 [Strings.040C]
 SystemClassName = "Périphériques système"
-
 GenericMfg = "(Périphériques systèmes génériques)"
 *PNP0000.DeviceDesc = "Contrôleur d'interruptions programmable"
 *PNP0001.DeviceDesc = "Contrôleur d'interruptions programmable EISA"
@@ -457,7 +442,6 @@ PCI\CC_0600.DeviceDesc = "Pont standard CPU vers PCI"
 PCI\CC_0601.DeviceDesc = "Pont standard PCI vers ISA"
 PCI\CC_0604.DeviceDesc = "Pont standard PCI vers PCI"
 *ThermalZone.DeviceDesc = "Zone thermique ACPI"
-
 *INT0800.DeviceDesc = "Périphérique concentrateur à microprogramme Intel 82802"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Pont Intel 82371SB PIIX3 PCI vers ISA"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Pont Intel 82371AB/EB PCI vers ISA"
@@ -468,7 +452,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Pont Intel 82443BX/ZX/DX Processeur Pentium(
 
 [Strings.0411]
 SystemClassName = "システム デバイス"
-
 GenericMfg = "(標準 システム デバイス)"
 *PNP0000.DeviceDesc = "プログラム可能割り込みコントローラ"
 *PNP0001.DeviceDesc = "EISA プログラム可能割り込みコントローラ"
@@ -493,7 +476,6 @@ PCI\CC_0600.DeviceDesc = "スタンダード CPU to PCI ブリッジ"
 PCI\CC_0601.DeviceDesc = "スタンダード PCI to ISA ブリッジ"
 PCI\CC_0604.DeviceDesc = "スタンダード PCI to PCI ブリッジ"
 *ThermalZone.DeviceDesc = "ACPI サーマル ゾーン"
-
 *INT0800.DeviceDesc = "Intel 82802 ファームウェア ハブ デバイス"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -506,7 +488,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI
 
 [Strings.0415]
 SystemClassName = "Urządzenia systemowe"
-
 GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0000.DeviceDesc = "Programowalny kontroler przerwań"
 *PNP0001.DeviceDesc = "Programowalny kontroler przerwań EISA"
@@ -536,7 +517,6 @@ PCI\CC_0601.DeviceDesc = "Standardowy mostek PCI do ISA"
 PCI\CC_0604.DeviceDesc = "Standardowy mostek PCI do PCI"
 *ThermalZone.DeviceDesc = "Strefa termiczna ACPI"
 PCI\CC_0C05.DeviceDesc = "Kontroler SMBus"
-
 *INT0800.DeviceDesc = "Urządzenie Intel 82802 Firmware Hub"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -549,7 +529,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Mostek Intel 82443BX/ZX/DX Pentium(R) II CPU
 
 [Strings.0416]
 SystemClassName = "Dispositivos de sistema"
-
 GenericMfg = "(Dispositivos de sistema padrão)"
 *PNP0000.DeviceDesc = "Controlador de interrupção programável"
 *PNP0001.DeviceDesc = "Controlador de interrupção programável EISA"
@@ -574,7 +553,6 @@ PCI\CC_0600.DeviceDesc = "Ponte padrão CPU - PCI"
 PCI\CC_0601.DeviceDesc = "Ponte PCI - ISA"
 PCI\CC_0604.DeviceDesc = "Ponte PCI - PCI"
 *ThermalZone.DeviceDesc = "Zona termal ACPI"
-
 *INT0800.DeviceDesc = "Dispositivo concentrador Firmware Intel 82802"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -587,7 +565,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Ponte CPU 
 
 [Strings.0418]
 SystemClassName = "Dispozitive de sistem"
-
 GenericMfg = "(dispozitiv generic de sistem)"
 *PNP0000.DeviceDesc = "Dispozitiv programabil de control întreruperi"
 *PNP0001.DeviceDesc = "Dispozitiv programabil EISA de control întreruperi"
@@ -618,7 +595,6 @@ PCI\CC_0604.DeviceDesc = "Punte standard PCI spre PCI"
 *ThermalZone.DeviceDesc = "Zonă termală ACPI"
 PCI\CC_0C05.DeviceDesc = "Dispozitiv de control magistrală SM"
 SWENUM.DeviceDesc  = "Enumerator logic de magistrală P&P"
-
 *INT0800.DeviceDesc = "Dispozitiv nod firmware Intel 82802"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Magistrală SM Intel 82801AA"
@@ -631,7 +607,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Punte Intel 82443BX/ZX/DX Pentium(R) II CPU 
 
 [Strings.0419]
 SystemClassName = "Системные устройства"
-
 GenericMfg = "(Стандартные системные устройства)"
 *PNP0000.DeviceDesc = "Программируемый контроллер прерываний"
 *PNP0001.DeviceDesc = "Программируемый контроллер прерываний EISA"
@@ -659,7 +634,6 @@ PCI\CC_0604.DeviceDesc = "Стандартный мост PCI - PCI"
 *ThermalZone.DeviceDesc = "Термальная зона ACPI"
 PCI\CC_0C05.DeviceDesc = "Контроллер SMBus"
 SWENUM.DeviceDesc  = "Перечислитель программных устройств Plug & Play"
-
 *INT0800.DeviceDesc = "Устройство Intel 82802 Firmware Hub"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -669,10 +643,8 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Контроллер управления п
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II мост CPU - PCI"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
-
 NecCb.DeviceDesc = "NEC мост PCI - C-bus"
 NecVl.DeviceDesc = "NEC мост PCI - VL"
-
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce мост PCI - ISA"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce контроллер SMBus"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce мост AGP - PCI"
@@ -682,7 +654,6 @@ PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX контроллер PCI RAM"
 
 [Strings.041B]
 SystemClassName = "Systémové zariadenia"
-
 GenericMfg = "(Generické systémové zariadenia)"
 *PNP0000.DeviceDesc = "Programmable interrupt controller"
 *PNP0001.DeviceDesc = "EISA programmable interrupt controller"
@@ -707,7 +678,6 @@ PCI\CC_0600.DeviceDesc = "Štandardný most CPU na PCI"
 PCI\CC_0601.DeviceDesc = "Štandardný most PCI na ISA"
 PCI\CC_0604.DeviceDesc = "Štandardný most PCI na PCI"
 *ThermalZone.DeviceDesc = "ACPI thermal zone"
-
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -720,7 +690,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Most Intel 82443BX/ZX/DX Pentium(R) II CPU n
 
 [Strings.041f]
 SystemClassName = "Sistem Aygıtları"
-
 GenericMfg = "(Genel Sistem Aygıtları)"
 *PNP0000.DeviceDesc = "Programlanabilir Kesme Denetleyicisi"
 *PNP0001.DeviceDesc = "EISA Programlanabilir Kesme Denetleyicisi"
@@ -750,7 +719,6 @@ PCI\CC_0604.DeviceDesc = "Standart PCI'dan PCI'ya Köprü"
 *ThermalZone.DeviceDesc = "ACPI Isı Bölgesi"
 PCI\CC_0C05.DeviceDesc = "SMBus Denetleyicisi"
 SWENUM.DeviceDesc  = "Tak ve Çalıştır Yazılım Veriyolu Numaralandırıcısı"
-
 *INT0800.DeviceDesc = "Intel 82802 Yerleşik Yazılım Göbek Aygıtı"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -763,7 +731,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU'dan PC
 
 [Strings.0422]
 SystemClassName = "Системні пристрої"
-
 GenericMfg = "(Стандартні системні пристрої)"
 *PNP0000.DeviceDesc = "Програмований контроллер переривань"
 *PNP0001.DeviceDesc = "Програмований контроллер переривань EISA"
@@ -791,7 +758,6 @@ PCI\CC_0601.DeviceDesc = "Стандартний міст PCI на ISA"
 PCI\CC_0604.DeviceDesc = "Стандартний міст PCI на PCI"
 *ThermalZone.DeviceDesc = "Термальна зона ACPI"
 PCI\CC_0C05.DeviceDesc = "Контроллер SMBus"
-
 *INT0800.DeviceDesc = "Пристрій Intel 82802 Firmware Hub"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 міст PCI на ISA"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB міст PCI на ISA"
@@ -799,7 +765,6 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Контроллер керування жи
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II міст CPU на PCI"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II міст CPU на PCI"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II міст CPU на PCI"
-
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce міст PCI на ISA"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce контролер SMBus"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce міст AGP на PCI"
@@ -809,7 +774,6 @@ PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX контролер PCI RAM"
 
 [Strings.0427]
 SystemClassName = "Sisteminiai įrenginiai"
-
 GenericMfg = "(Standartiniai sisteminiai įrenginiai)"
 *PNP0000.DeviceDesc = "Programuojamas pertraukimų valdiklis"
 *PNP0001.DeviceDesc = "EISA programuojamas pertraukimų valdiklis"
@@ -834,7 +798,6 @@ PCI\CC_0600.DeviceDesc = "Standartinis CPU į PCI tiltas"
 PCI\CC_0601.DeviceDesc = "Standartinis PCI į ISA tiltas"
 PCI\CC_0604.DeviceDesc = "Standartinis PCI į PCI tiltas"
 *ThermalZone.DeviceDesc = "ACPI šiluminė zona"
-
 *INT0800.DeviceDesc = "Intel 82802 Firmware šakotuvo įrenginys"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -876,7 +839,6 @@ PCI\CC_0604.DeviceDesc = "标准 PCI - PCI 桥"
 *ThermalZone.DeviceDesc = "ACPI 温度监控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
 SWENUM.DeviceDesc  = "即插即用软总线枚举器"
-
 *INT0800.DeviceDesc = "Intel 82802 固件集线器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 桥"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI - ISA 桥"
@@ -887,7 +849,6 @@ PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 
 
 [Strings.0816]
 SystemClassName = "Dispositivos do sistema"
-
 GenericMfg = "(Dispositivos do sistema padrão)"
 *PNP0000.DeviceDesc = "Controlador de interrupções programável (PIC)"
 *PNP0001.DeviceDesc = "Controlador EISA de interrupções programável"
@@ -912,7 +873,6 @@ PCI\CC_0600.DeviceDesc = "Ponte CPU-PCI padrão"
 PCI\CC_0601.DeviceDesc = "Ponte PCI-ISA padrão"
 PCI\CC_0604.DeviceDesc = "Ponte PCI-PCI padrão"
 *ThermalZone.DeviceDesc = "Zona térmica ACPI"
-
 *INT0800.DeviceDesc = "Dispositivo concentrador Firmware Intel 82802"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -955,7 +915,6 @@ PCI\CC_0604.DeviceDesc = "標準 PCI - PCI 橋接器"
 *ThermalZone.DeviceDesc = "ACPI 溫度監控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
 SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
-
 *INT0800.DeviceDesc = "Intel 82802 韌體集線器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 橋接器"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI - ISA 橋接器"
@@ -963,7 +922,6 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB 電源管理控制器"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU - PCI 橋接器"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 橋接器"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 橋接器"
-
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI - ISA 橋接器"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce SMBus 控制器"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP - PCI 橋接器"
