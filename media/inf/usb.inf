@@ -80,7 +80,6 @@ USB\CLASS_09.DeviceDesc = "Obecný USB rozbočovač"
 GenericMfg = "(Generischer USB-Hub)"
 USB\CLASS_09.DeviceDesc = "Generischer USB-Hub"
 
-; Spanish
 [Strings.0C0A]
 GenericMfg = "(Concentrador raíz USB estándar)"
 USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
