@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/ntobjshex/ntobjfolder.h
- * PURPOSE:     NT Object Namespace shell extension
- * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ * PROJECT:     NT Object Namespace shell extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NT Object Namespace folder class header
+ * COPYRIGHT:   Copyright 2015-2017 David Quintana <gigaherz@gmail.com>
  */
+
 #pragma once
 
 extern const GUID CLSID_NtObjectFolder;

@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/ntobjshex/ntobjfolder.h
- * PURPOSE:     NT Object Namespace shell extension
- * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ * PROJECT:     NT Object Namespace shell extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Folder view class header and implementation
+ * COPYRIGHT:   Copyright 2015-2017 David Quintana <gigaherz@gmail.com>
  */
+
 #pragma once
 
 extern const GUID CLSID_NtObjectFolder;
@@ -24,16 +24,18 @@ public:
     {
         switch (uMsg)
         {
-        case SFVM_DEFVIEWMODE:
-        {
-            FOLDERVIEWMODE* pViewMode = (FOLDERVIEWMODE*)lParam;
-            *pViewMode = FVM_DETAILS;
-            return S_OK;
-        }
-        case SFVM_COLUMNCLICK:
-            return S_FALSE;
-        case SFVM_BACKGROUNDENUM:
-            return S_OK;
+            case SFVM_DEFVIEWMODE:
+            {
+                FOLDERVIEWMODE* pViewMode = (FOLDERVIEWMODE*)lParam;
+                *pViewMode = FVM_DETAILS;
+                return S_OK;
+            }
+
+            case SFVM_COLUMNCLICK:
+                return S_FALSE;
+
+            case SFVM_BACKGROUNDENUM:
+                return S_OK;
         }
 
         DbgPrint("MessageSFVCB unimplemented %d %08x %08x\n", uMsg, wParam, lParam);
@@ -697,12 +699,13 @@ public:
     {
         switch (uMsg)
         {
-        case DFM_MERGECONTEXTMENU:
-            return S_OK;
-        case DFM_INVOKECOMMAND:
-        case DFM_INVOKECOMMANDEX:
-        case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
-            return S_FALSE;
+            case DFM_MERGECONTEXTMENU:
+                return S_OK;
+
+            case DFM_INVOKECOMMAND:
+            case DFM_INVOKECOMMANDEX:
+            case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+                return S_FALSE;
         }
         return E_NOTIMPL;
     }
