@@ -73,7 +73,7 @@ CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Die Spracheinstellungen des Systems sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die Nutzereinstellungen geben vor, wie Zahlen, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "Die Spracheinstellungen des Systems sollten mit der Sprache der Anwendungen übereinstimmen, die Sie nutzen wollen. Die Nutzereinstellungen geben vor, wie Zahlen, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Klicken Sie auf Einstellen, um die regionalen Einstellungen zu ändern.", IDC_STATIC, 53, 57, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14

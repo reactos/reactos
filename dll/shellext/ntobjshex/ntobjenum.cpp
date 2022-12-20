@@ -1,19 +1,8 @@
 /*
- * Copyright 2004, 2005 Martin Fuchs
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     NT Object Namespace shell extension
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     NT Object Namespace enumeration functions
+ * COPYRIGHT:   Copyright 2004-2005 Martin Fuchs <martin-fuchs@gmx.net>
  */
 
 #include "precomp.h"
@@ -73,19 +62,19 @@ static DWORD NtOpenObject(OBJECT_TYPE type, PHANDLE phandle, DWORD access, LPCWS
 
     switch (type)
     {
-    case DIRECTORY_OBJECT:      return NtOpenDirectoryObject(phandle, access, &open_struct);
-    case SYMBOLICLINK_OBJECT:   return NtOpenSymbolicLinkObject(phandle, access, &open_struct);
-    case MUTANT_OBJECT:         return NtOpenMutant(phandle, access, &open_struct);
-    case SECTION_OBJECT:        return NtOpenSection(phandle, access, &open_struct);
-    case EVENT_OBJECT:          return NtOpenEvent(phandle, access, &open_struct);
-    case SEMAPHORE_OBJECT:      return NtOpenSemaphore(phandle, access, &open_struct);
-    case TIMER_OBJECT:          return NtOpenTimer(phandle, access, &open_struct);
-    case KEY_OBJECT:            return NtOpenKey(phandle, access, &open_struct);
-    case EVENTPAIR_OBJECT:      return NtOpenEventPair(phandle, access, &open_struct);
-    case IOCOMPLETION_OBJECT:   return NtOpenIoCompletion(phandle, access, &open_struct);
-    case FILE_OBJECT:           return NtOpenFile(phandle, access, &open_struct, &ioStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
-    default:
-        return ERROR_INVALID_FUNCTION;
+        case DIRECTORY_OBJECT:      return NtOpenDirectoryObject(phandle, access, &open_struct);
+        case SYMBOLICLINK_OBJECT:   return NtOpenSymbolicLinkObject(phandle, access, &open_struct);
+        case MUTANT_OBJECT:         return NtOpenMutant(phandle, access, &open_struct);
+        case SECTION_OBJECT:        return NtOpenSection(phandle, access, &open_struct);
+        case EVENT_OBJECT:          return NtOpenEvent(phandle, access, &open_struct);
+        case SEMAPHORE_OBJECT:      return NtOpenSemaphore(phandle, access, &open_struct);
+        case TIMER_OBJECT:          return NtOpenTimer(phandle, access, &open_struct);
+        case KEY_OBJECT:            return NtOpenKey(phandle, access, &open_struct);
+        case EVENTPAIR_OBJECT:      return NtOpenEventPair(phandle, access, &open_struct);
+        case IOCOMPLETION_OBJECT:   return NtOpenIoCompletion(phandle, access, &open_struct);
+        case FILE_OBJECT:           return NtOpenFile(phandle, access, &open_struct, &ioStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
+        default:
+            return ERROR_INVALID_FUNCTION;
     }
 }
 

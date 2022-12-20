@@ -463,6 +463,28 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
     return E_FAIL;
 }
 
+static HRESULT
+getLabelForDrive(LPWSTR wszPath, LPWSTR wszLabel)
+{
+    WCHAR wszAutoRunInfPath[MAX_PATH];
+    WCHAR wszTemp[MAX_PATH];
+
+    if (!PathIsDirectoryW(wszPath))
+        return E_FAIL;
+
+    StringCchCopyW(wszAutoRunInfPath, _countof(wszAutoRunInfPath), wszPath);
+    PathAppendW(wszAutoRunInfPath, L"autorun.inf");
+
+    if (GetPrivateProfileStringW(L"autorun", L"label", NULL, wszTemp, _countof(wszTemp),
+                                 wszAutoRunInfPath) && wszTemp[0] != 0)
+    {
+        StringCchCopyW(wszLabel, _countof(wszTemp), wszTemp);
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
 BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
 
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
@@ -979,38 +1001,46 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     if (!(dwFlags & SHGDN_FORPARSING))
     {
         WCHAR wszDrive[18] = {0};
-        DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
 
         lstrcpynW(wszDrive, pszPath, 4);
         pszPath[0] = L'\0';
-        GetVolumeInformationW(wszDrive, pszPath,
-                                MAX_PATH - 7,
-                                &dwVolumeSerialNumber,
-                                &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
-        pszPath[MAX_PATH-1] = L'\0';
-        if (!wcslen(pszPath))
+
+        if (!SUCCEEDED(getLabelForDrive(wszDrive, pszPath)))
         {
-            UINT DriveType, ResourceId;
-            DriveType = GetDriveTypeW(wszDrive);
-            switch(DriveType)
+            DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
+
+            GetVolumeInformationW(wszDrive, pszPath,
+                                    MAX_PATH - 7,
+                                    &dwVolumeSerialNumber,
+                                    &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+            pszPath[MAX_PATH-1] = L'\0';
+
+            if (!wcslen(pszPath))
             {
-                case DRIVE_FIXED:
-                    ResourceId = IDS_DRIVE_FIXED;
-                    break;
-                case DRIVE_REMOTE:
-                    ResourceId = IDS_DRIVE_NETWORK;
-                    break;
-                case DRIVE_CDROM:
-                    ResourceId = IDS_DRIVE_CDROM;
-                    break;
-                default:
-                    ResourceId = 0;
-            }
-            if (ResourceId)
-            {
-                dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
-                if (dwFileSystemFlags > MAX_PATH - 7)
-                    pszPath[MAX_PATH-7] = L'\0';
+                UINT DriveType, ResourceId;
+                DriveType = GetDriveTypeW(wszDrive);
+
+                switch (DriveType)
+                {
+                    case DRIVE_FIXED:
+                        ResourceId = IDS_DRIVE_FIXED;
+                        break;
+                    case DRIVE_REMOTE:
+                        ResourceId = IDS_DRIVE_NETWORK;
+                        break;
+                    case DRIVE_CDROM:
+                        ResourceId = IDS_DRIVE_CDROM;
+                        break;
+                    default:
+                        ResourceId = 0;
+                }
+
+                if (ResourceId)
+                {
+                    dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
+                    if (dwFileSystemFlags > MAX_PATH - 7)
+                        pszPath[MAX_PATH-7] = L'\0';
+                }
             }
         }
         wcscat (pszPath, L" (");

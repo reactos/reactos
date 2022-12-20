@@ -1,15 +1,15 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Designs"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Ein Design ist ein Hintergrund, sowie ein Satz von Sounds, Symbolen und anderen Elementen, mit dem Sie den Computer mit einem Mausklick individuell gestalten können.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Design:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "S&peichern...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "&Löschen", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -26,7 +26,7 @@ BEGIN
     PUSHBUTTON "&Farbe...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Ausrichtung", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "D&esktop anpassen...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -47,8 +47,8 @@ BEGIN
     CONTROL "&Passwort nach Reaktivierung", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "&Energiesparfunktionen des Monitors", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Um die Energieeinstellungen des Monitors zu editieren, wählen Sie Energieeinstellungen.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "Energieoptionen", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
+    LTEXT "Um die Energieoptionen des Monitors zu editieren, wählen Sie Energieoptionen.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "Energieoptionen...", IDC_SCREENS_POWER_BUTTON, 157, 165, 69, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
@@ -154,23 +154,23 @@ END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
+    GROUPBOX "Desktopsymbole", IDC_STATIC, 6, 4, 212, 40
+    CONTROL "&Eigene Dateien", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
+    CONTROL "&Netzwerkumgebung", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
+    CONTROL "A&rbeitsplatz", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
     CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
-    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+    PUSHBUTTON "&Anderes Symbol...", IDC_ICONS_CHANGEICON, 80, 120, 69, 15
+    PUSHBUTTON "&Wiederherstellen", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -233,7 +233,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Desktopelemente"
 END
 
 STRINGTABLE
