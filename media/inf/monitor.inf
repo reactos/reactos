@@ -55,14 +55,12 @@ ReactOS = "ReactOS Project"
 
 ; Localizable
 MonitorClassName = "Monitors"
-
 StdMfg = "(Standard monitor types)"
 DefaultMonitor.DeviceDesc = "Default Monitor"
 PnPMonitor.DeviceDesc = "Plug and Play Monitor"
 
 [Strings.0404]
 MonitorClassName = "顯示器"
-
 StdMfg = "(標準顯示器類型)"
 DefaultMonitor.DeviceDesc = "預設顯示器"
 PnPMonitor.DeviceDesc = "隨插即用顯示器"
@@ -75,41 +73,35 @@ PnPMonitor.DeviceDesc = "Plug and Play monitor"
 
 [Strings.0407]
 MonitorClassName = "Monitore"
-
 StdMfg = "(Generische Monitore)"
 PnPMonitor.DeviceDesc = "Plug and Play Monitor"
 
 [Strings.0a]
 MonitorClassName = "Monitores"
-
 StdMfg = "(Monitores genéricos)"
 DefaultMonitor.DeviceDesc = "Monitor predeterminado"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0415]
 MonitorClassName = "Monitory"
-
 StdMfg = "(Standardowe typy monitorów)"
 DefaultMonitor.DeviceDesc = "Domyślny monitor"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0418]
 MonitorClassName = "Ecrane"
-
 StdMfg = "(ecrane de tip standard)"
 DefaultMonitor.DeviceDesc = "Ecran implicit"
 PnPMonitor.DeviceDesc = "Ecran cuplare dinamică (PnP)"
 
 [Strings.0419]
 MonitorClassName = "Мониторы"
-
 StdMfg = "(Стандартные мониторы)"
 DefaultMonitor.DeviceDesc = "Модуль подключения монитора"
 PnPMonitor.DeviceDesc = "Монитор Plug and Play"
 
 [Strings.041f]
 MonitorClassName = "Monitörler"
-
 StdMfg = "(Standart Monitör Türleri)"
 DefaultMonitor.DeviceDesc = "Varsayılan Monitör"
 PnPMonitor.DeviceDesc = "Tak ve Çalıştır Monitör"
@@ -121,14 +113,12 @@ PnPMonitor.DeviceDesc = "即插即用监视器"
 
 [Strings.0816]
 MonitorClassName = "Monitores"
-
 StdMfg = "(Monitores genéricos)"
 DefaultMonitor.DeviceDesc = "Monitor predefinido"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0C04]
 MonitorClassName = "顯示器"
-
 StdMfg = "(標準顯示器類型)"
 DefaultMonitor.DeviceDesc = "預設顯示器"
 PnPMonitor.DeviceDesc = "隨插即用顯示器"
