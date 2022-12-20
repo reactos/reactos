@@ -20,7 +20,7 @@ DefaultDestDir = 12
 [AMDMfg]
 %PCNET.DeviceDesc% = PCNet_Inst.ndi,PCI\VEN_1022&DEV_2000
 
-;----------------------------- PCNET DRIVER ---------------------------
+;----------------------------- PCNET DRIVER -----------------------------
 
 [PCNet_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
@@ -53,7 +53,7 @@ ErrorControl  = 0
 ServiceBinary = %12%\pcnet.sys
 LoadOrderGroup = NDIS
 
-;-------------------------------- STRINGS -----------------------------
+;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ; Non-localizable
