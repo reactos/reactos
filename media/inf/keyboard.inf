@@ -31,7 +31,7 @@ HKR, , UpperFilters,   0x00010000, "kbdclass"
 %*PNP0303.DeviceDesc%    = PS2_Inst.NT,*PNP0303
 %HID.KeyboardDevice%     = HID_Keyboard_Inst,,HID_DEVICE_SYSTEM_KEYBOARD
 
-;------------------------------ HID DRIVER -----------------------------
+;------------------------------ HID DRIVER ----------------------------
 
 [HID_Keyboard_Inst.NT]
 Copyfiles = HID_Keyboard_Inst.CopyFiles.NT
@@ -61,7 +61,7 @@ LoadOrderGroup = Keyboard Port
 [KbdClass.Services]
 AddService = kbdclass,, kbdclass_Service_Inst
 
-;------------------------------ PS/2 DRIVER -----------------------------
+;------------------------------ PS/2 DRIVER ---------------------------
 
 [PS2_Inst.NT]
 CopyFiles = PS2_CopyFiles.NT, kbdclass_CopyFiles.NT
@@ -84,7 +84,7 @@ LoadOrderGroup = Keyboard Port
 [PS2_AddReg]
 HKR, , LocationInformationOverride, 0, %LocationOverride%
 
-;---------------------------- KBDCLASS DRIVER ---------------------------
+;---------------------------- KBDCLASS DRIVER -------------------------
 
 [kbdclass_CopyFiles.NT]
 kbdclass.sys
@@ -96,7 +96,7 @@ ErrorControl  = 1
 ServiceBinary = %12%\kbdclass.sys
 LoadOrderGroup = Keyboard Class
 
-;-------------------------------- STRINGS -------------------------------
+;-------------------------------- STRINGS -----------------------------
 
 [Strings]
 ; Non-localizable
