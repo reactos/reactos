@@ -64,13 +64,11 @@ LoadOrderGroup = NDIS
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-
 RealtekMfg = "Realtek Semiconductor Co., Ltd."
 
 ; Localizable
 GenericMfg = "(Generic network cards)"
 *PNP80D6.DeviceDesc = "NE2000-compatible Ethernet Adapter"
-
 *RTL8019.DeviceDesc = "Realtek RTL8019AS ISA Ethernet Adapter"
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 PCI Ethernet Adapter"
 
@@ -110,7 +108,6 @@ GenericMfg = "(Adaptadores de rede padrão)"
 *PNP80D6.DeviceDesc = "Compatível com NE2000"
 
 [Strings.0418]
-
 GenericMfg = "(placă de rețea generică)"
 *PNP80D6.DeviceDesc = "Compatibile cu NE2000"
 
