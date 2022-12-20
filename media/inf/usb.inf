@@ -37,7 +37,7 @@ ErrorControl  = 1
 ServiceBinary = %12%\usbhub.sys
 LoadOrderGroup = Base
 
-;----------------------- COMMON GENERIC PARENT DRIVER -------------------------
+;----------------------- COMMON GENERIC PARENT DRIVER -------------------
 
 [usbccgp_Inst.NT]
 CopyFiles = usbccgp_CopyFiles.NT
