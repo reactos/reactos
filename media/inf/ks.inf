@@ -30,7 +30,6 @@ HKCR,%Proxy.FilterId%,,,%Proxy.FilterDesc%
 HKCR,%Proxy.FilterId%\InprocServer32,,,ksproxy.ax
 HKCR,%Proxy.FilterId%\InprocServer32,ThreadingModel,,Both
 
-
 [KSDriver.Files]
 ks.sys
 
@@ -210,7 +209,6 @@ HKLM,%MediaCategories%\%GUID.SWMidi%,Name,,%Pin.SWMidi%
 HKLM,%MediaCategories%\%GUID.SWMidi%,Display,1,00,00,00,00
 
 [AudRegistration]
-
 HKLM,%MediaCategories%\%GUID_AFN.Bass%,Name,,%AudFName.Bass%
 HKLM,%MediaCategories%\%GUID_AFN.Bass%,Display,1,00,00,00,00
 HKLM,%MediaCategories%\%GUID_AFN.Treble%,Name,,%AudFName.Treble%
@@ -312,7 +310,6 @@ HKLM,%MediaCategories%\%GUID_AFN.Video%,Display,1,00,00,00,00
 HKLM,%MediaCategories%\%GUID_AFN.Peakmeter%,Name,,%AudFName.Peakmeter%
 HKLM,%MediaCategories%\%GUID_AFN.Peakmeter%,Display,1,00,00,00,00
 
-
 [PlugRegistration]
 HKCR,CLSID\{1A8766A0-62CE-11CF-A5D6-28DB04C10000},,,%PlugIn_InterfaceHandler%
 HKCR,CLSID\{1A8766A0-62CE-11CF-A5D6-28DB04C10000}\InprocServer32,,,ksproxy.ax
@@ -342,11 +339,9 @@ HKCR,CLSID\{EC529B00-1A1F-11D1-BAD9-00609744111A}\InprocServer32,ThreadingModel,
 HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-00609744111A},,,%PlugIn_VPEVBI%
 HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-00609744111A},IID,1,00,9B,52,EC,1F,1A,D1,11,BA,D9,00,60,97,44,11,1A
 
-
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-
 KSSTRING_Clock="{53172480-4791-11D0-A5D6-28DB04C10000}"
 KSSTRING_Quality="{97EBAACB-95BD-11D0-A3EA-00A0C9223196}"
 KSSTRING_Server="{3C0D501A-140B-11D1-B40F-00A0C9223196}"
@@ -391,7 +386,6 @@ GUID.Chorus="{20173F20-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.3DEffects="{55515860-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.AEC="{BF963D80-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.DevSpecific="{941C7AC0-C559-11D0-8A2B-00A0C9255AC1}"
-
 GUID.Microphone="{DFF21BE1-F70F-11D0-B917-00A0C9223196}"
 GUID.DesktopMicrophone="{DFF21BE2-F70F-11D0-B917-00A0C9223196}"
 GUID.PersonalMicrophone="{DFF21BE3-F70F-11D0-B917-00A0C9223196}"
@@ -441,7 +435,6 @@ GUID.MultitrackRecorder="{DFF220F2-F70F-11D0-B917-00A0C9223196}"
 GUID.Synthesizer="{DFF220F3-F70F-11D0-B917-00A0C9223196}"
 GUID.SWSynth="{423274A0-8B81-11D1-A050-0000F8004788}"
 GUID.SWMidi="{CB9BEFA0-A251-11D1-A050-0000F8004788}"
-
 GUID_AFN.Bass="{185FEDE0-9905-11D1-95A9-00C04FB925D3}"
 GUID_AFN.Treble="{185FEDE1-9905-11D1-95A9-00C04FB925D3}"
 GUID_AFN.3DStereo="{185FEDE2-9905-11D1-95A9-00C04FB925D3}"
@@ -493,10 +486,7 @@ GUID_AFN.VideoMute="{9B46E709-992A-11d2-AC4D-00C04F8EFB68}"
 GUID_AFN.Video="{915DAEC4-A434-11d2-AC52-00C04F8EFB68}"
 GUID_AFN.Peakmeter="{57E24340-FC5B-4612-A562-72B11A29DFAE}"
 
-
-;
-; english localized strings
-;
+; Localizable
 StreamingClass="Streaming devices/filters"
 Proxy.FilterDesc="Generic WDM Filter Proxy"
 Category_CaptureDevices="WDM Streaming Capture Devices"
@@ -547,7 +537,6 @@ Node.Chorus="Chorus"
 Node.3DEffects="3D Effects"
 Node.AEC="Acoustic Echo Cancelation"
 Node.DevSpecific="Device Specific"
-
 Pin.Microphone="Microphone"
 Pin.DesktopMicrophone="Desktop Microphone"
 Pin.PersonalMicrophone="Personal Microphone"
@@ -596,7 +585,6 @@ Pin.MultitrackRecorder="Multitrack Recorder"
 Pin.Synthesizer="Synthesizer"
 Pin.SWSynth="SW Synth"
 Pin.SWMidi="ReactOS GS Wavetable SW Synth"
-
 AudFName.Bass="Bass"
 AudFName.Treble="Treble"
 AudFName.3DStereo="3D Stereo"
@@ -699,7 +687,6 @@ Node.Chorus="Echo"
 Node.3DEffects="3D-Effekte"
 Node.AEC="Echounterdrückung"
 Node.DevSpecific="Gerätespezifisch"
-
 Pin.Microphone="Mikrofon"
 Pin.DesktopMicrophone="Tischmikrofon"
 Pin.PersonalMicrophone="Persönliches Mikrofon"
@@ -748,7 +735,6 @@ Pin.MultitrackRecorder="Mehrspurrekorder"
 Pin.Synthesizer="Synthesizer"
 Pin.SWSynth="SW-Synthesizer"
 Pin.SWMidi="ReactOS GS Wavetable SW Synth"
-
 AudFName.Bass="Tiefen"
 AudFName.Treble="Höhen"
 AudFName.3DStereo="3D-Stereo"
@@ -851,7 +837,6 @@ Node.Chorus="Coro"
 Node.3DEffects="Effetti 3D"
 Node.AEC="Eliminazione eco acustica"
 Node.DevSpecific="Specifico della periferica"
-
 Pin.Microphone="Microfono"
 Pin.DesktopMicrophone="Microfono da tavolo"
 Pin.PersonalMicrophone="Microfono personale"
@@ -900,7 +885,6 @@ Pin.MultitrackRecorder="Registratore a traccia multipla"
 Pin.Synthesizer="Sintetizzatore"
 Pin.SWSynth="Sintetizzatore SW"
 Pin.SWMidi="Sint. SW ReactOS GS Wavetable"
-
 AudFName.Bass="Bassi"
 AudFName.Treble="Alti"
 AudFName.3DStereo="Stereo 3D"
@@ -1003,7 +987,6 @@ Node.Chorus="Coro"
 Node.3DEffects="Efectos 3D"
 Node.AEC="Cancelación de eco acústico"
 Node.DevSpecific="Específico del dispositivo"
-
 Pin.Microphone="Micrófono"
 Pin.DesktopMicrophone="Micrófono de escritorio"
 Pin.PersonalMicrophone="Micrófono personal"
@@ -1052,7 +1035,6 @@ Pin.MultitrackRecorder="Grabadora multipista"
 Pin.Synthesizer="Sintetizador"
 Pin.SWSynth="Sintetizador por software"
 Pin.SWMidi="Sintetizador GS Wavetable por software de ReactOS"
-
 AudFName.Bass="Graves"
 AudFName.Treble="Agudos"
 AudFName.3DStereo="Estéreo 3D"
@@ -1154,7 +1136,6 @@ Node.Chorus="Chorus"
 Node.3DEffects="Efekty 3D"
 Node.AEC="Wygaszanie Echa"
 Node.DevSpecific="Własne urządzenia"
-
 Pin.Microphone="Mikrofon"
 Pin.DesktopMicrophone="Mikrofon stacjonarny"
 Pin.PersonalMicrophone="Mikrofon osobisty"
@@ -1203,7 +1184,6 @@ Pin.MultitrackRecorder="Nagrywarka wielościeżkowa"
 Pin.Synthesizer="Syntezator"
 Pin.SWSynth="Syntezator programowy"
 Pin.SWMidi="ReactOS GS Wavetable SW Synth"
-
 AudFName.Bass="Tony niskie"
 AudFName.Treble="Tony wysokie"
 AudFName.3DStereo="Stereo 3D"
@@ -1405,7 +1385,6 @@ AudFName.VideoMute="Amuțește video"
 AudFName.Video="Video"
 AudFName.Peakmeter="Vârf-metru"
 
-; Turkish
 [Strings.041f]
 StreamingClass="Akış Aygıtları/Süzgeçleri"
 Proxy.FilterDesc="Genel WDM Süzgeç Vekil Sunucusu"
@@ -1457,7 +1436,6 @@ Node.Chorus="Koro"
 Node.3DEffects="3D Etkiler"
 Node.AEC="Akustik Yankı İptali"
 Node.DevSpecific="Aygıta Özgü"
-
 Pin.Microphone="Mikrofon"
 Pin.DesktopMicrophone="Masaüstü Mikrofon"
 Pin.PersonalMicrophone="Özel Mikrofon"
@@ -1506,7 +1484,6 @@ Pin.MultitrackRecorder="Çok Kanallı Kaydedici"
 Pin.Synthesizer="Sentezleyici"
 Pin.SWSynth="Sentezleyici Yazılım"
 Pin.SWMidi="ReactOS GS Dalga Tablosu Birleştirici Yazılım"
-
 AudFName.Bass="Bas"
 AudFName.Treble="Tiz"
 AudFName.3DStereo="3D Stereo"
@@ -1604,7 +1581,6 @@ Node.Chorus="Хор"
 Node.3DEffects="3D Ефекти"
 Node.AEC="Скасування акустичного Ехо"
 Node.DevSpecific="Конкретного пристрою"
-
 Pin.Microphone="Мікрофон"
 Pin.DesktopMicrophone="Настільний мікрофон"
 Pin.PersonalMicrophone="Особистий мікрофон"
@@ -1650,7 +1626,6 @@ Pin.RadioRecv="Радіоприймач"
 Pin.RadioXmit="Радіопередавач"
 Pin.MultitrackRecorder="Багатодоріжковий рекордер"
 Pin.Synthesizer="Синтезатор"
-
 AudFName.Bass="Бас"
 AudFName.Treble="Потрійний"
 AudFName.3DStereo="3D Стерео"
@@ -1751,7 +1726,6 @@ Node.Chorus="Coro"
 Node.3DEffects="Efeitos 3D"
 Node.AEC="Cancelamento do Eco acústico "
 Node.DevSpecific="Específico do dispositivo"
-
 Pin.Microphone="Microfone"
 Pin.DesktopMicrophone="Microfone de escritório"
 Pin.PersonalMicrophone="Microfone pessoal"
@@ -1800,7 +1774,6 @@ Pin.MultitrackRecorder="Gravador multipista"
 Pin.Synthesizer="Sintetizador"
 Pin.SWSynth="Sintetizador por software"
 Pin.SWMidi="Sintetizador GS Wavetable por software de ReactOS"
-
 AudFName.Bass="Graves"
 AudFName.Treble="Agudos"
 AudFName.3DStereo="Estéreo 3D"
