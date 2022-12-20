@@ -308,14 +308,14 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 %PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc%=PciIde_Inst, PCI\VEN_ffff&DEV_ffff&REV_ff
 
 ;Compatible adapters
-%PCI\CC_0101.DeviceDesc% = PciIde_Inst,PCI\CC_0101                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0104.DeviceDesc% = uniata_Inst,PCI\CC_0104                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0105.DeviceDesc% = uniata_Inst,PCI\CC_0105                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0106.DeviceDesc% = uniata_Inst,PCI\CC_0106                             ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%*PNP0600.PriDeviceDesc% = uniata_Inst, Primary_IDE_Channel
-%*PNP0600.SecDeviceDesc% = uniata_Inst, Secondary_IDE_Channel
-%*PNP0600.DeviceDesc%    = uniata_Inst, *PNP0600                                ; Generic_ESDI_Hard_Disk_Controller   (BAD_IDE)
-%UniATA_Name% = uniata_Inst
+%PCI\CC_0101.DeviceDesc%=PciIde_Inst,PCI\CC_0101                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%PCI\CC_0104.DeviceDesc%=uniata_Inst,PCI\CC_0104                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%PCI\CC_0105.DeviceDesc%=uniata_Inst,PCI\CC_0105                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%PCI\CC_0106.DeviceDesc%=uniata_Inst,PCI\CC_0106                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%*PNP0600.PriDeviceDesc%=uniata_Inst, Primary_IDE_Channel
+%*PNP0600.SecDeviceDesc%=uniata_Inst, Secondary_IDE_Channel
+%*PNP0600.DeviceDesc%=uniata_Inst, *PNP0600                            ; Generic_ESDI_Hard_Disk_Controller   (BAD_IDE)
+%UniATA_Name%=uniata_Inst
 
 ;---------------------------- PCI IDE DRIVER ----------------------------
 
@@ -358,11 +358,11 @@ LoadOrderGroup = System Bus Extender
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+ReactOS="ReactOS Project"
 
 ; Localizable
-HDCClassName = "IDE ATA/ATAPI controllers"
-GenericMfg = "(Generic hard disk controllers)"
+HDCClassName="IDE ATA/ATAPI controllers"
+GenericMfg="(Generic hard disk controllers)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 controller"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 controller"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 controller"
@@ -641,17 +641,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA controller"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE controller"
 
 ;Compatible adapters
-UniATA_Name = "Universal ATA Driver"
-*PNP0600.DeviceDesc     = "IDE/ESDI Hard Disk Controller"
-*PNP0600.PriDeviceDesc  = "Primary IDE Channel"
-*PNP0600.SecDeviceDesc  = "Secondary IDE Channel"
-PCI\CC_0101.DeviceDesc  = "Dual Channel PCI BusMaster IDE Controller"
-PCI\CC_0104.DeviceDesc  = "Generic RAID IDE Controller"
-PCI\CC_0105.DeviceDesc  = "Generic ATA Controller"
-PCI\CC_0106.DeviceDesc  = "Generic Serial ATA Controller"
+UniATA_Name="Universal ATA Driver"
+*PNP0600.DeviceDesc="IDE/ESDI Hard Disk Controller"
+*PNP0600.PriDeviceDesc="Primary IDE Channel"
+*PNP0600.SecDeviceDesc="Secondary IDE Channel"
+PCI\CC_0101.DeviceDesc="Dual Channel PCI BusMaster IDE Controller"
+PCI\CC_0104.DeviceDesc="Generic RAID IDE Controller"
+PCI\CC_0105.DeviceDesc="Generic ATA Controller"
+PCI\CC_0106.DeviceDesc="Generic Serial ATA Controller"
 
 [Strings.0404]
-GenericMfg = "(標準硬碟控制器)"
+GenericMfg="(標準硬碟控制器)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 控制器"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 控制器"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 控制器"
@@ -930,30 +930,30 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA 控制器"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE 控制器"
 
 ;Compatible adapters
-UniATA_Name = "標準 ATA 驅動程式"
-*PNP0600.PriDeviceDesc  = "主 IDE 通道"
-*PNP0600.SecDeviceDesc  = "次 IDE 通道"
-PCI\CC_0101.DeviceDesc  = "雙通道 PCI BusMaster IDE 控制器"
-PCI\CC_0104.DeviceDesc  = "標準 RAID IDE 控制器"
-PCI\CC_0105.DeviceDesc  = "標準 ATA 控制器"
-PCI\CC_0106.DeviceDesc  = "標準序列 ATA 控制器"
+UniATA_Name="標準 ATA 驅動程式"
+*PNP0600.PriDeviceDesc="主 IDE 通道"
+*PNP0600.SecDeviceDesc="次 IDE 通道"
+PCI\CC_0101.DeviceDesc="雙通道 PCI BusMaster IDE 控制器"
+PCI\CC_0104.DeviceDesc="標準 RAID IDE 控制器"
+PCI\CC_0105.DeviceDesc="標準 ATA 控制器"
+PCI\CC_0106.DeviceDesc="標準序列 ATA 控制器"
 
 [Strings.0405]
-HDCClassName = "IDE řadiče ATA/ATAPI"
-GenericMfg = "(Obecné řadiče pevných disků)"
+HDCClassName="IDE řadiče ATA/ATAPI"
+GenericMfg="(Obecné řadiče pevných disků)"
 
 ;Compatible adapters
-UniATA_Name = "Univerzální ATA ovladač"
-*PNP0600.PriDeviceDesc  = "Primární IDE kanál"
-*PNP0600.SecDeviceDesc  = "Sekundární IDE kanál"
-PCI\CC_0101.DeviceDesc  = "Dvoukanálový řadič PCI BusMaster IDE"
-PCI\CC_0104.DeviceDesc  = "Obecný řadič RAID IDE"
-PCI\CC_0105.DeviceDesc  = "Obecný řadič ATA"
-PCI\CC_0106.DeviceDesc  = "Obecný řadič Serial ATA"
+UniATA_Name="Univerzální ATA ovladač"
+*PNP0600.PriDeviceDesc="Primární IDE kanál"
+*PNP0600.SecDeviceDesc="Sekundární IDE kanál"
+PCI\CC_0101.DeviceDesc="Dvoukanálový řadič PCI BusMaster IDE"
+PCI\CC_0104.DeviceDesc="Obecný řadič RAID IDE"
+PCI\CC_0105.DeviceDesc="Obecný řadič ATA"
+PCI\CC_0106.DeviceDesc="Obecný řadič Serial ATA"
 
 [Strings.0407]
-HDCClassName = "IDE ATA/ATAPI Controller"
-GenericMfg = "(Generische Festplatten-Controller)"
+HDCClassName="IDE ATA/ATAPI Controller"
+GenericMfg="(Generische Festplatten-Controller)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 Controller"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 Controller"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 Controller"
@@ -1232,17 +1232,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA Controller"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE Controller"
 
 ;Compatible adapters
-UniATA_Name = "Universal ATA Treiber"
-*PNP0600.PriDeviceDesc  = "Primärer IDE Kanal"
-*PNP0600.SecDeviceDesc  = "Sekundärer IDE Kanal"
-PCI\CC_0101.DeviceDesc  = "PCI BusMaster IDE Controller (2-kanalig)"
-PCI\CC_0104.DeviceDesc  = "Generischer RAID IDE Controller"
-PCI\CC_0105.DeviceDesc  = "Generischer ATA Controller"
-PCI\CC_0106.DeviceDesc  = "Generischer Serial ATA Controller"
+UniATA_Name="Universal ATA Treiber"
+*PNP0600.PriDeviceDesc="Primärer IDE Kanal"
+*PNP0600.SecDeviceDesc="Sekundärer IDE Kanal"
+PCI\CC_0101.DeviceDesc="PCI BusMaster IDE Controller (2-kanalig)"
+PCI\CC_0104.DeviceDesc="Generischer RAID IDE Controller"
+PCI\CC_0105.DeviceDesc="Generischer ATA Controller"
+PCI\CC_0106.DeviceDesc="Generischer Serial ATA Controller"
 
 [Strings.0a]
-HDCClassName            = "Controladores IDE ATA/ATAPI genéricos"
-GenericMfg              = "(Controladores de disco duro genéricos)"
+HDCClassName="Controladores IDE ATA/ATAPI genéricos"
+GenericMfg="(Controladores de disco duro genéricos)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Controlador Acard ATP850 ATA-33"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Controlador Acard ATP860A ATA-66"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Controlador Acard ATP860R ATA-66"
@@ -1521,17 +1521,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Controlador HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Controlador IDE"
 
 ;Compatible adapters
-UniATA_Name             = "Controlador ATA universal"
-*PNP0600.PriDeviceDesc  = "Canal IDE primario"
-*PNP0600.SecDeviceDesc  = "Canal IDE secundario"
-PCI\CC_0101.DeviceDesc  = "Controlador PCI Dual Channel IDE BusMaster"
-PCI\CC_0104.DeviceDesc  = "Controlador RAID IDE genérico"
-PCI\CC_0105.DeviceDesc  = "Controlador ATA genérico"
-PCI\CC_0106.DeviceDesc  = "Controlador Serial ATA genérico"
+UniATA_Name="Controlador ATA universal"
+*PNP0600.PriDeviceDesc="Canal IDE primario"
+*PNP0600.SecDeviceDesc="Canal IDE secundario"
+PCI\CC_0101.DeviceDesc="Controlador PCI Dual Channel IDE BusMaster"
+PCI\CC_0104.DeviceDesc="Controlador RAID IDE genérico"
+PCI\CC_0105.DeviceDesc="Controlador ATA genérico"
+PCI\CC_0106.DeviceDesc="Controlador Serial ATA genérico"
 
 [Strings.0415]
-HDCClassName = "Kontrolery IDE ATA/ATAPI"
-GenericMfg = "(Standardowe kontrolery IDE ATA/ATAPI)"
+HDCClassName="Kontrolery IDE ATA/ATAPI"
+GenericMfg="(Standardowe kontrolery IDE ATA/ATAPI)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Kontroler Acard ATP850 ATA-33"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Kontroler Acard ATP860A ATA-66"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Kontroler Acard ATP860R ATA-66"
@@ -1810,17 +1810,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Kontroler HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Kontroler IDE"
 
 ;Compatible adapters
-UniATA_Name = "Uniwersalny sterownik ATA"
-*PNP0600.PriDeviceDesc  = "Podstawowy kanał IDE"
-*PNP0600.SecDeviceDesc  = "Pomocniczy kanał IDE"
-PCI\CC_0101.DeviceDesc  = "Dwukanałowy kontroler PCI BusMaster IDE"
-PCI\CC_0104.DeviceDesc  = "Standardowy kontroler RAID IDE"
-PCI\CC_0105.DeviceDesc  = "Standardowy kontroler ATA"
-PCI\CC_0106.DeviceDesc  = "Standardowy kontroler Serial ATA"
+UniATA_Name="Uniwersalny sterownik ATA"
+*PNP0600.PriDeviceDesc="Podstawowy kanał IDE"
+*PNP0600.SecDeviceDesc="Pomocniczy kanał IDE"
+PCI\CC_0101.DeviceDesc="Dwukanałowy kontroler PCI BusMaster IDE"
+PCI\CC_0104.DeviceDesc="Standardowy kontroler RAID IDE"
+PCI\CC_0105.DeviceDesc="Standardowy kontroler ATA"
+PCI\CC_0106.DeviceDesc="Standardowy kontroler Serial ATA"
 
 [Strings.0418]
-HDCClassName = "Dispozitive de control IDE ATA/ATAPI"
-GenericMfg = "(dispozitive generice de control HDD)"
+HDCClassName="Dispozitive de control IDE ATA/ATAPI"
+GenericMfg="(dispozitive generice de control HDD)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Dispozitiv de control Acard ATP850 ATA-33"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Dispozitiv de control Acard ATP860A ATA-66"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Dispozitiv de control Acard ATP860R ATA-66"
@@ -2099,17 +2099,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Dispozitiv de control HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Dispozitiv de control IDE"
 
 ;Compatible adapters
-UniATA_Name = "Modúl-pilot ATA universal"
-*PNP0600.PriDeviceDesc  = "Dispozitiv de control IDE primar"
-*PNP0600.SecDeviceDesc  = "Dispozitiv de control IDE secundar"
-PCI\CC_0101.DeviceDesc  = "Dispozitiv de control Dual Channel PCI BusMaster IDE"
-PCI\CC_0104.DeviceDesc  = "Dispozitiv de control RAID IDE generic"
-PCI\CC_0105.DeviceDesc  = "Dispozitiv de control ATA generic"
-PCI\CC_0106.DeviceDesc  = "Dispozitiv de control Serial ATA generic"
+UniATA_Name="Modúl-pilot ATA universal"
+*PNP0600.PriDeviceDesc="Dispozitiv de control IDE primar"
+*PNP0600.SecDeviceDesc="Dispozitiv de control IDE secundar"
+PCI\CC_0101.DeviceDesc="Dispozitiv de control Dual Channel PCI BusMaster IDE"
+PCI\CC_0104.DeviceDesc="Dispozitiv de control RAID IDE generic"
+PCI\CC_0105.DeviceDesc="Dispozitiv de control ATA generic"
+PCI\CC_0106.DeviceDesc="Dispozitiv de control Serial ATA generic"
 
 [Strings.0419]
-HDCClassName = "IDE ATA/ATAPI контроллеры"
-GenericMfg = "(Универсальный контроллер жёсткого диска)"
+HDCClassName="IDE ATA/ATAPI контроллеры"
+GenericMfg="(Универсальный контроллер жёсткого диска)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 контроллер"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 контроллер"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 контроллер"
@@ -2388,18 +2388,18 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA контроллер"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE контроллер"
 
 ;Compatible adapters
-UniATA_Name = "Универсальный ATA драйвер"
-*PNP0600.DeviceDesc     = "IDE/ESDI контроллер жёсткого диска"
-*PNP0600.PriDeviceDesc  = "Первичный канал IDE"
-*PNP0600.SecDeviceDesc  = "Вторичный канал IDE"
-PCI\CC_0101.DeviceDesc  = "Двухканальный PCI BusMaster IDE контроллер"
-PCI\CC_0104.DeviceDesc  = "Универсальный RAID IDE контроллер"
-PCI\CC_0105.DeviceDesc  = "Универсальный ATA контроллер"
-PCI\CC_0106.DeviceDesc  = "Универсальный Serial ATA контроллер"
+UniATA_Name="Универсальный ATA драйвер"
+*PNP0600.DeviceDesc="IDE/ESDI контроллер жёсткого диска"
+*PNP0600.PriDeviceDesc="Первичный канал IDE"
+*PNP0600.SecDeviceDesc="Вторичный канал IDE"
+PCI\CC_0101.DeviceDesc="Двухканальный PCI BusMaster IDE контроллер"
+PCI\CC_0104.DeviceDesc="Универсальный RAID IDE контроллер"
+PCI\CC_0105.DeviceDesc="Универсальный ATA контроллер"
+PCI\CC_0106.DeviceDesc="Универсальный Serial ATA контроллер"
 
 [Strings.041f]
-HDCClassName = "IDE ATA/ATAPI Denetleyicileri"
-GenericMfg = "(Genel Sabit Disk Denetleyicileri)"
+HDCClassName="IDE ATA/ATAPI Denetleyicileri"
+GenericMfg="(Genel Sabit Disk Denetleyicileri)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 Denetleyicisi"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 Denetleyicisi"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 Denetleyicisi"
@@ -2678,17 +2678,17 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA Denetleyicisi"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE Denetleyicisi"
 
 ;Compatible adapters
-UniATA_Name = "Evrensel ATA Sürücüsü"
-*PNP0600.PriDeviceDesc  = "Birinci IDE Kanalı"
-*PNP0600.SecDeviceDesc  = "İkinci IDE Kanalı"
-PCI\CC_0101.DeviceDesc  = "İkili Kanal PCI BusMaster IDE Denetleyicisi"
-PCI\CC_0104.DeviceDesc  = "Genel RAID IDE Denetleyicisi"
-PCI\CC_0105.DeviceDesc  = "Genel ATA Denetleyicisi"
-PCI\CC_0106.DeviceDesc  = "Genel Seri ATA Denetleyicisi"
+UniATA_Name="Evrensel ATA Sürücüsü"
+*PNP0600.PriDeviceDesc="Birinci IDE Kanalı"
+*PNP0600.SecDeviceDesc="İkinci IDE Kanalı"
+PCI\CC_0101.DeviceDesc="İkili Kanal PCI BusMaster IDE Denetleyicisi"
+PCI\CC_0104.DeviceDesc="Genel RAID IDE Denetleyicisi"
+PCI\CC_0105.DeviceDesc="Genel ATA Denetleyicisi"
+PCI\CC_0106.DeviceDesc="Genel Seri ATA Denetleyicisi"
 
 [Strings.0422]
-HDCClassName = "Контроллери IDE ATA/ATAPI"
-GenericMfg = "(Стандартні контроллери жорстких дисків)"
+HDCClassName="Контроллери IDE ATA/ATAPI"
+GenericMfg="(Стандартні контроллери жорстких дисків)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Контроллер Acard ATP850 ATA-33"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Контроллер Acard ATP860A ATA-66"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Контроллер Acard ATP860R ATA-66"
@@ -2967,16 +2967,16 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Контроллер HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Контроллер IDE"
 
 ;Compatible adapters
-UniATA_Name = "Універсальний драйвер ATA"
-*PNP0600.PriDeviceDesc  = "Основний канал IDE"
-*PNP0600.SecDeviceDesc  = "Вторинний канал IDE"
-PCI\CC_0101.DeviceDesc  = "Контроллер двоканальної PCI BusMaster IDE"
-PCI\CC_0104.DeviceDesc  = "Стандартний контроллер RAID IDE"
-PCI\CC_0105.DeviceDesc  = "Стандартний контроллер ATA"
-PCI\CC_0106.DeviceDesc  = "Стандартний контроллер Serial ATA"
+UniATA_Name="Універсальний драйвер ATA"
+*PNP0600.PriDeviceDesc="Основний канал IDE"
+*PNP0600.SecDeviceDesc="Вторинний канал IDE"
+PCI\CC_0101.DeviceDesc="Контроллер двоканальної PCI BusMaster IDE"
+PCI\CC_0104.DeviceDesc="Стандартний контроллер RAID IDE"
+PCI\CC_0105.DeviceDesc="Стандартний контроллер ATA"
+PCI\CC_0106.DeviceDesc="Стандартний контроллер Serial ATA"
 
 [Strings.0804]
-GenericMfg = "(通用硬盘控制器)"
+GenericMfg="(通用硬盘控制器)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 控制器"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 控制器"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 控制器"
@@ -3255,16 +3255,16 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA 控制器"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE 控制器"
 
 ;Compatible adapters
-UniATA_Name = "通用 ATA 驱动"
-*PNP0600.PriDeviceDesc  = "主 IDE 通道"
-*PNP0600.SecDeviceDesc  = "次 IDE 通道"
-PCI\CC_0101.DeviceDesc  = "双通道 PCI BusMaster IDE 控制器"
-PCI\CC_0104.DeviceDesc  = "通用 RAID IDE 控制器"
-PCI\CC_0105.DeviceDesc  = "通用 ATA 控制器"
-PCI\CC_0106.DeviceDesc  = "通用串口 ATA 控制器"
+UniATA_Name="通用 ATA 驱动"
+*PNP0600.PriDeviceDesc="主 IDE 通道"
+*PNP0600.SecDeviceDesc="次 IDE 通道"
+PCI\CC_0101.DeviceDesc="双通道 PCI BusMaster IDE 控制器"
+PCI\CC_0104.DeviceDesc="通用 RAID IDE 控制器"
+PCI\CC_0105.DeviceDesc="通用 ATA 控制器"
+PCI\CC_0106.DeviceDesc="通用串口 ATA 控制器"
 
 [Strings.0C04]
-GenericMfg = "(標準硬碟控制器)"
+GenericMfg="(標準硬碟控制器)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 控制器"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 控制器"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 控制器"
@@ -3543,10 +3543,10 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="HiNT VXII EIDE IDE DMA 控制器"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE 控制器"
 
 ;Compatible adapters
-UniATA_Name = "標準 ATA 驅動程式"
-*PNP0600.PriDeviceDesc  = "主 IDE 通道"
-*PNP0600.SecDeviceDesc  = "次 IDE 通道"
-PCI\CC_0101.DeviceDesc  = "雙通道 PCI BusMaster IDE 控制器"
-PCI\CC_0104.DeviceDesc  = "標準 RAID IDE 控制器"
-PCI\CC_0105.DeviceDesc  = "標準 ATA 控制器"
-PCI\CC_0106.DeviceDesc  = "標準序列 ATA 控制器"
+UniATA_Name="標準 ATA 驅動程式"
+*PNP0600.PriDeviceDesc="主 IDE 通道"
+*PNP0600.SecDeviceDesc="次 IDE 通道"
+PCI\CC_0101.DeviceDesc="雙通道 PCI BusMaster IDE 控制器"
+PCI\CC_0104.DeviceDesc="標準 RAID IDE 控制器"
+PCI\CC_0105.DeviceDesc="標準 ATA 控制器"
+PCI\CC_0106.DeviceDesc="標準序列 ATA 控制器"
