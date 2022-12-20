@@ -47,7 +47,6 @@ StartType      = 3
 ErrorControl   = 1
 ServiceBinary  = %12%\flpydisk.sys
 
-
 ;---------------------------- NO DRIVER REQ -----------------------------
 
 [NO_DRV]
@@ -95,7 +94,6 @@ Floppy.DeviceDesc = "Unitate de disc flexibil"
 FloppyClassName = "Дисководы гибких дисков"
 GenericMfg = "(Универсальные дисководы гибких дисков)"
 Floppy.DeviceDesc = "Универсальный дисковод гибких дисков"
-
 
 [Strings.041f]
 FloppyClassName = "Disket Sürücüleri"
