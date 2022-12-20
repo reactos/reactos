@@ -162,6 +162,10 @@ LoadOrderGroup = Pointer Port
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+IbmMfg = "IBM"
+LogMfg = "Logitech"
+MSMfg = "Microsoft"
+NecMfg = "NEC"
 
 ; Localizable
 MouseClassName = "Mice and other pointing devices"
@@ -174,22 +178,14 @@ HID_MOUSE.DeviceDesc = "HID Mouse"
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port for PS/2-style mice"
-
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
-
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech Serial Mouse"
 *PNP0F12.DeviceDesc = "Logitech PS/2-style Mouse"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
-MSMfg = "Microsoft"
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft Serial Mouse"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2-style Mouse"
-
-NecMfg = "NEC"
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0404]
