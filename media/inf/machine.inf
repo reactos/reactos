@@ -165,6 +165,9 @@ LoadOrderGroup = Boot Bus Extender
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+IntelMfg = "Intel"
+NecMfg = "NEC"
+nVidiaMfg = "nVidia"
 
 ; Localizable
 SystemClassName = "System devices"
@@ -200,8 +203,6 @@ PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 *ThermalZone.DeviceDesc = "ACPI thermal zone"
 PCI\CC_0C05.DeviceDesc = "SMBus Controller"
 SWENUM.DeviceDesc  = "Plug & Play Software Bus Enumerator"
-
-IntelMfg = "Intel"
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -211,12 +212,8 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
-
-NecMfg = "NEC"
 NecCb.DeviceDesc = "NEC PCI to C-bus Bridge"
 NecVl.DeviceDesc = "NEC PCI to VL bus Bridge"
-
-nVidiaMfg = "nVidia"
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI to ISA Bridge"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce SMBus Controller"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP to PCI Bridge"
