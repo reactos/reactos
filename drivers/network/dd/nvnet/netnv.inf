@@ -142,14 +142,12 @@ HKR, Ndi\params\OptimizationMode,      default,   0, "0"
 HKR, Ndi\params\OptimizationMode\enum, "0",       0, "%M1%"
 HKR, Ndi\params\OptimizationMode\enum, "1",       0, "%M2%"
 HKR, Ndi\params\OptimizationMode\enum, "2",       0, "%M3%"
-
 HKR, Ndi\params\NetworkAddress,        ParamDesc, 0, %NA%
 HKR, Ndi\params\NetworkAddress,        type,      0, "edit"
 HKR, Ndi\params\NetworkAddress,        LimitText, 0, "12"
 HKR, Ndi\params\NetworkAddress,        UpperCase, 0, "1"
 HKR, Ndi\params\NetworkAddress,        default,   0, " "
 HKR, Ndi\params\NetworkAddress,        optional,  0, "1"
-
 HKR, Ndi\params\SpeedDuplex,           ParamDesc, 0, %SD%
 HKR, Ndi\params\SpeedDuplex,           type,      0, "enum"
 HKR, Ndi\params\SpeedDuplex,           default,   0, "0"
@@ -183,7 +181,6 @@ HKR, Ndi\params\ChecksumOffload,       type,      0, "enum"
 HKR, Ndi\params\ChecksumOffload,       default,   0, "1"
 HKR, Ndi\params\ChecksumOffload\enum,  "0",       0, "%No%"
 HKR, Ndi\params\ChecksumOffload\enum,  "1",       0, "%Yes%"
-
 HKR, Ndi\params\LargeSendOffload,       ParamDesc, 0, %LS%
 HKR, Ndi\params\LargeSendOffload,       type,      0, "enum"
 HKR, Ndi\params\LargeSendOffload,       default,   0, "1"
@@ -205,13 +202,11 @@ HKR, Ndi\params\Priority,              type,      0, "enum"
 HKR, Ndi\params\Priority,              default,   0, "1"
 HKR, Ndi\params\Priority\enum,         "0",       0, "%No%"
 HKR, Ndi\params\Priority\enum,         "1",       0, "%Yes%"
-
 HKR, Ndi\params\VlanTag,               ParamDesc, 0, %VT%
 HKR, Ndi\params\VlanTag,               type,      0, "enum"
 HKR, Ndi\params\VlanTag,               default,   0, "1"
 HKR, Ndi\params\VlanTag\enum,          "0",       0, "%No%"
 HKR, Ndi\params\VlanTag\enum,          "1",       0, "%Yes%"
-
 HKR, Ndi\params\VlanID,                ParamDesc, 0, %VI%
 HKR, Ndi\params\VlanID,                type,      0, "long"
 HKR, Ndi\params\VlanID,                default,   0, "0"
@@ -239,7 +234,6 @@ HKR, , TypesSupported,   0x00010001, 7
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-
 nVidiaMfg = "nVidia"
 
 ; Localizable
@@ -262,7 +256,6 @@ PP = "Packet Priority"
 VT = "VLAN Tagging"
 VI = "VLAN ID"
 JF = "Jumbo Frame"
-
 nForce.DeviceDesc = "nVidia nForce PCI Ethernet Controller"
 nForce2.DeviceDesc = "nVidia nForce2 PCI Ethernet Controller"
 nForce3.DeviceDesc = "nVidia nForce3 PCI Ethernet Controller"
@@ -297,7 +290,6 @@ Yes = "Да"
 PP = "Приоритет кадров"
 VT = "Маркировка кадров"
 JF = "Кадры большого размера"
-
 nForce.DeviceDesc = "nVidia nForce PCI сетевой контроллер"
 nForce2.DeviceDesc = "nVidia nForce2 PCI сетевой контроллер"
 nForce3.DeviceDesc = "nVidia nForce3 PCI сетевой контроллер"
