@@ -63,7 +63,6 @@ vfwwdm.drv
 [VfWWDM32.Files]
 vfwwdm32.dll
 
-
 [Filters]
 HKCR,CLSID\{266EEE40-6C63-11cf-8A03-00AA006ECB65},,,%Filter_TVTuner%
 HKCR,CLSID\{266EEE40-6C63-11cf-8A03-00AA006ECB65}\InprocServer32,,,kstvtune.ax
@@ -71,14 +70,12 @@ HKCR,CLSID\{266EEE40-6C63-11cf-8A03-00AA006ECB65}\InprocServer32,ThreadingModel,
 HKCR,CLSID\{266EEE41-6C63-11cf-8A03-00AA006ECB65},,,%PropPage_TVTuner%
 HKCR,CLSID\{266EEE41-6C63-11cf-8A03-00AA006ECB65}\InprocServer32,,,kstvtune.ax
 HKCR,CLSID\{266EEE41-6C63-11cf-8A03-00AA006ECB65}\InprocServer32,ThreadingModel,,Both
-
 HKCR,CLSID\{71F96460-78F3-11d0-A18C-00A0C9118956},,,%Filter_XBar%
 HKCR,CLSID\{71F96460-78F3-11d0-A18C-00A0C9118956}\InprocServer32,,,ksxbar.ax
 HKCR,CLSID\{71F96460-78F3-11d0-A18C-00A0C9118956}\InprocServer32,ThreadingModel,,Both
 HKCR,CLSID\{71F96461-78F3-11d0-A18C-00A0C9118956},,,%PropPage_XBar%
 HKCR,CLSID\{71F96461-78F3-11d0-A18C-00A0C9118956}\InprocServer32,,,ksxbar.ax
 HKCR,CLSID\{71F96461-78F3-11d0-A18C-00A0C9118956}\InprocServer32,ThreadingModel,,Both
-
 HKCR,CLSID\{71F96462-78F3-11d0-A18C-00A0C9118956},,,%Filter_TVAudio%
 HKCR,CLSID\{71F96462-78F3-11d0-A18C-00A0C9118956}\InprocServer32,,,ksxbar.ax
 HKCR,CLSID\{71F96462-78F3-11d0-A18C-00A0C9118956}\InprocServer32,ThreadingModel,,Both
@@ -92,7 +89,6 @@ ksxbar.ax
 kswdmcap.ax
 vidcap.ax
 
-
 [Categories]
 HKCR,%ActiveMovieCategories%\%GUID.TvTuner%,CLSID,,%GUID.TvTuner%
 HKCR,%ActiveMovieCategories%\%GUID.TvTuner%,FriendlyName,,%Category_TvTunerDevices%
@@ -104,7 +100,6 @@ HKCR,%ActiveMovieCategories%\%GUID.Encoder%,CLSID,,%GUID.Encoder%
 HKCR,%ActiveMovieCategories%\%GUID.Encoder%,FriendlyName,,%Category_Encoder%
 HKCR,%ActiveMovieCategories%\%GUID.Multiplexer%,CLSID,,%GUID.Multiplexer%
 HKCR,%ActiveMovieCategories%\%GUID.Multiplexer%,FriendlyName,,%Category_Multiplexer%
-
 
 [TopologyNodes]
 HKLM,%MediaCategories%\%GUID.CapturePin%,Name,,%Node.CapturePin%
@@ -247,7 +242,6 @@ HKLM,%RunOnce%,"NDISIP0",,"rundll32.exe streamci,StreamingDeviceSetup %NdisIP.De
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-
 ActiveMovieCategories="CLSID\{da4e3da0-d07d-11d0-bd50-00a0c911ce86}\Instance"
 GUID.TvTuner="{A799A800-A46D-11d0-A18C-00A02401DCD4}"
 GUID.Crossbar="{A799A801-A46D-11d0-A18C-00A02401DCD4}"
@@ -285,10 +279,7 @@ GUID.BdaRenderer="{71985F4A-1CA1-11d3-9CC8-00C04F7971E0}"
 NdisIP.DeviceID="{48926476-2cae-4ded-a86e-73ddebed6779}"
 NdisIP.GUID.BDANetInterface="{9aa4a2cc-81e0-4cfd-802f-0f74526d2bd3}"
 
-;
-; english localized strings
-;
-
+; Localizable
 Category_CrossbarDevices="WDM Streaming-Crossbar-Device"
 Category_TvTunerDevices="WDM Streaming-TV-Receiver Devices"
 Category_TvAudioDevices="WDM Streaming-TV-Audio Devices"
@@ -335,7 +326,6 @@ Plugin_ICameraControl="WDM Streaming-ICameraControl-Interface handler"
 Plugin_IVideoProcAmp="WDM Streaming-IVideoProcAmp-Interface handler"
 Plugin_ISelector="WDM Streaming-ISelector-Interface handler"
 Plugin_PropertyObject="Node Interfaces-Aggregate handler"
-
 
 [Strings.0407]
 Category_CrossbarDevices="WDM Streaming-Crossbar-Geräte"
@@ -387,11 +377,8 @@ Plugin_PropertyObject="Knotenschnittstellen-Aggregierungshandler"
 
 [Strings.0a]
 VfWWDMDriverDesc="Dispositivo de captura de vídeo por WDM"
-
 Filter_TVAudio="Audio de TV por WDM"
 Filter_TVTuner="Receptor de TV por WDM"
-
-;Node.Crossbar="Crossbar"
 Node.Preview="Vista previa"
 Node.CapturePin="Captura"
 Node.AnalogVideoIn="Entrada de vídeo analógico"
