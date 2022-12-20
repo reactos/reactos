@@ -74,13 +74,13 @@ LoadOrderGroup = Extended Base
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+MSMice = "Microsoft"
 
 ; Localizable
 HID.ClassName         = "Human Interface Devices"
 HID.DeviceDesc        = "USB Human Interface Device"
 HID_DEVICE            =  "HID-compatible Device"
 StdMfg                = "(Standard Human Interface Devices)"
-MSMice                = "Microsoft"
 USB\VID_045E&PID_0009.DeviceDesc="Microsoft IntelliMouse (USB)"
 USB\VID_045E&PID_001E.DeviceDesc="Microsoft IntelliMouse Explorer (USB)"
 USB\VID_045E&PID_0023.DeviceDesc="Microsoft Trackball Optical (USB)"
@@ -114,7 +114,6 @@ HID.ClassName         = "Urządzenia interfejsu HID"
 HID.DeviceDesc        = "Urządzenie USB interfejsu HID"
 HID_DEVICE            = "Urządzenie zgodne z HID"
 StdMfg                = "(Standardowe urządzenia HID)"
-MSMice                = "Microsoft"
 
 [Strings.0418]
 HID.ClassName = "Dispozitive de interfațare umană"
@@ -127,7 +126,6 @@ HID.ClassName         = "Устройства HID (Human Interface Devices)"
 HID.DeviceDesc        = "USB HID-совместимое устройство"
 HID_DEVICE            =  "HID-совместимое устройство"
 StdMfg                = "(Стандартные HID-устройства)"
-MSMice                = "Microsoft"
 
 [Strings.041f]
 HID.ClassName         = "İnsan Arabirimi Aygıtları"
