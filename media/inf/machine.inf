@@ -86,7 +86,7 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_10DE&DEV_02A5.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A5
 %PCI\VEN_10DE&DEV_02A6.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A6
 
-;---------------------------- NO DRIVER REQ -----------------------------
+;---------------------------- NO DRIVER REQ ---------------------------
 
 [NO_DRV]
 
@@ -96,7 +96,7 @@ AddService = , 0x00000002
 [NO_DRV.HW]
 
 
-;-------------------------- SWENUM BUS DRIVER --------------------------
+;-------------------------- SWENUM BUS DRIVER -------------------------
 
 [SWENUM_Inst.NT]
 CopyFiles = SWENUM_CopyFiles.NT
@@ -124,7 +124,7 @@ ErrorControl   = 3
 ServiceBinary  = %12%\swenum.sys
 LoadOrderGroup = Boot Bus Extender
 
-;-------------------------- PCI-ISA BUS DRIVER --------------------------
+;-------------------------- PCI-ISA BUS DRIVER ------------------------
 
 [PCI_ISA_Inst.NT]
 CopyFiles = PCI_ISA_CopyFiles.NT
@@ -142,7 +142,7 @@ ErrorControl  = 3
 ServiceBinary = %12%\isapnp.sys
 LoadOrderGroup = Boot Bus Extender
 
-;---------------------------- PCI BUS DRIVER ----------------------------
+;---------------------------- PCI BUS DRIVER --------------------------
 
 [PCI_Inst.NT]
 CopyFiles = PCI_CopyFiles.NT
@@ -160,7 +160,7 @@ ErrorControl  = 3
 ServiceBinary = %12%\pci.sys
 LoadOrderGroup = Boot Bus Extender
 
-;-------------------------------- STRINGS -------------------------------
+;-------------------------------- STRINGS -----------------------------
 
 [Strings]
 ; Non-localizable
