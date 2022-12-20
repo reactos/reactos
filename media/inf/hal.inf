@@ -43,7 +43,7 @@ HKR, , Icon,           0, "-27"
 [NO_DRV.Services]
 AddService = , 0x00000002
 
-;-------------------------------- STRINGS -------------------------------
+;-------------------------------- STRINGS -----------------------------
 
 [Strings]
 ; Non-localizable
@@ -51,26 +51,20 @@ ReactOS = "ReactOS Project"
 
 ; Localizable
 ComputerClassName = "Computer"
-
 GenericMfg = "(Generic computers)"
 acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
 e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 NecMfg = "NEC"
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0404]
 ComputerClassName = "電腦"
-
 GenericMfg = "(標準電腦)"
 acpipic_up.DeviceDesc = "ACPI 單處理器 PC"
 e_isa_up.DeviceDesc = "標準單處理器 PC"
-
 xbox.DeviceDesc = "原版 Xbox (基於 x86)"
-
 pc98_up.DeviceDesc = "單處理器 NEC PC-98"
 
 [Strings.0405]
@@ -78,46 +72,35 @@ ComputerClassName = "Počítač"
 GenericMfg = "(Obecné počítače)"
 acpipic_up.DeviceDesc = "Jednoprocesorové PC s ACPI rozhraním"
 e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0a]
 ComputerClassName = "Equipo"
-
 GenericMfg = "(Equipos genéricos)"
 acpipic_up.DeviceDesc = "PC con uniprocesador ACPI"
 e_isa_up.DeviceDesc = "PC con uniprocesador estándar"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0415]
 ComputerClassName = "Komputer"
-
 GenericMfg = "(Komputery standardowe)"
 acpipic_up.DeviceDesc = "Komputer PC z interfejsem ACPI"
 e_isa_up.DeviceDesc = "Standardowy komputer PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Oryginalny Xbox (oparty na procesorze x86)"
-
 pc98_up.DeviceDesc = "Komputer NEC PC-98"
 
 [Strings.0418]
 ComputerClassName = "Calculator"
-
 GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0419]
@@ -126,66 +109,50 @@ ComputerClassName = "Компьютер"
 GenericMfg = "(Универсальный компьютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцессорный ПК"
 e_isa_up.DeviceDesc = "Стандартный однопроцессорный ПК"
-
 MsftMfg = "Корпорация Microsoft"
 xbox.DeviceDesc = "Оригинальный Xbox (на базе x86)"
-
 pc98_up.DeviceDesc = "Однопроцессорный NEC PC-98"
 
 [Strings.041f]
 ComputerClassName = "Bilgisayar"
-
 GenericMfg = "(Genel Bilgisayarlar)"
 acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
 e_isa_up.DeviceDesc = "Standart Tek İşlemcili PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Özgün Xbox (x86 tabanlı)"
-
 pc98_up.DeviceDesc = "Tek İşlemcili NEC PC-98"
 
 [Strings.0422]
 ComputerClassName = "Комп'ютер"
-
 GenericMfg = "(Стандартний комп'ютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцесорний ПК"
 e_isa_up.DeviceDesc = "Стандартний однопроцесорний ПК"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 pc98_up.DeviceDesc = "Однопроцесорний NEC PC-98"
 
 [Strings.0804]
 GenericMfg = "(通用计算机)"
 acpipic_up.DeviceDesc = "ACPI 单处理器 PC"
 e_isa_up.DeviceDesc = "标准单处理器 PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0816]
 ComputerClassName = "Computador"
-
 GenericMfg = "(Computador Genérico)"
 acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
 e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
-
 MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
-
 NecMfg = "NEC"
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0C04]
 ComputerClassName = "電腦"
-
 GenericMfg = "(標準電腦)"
 acpipic_up.DeviceDesc = "ACPI 單處理器 PC"
 e_isa_up.DeviceDesc = "標準單處理器 PC"
-
 xbox.DeviceDesc = "原版 Xbox (基於 x86)"
-
 pc98_up.DeviceDesc = "單處理器 NEC PC-98"
