@@ -68,7 +68,6 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
-
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
@@ -78,10 +77,8 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
-
 README_TITLE=Read Me
 README_DESC=ReactOS Read-Me file
-
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=ReactOS Explorer
@@ -140,7 +137,6 @@ UTILMAN_DESC=Launch Accessibility Utility Manager
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Wine Web Browser
 
-; Bulgarian
 [Strings.0402]
 ACCESSORIES=Принадлежности
 SYSTOOLS=Системни средства
@@ -148,7 +144,6 @@ ACCESSIBILITY=Достъпност
 ENTERTAINMENT=Забавление
 COMMUNICATIONS=Communications
 GAMES=Игри
-
 CMD_TITLE=Команден прозорец
 CMD_DESC=Отваряне на командния прозорец
 EXPLORER_TITLE=Изследователят на РеактОС
@@ -201,7 +196,6 @@ WINMINE_DESC=Минички
 SPIDER_TITLE=Пасианс „Паяк“
 SPIDER_DESC=Пасианс „Паяк“
 
-; Traditional Chinese
 [Strings.0404]
 ACCESSORIES=附屬應用程式
 SYSTOOLS=系統管理工具
@@ -209,10 +203,8 @@ ACCESSIBILITY=協助工具
 ENTERTAINMENT=娛樂
 COMMUNICATIONS=通訊
 GAMES=遊樂場
-
 README_TITLE=讀我檔案
 README_DESC=ReactOS 讀我檔案
-
 CMD_TITLE=命令提示字元
 CMD_DESC=啟動命令提示字元
 EXPLORER_TITLE=ReactOS 檔案總管
@@ -271,7 +263,6 @@ UTILMAN_DESC=啟動協助工具管理員
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=瀏覽網際網路上的網頁
 
-; Czech
 [Strings.0405]
 ACCESSORIES=Příslušenství
 SYSTOOLS=Systémové nástroje
@@ -279,7 +270,6 @@ ACCESSIBILITY=Usnadnění
 ENTERTAINMENT=Zábava
 COMMUNICATIONS=Communications
 GAMES=Hry
-
 CMD_TITLE=Příkazový řádek
 CMD_DESC=Otevřít Příkazový řádek
 EXPLORER_TITLE=ReactOS Průzkumník
@@ -332,7 +322,6 @@ WINMINE_DESC=Spustit WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; German
 [Strings.0407]
 ACCESSORIES=Zubehör
 SYSTOOLS=Systemprogramme
@@ -340,10 +329,8 @@ ACCESSIBILITY=Eingabehilfen
 ENTERTAINMENT=Unterhaltung
 COMMUNICATIONS=Kommunikation
 GAMES=Spiele
-
 README_TITLE=Lies Mich
 README_DESC=Lies-Mich Datei für ReactOS
-
 CMD_TITLE=Eingabeaufforderung
 CMD_DESC=Öffne Kommandozeilenfenster
 EXPLORER_TITLE=ReactOS Explorer
@@ -398,7 +385,6 @@ SPIDER_DESC=Spider Solitär
 UTILMAN_TITLE=Eingabehilfen-Manager
 UTILMAN_DESC=Eingabehilfen-Manager starten
 
-; Greek
 [Strings.0408]
 ACCESSORIES=Βοηθήματα
 SYSTOOLS=Εργαλεία Συστήματος
@@ -406,7 +392,6 @@ ACCESSIBILITY=Για άτομα με ειδικές ανάγκες
 ENTERTAINMENT=Διασκέδαση
 COMMUNICATIONS=Communications
 GAMES=Παιχνίδια
-
 CMD_TITLE=Γραμμή εντολών
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=Εξερεύνηση του ReactOS
@@ -459,7 +444,6 @@ WINMINE_DESC=Ναρκαλιευτής
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Spanish
 [Strings.0a]
 ACCESSORIES=Accesorios
 SYSTOOLS=Herramientas del sistema
@@ -467,10 +451,8 @@ ACCESSIBILITY=Accesibilidad
 ENTERTAINMENT=Entretenimiento
 COMMUNICATIONS=Comunicaciones
 GAMES=Juegos
-
 README_TITLE=Léame
 README_DESC=Documento Léame de ReactOS
-
 CMD_TITLE=Consola
 CMD_DESC=Abre una consola de comandos.
 EXPLORER_TITLE=Explorador de ReactOS
@@ -527,7 +509,6 @@ SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
 UTILMAN_TITLE=Herramientas de Accesibilidad
 UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
 
-; Estonian
 [Strings.0425]
 ACCESSORIES=Tarvikud
 SYSTOOLS=Süsteemi tööriistad
@@ -535,10 +516,8 @@ ACCESSIBILITY=Ligipääsetavus
 ENTERTAINMENT=Meelelahutus
 COMMUNICATIONS=Kommunikatsioon
 GAMES=Mängud
-
 README_TITLE=Loe mind
 README_DESC=ReactOS'i Loe-mind fail
-
 CMD_TITLE=Käsurida
 CMD_DESC=Ava käsurida
 EXPLORER_TITLE=ReactOS Explorer
@@ -593,7 +572,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; French
 [Strings.040C]
 ACCESSORIES=Accessoires
 SYSTOOLS=Outils système
@@ -601,10 +579,8 @@ ACCESSIBILITY=Accessibilité
 ENTERTAINMENT=Divertissement
 COMMUNICATIONS=Communications
 GAMES=Jeux
-
 README_TITLE=Lisez-Moi
 README_DESC=Fichier Lisez-Moi pour ReactOS
-
 CMD_TITLE=Invite de commandes
 CMD_DESC=Ouvrir l'invite de commandes
 EXPLORER_TITLE=Explorateur ReactOS
@@ -663,7 +639,6 @@ UTILMAN_DESC=Lance le gestionnaire d'utilitaires d'accessibilité
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Lance le navigateur Wine Internet Explorer
 
-; Hebrew
 [Strings.040D]
 ACCESSORIES=עזרים
 SYSTOOLS=כלי מערכת
@@ -671,7 +646,6 @@ ACCESSIBILITY=נגישות
 ENTERTAINMENT=בידור
 COMMUNICATIONS=תקשורת
 GAMES=משחקים
-
 CMD_TITLE=שורת הפקודה
 CMD_DESC=שורת הפקודה
 EXPLORER_TITLE=סייר ReactOS
@@ -728,7 +702,6 @@ SPIDER_DESC=סוליטייר עכביש
 UTILMAN_TITLE=מנהל כלי הנגישות
 UTILMAN_DESC=הפעל את מנהל כלי הנגישות
 
-; Hungarian
 [Strings.040E]
 ACCESSORIES=Kellékek
 SYSTOOLS=Rendszereszközök
@@ -736,10 +709,8 @@ ACCESSIBILITY=Kisegítő lehetőségek
 ENTERTAINMENT=Szórakozás
 COMMUNICATIONS=Kommunikáció
 GAMES=Játékok
-
 README_TITLE=Olvass el
 README_DESC=ReactOS Olvass-el fájl
-
 CMD_TITLE=Parancssor
 CMD_DESC=Parancssor megnyitása
 EXPLORER_TITLE=ReactOS Intéző
@@ -796,7 +767,6 @@ SPIDER_DESC=Fekete Özvegy
 UTILMAN_TITLE=Kisegítő lehetőségek kezelő
 UTILMAN_DESC=Kisegítő lehetőségek kezelő indítása
 
-; Indonesian
 [Strings.0421]
 ACCESSORIES=Aksesoris
 SYSTOOLS=Alat Sistem
@@ -804,7 +774,6 @@ ACCESSIBILITY=Aksesibilitas
 ENTERTAINMENT=Hiburan
 COMMUNICATIONS=Komunikasi
 GAMES=Permainan
-
 CMD_TITLE=Perintah Cepat
 CMD_DESC=Buka Perintah Cepat
 EXPLORER_TITLE=Penjelajah ReactOS
@@ -857,7 +826,6 @@ WINMINE_DESC=Buka WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Buka Spider Solitaire
 
-; Italian
 [Strings.0410]
 ACCESSORIES=Accessori
 SYSTOOLS=Strumenti di sistema
@@ -865,10 +833,8 @@ ACCESSIBILITY=Accessibilità
 ENTERTAINMENT=Divertimento
 COMMUNICATIONS=Comunicazioni
 GAMES=Giochi
-
 README_TITLE=Leggimi
 README_DESC=File Leggimi per ReactOS
-
 CMD_TITLE=Prompt dei comandi
 CMD_DESC=Apri la finestra dei comandi
 EXPLORER_TITLE=ReactOS Explorer
@@ -921,7 +887,6 @@ WINMINE_DESC=Campo minato
 SPIDER_TITLE=Spider
 SPIDER_DESC=Spider
 
-; Japanese
 [Strings.0411]
 ACCESSORIES=アクセサリ
 SYSTOOLS=システムツール
@@ -929,7 +894,6 @@ ACCESSIBILITY=アクセシビリティ
 ENTERTAINMENT=エンターテイメント
 COMMUNICATIONS=Communications
 GAMES=ゲーム
-
 CMD_TITLE=コマンド プロンプト
 CMD_DESC=コマンド プロンプトを開きます
 EXPLORER_TITLE=ReactOS Explorer
@@ -982,7 +946,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=スパイダ ソリティア
 SPIDER_DESC=スパイダ ソリティア
 
-; Dutch
 [Strings.0413]
 ACCESSORIES=Accessories
 SYSTOOLS=System Tools
@@ -990,10 +953,8 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
-
 README_TITLE=Lees Mij
 README_DESC=LeesMij bestand voor ReactOS
-
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=ReactOS Explorer
@@ -1046,7 +1007,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Norwegian
 [Strings.0414]
 ACCESSORIES=Tilbehør
 SYSTOOLS=Systemverktøy
@@ -1054,7 +1014,6 @@ ACCESSIBILITY=Tilgjengelighet
 ENTERTAINMENT=Underholdning
 COMMUNICATIONS=Communications
 GAMES=Spill
-
 CMD_TITLE=Command Prompt
 CMD_DESC=Åpne Kommandolinje
 EXPLORER_TITLE=ReactOS Explorer
@@ -1107,7 +1066,6 @@ WINMINE_DESC=Minnesveiper
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Polish
 [Strings.0415]
 ACCESSORIES=Akcesoria
 SYSTOOLS=Narzędzia systemowe
@@ -1115,10 +1073,8 @@ ACCESSIBILITY=Ułatwienia dostępu
 ENTERTAINMENT=Rozrywka
 COMMUNICATIONS=Komunikacja
 GAMES=Gry
-
 README_TITLE=Przeczytaj Mnie
 README_DESC=Plik Przeczytaj Mnie ReactOS
-
 CMD_TITLE=Wiersz polecenia
 CMD_DESC=Uruchom konsolę
 EXPLORER_TITLE=Eksplorator ReactOS
@@ -1175,7 +1131,6 @@ SPIDER_DESC=Pasjans Pająk
 UTILMAN_TITLE=Menedżer narzędzi ułatwienia dostępu
 UTILMAN_DESC=Uruchom Menedżer narzędzi ułatwienia dostępu
 
-; Portuguese - Brazil
 [Strings.0416]
 ACCESSORIES=Acessórios
 SYSTOOLS=Ferramentas de Sistema
@@ -1183,10 +1138,8 @@ ACCESSIBILITY=Acessibilidade
 ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Communications
 GAMES=Jogos
-
 README_TITLE=Leia-Me
 README_DESC=Arquivo de informações para ReactOS
-
 CMD_TITLE=Command Prompt
 CMD_DESC=Abrir prompt de comando
 EXPLORER_TITLE=ReactOS Explorer
@@ -1239,7 +1192,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Portuguese - Portugal
 [Strings.0816]
 ACCESSORIES=Acessórios
 SYSTOOLS=Ferramentas de Sistema
@@ -1247,10 +1199,8 @@ ACCESSIBILITY=Acessibilidade
 ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Comunicações
 GAMES=Jogos
-
 README_TITLE=Leia-Me
 README_DESC=Arquivo de informações para o ReactOS
-
 CMD_TITLE=Linha de Comandos
 CMD_DESC=Abrir Linha de comando
 EXPLORER_TITLE=Explorador do ReactOS
@@ -1303,7 +1253,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Romanian
 [Strings.0418]
 ACCESSORIES=Accesorii
 SYSTOOLS=Instrumente de sistem
@@ -1311,10 +1260,8 @@ ACCESSIBILITY=Accesibilitate
 ENTERTAINMENT=Divertisment
 COMMUNICATIONS=Communicații
 GAMES=Jocuri
-
 README_TITLE=De citit
 README_DESC=Fișier de informare ReactOS
-
 CMD_TITLE=Linie de comandă
 CMD_DESC=Mediu textual cu operații lansate de la linia de comandă.
 EXPLORER_TITLE=Explorator ReactOS
@@ -1369,7 +1316,6 @@ WINMINE_DESC=Joc de deminare.
 SPIDER_TITLE=Pasiență-păianjen
 SPIDER_DESC=Joc de pasiență.
 
-; Russian
 [Strings.0419]
 ACCESSORIES=Стандартные
 SYSTOOLS=Служебные
@@ -1377,10 +1323,8 @@ ACCESSIBILITY=Специальные возможности
 ENTERTAINMENT=Развлечения
 COMMUNICATIONS=Связь
 GAMES=Игры
-
 README_TITLE=Прочти Меня
 README_DESC=файл ReadMe для ReactOS
-
 CMD_TITLE=Командная строка
 CMD_DESC=Используется для выполнения вводимых с клавиатуры команд.
 EXPLORER_TITLE=Проводник ReactOS
@@ -1437,7 +1381,6 @@ SPIDER_DESC=Пасьянс Паук
 UTILMAN_TITLE=Диспетчер служебных программ
 UTILMAN_DESC=Обеспечивает запуск и настройку программ поддержки специальных возможностей.
 
-; Slovak
 [Strings.041B]
 ACCESSORIES=Príslušenstvo
 SYSTOOLS=Systémové nástroje
@@ -1445,7 +1388,6 @@ ACCESSIBILITY=Zjednodušenie ovládania
 ENTERTAINMENT=Zábava
 COMMUNICATIONS=Communications
 GAMES=Hry
-
 CMD_TITLE=Príkazový riadok
 CMD_DESC=Otvoriť Príkazový riadok
 EXPLORER_TITLE=Prieskumník systému ReactOS
@@ -1498,7 +1440,6 @@ WINMINE_DESC=Míny
 SPIDER_TITLE=Pavúčí solitér
 SPIDER_DESC=Pavúčí solitér
 
-; Turkish
 [Strings.041f]
 ACCESSORIES=Donatılar
 SYSTOOLS=Sistem Araçları
@@ -1506,10 +1447,8 @@ ACCESSIBILITY=Erişilebilirlik
 ENTERTAINMENT=Eğlence
 COMMUNICATIONS=İletişim
 GAMES=Oyunlar
-
 README_TITLE=Benioku
 README_DESC=ReactOS Benioku
-
 CMD_TITLE=Komut İstemi
 CMD_DESC=Komut İstemi'ni aç
 EXPLORER_TITLE=ReactOS Gezgini
@@ -1566,7 +1505,6 @@ UTILMAN_DESC=Erişilebilirlik Araçları Yöneticisi'ni başlat
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Wine Web Tarayıcısı
 
-; Ukrainian
 [Strings.0422]
 ACCESSORIES=Стандартні
 SYSTOOLS=Службові
@@ -1574,10 +1512,8 @@ ACCESSIBILITY=Спеціальні можливості
 ENTERTAINMENT=Розваги
 COMMUNICATIONS=Зв'язок
 GAMES=Ігри
-
 README_TITLE=Прочитай мене
 README_DESC=Файл ReadMe для ReactOS
-
 CMD_TITLE=Командний рядок
 CMD_DESC=Відкрити командний рядок
 EXPLORER_TITLE=Провідник ReactOS
@@ -1632,7 +1568,6 @@ SPIDER_DESC=Пас'янс Павук
 UTILMAN_TITLE=Диспетчер службових програм
 UTILMAN_DESC=Забезпечує запуск і настройку програм підтримки спеціальних можливостей.
 
-; Basque
 [Strings.042D]
 ACCESSORIES=Osagarriak
 SYSTOOLS=Sistemaren Tresnak
@@ -1640,10 +1575,8 @@ ACCESSIBILITY=Irisgarritasuna
 ENTERTAINMENT=Dembora-pasa
 COMMUNICATIONS=Komunikazioak
 GAMES=Jolasak
-
 README_TITLE=Irakurri hau
 README_DESC=ReactOS gidaliburua irakurtzeko
-
 CMD_TITLE=Kontsola
 CMD_DESC=Ireki komanduen konstsola.
 EXPLORER_TITLE=ReactOS Esploradorea
@@ -1700,7 +1633,6 @@ SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
 UTILMAN_TITLE=Irisgarritasun tresnak
 UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
 
-; Simplified Chinese
 [Strings.0804]
 ACCESSORIES=附件
 SYSTOOLS=系统工具
@@ -1708,10 +1640,8 @@ ACCESSIBILITY=辅助工具
 ENTERTAINMENT=娱乐
 COMMUNICATIONS=通讯
 GAMES=游戏
-
 README_TITLE=自述文件
 README_DESC=ReactOS 自述文件
-
 CMD_TITLE=命令提示符
 CMD_DESC=命令提示符
 EXPLORER_TITLE=ReactOS 资源管理器
@@ -1766,7 +1696,6 @@ WINMINE_DESC=扫雷
 SPIDER_TITLE=蜘蛛纸牌
 SPIDER_DESC=蜘蛛纸牌
 
-; Chinese Hong Kong
 [Strings.0c04]
 ACCESSORIES=附屬應用程式
 SYSTOOLS=系統管理工具
@@ -1774,10 +1703,8 @@ ACCESSIBILITY=協助工具
 ENTERTAINMENT=娛樂
 COMMUNICATIONS=通訊
 GAMES=遊樂場
-
 README_TITLE=讀我檔案
 README_DESC=ReactOS 讀我檔案
-
 CMD_TITLE=命令提示字元
 CMD_DESC=啟動命令提示字元
 EXPLORER_TITLE=ReactOS 檔案總管
