@@ -64,7 +64,7 @@ LoadOrderGroup = NDIS
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-RealtekMfg = "Realtek Semiconductor Co., Ltd."
+RealtekMfg = "Realtek"
 
 ; Localizable
 GenericMfg = "(Generic network cards)"
