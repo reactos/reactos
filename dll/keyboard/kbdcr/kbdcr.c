@@ -41,7 +41,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
-  'R',          'T',          'Y',          'U',
+  'R',          'T',          'Z',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
@@ -53,7 +53,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
-  'Z',          'X',          'C',          'V',
+  'Y',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
   VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
   /* - 37 - */
@@ -98,10 +98,8 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_F24,
   /* - 77 - */
   VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  VK_OEM_PA1, VK_TAB, 0xc2, 0, /* PA1 */
-  0,
-  /* - 80 - */
-  0
+  VK_OEM_PA1, VK_TAB, 0xc2, VK_EMPTY, /* PA1 */
+  VK_EMPTY,
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
@@ -488,7 +486,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   /* scan code to virtual key maps */
   scancode_to_vk,
-  sizeof(scancode_to_vk) / sizeof(scancode_to_vk[0]),
+  RTL_NUMBER_OF(scancode_to_vk),
   extcode0_to_vk,
   extcode1_to_vk,
 
