@@ -220,7 +220,7 @@ BEGIN
 END
 
 /* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
-/* If there is no special situation, please DO NOT change English folder names 
+/* If there is no special situation, please DO NOT change English folder names
 into Chinese, or it may cause problems in the system. */
 
 STRINGTABLE
@@ -247,7 +247,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
