@@ -1,2 +1,2 @@
-@ stdcall KbSwitchSetHooks()
-@ stdcall KbSwitchDeleteHooks()
+@ stdcall KbsHook(ptr)
+@ stdcall KbsUnhook()
