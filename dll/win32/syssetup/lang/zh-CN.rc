@@ -206,7 +206,7 @@ BEGIN
 END
 
 /* ATTENTION: Synchronize the translation of these strings with shell32 */
-/* If there is no special situation, please DO NOT change English folder names 
+/* If there is no special situation, please DO NOT change English folder names
 into Chinese, or it may cause problems in the system. */
 
 STRINGTABLE
