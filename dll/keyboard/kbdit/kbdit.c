@@ -155,9 +155,6 @@ ROSDATA USHORT scancode_to_vk[] = {
 /* 7c */  VK_EMPTY,
 /* 7d */  VK_EMPTY,
 /* 7e */  VK_EMPTY,
-/* 7f */  VK_EMPTY,
-/* 80 */  VK_EMPTY,
-/* 00 */  0
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
@@ -432,7 +429,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   /* scan code to virtual key maps */
   scancode_to_vk,
-  sizeof(scancode_to_vk) / sizeof(scancode_to_vk[0]),
+  RTL_NUMBER_OF(scancode_to_vk),
   extcode0_to_vk,
   extcode1_to_vk,
 
