@@ -17,7 +17,7 @@ DriverVer  = 04/12/2006,1.00
 [ReactOS]
 %MS_TCPIP.DisplayName% = MS_TCPIP.PrimaryInstall, MS_TCPIP
 
-;----------------------------- TCP/IPv4 DRIVER --------------------------
+;--------------------------- TCP/IPv4 DRIVER ----------------------------
 
 [MS_TCPIP.PrimaryInstall]
 Characteristics = 0xA0
