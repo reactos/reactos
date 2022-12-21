@@ -29,7 +29,7 @@ DefaultDestDir = 12
 %GEN_SCSIADAPTER.DeviceDesc% = NO_DRV,,GEN_SCSIADAPTER
 %PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
 
-;----------------------------- ScsiPort Driver --------------------------
+;--------------------------- SCSIPORT DRIVER ----------------------------
 
 [Scsiport_CopyFiles.NT]
 scsiport.sys
@@ -48,7 +48,7 @@ LoadOrderGroup = SCSI Port
 [NO_DRV.Services]
 AddService = , 0x00000002
 
-;----------------------------- BusLogic Driver --------------------------
+;--------------------------- BUSLOGIC DRIVER ----------------------------
 
 [BusLogic_Inst.NT]
 CopyFiles = BusLogic_CopyFiles.NT, Scsiport_CopyFiles.NT
@@ -67,7 +67,7 @@ ErrorControl  = 0
 ServiceBinary = %12%\buslogic.sys
 LoadOrderGroup = SCSI Miniport
 
-;--------------------------------- Strings ------------------------------
+;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ; Non-localizable
