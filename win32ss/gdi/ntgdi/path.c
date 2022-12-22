@@ -1442,9 +1442,8 @@ PATH_FlattenPath(PPATH pPath)
 
 /* PATH_PathToRegion
  *
- * Creates a region from the specified path using the specified polygon
- * filling mode. The path is left unchanged. A handle to the region that
- * was created is stored in *pHrgn.
+ * Fills Rgn from the specified path using the specified polygon
+ * filling mode. The path is left unchanged.
  */
 BOOL
 FASTCALL
