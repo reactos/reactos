@@ -482,8 +482,13 @@ BOOL CNtObjectFolder::IsFolder(const NtPidlEntry * info)
 
 HRESULT CNtObjectFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
 {
-    NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
+    if (!pcidl)
+    {
+        DbgPrint("PCIDL is NULL\n");
+        return E_INVALIDARG;
+    }
 
+    NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
     if (!entry)
     {
         DbgPrint("PCIDL with NULL mkid\n");
