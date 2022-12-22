@@ -21,7 +21,7 @@ BEGIN
     STRING_FORMAT_FAIL "FormatEx başarılı olarak bitiremedi.\n\n"
     STRING_NO_SUPPORT "İşlem Desteklenmiyor"
     STRING_FMIFS_FAIL "FMIFS giriş noktaları konumlandırılamadı.\n\n"
-    STRING_UNKNOW_ARG "Bilinmeyen değiştirgen: %s\n"
+    STRING_UNKNOW_ARG "Bilinmeyen değişken: %s\n"
     STRING_DRIVE_PARM "İstenen sürücü değişkeni eksik.\n\n"
     STRING_ERROR_DRIVE_TYPE "Sürücü türü alınamadı."
     STRING_INSERT_DISK "%C: sürücüsüne yeni bir yumuşak disk yerleştiriniz\nve hazır olduğunda Enter'e basınız..."
