@@ -16,7 +16,7 @@ drmkaud.sys
 portcls.sys
 
 [Manufacturer]
-%MfgName%=GenericMfg
+%ReactOS%=GenericMfg
 
 ; Excluding drivers from the "Add New Hardware" list
 [ControlFlags]
@@ -169,9 +169,9 @@ WDM_DRMKAUD.CopyFiles  = 10,system32\drivers
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-;Non-localizable
+; Non-localizable
 ReactOS="ReactOS"
-MfgName="ReactOS"
+
 RunOnce = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 Proxy.CLSID               = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
 KSNAME_Filter             = "{9B365890-165F-11D0-A195-0020AFD156E4}"
@@ -188,7 +188,7 @@ KSCATEGORY_WDMAUD         = "{3E227E76-690D-11D2-8161-0000F8775BF1}"
 WDM_KMIXER.DeviceId       = "{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}"
 KSCATEGORY_MIXER          = "{AD809C00-7B88-11D0-A5D6-28DB04C10000}"
 
-;Localizable
+; Localizable
 WDM_KMIXER.DeviceDesc     = "ReactOS Wave Audio Mixer"
 WDM_KMIXER.FriendlyName   = "ReactOS Wave Audio Mixer"
 kmixer.SvcDesc            = "ReactOS Wave Audio Mixer"

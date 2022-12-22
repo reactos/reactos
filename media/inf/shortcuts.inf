@@ -77,8 +77,10 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
+
 README_TITLE=Read Me
 README_DESC=ReactOS Read-Me file
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=ReactOS Explorer
@@ -144,6 +146,7 @@ ACCESSIBILITY=Достъпност
 ENTERTAINMENT=Забавление
 COMMUNICATIONS=Communications
 GAMES=Игри
+
 CMD_TITLE=Команден прозорец
 CMD_DESC=Отваряне на командния прозорец
 EXPLORER_TITLE=Изследователят на РеактОС
@@ -203,8 +206,10 @@ ACCESSIBILITY=協助工具
 ENTERTAINMENT=娛樂
 COMMUNICATIONS=通訊
 GAMES=遊樂場
+
 README_TITLE=讀我檔案
 README_DESC=ReactOS 讀我檔案
+
 CMD_TITLE=命令提示字元
 CMD_DESC=啟動命令提示字元
 EXPLORER_TITLE=ReactOS 檔案總管
@@ -270,6 +275,7 @@ ACCESSIBILITY=Usnadnění
 ENTERTAINMENT=Zábava
 COMMUNICATIONS=Communications
 GAMES=Hry
+
 CMD_TITLE=Příkazový řádek
 CMD_DESC=Otevřít Příkazový řádek
 EXPLORER_TITLE=ReactOS Průzkumník
@@ -329,8 +335,10 @@ ACCESSIBILITY=Eingabehilfen
 ENTERTAINMENT=Unterhaltung
 COMMUNICATIONS=Kommunikation
 GAMES=Spiele
+
 README_TITLE=Lies Mich
 README_DESC=Lies-Mich Datei für ReactOS
+
 CMD_TITLE=Eingabeaufforderung
 CMD_DESC=Öffne Kommandozeilenfenster
 EXPLORER_TITLE=ReactOS Explorer
@@ -392,6 +400,7 @@ ACCESSIBILITY=Για άτομα με ειδικές ανάγκες
 ENTERTAINMENT=Διασκέδαση
 COMMUNICATIONS=Communications
 GAMES=Παιχνίδια
+
 CMD_TITLE=Γραμμή εντολών
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=Εξερεύνηση του ReactOS
@@ -451,8 +460,10 @@ ACCESSIBILITY=Accesibilidad
 ENTERTAINMENT=Entretenimiento
 COMMUNICATIONS=Comunicaciones
 GAMES=Juegos
+
 README_TITLE=Léame
 README_DESC=Documento Léame de ReactOS
+
 CMD_TITLE=Consola
 CMD_DESC=Abre una consola de comandos.
 EXPLORER_TITLE=Explorador de ReactOS
@@ -516,8 +527,10 @@ ACCESSIBILITY=Ligipääsetavus
 ENTERTAINMENT=Meelelahutus
 COMMUNICATIONS=Kommunikatsioon
 GAMES=Mängud
+
 README_TITLE=Loe mind
 README_DESC=ReactOS'i Loe-mind fail
+
 CMD_TITLE=Käsurida
 CMD_DESC=Ava käsurida
 EXPLORER_TITLE=ReactOS Explorer
@@ -579,8 +592,10 @@ ACCESSIBILITY=Accessibilité
 ENTERTAINMENT=Divertissement
 COMMUNICATIONS=Communications
 GAMES=Jeux
+
 README_TITLE=Lisez-Moi
 README_DESC=Fichier Lisez-Moi pour ReactOS
+
 CMD_TITLE=Invite de commandes
 CMD_DESC=Ouvrir l'invite de commandes
 EXPLORER_TITLE=Explorateur ReactOS
@@ -646,6 +661,7 @@ ACCESSIBILITY=נגישות
 ENTERTAINMENT=בידור
 COMMUNICATIONS=תקשורת
 GAMES=משחקים
+
 CMD_TITLE=שורת הפקודה
 CMD_DESC=שורת הפקודה
 EXPLORER_TITLE=סייר ReactOS
@@ -709,8 +725,10 @@ ACCESSIBILITY=Kisegítő lehetőségek
 ENTERTAINMENT=Szórakozás
 COMMUNICATIONS=Kommunikáció
 GAMES=Játékok
+
 README_TITLE=Olvass el
 README_DESC=ReactOS Olvass-el fájl
+
 CMD_TITLE=Parancssor
 CMD_DESC=Parancssor megnyitása
 EXPLORER_TITLE=ReactOS Intéző
@@ -774,6 +792,7 @@ ACCESSIBILITY=Aksesibilitas
 ENTERTAINMENT=Hiburan
 COMMUNICATIONS=Komunikasi
 GAMES=Permainan
+
 CMD_TITLE=Perintah Cepat
 CMD_DESC=Buka Perintah Cepat
 EXPLORER_TITLE=Penjelajah ReactOS
@@ -833,8 +852,10 @@ ACCESSIBILITY=Accessibilità
 ENTERTAINMENT=Divertimento
 COMMUNICATIONS=Comunicazioni
 GAMES=Giochi
+
 README_TITLE=Leggimi
 README_DESC=File Leggimi per ReactOS
+
 CMD_TITLE=Prompt dei comandi
 CMD_DESC=Apri la finestra dei comandi
 EXPLORER_TITLE=ReactOS Explorer
@@ -894,6 +915,7 @@ ACCESSIBILITY=アクセシビリティ
 ENTERTAINMENT=エンターテイメント
 COMMUNICATIONS=Communications
 GAMES=ゲーム
+
 CMD_TITLE=コマンド プロンプト
 CMD_DESC=コマンド プロンプトを開きます
 EXPLORER_TITLE=ReactOS Explorer
@@ -953,8 +975,10 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
+
 README_TITLE=Lees Mij
 README_DESC=LeesMij bestand voor ReactOS
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=ReactOS Explorer
@@ -1014,6 +1038,7 @@ ACCESSIBILITY=Tilgjengelighet
 ENTERTAINMENT=Underholdning
 COMMUNICATIONS=Communications
 GAMES=Spill
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Åpne Kommandolinje
 EXPLORER_TITLE=ReactOS Explorer
@@ -1073,8 +1098,10 @@ ACCESSIBILITY=Ułatwienia dostępu
 ENTERTAINMENT=Rozrywka
 COMMUNICATIONS=Komunikacja
 GAMES=Gry
+
 README_TITLE=Przeczytaj Mnie
 README_DESC=Plik Przeczytaj Mnie ReactOS
+
 CMD_TITLE=Wiersz polecenia
 CMD_DESC=Uruchom konsolę
 EXPLORER_TITLE=Eksplorator ReactOS
@@ -1138,8 +1165,10 @@ ACCESSIBILITY=Acessibilidade
 ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Communications
 GAMES=Jogos
+
 README_TITLE=Leia-Me
 README_DESC=Arquivo de informações para ReactOS
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Abrir prompt de comando
 EXPLORER_TITLE=ReactOS Explorer
@@ -1199,8 +1228,10 @@ ACCESSIBILITY=Acessibilidade
 ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Comunicações
 GAMES=Jogos
+
 README_TITLE=Leia-Me
 README_DESC=Arquivo de informações para o ReactOS
+
 CMD_TITLE=Linha de Comandos
 CMD_DESC=Abrir Linha de comando
 EXPLORER_TITLE=Explorador do ReactOS
@@ -1260,8 +1291,10 @@ ACCESSIBILITY=Accesibilitate
 ENTERTAINMENT=Divertisment
 COMMUNICATIONS=Communicații
 GAMES=Jocuri
+
 README_TITLE=De citit
 README_DESC=Fișier de informare ReactOS
+
 CMD_TITLE=Linie de comandă
 CMD_DESC=Mediu textual cu operații lansate de la linia de comandă.
 EXPLORER_TITLE=Explorator ReactOS
@@ -1323,8 +1356,10 @@ ACCESSIBILITY=Специальные возможности
 ENTERTAINMENT=Развлечения
 COMMUNICATIONS=Связь
 GAMES=Игры
+
 README_TITLE=Прочти Меня
 README_DESC=файл ReadMe для ReactOS
+
 CMD_TITLE=Командная строка
 CMD_DESC=Используется для выполнения вводимых с клавиатуры команд.
 EXPLORER_TITLE=Проводник ReactOS
@@ -1388,6 +1423,7 @@ ACCESSIBILITY=Zjednodušenie ovládania
 ENTERTAINMENT=Zábava
 COMMUNICATIONS=Communications
 GAMES=Hry
+
 CMD_TITLE=Príkazový riadok
 CMD_DESC=Otvoriť Príkazový riadok
 EXPLORER_TITLE=Prieskumník systému ReactOS
@@ -1447,8 +1483,10 @@ ACCESSIBILITY=Erişilebilirlik
 ENTERTAINMENT=Eğlence
 COMMUNICATIONS=İletişim
 GAMES=Oyunlar
+
 README_TITLE=Benioku
 README_DESC=ReactOS Benioku
+
 CMD_TITLE=Komut İstemi
 CMD_DESC=Komut İstemi'ni aç
 EXPLORER_TITLE=ReactOS Gezgini
@@ -1512,8 +1550,10 @@ ACCESSIBILITY=Спеціальні можливості
 ENTERTAINMENT=Розваги
 COMMUNICATIONS=Зв'язок
 GAMES=Ігри
+
 README_TITLE=Прочитай мене
 README_DESC=Файл ReadMe для ReactOS
+
 CMD_TITLE=Командний рядок
 CMD_DESC=Відкрити командний рядок
 EXPLORER_TITLE=Провідник ReactOS
@@ -1575,8 +1615,10 @@ ACCESSIBILITY=Irisgarritasuna
 ENTERTAINMENT=Dembora-pasa
 COMMUNICATIONS=Komunikazioak
 GAMES=Jolasak
+
 README_TITLE=Irakurri hau
 README_DESC=ReactOS gidaliburua irakurtzeko
+
 CMD_TITLE=Kontsola
 CMD_DESC=Ireki komanduen konstsola.
 EXPLORER_TITLE=ReactOS Esploradorea
@@ -1640,8 +1682,10 @@ ACCESSIBILITY=辅助工具
 ENTERTAINMENT=娱乐
 COMMUNICATIONS=通讯
 GAMES=游戏
+
 README_TITLE=自述文件
 README_DESC=ReactOS 自述文件
+
 CMD_TITLE=命令提示符
 CMD_DESC=命令提示符
 EXPLORER_TITLE=ReactOS 资源管理器
@@ -1703,8 +1747,10 @@ ACCESSIBILITY=協助工具
 ENTERTAINMENT=娛樂
 COMMUNICATIONS=通訊
 GAMES=遊樂場
+
 README_TITLE=讀我檔案
 README_DESC=ReactOS 讀我檔案
+
 CMD_TITLE=命令提示字元
 CMD_DESC=啟動命令提示字元
 EXPLORER_TITLE=ReactOS 檔案總管

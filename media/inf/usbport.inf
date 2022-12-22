@@ -118,10 +118,12 @@ LoadOrderGroup = Base
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 IntelMfg = "Intel"
 
 ; Localizable
 USBClassName = "USB Controllers"
+
 GenericMfg = "(Generic USB devices)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB controller"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB controller"
@@ -132,6 +134,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB cont
 
 [Strings.0404]
 USBClassName = "USB 控制器"
+
 GenericMfg = "(標準 USB 裝置)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
@@ -142,6 +145,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控�
 
 [Strings.0405]
 USBClassName = "USB řadiče"
+
 GenericMfg = "(Generická USB zařízení)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB řadič"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB řadič"
@@ -152,6 +156,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB řad
 
 [Strings.0407]
 USBClassName = "USB Controller"
+
 GenericMfg = "(Generische USB-Geräte)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB-Controller"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB-Controller"
@@ -160,6 +165,7 @@ USB\ROOT_HUB.DeviceDesc = "Root Hub"
 
 [Strings.0a]
 USBClassName = "Controladores USB"
+
 GenericMfg = "(Dispositivo USB estándar)"
 PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
@@ -170,6 +176,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/M
 
 [Strings.040C]
 USBClassName = "Contrôleur USB"
+
 GenericMfg = "(Périphériques USB génériques)"
 PCI\CC_0C0300.DeviceDesc = "Contrôleur USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Contrôleur USB OHCI"
@@ -180,6 +187,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Contrôleur USB  Intel 82371AB/EB/
 
 [Strings.0411]
 USBClassName = "USB コントローラ"
+
 GenericMfg = "(標準 USB デバイス)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB コントローラ"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB コントローラ"
@@ -188,6 +196,7 @@ USB\ROOT_HUB.DeviceDesc = "ルート ハブ"
 
 [Strings.0415]
 USBClassName = "Kontrolery USB"
+
 GenericMfg = "(Standardowe urządzenia USB)"
 PCI\CC_0C0300.DeviceDesc = "Kontroler UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Kontroler OHCI USB"
@@ -198,6 +207,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Kontroler Intel 82371AB/EB/MB PIIX
 
 [Strings.0416]
 USBClassName = "Controladores de barramento serial universal (USB)"
+
 GenericMfg = "(Dispositivo USB padrão)"
 PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
@@ -208,6 +218,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/M
 
 [Strings.0418]
 USBClassName = "Dispozitive de control USB"
+
 GenericMfg = "(dispozitive generice de control USB)"
 PCI\CC_0C0300.DeviceDesc = "Dispozitive de control USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Dispozitive de control USB OHCI"
@@ -218,6 +229,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Dispozitiv de contorl USB Intel 82
 
 [Strings.0419]
 USBClassName = "Контроллеры USB"
+
 GenericMfg = "(Стандартные устройства USB)"
 PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
@@ -228,6 +240,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Контроллер Intel 82371AB
 
 [Strings.041B]
 USBClassName = "USB radiče"
+
 GenericMfg = "(Generické USB zariadenia)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB radič"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB radič"
@@ -238,6 +251,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB radi
 
 [Strings.041B]
 USBClassName = "USB valdikliai"
+
 GenericMfg = "(Standartiniai USB įrenginiai)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB valdiklis"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB valdiklis"
@@ -248,6 +262,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB vald
 
 [Strings.041f]
 USBClassName = "USB Denetleyicileri"
+
 GenericMfg = "(Genel USB Aygıtları)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
@@ -258,6 +273,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB Dene
 
 [Strings.0422]
 USBClassName = "Контроллери USB"
+
 GenericMfg = "(Стандартні пристрої USB)"
 PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
@@ -277,6 +293,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控�
 
 [Strings.0816]
 USBClassName = "Controladores de barramento série universal (USB)"
+
 GenericMfg = "(Dispositivo USB padrão)"
 PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
@@ -287,6 +304,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/M
 
 [Strings.0C04]
 USBClassName = "USB 控制器"
+
 GenericMfg = "(標準 USB 裝置)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"

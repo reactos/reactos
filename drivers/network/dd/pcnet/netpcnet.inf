@@ -58,6 +58,7 @@ LoadOrderGroup = NDIS
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 AMDMfg = "AMD"
 
 ; Localizable

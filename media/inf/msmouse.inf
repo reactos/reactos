@@ -162,6 +162,7 @@ LoadOrderGroup = Pointer Port
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 IbmMfg = "IBM"
 LogMfg = "Logitech"
 MSMfg = "Microsoft"
@@ -169,11 +170,13 @@ NecMfg = "NEC"
 
 ; Localizable
 MouseClassName = "Mice and other pointing devices"
-LocationOverride = "plugged in to PS/2 mouse port"
+
 StdMfg = "(Standard mice)"
 SERIAL_MOUSE.DeviceDesc = "Standard Serial Mouse"
 PS2_MOUSE.DeviceDesc = "Standard PS/2 Mouse"
+LocationOverride = "plugged in to PS/2 mouse port"
 HID_MOUSE.DeviceDesc = "HID Mouse"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port for PS/2-style mice"
@@ -189,10 +192,12 @@ HID_MOUSE.DeviceDesc = "HID Mouse"
 
 [Strings.0404]
 MouseClassName = "滑鼠和其他指標裝置"
+
 StdMfg = "(標準滑鼠)"
 SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
 PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
 HID_MOUSE.DeviceDesc = "HID 滑鼠"
+
 *PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
 *PNP0F11.DeviceDesc = "標準匯流排滑鼠"
 *PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠的 PS/2 連接埠"
@@ -208,10 +213,12 @@ HID_MOUSE.DeviceDesc = "HID 滑鼠"
 
 [Strings.0405]
 MouseClassName = "Myši a jiná polohovací zařízení"
+
 StdMfg = "(Standardní myši)"
 SERIAL_MOUSE.DeviceDesc = "Standardní sériová myš"
 PS2_MOUSE.DeviceDesc = "Standardní PS/2 myš"
 HID_MOUSE.DeviceDesc = "HID myš"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port pro PS/2 myši"
@@ -227,11 +234,13 @@ HID_MOUSE.DeviceDesc = "HID myš"
 
 [Strings.0407]
 MouseClassName = "Mäuse und andere Zeigegeräte"
-LocationOverride = "eingesteckt in PS/2-Mausanschluss"
+
 StdMfg = "(Standard-Maus)"
 SERIAL_MOUSE.DeviceDesc = "Standard serielle Maus"
 PS2_MOUSE.DeviceDesc = "Standard PS/2 Maus"
+LocationOverride = "eingesteckt in PS/2-Mausanschluss"
 HID_MOUSE.DeviceDesc = "HID Maus"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 Anschluss für PS/2-Maus"
@@ -246,10 +255,12 @@ HID_MOUSE.DeviceDesc = "HID Maus"
 
 [Strings.0408]
 MouseClassName = "Ποντίκια και άλλες συσκευές εισόδου"
+
 StdMfg = "(Πρότυπα ποντίκια)"
 SERIAL_MOUSE.DeviceDesc = "Πρότυπο Σειριακό Ποντίκι"
 PS2_MOUSE.DeviceDesc = "Πρότυπο PS/2 Ποντίκι"
 HID_MOUSE.DeviceDesc = "Ποντίκι HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 θύρα για PS/2 ποντίκια"
@@ -265,11 +276,13 @@ HID_MOUSE.DeviceDesc = "Ποντίκι HID"
 
 [Strings.0a]
 MouseClassName = "Ratones y otros dispositivos señaladores"
-LocationOverride = "se conecta al puerto de ratón PS/2"
+
 StdMfg = "(Ratón estándar)"
 SERIAL_MOUSE.DeviceDesc = "Ratón serie estándar"
 PS2_MOUSE.DeviceDesc = "Ratón PS/2 estándar"
+LocationOverride = "se conecta al puerto de ratón PS/2"
 HID_MOUSE.DeviceDesc = "Ratón oculto"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Puerto PS/2 para ratón PS/2"
@@ -285,11 +298,13 @@ HID_MOUSE.DeviceDesc = "Ratón oculto"
 
 [Strings.040C]
 MouseClassName = "Souris et autres périphériques de pointage"
-LocationOverride = "Branché sur le port PS/2"
+
 StdMfg = "(Souris standards)"
 SERIAL_MOUSE.DeviceDesc = "Souris série standard"
 PS2_MOUSE.DeviceDesc = "Souris PS/2 standard"
+LocationOverride = "Branché sur le port PS/2"
 HID_MOUSE.DeviceDesc = "Souris HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port PS/2 pour souris type PS/2"
@@ -304,10 +319,12 @@ HID_MOUSE.DeviceDesc = "Souris HID"
 
 [Strings.0411]
 MouseClassName = "マウスとその他のポインティング デバイス"
+
 StdMfg = "(スタンダード マウス)"
 SERIAL_MOUSE.DeviceDesc = "スタンダード シリアル マウス"
 PS2_MOUSE.DeviceDesc = "スタンダード PS/2 マウス"
 HID_MOUSE.DeviceDesc = "HID マウス"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2接続マウス用のPS/2 ポート"
@@ -323,11 +340,13 @@ HID_MOUSE.DeviceDesc = "HID マウス"
 
 [Strings.0415]
 MouseClassName = "Mysz i inne urządzenia wskazujące"
-LocationOverride = "podłączone do portu PS/2 dla myszy"
+
 StdMfg = "(Standardowa mysz)"
 SERIAL_MOUSE.DeviceDesc = "Standardowa mysz szeregowa"
 PS2_MOUSE.DeviceDesc = "Standardowa mysz PS/2"
+LocationOverride = "podłączone do portu PS/2 dla myszy"
 HID_MOUSE.DeviceDesc = "Mysz zgodna z HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port PS/2 dla myszy"
@@ -343,10 +362,12 @@ HID_MOUSE.DeviceDesc = "Mysz zgodna z HID"
 
 [Strings.0416]
 MouseClassName = "Mouse e outros dispositivos apontadores"
+
 StdMfg = "(Mouse padrão)"
 SERIAL_MOUSE.DeviceDesc = "Mouse serial padrão"
 PS2_MOUSE.DeviceDesc = "Mouse PS/2 padrão"
 HID_MOUSE.DeviceDesc = "Mouse interno"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Porta PS/2 para mouse PS/2"
@@ -362,11 +383,13 @@ HID_MOUSE.DeviceDesc = "Mouse interno"
 
 [Strings.0418]
 MouseClassName = "Șoricel și alte dispozitive de indicare"
-LocationOverride = "conectat la portul PS/2 pentru șoricel"
+
 StdMfg = "(șoricel standard)"
 SERIAL_MOUSE.DeviceDesc = "Șoricel serial standard"
 PS2_MOUSE.DeviceDesc = "Șoricel PS/2 standard"
+LocationOverride = "conectat la portul PS/2 pentru șoricel"
 HID_MOUSE.DeviceDesc = "Șoricel HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port pentru șoricel PS/2"
@@ -382,11 +405,13 @@ HID_MOUSE.DeviceDesc = "Șoricel HID"
 
 [Strings.0419]
 MouseClassName = "Мыши и другие указывающие устройства"
-LocationOverride = "подключено в PS/2 порт мыши"
+
 StdMfg = "(Стандартная мышь)"
 SERIAL_MOUSE.DeviceDesc = "Стандартная последовательная мышь"
 PS2_MOUSE.DeviceDesc = "Стандартная мышь PS/2"
+LocationOverride = "подключено в PS/2 порт мыши"
 HID_MOUSE.DeviceDesc = "HID-мышь"
+
 *PNP0F0D.DeviceDesc = "Стандартная мышь InPort"
 *PNP0F11.DeviceDesc = "Стандартная шинная мышь"
 *PNP0F13.DeviceDesc = "PS/2-порт на мыши PS/2-вида"
@@ -401,10 +426,12 @@ HID_MOUSE.DeviceDesc = "HID-мышь"
 
 [Strings.041B]
 MouseClassName = "Myši a iné polohovacie zariadenia"
+
 StdMfg = "(Štandardná myš)"
 SERIAL_MOUSE.DeviceDesc = "Štandardná sériová myš"
 PS2_MOUSE.DeviceDesc = "Štandardná PS/2 myš"
 HID_MOUSE.DeviceDesc = "HID myš"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port pre myši typu PS/2"
@@ -419,11 +446,13 @@ HID_MOUSE.DeviceDesc = "HID myš"
 
 [Strings.041f]
 MouseClassName = "Fare ve Diğer İşaretçi Aygıtları"
-LocationOverride = "PS/2 fare girişine takılı"
+
 StdMfg = "(Standart Fare)"
 SERIAL_MOUSE.DeviceDesc = "Standart Seri Fare"
 PS2_MOUSE.DeviceDesc = "Standart PS/2 Fare"
+LocationOverride = "PS/2 fare girişine takılı"
 HID_MOUSE.DeviceDesc = "HID Fare"
+
 *PNP0F0D.DeviceDesc = "Standart InPort Fare"
 *PNP0F11.DeviceDesc = "Standart Veriyolu Faresi"
 *PNP0F13.DeviceDesc = "PS/2 Fare İçin PS/2 Girişi"
@@ -439,11 +468,13 @@ HID_MOUSE.DeviceDesc = "HID Fare"
 
 [Strings.0422]
 MouseClassName = "Миші та інші вказівні пристрої"
-LocationOverride = "приєднано до порту миші PS/2"
+
 StdMfg = "(Стандартні миші)"
 SERIAL_MOUSE.DeviceDesc = "Стандартна послідовна миша"
 PS2_MOUSE.DeviceDesc = "Стандартна миша PS/2"
+LocationOverride = "приєднано до порту миші PS/2"
 HID_MOUSE.DeviceDesc = "HID-миша"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Порт PS/2 для миші PS/2-типу"
@@ -459,10 +490,12 @@ HID_MOUSE.DeviceDesc = "HID-миша"
 
 [Strings.0427]
 MouseClassName = "Pelės ir kiti manipuliatoriai"
+
 StdMfg = "(Standartinė pelė)"
 SERIAL_MOUSE.DeviceDesc = "Standartinė nuoseklioji pelė"
 PS2_MOUSE.DeviceDesc = "Standartinė PS/2 pelė"
 HID_MOUSE.DeviceDesc = "HID pelė"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 jungtis PS/2 tipo pelei"
@@ -481,6 +514,7 @@ StdMfg = "(标准鼠标)"
 SERIAL_MOUSE.DeviceDesc = "标准串口鼠标"
 PS2_MOUSE.DeviceDesc = "标准 PS/2 鼠标"
 HID_MOUSE.DeviceDesc = "HID 鼠标"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "用于 PS/2 风格鼠标的 PS/2 端口"
@@ -495,11 +529,13 @@ HID_MOUSE.DeviceDesc = "HID 鼠标"
 
 [Strings.0816]
 MouseClassName = "Ratos e outros dispositivos apontadores"
-LocationOverride = "Ligado à porta PS/2 do rato"
+
 StdMfg = "(Rato padrão)"
 SERIAL_MOUSE.DeviceDesc = "Rato série padrão"
 PS2_MOUSE.DeviceDesc = "Rato PS/2 padrão"
+LocationOverride = "Ligado à porta PS/2 do rato"
 HID_MOUSE.DeviceDesc = "Rato oculto"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Porta PS/2 para rato PS/2"
@@ -515,10 +551,12 @@ HID_MOUSE.DeviceDesc = "Rato oculto"
 
 [Strings.0C04]
 MouseClassName = "滑鼠和其他指標裝置"
+
 StdMfg = "(標準滑鼠)"
 SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
 PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
 HID_MOUSE.DeviceDesc = "HID 滑鼠"
+
 *PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
 *PNP0F11.DeviceDesc = "標準匯流排滑鼠"
 *PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠嘅 PS/2 連接埠"

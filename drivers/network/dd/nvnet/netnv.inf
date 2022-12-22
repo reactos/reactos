@@ -239,6 +239,7 @@ HKR, , TypesSupported,   0x00010001, 7
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 nVidiaMfg = "nVidia"
 
 ; Localizable
@@ -261,6 +262,7 @@ PP = "Packet Priority"
 VT = "VLAN Tagging"
 VI = "VLAN ID"
 JF = "Jumbo Frame"
+
 nForce.DeviceDesc = "nVidia nForce PCI Ethernet Controller"
 nForce2.DeviceDesc = "nVidia nForce2 PCI Ethernet Controller"
 nForce3.DeviceDesc = "nVidia nForce3 PCI Ethernet Controller"
@@ -295,6 +297,7 @@ Yes = "Да"
 PP = "Приоритет кадров"
 VT = "Маркировка кадров"
 JF = "Кадры большого размера"
+
 nForce.DeviceDesc = "nVidia nForce PCI сетевой контроллер"
 nForce2.DeviceDesc = "nVidia nForce2 PCI сетевой контроллер"
 nForce3.DeviceDesc = "nVidia nForce3 PCI сетевой контроллер"

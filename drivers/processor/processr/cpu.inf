@@ -122,14 +122,16 @@ LoadOrderGroup = Extended Base
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 CyrixMfg = "Cyrix"
 IntelMfg = "Intel"
-AMDMfg = "Advanced Micro Devices"
+AMDMfg = "AMD"
 TransmetaMfg = "Transmeta"
 VIAMfg = "VIA"
 
 ; Localizable
 ProcessorClassName = "Processors"
+
 Processor.DeviceDesc = "Processor"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 Processor"
@@ -221,6 +223,7 @@ ViaProcessor.DeviceDesc = "Procesor VIA"
 
 [Strings.0407]
 ProcessorClassName = "Prozessoren"
+
 Processor.DeviceDesc = "Prozessor"
 Processor.ServiceDesc = "Prozessortreiber"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 Prozessor"
@@ -270,6 +273,7 @@ Standard = "スタンダードプロセッサ"
 
 [Strings.0415]
 ProcessorClassName = "Procesory"
+
 Processor.DeviceDesc = "Procesor"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
@@ -307,6 +311,7 @@ Standard = "Processador padrão"
 
 [Strings.0418]
 ProcessorClassName = "Procesoare"
+
 Processor.DeviceDesc = "Procesor"
 Processor.ServiceDesc = "Modúl-pilot de processor"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
@@ -338,6 +343,7 @@ ViaProcessor.DeviceDesc = "Procesor VIA"
 
 [Strings.0419]
 ProcessorClassName = "Процессоры"
+
 Processor.DeviceDesc = "Процессор"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 процессор"
@@ -375,6 +381,7 @@ Standard = "Štandardný procesor"
 
 [Strings.041f]
 ProcessorClassName = "İşlemciler"
+
 Processor.DeviceDesc = "İşlemci"
 Processor.ServiceDesc = "İşlemci sürücüsü"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 İşlemci"
@@ -406,6 +413,7 @@ ViaProcessor.DeviceDesc = "VIA İşlemci"
 
 [Strings.0422]
 ProcessorClassName = "Процесори"
+
 Processor.DeviceDesc = "Процесор"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Процесор Cyrix 6x86"
@@ -473,6 +481,7 @@ ViaProcessor.DeviceDesc = "VIA 处理器"
 
 [Strings.0a]
 ProcessorClassName = "Procesadores"
+
 Processor.DeviceDesc = "Procesador"
 Processor.ServiceDesc = "Driver de procesador"
 CyrixProcessor.DeviceDesc = "Procesador Cyrix 6x86"

@@ -5,7 +5,7 @@ LayoutFile  = layout.inf
 Class       = Media
 ClassGUID   = {4d36e96c-e325-11ce-bfc1-08002be10318}
 Provider    = %ReactOS%
-DriverVer=07/01/2001,5.1.2535.0
+DriverVer   = 07/01/2001,5.1.2535.0
 
 [DefaultInstall]
 Include=ks.inf
@@ -134,6 +134,7 @@ BdaPlgIn.ax,,,COPYFLG_NO_VERSION_DIALOG
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 RunOnce="SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 ActiveMovieCategories="CLSID\{da4e3da0-d07d-11d0-bd50-00a0c911ce86}\Instance"
 MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"

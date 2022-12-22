@@ -64,11 +64,13 @@ LoadOrderGroup = NDIS
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
+
 RealtekMfg = "Realtek"
 
 ; Localizable
 GenericMfg = "(Generic network cards)"
 *PNP80D6.DeviceDesc = "NE2000-compatible Ethernet Adapter"
+
 *RTL8019.DeviceDesc = "Realtek RTL8019AS ISA Ethernet Adapter"
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 PCI Ethernet Adapter"
 
