@@ -30,7 +30,7 @@ HKR, , NoInstallClass, , 1
 %Floppy.DeviceDesc% = NO_DRV, GenFloppyDisk
 ;%Floppy.DeviceDesc% = floppy_Inst, GenFloppyDisk
 
-;----------------------------- FDC DRIVER -----------------------------
+;------------------------------ FDC DRIVER ------------------------------
 
 [floppy_Inst.NT]
 CopyFiles = floppy_CopyFiles.NT

@@ -48,7 +48,7 @@ ErrorControl   = 1
 ServiceBinary  = %12%\fdc.sys
 LoadOrderGroup = System Bus Extender
 
-;---------------------------- NO DRIVER REQ -----------------------------
+;----------------------------- NO DRIVER REQ ----------------------------
 
 [NO_DRV]
 

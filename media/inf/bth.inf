@@ -55,7 +55,7 @@ HKLM,"System\CurrentControlSet\services\FreeBT\Parameters","FreeBTEnable",0x1000
 [FreeBT.Files]
 fbtusb.sys
 
-;---------------------------------------------------------------;
+;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ; Non-localizable

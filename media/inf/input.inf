@@ -39,7 +39,7 @@ AddReg=HIDClass.NT.AddReg
 %HID.DeviceDesc% = HID_Inst,USB\Class_03
 %HID_DEVICE%=HID_Raw_Inst,, HID_DEVICE
 
-;---------------------------- HID Raw Device ----------------------------
+;---------------------------- HID RAW DEVICE ----------------------------
 
 [HID_Raw_Inst.NT]
 
@@ -48,7 +48,7 @@ AddService = , 0x00000002
 
 [HID_Raw_Inst.HW]
 
-;------------------------------ HID Device ------------------------------
+;------------------------------ HID DEVICE ------------------------------
 
 [HID_Inst.NT]
 Copyfiles = HID_Inst.CopyFiles.NT, HID_Inst.CopyFilesDLL.NT
