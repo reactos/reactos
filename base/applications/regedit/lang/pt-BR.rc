@@ -128,7 +128,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Atuali&zar\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorites"
+    POPUP "&Favoritos"
     BEGIN
         MENUITEM "&Adicionar a favoritos", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remover favorito", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
