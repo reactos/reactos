@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE
 BEGIN
@@ -69,11 +69,11 @@ dec  hex  nome        dec  hex  name\n\
 0    0    Preto        8    8    Cinzento\n\
 1    1    Azul         9    9    Azul claro\n\
 2    2    Verde       10    A    Verde claro\n\
-3    3    Cian        11    B    Cian  claro\n\
+3    3    Cian        11    B    Ciano claro\n\
 4    4    Vermelho    12    C    Vermelho claro\n\
 5    5    Violeta     13    D    Violeta claro\n\
 6    6    Amarelo     14    E    Amarelo claro\n\
-7    7    Branco      15    F    Branco claro\n\n"
+7    7    Cinza claro      15    F    Branco\n\n"
     STRING_COPY_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)\n\n"
     STRING_COPY_HELP2 "Copia um ou mais arquivos para outro local.\n\n\
 COPY [/V] [/Y | /-Y] [/A | /B] fonte [/A | /B]\n\
