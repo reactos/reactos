@@ -66,14 +66,14 @@ Existem três maneiras de especificar as cores:\n\
 3) dois dígitos hexadecimais (fundo p.plano)\n\n\
 As cores são:\n\
 dec  hex  nome        dec  hex  name\n\
-0    0    Preto escuro       8    8    Cinza\n\
-1    1    Azul escuro        9    9    Azul \n\
-2    2    Verde escuro       10    A    Verde \n\
-3    3    Ciano escuro        11    B    Ciano \n\
-4    4    Vermelho escuro    12    C    Vermelho \n\
-5    5    Violeta escuro     13    D    Violeta \n\
-6    6    Amarelo escuro     14    E    Amarelo \n\
-7    7    Cinza claro      15    F    Branco\n\n"
+0    0    Preto       8    8    Cinza (preto brilhante)\n\
+1    1    Azul         9    9    Azul brilhante \n\
+2    2    Verde        10    A    Verde brilhante\n\
+3    3    Ciano         11    B    Ciano brilhante\n\
+4    4    Vermelho     12    C    Vermelho brilhante\n\
+5    5    Violeta      13    D    Violeta brilhante\n\
+6    6    Amarelo      14    E    Amarelo brilhante\n\
+7    7    Branco      15    F    Branco brilhante\n\n"
     STRING_COPY_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)\n\n"
     STRING_COPY_HELP2 "Copia um ou mais arquivos para outro local.\n\n\
 COPY [/V] [/Y | /-Y] [/A | /B] fonte [/A | /B]\n\
@@ -468,7 +468,7 @@ As atualizações estão disponíveis em: http://www.reactos.org"
     STRING_VOL_HELP2 "Volume na unidade %c não tem nome.\n"
     STRING_VOL_HELP3 "Número de série do volume é %04X-%04X\n"
     STRING_VOL_HELP4 "Apresenta o nome do volume do disco e o número de série, se existirem.\n\nVOL [unidade:]"
-    STRING_WINDOW_HELP1 "alterar aspecto da janela do console\n\n\
+    STRING_WINDOW_HELP1 "alterar aspecto da janela do prompt\n\n\
 WINDOW [/POS [=] esquerda, topo, largura, altura]\n\
               [MIN | MAX | RESTORE] ['título']\n\n\
 /POS         Especifica o posicionamento e as dimensões da janela\n\
