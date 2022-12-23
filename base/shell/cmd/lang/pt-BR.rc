@@ -30,7 +30,7 @@ CD [..|.]\n\n\
   /D       Altera a unidade e o diretório atual.\n\n\
 Digite CD unidade: para apresentar o diretório atual na unidade especificada.\n\
 Digite CD sem parâmetro para apresentar a unidade e o diretório atual.\n"
-    STRING_CHOICE_HELP "Espera que o utilizador escolha uma das opções.\n\n\
+    STRING_CHOICE_HELP "Espera que o usuário escolha uma das opções.\n\n\
 CHOICE [/C[:]opções][/N][/S][/T[:]c,nn][texto]\n\n\
   /C [:]opções    Especifica a lista de opções. A lista predefinida é ""SN"".\n\n\
   /N              Oculta a lista de opções na prompt.\n\n\
@@ -98,7 +98,7 @@ Dispositivo CTTY\n\n\
             Este nome deve referir um dispositivo de caractere válido:\n\
             AUX, COMx (x = 1..N), CON, LPTx (x = 1..N), PRN, NUL.\n\
             CON geralmente é o dispositivo de E/S predefinido.\n\n\
-Para atribuir o controle à consola predefinida, digite: CTTY CON no dispositivo\n\
+Para atribuir o controle ao console predefinido, digite: CTTY CON no dispositivo\n\
 auxiliar."
     STRING_DATE_HELP1 "\nInsira uma nova data (mm%cdd%cyyyy):"
     STRING_DATE_HELP2 "\nInsira uma nova data (dd%cmm%cyyyy):"
@@ -115,7 +115,7 @@ ERASE [/N /P /T /Q /S /W /A /Z /A [[:] atributos]] arquivo ...\n\n\
   arquivo  Especifica os arquivos a serem excluídos.\n\n\
   /P    Prompt. Perguntar antes de excluir cada arquivo.\n\
   /T    Total. Apresenta o número total de arquivos excluídos e espaço livre em disco.\n\
-  /Q    Modo silencioso, não solicita confirmação do utilizador.\n\
+  /Q    Modo silencioso, não solicita confirmação do usuário.\n\
   /W    Wipe. Reescreve o arquivo com números aleatórios antes de excluí-lo.\n\
   /Y    Yes. Remove até *. * Sem perguntar.\n\
   /F    Força a exclusão de arquivos ocultos, só de leitura e de sistema.\n\
@@ -294,7 +294,7 @@ MOVE [/N] [/Y | /-Y] [unidade:] [caminho] nome dir1 dir2\n\n\
   /N Nada.                 Simula o comando MOVE, sem mover arquivos ou diretórios.\n\n\
 Limitações actuais:\n\
   - Não pode mover um arquivo ou diretório de uma unidade para outra.\n"
-    STRING_MSGBOX_HELP "Apresenta uma caixa de dialogo e retorna a resposta do utilizador\n\n\
+    STRING_MSGBOX_HELP "Apresenta uma caixa de dialogo e retorna a resposta do usuário\n\n\
 Tipo de MSGBOX ['título'] prompt\n\n\
 tipo             botão exibido\n\
                  os valores possíveis são: OK, OKCANCEL, YESNO, YESNOCANCEL\n\
@@ -309,7 +309,7 @@ Digite PATH; para limpar todas as definições do caminho de pesquisa e Direcion
 para pesquisar apenas no diretório atual.\n\
 Digite PATH sem parâmetros para apresentar o caminho atual.\n"
     STRING_PAUSE_HELP1 "Suspende o processamento de um programa batch e apresenta a mensagem:\n\
-'Pressione qualquer tecla para continuar ...' ou uma mensagem definida pelo utilizador.\n\n\
+'Pressione qualquer tecla para continuar ...' ou uma mensagem definida pelo usuário.\n\n\
 PAUSAR [mensagem]"
     STRING_PROMPT_HELP1 "Altera o prompt de comando.\n\n\
 PROMPT [texto]\n\n\
@@ -339,7 +339,7 @@ O prompt pode ser composto de caracteres normais e os seguintes códigos especia
     STRING_RMDIR_HELP "Remove um diretório.\n\n\
 RMDIR [/S] [/Q] [unidade:] caminho\nRD [/S][/Q][unidade:] caminho\n\
   /S    Exclui todos os arquivos e pastas do destino.\n\
-  /Q    Modo silencioso, não solicita confirmação do utilizador.\n"
+  /Q    Modo silencioso, não solicita confirmação do usuário.\n"
     STRING_RMDIR_HELP2 "O diretório não está vazio!\n"
     STRING_REN_HELP1 "Altera o nome a arquivo(s) ou diretório(s).\n\n\
 RENAME [/E /N /P /Q /S /T] nome_antigo ... nome_novo\n\
@@ -348,7 +348,7 @@ REN [/E /N /P /Q /S /T] nome_antigo ... nome_novo\n\n\
   /N    Nada.\n\
   /P    Solicita confirmação antes de renomear cada arquivo.\n\
         (ainda não implementado!)\n\
-  /Q    Modo silencioso, não solicita confirmação do utilizador.\n\
+  /Q    Modo silencioso, não solicita confirmação do usuário.\n\
   /S    Renomear subdiretórios.\n\
   /T    Apresenta o número total de arquivos renomeados.\n\n\
 Observe que não pode especificar uma nova unidade ou caminho para o seu destino. Use\n\
@@ -445,9 +445,9 @@ Digite VERIFY sem parâmetro para apresentar a definição atual de VERIFY.\n"
     STRING_VERIFY_HELP3 "Deve especificar ON ou OFF."
     STRING_VERSION_HELP1 "Apresenta informações da versão do shell\n\n\
 VER [/C][/R][/W]\n\n\
-  /C         Apresenta créditos.\n\
-  /R         Apresenta informações de redistribuição.\n\
-  /W         Apresenta informações de garantia."
+  /C         Mostra créditos.\n\
+  /R         Mostra informações de redistribuição.\n\
+  /W         Mostra informações de garantia."
     STRING_VERSION_HELP2 "vem ABSOLUTAMENTE SEM GARANTIA; para obter detalhes\n\
 digite: `ver /w '. Este é um software livre e pode redistribuir\n\
 sob certas condições; digite `ver /r 'para obter detalhes. Digite `ver /c 'para uma\n\
@@ -468,7 +468,7 @@ As atualizações estão disponíveis em: http://www.reactos.org"
     STRING_VOL_HELP2 "Volume na unidade %c não tem nome.\n"
     STRING_VOL_HELP3 "Número de série do volume é %04X-%04X\n"
     STRING_VOL_HELP4 "Apresenta o nome do volume do disco e o número de série, se existirem.\n\nVOL [unidade:]"
-    STRING_WINDOW_HELP1 "alterar aspecto da janela do prompt\n\n\
+    STRING_WINDOW_HELP1 "alterar aspecto da janela do console\n\n\
 WINDOW [/POS [=] esquerda, topo, largura, altura]\n\
               [MIN | MAX | RESTORE] ['título']\n\n\
 /POS         Especifica o posicionamento e as dimensões da janela\n\
@@ -547,7 +547,7 @@ título      Novo título\n"
     STRING_REPLACE_ERROR5 "Acesso negado - %s\n"
     STRING_REPLACE_ERROR6 "Nenhum arquivo encontrado - %s\n"
     STRING_REPLACE_ERROR7 "Erro estendido 32\n"
-    STRING_CMD_INFOLINE "Prompt de comandos do ReactOS HELP = Ajuda"
+    STRING_CMD_INFOLINE "Prompt de comandos do ReactOS \tHELP = Ajuda"
     STRING_REACTOS_VERSION "ReactOS [Versão %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Interpretador de linha de comando\nVersão %s %s"
     STRING_VERSION_RUNNING_ON "Em execução em:"
