@@ -121,9 +121,9 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bileşenler kaydediliyor", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Başlat menüsü öğeleri yükleniyor", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Ayarlar kaydediliyor", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Geçici dosyalar kaldırılıyor", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -187,8 +187,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Şifresi sağlamalısınız."
     IDS_LOCALETITLE "Yerel Ayarlar"
     IDS_LOCALESUBTITLE "Farklı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
-    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
-    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
+    IDS_LOCALETEXT "Standartlar ve biçimler %s olarak ayarlandı ve konum %s olarak ayarlandı."
+    IDS_LAYOUTTEXT "Varsayılan metin giriş diliniz ve yönteminiz: %s klavye düzeni"
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
     IDS_PROCESSTITLE "Finishing the Installation"

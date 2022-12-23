@@ -10,5 +10,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DISPLAYNAME "Zaman Hizmeti"
-    IDS_DESCRIPTION "Maintains date and time synchronization on all clients and servers on the network."
+    IDS_DESCRIPTION "Ağdaki tüm istemcilerde ve sunucularda tarih ve saat senkronizasyonunu sürdürür."
 END
