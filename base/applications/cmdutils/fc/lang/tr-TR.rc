@@ -1,5 +1,6 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-
+ 
+ 
 STRINGTABLE
 BEGIN
     IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
