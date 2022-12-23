@@ -58,6 +58,7 @@ typedef struct tagENTRY
     DWORD dwVariant;
 } ENTRY, *PENTRY;
 
+// The entries of Keyboard Layouts
 PENTRY g_pEntries = NULL; // LocalAlloc'ed
 UINT g_cEntries = 0, g_cCapacity = 0;
 
@@ -168,9 +169,11 @@ LoadEntries(VOID)
     }
     g_cCapacity = dwNewCount;
 
-    error = RegOpenKeyW(HKEY_LOCAL_MACHINE,
-                        L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
-                        &hLayoutsKey);
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
+                          0,
+                          KEY_READ,
+                          &hLayoutsKey);
     if (error != ERROR_SUCCESS)
     {
         return FALSE;
