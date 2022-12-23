@@ -433,12 +433,6 @@ HRESULT CRegistryFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry
     }
 
     RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
-    if (!entry)
-    {
-        DbgPrint("PCIDL with NULL mkid\n");
-        return E_INVALIDARG;
-    }
-
     if (entry->cb < sizeof(RegPidlEntry))
     {
         DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(RegPidlEntry));

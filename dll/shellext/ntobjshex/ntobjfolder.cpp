@@ -489,12 +489,6 @@ HRESULT CNtObjectFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry 
     }
 
     NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
-    if (!entry)
-    {
-        DbgPrint("PCIDL with NULL mkid\n");
-        return E_INVALIDARG;
-    }
-
     if (entry->cb < sizeof(NtPidlEntry))
     {
         DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(NtPidlEntry));
