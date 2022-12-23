@@ -51,28 +51,28 @@ DWORD g_dwCodePageBitField = 0;
 HWND g_hwndLastActive = NULL;
 HKL g_hKL = NULL;
 
-typedef struct tagLAYOUT_ENTRY
+typedef struct tagENTRY
 {
     DWORD dwKLID;
     LPWSTR pszText; // malloc'ed
     DWORD dwVariant;
-} LAYOUT_ENTRY, *PLAYOUT_ENTRY;
+} ENTRY, *PENTRY;
 
-PLAYOUT_ENTRY g_pLayouts = NULL; // LocalAlloc'ed
-UINT g_cLayouts = 0, g_cLayoutsCapacity = 0;
+PENTRY g_pEntries = NULL; // LocalAlloc'ed
+UINT g_cEntries = 0, g_cCapacity = 0;
 
 static VOID
-FreeLayouts(VOID)
+FreeEntries(VOID)
 {
     UINT i;
-    for (i = 0; i < g_cLayouts; ++i)
+    for (i = 0; i < g_cEntries; ++i)
     {
-        free(g_pLayouts[i].pszText);
+        free(g_pEntries[i].pszText);
     }
 
-    g_cLayouts = g_cLayoutsCapacity = 0;
-    LocalFree(g_pLayouts);
-    g_pLayouts = NULL;
+    g_cEntries = g_cCapacity = 0;
+    LocalFree(g_pEntries);
+    g_pEntries = NULL;
 }
 
 static BOOL
@@ -86,24 +86,87 @@ GetSystemLibraryPath(LPWSTR szPath, SIZE_T cchPath, LPCWSTR FileName)
     return TRUE;
 }
 
-static BOOL
-LoadLayouts(VOID)
+static INT
+AddEntry(LPCWSTR pszKLID)
 {
-    HKEY hLayoutsKey, hKey;
+    HKEY hKey;
+    WCHAR szSubKey[MAX_PATH], szText[MAX_PATH];
     LONG error;
-    DWORD dwIndex, cb;
-    WCHAR szKeyName[MAX_PATH], szText[MAX_PATH];
-    PLAYOUT_ENTRY pLayout;
-    DWORD dwNewCount = 256;
+    DWORD cb, dwNewCount;
+    PENTRY pEntry;
+    INT iEntry = -1;
 
-    FreeLayouts();
+    StringCchCopyW(szSubKey, _countof(szSubKey), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts");
+    StringCchCatW(szSubKey, _countof(szSubKey), L"\\");
+    StringCchCatW(szSubKey, _countof(szSubKey), pszKLID);
 
-    g_pLayouts = LocalAlloc(LPTR, dwNewCount * sizeof(LAYOUT_ENTRY));
-    if (g_pLayouts == NULL)
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, KEY_READ, &hKey);
+    if (error != ERROR_SUCCESS)
+        return -1;
+
+    if (g_cCapacity < g_cEntries + 1)
+    {
+        dwNewCount = g_cEntries + 16;
+        cb = dwNewCount * sizeof(ENTRY);
+        g_pEntries = LocalReAlloc(g_pEntries, cb, LPTR);
+        if (g_pEntries == NULL)
+        {
+            RegCloseKey(hKey);
+            return -1;
+        }
+
+        g_cCapacity = dwNewCount;
+    }
+
+    pEntry = &g_pEntries[g_cEntries];
+
+    // "Layout Id"
+    pEntry->dwVariant = 0;
+    szText[0] = UNICODE_NULL;
+    cb = sizeof(szText);
+    error = RegQueryValueExW(hKey, L"Layout Id", NULL, NULL, (LPBYTE)szText, &cb);
+    if (error == ERROR_SUCCESS)
+    {
+        pEntry->dwVariant = _tcstoul(szText, NULL, 16);
+    }
+
+    // "Layout Text"
+    szText[0] = UNICODE_NULL;
+    cb = sizeof(szText);
+    error = RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (LPBYTE)szText, &cb);
+    if (error == ERROR_SUCCESS && cb > sizeof(WCHAR))
+    {
+        // "Layout Display Name"
+        SHLoadRegUIStringW(hKey, L"Layout Display Name", szText, _countof(szText));
+
+        pEntry->pszText = _tcsdup(szText);
+
+        // dwKLID
+        pEntry->dwKLID = _tcstoul(pszKLID, NULL, 16);
+
+        iEntry = g_cEntries++;
+    }
+
+    RegCloseKey(hKey);
+    return iEntry;
+}
+
+static BOOL
+LoadEntries(VOID)
+{
+    HKEY hLayoutsKey;
+    LONG error;
+    DWORD dwIndex, dwNewCount = 256;
+    WCHAR szKeyName[MAX_PATH];
+
+    FreeEntries();
+
+    g_pEntries = LocalAlloc(LPTR, dwNewCount * sizeof(ENTRY));
+    if (g_pEntries == NULL)
     {
         return FALSE;
     }
-    g_cLayoutsCapacity = dwNewCount;
+    g_cCapacity = dwNewCount;
 
     error = RegOpenKeyW(HKEY_LOCAL_MACHINE,
                         L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
@@ -120,77 +183,37 @@ LoadLayouts(VOID)
         if (error != ERROR_SUCCESS)
             break;
 
-        error = RegOpenKeyW(hLayoutsKey, szKeyName, &hKey);
-        if (error != ERROR_SUCCESS)
-            break;
-
-        if (g_cLayoutsCapacity < g_cLayouts + 1)
-        {
-            dwNewCount = g_cLayouts + 16;
-            cb = dwNewCount * sizeof(LAYOUT_ENTRY);
-            g_pLayouts = LocalReAlloc(g_pLayouts, cb, LPTR);
-            if (g_pLayouts == NULL)
-                break;
-
-            g_cLayoutsCapacity = dwNewCount;
-        }
-
-        pLayout = &g_pLayouts[g_cLayouts];
-
-        // "Layout Id"
-        pLayout->dwVariant = 0;
-        szText[0] = UNICODE_NULL;
-        cb = sizeof(szText);
-        error = RegQueryValueExW(hKey, L"Layout Id", NULL, NULL, (LPBYTE)szText, &cb);
-        if (error == ERROR_SUCCESS)
-        {
-            pLayout->dwVariant = _tcstoul(szText, NULL, 16);
-        }
-
-        // "Layout Text"
-        szText[0] = UNICODE_NULL;
-        cb = sizeof(szText);
-        error = RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (LPBYTE)szText, &cb);
-        if (error == ERROR_SUCCESS && cb > sizeof(WCHAR))
-        {
-            // "Layout Display Name"
-            SHLoadRegUIStringW(hKey, L"Layout Display Name", szText, _countof(szText));
-
-            pLayout->pszText = _tcsdup(szText);
-
-            // dwKLID
-            pLayout->dwKLID = _tcstoul(szKeyName, NULL, 16);
-
-            g_cLayouts++;
-        }
-
-        RegCloseKey(hKey);
+        AddEntry(szKeyName);
     }
 
     RegCloseKey(hLayoutsKey);
-    return g_cLayouts > 0;
+    return g_cEntries > 0;
 }
 
 static INT
-FindLayoutEntry(HKL hKL)
+FindEntry(HKL hKL)
 {
     UINT i;
+    WCHAR szKLID[KL_NAMELENGTH + 1];
 
     if (IS_IME_HKL(hKL))
     {
-        for (i = 0; i < g_cLayouts; ++i)
+        for (i = 0; i < g_cEntries; ++i)
         {
-            if (hKL == (HKL)(DWORD_PTR)g_pLayouts[i].dwKLID)
+            if (hKL == (HKL)(DWORD_PTR)g_pEntries[i].dwKLID)
                 return i;
         }
+
+        StringCchPrintfW(szKLID, _countof(szKLID), L"%08lX", (DWORD)(DWORD_PTR)hKL);
+        return AddEntry(szKLID);
     }
     else if (IS_VARIANT_HKL(hKL))
     {
         DWORD dwVariant = GET_HKL_VARIANT(hKL);
-        for (i = 0; i < g_cLayouts; ++i)
+        for (i = 0; i < g_cEntries; ++i)
         {
-            if (g_pLayouts[i].dwVariant == dwVariant &&
-                LOWORD(hKL) == LOWORD(g_pLayouts[i].dwKLID))
+            if (g_pEntries[i].dwVariant == dwVariant &&
+                LOWORD(hKL) == LOWORD(g_pEntries[i].dwKLID))
             {
                 return i;
             }
@@ -199,15 +222,15 @@ FindLayoutEntry(HKL hKL)
     else
     {
         LANGID LangID = LOWORD(hKL);
-        for (i = 0; i < g_cLayouts; ++i)
+        for (i = 0; i < g_cEntries; ++i)
         {
-            if (LangID == LOWORD(g_pLayouts[i].dwKLID))
+            if (LangID == LOWORD(g_pEntries[i].dwKLID))
                 return i;
         }
         LangID = HIWORD(hKL);
-        for (i = 0; i < g_cLayouts; ++i)
+        for (i = 0; i < g_cEntries; ++i)
         {
-            if (LangID == LOWORD(g_pLayouts[i].dwKLID))
+            if (LangID == LOWORD(g_pEntries[i].dwKLID))
                 return i;
         }
     }
@@ -367,10 +390,10 @@ ShowKeyboardMenu(HWND hwnd, HKL hCheckKL, POINT pt)
             GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, szText, _countof(szText));
             if (LOWORD(hKL) != HIWORD(hKL))
             {
-                INT iEntry = FindLayoutEntry(hKL);
+                INT iEntry = FindEntry(hKL);
                 if (iEntry != -1)
                 {
-                    PLAYOUT_ENTRY pEntry = &g_pLayouts[iEntry];
+                    PENTRY pEntry = &g_pEntries[iEntry];
                     if (pEntry->pszText)
                     {
                         StringCchCat(szText, _countof(szText), L" - ");
@@ -526,7 +549,7 @@ AddTrayIcon(HWND hwnd, HKL hKL)
     WCHAR szImeFile[80];
     INT iEntry;
 
-    iEntry = FindLayoutEntry(hKL);
+    iEntry = FindEntry(hKL);
     if (iEntry == -1)
         return;
 
@@ -534,7 +557,7 @@ AddTrayIcon(HWND hwnd, HKL hKL)
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(hKL, szImeFile);
-    StringCchCopyW(tnid.szTip, _countof(tnid.szTip), g_pLayouts[iEntry].pszText);
+    StringCchCopyW(tnid.szTip, _countof(tnid.szTip), g_pEntries[iEntry].pszText);
 
     Shell_NotifyIconW(NIM_ADD, &tnid);
 
@@ -563,7 +586,7 @@ UpdateTrayIcon(HWND hwnd, HKL hKL)
     WCHAR szImeFile[80];
     INT iEntry;
 
-    iEntry = FindLayoutEntry(hKL);
+    iEntry = FindEntry(hKL);
     if (iEntry == -1)
         return;
 
@@ -571,7 +594,7 @@ UpdateTrayIcon(HWND hwnd, HKL hKL)
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(hKL, szImeFile);
-    StringCchCopyW(tnid.szTip, _countof(tnid.szTip), g_pLayouts[iEntry].pszText);
+    StringCchCopyW(tnid.szTip, _countof(tnid.szTip), g_pEntries[iEntry].pszText);
 
     Shell_NotifyIconW(NIM_MODIFY, &tnid);
 
@@ -620,7 +643,7 @@ ForgetWindowHKL(HWND hwnd, HWND hwndTarget)
 static BOOL
 OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-    if (!LoadLayouts())
+    if (!LoadEntries())
         return FALSE;
 
     g_hDLL = LoadLibraryW(L"kbsdll.dll");
@@ -698,7 +721,7 @@ OnDestroy(HWND hwnd)
 
     EnumPropsW(hwnd, RemovePropProc);
 
-    FreeLayouts();
+    FreeEntries();
 
     PostQuitMessage(0);
 }
