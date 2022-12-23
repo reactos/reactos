@@ -66,13 +66,13 @@ Existem três maneiras de especificar as cores:\n\
 3) dois dígitos hexadecimais (fundo p.plano)\n\n\
 As cores são:\n\
 dec  hex  nome        dec  hex  name\n\
-0    0    Preto        8    8    Cinzento\n\
-1    1    Azul         9    9    Azul claro\n\
-2    2    Verde       10    A    Verde claro\n\
-3    3    Cian        11    B    Ciano claro\n\
-4    4    Vermelho    12    C    Vermelho claro\n\
-5    5    Violeta     13    D    Violeta claro\n\
-6    6    Amarelo     14    E    Amarelo claro\n\
+0    0    Preto escuro       8    8    Cinza\n\
+1    1    Azul escuro        9    9    Azul \n\
+2    2    Verde escuro       10    A    Verde \n\
+3    3    Ciano escuro        11    B    Ciano \n\
+4    4    Vermelho escuro    12    C    Vermelho \n\
+5    5    Violeta escuro     13    D    Violeta \n\
+6    6    Amarelo escuro     14    E    Amarelo \n\
 7    7    Cinza claro      15    F    Branco\n\n"
     STRING_COPY_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)\n\n"
     STRING_COPY_HELP2 "Copia um ou mais arquivos para outro local.\n\n\
