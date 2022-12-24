@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/main.h
  * PURPOSE:         On screen keyboard.
  * PROGRAMMERS:     Denis ROBERT
  */
@@ -21,8 +20,6 @@ typedef struct
     HWND       hMainWnd;
     HBRUSH     hBrushGreenLed;
     UINT_PTR   iTimer;
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND       hActiveWnd;
     BOOL       bShowWarning;
 } OSK_GLOBALS;
 
