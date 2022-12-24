@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/main.c
  * PURPOSE:         On-screen keyboard.
  * PROGRAMMERS:     Denis ROBERT
  */
@@ -66,7 +65,7 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
  */
 int OSK_DlgInitDialog(HWND hDlg)
 {
-    HMONITOR  monitor;
+    HMONITOR monitor;
     MONITORINFO info;
     POINT Pt;
     RECT rcWindow;
@@ -76,7 +75,7 @@ int OSK_DlgInitDialog(HWND hDlg)
 
     /* Get screen info */
     memset(&Pt, 0, sizeof(Pt));
-    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY );
+    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
     info.cbSize = sizeof(info);
     GetMonitorInfoW(monitor, &info);
 
@@ -150,15 +149,6 @@ int OSK_DlgClose(void)
  */
 int OSK_DlgTimer(void)
 {
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND hWndActiveWindow;
-
-    hWndActiveWindow = GetForegroundWindow();
-    if (hWndActiveWindow != NULL && hWndActiveWindow != Globals.hMainWnd)
-    {
-        Globals.hActiveWnd = hWndActiveWindow;
-    }
-
     /* Always redraw leds because it can be changed by the real keyboard) */
     InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_NUM), NULL, TRUE);
     InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_CAPS), NULL, TRUE);
@@ -181,19 +171,6 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyDown;
     BOOL bKeyUp;
     LONG WindowStyle;
-
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    if (Globals.hActiveWnd)
-    {
-        MSG msg;
-
-        SetForegroundWindow(Globals.hActiveWnd);
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
 
     /* KeyDown and/or KeyUp ? */
     WindowStyle = GetWindowLong(hWndControl, GWL_STYLE);
