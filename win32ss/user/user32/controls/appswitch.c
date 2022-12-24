@@ -71,18 +71,6 @@ int CoolSwitchColumns = 7;
 const DWORD Style = WS_POPUP | WS_BORDER | WS_DISABLED;
 const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
-DWORD wtodw(const WCHAR *psz)
-{
-   const WCHAR *pch = psz;
-   DWORD Value = 0;
-   while ('0' <= *pch && *pch <= '9')
-   {
-      Value *= 10;
-      Value += *pch - L'0';
-   }
-   return Value;
-}
-
 BOOL LoadCoolSwitchSettings(void)
 {
    CoolSwitch = TRUE;
@@ -165,11 +153,17 @@ void CompleteSwitch(BOOL doSwitch)
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
    HICON hIcon;
+   DWORD ExStyle;
 
    UNREFERENCED_PARAMETER(lParam);
 
    if (!IsWindowVisible(window))
             return TRUE;
+
+   // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
+   ExStyle = GetWindowLongPtrW(window, GWL_EXSTYLE);
+   if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
+       return TRUE;
 
    GetClassNameW(window, windowText, _countof(windowText));
    if ((wcscmp(L"Shell_TrayWnd", windowText)==0) ||
