@@ -622,7 +622,7 @@ IsAllowedFGActive(PTHREADINFO pti, PWND Wnd)
         pti->rpdesk != gpdeskInputDesktop ||  // not current Desktop,
         pti->MessageQueue == gpqForeground || // if already the queue foreground,
         IsFGLocked() ||                       // foreground is locked,
-        Wnd->ExStyle & WS_EX_NOACTIVATE )     // or,,, does not become the foreground window when the user clicks it.
+        (Wnd->ExStyle & WS_EX_NOACTIVATE))    // or, does not become the foreground window when the user clicks it.
    {
       return FALSE;
    }
@@ -929,9 +929,8 @@ co_IntSetActiveWindow(
    ThreadQueue = pti->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
-   hWndPrev = ThreadQueue->spwndActive ? UserHMGetHandle(ThreadQueue->spwndActive) : NULL;
-
    pWndChg = ThreadQueue->spwndActive; // Keep to notify of a preemptive switch.
+   hWndPrev = (pWndChg ? UserHMGetHandle(pWndChg) : NULL);
 
    if ( !Wnd || Wnd == UserGetDesktopWindow() )
    {
@@ -942,6 +941,9 @@ co_IntSetActiveWindow(
    ASSERT_REFS_CO(Wnd);
    hWnd = UserHMGetHandle(Wnd);
    //ERR("co_IntSetActiveWindow 2 hWnd 0x%p\n",hWnd);
+
+   if (Wnd->ExStyle & WS_EX_NOACTIVATE)
+       return TRUE;
 
    /* check if the specified window can be set in the input data of a given queue */
    if ( ThreadQueue != Wnd->head.pti->MessageQueue )
@@ -1136,9 +1138,12 @@ BOOL FASTCALL
 co_IntMouseActivateWindow(PWND Wnd)
 {
    TRACE("Mouse Active\n");
+   if (Wnd && (Wnd->ExStyle & WS_EX_NOACTIVATE))
+      return TRUE;
    return co_IntSetForegroundAndFocusWindow(Wnd, TRUE, TRUE);
 }
 
+/* Win: PWND xxxSetActiveWindow(Wnd) */
 BOOL FASTCALL
 UserSetActiveWindow( _In_opt_ PWND Wnd )
 {
@@ -1547,7 +1552,7 @@ NtUserSetActiveWindow(HWND hWnd)
 {
    USER_REFERENCE_ENTRY Ref;
    HWND hWndPrev;
-   PWND Window;
+   PWND Window, pwndPrev;
    DECLARE_RETURN(HWND);
 
    TRACE("Enter NtUserSetActiveWindow(%p)\n", hWnd);
@@ -1566,11 +1571,12 @@ NtUserSetActiveWindow(HWND hWnd)
    if (!Window ||
         Window->head.pti->MessageQueue == gptiCurrent->MessageQueue)
    {
-      hWndPrev = gptiCurrent->MessageQueue->spwndActive ? UserHMGetHandle(gptiCurrent->MessageQueue->spwndActive) : NULL;
+      pwndPrev = gptiCurrent->MessageQueue->spwndActive;
+      hWndPrev = (pwndPrev ? UserHMGetHandle(pwndPrev) : NULL);
       if (Window) UserRefObjectCo(Window, &Ref);
       UserSetActiveWindow(Window);
       if (Window) UserDerefObjectCo(Window);
-      RETURN( hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : 0) : 0 );
+      RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
    }
    RETURN( NULL);
 
