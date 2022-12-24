@@ -34,8 +34,6 @@ typedef struct
     HWND       hMainWnd;
     HBRUSH     hBrushGreenLed;
     UINT_PTR   iTimer;
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND       hActiveWnd;
 
     /* On-Screen Keyboard registry settings */
     BOOL       bShowWarning;

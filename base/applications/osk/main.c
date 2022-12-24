@@ -289,15 +289,6 @@ int OSK_DlgClose(void)
  */
 int OSK_DlgTimer(void)
 {
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND hWndActiveWindow;
-
-    hWndActiveWindow = GetForegroundWindow();
-    if (hWndActiveWindow != NULL && hWndActiveWindow != Globals.hMainWnd)
-    {
-        Globals.hActiveWnd = hWndActiveWindow;
-    }
-
     /* Always redraw leds because it can be changed by the real keyboard) */
     InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_NUM), NULL, TRUE);
     InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_CAPS), NULL, TRUE);
@@ -320,19 +311,6 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyDown;
     BOOL bKeyUp;
     LONG WindowStyle;
-
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    if (Globals.hActiveWnd)
-    {
-        MSG msg;
-
-        SetForegroundWindow(Globals.hActiveWnd);
-        while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
 
     /* KeyDown and/or KeyUp ? */
     WindowStyle = GetWindowLongW(hWndControl, GWL_STYLE);
