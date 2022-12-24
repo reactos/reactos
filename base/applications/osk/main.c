@@ -319,15 +319,6 @@ VOID OSK_RefreshLEDKeys(VOID)
  */
 int OSK_DlgTimer(void)
 {
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    HWND hWndActiveWindow;
-
-    hWndActiveWindow = GetForegroundWindow();
-    if (hWndActiveWindow != NULL && hWndActiveWindow != Globals.hMainWnd)
-    {
-        Globals.hActiveWnd = hWndActiveWindow;
-    }
-
     /*
         Update the LED key indicators accordingly to their state (if one
         of the specific keys is held down).
@@ -352,19 +343,6 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyUp;
     LONG WindowStyle;
     INT i;
-
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
-    if (Globals.hActiveWnd)
-    {
-        MSG msg;
-
-        SetForegroundWindow(Globals.hActiveWnd);
-        while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
 
     /* KeyDown and/or KeyUp ? */
     WindowStyle = GetWindowLongW(hWndControl, GWL_STYLE);
