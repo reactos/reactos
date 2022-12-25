@@ -3,24 +3,23 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
-Description:\n\
-  This command line tool enables an administrator to query for basic\n\
-  system configuration information.\n\n\
-Parameter List:\n\
-  /S      system           Specifies the remote system to connect to.\n\n\
-  /U      [domain\\]user   Specifies the user context under which\n\
-                           the command should execute.\n\n\
-  /P      [password]       Specifies the password for the given\n\
-                           user context. Prompts for input if omitted.\n\n\
-  /FO     format           Specifies the format in which the output\n\
-                           is to be displayed.\n\
-                           Valid values: ""TABLE"", ""LIST"", ""CSV"".\n\n\
-  /NH                      Specifies that the ""Column Header"" should\n\
-                           not be displayed in the output.\n\
-                           Valid only for ""TABLE"" and ""CSV"" formats.\n\n\
-  /?                       Displays this help/usage.\n\n\
-Examples:\n\
+IDS_USAGE, "SYSTEMINFO [/S sistem [/U kullanici_adi [/P [sifre]]]] [/FO format] [/NH]\n\n\
+Açıklama:\n\
+  Bu komut satırı aracı, bir yöneticinin temel sistem yapılandırma bilgilerini\n\
+  sorgulamasını sağlar.\n\n\
+Parametre Listesi:\n\
+  /S      sistem                      Bağlanılacak uzak sistemi belirtir.\n\n\
+  /U      [alan_adi\\]kullanici_adi   Komutun yürütülmesi gereken kullanıcı\n\
+                                      bağlamını belirtir.\n\n\
+  /P      [sifre]                     Verilen kullanıcı bağlamı için parolayı\n\
+                                      belirtir. Atlanırsa girdi ister.\n\n\
+  /FO     format                      Çıktının görüntüleneceği biçimi belirtir.\n\
+                                      Geçerli değerler: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                                 Çıktıda ""Column Header""nın görüntülenmemesi\n\
+                                      gerektiğini belirtir.\n\
+                                      ""TABLE"" ve ""CSV"" biçimlerinde geçerlidir.\n\n\
+  /?                                  Bu yardımı/kullanımı görüntüler.\n\n\
+Örnekler:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
   SYSTEMINFO /S system\n\
@@ -29,44 +28,44 @@ Examples:\n\
   SYSTEMINFO /S system /FO LIST\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
-IDS_HOST_NAME,               "Host Name"
-IDS_OS_NAME,                 "OS Name"
-IDS_OS_VERSION,              "OS Version"
-IDS_BUILD,                   "Build"
-IDS_OS_BUILD_TYPE,           "OS Build Type"
-IDS_REG_OWNER,               "Registered Owner"
-IDS_REG_ORG,                 "Registered Organization"
-IDS_PRODUCT_ID,              "Product ID"
-IDS_INST_DATE,               "Install Date"
-IDS_UP_TIME,                 "System Up Time"
-IDS_UP_TIME_FORMAT,          "%u Days, %u Hours, %u Minutes, %u Seconds"
-IDS_SYS_MANUFACTURER,        "System Manufacturer"
-IDS_SYS_MODEL,               "System Model"
-IDS_SYS_TYPE,                "System type"
-IDS_PROCESSORS,              "Processor(s)"
-IDS_PROCESSORS_FORMAT,       "%u Processor(s) Installed."
-IDS_BIOS_DATE,               "BIOS Date"
-IDS_BIOS_VERSION,            "BIOS Version"
-IDS_ROS_DIR,                 "ReactOS Directory"
-IDS_SYS_DIR,                 "System Directory"
-IDS_BOOT_DEV,                "Boot Device"
-IDS_SYS_LOCALE,              "System Locale"
-IDS_INPUT_LOCALE,            "Input Locale"
-IDS_TIME_ZONE,               "Time zone"
-IDS_TOTAL_PHYS_MEM,          "Total Physical Memory"
-IDS_AVAIL_PHISICAL_MEM,      "Available Physical Memory"
-IDS_VIRT_MEM_MAX,            "Virtual Memory: Max Size"
-IDS_VIRT_MEM_AVAIL,          "Virtual Memory: Available"
-IDS_VIRT_MEM_INUSE,          "Virtual Memory: In Use"
-IDS_PAGEFILE_LOC,            "Page File Location(s)"
-IDS_DOMAIN,                  "Domain"
-IDS_NETWORK_CARDS,           "Network Card(s)"
-IDS_NETWORK_CARDS_FORMAT,    "%u Installed."
-IDS_CONNECTION_NAME,         "Connection Name"
-IDS_STATUS,                  "Status"
-IDS_MEDIA_DISCONNECTED,      "Media disconnected"
-IDS_DHCP_ENABLED,            "DHCP Enabled"
-IDS_NO,                      "No"
-IDS_IP_ADDRESSES,            "IP address(es)"
+IDS_HOST_NAME,               "Ana Bilgisayar Adı"
+IDS_OS_NAME,                 "İS Adı"
+IDS_OS_VERSION,              "İS Sürümü"
+IDS_BUILD,                   "İnşa"
+IDS_OS_BUILD_TYPE,           "İS İnşa Tipi"
+IDS_REG_OWNER,               "Kayıtlı Sahip"
+IDS_REG_ORG,                 "Kayıtlı Organizasyon"
+IDS_PRODUCT_ID,              "Ürün Kimliği"
+IDS_INST_DATE,               "Yüklenme Tarihi"
+IDS_UP_TIME,                 "Son Güncelleme"
+IDS_UP_TIME_FORMAT,          "%u Gün, %u Saat, %u Dakika, %u Saniye"
+IDS_SYS_MANUFACTURER,        "Sistem Üreticisi"
+IDS_SYS_MODEL,               "Sistem Modeli"
+IDS_SYS_TYPE,                "Sistem Türü"
+IDS_PROCESSORS,              "İşlemci(ler)"
+IDS_PROCESSORS_FORMAT,       "%u İşlemci Kuruldu."
+IDS_BIOS_DATE,               "BIOS Tarihi"
+IDS_BIOS_VERSION,            "BIOS Versiyonu"
+IDS_ROS_DIR,                 "ReactOS Dizini"
+IDS_SYS_DIR,                 "Sistem Dizini"
+IDS_BOOT_DEV,                "Önyükleme Cihazı"
+IDS_SYS_LOCALE,              "Sistem Yerel Ayarı"
+IDS_INPUT_LOCALE,            "Girdi Yerel Ayarı"
+IDS_TIME_ZONE,               "Saat Dilimi"
+IDS_TOTAL_PHYS_MEM,          "Toplam Fiziksel Bellek"
+IDS_AVAIL_PHISICAL_MEM,      "Kullanılabilir Fiziksel Bellek"
+IDS_VIRT_MEM_MAX,            "Sanal Bellek: Maks. Boyut"
+IDS_VIRT_MEM_AVAIL,          "Sanal Bellek: Kullanılabilir"
+IDS_VIRT_MEM_INUSE,          "Sanal Bellek: Kullanımda"
+IDS_PAGEFILE_LOC,            "Sayfa Dosya Konum(lar)ı"
+IDS_DOMAIN,                  "Alan adı"
+IDS_NETWORK_CARDS,           "Ağ Kart(ları)"
+IDS_NETWORK_CARDS_FORMAT,    "%u Kurulu."
+IDS_CONNECTION_NAME,         "Bağlantı adı"
+IDS_STATUS,                  "Durum"
+IDS_MEDIA_DISCONNECTED,      "Medya Çıkarıldı"
+IDS_DHCP_ENABLED,            "DHCP Etkinleştirilmiş"
+IDS_NO,                      "Hayır"
+IDS_IP_ADDRESSES,            "IP adres(ler)i"
 
 END

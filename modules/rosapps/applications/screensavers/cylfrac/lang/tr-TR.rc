@@ -2,7 +2,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Cylinders fractal"
-    IDS_TITLE       "About"
-    IDS_TEXT        "Cylinders fractal by unC0Rr.\nSpecial for ReactOS."
+    IDS_DESCRIPTION "Silindirik Fractaller"
+    IDS_TITLE       "Hakkında"
+    IDS_TEXT        "Cylinders fractal unC0Rr tarafından yapılmıştır.\nReactOS'a özeldir."
 END

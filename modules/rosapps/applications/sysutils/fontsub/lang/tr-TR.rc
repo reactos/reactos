@@ -15,29 +15,29 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 1 MENU
 BEGIN
-    POPUP "&File"
+    POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Import From...\tCtrl+O", ID_IMPORT
-        MENUITEM "&Export To...\tCtrl+S", ID_EXPORT
+        MENUITEM "&İçe Aktar...\tCtrl+O", ID_IMPORT
+        MENUITEM "&Dışa Aktar...\tCtrl+S", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "Re&load from Registry\tCtrl+L", ID_RELOAD
-        MENUITEM "Update &Registry\tCtrl+U", ID_UPDATE_REGISTRY
+        MENUITEM "Kayıdı Ye&niden Yükle\tCtrl+L", ID_RELOAD
+        MENUITEM "&Kaydı güncelle\tCtrl+U", ID_UPDATE_REGISTRY
         MENUITEM SEPARATOR
-        MENUITEM "Open in Reg&edit", ID_OPEN_REGKEY
+        MENUITEM "Reg&edit'te aç", ID_OPEN_REGKEY
         MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt+F4", ID_EXIT
+        MENUITEM "Ç&ıkış\tAlt+F4", ID_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Düzenle"
     BEGIN
-        MENUITEM "&New Item\tCtrl+N", ID_NEW
+        MENUITEM "&Yeni Öğe\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Edit Item\tEnter", ID_EDIT
+        MENUITEM "Öğeyi &Düzenle\tEnter", ID_EDIT
         MENUITEM SEPARATOR
-        MENUITEM "&Delete Item\tDel", ID_DELETE
+        MENUITEM "Öğeyi &Sil\tDel", ID_DELETE
     END
-    POPUP "&Help"
+    POPUP "&Yardım"
     BEGIN
-        MENUITEM "&About...", ID_ABOUT
+        MENUITEM "&Hakkında...", ID_ABOUT
     END
 END
 
@@ -45,62 +45,62 @@ END
 BEGIN
     POPUP "Popup"
     BEGIN
-        MENUITEM "&New Item\tCtrl+N", ID_NEW
+        MENUITEM "&Yeni Öğe\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Edit Item\tEnter", ID_EDIT
+        MENUITEM "Öğeyi &Düzenle\tEnter", ID_EDIT
         MENUITEM SEPARATOR
-        MENUITEM "&Delete Item\tDel", ID_DELETE
+        MENUITEM "Öğeyi &Sil\tDel", ID_DELETE
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE,          "Font Substitutes Editor"
-    IDS_FONTNAME,       "Font Name"
-    IDS_SUBSTITUTE,     "Substitute"
-    IDS_ENTERNAME,      "(Please enter a font name...)"
-    IDS_IMPORT,         "Import"
-    IDS_EXPORT,         "Export"
-    IDS_CANTIMPORT,     "Could not import."
-    IDS_CANTEXPORT,     "Could not export."
-    IDS_INPFILTER,      "Registry Files (*.reg)|*.reg|All Files (*.*)|*.*|"
-    IDS_OUTFILTER,      "Registry Files (*.reg)|*.reg|"
-    IDS_QUERYUPDATE,    "Substitutes info has been modified. Update registry now?"
-    IDS_ALREADYEXISTS,  "The same name already exists."
-    IDS_ENTERNAME2,     "Enter the font name."
-    IDS_QUERYDELETE,    "Do you really want to delete this item?"
-    IDS_CANTOPENKEY,    "Could not open the registry key."
-    IDS_REBOOTNOW,      "Registry was updated. Reboot system now?"
-    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The ReactOS Team\r\n\r\nThis software was released under CC0 1.0 license."
+    IDS_TITLE,          "Yazı Tipi İkame Düzenleyicisi"
+    IDS_FONTNAME,       "Yazı Tipi Adı"
+    IDS_SUBSTITUTE,     "İkame"
+    IDS_ENTERNAME,      "(Bir yazı tipi adı girin...)"
+    IDS_IMPORT,         "İçe aktar"
+    IDS_EXPORT,         "Dışa aktar"
+    IDS_CANTIMPORT,     "İçe aktarılamadı."
+    IDS_CANTEXPORT,     "Dışa aktarılamadı."
+    IDS_INPFILTER,      "Kayıt dosyaları (*.reg)|*.reg|Tüm dosyalar (*.*)|*.*|"
+    IDS_OUTFILTER,      "Kayıt dosyaları (*.reg)|*.reg|"
+    IDS_QUERYUPDATE,    "İkame bilgileri değiştirildi. Kayıt şimdi güncellensin mi?"
+    IDS_ALREADYEXISTS,  "Aynı isim zaten var."
+    IDS_ENTERNAME2,     "Yazı tipi adı giriniz."
+    IDS_QUERYDELETE,    "Bu öğeyi gerçekten silmek istiyor musunuz?"
+    IDS_CANTOPENKEY,    "Kayıt defteri anahtarı açılamadı."
+    IDS_REBOOTNOW,      "Kayıt güncellendi. Sistemi şimdi yeniden başlat?"
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Sürüm 0.5\r\nKatayama Hirofumi MZ ve ReactOS Ekibi tarafından\r\n\r\nBu yazılım CC0 1.0 lisansı altında yayınlandı."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "Add Substitute Item"
+CAPTION "İkame Öğesi Ekle"
 FONT 10, "MS Shell Dlg"
 BEGIN
-    CONTROL "Font &Name:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "Font &Adı:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
     CONTROL "", cmb1, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 6, 120, 120
     CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
-    CONTROL "&Substitute:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "&İkame:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
     CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
     CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
-    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
-    CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "Tamam", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "İptal", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
 END
 
 IDD_EDIT DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Substitute Item"
+CAPTION "İkame Öğesini Düzenle"
 FONT 10, "MS Shell Dlg"
 BEGIN
-    CONTROL "Font &Name:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "Font &Adı:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
     CONTROL "", edt1, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP, 70, 6, 120, 14
     CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
-    CONTROL "&Substitute:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "&İkame:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
     CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
     CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
-    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
-    CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
-    CONTROL "&Delete", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
+    CONTROL "TAMAM", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "İptal", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "&Sil", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
 END

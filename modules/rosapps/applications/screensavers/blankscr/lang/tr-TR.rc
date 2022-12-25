@@ -2,6 +2,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Blank screen"
-    IDS_TEXT        "No options need to be set."
+    IDS_DESCRIPTION "Boş ekran"
+    IDS_TEXT        "Hiçbir seçeneğin ayarlanması gerekmez."
 END

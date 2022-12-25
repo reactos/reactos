@@ -2,7 +2,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Starfield ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "No options need to be set."
+    IDS_DESCRIPTION "Starfield Ekran Koruyucu"
+    IDS_TITLE       "Hakkında"
+    IDS_TEXT        "Hiçbir seçeneğin ayarlanması gerekmez."
 END

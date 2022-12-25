@@ -2,6 +2,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Circles"
-    IDS_TEXT        "No options need to be set."
+    IDS_DESCRIPTION "Çemberler"
+    IDS_TEXT        "Hiçbir seçeneğin ayarlanması gerekmez."
 END
