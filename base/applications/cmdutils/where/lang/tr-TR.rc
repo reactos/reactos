@@ -41,7 +41,7 @@ NOT: Bu araç, arama başarılı olursa 0, dosya bulunamazsa 1 ve bir hata\n\
     IDS_TYPE_HELP "Kullanım yardımı için ""WHERE /?"" yazın.\n"
     IDS_ENVPAT_WITH_R "HATA: ""$env:pattern"" /R ile kullanılamaz.\n"
     IDS_PATHPAT_WITH_R "HATA: ""path:pattern"" biçimi /R ile kullanılamaz.\n"
-    IDS_BAD_PATHPAT "HATA: ""path:pattern"" içinde geçersiz kalıp belirtildi".\n"
+    IDS_BAD_PATHPAT "HATA: ""path:pattern"" içinde geçersiz kalıp belirtildi.\n"
     IDS_OUTOFMEMORY "HATA: Bellek yetersiz.\n"
     IDS_BAD_ENVVAR "HATA: ""%ls"" ortam değişkeni bulunamadı.\n"
     IDS_CANT_FOUND "HATA: Sistem belirtilen dosyayı bulamadı.\n"
