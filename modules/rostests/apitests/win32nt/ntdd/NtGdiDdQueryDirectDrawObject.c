@@ -450,7 +450,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
     RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
     RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
-    RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_CALLBACKS));
+    RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
 
     RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
                                         pCallBackFlags, puD3dCallbacks,
@@ -570,6 +570,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dDriverData->dwNumTextureFormats != 0)
     {
         puD3dTextureFormats = malloc (puD3dDriverData->dwNumTextureFormats * sizeof(DDSURFACEDESC2));
+        ASSERT(puD3dTextureFormats != NULL);
     }
 
     RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
@@ -599,9 +600,6 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
 
     RTEST(puD3dBufferCallbacks != NULL);
     ASSERT(puD3dDriverData != NULL);
-
-    RTEST(puD3dTextureFormats != NULL);
-    ASSERT(puD3dTextureFormats != NULL);
 
     RTEST(puNumFourCC == NULL);
     RTEST(puFourCC == NULL);
@@ -698,9 +696,6 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     RTEST(puD3dBufferCallbacks != NULL);
     ASSERT(puD3dDriverData != NULL);
 
-    RTEST(puD3dTextureFormats != NULL);
-    ASSERT(puD3dTextureFormats != NULL);
-
     RTEST(puNumHeaps != NULL);
     ASSERT(puNumHeaps != NULL);
     RTEST(NumHeaps == 0);
@@ -763,9 +758,6 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
 
     RTEST(puD3dBufferCallbacks != NULL);
     ASSERT(puD3dDriverData != NULL);
-
-    RTEST(puD3dTextureFormats != NULL);
-    ASSERT(puD3dTextureFormats != NULL);
 
     RTEST(puNumHeaps != NULL);
     ASSERT(puNumHeaps != NULL);
