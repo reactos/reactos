@@ -1956,11 +1956,6 @@ CmpUnlockRegistry(VOID)
         CmpDoFlushAll(TRUE);
         CmpFlushOnLockRelease = FALSE;
     }
-    else
-    {
-        /* Lazy flush the registry */
-        CmpLazyFlush();
-    }
 
     /* Release the lock and leave the critical region */
     ExReleaseResourceLite(&CmpRegistryLock);
