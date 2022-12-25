@@ -38,7 +38,7 @@ NOT: Bu araç, arama başarılı olursa 0, dosya bulunamazsa 1 ve bir hata\n\
     IDS_NOT_FOUND "BİLGİ: Verilen kalıp(lar) için dosyalar bulunamadı.\n"
     IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
     IDS_WANT_VALUE "HATA: '%ls' için değer gerekiyor.\n"
-    IDS_TYPE_HELP "Kullanım yardımı için "WHERE /?"" yazın.\n"
+    IDS_TYPE_HELP "Kullanım yardımı için ""WHERE /?"" yazın.\n"
     IDS_ENVPAT_WITH_R "HATA: ""$env:pattern"" /R ile kullanılamaz.\n"
     IDS_PATHPAT_WITH_R "HATA: ""path:pattern"" biçimi /R ile kullanılamaz.\n"
     IDS_BAD_PATHPAT "HATA: ""path:pattern"" içinde geçersiz kalıp belirtildi".\n"
