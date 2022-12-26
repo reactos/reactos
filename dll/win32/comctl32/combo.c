@@ -1610,8 +1610,6 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
        else
        {
 	   /* drop down the listbox and start tracking */
-
-           lphc->wState |= CBF_CAPTURE;
            SetCapture( hWnd );
            CBDropDown( lphc );
        }
@@ -1642,6 +1640,11 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
        }
        ReleaseCapture();
        SetCapture(lphc->hWndLBox);
+   }
+   else
+   {
+        if (lphc->wState & CBF_DROPPED)
+            lphc->wState |= CBF_CAPTURE;
    }
 
    if( lphc->wState & CBF_BUTTONDOWN )
