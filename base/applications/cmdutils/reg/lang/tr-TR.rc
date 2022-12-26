@@ -101,9 +101,9 @@ For help on a specific operation, type:\n\
     STRING_UNHANDLED_TYPE, "reg: İşlenemeyen kayıt defteri veri türü [/t 0x%1!x!, /d %2]\n"
     STRING_OVERWRITE_VALUE, """%1"" kayıt defteri değeri önceden var. Üzerine yazmak ister misiniz?"
 
-    STRING_YES, "#msgctxt#Yes key#Y"
-    STRING_NO, "#msgctxt#No key#N"
-    STRING_ALL, "#msgctxt#All key#A"
+    STRING_YES, "Y"
+    STRING_NO, "N"
+    STRING_ALL, "A"
     STRING_YESNO, " (Evet|Hayır)"
     STRING_YESNOALL, " (Yes|No|All)"
     STRING_CANCELLED, "Kayıt defteri işlemi iptal edildi\n"
