@@ -436,12 +436,12 @@ co_WinPosActivateOtherWindow(PWND Wnd)
 
    // Find any window to bring to top. Works Okay for wine since it does not see X11 windows.
    WndTo = UserGetDesktopWindow();
-   WndTo = WndTo->spwndChild;
-   if ( WndTo == NULL )
+   if ((WndTo == NULL) || (WndTo->spwndChild == NULL))
    {
       //ERR("WinPosActivateOtherWindow No window!\n");
       return;
    }
+   WndTo = WndTo->spwndChild;
    for (;;)
    {
       if (WndTo == Wnd)

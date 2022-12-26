@@ -1788,6 +1788,14 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
     PLIST_ENTRY ListEntry;
     PSHELL_HOOK_WINDOW Current;
 
+    // FIXME: This probably shouldn't happen, but it does
+    if (Desktop == NULL)
+    {
+        Desktop = IntGetActiveDesktop();
+        if (Desktop == NULL)
+            return FALSE;
+    }
+
     ListEntry = Desktop->ShellHookWindows.Flink;
     while (ListEntry != &Desktop->ShellHookWindows)
     {
