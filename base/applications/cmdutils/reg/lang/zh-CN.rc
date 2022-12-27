@@ -109,7 +109,7 @@ For help on a specific operation, type:\n\
     STRING_OVERWRITE_VALUE, "注册表值 '%1' 已经存在。您是否要覆盖它？"
     STRING_YES, "Y"
     STRING_NO, "N"
-    STRING_ALL, "#msgctxt#All key#A"
+    STRING_ALL, "A"
     STRING_YESNO, " (Yes|No)"
     STRING_YESNOALL, " (Yes|No|All)"
     STRING_CANCELLED, "注册表操作被取消。\n"
