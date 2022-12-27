@@ -32,6 +32,7 @@
 // Get hKL's variant
 #define GET_HKL_VARIANT(hKL) (HIWORD(hKL) & 0xFFF)
 
+/* Vista+ doesn't notify the language change. Use timer. */
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     #define TIMER_ID 999
     #define TIMER_INTERVAL 1000

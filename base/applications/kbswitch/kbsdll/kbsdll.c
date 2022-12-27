@@ -16,6 +16,7 @@ HWND g_hwnd = NULL;
     #define SHARED(name) __attribute__((section(name), shared))
 #endif
 
+/* The following two hook handles are shared throughout the system: */
 #ifdef _MSC_VER
     #pragma data_seg(".shared")
 #endif
