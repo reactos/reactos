@@ -853,7 +853,7 @@ OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
-static void OnTargetActivated(HWND hwnd, HWND hwndTarget, INT type)
+static VOID OnTargetActivated(HWND hwnd, HWND hwndTarget, INT type)
 {
     HKL hKL;
 
@@ -876,7 +876,7 @@ static void OnTargetActivated(HWND hwnd, HWND hwndTarget, INT type)
     UpdateTrayIcon(hwnd, g_hKL);
 }
 
-static void OnLanguage(HWND hwnd, HWND hwndTarget, HKL hKL)
+static VOID OnLanguage(HWND hwnd, HWND hwndTarget, HKL hKL)
 {
     if (hKL == NULL || hwndTarget == NULL)
     {
