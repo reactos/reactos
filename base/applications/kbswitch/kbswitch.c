@@ -32,14 +32,16 @@
 // Get hKL's variant
 #define GET_HKL_VARIANT(hKL) (HIWORD(hKL) & 0xFFF)
 
-#define TIMER_ID 999
-#define TIMER_INTERVAL 1000
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    #define TIMER_ID 999
+    #define TIMER_INTERVAL 1000
+#endif
 
-typedef BOOL (APIENTRY *FN_KBS_START_HOOK)(VOID);
-typedef VOID (APIENTRY *FN_KBS_END_HOOK)(VOID);
+typedef BOOL (APIENTRY *FN_START_HOOK)(VOID);
+typedef VOID (APIENTRY *FN_END_HOOK)(VOID);
 HINSTANCE g_hDLL = NULL;
-FN_KBS_START_HOOK g_fnKbsStartHook = NULL;
-FN_KBS_END_HOOK g_fnKbsEndHook = NULL;
+FN_START_HOOK g_fnStartHook = NULL;
+FN_END_HOOK g_fnEndHook = NULL;
 
 HINSTANCE g_hInstance = NULL;
 HICON g_hTrayIcon = NULL;
@@ -653,9 +655,9 @@ OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     if (!g_hDLL)
         return TRUE;
 
-    g_fnKbsStartHook = (FN_KBS_START_HOOK)GetProcAddress(g_hDLL, "KbsStartHook");
-    g_fnKbsEndHook = (FN_KBS_END_HOOK)GetProcAddress(g_hDLL, "KbsEndHook");
-    if (!g_fnKbsStartHook || !g_fnKbsEndHook)
+    g_fnStartHook = (FN_START_HOOK)GetProcAddress(g_hDLL, "StartHook");
+    g_fnEndHook = (FN_END_HOOK)GetProcAddress(g_hDLL, "EndHook");
+    if (!g_fnStartHook || !g_fnEndHook || !g_fnStartHook())
     {
         FreeLibrary(g_hDLL);
         g_hDLL = NULL;
@@ -666,10 +668,7 @@ OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     AddTrayIcon(hwnd, g_hKL);
     g_hwndTrayWnd = GetTrayWnd();
     g_uTaskbarRestart = RegisterWindowMessageW(L"TaskbarCreated");
-
     g_dwCodePageBitField = GetCodePageBitField(hwnd);
-
-    g_fnKbsStartHook();
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
@@ -725,7 +724,7 @@ OnDestroy(HWND hwnd)
 
     if (g_hDLL)
     {
-        g_fnKbsEndHook();
+        g_fnEndHook();
         FreeLibrary(g_hDLL);
     }
 

@@ -70,7 +70,7 @@ ShellProc(INT code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(g_hShellHook, code, wParam, lParam);
 }
 
-BOOL APIENTRY KbsStartHook(VOID)
+BOOL APIENTRY StartHook(VOID)
 {
     g_hCbtHook = SetWindowsHookEx(WH_CBT, CbtProc, g_hinstDLL, 0);
     g_hShellHook = SetWindowsHookEx(WH_SHELL, ShellProc, g_hinstDLL, 0);
@@ -85,7 +85,7 @@ BOOL APIENTRY KbsStartHook(VOID)
     return TRUE;
 }
 
-VOID APIENTRY KbsEndHook(VOID)
+VOID APIENTRY EndHook(VOID)
 {
     UnhookWindowsHookEx(g_hCbtHook);
     UnhookWindowsHookEx(g_hShellHook);
