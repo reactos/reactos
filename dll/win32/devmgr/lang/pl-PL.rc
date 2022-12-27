@@ -296,14 +296,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Menedźer urządzeń ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować.\nCzy na pewno chcesz je wyłączyć?"
   IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\nCzy chcesz kontynuować?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Aktualizuj sterownik..."
   IDS_MENU_ENABLE           "Włącz"
@@ -314,7 +315,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Właściwości"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Właściwości"
   IDS_TOOLTIP_SCAN          "Skanuj w poszukiwaniu zmian sprzętu"
@@ -325,7 +326,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Otwiera okno dialogowe właściwiości dla bieżącego zaznaczenia."

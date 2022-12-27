@@ -18,7 +18,7 @@ IDI_MAIN_ICON   ICON    "resources/computer.ico"
 IDB_ROOT_IMAGE  BITMAP  "resources/root.bmp"
 
 /* main toolbar icons */
-IDB_TOOLBAR    BITMAP DISCARDABLE "resources/toolbar.bmp"
+IDB_TOOLBAR     BITMAP  "resources/toolbar.bmp"
 
 
 /* UTF-8 */

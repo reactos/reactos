@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_ICON  ICON  DISCARDABLE  "res/icon_3dtext.ico"
+IDI_ICON ICON "res/icon_3dtext.ico"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION  "OpenGL 3DText ScreenSaver"

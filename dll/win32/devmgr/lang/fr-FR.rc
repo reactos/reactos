@@ -286,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Gestionnaire de périphériques ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\nVoulez-vous réellement le désactiver ?"
   IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\nVoulez-vous continuer ?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Mettre le pilote logiciel à jour..."
   IDS_MENU_ENABLE           "Activer"
@@ -304,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Propriétés"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Propriétés"
   IDS_TOOLTIP_SCAN          "Vérifier les changements de matériel"
@@ -315,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Ouvre les priopriétés pour la sélection actuelle."

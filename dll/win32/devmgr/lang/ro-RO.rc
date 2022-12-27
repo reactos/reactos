@@ -294,14 +294,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Manager de dispozitive"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Dezactivarea acestui dispozitiv va cauza oprirea funcționării sale.\nSigur doriți dezactivarea sa?"
   IDS_CONFIRM_UNINSTALL     "Avertisment: Urmează să dezinstalați acest dispozitiv din sistem.\nContinuați?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Actualizare driver…"
   IDS_MENU_ENABLE           "Activare"
@@ -312,7 +313,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Proprietăți"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Proprietăți"
   IDS_TOOLTIP_SCAN          "Scanare configurație hardware"
@@ -323,7 +324,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Inspectarea proprietăților pentru selecția curentă."

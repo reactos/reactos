@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "Консольный Диспетчер задач от Алексея Брагина <aleksey@reactos.org>"
 

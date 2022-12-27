@@ -292,14 +292,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Seadmehaldur"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\nKas soovite kindlasti seda keelata?"
   IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\nKas soovite jätkata?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Draiveritarkvara värskendamine..."
   IDS_MENU_ENABLE           "Luba"
@@ -310,7 +311,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Atribuudid"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Atribuudid"
   IDS_TOOLTIP_SCAN          "Otsi riistvaramuudatusi"
@@ -321,7 +322,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Avab antud valike atribuudilehe."

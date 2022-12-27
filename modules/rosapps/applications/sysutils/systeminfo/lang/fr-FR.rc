@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE "SYSTEMINFO [/S système [/U utilisateur [/P [motdepasse]]]] [/FO format] [/NH]\n\n\

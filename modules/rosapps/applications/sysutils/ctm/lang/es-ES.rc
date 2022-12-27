@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "Administrador de tareas de la Consola por Aleksey Bragin <aleksey@reactos.org>"
 
@@ -11,7 +11,7 @@ BEGIN
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "CPU"
    IDS_COLUMN_MEM          "Uso Memor."
-   IDS_COLUMN_MEM_UNIT		"KB"
+   IDS_COLUMN_MEM_UNIT     "KB"
    IDS_COLUMN_PF           "Fallos de paginación"
 
    IDS_IDLE_PROCESS        "Proceso inactivo del sistema"

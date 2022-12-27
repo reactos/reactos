@@ -286,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Eszközkezelő"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Az eszköz letiltás után nem fog működni.\nBiztosan letiltja?"
   IDS_CONFIRM_UNINSTALL     "Figyelem: arra készül hogy eltávolítsa ezt az eszközt a rendszerből.\nFolytatni szeretné?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Illesztőprogram frissítése..."
   IDS_MENU_ENABLE           "Engedélyezés"
@@ -304,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Tulajdonságok"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Tulajdonságok"
   IDS_TOOLTIP_SCAN          "Hardverváltozások keresése"
@@ -315,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Az aktuális kijelölés tulajdonságainak megnyitása."

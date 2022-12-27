@@ -8,9 +8,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "Gestionar de activități consolă v0.1 de Aleksey Bragin <aleksey@reactos.org>"
 
@@ -19,7 +17,7 @@ BEGIN
    IDS_COLUMN_PID          "IDP  "
    IDS_COLUMN_CPU          "UCP"
    IDS_COLUMN_MEM          "Uz memor."
-   IDS_COLUMN_MEM_UNIT		"ko"
+   IDS_COLUMN_MEM_UNIT     "ko"
    IDS_COLUMN_PF           "Er. de pag."
 
    IDS_IDLE_PROCESS        "Proces de inactivitate sistem"

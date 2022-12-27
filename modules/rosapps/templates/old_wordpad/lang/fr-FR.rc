@@ -108,14 +108,14 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_LICENSE           "Ce programme est un logiciel libre; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version suivante.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE; sans même une garantie implicite de COMMERCIABILITE ou DE CONFORMITE A UNE UTILISATION PARTICULIERE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
   IDS_DEFAULT_NAME      "Document %1!u!"
   IDS_READY             " Prêt."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_DOC_TYPE_RICH_TEXT    "Document RTF"
   IDS_DOC_TYPE_UNICODE_TEXT "Document texte"
@@ -125,7 +125,7 @@ END
 
 
 /* Tooltips */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_NEW       "Nouveau"
   IDS_TOOLTIP_OPEN      "Ouvrir"
@@ -140,7 +140,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_NEW          " Crée un nouveau document."

@@ -4,12 +4,12 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_ICON  ICON  DISCARDABLE  "res/icon_starfield.ico"
+IDI_ICON ICON "res/icon_starfield.ico"
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Starfield ScreenSaver\0"
-#define REACTOS_STR_INTERNAL_NAME       "starfield\0"
-#define REACTOS_STR_ORIGINAL_FILENAME   "starfield.scr\0"
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Starfield ScreenSaver"
+#define REACTOS_STR_INTERNAL_NAME       "starfield"
+#define REACTOS_STR_ORIGINAL_FILENAME   "starfield.scr"
 
 #include <reactos/version.rc>
 

@@ -49,7 +49,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Cer înstelat"
     IDS_ROTATION_NONE       "Niciuna"

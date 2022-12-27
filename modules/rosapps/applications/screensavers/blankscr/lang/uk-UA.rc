@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Порожньо"
     IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."

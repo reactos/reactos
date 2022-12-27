@@ -9,7 +9,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "editor.exe"
 //#include <reactos/version.rc>
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME   "Editor"
   IDS_VERSION   "v0.1"
@@ -18,7 +18,7 @@ END
 IDI_ICON ICON "res/wordpad.ico"
 
 /* main toolbar icons */
-IDB_TEXTTOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
+IDB_TEXTTOOLBAR BITMAP "res/toolbar.bmp"
 
 #include <reactos/manifest_exe.rc>
 

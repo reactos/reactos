@@ -6,7 +6,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "maze.exe"
 #include <reactos/version.rc>
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     idsAppName              "Screen Saver.Maze"
 END

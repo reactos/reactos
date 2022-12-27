@@ -117,14 +117,14 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_LICENSE           "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
   IDS_DEFAULT_NAME      "文档 %1!u!"
   IDS_READY             " 准备就绪。"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_DOC_TYPE_RICH_TEXT    "RTF 文档"
   IDS_DOC_TYPE_UNICODE_TEXT "文本文档"
@@ -134,7 +134,7 @@ END
 
 
 /* Tooltips */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_NEW       "新建"
   IDS_TOOLTIP_OPEN      "打开"
@@ -149,7 +149,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_NEW          " 创建新文档。"

@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "主控台工作管理員，由 Aleksey Bragin <aleksey@reactos.org> 開發"
 

@@ -287,14 +287,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Диспетчер устройств ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Отключение устройства означает, что оно перестанет работать.\nОтключить устройство?"
   IDS_CONFIRM_UNINSTALL     "Предупреждение: Сейчас устройство будет удалено из системы.\nВы хотите продолжить?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "&Обновить драйвер..."
   IDS_MENU_ENABLE           "&Включить"
@@ -305,7 +306,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "&Свойства"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Свойства"
   IDS_TOOLTIP_SCAN          "Обновить конфигурацию оборудования"
@@ -316,7 +317,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Открытие страницы свойств для выделенного объекта."
