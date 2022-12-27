@@ -1,2 +1,2 @@
-@ stdcall KbsHook(ptr)
-@ stdcall KbsUnhook()
+@ stdcall KbsStartHook()
+@ stdcall KbsEndHook()

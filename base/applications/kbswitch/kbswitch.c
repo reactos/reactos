@@ -35,11 +35,11 @@
 #define TIMER_ID 999
 #define TIMER_INTERVAL 1000
 
-typedef BOOL (APIENTRY *FN_KBS_HOOK)(HWND hwnd);
-typedef VOID (APIENTRY *FN_KBS_UNHOOK)(VOID);
+typedef BOOL (APIENTRY *FN_KBS_START_HOOK)(VOID);
+typedef VOID (APIENTRY *FN_KBS_END_HOOK)(VOID);
 HINSTANCE g_hDLL = NULL;
-FN_KBS_HOOK g_fnKbsHook = NULL;
-FN_KBS_UNHOOK g_fnKbsUnhook = NULL;
+FN_KBS_START_HOOK g_fnKbsStartHook = NULL;
+FN_KBS_END_HOOK g_fnKbsEndHook = NULL;
 
 HINSTANCE g_hInstance = NULL;
 HICON g_hTrayIcon = NULL;
@@ -506,7 +506,7 @@ static BOOL IsWndIgnored(HWND hwndTarget)
            IsKbswitchWindow(hwndTopLevel);
 }
 
-static VOID SetLastActive(HWND hwndTarget, INT line)
+static VOID SetLastActive(HWND hwndTarget)
 {
     if (g_hwndLastActive != hwndTarget)
     {
@@ -653,9 +653,9 @@ OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     if (!g_hDLL)
         return TRUE;
 
-    g_fnKbsHook = (FN_KBS_HOOK)GetProcAddress(g_hDLL, "KbsHook");
-    g_fnKbsUnhook = (FN_KBS_UNHOOK)GetProcAddress(g_hDLL, "KbsUnhook");
-    if (!g_fnKbsHook || !g_fnKbsUnhook)
+    g_fnKbsStartHook = (FN_KBS_START_HOOK)GetProcAddress(g_hDLL, "KbsStartHook");
+    g_fnKbsEndHook = (FN_KBS_END_HOOK)GetProcAddress(g_hDLL, "KbsEndHook");
+    if (!g_fnKbsStartHook || !g_fnKbsEndHook)
     {
         FreeLibrary(g_hDLL);
         g_hDLL = NULL;
@@ -669,11 +669,15 @@ OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
     g_dwCodePageBitField = GetCodePageBitField(hwnd);
 
-    g_fnKbsHook(hwnd);
+    g_fnKbsStartHook();
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+#endif
     return TRUE;
 }
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 static VOID
 OnTimer(HWND hwnd, UINT id)
 {
@@ -684,7 +688,7 @@ OnTimer(HWND hwnd, UINT id)
     if (IsWndIgnored(hwndTarget))
         return;
 
-    SetLastActive(hwndTarget, __LINE__);
+    SetLastActive(hwndTarget);
 
     DWORD dwThreadId = GetWindowThreadProcessId(hwndTarget, NULL);
     HKL hKL = GetKeyboardLayout(dwThreadId);
@@ -696,6 +700,7 @@ OnTimer(HWND hwnd, UINT id)
     UpdateTrayIcon(hwnd, hKL);
     g_hKL = hKL;
 }
+#endif
 
 static BOOL CALLBACK
 RemovePropProc(HWND hwnd, LPCWSTR lpszString, HANDLE hData)
@@ -707,7 +712,9 @@ RemovePropProc(HWND hwnd, LPCWSTR lpszString, HANDLE hData)
 static VOID
 OnDestroy(HWND hwnd)
 {
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     KillTimer(hwnd, TIMER_ID);
+#endif
 
     if (g_hMenu)
     {
@@ -718,7 +725,7 @@ OnDestroy(HWND hwnd)
 
     if (g_hDLL)
     {
-        g_fnKbsUnhook();
+        g_fnKbsEndHook();
         FreeLibrary(g_hDLL);
     }
 
@@ -758,7 +765,9 @@ OnNotifyIcon(HWND hwnd, LPARAM lParam)
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
         {
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
             KillTimer(hwnd, TIMER_ID);
+#endif
 
             POINT pt;
             GetCursorPos(&pt);
@@ -786,7 +795,9 @@ OnNotifyIcon(HWND hwnd, LPARAM lParam)
 
             PostMessageW(hwnd, WM_NULL, 0, 0);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
             SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+#endif
             break;
         }
     }
@@ -842,13 +853,59 @@ OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
+static void OnTargetActivated(HWND hwnd, HWND hwndTarget, INT type)
+{
+    HKL hKL;
+
+    if (IsWndIgnored(hwndTarget))
+        return;
+
+    if (IsConsoleWnd(hwndTarget))
+    {
+        hKL = RecallWindowHKL(hwnd, hwndTarget);
+    }
+    else
+    {
+        DWORD dwThreadId = GetWindowThreadProcessId(hwndTarget, NULL);
+        hKL = GetKeyboardLayout(dwThreadId);
+    }
+
+    SetLastActive(hwndTarget);
+
+    g_hKL = hKL;
+    UpdateTrayIcon(hwnd, g_hKL);
+}
+
+static void OnLanguage(HWND hwnd, HWND hwndTarget, HKL hKL)
+{
+    if (hKL == NULL || hwndTarget == NULL)
+    {
+        if (hwndTarget == NULL)
+            hwndTarget = GetForegroundWindow();
+        OnTargetActivated(hwnd, hwndTarget, 4);
+        return;
+    }
+
+    if (IsWndIgnored(hwndTarget))
+        return;
+
+    // We can't get the real KL from console window, so remember the KL.
+    if (IsConsoleWnd(hwndTarget) && hKL)
+        RememberWindowHKL(hwnd, hwndTarget, hKL);
+
+    g_hKL = hKL;
+    UpdateTrayIcon(hwnd, g_hKL);
+}
+
 static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         HANDLE_MSG(hwnd, WM_CREATE, OnCreate);
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
+#endif
         HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
         case WM_NOTIFYICONMSG:
@@ -858,48 +915,20 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_LANGUAGE: // HSHELL_LANGUAGE
         {
-            HWND hwndTarget = (HWND)wParam;
-            HKL hKL = (HKL)lParam;
-            if (hKL == NULL || hwndTarget == NULL)
-                break;
-            if (IsWndIgnored(hwndTarget))
-                break;
-            // We can't get the real KL from console window, so remember the KL.
-            if (IsConsoleWnd(hwndTarget) && hKL)
-                RememberWindowHKL(hwnd, hwndTarget, hKL);
-            g_hKL = hKL;
-            UpdateTrayIcon(hwnd, g_hKL);
+            OnLanguage(hwnd, (HWND)wParam, (HKL)lParam);
             break;
         }
         case WM_WINDOWACTIVATED: // HSHELL_WINDOWACTIVATED
         {
-            HWND hwndTarget = (HWND)wParam;
-            DWORD dwThreadId = 0;
-            HKL hKL = NULL;
-
-            if (IsWndIgnored(hwndTarget))
-                break;
-
-            if (IsConsoleWnd(hwndTarget))
-            {
-                hKL = RecallWindowHKL(hwnd, hwndTarget);
-            }
-            else
-            {
-                dwThreadId = GetWindowThreadProcessId(hwndTarget, NULL);
-                hKL = GetKeyboardLayout(dwThreadId);
-            }
-
-            g_hKL = hKL;
-            UpdateTrayIcon(hwnd, g_hKL);
+            OnTargetActivated(hwnd, (HWND)wParam, 1);
             break;
         }
         case WM_WINDOWCREATED: // HSHELL_WINDOWCREATED
         {
-            // TODO:
+            OnTargetActivated(hwnd, (HWND)wParam, 2);
             break;
         }
-        case WM_WINDOWDESTROYED: // HSHELL_WINDOWCREATED
+        case WM_WINDOWDESTROYED: // HSHELL_WINDOWDESTROYED
         {
             HWND hwndTarget = (HWND)wParam;
             ForgetWindowHKL(hwnd, hwndTarget);
@@ -907,7 +936,7 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_WINDOWSETFOCUS: // HCBT_SETFOCUS
         {
-            // TODO:
+            OnTargetActivated(hwnd, GetForegroundWindow(), 3);
             break;
         }
         default:

@@ -8,9 +8,23 @@
 #include "../kbswitch.h"
 
 HINSTANCE g_hinstDLL = NULL;
-HHOOK g_hShellHook = NULL;
-HHOOK g_hCbtHook = NULL;
 HWND g_hwnd = NULL;
+
+#ifdef _MSC_VER
+    #define SHARED(name)
+#else
+    #define SHARED(name) __attribute__((section(name), shared))
+#endif
+
+#ifdef _MSC_VER
+    #pragma data_seg(".shared")
+#endif
+HHOOK g_hCbtHook SHARED(".shared") = NULL;
+HHOOK g_hShellHook SHARED(".shared") = NULL;
+#ifdef _MSC_VER
+    #pragma data_seg()
+    #pragma comment(linker, "/section:.shared,rws")
+#endif
 
 static LRESULT CALLBACK
 CbtProc(INT code, WPARAM wParam, LPARAM lParam)
@@ -25,7 +39,7 @@ CbtProc(INT code, WPARAM wParam, LPARAM lParam)
             break;
     }
 
-    return CallNextHookEx(g_hShellHook, code, wParam, lParam);
+    return CallNextHookEx(g_hCbtHook, code, wParam, lParam);
 }
 
 static LRESULT CALLBACK
@@ -39,12 +53,15 @@ ShellProc(INT code, WPARAM wParam, LPARAM lParam)
         case HSHELL_LANGUAGE:
             PostMessageW(g_hwnd, WM_LANGUAGE, wParam, lParam);
             break;
+
         case HSHELL_WINDOWACTIVATED:
             PostMessageW(g_hwnd, WM_WINDOWACTIVATED, wParam, lParam);
             break;
+
         case HSHELL_WINDOWCREATED:
             PostMessageW(g_hwnd, WM_WINDOWCREATED, wParam, lParam);
             break;
+
         case HSHELL_WINDOWDESTROYED:
             PostMessageW(g_hwnd, WM_WINDOWDESTROYED, wParam, lParam);
             break;
@@ -53,27 +70,26 @@ ShellProc(INT code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(g_hShellHook, code, wParam, lParam);
 }
 
-BOOL APIENTRY KbsHook(HWND hwnd)
+BOOL APIENTRY KbsStartHook(VOID)
 {
-    g_hShellHook = SetWindowsHookEx(WH_SHELL, ShellProc, g_hinstDLL, 0);
     g_hCbtHook = SetWindowsHookEx(WH_CBT, CbtProc, g_hinstDLL, 0);
-    if (!g_hShellHook || !g_hCbtHook)
+    g_hShellHook = SetWindowsHookEx(WH_SHELL, ShellProc, g_hinstDLL, 0);
+    if (!g_hCbtHook || !g_hShellHook)
     {
-        UnhookWindowsHookEx(g_hShellHook);
         UnhookWindowsHookEx(g_hCbtHook);
-        g_hShellHook = g_hCbtHook = NULL;
+        UnhookWindowsHookEx(g_hShellHook);
+        g_hCbtHook = g_hShellHook = NULL;
         return FALSE;
     }
 
-    g_hwnd = hwnd;
     return TRUE;
 }
 
-VOID APIENTRY KbsUnhook(VOID)
+VOID APIENTRY KbsEndHook(VOID)
 {
-    UnhookWindowsHookEx(g_hShellHook);
     UnhookWindowsHookEx(g_hCbtHook);
-    g_hShellHook = g_hCbtHook = NULL;
+    UnhookWindowsHookEx(g_hShellHook);
+    g_hCbtHook = g_hShellHook = NULL;
 }
 
 BOOL WINAPI
@@ -84,6 +100,10 @@ DllMain(IN HINSTANCE hinstDLL,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+            g_hwnd = FindWindowW(KBSWITCH_CLASS, NULL);
+            if (g_hwnd == NULL)
+                return FALSE;
+
             g_hinstDLL = hinstDLL;
             break;
     }
