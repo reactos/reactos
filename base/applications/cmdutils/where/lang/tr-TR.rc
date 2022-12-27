@@ -33,7 +33,7 @@ NOT: Bu araç, arama başarılı olursa 0, dosya bulunamazsa 1 ve bir hata\n\
     WHERE $WINDIR:notepad myfile???\n\
     WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
     WHERE /R ""C:\\Program Files"" *.dll\n"
-
+    
     IDS_BAD_ARG "HATA: Geçersiz seçenek -'%ls'.\n"
     IDS_NOT_FOUND "BİLGİ: Verilen kalıp(lar) için dosyalar bulunamadı.\n"
     IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
