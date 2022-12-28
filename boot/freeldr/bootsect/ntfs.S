@@ -839,7 +839,7 @@ ReadINDX:
     pop   es
     ret
 
-// Finds an attribute header intho the MFT
+// Finds an attribute header into the MFT
 // INPUT:
 //  - ES:[AX] : pointer to the MFT entry
 //  - EBX     : type to find

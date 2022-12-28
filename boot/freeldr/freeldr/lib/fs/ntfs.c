@@ -1,7 +1,7 @@
 /*
  *  FreeLoader NTFS support
  *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
- *  Copyright (C) 2009-2010  Hervé Poussineau
+ *  Copyright (C) 2009-2010  Hervï¿½ Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -733,7 +733,6 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
             TRACE("- Failed\n");
             return FALSE;
         }
-        CurrentMFTIndex &= NTFS_MFT_MASK;
         TRACE("- Lookup: %x\n", CurrentMFTIndex);
     }
 
