@@ -1,4 +1,5 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
 STRINGTABLE
 BEGIN
     IDS_USAGE "İki dosyayı veya dosya grubunu karşılaştırır ve aralarındaki farkları\n\

@@ -1,5 +1,6 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
 STRINGTABLE
 {
     STRING_USAGE, "Kullanım:\n\
@@ -99,11 +100,11 @@ Belirli bir işlemle ilgili yardım için şunu yazın:\n\
     STRING_UNHANDLED_TYPE, "reg: İşlenemeyen kayıt defteri veri türü [/t 0x%1!x!, /d %2]\n"
     STRING_OVERWRITE_VALUE, """%1"" kayıt defteri değeri önceden var. Üzerine yazmak ister misiniz?"
 
-    STRING_YES, "Y"
-    STRING_NO, "N"
-    STRING_ALL, "A"
+    STRING_YES, "E"
+    STRING_NO, "H"
+    STRING_ALL, "T"
     STRING_YESNO, " (Evet|Hayır)"
-    STRING_YESNOALL, " (Evet|Hayır|Hepsi)"
+    STRING_YESNOALL, " (Evet|Hayır|Tümü)"
     STRING_CANCELLED, "Kayıt defteri işlemi iptal edildi\n"
     STRING_DEFAULT_VALUE, "(Varsayılan)"
     STRING_DELETE_VALUE, """%1"" kayıt defteri değerini silmek istediğinize emin misiniz?"

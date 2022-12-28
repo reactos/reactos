@@ -57,5 +57,5 @@ BEGIN
     IDS_ABOUT "&Hakkında..."
     IDS_TITLE "Karakter Seçici"
     IDS_UNICODE "Unicode"
-    IDS_ALL "Hepsi"
+    IDS_ALL "Tümü"
 END
