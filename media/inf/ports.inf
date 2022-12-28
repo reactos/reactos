@@ -129,7 +129,6 @@ StdMfg = "(Puertos estándar)"
 *PNP0400.DeviceDesc = "Puerto de impresora"
 *PNP0401.DeviceDesc = "Puerto de impresora"
 
-
 [Strings.040C]
 PortsClassName = "Ports série et parallèle"
 

@@ -163,33 +163,31 @@ LoadOrderGroup = Pointer Port
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
+IbmMfg = "IBM"
+LogMfg = "Logitech"
+MSMfg = "Microsoft"
+NecMfg = "NEC"
+
 ; Localizable
 MouseClassName = "Mice and other pointing devices"
-LocationOverride = "plugged in to PS/2 mouse port"
 
 StdMfg = "(Standard mice)"
 SERIAL_MOUSE.DeviceDesc = "Standard Serial Mouse"
 PS2_MOUSE.DeviceDesc = "Standard PS/2 Mouse"
+LocationOverride = "plugged in to PS/2 mouse port"
 HID_MOUSE.DeviceDesc = "HID Mouse"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port for PS/2-style mice"
-
-IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
-
-LogMfg = "Logitech"
 *PNP0F08.DeviceDesc = "Logitech Serial Mouse"
 *PNP0F12.DeviceDesc = "Logitech PS/2-style Mouse"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
-MSMfg = "Microsoft"
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft Serial Mouse"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2-style Mouse"
-
-NecMfg = "NEC"
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0404]
@@ -199,21 +197,18 @@ StdMfg = "(標準滑鼠)"
 SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
 PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
 HID_MOUSE.DeviceDesc = "HID 滑鼠"
+
 *PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
 *PNP0F11.DeviceDesc = "標準匯流排滑鼠"
 *PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠的 PS/2 連接埠"
-
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint 指點桿"
-
 *PNP0F08.DeviceDesc = "Logitech 序列滑鼠"
 *PNP0F12.DeviceDesc = "Logitech PS/2 風格滑鼠"
 *PNP0F15.DeviceDesc = "Logitech 匯流排滑鼠"
-
 *PNP0F00.DeviceDesc = "Microsoft 匯流排滑鼠"
 *PNP0F01.DeviceDesc = "Microsoft 序列滑鼠"
 *PNP0F02.DeviceDesc = "Microsoft InPort 滑鼠"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 風格滑鼠"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 匯流排滑鼠"
 
 [Strings.0405]
@@ -223,44 +218,39 @@ StdMfg = "(Standardní myši)"
 SERIAL_MOUSE.DeviceDesc = "Standardní sériová myš"
 PS2_MOUSE.DeviceDesc = "Standardní PS/2 myš"
 HID_MOUSE.DeviceDesc = "HID myš"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port pro PS/2 myši"
-
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
-
 *PNP0F08.DeviceDesc = "Logitech sériová myš"
 *PNP0F12.DeviceDesc = "Logitech PS/2 myš"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft sériová myš"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 myš"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0407]
 MouseClassName = "Mäuse und andere Zeigegeräte"
-LocationOverride = "eingesteckt in PS/2-Mausanschluss"
 
 StdMfg = "(Standard-Maus)"
 SERIAL_MOUSE.DeviceDesc = "Standard serielle Maus"
 PS2_MOUSE.DeviceDesc = "Standard PS/2 Maus"
+LocationOverride = "eingesteckt in PS/2-Mausanschluss"
 HID_MOUSE.DeviceDesc = "HID Maus"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 Anschluss für PS/2-Maus"
-
 *PNP0F08.DeviceDesc = "Logitech serielle Maus"
 *PNP0F12.DeviceDesc = "Logitech PS/2-Maus"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft serielle Maus"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2-Maus"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0408]
@@ -270,69 +260,61 @@ StdMfg = "(Πρότυπα ποντίκια)"
 SERIAL_MOUSE.DeviceDesc = "Πρότυπο Σειριακό Ποντίκι"
 PS2_MOUSE.DeviceDesc = "Πρότυπο PS/2 Ποντίκι"
 HID_MOUSE.DeviceDesc = "Ποντίκι HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 θύρα για PS/2 ποντίκια"
-
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
-
 *PNP0F08.DeviceDesc = "Logitech Σειριακό Ποντίκι"
 *PNP0F12.DeviceDesc = "Logitech PS/2 Ποντίκι"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft Σειριακό Ποντίκι"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 Ποντίκι"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0a]
 MouseClassName = "Ratones y otros dispositivos señaladores"
-LocationOverride = "se conecta al puerto de ratón PS/2"
 
 StdMfg = "(Ratón estándar)"
 SERIAL_MOUSE.DeviceDesc = "Ratón serie estándar"
 PS2_MOUSE.DeviceDesc = "Ratón PS/2 estándar"
+LocationOverride = "se conecta al puerto de ratón PS/2"
 HID_MOUSE.DeviceDesc = "Ratón oculto"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Puerto PS/2 para ratón PS/2"
-
 *IBM3780.DeviceDesc = "Trackpoint PS/2 de IBM"
-
 *PNP0F08.DeviceDesc = "Ratón serie de Logitech"
 *PNP0F12.DeviceDesc = "Ratón PS/2 de Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Ratón serie de Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Ratón PS/2 de Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.040C]
 MouseClassName = "Souris et autres périphériques de pointage"
-LocationOverride = "Branché sur le port PS/2"
 
 StdMfg = "(Souris standards)"
 SERIAL_MOUSE.DeviceDesc = "Souris série standard"
 PS2_MOUSE.DeviceDesc = "Souris PS/2 standard"
+LocationOverride = "Branché sur le port PS/2"
 HID_MOUSE.DeviceDesc = "Souris HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port PS/2 pour souris type PS/2"
-
 *PNP0F08.DeviceDesc = "Souris série Logitech"
 *PNP0F12.DeviceDesc = "Souris PS/2 Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Souris série Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Souris PS/2 Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0411]
@@ -342,46 +324,40 @@ StdMfg = "(スタンダード マウス)"
 SERIAL_MOUSE.DeviceDesc = "スタンダード シリアル マウス"
 PS2_MOUSE.DeviceDesc = "スタンダード PS/2 マウス"
 HID_MOUSE.DeviceDesc = "HID マウス"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2接続マウス用のPS/2 ポート"
-
 *IBM3780.DeviceDesc = "IBM PS/2 トラックポイント"
-
 *PNP0F08.DeviceDesc = "Logitech シリアル マウス"
 *PNP0F12.DeviceDesc = "Logitech PS/2接続マウス"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft シリアル マウス"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2接続マウス"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0415]
 MouseClassName = "Mysz i inne urządzenia wskazujące"
-LocationOverride = "podłączone do portu PS/2 dla myszy"
 
 StdMfg = "(Standardowa mysz)"
 SERIAL_MOUSE.DeviceDesc = "Standardowa mysz szeregowa"
 PS2_MOUSE.DeviceDesc = "Standardowa mysz PS/2"
+LocationOverride = "podłączone do portu PS/2 dla myszy"
 HID_MOUSE.DeviceDesc = "Mysz zgodna z HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port PS/2 dla myszy"
-
 *IBM3780.DeviceDesc = "Trackpoint PS/2 IBM"
-
 *PNP0F08.DeviceDesc = "Mysz szeregowa Logitech"
 *PNP0F12.DeviceDesc = "Mysz PS/2 Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Mysz szeregowa Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Mysz PS/2 Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0416]
@@ -391,69 +367,61 @@ StdMfg = "(Mouse padrão)"
 SERIAL_MOUSE.DeviceDesc = "Mouse serial padrão"
 PS2_MOUSE.DeviceDesc = "Mouse PS/2 padrão"
 HID_MOUSE.DeviceDesc = "Mouse interno"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Porta PS/2 para mouse PS/2"
-
 *IBM3780.DeviceDesc = "Trackpoint PS/2 IBM"
-
 *PNP0F08.DeviceDesc = "Mouse serial Logitech"
 *PNP0F12.DeviceDesc = "Mouse PS/2 Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Mouse serial Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Mouse PS/2 Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0418]
 MouseClassName = "Șoricel și alte dispozitive de indicare"
-LocationOverride = "conectat la portul PS/2 pentru șoricel"
 
 StdMfg = "(șoricel standard)"
 SERIAL_MOUSE.DeviceDesc = "Șoricel serial standard"
 PS2_MOUSE.DeviceDesc = "Șoricel PS/2 standard"
+LocationOverride = "conectat la portul PS/2 pentru șoricel"
 HID_MOUSE.DeviceDesc = "Șoricel HID"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Port pentru șoricel PS/2"
-
 *IBM3780.DeviceDesc = "Rotulă IBM PS/2"
-
 *PNP0F08.DeviceDesc = "Șoricel serial Logitech"
 *PNP0F12.DeviceDesc = "Șoricel PS/2 Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Șoricel serial Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Șoricel PS/2 Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0419]
 MouseClassName = "Мыши и другие указывающие устройства"
-LocationOverride = "подключено в PS/2 порт мыши"
 
 StdMfg = "(Стандартная мышь)"
 SERIAL_MOUSE.DeviceDesc = "Стандартная последовательная мышь"
 PS2_MOUSE.DeviceDesc = "Стандартная мышь PS/2"
+LocationOverride = "подключено в PS/2 порт мыши"
 HID_MOUSE.DeviceDesc = "HID-мышь"
+
 *PNP0F0D.DeviceDesc = "Стандартная мышь InPort"
 *PNP0F11.DeviceDesc = "Стандартная шинная мышь"
 *PNP0F13.DeviceDesc = "PS/2-порт на мыши PS/2-вида"
-
 *PNP0F08.DeviceDesc = "Последовательная мышь Logitech"
 *PNP0F12.DeviceDesc = "Мышь Logitech PS/2-вида"
 *PNP0F15.DeviceDesc = "Шинная мышь Logitech"
-
 *PNP0F00.DeviceDesc = "Шинная мышь Microsoft"
 *PNP0F01.DeviceDesc = "Последовательная мышь Microsoft"
 *PNP0F02.DeviceDesc = "Мышь Microsoft InPort"
 *PNP0F03.DeviceDesc = "Мышь Microsoft PS/2-вида"
-
 *nEC1F00.DeviceDesc = "Шинная мышь для NEC PC-98"
 
 [Strings.041B]
@@ -463,69 +431,61 @@ StdMfg = "(Štandardná myš)"
 SERIAL_MOUSE.DeviceDesc = "Štandardná sériová myš"
 PS2_MOUSE.DeviceDesc = "Štandardná PS/2 myš"
 HID_MOUSE.DeviceDesc = "HID myš"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 port pre myši typu PS/2"
-
 *PNP0F08.DeviceDesc = "Logitech sériová myš"
 *PNP0F12.DeviceDesc = "Logitech PS/2 myš"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft sériová myš"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 myš"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.041f]
 MouseClassName = "Fare ve Diğer İşaretçi Aygıtları"
-LocationOverride = "PS/2 fare girişine takılı"
 
 StdMfg = "(Standart Fare)"
 SERIAL_MOUSE.DeviceDesc = "Standart Seri Fare"
 PS2_MOUSE.DeviceDesc = "Standart PS/2 Fare"
+LocationOverride = "PS/2 fare girişine takılı"
 HID_MOUSE.DeviceDesc = "HID Fare"
+
 *PNP0F0D.DeviceDesc = "Standart InPort Fare"
 *PNP0F11.DeviceDesc = "Standart Veriyolu Faresi"
 *PNP0F13.DeviceDesc = "PS/2 Fare İçin PS/2 Girişi"
-
 *IBM3780.DeviceDesc = "IBM PS/2 Nokta Fare"
-
 *PNP0F08.DeviceDesc = "Logitech Seri Fare"
 *PNP0F12.DeviceDesc = "Logitech PS/2 Fare"
 *PNP0F15.DeviceDesc = "Logitech Veriyolu Faresi"
-
 *PNP0F00.DeviceDesc = "Microsoft Veriyolu Faresi"
 *PNP0F01.DeviceDesc = "Microsoft Seri Fare"
 *PNP0F02.DeviceDesc = "Microsoft InPort Fare"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 Fare"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Veriyolu Faresi"
 
 [Strings.0422]
 MouseClassName = "Миші та інші вказівні пристрої"
-LocationOverride = "приєднано до порту миші PS/2"
 
 StdMfg = "(Стандартні миші)"
 SERIAL_MOUSE.DeviceDesc = "Стандартна послідовна миша"
 PS2_MOUSE.DeviceDesc = "Стандартна миша PS/2"
+LocationOverride = "приєднано до порту миші PS/2"
 HID_MOUSE.DeviceDesc = "HID-миша"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Порт PS/2 для миші PS/2-типу"
-
 *IBM3780.DeviceDesc = "Трекпойнт IBM PS/2"
-
 *PNP0F08.DeviceDesc = "Послідовна миша Logitech"
 *PNP0F12.DeviceDesc = "Миша Logitech PS/2-типу"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Послідовна миша Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Миша Microsoft PS/2-типу"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0427]
@@ -535,21 +495,18 @@ StdMfg = "(Standartinė pelė)"
 SERIAL_MOUSE.DeviceDesc = "Standartinė nuoseklioji pelė"
 PS2_MOUSE.DeviceDesc = "Standartinė PS/2 pelė"
 HID_MOUSE.DeviceDesc = "HID pelė"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "PS/2 jungtis PS/2 tipo pelei"
-
 *IBM3780.DeviceDesc = "IBM PS/2 rutulinis manipuliatorius"
-
 *PNP0F08.DeviceDesc = "Logitech nuoseklioji pelė"
 *PNP0F12.DeviceDesc = "Logitech PS/2 tipo pelė"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft nuoseklioji pelė"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 tipo pelė"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0804]
@@ -557,44 +514,39 @@ StdMfg = "(标准鼠标)"
 SERIAL_MOUSE.DeviceDesc = "标准串口鼠标"
 PS2_MOUSE.DeviceDesc = "标准 PS/2 鼠标"
 HID_MOUSE.DeviceDesc = "HID 鼠标"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "用于 PS/2 风格鼠标的 PS/2 端口"
-
 *PNP0F08.DeviceDesc = "Logitech 串口鼠标"
 *PNP0F12.DeviceDesc = "Logitech PS/2 风格鼠标"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Microsoft 串口鼠标"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 风格鼠标"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0816]
 MouseClassName = "Ratos e outros dispositivos apontadores"
-LocationOverride = "Ligado à porta PS/2 do rato"
 
 StdMfg = "(Rato padrão)"
 SERIAL_MOUSE.DeviceDesc = "Rato série padrão"
 PS2_MOUSE.DeviceDesc = "Rato PS/2 padrão"
+LocationOverride = "Ligado à porta PS/2 do rato"
 HID_MOUSE.DeviceDesc = "Rato oculto"
+
 *PNP0F0D.DeviceDesc = "Standard InPort Mouse"
 *PNP0F11.DeviceDesc = "Standard Bus Mouse"
 *PNP0F13.DeviceDesc = "Porta PS/2 para rato PS/2"
-
 *IBM3780.DeviceDesc = "Trackpoint PS/2 da IBM"
-
 *PNP0F08.DeviceDesc = "Rato série da Logitech"
 *PNP0F12.DeviceDesc = "Rato PS/2 da Logitech"
 *PNP0F15.DeviceDesc = "Logitech Bus Mouse"
-
 *PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
 *PNP0F01.DeviceDesc = "Rato série de Microsoft"
 *PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
 *PNP0F03.DeviceDesc = "Rato PS/2 da Microsoft"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0C04]
@@ -604,19 +556,16 @@ StdMfg = "(標準滑鼠)"
 SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
 PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
 HID_MOUSE.DeviceDesc = "HID 滑鼠"
+
 *PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
 *PNP0F11.DeviceDesc = "標準匯流排滑鼠"
 *PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠嘅 PS/2 連接埠"
-
 *IBM3780.DeviceDesc = "IBM PS/2 Trackpoint 指點桿"
-
 *PNP0F08.DeviceDesc = "Logitech 序列滑鼠"
 *PNP0F12.DeviceDesc = "Logitech PS/2 風格滑鼠"
 *PNP0F15.DeviceDesc = "Logitech 匯流排滑鼠"
-
 *PNP0F00.DeviceDesc = "Microsoft 匯流排滑鼠"
 *PNP0F01.DeviceDesc = "Microsoft 序列滑鼠"
 *PNP0F02.DeviceDesc = "Microsoft InPort 滑鼠"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 風格滑鼠"
-
 *nEC1F00.DeviceDesc = "NEC PC-98 匯流排滑鼠"

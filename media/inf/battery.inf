@@ -90,12 +90,14 @@ ACPI\ACPI0003.DeviceDesc = "交流配接器"
 
 [Strings.0405]
 BatteryClassName = "Baterie"
+
 GenericMfg = "(Generické baterie)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI baterie"
 ACPI\ACPI0003.DeviceDesc = "Síťový adaptér"
 
 [Strings.0407]
 BatteryClassName = "Batterien"
+
 GenericMfg = "(Generische Batterien)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI-konforme Kontrollmethodenbatterie"
 ACPI\ACPI0003.DeviceDesc = "Netzteil"
@@ -109,6 +111,7 @@ ACPI\ACPI0003.DeviceDesc = "Adaptador de corriente alterna"
 
 [Strings.040C]
 BatteryClassName = "Batteries"
+
 GenericMfg = "(Batteries génériques)"
 ACPI\PNP0C0A.DeviceDesc = "Batterie à méthode de contrôle compatible ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptateur secteur"

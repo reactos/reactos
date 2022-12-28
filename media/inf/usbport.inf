@@ -119,6 +119,8 @@ LoadOrderGroup = Base
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
+IntelMfg = "Intel"
+
 ; Localizable
 USBClassName = "USB Controllers"
 
@@ -127,8 +129,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB controller"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB controller"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB controller"
 USB\ROOT_HUB.DeviceDesc = "Root hub"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB controller"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB controller"
 
@@ -140,7 +140,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
 USB\ROOT_HUB.DeviceDesc = "根集線器"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"
 
@@ -152,8 +151,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB řadič"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB řadič"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB řadič"
 USB\ROOT_HUB.DeviceDesc = "Kořenový rozbočovač"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB řadič"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB řadič"
 
@@ -174,11 +171,8 @@ PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
-
 
 [Strings.040C]
 USBClassName = "Contrôleur USB"
@@ -188,7 +182,6 @@ PCI\CC_0C0300.DeviceDesc = "Contrôleur USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Contrôleur USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Contrôleur USB EHCI"
 USB\ROOT_HUB.DeviceDesc = "Concentrateur racine"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Contrôleur USB  Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Contrôleur USB  Intel 82371AB/EB/MB PIIX4"
 
@@ -209,8 +202,6 @@ PCI\CC_0C0300.DeviceDesc = "Kontroler UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Kontroler OHCI USB"
 PCI\CC_0C0320.DeviceDesc = "Kontroler EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Główny koncentrator USB"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Kontroler Intel 82371SB PIIX3 USB"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Kontroler Intel 82371AB/EB/MB PIIX4 USB"
 
@@ -222,8 +213,6 @@ PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
 
@@ -235,8 +224,6 @@ PCI\CC_0C0300.DeviceDesc = "Dispozitive de control USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Dispozitive de control USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Dispozitive de control USB EHCI"
 USB\ROOT_HUB.DeviceDesc = "Cuplator rădăcină"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Dispozitiv de control USB Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Dispozitiv de contorl USB Intel 82371AB/EB/MB PIIX4"
 
@@ -248,7 +235,6 @@ PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
 PCI\CC_0C0320.DeviceDesc = "Контроллер EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Корневой хаб"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Контроллер Intel 82371SB PIIX3 USB"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Контроллер Intel 82371AB/EB/MB PIIX4 USB"
 
@@ -260,7 +246,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB radič"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB radič"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB radič"
 USB\ROOT_HUB.DeviceDesc = "Koreňový rozbočovač"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB radič"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB radič"
 
@@ -272,7 +257,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB valdiklis"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB valdiklis"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB valdiklis"
 USB\ROOT_HUB.DeviceDesc = "Pagrindinis šakotuvas"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB valdiklis"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB valdiklis"
 
@@ -284,8 +268,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB Denetleyicisi"
 USB\ROOT_HUB.DeviceDesc = "Kök Göbek"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB Denetleyicisi"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB Denetleyicisi"
 
@@ -297,7 +279,6 @@ PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
 PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
 PCI\CC_0C0320.DeviceDesc = "Контроллер EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Кореневий хаб"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Контроллер Intel 82371SB PIIX3 USB"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Контроллер Intel 82371AB/EB/MB PIIX4 USB"
 
@@ -307,7 +288,6 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
 USB\ROOT_HUB.DeviceDesc = "根集线器"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"
 
@@ -319,8 +299,6 @@ PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
 USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
-
-IntelMfg = "Intel"
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
 
@@ -332,6 +310,5 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
 USB\ROOT_HUB.DeviceDesc = "根集線器"
-
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"

@@ -24,7 +24,7 @@ HKR, , EnumPropPages32,0, "MmSys.Cpl,MediaPropPageProvider"
 HKR, , Icon,           0, "3004"
 HKR, , Installer32,    0, "MmSys.Cpl,MediaClassInstaller"
 
-;-------------------------------- Audio installation ----------------------------------------
+;-------------------------- AUDIO INSTALLATION --------------------------
 
 [AUDIO_Inst.NT]
 CopyFiles = Audio.CopyFiles.KernelMode, Audio.CopyFiles.UserMode

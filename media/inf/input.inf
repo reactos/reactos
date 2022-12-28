@@ -39,7 +39,7 @@ AddReg=HIDClass.NT.AddReg
 %HID.DeviceDesc% = HID_Inst,USB\Class_03
 %HID_DEVICE%=HID_Raw_Inst,, HID_DEVICE
 
-;=========================== HID Raw Device ====================
+;---------------------------- HID RAW DEVICE ----------------------------
 
 [HID_Raw_Inst.NT]
 
@@ -48,9 +48,7 @@ AddService = , 0x00000002
 
 [HID_Raw_Inst.HW]
 
-
-;=========================== HID Device ====================
-
+;------------------------------ HID DEVICE ------------------------------
 
 [HID_Inst.NT]
 Copyfiles = HID_Inst.CopyFiles.NT, HID_Inst.CopyFilesDLL.NT
@@ -67,23 +65,24 @@ hid.dll
 AddService = hidusb, 0x00000002, HID_Service_Inst
 
 [HID_Service_Inst]
-ServiceType   = 1
-StartType     = 3
-ErrorControl  = 1
+ServiceType = 1
+StartType = 3
+ErrorControl = 1
 ServiceBinary = %12%\hidusb.sys
 LoadOrderGroup = Extended Base
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+ReactOS="ReactOS Project"
+
+MSMice="Microsoft"
 
 ; Localizable
-HID.ClassName         = "Human Interface Devices"
-HID.DeviceDesc        = "USB Human Interface Device"
+HID.ClassName="Human Interface Devices"
 
-HID_DEVICE            =  "HID-compatible Device"
-StdMfg                = "(Standard Human Interface Devices)"
-MSMice                = "Microsoft"
+StdMfg="(Standard Human Interface Devices)"
+HID.DeviceDesc="USB Human Interface Device"
+HID_DEVICE="HID-compatible Device"
 
 USB\VID_045E&PID_0009.DeviceDesc="Microsoft IntelliMouse (USB)"
 USB\VID_045E&PID_001E.DeviceDesc="Microsoft IntelliMouse Explorer (USB)"
@@ -96,73 +95,72 @@ USB\VID_045E&PID_0040.DeviceDesc="Microsoft Wheel Mouse Optical (USB)"
 USB\VID_045E&PID_0047.DeviceDesc="Microsoft IntelliMouse Explorer 3.0 (USB)"
 
 [Strings.0404]
-HID.ClassName         = "人性化介面裝置"
-HID.DeviceDesc        = "USB 人性化介面裝置"
+HID.ClassName="人性化介面裝置"
 
-HID_DEVICE            = "HID 相容裝置"
-StdMfg                = "（標準人性化介面裝置）"
+StdMfg="（標準人性化介面裝置）"
+HID.DeviceDesc="USB 人性化介面裝置"
+HID_DEVICE="HID 相容裝置"
 
 [Strings.0405]
-HID.ClassName         = "Zařízení standardu HID"
-HID.DeviceDesc        = "USB zařízení standardu HID"
-HID_DEVICE            = "Zařízení standardu HID"
-StdMfg                = "(Obecná zařízení standardu HID)"
+HID.ClassName="Zařízení standardu HID"
+
+StdMfg="(Obecná zařízení standardu HID)"
+HID.DeviceDesc="USB zařízení standardu HID"
+HID_DEVICE="Zařízení standardu HID"
 
 [Strings.0a]
-HID.ClassName         = "Dispositivos de interfaz humana"
-HID.DeviceDesc        = "Dispositivos de interfaz humana USB"
+HID.ClassName="Dispositivos de interfaz humana"
 
-HID_DEVICE            = "Dispositivo compatible con otros dispositivos de interfaz humana"
-StdMfg                = "(Dispositivos de interfaz humana estándar)"
+StdMfg="(Dispositivos de interfaz humana estándar)"
+HID.DeviceDesc="Dispositivos de interfaz humana USB"
+HID_DEVICE="Dispositivo compatible con otros dispositivos de interfaz humana"
 
 [Strings.0415]
-HID.ClassName         = "Urządzenia interfejsu HID"
-HID.DeviceDesc        = "Urządzenie USB interfejsu HID"
+HID.ClassName="Urządzenia interfejsu HID"
 
-HID_DEVICE            = "Urządzenie zgodne z HID"
-StdMfg                = "(Standardowe urządzenia HID)"
-MSMice                = "Microsoft"
+StdMfg="(Standardowe urządzenia HID)"
+HID.DeviceDesc="Urządzenie USB interfejsu HID"
+HID_DEVICE="Urządzenie zgodne z HID"
 
 [Strings.0418]
-HID.ClassName = "Dispozitive de interfațare umană"
-HID.DeviceDesc = "Dispozitiv USB de interfațare umană"
+HID.ClassName="Dispozitive de interfațare umană"
 
-HID_DEVICE =  "Dispozitiv compatibil de interfațare umană"
-StdMfg = "(dispozitive generice de interfațare umană)"
+StdMfg="(dispozitive generice de interfațare umană)"
+HID.DeviceDesc="Dispozitiv USB de interfațare umană"
+HID_DEVICE="Dispozitiv compatibil de interfațare umană"
 
 [Strings.0419]
-HID.ClassName         = "Устройства HID (Human Interface Devices)"
-HID.DeviceDesc        = "USB HID-совместимое устройство"
+HID.ClassName="Устройства HID (Human Interface Devices)"
 
-HID_DEVICE            =  "HID-совместимое устройство"
-StdMfg                = "(Стандартные HID-устройства)"
-MSMice                = "Microsoft"
+StdMfg="(Стандартные HID-устройства)"
+HID.DeviceDesc="USB HID-совместимое устройство"
+HID_DEVICE="HID-совместимое устройство"
 
 [Strings.041f]
-HID.ClassName         = "İnsan Arabirimi Aygıtları"
-HID.DeviceDesc        = "USB İnsan Arabirimi Aygıtı"
+HID.ClassName="İnsan Arabirimi Aygıtları"
 
-HID_DEVICE            =  "HID Uyumlu Aygıt"
-StdMfg                = "(Standart İnsan Arabirimi Aygıtları)"
+StdMfg="(Standart İnsan Arabirimi Aygıtları)"
+HID.DeviceDesc="USB İnsan Arabirimi Aygıtı"
+HID_DEVICE="HID Uyumlu Aygıt"
 
 [Strings.0422]
-HID_DEVICE            =  "HID-сумісний пристрій"
+HID_DEVICE="HID-сумісний пристрій"
 
 [Strings.0804]
-HID.DeviceDesc        = "USB 人机接口设备"
-HID_DEVICE            =  "HID 兼容设备"
-StdMfg                = "(标准人机接口设备)"
+StdMfg="(标准人机接口设备)"
+HID.DeviceDesc="USB 人机接口设备"
+HID_DEVICE="HID 兼容设备"
 
 [Strings.0816]
-HID.ClassName         = "Dispositivos de interface humana"
-HID.DeviceDesc        = "Dispositivos de interface humana USB"
+HID.ClassName="Dispositivos de interface humana"
 
-HID_DEVICE            = "Dispositivo compatível com outros dispositivos de interface humana"
-StdMfg                = "(Dispositivos de interface humana padrão)"
+StdMfg="(Dispositivos de interface humana padrão)"
+HID.DeviceDesc="Dispositivos de interface humana USB"
+HID_DEVICE="Dispositivo compatível com outros dispositivos de interface humana"
 
 [Strings.0c04]
-HID.ClassName         = "人性化介面裝置"
-HID.DeviceDesc        = "USB 人性化介面裝置"
+HID.ClassName="人性化介面裝置"
 
-HID_DEVICE            = "HID 相容裝置"
-StdMfg                = "（標準人性化介面裝置）"
+StdMfg="（標準人性化介面裝置）"
+HID.DeviceDesc="USB 人性化介面裝置"
+HID_DEVICE="HID 相容裝置"

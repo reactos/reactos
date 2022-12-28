@@ -65,7 +65,7 @@ LoadOrderGroup = NDIS
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
-RealtekMfg = "Realtek Semiconductor Co., Ltd."
+RealtekMfg = "Realtek"
 
 ; Localizable
 GenericMfg = "(Generic network cards)"
@@ -110,7 +110,6 @@ GenericMfg = "(Adaptadores de rede padrão)"
 *PNP80D6.DeviceDesc = "Compatível com NE2000"
 
 [Strings.0418]
-
 GenericMfg = "(placă de rețea generică)"
 *PNP80D6.DeviceDesc = "Compatibile cu NE2000"
 

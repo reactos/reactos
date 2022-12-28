@@ -38,7 +38,7 @@ DefaultDestDir = 12
 [CompaqMfg]
 %CompaqHNE300.DeviceDesc% = RTL8139_Inst.ndi,PCI\VEN_021B&DEV_8139
 
-;----------------------------- RTL8139 DRIVER -----------------------------
+;---------------------------- RTL8139 DRIVER ----------------------------
 
 [RTL8139_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL

@@ -7,7 +7,7 @@ DriverVer=11/19/2010,6.1.7601.17514
 PnPLockdown=1
 
 [SourceDisksFiles]
-hdaudbus.sys 		= 3426
+hdaudbus.sys = 3426
 
 [DestinationDirs]
 DefaultDestDir = 12 ; windows\system32\drivers
@@ -39,7 +39,6 @@ HKR,Interrupt Management,,0x00000010
 HKR,Interrupt Management\MessageSignaledInterruptProperties,,0x00000010
 HKR,Interrupt Management\MessageSignaledInterruptProperties,MSISupported,0x00010001,1
 
-
 ;-------------- Service installation
 [HDAudio_Device.NT.Services]
 AddService = HDAudBus, 0x00000002, HDAudio_Service_Inst
@@ -58,8 +57,6 @@ hdaudbus.sys=SignatureAttributes.DRM
 
 [SignatureAttributes.DRM]
 DRMLevel=1300
-
-
 
 [Strings]
 DiskId1 = "ReactOS UAA Bus Driver for High Definition Audio. Installation Disk #1"

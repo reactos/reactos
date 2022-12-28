@@ -19,7 +19,7 @@ DefaultDestDir = 12
 %USB\COMPOSITE.DeviceDesc% = usbccgp_Inst,USB\COMPOSITE
 %USB\CLASS_09.DeviceDesc% = usbhub_Inst,USB\CLASS_09
 
-;----------------------- GENERIC USB HUB DRIVER -------------------------
+;------------------------ GENERIC USB HUB DRIVER ------------------------
 
 [usbhub_Inst.NT]
 CopyFiles = usbhub_CopyFiles.NT
@@ -37,7 +37,7 @@ ErrorControl  = 1
 ServiceBinary = %12%\usbhub.sys
 LoadOrderGroup = Base
 
-;----------------------- COMMON GENERIC PARENT DRIVER -------------------------
+;----------------------- COMMON GENERIC PARENT DRIVER -------------------
 
 [usbccgp_Inst.NT]
 CopyFiles = usbccgp_CopyFiles.NT
@@ -80,7 +80,6 @@ USB\CLASS_09.DeviceDesc = "Obecný USB rozbočovač"
 GenericMfg = "(Generischer USB-Hub)"
 USB\CLASS_09.DeviceDesc = "Generischer USB-Hub"
 
-; Spanish
 [Strings.0C0A]
 GenericMfg = "(Concentrador raíz USB estándar)"
 USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"

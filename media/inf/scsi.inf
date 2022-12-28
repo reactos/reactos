@@ -29,7 +29,7 @@ DefaultDestDir = 12
 %GEN_SCSIADAPTER.DeviceDesc% = NO_DRV,,GEN_SCSIADAPTER
 %PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
 
-;----------------------------- ScsiPort Driver ----------------------------
+;--------------------------- SCSIPORT DRIVER ----------------------------
 
 [Scsiport_CopyFiles.NT]
 scsiport.sys
@@ -48,7 +48,7 @@ LoadOrderGroup = SCSI Port
 [NO_DRV.Services]
 AddService = , 0x00000002
 
-;----------------------------- BusLogic Driver ----------------------------
+;--------------------------- BUSLOGIC DRIVER ----------------------------
 
 [BusLogic_Inst.NT]
 CopyFiles = BusLogic_CopyFiles.NT, Scsiport_CopyFiles.NT
@@ -67,7 +67,7 @@ ErrorControl  = 0
 ServiceBinary = %12%\buslogic.sys
 LoadOrderGroup = SCSI Miniport
 
-;--------------------------------- Strings ---------------------------------
+;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ; Non-localizable
@@ -78,6 +78,7 @@ SCSIClassName = "SCSI and RAID Controllers"
 
 GenericMfg = "(Standard SCSI and RAID controllers)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Host Controller"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Controller"
 
 [Strings.0404]
@@ -85,12 +86,14 @@ SCSIClassName = "SCSI / RAID 控制器"
 
 GenericMfg = "(標準 SCSI / RAID 控制器)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID 主機控制器"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"
 
 [Strings.0405]
 SCSIClassName = "SCSI a RAID řadiče"
 
 GenericMfg = "(Standardní SCSI a RAID řadiče)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI řadič"
 
 [Strings.0407]
@@ -103,6 +106,7 @@ SCSIClassName = "Controladores SCSI y RAID"
 
 GenericMfg = "(Controladores estándar SCSI y RAID)"
 GEN_SCSIADAPTER.DeviceDesc = "Controlador Huésped de SCSI/RAID"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
 
 [Strings.040C]
@@ -114,24 +118,28 @@ GenericMfg = "(Contrôleur standard SCSI et RAID)"
 SCSIClassName = "SCSIおよびRAID コントローラ"
 
 GenericMfg = "(スタンダード SCSI および RAID コントローラ)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI コントローラ"
 
 [Strings.0415]
 SCSIClassName = "Kontrolery SCSI i RAID"
 
 GenericMfg = "(Standardowe kontrolery SCSI i RAID)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Kontroler SCSI BusLogic"
 
 [Strings.0416]
 SCSIClassName = "Controladores SCSI e RAID"
 
 GenericMfg = "(Controladores SCSI e RAID padrão)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
 
 [Strings.0418]
 SCSIClassName = "Dispozitive de control SCSI și RAID"
 
 GenericMfg = "(dispozitiv standard de control SCSI și RAID)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Dispozitiv de control SCSI BusLogic"
 
 [Strings.0419]
@@ -139,12 +147,14 @@ SCSIClassName = "SCSI и RAID контроллеры"
 
 GenericMfg = "(Стандартные SCSI и RAID контроллеры)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID хост-контроллер"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Контроллер BusLogic SCSI"
 
 [Strings.041B]
 SCSIClassName = "SCSI a RAID radiče"
 
 GenericMfg = "(Štandardné SCSI a RAID radiče)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI radič"
 
 [Strings.041f]
@@ -152,18 +162,21 @@ SCSIClassName = "SCSI ve RAID Denetleyicileri"
 
 GenericMfg = "(Standart SCSI ve RAID Denetleyicileri)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Ana Denetleyicisi"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Denetleyicisi"
 
 [Strings.0422]
 SCSIClassName = "SCSI і RAID контроллери"
 
 GenericMfg = "(Стандартні SCSI і RAID контроллери)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Контроллер BusLogic SCSI"
 
 [Strings.0427]
 SCSIClassName = "SCSI ir RAID valdikliai"
 
 GenericMfg = "(Standartiniai SCSI ir RAID valdikliai)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI valdiklis"
 
 [Strings.0804]
@@ -174,6 +187,7 @@ PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"
 SCSIClassName = "Controladores SCSI e RAID"
 
 GenericMfg = "(Controladores SCSI e RAID padrão)"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
 
 [Strings.0C04]
@@ -181,4 +195,5 @@ SCSIClassName = "SCSI / RAID 控制器"
 
 GenericMfg = "(標準 SCSI / RAID 控制器)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID 主機控制器"
+
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"

@@ -30,7 +30,6 @@ HKCR,%Proxy.FilterId%,,,%Proxy.FilterDesc%
 HKCR,%Proxy.FilterId%\InprocServer32,,,ksproxy.ax
 HKCR,%Proxy.FilterId%\InprocServer32,ThreadingModel,,Both
 
-
 [KSDriver.Files]
 ks.sys
 
@@ -210,7 +209,6 @@ HKLM,%MediaCategories%\%GUID.SWMidi%,Name,,%Pin.SWMidi%
 HKLM,%MediaCategories%\%GUID.SWMidi%,Display,1,00,00,00,00
 
 [AudRegistration]
-
 HKLM,%MediaCategories%\%GUID_AFN.Bass%,Name,,%AudFName.Bass%
 HKLM,%MediaCategories%\%GUID_AFN.Bass%,Display,1,00,00,00,00
 HKLM,%MediaCategories%\%GUID_AFN.Treble%,Name,,%AudFName.Treble%
@@ -312,7 +310,6 @@ HKLM,%MediaCategories%\%GUID_AFN.Video%,Display,1,00,00,00,00
 HKLM,%MediaCategories%\%GUID_AFN.Peakmeter%,Name,,%AudFName.Peakmeter%
 HKLM,%MediaCategories%\%GUID_AFN.Peakmeter%,Display,1,00,00,00,00
 
-
 [PlugRegistration]
 HKCR,CLSID\{1A8766A0-62CE-11CF-A5D6-28DB04C10000},,,%PlugIn_InterfaceHandler%
 HKCR,CLSID\{1A8766A0-62CE-11CF-A5D6-28DB04C10000}\InprocServer32,,,ksproxy.ax
@@ -341,7 +338,6 @@ HKCR,CLSID\{EC529B00-1A1F-11D1-BAD9-00609744111A}\InprocServer32,,,ksproxy.ax
 HKCR,CLSID\{EC529B00-1A1F-11D1-BAD9-00609744111A}\InprocServer32,ThreadingModel,,Both
 HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-00609744111A},,,%PlugIn_VPEVBI%
 HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-00609744111A},IID,1,00,9B,52,EC,1F,1A,D1,11,BA,D9,00,60,97,44,11,1A
-
 
 [Strings]
 ; Non-localizable
@@ -391,7 +387,6 @@ GUID.Chorus="{20173F20-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.3DEffects="{55515860-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.AEC="{BF963D80-C559-11D0-8A2B-00A0C9255AC1}"
 GUID.DevSpecific="{941C7AC0-C559-11D0-8A2B-00A0C9255AC1}"
-
 GUID.Microphone="{DFF21BE1-F70F-11D0-B917-00A0C9223196}"
 GUID.DesktopMicrophone="{DFF21BE2-F70F-11D0-B917-00A0C9223196}"
 GUID.PersonalMicrophone="{DFF21BE3-F70F-11D0-B917-00A0C9223196}"
@@ -441,7 +436,6 @@ GUID.MultitrackRecorder="{DFF220F2-F70F-11D0-B917-00A0C9223196}"
 GUID.Synthesizer="{DFF220F3-F70F-11D0-B917-00A0C9223196}"
 GUID.SWSynth="{423274A0-8B81-11D1-A050-0000F8004788}"
 GUID.SWMidi="{CB9BEFA0-A251-11D1-A050-0000F8004788}"
-
 GUID_AFN.Bass="{185FEDE0-9905-11D1-95A9-00C04FB925D3}"
 GUID_AFN.Treble="{185FEDE1-9905-11D1-95A9-00C04FB925D3}"
 GUID_AFN.3DStereo="{185FEDE2-9905-11D1-95A9-00C04FB925D3}"
@@ -493,11 +487,9 @@ GUID_AFN.VideoMute="{9B46E709-992A-11d2-AC4D-00C04F8EFB68}"
 GUID_AFN.Video="{915DAEC4-A434-11d2-AC52-00C04F8EFB68}"
 GUID_AFN.Peakmeter="{57E24340-FC5B-4612-A562-72B11A29DFAE}"
 
-
-;
-; english localized strings
-;
+; Localizable
 StreamingClass="Streaming devices/filters"
+
 Proxy.FilterDesc="Generic WDM Filter Proxy"
 Category_CaptureDevices="WDM Streaming Capture Devices"
 Category_CommunicationTransforms="WDM Streaming Communication Transforms"
@@ -508,12 +500,14 @@ Category_DecompressorDevices="WDM Stream Decompression Devices"
 Category_AudioDevices="WDM Streaming System Audio Devices"
 Category_MixerDevices="WDM Streaming Mixer Devices"
 Category_SplitterDevices="WDM Streaming Tee/Splitter Devices"
+
 PlugIn_InterfaceHandler="WDM Streaming Standard Interface Handler"
 PlugIn_DataHandler="WDM Streaming Standard Data Type Handler"
 PlugIn_IKsClock="Plug In Distributor: IKsClock"
 PlugIn_IKsQualityForwarder="Plug In Distributor: IKsQualityForwarder"
 PlugIn_VPE="WDM Streaming VPE Property Set Interface Handler"
 PlugIn_VPEVBI="WDM Streaming VPE VBI Property Set Interface Handler"
+
 Node.Bridge="Bridge"
 Node.Capture="Capture"
 Node.Render="Render"
@@ -650,6 +644,7 @@ AudFName.Peakmeter="Peakmeter"
 
 [Strings.0407]
 StreamingClass="Streaming devices/filters"
+
 Proxy.FilterDesc="Standard-WDM-Filterproxy"
 Category_CaptureDevices="WDM Streaming-Capturegeräte"
 Category_CommunicationTransforms="WDM Streaming-Kommunikations-Transforms"
@@ -660,12 +655,14 @@ Category_DecompressorDevices="WDM Stream-Dekomprimierungsgeräte"
 Category_AudioDevices="WDM Streaming-Systemgeräte"
 Category_MixerDevices="WDM Streaming-Mixer"
 Category_SplitterDevices="WDM Streaming-Tee/Splitter-Geräte"
+
 PlugIn_InterfaceHandler="WDM Streaming-Standard-Schnittstellenhandler"
 PlugIn_DataHandler="WDM Streaming-Standard-Datentyphandler"
 PlugIn_IKsClock="Plug In Distributor: IKsClock"
 PlugIn_IKsQualityForwarder="Plug In Distributor: IKsQualityForwarder"
 PlugIn_VPE="WDM Streaming-VPE-Eigenschaftssatz-Schnittstellenhandler"
 PlugIn_VPEVBI="WDM Streaming-VPE-VBI-Eigenschaftssatz-Schnittstellenhandler"
+
 Node.Bridge="Brücke"
 Node.Capture="Aufnahme"
 Node.Render="Wiedergabe"
@@ -802,6 +799,7 @@ AudFName.Peakmeter="Pegelanzeige"
 
 [Strings.0410]
 StreamingClass="Filtri/Periferiche di flusso"
+
 Proxy.FilterDesc="Proxy filtro WDM generico"
 Category_CaptureDevices="Periferiche acquisizione flusso WDM"
 Category_CommunicationTransforms="Trasformatori di flusso di comunicazioni WDM"
@@ -812,12 +810,14 @@ Category_DecompressorDevices="Periferiche di decompressione flusso WDM"
 Category_AudioDevices="Periferiche di sistema flusso WDM"
 Category_MixerDevices="Periferiche di flusso mixer WDM"
 Category_SplitterDevices="Periferiche di flusso a frazionatore WDM"
+
 PlugIn_InterfaceHandler="Gestore di flusso WDM per interfaccia standard"
 PlugIn_DataHandler="Gestore di flusso WDM per tipi di dati standard"
 PlugIn_IKsClock="Distributore plug in: IKsClock"
 PlugIn_IKsQualityForwarder="Distributore plug in: IKsQualityForwarder"
 PlugIn_VPE="Gestore di flusso WDM per interfaccia di regolazione di proprietà VPE"
 PlugIn_VPEVBI="Gestore di flusso WDM per interfaccia di regolazione di proprietà VPE VBI"
+
 Node.Bridge="Ponte"
 Node.Capture="Acquisizione"
 Node.Render="Render"
@@ -954,6 +954,7 @@ AudFName.Peakmeter="Peakmeter"
 
 [Strings.0a]
 StreamingClass="Dispositivos y filtros de streaming"
+
 Proxy.FilterDesc="Proxy de filtrado WDM genérico"
 Category_CaptureDevices="Dispositivos de captura de streaming WDM"
 Category_CommunicationTransforms="Transformadores de comunicación por streaming WDM"
@@ -964,12 +965,14 @@ Category_DecompressorDevices="Dispositivos de descompresión por streaming WDM"
 Category_AudioDevices="Dispositivos de mezclado de audio por streaming WDM"
 Category_MixerDevices="Dispositivos de mezcla por streaming WDM"
 Category_SplitterDevices="Dispositivos de división por streaming WDM"
+
 PlugIn_InterfaceHandler="Extremo estándar de interfaz por streaming WDM"
 PlugIn_DataHandler="Extremo de tipos de datos estándar por streaming WDM"
 PlugIn_IKsClock="Distribuidor Plug In: IKsClock"
 PlugIn_IKsQualityForwarder="Distribuidor Plug In: IKsQualityForwarder"
 PlugIn_VPE="WDM Streaming VPE Property Set Interface Handler"
 PlugIn_VPEVBI="WDM Streaming VPE VBI Property Set Interface Handler"
+
 Node.Bridge="Puente"
 Node.Capture="Captura"
 Node.Render="Procesado (Render)"
@@ -1105,6 +1108,7 @@ AudFName.Video="Vídeo"
 
 [Strings.0415]
 StreamingClass="Urządzenia/filtry strumieniowe"
+
 Proxy.FilterDesc="Standardowy filtr WDM"
 Category_CaptureDevices="Urządzenia nagrywania strumieniowego WDM"
 Category_CommunicationTransforms="Transformaty komunikacji strumieniowej WDM"
@@ -1115,12 +1119,14 @@ Category_DecompressorDevices="Urządzenia dekompresji strumienia WDM"
 Category_AudioDevices="Urządzenia Audio systemu strumieniowania WDM"
 Category_MixerDevices="Urządzenia miksujące strumienia WDM"
 Category_SplitterDevices="Urządzenia Splitera strumienia WDM"
+
 PlugIn_InterfaceHandler="Obsługa standardowego interfejsu strumienia WDM"
 PlugIn_DataHandler="Obsługa standardowego interfejsu strumienia WDM"
 PlugIn_IKsClock="Wtyczka: IKsClock"
 PlugIn_IKsQualityForwarder="Wtyczka: IKsQualityForwarder"
 PlugIn_VPE="Obsługa VPE w interfejsie strumienia WDM"
 PlugIn_VPEVBI="Obsługa VPE VBI w interfejsie strumienia WDM"
+
 Node.Bridge="Mostek"
 Node.Capture="Przechwytywanie"
 Node.Render="Renderowanie"
@@ -1257,6 +1263,7 @@ AudFName.Peakmeter="Analizator"
 
 [Strings.0418]
 StreamingClass="Filtre/dispozitive de redare în flux"
+
 Proxy.FilterDesc="Proxy filtru WDM generic"
 Category_CaptureDevices="Dispozitive de captură flux WDM"
 Category_CommunicationTransforms="Transformări de comunicație flux WDM"
@@ -1267,12 +1274,14 @@ Category_DecompressorDevices="Dispozitive de decompresie flux WDM"
 Category_AudioDevices="Dispozitive audio de sistem pentru flux WDM"
 Category_MixerDevices="Dispozitive de mixaj flux WDM"
 Category_SplitterDevices="Dispozitive de reperare/împărțire flux WDM"
+
 PlugIn_InterfaceHandler="Operator standard de interfață flux WDM"
 PlugIn_DataHandler="Rutină standard pentru tip de date flux WDM"
 PlugIn_IKsClock="Distribuție extensie: IKsClock"
 PlugIn_IKsQualityForwarder="Distribuție extensie: IKsQualityForwarder"
 PlugIn_VPE="Rutină interfață de stabilire proprietăți VPE pentru flux WDM"
 PlugIn_VPEVBI="Rutină interfață de stabilire proprietăți VPE VBI pentru flux WDM"
+
 Node.Bridge="Punte"
 Node.Capture="Captură"
 Node.Render="Dispozitiv de randare"
@@ -1306,6 +1315,7 @@ Node.Chorus="Cor"
 Node.3DEffects="Efecte 3D"
 Node.AEC="Anulare acustică în ecou"
 Node.DevSpecific="Specifică dispozitivului"
+
 Pin.Microphone="Microfon"
 Pin.DesktopMicrophone="Microfon de birou"
 Pin.PersonalMicrophone="Microfon personal"
@@ -1354,6 +1364,7 @@ Pin.MultitrackRecorder="Înregistrator multipistă"
 Pin.Synthesizer="Sintetizator"
 Pin.SWSynth="Sintetizator SW"
 Pin.SWMidi="Sintetizator SW cu tabelă de sunete GS"
+
 AudFName.Bass="Bas"
 AudFName.Treble="Sopran"
 AudFName.3DStereo="Stereo 3D"
@@ -1405,9 +1416,9 @@ AudFName.VideoMute="Amuțește video"
 AudFName.Video="Video"
 AudFName.Peakmeter="Vârf-metru"
 
-; Turkish
 [Strings.041f]
 StreamingClass="Akış Aygıtları/Süzgeçleri"
+
 Proxy.FilterDesc="Genel WDM Süzgeç Vekil Sunucusu"
 Category_CaptureDevices="WDM Akış Yakalama Aygıtları"
 Category_CommunicationTransforms="WDM Akış İletişim Dönüşümleri"
@@ -1418,12 +1429,14 @@ Category_DecompressorDevices="WDM Akış Açma Aygıtları"
 Category_AudioDevices="WDM Akış Sistem Ses Aygıtları"
 Category_MixerDevices="WDM Akış Karıştırıcı Aygıtlar"
 Category_SplitterDevices="WDM Akış T Bölücü Aygıtları"
+
 PlugIn_InterfaceHandler="WDM Akış Standart Arayüz İşleyicisi"
 PlugIn_DataHandler="WDM Akış Standart Veri Türü İşleyicisi"
 PlugIn_IKsClock="Takılabilir Dağıtıcı: IKsClock"
 PlugIn_IKsQualityForwarder="Takılabilir Dağıtıcı: IKsQualityForwarder"
 PlugIn_VPE="WDM Akış VPE Özellik Kümesi Arayüz İşleyicisi"
 PlugIn_VPEVBI="WDM Akış VPE VBI Özellik Kümesi Arayüz İşleyicisi"
+
 Node.Bridge="Köprü"
 Node.Capture="Yakalama"
 Node.Render="İşleme"
@@ -1560,6 +1573,7 @@ AudFName.Peakmeter="Tepe Noktası Ölçücüsü"
 
 [Strings.0422]
 StreamingClass="Потокові пристрої/фільтри"
+
 Proxy.FilterDesc="Стандартний проксі фільтру WDM"
 Category_CaptureDevices="Пристрої захоплення потоку WDM"
 Category_CommunicationTransforms="Перетворення потокових зв'язків WDM"
@@ -1570,12 +1584,14 @@ Category_DecompressorDevices="Пристрої декомпресії поток
 Category_AudioDevices="Системні потокові аудіопристрої WDM"
 Category_MixerDevices="Пристрої мікшування потоків WDM"
 Category_SplitterDevices="Пристрої трійників/роздільників потоків WDM"
+
 PlugIn_InterfaceHandler="Обробник стандартного інтерфесу потоків WDM"
 PlugIn_DataHandler="Обробник стандартного типу даних потоків WDM"
 PlugIn_IKsClock="Дистриб'ютор плагіну: IKsClock"
 PlugIn_IKsQualityForwarder="Дистриб'ютор плагіну: IKsQualityForwarder"
 PlugIn_VPE="Обробник потоковго інтерфейсу набору властивостей VPE WDM"
 PlugIn_VPEVBI="Обробник потоковго інтерфейсу набору властивостей VPE VBI WDM"
+
 Node.Bridge="Міст"
 Node.Capture="Захоплення"
 Node.Render="Відтворення"
@@ -1702,6 +1718,7 @@ AudFName.Peakmeter="Замір рівнів"
 
 [Strings.0816]
 StreamingClass="Dispositivos e filtros de streaming"
+
 Proxy.FilterDesc="Proxy de filtro WDM genérico"
 Category_CaptureDevices="Dispositivos de captura de WDM Streaming"
 Category_CommunicationTransforms="Transformadores de comunicação de WDM Streaming"
@@ -1712,12 +1729,14 @@ Category_DecompressorDevices="Dispositivos de descompressão WDM Streaming"
 Category_AudioDevices="Dispositivos de audio por WDM Streaming"
 Category_MixerDevices="Dispositivos de mistura de WDM Streaming"
 Category_SplitterDevices="Dispositivos de ??? de WDM Streaming"
+
 PlugIn_InterfaceHandler="Manipulador de interface padrão de WDM Streaming"
 PlugIn_DataHandler="Manipulador de tipo de datos padrão de WDM Streaming"
 PlugIn_IKsClock="Distribuidor Plug-in: IKsClock"
 PlugIn_IKsQualityForwarder="Distribuidor Plug-in: IKsQualityForwarder"
 PlugIn_VPE="Manipulador de interface do conjunto de propriedades VPE de WDM Streaming"
 PlugIn_VPEVBI="Manipulador de interface de conjunto de propriedades VPE VBI WDM Streaming"
+
 Node.Bridge="Ponte"
 Node.Capture="Captura"
 Node.Render="Processado (Render)"
