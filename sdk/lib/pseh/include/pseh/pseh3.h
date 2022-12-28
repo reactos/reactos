@@ -263,6 +263,11 @@ _SEH3$_AutoCleanup(
 
 #else /* __cplusplus || __clang__ */
 
+typedef struct __SEH3$FILTER_RESULT
+{
+    int Value;
+} _SEH3$FILTER_RESULT;
+
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
     inline __attribute__((always_inline, gnu_inline)) \
     unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionCode; }
@@ -276,13 +281,13 @@ _SEH3$_AutoCleanup(
    the function with an arbitrary base address in eax first and then use the
    result to calculate the correct address for a second call to the function. */
 #define _SEH3$_DECLARE_FILTER_FUNC(_Name) \
-    auto int __fastcall _Name(int Action)
+    auto _SEH3$FILTER_RESULT __fastcall _Name(int Action)
 
 #define _SEH3$_NESTED_FUNC_OPEN(_Name) \
-    int __fastcall _Name(int Action) \
+    _SEH3$FILTER_RESULT __fastcall _Name(int Action) \
     { \
         /* This is a fancy way to get information about the frame layout */ \
-        if (Action == 0) return (int)&_SEH3$_TrylevelFrame;
+        if (Action == 0) { _SEH3$FILTER_RESULT seh3$result; seh3$result.Value = (int)&_SEH3$_TrylevelFrame; return seh3$result; }
 
 #define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
     _SEH3$_NESTED_FUNC_OPEN(_Name) \
@@ -296,7 +301,7 @@ _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
 _Pragma("GCC diagnostic pop") \
 \
         /* Now handle the actual filter expression */ \
-        return (expression); \
+        { _SEH3$FILTER_RESULT seh3$result; seh3$result.Value = (expression); return seh3$result; } \
     }
 
 #define _SEH3$_FINALLY_FUNC_OPEN(_Name) \
@@ -307,7 +312,7 @@ _Pragma("GCC diagnostic pop") \
 \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
-        for (; ; (void)({return 0; 0;}))
+        for (; ; (void)({ _SEH3$FILTER_RESULT seh3$result; seh3$result.Value = 0; return seh3$result; 0;}))
 
 #define _SEH3$_FILTER(_Filter, _FilterExpression) \
     (__builtin_constant_p(_FilterExpression) ? (void*)(unsigned long)(unsigned char)(unsigned long)(_FilterExpression) : _Filter)
