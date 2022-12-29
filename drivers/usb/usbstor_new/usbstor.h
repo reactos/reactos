@@ -312,6 +312,8 @@ typedef struct
     UCHAR Bytes[16];
 }UFI_UNKNOWN_CMD, *PUFI_UNKNOWN_CMD;
 
+#include <poppack.h>
+
 typedef struct
 {
     union
