@@ -3160,7 +3160,11 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
          */
         if ( !wcsncmp( num, L"-", 1 ) || !str_is_number( num ) ) {
             msi_free( num );
+            #ifndef __REACTOS__
+            return;
+            #else
             continue;
+            #endif
         }
 
         ZeroMemory( &lvc, sizeof(lvc) );
