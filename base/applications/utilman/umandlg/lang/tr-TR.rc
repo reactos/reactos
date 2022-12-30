@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Turkish translation resource
- * COPYRIGHT:       Copyright 2022 Suleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

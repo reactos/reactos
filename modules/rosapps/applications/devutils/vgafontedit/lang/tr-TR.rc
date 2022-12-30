@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Turkish resource file
- * COPYRIGHT:   Copyright 2022 Suleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
- * TRANSLATOR:  Suleyman POYRAZ
+ * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL

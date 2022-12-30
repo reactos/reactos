@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Matrix ScreenSaver
+ * LICENSE:     Public Domain
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
 #include "resource.h"
 
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL

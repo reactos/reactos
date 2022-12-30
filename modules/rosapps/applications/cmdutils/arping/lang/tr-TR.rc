@@ -1,4 +1,9 @@
-/* TRANSLATORS: 2022 Suleyman POYRAZ (Zaryob) (zaryob [dot] dev [at] gmail [dot] com) */
+/*
+ * PROJECT:     ReactOS TCP/IPv4 Win32 ARP Ping
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
