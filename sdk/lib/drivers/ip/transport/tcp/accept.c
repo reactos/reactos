@@ -77,10 +77,18 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
             if (NT_SUCCESS(Status))
             {
                 /* Allocate the port in the port bitmap */
-                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                UINT nPort = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
 
-                /* This should never fail */
-                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+                if (nPort == (UINT)-1)
+                {
+                    TI_DbgPrint(DEBUG_TCP,("Failed to allocate port for = %d\n", LocalAddress.Address[0].Address[0].sin_port));
+                    UnlockObject(Connection);
+                    return STATUS_ADDRESS_ALREADY_EXISTS;
+                }
+                else
+                {
+                    Connection->AddressFile->Port = nPort;
+                }
             }
         }
     }
