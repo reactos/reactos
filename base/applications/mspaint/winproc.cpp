@@ -280,14 +280,18 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     BOOL trueSelection =
         (::IsWindowVisible(selectionWindow) &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL isBMP;
     switch (lParam)
     {
         case 0: /* File menu */
             if ((HMENU)wParam != GetSubMenu(menu, 0))
                 break;
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile));
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile));
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile));
+
+            isBMP = _wcsicmp(PathFindExtensionW(filepathname), L".bmp") == 0;
+            EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile && isBMP));
+            EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile && isBMP));
+            EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile && isBMP));
+
             RemoveMenu(menu, IDM_FILE1, MF_BYCOMMAND);
             RemoveMenu(menu, IDM_FILE2, MF_BYCOMMAND);
             RemoveMenu(menu, IDM_FILE3, MF_BYCOMMAND);
