@@ -177,14 +177,16 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                            RecvReq->BufferCount, FALSE );
             if (FCB->Overread && FCB->LastReceiveStatus == STATUS_SUCCESS)
             {
-                /* Overread after a graceful disconnect so complete with an error */
-                Status = STATUS_FILE_CLOSED;
+                /* Overread after a graceful disconnect */
+                AFD_DbgPrint(MID_TRACE,("FCB overread detected\n"));
             }
-            else
-            {
-                /* Unexpected disconnect by the remote host or initial read after a graceful disconnect */
-                Status = FCB->LastReceiveStatus;
-            }
+
+            /* Overread shall not lead to situation of "ECONNRESET" errors
+             * See CORE-18328 and CORE-11650 */
+
+            /* Unexpected disconnect by the remote host or initial read after a graceful disconnect */
+            Status = FCB->LastReceiveStatus;
+
             NextIrp->IoStatus.Status = Status;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
