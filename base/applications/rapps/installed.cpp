@@ -88,7 +88,7 @@ void CInstalledApplicationInfo::EnsureDetailsLoaded()
         if (GetApplicationRegDword(L"WindowsInstaller", &dwWindowsInstaller) && dwWindowsInstaller)
         {
             // MSI has the same info in Uninstall / modify, so manually build it
-            szUninstallString.Format(L"msiexec /x%s", m_szKeyName.GetString());
+            szUninstallString.Format(L"msiexec /x %s", m_szKeyName.GetString());
         }
         else
         {
@@ -111,7 +111,7 @@ void CInstalledApplicationInfo::EnsureDetailsLoaded()
         {
             if (dwWindowsInstaller)
             {
-                szModifyPath.Format(L"msiexec /i%s", m_szKeyName.GetString());
+                szModifyPath.Format(L"msiexec /i %s", m_szKeyName.GetString());
             }
             else
             {
@@ -148,7 +148,7 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
 
     dwSize = min(dwAllocated, dwSize);
     // CString takes care of zero-terminating it
-    String.ReleaseBuffer(dwSize / sizeof(WCHAR));
+    String.ReleaseBuffer();
 
     if (Result != ERROR_SUCCESS)
     {
@@ -164,7 +164,7 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
         if (dwLen > 0)
         {
             BOOL bSuccess = ExpandEnvironmentStringsW(String, Tmp.GetBuffer(dwLen), dwLen) == dwLen;
-            Tmp.ReleaseBuffer(dwLen - 1);
+            Tmp.ReleaseBuffer();
             if (bSuccess)
             {
                 String = Tmp;
