@@ -2333,14 +2333,26 @@ UserFault:
             }
         }
 
+#if _MI_HAS_NO_EXECUTE
         /* Check for execution of non-executable memory */
         if (MI_IS_INSTRUCTION_FETCH(FaultCode) &&
             !MI_IS_PAGE_EXECUTABLE(&TempPte))
         {
+            /* Check if execute enable was set */
+            if (CurrentProcess->Pcb.Flags.ExecuteEnable)
+            {
+                /* Fix up the PTE to be executable */
+                TempPte.u.Hard.NoExecute = 0;
+                MI_UPDATE_VALID_PTE(PointerPte, TempPte);
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                return STATUS_SUCCESS;
+            }
+
             /* Return the status */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return STATUS_ACCESS_VIOLATION;
         }
+#endif
 
         /* The fault has already been resolved by a different thread */
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
