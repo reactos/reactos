@@ -3132,6 +3132,9 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
     WCHAR *num;
     LVCOLUMNW lvc;
     DWORD count = 0;
+#ifdef __REACTOS__
+    BOOL bFirst = TRUE;
+#endif
 
     if (!text) return;
 
@@ -3160,15 +3163,23 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
          */
         if ( !wcsncmp( num, L"-", 1 ) || !str_is_number( num ) ) {
             msi_free( num );
-/* Temporary workaround for CORE-18749
- * new issue will be opened for improvement on jira
- */
-#ifndef __REACTOS__
-            return;
+#ifdef __REACTOS__
+            if ((bFirst) && (wcsncmp( num, L"\\", 1 ) || wcsncmp( num, L"&", 1 )))
+            {
+                FIXME("Style prefix not supported. Skipping.\n");
+                continue;
+            }
+            else
+            {
+                return;
+            }
 #else
-            continue;
+            return;
 #endif
         }
+#ifdef __REACTOS__
+        bFirst = FALSE;
+#endif
 
         ZeroMemory( &lvc, sizeof(lvc) );
         lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
