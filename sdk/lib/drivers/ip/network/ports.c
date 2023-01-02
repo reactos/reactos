@@ -36,8 +36,11 @@ VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
     KIRQL OldIrql;
 
     Port = htons(Port);
-    ASSERT(Port >= PortSet->StartingPort);
-    ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
+    if ((Port < PortSet->StartingPort) ||
+        (Port >= PortSet->StartingPort + PortSet->PortsToOversee))
+    {
+       return;
+    }
 
     if ((Port < PortSet->StartingPort) ||
         (Port >= PortSet->StartingPort + PortSet->PortsToOversee))
