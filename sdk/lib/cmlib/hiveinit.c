@@ -306,7 +306,7 @@ HvpInitializeMemoryHive(
         BlockIndex += Bin->Size / HBLOCK_SIZE;
     }
 
-    if (HvpCreateHiveFreeCellList(Hive))
+    if (!NT_SUCCESS(HvpCreateHiveFreeCellList(Hive)))
     {
         HvpFreeHiveBins(Hive);
         Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);

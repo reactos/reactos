@@ -9,7 +9,7 @@ endif()
 set(KERNEL_VERSION_MAJOR "0")
 set(KERNEL_VERSION_MINOR "4")
 set(KERNEL_VERSION_PATCH_LEVEL "15")
-set(COPYRIGHT_YEAR "2022")
+set(COPYRIGHT_YEAR "2023")
 
 # KERNEL_VERSION_BUILD_TYPE is "dev" for Git builds
 # or "RC1", "RC2", "" for releases.
