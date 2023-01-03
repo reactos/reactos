@@ -66,6 +66,8 @@ CMainToolbar::CMainToolbar()
     memset(szUninstallBtn, 0, sizeof(szUninstallBtn));
     memset(szModifyBtn, 0, sizeof(szModifyBtn));
     memset(szSelectAll, 0, sizeof(szSelectAll));
+    memset(szRefreshBtn, 0, sizeof(szRefreshBtn));
+    memset(szUpdateDbBtn, 0, sizeof(szUpdateDbBtn));
 }
 
 VOID CMainToolbar::OnGetDispInfo(LPTOOLTIPTEXT lpttt)
@@ -114,14 +116,16 @@ HWND CMainToolbar::Create(HWND hwndParent)
         {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szModifyBtn       },
         {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szSelectAll       },
         { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
-        {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-        {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           }
+        {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szRefreshBtn       },
+        {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szUpdateDbBtn      }
     };
 
     LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
     LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
     LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
     LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
+    LoadStringW(hInst, IDS_TOOLTIP_REFRESH, szRefreshBtn, _countof(szRefreshBtn));
+    LoadStringW(hInst, IDS_TOOLTIP_UPDATE_DB, szUpdateDbBtn, _countof(szUpdateDbBtn));
 
     m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
         WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,

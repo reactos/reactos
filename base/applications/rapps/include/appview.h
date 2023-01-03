@@ -285,6 +285,8 @@ class CMainToolbar :
     WCHAR szUninstallBtn[MAX_STR_LEN];
     WCHAR szModifyBtn[MAX_STR_LEN];
     WCHAR szSelectAll[MAX_STR_LEN];
+    WCHAR szRefreshBtn[MAX_STR_LEN];
+    WCHAR szUpdateDbBtn[MAX_STR_LEN];
 
     VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
 
