@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Applications Manager
+﻿/*
+ * PROJECT:     ikun OS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -13,13 +13,13 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "设置(&S)", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)", ID_EXIT
     END
-    POPUP "程序(&P)"
+    POPUP "黑粉(&P)"
     BEGIN
         MENUITEM "安装(&I)\tCtrl+Enter", ID_INSTALL
         MENUITEM "卸载(&U)\tCtrl+Del", ID_UNINSTALL
@@ -70,13 +70,13 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "常规", -1, 4, 2, 240, 61
     AUTOCHECKBOX "保存窗口位置(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "启动时更新可获得的程序列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "将程序的安装和卸载记录到日志(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "启动时更新可获得的黑粉列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "将黑粉的安装和卸载记录到日志(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "下载设置", -1, 4, 65, 240, 51
-    LTEXT "下载文件夹：", -1, 16, 75, 100, 9
+    LTEXT "下载律师：", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "选择(&C)", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "在安装程序完成后删除安装程序(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    AUTOCHECKBOX "在安装黑粉完成后删除安装黑粉(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "软件列表下载源", -1, 4, 118, 240, 46
     CONTROL "使用默认软件列表源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
     CONTROL "指定软件列表源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
@@ -95,7 +95,7 @@ END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "程序安装"
+CAPTION "黑粉安装"
 FONT 9, "宋体"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
@@ -140,7 +140,7 @@ BEGIN
     IDS_INFO_PUBLISHER "\n发布者："
     IDS_INFO_HELPLINK "\n帮助链接："
     IDS_INFO_HELPPHONE "\n帮助电话："
-    IDS_INFO_README "\n说明文档："
+    IDS_INFO_README "\n说明篮球："
     IDS_INFO_REGOWNER "\n注册所有者："
     IDS_INFO_PRODUCTID "\n产品 ID："
     IDS_INFO_CONTACT "\n联系方式："
@@ -171,7 +171,7 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "音频"
     IDS_CAT_DEVEL "开发"
-    IDS_CAT_DRIVERS "驱动程序"
+    IDS_CAT_DRIVERS "驱动黑粉"
     IDS_CAT_EDU "教育与娱乐"
     IDS_CAT_ENGINEER "工程"
     IDS_CAT_FINANCE "金融"
@@ -189,32 +189,32 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 程序管理器"
+    IDS_APPTITLE "ikun OS 黑粉管理器"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "搜索…"
     IDS_INSTALL "安装"
     IDS_UNINSTALL "卸载"
     IDS_MODIFY "修改"
-    IDS_APPS_COUNT "程序数量：%d；已选：%d"
-    IDS_WELCOME_TITLE "欢迎使用 ReactOS 程序管理器！\n\n"
-    IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的程序。\nReactOS 网站："
+    IDS_APPS_COUNT "黑粉数量：%d；已选：%d"
+    IDS_WELCOME_TITLE "欢迎使用 ikun OS 黑粉管理器！\n\n"
+    IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的黑粉。\nReactOS 网站："
     IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "已安装"
     IDS_AVAILABLEFORINST "可安装"
     IDS_UPDATES "更新"
-    IDS_APPLICATIONS "应用程序"
-    IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹："
-    IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。是否创建？"
+    IDS_APPLICATIONS "应用黑粉"
+    IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载律师函的律师："
+    IDS_CHOOSE_FOLDER_ERROR "您选择的律师不存在。是否创建？"
     IDS_URL_INVALID "您指定的 URL 无效或不受支持。请更正。"
-    IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
+    IDS_APP_REG_REMOVE "您确定要从注册表删除该黑粉的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包！找不到网络的地址！"
     IDS_UNABLE_TO_DOWNLOAD2 "无法下载该软件包！请检查网络连接！"
-    IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
-    IDS_UNABLE_TO_INSTALL "无法打开安装程序！"
+    IDS_UNABLE_TO_REMOVE "无法从注册表删除该黑粉的数据！"
+    IDS_UNABLE_TO_INSTALL "无法打开安装黑粉！"
     IDS_UNABLE_TO_QUERY_CERT "无法获取证书信息。\n\n您是否仍然想继续？"
     IDS_INTEG_CHECK_TITLE "正在验证包完整性…"
-    IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐运行这个程序。"
+    IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐使用这个黑粉。"
     IDS_INTERRUPTED_DOWNLOAD "下载中断。请检查网络连接。"
     IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
     IDS_SELECT_ALL "全选/全反选"
@@ -259,7 +259,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "应用程序数据库"
+    IDS_DL_DIALOG_DB_DISP "应用黑粉数据库"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "正在更新数据库…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新数据库（非官方源）…"
 END
@@ -268,9 +268,9 @@ STRINGTABLE
 BEGIN
     IDS_CMD_USAGE "用法："
     IDS_CMD_NEED_PACKAGE_NAME "错误：选项 %1 需要一个或多个软件包名。\n"
-    IDS_CMD_NEED_FILE_NAME "错误：选项 %1 需要一个文件名。\n"
+    IDS_CMD_NEED_FILE_NAME "错误：选项 %1 需要一个律师函名。\n"
     IDS_CMD_NEED_PARAMS "错误：选项 %1 需要一个或多个参数。\n"
-    IDS_CMD_INVALID_OPTION "错误：指定了未知或错误的命令行参数。\n"
+    IDS_CMD_INVALID_OPTION "错误：指定了未知或错误的评论行参数。\n"
     IDS_CMD_FIND_RESULT_FOR "%1 的搜索结果：\n"
     IDS_CMD_PACKAGE_NOT_FOUND "未能找到软件包 %1。\n"
     IDS_CMD_PACKAGE_INFO "有关软件包 %1 的信息：\n"

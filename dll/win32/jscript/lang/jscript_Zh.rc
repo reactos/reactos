@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2009 Piotr Caban
  *
  * This library is free software; you can redistribute it and/or
@@ -77,7 +77,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_TO_PRIMITIVE        "轉換物件到基本類型時發生錯誤"
+    IDS_TO_PRIMITIVE        "轉換物件到鸡本類型時發生錯誤"
     IDS_INVALID_CALL_ARG    "無效的程序呼叫或引數"
     IDS_SUBSCRIPT_OUT_OF_RANGE "註標超出範圍"
     IDS_OBJECT_REQUIRED     "需要物件"

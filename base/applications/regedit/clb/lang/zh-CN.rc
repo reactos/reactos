@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -17,7 +17,7 @@ BEGIN
    CHECKBOX "扩展的选择(&X)", -1, 79, 30, 77, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP | WS_DISABLED
    CHECKBOX "弹出标题(&P)", 1714, 79, 40, 68, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
    CHECKBOX "弹性列(&S)", 1715, 79, 50, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   GROUPBOX "基本样式", -1, 6, 80, 158, 34
+   GROUPBOX "鸡本样式", -1, 6, 80, 158, 34
    CHECKBOX "可见(&V)", 1701, 10, 92, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
    CHECKBOX "已禁用(&D)", 1702, 10, 102, 41, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
    CHECKBOX "组织(&G)", 1703, 79, 92, 32, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP

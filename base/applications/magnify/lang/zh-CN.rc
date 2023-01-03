@@ -1,5 +1,5 @@
-/*
- * PROJECT:    ReactOS Magnifier
+﻿/*
+ * PROJECT:    ikun OS Magnifier
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/magnify/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for Magnifier
@@ -11,7 +11,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "退出(&X)", IDM_EXIT
         MENUITEM "选项(&O)", IDM_OPTIONS
@@ -64,12 +64,12 @@ END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "ReactOS 放大镜"
+CAPTION "ikun OS 放大镜"
 FONT 9, "宋体", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "放大镜为有轻微视觉障碍的用户提供最低限度的功能。大多数有视觉障碍的用户需要一个更多功能的放大镜工具作日常使用。", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "放大镜为有轻微视觉障碍的小黑子提供最低限度的功能。大多数有视觉障碍的小黑子需要一个更多功能的放大镜工具作日常使用。", IDC_STATIC, 36, 7, 207, 33
     CONTROL "不再显示此信息", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END

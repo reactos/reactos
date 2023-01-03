@@ -1,5 +1,5 @@
-/*
- * PROJECT:    ReactOS Management Console
+﻿/*
+ * PROJECT:    ikun OS Management Console
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mmc/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for Management Console
@@ -11,7 +11,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
@@ -20,13 +20,13 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于 ReactOS 管理控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS 管理控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
 IDM_CONSOLE_LARGE MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
@@ -41,12 +41,12 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于 ReactOS 管理控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS 管理控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 管理控制台"
+    IDS_APPTITLE "ikun OS 管理控制台"
     IDS_CONSOLETITLE "控制台%1!u!"
 END

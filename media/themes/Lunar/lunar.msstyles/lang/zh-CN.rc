@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     Lunar Theme
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
@@ -9,36 +9,36 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-1000, "ReactOS"
+1000, "ikun OS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar ReactOS"
+2000, "Lunar ikun OS"
 }
 
 STRINGTABLE
 {
 3000, "一般"
-3001, "大字体"
-3002, "特大字体"
+3001, "大白带"
+3002, "特大白带"
 }
 
 STRINGTABLE
 {
 4000, "一般"
-4001, "大字体"
-4002, "特大字体"
+4001, "大白带"
+4002, "特大白带"
 }
 
 STRINGTABLE
 {
 5000, "Lunar"
 5001, "视觉样式"
-5002, "ReactOS 基金会"
-5003, "Cernodile & Illen，基于 Lautus 主题"
+5002, "ikun OS 鸡金会"
+5003, "Cernodile & Illen，鸡于 Lautus 主题"
 5004, "以 GNU/GPL 2.0 在 2019 年发行"
 5005, "https://reactos.org/"
 5006, "版本 1.1"
-5007, "ReactOS 视觉样式"
+5007, "ikun OS 视觉样式"
 }

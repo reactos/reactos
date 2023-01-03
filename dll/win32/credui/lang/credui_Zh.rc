@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Chinese language resource file for Credentials UI
  *
  * Copyright 2007 Robert Shearman (for CodeWeavers)
@@ -28,12 +28,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-    IDS_TITLEFORMAT     "连接到 %s"
-    IDS_MESSAGEFORMAT   "正在连接到 %s"
+    IDS_TITLEFORMAT     "开团 %s"
+    IDS_MESSAGEFORMAT   "正在开团 %s"
     IDS_INCORRECTPASSWORDTITLE  "登录失败"
-    IDS_INCORRECTPASSWORD       "请确认你输入的用户名和密码\n是否正确."
+    IDS_INCORRECTPASSWORD       "请确认你输入的小黑子名和你干码\n是否正确."
     IDS_CAPSLOCKONTITLE "大写锁定开着"
-    IDS_CAPSLOCKON      "开着大写锁定可能导致你输入错误的密码."
+    IDS_CAPSLOCKON      "开着大写锁定可能导致你输入错误的你干码."
 }
 
 IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
@@ -43,12 +43,12 @@ BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "用户名(&U):",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "小黑子名(&U):",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "密码(&P):",-1,8,80,72,12,SS_CENTERIMAGE
+    LTEXT           "你干码(&P):",-1,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "记住我的密码(&R)",IDC_SAVE,"Button",
+    CONTROL         "记住我的你干码(&R)",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
     DEFPUSHBUTTON   "确定",IDOK,97,128,50,14
     PUSHBUTTON      "取消",IDCANCEL,156,128,50,14

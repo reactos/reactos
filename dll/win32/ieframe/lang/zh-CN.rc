@@ -1,11 +1,11 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Translation has been changed by Luke Luo 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_BROWSE_MAIN_MENU MENU
 {
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     {
         POPUP "新建(&N)"
         {
@@ -37,7 +37,7 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "帮助(&H)"
     {
-        MENUITEM "关于 Internet Explorer(&A)", ID_BROWSE_ABOUT
+        MENUITEM "关于 ikun网络 Explorer(&A)", ID_BROWSE_ABOUT
     }
 }
 
@@ -70,7 +70,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
 CAPTION "打开 URL"
 FONT 9, "宋体"
 {
-    LTEXT "指定您希望要在 Internet Explorer 中打开的 URL",-1, 35,5,160,25
+    LTEXT "指定您希望要在 ikun网络 Explorer 中打开的 URL",-1, 35,5,160,25
     LTEXT "打开：", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON

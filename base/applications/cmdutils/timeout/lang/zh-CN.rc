@@ -1,8 +1,8 @@
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+﻿LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS 延时实用工具\n\
+    IDS_USAGE "ikun OS 延时实用工具\n\
 \n\
 TIMEOUT [/?] [/T] delay [/NOBREAK]\n\
 \n\
@@ -14,7 +14,7 @@ TIMEOUT [/?] [/T] delay [/NOBREAK]\n\
     /?        显示本帮助信息。\n\
 \n\
     /T delay  指定等待的秒数（-1 到 99999）。\n\
-              值 -1 表示程序将永远处于等待状态直到有按键被按下。\n\
+              值 -1 表示黑粉将永远处于等待状态直到有按键被按下。\n\
               注意 “/T” 表述是可选的，您可以直接表明延时的值而\n\
               不用输入它。\n\
 \n\

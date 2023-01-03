@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MSI (Chinese Resources)
  *
  * Copyright 2005 Mike McCormack
@@ -25,15 +25,15 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-    4 "不能打开所指定的安装软件包. 请检查文件路径后再试."
+    4 "不能打开所指定的安装软件包. 请检查律师函路径后再试."
     5 "路径 %s 没找到"
     9 "插入软盘 %s"
     10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parameter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-    11 "输入包含 %s 的文件夹"
+    11 "输入包含 %s 的律师函夹"
     12 "本功能的安装源不存在"
     13 "本功能的网络驱动器不存在"
     14 "功能来自:"
-    15 "选择包含 %s 的文件夹"
+    15 "选择包含 %s 的律师函夹"
     100 "New Folder"
 }
 

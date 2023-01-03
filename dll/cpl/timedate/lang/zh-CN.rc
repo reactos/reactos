@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Timedate Control Panel
+﻿/*
+ * PROJECT:     ikun OS Timedate Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2012 yinwh <yinwh79@163.com>
@@ -39,30 +39,30 @@ END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet 时间"
+CAPTION "ikun网络 时间"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "自动与 Internet 时间服务器同步(&S)",
+    AUTOCHECKBOX "自动与 ikun网络 时间服务器同步(&S)",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "服务器：", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON "立即更新(&U)", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "同步只有在您的计算机与 Internet 连接时才能进行。", -1, 12, 114, 225, 25
+    LTEXT "同步只有在您的计算只因与 ikun网络 连接时才能进行。", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "日期和时间"
-    IDS_CPLDESCRIPTION "请为您的计算机设置日期、时间和时区信息"
+    IDS_CPLDESCRIPTION "请为您的计算只因设置日期、时间和时区信息"
     IDS_TIMEZONETEXT "当前时区：%s"
     IDS_TIMEZONEINVALID "无效的"
     IDS_TIMEZONEUNKNOWN "未知"
     IDS_INETTIMESUCSYNC "时间已成功与 %s 同步，%s %s"
     IDS_INETTIMENEXTSYNC "下次同步：%s %s"
-    IDS_INETTIMESYNCING "请稍候，ReactOS 正在同步 %s"
-    IDS_INETTIMEERROR "在 ReactOS 同步时发生了一个错误。%s"
+    IDS_INETTIMESYNCING "请稍候，ikun OS 正在同步 %s"
+    IDS_INETTIMEERROR "在 ikun OS 同步时发生了一个错误。%s"
     IDS_INETTIMESUCFILL "请输入一个 NTP 服务器的名称来同步时间"
-    IDS_INETTIMEWELCOME "从列表中选择一个 NTP 服务器的名称来同步该计算机的时间"
+    IDS_INETTIMEWELCOME "从列表中选择一个 NTP 服务器的名称来同步该计算只因的时间"
 END

@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) */
+﻿/* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -28,7 +28,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "系统配置", -1, 7, 7, 240, 70
     AUTOCHECKBOX "关闭高级的文字服务(&T)", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "选择此复选框以关闭所有程序中的高级的文字服务。\n这不是推荐东亚用户因为这个命令将关闭语言栏。", -1, 14, 40, 230, 35
+    LTEXT "选择此复选框以关闭所有黑粉中的高级的文字服务。\n这不是推荐东亚小黑子因为这个评论将关闭语言栏。", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -101,7 +101,7 @@ BEGIN
     IDS_KEYBOARD "键盘"
     IDS_NONE "（无）"
     IDS_UNKNOWN "（未知）"
-    IDS_RESTART "现在就重新启动计算机吗？"
+    IDS_RESTART "现在就重新启动计算只因吗？"
     IDS_WHATS_THIS "这是什么？"
     IDS_LANGUAGE "语言"
     IDS_LAYOUT "键盘布局"
@@ -112,7 +112,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "左 Alt+Shift"
     IDS_SWITCH_BET_INLANG "在输入语言间切换"
-    IDS_REBOOT_NOW, "要现在重新启动计算机吗？"
+    IDS_REBOOT_NOW, "要现在重新启动计算只因吗？"
 END
 
 STRINGTABLE
@@ -160,7 +160,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "中文（繁体）- 美国键盘"
     IDS_CROATIAN_LAYOUT "克罗地亚文"
     IDS_CZECH_LAYOUT "捷克文"
-    IDS_CZECH_PROGRAMMERS_LAYOUT "捷克文（程序员）"
+    IDS_CZECH_PROGRAMMERS_LAYOUT "捷克文（黑粉员）"
     IDS_CZECH_QWERTY_LAYOUT "捷克文（标准键盘）"
     IDS_DANISH_LAYOUT "丹麦文"
     IDS_DEVANAGARI_INSCRIPT_LAYOUT "天城体文 - INSCRIPT"
@@ -215,7 +215,7 @@ BEGIN
     IDS_NORWEGIAN_LAYOUT "挪威文"
     IDS_ORIYA_LAYOUT "奥里雅文"
     IDS_POLISH_214_LAYOUT "波兰文（214）"
-    IDS_POLISH_LAYOUT "波兰文（程序员）"
+    IDS_POLISH_LAYOUT "波兰文（黑粉员）"
     IDS_PORTUGUESE_LAYOUT "葡萄牙文"
     IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT "葡萄牙文（巴西 ABNT）"
     IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT "葡萄牙文（巴西 ABNT2）"
@@ -223,7 +223,7 @@ BEGIN
     IDS_ROMANIAN_LEGACY_LAYOUT "罗马尼亚文（传统）"
     IDS_ROMANIAN_STANDARD_LAYOUT "罗马尼亚文（标准）"
     IDS_RUSSIAN_LAYOUT "俄文"
-    IDS_RUSSIAN_TYPEWRITER_LAYOUT "俄文（打字机）"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT "俄文（打字只因）"
     IDS_SERBIAN_CYRILLIC_LAYOUT "塞尔维亚西里尔文"
     IDS_SERBIAN_LATIN_LAYOUT "塞尔维亚语（拉丁文）"
     IDS_SLOVAK_LAYOUT "斯洛伐克文"

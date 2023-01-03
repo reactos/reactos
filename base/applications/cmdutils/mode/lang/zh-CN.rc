@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Mode Utility
+﻿/*
+ * PROJECT:     ikun OS Mode Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2018 Li Keqing <forucial@icloud.com>
@@ -56,8 +56,8 @@ BEGIN
     IDS_CONSOLE_KBD_DELAY       "    键盘延迟：         %ld\n"
     IDS_CONSOLE_CODEPAGE        "    代码页：           %d\n"
 
-    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    打印机输出没有被重定向。\n"
-    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    打印机输出被重定向至串口 %s。\n"
+    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    打印只因输出没有被重定向。\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    打印只因输出被重定向至串口 %s。\n"
 END
 
 STRINGTABLE

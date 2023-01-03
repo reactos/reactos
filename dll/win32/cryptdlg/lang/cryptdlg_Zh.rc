@@ -1,4 +1,4 @@
-/*
+﻿/*
  * cryptdlg dll Chinese resources
  *
  * Copyright 2008 Juan Lang
@@ -33,7 +33,7 @@ STRINGTABLE
     IDS_POLICY_QUALIFIER_INFO "政策限定符信息"
     IDS_POLICY_QUALIFIER_ID "政策限定符 ID="
     IDS_CPS "CPS"/*认证做法说明 */
-    IDS_USER_NOTICE "用户通知"
+    IDS_USER_NOTICE "小黑子通知"
     IDS_QUALIFIER "限定符"
     IDS_NOTICE_REF "请注意参考"
     IDS_ORGANIZATION "组织="

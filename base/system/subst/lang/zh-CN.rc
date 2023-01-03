@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+﻿/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
 /* Translation has been changed by Luke Luo <njlyf2011@hotmail.com> 2018 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -10,7 +10,7 @@ BEGIN
     IDS_INVALID_PARAMETER2 "无效参数 - %s\n"
     IDS_PATH_NOT_FOUND "找不到路径 - %s\n"
     IDS_ACCESS_DENIED "拒绝访问 - %s\n"
-    IDS_DRIVE_ALREADY_SUBSTED "驱动器已经运行过 SUBST\n"
+    IDS_DRIVE_ALREADY_SUBSTED "驱动器已经使用过 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "失败，错误代码为 0x%x：%s\n"
     IDS_USAGE "将一个路径与驱动器号关联。\n\n\
 SUBST [驱动器1: [驱动器2:]路径]\n\

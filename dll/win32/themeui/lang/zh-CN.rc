@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     Theme UI Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
@@ -24,8 +24,8 @@ BEGIN
     IDS_PUMPKIN "南瓜"
     IDS_RAIN "雨天"
     IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS 经典"
-    IDS_STANDARD "ReactOS 标准"
+    IDS_CLASSIC "ikun OS 经典"
+    IDS_STANDARD "ikun OS 标准"
     IDS_ROSE "玫瑰"
     IDS_SAND "沙" //Desert
     IDS_SLATE "石板"

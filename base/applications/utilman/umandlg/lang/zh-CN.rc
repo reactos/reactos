@@ -1,5 +1,5 @@
-/*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
+﻿/*
+ * PROJECT:         ikun OS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Simplified Chinese translation resource
  * COPYRIGHT:       Copyright 2020 Zheng Jianping (robsean@126.com)
@@ -33,8 +33,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTRUNNING "%s 未运行"
-    IDS_RUNNING "%s 正在运行"
+    IDS_NOTRUNNING "%s 未使用"
+    IDS_RUNNING "%s 正在使用"
     IDS_GROUPBOX_OPTIONS_TITLE "%s 选项"
 END
 

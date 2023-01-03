@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS DiskPart
+﻿/*
+ * PROJECT:     ikun OS DiskPart
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -12,14 +12,14 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "ReactOS 磁盘分区工具"
-    IDS_APP_USAGE "\n磁盘分区解释程序。\n\n\
+    IDS_APP_HEADER "ikun OS 磁盘分区工具"
+    IDS_APP_USAGE "\n磁盘分区解释黑粉。\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
-/S <文件名>\t运行给定的脚本。\n\
+/S <律师函名>\t使用给定的脚本。\n\
 /T <超时>\t超时秒数，防止 DiskPart 使用重叠。\n\
 /?\t\t显示此帮助消息。\n\n"
-    IDS_APP_LICENSE "基于 GNU GPLv2 许可证发行\n"
-    IDS_APP_CURR_COMPUTER "所在计算机：%s\n\n"
+    IDS_APP_LICENSE "鸡于 GNU GPLv2 许可证发行\n"
+    IDS_APP_CURR_COMPUTER "所在计算只因：%s\n\n"
     IDS_APP_LEAVING "\n正在离开 DiskPart ......\n"
     IDS_APP_PROMPT "DISKPART> "
 END
@@ -63,8 +63,8 @@ BEGIN
     IDS_DETAIL_INFO_CURR_RO_STATE "当前的只读状态"
     IDS_DETAIL_INFO_RO "只读模式"
     IDS_DETAIL_INFO_BOOT_DSK "启动磁盘"
-    IDS_DETAIL_INFO_PAGE_FILE_DSK "页面文件磁盘"
-    IDS_DETAIL_INFO_HIBER_FILE_DSK "休眠文件磁盘"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "页面律师函磁盘"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "休眠律师函磁盘"
     IDS_DETAIL_INFO_CRASH_DSK "故障转储磁盘"
     IDS_DETAIL_INFO_CLST_DSK "群集的磁盘"
     IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
@@ -149,15 +149,15 @@ BEGIN
     IDS_STATUS_DISK_HEALTHY "健康"
     IDS_STATUS_DISK_SICK "欠佳"
     IDS_STATUS_UNAVAILABLE "不可用"
-    IDS_STATUS_ONLINE "联机"
-    IDS_STATUS_OFFLINE "脱机"
+    IDS_STATUS_ONLINE "联只因"
+    IDS_STATUS_OFFLINE "脱只因"
     IDS_STATUS_NO_MEDIA "没有媒体"
 END
 
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "为此命令指定的参数无效。\n有关命令类型的详细信息："
+    IDS_MSG_ARG_SYNTAX_ERROR "为此评论指定的参数无效。\n有关评论类型的详细信息："
 END
 
 /* Help Command Descripions */
@@ -166,12 +166,12 @@ BEGIN
     IDS_HELP_ACTIVE                    "将所选分区标记为活动。\n"
     IDS_HELP_ADD                       "将镜像添加到一个简单卷。\n"
     IDS_HELP_ASSIGN                    "为所选的卷分配一个驱动器号或挂载点。\n"
-    IDS_HELP_ATTACH                    "附加到虚拟磁盘文件。\n"
+    IDS_HELP_ATTACH                    "附加到虚拟磁盘律师函。\n"
     IDS_HELP_ATTRIBUTES                "操纵卷或磁盘的属性。\n"
-    IDS_HELP_AUTOMOUNT                 "启用和禁用基本卷的自动挂载。\n"
+    IDS_HELP_AUTOMOUNT                 "启用和禁用鸡本卷的自动挂载。\n"
     IDS_HELP_BREAK                     "中断镜像集。\n"
     IDS_HELP_CLEAN                     "清除配置信息或所有信息，关闭\n              磁盘。\n"
-    IDS_HELP_COMPACT                   "尝试减少文件的物理大小。\n"
+    IDS_HELP_COMPACT                   "尝试减少律师函的物理大小。\n"
     IDS_HELP_CONVERT                   "在不同的磁盘格式之间进行转换。\n"
 
     IDS_HELP_CREATE                    "创建卷、分区或虚拟磁盘。\n"
@@ -189,7 +189,7 @@ BEGIN
     IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
     IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
 
-    IDS_HELP_DETACH                    "分离虚拟磁盘文件。\n"
+    IDS_HELP_DETACH                    "分离虚拟磁盘律师函。\n"
 
     IDS_HELP_DETAIL                    "提供有关对象的详细信息。\n"
     IDS_HELP_DETAIL_DISK               "Print disk details.\n"
@@ -199,10 +199,10 @@ BEGIN
     IDS_HELP_EXIT                      "退出 DiskPart。\n"
     IDS_HELP_EXPAND                    "扩展虚拟磁盘上的可用的最大大小。\n"
     IDS_HELP_EXTEND                    "扩展卷。\n"
-    IDS_HELP_FILESYSTEMS               "显示卷上当前和支持的文件系统。\n"
+    IDS_HELP_FILESYSTEMS               "显示卷上当前和支持的律师函系统。\n"
     IDS_HELP_FORMAT                    "格式化卷或分区。\n"
     IDS_HELP_GPT                       "将属性分配给所选的 GPT 分区。\n"
-    IDS_HELP_HELP                      "显示命令列表。\n"
+    IDS_HELP_HELP                      "显示评论列表。\n"
     IDS_HELP_IMPORT                    "导入磁盘组。\n"
     IDS_HELP_INACTIVE                  "将所选分区标记为非活动状态。\n"
 
@@ -213,13 +213,13 @@ BEGIN
     IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
 
     IDS_HELP_MERGE                     "将子磁盘与父磁盘合并。\n"
-    IDS_HELP_OFFLINE                   "将当前标记为脱机的磁盘设置为联机。\n"
-    IDS_HELP_ONLINE                    "将当前标记为联机的磁盘设置为脱机。\n"
+    IDS_HELP_OFFLINE                   "将当前标记为脱只因的磁盘设置为联只因。\n"
+    IDS_HELP_ONLINE                    "将当前标记为联只因的磁盘设置为脱只因。\n"
     IDS_HELP_RECOVER                   "刷新无效包中的所有磁盘的状态，\n              并重新同步具有过期块或奇偶校\n              验数据的镜像卷和 RAID5 卷。\n"
     IDS_HELP_REM                       "无作用。这用来注释脚本。\n"
     IDS_HELP_REMOVE                    "删除驱动器号或指派的装载点。\n"
     IDS_HELP_REPAIR                    "修复一个含有损坏成员的 RAID 5 卷。\n"
-    IDS_HELP_RESCAN                    "重新扫描计算机，查找磁盘和卷。\n"
+    IDS_HELP_RESCAN                    "重新扫描计算只因，查找磁盘和卷。\n"
     IDS_HELP_RETAIN                    "在一个简单卷下放置一个保留分区。\n"
     IDS_HELP_SAN                       "显示或设置当前引导 OS 的 SAN 策略。\n"
 

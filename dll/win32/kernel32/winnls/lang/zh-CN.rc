@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -268,7 +268,7 @@ BEGIN
     129+NLSRC_OFFSET "肯尼亚"
     130+NLSRC_OFFSET "吉尔吉斯斯坦"
     131+NLSRC_OFFSET "朝鲜"
-    133+NLSRC_OFFSET "基里巴斯"
+    133+NLSRC_OFFSET "鸡里巴斯"
     134+NLSRC_OFFSET "韩国"
     136+NLSRC_OFFSET "科威特"
     137+NLSRC_OFFSET "哈萨克斯坦"
@@ -308,10 +308,10 @@ BEGIN
     181+NLSRC_OFFSET "苏里南"
     182+NLSRC_OFFSET "尼加拉瓜"
     183+NLSRC_OFFSET "新西兰"
-    184+NLSRC_OFFSET "巴勒斯坦权力机构"
+    184+NLSRC_OFFSET "巴勒斯坦权力只因构"
     185+NLSRC_OFFSET "巴拉圭"
     187+NLSRC_OFFSET "秘鲁"
-    190+NLSRC_OFFSET "巴基斯坦"
+    190+NLSRC_OFFSET "巴鸡斯坦"
     191+NLSRC_OFFSET "波兰"
     192+NLSRC_OFFSET "巴拿马"
     193+NLSRC_OFFSET "葡萄牙"
@@ -328,7 +328,7 @@ BEGIN
     204+NLSRC_OFFSET "卢旺达"
     205+NLSRC_OFFSET "沙特阿拉伯"
     206+NLSRC_OFFSET "圣皮埃尔和密克隆"
-    207+NLSRC_OFFSET "圣基茨和尼维斯"
+    207+NLSRC_OFFSET "圣鸡茨和尼维斯"
     208+NLSRC_OFFSET "塞舌尔"
     209+NLSRC_OFFSET "南非"
     210+NLSRC_OFFSET "塞内加尔"
@@ -393,7 +393,7 @@ BEGIN
     308+NLSRC_OFFSET "海峡群岛"
     309+NLSRC_OFFSET "圣诞岛"
     310+NLSRC_OFFSET "克利珀顿岛"
-    311+NLSRC_OFFSET "科科斯（基林）群岛"
+    311+NLSRC_OFFSET "科科斯（鸡林）群岛"
     312+NLSRC_OFFSET "库克岛"
     313+NLSRC_OFFSET "珊瑚海群岛"
     314+NLSRC_OFFSET "迪戈加西亚"

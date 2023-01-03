@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Power Configuration Applet
+﻿/*
+ * PROJECT:     ikun OS Power Configuration Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2009 Jingjing Fu <jingjingf@188.com>
@@ -15,13 +15,13 @@ CAPTION "电源使用方案"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "请选定对于您使用计算机方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。", -1, 37, 6, 209, 36
+    LTEXT "请选定对于您使用计算只因方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。", -1, 37, 6, 209, 36
     GROUPBOX "电源使用方案(&O)", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "另存为(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "删除(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "未知", IDC_GRPDETAIL, 6, 95, 240, 136
-    LTEXT "当计算机：", IDC_SAT, 12, 109, 60, 12
+    LTEXT "当计算只因：", IDC_SAT, 12, 109, 60, 12
     LTEXT "接通电源", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
     LTEXT "使用电池", IDC_SDC, 195, 110, 45, 15
@@ -32,7 +32,7 @@ BEGIN
     LTEXT "关闭硬盘(&I)：", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "系统待机(&T)：", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "系统待只因(&T)：", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "系统休眠(&H)：", IDC_HIBERNATE, 13, 212, 84, 10
@@ -46,7 +46,7 @@ CAPTION "电源使用方案"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "请选定对于您使用计算机方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。", -1, 37, 6, 209, 36
+    LTEXT "请选定对于您使用计算只因方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。", -1, 37, 6, 209, 36
     GROUPBOX "电源使用方案(&O)", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "另存为(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -56,7 +56,7 @@ BEGIN
     COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "关闭硬盘(&I)：", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "系统待机(&T)：", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "系统待只因(&T)：", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "系统休眠(&H)：", IDC_HIBERNATE, 13, 212, 84, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -78,7 +78,7 @@ BEGIN
     LTEXT "未知", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "操作：", -1, 95, 83, 55, 10
     LTEXT "未知", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "运行程序：", -1, 95, 95, 55, 10
+    LTEXT "使用黑粉：", -1, 95, 95, 55, 10
     LTEXT "未知", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "电池严重短缺警报", -1, 6, 120, 239, 106
     AUTOCHECKBOX "当电力降低到以下水平时，发出电池严重短缺警报(&C)：", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
@@ -91,7 +91,7 @@ BEGIN
     LTEXT "未知", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "操作：", -1, 95, 198, 45, 10
     LTEXT "未知", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "运行程序：", -1, 95, 211, 50, 10
+    LTEXT "使用黑粉：", -1, 95, 211, 50, 10
     LTEXT "未知", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
@@ -103,15 +103,15 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "请选择要使用的节能设置。", -1, 37, 6, 207, 20
     GROUPBOX "选项", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "总是在任务栏上显示图标(&S)", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "在计算机从待机状态恢复时，提示输入密码(&P)", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "总是在粉丝栏上显示图标(&S)", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "在计算只因从待只因状态恢复时，提示输入你干码(&P)", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "在使用电池时弱显示(&D)。", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "电源按钮", -1, 6, 101, 240, 127
-    LTEXT "在合上便携式计算机时(&W)：", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "在合上便携式计算只因时(&W)：", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "在按下计算机电源按钮时(&E)：", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    LTEXT "在按下计算只因电源按钮时(&E)：", IDC_SPOWERBUTTON, 15, 153, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "在按下计算机睡眠按钮时(&N)：", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    LTEXT "在按下计算只因睡眠按钮时(&N)：", IDC_SSLEEPBUTTON, 15, 191, 222, 10
     COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -121,7 +121,7 @@ CAPTION "休眠"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "在计算机休眠时，它将内存中所有信息保存到硬盘上，然后关闭计算机。在退出休眠状态时，计算机会恢复到原来的状态。", -1, 37, 6, 210, 35
+    LTEXT "在计算只因休眠时，它将内存中所有信息保存到硬盘上，然后关闭计算只因。在退出休眠状态时，计算只因会恢复到原来的状态。", -1, 37, 6, 210, 35
     GROUPBOX "休眠", -1, 6, 41, 240, 32
     AUTOCHECKBOX "启用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "用于休眠的磁盘空间", -1, 6, 80, 240, 76
@@ -129,7 +129,7 @@ BEGIN
     LTEXT "未知", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "休眠所需的磁盘空间：", -1, 15, 115, 140, 10
     LTEXT "未知", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "在计算机进入休眠之前，您必须释放一些磁盘空间。", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "在计算只因进入休眠之前，您必须释放一些磁盘空间。", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
@@ -146,7 +146,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "电源选项"
-    IDS_CPLDESCRIPTION_1 "配置计算机的节能设置。"
+    IDS_CPLDESCRIPTION_1 "配置计算只因的节能设置。"
     IDS_PERCENT "%i%%"
     IDS_SOUND "声音"
     IDS_TEXT "文本"
@@ -155,11 +155,11 @@ BEGIN
     IDS_NOACTION "无操作"
     IDS_PowerActionNone1 "无动作"
     IDS_PowerActionUnknown "未知"
-    IDS_PowerActionSleep "待机"
+    IDS_PowerActionSleep "待只因"
     IDS_PowerActionHibernate "休眠"
-    IDS_PowerActionShutdown "关机"
+    IDS_PowerActionShutdown "关只因"
     IDS_PowerActionRestart "重新启动"
-    IDS_PowerActionShutdownOff "关机并切断电源"
+    IDS_PowerActionShutdownOff "关只因并切断电源"
     IDS_PowerActionWarmEject "问我要做什么"
     IDS_PowerActionNone2 "无"
     IDS_TIMEOUT1 "1 分钟之后"

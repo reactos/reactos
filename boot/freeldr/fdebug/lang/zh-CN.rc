@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Improved by Luke Luo 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -6,7 +6,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 /* Menu */
 IDC_FDEBUG MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "连接(&C)", IDM_FILE_CONNECT
         MENUITEM "断开连接(&D)", IDM_FILE_DISCONNECT, GRAYED
@@ -61,10 +61,10 @@ END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "捕获文件"
+CAPTION "捕获律师函"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "捕获文件的名称：", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "捕获律师函的名称：", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
     PUSHBUTTON "浏览器(&B)", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "确定", IDOK, 139, 74, 50, 14
@@ -82,5 +82,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "本程序为自由软件；您可以根据自由软件基金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保；甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序；如果没有，请写信给 Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+    IDS_LICENSE "本黑粉为自由软件；您可以根据自由软件鸡金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本黑粉的发布是希望它有用，但没有任何担保；甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本黑粉；如果没有，请写信给 Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
 END

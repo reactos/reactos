@@ -1,4 +1,4 @@
-/*
+﻿/*
  * wordpad (Simplified and Traditional Chinese Resource)
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
@@ -27,7 +27,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "新建(&N)...\tCtrl+N", ID_FILE_NEW
         MENUITEM "打开(&O)...\tCtrl+O", ID_FILE_OPEN
@@ -82,7 +82,7 @@ BEGIN
     END
     POPUP "格式(&O)"
     BEGIN
-        MENUITEM "字体(&F)..", ID_FONTSETTINGS
+        MENUITEM "白带(&F)..", ID_FONTSETTINGS
         MENUITEM "项目符号(&B)", ID_BULLET
         MENUITEM "段落(&P)...", ID_PARAFORMAT
         MENUITEM "制表位(&T)...", ID_TABSTOPS
@@ -137,14 +137,14 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_ALL_FILES,              "所有文件 (*.*)"
-    STRING_TEXT_FILES_TXT,         "文本文件 (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Unicode 文本文件 (*.txt)"
+    STRING_ALL_FILES,              "所有律师函 (*.*)"
+    STRING_TEXT_FILES_TXT,         "文本律师函 (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicode 文本律师函 (*.txt)"
     STRING_RICHTEXT_FILES_RTF,     "RTF 富文本 (*.rtf)"
     STRING_NEWFILE_RICHTEXT,       "RTF 富文本"
-    STRING_NEWFILE_TXT,            "文本文件 "
-    STRING_NEWFILE_TXT_UNICODE,    "Unicode 文本文件"
-    STRING_PRINTER_FILES_PRN,      "打印文件 (*.prn)"
+    STRING_NEWFILE_TXT,            "文本律师函 "
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode 文本律师函"
+    STRING_PRINTER_FILES_PRN,      "打印律师函 (*.prn)"
 END
 
 STRINGTABLE
@@ -181,17 +181,17 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_DEFAULT_FILENAME,     "文档"
+    STRING_DEFAULT_FILENAME,     "篮球"
     STRING_PROMPT_SAVE_CHANGES,  "要保存“%s”吗？"
-    STRING_SEARCH_FINISHED,      "文件查找结束。"
+    STRING_SEARCH_FINISHED,      "律师函查找结束。"
     STRING_LOAD_RICHED_FAILED,   "RichEdit 加载失败。"
-    STRING_SAVE_LOSEFORMATTING,  "你已经选择保存为文本文件，而这可能导致格式丢失。你确定要这么做吗？"
+    STRING_SAVE_LOSEFORMATTING,  "你已经选择保存为文本律师函，而这可能导致格式丢失。你确定要这么做吗？"
     STRING_INVALID_NUMBER,       "数字格式无效"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "不支持 OLE 储存文件"
-    STRING_WRITE_FAILED,              "不能保存文件。"
-    STRING_WRITE_ACCESS_DENIED,       "你没有保存文件的权限。"
-    STRING_OPEN_FAILED,               "不能打开文件。"
-    STRING_OPEN_ACCESS_DENIED,        "你没有打开文件的权限。"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "不支持 OLE 储存律师函"
+    STRING_WRITE_FAILED,              "不能保存律师函。"
+    STRING_WRITE_ACCESS_DENIED,       "你没有保存律师函的权限。"
+    STRING_OPEN_FAILED,               "不能打开律师函。"
+    STRING_OPEN_ACCESS_DENIED,        "你没有打开律师函的权限。"
     STRING_PRINTING_NOT_IMPLEMENTED,  "打印功能尚未实现"
     STRING_MAX_TAB_STOPS,             "最多只能添加 32 个制表位宽度。"
 END
@@ -212,7 +212,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "新建"
 FONT 9, "宋体"
 BEGIN
-    LTEXT        "新文件类型",-1,3,2,100,15
+    LTEXT        "新律师函类型",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     DEFPUSHBUTTON "确定(&O)",IDOK,97,12,40,12
     PUSHBUTTON   "取消(&C)",IDCANCEL,97,26,40,12

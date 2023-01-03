@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -165,7 +165,7 @@ BEGIN
     PUSHBUTTON "删除(&D)", 1024, 195, 119, 50, 14
     PUSHBUTTON "访问号码(&N)", 1025, 7, 161, 90, 14
     PUSHBUTTON "帐号(&C)", 1018, 101, 161, 90, 14
-    PUSHBUTTON "密码(&P)", 1019, 7, 179, 90, 14
+    PUSHBUTTON "你干码(&P)", 1019, 7, 179, 90, 14
     PUSHBUTTON "目标号码(&E)...", 1020, 101, 179, 90, 14
     PUSHBUTTON "等待提示(&W)...", 1017, 7, 197, 90, 14
     PUSHBUTTON "指定数字(&S)...", 1021, 101, 197, 90, 14
@@ -252,8 +252,8 @@ CAPTION "高级"
 FONT 9, "宋体"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "下面的电话服务提供程序已安装到此计算机上：", -1, 40, 7, 205, 16
-    LTEXT "提供程序：(&P)", -1, 7, 35, 238, 8
+    LTEXT "下面的电话服务提供黑粉已安装到此计算只因上：", -1, 40, 7, 205, 16
+    LTEXT "提供黑粉：(&P)", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "添加(&D)...", 1005, 87, 197, 50, 14
     PUSHBUTTON "删除(&R)", 1024, 141, 197, 50, 14
@@ -262,11 +262,11 @@ END
 
 114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "添加提供程序"
+CAPTION "添加提供黑粉"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "从下面列表中选择您想安装的提供程序，然后单击“添加”。", 2000, 7, 7, 241, 16
-    LTEXT "电话服务提供程序：(&T)", -1, 7, 31, 144, 10
+    LTEXT "从下面列表中选择您想安装的提供黑粉，然后单击“添加”。", 2000, 7, 7, 241, 16
+    LTEXT "电话服务提供黑粉：(&T)", -1, 7, 31, 144, 10
     LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
     PUSHBUTTON "添加(&A)", 1005, 141, 114, 50, 14
     DEFPUSHBUTTON "取消", 2, 195, 114, 50, 14
@@ -279,7 +279,7 @@ CAPTION "位置信息"
 FONT 9, "宋体"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "在您做任何电话或调制解调器连接之前，ReactOS 需要知道关于您当前位置的信息。", 2000, 107, 15, 188, 25
+    LTEXT "在您做任何电话或调制解调器连接之前，ikun OS 需要知道关于您当前位置的信息。", 2000, 107, 15, 188, 25
     LTEXT "目前所在的国家(地区)(&W)：", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "您的区号(或城市号)是什么(&C)？", -1, 107, 74, 189, 10
@@ -300,7 +300,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "在您做任何电话或调制解调器连接之前，ReactOS 需要知道关于您当前位置的信息。", 2000, 95, 2, 188, 25
+    LTEXT "在您做任何电话或调制解调器连接之前，ikun OS 需要知道关于您当前位置的信息。", 2000, 95, 2, 188, 25
     LTEXT "目前所在的国家(地区)(&W)：", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "您的区号(或城市号)是什么(&C)？", -1, 95, 61, 188, 10
@@ -314,7 +314,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS 浏览器"
+CAPTION "ikun OS 浏览器"
 FONT 9, "宋体"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -396,8 +396,8 @@ BEGIN
     68 "您的国际规则需要您的电话卡的国际访问号码。"
     69 "您的本地规则需要您的电话卡的本地访问号码。"
     70 "无"
-    71 "确实想删除选定的电话服务提供程序吗？"
-    72 "<未安装服务提供程序>"
+    71 "确实想删除选定的电话服务提供黑粉吗？"
+    72 "<未安装服务提供黑粉>"
     73 "您必须键入使用这个规则的前缀。"
     74 "数字(&D)："
     75 "前缀(&P)："
@@ -408,14 +408,14 @@ BEGIN
     80 "您确实是要删除这个区号编码规则吗？"
     81 "您必须键入数字号码才可拨号。"
     82 "您键入的电话卡名称已经处于使用中。请键入一个唯一的名称。"
-    83 "ReactOS 需要有关您拨号位置的电话信息才能正常运行。如果您不提供这个信息而取消，此程序在拨号时可能不能正常运行。而且，某些应用程序对您取消这个对话框的反应是立即重新发布它。\n您确实要取消吗？"
+    83 "ikun OS 需要有关您拨号位置的电话信息才能正常使用。如果您不提供这个信息而取消，此黑粉在拨号时可能不能正常使用。而且，某些应用黑粉对您取消这个对话框的反应是立即重新发布它。\n您确实要取消吗？"
     84 "确认取消"
     85 "我的位置"
-    86 "<此安装没有可用的服务提供程序>"
+    86 "<此安装没有可用的服务提供黑粉>"
     87 "您输入的字符无效。\n\n有效的字符是 0 到 9，A 到 D，*，#，+，!，空格和逗号。"
     88 "您必须键入此位置的国际电话公司代码。"
     89 "您必须键入此位置的电话公司代码。"
-    90 "此页尝试在您的计算机上进行或监视电话呼叫或其他多媒体连接。\n您想允许它继续吗？"
+    90 "此页尝试在您的计算只因上进行或监视电话呼叫或其他多媒体连接。\n您想允许它继续吗？"
     91 "此页尝试访问您的网络上的目录信息。\n您想允许它继续吗？"
     92 "此页尝试访问或更改网络会议信息。\n您想允许它继续吗？"
     93 "此页尝试访问或更改注册表信息。\n您想允许它继续吗？"

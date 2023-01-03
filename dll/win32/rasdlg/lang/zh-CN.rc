@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -62,14 +62,14 @@ BEGIN
     COMBOBOX 1034, 53, 62, 191, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "属性(&R)", 1035, 184, 77, 60, 14
     AUTORADIOBUTTON "允许这些协议(&P)", 1545, 17, 92, 224, 10
-    AUTOCHECKBOX "未加密的密码 (PAP)(&U)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTOCHECKBOX "湿婆密码身份验证协议 (SPAP)(&S)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "未加密的你干码 (PAP)(&U)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "湿婆你干码身份验证协议 (SPAP)(&S)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "质询握手身份验证协议 (CHAP)(&C)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE  /* Need advice */
     AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "允许使用旧的 Windows 95 服务器的 MS-CHAP 版本(&W)", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "微软 CHAP 版本 2 (MS-CHAP v2)(&I)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "对基于 MS-CHAP 的协议，自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "对鸡于 MS-CHAP 的协议，自动使用我的 ikun OS 登录名称和你干码（如果有域的话，还有域名）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "确定", 1, 127, 232, 60, 14
     PUSHBUTTON "取消", 2, 192, 232, 60, 14
 END
@@ -82,7 +82,7 @@ BEGIN
     DEFPUSHBUTTON "确定", 1, 97, 91, 60, 14
     ICON 563, 1046, 7, 7, 20, 20
     LTEXT "“连接名称”现在已连接。", 1047, 40, 7, 212, 16
-    LTEXT "要检查此连接的状态或断开连接，请在网络连接文件夹中右键单击其图标，或单击其任务栏上的图标（如果存在）。", -1, 40, 30, 212, 34
+    LTEXT "要检查此连接的状态或断开连接，请在网络连接律师中右键单击其图标，或单击其粉丝栏上的图标（如果存在）。", -1, 40, 30, 212, 34
     AUTOCHECKBOX "不再显示此消息(&D)", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
 END
 
@@ -106,13 +106,13 @@ END
 
 108 DIALOGEX 6, 18, 222, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "更改密码"
+CAPTION "更改你干码"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您在远程网络上的密码已过期。请输入新密码，并单击确定以设置新密码。", 1062, 7, 5, 210, 24
-    LTEXT "新密码：(&N)", 1064, 8, 43, 108, 8
+    LTEXT "您在远程网络上的你干码已过期。请输入新你干码，并单击确定以设置新你干码。", 1062, 7, 5, 210, 24
+    LTEXT "新你干码：(&N)", 1064, 8, 43, 108, 8
     EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认新密码：(&C)", 1061, 8, 61, 102, 8
+    LTEXT "确认新你干码：(&C)", 1061, 8, 61, 102, 8
     EDITTEXT 1058, 118, 57, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", 1, 90, 84, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 154, 84, 60, 14
@@ -120,15 +120,15 @@ END
 
 109 DIALOGEX 6, 18, 223, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "更改密码"
+CAPTION "更改你干码"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您在远程网络上的密码已过期。请输入新密码，并单击确定以设置新密码。", 1062, 7, 5, 212, 29
-    LTEXT "旧密码：(&O)", 1063, 7, 42, 108, 8
+    LTEXT "您在远程网络上的你干码已过期。请输入新你干码，并单击确定以设置新你干码。", 1062, 7, 5, 212, 29
+    LTEXT "旧你干码：(&O)", 1063, 7, 42, 108, 8
     EDITTEXT 1059, 116, 38, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "新密码：(&N)", 1064, 7, 60, 108, 8
+    LTEXT "新你干码：(&N)", 1064, 7, 60, 108, 8
     EDITTEXT 1060, 116, 56, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认新密码：(&C)", 1061, 7, 78, 108, 8
+    LTEXT "确认新你干码：(&C)", 1061, 7, 78, 108, 8
     EDITTEXT 1058, 116, 74, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", 1, 92, 101, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 156, 101, 60, 14
@@ -148,7 +148,7 @@ END
 
 111 DIALOGEX 6, 19, 265, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "连接到 %1 时出错"
+CAPTION "开团 %1 时出错"
 FONT 9, "宋体"
 BEGIN
     ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
@@ -163,7 +163,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "自动拨号和挂断"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "ReactOS 可以根据正在发送和接收的信息数量来自动拨号和挂断。", 1085, 9, 7, 253, 30
+    LTEXT "ikun OS 可以根据正在发送和接收的信息数量来自动拨号和挂断。", 1085, 9, 7, 253, 30
     GROUPBOX "自动拨号", -1, 6, 38, 249, 71
     LTEXT "当此连接满足两个以下的条件时，拨另一个号码：", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "至少活动时间：(&L)", -1, 16, 73, 100, 8
@@ -225,14 +225,14 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名称：(&U)", 1413, 8, 60, 88, 8
+    LTEXT "小黑子名称：(&U)", 1413, 8, 60, 88, 8
     EDITTEXT 1104, 103, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码：(&P)", 1112, 8, 79, 88, 8
+    LTEXT "你干码：(&P)", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "为以下用户保存此用户名和密码：(&S)", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "为以下小黑子保存此小黑子名和你干码：(&S)", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只有我(&N)", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
     DEFPUSHBUTTON "拨号(&D)", 1590, 8, 156, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 1591, 71, 156, 60, 14
@@ -246,16 +246,16 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名：(&U)", 1413, 9, 61, 92, 8
+    LTEXT "小黑子名：(&U)", 1413, 9, 61, 92, 8
     EDITTEXT 1104, 102, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码：(&P)", 1112, 9, 80, 92, 8
+    LTEXT "你干码：(&P)", 1112, 9, 80, 92, 8
     EDITTEXT 1103, 102, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "域：(&M)", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "为以下用户保存此用户名和密码：(&S)", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "为以下小黑子保存此小黑子名和你干码：(&S)", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只有我(&N)", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
     DEFPUSHBUTTON "拨打(&D)", 1590, 8, 173, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 1591, 71, 173, 60, 14
@@ -269,16 +269,16 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名:(&U)", 1413, 10, 61, 92, 8
+    LTEXT "小黑子名:(&U)", 1413, 10, 61, 92, 8
     EDITTEXT 1104, 104, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码:(&P)", 1112, 10, 80, 92, 8
+    LTEXT "你干码:(&P)", 1112, 10, 80, 92, 8
     EDITTEXT 1103, 104, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "域:(&M)", 1110, 10, 100, 92, 8
     EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
-    AUTOCHECKBOX "为以下用户保存此用户名和密码:(&S)", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "为以下小黑子保存此小黑子名和你干码:(&S)", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只有我(&N)", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
     LTEXT "拨打(&I)", 1412, 10, 177, 90, 8
     COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
@@ -295,14 +295,14 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名：(&U)", 1413, 10, 62, 91, 8
+    LTEXT "小黑子名：(&U)", 1413, 10, 62, 91, 8
     EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码：(&P)", 1112, 10, 81, 92, 8
+    LTEXT "你干码：(&P)", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "为以下用户保存此用户名和密码：(&S)", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "为以下小黑子保存此小黑子名和你干码：(&S)", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只有我(&N)", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
     LTEXT "拨号：(&I)", 1412, 13, 157, 88, 8
     COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
@@ -405,8 +405,8 @@ CAPTION "NetWare 或兼容的连接"
 FONT 9, "宋体"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
-    LTEXT "你有连接到 NetWare 兼容网络的连接。建立 PPP IPX 连接时，将关闭这些连接。", 1279, 42, 7, 215, 37
-    LTEXT "在拨号之前，为避免数据丢失，请关闭所有使用这些连接的文件，或在此项的网络协议设置中取消选择 IPX。", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    LTEXT "你有开团 NetWare 兼容网络的连接。建立 PPP IPX 连接时，将关闭这些连接。", 1279, 42, 7, 215, 37
+    LTEXT "在拨号之前，为避免数据丢失，请关闭所有使用这些连接的律师函，或在此项的网络协议设置中取消选择 IPX。", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "不再显示此消息(&D)", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "确定", 1, 65, 112, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 134, 112, 60, 14
@@ -417,7 +417,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "手动拨号"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "请摘机并拨号（或者请接线员拨号）。拨号完毕后，单击确定。等到听筒中没有声音后，挂断电话。", 1281, 8, 8, 219, 32
+    LTEXT "请摘只因并拨号（或者请接线员拨号）。拨号完毕后，单击确定。等到听筒中没有声音后，挂断电话。", 1281, 8, 8, 219, 32
     LTEXT "电话号码：", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "确定", 1, 104, 70, 60, 14, WS_GROUP
@@ -447,7 +447,7 @@ BEGIN
     LTEXT "X.121 地址：(&A)", 1407, 9, 66, 213, 8, NOT WS_GROUP
     EDITTEXT 1402, 8, 77, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "可选", 1405, 8, 95, 215, 79
-    LTEXT "用户数据：(&U)", 1411, 19, 109, 182, 8, NOT WS_GROUP
+    LTEXT "小黑子数据：(&U)", 1411, 19, 109, 182, 8, NOT WS_GROUP
     EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
     LTEXT "设施：(&F)", 1409, 19, 138, 182, 8, NOT WS_GROUP
     EDITTEXT 1403, 19, 149, 193, 14, ES_AUTOHSCROLL
@@ -460,7 +460,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "自动拨号"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "如果您没有连接到网络，每次您访问远程信息时，自动拨号都将尝试连接到网络。", -1, 7, 4, 219, 32
+    LTEXT "如果您没有开团网络，每次您访问远程信息时，自动拨号都将尝试开团网络。", -1, 7, 4, 219, 32
     LTEXT "启用自动拨号的位置：(&E)", 1006, 8, 42, 213, 8
     CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
     AUTOCHECKBOX "自动拨号前总是询问我(&W)", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
@@ -472,7 +472,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "拨号"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "这些设置适用于使用 Ctrl-Alt-Del 登录时“登录使用拨号网络”。身为管理员的您可以更改此配置。", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "这些设置适用于使用 Ctrl-Alt-Del 登录时“登录使用拨号网络”。身为团长的您可以更改此配置。", 1007, 7, 4, 221, 40, NOT WS_GROUP
     LTEXT "重拨次数：(&N)", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
     LTEXT "两次重拨之间的秒数：(&S)", 1009, 7, 73, 156, 8, NOT WS_GROUP
@@ -499,12 +499,12 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您需要设置远程路由器连接到此接口使用的拨入凭据。系统将使用您输入的信息在该路由器上创建一个用户帐户。", 1094, 8, 5, 307, 35
-    LTEXT "用户名称：(&U)", 1078, 8, 47, 124, 8, NOT WS_GROUP
+    LTEXT "您需要设置远程路由器开团此接口使用的拨入凭据。系统将使用您输入的信息在该路由器上创建一个小黑子帐户。", 1094, 8, 5, 307, 35
+    LTEXT "小黑子名称：(&U)", 1078, 8, 47, 124, 8, NOT WS_GROUP
     EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "密码：(&P)", 1077, 8, 68, 124, 8, NOT WS_GROUP
+    LTEXT "你干码：(&P)", 1077, 8, 68, 124, 8, NOT WS_GROUP
     EDITTEXT 1073, 135, 66, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认密码：(&C)", 1075, 8, 90, 124, 8, NOT WS_GROUP
+    LTEXT "确认你干码：(&C)", 1075, 8, 90, 124, 8, NOT WS_GROUP
     EDITTEXT 1071, 135, 87, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -512,14 +512,14 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您需要设置通过此接口连接到远程路由器时使用的拨出凭据。这些凭据必须与在远程路由器上设置的拨入凭据相匹配。", 1094, 8, 5, 308, 33
-    LTEXT "用户名称：(&U)", 1096, 8, 43, 130, 8, NOT WS_GROUP
+    LTEXT "您需要设置通过此接口开团远程路由器时使用的拨出凭据。这些凭据必须与在远程路由器上设置的拨入凭据相匹配。", 1094, 8, 5, 308, 33
+    LTEXT "小黑子名称：(&U)", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
     LTEXT "域：(&D)", 1093, 8, 63, 130, 8, NOT WS_GROUP
     EDITTEXT 1089, 140, 60, 175, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "密码：(&P)", 1095, 8, 81, 130, 8, NOT WS_GROUP
+    LTEXT "你干码：(&P)", 1095, 8, 81, 130, 8, NOT WS_GROUP
     EDITTEXT 1090, 140, 78, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认密码：(&C)", 1092, 8, 99, 130, 8, NOT WS_GROUP
+    LTEXT "确认你干码：(&C)", 1092, 8, 99, 130, 8, NOT WS_GROUP
     EDITTEXT 1088, 140, 96, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -529,8 +529,8 @@ FONT 9, "宋体"
 BEGIN
     LTEXT "输入用于此连接的名称：", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "单击完成后，此连接会保存到网络连接文件夹中。", -1, 8, 38, 193, 8
-    LTEXT "若要编辑此连接，请先选中它，并单击“文件”菜单，然后单击“属性”。", -1, 8, 58, 193, 16
+    LTEXT "单击完成后，此连接会保存到网络连接律师中。", -1, 8, 38, 193, 8
+    LTEXT "若要编辑此连接，请先选中它，并单击“律师函”菜单，然后单击“属性”。", -1, 8, 58, 193, 16
 END
 
 155 DIALOGEX 0, 0, 231, 215
@@ -610,7 +610,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "选择该按需拨号接口的名称。常见的做法，是使用它所连接到的网络或路由器的名称。", 1158, 7, 5, 309, 29
+    LTEXT "选择该按需拨号接口的名称。常见的做法，是使用它所开团的网络或路由器的名称。", 1158, 7, 5, 309, 29
     LTEXT "接口名称：(&I)", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "我详细了解按需拨号接口，愿意直接编辑属性(&K)", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
@@ -626,13 +626,13 @@ BEGIN
     AUTORADIOBUTTON "高级（自定义设置）(&D)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "按如下配置验证我的身份(&V)：", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自动使用我的 ikun OS 登录名称和你干码（如果有域的话，还有域名）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求数据加密（没有则断开连接）(&I)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用这些设置需要对安全协议有所了解。", 1539, 15, 114, 134, 20
     PUSHBUTTON "设置...(&S)", 1180, 151, 115, 60, 14
     GROUPBOX "交互式登录和脚本", 1177, 8, 146, 215, 62, WS_GROUP
     AUTOCHECKBOX "显示终端窗口(&H)", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "运行脚本(&R)：", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "使用脚本(&R)：", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
     COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "编辑...(&E)", 1182, 87, 187, 60, 14
     PUSHBUTTON "浏览...(&B)", 1181, 151, 187, 60, 14
@@ -642,7 +642,7 @@ END
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您的计算机上有多个拨号设备。", -1, 6, 3, 307, 13
+    LTEXT "您的计算只因上有多个拨号设备。", -1, 6, 3, 307, 13
     LTEXT "选择要在此连接中使用的设备(&S)：", -1, 6, 15, 307, 11
     CONTROL "", 1228, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 7, 28, 304, 77
 END
@@ -682,8 +682,8 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "拨号选项", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "连接时显示连接进度(&D)", 1284, 16, 14, 201, 10
-    AUTOCHECKBOX "提示名称、密码、证书等。(&P)", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "包括 &ReactOS 登录域", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "提示名称、你干码、证书等。(&P)", 1554, 16, 27, 201, 10
+    AUTOCHECKBOX "包括 &ikun OS 登录域", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "提示输入电话号码(&N)", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "重拨选项", 1290, 6, 72, 213, 79
     LTEXT "重拨次数(&R)：", 1300, 16, 87, 123, 8
@@ -740,7 +740,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "输入此路由器在远程网络上的 IP 地址。如果您想让远程路由器提供它，则留空为 0.0.0.0。远程网络管理员或路由器通常会告诉你应该输入什么。", 1331, 5, 4, 308, 35
+    LTEXT "输入此路由器在远程网络上的 IP 地址。如果您想让远程路由器提供它，则留空为 0.0.0.0。远程网络团长或路由器通常会告诉你应该输入什么。", 1331, 5, 4, 308, 35
     LTEXT "我的 &IP 地址：", 1332, 4, 51, 100, 8, NOT WS_GROUP
     CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
     LTEXT "注意：如果您已经安装了网络适配器，则不应该选择与您的网络适配器相同的地址。", 1333, 5, 94, 306, 36, NOT WS_GROUP
@@ -750,9 +750,9 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "某些拨号服务器和路由器在连接后还要求完成交互式登录。您可以运行一个脚本自动进行响应。", 1339, 5, 3, 309, 27
+    LTEXT "某些拨号服务器和路由器在连接后还要求完成交互式登录。您可以使用一个脚本自动进行响应。", 1339, 5, 3, 309, 27
     AUTOCHECKBOX "显示终端窗口(&T)", 1462, 15, 31, 162, 10
-    AUTOCHECKBOX "运行脚本(&R)：", 1463, 15, 45, 58, 10
+    AUTOCHECKBOX "使用脚本(&R)：", 1463, 15, 45, 58, 10
     COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "编辑...(&E)", 1335, 180, 77, 60, 14
     PUSHBUTTON "浏览...(&B)", 1465, 244, 77, 60, 14
@@ -825,9 +825,9 @@ BEGIN
     AUTOCHECKBOX "要求数据加密(&R)", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTOCHECKBOX "需要较强的数据加密(&S)", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "使用双向身份验证(&W)", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "删除记忆的密码(&U)", 1369, 59, 117, 80, 14, WS_GROUP
+    PUSHBUTTON "删除记忆的你干码(&U)", 1369, 59, 117, 80, 14, WS_GROUP
     PUSHBUTTON "高级...(&V)", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
-    AUTOCHECKBOX "在拨号前检测文件和打印共享(&D)", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "在拨号前检测律师函和打印共享(&D)", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 182 DIALOGEX 6, 18, 248, 148
@@ -841,10 +841,10 @@ BEGIN
     AUTORADIOBUTTON "只接受 &MS 加密身份验证", 1374, 14, 53, 184, 10
     AUTOCHECKBOX "要求数据加密(&D)", 1363, 33, 67, 165, 10, WS_GROUP
     AUTOCHECKBOX "需要较强的数据加密(&S)", 1364, 48, 79, 152, 10
-    AUTOCHECKBOX "使用当前用户名和密码(&U)", 1366, 31, 91, 165, 10
-    PUSHBUTTON "不保存密码(&P)", 1369, 6, 114, 100, 14, WS_GROUP
+    AUTOCHECKBOX "使用当前小黑子名和你干码(&U)", 1366, 31, 91, 165, 10
+    PUSHBUTTON "不保存你干码(&P)", 1369, 6, 114, 100, 14, WS_GROUP
     PUSHBUTTON "高级...(&A)", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
-    AUTOCHECKBOX "在拨号前检测文件和打印共享(&F)", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "在拨号前检测律师函和打印共享(&F)", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
 END
 
 183 DIALOGEX 6, 18, 317, 144
@@ -854,8 +854,8 @@ BEGIN
     LTEXT "请勾选符合情况的选项：", 1388, 7, 4, 296, 9
     AUTOCHECKBOX "在此接口上路由 &IP 数据包。", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "在此接口上路由 IP&X 数据包。", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "添加一个用户帐户，使远程路由器可以拨入。(&A)", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "如果只能通过明文连接，则允许发送纯文本密码。(&P)", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "添加一个小黑子帐户，使远程路由器可以拨入。(&A)", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "如果只能通过明文连接，则允许发送纯文本你干码。(&P)", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "使用脚本来完成与远程路由器的连接。(&U)", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
 END
 
@@ -870,7 +870,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "为您自己创建的连接只保存在您的用户帐户，除非您登录，否则不能使用它。", -1, 7, 4, 306, 23
+    LTEXT "为您自己创建的连接只保存在您的小黑子帐户，除非您登录，否则不能使用它。", -1, 7, 4, 306, 23
     LTEXT "为谁创建此连接：", -1, 14, 27, 288, 12
     AUTORADIOBUTTON "任何人(&A)", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "只有我自己(&M)", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
@@ -881,12 +881,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "ReactOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 206, 36
-    LTEXT "用户名(&U)：", 1399, 8, 51, 49, 8
+    LTEXT "ikun OS 无法使用您提供的小黑子名和你干码开团网络。请重新输入小黑子名和你干码。", 1396, 7, 6, 206, 36
+    LTEXT "小黑子名(&U)：", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
-    LTEXT "密码(&P)：", 1397, 8, 70, 49, 8, NOT WS_GROUP
+    LTEXT "你干码(&P)：", 1397, 8, 70, 49, 8, NOT WS_GROUP
     EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "保存密码(&S)", 1391, 66, 84, 143, 10
+    AUTOCHECKBOX "保存你干码(&S)", 1391, 66, 84, 143, 10
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
     DEFPUSHBUTTON "确定", 1, 81, 104, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 145, 104, 60, 14
@@ -897,14 +897,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "ReactOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 209, 26
-    LTEXT "用户名称(&U)：", 1399, 7, 72, 44, 8
+    LTEXT "ikun OS 无法使用您提供的小黑子名和你干码开团网络。请重新输入小黑子名和你干码。", 1396, 7, 6, 209, 26
+    LTEXT "小黑子名称(&U)：", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
-    LTEXT "密码(&P)：", 1397, 7, 90, 45, 8, NOT WS_GROUP
+    LTEXT "你干码(&P)：", 1397, 7, 90, 45, 8, NOT WS_GROUP
     EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "域(&D)：", 1395, 7, 108, 53, 8, NOT WS_GROUP
     EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    AUTOCHECKBOX "保存用户名和密码(&S)", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "保存小黑子名和你干码(&S)", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "确定", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
@@ -928,11 +928,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "选择您为这台计算机分配的角色：", -1, 10, 5, 275, 9
-    AUTORADIOBUTTON "主机(&H)", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "客户机(&G)", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
-    LTEXT "此计算机有您想要访问的信息。", -1, 43, 31, 253, 13, NOT WS_GROUP | WS_TABSTOP
-    LTEXT "使用此计算机来访问主机上的信息。", -1, 43, 56, 253, 23, NOT WS_GROUP
+    LTEXT "选择您为这台计算只因分配的角色：", -1, 10, 5, 275, 9
+    AUTORADIOBUTTON "主只因(&H)", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "客户只因(&G)", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
+    LTEXT "此计算只因有您想要访问的信息。", -1, 43, 31, 253, 13, NOT WS_GROUP | WS_TABSTOP
+    LTEXT "使用此计算只因来访问主只因上的信息。", -1, 43, 56, 253, 23, NOT WS_GROUP
 END
 
 511 DIALOGEX 0, 0, 317, 143
@@ -949,7 +949,7 @@ CAPTION "连接"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "登录权限", 1582, 8, 10, 213, 63
-    LTEXT "您可以允许非管理员用户在登录前创建或修改连接。", 1581, 16, 21, 194, 30
+    LTEXT "您可以允许非团长小黑子在登录前创建或修改连接。", 1581, 16, 21, 194, 30
     AUTOCHECKBOX "允许在登录前创建或修改连接(&W)", 1497, 16, 56, 195, 10, BS_TOP | BS_MULTILINE
 END
 
@@ -997,7 +997,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名称(&U)：", 1413, 14, 64, 84, 8
+    LTEXT "小黑子名称(&U)：", 1413, 14, 64, 84, 8
     EDITTEXT 1104, 102, 62, 154, 14, ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
     DEFPUSHBUTTON "拨号(&D)", 1590, 8, 89, 60, 14
@@ -1012,7 +1012,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名称(&U)：", 1413, 10, 64, 90, 8
+    LTEXT "小黑子名称(&U)：", 1413, 10, 64, 90, 8
     EDITTEXT 1104, 105, 60, 154, 14, ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 80, 252, 1
     LTEXT "拨号(&I)：", 1412, 10, 91, 92, 10
@@ -1030,7 +1030,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名称(&U)：", 1413, 10, 67, 87, 8
+    LTEXT "小黑子名称(&U)：", 1413, 10, 67, 87, 8
     EDITTEXT 1104, 103, 63, 154, 14, ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 84, 248, 1
     LTEXT "拨号(&I)：", 1412, 11, 96, 48, 8
@@ -1050,9 +1050,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "互联网连接共享可让您本地网络上的其他计算机通过此连接访问外部资源。", -1, 10, 5, 300, 22
+    LTEXT "互联网连接共享可让您本地网络上的其他计算只因通过此连接访问外部资源。", -1, 10, 5, 300, 22
     AUTOCHECKBOX "为此连接启用互联网连接共享(&E)", 1512, 21, 31, 272, 10
-    LTEXT "若要在您的本地网络上的计算机尝试访问外部资源时自动拨通此连接，请选择下面的复选框。", 1514, 10, 56, 294, 22
+    LTEXT "若要在您的本地网络上的计算只因尝试访问外部资源时自动拨通此连接，请选择下面的复选框。", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "启用按需拨号(&L)", 1513, 21, 86, 260, 10
 END
 
@@ -1061,7 +1061,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "访问共享可让您本地网络上的其他计算机通过此拨号连接访问外部资源。您一次可以为一个本地网络和一个连接启用访问共享。", -1, 10, 5, 300, 25
+    LTEXT "访问共享可让您本地网络上的其他计算只因通过此拨号连接访问外部资源。您一次可以为一个本地网络和一个连接启用访问共享。", -1, 10, 5, 300, 25
     LTEXT "选择通过此连接访问资源的局域网(&S)：", -1, 21, 35, 285, 8
     COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
@@ -1081,7 +1081,7 @@ CAPTION "按需拨号接口向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用按需拨号接口向导。", 1530, 122, 8, 192, 32
-    LTEXT "使用此向导可以创建按需拨号接口来将此路由器连接到其他路由器。", 1531, 122, 43, 192, 37
+    LTEXT "使用此向导可以创建按需拨号接口来将此路由器开团其他路由器。", 1531, 122, 43, 192, 37
     LTEXT "单击下一步继续。", 1532, 122, 85, 191, 29
 END
 
@@ -1109,7 +1109,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名(&U)：", 1413, 12, 62, 89, 8
+    LTEXT "小黑子名(&U)：", 1413, 12, 62, 89, 8
     EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
     LTEXT "域(&M)：", 1110, 12, 82, 90, 8
     EDITTEXT 1102, 104, 79, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
@@ -1126,7 +1126,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名(&U)：", 1413, 10, 67, 91, 10
+    LTEXT "小黑子名(&U)：", 1413, 10, 67, 91, 10
     EDITTEXT 1104, 104, 64, 154, 14, ES_AUTOHSCROLL
     LTEXT "域(&M)：", 1110, 10, 86, 91, 8
     EDITTEXT 1102, 104, 83, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
@@ -1146,7 +1146,7 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名(&U)：", 1413, 10, 68, 92, 10
+    LTEXT "小黑子名(&U)：", 1413, 10, 68, 92, 10
     EDITTEXT 1104, 104, 65, 154, 14, ES_AUTOHSCROLL
     LTEXT "域(&M)：", 1110, 10, 90, 91, 8
     EDITTEXT 1102, 104, 86, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
@@ -1197,10 +1197,10 @@ END
 
 556 DIALOGEX 0, 0, 220, 165
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "程序设置"
+CAPTION "黑粉设置"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您要在网络上运行的程序的说明(&D)：", -1, 7, 5, 203, 8
+    LTEXT "您要在网络上使用的黑粉的说明(&D)：", -1, 7, 5, 203, 8
     EDITTEXT 1565, 7, 17, 206, 14, ES_AUTOHSCROLL
     LTEXT "互联网服务器端口号(&I)：", -1, 7, 35, 202, 8
     EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1222,7 +1222,7 @@ FONT 9, "宋体"
 BEGIN
     LTEXT "服务描述(&D)：", -1, 7, 5, 203, 8
     EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
-    LTEXT "运行此服务的计算机在您的网络上的 IP 地址（例如 192.168.0.12）(&N)：", -1, 7, 37, 208, 16
+    LTEXT "使用此服务的计算只因在您的网络上的 IP 地址（例如 192.168.0.12）(&N)：", -1, 7, 37, 208, 16
     EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
     LTEXT "服务所在的端口号(&P)：", -1, 7, 85, 203, 8
     EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1234,10 +1234,10 @@ END
 
 558 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "程序"
+CAPTION "黑粉"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "此计算机的互联网连接已被调整，使以下程序能在您的网络中正常运行：", -1, 7, 7, 218, 28
+    LTEXT "此计算只因的互联网连接已被调整，使以下黑粉能在您的网络中正常使用：", -1, 7, 7, 218, 28
     CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
     PUSHBUTTON "添加...(&D)", 1538, 7, 197, 67, 14
     PUSHBUTTON "编辑...(&T)", 1559, 80, 197, 67, 14
@@ -1249,7 +1249,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "服务"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "选择您的网络上运行的哪些服务可被互联网用户访问。(&S)", -1, 7, 5, 216, 22
+    LTEXT "选择您的网络上使用的哪些服务可被互联网小黑子访问。(&S)", -1, 7, 5, 216, 22
     LTEXT "服务：", -1, 7, 27, 143, 8
     CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
     PUSHBUTTON "添加...(&D)", 1561, 7, 197, 67, 14
@@ -1274,7 +1274,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "在下面的文本框中输入您的服务的名称。如果将文本框留空，则ReactOS会在您连接时自动检测并配置您的服务。", -1, 10, 7, 301, 25
+    LTEXT "在下面的文本框中输入您的服务的名称。如果将文本框留空，则ikun OS会在您连接时自动检测并配置您的服务。", -1, 10, 7, 301, 25
     LTEXT "服务名称（可选）(&S)：", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1299,7 +1299,7 @@ BEGIN
     AUTORADIOBUTTON "高级（自定义设置）(&D)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "按如下配置验证我的身份(&V)：", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自动使用我的 ikun OS 登录名称和你干码（如果有域的话，还有域名）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求数据加密（没有则断开连接）(&I)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用这些设置，需要对安全协议有所了解。", 1539, 26, 111, 136, 20
     PUSHBUTTON "设置...(&S)", 1180, 151, 134, 60, 14
@@ -1316,7 +1316,7 @@ BEGIN
     AUTOCHECKBOX "使用预共享的密钥进行身份验证(&U)", 1604, 21, 15, 217, 10
     LTEXT "私钥(&K)：", 1602, 20, 31, 44, 12
     EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "允许使用系统证书，以及我保存在用户存储区的证书", 1606, 20, 50, 242, 13, WS_DISABLED
+    AUTOCHECKBOX "允许使用系统证书，以及我保存在小黑子存储区的证书", 1606, 20, 50, 242, 13, WS_DISABLED
     AUTOCHECKBOX "使用特定的证书", 1607, 20, 67, 239, 10, WS_DISABLED
     PUSHBUTTON "选择", 1608, 31, 84, 50, 14, WS_DISABLED
     COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
@@ -1330,7 +1330,7 @@ BEGIN
     GROUPBOX "日志记录选项：", -1, 6, 8, 216, 47
     AUTOCHECKBOX "记录不成功的入站的连接尝试(&I)", 1642, 14, 22, 201, 10
     AUTOCHECKBOX "记录成功的出站连接(&O)", 1641, 14, 37, 200, 10
-    GROUPBOX "日志文件选项：", -1, 7, 64, 215, 91
+    GROUPBOX "日志律师函选项：", -1, 7, 64, 215, 91
     LTEXT "名称(&N)：", -1, 14, 78, 199, 8
     EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
     PUSHBUTTON "浏览...(&B)", 1639, 153, 108, 60, 14
@@ -1345,7 +1345,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "互联网控制消息协议 (&ICMP) 允许同一网络上的计算机分享错误和状态信息。请选择此计算机能够响应的互联网信息请求：", -1, 7, 5, 215, 37
+    LTEXT "互联网控制消息协议 (&ICMP) 允许同一网络上的计算只因分享错误和状态信息。请选择此计算只因能够响应的互联网信息请求：", -1, 7, 5, 215, 37
     CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
     GROUPBOX "描述：", -1, 7, 153, 215, 55
     LTEXT "", 1645, 14, 171, 199, 32
@@ -1400,14 +1400,14 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名(&U):", 1413, 10, 61, 90, 8
+    LTEXT "小黑子名(&U):", 1413, 10, 61, 90, 8
     EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码(&P):", 1112, 11, 81, 90, 8
+    LTEXT "你干码(&P):", 1112, 11, 81, 90, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-    AUTOCHECKBOX "为以下用户保存此用户名和密码(&S):", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "为以下小黑子保存此小黑子名和你干码(&S):", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只是我(&N)", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
     LTEXT "拨号(&I):", 1412, 14, 161, 87, 8
     COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
@@ -1427,16 +1427,16 @@ CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "用户名(&U)：", 1413, 10, 67, 91, 8
+    LTEXT "小黑子名(&U)：", 1413, 10, 67, 91, 8
     EDITTEXT 1104, 104, 63, 154, 14, ES_AUTOHSCROLL
-    LTEXT "密码(&P)：", 1112, 10, 85, 92, 8
+    LTEXT "你干码(&P)：", 1112, 10, 85, 92, 8
     EDITTEXT 1103, 104, 82, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "域(&M)：", 1110, 10, 104, 92, 8
     EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-    AUTOCHECKBOX "保存此用户名和密码为以下用户(&S)：", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "保存此小黑子名和你干码为以下小黑子(&S)：", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "只是我(&N)", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "任何使用此计算机的人(&A)", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "任何使用此计算只因的人(&A)", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
     LTEXT "拨号(&I)：", 1412, 14, 182, 87, 8
     COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
@@ -1455,10 +1455,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "目标的主机名或 IP 地址（如 reactos.org 或 145.52.0.1）(&H)：", 1430, 7, 5, 217, 18
+    LTEXT "目标的主只因名或 IP 地址（如 reactos.org 或 145.52.0.1）(&H)：", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "第一次连接", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS 可以在建立此虚拟连接前先连接到公共的网络（比如互联网）。", 1432, 17, 63, 199, 24
+    LTEXT "ikun OS 可以在建立此虚拟连接前先开团公共的网络（比如互联网）。", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "先拨另一个连接(&D)：", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "连接后在通知区域显示图标(&W)", 1120, 10, 192, 213, 13
@@ -1471,8 +1471,8 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "拨号选项", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "连接时显示连接进度(&D)", 1284, 16, 17, 199, 10
-    AUTOCHECKBOX "提示名称、密码、证书等。(&P)", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "包括 &ReactOS 登录域", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "提示名称、你干码、证书等。(&P)", 1554, 16, 32, 199, 10
+    AUTOCHECKBOX "包括 &ikun OS 登录域", 1555, 16, 47, 178, 10
     GROUPBOX "重拨选项", 1290, 8, 68, 214, 89
     LTEXT "重拨次数(&R)：", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1487,8 +1487,8 @@ END
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "输入您要连接到的计算机的主机名或 IP 地址。", -1, 10, 6, 275, 16
-    LTEXT "主机名或 IP 地址（例如，reactos.org 或 145.52.0.1）(&H)：", -1, 21, 28, 277, 11
+    LTEXT "输入您要开团的计算只因的主只因名或 IP 地址。", -1, 10, 6, 275, 16
+    LTEXT "主只因名或 IP 地址（例如，reactos.org 或 145.52.0.1）(&H)：", -1, 21, 28, 277, 11
     EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
 END
 
@@ -1497,7 +1497,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "ReactOS 可以在建立此虚拟连接前先拨通一个初始连接。", -1, 10, 6, 275, 24
+    LTEXT "ikun OS 可以在建立此虚拟连接前先拨通一个初始连接。", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "不拨初始连接。(&D)", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "自动拨此初始连接(&A)：", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1585,9 +1585,9 @@ CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
     AUTORADIOBUTTON "拨号到专用网络。(&P)", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "通过互联网连接到专用网络。(&T)", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "直接连接到另一台计算机。(&C)", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "通过宽带连接到网络(&R)", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "通过互联网开团专用网络。(&T)", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "直接开团另一台计算只因。(&C)", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "通过宽带开团网络(&R)", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
     LTEXT "使用我的电话线（调制解调器或 ISDN）连接。", -1, 45, 21, 156, 8
     LTEXT "创建虚拟专用网络（VPN）连接或通过互联网的隧道。", -1, 45, 46, 266, 8
     LTEXT "使用我的串行、并行或红外端口的连接。", -1, 45, 71, 266, 8
@@ -1610,14 +1610,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "输入 ISP 帐户名称和密码，然后记下此信息，并将其保存在一个安全的地方。（如果您忘记了已有的帐户名或密码，请与 ISP 联系。）", 1689, 10, 4, 308, 25
-    LTEXT "用户名(&U)：", 1636, 23, 35, 89, 15
+    LTEXT "输入 ISP 帐户名称和你干码，然后记下此信息，并将其保存在一个安全的地方。（如果您忘记了已有的帐户名或你干码，请与 ISP 联系。）", 1689, 10, 4, 308, 25
+    LTEXT "小黑子名(&U)：", 1636, 23, 35, 89, 15
     EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
-    LTEXT "密码(&P)：", 1637, 23, 55, 90, 13
+    LTEXT "你干码(&P)：", 1637, 23, 55, 90, 13
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认密码(&C)：", 1638, 23, 74, 88, 13
+    LTEXT "确认你干码(&C)：", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "任何人从这台计算机连接到互联网时，都使用此帐户名和密码(&S)", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "任何人从这台计算只因开团互联网时，都使用此帐户名和你干码(&S)", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "使此连接成为默认互联网连接(&M)", 1595, 23, 112, 288, 14
     AUTOCHECKBOX "为此连接打开防火墙(&T)", 1682, 23, 133, 290, 14
 END
@@ -1628,7 +1628,7 @@ CAPTION "互联网连接防火墙"
 FONT 9, "宋体"
 BEGIN
     ICON 32515, -1, 7, 7, 20, 20
-    LTEXT "关闭互联网连接防火墙后，可以在互联网上未经授权公开访问您的计算机。你确定你想要把它关闭吗？", -1, 44, 5, 212, 24
+    LTEXT "关闭互联网连接防火墙后，可以在互联网上未经授权公开访问您的计算只因。你确定你想要把它关闭吗？", -1, 44, 5, 212, 24
     AUTOCHECKBOX "不再显示此对话框(&D)", 1662, 42, 40, 210, 10
     DEFPUSHBUTTON "是(&Y)", 6, 74, 60, 50, 14
     PUSHBUTTON "否(&N)", 7, 128, 60, 50, 14
@@ -1639,13 +1639,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "用户名(&U)：", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+    LTEXT "小黑子名(&U)：", -1, 7, 8, 90, 12, SS_CENTERIMAGE
     EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
     LTEXT "全名(&F)：", -1, 7, 26, 90, 12
     EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
-    LTEXT "密码(&P)：", -1, 7, 44, 90, 12
+    LTEXT "你干码(&P)：", -1, 7, 44, 90, 12
     EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "确认密码(&C)：", -1, 7, 62, 91, 12
+    LTEXT "确认你干码(&C)：", -1, 7, 62, 91, 12
     EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
     PUSHBUTTON "确定", 1, 84, 82, 60, 14
     PUSHBUTTON "取消", 2, 149, 82, 60, 14
@@ -1674,7 +1674,7 @@ BEGIN
     AUTOCHECKBOX "启用多链路(&E)", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     PUSHBUTTON "属性(&R)", 7013, 145, 94, 65, 14, WS_GROUP
     GROUPBOX "虚拟专用网络", -1, 6, 122, 214, 49, WS_GROUP
-    AUTOCHECKBOX "允许他人通过互联网或其他网络建立专用隧道连接到我的计算机(&W)", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "允许他人通过互联网或其他网络建立专用隧道开团我的计算只因(&W)", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTOCHECKBOX "连接后在通知区域显示图标(&S)", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
@@ -1694,7 +1694,7 @@ BEGIN
     CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
     LTEXT "总数：", -1, 29, 124, 53, 10
     LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
-    AUTOCHECKBOX "允许呼叫方的计算机指定其 IP 地址(&W)", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "允许呼叫方的计算只因指定其 IP 地址(&W)", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "确定", 1, 133, 169, 60, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 197, 169, 60, 14
 END
@@ -1707,7 +1707,7 @@ BEGIN
     GROUPBOX "网络访问", -1, 8, 6, 234, 32
     AUTOCHECKBOX "允许呼叫方访问我的局域网(&C)", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
     GROUPBOX "网络号分配", -1, 8, 43, 234, 87
-    AUTOCHECKBOX "给所有的计算机指派相同的网络号(&A)", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "给所有的计算只因指派相同的网络号(&A)", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "自动分配网络号(&G)", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "指定网络号(&S)：", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
@@ -1742,25 +1742,25 @@ END
 
 7042 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "用户"
+CAPTION "小黑子"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "允许连接的用户(&U)：", -1, 7, 5, 213, 8
+    LTEXT "允许连接的小黑子(&U)：", -1, 7, 5, 213, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
     PUSHBUTTON "创建(&N)", 7044, 7, 107, 67, 14, WS_GROUP
     PUSHBUTTON "删除(&D)", 7045, 80, 107, 67, 14, WS_GROUP
     PUSHBUTTON "属性(&R)", 7046, 153, 107, 67, 14, WS_GROUP
-    AUTOCHECKBOX "需要所有用户保证他们的密码和数据的安全。(&Q)", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "允许像掌上电脑这样直接连接的设备不提供密码。(&W)", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-    LTEXT "请注意，诸如禁用的帐户这样的因素，可能会影响用户的连接。", -1, 9, 126, 212, 23
+    AUTOCHECKBOX "需要所有小黑子保证他们的你干码和数据的安全。(&Q)", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "允许像掌上电脑这样直接连接的设备不提供你干码。(&W)", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+    LTEXT "请注意，诸如禁用的帐户这样的因素，可能会影响小黑子的连接。", -1, 9, 126, 212, 23
 END
 
 7049 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "勾选允许连接的用户旁边的复选框。请注意，诸如禁用的帐户这样的因素，可能会影响用户的连接。", -1, 10, 1, 275, 27
-    LTEXT "允许连接的用户(&U)：", -1, 10, 28, 275, 8
+    LTEXT "勾选允许连接的小黑子旁边的复选框。请注意，诸如禁用的帐户这样的因素，可能会影响小黑子的连接。", -1, 10, 1, 275, 27
+    LTEXT "允许连接的小黑子(&U)：", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "添加...(&A)", 7044, 10, 122, 65, 14, WS_GROUP
     PUSHBUTTON "删除(&R)", 7045, 79, 122, 65, 14, WS_GROUP
@@ -1795,11 +1795,11 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    LTEXT "仅当您的计算机在互联网上已有一个名称或 IP 地址时才能通过互联网建立到您的计算机的虚拟专用连接。", -1, 10, 4, 290, 20
+    LTEXT "仅当您的计算只因在互联网上已有一个名称或 IP 地址时才能通过互联网建立到您的计算只因的虚拟专用连接。", -1, 10, 4, 290, 20
     AUTORADIOBUTTON "允许虚拟专用连接(&A)", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "不允许虚拟专用连接(&D)", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    LTEXT "你想要允许连接到这台计算机的虚拟专用连接吗？", -1, 17, 49, 275, 8
-    LTEXT "如果你允许 VPN 连接，ReactOS 将会修改互联网连接防火墙，以允许您的计算机发送和接收 VPN 数据包。", -1, 10, 25, 293, 25
+    LTEXT "你想要允许开团这台计算只因的虚拟专用连接吗？", -1, 17, 49, 275, 8
+    LTEXT "如果你允许 VPN 连接，ikun OS 将会修改互联网连接防火墙，以允许您的计算只因发送和接收 VPN 数据包。", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1830,12 +1830,12 @@ END
 STRINGTABLE
 BEGIN
     187 "不要拨号(&N)\0"
-    188 "您（或程序）从 %1 请求了信息。你想要使用哪个连接?\0"
+    188 "您（或黑粉）从 %1 请求了信息。你想要使用哪个连接?\0"
     189 "添加备用电话号码\0"
     190 "只拨第一个可用的设备\0"
     191 "拨所有设备\0"
     192 "需要时才拨设备\0"
-    193 "输入有权访问远程网络域的用户名和密码访问。\0" /*Restart from here*/
+    193 "输入有权访问远程网络域的小黑子名和你干码访问。\0" /*Restart from here*/
     194 "当前已经安装了网络地址转换（NAT）路由协议,\n在启用互联网连接共享之前必须将其移除。\n要删除网络地址转换，请打开路由和远程访问管理器管理单元，\n并在左侧窗格中展开路由协议的条目，\n从 IP 路由协议列表中删除网络地址转换协议\n。\0"
     195 "区号只能包含 0 到 9 的数字。\0"
     196 "条目名称必须包含至少一个非空白字符，不能以句点开头。请选择一个不同的名称。\0"
@@ -1843,23 +1843,23 @@ BEGIN
     198 "无法加载自定义身份验证配置 DLL。请确保自定义身份验证软件包已正确安装。\0"
     199 "所选的连接是由多协议路由器建立的。\n请使用“路由及 RAS 管理工具”来挂断连接。\0"
     200 "备注\0"
-    201 "自定义身份验证程序包配置失败。\0"
+    201 "自定义身份验证黑粉包配置失败。\0"
     202 "TCP/IP 未安装，或者它已对路由和远程访问禁用。在控制面板中打开“网络”，转到“服务”页，选择“路由和远程访问服务”的属性，然后单击“网络”按钮进行设置。\0"
-    203 "IPX 未安装，或者它已对路由和远程访问禁用。你可以在“连接”文件夹中查看一个连接的属性，来安装或启用 IPX。\0"
+    203 "IPX 未安装，或者它已对路由和远程访问禁用。你可以在“连接”律师中查看一个连接的属性，来安装或启用 IPX。\0"
     204 "从列表中删除所选的设备吗？\0"
     205 "从电话簿中删除 %1 吗？\0"
     206 "从 %1 断开连接吗？\0"
-    207 "文件 %1 已经存在。要覆盖它吗？\0"
+    207 "律师函 %1 已经存在。要覆盖它吗？\0"
     208 "在脚本中发现语法错误。你想要查看错误日志吗？\0"
     209 "“%1”已连接。\0"
-    210 "在任务栏中右键单击“拨号网络监视器”来挂断或检查连接状况。\0"
+    210 "在粉丝栏中右键单击“拨号网络监视器”来挂断或检查连接状况。\0"
     212 "已成功连接。\0"
     213 "必须单击“属性”来初始化选定的自定义身份验证方法。\0"
     214 "lnk\0"
-    215 "拨号快捷方式文件 (*.rnk)\0"
+    215 "拨号快捷方式律师函 (*.rnk)\0"
     216 "*.rnk\0"
     217 "创建拨号快捷方式\0"
-    218 "无法连接到 %1 。正在等待重新连接...\0"
+    218 "无法开团 %1 。正在等待重新连接...\0"
     219 "无法获得帧信息。\0"
     220 "无法获得端口信息。\0"
     221 "无法获得投影信息。\0"
@@ -1876,19 +1876,19 @@ BEGIN
     232 "COM1\0"
     233 "远程路由器\0"
     234 "调制解调器或设备\0"
-    235 "请为该接口在远程路由器上的帐户输入一个用户名。\0"
+    235 "请为该接口在远程路由器上的帐户输入一个小黑子名。\0"
     236 "名为 %1 的条目已经存在。选择一个不同的名称。\0"
-    237 "您可能想要允许以不加密方式发送您的密码。\0"
-    238 "密码加密\0"
+    237 "您可能想要允许以不加密方式发送您的你干码。\0"
+    238 "你干码加密\0"
     239 "向导已准备好创建您的连接。\0"
     240 "完成\0"
     241 "电话号码(&N)：\0"
     242 "用此号码向我回拨\0"
     243 "编辑备用电话号码\0"
     244 "因为此连接当前处于活动状态，某些设置需要等到下一次拨号时才能生效。\0"
-    245 "没有可供所有用户使用的连接。您在拨号前必须先登录。\0"
+    245 "没有可供所有小黑子使用的连接。您在拨号前必须先登录。\0"
     246 "通讯簿是空的。\n\n单击确定来添加条目。\0"
-    247 "由于导入/导出限制，数据加密在此版本的 ReactOS 中不可用。\0"
+    247 "由于导入/导出限制，数据加密在此版本的 ikun OS 中不可用。\0"
     248 "请在下一页输入一个 X.25 地址。\0"
     249 "错误 %1：%2\0"
     250 "%1\n\n错误 %2：%3\0"
@@ -1954,9 +1954,9 @@ BEGIN
     310 "如果选择了一个 X.25 拨号网络或 X.25 设备，则必须提供一个 X.25 地址。\0"
     311 "（无）\0"
     312 "“%1”已在列表中。\0"
-    313 "保护我的密码和我的数据\0"
+    313 "保护我的你干码和我的数据\0"
     314 "无法选择 %1 通讯协议，因为它未安装或者已对远程访问禁用。若要更改，在控制面板启动网络，选择服务页面，远程访问属性，然后按网络按钮。\0"
-    315 "无法保存密码。\0"
+    315 "无法保存你干码。\0"
     316 "无法显示数据。\0"
     317 "无法获取自动拨号信息。\0"
     318 "无法加载对话框。\0"
@@ -1964,7 +1964,7 @@ BEGIN
     320 "无法加载属性页。\0"
     321 "无法加载电话簿。\0"
     322 "无法加载 RAS 管理器端口信息。\0"
-    323 "无法从注册表读取用户首选项。\0"
+    323 "无法从注册表读取小黑子首选项。\0"
     324 "无法加载脚本信息。\0"
     325 "无法使用 notepad.exe 查看 script.log\0"
     326 "无法使用 notepad.exe 编辑 switch.inf\0"
@@ -1984,17 +1984,17 @@ BEGIN
     340 "脚本已停止。\0"
     341 "脚本已因错误而停止。你想要查看错误日志吗？\0"
     342 "无法设置自动拨号信息。\0"
-    343 "无法删除保存的密码。\0"
+    343 "无法删除保存的你干码。\0"
     344 "无法写入电话簿。\0"
     345 "正在将选项写入注册表\0"
-    346 "无法写入快捷方式文件。\0"
+    346 "无法写入快捷方式律师函。\0"
     347 "确定\0"
     348 "您的 ISP 电话号码是什么?\0"
     349 "拨号的电话号码\0"
-    350 "密码和确认密码不匹配。\0"
-    351 "新密码和确认新密码不匹配。\0"
+    350 "你干码和确认你干码不匹配。\0"
+    351 "新你干码和确认新你干码不匹配。\0"
     352 "pbk\0"
-    353 "电话簿文件 (*.pbk)\0"
+    353 "电话簿律师函 (*.pbk)\0"
     354 "*.pbk\0"
     355 "打开电话簿\0"
     356 "复制电话簿项目\0"
@@ -2004,21 +2004,21 @@ BEGIN
     360 "电话号码\0"
     361 "网络连接\0"
     362 "您必须选择至少一个网络协议。\0"
-    363 "必须在使用网络控制程序安装一个网络协议后才能呼叫 PPP 服务器。\0"
+    363 "必须在使用网络控制黑粉安装一个网络协议后才能呼叫 PPP 服务器。\0"
     364 "新的前缀(&N)：\0"
     365 "前缀(&P)：\0"
     366 "电话号码前缀\0"
     367 "请求的一个或多个网络协议没有连接成功。\n\n\0"
     368 "单击“接受”使用此连接，或单击“挂断”断开连接。\0"
     369 "当 %1 在接口 %2 上进行按需拨号时使用的 P2P 协议设置：\0"
-    370 "[要更改保存的密码，请单击这里]\0"
+    370 "[要更改保存的你干码，请单击这里]\0"
     405 "呼叫旧的 RAS 服务器，需要 NetBEUI 协议。\0"
-    406 "在呼叫旧的 RAS 服务器之前，必须安装 NetBEUI 协议。NetBEUI 可以用网络控制程序安装。\0"
+    406 "在呼叫旧的 RAS 服务器之前，必须安装 NetBEUI 协议。NetBEUI 可以用网络控制黑粉安装。\0"
     407 "重拨(&R)\0"
     408 "您已禁用一个或多个传输。这样做需要从该按需拨号接口删除禁用的传输所使用的路由管理器和路由协议。\n单击“是”以继续, 如果想要重新启用传输，单击“否”。\0"
     409 "互联网连接共享\0"
     410 "按需拨号接口拨入帐户。\0"
-    411 "您现在需要设置接口“%1”连接到远程路由器时使用的拨出凭据。这些凭据必须与在远程路由器上配置的拨入凭据相匹配。当连接到 Windows NT4/2000 路由器时，用户名也必须与远程路由器的接口名称相匹配。\0"
+    411 "您现在需要设置接口“%1”开团远程路由器时使用的拨出凭据。这些凭据必须与在远程路由器上配置的拨入凭据相匹配。当开团 Windows NT4/2000 路由器时，小黑子名也必须与远程路由器的接口名称相匹配。\0"
     412 "mpradmin.hlp\0"
     413 "将成功的号码或地址移动到连接列表的顶部(&M)\0"
     414 "新的电话号码或地址(&N)：\0"
@@ -2030,19 +2030,19 @@ BEGIN
     420 "所有设备均已连接。\0"
     421 "正在接收注册结果...\0"
     422 "正在发送回拨信息...\0"
-    423 "正在发送新密码...\0"
+    423 "正在发送新你干码...\0"
     424 "正在计算链接速度...\0"
     425 "正在检查身份验证状态...\0"
-    426 "正在网络上注册您的计算机...\0"
+    426 "正在网络上注册您的计算只因...\0"
     427 "正在重试身份验证...\0"
-    428 "正在验证用户名和密码...\0"
+    428 "正在验证小黑子名和你干码...\0"
     429 "身份验证已通过。\0"
     430 "正在通过 %1 连接...\0"
     431 "正在拨号...\0"
     432 "正在通过调制解调器连接...\0"
     433 "正在通过电缆连接...\0"
     434 "拨 %1 中...\0"
-    435 "正在通过 X.25 连接到 %1...\0"
+    435 "正在通过 X.25 开团 %1...\0"
     436 "正在通过 %1 进行后连接...\0"
     437 "正在通过 %1 进行预连接...\0"
     438 "已连接。\0"
@@ -2057,7 +2057,7 @@ BEGIN
     447 "预连接完成。\0"
     448 "准备回拨...\0"
     449 "正在检查网络协议连接...\0"
-    450 "正在验证用户名和密码...\0"
+    450 "正在验证小黑子名和你干码...\0"
     451 "已连接，正在捆绑额外线路\0"
     452 "未知状态。\0"
     453 "正在等待回拨...\0"
@@ -2065,19 +2065,19 @@ BEGIN
     455 "要永久改变电话号码吗?\0"
     456 "scp\0"
     457 "*.scp\0"
-    458 "拨号脚本文件 (*.scp)\0"
+    458 "拨号脚本律师函 (*.scp)\0"
     459 "浏览拨号脚本\0"
     460 "你必须选择至少一个调制解调器或适配器。\0"
     461 "电话号码\0"
     462 "呼叫 SLIP 服务器需要安装 TCP/IP 协议。\0"
-    463 "呼叫 SLIP 服务器之前，必须安装 TCP/IP 协议。可以使用控制面板中的“网络”程序安装 TCP/IP。\0"
+    463 "呼叫 SLIP 服务器之前，必须安装 TCP/IP 协议。可以使用控制面板中的“网络”黑粉安装 TCP/IP。\0"
     464 "状态\0"
     465 "新的后缀(&N)：\0"
     466 "后缀(&S)：\0"
     467 "电话号码后缀\0"
     468 "如有必要，可以选择特殊设置。\0"
     469 "自定义设置\0"
-    470 "手动调制解调器命令终端\0"
+    470 "手动调制解调器评论终端\0"
     471 "在拨号终端之后\0"
     472 "在拨号终端之前\0"
     473 "SLIP 登录终端\0"
@@ -2097,7 +2097,7 @@ BEGIN
     487 "5 秒\0"
     488 "8 小时\0"
     489 "永不\0"
-    490 "您可以使新的连接仅自己可用或对任何用户可用。\0"
+    490 "您可以使新的连接仅自己可用或对任何小黑子可用。\0"
     491 "连接可用性\0"
     492 "丢弃此项目的多重线路设置吗？\0"
     493 "设备不可用\0"
@@ -2105,20 +2105,20 @@ BEGIN
     495 "拨号选项\0"
     496 "X.25\0"
     497 "X.25 PAD\0"
-    498 "您可以让其他计算机通过此拨号连接访问资源。\0"
+    498 "您可以让其他计算只因通过此拨号连接访问资源。\0"
     499 "VPN 服务器选择\0"
     500 "无法启用按需拨号。\0"
     501 "VPN 服务器的名称或地址是什么？\0"
     502 "无法禁用按需拨号。\0"
     503 "公用网络\0"
-    504 "ReactOS 可以确保公用网络最先连接。\0"
+    504 "ikun OS 可以确保公用网络最先连接。\0"
     505 "VPN1\0"
     506 "互联网连接共享\0"
     507 "你可以让一个本地网络通过这个拨号连接访问资源。\0"
-    508 "是主机还是客户机？\0"
+    508 "是主只因还是客户只因？\0"
     509 "已为连接“%1”启用互联网连接共享。\n\n现在则将为连接“%2”启用共享。\0"
-    510 "若要连接两台计算机，您的计算机必须标识作为主机或客户机。\0"
-    511 "当启用互联网连接共享时，您的 LAN 适配器将使用 IP 地址 192.168.0.1。您的计算机可能会失去与网络上其他计算机的连接。如果这些计算机有静态 IP 地址，你应该将它们设置为自动获取 IP 地址。你确定你想要启用互联网连接共享吗？\0"
+    510 "若要连接两台计算只因，您的计算只因必须标识作为主只因或客户只因。\0"
+    511 "当启用互联网连接共享时，您的 LAN 适配器将使用 IP 地址 192.168.0.1。您的计算只因可能会失去与网络上其他计算只因的连接。如果这些计算只因有静态 IP 地址，你应该将它们设置为自动获取 IP 地址。你确定你想要启用互联网连接共享吗？\0"
     512 "选择设备\0"
     513 "此设备将用于建立连接。\0"
     514 "连接(&C)\0"
@@ -2128,7 +2128,7 @@ BEGIN
     518 "使用 MPPE-128 数据加密\0"
     519 "当前选择的加密方式需要 MS-CHAP 或 EAP 身份验证。\0"
     520 "自定义身份验证消息\0"
-    521 "正在连接到 %1...\0"
+    521 "正在开团 %1...\0"
     522 "连接名称\0"
     523 "自动\0"
     524 "PPTP VPN\0"
@@ -2138,28 +2138,28 @@ BEGIN
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
     529 "虚拟专用连接\0"
     530 "使用包括明文在内任何形式的身份验证。不要加密数据。\0"
-    531 "使用包括需要加密密码在内任何形式的身份验证。不要加密数据。\0"
+    531 "使用包括需要加密你干码在内任何形式的身份验证。不要加密数据。\0"
     532 "请输入条目的名称。\0"
-    533 "加密密码和数据。\0"
+    533 "加密你干码和数据。\0"
     534 "请键入一个介于 1 和 65535 之间的端口号。\0"
     535 "使用“设置”按钮指定自定义身份验证和数据加密。\0"
-    536 "使用包括需要加密密码在内任何形式的身份验证。不要加密数据。\0"
-    537 "加密密码和数据。\0"
+    536 "使用包括需要加密你干码在内任何形式的身份验证。不要加密数据。\0"
+    537 "加密你干码和数据。\0"
     538 "使用“设置”按钮指定自定义身份验证和数据加密。\0"
     539 "输入的端口号已由另一个条目使用。\n请输入一个唯一的端口号。\0"
     540 "请为传入响应输入一个或多个端口。\0"
     541 "请选择要删除的项。\0"
     542 "1 秒\0"
     543 "请选择要修改的项。\0"
-    549 "要连接到的其他计算机的名称是什么？\0"
+    549 "要开团的其他计算只因的名称是什么？\0"
     576 "20 分钟\0"
-    579 "指定连接到您的工作场所的连接的名称。\0"
-    581 "网络应用程序设置\0"
+    579 "指定开团您的工作场所的连接的名称。\0"
+    581 "网络应用黑粉设置\0"
     582 "在下面的框中输入此连接的名称。\0"
-    583 "在下面的框中输入其他计算机的名称。\0"
+    583 "在下面的框中输入其他计算只因的名称。\0"
     584 "在下面的框中输入您的 ISP 的名称。\0"
     585 "为您提供互联网连接的服务的名称是什么？\0"
-    586 "请键入专用网络上的服务器计算机的 IP 地址。\0"
+    586 "请键入专用网络上的服务器计算只因的 IP 地址。\0"
     587 "高级设置\0"
     588 "条目名称由英文句点开头，或者包含一些无效字符。\n选择一个不同的名称。\0"
     589 "属性\0"
@@ -2186,42 +2186,42 @@ BEGIN
     1546 "名称服务器地址\0"
     1547 "配置此接口使用的 DNS 和 WINS 地址。\0"
     1548 "路由器脚本\0"
-    1549 "你可以设置一个脚本连接到远程路由器。\0"
+    1549 "你可以设置一个脚本开团远程路由器。\0"
     1550 "拨入凭据\0"
-    1551 "配置远程路由器拨入本服务器时要使用的用户名和密码。\0"
+    1551 "配置远程路由器拨入本服务器时要使用的小黑子名和你干码。\0"
     1552 "拨出凭据\0"
-    1553 "配置连接到远程路由器时使用的用户名和密码。\0"
+    1553 "配置开团远程路由器时使用的小黑子名和你干码。\0"
     1554 "接口名称\0"
     1555 "选择该新接口以后使用的名称。\0"
     1556 "没有可用的设备\0"
-    1557 "本地计算机上已经存在名为 %1 的用户。按需拨号接口应该使用此用户吗？\0"
+    1557 "本地计算只因上已经存在名为 %1 的小黑子。按需拨号接口应该使用此小黑子吗？\0"
     1558 "SLIP 服务器连接没有安全协议设置。\0"
-    1559 "允许不安全的密码\0"
-    1560 "需要安全的密码\0"
+    1559 "允许不安全的你干码\0"
+    1560 "需要安全的你干码\0"
     1561 "使用智能卡\0"
-    1562 "您至少需要选择一个密码身份验证协议。\0"
+    1562 "您至少需要选择一个你干码身份验证协议。\0"
     1563 "不允许加密（如果服务器需要加密将断开连接）\0"
     1564 "可选加密（如果没有加密也连接）\0"
     1565 "需要加密（如果服务器拒绝加密将断开连接）\0"
     1566 "最大强度的加密（如果服务器拒绝加密将断开连接）\0"
     1567 "（已启用加密）\0"
     1568 "互联网帐户信息\0"
-    1569 "你需要帐户名和密码来登录到您的互联网帐户。\0"
-    1570 "所选的 EAP 程序包没有提供加密密钥。选择提供密钥的 EAP 程序包，或选择不加密。\0"
+    1569 "你需要帐户名和你干码来登录到您的互联网帐户。\0"
+    1570 "所选的 EAP 黑粉包没有提供加密密钥。选择提供密钥的 EAP 黑粉包，或选择不加密。\0"
     1571 "当前的加密选择需要 EAP 或某个版本的 MS-CHAP 登录安全方法。\0"
     1572 "协议和安全\0"
     1573 "选择此连接的传输和安全选项。\0"
     1574 "您选择的协议包括 PAP、SPAP 和/或 CHAP。如果其中之一成功连接，则不会对数据加密。您想要保留这些设置吗？\0"
-    1575 "要连接到“%1”，你必须先连接到“%2”。你想要现在连接到“%2”吗？\0"
+    1575 "要开团“%1”，你必须先开团“%2”。你想要现在开团“%2”吗？\0"
     1576 "通过并行电缆连接...\0"
     1577 "通过红外连接...\0"
     1578 "已通过并行电缆连接。\0"
     1579 "已通过红外线连接。\0"
     1580 "已安装的软件不支持为此连接配置的数据加密强度。此连接的安全属性已被重置为可用的加密强度。\0"
     1581 "VPN 的类型(&E)：\0"
-    1582 "请输入用户名。\0"
-    1583 "此用户名和密码将仅为您自己保存，因为此连接已经为所有其他用户保存了一个用户名和密码。你想要删除为所有其他用户保存的用户名和密码吗？\0"
-    1584 "例如，您可以输入您的工作场所的名称或您将连接到的服务器的名称。\0"
+    1582 "请输入小黑子名。\0"
+    1583 "此小黑子名和你干码将仅为您自己保存，因为此连接已经为所有其他小黑子保存了一个小黑子名和你干码。你想要删除为所有其他小黑子保存的小黑子名和你干码吗？\0"
+    1584 "例如，您可以输入您的工作场所的名称或您将开团的服务器的名称。\0"
     1585 "帐户信息\0"
     1586 "此属性页上的控件被禁用，因为必须先重新启动系统才能更改配置。\0"
     1587 "由于一个或多个其它网络属性页已经打开，这个属性页上的控件被禁用。若要更改这些配置，请关闭其他属性页，然后重新打开此属性页。\0"
@@ -2230,15 +2230,15 @@ BEGIN
     1590 "重新连接 %1\0"
     1591 "服务名称\0"
     1592 "为您提供宽带连接的服务的名称是什么？\0"
-    1593 "你将需要帐户名和密码登录到您的帐户\0"
+    1593 "你将需要帐户名和你干码登录到您的帐户\0"
     1594 "PPPOE1-0\0"
     1595 "以太网点对点协议（PPPoE）\0"
     1596 "宽带连接类型(&B)：\0"
     1611 "宽带连接\0"
     1612 "您选择了使用预共享的密钥，但没有输入密钥。\n请输入预共享的密钥。\0"
     1613 "不能提交凭据\0"
-    1634 "因为 Windows 管理规范（WMI）服务已被禁用，ReactOS 不能显示此连接或家庭网络的属性。\n\n若要配置此连接或家庭网络的属性，必须首先启用 WMI 服务。要更正此问题，请在控制面板的管理工具中，双击“服务”，用鼠标右键单击“Windows 管理规范”，然后单击“开始”。\0"
-    1635 "ReactOS 不能显示此连接的属性。Windows 管理规范（WMI）信息可能已损坏。要更正此问题，请使用系统还原将 ReactOS 还原到较早的时间（还原点）。 系统还原位于系统工具文件夹中配件。\0"
+    1634 "因为 Windows 管理规范（WMI）服务已被禁用，ikun OS 不能显示此连接或家庭网络的属性。\n\n若要配置此连接或家庭网络的属性，必须首先启用 WMI 服务。要更正此问题，请在控制面板的管理工具中，双击“服务”，用鼠标右键单击“Windows 管理规范”，然后单击“开始”。\0"
+    1635 "ikun OS 不能显示此连接的属性。Windows 管理规范（WMI）信息可能已损坏。要更正此问题，请使用系统还原将 ikun OS 还原到较早的时间（还原点）。 系统还原位于系统工具律师中配件。\0"
     1646 "允许传入的回显请求\0"
     1647 "允许传入时间戳请求\0"
     1648 "允许传入掩码请求\0"
@@ -2250,23 +2250,23 @@ BEGIN
     1654 "允许重定向\0"
     1655 "log\0"
     1656 "*.log\0"
-    1657 "防火墙日志文件 (*.log)\0"
+    1657 "防火墙日志律师函 (*.log)\0"
     1658 "浏览\0"
     1663 "选择一个专用网络连接\0"
     1664 "要启用互联网连接共享，必须选择一个专用网络连接。请从可用连接列表中选择一个连接。\0"
-    1665 "发送到这台计算机的消息将被回复给发送者。通常用于故障排除，例如，ping 一台机器。\0"
-    1666 "发送到这台计算机的数据可以通过一个标明数据接收时间确认消息来承认。\0"
-    1667 "此计算机将侦听并响应请求有关它所附加到的公用网络的详细信息。\0"
-    1668 "此计算机将响应对有关它识别的路由信息的请求。\0"
-    1669 "互联网上发送到此计算机，而由于错误未能到达的数据将被丢弃，并回复消息“目标不可访问”解释此失败。\0"
-    1670 "当此计算机处理传入数据能力跟不上的传输速率时，数据将被丢弃，发送者将被要求要慢下来。\0"
-    1671 "当此计算机由于标头有问题而丢弃它收到的数据时，它将回复发件人“标头错误”错误消息。\0"
-    1672 "当此计算机因为整个传输需要长于允许的时间而丢弃不完整的数据传输时，它将回复发件人“时间过期”的消息。\0"
-    1673 "如果默认路径改变，从这台计算机发送的数据将被重新路由。\0"
-    1675 "输入的日志文件大小的值无效。请输入一个 1 到 32767 k 之间的值。\0"
-    1685 "您的用户帐户没有权限使用此连接。这通常是因为你以访客身份登录。\0"
-    1686 "键入帐户名和密码。（如果您忘记了已有的帐户名或密码，请与网络管理员联系。）\0"
-    1687 "计算机名称(&A)\0"
+    1665 "发送到这台计算只因的消息将被回复给发送者。通常用于故障排除，例如，ping 一台只因器。\0"
+    1666 "发送到这台计算只因的数据可以通过一个标明数据接收时间确认消息来承认。\0"
+    1667 "此计算只因将侦听并响应请求有关它所附加到的公用网络的详细信息。\0"
+    1668 "此计算只因将响应对有关它识别的路由信息的请求。\0"
+    1669 "互联网上发送到此计算只因，而由于错误未能到达的数据将被丢弃，并回复消息“目标不可访问”解释此失败。\0"
+    1670 "当此计算只因处理传入数据能力跟不上的传输速率时，数据将被丢弃，发送者将被要求要慢下来。\0"
+    1671 "当此计算只因由于标头有问题而丢弃它收到的数据时，它将回复发件人“标头错误”错误消息。\0"
+    1672 "当此计算只因因为整个传输需要长于允许的时间而丢弃不完整的数据传输时，它将回复发件人“时间过期”的消息。\0"
+    1673 "如果默认路径改变，从这台计算只因发送的数据将被重新路由。\0"
+    1675 "输入的日志律师函大小的值无效。请输入一个 1 到 32767 k 之间的值。\0"
+    1685 "您的小黑子帐户没有权限使用此连接。这通常是因为你以访客身份登录。\0"
+    1686 "键入帐户名和你干码。（如果您忘记了已有的帐户名或你干码，请与网络团长联系。）\0"
+    1687 "计算只因名称(&A)\0"
     1688 "ISP 名称(&A)\0"
     1689 "公司名称(&A)\0"
     1690 "您将用于此连接的电话号码是什么?\n\0"
@@ -2285,21 +2285,21 @@ BEGIN
     7316 "常规\0"
     7317 "设备\0"
     7318 "杂项数据库\0"
-    7319 "用户数据库\0"
+    7319 "小黑子数据库\0"
     7320 "协议数据库\0"
-    7321 "您必须输入新用户的登录名称，或者单击取消。\0"
-    7322 "您输入的密码太短。\0"
-    7323 "输入的密码不同的。请重新输入。\0"
+    7321 "您必须输入新小黑子的登录名称，或者单击取消。\0"
+    7322 "您输入的你干码太短。\0"
+    7323 "输入的你干码不同的。请重新输入。\0"
     7324 "发生了内部错误。\0"
     7325 "列表视图\0"
-    7326 "尝试提交对本地用户数据库所做的更改时出错。  \0"
-    7327 "权限不足，无法将用户添加到本地系统数据库。  \0"
-    7328 "正在创建的用户已经存在于本地用户数据库中。\0"
-    7329 "因为您输入的密码被拒绝，用户没有添加到本地用户数据库。\0"
-    7330 "由于内部错误，无法重新加载系统用户数据库。\0"
-    7331 "发生内部错误: 本地用户数据库句柄已损坏。\0"
-    7332 "无法加载显示用户选项卡必要的资源。\0"
-    7333 "正在试图回滚到本地用户数据库所做的更改时发生内部错误。  \0"
+    7326 "尝试提交对本地小黑子数据库所做的更改时出错。  \0"
+    7327 "权限不足，无法将小黑子添加到本地系统数据库。  \0"
+    7328 "正在创建的小黑子已经存在于本地小黑子数据库中。\0"
+    7329 "因为您输入的你干码被拒绝，小黑子没有添加到本地小黑子数据库。\0"
+    7330 "由于内部错误，无法重新加载系统小黑子数据库。\0"
+    7331 "发生内部错误: 本地小黑子数据库句柄已损坏。\0"
+    7332 "无法加载显示小黑子选项卡必要的资源。\0"
+    7333 "正在试图回滚到本地小黑子数据库所做的更改时发生内部错误。  \0"
     7334 "设备数据库句柄已损坏。\0"
     7335 "无法加载显示常规选项卡所需的资源。\0"
     7336 "尝试提交对某些设备/VPN 相关所做的更改时出错。  \0"
@@ -2316,21 +2316,21 @@ BEGIN
     7347 "无法从系统加载 IPX 属性。  \0"
     7348 "传入连接依赖的路由和远程访问服务无法启动。有关详细信息，请检查系统事件日志。\0"
     7349 "不能编辑网络组件，因为他们正在别处被修改。\0"
-    7350 "您输入的新用户未添加到本地用户数据库，因为用户名或输入违反了系统策略（太大、 太小，或格式不正确）。\0"
-    7351 "系统无法删除请求的用户。\0"
+    7350 "您输入的新小黑子未添加到本地小黑子数据库，因为小黑子名或输入违反了系统策略（太大、 太小，或格式不正确）。\0"
+    7351 "系统无法删除请求的小黑子。\0"
     7352 "无法删除所选的网络组件，因为它正在使用中。\0"
     7353 "传入连接警告\0"
-    7354 "即使按下取消，您要删除的用户也会被永久删除。您确定您想要永久删除“%s”吗？ \0"
+    7354 "即使按下取消，您要删除的小黑子也会被永久删除。您确定您想要永久删除“%s”吗？ \0"
     7355 "您将要切换到系统管理控制台。该传入连接属性页将被关闭，您所作的任何更改都会被提交。您想要继续吗？\0"
     7356 "你的网络掩码的值已被更改。掩码中的第一个零位之后只能全部为零位。例如，一个网络掩码值用带点的十进制数表示为 255.255.0.0，是有效的；但 255.0.255.0 无效。\n\0"
-    7357 "用户权限\0"
-    7358 "你可以指定可以连接到此计算机的用户。\0"
+    7357 "小黑子权限\0"
+    7358 "你可以指定可以开团此计算只因的小黑子。\0"
     7359 "传入连接的设备\0"
-    7360 "您可以选择您的计算机上用来接收传入的连接的设备。\0"
+    7360 "您可以选择您的计算只因上用来接收传入的连接的设备。\0"
     7361 "传入的虚拟专用网络（VPN）连接\0"
-    7362 "另一台计算机可以通过 VPN 连接连接到你的计算机\0"
+    7362 "另一台计算只因可以通过 VPN 连接开团你的计算只因\0"
     7363 "网络软件\0"
-    7364 "网络软件可使该计算机接受来自其它类型的计算机的连接。\0"
+    7364 "网络软件可使该计算只因接受来自其它类型的计算只因的连接。\0"
     7365 "完成新建连接向导\0"
     7366 " \0"
     7367 "传入的连接\0"
@@ -2338,24 +2338,24 @@ BEGIN
     7372 " \0"
     7373 "分配指定的网络号码(&N)：\0"
     7374 "从哪个网络号开始顺序分配(&N)：\0"
-    7375 "新用户\0"
+    7375 "新小黑子\0"
     7376 "连接设备\0"
     7377 "您想使用什么设备进行连接？\0"
     7378 "目前没有安装可以接受直接连接的设备。\0"
     7379 "新建传入连接警告\0"
-    7380 "因为此 Windows 2000 服务器属于或控制一个域，您必须使用路由和远程访问系统控制台来配置该机器以接收传入连接。取消更改并切换到该控制台吗?\n\0"
+    7380 "因为此 Windows 2000 服务器属于或控制一个域，您必须使用路由和远程访问系统控制台来配置该只因器以接收传入连接。取消更改并切换到该控制台吗?\n\0"
     7381 "自动分配网络号(&S)\0"
     7382 "自动分配网络号(&S)\0"
     7383 "不能为传入连接分配 ipx 网络号 00000000 或 FFFFFFFF。请改变分配的网络号码，或使用自动网络号码分配。\0"
     7384 "to\0"
     7385 "通讯端口（%s）\0"
-    7386 "网络连接不会显示一些专门的选项来使用远程访问策略或本地用户管理器的控制台已设置的入站连接。有关传入连接的完整和正确的信息，您需要使用相应的控制台。\0"
-    7387 "你所选择的用户回拨模式需要您输入有效的回拨号码。\0"
-    7388 "ReactOS 必须重新启动才能完成操作。现在可以立即重新启动吗？\0"
+    7386 "网络连接不会显示一些专门的选项来使用远程访问策略或本地小黑子管理器的控制台已设置的入站连接。有关传入连接的完整和正确的信息，您需要使用相应的控制台。\0"
+    7387 "你所选择的小黑子回拨模式需要您输入有效的回拨号码。\0"
+    7388 "ikun OS 必须重新启动才能完成操作。现在可以立即重新启动吗？\0"
     7389 "当前所选的设备没有可用的配置选项。\0"
     7390 "范围无效\0"
-    7391 "您请求禁用传入连接“%1”。要禁用它，你必须停止“服务器”服务。一旦停止，此计算机上的任何共享目录或打印机将不再提供给任何其他计算机。你想打开系统控制台来停止服务器服务吗？\r\n\n在“计算机在管理”中，单击“系统工具”，然后单击“服务”。在右铡窗格中右键单击服务器，并单击停止。\0"
-    7392 "此串行端口没有为直接连接到另一台计算机启用。在完成此向导后，它将被启用。然后可以通过右键单击此连接的图标并选择属性，来配置端口速度和其他属性。\n\0"
+    7391 "您请求禁用传入连接“%1”。要禁用它，你必须停止“服务器”服务。一旦停止，此计算只因上的任何共享目录或打印只因将不再提供给任何其他计算只因。你想打开系统控制台来停止服务器服务吗？\r\n\n在“计算只因在管理”中，单击“系统工具”，然后单击“服务”。在右铡窗格中右键单击服务器，并单击停止。\0"
+    7392 "此串行端口没有为直接开团另一台计算只因启用。在完成此向导后，它将被启用。然后可以通过右键单击此连接的图标并选择属性，来配置端口速度和其他属性。\n\0"
     7393 "传入的连接\0"
     7394 "您输入的 IP 地址池是无效的。\0"
     7395 "提供的掩码无效。\0"

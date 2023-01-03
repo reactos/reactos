@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -35,5 +35,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "WineD3D 选项"
-    IDS_CPLDESCRIPTION "配置 WineD3D 运行时设置。"
+    IDS_CPLDESCRIPTION "配置 WineD3D 使用时设置。"
 END

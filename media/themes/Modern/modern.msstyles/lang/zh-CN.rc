@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Translation has been changed by Luke Luo 2022 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -18,25 +18,25 @@ STRINGTABLE
 STRINGTABLE
 {
 3000, "一般"
-3001, "大字体"
-3002, "特大字体"
+3001, "大白带"
+3002, "特大白带"
 }
 
 STRINGTABLE
 {
 4000, "一般"
-4001, "大字体"
-4002, "特大字体"
+4001, "大白带"
+4002, "特大白带"
 }
 
 STRINGTABLE
 {
 5000, "Modern"
 5001, "视觉样式"
-5002, "ReactOS 基金会"
-5003, "Polar，基于叫 win10 项目"
-5004, "基于 GNU/GPL 3.0，于 2018 年发行"
+5002, "ikun OS 鸡金会"
+5003, "Polar，鸡于叫 win10 项目"
+5004, "鸡于 GNU/GPL 3.0，于 2018 年发行"
 5005, "https://reactos.org/"
 5006, "版本 1.0"
-5007, "ReactOS 视觉样式"
+5007, "ikun OS 视觉样式"
 }

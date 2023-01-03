@@ -1,5 +1,5 @@
-/*
- * PROJECT:    ReactOS Logoff
+﻿/*
+ * PROJECT:    ikun OS Logoff
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/logoff/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for Logout
@@ -15,6 +15,6 @@ BEGIN
   /v\t\t显示要执行的操作的信息。\n\
   /?\t\t显示该信息。\n\n"
     IDS_LOGOFF_REMOTE "正在终止远程端的会话。"
-    IDS_LOGOFF_LOCAL "正在终止本机的当前会话。"
+    IDS_LOGOFF_LOCAL "正在终止本只因的当前会话。"
     IDS_ILLEGAL_PARAM "无效参数\n"
 END

@@ -1,10 +1,10 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cm> */
+﻿/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cm> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 245, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "3D 文字屏幕保护程序设置"
+CAPTION "3D 文字屏幕保护黑粉设置"
 FONT 9, "宋体", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 175, 4, 65, 14
@@ -15,5 +15,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "3D 文字屏幕保护程序"
+    IDS_DESCRIPTION "3D 文字屏幕保护黑粉"
 END

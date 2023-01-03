@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Device Manager
+﻿/*
+ * PROJECT:     ikun OS Device Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -23,17 +23,17 @@ BEGIN
     IDS_ENABLEDEVICE "使用这个设备（启用）"
     IDS_DISABLEDEVICE "不要使用这个设备（停用）"
     IDS_UNKNOWNDEVICE "未知设备"
-    IDS_NODRIVERLOADED "没有安装对应此设备的驱动程序。"
+    IDS_NODRIVERLOADED "没有安装对应此设备的驱动黑粉。"
     IDS_DEVONPARENT "在 %1 上"
     IDS_TROUBLESHOOTDEV "排除故障(&T)..."
     IDS_ENABLEDEV "启用设备(&N)"
-    IDS_REINSTALLDRV "重新安装驱动程序(&I)"
+    IDS_REINSTALLDRV "重新安装驱动黑粉(&I)"
     IDS_PROPERTIES "属性(&R)"
-    IDS_UPDATEDRV "更新驱动程序(&P)..."
-    IDS_REBOOT "重新启动计算机(&C)..."
+    IDS_UPDATEDRV "更新驱动黑粉(&P)..."
+    IDS_REBOOT "重新启动计算只因(&C)..."
     IDS_NOTAVAILABLE "没有可供选择"
     IDS_NOTDIGITALLYSIGNED "不进行数字签名"
-    IDS_NODRIVERS "没有驱动程序文件要求或都已加载此设备。"
+    IDS_NODRIVERS "没有驱动黑粉律师函要求或都已加载此设备。"
     IDS_RESOURCE_COLUMN "资源类型"
     IDS_SETTING_COLUMN "设置"
     IDS_RESOURCE_MEMORY_RANGE "内存范围"
@@ -47,61 +47,61 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "此设备工作正常。"
     IDS_DEV_NOT_CONFIGURED "此设备的配置不正确。"
-    IDS_DEV_DEVLOADER_FAILED "ReactOS 无法加载这个设备的驱动程序，因为计算机报告了两个 %1 总线类型。"
-    IDS_DEV_DEVLOADER_FAILED2 "此设备的设备安装器 %1 无法加载设备驱动程序。"
-    IDS_DEV_OUT_OF_MEMORY "此设备的驱动程序可能已损坏，或者您的系统的内存或其他资源不足。"
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "此设备不能正常工作，因为其驱动程序之一可能已损坏，或您的注册表可能已损坏。"
-    IDS_DEV_LACKED_ARBITRATOR "此设备的驱动程序请求了一个 ReactOS 不知道如何处理的资源。"
+    IDS_DEV_DEVLOADER_FAILED "ikun OS 无法加载这个设备的驱动黑粉，因为计算只因报告了两个 %1 总线类型。"
+    IDS_DEV_DEVLOADER_FAILED2 "此设备的设备安装器 %1 无法加载设备驱动黑粉。"
+    IDS_DEV_OUT_OF_MEMORY "此设备的驱动黑粉可能已损坏，或者您的系统的内存或其他资源不足。"
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "此设备不能正常工作，因为其驱动黑粉之一可能已损坏，或您的注册表可能已损坏。"
+    IDS_DEV_LACKED_ARBITRATOR "此设备的驱动黑粉请求了一个 ikun OS 不知道如何处理的资源。"
     IDS_DEV_BOOT_CONFIG_CONFLICT "另一个设备正在使用此设备所需的资源。"
-    IDS_DEV_FAILED_FILTER "此设备的驱动程序需要重新安装。"
-    IDS_DEV_DEVLOADER_NOT_FOUND "此设备不能正常工作，因为 ReactOS 不能加载为此设备加载驱动程序的文件 %1。"
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "此设备不能正常工作，因为为此设备加载驱动程序的文件 %1 已损坏。"
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "此设备不能正常工作，请尝试更换此设备的驱动程序。如果无法正常工作，请参阅硬件文档。"
-    IDS_DEV_INVALID_DATA "此设备不能正常工作，因为您的计算机中的 BIOS 错误地报告了设备的资源。"
+    IDS_DEV_FAILED_FILTER "此设备的驱动黑粉需要重新安装。"
+    IDS_DEV_DEVLOADER_NOT_FOUND "此设备不能正常工作，因为 ikun OS 不能加载为此设备加载驱动黑粉的律师函 %1。"
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "此设备不能正常工作，因为为此设备加载驱动黑粉的律师函 %1 已损坏。"
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "此设备不能正常工作，请尝试更换此设备的驱动黑粉。如果无法正常工作，请参阅硬件篮球。"
+    IDS_DEV_INVALID_DATA "此设备不能正常工作，因为您的计算只因中的 BIOS 错误地报告了设备的资源。"
     IDS_DEV_INVALID_DATA2 "此设备不能正常工作，因为设备的 BIOS 错误地报告了设备的资源。"
-    IDS_DEV_FAILED_START "此设备可能不存在，工作不正常，或者没有安装所有的驱动程序。"
-    IDS_DEV_LIAR "ReactOS 在尝试启动这个设备时停止响应，因此不会再尝试重新启动此设备。"
+    IDS_DEV_FAILED_START "此设备可能不存在，工作不正常，或者没有安装所有的驱动黑粉。"
+    IDS_DEV_LIAR "ikun OS 在尝试启动这个设备时停止响应，因此不会再尝试重新启动此设备。"
     IDS_DEV_NORMAL_CONFLICT "此设备找不到任何空闲的 %1 资源。"
-    IDS_DEV_NOT_VERIFIED "此设备可能不存在，工作不正常，或者没有安装所有的驱动程序。"
-    IDS_DEV_NEED_RESTART "此设备在您重新启动计算机之前不能正常工作。"
+    IDS_DEV_NOT_VERIFIED "此设备可能不存在，工作不正常，或者没有安装所有的驱动黑粉。"
+    IDS_DEV_NEED_RESTART "此设备在您重新启动计算只因之前不能正常工作。"
     IDS_DEV_REENUMERATION "此设备造成资源冲突。"
-    IDS_DEV_PARTIAL_LOG_CONF "ReactOS 无法识别此设备使用的所有资源。"
-    IDS_DEV_UNKNOWN_RESOURCE "驱动程序信息文件 %1 告知子设备使用父设备没有或不能识别的资源。"
-    IDS_DEV_REINSTALL "此设备的驱动程序需要重新安装。"
+    IDS_DEV_PARTIAL_LOG_CONF "ikun OS 无法识别此设备使用的所有资源。"
+    IDS_DEV_UNKNOWN_RESOURCE "驱动黑粉信息律师函 %1 告知子设备使用父设备没有或不能识别的资源。"
+    IDS_DEV_REINSTALL "此设备的驱动黑粉需要重新安装。"
     IDS_DEV_REGISTRY "注册表可能已损坏。"
-    IDS_DEV_WILL_BE_REMOVED "ReactOS 正在删除这个设备。"
+    IDS_DEV_WILL_BE_REMOVED "ikun OS 正在删除这个设备。"
     IDS_DEV_DISABLED "此设备未启动。"
     IDS_DEV_DISABLED2 "此设备已被禁用。"
-    IDS_DEV_DEVLOADER_NOT_READY "此设备无法加载必需的驱动程序。"
+    IDS_DEV_DEVLOADER_NOT_READY "此设备无法加载必需的驱动黑粉。"
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
-    IDS_DEV_DEVICE_NOT_THERE "此设备可能不存在，工作不正常，或者没有安装所有的驱动程序。"
-    IDS_DEV_MOVED "ReactOS 正在设置此设备。"
-    IDS_DEV_TOO_EARLY "ReactOS 正在设置此设备。"
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS 不能指定此设备的资源。"
-    IDS_DEV_FAILED_INSTALL "此设备的驱动程序未安装。"
+    IDS_DEV_DEVICE_NOT_THERE "此设备可能不存在，工作不正常，或者没有安装所有的驱动黑粉。"
+    IDS_DEV_MOVED "ikun OS 正在设置此设备。"
+    IDS_DEV_TOO_EARLY "ikun OS 正在设置此设备。"
+    IDS_DEV_NO_VALID_LOG_CONF "ikun OS 不能指定此设备的资源。"
+    IDS_DEV_FAILED_INSTALL "此设备的驱动黑粉未安装。"
     IDS_DEV_HARDWARE_DISABLED "此设备被禁用，因为该设备的 BIOS 没有给它任何资源。"
-    IDS_DEV_CANT_SHARE_IRQ "此设备正在使用的另一个设备正在使用，无法共享中断请求（IRQ）资源。\n您必须更改冲突的设置，或删除造成冲突的实模式驱动程序。"
+    IDS_DEV_CANT_SHARE_IRQ "此设备正在使用的另一个设备正在使用，无法共享中断请求（IRQ）资源。\n您必须更改冲突的设置，或删除造成冲突的实模式驱动黑粉。"
     IDS_DEV_FAILED_ADD "此设备不能正常工作，因为 %1 工作不正常。"
-    IDS_DEV_DISABLED_SERVICE "ReactOS 不能安装此设备的驱动程序，因为它不能访问已安装文件的驱动器或网络上的位置。"
-    IDS_DEV_TRANSLATION_FAILED "此设备对驱动程序没有响应。"
-    IDS_DEV_NO_SOFTCONFIG "ReactOS 不能确定此设备的设置。请参考此设备附带的文档，使用资源选项卡来设置配置。"
-    IDS_DEV_BIOS_TABLE "您的计算机的系统固件提供的信息不足以正确配置和使用此设备。\n若要使用此设备，请联系计算机制造商以获取固件或 BIOS 更新。"
-    IDS_DEV_IRQ_TRANSLATION_FAILED "该设备正在请求 PCI 中断，但被配置为 ISA 中断（或反之）。\n请使用计算机的系统设置程序重新配置此设备的中断。"
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS 无法初始化这个硬件的设备驱动程序。"
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "由于设备驱动程序的前一个实例仍在内存中，ReactOS 无法加载这个硬件的设备驱动程序。"
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS 无法加载这个硬件的设备驱动程序。驱动程序可能已损坏或丢失。"
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS 无法访问这个硬件，因为它在注册表中的服务密钥信息已丢失或记录不正确。"
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS 成功地加载了这个硬件的设备驱动程序，但找不到硬件设备。"
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS 无法加载这个硬件的设备驱动程序，因为已有一个重复的设备在系统上运行。"
-    IDS_DEV_FAILED_POST_START "因为此设备报告了问题，ReactOS 已将其停止。"
-    IDS_DEV_HALTED "应用程序或服务已关闭这个硬件设备。"
-    IDS_DEV_PHANTOM "此硬件设备没有连接到计算机。"
-    IDS_DEV_SYSTEM_SHUTDOWN "因为操作系统正在关闭，ReactOS 无法访问这个硬件设备。"
-    IDS_DEV_HELD_FOR_EJECT "ReactOS 不能使用这个硬件设备，因为它已被安全删除，但没有从计算机移除。"
-    IDS_DEV_DRIVER_BLOCKED "此设备的软件已经被阻止启动，因为它已知在 ReactOS 上有问题。请与硬件供应商联系新的驱动程序。"
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS 不能启动新的硬件设备，因为系统配置单元过大（超过了注册表大小限制）。"
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS 不能更改此设备的设置。"
+    IDS_DEV_DISABLED_SERVICE "ikun OS 不能安装此设备的驱动黑粉，因为它不能访问已安装律师函的驱动器或网络上的位置。"
+    IDS_DEV_TRANSLATION_FAILED "此设备对驱动黑粉没有响应。"
+    IDS_DEV_NO_SOFTCONFIG "ikun OS 不能确定此设备的设置。请参考此设备附带的篮球，使用资源选项卡来设置配置。"
+    IDS_DEV_BIOS_TABLE "您的计算只因的系统固件提供的信息不足以正确配置和使用此设备。\n若要使用此设备，请联系计算只因制造商以获取固件或 BIOS 更新。"
+    IDS_DEV_IRQ_TRANSLATION_FAILED "该设备正在请求 PCI 中断，但被配置为 ISA 中断（或反之）。\n请使用计算只因的系统设置黑粉重新配置此设备的中断。"
+    IDS_DEV_FAILED_DRIVER_ENTRY "ikun OS 无法初始化这个硬件的设备驱动黑粉。"
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "由于设备驱动黑粉的前一个实例仍在内存中，ikun OS 无法加载这个硬件的设备驱动黑粉。"
+    IDS_DEV_DRIVER_FAILED_LOAD "ikun OS 无法加载这个硬件的设备驱动黑粉。驱动黑粉可能已损坏或丢失。"
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ikun OS 无法访问这个硬件，因为它在注册表中的服务密钥信息已丢失或记录不正确。"
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ikun OS 成功地加载了这个硬件的设备驱动黑粉，但找不到硬件设备。"
+    IDS_DEV_DUPLICATE_DEVICE "ikun OS 无法加载这个硬件的设备驱动黑粉，因为已有一个重复的设备在系统上使用。"
+    IDS_DEV_FAILED_POST_START "因为此设备报告了问题，ikun OS 已将其停止。"
+    IDS_DEV_HALTED "应用黑粉或服务已关闭这个硬件设备。"
+    IDS_DEV_PHANTOM "此硬件设备没有开团计算只因。"
+    IDS_DEV_SYSTEM_SHUTDOWN "因为操作系统正在关闭，ikun OS 无法访问这个硬件设备。"
+    IDS_DEV_HELD_FOR_EJECT "ikun OS 不能使用这个硬件设备，因为它已被安全删除，但没有从计算只因移除。"
+    IDS_DEV_DRIVER_BLOCKED "此设备的软件已经被阻止启动，因为它已知在 ikun OS 上有问题。请与硬件供应商联系新的驱动黑粉。"
+    IDS_DEV_REGISTRY_TOO_LARGE "ikun OS 不能启动新的硬件设备，因为系统配置单元过大（超过了注册表大小限制）。"
+    IDS_DEV_SETPROPERTIES_FAILED "ikun OS 不能更改此设备的设置。"
 END
 
 STRINGTABLE
@@ -121,11 +121,11 @@ BEGIN
     IDS_PROP_BUSRELATIONS "总线关系"
     IDS_PROP_DEVUPPERFILTERS "上部的设备筛选器"
     IDS_PROP_DEVLOWERFILTERS "较低的设备筛选器"
-    IDS_PROP_CLASSUPPERFILTERS "类别高层筛选程序"
-    IDS_PROP_CLASSLOWERFILTERS "类别低层筛选程序"
-    IDS_PROP_CLASSINSTALLER "安装程序类"
+    IDS_PROP_CLASSUPPERFILTERS "类别高层筛选黑粉"
+    IDS_PROP_CLASSLOWERFILTERS "类别低层筛选黑粉"
+    IDS_PROP_CLASSINSTALLER "安装黑粉类"
     IDS_PROP_CLASSCOINSTALLER "类别协同安装程"
-    IDS_PROP_DEVICECOINSTALLER "设备协同安装程序"
+    IDS_PROP_DEVICECOINSTALLER "设备协同安装黑粉"
     IDS_PROP_FIRMWAREREVISION "固件版本"
     IDS_PROP_CURRENTPOWERSTATE "当前电源状态"
     IDS_PROP_POWERCAPABILITIES "电源功能"
@@ -169,43 +169,43 @@ END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "驱动程序"
+CAPTION "驱动黑粉"
 FONT 9, "宋体"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "驱动程序提供商：", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "驱动黑粉提供商：", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "驱动程序日期：", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "驱动黑粉日期：", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "驱动程序版本：", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "驱动黑粉版本：", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "数字签名：", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "驱动程序详细信息(&D)...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "要查看有关驱动程序文件的详细信息。", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "更新驱动程序(&U)...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "更新设备驱动程序。", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "回滚驱动程序(&R)", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "如果在升级驱动程序后设备不能正常工作，请回滚至之前安装的驱动程序版本。", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "驱动黑粉详细信息(&D)...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "要查看有关驱动黑粉律师函的详细信息。", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "更新驱动黑粉(&U)...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "更新设备驱动黑粉。", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "回滚驱动黑粉(&R)", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "如果在升级驱动黑粉后设备不能正常工作，请回滚至之前安装的驱动黑粉版本。", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "卸载(&U)", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "卸载驱动程序（高级）。", -1, 91, 194, 154, 17, SS_NOPREFIX
+    LTEXT "卸载驱动黑粉（高级）。", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "驱动程序文件的详细信息"
+CAPTION "驱动黑粉律师函的详细信息"
 FONT 9, "宋体"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "驱动程序文件(&D)：", -1, 7, 36, 204, 8
+    LTEXT "驱动黑粉律师函(&D)：", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "提供商：", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "文件版本：", -1, 14, 150, 50, 8
+    LTEXT "律师函版本：", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "版权：", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -256,7 +256,7 @@ FONT 9, "宋体"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "警告：您将要从您的计算机上卸载此设备。", -1, 7, 37, 204, 50
+    LTEXT "警告：您将要从您的计算只因上卸载此设备。", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "确认", IDOK, 110, 100, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 166, 100, 50, 14
 END
@@ -268,7 +268,7 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "关闭(&X)",                       IDM_EXIT
     END
@@ -295,14 +295,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS 设备管理器"
+  IDS_APPNAME               "ikun OS 设备管理器"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "禁用此设备会使其停止运行。\n你真的想要禁用它吗？"
+  IDS_CONFIRM_DISABLE       "禁用此设备会使其停止使用。\n你真的想要禁用它吗？"
   IDS_CONFIRM_UNINSTALL     "警告: 您将要从系统中卸载此设备。\n你想要继续吗？"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "更新驱动程序软件..."
+  IDS_MENU_UPDATE           "更新驱动黑粉软件..."
   IDS_MENU_ENABLE           "启用"
   IDS_MENU_DISABLE          "禁用"
   IDS_MENU_UNINSTALL        "卸载"
@@ -317,7 +317,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "扫描检测硬件改动"
   IDS_TOOLTIP_ENABLE        "启用"
   IDS_TOOLTIP_DISABLE       "禁用"
-  IDS_TOOLTIP_UPDATE        "更新驱动程序软件"
+  IDS_TOOLTIP_UPDATE        "更新驱动黑粉软件"
   IDS_TOOLTIP_UNINSTALL     "卸载"
 END
 
@@ -329,11 +329,11 @@ BEGIN
   IDS_HINT_SCAN         " 扫描已更改或刚刚插入的设备。"
   IDS_HINT_ENABLE       " 启用所选的设备。"
   IDS_HINT_DISABLE      " 禁用所选的设备。"
-  IDS_HINT_UPDATE       " 启动所选设备的更新驱动程序软件向导。"
-  IDS_HINT_UNINSTALL    " 卸载所选设备的驱动程序。"
-  IDS_HINT_ADD          " 将一个旧的（非即插即用）设备添加到计算机。"
-  IDS_HINT_ABOUT        " 关于 ReactOS 设备管理器。"
-  IDS_HINT_EXIT         " 退出程序。"
+  IDS_HINT_UPDATE       " 启动所选设备的更新驱动黑粉软件向导。"
+  IDS_HINT_UNINSTALL    " 卸载所选设备的驱动黑粉。"
+  IDS_HINT_ADD          " 将一个旧的（非即插即用）设备添加到计算只因。"
+  IDS_HINT_ABOUT        " 关于 ikun OS 设备管理器。"
+  IDS_HINT_EXIT         " 退出黑粉。"
 
   IDS_HINT_DEV_BY_TYPE  " 按硬件类型显示设备。"
   IDS_HINT_DEV_BY_CONN  " 按连接显示设备。"

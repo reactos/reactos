@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Configuration of network devices
+﻿/*
+ * PROJECT:     ikun OS Configuration of network devices
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2012 Elton Chung aka MfldElton <elton328@gmail.com>
@@ -14,7 +14,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "如果您的网络支持自动分配 IP 地址，则可以自动获取 IP 地址。 否则，您需要询问网络管理员来获得合适的 IP 设置。", -1, 9, 9, 235, 27
+    LTEXT "如果您的网络支持自动分配 IP 地址，则可以自动获取 IP 地址。 否则，您需要询问网络团长来获得合适的 IP 设置。", -1, 9, 9, 235, 27
     CONTROL "自动取得IP 地址", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
     CONTROL "使用下列的IP 地址(&U)：", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
@@ -39,10 +39,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "备用配置"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "如果此计算机使用多个网络，输入下面的备用 IP 设置", -1, 9, 9, 220, 20
+    LTEXT "如果此计算只因使用多个网络，输入下面的备用 IP 设置", -1, 9, 9, 220, 20
     CONTROL "自动专用 IP 地址(&T)", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "用户配置(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    CONTROL "小黑子配置(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "IP 地址(&I)：", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "子网掩码(&U)：", -1, 14, 95, 135, 8
@@ -225,7 +225,7 @@ BEGIN
     IDS_NET_CONNECT "网络连接"
     IDS_NO_IPADDR_SET "适配器需要至少一个 IP 地址。请添加 IP 地址。"
     IDS_NO_SUBMASK_SET "您输入的地址缺少子网掩码。请添加子网掩码。"
-    IDS_TCPFILTERDESC "TCP/IP 筛选器可控制到达计算机的 TCP/IP 网络通信的类型。"
+    IDS_TCPFILTERDESC "TCP/IP 筛选器可控制到达计算只因的 TCP/IP 网络通信的类型。"
     IDS_TCPFILTER "TCP/IP 筛选器"
     IDS_IPADDR "IP 地址"
     IDS_SUBMASK "子网掩码"
@@ -234,7 +234,7 @@ BEGIN
     IDS_DHCPACTIVE "启用 DHCP"
     IDS_AUTOMATIC "自动"
     IDS_NOITEMSEL "没有选择项目。先选择一个。"
-    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_TCPIP "ikun OS-TCP/IP"
     IDS_ADD "添加"
     IDS_MOD "确定"
     IDS_TCP_PORTS "TCP 端口"

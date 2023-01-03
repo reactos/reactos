@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2009 Piotr Caban
  * Copyright 2010 Akihiro Sagawa
  *
@@ -24,7 +24,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_TO_PRIMITIVE        "オブジェクトを基本型に変換できません"
+    IDS_TO_PRIMITIVE        "オブジェクトを鸡本型に変換できません"
     IDS_INVALID_CALL_ARG    "手続き呼び出しまたは引数が無効です"
     IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
     IDS_OBJECT_REQUIRED     "Object required"

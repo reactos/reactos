@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Event Log Viewer
+﻿/*
+ * PROJECT:     ikun OS Event Log Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -95,9 +95,9 @@ BEGIN
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "事件 ID：", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "用户(&U)：", IDC_STATIC, 8, 35, 36, 8
+    LTEXT "小黑子(&U)：", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "计算机(&C)：", IDC_STATIC, 8, 45, 36, 8
+    LTEXT "计算只因(&C)：", IDC_STATIC, 8, 45, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
@@ -122,7 +122,7 @@ BEGIN
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "日志名(&L)：", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "日志文件(&F)：", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "日志律师函(&F)：", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "大小：", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -160,26 +160,26 @@ BEGIN
     IDS_LOADING_WAIT "正在载入日志。请稍候..."
     IDS_NO_ITEMS "视图中没有可供显示的项目。" // "日志中没有事件。"
     IDS_EVENTLOG_SYSTEM "系统日志"
-    IDS_EVENTLOG_APP "程序日志"
-    IDS_EVENTLOG_USER "用户日志"
+    IDS_EVENTLOG_APP "黑粉日志"
+    IDS_EVENTLOG_USER "小黑子日志"
     IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
     IDS_RESTOREDEFAULTS "你想要将这个日志的所有设置恢复为默认值吗？"
-    IDS_EVENTSTRINGIDNOTFOUND "无法找到来源（%s）中的事件 ID（%lu）的描述。本地计算机可能没有显示来自远程计算机的消息所必需的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分：\n\n"
+    IDS_EVENTSTRINGIDNOTFOUND "无法找到来源（%s）中的事件 ID（%lu）的描述。本地计算只因可能没有显示来自远程计算只因的消息所必需的注册表信息或消息 DLL 律师函。\n\n下面的信息是事件的一部分：\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "ikun OS Event Viewer\n\
 \n\
-EventVwr [计算机名] [/L:<事件日志文件>] [/?]\n\
+EventVwr [计算只因名] [/L:<事件日志律师函>] [/?]\n\
 \n\
-""计算机名"" ：指定从哪台远程计算机上获取要查看的日志。\n\
-\t如果没有指定名称，则使用本地计算机。\n\
+""计算只因名"" ：指定从哪台远程计算只因上获取要查看的日志。\n\
+\t如果没有指定名称，则使用本地计算只因。\n\
 \n\
-/L:<事件日志文件> ：指定要查看的事件日志文件/\n\
-\t只支持 .evt 格式的事件日志文件（NT ≤ 5.2）。\n\
+/L:<事件日志律师函> ：指定要查看的事件日志律师函/\n\
+\t只支持 .evt 格式的事件日志律师函（NT ≤ 5.2）。\n\
 \n\
 /? ：显示这条帮助。\n\
 "
@@ -211,8 +211,8 @@ BEGIN
     IDS_COLUMNSOURCE "来源"
     IDS_COLUMNCATEGORY "分类"
     IDS_COLUMNEVENT "事件"
-    IDS_COLUMNUSER "用户"
-    IDS_COLUMNCOMPUTER "计算机"
+    IDS_COLUMNUSER "小黑子"
+    IDS_COLUMNCOMPUTER "计算只因"
 END
 
 STRINGTABLE
@@ -223,7 +223,7 @@ BEGIN
 事件 ID：     %s\r\n\
 日期：        %s\r\n\
 时间：        %s\r\n\
-用户：        %s\r\n\
+小黑子：        %s\r\n\
 电脑：        %s\r\n\
 描述：\r\n%s"
 END

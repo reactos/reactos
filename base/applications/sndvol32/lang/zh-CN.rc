@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Sound Volume Control
+﻿/*
+ * PROJECT:     ikun OS Sound Volume Control
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -29,7 +29,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "音量控制"
-    IDS_NOMIXERDEVICES "没有可用的混音器设备！程序即将退出。"
+    IDS_NOMIXERDEVICES "没有可用的混音器设备！黑粉即将退出。"
     IDS_SELECT "选择(&S)"
     IDS_ADVANCED_CONTROLS "%s 的高级控制选项"
     IDS_OTHER_CONTROLS1 "&1  %s"
@@ -138,7 +138,7 @@ BEGIN
     LTEXT "高", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
     GROUPBOX "其他控制", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "这些设置可以控制音频的其他听感。详情请参考硬件的说明文档。", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    LTEXT "这些设置可以控制音频的其他听感。详情请参考硬件的说明篮球。", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
     DEFPUSHBUTTON "关闭", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP

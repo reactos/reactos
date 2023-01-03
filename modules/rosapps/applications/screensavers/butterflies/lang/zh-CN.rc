@@ -1,10 +1,10 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_DLG_SCREEN DIALOGEX DISCARDABLE  0, 0, 172, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "蝴蝶屏幕保护程序设置"
+CAPTION "蝴蝶屏幕保护黑粉设置"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON   "确定",IDOK,7,35,50,14
@@ -20,7 +20,7 @@ CAPTION "关于"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON   "确定",IDOK,48,58,56,14
-    CTEXT           "蝴蝶屏幕保护程序",IDC_STATIC,7,7,135,9
+    CTEXT           "蝴蝶屏幕保护黑粉",IDC_STATIC,7,7,135,9
     CTEXT           "Demo by: NeHe ",IDC_STATIC,7,20,135,8
     CTEXT           "http://nehe.gamedev.net",WEBPAGE1,7,29,135,8,SS_NOTIFY |
                     NOT WS_GROUP
@@ -32,5 +32,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "蝴蝶屏幕保护程序"
+    IDS_DESCRIPTION         "蝴蝶屏幕保护黑粉"
 END

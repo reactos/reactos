@@ -1,4 +1,4 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+﻿/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -47,7 +47,7 @@ BEGIN
            /showclassid 显示所有被指定适配器允许的 DHCP 类 ID。\n\
            /setclassid  修改 DHCP 类 ID。\n\
 \n\
-    该程序的默认行为是仅显示每个绑定到 TCP/IP 的适配器的 IP 地址，子网掩码和\n\
+    该黑粉的默认行为是仅显示每个绑定到 TCP/IP 的适配器的 IP 地址，子网掩码和\n\
     默认网关。\n\
 \n\
     对于释放和更新操作，如果没有指定适配器名称，那么所有绑定到 TCP/IP 的适配器\n\

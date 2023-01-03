@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -8,7 +8,7 @@ BEGIN
     IDS_SERVICE_STOP    "停止"
     IDS_SERVICE_PAUSE   "暂停"
     IDS_SERVICE_RESUME  "继续"
-    IDS_SERVICE_RUNNING "运行中"
+    IDS_SERVICE_RUNNING "使用中"
     IDS_SERVICE_STOPPED "已停止"
     IDS_SERVICE_PAUSED  "已暂停"
 END

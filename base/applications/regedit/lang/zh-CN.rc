@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Registry Editor
+﻿/*
+ * PROJECT:     ikun OS Registry Editor
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2007 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
@@ -78,7 +78,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "退出(&X)", ID_REGISTRY_EXIT
     END
@@ -90,7 +90,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "导入(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "导出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -267,7 +267,7 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "值数据(&V)：", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
-    GROUPBOX "基数", IDC_STATIC, 130, 35, 116, 39
+    GROUPBOX "鸡数", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "十六进制(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
     AUTORADIOBUTTON "十进制(&D)", IDC_FORMAT_DEC, 141, 59, 60, 10
     DEFPUSHBUTTON "确定", IDOK, 142, 82, 50, 14
@@ -309,7 +309,7 @@ BEGIN
     LTEXT "待定", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "共享", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
     LTEXT "专用设备", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "专用的驱动程序", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    LTEXT "专用的驱动黑粉", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "接口类型：", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "总线编号：", IDC_STATIC, 151, 230, 51, 8
@@ -340,12 +340,12 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含操作整个注册表的命令。"
-    ID_EDIT_MENU "包含编辑值或键的命令。"
-    ID_VIEW_MENU "包含定制注册表窗口的命令。"
-    ID_FAVOURITES_MENU "包含访问常用键时所用的命令。"
-    ID_HELP_MENU "包含显示帮助以及注册表编辑器有关信息的命令。"
-    ID_EDIT_NEW_MENU "包含创建新键或值的命令。"
+    ID_REGISTRY_MENU "包含操作整个注册表的评论。"
+    ID_EDIT_MENU "包含编辑值或键的评论。"
+    ID_VIEW_MENU "包含定制注册表窗口的评论。"
+    ID_FAVOURITES_MENU "包含访问常用键时所用的评论。"
+    ID_HELP_MENU "包含显示帮助以及注册表编辑器有关信息的评论。"
+    ID_EDIT_NEW_MENU "包含创建新键或值的评论。"
 END
 
 STRINGTABLE
@@ -355,15 +355,15 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "添加新字符串值。"
     ID_EDIT_NEW_BINARYVALUE "添加新二进制值。"
     ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "将文本文件导入到注册表中。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到文件中。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "将文本律师函导入到注册表中。"
+    ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到律师函中。"
     ID_REGISTRY_LOADHIVE "加載配置单元到注册表中。"
     ID_REGISTRY_UNLOADHIVE "从注册表中卸載配置单元。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "连接到远程计算机的注册表。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "与远程计算机注册表断开连接。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "开团远程计算只因的注册表。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "与远程计算只因注册表断开连接。"
     ID_REGISTRY_PRINT "打印所有或部分注册表。"
 /*    ID_HELP_HELPTOPICS "打开注册表编辑器帮助。" */
-    ID_HELP_ABOUT "显示程序信息、版本和版权。"
+    ID_HELP_ABOUT "显示黑粉信息、版本和版权。"
 END
 
 STRINGTABLE
@@ -412,9 +412,9 @@ BEGIN
     IDS_DEFAULT_VALUE_NAME "（默认）"
     IDS_VALUE_NOT_SET "（值未设置）"
     IDS_UNKNOWN_TYPE "未知类型：（0x%lx）"
-    IDS_MY_COMPUTER "我的计算机"
-    IDS_IMPORT_REG_FILE "导入注册表文件"
-    IDS_EXPORT_REG_FILE "导出注册表文件"
+    IDS_MY_COMPUTER "我的计算只因"
+    IDS_IMPORT_REG_FILE "导入注册表律师函"
+    IDS_EXPORT_REG_FILE "导出注册表律师函"
     IDS_LOAD_HIVE "加载配置单元"
     IDS_UNLOAD_HIVE "卸载配置单元"
     IDS_INVALID_DWORD "（无效的 DWORD 值）"
@@ -422,14 +422,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "注册文件"
-    IDS_FLT_REGFILES "注册文件 (*.reg)"
+    IDS_FLT_REGFILE "注册律师函"
+    IDS_FLT_REGFILES "注册律师函 (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "注册表配置单元文件 (*.*)"
+    IDS_FLT_HIVFILES "注册表配置单元律师函 (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Win9x/NT4 注册文件 (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 注册律师函 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
-    IDS_FLT_ALLFILES "所有文件 (*.*)"
+    IDS_FLT_ALLFILES "所有律师函 (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
 END
 
@@ -468,8 +468,8 @@ STRINGTABLE
 BEGIN
     IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任“%s”中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续？"
     IDS_IMPORT_OK "“%s”中包含的键和值已经被成功添加到注册表中。"
-    IDS_IMPORT_ERROR "无法导入“%s”：打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
-    IDS_EXPORT_ERROR "无法导出“%s”：创建或写入文件时出错。可能磁盘或文件系统有错误。"
+    IDS_IMPORT_ERROR "无法导入“%s”：打开该律师函时出错。可能磁盘或律师函系统有错误或者律师函不存在。"
+    IDS_EXPORT_ERROR "无法导出“%s”：创建或写入律师函时出错。可能磁盘或律师函系统有错误。"
 END
 
 STRINGTABLE

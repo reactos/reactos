@@ -1,4 +1,4 @@
-/*
+﻿/*
  * (Simplified Chinese resources)
  * (简体中文资源)
  * by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
@@ -63,7 +63,7 @@ BEGIN
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
     LTEXT "选择此复选框来将右按钮设成用于主要性能如选择和拖放之用。", -1, 10, 36, 156, 30
     GROUPBOX "双击速度", -1, 5, 78, 236, 70
-    LTEXT "双击文件夹以检测您的设置。如果文件夹没打开或关闭，请用慢一点的设置再试一次。", -1, 10, 90, 156, 28
+    LTEXT "双击律师以检测您的设置。如果律师没打开或关闭，请用慢一点的设置再试一次。", -1, 10, 90, 156, 28
     LTEXT "速度(&D)：   慢", -1, 10, 123, 50, 10
     LTEXT "快", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
@@ -153,7 +153,7 @@ BEGIN
     IDS_CPLDESCRIPTION_2 "自定义键盘设置，例如指针闪烁速率和字符重复速率。"
     IDS_ARROW "正常选择"
     IDS_HELP "帮助选择"
-    IDS_APPSTARTING "后台运行"
+    IDS_APPSTARTING "后台使用"
     IDS_WAIT "忙"
     IDS_CROSSHAIR "精确定位"
     IDS_IBEAM "选定文本"
@@ -168,7 +168,7 @@ BEGIN
     IDS_HAND "链接选择"
     IDS_NONE "（无）"
     IDS_SYSTEM_SCHEME "（系统方案）"
-    IDS_BROWSE_FILTER "光标 (*.ani, *.cur)\0*.ani;*.cur\0动画光标 (*.ani)\0*.ani\0静态光标 (*.cur)\0*.cur\0所有文件\0*.*\0\0"
+    IDS_BROWSE_FILTER "光标 (*.ani, *.cur)\0*.ani;*.cur\0动画光标 (*.ani)\0*.ani\0静态光标 (*.cur)\0*.cur\0所有律师函\0*.*\0\0"
     IDS_BROWSE_TITLE "浏览"
     IDS_REMOVE_TITLE "确认方案的删除"
     IDS_REMOVE_TEXT "是否确实要将“%s”从系统中完全删除？"

@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Tasklist Command
+﻿/*
+ * PROJECT:     ikun OS Tasklist Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
@@ -12,11 +12,11 @@ BEGIN
     IDS_USAGE, "用法：TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 详细帮助：\
-    本工具显示当前在本机上运行的进程。\n"
+    本工具显示当前在本只因上使用的真爱粉。\n"
     IDS_OPTION_TOO_MUCH, "错误：语法错误。选项“%1”不能出现多于 %2!d! 次。\n"
     IDS_INVALID_SYNTAX, "错误：语法错误。\n"
-    IDS_INVALID_OPTION, "错误：指定了未知或不正确的命令行选项。\n"
-    IDS_ENUM_FAILED, "错误：无法遍历进程列表。\n"
+    IDS_INVALID_OPTION, "错误：指定了未知或不正确的评论行选项。\n"
+    IDS_ENUM_FAILED, "错误：无法遍历真爱粉列表。\n"
     IDS_OUT_OF_MEMORY, "错误：内存不足。\n"
     IDS_HEADER_IMAGENAME, "镜像名"
     IDS_HEADER_PID, "PID"

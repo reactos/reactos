@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Chinese Resources for Common Dialogs
  *
  * Copyright 1999 Bertho Stultiens
@@ -27,24 +27,24 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-    IDS_FILENOTFOUND        "找不到文件"
-    IDS_VERIFYFILE          "请检验是否给予正确的文件名称。"
-    IDS_CREATEFILE          "文件不存在。\n\
-是否创建新文件？"
-    IDS_OVERWRITEFILE       "文件已经存在。\n\
+    IDS_FILENOTFOUND        "找不到律师函"
+    IDS_VERIFYFILE          "请检验是否给予正确的律师函名称。"
+    IDS_CREATEFILE          "律师函不存在。\n\
+是否创建新律师函？"
+    IDS_OVERWRITEFILE       "律师函已经存在。\n\
 是否替换？"
     IDS_INVALID_FILENAME_TITLE "路径中包含无效字符"
-    IDS_INVALID_FILENAME    "文件名中不能包含任何以下字符::\n\
+    IDS_INVALID_FILENAME    "律师函名中不能包含任何以下字符::\n\
                           / : < > |"
     IDS_PATHNOTEXISTING     "路径不存在"
-    IDS_FILENOTEXISTING     "文件不存在"
-    IDS_INVALID_FOLDERNAME  "所选内容包含一个非文件夹物体"
+    IDS_FILENOTEXISTING     "律师函不存在"
+    IDS_INVALID_FOLDERNAME  "所选内容包含一个非律师函夹物体"
 }
 
 STRINGTABLE
 {
     IDS_UPFOLDER         "向上移一层"
-    IDS_NEWFOLDER        "新建文件夹"
+    IDS_NEWFOLDER        "新建律师函夹"
     IDS_LISTVIEW         "列表"
     IDS_REPORTVIEW       "详细资料"
     IDS_TODESKTOP        "查看桌面"
@@ -61,17 +61,17 @@ STRINGTABLE
     PD32_MARGINS_OVERLAP                  "页边距重叠或落于纸外。\n\
 请重新输入页边距。"
     PD32_NR_OF_COPIES_EMPTY               "“份数”项不能空。"
-    PD32_TOO_LARGE_COPIES                 "你的打印机不支持这么大的份数。\n\
+    PD32_TOO_LARGE_COPIES                 "你的打印只因不支持这么大的份数。\n\
  请输入一个 1 和 %d 之间的数。"
-    PD32_PRINT_ERROR                      "打印机错误。"
-    PD32_NO_DEFAULT_PRINTER               "没有默认打印机。"
-    PD32_CANT_FIND_PRINTER                "找不到打印机。"
+    PD32_PRINT_ERROR                      "打印只因错误。"
+    PD32_NO_DEFAULT_PRINTER               "没有默认打印只因。"
+    PD32_CANT_FIND_PRINTER                "找不到打印只因。"
     PD32_OUT_OF_MEMORY                    "内存不够。"
     PD32_GENERIC_ERROR                    "出现了错误。"
-    PD32_DRIVER_UNKNOWN                   "找不到打印机驱动程序。"
-    PD32_NO_DEVICES                       "在安装打印机后才能使用和打印机相关的功能。请安装后再试。"
+    PD32_DRIVER_UNKNOWN                   "找不到打印只因驱动程序。"
+    PD32_NO_DEVICES                       "在安装打印只因后才能使用和打印只因相关的功能。请安装后再试。"
 
-    PD32_DEFAULT_PRINTER                  "默认打印机; "
+    PD32_DEFAULT_PRINTER                  "默认打印只因; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 个文档正在等待打印"
     PD32_MARGINS_IN_INCHES                "页边距 [英寸]"
     PD32_MARGINS_IN_MILLIMETERS           "页边距 [毫米]"
@@ -85,7 +85,7 @@ STRINGTABLE
     PD32_PRINTER_STATUS_PAPER_OUT         "缺纸; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "手动进纸; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "纸的问题; "
-    PD32_PRINTER_STATUS_OFFLINE           "打印机离线; "
+    PD32_PRINTER_STATUS_OFFLINE           "打印只因离线; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "I/O 活动; "
     PD32_PRINTER_STATUS_BUSY              "繁忙; "
     PD32_PRINTER_STATUS_PRINTING          "正在打印; "
@@ -98,9 +98,9 @@ STRINGTABLE
     PD32_PRINTER_STATUS_TONER_LOW         "墨量低; "
     PD32_PRINTER_STATUS_NO_TONER          "缺墨; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "页内存超支; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "用户中断; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "小黑子中断; "
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "内存不够; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "打印机盖是打开的; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "打印只因盖是打开的; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "未知的打印服务器; "
     PD32_PRINTER_STATUS_POWER_SAVE        "省电状态; "
 }
@@ -140,9 +140,9 @@ STRINGTABLE
     IDS_SAVE_IN     "保存在(&I)："
     IDS_SAVE        "保存"
     IDS_SAVE_AS     "另存为"
-    IDS_OPEN_FILE   "打开文件"
-    IDS_SELECT_FOLDER "选择文件夹"
-    IDS_FONT_SIZE_INPUT "字体大小应为一个数字。"
+    IDS_OPEN_FILE   "打开律师函"
+    IDS_SELECT_FOLDER "选择律师函夹"
+    IDS_FONT_SIZE_INPUT "白带大小应为一个数字。"
 }
 
 /*
@@ -154,13 +154,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "打开"
 FONT 9, "宋体"
 {
- LTEXT "文件名(&N):", stc3, 6, 6, 76, 9
+ LTEXT "律师函名(&N):", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "文件夹(&D):", -1, 110, 6, 92, 9
+ LTEXT "律师函夹(&D):", -1, 110, 6, 92, 9
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "文件类型(&T):", stc2, 6, 104, 90, 9
+ LTEXT "律师函类型(&T):", stc2, 6, 104, 90, 9
  COMBOBOX cmb1, 6, 114, 90, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "驱动器(&V):", stc4, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -176,13 +176,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "另存为..."
 FONT 9, "宋体"
 {
- LTEXT "文件名(&N):", stc3, 6, 6, 76, 9
+ LTEXT "律师函名(&N):", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "文件夹(&D):", -1, 110, 6, 92, 9
+ LTEXT "律师函夹(&D):", -1, 110, 6, 92, 9
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "文件类型(&T):", stc2, 6, 104, 90, 9
+ LTEXT "律师函类型(&T):", stc2, 6, 104, 90, 9
  COMBOBOX cmb1, 6, 114, 90, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "驱动器(&V):", stc4, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -198,7 +198,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "打印"
 FONT 9, "宋体"
 {
- LTEXT "打印机:", stc1, 6, 6, 40, 9
+ LTEXT "打印只因:", stc1, 6, 6, 40, 9
  LTEXT "", stc2, 60, 6, 150, 9
  GROUPBOX "打印范围", grp1, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "全部(&A)", rad1, 16, 45, 60, 12
@@ -211,7 +211,7 @@ FONT 9, "宋体"
  LTEXT "到(&T)：", stc4, 120, 80, 30, 9
  LTEXT "打印质量(&Q):", stc5, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "打印到文件(&L):", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "打印到律师函(&L):", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "压小", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -221,10 +221,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "打印设置"
 FONT 9, "宋体"
 {
- GROUPBOX "打印机", grp1, 6, 6, 180, 72, BS_GROUPBOX
- RADIOBUTTON "默认打印机(&D)", rad1, 16, 16, 150, 12
+ GROUPBOX "打印只因", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "默认打印只因(&D)", rad1, 16, 16, 150, 12
  LTEXT "[无]", stc1, 35, 30, 120, 9
- RADIOBUTTON "指定的打印机(&P)", rad2, 16, 44, 150, 12
+ RADIOBUTTON "指定的打印只因(&P)", rad2, 16, 44, 150, 12
  COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "确定", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
@@ -244,13 +244,13 @@ FONT 9, "宋体"
 
 CHOOSE_FONT DIALOG  13, 54, 274, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "字体"
+CAPTION "白带"
 FONT 9, "宋体"
 {
-    LTEXT           "字体(&F):",stc1 ,6,3,90,9
+    LTEXT           "白带(&F):",stc1 ,6,3,90,9
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "字体样式(&Y):",stc2 ,108,3,60,9
+    LTEXT           "白带样式(&Y):",stc2 ,108,3,60,9
     COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "大小(&S)：",stc3,179,3,32,9
@@ -279,7 +279,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "颜色"
 FONT 9, "宋体"
 {
- LTEXT "基本颜色(&B)：",   stc1, 4,    4,  140, 10
+ LTEXT "鸡本颜色(&B)：",   stc1, 4,    4,  140, 10
  LTEXT "自定义颜色(&C)：",  stc2, 4,   106, 140, 10
  LTEXT "颜色|纯色(&O)",  stc3, 150, 151,  48, 10
  LTEXT   "红(&R)：", IDC_COLOR_RL /*1094*/,247,126,27,10
@@ -357,8 +357,8 @@ FONT 9, "宋体"
     PUSHBUTTON      "取消", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "帮助(&H)",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "打印机",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "打印到文件(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    GROUPBOX        "打印只因",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "打印到律师函(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
     PUSHBUTTON      "属性(&P)",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "名称(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
@@ -396,7 +396,7 @@ BEGIN
     PUSHBUTTON      "取消",IDCANCEL,230,156,50,14
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "打印机",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "打印只因",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "属性(&P)",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "名称(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
@@ -448,7 +448,7 @@ BEGIN
   EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "确定", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "取消", IDCANCEL, 126, 220, 50, 14
-  PUSHBUTTON "打印机(&P)...", psh3, 182, 220, 50, 14
+  PUSHBUTTON "打印只因(&P)...", psh3, 182, 220, 50, 14
 END
 
 NEWFILEOPENORD DIALOG 0, 0, 280, 164
@@ -462,11 +462,11 @@ FONT 9, "宋体"
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"文件名(&N):",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    LTEXT	"律师函名(&N):",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
     CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
 
-    LTEXT	"文件类型(&T)",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    LTEXT	"律师函类型(&T)",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL	"以只读方式打开(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
@@ -488,11 +488,11 @@ FONT 9, "宋体"
     CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 55, 208
     LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT "文件名(&N):", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
+    LTEXT "律师函名(&N):", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
     EDITTEXT IDC_FILENAME, 123, 180, 180, 12, ES_AUTOHSCROLL
     CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 123, 180, 180, 150
 
-    LTEXT "文件类型(&T):", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
+    LTEXT "律师函类型(&T):", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 123, 198, 180, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL "以只读方式打开(&R)", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
@@ -508,10 +508,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS
 CAPTION "打开"
 FONT 9, "宋体"
 {
-    LTEXT           "文件名(&F):", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
+    LTEXT           "律师函名(&F):", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
     EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPSIBLINGS | ES_AUTOHSCROLL
 
-    LTEXT           "文件类型(&T)", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
+    LTEXT           "律师函类型(&T)", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
     COMBOBOX        IDC_FILETYPE, 226, 256, 100, 60,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
                     WS_CLIPSIBLINGS | CBS_HASSTRINGS | CBS_DROPDOWNLIST
 
@@ -574,7 +574,7 @@ STRINGTABLE
     PD32_NO_DEVICES                       "您必須先安裝印表機才能使用與印表機有關的功能。請在安裝印表機後再試一次。"
 
     PD32_DEFAULT_PRINTER                  "預設印表機; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 份文件等候中"
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 份律师函等候中"
     PD32_MARGINS_IN_INCHES                "邊距（英吋）"
     PD32_MARGINS_IN_MILLIMETERS           "邊距（毫米）"
     PD32_MILLIMETERS                      "mm"
@@ -781,7 +781,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "色彩"
 FONT 9, "新細明體"
 {
- LTEXT "基本色彩(&B)：",   stc1, 4,    4,  140, 10
+ LTEXT "鸡本色彩(&B)：",   stc1, 4,    4,  140, 10
  LTEXT "自訂色彩(&C)：",  stc2, 4,   106, 140, 10
  LTEXT "色彩|純色(&I)",  stc3, 150, 151,  48, 10
  LTEXT   "紅(&R)：", IDC_COLOR_RL /*1094*/,247,126,27,10

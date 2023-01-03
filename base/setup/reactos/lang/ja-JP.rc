@@ -1,4 +1,4 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -143,7 +143,7 @@ STRINGTABLE
 BEGIN
     IDS_TYPETITLE "ReactOS セットアップにようこそ"
     IDS_TYPESUBTITLE "セットアップの種類を選んで下さい"
-    IDS_DEVICETITLE "基本デバイスをセットアップします"
+    IDS_DEVICETITLE "鸡本デバイスをセットアップします"
     IDS_DEVICESUBTITLE "ディスプレイとキーボードの設定をします"
     IDS_DRIVETITLE "インストール先パーティションとシステムフォルダをセットアップします"
     IDS_DRIVESUBTITLE "インストール先のパーティション、システムフォルダ、ブートローダを準備します"

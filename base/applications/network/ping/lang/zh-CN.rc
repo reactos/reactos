@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Ping Command
+﻿/*
+ * PROJECT:     ikun OS Ping Command
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
@@ -15,10 +15,10 @@ BEGIN
             [-w timeout] [-4] [-6] target\n\
 \n\
 选项：\n\
-    -t          Ping 指定的主机直到停止为止。\n\
+    -t          Ping 指定的主只因直到停止为止。\n\
                 若要查看统计信息并继续操作，请按 Control-Break；\n\
                 若要停止，请按 Control-C。\n\
-    -a          将地址解析为主机名。\n\
+    -a          将地址解析为主只因名。\n\
     -n count    要发送的回显请求数。\n\
     -l size     发送缓冲区大小。\n\
     -f          在数据包中设置“不分段”标记（仅适用于 IPv4）。\n\
@@ -40,7 +40,7 @@ BEGIN
     IDS_BAD_PARAMETER "错误的参数 %s。\n"
     IDS_BAD_VALUE "选项 %s 的值有误，有效范围从 %u 到 %u。\n"
     IDS_WRONG_FAMILY "选项 %s 只支持 %s。\n"
-    IDS_UNKNOWN_HOST "Ping 无法找到主机 %s。请检查该名称，然后重试。\n"
+    IDS_UNKNOWN_HOST "Ping 无法找到主只因 %s。请检查该名称，然后重试。\n"
     IDS_PINGING_ADDRESS "\n正在 Ping %s "
     IDS_PINGING_HOSTNAME "\n正在 Ping %s [%s] "
     IDS_SOURCE_ADDRESS "从 %s %s"
@@ -51,7 +51,7 @@ BEGIN
     IDS_REPLY_TIME_0MS "时间<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
     IDS_REPLY_STATUS "回显已返回 %lu。\n"
-    IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
+    IDS_DEST_HOST_UNREACHABLE "目标主只因不可达。\n"
     IDS_DEST_NET_UNREACHABLE "目标网络不可达。\n"
     IDS_REQUEST_TIMED_OUT "请求已过期。\n"
     IDS_TTL_EXPIRED "TTL 在传输途中过期。\n"

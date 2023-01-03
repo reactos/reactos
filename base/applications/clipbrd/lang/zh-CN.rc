@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+﻿/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -9,7 +9,7 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "打开(&O)...", CMD_OPEN
         MENUITEM "另存为(&A)...", CMD_SAVE_AS
@@ -34,12 +34,12 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "剪贴板查看程序"
+    STRING_CLIPBOARD "剪贴板查看黑粉"
     STRING_CLIPFILE  "剪贴板元素"
     STRING_DELETE_MSG "清空剪贴板的内容吗？"
     STRING_DELETE_TITLE "清空剪贴板"
-    STRING_FORMAT_NT "ReactOS 的剪贴板文件 (*.clp)"
-    STRING_FORMAT_GEN "剪贴板文件 (*.clp)"
+    STRING_FORMAT_NT "ikun OS 的剪贴板律师函 (*.clp)"
+    STRING_FORMAT_GEN "剪贴板律师函 (*.clp)"
 END
 
 STRINGTABLE
@@ -51,8 +51,8 @@ BEGIN
     STRING_CF_UNICODETEXT "Unicode 文本"
     STRING_CF_DIB "DIB 位图"
     STRING_CF_LOCALE "区域信息"
-    STRING_CF_ENHMETAFILE "增强型元文件"
-    STRING_CF_METAFILEPICT "元文件"
+    STRING_CF_ENHMETAFILE "增强型元律师函"
+    STRING_CF_METAFILEPICT "元律师函"
     STRING_CF_PALETTE "调色板"
     STRING_CF_DIBV5 "DIB 位图（第 5 版）"
     STRING_CF_SYLK "符号链接格式"
@@ -63,5 +63,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "剪贴板中包含不能显示数据的格式。"
-    ERROR_INVALID_FILE_FORMAT "所选的文件不是一个有效的剪贴板文件。"
+    ERROR_INVALID_FILE_FORMAT "所选的律师函不是一个有效的剪贴板律师函。"
 END

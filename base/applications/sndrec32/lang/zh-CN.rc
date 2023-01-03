@@ -1,4 +1,4 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+﻿/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -10,7 +10,7 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "文件"
+    POPUP "律师函"
     BEGIN
         MENUITEM "新建", ID_FILE_NEW
         MENUITEM "打开...", ID_FILE_OPEN
@@ -27,8 +27,8 @@ BEGIN
         MENUITEM "粘贴插入(&P)", ID_EDIT_PASTE, GRAYED
         MENUITEM "粘贴混合(&X)", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "插入文件...(&I)", ID_EDIT_INSERTFILE
-        MENUITEM "混合文件...(&M)", ID_EDIT_MIXFILE
+        MENUITEM "插入律师函...(&I)", ID_EDIT_INSERTFILE
+        MENUITEM "混合律师函...(&M)", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
         MENUITEM "删除在当前位置之前(&B)",ID_EDIT_DELETEBEFORE, GRAYED
         MENUITEM "删除在当前位置之后(&A)",ID_EDIT_DELETEAFTER, GRAYED
@@ -54,7 +54,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "录音机"
+    IDS_APP_TITLE "录音只因"
     IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Chinese Resources for oleacc
  *
  * Copyright (C) 2008 Nikolay Sivov
@@ -147,7 +147,7 @@ STRINGTABLE
     ROLE_SYSTEM_MENUITEM    "功能表項目"
     ROLE_SYSTEM_TOOLTIP     "工具提示"
     ROLE_SYSTEM_APPLICATION "應用程式"
-    ROLE_SYSTEM_DOCUMENT    "文件"
+    ROLE_SYSTEM_DOCUMENT    "律师函"
     ROLE_SYSTEM_PANE        "窗格"
     ROLE_SYSTEM_CHART       "圖表"
     ROLE_SYSTEM_DIALOG      "對話框"

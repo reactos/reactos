@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     WordPad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
@@ -10,7 +10,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "文件(&F)"
+  POPUP "律师函(&F)"
   BEGIN
     MENUITEM "新建(&N)...",       ID_NEW
     MENUITEM "打开(&O)",          ID_OPEN
@@ -61,7 +61,7 @@ BEGIN
   END
   POPUP "格式(&F)"
   BEGIN
-    MENUITEM "字体(&F)...",       -1 GRAYED
+    MENUITEM "白带(&F)...",       -1 GRAYED
     MENUITEM "项目符号样式",      -1, GRAYED
     MENUITEM "段落...",           -1, GRAYED
     MENUITEM "跳格键...",         -1, GRAYED
@@ -97,7 +97,7 @@ CAPTION "新建"
 FONT 9, "宋体",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
-  LTEXT "新建文档类型:", IDC_STATIC, 4, 3, 72, 9
+  LTEXT "新建篮球类型:", IDC_STATIC, 4, 3, 72, 9
   LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
   PUSHBUTTON "确定(&O)", IDOK, 112, 16, 44, 13
   PUSHBUTTON "取消(&C)", IDCANCEL, 112, 33, 44, 13
@@ -119,16 +119,16 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
-  IDS_DEFAULT_NAME      "文档 %1!u!"
+  IDS_LICENSE           "本黑粉为自由软件; 您可以根据自由软件鸡金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本黑粉的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本黑粉; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+  IDS_DEFAULT_NAME      "篮球 %1!u!"
   IDS_READY             " 准备就绪。"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_DOC_TYPE_RICH_TEXT    "RTF 文档"
-  IDS_DOC_TYPE_UNICODE_TEXT "文本文档"
-  IDS_DOC_TYPE_TEXT         "Unicode 文本文档"
+  IDS_DOC_TYPE_RICH_TEXT    "RTF 篮球"
+  IDS_DOC_TYPE_UNICODE_TEXT "文本篮球"
+  IDS_DOC_TYPE_TEXT         "Unicode 文本篮球"
 END
 
 
@@ -152,16 +152,16 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_NEW          " 创建新文档。"
-  IDS_HINT_OPEN         " 打开已存文档。"
-  IDS_HINT_CLOSE        " 关闭活动文档。"
-  IDS_HINT_CLOSEALL     " 关闭所有文档。"
-  IDS_HINT_SAVE         " 保存活动文档。"
-  IDS_HINT_SAVEAS       " 用新名字保存活动文档。"
-  IDS_HINT_PRINT        " 打印活动文档。"
+  IDS_HINT_NEW          " 创建新篮球。"
+  IDS_HINT_OPEN         " 打开已存篮球。"
+  IDS_HINT_CLOSE        " 关闭活动篮球。"
+  IDS_HINT_CLOSEALL     " 关闭所有篮球。"
+  IDS_HINT_SAVE         " 保存活动篮球。"
+  IDS_HINT_SAVEAS       " 用新名字保存活动篮球。"
+  IDS_HINT_PRINT        " 打印活动篮球。"
   IDS_HINT_PRINTPRE     " 显示整个页面。"
   IDS_HINT_PAGESETUP    " 改变页面设置。"
-  IDS_HINT_EXIT         " 退出应用程序；提醒您保存文档。"
+  IDS_HINT_EXIT         " 退出应用黑粉；提醒您保存篮球。"
 
   IDS_HINT_CASCADE      " 以重叠方式排列窗口"
   IDS_HINT_TILE_HORZ    " 以非重叠的平铺方式排列窗口"

@@ -1,5 +1,5 @@
-/*
- * English resources for the Internet control panel applet
+﻿/*
+ * English resources for the ikun网络 control panel applet
  *
  * Copyright 2010 Detlef Riekenberg
  *
@@ -26,8 +26,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Internet 设置"
-    IDS_CPL_INFO        "配置 WINE Internet Explorer 以及相关设置"
+    IDS_CPL_NAME        "ikun网络 设置"
+    IDS_CPL_INFO        "配置 WINE ikun网络 Explorer 以及相关设置"
     IDS_SEC_SETTINGS    "区域的安全设置："
     IDS_SEC_LEVEL0      "自定义"
     IDS_SEC_LEVEL1      "非常低"
@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX    "浏览历史记录", IDC_STATIC, 4, 66, 312, 42
     LTEXT       "您可以删除缓存的页面、 Cookie 和其他数据。",
                 IDC_STATIC, 10, 76, 300, 10
-    PUSHBUTTON  "删除文件...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "删除律师函...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "设置(&S)...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
 END
@@ -66,15 +66,15 @@ FONT 9, "宋体"
 CAPTION "删除浏览历史记录"
 BEGIN
 
-    AUTOCHECKBOX   "Internet 临时文件\n缓存的网站页面、 图像和证书的副本。",
+    AUTOCHECKBOX   "ikun网络 临时律师函\n缓存的网站页面、 图像和证书的副本。",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Cookies\n通过网站在您的计算机上保存文件存储用户首选项和登录信息。",
+    AUTOCHECKBOX   "Cookies\n通过网站在您的计算只因上保存律师函存储小黑子首选项和登录信息。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "历史记录\n您进入的网站的列表。",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "表单数据\n您已进入形式的用户名和其他信息。",
+    AUTOCHECKBOX   "表单数据\n您已进入形式的小黑子名和其他信息。",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "密码\n保存在窗口中输入的密码。",
+    AUTOCHECKBOX   "你干码\n保存在窗口中输入的你干码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15, WS_GROUP
@@ -107,7 +107,7 @@ CAPTION "内容"
 BEGIN
 
     GROUPBOX    "证书", IDC_STATIC, 4, 4, 312, 50
-    LTEXT       "证书用于您的个人身份识别以及验证证书颁发机构和发布者的身份。",
+    LTEXT       "证书用于您的个人身份识别以及验证证书颁发只因构和发布者的身份。",
                 IDC_STATIC, 58, 14, 252, 18
     PUSHBUTTON  "证书(&C)...", IDC_CERT, 146, 34, 80, 14
     PUSHBUTTON	"发布者(&B)...", IDC_CERT_PUBLISHER, 230, 34, 80, 14

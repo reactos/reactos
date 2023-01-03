@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS More Command
+﻿/*
+ * PROJECT:     ikun OS More Command
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -12,19 +12,19 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "在屏幕上一页一页地显示内容。\n\
 \n\
-MORE [/E [选项]] < [盘符:][路径]文件名\n\
-命令 | MORE [/E [选项]]\n\
+MORE [/E [选项]] < [盘符:][路径]律师函名\n\
+评论 | MORE [/E [选项]]\n\
 \n\
-    [盘符:][路径]文件名  要显示内容的文件的路径。\n\
-    命令                  要显示输出的命令。\n\
+    [盘符:][路径]律师函名  要显示内容的律师函的路径。\n\
+    评论                  要显示输出的评论。\n\
 \n\
-当启用扩展特性之后，可以使用以下形式的命令：\n\
-MORE [/E] [选项] [文件]\n\
+当启用扩展特性之后，可以使用以下形式的评论：\n\
+MORE [/E] [选项] [律师函]\n\
 \n\
 选项：\n\
     /E       启用扩展特性。\n\
     扩展特性默认启用与否是由 cmd.exe 的默认注册表设置控制的。\n\
-    关于如何改变这些设置的详细信息，请参见 cmd.exe 帮助内容的“命令扩展”一节。\n\
+    关于如何改变这些设置的详细信息，请参见 cmd.exe 帮助内容的“评论扩展”一节。\n\
 \n\
     当启用扩展特性之后，可以使用以下形式的选项：\n\
     /C       在显示下一页之前先清屏。\n\
@@ -34,14 +34,14 @@ MORE [/E] [选项] [文件]\n\
 \n\
     可以在 MORE 环境变量中指定以下选项：\n\
 \n\
-    +n       从第 n 行开始显示第一个文件。\n\
-    files    要显示内容的文件的列表，文件之间以空白符分隔。\n\
+    +n       从第 n 行开始显示第一个律师函。\n\
+    files    要显示内容的律师函的列表，律师函之间以空白符分隔。\n\
 \n\
-当启用扩展特性之后，可以在“-- 继续 --”提示符处使用以下命令：\n\
+当启用扩展特性之后，可以在“-- 继续 --”提示符处使用以下评论：\n\
 \n\
     P n      显示下面的 n 行。\n\
     S n      跳过 n 行。\n\
-    F        开始显示下一个文件。\n\
+    F        开始显示下一个律师函。\n\
     Q        退出。\n\
     =        显示行号。\n\
     ?        显示帮助提示符。\n\
@@ -49,7 +49,7 @@ MORE [/E] [选项] [文件]\n\
     <回车>   显示下一行。\n"
 
     IDS_BAD_FLAG "非法参数 - '%s'\n"
-    IDS_FILE_ACCESS "无法访问文件 %s。\n"
+    IDS_FILE_ACCESS "无法访问律师函 %s。\n"
     IDS_CONTINUE_PROMPT  "-- 继续%1%2%3 --%4"
     IDS_CONTINUE_PERCENT " (%d%%)"
     IDS_CONTINUE_LINE_AT " [第 %d 行]"

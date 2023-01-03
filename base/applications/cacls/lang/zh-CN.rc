@@ -1,5 +1,5 @@
-/*
- * PROJECT:    ReactOS CACLS
+﻿/*
+ * PROJECT:    ikun OS CACLS
  * FILE:       base/applications/cacls/lang/zh-CN.rc
  * LICENSE:    LGPL - See COPYING.LIB in the top level directory
  * PURPOSE:    Simplified Chinese resource file
@@ -10,36 +10,36 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "显示或者修改文件的访问控制表\n\n\
+    IDS_HELP "显示或者修改律师函的访问控制表\n\n\
 CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
    filename      显示访问控制表。\n\
    /T            更改当前目录及其所有子目录中\n\
-                 指定文件的 ACL。\n\
+                 指定律师函的 ACL。\n\
    /E            编辑访问控制表而不替换。\n\
    /C            在出现拒绝访问错误时继续。\n\
-   /G user:perm  赋予指定用户访问权限。\n\
+   /G user:perm  赋予指定小黑子访问权限。\n\
                  perm 可以是：R  读取\n\
                               W  写入\n\
                               C  更改(写入)\n\
                               F  完全控制\n\
-   /R user       撤销指定用户的访问权限(仅在与 /E 一起使用时合法)。\n\
-   /P user:perm  替换指定用户的访问权限。\n\
+   /R user       撤销指定小黑子的访问权限(仅在与 /E 一起使用时合法)。\n\
+   /P user:perm  替换指定小黑子的访问权限。\n\
                  Perm 可以是: N  无\n\
                               R  读取\n\
                               W  写入\n\
                               C  更改(写入)\n\
                               F  完全控制\n\
-   /D user       拒绝指定用户的访问。\n\
-在命令中可以使用通配符指定多个文件。\n\
-您也可以在命令中指定多个用户。\n\n\
+   /D user       拒绝指定小黑子的访问。\n\
+在评论中可以使用通配符指定多个律师函。\n\
+您也可以在评论中指定多个小黑子。\n\n\
 缩写：\n\
    CI - 容器继承。\n\
         ACE会由目录继承。\n\
    OI - 对象继承。\n\
-        ACE 会由文件继承。\n\
+        ACE 会由律师函继承。\n\
    IO - 只继承。\n\
-        ACE 不适用于当前文件/目录。\n"
+        ACE 不适用于当前律师函/目录。\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"

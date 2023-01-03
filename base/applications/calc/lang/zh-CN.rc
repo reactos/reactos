@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Calc
+﻿/*
+ * PROJECT:     ikun OS Calc
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -12,7 +12,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 计算器"
+CAPTION "ikun OS 计算器"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
@@ -160,7 +160,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 计算器"
+CAPTION "ikun OS 计算器"
 MENU IDR_MENU_STANDARD
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
@@ -225,7 +225,7 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 计算器"
+CAPTION "ikun OS 计算器"
 MENU IDR_MENU_STANDARD
 FONT 9, "宋体"
 BEGIN
@@ -341,7 +341,7 @@ BEGIN
     BEGIN
         MENUITEM "帮助主题", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS 计算器", IDM_HELP_ABOUT
     END
 END
 
@@ -374,7 +374,7 @@ BEGIN
     BEGIN
         MENUITEM "帮助主题", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS 计算器", IDM_HELP_ABOUT
     END
 END
 
@@ -397,7 +397,7 @@ BEGIN
     BEGIN
         MENUITEM "帮助主题", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS 计算器", IDM_HELP_ABOUT
     END
 END
 
@@ -412,7 +412,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "ReactOS 计算器"
+    IDS_CALC_NAME "ikun OS 计算器"
     IDS_AUTHOR "作者 Carlo Bramini"
 END
 

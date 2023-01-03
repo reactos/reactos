@@ -1,5 +1,5 @@
-/*
- * PROJECT:    ReactOS Netshell
+﻿/*
+ * PROJECT:    ikun OS Netshell
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       dll/shellext/netshell/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File
@@ -87,20 +87,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "ikun OS 安装黑粉"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "请选择使用典型设置还是自定义设置：", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "典型设置", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "自定义设置", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "使用 ReactOS 网络客户端，ReactOS 网络的文件和打印共享以及具有自动寻址功能的 TCP/IP 传输协议创建网络连接。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "使用 ikun OS 网络客户端，ikun OS 网络的律师函和打印共享以及具有自动寻址功能的 TCP/IP 传输协议创建网络连接。", IDC_STATIC, 65, 45, 240, 30
     LTEXT "允许您手动配置网络组件。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "ikun OS 安装黑粉"
 FONT 9, "宋体"
 BEGIN
     LTEXT "设备：", IDC_STATIC, 33, 2, 100, 20
@@ -115,16 +115,16 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "ikun OS 安装黑粉"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "您是否希望此计算机成为域的成员？\n\
-（您可以从网络管理员处获取此信息。）", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "不，这台计算机将成为工作组的一部分。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "是的，这台计算机将成为域的一部分。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "您是否希望此计算只因成为域的成员？\n\
+（您可以从网络团长处获取此信息。）", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "不，这台计算只因将成为工作组的一部分。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "是的，这台计算只因将成为域的一部分。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "工作组或域名称：", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "注意：如果此计算机不是网络的一部分，您没有足够的权限加入域，或者您不知道要输入什么，那么现在就选择工作组。这些选项可以在以后更改。", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "注意：如果此计算只因不是网络的一部分，您没有足够的权限加入域，或者您不知道要输入什么，那么现在就选择工作组。这些选项可以在以后更改。", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -145,7 +145,7 @@ BEGIN
     IDS_SHV_COLUMN_TYPE "类型"
     IDS_SHV_COLUMN_STATE "状态"
     IDS_SHV_COLUMN_DEVNAME "设备名称"
-    IDS_SHV_COLUMN_PHONE "电话 # 或主机地址"
+    IDS_SHV_COLUMN_PHONE "电话 # 或主只因地址"
     IDS_SHV_COLUMN_OWNER "所有者"
     IDS_TYPE_ETHERNET "局域网或高速互联网"
     IDS_STATUS_NON_OPERATIONAL "已禁用"
@@ -175,11 +175,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "网络设置"
-    IDS_NETWORKSETTINGSSUBTITLE "安装用于连接其他网络、计算机和 Internet 的网络软件。"
+    IDS_NETWORKSETTINGSSUBTITLE "安装用于连接其他网络、计算只因和 ikun网络 的网络软件。"
     IDS_NETWORKCOMPONENTTITLE "网络组件"
-    IDS_NETWORKCOMPONENTSUBTITLE "确定计算机上使用的网络组件。若要添加新组件，请单击“安装”。"
-    IDS_NETWORKDOMAINTITLE "工作组或计算机域"
-    IDS_NETWORKDOMAINSUBTITLE "域是由网络管理员定义的一组计算机。工作组是共享相同工作组名称的计算机组。"
-    IDS_REACTOS_SETUP "ReactOS 安装程序"
-    IDS_WZD_DOMAIN_NAME "在输入域或工作组的名称之前，安装程序无法继续。"
+    IDS_NETWORKCOMPONENTSUBTITLE "确定计算只因上使用的网络组件。若要添加新组件，请单击“安装”。"
+    IDS_NETWORKDOMAINTITLE "工作组或计算只因域"
+    IDS_NETWORKDOMAINSUBTITLE "域是由网络团长定义的一组计算只因。工作组是共享相同工作组名称的计算只因组。"
+    IDS_REACTOS_SETUP "ikun OS 安装黑粉"
+    IDS_WZD_DOMAIN_NAME "在输入域或工作组的名称之前，安装黑粉无法继续。"
 END

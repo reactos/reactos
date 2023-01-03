@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2009 Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
@@ -41,7 +41,7 @@ END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "文件(&F)", FCIDM_MENU_FILE
+    POPUP "律师函(&F)", FCIDM_MENU_FILE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "关闭(&C)", IDM_FILE_CLOSE
@@ -63,7 +63,7 @@ BEGIN
             MENUITEM "收藏夹(&F)\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "媒体(&M)", IDM_EXPLORERBAR_MEDIA
             MENUITEM "历史(&H)\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "文件夹(&O)", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "律师(&O)", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
@@ -90,11 +90,11 @@ BEGIN
         MENUITEM "断开网络驱动器...(&D)", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "同步...(&S)", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "文件夹选项...(&O)", IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "律师选项...(&O)", IDM_TOOLS_FOLDEROPTIONS
     END
     POPUP "帮助(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "关于 ReactOS(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 ikun OS(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -124,7 +124,7 @@ BEGIN
             MENUITEM "大图标(&L)", IDM_LARGE_ICONS
             MENUITEM "小图标(&S)", IDM_SMALL_ICONS
         END
-        MENUITEM "打开文件夹(&O)", IDM_OPEN_FOLDER
+        MENUITEM "打开律师(&O)", IDM_OPEN_FOLDER
         MENUITEM "显示文本(&S)", IDM_SHOW_TEXT
     END
 END
@@ -160,10 +160,10 @@ FONT 9, "宋体"
 BEGIN
     LTEXT "使用下面的任一或全部条件搜索。", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "文件名的全部或一部分(&O)：", -1, 10, 25, 500, 10
+    LTEXT "律师函名的全部或一部分(&O)：", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "文件内的一个词语或短句(&W)：", -1, 10, 50, 500, 10
+    LTEXT "律师函内的一个词语或短句(&W)：", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "搜索范围(&L)：", -1, 10, 75, 500, 10
@@ -172,7 +172,7 @@ BEGIN
     DEFPUSHBUTTON "搜索(&R)", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "停止搜索(&S)", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "同时搜索隐藏的文件和文件夹",
+    AUTOCHECKBOX "同时搜索隐藏的律师函和律师",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -208,27 +208,27 @@ END
 
 STRINGTABLE
 BEGIN
-    800 "包含用于处理所选的项目的命令。"
+    800 "包含用于处理所选的项目的评论。"
 END
 
 STRINGTABLE
 BEGIN
-    864 "包含编辑命令。"
+    864 "包含编辑评论。"
 END
 
 STRINGTABLE
 BEGIN
-    928 "包含操作视图的命令。"
+    928 "包含操作视图的评论。"
 END
 
 STRINGTABLE
 BEGIN
-    992 "包含工具命令。"
+    992 "包含工具评论。"
 END
 
 STRINGTABLE
 BEGIN
-    1056 "包含显示帮助的命令。"
+    1056 "包含显示帮助的评论。"
 END
 
 STRINGTABLE
@@ -239,13 +239,13 @@ END
 
 STRINGTABLE
 BEGIN
-    9121 "连接到网络驱动器。"
+    9121 "开团网络驱动器。"
     9122 "断开网络驱动器。"
 END
 
 STRINGTABLE
 BEGIN
-    9250 "显示程序信息、版本号和版权信息。"
+    9250 "显示黑粉信息、版本号和版权信息。"
     9252 "显示调试信息。"
 END
 
@@ -259,7 +259,7 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "打开收藏夹文件夹。"
+    9362 "打开收藏夹律师。"
     9363 "将当前页添加到您的收藏夹列表。"
 END
 
@@ -284,7 +284,7 @@ BEGIN
     9553 "显示搜索栏。"
     9554 "显示收藏夹栏。"
     9555 "显示历史记录栏。"
-    9557 "显示文件夹栏。"
+    9557 "显示律师栏。"
     9559 "显示媒体栏。"
 END
 
@@ -315,7 +315,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "文件夹"
+    IDS_FOLDERSLABEL "律师"
 END
 
 STRINGTABLE
@@ -333,17 +333,17 @@ STRINGTABLE
 BEGIN
     IDS_BACK "返回到 %s"
     IDS_FORWARD "前进到 %s"
-    IDS_FOLDER_OPTIONS "文件夹选项"
+    IDS_FOLDER_OPTIONS "律师选项"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪切|复制|粘贴|文件夹选项||"
+    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|律师|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪切|复制|粘贴|律师选项||"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "选择一个文件夹"
+    IDS_BROWSEFORNEWTOOLAR "选择一个律师"
     IDS_TOOLBAR_ERR_TITLE "工具栏"
     IDS_TOOLBAR_ERR_TEXT "无法创建工具栏。"
 END
@@ -353,15 +353,15 @@ BEGIN
     IDS_SEARCH_RESULTS "搜索结果"
     IDS_SEARCHINVALID "“%1”不是一个合法的目录。"
     IDS_SEARCH_FOLDER "正在搜索 %s"
-    IDS_SEARCH_FILES_FOUND "找到了 %u 个文件"
-    IDS_SEARCH_OPEN_FOLDER "打开所在文件夹(&F)"
-    IDS_COL_NAME "文件名"
-    IDS_COL_LOCATION "所在文件夹"
+    IDS_SEARCH_FILES_FOUND "找到了 %u 个律师函"
+    IDS_SEARCH_OPEN_FOLDER "打开所在律师(&F)"
+    IDS_COL_NAME "律师函名"
+    IDS_COL_LOCATION "所在律师"
     IDS_COL_RELEVANCE "相关度"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS 资源管理器"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 资源管理器找不到“%1”。请检查拼写，然后重试。"
+    IDS_PARSE_ADDR_ERR_TITLE "ikun OS 资源管理器"
+    IDS_PARSE_ADDR_ERR_TEXT "ikun OS 资源管理器找不到“%1”。请检查拼写，然后重试。"
 END

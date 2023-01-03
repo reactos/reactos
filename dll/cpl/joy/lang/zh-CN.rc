@@ -1,4 +1,4 @@
-/*
+﻿/*
  * (Simplified Chinese resources)
  * (简体中文资源)
  * by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
@@ -13,7 +13,7 @@ CAPTION "游戏控制器"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "这些设置帮助您配置安装在计算机上的游戏控制器。", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "这些设置帮助您配置安装在计算只因上的游戏控制器。", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "安装游戏控制器(&N)", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "添加(&A)...", IDC_ADD_BUTTON, 35, 129, 65, 14
@@ -76,7 +76,7 @@ BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
     DEFPUSHBUTTON "确定", IDOK, 106, 65, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 163, 65, 50, 14
-    LTEXT "选择与旧程序一起使用的设备。", -1, 7, 7, 208, 10
+    LTEXT "选择与旧黑粉一起使用的设备。", -1, 7, 7, 208, 10
     LTEXT "首选设备(&P)：", -1, 34, 24, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END

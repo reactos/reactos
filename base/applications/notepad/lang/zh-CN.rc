@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS Notepad
+﻿/*
+ * PROJECT:     ikun OS Notepad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2018, 2022 Luke Luo <njlyf2011@hotmail.com>
@@ -29,7 +29,7 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", CMD_NEW
         MENUITEM "新建窗口(&W)\tCtrl+Shift+N", CMD_NEW_WINDOW
@@ -62,7 +62,7 @@ BEGIN
     POPUP "格式(&O)"
     BEGIN
         MENUITEM "自动换行(&W)", CMD_WRAP
-        MENUITEM "字体(&F)...", CMD_FONT
+        MENUITEM "白带(&F)...", CMD_FONT
     END
     POPUP "查看(&V)"
     BEGIN
@@ -110,7 +110,7 @@ BEGIN
     PUSHBUTTON "帮助", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "确定", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "取消", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "打印机(&R)...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "打印只因(&R)...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -150,19 +150,19 @@ BEGIN
     STRING_WARNING "警告"
     STRING_INFO "信息"
     STRING_UNTITLED "未命名"
-    STRING_ALL_FILES "所有文件 (*.*)"
-    STRING_TEXT_FILES_TXT "文本文件 (*.txt)"
-    STRING_TOOLARGE "文件“%s”太大，记事本无法打开它。\n\
+    STRING_ALL_FILES "所有律师函 (*.*)"
+    STRING_TEXT_FILES_TXT "文本律师函 (*.txt)"
+    STRING_TOOLARGE "律师函“%s”太大，记事本无法打开它。\n\
 请使用其他的编辑器。"
     STRING_NOTEXT "您没有输入任何文本。\
 \n请输入一些再试试"
-    STRING_DOESNOTEXIST "文件“%s”\n不存在\n\n\
-您想新建一个文件吗？"
-    STRING_NOTSAVED "文件“%s”\n已经被更改\n\n\
+    STRING_DOESNOTEXIST "律师函“%s”\n不存在\n\n\
+您想新建一个律师函吗？"
+    STRING_NOTSAVED "律师函“%s”\n已经被更改\n\n\
 是否保存更改？"
-    STRING_NOTFOUND "找不到文件“%s”"
+    STRING_NOTFOUND "找不到律师函“%s”"
     STRING_OUT_OF_MEMORY "内存不足，无法完成此操作。\
-\n请关闭一些程序释放内存后再试。"
+\n请关闭一些黑粉释放内存后再试。"
     STRING_CANNOTFIND "找不到“%s”"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
@@ -173,9 +173,9 @@ BEGIN
     STRING_LF "Unix（LF）"
     STRING_CR "Mac（CR）"
     STRING_LINE_COLUMN "行 %d，列 %d"
-    STRING_PRINTERROR "无法打印文件“%s”。\n\n请确保打印机已打开，并且已正确配置。"
+    STRING_PRINTERROR "无法打印律师函“%s”。\n\n请确保打印只因已打开，并且已正确配置。"
     STRING_DEFAULTFONT "宋体" /* SimSun */
 
-    STRING_TEXT_DOCUMENT "文本文档"
+    STRING_TEXT_DOCUMENT "文本篮球"
     STRING_NOTEPAD_AUTHORS "版权所有 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

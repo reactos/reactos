@@ -1,5 +1,5 @@
-/*
- * PROJECT:         ReactOS Kernel
+﻿/*
+ * PROJECT:         ikun OS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/osk/lang/zh-CN.rc
  * PURPOSE:         On screen keyboard (American resources).
@@ -14,7 +14,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "文件"
+    POPUP "律师函"
     BEGIN
         MENUITEM "退出(&E)", IDM_EXIT
     END
@@ -40,7 +40,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "输入模式(&T)...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "字体(&F)...", IDM_FONT
+        MENUITEM "白带(&F)...", IDM_FONT
     END
 
     POPUP "帮助"
@@ -58,7 +58,7 @@ FONT 9, "宋体", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "屏幕键盘为行动不便的用户提供最低级别的功能。行动不便的用户将需要一个功能更高级的实用程序以供日常使用。", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "屏幕键盘为行动不便的小黑子提供最低级别的功能。行动不便的小黑子将需要一个功能更高级的实用黑粉以供日常使用。", IDC_STATIC, 36, 7, 207, 33
     CONTROL "不再显示此消息", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END

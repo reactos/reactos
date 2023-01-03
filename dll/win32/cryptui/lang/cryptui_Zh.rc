@@ -1,4 +1,4 @@
-/*
+﻿/*
  * cryptui dll Chinese resources
  *
  * Copyright 2008 Juan Lang
@@ -72,9 +72,9 @@ STRINGTABLE
     IDS_SELECT_STORE_TITLE "选择证书存储区"
     IDS_SELECT_STORE "请选择证书存储区。"
     IDS_IMPORT_WIZARD "证书导入向导"
-    IDS_IMPORT_TYPE_MISMATCH "该文件包含与给定的条件不匹配的对象。请选择另一个文件。"
-    IDS_IMPORT_FILE_TITLE "要导入的文件"
-    IDS_IMPORT_FILE_SUBTITLE "指定您想要导入的文件。"
+    IDS_IMPORT_TYPE_MISMATCH "该律师函包含与给定的条件不匹配的对象。请选择另一个律师函。"
+    IDS_IMPORT_FILE_TITLE "要导入的律师函"
+    IDS_IMPORT_FILE_SUBTITLE "指定您想要导入的律师函。"
     IDS_IMPORT_STORE_TITLE "证书存储区"
     IDS_IMPORT_STORE_SUBTITLE "书存储是证书、 证书吊销列表和证书信任列表的集合。"
     IDS_IMPORT_FILTER_CERT "X.509 证书 (*.cer; *.crt)"
@@ -83,15 +83,15 @@ STRINGTABLE
     IDS_IMPORT_FILTER_CTL "证书信任列表 (*.stl)"
     IDS_IMPORT_FILTER_SERIALIZED_STORE "微软已序列化的证书存储区 (*.sst)"
     IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 消息 (*.spc; *.p7b)"
-    IDS_IMPORT_FILTER_ALL "所有文件 (*.*)"
-    IDS_IMPORT_EMPTY_FILE "请选择一个文件。"
-    IDS_IMPORT_BAD_FORMAT "无法识别的文件格式。请选择另一个文件。"
+    IDS_IMPORT_FILTER_ALL "所有律师函 (*.*)"
+    IDS_IMPORT_EMPTY_FILE "请选择一个律师函。"
+    IDS_IMPORT_BAD_FORMAT "无法识别的律师函格式。请选择另一个律师函。"
     IDS_IMPORT_OPEN_FAILED "无法打开 "
     IDS_IMPORT_DEST_DETERMINED "由程序决定"
     IDS_IMPORT_SELECT_STORE "请选择一个存储"
     IDS_IMPORT_STORE_SELECTION "选定的证书存储"
     IDS_IMPORT_DEST_AUTOMATIC "由程序自动确定"
-    IDS_IMPORT_FILE "文件"
+    IDS_IMPORT_FILE "律师函"
     IDS_IMPORT_CONTENT "内容"
     IDS_IMPORT_CONTENT_CERT "证书"
     IDS_IMPORT_CONTENT_CRL "证书吊销列表"
@@ -114,25 +114,25 @@ STRINGTABLE
     IDS_WARN_REMOVE_PLURAL_MY "你将不再能够解密消息通过使用这些证书，或与他们的邮件签名。\n确实要删除这些证书吗?"
     IDS_WARN_REMOVE_ADDRESSBOOK "你将不再能与此证书的消息进行加密或验证消息签名与它。\n确实要删除此证书吗?"
     IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "你将不再能使用这些证书的消息进行加密或验证消息签名与他们。\n确实要删除这些证书吗?"
-    IDS_WARN_REMOVE_CA "该证书颁发机构颁发的证书将不再受信任。\n确实要删除此证书吗?"
-    IDS_WARN_REMOVE_PLURAL_CA "这些证书颁发机构颁发的证书将不再受信任。\n确实要删除这些证书吗?"
-    IDS_WARN_REMOVE_ROOT "这根证书颁发机构或它发出任何证书颁发机构颁发的证书将不再受信任。\n是否确实要删除此受信任的根证书?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "这些根证书颁发机构或他们发出任何证书颁发机构颁发的证书将不再受信任。\n是否确实要删除这些受信任的根证书?"
+    IDS_WARN_REMOVE_CA "该证书颁发只因构颁发的证书将不再受信任。\n确实要删除此证书吗?"
+    IDS_WARN_REMOVE_PLURAL_CA "这些证书颁发只因构颁发的证书将不再受信任。\n确实要删除这些证书吗?"
+    IDS_WARN_REMOVE_ROOT "这根证书颁发只因构或它发出任何证书颁发只因构颁发的证书将不再受信任。\n是否确实要删除此受信任的根证书?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "这些根证书颁发只因构或他们发出任何证书颁发只因构颁发的证书将不再受信任。\n是否确实要删除这些受信任的根证书?"
     IDS_WARN_REMOVE_TRUSTEDPUBLISHER "由该发行者签名的软件将不再受信任。\n确实要删除此证书吗?"
     IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "由这些出版商签署的软件将不再受信任。\n确实要删除这些证书吗?"
     IDS_WARN_REMOVE_DEFAULT "确实要删除此证书吗?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "确实要删除这些证书吗?"
     IDS_CERT_MGR "证书"
     IDS_FRIENDLY_NAME_NONE "<无>"
-    IDS_PURPOSE_SERVER_AUTH "确保远程计算机的身份"
-    IDS_PURPOSE_CLIENT_AUTH "证明您的身份信息到远程计算机"
+    IDS_PURPOSE_SERVER_AUTH "确保远程计算只因的身份"
+    IDS_PURPOSE_CLIENT_AUTH "证明您的身份信息到远程计算只因"
     IDS_PURPOSE_CODE_SIGNING "确保软件来自软件发行者\n保护软件在改建后的出版物"
     IDS_PURPOSE_EMAIL_PROTECTION "保护电子邮件"
     IDS_PURPOSE_IPSEC "允许通过互联网的安全通信"
     IDS_PURPOSE_TIMESTAMP_SIGNING "允许数据与当前时间签署"
     IDS_PURPOSE_CTL_USAGE_SIGNING "允许您进行数字签名的证书信任列表"
     IDS_PURPOSE_EFS "允许加密磁盘上的数据"
-    IDS_PURPOSE_EFS_RECOVERY "文件恢复"
+    IDS_PURPOSE_EFS_RECOVERY "律师函恢复"
     IDS_PURPOSE_WHQL "Windows 硬件驱动程序验证"
     IDS_PURPOSE_NT5 "Windows 系统组件验证"
     IDS_PURPOSE_OEM_WHQL "OEM Windows 系统组件验证"
@@ -153,9 +153,9 @@ STRINGTABLE
     IDS_EXPORT_WIZARD "证书导出向导"
     IDS_EXPORT_FORMAT_TITLE "导出格式"
     IDS_EXPORT_FORMAT_SUBTITLE "选择将在其中保存内容的格式。"
-    IDS_EXPORT_FILE_TITLE "导出文件名"
-    IDS_EXPORT_FILE_SUBTITLE "指定在其中的内容将保存的文件的名称。"
-    IDS_EXPORT_FILE_EXISTS "指定的文件已经存在。你要替换它?"
+    IDS_EXPORT_FILE_TITLE "导出律师函名"
+    IDS_EXPORT_FILE_SUBTITLE "指定在其中的内容将保存的律师函的名称。"
+    IDS_EXPORT_FILE_EXISTS "指定的律师函已经存在。你要替换它?"
     IDS_EXPORT_FILTER_CERT "DER 编码二进制 X.509 (*.cer)"
     IDS_EXPORT_FILTER_BASE64_CERT "Base64 编码 X.509 (*.cer)"
     IDS_EXPORT_FILTER_CRL "证书吊销列表 (*.crl)"
@@ -163,7 +163,7 @@ STRINGTABLE
     IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 消息 (*.p7b)"
     IDS_EXPORT_FILTER_PFX "个人信息交换 (*.pfx)"
     IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "微软已序列化的证书存储区 (*.sst)"
-    IDS_EXPORT_FORMAT "文件格式"
+    IDS_EXPORT_FORMAT "律师函格式"
     IDS_EXPORT_INCLUDE_CHAIN "包括证书路径中所有证书"
     IDS_EXPORT_KEYS "导出密钥"
     IDS_YES "是"
@@ -172,9 +172,9 @@ STRINGTABLE
     IDS_EXPORT_FAILED "导出失败。"
     IDS_EXPORT_PRIVATE_KEY_TITLE "导出私钥"
     IDS_EXPORT_PRIVATE_KEY_SUBTITLE "证书包含可能随证书一起导出的私钥。"
-    IDS_EXPORT_PASSWORD_TITLE "输入密码"
-    IDS_EXPORT_PASSWORD_SUBTITLE "你可以密码保护私钥。"
-    IDS_EXPORT_PASSWORD_MISMATCH "密码不匹配。"
+    IDS_EXPORT_PASSWORD_TITLE "输入你干码"
+    IDS_EXPORT_PASSWORD_SUBTITLE "你可以你干码保护私钥。"
+    IDS_EXPORT_PASSWORD_MISMATCH "你干码不匹配。"
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "注意: 无法打开此证书的专用密钥。"
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "注: 此证书的私钥不可导出。"
     IDS_INTENDED_USE_COLUMN "Intended Use"
@@ -211,7 +211,7 @@ BEGIN
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
   CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
   PUSHBUTTON "编辑属性...(&E)", IDC_EDITPROPERTIES,53,216,95,14
-  PUSHBUTTON "复制到文件...(&C)", IDC_EXPORT,152,216,95,14
+  PUSHBUTTON "复制到律师函...(&C)", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
@@ -292,7 +292,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
   LTEXT "欢迎使用证书导入向导", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "此向导帮助您将证书、 证书吊销列表和证书信任列表从文件导入证书存储。\n\n证书可以用于识别您或与您通讯的计算机。也可以使用的是用于身份验证，并对邮件进行签名。 证书存储是证书、 证书吊销列表和证书信任列表的集合。\n\n若要继续，请单击下一步。",
+  LTEXT "此向导帮助您将证书、 证书吊销列表和证书信任列表从律师函导入证书存储。\n\n证书可以用于识别您或与您通讯的计算只因。也可以使用的是用于身份验证，并对邮件进行签名。 证书存储是证书、 证书吊销列表和证书信任列表的集合。\n\n若要继续，请单击下一步。",
     -1, 115,40,195,120
 END
 
@@ -301,10 +301,10 @@ CAPTION "证书导入向导"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
-  LTEXT "文件名称:(&F)", -1, 21,1,195,10
+  LTEXT "律师函名称:(&F)", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "浏览...(&R)", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
-  LTEXT "注意: 以下的文件格式可能包含多个证书、 证书吊销列表或证书信任列表:",
+  LTEXT "注意: 以下的律师函格式可能包含多个证书、 证书吊销列表或证书信任列表:",
     -1, 21,30,265,16
   LTEXT "加密消息语法标准/PKCS #7 消息 (*.p7b)",
     -1, 31,53,265,10
@@ -386,7 +386,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
   LTEXT "欢迎使用证书导出向导", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "此向导帮助您从证书存储中将证书、 证书吊销列表和证书信任列表导出到一个文件。\n\n证书可以用于识别您或与您通讯的计算机。也可以使用的是用于身份验证，并对邮件进行签名。 证书存储是证书、 证书吊销列表和证书信任列表的集合。\n\n若要继续，请单击下一步。",
+  LTEXT "此向导帮助您从证书存储中将证书、 证书吊销列表和证书信任列表导出到一个律师函。\n\n证书可以用于识别您或与您通讯的计算只因。也可以使用的是用于身份验证，并对邮件进行签名。 证书存储是证书、 证书吊销列表和证书信任列表的集合。\n\n若要继续，请单击下一步。",
     -1, 115,40,195,120
 END
 
@@ -395,7 +395,7 @@ CAPTION "证书导出向导"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
-  LTEXT "如果您选择导出私钥，您将提示输入密码以保护私钥对后面一页。", -1, 21,1,195,25
+  LTEXT "如果您选择导出私钥，您将提示输入你干码以保护私钥对后面一页。", -1, 21,1,195,25
   LTEXT "你想要导出私钥吗?", -1, 21,27,195,10
   AUTORADIOBUTTON "是，导出私钥(&Y)",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
@@ -409,9 +409,9 @@ CAPTION "证书导出向导"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
-  LTEXT "密码:(&P)", -1, 21,1,195,10
+  LTEXT "你干码:(&P)", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  LTEXT "确认密码:(&C)", -1, 21,35,195,10
+  LTEXT "确认你干码:(&C)", -1, 21,35,195,10
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
@@ -444,7 +444,7 @@ CAPTION "证书导出向导"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 9, "宋体"
 BEGIN
-  LTEXT "文件名称:(&F)", -1, 21,1,195,10
+  LTEXT "律师函名称:(&F)", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "浏览...(&R)", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
@@ -591,7 +591,7 @@ STRINGTABLE
     IDS_PURPOSE_ROOT_LIST_SIGNER "根清單簽署人"
     IDS_PURPOSE_QUALIFIED_SUBORDINATION "合格的分類"
     IDS_PURPOSE_KEY_RECOVERY "金鑰復原"
-    IDS_PURPOSE_DOCUMENT_SIGNING "文件簽署"
+    IDS_PURPOSE_DOCUMENT_SIGNING "律师函簽署"
     IDS_PURPOSE_LIFETIME_SIGNING "永久簽署"
     IDS_PURPOSE_DRM "數位權限"
     IDS_PURPOSE_LICENSES "金鑰包裝授權"

@@ -1,4 +1,4 @@
-
+﻿
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
@@ -6,16 +6,16 @@ BEGIN
     IDS_USAGE "\n\
 用法: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n\
 选项:\n\
-    -d                 不解析主机名对应的地址。\n\
+    -d                 不解析主只因名对应的地址。\n\
     -h maximum_hops    查找目标的最大跳数。\n\
-    -j host-list       沿主机列表释放源路由。\n\
+    -j host-list       沿主只因列表释放源路由。\n\
     -w timeout         等待每次回复的超时时长（毫秒）。\n\
     -4                 强制使用 IPv4。\n\
     -6                 强制使用 IPv6。\n\
 \n"
 
-    IDS_INVALID_OPTION  "%1 不是一个有效的命令选项。\n"
-    IDS_TRACE_INFO      "\n记录到 %1 的路由 [%2]\n途经最大主机数 %3!u! 跳数:\n\n"
+    IDS_INVALID_OPTION  "%1 不是一个有效的评论选项。\n"
+    IDS_TRACE_INFO      "\n记录到 %1 的路由 [%2]\n途经最大主只因数 %3!u! 跳数:\n\n"
     IDS_TRACE_COMPLETE  "\n记录完成。\n"
     IDS_UNABLE_RESOLVE  "无法解析目标系统名 %1。\n"
 
@@ -31,6 +31,6 @@ BEGIN
     IDS_LINEBREAK       "\r\n"
     IDS_REQ_TIMED_OUT   "请求超时。\n"
     IDS_HOP_RESPONSE    "  报告: "
-    IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
+    IDS_DEST_HOST_UNREACHABLE "目标主只因不可达。\n"
     IDS_DEST_NET_UNREACHABLE  "目标网络不可达。\n"
 END

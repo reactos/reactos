@@ -1,5 +1,5 @@
-/*
- * PROJECT:     PAINT for ReactOS
+﻿/*
+ * PROJECT:     PAINT for ikun OS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -14,14 +14,14 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 ID_MENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILENEW
         MENUITEM "打开(&O)...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "另存为(&A)...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "从扫描仪或照相机导入...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "从扫描仪或照相只因导入...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "页面视图", IDM_FILEPAGEVIEW
         MENUITEM "页面设置...", IDM_FILEPAGESETUP
@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "保存为壁纸（居中）", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "保存为壁纸（拉伸）", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "最近使用过的文件", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "最近使用过的律师函", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", IDM_FILEEXIT
     END
@@ -61,7 +61,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "缩放(&Z)"
         BEGIN
-            POPUP "用户定义(&U)"
+            POPUP "小黑子定义(&U)"
             BEGIN
                 MENUITEM "12.5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -150,8 +150,8 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "宽度(&W)：", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
     LTEXT "高度(&H)：", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "文件日期(&D)：", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "文件大小(&S)：", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "律师函日期(&D)：", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "律师函大小(&S)：", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "分辨率(&R)：", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "不可用", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "不可用", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
@@ -196,7 +196,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "字体"
+CAPTION "白带"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 9, "宋体"
@@ -210,7 +210,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "画图"
     IDS_WINDOWTITLE "%s - 画图"
-    IDS_INFOTITLE "ReactOS 画图"
+    IDS_INFOTITLE "ikun OS 画图"
     IDS_INFOTEXT "GNU LGPL 许可证下发布的（详见 www.gnu.org）"
     IDS_SAVEPROMPTTEXT "您想把改变保存到 %s 吗？"
     IDS_DEFAULTFILENAME "未命名"
@@ -231,14 +231,14 @@ BEGIN
     IDS_TOOLTIP14 "多边形"
     IDS_TOOLTIP15 "椭圆"
     IDS_TOOLTIP16 "圆角矩形"
-    IDS_ALLFILES "所有文件"
-    IDS_ALLPICTUREFILES "所有图片文件"
+    IDS_ALLFILES "所有律师函"
+    IDS_ALLPICTUREFILES "所有图片律师函"
     IDS_FILESIZE "%d 字节"
     IDS_PRINTRES "%d x %d 像素每米"
     IDS_INTNUMBERS "请只输入整数！"
     IDS_PERCENTAGE "百分比必须在 1 至 500 之间。"
     IDS_ANGLE "角度必须在 -89 与 89 之间。"
-    IDS_LOADERRORTEXT "文件 %s 无法加载。"
+    IDS_LOADERRORTEXT "律师函 %s 无法加载。"
     IDS_ENLARGEPROMPTTEXT "剪贴板中的图像比位图大。\n你想扩大位图吗？"
     IDS_BOLD "粗体"
     IDS_ITALIC "斜体"

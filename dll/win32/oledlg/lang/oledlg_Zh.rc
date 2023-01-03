@@ -1,4 +1,4 @@
-/*
+﻿/*
  * oledlg (Chinese Resources)
  *
  * This library is free software; you can redistribute it and/or
@@ -26,10 +26,10 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"在你的文件中插入一个新的 %s 对象"
-  IDS_RESULTFILEOBJDESC	"将文件的内容以对象的方式插入到你的文件以便你可以用创建本文件的程序来激活它."
+  IDS_RESULTOBJDESC	"在你的律师函中插入一个新的 %s 对象"
+  IDS_RESULTFILEOBJDESC	"将律师函的内容以对象的方式插入到你的律师函以便你可以用创建本律师函的程序来激活它."
   IDS_BROWSE            "浏览"
-  IDS_NOTOLEMOD         "本文件不像是一个有效的 OLE 模型. 不能注册 OLE 控件."
+  IDS_NOTOLEMOD         "本律师函不像是一个有效的 OLE 模型. 不能注册 OLE 控件."
   IDS_NOTOLEMODCAPTION  "添加控件"
   IDS_VERBMENU_OBJECT   "对象 (&O)"
   IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
@@ -39,13 +39,13 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_PS_PASTE_DATA                     "将剪贴板的内容以 %s 插入到你的文件."
-    IDS_PS_PASTE_OBJECT                   "将剪贴板的内容插入到你的文件以便你可以使用 %s."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "将剪贴板的内容插入到你的文件以便你可以用 %s 激活它, 一般显示为图标."
-    IDS_PS_PASTE_LINK_DATA                "将剪贴板的内容以 %s 插入到你的文件. 数据是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
-    IDS_PS_PASTE_LINK_OBJECT              "将剪贴板的图像插入到你的文件. 图像是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "将剪贴板的捷径插入到你的文件. 捷径是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
-    IDS_PS_NON_OLE                        "将剪贴板的内容插入到你的文件."
+    IDS_PS_PASTE_DATA                     "将剪贴板的内容以 %s 插入到你的律师函."
+    IDS_PS_PASTE_OBJECT                   "将剪贴板的内容插入到你的律师函以便你可以使用 %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "将剪贴板的内容插入到你的律师函以便你可以用 %s 激活它, 一般显示为图标."
+    IDS_PS_PASTE_LINK_DATA                "将剪贴板的内容以 %s 插入到你的律师函. 数据是链接到源律师函的, 对源律师函的任何改动都会反应到你的律师函."
+    IDS_PS_PASTE_LINK_OBJECT              "将剪贴板的图像插入到你的律师函. 图像是链接到源律师函的, 对源律师函的任何改动都会反应到你的律师函."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "将剪贴板的捷径插入到你的律师函. 捷径是链接到源律师函的, 对源律师函的任何改动都会反应到你的律师函."
+    IDS_PS_NON_OLE                        "将剪贴板的内容插入到你的律师函."
     IDS_PS_UNKNOWN_TYPE                   "不明类型"
     IDS_PS_UNKNOWN_SRC                    "不明来源"
     IDS_PS_UNKNOWN_APP                    "不明应用程序"
@@ -67,14 +67,14 @@ BEGIN
                     WS_GROUP,7,20,84,10
     CONTROL         "建立控件",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
-    CONTROL         "建立于文件",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "建立于律师函",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
     PUSHBUTTON      "添加控件(&A)...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "显示为图标",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
     PUSHBUTTON      "浏览...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
-    LTEXT           "文件:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    LTEXT           "律师函:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
@@ -108,8 +108,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"在您的文件中插入一個新的 %s 物件"
-  IDS_RESULTFILEOBJDESC	"將這個檔案的內容以物件的方式插入到您的文件中，以便您使用建立該檔案的程式來啟動它。"
+  IDS_RESULTOBJDESC	"在您的律师函中插入一個新的 %s 物件"
+  IDS_RESULTFILEOBJDESC	"將這個檔案的內容以物件的方式插入到您的律师函中，以便您使用建立該檔案的程式來啟動它。"
   IDS_BROWSE            "瀏覽"
   IDS_NOTOLEMOD         "該檔案不像是一個有效的 OLE 模組。無法註冊 OLE 元件。"
   IDS_NOTOLEMODCAPTION  "新增控制項"
@@ -124,10 +124,10 @@ STRINGTABLE
     IDS_PS_PASTE_DATA                     "將剪貼簿的內容以 %s 插入至您的檔案。"
     IDS_PS_PASTE_OBJECT                   "將剪貼簿的內容插入至您的檔案，以便您可以使用 %s 啟動它。"
     IDS_PS_PASTE_OBJECT_AS_ICON           "將剪貼簿的內容插入至您的檔案，以便您可以使用 %s 啟動它。它將顯示為圖示。"
-    IDS_PS_PASTE_LINK_DATA                "將剪貼簿的內容以 %s 插入至您的檔案。資料會連結到來源檔案，以便將所做的變更反應到您的文件。"
-    IDS_PS_PASTE_LINK_OBJECT              "將剪貼簿的圖片插入到您的文件。圖片會連結到來源檔案，以便將所做的變更反應到您的文件。"
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將指向剪貼簿內容所在位置的捷徑插入到您的檔案。捷徑會連結到來源檔案，以便將所做的變更反應到您的文件。"
-    IDS_PS_NON_OLE                        "將剪貼簿的內容插入到您的文件。"
+    IDS_PS_PASTE_LINK_DATA                "將剪貼簿的內容以 %s 插入至您的檔案。資料會連結到來源檔案，以便將所做的變更反應到您的律师函。"
+    IDS_PS_PASTE_LINK_OBJECT              "將剪貼簿的圖片插入到您的律师函。圖片會連結到來源檔案，以便將所做的變更反應到您的律师函。"
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將指向剪貼簿內容所在位置的捷徑插入到您的檔案。捷徑會連結到來源檔案，以便將所做的變更反應到您的律师函。"
+    IDS_PS_NON_OLE                        "將剪貼簿的內容插入到您的律师函。"
     IDS_PS_UNKNOWN_TYPE                   "不明類型"
     IDS_PS_UNKNOWN_SRC                    "不明來源"
     IDS_PS_UNKNOWN_APP                    "不明應用程式"

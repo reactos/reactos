@@ -1,10 +1,10 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+﻿/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "文件(&F)"
+    POPUP "律师函(&F)"
     BEGIN
         MENUITEM "打开(&O)...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "关闭(&C)\tCtrl+W", IDM_CLOSE_FILE
@@ -63,7 +63,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "快进"
     IDS_TOOLTIP_FORWARD "向前跳过"
     IDS_TOOLTIP_PAUSE "暂停"
-    IDS_APPTITLE "ReactOS 多媒体播放器"
+    IDS_APPTITLE "ikun OS 多媒体播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "该错误没有可用的描述."
 END

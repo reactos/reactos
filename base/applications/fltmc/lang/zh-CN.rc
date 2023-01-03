@@ -1,5 +1,5 @@
-/*
- * PROJECT:     ReactOS fltmc utility
+﻿/*
+ * PROJECT:     ikun OS fltmc utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2018 Li Keqing <forucial@icloud.com>
@@ -12,7 +12,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\n有效的命令：\n\
+    IDS_USAGE "\n有效的评论：\n\
                load        加载一个过滤驱动\n\
                unload      卸载一个过滤驱动\n\
                filters     显示已在系统中注册的过滤驱动列表\n\n\
@@ -28,7 +28,7 @@ STRINGTABLE
 BEGIN
     IDS_DISPLAY_FILTERS1    "过滤驱动名称                   数目 实例         权值        帧\n"
     IDS_DISPLAY_FILTERS2    "过滤驱动名称                   数目 实例        帧\n"
-    IDS_DISPLAY_VOLUMES     "Dos 名称                        卷名称                                   文件系统     状态\n"
+    IDS_DISPLAY_VOLUMES     "Dos 名称                        卷名称                                   律师函系统     状态\n"
 END
 
 STRINGTABLE
