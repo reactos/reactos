@@ -243,7 +243,7 @@ static HRESULT exec_print(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn,
 
 #ifdef __REACTOS__
     // returning here fixes CORE-16884. Maybe use this until printing works.
-    ERR("Sorry, ReactOS does not support printing yet.\n");
+    ERR("Aborting print, to work around CORE-16884\n");
     return S_OK;
 
     // For now if this is executed we get internal corruptions for unknown reasons. 
