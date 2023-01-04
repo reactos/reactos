@@ -46,7 +46,7 @@ static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
     ret = mmioOpenW((LPWSTR)lpszName, NULL,
                     MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
     if (ret != 0) return ret;
-    if (SearchPathW(NULL, lpszName, NULL, sizeof(buf)/sizeof(buf[0]), buf, &dummy))
+    if (SearchPathW(NULL, lpszName, NULL, ARRAY_SIZE(buf), buf, &dummy))
     {
         return mmioOpenW(buf, NULL,
                          MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
@@ -71,7 +71,7 @@ static HMMIO get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
                       bIsDefault ? L"Default" : lpszName,
                       L"",
                       str,
-                      _countof(str));
+                      ARRAY_SIZE(str));
     if (lstrlenW(str) == 0)
         goto Next;
 
@@ -105,8 +105,8 @@ Next:
         DWORD len;
 
         err = ERROR_FILE_NOT_FOUND; /* error */
-        len = GetModuleFileNameW(NULL, str, _countof(str));
-        if (len > 0 && len < _countof(str))
+        len = GetModuleFileNameW(NULL, str, ARRAY_SIZE(str));
+        if (len > 0 && len < ARRAY_SIZE(str))
         {
             for (ptr = str + lstrlenW(str) - 1; ptr >= str; ptr--)
             {
