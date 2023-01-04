@@ -335,7 +335,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     add_subdirectory(sdk/include/reactos/mc)
     add_subdirectory(sdk/include/asm)
 
-    if(NO_ROSSYM)
+    if(DEFINED NO_ROSSYM AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
         include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)
         if (ARCH STREQUAL "amd64")
