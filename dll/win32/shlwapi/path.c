@@ -1353,7 +1353,7 @@ BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile,LPCWSTR *lppszOtherDirs,DWORD dwWh
 
   TRACE("(%s,%p,%08x)\n", debugstr_w(lpszFile), lppszOtherDirs, dwWhich);
 
-  if (!PathIsFileSpecW(lpszFile) || !lpszFile)
+  if (!(lpszFile && PathIsFileSpecW(lpszFile)))
     return FALSE;
 
   /* Search provided directories first */
