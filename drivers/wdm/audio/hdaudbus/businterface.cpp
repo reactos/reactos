@@ -294,6 +294,48 @@ HDA_UnregisterNotificationEvent(
 	return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+HDA_AllocateContiguousDmaBuffer(
+    IN PVOID _context,
+    IN HANDLE Handle,
+    ULONG RequestedBufferSize,
+    OUT PVOID *DataBuffer,
+    OUT PHDAUDIO_BUFFER_DESCRIPTOR *BdlBuffer)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HDA_FreeContiguousDmaBuffer(
+    IN PVOID _context,
+    IN HANDLE Handle)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HDA_SetupDmaEngineWithBdl(
+    IN PVOID _context,
+    IN HANDLE Handle,
+    ULONG BufferLength,
+    IN ULONG Lvi,
+    IN PHDAUDIO_BDL_ISR Isr,
+    PVOID Context,
+    OUT PUCHAR StreamId,
+    OUT PULONG FifoSize)
+{
+	UNIMPLEMENTED;
+	ASSERT(FALSE);
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 NTSTATUS
 HDA_PDOHandleQueryInterface(
@@ -302,6 +344,7 @@ HDA_PDOHandleQueryInterface(
 {
     PIO_STACK_LOCATION IoStack;
     PHDAUDIO_BUS_INTERFACE_V2 InterfaceHDA;
+    PHDAUDIO_BUS_INTERFACE_BDL InterfaceBDL;
     PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
@@ -363,10 +406,36 @@ HDA_PDOHandleQueryInterface(
         InterfaceHDA->FreeDmaBufferWithNotification = HDA_FreeDmaBufferWithNotification;
         InterfaceHDA->RegisterNotificationEvent = HDA_RegisterNotificationEvent;
         InterfaceHDA->UnregisterNotificationEvent = HDA_UnregisterNotificationEvent;
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE_BDL))
+    {
+        InterfaceBDL = (PHDAUDIO_BUS_INTERFACE_BDL)IoStack->Parameters.QueryInterface.Interface;
+        InterfaceBDL->Version = IoStack->Parameters.QueryInterface.Version;
+        InterfaceBDL->Size = sizeof(HDAUDIO_BUS_INTERFACE_BDL);
+        InterfaceBDL->Context = DeviceExtension;
+        InterfaceBDL->InterfaceReference = HDA_InterfaceReference;
+        InterfaceBDL->InterfaceDereference = HDA_InterfaceDereference;
+
+        InterfaceBDL->TransferCodecVerbs = HDA_TransferCodecVerbs;
+        InterfaceBDL->AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
+        InterfaceBDL->AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
+        InterfaceBDL->ChangeBandwidthAllocation = HDA_ChangeBandwidthAllocation;
+        InterfaceBDL->FreeDmaEngine = HDA_FreeDmaEngine;
+        InterfaceBDL->SetDmaEngineState = HDA_SetDmaEngineState;
+        InterfaceBDL->GetWallClockRegister = HDA_GetWallClockRegister;
+        InterfaceBDL->GetLinkPositionRegister = HDA_GetLinkPositionRegister;
+        InterfaceBDL->RegisterEventCallback = HDA_RegisterEventCallback;
+        InterfaceBDL->UnregisterEventCallback = HDA_UnregisterEventCallback;
+        InterfaceBDL->GetDeviceInformation = HDA_GetDeviceInformation;
+        InterfaceBDL->GetResourceInformation = HDA_GetResourceInformation;
+
+        InterfaceBDL->AllocateContiguousDmaBuffer = HDA_AllocateContiguousDmaBuffer;
+        InterfaceBDL->FreeContiguousDmaBuffer = HDA_FreeContiguousDmaBuffer;
+        InterfaceBDL->SetupDmaEngineWithBdl = HDA_SetupDmaEngineWithBdl;
+        return STATUS_SUCCESS;
     }
 
-    // FIXME
-    // implement support for GUID_HDAUDIO_BUS_INTERFACE_BDL
-    UNIMPLEMENTED;
+    DPRINT1("Unsupported HDAUDIO GUID requested\n");
     return STATUS_NOT_SUPPORTED;
 }
