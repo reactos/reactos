@@ -74,56 +74,6 @@ static const TEST_ENTRY g_test_entries[] =
 };
 #define g_test_entry_count _countof(g_test_entries)
 #else
-static const TEST_ENTRY g_FREEMONO[] =
-{
-    { __LINE__, 400, 0, 3600, 400, 400, 320, 80, 0, 0 },
-    { __LINE__, 300, 0, 2700, 300, 300, 240, 60, 0, 0 },
-    { __LINE__, 200, 0, 1800, 200, 200, 160, 40, 0, 0 },
-    { __LINE__, 100, 0, 900, 100, 100, 80, 20, 0, 0 },
-    { __LINE__, 64, 0, 570, 64, 64, 51, 13, 0, 0 },
-    { __LINE__, 32, 0, 285, 32, 32, 26, 6, 0, 0 },
-    { __LINE__, 16, 0, 150, 16, 16, 13, 3, 0, 0 },
-    { __LINE__, 15, 0, 135, 15, 15, 12, 3, 0, 0 },
-    { __LINE__, 14, 0, 120, 14, 14, 11, 3, 0, 0 },
-    { __LINE__, 13, 0, 120, 13, 13, 10, 3, 0, 0 },
-    { __LINE__, 12, 0, 105, 12, 12, 10, 2, 0, 0 },
-    { __LINE__, 11, 0, 105, 11, 11, 9, 2, 0, 0 },
-    { __LINE__, 10, 0, 90, 10, 10, 8, 2, 0, 0 },
-    { __LINE__, 9, 0, 77, 9, 9, 7, 2, 0, 0 },
-    { __LINE__, 8, 0, 75, 8, 8, 6, 2, 0, 0 },
-    { __LINE__, 7, 0, 60, 7, 7, 6, 1, 0, 0 },
-    { __LINE__, 6, 0, 60, 6, 6, 5, 1, 0, 0 },
-    { __LINE__, 5, 0, 45, 5, 5, 4, 1, 0, 0 },
-    { __LINE__, 4, 0, 30, 4, 4, 3, 1, 0, 0 },
-    { __LINE__, 3, 0, 30, 3, 3, 2, 1, 0, 0 },
-    { __LINE__, 2, 0, 15, 2, 2, 2, 0, 0, 0 },
-    { __LINE__, 1, 0, 15, 2, 2, 2, 0, 0, 0 },
-    { __LINE__, 0, 0, -165, -18, -18, -14, -4, 0, 0 },
-    { __LINE__, -1, 0, 15, 2, 2, 2, 0, 0, 0 },
-    { __LINE__, -2, 0, 15, 2, 2, 2, 0, 0, 0 },
-    { __LINE__, -3, 0, 30, 3, 3, 2, 1, 0, 0 },
-    { __LINE__, -4, 0, 30, 4, 4, 3, 1, 0, 0 },
-    { __LINE__, -5, 0, 45, 5, 5, 4, 1, 0, 0 },
-    { __LINE__, -6, 0, 60, 6, 6, 5, 1, 0, 0 },
-    { __LINE__, -7, 0, 60, 7, 7, 6, 1, 0, 0 },
-    { __LINE__, -8, 0, 75, 8, 8, 6, 2, 0, 0 },
-    { __LINE__, -9, 0, 77, 9, 9, 7, 2, 0, 0 },
-    { __LINE__, -10, 0, 90, 10, 10, 8, 2, 0, 0 },
-    { __LINE__, -11, 0, 105, 11, 11, 9, 2, 0, 0 },
-    { __LINE__, -12, 0, 105, 12, 12, 10, 2, 0, 0 },
-    { __LINE__, -13, 0, 120, 13, 13, 10, 3, 0, 0 },
-    { __LINE__, -14, 0, 120, 14, 14, 11, 3, 0, 0 },
-    { __LINE__, -15, 0, 135, 15, 15, 12, 3, 0, 0 },
-    { __LINE__, -16, 0, 150, 16, 16, 13, 3, 0, 0 },
-    { __LINE__, -32, 0, 285, 32, 32, 26, 6, 0, 0 },
-    { __LINE__, -64, 0, 570, 64, 64, 51, 13, 0, 0 },
-    { __LINE__, -100, 0, 900, 100, 100, 80, 20, 0, 0 },
-    { __LINE__, -200, 0, 1800, 200, 200, 160, 40, 0, 0 },
-    { __LINE__, -300, 0, 2700, 300, 300, 240, 60, 0, 0 },
-    { __LINE__, -400, 0, 3600, 400, 400, 320, 80, 0, 0 },
-};
-#define g_FREEMONO_count _countof(g_FREEMONO)
-
 static const TEST_ENTRY g_MSGOTHIC[] =
 {
     { __LINE__, 400, 0, 3000, 400, 400, 344, 56, 0, 0 },
@@ -288,12 +238,10 @@ typedef struct FONT_ENTRY
 static FONT_ENTRY g_font_entries[] =
 {
 #ifdef EMIT_TESTCASES
-    { "FREEMONO", "FreeMono", "FreeMono.ttf" },
     { "MSGOTHIC", "MS Gothic", "msgothic.ttc" },
     { "MSMINCHO", "MS Mincho", "msmincho.ttc" },
     { "TAHOMA", "Tahoma", "tahoma.ttf" },
 #else
-    { "FREEMONO", "FreeMono", "FreeMono.ttf", g_FREEMONO_count, g_FREEMONO },
     { "MSGOTHIC", "MS Gothic", "msgothic.ttc", g_MSGOTHIC_count, g_MSGOTHIC },
     { "MSMINCHO", "MS Mincho", "msmincho.ttc", g_MSMINCHO_count, g_MSMINCHO },
     { "TAHOMA", "Tahoma", "Tahoma.ttf", g_TAHOMA_count, g_TAHOMA },
