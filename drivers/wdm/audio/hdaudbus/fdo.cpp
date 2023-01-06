@@ -120,7 +120,7 @@ HDA_DpcForIsr(
         if (Codec->ResponseCount >= MAX_CODEC_RESPONSES)
         {
             DPRINT1("too many responses for codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
-            continue;
+            break;
         }
 
         // FIXME handle unsolicited responses
