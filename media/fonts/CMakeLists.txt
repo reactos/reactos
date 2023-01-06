@@ -4,14 +4,10 @@ list(APPEND FONT_FILES
     arialbd.ttf
     arialbi.ttf
     ariali.ttf
-    DejaVuSansMono-Bold.ttf
-    DejaVuSansMono-BoldOblique.ttf
-    DejaVuSansMono-Oblique.ttf
-    DejaVuSansMono.ttf
-    FreeMono.ttf
-    FreeMonoBold.ttf
-    FreeMonoBoldOblique.ttf
-    FreeMonoOblique.ttf
+    cour.ttf
+    courbd.ttf
+    courbi.ttf
+    couri.ttf
     FreeSans.ttf
     FreeSansBold.ttf
     FreeSansBoldOblique.ttf
@@ -26,6 +22,7 @@ list(APPEND FONT_FILES
     LibreFranklin-BoldItalic.ttf
     LibreFranklin-Italic.ttf
     LibreFranklin-Regular.ttf
+    lucon.ttf
     Marlett.ttf
     pala.ttf
     palab.ttf
