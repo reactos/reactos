@@ -117,8 +117,16 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
 
 PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 {
-   if (hWnd) return (PWND)UserGetObjectNoErr(gHandleTable, hWnd, TYPE_WINDOW);
-   return NULL;
+    PWND Window;
+
+    if (!hWnd)
+        return NULL;
+
+    Window = (PWND)UserGetObjectNoErr(gHandleTable, hWnd, TYPE_WINDOW);
+    if (!Window || (Window->state & WNDS_DESTROYED))
+        return NULL;
+
+    return Window;
 }
 
 /* Temp HACK */
