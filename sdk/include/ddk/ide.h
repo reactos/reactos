@@ -246,6 +246,7 @@ typedef NTSTATUS
     _In_ PVOID DeviceExtension,
     _In_ PIDE_CONTROLLER_PROPERTIES ControllerProperties);
 
+CODE_SEG("PAGE")
 NTSTATUS NTAPI
 PciIdeXInitialize(
     _In_ PDRIVER_OBJECT DriverObject,
