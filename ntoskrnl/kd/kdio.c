@@ -212,8 +212,9 @@ KdpPrintToLogFile(PCHAR String,
 
 VOID
 NTAPI
-KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
-                ULONG BootPhase)
+KdpDebugLogInit(
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
 {
     NTSTATUS Status;
     UNICODE_STRING FileName;
@@ -340,8 +341,9 @@ KdpSerialPrint(PCHAR String,
 
 VOID
 NTAPI
-KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
-              ULONG BootPhase)
+KdpSerialInit(
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
 {
     if (!KdpDebugMode.Serial) return;
 
@@ -504,8 +506,9 @@ KdpScreenPrint(PCHAR String,
 
 VOID
 NTAPI
-KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
-              ULONG BootPhase)
+KdpScreenInit(
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
 {
     if (!KdpDebugMode.Screen) return;
 
@@ -550,8 +553,8 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable, ULONG BootPhase);
 VOID
 NTAPI
 KdpKdbgInit(
-    PKD_DISPATCH_TABLE DispatchTable,
-    ULONG BootPhase)
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
 {
     /* Forward the call */
     KdbInitialize(DispatchTable, BootPhase);

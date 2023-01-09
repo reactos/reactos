@@ -348,8 +348,8 @@ KdbDebugPrint(
 VOID
 NTAPI
 KdbInitialize(
-    PKD_DISPATCH_TABLE DispatchTable,
-    ULONG BootPhase)
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
 {
     PCHAR p1, p2;
     SHORT Found = FALSE;

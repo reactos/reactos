@@ -40,10 +40,9 @@ typedef enum _KD_CONTINUE_TYPE
 
 typedef
 VOID
-(NTAPI*PKDP_INIT_ROUTINE)(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
+(NTAPI *PKDP_INIT_ROUTINE)(
+    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
+    _In_ ULONG BootPhase);
 
 typedef
 VOID
@@ -63,30 +62,27 @@ KdpScreenRelease(VOID);
 VOID
 NTAPI
 KdpScreenInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
+    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
+    _In_ ULONG BootPhase);
 
 VOID
 NTAPI
 KdpSerialInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
+    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
+    _In_ ULONG BootPhase);
 
 VOID
 NTAPI
 KdpDebugLogInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
+    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
+    _In_ ULONG BootPhase);
 
 #ifdef KDBG
 VOID
 NTAPI
 KdpKdbgInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase);
+    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
+    _In_ ULONG BootPhase);
 #endif
 
 

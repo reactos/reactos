@@ -21,7 +21,8 @@ extern ANSI_STRING KdpLogFileName;
 
 static PCHAR
 NTAPI
-KdpGetDebugMode(PCHAR Currentp2)
+KdpGetDebugMode(
+    _In_ PCHAR Currentp2)
 {
     PCHAR p1, p2 = Currentp2;
     ULONG Value;
@@ -83,7 +84,7 @@ KdpGetDebugMode(PCHAR Currentp2)
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i;
     PCHAR CommandLine, Port = NULL;
@@ -138,7 +139,7 @@ KdDebuggerInitialize0(
 NTSTATUS
 NTAPI
 KdDebuggerInitialize1(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
