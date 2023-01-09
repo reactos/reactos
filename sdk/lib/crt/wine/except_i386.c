@@ -96,6 +96,16 @@ typedef struct __cxx_function_descr
     UINT                 flags;          /* flags when magic >= VC8 */
 } cxx_function_descr;
 
+/* exception frame for nested exceptions in catch block */
+typedef struct
+{
+    EXCEPTION_REGISTRATION_RECORD frame;     /* standard exception frame */
+    cxx_exception_frame          *cxx_frame; /* frame of parent exception */
+    const cxx_function_descr     *descr;     /* descriptor of parent exception */
+    int                           trylevel;  /* current try level */
+    cxx_frame_info                frame_info;
+} catch_func_nested_frame;
+
 typedef struct
 {
     cxx_exception_frame *frame;
@@ -135,7 +145,7 @@ typedef struct
 DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                const cxx_function_descr *descr,
-                               EXCEPTION_REGISTRATION_RECORD* nested_frame, int nested_trylevel ) DECLSPEC_HIDDEN;
+                               catch_func_nested_frame* nested_frame ) DECLSPEC_HIDDEN;
 
 /* call a copy constructor */
 extern void call_copy_ctor( void *func, void *this, void *src, int has_vbase );
@@ -332,21 +342,11 @@ static void cxx_local_unwind( cxx_exception_frame* frame, const cxx_function_des
     frame->trylevel = last_level;
 }
 
-/* exception frame for nested exceptions in catch block */
-struct catch_func_nested_frame
-{
-    EXCEPTION_REGISTRATION_RECORD frame;     /* standard exception frame */
-    cxx_exception_frame          *cxx_frame; /* frame of parent exception */
-    const cxx_function_descr     *descr;     /* descriptor of parent exception */
-    int                           trylevel;  /* current try level */
-    cxx_frame_info                frame_info;
-};
-
 /* handler for exceptions happening while calling a catch function */
 static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
                                             CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **dispatcher )
 {
-    struct catch_func_nested_frame *nested_frame = (struct catch_func_nested_frame *)frame;
+    catch_func_nested_frame *nested_frame = (catch_func_nested_frame *)frame;
 
     if (rec->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND))
     {
@@ -382,8 +382,7 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
     }
 
     return cxx_frame_handler( rec, nested_frame->cxx_frame, context,
-                              NULL, nested_frame->descr, &nested_frame->frame,
-                              nested_frame->trylevel );
+                              NULL, nested_frame->descr, nested_frame );
 }
 
 /* find and call the appropriate catch block for an exception */
@@ -397,7 +396,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
     UINT i;
     int j;
     void *addr, *object = (void *)rec->ExceptionInformation[1];
-    struct catch_func_nested_frame nested_frame;
+    catch_func_nested_frame nested_frame;
     int trylevel = frame->trylevel;
     DWORD save_esp = ((DWORD*)frame)[-1];
     thread_data_t *data = msvcrt_get_thread_data();
@@ -560,8 +559,7 @@ static LONG CALLBACK se_translation_filter( EXCEPTION_POINTERS *ep, void *c )
 DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                const cxx_function_descr *descr,
-                               EXCEPTION_REGISTRATION_RECORD* nested_frame,
-                               int nested_trylevel )
+                               catch_func_nested_frame* nested_frame )
 {
     cxx_exception_type *exc_type;
 
@@ -577,7 +575,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 
     if (rec->ExceptionFlags & (EH_UNWINDING|EH_EXIT_UNWIND))
     {
-        if (descr->unwind_count && !nested_trylevel) cxx_local_unwind( frame, descr, -1 );
+        if (descr->unwind_count && !nested_frame) cxx_local_unwind( frame, descr, -1 );
         return ExceptionContinueSearch;
     }
     if (!descr->tryblock_count) return ExceptionContinueSearch;
@@ -602,8 +600,9 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
         if (rec->ExceptionInformation[0] > CXX_FRAME_MAGIC_VC8 &&
                 exc_type->custom_handler)
         {
-            return exc_type->custom_handler( rec, frame, context, dispatch,
-                                         descr, nested_trylevel, nested_frame, 0 );
+            return exc_type->custom_handler( rec, frame, context, dispatch, descr,
+                                         nested_frame ? nested_frame->trylevel : 0,
+                                         nested_frame ? &nested_frame->frame : NULL, 0 );
         }
 
         if (TRACE_ON(seh))
@@ -628,7 +627,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 
             ctx.frame = frame;
             ctx.descr = descr;
-            ctx.nested_frame = nested_frame;
+            ctx.nested_frame = nested_frame ? &nested_frame->frame : NULL;
             __TRY
             {
                 except_ptrs.ExceptionRecord = rec;
@@ -643,7 +642,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
     }
 
     call_catch_block( rec, context, frame, descr,
-            frame->trylevel, nested_frame, exc_type );
+            frame->trylevel, nested_frame ? &nested_frame->frame : NULL, exc_type );
     return ExceptionContinueSearch;
 }
 
