@@ -74,7 +74,7 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, const ip4_addr_t *dest)
     if (!NT_SUCCESS(NdisStatus))
         return ERR_RTE;
 
-    return 0;
+    return ERR_OK;
 }
 
 VOID
@@ -112,7 +112,7 @@ TCPInterfaceInit(struct netif *netif)
 
     TCPUpdateInterfaceIPInformation(IF);
 
-    return 0;
+    return ERR_OK;
 }
 
 VOID

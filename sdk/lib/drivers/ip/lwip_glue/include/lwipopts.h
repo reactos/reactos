@@ -1,60 +1,101 @@
-/*
-   ------------------------------------
-   ---------- Memory options ----------
-   ------------------------------------
-*/
+#ifndef DEBUG
+#define DEBUG
+#endif
 
-/* This combo allows us to implement malloc, free, and realloc ourselves */
-#define MEM_LIBC_MALLOC                 1
-#define MEMP_MEM_MALLOC                 1
+////// Non-supported options
+//// sys.h
+// doc: https://www.nongnu.org/lwip/2_1_x/sys_8h.html
+/* Define LWIP_COMPAT_MUTEX if the port has no mutexes and binary semaphores
+ should be used instead */
+//#define LWIP_COMPAT_MUTEX               1
 
-#define MEM_ALIGNMENT                   4
+//// opt.h
+// No doc available
+#define LWIP_CALLBACK_API               1
 
-#define LWIP_IPV4						1
+//// ppp_opts.h
+// No doc available
+#define PPP_SUPPORT                     0
+#define PPPOE_SUPPORT                   0
+#define PPPOS_SUPPORT                   0
 
-#define LWIP_IPV6						0
+////// lwIP Infrastructure options
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__infrastructure.html
 
-#define LWIP_ARP                        0
+//// NO_SYS
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__nosys.html
+//#define NO_SYS                          1
 
-#define ARP_QUEUEING                    0
+//// Timers
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__timers.html
+// No timers used
 
-#define ETH_PAD_SIZE                    2
+//// memcpy
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__memcpy.html
+// No memcpy used
 
-#define IP_FORWARD                      0
+//// Core locking and MPU
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__lock.html
+// No core locking and MPU used
 
-#define IP_REASS_MAX_PBUFS              0xFFFFFFFF
+//// Heap and memory pools
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__mem.html
+#define MEM_LIBC_MALLOC                 1 /* DEFAULT: 0 */
+#define MEMP_MEM_MALLOC                 1 /* DEFAULT: 0 */
+#define MEM_ALIGNMENT                   4 /* DEFAULT: 1 */
 
-#define IP_DEFAULT_TTL                  128
+//// Internal memory pools
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__memp.html
+// No internal memory pools option used
 
-#define IP_SOF_BROADCAST                1
+//// SNMP MIB2 callbacks
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__mib2.html
+// No SNMP MIB2 callbacks option used
 
-#define IP_SOF_BROADCAST_RECV           1
+//// Multicast
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__multicast.html
+// No multicast option used
 
-#define LWIP_ICMP                       0
+//// Threading
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__thread.html
+// No threading option used
 
+//// Checksum
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__checksum.html
+// No checksum option used
+
+//// Hooks
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__hooks.html
+// No hook option used
+
+
+////// lwIP Callback-style APIs Options
+
+//// RAW
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__raw.html
 #define LWIP_RAW                        0
 
-#define LWIP_DHCP                       0
-
-#define LWIP_AUTOIP                     0
-
-#define LWIP_SNMP                       0
-
-#define LWIP_IGMP                       0
-
+//// DNS
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__dns.html
 #define LWIP_DNS                        0
 
+//// UDP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__udp.html
 #define LWIP_UDP                        0
-
 #define LWIP_UDPLITE                    0
 
+//// TCP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__tcp.html
 #define LWIP_TCP                        1
 
-#define TCP_QUEUE_OOSEQ                 1
-
-#define SO_REUSE                        1
-
-#define SO_REUSE_RXTOALL                1
+#define TCP_WND                         0xFFFF /* DEFUALT: (4 * TCP_MSS) */
+#define TCP_MAXRTX                      8 /* DEFAULT: 12 */
+#define TCP_SYNMAXRTX                   4 /* DEFAULT: 6 */
+#define TCP_QUEUE_OOSEQ                 1 /* DEFAULT: LWIP_TCP */
+#define TCP_MSS                         1460
+#define TCP_SND_BUF                     TCP_WND /* DEFAULT: (2 * TCP_MSS) */
+#define TCP_LISTEN_BACKLOG              1
+#define LWIP_TCP_TIMESTAMPS             1
 
 /* FIXME: These MSS and TCP Window definitions assume an MTU
  * of 1500. We need to add some code to lwIP which would allow us
@@ -62,145 +103,132 @@
  * using. Currently ReactOS only supports Ethernet so we're
  * fine for now but it does need to be fixed later when we
  * add support for other transport mediums */
-#define TCP_MSS                         1460
 
-#define TCP_WND                         0xFFFF
 
-#define TCP_SND_BUF                     TCP_WND
+////// lwIP Thread-safe APIs Options
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__threadsafe__apis.html
 
-#define TCP_MAXRTX                      8
-
-#define TCP_SYNMAXRTX                   4
-
-#define TCP_LISTEN_BACKLOG              1
-
-#define LWIP_TCP_TIMESTAMPS             1
-
-#define LWIP_CALLBACK_API               1
-
-#define LWIP_NETIF_API                  1
-
-#define LWIP_SOCKET                     0
-
+//// Netconn
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__netconn.html
 #define LWIP_NETCONN                    0
 
+//// Sockets
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__socket.html
+#define LWIP_SOCKET                     0
+
+#define SO_REUSE                        1
+#define SO_REUSE_RXTOALL                1
+
+
+////// lwIP IPv4 Options
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__ipv4.html
+//#define LWIP_IPV4                       1
+
+#define IP_FORWARD                      0
+#define IP_REASS_MAX_PBUFS              0xFFFFFFFF // DEFAULT: 10
+#define IP_DEFAULT_TTL                  128        // DEFAULT: 255
+#define IP_SOF_BROADCAST                1          // DEFAULT: 0
+#define IP_SOF_BROADCAST_RECV           1          // DEFAULT: 0
+
+//// ARP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__arp.html
+#define LWIP_ARP                        0
+
+#define ARP_QUEUEING                    0
+#define ETH_PAD_SIZE                    2 /* DEFAULT: 0 */
+
+//// ICMP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__icmp.html
+#define LWIP_ICMP                       0
+
+//// DHCP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__dhcp.html
+#define LWIP_DHCP                       0
+
+//// AUTOIP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__autoip.html
+#define LWIP_AUTOIP                     0
+
+//// IGMP
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__igmp.html
+#define LWIP_IGMP                       0
+
+//// PBUF
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__pbuf.html
+// No PBUF option used
+
+//// NETIF
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__netif.html
+#define LWIP_NETIF_API                  1 // DEFAULT: 0
 #define LWIP_NETIF_HWADDRHINT           0
 
-#define LWIP_STATS                      0
+//// IPv6
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__ipv6.html
+//#define LWIP_IPV6                       0
 
-#define ICMP_STATS                      0
 
-#define PPP_SUPPORT                     0
+////// lwIP Application Options
+// doc: https://www.nongnu.org/lwip/2_1_x/group__snmp__opts.html
+#define LWIP_SNMP                       0
 
-#define PPPOE_SUPPORT                   0
 
-#define PPPOS_SUPPORT                   0
+#ifdef DEBUG
+////// lwIP Debugging Options
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__debug.html
 
-/*
-   ---------------------------------------
-   ---------- Debugging options ----------
-   ---------------------------------------
-*/
-/**
- * LWIP_DBG_MIN_LEVEL: After masking, the value of the debug is
- * compared against this value. If it is smaller, then debugging
- * messages are written.
- */
-#define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_ALL
+//// Assertion handling
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__assertions.html
+// No assertion handling option used
 
-/**
- * LWIP_DBG_TYPES_ON: A mask that can be used to globally enable/disable
- * debug messages of certain types.
- */
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+//// Statistics
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__stats.html
+#define LWIP_STATS                      0 /* DEFAULT: 1 */
+#define ICMP_STATS                      0 /* DEFAULT: 1 */
 
-/**
- * NETIF_DEBUG: Enable debugging in netif.c.
- */
-#define NETIF_DEBUG                     LWIP_DBG_OFF
+//// Debug messages
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__debugmsg.html
 
-/**
- * PBUF_DEBUG: Enable debugging in pbuf.c.
- */
-#define PBUF_DEBUG                      LWIP_DBG_OFF
+#  define LWIP_DEBUG
 
-/**
- * INET_DEBUG: Enable debugging in inet.c.
- */
-#define INET_DEBUG                      LWIP_DBG_OFF
+#  define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_SEVERE
+#  define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
 
-/**
- * IP_DEBUG: Enable debugging for IP.
- */
-#define IP_DEBUG                        LWIP_DBG_OFF
+#  define ETHARP_DEBUG                    LWIP_DBG_ON
+#  define NETIF_DEBUG                     LWIP_DBG_ON
+#  define PBUF_DEBUG                      LWIP_DBG_ON
+#  define API_LIB_DEBUG                   LWIP_DBG_ON
+#  define API_MSG_DEBUG                   LWIP_DBG_ON
+#  define SOCKETS_DEBUG                   LWIP_DBG_ON
+#  define ICMP_DEBUG                      LWIP_DBG_ON
+#  define IGMP_DEBUG                      LWIP_DBG_ON
+#  define INET_DEBUG                      LWIP_DBG_ON
+#  define IP_DEBUG                        LWIP_DBG_ON
+#  define IP_REASS_DEBUG                  LWIP_DBG_ON
+#  define RAW_DEBUG                       LWIP_DBG_ON
+#  define MEM_DEBUG                       LWIP_DBG_ON
+#  define MEMP_DEBUG                      LWIP_DBG_ON
+#  define SYS_DEBUG                       LWIP_DBG_ON
+#  define TIMERS_DEBUG                    LWIP_DBG_ON
+#  define TCP_DEBUG                       LWIP_DBG_ON
+#  define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+#  define TCP_FR_DEBUG                    LWIP_DBG_ON
+#  define TCP_RTO_DEBUG                   LWIP_DBG_ON
+#  define TCP_CWND_DEBUG                  LWIP_DBG_ON
+#  define TCP_WND_DEBUG                   LWIP_DBG_ON
+#  define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
+#  define TCP_RST_DEBUG                   LWIP_DBG_ON
+#  define TCP_QLEN_DEBUG                  LWIP_DBG_ON
+#  define UDP_DEBUG                       LWIP_DBG_ON
+#  define TCPIP_DEBUG                     LWIP_DBG_ON
+#  define SLIP_DEBUG                      LWIP_DBG_ON
+#  define DHCP_DEBUG                      LWIP_DBG_ON
+#  define AUTOIP_DEBUG                    LWIP_DBG_ON
+#  define DNS_DEBUG                       LWIP_DBG_ON
+#  define IP6_DEBUG                       LWIP_DBG_ON
+#  define DHCP6_DEBUG                     LWIP_DBG_ON
 
-/**
- * IP_REASS_DEBUG: Enable debugging in ip_frag.c for both frag & reass.
- */
-#define IP_REASS_DEBUG                  LWIP_DBG_OFF
+//// Performance
+// doc: https://www.nongnu.org/lwip/2_1_x/group__lwip__opts__perf.html
+// No performance option used 
 
-/**
- * MEM_DEBUG: Enable debugging in mem.c.
- */
-#define MEM_DEBUG                       LWIP_DBG_OFF
-
-/**
- * MEMP_DEBUG: Enable debugging in memp.c.
- */
-#define MEMP_DEBUG                      LWIP_DBG_OFF
-
-/**
- * SYS_DEBUG: Enable debugging in sys.c.
- */
-#define SYS_DEBUG                       LWIP_DBG_OFF
-
-/**
- * TCP_DEBUG: Enable debugging for TCP.
- */
-#define TCP_DEBUG                       LWIP_DBG_ON
-
-/**
- * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.
- */
-#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
-
-/**
- * TCP_FR_DEBUG: Enable debugging in tcp_in.c for fast retransmit.
- */
-#define TCP_FR_DEBUG                    LWIP_DBG_OFF
-
-/**
- * TCP_RTO_DEBUG: Enable debugging in TCP for retransmit
- * timeout.
- */
-#define TCP_RTO_DEBUG                   LWIP_DBG_OFF
-
-/**
- * TCP_CWND_DEBUG: Enable debugging for TCP congestion window.
- */
-#define TCP_CWND_DEBUG                  LWIP_DBG_OFF
-
-/**
- * TCP_WND_DEBUG: Enable debugging in tcp_in.c for window updating.
- */
-#define TCP_WND_DEBUG                   LWIP_DBG_OFF
-
-/**
- * TCP_OUTPUT_DEBUG: Enable debugging in tcp_out.c output functions.
- */
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
-
-/**
- * TCP_RST_DEBUG: Enable debugging for TCP with the RST message.
- */
-#define TCP_RST_DEBUG                   LWIP_DBG_OFF
-
-/**
- * TCP_QLEN_DEBUG: Enable debugging for TCP queue lengths.
- */
-#define TCP_QLEN_DEBUG                  LWIP_DBG_OFF
-
-/**
- * TCPIP_DEBUG: Enable debugging in tcpip.c.
- */
-#define TCPIP_DEBUG                     LWIP_DBG_OFF
+#endif

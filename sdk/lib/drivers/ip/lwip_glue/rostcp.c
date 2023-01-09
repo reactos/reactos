@@ -339,12 +339,13 @@ LibTCPSocketCallback(void *arg)
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
-struct tcp_pcb *
+PTCP_PCB
 LibTCPSocket(void *arg)
 {
-    struct lwip_callback_msg *msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
-    struct tcp_pcb *ret;
+    struct lwip_callback_msg *msg;
+    PTCP_PCB ret = NULL;
 
+    msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
@@ -358,11 +359,9 @@ LibTCPSocket(void *arg)
             ret = NULL;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return NULL;
+    return ret;
 }
 
 static
@@ -421,7 +420,7 @@ err_t
 LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
-    err_t ret;
+    err_t ret = ERR_MEM;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -431,7 +430,7 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t
         msg->Input.Bind.IpAddress = ipaddr;
         msg->Input.Bind.Port = port;
 
-        tcpip_callback_with_block(LibTCPBindCallback, msg, 1);
+        tcpip_callback(LibTCPBindCallback, msg);
 
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Bind.Error;
@@ -439,11 +438,9 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t
             ret = ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return ERR_MEM;
+    return ret;
 }
 
 static
@@ -475,7 +472,7 @@ PTCP_PCB
 LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
 {
     struct lwip_callback_msg *msg;
-    PTCP_PCB ret;
+    PTCP_PCB ret = NULL;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -492,11 +489,9 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
             ret = NULL;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return NULL;
+    return ret;
 }
 
 static
@@ -562,8 +557,8 @@ done:
 err_t
 LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe)
 {
-    err_t ret;
     struct lwip_callback_msg *msg;
+    err_t ret = ERR_MEM;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -589,11 +584,9 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
             *sent = 0;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return ERR_MEM;
+    return ret;
 }
 
 static
@@ -628,7 +621,7 @@ err_t
 LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
-    err_t ret;
+    err_t ret = ERR_MEM;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -648,11 +641,9 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u1
             ret = ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return ERR_MEM;
+    return ret;
 }
 
 static
@@ -724,7 +715,7 @@ err_t
 LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shut_tx)
 {
     struct lwip_callback_msg *msg;
-    err_t ret;
+    err_t ret = ERR_MEM;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -743,11 +734,9 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
             ret = ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return ERR_MEM;
+    return ret;
 }
 
 static
@@ -804,8 +793,8 @@ done:
 err_t
 LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
 {
-    err_t ret;
     struct lwip_callback_msg *msg;
+    err_t ret = ERR_MEM;
 
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
@@ -826,11 +815,9 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
             ret = ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-
-        return ret;
     }
 
-    return ERR_MEM;
+    return ret;
 }
 
 void

@@ -226,8 +226,8 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
-    IF->TCPContext = ExAllocatePool
-	( NonPagedPool, sizeof(struct netif));
+    IF->TCPContext = ExAllocatePool(NonPagedPool, sizeof(struct netif));
+
     if (!IF->TCPContext) {
         ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
         return NULL;
