@@ -3832,7 +3832,8 @@ KdbpCliInit(VOID)
     }
 
     /* Get the size of the file */
-    Status = ZwQueryInformationFile(hFile, &Iosb, &FileStdInfo, sizeof(FileStdInfo),
+    Status = ZwQueryInformationFile(hFile, &Iosb,
+                                    &FileStdInfo, sizeof(FileStdInfo),
                                     FileStandardInformation);
     if (!NT_SUCCESS(Status))
     {
@@ -3855,7 +3856,7 @@ KdbpCliInit(VOID)
     Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb, FileBuffer, FileSize, NULL, NULL);
     ZwClose(hFile);
 
-    if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+    if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
         ExFreePool(FileBuffer);
         DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);

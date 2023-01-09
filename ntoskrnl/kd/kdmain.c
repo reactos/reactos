@@ -36,7 +36,7 @@ KdpGetDebugMode(PCHAR Currentp2)
     /* Check for Serial Debugging */
     else if (!_strnicmp(p2, "COM", 3))
     {
-        /* Gheck for a valid Serial Port */
+        /* Check for a valid Serial Port */
         p2 += 3;
         if (*p2 != ':')
         {

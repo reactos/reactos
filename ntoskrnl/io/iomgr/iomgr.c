@@ -584,8 +584,8 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return FALSE;
     }
 
-    // the disk subsystem is initialized here and the SystemRoot is set too
-    // we can finally load other drivers from the boot volume
+    /* The disk subsystem is initialized here and the SystemRoot is set too.
+     * We can finally load other drivers from the boot volume. */
     PnPBootDriversInitialized = TRUE;
 
 #if !defined(_WINKD_) && defined(KDBG)
@@ -640,7 +640,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return FALSE;
     }
 
-    /* Load the System DLL and its Entrypoints */
+    /* Load the System DLL and its entrypoints */
     Status = PsLocateSystemDll();
     if (!NT_SUCCESS(Status))
     {
