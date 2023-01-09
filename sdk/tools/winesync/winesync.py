@@ -100,6 +100,9 @@ class wine_sync:
             # root files should have a direct mapping
             return None
 
+        if self.module_cfg['directories'] is None:
+            return None
+
         wine_dir, wine_file = os.path.split(wine_path)
         if wine_dir in self.module_cfg['directories']:
             # we have a mapping for the directory
