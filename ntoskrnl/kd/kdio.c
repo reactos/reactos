@@ -272,8 +272,9 @@ KdpDebugLogInit(
                               NULL,
                               FILE_ATTRIBUTE_NORMAL,
                               FILE_SHARE_READ,
-                              FILE_SUPERSEDE,
-                              FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_NONALERT,
+                              FILE_OPEN_IF,
+                              FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                                FILE_SEQUENTIAL_ONLY | FILE_WRITE_THROUGH,
                               NULL,
                               0);
 
@@ -284,6 +285,39 @@ KdpDebugLogInit(
             DPRINT1("Failed to open log file: 0x%08x\n", Status);
             return;
         }
+
+        /**    HACK for FILE_APPEND_DATA     **
+         ** Remove once CORE-18789 is fixed. **
+         ** Enforce to go to the end of file **/
+        {
+            FILE_STANDARD_INFORMATION FileInfo;
+            FILE_POSITION_INFORMATION FilePosInfo;
+
+            Status = ZwQueryInformationFile(KdpLogFileHandle,
+                                            &Iosb,
+                                            &FileInfo,
+                                            sizeof(FileInfo),
+                                            FileStandardInformation);
+            DPRINT("Status: 0x%08lx - EOF offset: %I64d\n",
+                    Status, FileInfo.EndOfFile.QuadPart);
+
+            Status = ZwQueryInformationFile(KdpLogFileHandle,
+                                            &Iosb,
+                                            &FilePosInfo,
+                                            sizeof(FilePosInfo),
+                                            FilePositionInformation);
+            DPRINT("Status: 0x%08lx - Position: %I64d\n",
+                    Status, FilePosInfo.CurrentByteOffset.QuadPart);
+
+            FilePosInfo.CurrentByteOffset.QuadPart = FileInfo.EndOfFile.QuadPart;
+            Status = ZwSetInformationFile(KdpLogFileHandle,
+                                          &Iosb,
+                                          &FilePosInfo,
+                                          sizeof(FilePosInfo),
+                                          FilePositionInformation);
+            DPRINT("ZwSetInformationFile(FilePositionInfo) returned: 0x%08lx\n", Status);
+        }
+        /** END OF HACK **/
 
         KeInitializeEvent(&KdpLoggerThreadEvent, SynchronizationEvent, TRUE);
 
