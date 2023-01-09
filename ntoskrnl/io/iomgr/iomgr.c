@@ -588,14 +588,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
      * We can finally load other drivers from the boot volume. */
     PnPBootDriversInitialized = TRUE;
 
-#if !defined(_WINKD_) && defined(KDBG)
-    /* Read KDB Data */
-    KdbpCliInit();
-
-    /* I/O is now setup for disk access, so phase 3 */
-    KdInitSystem(3, LoaderBlock);
-#endif
-
     /* Load system start drivers */
     IopInitializeSystemDrivers();
     PnpSystemInit = TRUE;

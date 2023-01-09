@@ -39,7 +39,7 @@ typedef enum _KD_CONTINUE_TYPE
 } KD_CONTINUE_TYPE;
 
 typedef
-VOID
+NTSTATUS
 (NTAPI *PKDP_INIT_ROUTINE)(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
     _In_ ULONG BootPhase);
@@ -70,19 +70,19 @@ KdpScreenAcquire(VOID);
 VOID
 KdpScreenRelease(VOID);
 
-VOID
+NTSTATUS
 NTAPI
 KdpScreenInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
     _In_ ULONG BootPhase);
 
-VOID
+NTSTATUS
 NTAPI
 KdpSerialInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
     _In_ ULONG BootPhase);
 
-VOID
+NTSTATUS
 NTAPI
 KdpDebugLogInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
@@ -168,6 +168,7 @@ typedef struct _KD_DISPATCH_TABLE
     LIST_ENTRY KdProvidersList;
     PKDP_INIT_ROUTINE KdpInitRoutine;
     PKDP_PRINT_ROUTINE KdpPrintRoutine;
+    NTSTATUS InitStatus;
 } KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
 /* The current Debugging Mode */

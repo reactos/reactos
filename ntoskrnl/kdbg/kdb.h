@@ -82,7 +82,7 @@ KdbpStackSwitchAndCall(
 
 extern PCHAR KdbInitFileBuffer;
 
-VOID
+NTSTATUS
 NTAPI
 KdbInitialize(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
@@ -94,7 +94,7 @@ KdbRegisterCliCallback(
     PVOID Callback,
     BOOLEAN Deregister);
 
-VOID
+NTSTATUS
 KdbpCliInit(VOID);
 
 VOID

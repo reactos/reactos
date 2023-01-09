@@ -3795,11 +3795,13 @@ KdbpCliInterpretInitFile(VOID)
     DPRINT("KDB: KDBinit executed\n");
 }
 
-/*!\brief Called when KDB is initialized
+/**
+ * @brief   Called when KDB is initialized.
  *
- * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory and executes it.
- */
-VOID
+ * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory
+ * and executes it.
+ **/
+NTSTATUS
 KdbpCliInit(VOID)
 {
     NTSTATUS Status;
@@ -3811,6 +3813,10 @@ KdbpCliInit(VOID)
     INT FileSize;
     PCHAR FileBuffer;
     ULONG OldEflags;
+
+    /* Don't load the KDBinit file if its buffer is already lying around */
+    if (KdbInitFileBuffer)
+        return STATUS_SUCCESS;
 
     /* Initialize the object attributes */
     RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\drivers\\etc\\KDBinit");
@@ -3828,7 +3834,7 @@ KdbpCliInit(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
-        return;
+        return Status;
     }
 
     /* Get the size of the file */
@@ -3839,7 +3845,7 @@ KdbpCliInit(VOID)
     {
         ZwClose(hFile);
         DPRINT("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
-        return;
+        return Status;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;
 
@@ -3849,7 +3855,7 @@ KdbpCliInit(VOID)
     {
         ZwClose(hFile);
         DPRINT("Could not allocate %d bytes for KDBinit file\n", FileSize);
-        return;
+        return Status;
     }
 
     /* Load file into memory */
@@ -3860,7 +3866,7 @@ KdbpCliInit(VOID)
     {
         ExFreePool(FileBuffer);
         DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
-        return;
+        return Status;
     }
 
     FileSize = min(FileSize, (INT)Iosb.Information);
@@ -3872,13 +3878,15 @@ KdbpCliInit(VOID)
 
     /* Interpret the init file... */
     KdbInitFileBuffer = FileBuffer;
-    //KdbEnter(); // FIXME
+    //KdbEnter(); // FIXME, see commit baa47fa5e
     KdbInitFileBuffer = NULL;
 
     /* Leave critical section */
     __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -3947,10 +3955,10 @@ KdbDebugPrint(
  * @param[in]   BootPhase
  * Phase of initialization.
  *
- * @return  None.
+ * @return  A status value.
  * @note    Also known as "KdpKdbgInit".
  **/
-VOID
+NTSTATUS
 NTAPI
 KdbInitialize(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
@@ -3959,14 +3967,17 @@ KdbInitialize(
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
-        DispatchTable->KdpInitRoutine = KdbInitialize;
         DispatchTable->KdpPrintRoutine = KdbDebugPrint;
 
-        /* Register as a Provider */
+        /* Register for BootPhase 1 initialization and as a Provider */
+        DispatchTable->KdpInitRoutine = KdbInitialize;
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
     else if (BootPhase == 1)
     {
+        /* Register for later BootPhase 2 reinitialization */
+        DispatchTable->KdpInitRoutine = KdbInitialize;
+
         /* Initialize Dmesg support */
 
         /* Allocate a buffer for Dmesg log buffer. +1 for terminating null,
@@ -3987,6 +3998,20 @@ KdbInitialize(
         /* Initialize symbols support */
         KdbSymInit(BootPhase);
     }
+    else if (BootPhase >= 2)
+    {
+        /* I/O is now set up for disk access: Read KDB Data */
+        NTSTATUS Status = KdbpCliInit();
+
+        /* Schedule an I/O reinitialization if needed */
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND ||
+            Status == STATUS_OBJECT_PATH_NOT_FOUND)
+        {
+            DispatchTable->KdpInitRoutine = KdbInitialize;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
