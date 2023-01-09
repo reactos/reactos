@@ -110,7 +110,7 @@ typedef struct
 {
     cxx_exception_frame *frame;
     const cxx_function_descr *descr;
-    EXCEPTION_REGISTRATION_RECORD *nested_frame;
+    catch_func_nested_frame *nested_frame;
 } se_translator_ctx;
 
 typedef struct _SCOPETABLE
@@ -390,7 +390,7 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
 static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
                                      cxx_exception_frame *frame,
                                      const cxx_function_descr *descr, int nested_trylevel,
-                                     EXCEPTION_REGISTRATION_RECORD *catch_frame,
+                                     catch_func_nested_frame *catch_frame,
                                      cxx_exception_type *info )
 {
     UINT i;
@@ -440,7 +440,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
                     (void*)rec->ExceptionInformation[1]);
 
             /* unwind the stack */
-            RtlUnwind( catch_frame ? catch_frame : &frame->frame, 0, rec, 0 );
+            RtlUnwind( catch_frame ? &catch_frame->frame : &frame->frame, 0, rec, 0 );
             cxx_local_unwind( frame, descr, tryblock->start_level );
             frame->trylevel = tryblock->end_level + 1;
 
@@ -627,7 +627,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 
             ctx.frame = frame;
             ctx.descr = descr;
-            ctx.nested_frame = nested_frame ? &nested_frame->frame : NULL;
+            ctx.nested_frame = nested_frame;
             __TRY
             {
                 except_ptrs.ExceptionRecord = rec;
@@ -642,7 +642,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
     }
 
     call_catch_block( rec, context, frame, descr,
-            frame->trylevel, nested_frame ? &nested_frame->frame : NULL, exc_type );
+            frame->trylevel, nested_frame, exc_type );
     return ExceptionContinueSearch;
 }
 
