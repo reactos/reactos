@@ -389,7 +389,7 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
 /* returns the address to continue execution to after the catch block was called */
 static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
                                      cxx_exception_frame *frame,
-                                     const cxx_function_descr *descr, int nested_trylevel,
+                                     const cxx_function_descr *descr,
                                      catch_func_nested_frame *catch_frame,
                                      cxx_exception_type *info )
 {
@@ -407,7 +407,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
         const tryblock_info *tryblock = &descr->tryblock[i];
 
         /* only handle try blocks inside current catch block */
-        if (catch_frame && nested_trylevel > tryblock->start_level) continue;
+        if (catch_frame && catch_frame->trylevel > tryblock->start_level) continue;
 
         if (trylevel < tryblock->start_level) continue;
         if (trylevel > tryblock->end_level) continue;
@@ -458,7 +458,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
             nested_frame.frame.Handler = catch_function_nested_handler;
             nested_frame.cxx_frame = frame;
             nested_frame.descr     = descr;
-            nested_frame.trylevel  = nested_trylevel + 1;
+            nested_frame.trylevel  = tryblock->end_level + 1;
 
             __wine_push_frame( &nested_frame.frame );
             addr = call_handler( catchblock->handler, &frame->ebp );
@@ -545,7 +545,7 @@ static LONG CALLBACK se_translation_filter( EXCEPTION_POINTERS *ep, void *c )
 
     exc_type = (cxx_exception_type *)rec->ExceptionInformation[2];
     call_catch_block( rec, ep->ContextRecord, ctx->frame, ctx->descr,
-            ctx->frame->trylevel, ctx->nested_frame, exc_type );
+            ctx->nested_frame, exc_type );
 
     __DestructExceptionObject( rec );
     return ExceptionContinueSearch;
@@ -642,7 +642,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
     }
 
     call_catch_block( rec, context, frame, descr,
-            frame->trylevel, nested_frame, exc_type );
+            nested_frame, exc_type );
     return ExceptionContinueSearch;
 }
 
