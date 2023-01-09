@@ -174,10 +174,7 @@ KdpPrintToLogFile(PCHAR String,
     OldIrql = KdbpAcquireLock(&KdpDebugLogSpinLock);
 
     beg = KdpCurrentPosition;
-    num = KdpFreeBytes;
-    if (Length < num)
-        num = Length;
-
+    num = min(Length, KdpFreeBytes);
     if (num != 0)
     {
         end = (beg + num) % KdpBufferSize;
@@ -470,16 +467,14 @@ KdpScreenPrint(PCHAR String,
        return;
 
     if (KdpDmesgBuffer == NULL)
-      return;
+        return;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdbpAcquireLock(&KdpDmesgLogSpinLock);
 
-    /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
-     * set num to min(KdpDmesgFreeBytes, Length).
-     */
-    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes;
     beg = KdpDmesgCurrentPosition;
+    /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize); */
+    num = min(Length, KdpDmesgFreeBytes);
     if (num != 0)
     {
         end = (beg + num) % KdpDmesgBufferSize;
