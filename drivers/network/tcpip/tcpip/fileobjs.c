@@ -404,6 +404,7 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   PADDRESS_FILE AddrFile;
+  UINT nPort;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
@@ -472,13 +473,18 @@ NTSTATUS FileOpenAddress(
       if (Address->Address[0].Address[0].sin_port)
       {
           /* The client specified an explicit port so we force a bind to this */
-          AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+          nPort = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
 
           /* Check for bind success */
-          if (AddrFile->Port == 0xffff)
+          if (nPort == (UINT)-1)
           {
+              AddrFile->Port = 0xffff;
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+          else
+          {
+              AddrFile->Port = nPort;
           }
 
           /* Sanity check */
@@ -487,13 +493,18 @@ NTSTATUS FileOpenAddress(
       else if (!AddrIsUnspecified(&AddrFile->Address))
       {
           /* The client is trying to bind to a local address so allocate a port now too */
-          AddrFile->Port = TCPAllocatePort(0);
+          nPort = TCPAllocatePort(0);
 
           /* Check for bind success */
-          if (AddrFile->Port == 0xffff)
+          if (nPort == (UINT)-1)
           {
+              AddrFile->Port = 0xffff;
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+          else
+          {
+              AddrFile->Port = nPort;
           }
       }
       else

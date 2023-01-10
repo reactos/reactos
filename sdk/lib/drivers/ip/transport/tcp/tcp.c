@@ -214,7 +214,7 @@ NTSTATUS TCPStartup(VOID)
 {
     NTSTATUS Status;
 
-    Status = PortsStartup( &TCPPorts, 1, 0xfffe );
+    Status = PortsStartup( &TCPPorts, 1, 0xffff );
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -379,10 +379,10 @@ NTSTATUS TCPConnect
         }
 
         /* Allocate the port in the port bitmap */
-        Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-
+        UINT nPort = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
         /* This should never fail */
-        ASSERT(Connection->AddressFile->Port != 0xFFFF);
+        ASSERT(nPort != (UINT)-1);
+        Connection->AddressFile->Port = nPort;
     }
 
     connaddr.addr = RemoteAddress.Address.IPv4Address;
