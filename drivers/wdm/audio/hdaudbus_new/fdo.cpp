@@ -548,7 +548,7 @@ Fdo_EvtDeviceD0Exit(
     return status;
 }
 
-#define ENABLE_HDA 0
+#define ENABLE_HDA 1
 
 NTSTATUS
 Fdo_EvtDeviceSelfManagedIoInit(
