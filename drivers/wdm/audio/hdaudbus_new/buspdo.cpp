@@ -511,14 +511,14 @@ Bus_CreatePdo(
     else {
         //TODO: Add HD Audio Interfaces
 
-        /*HDAUDIO_BUS_INTERFACE busInterface = HDA_BusInterface(pdoData);
+        HDAUDIO_BUS_INTERFACE busInterface = HDA_BusInterface(pdoData);
 
         WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
             (PINTERFACE)&busInterface,
             &GUID_HDAUDIO_BUS_INTERFACE,
             NULL);
 
-        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);*/
+        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
 
         HDAUDIO_BUS_INTERFACE_V2 busInterface2 = HDA_BusInterfaceV2(pdoData);
         WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
