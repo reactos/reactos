@@ -339,6 +339,7 @@ NTSTATUS HDA_GetDeviceInformation(
 	DeviceInformation->DriverVersion = 1 << 4;
 	DeviceInformation->IsStripingSupported = TRUE;
 
+#if (NTDDI_VERSION >= NTDDI_WIN10_19H1)
 	if (DeviceInformation->Size >= sizeof(HDAUDIO_DEVICE_INFORMATION_V2)) {
 		DeviceInformation->Size = sizeof(HDAUDIO_DEVICE_INFORMATION_V2);
 
@@ -350,6 +351,7 @@ NTSTATUS HDA_GetDeviceInformation(
 	else {
 		DeviceInformation->Size = sizeof(HDAUDIO_DEVICE_INFORMATION);
 	}
+#endif // NTDDI_WIN10_19H1
 	return STATUS_SUCCESS;
 }
 
