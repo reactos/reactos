@@ -14,6 +14,17 @@ list(APPEND SOURCE
     nhlt.cpp
     driver.h)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(hdaudbus PRIVATE -Wno-format -Wno-unused-variable -Wno-pointer-sign)
+    target_compile_options(hdaudbus PRIVATE -Wno-unknown-pragmas -Wno-incompatible-pointer-types -Wno-switch)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(hdaudbus PRIVATE -Wno-enum-conversion -Wno-tautological-constant-compare)
+endif()
+
+target_compile_definitions(hdaudbus PRIVATE DEBUG_USE_KDPRINT)
+
 add_library(hdaudbus MODULE ${SOURCE})
 set_module_type(hdaudbus kernelmodedriver)
 target_link_libraries(hdaudbus wdf01000 libcntpr ${PSEH_LIB})
