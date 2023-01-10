@@ -57,7 +57,76 @@ NTSTATUS HDA_AllocateCaptureDmaEngine(
 ) {
 	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called!\n", __func__);
 
-	return STATUS_UNSUCCESSFUL;
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PFDO_CONTEXT fdoContext = devData->FdoContext;
+
+	WdfInterruptAcquireLock(devData->FdoContext->Interrupt);
+	for (int i = 0; i < fdoContext->captureStreams; i++) {
+		int tag = fdoContext->captureIndexOff;
+		PHDAC_STREAM stream = &fdoContext->streams[tag];
+		if (stream->PdoContext != NULL) {
+			continue;
+		}
+
+		SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s Allocated render stream idx %d, tag %d, channels %d, bits %d, sample rate %d!\n", __func__, tag, stream->streamTag, StreamFormat->NumberOfChannels, StreamFormat->ValidBitsPerSample, StreamFormat->SampleRate);
+
+
+		stream->stripe = Stripe;
+		stream->PdoContext = devData;
+		stream->prepared = FALSE;
+		stream->running = FALSE;
+		stream->streamFormat = *StreamFormat;
+
+		ConverterFormat->ConverterFormat = 0;
+		switch (StreamFormat->ValidBitsPerSample) {
+		case 32:
+			ConverterFormat->BitsPerSample = 4;
+			break;
+		case 24:
+			ConverterFormat->BitsPerSample = 3;
+			break;
+		case 20:
+			ConverterFormat->BitsPerSample = 2;
+			break;
+		case 16:
+			ConverterFormat->BitsPerSample = 1;
+			break;
+		case 8:
+		default:
+			ConverterFormat->BitsPerSample = 1;
+			break;
+		}
+		ConverterFormat->NumberOfChannels = StreamFormat->NumberOfChannels - 1;
+		switch (StreamFormat->SampleRate) {
+		case 192000:
+			ConverterFormat->SampleRate = 24;
+			break;
+		case 96000:
+			ConverterFormat->SampleRate = 8;
+			break;
+		case 48000:
+			ConverterFormat->SampleRate = 0;
+			break;
+		case 44100:
+		default:
+			ConverterFormat->SampleRate = 64;
+			break;
+		}
+		ConverterFormat->StreamType = 0;
+
+		if (Handle)
+			*Handle = (HANDLE)stream;
+
+		WdfInterruptReleaseLock(devData->FdoContext->Interrupt);
+		return STATUS_SUCCESS;
+	}
+
+	WdfInterruptReleaseLock(devData->FdoContext->Interrupt);
+	return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 NTSTATUS HDA_AllocateRenderDmaEngine(
@@ -667,7 +736,7 @@ HDAUDIO_BUS_INTERFACE_V2 HDA_BusInterfaceV2(PVOID Context) {
 	busInterface.InterfaceReference = WdfDeviceInterfaceReferenceNoOp;
 	busInterface.InterfaceDereference = WdfDeviceInterfaceDereferenceNoOp;
 	busInterface.TransferCodecVerbs = HDA_TransferCodecVerbs;
-	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine; //TODO
+	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
 	busInterface.AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
 	busInterface.ChangeBandwidthAllocation = HDA_ChangeBandwidthAllocation;  //TODO
 	busInterface.AllocateDmaBuffer = HDA_AllocateDmaBuffer;
