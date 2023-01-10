@@ -819,8 +819,11 @@ int CDECL MSVCRT_strncpy_s(char *dest, MSVCRT_size_t numberOfElements,
 
     TRACE("(%s %lu %s %lu)\n", dest, numberOfElements, src, count);
 
-    if(!count)
+    if(!count) {
+        if(dest && numberOfElements)
+            *dest = 0;
         return 0;
+    }
 
     if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
     if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
