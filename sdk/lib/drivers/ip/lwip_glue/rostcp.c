@@ -280,10 +280,7 @@ InternalAcceptEventHandler(void *arg, PTCP_PCB newpcb, const err_t err)
     TCPAcceptEventHandler(arg, newpcb);
 
     /* Set in LibTCPAccept (called from TCPAcceptEventHandler) */
-    if (newpcb->callback_arg)
-        return ERR_OK;
-    else
-        return ERR_CLSD;
+    return newpcb->callback_arg ? ERR_OK : ERR_CLSD;
 }
 
 static
@@ -351,12 +348,10 @@ LibTCPSocket(void *arg)
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
         msg->Input.Socket.Arg = arg;
 
-        tcpip_callback_with_block(LibTCPSocketCallback, msg, 1);
+        tcpip_callback(LibTCPSocketCallback, msg);
 
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Socket.NewPcb;
-        else
-            ret = NULL;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -385,7 +380,7 @@ void LibTCPFreeSocket(PTCP_PCB pcb)
     KeInitializeEvent(&msg.Event, NotificationEvent, FALSE);
     msg.Input.FreeSocket.pcb = pcb;
 
-    tcpip_callback_with_block(LibTCPFreeSocketCallback, &msg, 1);
+    tcpip_callback(LibTCPFreeSocketCallback, &msg);
 
     WaitForEventSafely(&msg.Event);
 }
@@ -432,10 +427,7 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t
 
         tcpip_callback(LibTCPBindCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Output.Bind.Error;
-        else
-            ret = ERR_CLSD;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Bind.Error : ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -481,12 +473,9 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
         msg->Input.Listen.Connection = Connection;
         msg->Input.Listen.Backlog = backlog;
 
-        tcpip_callback_with_block(LibTCPListenCallback, msg, 1);
+        tcpip_callback(LibTCPListenCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Output.Listen.NewPcb;
-        else
-            ret = NULL;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Listen.NewPcb : NULL;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -571,17 +560,10 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
         if (safe)
             LibTCPSendCallback(msg);
         else
-            tcpip_callback_with_block(LibTCPSendCallback, msg, 1);
+            tcpip_callback(LibTCPSendCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Output.Send.Error;
-        else
-            ret = ERR_CLSD;
-
-        if (ret == ERR_OK)
-            *sent = msg->Output.Send.Information;
-        else
-            *sent = 0;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Send.Error : ERR_CLSD;
+        *sent = (ret == ERR_OK) ? msg->Output.Send.Information : 0;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -631,14 +613,9 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u1
         msg->Input.Connect.IpAddress = ipaddr;
         msg->Input.Connect.Port = port;
 
-        tcpip_callback_with_block(LibTCPConnectCallback, msg, 1);
+        tcpip_callback(LibTCPConnectCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-        {
-            ret = msg->Output.Connect.Error;
-        }
-        else
-            ret = ERR_CLSD;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Connect.Error : ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -726,12 +703,9 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
         msg->Input.Shutdown.shut_rx = shut_rx;
         msg->Input.Shutdown.shut_tx = shut_tx;
 
-        tcpip_callback_with_block(LibTCPShutdownCallback, msg, 1);
+        tcpip_callback(LibTCPShutdownCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Output.Shutdown.Error;
-        else
-            ret = ERR_CLSD;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Shutdown.Error : ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -807,12 +781,9 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
         if (safe)
             LibTCPCloseCallback(msg);
         else
-            tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
+            tcpip_callback(LibTCPCloseCallback, msg);
 
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Output.Close.Error;
-        else
-            ret = ERR_CLSD;
+        ret = WaitForEventSafely(&msg->Event) ? msg->Output.Close.Error : ERR_CLSD;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
     }
@@ -830,8 +801,6 @@ LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
     tcp_sent(pcb, InternalSendEventHandler);
     tcp_err(pcb, InternalErrorEventHandler);
     tcp_arg(pcb, arg);
-
-    tcp_accepted(listen_pcb);
 }
 
 err_t
