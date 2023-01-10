@@ -62,7 +62,7 @@ typedef int (CDECL *MSVCRT_new_handler_func)(MSVCRT_size_t size);
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static int MSVCRT_new_mode;
 
-/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */
+/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */ 
 static unsigned int MSVCRT_amblksiz = 16;
 /* FIXME - According to documentation it should be 480 bytes, at runtime default is 0 */
 static MSVCRT_size_t MSVCRT_sbh_threshold = 0;
@@ -74,6 +74,7 @@ void* CDECL MSVCRT_operator_new(MSVCRT_size_t size)
 {
   void *retval;
   int freed;
+  MSVCRT_new_handler_func handler;
 
   do
   {
@@ -85,14 +86,18 @@ void* CDECL MSVCRT_operator_new(MSVCRT_size_t size)
     }
 
     LOCK_HEAP;
-    if(MSVCRT_new_handler)
-      freed = (*MSVCRT_new_handler)(size);
+    handler = MSVCRT_new_handler;
+    if(handler)
+      freed = (*handler)(size);
     else
       freed = 0;
     UNLOCK_HEAP;
   } while(freed);
 
   TRACE("(%ld) out of memory\n", size);
+#if _MSVCR_VER >= 80
+  throw_bad_alloc("bad allocation");
+#endif
   return NULL;
 }
 
@@ -174,9 +179,11 @@ int CDECL MSVCRT__set_new_mode(int mode)
  */
 int CDECL _callnewh(MSVCRT_size_t size)
 {
-  if(MSVCRT_new_handler)
-    (*MSVCRT_new_handler)(size);
-  return 0;
+  int ret = 0;
+  MSVCRT_new_handler_func handler = MSVCRT_new_handler;
+  if(handler)
+    ret = (*handler)(size) ? 1 : 0;
+  return ret;
 }
 
 /*********************************************************************
@@ -285,7 +292,7 @@ int CDECL _heapadd(void* mem, MSVCRT_size_t size)
 }
 
 /*********************************************************************
- *		_heapadd (MSVCRT.@)
+ *		_get_heap_handle (MSVCRT.@)
  */
 MSVCRT_intptr_t CDECL _get_heap_handle(void)
 {
