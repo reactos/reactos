@@ -545,7 +545,7 @@ void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment,
     }
 
     /* offset must be less than size */
-    if (offset >= size)
+    if (offset && offset >= size)
     {
         *MSVCRT__errno() = MSVCRT_EINVAL;
         return NULL;
