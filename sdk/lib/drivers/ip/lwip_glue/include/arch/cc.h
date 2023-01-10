@@ -24,12 +24,7 @@ ros_realloc(void *mem, size_t size);
 #define mem_clib_realloc ros_realloc
 
 
-/* Unsigned int types */
-typedef unsigned char u8_t;
 
-/* Signed int types */
-typedef signed char s8_t;
-typedef signed short s16_t;
 
 /* Printf/DPRINT formatters */
 #define U16_F "hu"
