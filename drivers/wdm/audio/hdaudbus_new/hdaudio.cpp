@@ -326,7 +326,31 @@ NTSTATUS HDA_GetDeviceInformation(
 ) {
 	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called!\n", __func__);
 
-	return STATUS_UNSUCCESSFUL;
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!_context || !devData->FdoContext)
+		return STATUS_NO_SUCH_DEVICE;
+
+	if (DeviceInformation->Size < sizeof(HDAUDIO_DEVICE_INFORMATION)) {
+		return STATUS_BUFFER_TOO_SMALL;
+	}
+
+	DeviceInformation->CodecsDetected = devData->FdoContext->numCodecs;
+	DeviceInformation->DeviceVersion = 2 << 4;
+	DeviceInformation->DriverVersion = 1 << 4;
+	DeviceInformation->IsStripingSupported = TRUE;
+
+	if (DeviceInformation->Size >= sizeof(HDAUDIO_DEVICE_INFORMATION_V2)) {
+		DeviceInformation->Size = sizeof(HDAUDIO_DEVICE_INFORMATION_V2);
+
+		PHDAUDIO_DEVICE_INFORMATION_V2 DeviceInformation2 = (PHDAUDIO_DEVICE_INFORMATION_V2)DeviceInformation;
+		DeviceInformation2->CtrlRevision = devData->CodecIds.RevId;
+		DeviceInformation2->CtrlVendorId = devData->CodecIds.CtlrVenId;
+		DeviceInformation2->CtrlDeviceId = devData->CodecIds.CtlrDevId;
+	}
+	else {
+		DeviceInformation->Size = sizeof(HDAUDIO_DEVICE_INFORMATION);
+	}
+	return STATUS_SUCCESS;
 }
 
 void HDA_GetResourceInformation(
@@ -583,7 +607,7 @@ HDAUDIO_BUS_INTERFACE_V2 HDA_BusInterfaceV2(PVOID Context) {
 	busInterface.GetLinkPositionRegister = HDA_GetLinkPositionRegister;
 	busInterface.RegisterEventCallback = HDA_RegisterEventCallback;
 	busInterface.UnregisterEventCallback = HDA_UnregisterEventCallback;
-	busInterface.GetDeviceInformation = HDA_GetDeviceInformation;  //TODO
+	busInterface.GetDeviceInformation = HDA_GetDeviceInformation;
 	busInterface.GetResourceInformation = HDA_GetResourceInformation;
 	busInterface.AllocateDmaBufferWithNotification = HDA_AllocateDmaBufferWithNotification;
 	busInterface.FreeDmaBufferWithNotification = HDA_FreeDmaBufferWithNotification;
