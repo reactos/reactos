@@ -9,9 +9,9 @@ list(APPEND SOURCE
     fdo.cpp
     hdac_controller.cpp
     hdac_stream.cpp
+    hdaudbus.cpp
     hdaudio.cpp
-    nhlt.cpp
-    sklhdaudbus.cpp)
+    nhlt.cpp)
 
 add_library(hdaudbus MODULE ${SOURCE})
 set_module_type(hdaudbus kernelmodedriver)
