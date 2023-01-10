@@ -5,6 +5,7 @@ extern int BlockEnvToEnvironA(void);
 extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
 
+extern BOOL msvcrt_init_heap(void);
 extern void msvcrt_init_mt_locks(void);
 extern void msvcrt_init_io(void);
 
@@ -32,6 +33,9 @@ crt_process_init(void)
 
     /* create tls stuff */
     if (!msvcrt_init_tls())
+        return FALSE;
+
+    if (!msvcrt_init_heap())
         return FALSE;
 
     if (BlockEnvToEnvironA() < 0)
