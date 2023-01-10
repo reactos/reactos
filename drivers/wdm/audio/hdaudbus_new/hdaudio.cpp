@@ -270,7 +270,7 @@ NTSTATUS HDA_AllocateDmaBuffer(
 	*BufferMdl = mdl;
 	*AllocatedBufferSize = mdl->ByteCount;
 	*StreamId = stream->streamTag;
-	*FifoSize = 0;
+	*FifoSize = stream->fifoSize;
 
 	//TODO: Program DMA to device
 
