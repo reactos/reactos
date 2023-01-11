@@ -1,53 +1,53 @@
-static UINT8 read8(PVOID addr) {
+UINT8 read8(PVOID addr) {
 	UINT8 ret = *(UINT8*)addr;
 	return ret;
 }
 
-static void write8(PVOID addr, UINT8 data) {
+void write8(PVOID addr, UINT8 data) {
 	*(UINT8*)addr = data;
 }
 
-static UINT16 read16(PVOID addr) {
+UINT16 read16(PVOID addr) {
 	UINT16 ret = *(UINT16*)addr;
 	return ret;
 }
 
-static void write16(PVOID addr, UINT16 data) {
+void write16(PVOID addr, UINT16 data) {
 	*(UINT16*)addr = data;
 }
 
-static UINT32 read32(PVOID addr) {
+UINT32 read32(PVOID addr) {
 	UINT32 ret = *(UINT32*)addr;
 	return ret;
 }
 
-static void write32(PVOID addr, UINT32 data) {
+void write32(PVOID addr, UINT32 data) {
 	*(UINT32*)addr = data;
 }
 
-static void pci_read_cfg_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE* data) {
+void pci_read_cfg_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE* data) {
 	if (!data) {
 		return;
 	}
 	pciInterface->GetBusData(pciInterface->Context, PCI_WHICHSPACE_CONFIG, data, reg, sizeof(BYTE));
 }
 
-static void pci_read_cfg_dword(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, UINT32* data) {
+void pci_read_cfg_dword(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, UINT32* data) {
 	if (!data) {
 		return;
 	}
 	pciInterface->GetBusData(pciInterface->Context, PCI_WHICHSPACE_CONFIG, data, reg, sizeof(UINT32));
 }
 
-static void pci_write_cfg_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE data) {
+void pci_write_cfg_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE data) {
 	pciInterface->SetBusData(pciInterface->Context, PCI_WHICHSPACE_CONFIG, &data, reg, sizeof(BYTE));
 }
 
-static void pci_write_cfg_dword(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, UINT32 data) {
+void pci_write_cfg_dword(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, UINT32 data) {
 	pciInterface->GetBusData(pciInterface->Context, PCI_WHICHSPACE_CONFIG, &data, reg, sizeof(UINT32));
 }
 
-static void update_pci_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE mask, BYTE val) {
+void update_pci_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE mask, BYTE val) {
 	BYTE data;
 	pci_read_cfg_byte(pciInterface, reg, &data);
 	data &= ~mask;
