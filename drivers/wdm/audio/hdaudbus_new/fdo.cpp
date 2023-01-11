@@ -344,7 +344,7 @@ Fdo_EvtDevicePrepareHardware(
     RtlZeroMemory(fdoCtx->streams, sizeof(HDAC_STREAM) * fdoCtx->numStreams);
 
     PHYSICAL_ADDRESS maxAddr;
-    maxAddr.QuadPart = MAXULONG64;
+    maxAddr.QuadPart = MAXULONG;
 
     fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
     RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
@@ -403,7 +403,7 @@ Fdo_EvtDevicePrepareHardware(
                 }
 
                 PHYSICAL_ADDRESS maxAddr;
-                maxAddr.QuadPart = MAXULONG64;
+                maxAddr.QuadPart = MAXULONG;
                 stream->bdl = (UINT32 *)MmAllocateContiguousMemory(BDL_SIZE, maxAddr);
             }
 

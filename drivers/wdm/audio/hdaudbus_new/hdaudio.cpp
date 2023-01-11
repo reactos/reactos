@@ -253,7 +253,7 @@ NTSTATUS HDA_AllocateDmaBuffer(
 	PHYSICAL_ADDRESS lowAddr;
 	lowAddr.QuadPart = 0;
 	PHYSICAL_ADDRESS maxAddr;
-	maxAddr.QuadPart = MAXULONG64;
+	maxAddr.QuadPart = MAXULONG;
 
 	PHYSICAL_ADDRESS skipBytes;
 	skipBytes.QuadPart = 0;
@@ -477,7 +477,7 @@ NTSTATUS HDA_GetDeviceInformation(
 	DeviceInformation->DriverVersion = 1 << 4;
 	DeviceInformation->IsStripingSupported = TRUE;
 
-#if (NTDDI_VERSION >= NTDDI_WIN10_19H1)
+#if(NTDDI_VERSION>=NTDDI_WIN10_19H1)
 	if (DeviceInformation->Size >= sizeof(HDAUDIO_DEVICE_INFORMATION_V2)) {
 		DeviceInformation->Size = sizeof(HDAUDIO_DEVICE_INFORMATION_V2);
 
