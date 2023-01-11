@@ -23,7 +23,7 @@
 #include "hdac_stream.h"
 #include "hda_verbs.h"
 
-#define DRIVERNAME "sklhdaudbus.sys: "
+#define DRIVERNAME "hdaudbus.sys: "
 #define SKLHDAUDBUS_POOL_TAG 'SADH'
 
 #define VEN_INTEL 0x8086
