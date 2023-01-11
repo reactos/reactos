@@ -590,7 +590,7 @@ NTSTATUS NTAPI HDA_AllocateDmaBufferWithNotification(
 	stream->mdlBuf = mdl;
 	stream->bufSz = MmGetMdlByteCount(mdl);
 
-	stream->virtAddr = (UINT8*)MmMapLockedPagesSpecifyCache(mdl, KernelMode, MmWriteCombined, NULL, FALSE, MdlMappingNoExecute | NormalPagePriority);
+	stream->virtAddr = (UINT8*)MmMapLockedPagesSpecifyCache(mdl, KernelMode, MmWriteCombined, NULL, FALSE, /*MdlMappingNoExecute //Windows 8+ flag */ | NormalPagePriority);
 
 	/*UINT32 smallestCopy = min(stream->bufSz, crabrave_size);
 	DbgPrint("Mapped Buf: 0x%llx\n", stream->virtAddr);
@@ -661,7 +661,7 @@ NTSTATUS NTAPI HDA_FreeDmaBufferWithNotification(
 		stream->virtAddr = NULL;
 	}
 
-	MmFreePagesFromMdlEx(stream->mdlBuf, MM_DONT_ZERO_ALLOCATION);
+	MmFreePagesFromMdl(stream->mdlBuf);
 	ExFreePool(stream->mdlBuf);
 	stream->mdlBuf = NULL;
 
