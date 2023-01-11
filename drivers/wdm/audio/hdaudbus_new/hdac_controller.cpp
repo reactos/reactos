@@ -160,7 +160,7 @@ NTSTATUS hdac_bus_send_cmd(PFDO_CONTEXT fdoCtx, unsigned int val) {
 
 #define HDA_RIRB_EX_UNSOL_EV	(1<<4)
 
-void hdac_bus_process_unsol_events(WDFWORKITEM workItem) {
+void NTAPI hdac_bus_process_unsol_events(WDFWORKITEM workItem) {
 	WDFDEVICE wdfDevice = (WDFDEVICE)WdfWorkItemGetParentObject(workItem);
 	PFDO_CONTEXT fdoCtx = Fdo_GetContext(wdfDevice);
 
@@ -433,7 +433,7 @@ int hda_stream_interrupt(PFDO_CONTEXT fdoCtx, unsigned int status) {
 	return handled;
 }
 
-BOOLEAN hda_interrupt(
+BOOLEAN NTAPI hda_interrupt(
 	WDFINTERRUPT Interrupt,
 	ULONG MessageID) {
 	UNREFERENCED_PARAMETER(MessageID);

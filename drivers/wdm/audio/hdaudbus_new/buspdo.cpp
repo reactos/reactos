@@ -233,7 +233,7 @@ Bus_CreatePdo(
         //
         WdfDeviceInitSetDeviceType(DeviceInit, FILE_DEVICE_SOUND);
 
-        WCHAR prefix[7] = L"HDAUDIO";
+        WCHAR prefix[8] = L"HDAUDIO";
 
         //
         // Provide DeviceID, HardwareIDs, CompatibleIDs and InstanceId

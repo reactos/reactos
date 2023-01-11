@@ -43,7 +43,7 @@ NHLTQuery(
 	}
 	RtlZeroMemory(inputBuffer, inputBufferSize);
 
-	inputBuffer->Signature = ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE_V1_EX;
+	inputBuffer->Signature = ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE_EX;
 	status = RtlStringCchPrintfA(
 		inputBuffer->MethodName,
 		sizeof(inputBuffer->MethodName),
@@ -152,15 +152,15 @@ NTSTATUS NHLTCheckSupported(_In_ WDFDEVICE FxDevice) {
 	if (!outputBufferMemory) {
 		return STATUS_NO_MEMORY;
 	}
+	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
+
+	UCHAR supportedQueries = argument->Data[0];
 
 	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
 		status = STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
 		goto end;
 	}
-	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
-
-	UCHAR supportedQueries = argument->Data[0];
 
 	if ((supportedQueries & 0x3) == 0) {
 		status = STATUS_NOT_SUPPORTED;
@@ -186,16 +186,16 @@ NTSTATUS NHLTQueryTableAddress(_In_ WDFDEVICE FxDevice, UINT64 *nhltAddr, UINT64
 		return STATUS_NO_MEMORY;
 	}
 
+	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
+
+	UINT8* res = argument->Data;
+	UINT32 sz = argument->DataLength;
+
 	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
 		return STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
 		goto end;
 	}
-
-	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
-
-	UINT8* res = argument->Data;
-	UINT32 sz = argument->DataLength;
 
 	*nhltAddr = 0;
 	*nhltSz = 0;

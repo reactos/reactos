@@ -15,7 +15,7 @@ list(APPEND SOURCE
 add_library(hdaudbus MODULE ${SOURCE})
 set_module_type(hdaudbus kernelmodedriver)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(hdaudbus PRIVATE -Wno-unused-variable -Wno-sign-compare -Wno-unknown-pragmas -Wno-switch)
+    target_compile_options(hdaudbus PRIVATE -Wno-unused-variable -Wno-unused-but-set-variable -Wno-sign-compare -Wno-unknown-pragmas -Wno-switch -Wno-write-strings)
 endif()
 target_link_libraries(hdaudbus wdf01000 libcntpr ${PSEH_LIB})
 add_importlibs(hdaudbus ntoskrnl hal)

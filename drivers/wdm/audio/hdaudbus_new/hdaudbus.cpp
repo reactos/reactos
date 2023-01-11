@@ -1,6 +1,7 @@
 #include "driver.h"
 
 NTSTATUS
+NTAPI
 SklHdAudBusEvtDeviceAdd(
 	_In_ WDFDRIVER Driver,
 	_Inout_ PWDFDEVICE_INIT DeviceInit
@@ -38,7 +39,7 @@ __in PUNICODE_STRING RegistryPath
 	//  Default to NonPagedPoolNx for non paged pool allocations where supported.
 	//
 
-	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+	//ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 #endif // NTDDI_WIN7
 
 	WDF_DRIVER_CONFIG_INIT(&config, SklHdAudBusEvtDeviceAdd);

@@ -22,7 +22,7 @@ void hdac_stream_clear(PHDAC_STREAM stream) {
 	stream_update8(stream, SD_CTL, SD_CTL_DMA_START | SD_INT_MASK, 0);
 	stream_write8(stream, SD_STS, SD_INT_MASK); /* to be sure */
 	if (stream->stripe)
-		stream_write8(stream, SD_CTL_3B, SD_CTL_STRIPE_MASK, 0);
+		stream_write8(stream, SD_CTL_3B, SD_CTL_STRIPE_MASK);
 
 	stream->running = FALSE;
 }

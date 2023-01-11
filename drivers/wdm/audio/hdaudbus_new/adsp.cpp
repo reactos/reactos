@@ -357,8 +357,8 @@ ADSP_BUS_INTERFACE ADSP_BusInterface(PVOID Context) {
 	busInterface.Size = sizeof(ADSP_BUS_INTERFACE);
 	busInterface.Version = 1;
 	busInterface.Context = Context;
-	busInterface.InterfaceReference = WdfDeviceInterfaceReferenceNoOp;
-	busInterface.InterfaceDereference = WdfDeviceInterfaceDereferenceNoOp;
+	busInterface.InterfaceReference = (PINTERFACE_REFERENCE)WdfDeviceInterfaceReferenceNoOp;
+	busInterface.InterfaceDereference = (PINTERFACE_DEREFERENCE)WdfDeviceInterfaceDereferenceNoOp;
 	busInterface.CtlrDevId = devData->CodecIds.CtlrDevId;
 	busInterface.GetResources = ADSPGetResources;
 	busInterface.RegisterInterrupt = ADSPRegisterInterrupt;
