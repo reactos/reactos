@@ -57,6 +57,7 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(PDO_DEVICE_DATA, PdoGetData)
 extern "C" {
 
     NTSTATUS
+    NTAPI
         Bus_EvtChildListIdentificationDescriptionDuplicate(
             WDFCHILDLIST DeviceList,
             PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER SourceIdentificationDescription,
@@ -64,6 +65,7 @@ extern "C" {
         );
 
     BOOLEAN
+    NTAPI
         Bus_EvtChildListIdentificationDescriptionCompare(
             WDFCHILDLIST DeviceList,
             PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER FirstIdentificationDescription,
@@ -71,12 +73,14 @@ extern "C" {
         );
 
     VOID
+    NTAPI
         Bus_EvtChildListIdentificationDescriptionCleanup(
             _In_ WDFCHILDLIST DeviceList,
             _Out_ PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription
         );
 
     NTSTATUS
+    NTAPI
         Bus_EvtDeviceListCreatePdo(
             WDFCHILDLIST DeviceList,
             PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,
