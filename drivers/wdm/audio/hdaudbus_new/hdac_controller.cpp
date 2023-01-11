@@ -69,13 +69,13 @@ void hdac_bus_init_cmd_io(PFDO_CONTEXT fdoCtx) {
 
 static void hdac_wait_for_cmd_dmas(PFDO_CONTEXT fdoCtx) {
 	LARGE_INTEGER StartTime;
-	KeQuerySystemTimePrecise(&StartTime);
+	KeQuerySystemTime(&StartTime);
 
 	int timeout_ms = 100;
 
 	while (hda_read8(fdoCtx, RIRBCTL) & HDA_RBCTL_DMA_EN) {
 		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTimePrecise(&CurrentTime);
+		KeQuerySystemTime(&CurrentTime);
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
 			break;
@@ -83,10 +83,10 @@ static void hdac_wait_for_cmd_dmas(PFDO_CONTEXT fdoCtx) {
 		udelay(500);
 	}
 
-	KeQuerySystemTimePrecise(&StartTime);
+	KeQuerySystemTime(&StartTime);
 	while (hda_read8(fdoCtx, CORBCTL) & HDA_CORBCTL_RUN) {
 		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTimePrecise(&CurrentTime);
+		KeQuerySystemTime(&CurrentTime);
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
 			break;
@@ -254,7 +254,7 @@ void hdac_bus_update_rirb(PFDO_CONTEXT fdoCtx) {
 
 NTSTATUS hdac_bus_get_response(PFDO_CONTEXT fdoCtx, UINT16 addr, UINT32* res) {
 	LARGE_INTEGER StartTime;
-	KeQuerySystemTimePrecise(&StartTime);
+	KeQuerySystemTime(&StartTime);
 
 	int timeout_ms = 1000;
 	for (ULONG loopcounter = 0; ; loopcounter++) {
@@ -266,7 +266,7 @@ NTSTATUS hdac_bus_get_response(PFDO_CONTEXT fdoCtx, UINT16 addr, UINT32* res) {
 		}
 
 		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTimePrecise(&CurrentTime);
+		KeQuerySystemTime(&CurrentTime);
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
 			return STATUS_IO_TIMEOUT;
@@ -281,13 +281,13 @@ void hdac_bus_enter_link_reset(PFDO_CONTEXT fdoCtx) {
     hda_update32(fdoCtx, GCTL, HDA_GCTL_RESET, 0);
 
 	LARGE_INTEGER StartTime;
-	KeQuerySystemTimePrecise(&StartTime);
+	KeQuerySystemTime(&StartTime);
 
 	int timeout_ms = 100;
 
 	while (hda_read32(fdoCtx, GCTL) & HDA_GCTL_RESET) {
 		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTimePrecise(&CurrentTime);
+		KeQuerySystemTime(&CurrentTime);
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
 			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Enter link reset timeout\n");
@@ -301,13 +301,13 @@ void hdac_bus_exit_link_reset(PFDO_CONTEXT fdoCtx) {
 	hda_update8(fdoCtx, GCTL, HDA_GCTL_RESET, HDA_GCTL_RESET);
 
 	LARGE_INTEGER StartTime;
-	KeQuerySystemTimePrecise(&StartTime);
+	KeQuerySystemTime(&StartTime);
 
 	int timeout_ms = 100;
 
 	while (!hda_read8(fdoCtx, GCTL)) {
 		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTimePrecise(&CurrentTime);
+		KeQuerySystemTime(&CurrentTime);
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
 			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Exit link reset timeout\n");
