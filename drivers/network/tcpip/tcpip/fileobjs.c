@@ -478,7 +478,6 @@ NTSTATUS FileOpenAddress(
           /* Check for bind success */
           if (nPort == (UINT)-1)
           {
-              AddrFile->Port = 0xffff;
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
           }
@@ -495,7 +494,6 @@ NTSTATUS FileOpenAddress(
           /* Check for bind success */
           if (nPort == (UINT)-1)
           {
-              AddrFile->Port = 0xffff;
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
           }
