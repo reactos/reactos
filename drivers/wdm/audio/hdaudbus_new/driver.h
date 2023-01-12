@@ -35,13 +35,13 @@ HDAUDIO_BUS_INTERFACE_V2 HDA_BusInterfaceV2(PVOID Context);
 
 #define IS_BXT(ven, dev) (ven == VEN_INTEL && dev == 0x5a98)
 
-void mdelay(LONG msec) {
+inline void mdelay(LONG msec) {
 	LARGE_INTEGER Interval;
 	Interval.QuadPart = -10 * 1000 * msec;
 	KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
 
-void udelay(LONG usec) {
+inline void udelay(LONG usec) {
 	LARGE_INTEGER Interval;
 	Interval.QuadPart = -10 * usec;
 	KeDelayExecutionThread(KernelMode, FALSE, &Interval);
