@@ -39,6 +39,12 @@ VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
     ASSERT(Port >= PortSet->StartingPort);
     ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
 
+    if ((Port < PortSet->StartingPort) ||
+        (Port >= PortSet->StartingPort + PortSet->PortsToOversee))
+    {
+       return;
+    }
+
     KeAcquireSpinLock( &PortSet->Lock, &OldIrql );
     RtlClearBits( &PortSet->ProtoBitmap, Port - PortSet->StartingPort, 1 );
     KeReleaseSpinLock( &PortSet->Lock, OldIrql );

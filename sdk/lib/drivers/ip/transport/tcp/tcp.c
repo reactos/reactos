@@ -214,7 +214,7 @@ NTSTATUS TCPStartup(VOID)
 {
     NTSTATUS Status;
 
-    Status = PortsStartup( &TCPPorts, 1, 0xfffe );
+    Status = PortsStartup(&TCPPorts, 1, 0xffff);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -370,6 +370,8 @@ NTSTATUS TCPConnect
     /* Check if we had an unspecified port */
     if (!Connection->AddressFile->Port)
     {
+        UINT nPort;
+
         /* We did, so we need to copy back the port */
         Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
         if (!NT_SUCCESS(Status))
@@ -379,10 +381,10 @@ NTSTATUS TCPConnect
         }
 
         /* Allocate the port in the port bitmap */
-        Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-
+        nPort = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
         /* This should never fail */
-        ASSERT(Connection->AddressFile->Port != 0xFFFF);
+        ASSERT(nPort != (UINT)-1);
+        Connection->AddressFile->Port = nPort;
     }
 
     connaddr.addr = RemoteAddress.Address.IPv4Address;
