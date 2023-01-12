@@ -9,16 +9,14 @@ list(APPEND SOURCE
     hdac_stream.cpp
     hdaudbus.cpp
     hdaudio.cpp
-    nhlt.cpp
-    driver.h)
+    nhlt.cpp)
 
 add_library(hdaudbus MODULE ${SOURCE})
 set_module_type(hdaudbus kernelmodedriver)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(hdaudbus PRIVATE -Wno-unused-variable -Wno-unused-but-set-variable -Wno-sign-compare -Wno-unknown-pragmas -Wno-switch -Wno-write-strings)
 endif()
-target_link_libraries(hdaudbus wdf01000 libcntpr ${PSEH_LIB})
+target_link_libraries(hdaudbus wdf01000 ntoskrnl_vista libcntpr ${PSEH_LIB})
 add_importlibs(hdaudbus ntoskrnl hal)
 add_cd_file(TARGET hdaudbus DESTINATION reactos/system32/drivers FOR all)
-add_pch(hdaudbus driver.h SOURCE)
 add_driver_inf(hdaudbus hdaudbus.inf)
