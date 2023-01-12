@@ -152,11 +152,12 @@ NTSTATUS NHLTCheckSupported(_In_ WDFDEVICE FxDevice) {
 	if (!outputBufferMemory) {
 		return STATUS_NO_MEMORY;
 	}
+
+	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
 
 	UCHAR supportedQueries = argument->Data[0];
 
-	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
 		status = STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
 		goto end;
@@ -186,12 +187,12 @@ NTSTATUS NHLTQueryTableAddress(_In_ WDFDEVICE FxDevice, UINT64 *nhltAddr, UINT64
 		return STATUS_NO_MEMORY;
 	}
 
+	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
 
 	UINT8* res = argument->Data;
 	UINT32 sz = argument->DataLength;
 
-	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
 		return STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
 		goto end;

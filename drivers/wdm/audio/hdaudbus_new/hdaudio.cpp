@@ -14,7 +14,7 @@ NTSTATUS NTAPI HDA_TransferCodecVerbs(
 	if (!_context)
 		return STATUS_NO_SUCH_DEVICE;
 
-	NTSTATUS NTAPI status = STATUS_SUCCESS;
+	NTSTATUS status = STATUS_SUCCESS;
 
 	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
 	if (!devData->FdoContext) {
@@ -351,7 +351,7 @@ NTSTATUS NTAPI HDA_SetDmaEngineState(
 	return STATUS_NO_SUCH_DEVICE;
 }
 
-VOID HDA_GetWallClockRegister(
+VOID NTAPI HDA_GetWallClockRegister(
 	_In_ PVOID _context,
 	_Out_ PULONG* Wallclock
 ) {
@@ -590,7 +590,7 @@ NTSTATUS NTAPI HDA_AllocateDmaBufferWithNotification(
 	stream->mdlBuf = mdl;
 	stream->bufSz = MmGetMdlByteCount(mdl);
 
-	stream->virtAddr = (UINT8*)MmMapLockedPagesSpecifyCache(mdl, KernelMode, MmWriteCombined, NULL, FALSE, /*MdlMappingNoExecute //Windows 8+ flag */ | NormalPagePriority);
+	stream->virtAddr = (UINT8*)MmMapLockedPagesSpecifyCache(mdl, KernelMode, MmWriteCombined, NULL, FALSE, /* MdlMappingNoExecute //Windows 8+ flag | */ NormalPagePriority);
 
 	/*UINT32 smallestCopy = min(stream->bufSz, crabrave_size);
 	DbgPrint("Mapped Buf: 0x%llx\n", stream->virtAddr);
