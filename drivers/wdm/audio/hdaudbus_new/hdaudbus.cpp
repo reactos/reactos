@@ -22,6 +22,7 @@ SklHdAudBusEvtDeviceAdd(
 }
 
 extern "C" NTSTATUS
+NTAPI
 DriverEntry(
 __in PDRIVER_OBJECT  DriverObject,
 __in PUNICODE_STRING RegistryPath
