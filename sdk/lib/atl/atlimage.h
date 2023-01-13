@@ -382,8 +382,10 @@ public:
         // create a GpBitmap object from file
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        GetCommon().CreateBitmapFromFile(pszNameW, &pBitmap);
-        ATLASSERT(pBitmap);
+        if (GetCommon().CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
+        {
+            return E_FAIL;
+        }
 
         // TODO & FIXME: get parameters (m_rgbTransColor etc.)
 
@@ -407,8 +409,10 @@ public:
         // create GpBitmap from stream
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        GetCommon().CreateBitmapFromStream(pStream, &pBitmap);
-        ATLASSERT(pBitmap);
+        if (GetCommon().CreateBitmapFromStream(pStream, &pBitmap) != Ok)
+        {
+            return E_FAIL;
+        }
 
         // TODO & FIXME: get parameters (m_rgbTransColor etc.)
 
