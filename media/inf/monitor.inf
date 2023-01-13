@@ -69,6 +69,7 @@ PnPMonitor.DeviceDesc = "隨插即用顯示器"
 
 [Strings.0405]
 MonitorClassName = "Monitory"
+
 StdMfg = "(Obecné monitory)"
 DefaultMonitor.DeviceDesc = "Výchozí monitor"
 PnPMonitor.DeviceDesc = "Plug and Play monitor"

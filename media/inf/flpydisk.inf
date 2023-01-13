@@ -30,7 +30,7 @@ HKR, , NoInstallClass, , 1
 %Floppy.DeviceDesc% = NO_DRV, GenFloppyDisk
 ;%Floppy.DeviceDesc% = floppy_Inst, GenFloppyDisk
 
-;----------------------------- FDC DRIVER -----------------------------
+;------------------------------ FDC DRIVER ------------------------------
 
 [floppy_Inst.NT]
 CopyFiles = floppy_CopyFiles.NT
@@ -47,7 +47,6 @@ StartType      = 3
 ErrorControl   = 1
 ServiceBinary  = %12%\flpydisk.sys
 
-
 ;---------------------------- NO DRIVER REQ -----------------------------
 
 [NO_DRV]
@@ -63,42 +62,49 @@ ReactOS = "ReactOS Project"
 
 ; Localizable
 FloppyClassName = "Floppy disk drives"
+
 GenericMfg = "(Generic floppy disk drives)"
 Floppy.DeviceDesc = "Generic floppy disk drive"
 
 [Strings.0404]
 FloppyClassName = "軟碟機"
+
 GenericMfg = "（標準軟碟機）"
 Floppy.DeviceDesc = "標準軟碟機"
 
 [Strings.0405]
 FloppyClassName = "Disketové jednotky"
+
 GenericMfg = "(Obecné disketové jednotky)"
 Floppy.DeviceDesc = "Obecná disketová jednotka"
 
 [Strings.0a]
 FloppyClassName = "Disqueteras"
+
 GenericMfg = "(Disqueteras genéricas)"
 Floppy.DeviceDesc = "Disquetera genérica"
 
 [Strings.0415]
 FloppyClassName = "Stacje dyskietek"
+
 GenericMfg = "(Standardowe stacje dyskietek)"
 Floppy.DeviceDesc = "Standardowa stacja dyskietek"
 
 [Strings.0418]
 FloppyClassName = "Unitate de disc flexibil"
+
 GenericMfg = "(unități generice de disc flexibil)"
 Floppy.DeviceDesc = "Unitate de disc flexibil"
 
 [Strings.0419]
 FloppyClassName = "Дисководы гибких дисков"
+
 GenericMfg = "(Универсальные дисководы гибких дисков)"
 Floppy.DeviceDesc = "Универсальный дисковод гибких дисков"
 
-
 [Strings.041f]
 FloppyClassName = "Disket Sürücüleri"
+
 GenericMfg = "(Genel Disket Sürücüleri)"
 Floppy.DeviceDesc = "Genel Disket Sürücüsü"
 
@@ -108,10 +114,12 @@ Floppy.DeviceDesc = "通用软盘驱动器"
 
 [Strings.0816]
 FloppyClassName = "Controlador disquete"
+
 GenericMfg = "(Controlador disquete Genérico)"
 Floppy.DeviceDesc = "Controlador disquete Genérico"
 
 [Strings.0C04]
 FloppyClassName = "軟碟機"
+
 GenericMfg = "（標準軟碟機）"
 Floppy.DeviceDesc = "標準軟碟機"

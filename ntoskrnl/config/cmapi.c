@@ -2121,17 +2121,23 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
         /* Release the hive */
         CmHive->Hive.HiveFlags &= ~HIVE_IS_UNLOADING;
         CmHive->CreatorOwner = NULL;
-
-        /* Allow loads */
-        ExReleasePushLock(&CmpLoadHiveLock);
     }
     else
     {
         DPRINT1("CmpLinkHiveToMaster failed, Status %lx\n", Status);
-        /* FIXME: TODO */
-        // ASSERT(FALSE); see CORE-17263
-        ExReleasePushLock(&CmpLoadHiveLock);
+
+        /* We're touching this hive, set the loading flag */
+        CmHive->HiveIsLoading = TRUE;
+
+        /* Close associated file handles */
+        CmpCloseHiveFiles(CmHive);
+
+        /* Cleanup its resources */
+        CmpDestroyHive(CmHive);
     }
+
+    /* Allow loads */
+    ExReleasePushLock(&CmpLoadHiveLock);
 
     /* Is this first profile load? */
     if (!CmpProfileLoaded && !CmpWasSetupBoot)

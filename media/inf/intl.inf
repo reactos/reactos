@@ -181,7 +181,6 @@ DriverVer = 05/29/2008,0.1
 00000434 = %Xhosa%,                      850,  1,  , 0434:00000409,0409:00000409
 00000435 = %Zulu%,                       850,  1,  , 0435:00000409,0409:00000409
 
-
 [CodePages]
 1250   = %CP1250%
 1251   = %CP1251%
@@ -326,7 +325,6 @@ DriverVer = 05/29/2008,0.1
 51949  = %CP51949%
 52936  = %CP52936%
 54936  = %CP54936%
-
 
 [LanguageGroups]
 1  = %LG_WESTERN_EUROPE%,
@@ -551,7 +549,7 @@ Serbian_Latin = "Serbian (Latin)"
 Serbian_Latin_Bosnia = "Serbian (Latin, Bosnia and Herzegovina)"
 Serbian_Cyrillic = "Serbian (Cyrillic)"
 Serbian_Cyrillic_Bosnia = "Serbian (Cyrillic, Bosnia and Herzegovina)"
-Slovak    = "Slovak"
+Slovak = "Slovak"
 Slovenian = "Slovenian"
 Spanish_Traditional_Sort = "Spanish (Traditional Sort)"
 Spanish_Mexico = "Spanish (Mexico)"
@@ -591,7 +589,6 @@ Vietnamese = "Vietnamese"
 Welsh = "Welsh"
 Xhosa = "Xhosa"
 Zulu = "Zulu"
-
 
 ; Code pages
 CP1250  = "1250  (ANSI - Central Europe)"
@@ -750,7 +747,6 @@ CP51950 = "51950 (EUC-Traditional Chinese)"
 CP52936 = "52936 (HZ-GB2312 Simplified Chinese)"
 CP54936 = "54936 (GB18030 Simplified Chinese)"
 
-
 ; Language groups
 LG_WESTERN_EUROPE      = "Western Europe and United States"
 LG_CENTRAL_EUROPE      = "Central Europe"
@@ -770,9 +766,6 @@ LG_INDIAN              = "Indic"
 LG_GEORGIAN            = "Georgian"
 LG_ARMENIAN            = "Armenian"
 
-
-
-; Traditional Chinese
 [Strings.0404]
 ; Locales
 Afrikaans = "南非文"
@@ -909,7 +902,7 @@ Serbian_Latin = "塞爾維亞文 (拉丁)"
 Serbian_Latin_Bosnia = "塞爾維亞文 (拉丁, 波士尼亞和赫塞哥維納)"
 Serbian_Cyrillic = "塞爾維亞文 (西里爾)"
 Serbian_Cyrillic_Bosnia = "塞爾維亞文 (西里爾, 波士尼亞和赫塞哥維納)"
-Slovak    = "斯洛伐克文"
+Slovak = "斯洛伐克文"
 Slovenian = "斯洛維尼亞文"
 Spanish_Traditional_Sort = "西班牙文 (傳統分類)"
 Spanish_Mexico = "西班牙文 (墨西哥)"
@@ -949,7 +942,6 @@ Vietnamese = "越南文"
 Welsh = "威爾斯文"
 Xhosa = "科薩文"
 Zulu = "祖魯文"
-
 
 ; Code pages
 CP1250  = "1250  (ANSI - 中歐)"
@@ -1108,7 +1100,6 @@ CP51950 = "51950 (EUC - 繁體中文)"
 CP52936 = "52936 (HZ-GB2312 簡體中文)"
 CP54936 = "54936 (GB18030 簡體中文)"
 
-
 ; Language groups
 LG_WESTERN_EUROPE      = "西歐語系"
 LG_CENTRAL_EUROPE      = "中歐語系"
@@ -1128,9 +1119,6 @@ LG_INDIAN              = "印度語系"
 LG_GEORGIAN            = "喬治亞文"
 LG_ARMENIAN            = "亞美尼亞文"
 
-
-
-; Polish
 [Strings.0415]
 ; Locales
 Afrikaans = "Afrykanerski"
@@ -1267,7 +1255,7 @@ Serbian_Latin = "Serbski (łaciński)"
 Serbian_Latin_Bosnia = "Serbski (łaciński, Bośnia i Hercegowina)"
 Serbian_Cyrillic = "Serbski (cyrylica)"
 Serbian_Cyrillic_Bosnia = "Serbski (cyrylica, Bośnia i Hercegowina)"
-Slovak    = "Słowacki"
+Slovak = "Słowacki"
 Slovenian = "Słoweński"
 Spanish_Traditional_Sort = "Hiszpański (tradycyjny)"
 Spanish_Mexico = "Hiszpański (Meksyk)"
@@ -1307,7 +1295,6 @@ Vietnamese = "Wietnamski"
 Welsh = "Walijski"
 Xhosa = "Khosa"
 Zulu = "Zuluski"
-
 
 ; Code pages
 CP1250  = "1250  (ANSI - Europa Środkowa)"
@@ -1466,7 +1453,6 @@ CP51950 = "51950 (EUC-chiński tradycyjny)"
 CP52936 = "52936 (HZ-GB2312 chiński uproszczony)"
 CP54936 = "54936 (GB18030 chiński uproszczony)"
 
-
 ; Language groups
 LG_WESTERN_EUROPE      = "Języki Europy Zachodniej i Stany Zjednoczone"
 LG_CENTRAL_EUROPE      = "Języki Europy Środkowej"
@@ -1486,9 +1472,6 @@ LG_INDIAN              = "Indyjski"
 LG_GEORGIAN            = "Gruziński"
 LG_ARMENIAN            = "Armeński"
 
-
-
-; Romanian
 [Strings.0418]
 ; Locales
 Afrikaans = "Afrikaans"
@@ -1625,7 +1608,7 @@ Serbian_Latin = "Sârbă (Latin)"
 Serbian_Latin_Bosnia = "Sârbă (Latin, Bosnia și Herțegovina)"
 Serbian_Cyrillic = "Sârbă (Chirilic)"
 Serbian_Cyrillic_Bosnia = "Sârbă (Chirilic, Bosnia și Herțegovina)"
-Slovak    = "Slovacă"
+Slovak = "Slovacă"
 Slovenian = "Sloveană"
 Spanish_Traditional_Sort = "Spaniolă (forma tradițională)"
 Spanish_Mexico = "Spaniolă (Mexic)"
@@ -1842,7 +1825,6 @@ LG_INDIAN              = "Indian"
 LG_GEORGIAN            = "Georgian"
 LG_ARMENIAN            = "Armean"
 
-;Chinese(PRC)
 [Strings.0804]
 ; Locales
 Afrikaans = "南非文"
@@ -1979,7 +1961,7 @@ Serbian_Latin = "塞尔维亚文 (拉丁)"
 Serbian_Latin_Bosnia = "塞尔维亚文 (拉丁, 波斯尼亚和黑塞哥维那)"
 Serbian_Cyrillic = "塞尔维亚文 (西里尔)"
 Serbian_Cyrillic_Bosnia = "塞尔维亚文 (西里尔, 波斯尼亚和黑塞哥维那)"
-Slovak    = "斯洛伐克文"
+Slovak = "斯洛伐克文"
 Slovenian = "斯洛文尼亚文"
 Spanish_Traditional_Sort = "西班牙文 (传统分类)"
 Spanish_Mexico = "西班牙文 (墨西哥)"
@@ -2019,7 +2001,6 @@ Vietnamese = "越南文"
 Welsh = "韦尔斯文"
 Xhosa = "科萨文"
 Zulu = "祖鲁文"
-
 
 ; Code pages
 CP1250  = "1250  (ANSI - 中欧)"
@@ -2178,7 +2159,6 @@ CP51950 = "51950 (EUC - 繁体中文)"
 CP52936 = "52936 (HZ-GB2312 简体中文)"
 CP54936 = "54936 (GB18030 简体中文)"
 
-
 ; Language groups
 LG_WESTERN_EUROPE      = "西欧语系"
 LG_CENTRAL_EUROPE      = "中欧语系"
@@ -2198,7 +2178,6 @@ LG_INDIAN              = "印度语系"
 LG_GEORGIAN            = "乔治亚文"
 LG_ARMENIAN            = "亚美尼亚文"
 
-; Chinese Hong Kong
 [Strings.0c04]
 ; Locales
 Afrikaans = "南非文"
@@ -2335,7 +2314,7 @@ Serbian_Latin = "塞爾維亞文 (拉丁)"
 Serbian_Latin_Bosnia = "塞爾維亞文 (拉丁, 波斯尼亞和黑塞哥維那)"
 Serbian_Cyrillic = "塞爾維亞文 (西里爾)"
 Serbian_Cyrillic_Bosnia = "塞爾維亞文 (西里爾, 波斯尼亞和黑塞哥維那)"
-Slovak    = "斯洛伐克文"
+Slovak = "斯洛伐克文"
 Slovenian = "斯洛文尼亞文"
 Spanish_Traditional_Sort = "西班牙文 (傳統分類)"
 Spanish_Mexico = "西班牙文 (墨西哥)"
@@ -2375,7 +2354,6 @@ Vietnamese = "越南文"
 Welsh = "威爾斯文"
 Xhosa = "科薩文"
 Zulu = "祖魯文"
-
 
 ; Code pages
 CP1250  = "1250  (ANSI - 中歐)"
@@ -2533,7 +2511,6 @@ CP51950 = "51950 (EUC - 繁體中文)"
 
 CP52936 = "52936 (HZ-GB2312 簡體中文)"
 CP54936 = "54936 (GB18030 簡體中文)"
-
 
 ; Language groups
 LG_WESTERN_EUROPE      = "西歐語系"

@@ -36,7 +36,7 @@ HKR, , Icon,           0, "-27"
 [NecMfg]
 %pc98_up.DeviceDesc% = NO_DRV,pc98_up
 
-;------------------------------ NO DRIVER -----------------------------
+;------------------------------- NO DRIVER ------------------------------
 
 [NO_DRV]
 
@@ -49,6 +49,9 @@ AddService = , 0x00000002
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
+MsftMfg = "Microsoft"
+NecMfg = "NEC"
+
 ; Localizable
 ComputerClassName = "Computer"
 
@@ -56,10 +59,8 @@ GenericMfg = "(Generic computers)"
 acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
 e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
-NecMfg = "NEC"
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0404]
@@ -75,11 +76,11 @@ pc98_up.DeviceDesc = "單處理器 NEC PC-98"
 
 [Strings.0405]
 ComputerClassName = "Počítač"
+
 GenericMfg = "(Obecné počítače)"
 acpipic_up.DeviceDesc = "Jednoprocesorové PC s ACPI rozhraním"
 e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
@@ -91,7 +92,6 @@ GenericMfg = "(Equipos genéricos)"
 acpipic_up.DeviceDesc = "PC con uniprocesador ACPI"
 e_isa_up.DeviceDesc = "PC con uniprocesador estándar"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
@@ -103,7 +103,6 @@ GenericMfg = "(Komputery standardowe)"
 acpipic_up.DeviceDesc = "Komputer PC z interfejsem ACPI"
 e_isa_up.DeviceDesc = "Standardowy komputer PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Oryginalny Xbox (oparty na procesorze x86)"
 
 pc98_up.DeviceDesc = "Komputer NEC PC-98"
@@ -115,7 +114,6 @@ GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
@@ -127,7 +125,6 @@ GenericMfg = "(Универсальный компьютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцессорный ПК"
 e_isa_up.DeviceDesc = "Стандартный однопроцессорный ПК"
 
-MsftMfg = "Корпорация Microsoft"
 xbox.DeviceDesc = "Оригинальный Xbox (на базе x86)"
 
 pc98_up.DeviceDesc = "Однопроцессорный NEC PC-98"
@@ -139,7 +136,6 @@ GenericMfg = "(Genel Bilgisayarlar)"
 acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
 e_isa_up.DeviceDesc = "Standart Tek İşlemcili PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Özgün Xbox (x86 tabanlı)"
 
 pc98_up.DeviceDesc = "Tek İşlemcili NEC PC-98"
@@ -151,7 +147,6 @@ GenericMfg = "(Стандартний комп'ютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцесорний ПК"
 e_isa_up.DeviceDesc = "Стандартний однопроцесорний ПК"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Однопроцесорний NEC PC-98"
@@ -161,7 +156,6 @@ GenericMfg = "(通用计算机)"
 acpipic_up.DeviceDesc = "ACPI 单处理器 PC"
 e_isa_up.DeviceDesc = "标准单处理器 PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
@@ -173,10 +167,8 @@ GenericMfg = "(Computador Genérico)"
 acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
 e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
 
-MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
-NecMfg = "NEC"
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
 [Strings.0C04]

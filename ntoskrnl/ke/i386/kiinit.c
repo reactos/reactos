@@ -547,7 +547,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->State = Running;
     InitThread->Affinity = 1 << Number;
     InitThread->WaitIrql = DISPATCH_LEVEL;
-    InitProcess->ActiveProcessors = 1 << Number;
+    InitProcess->ActiveProcessors |= 1 << Number;
 
     /* HACK for MmUpdatePageDir */
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;

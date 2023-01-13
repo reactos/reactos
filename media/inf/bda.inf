@@ -5,9 +5,7 @@ LayoutFile  = layout.inf
 Class       = Media
 ClassGUID   = {4d36e96c-e325-11ce-bfc1-08002be10318}
 Provider    = %ReactOS%
-
-DriverVer=07/01/2001,5.1.2535.0
-
+DriverVer   = 07/01/2001,5.1.2535.0
 
 [DefaultInstall]
 Include=ks.inf
@@ -25,7 +23,6 @@ DelReg=CategoryUnRegistration
 RegisterDlls=BDA.RegisterDlls
 CopyFiles=BdaPlugIn.Files, BdaFilter.Files, BdaDriver.Files
 
-
 [DestinationDirs]
 DefaultDestDir=11
 BdaFilter.Files=11
@@ -33,7 +30,6 @@ BdaPlugIn.Files=11
 AllDll.Files=11
 BdaDriver.Files=10,system32\drivers
 AllDriver.Files=10,system32\drivers
-
 
 [BDA.Registration]
 AddReg=BDA.PluginRegistration, BDA.CategoryRegistration, BDA.NodeRegistration, BDA.PinNameRegistration, BDA.FilterRegistration
@@ -44,7 +40,6 @@ AddReg=BDA.PluginRegistration, BDA.CategoryRegistration, BDA.NodeRegistration, B
 DelReg=CategoryUnRegistration
 RegisterDlls=BDA.RegisterDlls
 CopyFiles=BdaPlugIn.Files, BdaFilter.Files, BdaDriver.Files
-
 
 [BDA.NodeRegistration]
 
@@ -74,7 +69,6 @@ HKLM,%MediaCategories%\%PinID.GUID.MPE%,Name,,%Pin.Name.MPE%
 HKLM,%MediaCategories%\%PinID.GUID.MPE%,Display,1,00,00,00,00
 HKLM,%MediaCategories%\%PinID.GUID.NABTS%,Name,,%Pin.Name.NABTS%
 HKLM,%MediaCategories%\%PinID.GUID.NABTS%,Display,1,00,00,00,00
-
 
 [BDA.DeviceInstallation]
 HKLM,%RunOnce%,"MPE0",,"rundll32.exe streamci,StreamingDeviceSetup %MPE.DeviceId%,GLOBAL,%GUID.BdaComponent%,%17%\mpe.inf,BDAcodec"
@@ -167,11 +161,7 @@ PinID.GUID.MPE="{C1B06D73-1DBB-11d3-8F46-00C04F7971E2}"
 PinID.GUID.NABTS="{FB6C4286-0353-11d1-905F-0000C0CC16BA}"
 PinID.GUID.AtscTS="{78216A81-CFA8-493e-9711-36A61C08BD9D}"
 
-
-;
-; english localized strings
-;
-
+; Localizable
 Category_BdaTuner="BDA-Source Filter"
 Category_BdaComponent="BDA-Receiver Component"
 Category_BdaRenderer="BDA-Playback Filter"

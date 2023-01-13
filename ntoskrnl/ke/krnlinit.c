@@ -60,7 +60,7 @@ KSPIN_LOCK IopDatabaseLock;
 KSPIN_LOCK IopCompletionLock;
 KSPIN_LOCK NtfsStructLock;
 KSPIN_LOCK AfdWorkQueueSpinLock;
-KSPIN_LOCK KiTimerTableLock[16];
+KSPIN_LOCK KiTimerTableLock[LOCK_QUEUE_TIMER_TABLE_LOCKS];
 KSPIN_LOCK KiReverseStallIpiLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -251,11 +251,14 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     Prcb->LockQueue[LockQueueUnusedSpare16].Next = NULL;
     Prcb->LockQueue[LockQueueUnusedSpare16].Lock = NULL;
 
-    /* Loop timer locks */
+    /* Loop timer locks (shared amongst all CPUs) */
     for (i = 0; i < LOCK_QUEUE_TIMER_TABLE_LOCKS; i++)
     {
-        /* Initialize the lock and setup the Queued Spinlock */
-        KeInitializeSpinLock(&KiTimerTableLock[i]);
+        /* Setup the Queued Spinlock (done only once by the boot CPU) */
+        if (!Number)
+            KeInitializeSpinLock(&KiTimerTableLock[i]);
+
+        /* Initialize the lock */
         Prcb->LockQueue[LockQueueTimerTableLock + i].Next = NULL;
         Prcb->LockQueue[LockQueueTimerTableLock + i].Lock =
             &KiTimerTableLock[i];

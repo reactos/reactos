@@ -189,8 +189,8 @@ typedef struct _LDR_ENUM_RESOURCE_INFO
     ULONG_PTR Name;
     ULONG_PTR Language;
     PVOID Data;
-    SIZE_T Size;
-    ULONG_PTR Reserved;
+    ULONG Size;
+    ULONG Reserved;
 } LDR_ENUM_RESOURCE_INFO, *PLDR_ENUM_RESOURCE_INFO;
 
 //

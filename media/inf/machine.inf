@@ -49,8 +49,8 @@ HKR, , Icon,           0, "-27"
 %*PNP0C0E.DeviceDesc% = NO_DRV,*PNP0C0E
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %*PNP0C15.DeviceDesc% = NO_DRV,*PNP0C15
-%SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
 
+%SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %ISAPNP\ReadDataPort.DeviceDesc% = NO_DRV,ISAPNP\ReadDataPort
 %PCI\CC_0500.DeviceDesc% = NO_DRV,PCI\CC_0500
@@ -95,8 +95,7 @@ AddService = , 0x00000002
 
 [NO_DRV.HW]
 
-
-;-------------------------- SWENUM BUS DRIVER --------------------------
+;-------------------------- SWENUM BUS DRIVER ---------------------------
 
 [SWENUM_Inst.NT]
 CopyFiles = SWENUM_CopyFiles.NT
@@ -166,6 +165,10 @@ LoadOrderGroup = Boot Bus Extender
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
+IntelMfg = "Intel"
+NecMfg = "NEC"
+nVidiaMfg = "nVidia"
+
 ; Localizable
 SystemClassName = "System devices"
 
@@ -191,6 +194,8 @@ GenericMfg = "(Generic system devices)"
 *PNP0C0E.DeviceDesc = "ACPI sleep button device"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 *PNP0C15.DeviceDesc = "Docking Station"
+
+SWENUM.DeviceDesc  = "Plug & Play Software Bus Enumerator"
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
 ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP read data port"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
@@ -199,9 +204,7 @@ PCI\CC_0601.DeviceDesc = "Standard PCI to ISA bridge"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 *ThermalZone.DeviceDesc = "ACPI thermal zone"
 PCI\CC_0C05.DeviceDesc = "SMBus Controller"
-SWENUM.DeviceDesc  = "Plug & Play Software Bus Enumerator"
 
-IntelMfg = "Intel"
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
 PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
@@ -212,11 +215,9 @@ PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI Br
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
 
-NecMfg = "NEC"
 NecCb.DeviceDesc = "NEC PCI to C-bus Bridge"
 NecVl.DeviceDesc = "NEC PCI to VL bus Bridge"
 
-nVidiaMfg = "nVidia"
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI to ISA Bridge"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce SMBus Controller"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP to PCI Bridge"
@@ -247,6 +248,8 @@ GenericMfg = "(標準系統裝置)"
 *PNP0C0E.DeviceDesc = "ACPI 休眠按鈕裝置"
 *PNP0C0F.DeviceDesc = "PCI 中斷連接裝置"
 *PNP0C15.DeviceDesc = "擴充埠"
+
+SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
 ACPI\FixedButton.DeviceDesc = "ACPI 固定功能按鈕"
 ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP 讀取數據埠"
 PCI\CC_0500.DeviceDesc = "標準 PCI 隨機存取記憶體控制器"
@@ -255,7 +258,6 @@ PCI\CC_0601.DeviceDesc = "標準 PCI - ISA 橋接器"
 PCI\CC_0604.DeviceDesc = "標準 PCI - PCI 橋接器"
 *ThermalZone.DeviceDesc = "ACPI 溫度監控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
-SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
 
 *INT0800.DeviceDesc = "Intel 82802 韌體集線器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 橋接器"
@@ -296,6 +298,8 @@ GenericMfg = "(Obecná systémová zařízení)"
 *PNP0C0E.DeviceDesc = "ACPI tlačítko spánku"
 *PNP0C0F.DeviceDesc = "PCI linkové zařízení přerušení"
 *PNP0C15.DeviceDesc = "Docking Station"
+
+SWENUM.DeviceDesc  = "Výčet zařízení podporujících Plug and Play"
 ACPI\FixedButton.DeviceDesc = "ACPI tlačítko s pevnou vlastností"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Standardní most CPU na PCI"
@@ -303,7 +307,6 @@ PCI\CC_0601.DeviceDesc = "Standardní most PCI na ISA"
 PCI\CC_0604.DeviceDesc = "Standardní most PCI na PCI"
 *ThermalZone.DeviceDesc = "ACPI teplotní zóna"
 PCI\CC_0C05.DeviceDesc = "SMBus řadič"
-SWENUM.DeviceDesc  = "Výčet zařízení podporujících Plug and Play"
 
 *INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
@@ -331,6 +334,7 @@ GenericMfg = "(Generische Systemgeräte)"
 *PNP0C04.DeviceDesc = "mathematischer Koprozessor"
 *PNP0C0B.DeviceDesc = "ACPI Ventilator"
 *PNP0C15.DeviceDesc = "Dockingstation"
+
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM-Controller"
 PCI\CC_0600.DeviceDesc = "Standard CPU zu PCI Brücke"
 PCI\CC_0601.DeviceDesc = "Standard PCI zu ISA Brücke"
@@ -363,6 +367,7 @@ GenericMfg = "(Πρότυπες συσκευές συστήματος)"
 *PNP0C0E.DeviceDesc = "ACPI sleep button device"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Πρότυπη γέφυρα από CPU σε PCI"
@@ -405,6 +410,8 @@ GenericMfg = "(Dispositivos del sistema estándar)"
 *PNP0C0E.DeviceDesc = "Botón de suspensión ACPI"
 *PNP0C0F.DeviceDesc = "Dispositivo de interrupción de enlaces PCI"
 *PNP0C15.DeviceDesc = "Replicador de puertos"
+
+SWENUM.DeviceDesc  = "Software enumerador de Buses Plug & Play"
 ACPI\FixedButton.DeviceDesc = "Botón de funcionalidad fija ACPI"
 ISAPNP\ReadDataPort.DeviceDesc = "Puerto de lectura de datos ISAPNP"
 PCI\CC_0500.DeviceDesc = "Controlador PCI RAM estándar"
@@ -413,7 +420,6 @@ PCI\CC_0601.DeviceDesc = "Puente PCI-ISA estándar"
 PCI\CC_0604.DeviceDesc = "Puente PCI-PCI estándar"
 *ThermalZone.DeviceDesc = "Zona térmica ACPI"
 PCI\CC_0C05.DeviceDesc = "Controlador SMBus"
-SWENUM.DeviceDesc  = "Software enumerador de Buses Plug & Play"
 
 *INT0800.DeviceDesc = "Dispositivo concentrador Firmware Intel 82802"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
@@ -431,7 +437,6 @@ PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce Puente AGP-PCI"
 PCI\VEN_10DE&DEV_01B8.DeviceDesc = "nVidia nForce Puente PCI-PCI"
 PCI\VEN_10DE&DEV_02A5.DeviceDesc = "nVidia MCPX Puente CPU-PCI"
 PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX Controlador de PCI RAM"
-
 
 [Strings.040C]
 SystemClassName = "Périphériques système"
@@ -454,6 +459,7 @@ GenericMfg = "(Périphériques systèmes génériques)"
 *PNP0C0E.DeviceDesc = "Périphérique de bouton de veille ACPI"
 *PNP0C0F.DeviceDesc = "Périphérique de lien d'interruption PCI"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "Bouton de fonction définie ACPI"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Pont standard CPU vers PCI"
@@ -490,6 +496,7 @@ GenericMfg = "(標準 システム デバイス)"
 *PNP0C0E.DeviceDesc = "ACPI スリープボタン デバイス"
 *PNP0C0F.DeviceDesc = "PCI 割り込みリンクデバイス"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "ACPI 固定 機能 ボタン"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "スタンダード CPU to PCI ブリッジ"
@@ -532,6 +539,7 @@ GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0C0E.DeviceDesc = "Przycisk zasypiania ACPI"
 *PNP0C0F.DeviceDesc = "Urządzenie PCI interrupt link"
 *PNP0C15.DeviceDesc = "Stacja dokująca"
+
 ACPI\FixedButton.DeviceDesc = "Przycisk ACPI Fixed Feature"
 PCI\CC_0500.DeviceDesc = "Standardowy kontroler RAM PCI"
 PCI\CC_0600.DeviceDesc = "Standardowy mostek CPU do PCI"
@@ -571,6 +579,7 @@ GenericMfg = "(Dispositivos de sistema padrão)"
 *PNP0C0E.DeviceDesc = "Botão dormir ACPI"
 *PNP0C0F.DeviceDesc = "Dispositivo de interrupção de ligações PCI"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "Botão de recurso fixo ACPI"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Ponte padrão CPU - PCI"
@@ -613,6 +622,8 @@ GenericMfg = "(dispozitiv generic de sistem)"
 *PNP0C0E.DeviceDesc = "Dispozitiv buton de repaus ACPI"
 *PNP0C0F.DeviceDesc = "Dispozitiv de întrerupere legătură PCI"
 *PNP0C15.DeviceDesc = "Docking Station"
+
+SWENUM.DeviceDesc  = "Enumerator logic de magistrală P&P"
 ACPI\FixedButton.DeviceDesc = "Buton de funcție fixă ACPI"
 PCI\CC_0500.DeviceDesc = "Dispozitiv de control PCI RAM standard"
 PCI\CC_0600.DeviceDesc = "Punte standard CPU spre PCI"
@@ -620,7 +631,6 @@ PCI\CC_0601.DeviceDesc = "Punte standard PCI spre ISA"
 PCI\CC_0604.DeviceDesc = "Punte standard PCI spre PCI"
 *ThermalZone.DeviceDesc = "Zonă termală ACPI"
 PCI\CC_0C05.DeviceDesc = "Dispozitiv de control magistrală SM"
-SWENUM.DeviceDesc  = "Enumerator logic de magistrală P&P"
 
 *INT0800.DeviceDesc = "Dispozitiv nod firmware Intel 82802"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
@@ -653,6 +663,8 @@ GenericMfg = "(Стандартные системные устройства)"
 *PNP0C0E.DeviceDesc = "Кнопка спящего режима ACPI"
 *PNP0C0F.DeviceDesc = "Контроллер прервываний PCI"
 *PNP0C15.DeviceDesc = "Док-станция"
+
+SWENUM.DeviceDesc  = "Перечислитель программных устройств Plug & Play"
 ACPI\FixedButton.DeviceDesc = "Кнопка фиксированной возможности ACPI"
 ISAPNP\ReadDataPort.DeviceDesc = "Порт чтения данных ISAPNP"
 PCI\CC_0500.DeviceDesc = "Стандартный контроллер PCI RAM"
@@ -661,7 +673,6 @@ PCI\CC_0601.DeviceDesc = "Стандартный мост PCI - ISA"
 PCI\CC_0604.DeviceDesc = "Стандартный мост PCI - PCI"
 *ThermalZone.DeviceDesc = "Термальная зона ACPI"
 PCI\CC_0C05.DeviceDesc = "Контроллер SMBus"
-SWENUM.DeviceDesc  = "Перечислитель программных устройств Plug & Play"
 
 *INT0800.DeviceDesc = "Устройство Intel 82802 Firmware Hub"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
@@ -704,6 +715,7 @@ GenericMfg = "(Generické systémové zariadenia)"
 *PNP0C0E.DeviceDesc = "ACPI sleep button device"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Štandardný most CPU na PCI"
@@ -745,6 +757,8 @@ GenericMfg = "(Genel Sistem Aygıtları)"
 *PNP0C0E.DeviceDesc = "ACPI Uyku Düğmesi Aygıtı"
 *PNP0C0F.DeviceDesc = "PCI Kesme Bağlantı Aygıtı"
 *PNP0C15.DeviceDesc = "Yerleştirme İstasyonu"
+
+SWENUM.DeviceDesc  = "Tak ve Çalıştır Yazılım Veriyolu Numaralandırıcısı"
 ACPI\FixedButton.DeviceDesc = "ACPI Sabit Özellik Düğmesi"
 PCI\CC_0500.DeviceDesc = "Standart PCI RAM Denetleyicisi"
 PCI\CC_0600.DeviceDesc = "Standart CPU'dan PCI'ya Köprü"
@@ -752,7 +766,6 @@ PCI\CC_0601.DeviceDesc = "Standart PCI'dan ISA'ya Köprü"
 PCI\CC_0604.DeviceDesc = "Standart PCI'dan PCI'ya Köprü"
 *ThermalZone.DeviceDesc = "ACPI Isı Bölgesi"
 PCI\CC_0C05.DeviceDesc = "SMBus Denetleyicisi"
-SWENUM.DeviceDesc  = "Tak ve Çalıştır Yazılım Veriyolu Numaralandırıcısı"
 
 *INT0800.DeviceDesc = "Intel 82802 Yerleşik Yazılım Göbek Aygıtı"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
@@ -787,6 +800,7 @@ GenericMfg = "(Стандартні системні пристрої)"
 *PNP0C0E.DeviceDesc = "Кнопка сплячого режиму ACPI"
 *PNP0C0F.DeviceDesc = "Контроллер переривань PCI"
 *PNP0C15.DeviceDesc = "Док станція"
+
 ACPI\FixedButton.DeviceDesc = "Кнопка фіксованої можливості ACPI"
 PCI\CC_0500.DeviceDesc = "Стандартний контролер PCI RAM"
 PCI\CC_0600.DeviceDesc = "Стандартний міст CPU на PCI"
@@ -831,6 +845,7 @@ GenericMfg = "(Standartiniai sisteminiai įrenginiai)"
 *PNP0C0E.DeviceDesc = "ACPI miego mygtukas"
 *PNP0C0F.DeviceDesc = "PCI pertraukimo sąsajos įrenginys"
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "ACPI fiksuotos galimybės mygtukas"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Standartinis CPU į PCI tiltas"
@@ -871,6 +886,8 @@ GenericMfg = "(通用系统设备)"
 *PNP0C0E.DeviceDesc = "ACPI 休眠按钮设备"
 *PNP0C0F.DeviceDesc = "PCI 中断链接设备"
 *PNP0C15.DeviceDesc = "Docking Station"
+
+SWENUM.DeviceDesc  = "即插即用软总线枚举器"
 ACPI\FixedButton.DeviceDesc = "ACPI 固定功能按钮"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "标准 CPU - PCI 桥"
@@ -878,7 +895,6 @@ PCI\CC_0601.DeviceDesc = "标准 PCI - ISA 桥"
 PCI\CC_0604.DeviceDesc = "标准 PCI - PCI 桥"
 *ThermalZone.DeviceDesc = "ACPI 温度监控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
-SWENUM.DeviceDesc  = "即插即用软总线枚举器"
 
 *INT0800.DeviceDesc = "Intel 82802 固件集线器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 桥"
@@ -909,6 +925,7 @@ GenericMfg = "(Dispositivos do sistema padrão)"
 *PNP0C0E.DeviceDesc = "Botão de suspensão ACPI"
 *PNP0C0F.DeviceDesc = "Dispositivo de link de interrupção PCI "
 *PNP0C15.DeviceDesc = "Docking Station"
+
 ACPI\FixedButton.DeviceDesc = "Botão de recurso fixo ACPI"
 PCI\CC_0500.DeviceDesc = "Controlador PCI RAM padrão"
 PCI\CC_0600.DeviceDesc = "Ponte CPU-PCI padrão"
@@ -949,6 +966,8 @@ GenericMfg = "(標準系統裝置)"
 *PNP0C0E.DeviceDesc = "ACPI 休眠按鈕裝置"
 *PNP0C0F.DeviceDesc = "PCI 中斷連接裝置"
 *PNP0C15.DeviceDesc = "擴充埠"
+
+SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
 ACPI\FixedButton.DeviceDesc = "ACPI 固定功能按鈕"
 ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP 讀取數據埠"
 PCI\CC_0500.DeviceDesc = "標準 PCI 隨機存取記憶體控制器"
@@ -957,7 +976,6 @@ PCI\CC_0601.DeviceDesc = "標準 PCI - ISA 橋接器"
 PCI\CC_0604.DeviceDesc = "標準 PCI - PCI 橋接器"
 *ThermalZone.DeviceDesc = "ACPI 溫度監控"
 PCI\CC_0C05.DeviceDesc = "SMBus 控制器"
-SWENUM.DeviceDesc  = "隨插即用軟體匯流排枚舉器"
 
 *INT0800.DeviceDesc = "Intel 82802 韌體集線器控制器"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI - ISA 橋接器"

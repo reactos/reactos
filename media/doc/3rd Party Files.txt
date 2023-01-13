@@ -178,7 +178,7 @@ License: media/fonts/doc/DejaVu/LICENSE.txt
 URL: http://dejavu.sourceforge.net
 
 Title: Open Sans Fonts
-Path: media/fonts
+Path: media/fonts/trebuc*.ttf
 Used Version: 1.10
 License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
 URL: http://www.google.com/fonts/specimen/Open+Sans

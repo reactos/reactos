@@ -32,6 +32,10 @@
 #include "winternl.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
+#else
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);

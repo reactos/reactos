@@ -123,14 +123,15 @@ LoadOrderGroup = Extended Base
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
+CyrixMfg = "Cyrix"
+IntelMfg = "Intel"
+AMDMfg = "AMD"
+TransmetaMfg = "Transmeta"
+VIAMfg = "VIA"
+
 ; Localizable
 ProcessorClassName = "Processors"
 
-CyrixMfg = "Cyrix"
-IntelMfg = "Intel"
-AMDMfg = "Advanced Micro Devices"
-TransmetaMfg = "Transmeta"
-VIAMfg = "VIA"
 Processor.DeviceDesc = "Processor"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 Processor"

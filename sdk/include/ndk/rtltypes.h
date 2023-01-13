@@ -1194,9 +1194,9 @@ typedef struct _RTL_DEBUG_INFORMATION
     HANDLE TargetProcessId;
     HANDLE TargetThreadHandle;
     ULONG Flags;
-    ULONG OffsetFree;
-    ULONG CommitSize;
-    ULONG ViewSize;
+    ULONG_PTR OffsetFree;
+    SIZE_T CommitSize;
+    SIZE_T ViewSize;
     union
     {
         PRTL_PROCESS_MODULES Modules;

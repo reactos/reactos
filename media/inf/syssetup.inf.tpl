@@ -1,14 +1,11 @@
-;
 ; For Windows, this file controls various aspects of the Installation and
 ; Upgrade process. If you know a good documentation about this file,
 ; please add a link here.
-;
-;
+
 [Version]
 Signature = "$Windows NT$"
 ;Signature = "$ReactOS$"
 ClassGUID={00000000-0000-0000-0000-000000000000}
-
 
 ; These .INFs install the device classes
 [DeviceInfsToInstall]

@@ -68,7 +68,6 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
-
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
@@ -140,7 +139,6 @@ UTILMAN_DESC=Launch Accessibility Utility Manager
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Wine Web Browser
 
-; Bulgarian
 [Strings.0402]
 ACCESSORIES=Принадлежности
 SYSTOOLS=Системни средства
@@ -201,7 +199,6 @@ WINMINE_DESC=Минички
 SPIDER_TITLE=Пасианс „Паяк“
 SPIDER_DESC=Пасианс „Паяк“
 
-; Traditional Chinese
 [Strings.0404]
 ACCESSORIES=附屬應用程式
 SYSTOOLS=系統管理工具
@@ -271,7 +268,6 @@ UTILMAN_DESC=啟動協助工具管理員
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=瀏覽網際網路上的網頁
 
-; Czech
 [Strings.0405]
 ACCESSORIES=Příslušenství
 SYSTOOLS=Systémové nástroje
@@ -332,7 +328,6 @@ WINMINE_DESC=Spustit WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; German
 [Strings.0407]
 ACCESSORIES=Zubehör
 SYSTOOLS=Systemprogramme
@@ -398,7 +393,6 @@ SPIDER_DESC=Spider Solitär
 UTILMAN_TITLE=Eingabehilfen-Manager
 UTILMAN_DESC=Eingabehilfen-Manager starten
 
-; Greek
 [Strings.0408]
 ACCESSORIES=Βοηθήματα
 SYSTOOLS=Εργαλεία Συστήματος
@@ -459,7 +453,6 @@ WINMINE_DESC=Ναρκαλιευτής
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Spanish
 [Strings.0a]
 ACCESSORIES=Accesorios
 SYSTOOLS=Herramientas del sistema
@@ -527,7 +520,6 @@ SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
 UTILMAN_TITLE=Herramientas de Accesibilidad
 UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
 
-; Estonian
 [Strings.0425]
 ACCESSORIES=Tarvikud
 SYSTOOLS=Süsteemi tööriistad
@@ -593,7 +585,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; French
 [Strings.040C]
 ACCESSORIES=Accessoires
 SYSTOOLS=Outils système
@@ -663,7 +654,6 @@ UTILMAN_DESC=Lance le gestionnaire d'utilitaires d'accessibilité
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Lance le navigateur Wine Internet Explorer
 
-; Hebrew
 [Strings.040D]
 ACCESSORIES=עזרים
 SYSTOOLS=כלי מערכת
@@ -728,7 +718,6 @@ SPIDER_DESC=סוליטייר עכביש
 UTILMAN_TITLE=מנהל כלי הנגישות
 UTILMAN_DESC=הפעל את מנהל כלי הנגישות
 
-; Hungarian
 [Strings.040E]
 ACCESSORIES=Kellékek
 SYSTOOLS=Rendszereszközök
@@ -796,7 +785,6 @@ SPIDER_DESC=Fekete Özvegy
 UTILMAN_TITLE=Kisegítő lehetőségek kezelő
 UTILMAN_DESC=Kisegítő lehetőségek kezelő indítása
 
-; Indonesian
 [Strings.0421]
 ACCESSORIES=Aksesoris
 SYSTOOLS=Alat Sistem
@@ -857,7 +845,6 @@ WINMINE_DESC=Buka WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Buka Spider Solitaire
 
-; Italian
 [Strings.0410]
 ACCESSORIES=Accessori
 SYSTOOLS=Strumenti di sistema
@@ -921,7 +908,6 @@ WINMINE_DESC=Campo minato
 SPIDER_TITLE=Spider
 SPIDER_DESC=Spider
 
-; Japanese
 [Strings.0411]
 ACCESSORIES=アクセサリ
 SYSTOOLS=システムツール
@@ -982,7 +968,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=スパイダ ソリティア
 SPIDER_DESC=スパイダ ソリティア
 
-; Dutch
 [Strings.0413]
 ACCESSORIES=Accessories
 SYSTOOLS=System Tools
@@ -1046,7 +1031,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Norwegian
 [Strings.0414]
 ACCESSORIES=Tilbehør
 SYSTOOLS=Systemverktøy
@@ -1107,7 +1091,6 @@ WINMINE_DESC=Minnesveiper
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Polish
 [Strings.0415]
 ACCESSORIES=Akcesoria
 SYSTOOLS=Narzędzia systemowe
@@ -1175,7 +1158,6 @@ SPIDER_DESC=Pasjans Pająk
 UTILMAN_TITLE=Menedżer narzędzi ułatwienia dostępu
 UTILMAN_DESC=Uruchom Menedżer narzędzi ułatwienia dostępu
 
-; Portuguese - Brazil
 [Strings.0416]
 ACCESSORIES=Acessórios
 SYSTOOLS=Ferramentas de Sistema
@@ -1239,7 +1221,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Portuguese - Portugal
 [Strings.0816]
 ACCESSORIES=Acessórios
 SYSTOOLS=Ferramentas de Sistema
@@ -1303,7 +1284,6 @@ WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 
-; Romanian
 [Strings.0418]
 ACCESSORIES=Accesorii
 SYSTOOLS=Instrumente de sistem
@@ -1369,7 +1349,6 @@ WINMINE_DESC=Joc de deminare.
 SPIDER_TITLE=Pasiență-păianjen
 SPIDER_DESC=Joc de pasiență.
 
-; Russian
 [Strings.0419]
 ACCESSORIES=Стандартные
 SYSTOOLS=Служебные
@@ -1437,7 +1416,6 @@ SPIDER_DESC=Пасьянс Паук
 UTILMAN_TITLE=Диспетчер служебных программ
 UTILMAN_DESC=Обеспечивает запуск и настройку программ поддержки специальных возможностей.
 
-; Slovak
 [Strings.041B]
 ACCESSORIES=Príslušenstvo
 SYSTOOLS=Systémové nástroje
@@ -1498,7 +1476,6 @@ WINMINE_DESC=Míny
 SPIDER_TITLE=Pavúčí solitér
 SPIDER_DESC=Pavúčí solitér
 
-; Turkish
 [Strings.041f]
 ACCESSORIES=Donatılar
 SYSTOOLS=Sistem Araçları
@@ -1566,7 +1543,6 @@ UTILMAN_DESC=Erişilebilirlik Araçları Yöneticisi'ni başlat
 IEXPLORE_TITLE=Wine Internet Explorer
 IEXPLORE_DESC=Wine Web Tarayıcısı
 
-; Ukrainian
 [Strings.0422]
 ACCESSORIES=Стандартні
 SYSTOOLS=Службові
@@ -1632,7 +1608,6 @@ SPIDER_DESC=Пас'янс Павук
 UTILMAN_TITLE=Диспетчер службових програм
 UTILMAN_DESC=Забезпечує запуск і настройку програм підтримки спеціальних можливостей.
 
-; Basque
 [Strings.042D]
 ACCESSORIES=Osagarriak
 SYSTOOLS=Sistemaren Tresnak
@@ -1700,7 +1675,6 @@ SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
 UTILMAN_TITLE=Irisgarritasun tresnak
 UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
 
-; Simplified Chinese
 [Strings.0804]
 ACCESSORIES=附件
 SYSTOOLS=系统工具
@@ -1766,7 +1740,6 @@ WINMINE_DESC=扫雷
 SPIDER_TITLE=蜘蛛纸牌
 SPIDER_DESC=蜘蛛纸牌
 
-; Chinese Hong Kong
 [Strings.0c04]
 ACCESSORIES=附屬應用程式
 SYSTOOLS=系統管理工具

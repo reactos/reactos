@@ -90,12 +90,12 @@ KbdSendCommandToMouse(UCHAR Command)
     return;
 }
 
-VOID KbdEnableMouse()
+VOID KbdEnableMouse(VOID)
 {
     KbdSendCommandToMouse(MOU_ENAB);
 }
 
-VOID KbdDisableMouse()
+VOID KbdDisableMouse(VOID)
 {
     KbdSendCommandToMouse(MOU_DISAB);
 }

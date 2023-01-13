@@ -1625,14 +1625,13 @@ FatalExit(IN int ExitCode)
 {
 #if DBG
     /* On Checked builds, Windows gives the user a nice little debugger UI */
-    CHAR ch[2];
-    DbgPrint("FatalExit...\n");
-    DbgPrint("\n");
+    CHAR Action[2];
+    DbgPrint("FatalExit...\n\n");
 
     while (TRUE)
     {
-        DbgPrompt( "A (Abort), B (Break), I (Ignore)? ", ch, sizeof(ch));
-        switch (ch[0])
+        DbgPrompt("A (Abort), B (Break), I (Ignore)? ", Action, sizeof(Action));
+        switch (Action[0])
         {
             case 'B': case 'b':
                  DbgBreakPoint();
@@ -3999,11 +3998,11 @@ StartScan:
         QuerySection = TRUE;
     }
 
-    /* Do we need to apply SxS to this image? */
+    /* Do we need to apply SxS to this image? (On x86 this flag is set by PeFmtCreateSection) */
     if (!(ImageInformation.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_ISOLATION))
     {
         /* Too bad, we don't support this yet */
-        DPRINT1("Image should receive SxS Fusion Isolation\n");
+        DPRINT("Image should receive SxS Fusion Isolation\n");
     }
 
     /* There's some SxS flag that we need to set if fusion flags have 1 set */
@@ -4226,7 +4225,7 @@ StartScan:
     /* Write the remote PEB address and clear it locally, we no longer use it */
     CreateProcessMsg->PebAddressNative = RemotePeb;
 #ifdef _WIN64
-    DPRINT1("TODO: WOW64 is not supported yet\n");
+    DPRINT("TODO: WOW64 is not supported yet\n");
     CreateProcessMsg->PebAddressWow64 = 0;
 #else
     CreateProcessMsg->PebAddressWow64 = (ULONG)RemotePeb;

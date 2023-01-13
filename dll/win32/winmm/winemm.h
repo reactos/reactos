@@ -170,9 +170,7 @@ LPWINE_MLD	MMDRV_GetRelated(HANDLE hndl, UINT srcType, BOOL bSrcCanBeID, UINT ds
 DWORD           MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 UINT		MMDRV_PhysicalFeatures(LPWINE_MLD mld, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
-const char* 	MCI_MessageToString(UINT wMsg);
 DWORD           MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
-LPWSTR          MCI_strdupAtoW(LPCSTR str);
 LPSTR           MCI_strdupWtoA(LPCWSTR str);
 
 const char*     WINMM_ErrorToString(MMRESULT error);
@@ -204,5 +202,10 @@ extern HANDLE psStopEvent;
     "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers"
 
 INT LoadRegistryMMEDrivers(char* key);
+
+// REACTOS:
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#define wcsnicmp strncmpiW
+#define swprintf snprintfW
 
 #endif /* _WINEMM_H_ */

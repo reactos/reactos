@@ -13,6 +13,7 @@
 #include "util.h"
 #include "options.h"
 #include "log2lines.h"
+#include <sys/types.h>
 
 static PIMAGE_SECTION_HEADER
 find_rossym_section(PIMAGE_FILE_HEADER PEFileHeader, PIMAGE_SECTION_HEADER PESectionHeaders)

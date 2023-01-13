@@ -37,7 +37,7 @@ CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
 static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
-const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
+const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024;
 PCHAR KdpDmesgBuffer = NULL;
 volatile ULONG KdpDmesgCurrentPosition = 0;
 volatile ULONG KdpDmesgFreeBytes = 0;
@@ -576,18 +576,34 @@ extern STRING KdbPromptString;
 VOID
 NTAPI
 KdSendPacket(
-    IN ULONG PacketType,
-    IN PSTRING MessageHeader,
-    IN PSTRING MessageData,
-    IN OUT PKD_CONTEXT Context)
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_opt_ PSTRING MessageData,
+    _Inout_ PKD_CONTEXT Context)
 {
     if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
     {
-        PSTRING Output = MessageData;
+        ULONG ApiNumber = ((PDBGKD_DEBUG_IO)MessageHeader->Buffer)->ApiNumber;
         PLIST_ENTRY CurrentEntry;
         PKD_DISPATCH_TABLE CurrentTable;
 
-        if (!KdpDebugMode.Value) return;
+        /* Validate API call */
+        if (MessageHeader->Length != sizeof(DBGKD_DEBUG_IO))
+            return;
+        if ((ApiNumber != DbgKdPrintStringApi) &&
+            (ApiNumber != DbgKdGetStringApi))
+        {
+            return;
+        }
+        if (!MessageData)
+            return;
+
+        /* NOTE: MessageData->Length should be equal to
+         * DebugIo.u.PrintString.LengthOfString, or to
+         * DebugIo.u.GetString.LengthOfPromptString */
+
+        if (!KdpDebugMode.Value)
+            return;
 
         /* Call the registered handlers */
         CurrentEntry = KdProviders.Flink;
@@ -599,7 +615,7 @@ KdSendPacket(
                                              KdProvidersList);
 
             /* Call it */
-            CurrentTable->KdpPrintRoutine(Output->Buffer, Output->Length);
+            CurrentTable->KdpPrintRoutine(MessageData->Buffer, MessageData->Length);
 
             /* Next Table */
             CurrentEntry = CurrentEntry->Flink;
@@ -672,20 +688,17 @@ KdSendPacket(
 KDSTATUS
 NTAPI
 KdReceivePacket(
-    IN ULONG PacketType,
-    OUT PSTRING MessageHeader,
-    OUT PSTRING MessageData,
-    OUT PULONG DataLength,
-    IN OUT PKD_CONTEXT Context)
+    _In_ ULONG PacketType,
+    _Out_ PSTRING MessageHeader,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG DataLength,
+    _Inout_ PKD_CONTEXT Context)
 {
 #ifdef KDBG
-    KIRQL OldIrql;
-    STRING StringChar;
-    CHAR Response;
-    USHORT i;
-    ULONG DummyScanCode;
-    CHAR MessageBuffer[100];
+    STRING NewLine = RTL_CONSTANT_STRING("\n");
     STRING ResponseString;
+    PDBGKD_DEBUG_IO DebugIo;
+    CHAR MessageBuffer[512];
 #endif
 
     if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
@@ -724,99 +737,49 @@ KdReceivePacket(
         return KdPacketTimedOut;
 
 #ifdef KDBG
+    DebugIo = (PDBGKD_DEBUG_IO)MessageHeader->Buffer;
+
+    /* Validate API call */
+    if (MessageHeader->MaximumLength != sizeof(DBGKD_DEBUG_IO))
+        return KdPacketNeedsResend;
+    if (DebugIo->ApiNumber != DbgKdGetStringApi)
+        return KdPacketNeedsResend;
+
+    /* NOTE: We cannot use directly MessageData->Buffer here as it points
+     * to the temporary KdpMessageBuffer scratch buffer that is being
+     * shared with all the possible I/O KD operations that may happen. */
     ResponseString.Buffer = MessageBuffer;
     ResponseString.Length = 0;
-    ResponseString.MaximumLength = min(sizeof(MessageBuffer), MessageData->MaximumLength);
-    StringChar.Buffer = &Response;
-    StringChar.Length = StringChar.MaximumLength = sizeof(Response);
+    ResponseString.MaximumLength = min(sizeof(MessageBuffer),
+                                       MessageData->MaximumLength);
+    ResponseString.MaximumLength = min(ResponseString.MaximumLength,
+                                       DebugIo->u.GetString.LengthOfStringRead);
 
-    /* Display the string and print a new line for log neatness */
-    *StringChar.Buffer = '\n';
-    KdpPrintString(&StringChar);
-
-    /* Print the kdb prompt */
-    KdpPrintString(&KdbPromptString);
-
-    // TODO: Use an improved KdbpReadCommand() function for our purposes.
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
+    /* The prompt string has been printed by KdSendPacket; go to
+     * new line and print the kdb prompt -- for SYSREG2 support. */
+    KdpPrintString(&NewLine);
+    KdpPrintString(&KdbPromptString); // Alternatively, use "Input> "
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdDisableMouse();
 
-    /* Loop the whole string */
-    for (i = 0; i < ResponseString.MaximumLength; i++)
-    {
-        /* Check if this is serial debugging mode */
-        if (KdbDebugState & KD_DEBUG_KDSERIAL)
-        {
-            /* Get the character from serial */
-            do
-            {
-                Response = KdbpTryGetCharSerial(MAXULONG);
-            } while (Response == -1);
-        }
-        else
-        {
-            /* Get the response from the keyboard */
-            do
-            {
-                Response = KdbpTryGetCharKeyboard(&DummyScanCode, MAXULONG);
-            } while (Response == -1);
-        }
-
-        /* Check for return */
-        if (Response == '\r')
-        {
-            /*
-             * We might need to discard the next '\n'.
-             * Wait a bit to make sure we receive it.
-             */
-            KeStallExecutionProcessor(100000);
-
-            /* Check the mode */
-            if (KdbDebugState & KD_DEBUG_KDSERIAL)
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharSerial(5);
-            }
-            else
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharKeyboard(&DummyScanCode, 5);
-            }
-
-            /*
-             * Null terminate the output string -- documentation states that
-             * DbgPrompt does not null terminate, but it does
-             */
-            *(PCHAR)(ResponseString.Buffer + i) = 0;
-            break;
-        }
-
-        /* Write it back and print it to the log */
-        *(PCHAR)(ResponseString.Buffer + i) = Response;
-        KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
-        KdpPrintString(&StringChar);
-        OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
-    }
-
-    /* Release the spinlock */
-    KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
-
-    /* Print a new line */
-    *StringChar.Buffer = '\n';
-    KdpPrintString(&StringChar);
-
-    /* Return the length */
-    RtlCopyMemory(MessageData->Buffer, ResponseString.Buffer, i);
-    *DataLength = i;
+    /* Read a line of user input and retrieve the length.
+     * The output string is NULL-terminated -- documentation states
+     * that DbgPrompt() does not NULL-terminate, but it does. */
+    *DataLength = KdbpReadCommand(ResponseString.Buffer,
+                                  ResponseString.MaximumLength);
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
 
+    /* Return the length */
+    *DataLength = min(*DataLength, DebugIo->u.GetString.LengthOfStringRead);
+    MessageData->Length = DebugIo->u.GetString.LengthOfStringRead = *DataLength;
+
+    /* Only now we can copy back the data into MessageData->Buffer */
+    RtlCopyMemory(MessageData->Buffer, ResponseString.Buffer, *DataLength);
 #endif
+
     return KdPacketReceived;
 }
 

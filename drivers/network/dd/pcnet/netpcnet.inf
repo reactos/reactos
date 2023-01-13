@@ -59,7 +59,7 @@ LoadOrderGroup = NDIS
 ; Non-localizable
 ReactOS = "ReactOS Project"
 
-AMDMfg = "Advanced Micro Devices (AMD)"
+AMDMfg = "AMD"
 
 ; Localizable
 PCNET.DeviceDesc = "AMD PCnet Am79C970 PCI Ethernet Adapter"

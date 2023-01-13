@@ -15,11 +15,10 @@ drmk.sys
 drmkaud.sys
 portcls.sys
 
-;; swenum
 [Manufacturer]
-%MfgName%=GenericMfg
+%ReactOS%=GenericMfg
 
-;; Excluding drivers from the "Add New Hardware" list.
+; Excluding drivers from the "Add New Hardware" list
 [ControlFlags]
 ExcludeFromSelect = SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 ExcludeFromSelect = WDMAUDIO_CopyFilesOnlyId
@@ -38,16 +37,15 @@ CopyFiles=WDM.CopyFiles, FX.CopyList
 AddReg = DeviceRegistration
 CopyFiles = WDM.CopyFiles
 
-;; DO NOT CHANGE - OEM Driver Install Hook
+; DO NOT CHANGE - OEM Driver Install Hook
 [WDMAUDIO.Registration.NT]
 AddReg = DeviceRegistration
 CopyFiles = WDM.CopyFiles
 
-;; copied to system32\drivers
+; copied to system32\drivers
 [WDM.CopyFiles]
 drmk.sys,,,0x0100
 portcls.sys,,,0x0100
-
 
 [DeviceRegistration]
 ; Kmixer swenum install
@@ -63,8 +61,8 @@ HKLM,%RunOnce%,"WDM_WDMAUD",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WD
 ; DRMKAUD install
 ;HKLM,%RunOnce%,"WDM_DRMKAUD",,"rundll32.exe streamci,StreamingDeviceSetup %WDM_DRMKAUD.DeviceId%,%KSNAME_DRMKAUD%,%KSCATEGORY_DRM_DESCRAMBLE%,%17%\WDMAUDIO.inf,WDM_DRMKAUD.Interface.Install"
 
-;--------------------------------------------------------------------------------
-; SysAudio Install
+;--------------------------- SYSAUDIO INSTALL ---------------------------
+
 [WDM_SYSAUDIO.Interface.Install]
 AddReg=WDM_SYSAUDIO.Interface.AddReg
 
@@ -74,7 +72,6 @@ HKR,,FriendlyName,,%WDM_SYSAUDIO.FriendlyName%
 
 [WDM_SYSAUDIO]
 CopyFiles = WDM_SYSAUDIO.CopyFiles
-
 
 [WDM_SYSAUDIO.CopyFiles]
 sysaudio.sys
@@ -89,8 +86,8 @@ StartType      = 3                  ; SERVICE_DEMAND_START
 ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %10%\system32\drivers\sysaudio.sys
 
-;--------------------------------------------------------------------------------
-; KMixer Install
+;---------------------------- KMIXER INSTALL ----------------------------
+
 [WDM_KMIXER.Interface.Install]
 AddReg=WDM_KMIXER.Interface.AddReg
 
@@ -113,8 +110,9 @@ ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
 StartType      = 3                  ; SERVICE_DEMAND_START
 ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %10%\system32\drivers\kmixer.sys
-;--------------------------------------------------------------------------------
-; WDMAUD Install
+
+;---------------------------- WDMAUD INSTALL ----------------------------
+
 [WDM_WDMAUD.Interface.Install]
 AddReg=WDM_WDMAUD.Interface.AddReg
 
@@ -138,8 +136,8 @@ StartType      = 3                  ; SERVICE_DEMAND_START
 ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %10%\system32\drivers\wdmaud.sys
 
-;--------------------------------------------------------------------------------
-; DRMKAUD Install
+;--------------------------- DRMKAUD INSTALL ----------------------------
+
 [WDM_DRMKAUD.Interface.Install]
 AddReg=WDM_DRMKAUD.Interface.AddReg
 
@@ -164,17 +162,15 @@ StartType      = 3                  ; SERVICE_DEMAND_START
 ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %10%\system32\drivers\drmkaud.sys
 
-
-;; Destination Directory List
 [DestinationDirs]
 WDM.CopyFiles  = 10,system32\drivers ; %SystemRoot%\system32\drivers
 WDM_DRMKAUD.CopyFiles  = 10,system32\drivers
 
-;---------------------------------------------------------------------------------
+;-------------------------------- STRINGS -------------------------------
+
 [Strings]
-;Non-localizable
+; Non-localizable
 ReactOS="ReactOS"
-MfgName="ReactOS"
 
 RunOnce = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 Proxy.CLSID               = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
@@ -192,7 +188,7 @@ KSCATEGORY_WDMAUD         = "{3E227E76-690D-11D2-8161-0000F8775BF1}"
 WDM_KMIXER.DeviceId       = "{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}"
 KSCATEGORY_MIXER          = "{AD809C00-7B88-11D0-A5D6-28DB04C10000}"
 
-;Localizable
+; Localizable
 WDM_KMIXER.DeviceDesc     = "ReactOS Wave Audio Mixer"
 WDM_KMIXER.FriendlyName   = "ReactOS Wave Audio Mixer"
 kmixer.SvcDesc            = "ReactOS Wave Audio Mixer"

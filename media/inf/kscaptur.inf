@@ -63,7 +63,6 @@ vfwwdm.drv
 [VfWWDM32.Files]
 vfwwdm32.dll
 
-
 [Filters]
 HKCR,CLSID\{266EEE40-6C63-11cf-8A03-00AA006ECB65},,,%Filter_TVTuner%
 HKCR,CLSID\{266EEE40-6C63-11cf-8A03-00AA006ECB65}\InprocServer32,,,kstvtune.ax
@@ -92,7 +91,6 @@ ksxbar.ax
 kswdmcap.ax
 vidcap.ax
 
-
 [Categories]
 HKCR,%ActiveMovieCategories%\%GUID.TvTuner%,CLSID,,%GUID.TvTuner%
 HKCR,%ActiveMovieCategories%\%GUID.TvTuner%,FriendlyName,,%Category_TvTunerDevices%
@@ -104,7 +102,6 @@ HKCR,%ActiveMovieCategories%\%GUID.Encoder%,CLSID,,%GUID.Encoder%
 HKCR,%ActiveMovieCategories%\%GUID.Encoder%,FriendlyName,,%Category_Encoder%
 HKCR,%ActiveMovieCategories%\%GUID.Multiplexer%,CLSID,,%GUID.Multiplexer%
 HKCR,%ActiveMovieCategories%\%GUID.Multiplexer%,FriendlyName,,%Category_Multiplexer%
-
 
 [TopologyNodes]
 HKLM,%MediaCategories%\%GUID.CapturePin%,Name,,%Node.CapturePin%
@@ -270,7 +267,6 @@ MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
 MediaResourcesMSVideo="SYSTEM\CurrentControlSet\Control\MediaResources\msvideo"
 MMDriverDesc="Software\Microsoft\Windows NT\CurrentVersion\drivers.desc"
 MMDrivers="Software\Microsoft\Windows NT\CurrentVersion\Drivers32"
-VfWWDMDriverDesc="Capture Device for WDM-Video For Windows (Win32)"
 RunOnce="SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 CC.DeviceId="{562370a8-f8dd-11d2-bc64-00a0c95ec22e}"
 CC.VBIcatID="{07DAD660-22F1-11d1-A9F4-00C04FBBDE8F}"
@@ -285,18 +281,19 @@ GUID.BdaRenderer="{71985F4A-1CA1-11d3-9CC8-00C04F7971E0}"
 NdisIP.DeviceID="{48926476-2cae-4ded-a86e-73ddebed6779}"
 NdisIP.GUID.BDANetInterface="{9aa4a2cc-81e0-4cfd-802f-0f74526d2bd3}"
 
-;
-; english localized strings
-;
+; Localizable
+VfWWDMDriverDesc="Capture Device for WDM-Video For Windows (Win32)"
 
 Category_CrossbarDevices="WDM Streaming-Crossbar-Device"
 Category_TvTunerDevices="WDM Streaming-TV-Receiver Devices"
 Category_TvAudioDevices="WDM Streaming-TV-Audio Devices"
 Category_Encoder="WDM Streaming-Encoder Devices"
 Category_Multiplexer="WDM Streaming-Multiplexing Devices"
+
 Filter_Crossbar="WDM Analog-Crossbar"
 Filter_TVAudio="WDM TV-Audio"
 Filter_TVTuner="WDM TV-Receiver"
+
 Node.Crossbar="Crossbar"
 Node.Preview="Preview"
 Node.CapturePin="Capture"
@@ -312,6 +309,7 @@ Node.Timecode="Timecode"
 Node.VPVBI="VPVBI"
 Node.Encoder="Encoder"
 Node.Multiplexer="Multiplexer"
+
 PropPage_XBar="Propertypage for analog Cross Bar"
 PropPage_TVAudio="TV-Audio property page"
 PropPage_TVTuner="TV-Receiver property page"
@@ -319,6 +317,7 @@ PropPage_VideoProcAmp="VideoProcAmp property page"
 PropPage_CameraControl="CameraControl-property page"
 PropPage_VideoDecoder="VideoDecoder property page"
 PropPage_VideoStreamConfig="VideoStreamConfig-property page"
+
 PlugIn_VideoInfoHeaderHandler="WDM Streaming-Capture-VideoInfoHeader-Datatype handler"
 PlugIn_VideoInfoHeader2Handler="WDM Streaming-Capture-VideoInfoHeader2-Datatype handler"
 PlugIn_AnalogVideoHandler="WDM Streaming-Capture-AnalogVideo-Datatype handler"
@@ -336,16 +335,17 @@ Plugin_IVideoProcAmp="WDM Streaming-IVideoProcAmp-Interface handler"
 Plugin_ISelector="WDM Streaming-ISelector-Interface handler"
 Plugin_PropertyObject="Node Interfaces-Aggregate handler"
 
-
 [Strings.0407]
 Category_CrossbarDevices="WDM Streaming-Crossbar-Geräte"
 Category_TvTunerDevices="WDM Streaming-TV-Empfangsgeräte"
 Category_TvAudioDevices="WDM Streaming-TV-Audiogeräte"
 Category_Encoder="WDM Streaming-Encodergeräte"
 Category_Multiplexer="WDM Streaming-Multiplexergeräte"
+
 Filter_Crossbar="WDM Analog-Crossbar"
 Filter_TVAudio="WDM TV-Audio"
 Filter_TVTuner="WDM TV-Empfänger"
+
 Node.Crossbar="Crossbar"
 Node.Preview="Vorschau"
 Node.CapturePin="Capture"
@@ -361,6 +361,7 @@ Node.Timecode="Zeitcode"
 Node.VPVBI="VPVBI"
 Node.Encoder="Encoder"
 Node.Multiplexer="Multiplexer"
+
 PropPage_XBar="Eigenschaftenseite für analoge Crossbar"
 PropPage_TVAudio="TV-Audioeigenschaftenseite"
 PropPage_TVTuner="TV-Empfängereigenschaftenseite"
@@ -368,6 +369,7 @@ PropPage_VideoProcAmp="VideoProcAmp-Eigenschaftenseite"
 PropPage_CameraControl="CameraControl-Eigenschaftenseite"
 PropPage_VideoDecoder="VideoDecoder-Eigenschaftenseite"
 PropPage_VideoStreamConfig="VideoStreamConfig-Eigenschaftenseite"
+
 PlugIn_VideoInfoHeaderHandler="WDM Streaming-Aufnahme-VideoInfoHeader-Datentyphandler"
 PlugIn_VideoInfoHeader2Handler="WDM Streaming-Aufnahme-VideoInfoHeader2-Datentyphandler"
 PlugIn_AnalogVideoHandler="WDM Streaming-Aufnahme-AnalogVideo-Datentyphandler"
@@ -391,7 +393,6 @@ VfWWDMDriverDesc="Dispositivo de captura de vídeo por WDM"
 Filter_TVAudio="Audio de TV por WDM"
 Filter_TVTuner="Receptor de TV por WDM"
 
-;Node.Crossbar="Crossbar"
 Node.Preview="Vista previa"
 Node.CapturePin="Captura"
 Node.AnalogVideoIn="Entrada de vídeo analógico"
@@ -413,9 +414,11 @@ Category_TvTunerDevices="Urządzenia strumieniowe odbiornika TV WDM"
 Category_TvAudioDevices="Urządzenia strumieniowe TV Audio WDM"
 Category_Encoder="Urządzenia strumieniowe kodera WDM"
 Category_Multiplexer="Urządzenia strumieniowe do Multiplexingu WDM"
+
 Filter_Crossbar="Urządzenie analogowe Crossbar WDM"
 Filter_TVAudio="TV-Audio WDM"
 Filter_TVTuner="Odbiornik TV WDM"
+
 Node.Crossbar="Crossbar"
 Node.Preview="Podgląd"
 Node.CapturePin="Nagrywanie"
@@ -431,6 +434,7 @@ Node.Timecode="Czas"
 Node.VPVBI="VPVBI"
 Node.Encoder="Koder"
 Node.Multiplexer="Multiplekser"
+
 PropPage_XBar="Właściwości analogowego Crossbar"
 PropPage_TVAudio="Właściwości TV Audio"
 PropPage_TVTuner="Właściwości odbiornika TV"
@@ -438,6 +442,7 @@ PropPage_VideoProcAmp="Właściwości VideoProcAmp"
 PropPage_CameraControl="Właściwości Kamery"
 PropPage_VideoDecoder="Właściwości dekodera Video"
 PropPage_VideoStreamConfig="Właściwości strumienia Video"
+
 PlugIn_VideoInfoHeaderHandler="Wtyczka do nagłówka strumienia Video WDM"
 PlugIn_VideoInfoHeader2Handler="Wtyczka nr.2 do nagłówka strumienia Video WDM"
 PlugIn_AnalogVideoHandler="Wtyczka do strumienia analogowego Video WDM"
@@ -461,9 +466,11 @@ Category_TvTunerDevices="Dispozitive receptoare TV de flux WDM"
 Category_TvAudioDevices="Dispozitive audio TV de flux WDM"
 Category_Encoder="Dispozitive codoare de flux WDM"
 Category_Multiplexer="Dispozitive multiplexoare de flux WDM"
+
 Filter_Crossbar="WDM „crossbar” analog"
 Filter_TVAudio="WDM audio-TV"
 Filter_TVTuner="WDM receptor-TV"
+
 Node.Crossbar="„Crossbar”"
 Node.Preview="Preafișare"
 Node.CapturePin="Captură"
@@ -479,6 +486,7 @@ Node.Timecode="Cod temporal"
 Node.VPVBI="VPVBI"
 Node.Encoder="Codor"
 Node.Multiplexer="Multiplexor"
+
 PropPage_XBar="Configurație „crossbar” analog"
 PropPage_TVAudio="Configurație audio-TV"
 PropPage_TVTuner="TV-Configurație receptor TV"
@@ -486,6 +494,7 @@ PropPage_VideoProcAmp="Configurație VideoProcAmp"
 PropPage_CameraControl="Configurație control-cameră"
 PropPage_VideoDecoder="Configurație decodor video"
 PropPage_VideoStreamConfig="Configurație flux video"
+
 PlugIn_VideoInfoHeaderHandler="Rutină de captură flux WDM de date-AntetInfoVideo"
 PlugIn_VideoInfoHeader2Handler="Rutină de captură flux WDM de date-AntetInfoVideo2"
 PlugIn_AnalogVideoHandler="Rutină de captură flux WDM de date video analog"
@@ -509,9 +518,11 @@ Category_TvTunerDevices="WDM Akış-TV-Alıcı Aygıtlar"
 Category_TvAudioDevices="WDM Akış-TV-Ses Aygıtları"
 Category_Encoder="WDM Akış-Şifreleyici Aygıtlar"
 Category_Multiplexer="WDM Akış-Çoklama Aygıtları"
+
 Filter_Crossbar="WDM Örneklik-Çubuk"
 Filter_TVAudio="WDM TV-Ses"
 Filter_TVTuner="WDM TV-Alıcı"
+
 Node.Crossbar="Çubuk"
 Node.Preview="Önizleme"
 Node.CapturePin="Yakalama"
@@ -527,6 +538,7 @@ Node.Timecode="Zaman Kodu"
 Node.VPVBI="VPVBI"
 Node.Encoder="Şifreleyici"
 Node.Multiplexer="Çoklayıcı"
+
 PropPage_XBar="Analog Çubuk İçin Özellik Sayfası"
 PropPage_TVAudio="TV-Ses Özellik Sayfası"
 PropPage_TVTuner="TV-Alıcı Özellik Sayfası"
@@ -534,6 +546,7 @@ PropPage_VideoProcAmp="VideoProcAmp Özellik Sayfası"
 PropPage_CameraControl="CameraControl Özellik Sayfası"
 PropPage_VideoDecoder="VideoDecoder Özellik Sayfası"
 PropPage_VideoStreamConfig="VideoStreamConfig Özellik Sayfası"
+
 PlugIn_VideoInfoHeaderHandler="WDM Akış-Yakalama-VideoInfoHeader-Veri Türü İşleyicisi"
 PlugIn_VideoInfoHeader2Handler="WDM Akış-Yakalama-VideoInfoHeader2-Veri Türü İşleyicisi"
 PlugIn_AnalogVideoHandler="WDM Akış-Yakalama-AnalogVideo-Veri Türü İşleyicisi"
@@ -557,9 +570,11 @@ Category_TvTunerDevices="Потокові TV-Приймальні Пристро
 Category_TvAudioDevices="Потокові TV-Аудіо Пристрої WDM"
 Category_Encoder="Потоково-Кодувальні Пристрої WDM"
 Category_Multiplexer="Потоково-Мультиплексні Пристрої WDM"
+
 Filter_Crossbar="Аналоговий комутатор WDM"
 Filter_TVAudio="WDM TV-Аудіо"
 Filter_TVTuner="WDM TV-Приймач"
+
 Node.Crossbar="Комутатор"
 Node.Preview="Перегляд"
 Node.CapturePin="Захоплення"
@@ -569,6 +584,7 @@ Node.Still="Кадр"
 Node.Timecode="Часовий код"
 Node.Encoder="Кодувальник"
 Node.Multiplexer="Мультиплексер"
+
 PropPage_XBar="Сторінка властивостей для аналогового комутатора"
 PropPage_TVAudio="Сторінка властивостей TV-Аудіо"
 PropPage_TVTuner="Сторінка властивостей TV-Приймача"
@@ -576,6 +592,7 @@ PropPage_VideoProcAmp="Сторінка властивостей VideoProcAmp"
 PropPage_CameraControl="Сторінка властивостей CameraControl"
 PropPage_VideoDecoder="Сторінка властивостей VideoDecoder"
 PropPage_VideoStreamConfig="Сторінка властивостей VideoStreamConfig"
+
 PlugIn_VideoInfoHeaderHandler="Обробник WDM Streaming-Capture-VideoInfoHeader-Datatype"
 PlugIn_VideoInfoHeader2Handler="Обробник WDM Streaming-Capture-VideoInfoHeader2-Datatype"
 PlugIn_AnalogVideoHandler="Обробник WDM Streaming-Capture-AnalogVideo-Datatype"

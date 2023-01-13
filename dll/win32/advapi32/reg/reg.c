@@ -4088,6 +4088,7 @@ RegQueryValueExA(
     /* We don't need this anymore */
     RtlFreeUnicodeString(&nameW);
 
+    /* Get the length for the multi-byte string (without the terminating NULL!) */
     DataLength = *count;
     RtlUnicodeToMultiByteSize(count, Buffer, BufferSize);
 
@@ -4101,7 +4102,7 @@ RegQueryValueExA(
     RtlUnicodeToMultiByteN(DataStr, DataLength, NULL, Buffer, BufferSize);
 
     /* NULL-terminate if there is enough room */
-    if ((DataLength > *count) && (DataStr[*count - 1] != '\0'))
+    if (DataLength > *count)
         DataStr[*count] = '\0';
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);

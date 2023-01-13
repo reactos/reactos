@@ -43,52 +43,38 @@ RtlAssert(IN PVOID FailedAssertion,
                  LineNumber);
 
         /* Prompt for action */
-        DbgPrompt("Break repeatedly, break Once, Ignore,"
-                  " terminate Process or terminate Thread (boipt)? ",
+        DbgPrompt("Break repeatedly, break Once, Ignore, "
+                  "terminate Process or terminate Thread (boipt)? ",
                   Action,
                   sizeof(Action));
         switch (Action[0])
         {
-            /* Break repeatedly */
+            /* Break repeatedly / Break once */
             case 'B': case 'b':
-
-                /* Do a breakpoint, then prompt again */
-                DbgPrint("Execute '.cxr %p' to dump context\n", &Context);
-                DbgBreakPoint();
-                break;
-
-            /* Ignore */
-            case 'I': case 'i':
-
-                /* Return to caller */
-                return;
-
-            /* Break once */
             case 'O': case 'o':
-
-                /* Do a breakpoint and return */
                 DbgPrint("Execute '.cxr %p' to dump context\n", &Context);
+                /* Do a breakpoint, then prompt again or return */
                 DbgBreakPoint();
+                if ((Action[0] == 'B') || (Action[0] == 'b'))
+                    break;
+                /* else ('O','o'): fall through */
+
+            /* Ignore: Return to caller */
+            case 'I': case 'i':
                 return;
 
-            /* Terminate process*/
+            /* Terminate current process */
             case 'P': case 'p':
-
-                /* Terminate us */
                 ZwTerminateProcess(ZwCurrentProcess(), STATUS_UNSUCCESSFUL);
                 break;
 
-            /* Terminate thread */
+            /* Terminate current thread */
             case 'T': case 't':
-
-                /* Terminate us */
                 ZwTerminateThread(ZwCurrentThread(), STATUS_UNSUCCESSFUL);
                 break;
 
-            /* Unrecognized */
+            /* Unrecognized: Prompt again */
             default:
-
-                /* Prompt again */
                 break;
         }
     }

@@ -395,26 +395,14 @@ FUNC KiGeneralProtectionFault
 
     /* Dispatch privileged instruction fault */
     DispatchException eax, 0, 0, 0, 0
-    jmp KiGpfFatal
+    jmp KiGpfExit
 
 DispatchAccessViolation:
 
     /* Dispatch access violation */
     DispatchException eax, 2, 0, -1, 0
 
-KiGpfFatal:
-
-    /* Bugcheck */
-    mov ecx, UNEXPECTED_KERNEL_MODE_TRAP
-    mov rdx, HEX(000D) // EXCEPTION_GP_FAULT
-    xor r8, r8
-    mov r9, [rbp + KTRAP_FRAME_ErrorCode] // error code
-    sub rsp, 8
-    mov [rsp + KTRAP_FRAME_P5+8], rbp // trap frame
-    call KeBugCheckWithTf
-
 KiGpfExit:
-    /* Return */
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC
@@ -429,12 +417,14 @@ FUNC KiPageFault
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
     
-    /* If interrupts are off, treat this as an access violation */
+    /* If interrupts are off, do not enable them */
     test dword ptr [rbp + KTRAP_FRAME_EFlags], EFLAGS_IF_MASK
-    jz AccessViolation
+    jz IntsDisabled
 
     /* Enable interrupts for the page fault handler */
     sti
+
+IntsDisabled:
 
     /* Call page fault handler */
     mov ecx, [rbp + KTRAP_FRAME_ErrorCode] // FaultCode
@@ -455,13 +445,10 @@ FUNC KiPageFault
 
 PageFaultError:
 
-    /* Disable interrupts again for the debugger */
-    cli
-
     /* Set parameter 1 to error code */
     mov r9d, [rbp + KTRAP_FRAME_ErrorCode]
 
-    /* Set parameter2 to faulting address */
+    /* Set parameter 2 to faulting address */
     mov r10, cr2  // Param2 = faulting address
 
     cmp eax, STATUS_ACCESS_VIOLATION
@@ -489,6 +476,10 @@ SpecialCode:
     call InternalDispatchException
 
 PageFaultReturn:
+
+    /* Disable interrupts for the return */
+    cli
+
     /* Return */
     ExitTrap (TF_SAVE_ALL or TF_CHECKUSERAPC)
 ENDFUNC

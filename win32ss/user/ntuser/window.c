@@ -493,7 +493,7 @@ static void IntSendDestroyMsg(HWND hWnd)
       }
 
       /* If the window being destroyed is currently tracked... */
-      if (ti->rpdesk->spwndTrack == Window)
+      if (ti->rpdesk && ti->rpdesk->spwndTrack == Window)
       {
           IntRemoveTrackMouseEvent(ti->rpdesk);
       }
@@ -588,6 +588,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    Window->style &= ~WS_VISIBLE;
    Window->head.pti->cVisWindows--;
 
+   WndSetOwner(Window, NULL);
 
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
@@ -662,7 +663,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (ThreadData->spwndDefaultIme &&
        ThreadData->spwndDefaultIme->spwndOwner == Window)
    {
-      ThreadData->spwndDefaultIme->spwndOwner = NULL;
+      WndSetOwner(ThreadData->spwndDefaultIme, NULL);
    }
 
    if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
@@ -1091,6 +1092,7 @@ IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
    // FIXME: System Tray checks.
 }
 
+static
 HWND FASTCALL
 IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 {
@@ -1119,14 +1121,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 
    if (IntValidateOwnerDepth(Wnd, WndNewOwner))
    {
-      if (WndNewOwner)
-      {
-         Wnd->spwndOwner= WndNewOwner;
-      }
-      else
-      {
-         Wnd->spwndOwner = NULL;
-      }
+      WndSetOwner(Wnd, WndNewOwner);
    }
    else
    {
@@ -1869,7 +1864,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
     */
    /* Remember, pWnd->head is setup in object.c ... */
    pWnd->spwndParent = ParentWindow;
-   pWnd->spwndOwner = OwnerWindow;
+   WndSetOwner(pWnd, OwnerWindow);
    pWnd->fnid = 0;
    pWnd->spwndLastActive = pWnd;
    // Ramp up compatible version sets.
@@ -2825,7 +2820,7 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
             continue;
         }
 
-        pWnd->spwndOwner = NULL;
+        WndSetOwner(pWnd, NULL);
         if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
         {
             UserRefObjectCo(pWnd, &Ref); // Temp HACK?
