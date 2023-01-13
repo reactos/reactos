@@ -18,8 +18,8 @@ END
 STRINGTABLE
 BEGIN
     STRING_USAGE "Kullanım:\n\
-  regedit [options] [filename] [reg_key]\n\n\
-Options:\n\
+  regedit [seçenekler] [dosya adı] [reg_key]\n\n\
+Seçenekler:\n\
   [seçenek yok]  Bu programın grafik sürümünü başlatın.\n\
   /L:system.dat  Değiştirilecek system.dat dosyasının konumu.\n\
                  Diğer tüm anahtarlarla uyumludur. Yok sayıldı.\n\
@@ -32,12 +32,12 @@ Options:\n\
   /S             Sessiz mod. Hiçbir mesaj görüntülenmeyecek.\n\
   /V             Grafik arayüzünü gelişmiş modda başlatın. Yok sayıldı.\n\
   /?             Bu bilgiyi görüntüleyin ve çıkın.\n\
-  [filename]     İçe aktarılacak kayıt bilgilerini içeren dosyanın konumu.\n\
+  [dosya adı]    İçe aktarılacak kayıt bilgilerini içeren dosyanın konumu.\n\
                  [/E] ile kullanıldığında, bu seçenek, kayıt bilgilerinin\n\
                  dışa aktarılacağı dosya konumunu belirtir.\n\
   [reg_key]      Değiştirilecek kayıt defteri anahtarı.\n\
 \n\
-Usage examples:\n\
+Örnekler:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
   regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
