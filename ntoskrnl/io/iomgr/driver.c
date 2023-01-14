@@ -967,9 +967,16 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                 instancePath.Buffer[instancePath.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 PDEVICE_OBJECT pdo = IopGetDeviceObjectFromDeviceInstance(&instancePath);
-                PiQueueDeviceAction(pdo, PiActionAddBootDevices, NULL, NULL);
-                ObDereferenceObject(pdo);
-                deviceAdded = TRUE;
+                if (pdo != NULL)
+                {
+                    PiQueueDeviceAction(pdo, PiActionAddBootDevices, NULL, NULL);
+                    ObDereferenceObject(pdo);
+                    deviceAdded = TRUE;
+                }
+                else
+                {
+                    DPRINT1("No device node found matching instance path '%wZ'\n", &instancePath);
+                }
             }
 
             ExFreePool(kvInfo);
