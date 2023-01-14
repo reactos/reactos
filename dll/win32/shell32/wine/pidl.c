@@ -520,6 +520,10 @@ BOOL _ILHACKCompareSimpleIds(LPCITEMIDLIST pidltemp1, LPCITEMIDLIST pidltemp2)
         if (!_ILIsDrive(pidltemp1) || !_ILIsDrive(pidltemp2) || pdata1->u.drive.szDriveName[0] != pdata2->u.drive.szDriveName[0])
             return FALSE;
     }
+    else
+    {
+        return FALSE;
+    }
 
     return TRUE;
 }
