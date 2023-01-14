@@ -18,6 +18,12 @@ typedef struct _PNP_EVENT_ENTRY
     PLUGPLAY_EVENT_BLOCK Event;
 } PNP_EVENT_ENTRY, *PPNP_EVENT_ENTRY;
 
+typedef struct _IOP_FIND_DEVICE_INSTANCE_TRAVERSE_CONTEXT
+{
+    PCUNICODE_STRING InstancePath;
+    PDEVICE_OBJECT DeviceObject;
+} IOP_FIND_DEVICE_INSTANCE_TRAVERSE_CONTEXT, *PIOP_FIND_DEVICE_INSTANCE_TRAVERSE_CONTEXT;
+
 
 /* GLOBALS *******************************************************************/
 
@@ -88,39 +94,32 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
     return STATUS_SUCCESS;
 }
 
-
-static PDEVICE_OBJECT
-IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
+NTSTATUS
+IopFindDeviceInstanceTraverse(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Inout_ PVOID Context)
 {
-    PDEVICE_OBJECT DeviceObject;
-    PDEVICE_NODE ChildNode;
+    PIOP_FIND_DEVICE_INSTANCE_TRAVERSE_CONTEXT DeviceInstanceContext = Context;
 
-    if (RtlEqualUnicodeString(&Node->InstancePath,
-                              DeviceInstance, TRUE))
+    if (RtlEqualUnicodeString(&DeviceNode->InstancePath,
+                              DeviceInstanceContext->InstancePath, TRUE))
     {
-        ObReferenceObject(Node->PhysicalDeviceObject);
-        return Node->PhysicalDeviceObject;
+        ObReferenceObject(DeviceNode->PhysicalDeviceObject);
+        DeviceInstanceContext->DeviceObject = DeviceNode->PhysicalDeviceObject;
+
+        /* Stop enumeration */
+        return STATUS_UNSUCCESSFUL;
     }
 
-    /* Traversal of all children nodes */
-    for (ChildNode = Node->Child;
-         ChildNode != NULL;
-         ChildNode = ChildNode->Sibling)
-    {
-        DeviceObject = IopTraverseDeviceNode(ChildNode, DeviceInstance);
-        if (DeviceObject != NULL)
-        {
-            return DeviceObject;
-        }
-    }
-
-    return NULL;
+    return STATUS_SUCCESS;
 }
-
 
 PDEVICE_OBJECT
 IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
 {
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    IOP_FIND_DEVICE_INSTANCE_TRAVERSE_CONTEXT DeviceInstanceContext;
+
     if (IopRootDeviceNode == NULL)
         return NULL;
 
@@ -136,7 +135,17 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
             return NULL;
     }
 
-    return IopTraverseDeviceNode(IopRootDeviceNode, DeviceInstance);
+    /* Traverse the device tree to find the matching device node */
+    DeviceInstanceContext.InstancePath = DeviceInstance;
+    DeviceInstanceContext.DeviceObject = NULL;
+    IopInitDeviceTreeTraverseContext(&Context,
+                                     IopRootDeviceNode,
+                                     IopFindDeviceInstanceTraverse,
+                                     &DeviceInstanceContext);
+    (void)IopTraverseDeviceTree(&Context);
+
+    /* In case of error or instance not found, this will still be NULL from above. */
+    return DeviceInstanceContext.DeviceObject;
 }
 
 static NTSTATUS
