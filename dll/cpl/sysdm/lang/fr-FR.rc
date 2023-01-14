@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON "&Assistant Matériel...", IDC_HARDWARE_WIZARD, 135, 120, 110, 14
     GROUPBOX "Profils Matériels", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "Les profils matériels vous offre la possibilité de définir et d'enregistrer plusieurs configurations matérielles.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "Les profils matériels vous offrent la possibilité de définir et d'enregistrer plusieurs configurations matérielles.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "&Profils Matériels...", IDC_HARDWARE_PROFILE, 135, 190, 110, 14
 END
 
@@ -80,7 +80,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
     LTEXT "Vous pouvez paramétrer des profils matériels pour différentes configurations matérielles. Au démarrage, vous pouvez choisir le profil désiré.", IDC_STATIC, 46, 11, 188, 25
-    LTEXT "Profils &matériels disponibles:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT "Profils &matériels disponibles :", IDC_STATIC, 8, 41, 120, 8
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
@@ -220,7 +220,7 @@ BEGIN
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Fichier de l'image mémoire :", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "R&emplacer tout les fichiers existants", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "R&emplacer tous les fichiers existants", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 258, 50, 15
     PUSHBUTTON "Annuler", IDCANCEL, 195, 258, 50, 15
 END
