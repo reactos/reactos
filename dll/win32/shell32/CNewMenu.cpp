@@ -565,8 +565,10 @@ HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
     }
     else
     {
-        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", wszName);
-        MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK | MB_ICONERROR); // FIXME load localized error msg
+        CStringW Caption(MAKEINTRESOURCEW(IDS_CREATEFILE_CAPTION));
+        CStringW Message(MAKEINTRESOURCEW(IDS_CREATEFILE_DENIED));
+        Message.FormatMessage(Message.GetString(), wszName);
+        MessageBoxW(0, Message, Caption, MB_ICONEXCLAMATION | MB_OK);
     }
 
     return S_OK;
