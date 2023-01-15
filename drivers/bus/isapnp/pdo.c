@@ -478,8 +478,17 @@ IsaPdoQueryResources(
 
     PAGED_CODE();
 
-    if (PdoExt->Common.Signature == IsaPnpLogicalDevice &&
-        !(PdoExt->IsaPnpDevice->Flags & ISAPNP_HAS_RESOURCES))
+    if (PdoExt->Common.Signature == IsaPnpReadDataPort)
+    {
+        ResourceList = IsaPnpCreateReadPortDOResources();
+        if (!ResourceList)
+            return STATUS_NO_MEMORY;
+
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+        return STATUS_SUCCESS;
+    }
+
+    if (!(PdoExt->IsaPnpDevice->Flags & ISAPNP_HAS_RESOURCES))
     {
         Irp->IoStatus.Information = 0;
         return STATUS_SUCCESS;
@@ -512,6 +521,16 @@ IsaPdoQueryResourceRequirements(
     UNREFERENCED_PARAMETER(IrpSp);
 
     PAGED_CODE();
+
+    if (PdoExt->Common.Signature == IsaPnpReadDataPort)
+    {
+        RequirementsList = IsaPnpCreateReadPortDORequirements(PdoExt->SelectedPort);
+        if (!RequirementsList)
+            return STATUS_NO_MEMORY;
+
+        Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
+        return STATUS_SUCCESS;
+    }
 
     if (!PdoExt->RequirementsList)
         return Irp->IoStatus.Status;
@@ -593,19 +612,9 @@ IsaPdoStartReadPort(
 
         ASSERT(SelectedPort != 0);
 
-        if (PdoExt->RequirementsList)
-        {
-            ExFreePoolWithTag(PdoExt->RequirementsList, TAG_ISAPNP);
-            PdoExt->RequirementsList = NULL;
-        }
-
         /* Discard the Read Ports at conflicting locations */
-        Status = IsaPnpCreateReadPortDORequirements(PdoExt, SelectedPort);
-        if (!NT_SUCCESS(Status))
-            return Status;
-
+        PdoExt->SelectedPort = SelectedPort;
         PdoExt->Flags |= ISAPNP_READ_PORT_NEED_REBALANCE;
-
         IoInvalidateDeviceState(PdoExt->Common.Self);
 
         return STATUS_SUCCESS;
