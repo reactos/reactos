@@ -11,6 +11,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <string.h>
+#include <lmcons.h>
 
 typedef struct _VARIABLE_DATA
 {
@@ -1852,10 +1853,10 @@ EnvironmentDlgProc(HWND hwndDlg,
 {
     PENVIRONMENT_DIALOG_DATA DlgData;
     DlgData = (PENVIRONMENT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
-    WCHAR szBuffer[MAX_STR_LENGTH];
-    WCHAR szUserName[MAX_STR_LENGTH];
+    WCHAR szBuffer[MAX_STR_LENGTH] = {0};
+    WCHAR szUserName[UNLEN + 1];
     WCHAR szFormat[MAX_STR_LENGTH];
-    DWORD Length = MAX_STR_LENGTH - sizeof(WCHAR);
+    DWORD cbUsrNameLen = UNLEN + 1;
 
     switch (uMsg)
     {
@@ -1871,10 +1872,11 @@ EnvironmentDlgProc(HWND hwndDlg,
             }
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)DlgData);
 
-            INT len = GetDlgItemTextW(hwndDlg, IDC_USER_VARIABLE_GROUP, szFormat, Length);
-            Length -= len;
-            GetUserNameW(szUserName, &Length);
-            wsprintf(szBuffer, szFormat, szUserName);
+            GetDlgItemTextW(hwndDlg, IDC_USER_VARIABLE_GROUP, szFormat, MAX_STR_LENGTH);
+            if (GetUserNameW(szUserName, &cbUsrNameLen))
+            {
+                wsprintf(szBuffer, szFormat, szUserName);
+            }
             SetWindowText(GetDlgItem(hwndDlg, IDC_USER_VARIABLE_GROUP), szBuffer);
 
             GetClientRect(hwndDlg, &rect);
