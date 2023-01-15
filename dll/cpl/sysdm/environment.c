@@ -1852,6 +1852,10 @@ EnvironmentDlgProc(HWND hwndDlg,
 {
     PENVIRONMENT_DIALOG_DATA DlgData;
     DlgData = (PENVIRONMENT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    WCHAR szBuffer[MAX_STR_LENGTH];
+    WCHAR szUserName[MAX_STR_LENGTH];
+    WCHAR szFormat[MAX_STR_LENGTH];
+    DWORD Length = MAX_STR_LENGTH - sizeof(WCHAR);
 
     switch (uMsg)
     {
@@ -1866,6 +1870,12 @@ EnvironmentDlgProc(HWND hwndDlg,
                 return (INT_PTR)TRUE;
             }
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)DlgData);
+
+            INT len = GetDlgItemTextW(hwndDlg, IDC_USER_VARIABLE_GROUP, szFormat, Length);
+            Length -= len;
+            GetUserNameW(szUserName, &Length);
+            wsprintf(szBuffer, szFormat, szUserName);
+            SetWindowText(GetDlgItem(hwndDlg, IDC_USER_VARIABLE_GROUP), szBuffer);
 
             GetClientRect(hwndDlg, &rect);
             DlgData->cxOld = rect.right - rect.left;
