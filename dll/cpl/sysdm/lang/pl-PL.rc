@@ -272,7 +272,7 @@ CAPTION "Zmienne środowiskowe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
-    GROUPBOX "Zmienne użytkownika", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
+    GROUPBOX "User variables for ", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Nowa...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
@@ -378,5 +378,9 @@ BEGIN
     IDS_HWPROFILE_WARNING "Uwaga"
     IDS_ENVIRONMENT_WARNING "Wszelkie zmiany, które zostały dokonane, zostaną odrzucone, a wartość zmiennej zostanie edytowana jako tekst."
     IDS_ENVIRONMENT_WARNING_TITLE "Właściwości systemu"
+    IDS_EDITUSERVARCAPTION "Edit user variable"
+    IDS_NEWUSERVARCAPTION "New user variable"
+    IDS_EDITSYSTEMVARCAPTION "Edit system variable"
+    IDS_NEWSYSTEMVARCAPTION "New system variable"
     IDS_FILE_BROWSE_FILTER "Wszystkie pliki (*.*)\0*.*\0"
 END

@@ -68,6 +68,11 @@
 #define IDS_ENVIRONMENT_WARNING_TITLE      151
 #define IDS_FILE_BROWSE_FILTER             152
 
+#define IDS_EDITUSERVARCAPTION             153
+#define IDS_NEWUSERVARCAPTION              154
+#define IDS_EDITSYSTEMVARCAPTION           155
+#define IDS_NEWSYSTEMVARCAPTION            156
+
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
 #define IDC_MACHINELINE1     101

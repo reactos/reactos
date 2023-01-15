@@ -267,7 +267,7 @@ CAPTION "Variáveis de ambiente"
 FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
-    GROUPBOX "Variáveis do utilizador", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
+    GROUPBOX "Variáveis de utilizador para ", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Novo...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
@@ -373,5 +373,9 @@ BEGIN
     IDS_HWPROFILE_WARNING "Aviso"
     IDS_ENVIRONMENT_WARNING "Quaisquer alterações feitas serão descartadas e o valor da variável será editado como texto."
     IDS_ENVIRONMENT_WARNING_TITLE "Propriedades do sistema"
+    IDS_EDITUSERVARCAPTION "Editar variável de utilizador"
+    IDS_NEWUSERVARCAPTION "Nova variável de utilizador"
+    IDS_EDITSYSTEMVARCAPTION "Editar variável de sistema"
+    IDS_NEWSYSTEMVARCAPTION "Nova variável de sistema"
     IDS_FILE_BROWSE_FILTER "Todos os ficheiros (*.*)\0*.*\0"
 END
