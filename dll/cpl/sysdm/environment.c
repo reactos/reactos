@@ -38,6 +38,7 @@ typedef struct _ENVIRONMENT_EDIT_DIALOG_DATA
     DWORD cyOld;
     DWORD dwDlgID;
     HWND hEditBox;
+    LPCWSTR Caption;
     PVARIABLE_DATA VarData;
 } EDIT_DIALOG_DATA, *PEDIT_DIALOG_DATA;
 
@@ -783,6 +784,8 @@ EditVariableDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
             DlgData = (PEDIT_DIALOG_DATA)lParam;
 
+            SetWindowText(hwndDlg, DlgData->Caption);
+
             GetClientRect(hwndDlg, &rect);
             DlgData->cxOld = rect.right - rect.left;
             DlgData->cyOld = rect.bottom - rect.top;
@@ -1219,6 +1222,7 @@ OnNewVariable(HWND hwndDlg,
     PEDIT_DIALOG_DATA DlgData;
     LV_ITEM lvi;
     INT iItem;
+    WCHAR Buffer[MAX_STR_LENGTH];
 
     DlgData = GlobalAlloc(GPTR, sizeof(EDIT_DIALOG_DATA));
     if (!DlgData)
@@ -1231,6 +1235,16 @@ OnNewVariable(HWND hwndDlg,
     DlgData->VarData = GlobalAlloc(GPTR, sizeof(VARIABLE_DATA));
     if (!DlgData->VarData)
         return;
+
+    if (iDlgItem == IDC_SYSTEM_VARIABLE_LIST)
+    {
+        LoadStringW(hApplet, IDS_NEWSYSTEMVARCAPTION, Buffer, (MAX_STR_LENGTH - sizeof(WCHAR)));
+    }
+    else if (iDlgItem == IDC_USER_VARIABLE_LIST)
+    {
+        LoadStringW(hApplet, IDS_NEWUSERVARCAPTION, Buffer, (MAX_STR_LENGTH - sizeof(WCHAR)));
+    }
+    DlgData->Caption = Buffer;
 
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(DlgData->dwDlgID),
@@ -1275,6 +1289,7 @@ OnEditVariable(HWND hwndDlg,
     LV_ITEM lvi;
     INT iItem;
     INT iRet;
+    WCHAR Buffer[MAX_STR_LENGTH];
 
     DlgData = GlobalAlloc(GPTR, sizeof(EDIT_DIALOG_DATA));
     if (!DlgData)
@@ -1299,6 +1314,16 @@ OnEditVariable(HWND hwndDlg,
             /* If the value has multiple values and directories then edit value with fancy dialog box */
             if (DetermineDialogBoxType(DlgData->VarData->lpRawValue))
                 DlgData->dwDlgID = IDD_EDIT_VARIABLE_FANCY;
+
+            if (iDlgItem == IDC_SYSTEM_VARIABLE_LIST)
+            {
+                LoadStringW(hApplet, IDS_EDITSYSTEMVARCAPTION, Buffer, (MAX_STR_LENGTH - sizeof(WCHAR)));
+            }
+            else if (iDlgItem == IDC_USER_VARIABLE_LIST)
+            {
+                LoadStringW(hApplet, IDS_EDITUSERVARCAPTION, Buffer, (MAX_STR_LENGTH - sizeof(WCHAR)));
+            }
+            DlgData->Caption = Buffer;
 
             iRet = DialogBoxParam(hApplet,
                                   MAKEINTRESOURCE(DlgData->dwDlgID),
