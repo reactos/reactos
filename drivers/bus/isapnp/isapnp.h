@@ -176,18 +176,29 @@ typedef struct _ISAPNP_FDO_EXTENSION
 typedef struct _ISAPNP_PDO_EXTENSION
 {
     ISAPNP_COMMON_EXTENSION Common;
-    PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
     PISAPNP_FDO_EXTENSION FdoExt;
-    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-
-    PCM_RESOURCE_LIST ResourceList;
-    ULONG ResourceListSize;
 
     ULONG Flags;
 #define ISAPNP_ENUMERATED               0x00000001 /**< @brief Whether the device has been reported to the PnP manager. */
 #define ISAPNP_SCANNED_BY_READ_PORT     0x00000002 /**< @brief The bus has been scanned by Read Port PDO. */
 #define ISAPNP_READ_PORT_ALLOW_FDO_SCAN 0x00000004 /**< @brief Allows the active FDO to scan the bus. */
 #define ISAPNP_READ_PORT_NEED_REBALANCE 0x00000008 /**< @brief The I/O resource requirements have changed. */
+
+    union
+    {
+        /* Data belonging to logical devices */
+        struct
+        {
+            PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
+
+            PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+            PCM_RESOURCE_LIST ResourceList;
+            ULONG ResourceListSize;
+        };
+
+        ULONG SelectedPort;
+    };
 
     _Write_guarded_by_(_Global_interlock_)
     volatile LONG SpecialFiles;
@@ -315,10 +326,13 @@ FindMemoryDescriptor(
     _Out_opt_ PUCHAR WriteOrder);
 
 CODE_SEG("PAGE")
-NTSTATUS
+PIO_RESOURCE_REQUIREMENTS_LIST
 IsaPnpCreateReadPortDORequirements(
-    _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _In_opt_ ULONG SelectedReadPort);
+
+CODE_SEG("PAGE")
+PCM_RESOURCE_LIST
+IsaPnpCreateReadPortDOResources(VOID);
 
 CODE_SEG("PAGE")
 VOID

@@ -1038,9 +1038,8 @@ IsaForwardOrIgnore(
 }
 
 CODE_SEG("PAGE")
-NTSTATUS
+PIO_RESOURCE_REQUIREMENTS_LIST
 IsaPnpCreateReadPortDORequirements(
-    _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _In_opt_ ULONG SelectedReadPort)
 {
     ULONG ResourceCount, ListSize, i;
@@ -1087,7 +1086,7 @@ IsaPnpCreateReadPortDORequirements(
                sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1);
     RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
-        return STATUS_NO_MEMORY;
+        return NULL;
 
     RequirementsList->ListSize = ListSize;
     RequirementsList->AlternativeLists = 1;
@@ -1182,15 +1181,12 @@ IsaPnpCreateReadPortDORequirements(
         }
     }
 
-    PdoExt->RequirementsList = RequirementsList;
-    return STATUS_SUCCESS;
+    return RequirementsList;
 }
 
-static
 CODE_SEG("PAGE")
-NTSTATUS
-IsaPnpCreateReadPortDOResources(
-    _In_ PISAPNP_PDO_EXTENSION PdoExt)
+PCM_RESOURCE_LIST
+IsaPnpCreateReadPortDOResources(VOID)
 {
     const USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
     ULONG ListSize, i;
@@ -1203,7 +1199,7 @@ IsaPnpCreateReadPortDOResources(
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (RTL_NUMBER_OF(Ports) - 1);
     ResourceList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
-        return STATUS_NO_MEMORY;
+        return NULL;
 
     ResourceList->Count = 1;
     ResourceList->List[0].InterfaceType = Internal;
@@ -1223,9 +1219,7 @@ IsaPnpCreateReadPortDOResources(
         Descriptor++;
     }
 
-    PdoExt->ResourceList = ResourceList;
-    PdoExt->ResourceListSize = ListSize;
-    return STATUS_SUCCESS;
+    return ResourceList;
 }
 
 static
@@ -1259,22 +1253,7 @@ IsaPnpCreateReadPortDO(
     PdoExt->Common.State = dsStopped;
     PdoExt->FdoExt = FdoExt;
 
-    Status = IsaPnpCreateReadPortDORequirements(PdoExt, 0);
-    if (!NT_SUCCESS(Status))
-        goto Failure;
-
-    Status = IsaPnpCreateReadPortDOResources(PdoExt);
-    if (!NT_SUCCESS(Status))
-        goto Failure;
-
     FdoExt->ReadPortPdo->Flags &= ~DO_DEVICE_INITIALIZING;
-
-    return Status;
-
-Failure:
-    IsaPnpRemoveReadPortDO(FdoExt->ReadPortPdo);
-
-    FdoExt->ReadPortPdo = NULL;
 
     return Status;
 }
@@ -1284,17 +1263,9 @@ VOID
 IsaPnpRemoveReadPortDO(
     _In_ PDEVICE_OBJECT Pdo)
 {
-    PISAPNP_PDO_EXTENSION ReadPortExt = Pdo->DeviceExtension;
-
     PAGED_CODE();
 
     DPRINT("Removing Read Port\n");
-
-    if (ReadPortExt->RequirementsList)
-        ExFreePoolWithTag(ReadPortExt->RequirementsList, TAG_ISAPNP);
-
-    if (ReadPortExt->ResourceList)
-        ExFreePoolWithTag(ReadPortExt->ResourceList, TAG_ISAPNP);
 
     IoDeleteDevice(Pdo);
 }
