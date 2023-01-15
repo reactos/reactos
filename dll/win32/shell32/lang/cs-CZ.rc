@@ -814,6 +814,8 @@ BEGIN
     IDS_MOVEERROR "Cannot move '%s': %s"
     IDS_COPYERROR "Cannot copy '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"
     IDS_DELETEITEM_CAPTION "Potvrdit odstranění souboru"

@@ -808,6 +808,8 @@ BEGIN
     IDS_MOVEERROR "Cannot move '%s': %s"
     IDS_COPYERROR "Cannot copy '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "फ़ोल्डर '%1' बनाने में असमर्थ"
     IDS_CREATEFOLDER_CAPTION "फ़ोल्डर बनाने में असमर्थ"
     IDS_DELETEITEM_CAPTION "फ़ाइल हटाए जाने की पुष्टि करें"
