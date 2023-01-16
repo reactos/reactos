@@ -756,8 +756,10 @@ SetDIBitsToDevice(
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
+        DPRINT1("SetDIBitsToDevice called on invalid DC %p (not owned?)\n", hdc);
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
     /*
      if ( !pDc_Attr || // DC is Public
@@ -867,8 +869,10 @@ StretchDIBits(
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
+        DPRINT1("StretchDIBits called on invalid DC %p (not owned?)\n", hdc);
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
     /*
      if ( !pDc_Attr ||
@@ -894,6 +898,7 @@ StretchDIBits(
                                                   cjBmpScanSize,
                                                   NULL );
     }
+Exit:
     if (pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
     if (lpBitsInfo != pConvertedInfo)
