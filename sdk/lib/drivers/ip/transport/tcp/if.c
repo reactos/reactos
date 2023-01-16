@@ -7,6 +7,56 @@
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
 
+void
+TCPPrintNetifInfo(struct netif *netif);
+
+#ifndef DEBUG
+#define DPRINT_NETIF(_netif)
+#else
+#define DPRINT_NETIF(_netif) TCPPrintNetifInfo(_netif)
+#endif
+
+void
+TCPPrintNetifInfo(struct netif *netif) {
+    DbgPrint("########## NETIF INFOS ##########\n");
+    
+    DbgPrint("Memory address:    %p\n", netif);
+    DbgPrint("Next interface:    %p\n\n", netif->next);
+
+    DbgPrint("IP Address:        %u.%u.%u.%u\n",
+        (netif->ip_addr.addr      ) & 0xFF, (netif->ip_addr.addr >> 8 ) & 0xFF,
+        (netif->ip_addr.addr >> 16) & 0xFF, (netif->ip_addr.addr >> 24) & 0xFF);
+    DbgPrint("Input  fn:         %p\n", netif->input);
+    DbgPrint("Output fn:         %p\n", netif->output);
+    DbgPrint("State:             %p\n", netif->state);
+    DbgPrint("MTU:               %u\n", netif->mtu);
+    DbgPrint("HW Address Length: %lu\n", netif->hwaddr_len);
+    if (netif->hwaddr_len == 6U)
+        DbgPrint("HW Address:    %02x:%02x:%02x:%02x:%02x:%02x\n",
+            netif->hwaddr[0], netif->hwaddr[1],
+            netif->hwaddr[2], netif->hwaddr[3],
+            netif->hwaddr[4], netif->hwaddr[5]);
+    DbgPrint("Flags (%u): \n", netif->flags);
+    if(netif->flags & NETIF_FLAG_UP)
+        DbgPrint("\t- NETIF_FLAG_UP\n");
+    if(netif->flags & NETIF_FLAG_BROADCAST)
+        DbgPrint("\t- NETIF_FLAG_BROADCAST\n");
+    if(netif->flags & NETIF_FLAG_LINK_UP)
+        DbgPrint("\t- NETIF_FLAG_LINK_UP\n");
+    if(netif->flags & NETIF_FLAG_ETHARP)
+        DbgPrint("\t- NETIF_FLAG_ETHARP\n");
+    if(netif->flags & NETIF_FLAG_ETHERNET)
+        DbgPrint("\t- NETIF_FLAG_ETHERNET\n");
+    if(netif->flags & NETIF_FLAG_IGMP)
+        DbgPrint("\t- NETIF_FLAG_IGMP\n");
+    if(netif->flags & NETIF_FLAG_MLD6)
+        DbgPrint("\t- NETIF_FLAG_MLD6\n");
+    DbgPrint("Interface name:    %c%c\n", netif->name[0], netif->name[1]);
+    DbgPrint("Interface number:  %u\n", netif->num);
+
+    DbgPrint("#################################\n");
+}
+
 err_t
 TCPSendDataCallback(struct netif *netif, struct pbuf *p, const ip4_addr_t *dest)
 {
@@ -97,6 +147,7 @@ TCPInterfaceInit(struct netif *netif)
 {
     PIP_INTERFACE IF = netif->state;
 
+    DPRINT1("### TCP Interface Init (%p)\n", IF);
     netif->hwaddr_len = IF->AddressLength;
     RtlCopyMemory(netif->hwaddr, IF->Address, netif->hwaddr_len);
 
@@ -107,6 +158,8 @@ TCPInterfaceInit(struct netif *netif)
     netif->name[1] = 'n';
 
     netif->flags |= NETIF_FLAG_BROADCAST;
+
+    DPRINT_NETIF(netif);
 
     TCPUpdateInterfaceLinkStatus(IF);
 
@@ -122,9 +175,13 @@ TCPRegisterInterface(PIP_INTERFACE IF)
     ip_addr_t netmask;
     ip_addr_t gw;
 
+    DPRINT1("### TCP Register Interface (%p)\n", IF);
+
     gw.addr = 0;
     ipaddr.addr = 0;
     netmask.addr = 0;
+
+    DPRINT1("(%p):[%p] TCP Registering interface\n", IF, IF->TCPContext);
 
     IF->TCPContext = netif_add(IF->TCPContext,
                                &ipaddr,
@@ -133,12 +190,17 @@ TCPRegisterInterface(PIP_INTERFACE IF)
                                IF,
                                TCPInterfaceInit,
                                tcpip_input);
+
+    DPRINT_NETIF(IF->TCPContext);
 }
 
 VOID
 TCPUnregisterInterface(PIP_INTERFACE IF)
 {
+    DPRINT1("### TCP Unregister Interface (%p)\n", IF);
+    DPRINT1("(%p):[%p] Unregistering netif interface\n", IF, IF->TCPContext);
     netif_remove(IF->TCPContext);
+    DPRINT1("(%p):[%p] Unregistered\n", IF, IF->TCPContext);
 }
 
 VOID
@@ -149,6 +211,8 @@ TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
     ip_addr_t gw;
 
     gw.addr = 0;
+
+    DPRINT1("### TCP Update Interface IP Information (%p):[%p]\n", IF, IF->TCPContext);
 
     GetInterfaceIPv4Address(IF,
                             ADE_UNICAST,
@@ -169,4 +233,7 @@ TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
     {
         netif_set_down(IF->TCPContext);
     }
+
+    DPRINT_NETIF(IF->TCPContext);
+    DPRINT1("(%p):[%p] Interface is %s\n", IF, IF->TCPContext, ipaddr.addr ? "up" : "down");
 }

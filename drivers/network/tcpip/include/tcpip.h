@@ -28,6 +28,9 @@
 #include <tdiinfo.h>
 #endif
 
+#include "ip_debug.h"
+
+#define NDEBUG
 #include <debug.h>
 
 #define TAG_STRING	' RTS' /* string */

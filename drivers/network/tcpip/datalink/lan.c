@@ -844,7 +844,7 @@ VOID NTAPI ProtocolStatus(
     switch(GeneralStatus)
     {
         case NDIS_STATUS_MEDIA_CONNECT:
-            DbgPrint("NDIS_STATUS_MEDIA_CONNECT\n");
+            DPRINT("NDIS_STATUS_MEDIA_CONNECT\n");
 
             if (Adapter->State == LAN_STATE_STARTED)
             {
@@ -856,7 +856,7 @@ VOID NTAPI ProtocolStatus(
             break;
 
         case NDIS_STATUS_MEDIA_DISCONNECT:
-            DbgPrint("NDIS_STATUS_MEDIA_DISCONNECT\n");
+            DPRINT("NDIS_STATUS_MEDIA_DISCONNECT\n");
 
             if (Adapter->State == LAN_STATE_STOPPED)
             {
@@ -880,7 +880,7 @@ VOID NTAPI ProtocolStatus(
             break;
 
         default:
-            DbgPrint("Unhandled status: %x", GeneralStatus);
+            DPRINT("Unhandled status: %x", GeneralStatus);
             ExFreePoolWithTag(Context, CONTEXT_TAG);
             return;
     }
@@ -908,23 +908,23 @@ ProtocolPnPEvent(
     switch(PnPEvent->NetEvent)
     {
       case NetEventSetPower:
-         DbgPrint("Device transitioned to power state %ld\n", PnPEvent->Buffer);
+         DPRINT("Device transitioned to power state %ld\n", PnPEvent->Buffer);
          return NDIS_STATUS_SUCCESS;
 
       case NetEventQueryPower:
-         DbgPrint("Device wants to go into power state %ld\n", PnPEvent->Buffer);
+         DPRINT("Device wants to go into power state %ld\n", PnPEvent->Buffer);
          return NDIS_STATUS_SUCCESS;
 
       case NetEventQueryRemoveDevice:
-         DbgPrint("Device is about to be removed\n");
+         DPRINT("Device is about to be removed\n");
          return NDIS_STATUS_SUCCESS;
 
       case NetEventCancelRemoveDevice:
-         DbgPrint("Device removal cancelled\n");
+         DPRINT("Device removal cancelled\n");
          return NDIS_STATUS_SUCCESS;
 
       default:
-         DbgPrint("Unhandled event type: %ld\n", PnPEvent->NetEvent);
+         DPRINT("Unhandled event type: %ld\n", PnPEvent->NetEvent);
          return NDIS_STATUS_SUCCESS;
     }
 }

@@ -287,7 +287,7 @@ NTSTATUS TCPTranslateError(const err_t err)
         case ERR_ARG: Status = STATUS_INVALID_PARAMETER; break; //-14
         case ERR_IF: Status = STATUS_UNEXPECTED_NETWORK_ERROR; break; //-15
         default:
-            DbgPrint("Invalid error value: %d\n", err);
+            DPRINT("Invalid error value: %d\n", err);
             ASSERT(FALSE);
             Status = STATUS_UNSUCCESSFUL;
             break;
