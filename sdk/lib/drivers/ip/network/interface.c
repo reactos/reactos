@@ -256,10 +256,8 @@ VOID GetInterfaceConnectionStatus(PIP_INTERFACE Interface, PULONG Result)
     PLAN_ADAPTER Adapter = Interface->Context;
 
     /* Loopback has no adapter context */
-    if (Adapter == NULL || Adapter->State == LAN_STATE_STARTED) {
+    if (Adapter == NULL || Adapter->State == LAN_STATE_STARTED)
         *Result = MIB_IF_OPER_STATUS_OPERATIONAL;
-    }
-    else {
+    else
         *Result = MIB_IF_OPER_STATUS_DISCONNECTED;
-    }
 }

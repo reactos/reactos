@@ -127,9 +127,12 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, const ip4_addr_t *dest)
     return ERR_OK;
 }
 
+// FIXME: Implement this function
+// Remove LINK_UP flag from TCPInterfaceInit
 VOID
 TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF)
 {
+    DPRINT1("fixme: TCPUpdateInterfaceLinkStatus() not implemented!");
 #if 0
     ULONG OperationalStatus;
 
@@ -148,8 +151,10 @@ TCPInterfaceInit(struct netif *netif)
     PIP_INTERFACE IF = netif->state;
 
     DPRINT1("### TCP Interface Init (%p)\n", IF);
+
+    RtlCopyMemory(netif->hwaddr, IF->Address, IF->AddressLength);
+
     netif->hwaddr_len = IF->AddressLength;
-    RtlCopyMemory(netif->hwaddr, IF->Address, netif->hwaddr_len);
 
     netif->output = TCPSendDataCallback;
     netif->mtu = IF->MTU;
@@ -158,11 +163,11 @@ TCPInterfaceInit(struct netif *netif)
     netif->name[1] = 'n';
 
     netif->flags |= NETIF_FLAG_BROADCAST;
+    netif->flags |= NETIF_FLAG_LINK_UP;
 
     DPRINT_NETIF(netif);
 
     TCPUpdateInterfaceLinkStatus(IF);
-
     TCPUpdateInterfaceIPInformation(IF);
 
     return ERR_OK;
@@ -206,11 +211,8 @@ TCPUnregisterInterface(PIP_INTERFACE IF)
 VOID
 TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
 {
-    ip_addr_t ipaddr;
-    ip_addr_t netmask;
-    ip_addr_t gw;
-
-    gw.addr = 0;
+    ip4_addr_t ipaddr;
+    ip4_addr_t netmask;
 
     DPRINT1("### TCP Update Interface IP Information (%p):[%p]\n", IF, IF->TCPContext);
 
@@ -222,7 +224,8 @@ TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
                             ADE_ADDRMASK,
                             (PULONG)&netmask.addr);
 
-    netif_set_addr(IF->TCPContext, &ipaddr, &netmask, &gw);
+    netif_set_ipaddr(IF->TCPContext, &ipaddr);
+    netif_set_netmask(IF->TCPContext, &netmask);
 
     if (ipaddr.addr != 0)
     {
