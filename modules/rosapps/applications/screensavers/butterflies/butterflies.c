@@ -12,6 +12,7 @@
 HINSTANCE		hInstance;			// Holds The Instance Of The Application
 
 GLuint texture[3];	                //stores texture objects and display list
+HDC hdcOpenGL;
 
 LPCTSTR registryPath = _T("Software\\Microsoft\\ScreenSavers\\Butterflies");
 BOOL dRotate;
@@ -136,7 +137,7 @@ HGLRC InitOGLWindow(HWND hWnd)
 	hRC = wglCreateContext(hDC);
 	wglMakeCurrent(hDC, hRC);
 
-	ReleaseDC(hWnd, hDC);
+	hdcOpenGL = hDC;
 
 	return hRC;
 }
@@ -287,6 +288,7 @@ LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message,
 	case WM_DESTROY:
 		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(hRC);
+		ReleaseDC(hWnd, hdcOpenGL);
 		break;
 	}
 
