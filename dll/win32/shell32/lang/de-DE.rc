@@ -80,9 +80,9 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Hierher kopieren", IDM_COPYHERE
-        MENUITEM "Hierher verschieben", IDM_MOVEHERE
-        MENUITEM "Verknüpfung hier erstellen", IDM_LINKHERE
+        MENUITEM "Hierher &kopieren", IDM_COPYHERE
+        MENUITEM "Hierher &verschieben", IDM_MOVEHERE
+        MENUITEM "Verknüpfung hier &erstellen", IDM_LINKHERE
         MENUITEM SEPARATOR
         MENUITEM "Abbrechen", 0
     END
