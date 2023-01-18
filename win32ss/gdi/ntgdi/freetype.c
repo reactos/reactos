@@ -4490,6 +4490,12 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
     DWORD num_ranges = 0;
     FT_Face face = Font->SharedFace->Face;
 
+    if (face->charmap == NULL)
+    {
+        DPRINT1("FIXME: No charmap selected! This is a BUG!\n");
+        return 0;
+    }
+
     if (face->charmap->encoding == FT_ENCODING_UNICODE)
     {
         FT_UInt glyph_code = 0;
