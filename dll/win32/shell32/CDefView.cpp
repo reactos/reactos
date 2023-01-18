@@ -402,7 +402,7 @@ CDefView::~CDefView()
         ::DeleteObject(m_viewinfo_data.hbmBack);
         m_viewinfo_data.hbmBack = NULL;
     }
-    
+
     if (m_hWnd)
     {
         DestroyViewWindow();
@@ -1306,10 +1306,10 @@ HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
     }
 
     /* Also check the menu item according to which we sort */
-    CheckMenuRadioItem(hmenuArrange, 
-                       0x30, 
-                       0x100, 
-                       m_sortInfo.nHeaderID + 0x30, 
+    CheckMenuRadioItem(hmenuArrange,
+                       0x30,
+                       0x100,
+                       m_sortInfo.nHeaderID + 0x30,
                        MF_BYCOMMAND);
 
     if (m_FolderSettings.ViewMode == FVM_DETAILS || m_FolderSettings.ViewMode == FVM_LIST)
@@ -1426,7 +1426,7 @@ HRESULT CDefView::OpenSelectedItems()
         return hResult;
 
     hMenu = CreatePopupMenu();
-    if (!hMenu) 
+    if (!hMenu)
         return E_FAIL;
 
     hResult = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pCM));
@@ -1447,7 +1447,7 @@ HRESULT CDefView::OpenSelectedItems()
     InvokeContextMenuCommand(uCommand);
 
 cleanup:
-    
+
     if (hMenu)
         DestroyMenu(hMenu);
 
@@ -1472,7 +1472,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     TRACE("(%p)\n", this);
 
     m_hContextMenu = CreatePopupMenu();
-    if (!m_hContextMenu) 
+    if (!m_hContextMenu)
         return E_FAIL;
 
     if (lParam != ~0)   // unless app key (menu key) was pressed
@@ -1534,7 +1534,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             /* We have to drop it somewhere.. */
             pt.x = pt.y = 0;
         }
-        
+
         m_ListView.ClientToScreen(&pt);
         x = pt.x;
         y = pt.y;
@@ -1738,7 +1738,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     DWORD dwCmdID;
     DWORD dwCmd;
     HWND  hwndCmd;
-    int   nCount; 
+    int   nCount;
 
     dwCmdID = GET_WM_COMMAND_ID(wParam, lParam);
     dwCmd = GET_WM_COMMAND_CMD(wParam, lParam);
@@ -2024,7 +2024,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     {
                         dwEffect |= dwAttributes & (SFGAO_CANCOPY | SFGAO_CANLINK);
                     }
-                    
+
                     CComPtr<IAsyncOperation> piaso;
                     if (SUCCEEDED(pda->QueryInterface(IID_PPV_ARG(IAsyncOperation, &piaso))))
                     {
@@ -2264,7 +2264,7 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    /* The lParam of WM_DRAWITEM WM_MEASUREITEM contain a menu id and this also needs to 
+    /* The lParam of WM_DRAWITEM WM_MEASUREITEM contain a menu id and this also needs to
        be changed to a menu identifier offset */
     UINT CmdID;
     HRESULT hres = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdID);
@@ -2736,7 +2736,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSpacing(POINT *ppt)
 {
     TRACE("(%p)->(%p)\n", this, ppt);
 
-    if (!m_ListView) 
+    if (!m_ListView)
         return S_FALSE;
 
     if (ppt)
@@ -2843,7 +2843,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
     TRACE("(%p)->(shlview=%p shlbrs=%p rec=%p hwnd=%p vmode=%x flags=%x)\n", this, psvPrevious, psb, prcView, hwnd, mode, flags);
     if (prcView != NULL)
         TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
-    
+
     /* Validate the Shell Browser */
     if (psb == NULL || m_hWnd)
         return E_UNEXPECTED;
@@ -3037,7 +3037,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, U
         {
             return E_OUTOFMEMORY;
         }
-        
+
         /* it's documented that caller shouldn't PIDLs, only array itself */
         memcpy(*pidl, m_apidl, *items * sizeof(PCUITEMID_CHILD));
     }
@@ -3047,7 +3047,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, U
 
 HRESULT STDMETHODCALLTYPE CDefView::IsDropOnSource(IDropTarget *drop_target)
 {
-    if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
+    if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) &&
         (m_pSourceDataObject.p))
     {
         return S_OK;
@@ -3133,7 +3133,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SetAutomationObject(IDispatch *disp)
     FIXME("(%p)->(%p) stub\n", this, disp);
     return E_NOTIMPL;
 }
- 
+
 /**********************************************************
  * ISVOleCmdTarget_QueryStatus (IOleCommandTarget)
  */
@@ -3344,7 +3344,7 @@ HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, 
     /* Get a hold on the data object for later calls to DragEnter on the sub-folders */
     m_pCurDataObject = pDataObject;
 
-    HRESULT hr = drag_notify_subitem(grfKeyState, pt, pdwEffect);    
+    HRESULT hr = drag_notify_subitem(grfKeyState, pt, pdwEffect);
     if (SUCCEEDED(hr))
     {
         POINT ptClient = {pt.x, pt.y};
@@ -3388,8 +3388,8 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
     ImageList_DragLeave(m_hWnd);
     ImageList_EndDrag();
 
-    if ((IsDropOnSource(NULL) == S_OK) && 
-        (*pdwEffect & DROPEFFECT_MOVE) && 
+    if ((IsDropOnSource(NULL) == S_OK) &&
+        (*pdwEffect & DROPEFFECT_MOVE) &&
         (m_grfKeyState & MK_LBUTTON))
     {
         if (m_pCurDropTarget)
@@ -3422,7 +3422,7 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
         m_pCurDropTarget.Release();
     }
 
-    m_pCurDataObject.Release();    
+    m_pCurDataObject.Release();
     m_iDragOverItem = 0;
     return S_OK;
 }
