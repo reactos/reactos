@@ -75,7 +75,7 @@ struct _DoDropData {
     CFSDropTarget *This;
     IStream *pStream;
     DWORD dwKeyState;
-    POINTL pt; 
+    POINTL pt;
     DWORD pdwEffect;
 };
 
