@@ -73,6 +73,18 @@ BEGIN
     END
 END
 
+IDM_DRAGFILE MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Hierher &kopieren", IDM_COPYHERE
+        MENUITEM "Hierher &verschieben", IDM_MOVEHERE
+        MENUITEM "Verknüpfung hier &erstellen", IDM_LINKHERE
+        MENUITEM SEPARATOR
+        MENUITEM "Abbrechen", 0
+    END
+END
+
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Verzeichnis auswählen"
