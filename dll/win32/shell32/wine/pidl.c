@@ -476,51 +476,13 @@ LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl)
     return newpidl;
 }
 
-BOOL _ILHACKCompareSimpleIds(LPCITEMIDLIST pidltemp1, LPCITEMIDLIST pidltemp2)
+BOOL _ILCompareSimpleIDs(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    LPPIDLDATA pdata1 = _ILGetDataPointer(pidltemp1);
-    LPPIDLDATA pdata2 = _ILGetDataPointer(pidltemp2);
-
-    IID *iid1 = _ILGetGUIDPointer(pidltemp1);
-    IID *iid2 = _ILGetGUIDPointer(pidltemp2);
-
-    FileStructW* pDataW1 = _ILGetFileStructW(pidltemp1);
-    FileStructW* pDataW2 = _ILGetFileStructW(pidltemp2);
-
-    if (_ILIsDesktop(pidltemp1) && _ILIsDesktop(pidltemp2))
-    {
-        return TRUE;
-    }
-    else if (_ILIsDesktop(pidltemp1) || _ILIsDesktop(pidltemp2))
+    if (pidl1->mkid.cb != pidl2->mkid.cb)
     {
         return FALSE;
     }
-    else if (iid1 || iid2)
-    {
-        if (!iid1 || !iid2 || memcmp(iid1, iid2, sizeof(GUID)))
-            return FALSE;
-    }
-    else if (pDataW1 || pDataW2)
-    {
-        if (!pDataW1 || !pDataW2 || wcsicmp(pDataW1->wszName, pDataW2->wszName))
-            return FALSE;
-    }
-    else if (_ILIsFolder(pidltemp1) || _ILIsFolder(pidltemp2))
-    {
-        if (!_ILIsFolder(pidltemp1) || !_ILIsFolder(pidltemp2) || strcmp(pdata1->u.file.szNames, pdata2->u.file.szNames))
-            return FALSE;
-    }
-    else if (_ILIsValue(pidltemp1) || _ILIsValue(pidltemp2))
-    {
-        if (!_ILIsValue(pidltemp1) || !_ILIsValue(pidltemp2) || strcmp(pdata1->u.file.szNames, pdata2->u.file.szNames))
-            return FALSE;
-    }
-    else if (_ILIsDrive(pidltemp1) || _ILIsDrive(pidltemp2))
-    {
-        if (!_ILIsDrive(pidltemp1) || !_ILIsDrive(pidltemp2) || pdata1->u.drive.szDriveName[0] != pdata2->u.drive.szDriveName[0])
-            return FALSE;
-    }
-    else
+    else if (!RtlEqualMemory((BYTE*)&pidl1->mkid, (BYTE*)&pidl2->mkid, pidl1->mkid.cb))
     {
         return FALSE;
     }
@@ -554,7 +516,7 @@ BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 
     while (pidltemp1->mkid.cb && pidltemp2->mkid.cb)
     {
-        if (!_ILHACKCompareSimpleIds(pidltemp1, pidltemp2))
+        if (!_ILCompareSimpleIDs(pidltemp1, pidltemp2))
             return FALSE;
 
         pidltemp1 = ILGetNext(pidltemp1);
@@ -601,7 +563,7 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
 
     while (pParent->mkid.cb && pChild->mkid.cb)
     {
-        if (!_ILHACKCompareSimpleIds(pParent, pChild))
+        if (!_ILCompareSimpleIDs(pParent, pChild))
             return FALSE;
 
         pParent = ILGetNext(pParent);
@@ -662,7 +624,7 @@ PUIDLIST_RELATIVE WINAPI ILFindChild(PIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE p
     {
         while (pidltemp1->mkid.cb && pidltemp2->mkid.cb)
         {
-            if (!_ILHACKCompareSimpleIds(pidltemp1, pidltemp2))
+            if (!_ILCompareSimpleIDs(pidltemp1, pidltemp2))
                 return FALSE;
 
             pidltemp1 = ILGetNext(pidltemp1);
