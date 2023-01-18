@@ -1,7 +1,7 @@
 /*
- * PROJECT:     Freeldr UEFI Extension
+ * PROJECT:     FreeLoader UEFI Support
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     UEFI stubs
+ * PURPOSE:     Function stubs
  * COPYRIGHT:   Copyright 2022 Justin Miller <justinmiller100@gmail.com>
  */
 
@@ -39,12 +39,6 @@ VOID
 UefiVideoSync(VOID)
 {
 
-}
-
-PFREELDR_MEMORY_DESCRIPTOR
-UefiMemGetMemoryMap(ULONG *MemoryMapSize)
-{
-    return 0;
 }
 
 VOID
@@ -92,12 +86,6 @@ PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(VOID)
 {
     return 0;
-}
-
-VOID
-UefiPrepareForReactOS(VOID)
-{
-
 }
 
 VOID

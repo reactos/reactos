@@ -1,7 +1,7 @@
 /*
- * PROJECT:     Freeldr UEFI Extension
+ * PROJECT:     FreeLoader UEFI Support
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     UEFI Console output
+ * PURPOSE:     Console output
  * COPYRIGHT:   Copyright 2022 Justin Miller <justinmiller100@gmail.com>
  */
 
