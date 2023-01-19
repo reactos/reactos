@@ -129,6 +129,23 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
     return SYS_ARCH_TIMEOUT;
 }
 
+void sys_mutex_lock(sys_mutex_t *mutex)
+{
+	KeAcquireGuardedMutex(&mutex->Mutex);
+}
+
+void sys_mutex_unlock(sys_mutex_t *mutex)
+{
+	KeReleaseGuardedMutex(&mutex->Mutex);
+}
+
+err_t sys_mutex_new(sys_mutex_t *mutex)
+{
+	KeInitializeGuardedMutex(&mutex->Mutex);
+	mutex->Valid = TRUE;
+	return ERR_OK;
+}
+
 err_t
 sys_mbox_new(sys_mbox_t *mbox, int size)
 {

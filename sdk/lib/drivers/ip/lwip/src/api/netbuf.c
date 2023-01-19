@@ -2,6 +2,12 @@
  * @file
  * Network buffer management
  *
+ * @defgroup netbuf Network buffers
+ * @ingroup netconn
+ * Network buffer descriptor for @ref netconn. Based on @ref pbuf internally
+ * to avoid copying data around.\n
+ * Buffers must not be shared accross multiple threads, all functions except
+ * netbuf_new() and netbuf_delete() are not thread-safe.
  */
 
 /*
@@ -46,6 +52,7 @@
 #include <string.h>
 
 /**
+ * @ingroup netbuf
  * Create (allocate) and initialize a new netbuf.
  * The netbuf doesn't yet contain a packet buffer!
  *
@@ -59,26 +66,13 @@ netbuf *netbuf_new(void)
 
   buf = (struct netbuf *)memp_malloc(MEMP_NETBUF);
   if (buf != NULL) {
-    buf->p = NULL;
-    buf->ptr = NULL;
-    ip_addr_set_any(&buf->addr);
-    buf->port = 0;
-#if LWIP_NETBUF_RECVINFO || LWIP_CHECKSUM_ON_COPY
-#if LWIP_CHECKSUM_ON_COPY
-    buf->flags = 0;
-#endif /* LWIP_CHECKSUM_ON_COPY */
-    buf->toport_chksum = 0;
-#if LWIP_NETBUF_RECVINFO
-    ip_addr_set_any(&buf->toaddr);
-#endif /* LWIP_NETBUF_RECVINFO */
-#endif /* LWIP_NETBUF_RECVINFO || LWIP_CHECKSUM_ON_COPY */
-    return buf;
-  } else {
-    return NULL;
+    memset(buf, 0, sizeof(struct netbuf));
   }
+  return buf;
 }
 
 /**
+ * @ingroup netbuf
  * Deallocate a netbuf allocated by netbuf_new().
  *
  * @param buf pointer to a netbuf allocated by netbuf_new()
@@ -96,6 +90,7 @@ netbuf_delete(struct netbuf *buf)
 }
 
 /**
+ * @ingroup netbuf
  * Allocate memory for a packet buffer for a given netbuf.
  *
  * @param buf the netbuf for which to allocate a packet buffer
@@ -114,15 +109,16 @@ netbuf_alloc(struct netbuf *buf, u16_t size)
   }
   buf->p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);
   if (buf->p == NULL) {
-     return NULL;
+    return NULL;
   }
   LWIP_ASSERT("check that first pbuf can hold size",
-             (buf->p->len >= size));
+              (buf->p->len >= size));
   buf->ptr = buf->p;
   return buf->p->payload;
 }
 
 /**
+ * @ingroup netbuf
  * Free the packet buffer included in a netbuf
  *
  * @param buf pointer to the netbuf which contains the packet buffer to free
@@ -135,9 +131,14 @@ netbuf_free(struct netbuf *buf)
     pbuf_free(buf->p);
   }
   buf->p = buf->ptr = NULL;
+#if LWIP_CHECKSUM_ON_COPY
+  buf->flags = 0;
+  buf->toport_chksum = 0;
+#endif /* LWIP_CHECKSUM_ON_COPY */
 }
 
 /**
+ * @ingroup netbuf
  * Let a netbuf reference existing (non-volatile) data.
  *
  * @param buf netbuf which should reference the data
@@ -158,13 +159,14 @@ netbuf_ref(struct netbuf *buf, const void *dataptr, u16_t size)
     buf->ptr = NULL;
     return ERR_MEM;
   }
-  buf->p->payload = (void*)dataptr;
+  ((struct pbuf_rom *)buf->p)->payload = dataptr;
   buf->p->len = buf->p->tot_len = size;
   buf->ptr = buf->p;
   return ERR_OK;
 }
 
 /**
+ * @ingroup netbuf
  * Chain one netbuf to another (@see pbuf_chain)
  *
  * @param head the first netbuf
@@ -173,7 +175,7 @@ netbuf_ref(struct netbuf *buf, const void *dataptr, u16_t size)
 void
 netbuf_chain(struct netbuf *head, struct netbuf *tail)
 {
-  LWIP_ERROR("netbuf_ref: invalid head", (head != NULL), return;);
+  LWIP_ERROR("netbuf_chain: invalid head", (head != NULL), return;);
   LWIP_ERROR("netbuf_chain: invalid tail", (tail != NULL), return;);
   pbuf_cat(head->p, tail->p);
   head->ptr = head->p;
@@ -181,12 +183,13 @@ netbuf_chain(struct netbuf *head, struct netbuf *tail)
 }
 
 /**
+ * @ingroup netbuf
  * Get the data pointer and length of the data inside a netbuf.
  *
  * @param buf netbuf to get the data from
  * @param dataptr pointer to a void pointer where to store the data pointer
  * @param len pointer to an u16_t where the length of the data is stored
- * @return ERR_OK if the information was retreived,
+ * @return ERR_OK if the information was retrieved,
  *         ERR_BUF on error.
  */
 err_t
@@ -205,6 +208,7 @@ netbuf_data(struct netbuf *buf, void **dataptr, u16_t *len)
 }
 
 /**
+ * @ingroup netbuf
  * Move the current data pointer of a packet buffer contained in a netbuf
  * to the next part.
  * The packet buffer itself is not modified.
@@ -217,7 +221,7 @@ netbuf_data(struct netbuf *buf, void **dataptr, u16_t *len)
 s8_t
 netbuf_next(struct netbuf *buf)
 {
-  LWIP_ERROR("netbuf_free: invalid buf", (buf != NULL), return -1;);
+  LWIP_ERROR("netbuf_next: invalid buf", (buf != NULL), return -1;);
   if (buf->ptr->next == NULL) {
     return -1;
   }
@@ -229,6 +233,7 @@ netbuf_next(struct netbuf *buf)
 }
 
 /**
+ * @ingroup netbuf
  * Move the current data pointer of a packet buffer contained in a netbuf
  * to the beginning of the packet.
  * The packet buffer itself is not modified.
@@ -238,7 +243,7 @@ netbuf_next(struct netbuf *buf)
 void
 netbuf_first(struct netbuf *buf)
 {
-  LWIP_ERROR("netbuf_free: invalid buf", (buf != NULL), return;);
+  LWIP_ERROR("netbuf_first: invalid buf", (buf != NULL), return;);
   buf->ptr = buf->p;
 }
 

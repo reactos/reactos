@@ -8,11 +8,11 @@
 #define MEM_LIBC_MALLOC                 1
 #define MEMP_MEM_MALLOC                 1
 
-/* Define LWIP_COMPAT_MUTEX if the port has no mutexes and binary semaphores
- should be used instead */
-#define LWIP_COMPAT_MUTEX               1
-
 #define MEM_ALIGNMENT                   4
+
+#define LWIP_IPV4						1
+
+#define LWIP_IPV6						0
 
 #define LWIP_ARP                        0
 
@@ -58,7 +58,7 @@
 
 /* FIXME: These MSS and TCP Window definitions assume an MTU
  * of 1500. We need to add some code to lwIP which would allow us
- * to change these values based upon the interface we are
+ * to change these values based upon the interface we are 
  * using. Currently ReactOS only supports Ethernet so we're
  * fine for now but it does need to be fixed later when we
  * add support for other transport mediums */

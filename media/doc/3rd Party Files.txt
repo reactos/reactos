@@ -203,7 +203,7 @@ URL: http://www.catch22.net/tuts/cardlib
 
 Title: lwIP - A Lightweight TCP/IP stack
 Path: sdk/lib/drivers/lwip
-Used Version: 1.4.1
+Used Version: 2.3.1
 License: Modified BSD License (sdk/lib/drivers/lwip/COPYING)
 URL: https://savannah.nongnu.org/projects/lwip/
 

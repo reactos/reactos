@@ -299,7 +299,7 @@ TCPSendEventHandler(void *arg, const u16_t space)
     PIRP Irp;
     NTSTATUS Status;
     PMDL Mdl;
-    ULONG BytesSent;
+    u32_t BytesSent;
 
     ReferenceObject(Connection);
     LockObject(Connection);

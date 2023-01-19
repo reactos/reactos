@@ -2,35 +2,34 @@
 
 #include <wdm.h>
 
+/* We provide our own ntohs, etc. functions for now */
+#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS
+
 /* ROS-specific mem defs */
 void *
-malloc(size_t size);
+ros_malloc(size_t size);
 
 void *
-calloc(size_t count, size_t size);
+ros_calloc(size_t count, size_t size);
 
 void
-free(void *mem);
+ros_free(void *mem);
 
 void *
-realloc(void *mem, size_t size);
+ros_realloc(void *mem, size_t size);
 
-/* mem_trim() must trim the buffer without relocating it.
- * Since we can't do that, we just return the buffer passed in unchanged */
-#define mem_trim(_m_, _s_) (_m_)
+#define mem_clib_malloc  ros_malloc
+#define mem_clib_calloc  ros_calloc
+#define mem_clib_free    ros_free
+#define mem_clib_realloc ros_realloc
+
 
 /* Unsigned int types */
 typedef unsigned char u8_t;
-typedef unsigned short u16_t;
-typedef unsigned long u32_t;
 
 /* Signed int types */
 typedef signed char s8_t;
 typedef signed short s16_t;
-typedef signed long s32_t;
-
-/* Memory pointer */
-typedef ULONG_PTR mem_ptr_t;
 
 /* Printf/DPRINT formatters */
 #define U16_F "hu"

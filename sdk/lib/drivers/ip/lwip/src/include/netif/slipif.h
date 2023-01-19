@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * SLIP netif API
+ */
+
 /*
  * Copyright (c) 2001, Swedish Institute of Computer Science.
  * All rights reserved.
@@ -31,8 +37,8 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-#ifndef __NETIF_SLIPIF_H__
-#define __NETIF_SLIPIF_H__
+#ifndef LWIP_HDR_NETIF_SLIPIF_H
+#define LWIP_HDR_NETIF_SLIPIF_H
 
 #include "lwip/opt.h"
 #include "lwip/netif.h"
@@ -47,7 +53,7 @@
 /** Set this to 1 to enable functions to pass in RX bytes from ISR context.
  * If enabled, slipif_received_byte[s]() process incoming bytes and put assembled
  * packets on a queue, which is fed into lwIP from slipif_poll().
- * If disabled, slipif_poll() polls the serila line (using sio_tryread()).
+ * If disabled, slipif_poll() polls the serial line (using sio_tryread()).
  */
 #ifndef SLIP_RX_FROM_ISR
 #define SLIP_RX_FROM_ISR 0
@@ -77,5 +83,5 @@ void slipif_received_bytes(struct netif *netif, u8_t *data, u8_t len);
 }
 #endif
 
-#endif
+#endif /* LWIP_HDR_NETIF_SLIPIF_H */
 

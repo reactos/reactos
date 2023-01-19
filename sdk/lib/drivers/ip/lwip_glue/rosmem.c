@@ -1,6 +1,3 @@
-#include "lwip/opt.h"
-
-#include "lwip/def.h"
 #include "lwip/mem.h"
 
 #ifndef LWIP_TAG
@@ -8,15 +5,15 @@
 #endif
 
 void *
-malloc(mem_size_t size)
+ros_malloc(mem_size_t size)
 {
     return ExAllocatePoolWithTag(NonPagedPool, size, LWIP_TAG);
 }
 
 void *
-calloc(mem_size_t count, mem_size_t size)
+ros_calloc(mem_size_t count, mem_size_t size)
 {
-    void *mem = malloc(count * size);
+    void *mem = ros_malloc(count * size);
 
     if (!mem) return NULL;
 
@@ -26,30 +23,30 @@ calloc(mem_size_t count, mem_size_t size)
 }
 
 void
-free(void *mem)
+ros_free(void *mem)
 {
     ExFreePoolWithTag(mem, LWIP_TAG);
 }
 
 /* This is only used to trim in lwIP */
 void *
-realloc(void *mem, size_t size)
+ros_realloc(void *mem, size_t size)
 {
     void* new_mem;
 
     /* realloc() with a NULL mem pointer acts like a call to malloc() */
     if (mem == NULL) {
-        return malloc(size);
+        return ros_malloc(size);
     }
 
     /* realloc() with a size 0 acts like a call to free() */
     if (size == 0) {
-        free(mem);
+        ros_free(mem);
         return NULL;
     }
 
     /* Allocate the new buffer first */
-    new_mem = malloc(size);
+    new_mem = ros_malloc(size);
     if (new_mem == NULL) {
         /* The old buffer is still intact */
         return NULL;
@@ -59,7 +56,7 @@ realloc(void *mem, size_t size)
     RtlCopyMemory(new_mem, mem, size);
 
     /* Deallocate the old buffer */
-    free(mem);
+    ros_free(mem);
 
     /* Return the newly allocated block */
     return new_mem;

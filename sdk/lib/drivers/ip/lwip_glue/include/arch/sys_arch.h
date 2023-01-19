@@ -15,6 +15,12 @@ typedef struct _sys_mbox_t
     int Valid;
 } sys_mbox_t;
 
+typedef struct _sys_mutex_t
+{
+	KGUARDED_MUTEX Mutex;
+	BOOLEAN Valid;
+} sys_mutex_t;
+
 typedef KIRQL sys_prot_t;
 
 typedef u32_t sys_thread_t;
@@ -40,4 +46,7 @@ sys_arch_unprotect(sys_prot_t lev);
 
 void
 sys_shutdown(void);
+
+/* There is no such thing as "from ISR" for us */
+#define sys_mbox_trypost_fromisr sys_mbox_trypost
 

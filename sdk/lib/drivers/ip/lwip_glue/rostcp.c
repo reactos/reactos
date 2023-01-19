@@ -39,7 +39,7 @@ void
 LibTCPDumpPcb(PVOID SocketContext)
 {
     struct tcp_pcb *pcb = (struct tcp_pcb*)SocketContext;
-    unsigned int addr = ntohl(pcb->remote_ip.addr);
+    unsigned int addr = lwip_ntohl(pcb->remote_ip.addr);
 
     DbgPrint("\tState: %s\n", tcp_state_str[pcb->state]);
     DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
@@ -133,8 +133,12 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
                 qp = NULL;
             }
 
+            UnlockObject(Connection);
+
             Copied = pbuf_copy_partial(p, RecvBuffer, ReadLength, Offset);
             ASSERT(Copied == ReadLength);
+
+            LockObject(Connection);
 
             /* Update trackers */
             RecvLen -= ReadLength;
@@ -387,7 +391,6 @@ void LibTCPFreeSocket(PTCP_PCB pcb)
     WaitForEventSafely(&msg.Event);
 }
 
-
 static
 void
 LibTCPBindCallback(void *arg)
@@ -408,14 +411,14 @@ LibTCPBindCallback(void *arg)
 
     msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
-                                      ntohs(msg->Input.Bind.Port));
+                                      lwip_ntohs(msg->Input.Bind.Port));
 
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
 err_t
-LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port)
+LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
     err_t ret;
@@ -612,7 +615,7 @@ LibTCPConnectCallback(void *arg)
     tcp_sent((PTCP_PCB)msg->Input.Connect.Connection->SocketContext, InternalSendEventHandler);
 
     Error = tcp_connect((PTCP_PCB)msg->Input.Connect.Connection->SocketContext,
-                        msg->Input.Connect.IpAddress, ntohs(msg->Input.Connect.Port),
+                        msg->Input.Connect.IpAddress, lwip_ntohs(msg->Input.Connect.Port),
                         InternalConnectEventHandler);
 
     msg->Output.Connect.Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
@@ -622,7 +625,7 @@ done:
 }
 
 err_t
-LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port)
+LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
     err_t ret;
@@ -671,22 +674,23 @@ LibTCPShutdownCallback(void *arg)
      * PCB without telling us if we shutdown TX and RX. To avoid these problems, we'll clear the
      * socket context if we have called shutdown for TX and RX.
      */
-    if (msg->Input.Shutdown.shut_rx != msg->Input.Shutdown.shut_tx) {
-        if (msg->Input.Shutdown.shut_rx) {
+    if (msg->Input.Shutdown.shut_rx != msg->Input.Shutdown.shut_tx)
+    {
+        if (msg->Input.Shutdown.shut_rx)
             msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
-        }
-        if (msg->Input.Shutdown.shut_tx) {
+        if (msg->Input.Shutdown.shut_tx)
             msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
-        }
     }
-    else if (msg->Input.Shutdown.shut_rx) {
+    else if (msg->Input.Shutdown.shut_rx && msg->Input.Shutdown.shut_tx)
+    {
         /* We received both RX and TX requests, which seems to mean closing connection from TDI.
          * So call tcp_close, otherwise we risk to be put in TCP_WAIT_* states, which makes further
          * attempts to close the socket to fail in this state.
          */
         msg->Output.Shutdown.Error = tcp_close(pcb);
     }
-    else {
+    else
+    {
         /* This case shouldn't happen */
         DbgPrint("Requested socket shutdown(0, 0) !\n");
     }
@@ -844,7 +848,7 @@ LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
 }
 
 err_t
-LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
+LibTCPGetHostName(PTCP_PCB pcb, ip_addr_t *const ipaddr, u16_t *const port)
 {
     if (!pcb)
         return ERR_CLSD;
@@ -856,7 +860,7 @@ LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
 }
 
 err_t
-LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr * const ipaddr, u16_t * const port)
+LibTCPGetPeerName(PTCP_PCB pcb, ip_addr_t * const ipaddr, u16_t * const port)
 {
     if (!pcb)
         return ERR_CLSD;
