@@ -348,7 +348,8 @@ LibTCPSocket(void *arg)
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
         msg->Input.Socket.Arg = arg;
 
-        tcpip_callback(LibTCPSocketCallback, msg);
+        if (tcpip_callback(LibTCPSocketCallback, msg) != ERR_OK)
+            DPRINT1("LibTCPSocket: tcpip_callback failed");
 
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Socket.NewPcb;
@@ -380,7 +381,8 @@ void LibTCPFreeSocket(PTCP_PCB pcb)
     KeInitializeEvent(&msg.Event, NotificationEvent, FALSE);
     msg.Input.FreeSocket.pcb = pcb;
 
-    tcpip_callback(LibTCPFreeSocketCallback, &msg);
+    if (tcpip_callback(LibTCPFreeSocketCallback, &msg) != ERR_OK)
+        DPRINT1("LibTCPFreeSocket: tcpip_callback failed");
 
     WaitForEventSafely(&msg.Event);
 }
@@ -425,7 +427,8 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t
         msg->Input.Bind.IpAddress = ipaddr;
         msg->Input.Bind.Port = port;
 
-        tcpip_callback(LibTCPBindCallback, msg);
+        if (tcpip_callback(LibTCPBindCallback, msg) != ERR_OK)
+            DPRINT1("LibTCPBind: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Bind.Error : ERR_CLSD;
 
@@ -473,7 +476,8 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
         msg->Input.Listen.Connection = Connection;
         msg->Input.Listen.Backlog = backlog;
 
-        tcpip_callback(LibTCPListenCallback, msg);
+        if (tcpip_callback(LibTCPListenCallback, msg) != ERR_OK)
+            DPRINT1("LibTCPListen: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Listen.NewPcb : NULL;
 
@@ -560,7 +564,8 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
         if (safe)
             LibTCPSendCallback(msg);
         else
-            tcpip_callback(LibTCPSendCallback, msg);
+            if (tcpip_callback(LibTCPSendCallback, msg) != ERR_OK)
+                DPRINT1("LibTCPSend: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Send.Error : ERR_CLSD;
         *sent = (ret == ERR_OK) ? msg->Output.Send.Information : 0;
@@ -613,7 +618,8 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u1
         msg->Input.Connect.IpAddress = ipaddr;
         msg->Input.Connect.Port = port;
 
-        tcpip_callback(LibTCPConnectCallback, msg);
+        if (tcpip_callback(LibTCPConnectCallback, msg) != ERR_OK)
+            DPRINT1("LibTCPConnect: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Connect.Error : ERR_CLSD;
 
@@ -703,7 +709,8 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
         msg->Input.Shutdown.shut_rx = shut_rx;
         msg->Input.Shutdown.shut_tx = shut_tx;
 
-        tcpip_callback(LibTCPShutdownCallback, msg);
+        if (tcpip_callback(LibTCPShutdownCallback, msg) != ERR_OK)
+            DPRINT1("LibTCPShutdown: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Shutdown.Error : ERR_CLSD;
 
@@ -781,7 +788,8 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
         if (safe)
             LibTCPCloseCallback(msg);
         else
-            tcpip_callback(LibTCPCloseCallback, msg);
+            if (tcpip_callback(LibTCPCloseCallback, msg) != ERR_OK)
+                DPRINT1("LibTCPClose: tcpip_callback failed");
 
         ret = WaitForEventSafely(&msg->Event) ? msg->Output.Close.Error : ERR_CLSD;
 
