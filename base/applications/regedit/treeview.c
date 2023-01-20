@@ -781,7 +781,7 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
 
     /* Load "My Computer" string... */
     LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, ARRAY_SIZE(szBuffer));
-    wcscat(szBuffer, L"\\");
+    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
 
     /* ... and remove it from the key path */
     if (!_wcsnicmp(keyPath, szBuffer, wcslen(szBuffer)))
@@ -795,24 +795,33 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
 
     while(keyPath[0])
     {
+        size_t copyLength;
         s = wcschr(keyPath, L'\\');
-        lstrcpynW(szPathPart, keyPath, s ? s - keyPath + 1 : wcslen(keyPath) + 1);
+        if (s != NULL)
+        {
+            copyLength = (s - keyPath) * sizeof(WCHAR);
+        }
+        else
+        {
+            copyLength = sizeof(szPathPart);
+        }
+        StringCbCopyNW(szPathPart, sizeof(szPathPart), keyPath, copyLength);
 
         /* Special case for root to expand root key abbreviations */
         if (hItem == hRoot)
         {
             if (!_wcsicmp(szPathPart, L"HKCR"))
-                wcscpy(szPathPart, L"HKEY_CLASSES_ROOT");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CLASSES_ROOT");
             else if (!_wcsicmp(szPathPart, L"HKCU"))
-                wcscpy(szPathPart, L"HKEY_CURRENT_USER");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CURRENT_USER");
             else if (!_wcsicmp(szPathPart, L"HKLM"))
-                wcscpy(szPathPart, L"HKEY_LOCAL_MACHINE");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_LOCAL_MACHINE");
             else if (!_wcsicmp(szPathPart, L"HKU"))
-                wcscpy(szPathPart, L"HKEY_USERS");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_USERS");
             else if (!_wcsicmp(szPathPart, L"HKCC"))
-                wcscpy(szPathPart, L"HKEY_CURRENT_CONFIG");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CURRENT_CONFIG");
             else if (!_wcsicmp(szPathPart, L"HKDD"))
-                wcscpy(szPathPart, L"HKEY_DYN_DATA");
+                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_DYN_DATA");
         }
 
         for (hChildItem = TreeView_GetChild(hwndTV, hItem); hChildItem;
