@@ -814,7 +814,7 @@ l_ReadHeaderFromFile:
             DIE(("Memory gap between section %u and the previous\n", i));
 
         /* ignore explicit BSS sections */
-        if(pishSectionHeaders[i].SizeOfRawData != 0)
+        if(pishSectionHeaders[i].PointerToRawData != 0 && pishSectionHeaders[i].SizeOfRawData != 0)
         {
             /* validate the alignment */
 #if 0
