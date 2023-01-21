@@ -738,7 +738,7 @@ IntDefWindowProc(
       {
             if (Wnd->style & WS_CHILD)
             {
-                co_IntSendMessage(UserHMGetHandle(IntGetParent(Wnd)), Msg, wParam, lParam);
+                co_IntSendMessage(UserHMGetHandle(IntGetParent(Wnd)), Msg, (WPARAM)UserHMGetHandle(Wnd), lParam);
             }
             else
             {

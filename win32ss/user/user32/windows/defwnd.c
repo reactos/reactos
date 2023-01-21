@@ -390,11 +390,11 @@ User32DefWindowProc(HWND hWnd,
             {
                 if (bUnicode)
                 {
-                    SendMessageW(GetParent(hWnd), Msg, wParam, lParam);
+                    SendMessageW(GetParent(hWnd), Msg, (WPARAM)hWnd, lParam);
                 }
                 else
                 {
-                    SendMessageA(GetParent(hWnd), WM_CONTEXTMENU, wParam, lParam);
+                    SendMessageA(GetParent(hWnd), Msg, (WPARAM)hWnd, lParam);
                 }
             }
             else
