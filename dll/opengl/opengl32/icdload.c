@@ -43,7 +43,7 @@ static PVOID APIENTRY wglGetCurrentValue()
     return IntGetCurrentICDPrivate();
 }
 
-static DHGLRC wglGetDHGLRC(struct wgl_context* context)
+static DHGLRC APIENTRY wglGetDHGLRC(struct wgl_context* context)
 {
     return context->dhglrc;
 }

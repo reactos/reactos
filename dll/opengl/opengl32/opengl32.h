@@ -17,6 +17,10 @@
 #include <winddi.h>
 #include <GL/gl.h>
 
+#ifndef OPENGL32_USE_TLS
+#include <pstypes.h>
+#endif
+
 #include <wine/debug.h>
 
 #include "icd.h"
@@ -108,39 +112,67 @@ struct wgl_dc_data
 void IntDeleteAllContexts(void);
 void IntDeleteAllICDs(void);
 
-#ifdef OPENGL32_USE_TLS
-extern DWORD OglTlsIndex;
-
-struct Opengl32_ThreadData
+FORCEINLINE
+const GLDISPATCHTABLE*
+IntGetCurrentDispatchTable(void)
 {
-    const GLDISPATCHTABLE* glDispatchTable;
-    HGLRC hglrc;
-    HDC hdc;
-    struct wgl_dc_data* dc_data;
-    PVOID* icdData;
-};
-C_ASSERT(FIELD_OFFSET(struct Opengl32_ThreadData, glDispatchTable) == 0);
+    return (GLDISPATCHTABLE*)NtCurrentTeb()->glTable;
+}
 
-static inline
+FORCEINLINE
+void
+IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
+{
+    NtCurrentTeb()->glTable = (void*)table;
+}
+
+FORCEINLINE
 void
 IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
 {
-    struct Opengl32_ThreadData* thread_data = TlsGetValue(OglTlsIndex);
+    TEB* CurrentTeb = NtCurrentTeb();
 
-    thread_data->hglrc = hglrc;
-    thread_data->hdc = hdc;
-    thread_data->dc_data = dc_data;
+    CurrentTeb->glCurrentRC = hglrc;
+    CurrentTeb->glReserved2 = hdc;
+    CurrentTeb->glContext = dc_data;
 }
 
-static inline
+FORCEINLINE
 HGLRC
 IntGetCurrentRC(void)
 {
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data ? data->hglrc : NULL;
+    return NtCurrentTeb()->glCurrentRC;
+}
+
+FORCEINLINE
+HDC
+IntGetCurrentDC(void)
+{
+    return NtCurrentTeb()->glReserved2;
 }
 
 static inline
+struct wgl_dc_data*
+IntGetCurrentDcData(void)
+{
+    return NtCurrentTeb()->glContext;
+}
+
+FORCEINLINE
+void
+IntSetCurrentICDPrivate(void* value)
+{
+    NtCurrentTeb()->glReserved1[0] = (ULONG_PTR)value;
+}
+
+FORCEINLINE
+void*
+IntGetCurrentICDPrivate(void)
+{
+    return (void*)NtCurrentTeb()->glReserved1[0];
+}
+
+FORCEINLINE
 DHGLRC
 IntGetCurrentDHGLRC(void)
 {
@@ -148,64 +180,6 @@ IntGetCurrentDHGLRC(void)
     if(!ctx) return NULL;
     return ctx->dhglrc;
 }
-
-static inline
-HDC
-IntGetCurrentDC(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->hdc;
-}
-
-static inline
-struct wgl_dc_data*
-IntGetCurrentDcData(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->dc_data;
-}
-
-static inline
-const GLDISPATCHTABLE *
-IntGetCurrentDispatchTable(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->glDispatchTable;
-}
-
-static inline
-void
-IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    data->glDispatchTable = table;
-}
-
-static inline
-void
-IntSetCurrentICDPrivate(void* value)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    data->icdData = value;
-}
-
-static inline
-void*
-IntGetCurrentICDPrivate(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->icdData;
-}
-
-
-#else
-static inline
-const GLDISPATCHTABLE*
-IntGetCurrentDispatchTable(void)
-{
-    return (GLDISPATCHTABLE*)NtCurrentTeb()->glTable;
-}
-#endif // defined(OPENGL32_USE_TLS)
 
 /* Software implementation functions */
 INT sw_DescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR* descr);
