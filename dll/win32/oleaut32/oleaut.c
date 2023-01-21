@@ -660,6 +660,9 @@ ULONG WINAPI OaBuildVersion(void)
     case 0x00000005:  /* W2K */
 		return MAKELONG(0xffff, 40);
     case 0x00000105:  /* WinXP */
+#ifdef __REACTOS__
+    case 0x00000205:  /* Win2K3 */
+#endif /* __REACTOS__ */
     case 0x00000006:  /* Vista */
     case 0x00000106:  /* Win7 */
 		return MAKELONG(0xffff, 50);
