@@ -407,7 +407,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         }
 
         /* query value */
-        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation, 
+        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation,
                                  InfoBuffer, sizeof(InfoBuffer), &Length);
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         if (!NT_SUCCESS(Status) || !pInfo->DataLength)
@@ -1180,7 +1180,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    GDI_LOAD_FONT   LoadFont;
+    GDI_LOAD_FONT LoadFont;
     INT FontCount;
     HANDLE KeyHandle;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
@@ -1290,7 +1290,6 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     HANDLE Ret = 0;
 
     PVOID BufferCopy = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_FONT);
-
     if (!BufferCopy)
     {
         *pNumAdded = 0;
@@ -1676,9 +1675,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
 
     TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
     if (TM->tmAveCharWidth == 0)
-    {
         TM->tmAveCharWidth = 1;
-    }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
@@ -3353,7 +3350,6 @@ ftGdiGetGlyphOutline(
         scaleMat.xy = 0;
         scaleMat.yx = 0;
         scaleMat.yy = FT_FixedFromFloat(1.0);
-
         FT_Matrix_Multiply(&scaleMat, &transMat);
         needsTransform = TRUE;
     }
@@ -3959,6 +3955,9 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
     DWORD num_ranges = 0;
     FT_Face face = Font->SharedFace->Face;
 
+    if (face->charmap == NULL)
+        return 0;
+
     if (face->charmap->encoding == FT_ENCODING_UNICODE)
     {
         FT_UInt glyph_code = 0;
@@ -4436,7 +4435,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     if (Long != TM->tmWeight)
     {
         /* Weight Penalty 3 */
-        /* The candidate's weight does not match the requested weight. 
+        /* The candidate's weight does not match the requested weight.
            Penalty * (weight difference/10) */
         Penalty += 3 * (labs(Long - TM->tmWeight) / 10);
     }
@@ -4760,9 +4759,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             FontGdi->RequestWeight = FW_NORMAL;
 
         Face = FontGdi->SharedFace->Face;
-
-        //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
-
         if (!FontGdi->OriginalItalic)
             FontGdi->OriginalItalic = ItalicFromStyle(Face->style_name);
 
@@ -5794,7 +5790,7 @@ GreExtTextOutW(
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
                 TextLeft += FLOATOBJ_GetLong(&Scale);
                 DPRINT("New TextLeft2: %I64d\n", TextLeft);
             }
@@ -5936,15 +5932,14 @@ GreExtTextOutW(
             HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
                                            BMF_8BPP, BMF_TOPDOWN,
                                            realglyph->bitmap.buffer);
-            if ( !HSourceGlyph )
+            if (!HSourceGlyph)
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
-                // FT_Done_Glyph(realglyph);
                 bResult = FALSE;
                 break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-            if ( !SourceGlyphSurf )
+            if (!SourceGlyphSurf)
             {
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
@@ -6055,7 +6050,7 @@ GreExtTextOutW(
                 FLOATOBJ_Set1(&Scale);
 
             /* do the shift before multiplying to preserve precision */
-            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
             TextLeft += FLOATOBJ_GetLong(&Scale);
             DPRINT("New TextLeft2: %I64d\n", TextLeft);
         }
@@ -6084,7 +6079,6 @@ GreExtTextOutW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
-
     DC_vFinishBlit(dc, NULL);
 
     if (TextObj != NULL)
@@ -6412,7 +6406,7 @@ NtGdiGetCharABCWidthsW(
     if(Safepwch)
         ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
 
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
         return FALSE;
@@ -6615,7 +6609,7 @@ NtGdiGetGlyphIndicesW(
     LPWORD UnSafepgi = pgi;
 
     /* Check for integer overflow */
-    if (cwc & 0x80000000) // (INT_MAX + 1) == INT_MIN 
+    if (cwc & 0x80000000) // (INT_MAX + 1) == INT_MIN
         return GDI_ERROR;
 
     if (!UnSafepwc && !UnSafepgi)
@@ -6654,7 +6648,6 @@ NtGdiGetGlyphIndicesW(
     {
         return GDI_ERROR;
     }
-
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
@@ -6694,7 +6687,6 @@ NtGdiGetGlyphIndicesW(
 
     pwcSize = cwc * sizeof(WCHAR);
     Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-
     if (!Safepwc)
     {
         Status = STATUS_NO_MEMORY;
@@ -6715,7 +6707,6 @@ NtGdiGetGlyphIndicesW(
     if (!NT_SUCCESS(Status)) goto ErrorRet;
 
     IntLockFreeType();
-
     for (i = 0; i < cwc; i++)
     {
         Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
@@ -6724,7 +6715,6 @@ NtGdiGetGlyphIndicesW(
             Buffer[i] = DefChar;
         }
     }
-
     IntUnLockFreeType();
 
     _SEH2_TRY
