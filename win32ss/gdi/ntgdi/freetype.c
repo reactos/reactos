@@ -574,7 +574,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         }
 
         /* query value */
-        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation, 
+        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation,
                                  InfoBuffer, sizeof(InfoBuffer), &Length);
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         if (!NT_SUCCESS(Status) || !pInfo->DataLength)
@@ -1054,52 +1054,6 @@ ItalicFromStyle(const char *style_name)
         return TRUE;
     return FALSE;
 }
-
-/*
-static LONG
-WeightFromStyle(const char *style_name)
-{
-    if (style_name == NULL || style_name[0] == 0)
-        return FW_NORMAL;
-    if (strstr(style_name, "Regular") != NULL)
-        return FW_REGULAR;
-    if (strstr(style_name, "Normal") != NULL)
-        return FW_NORMAL;
-    if (strstr(style_name, "SemiBold") != NULL)
-        return FW_SEMIBOLD;
-    if (strstr(style_name, "UltraBold") != NULL)
-        return FW_ULTRABOLD;
-    if (strstr(style_name, "DemiBold") != NULL)
-        return FW_DEMIBOLD;
-    if (strstr(style_name, "ExtraBold") != NULL)
-        return FW_EXTRABOLD;
-    if (strstr(style_name, "Bold") != NULL)
-        return FW_BOLD;
-    if (strstr(style_name, "UltraLight") != NULL)
-        return FW_ULTRALIGHT;
-    if (strstr(style_name, "ExtraLight") != NULL)
-        return FW_EXTRALIGHT;
-    if (strstr(style_name, "Light") != NULL)
-        return FW_LIGHT;
-    if (strstr(style_name, "Hairline") != NULL)
-        return 50;
-    if (strstr(style_name, "Book") != NULL)
-        return 350;
-    if (strstr(style_name, "ExtraBlack") != NULL)
-        return 950;
-    if (strstr(style_name, "UltraBlack") != NULL)
-        return 1000;
-    if (strstr(style_name, "Black") != NULL)
-        return FW_BLACK;
-    if (strstr(style_name, "Medium") != NULL)
-        return FW_MEDIUM;
-    if (strstr(style_name, "Thin") != NULL)
-        return FW_THIN;
-    if (strstr(style_name, "Heavy") != NULL)
-        return FW_HEAVY;
-    return FW_NORMAL;
-}
-*/
 
 static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
@@ -1814,7 +1768,7 @@ IntLoadFontsInRegistry(VOID)
         }
 
         /* query value */
-        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation,
                                  InfoBuffer, InfoSize, &Length);
         if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
         {
@@ -1828,7 +1782,7 @@ IntLoadFontsInRegistry(VOID)
                 break;
             }
             /* try again */
-            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation,
                                      InfoBuffer, InfoSize, &Length);
         }
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
@@ -2262,9 +2216,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
 
     TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
     if (TM->tmAveCharWidth == 0)
-    {
         TM->tmAveCharWidth = 1;
-    }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
@@ -4557,6 +4509,9 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
     DWORD num_ranges = 0;
     FT_Face face = Font->SharedFace->Face;
 
+    if (face->charmap == NULL)
+        return 0;
+
     if (face->charmap->encoding == FT_ENCODING_UNICODE)
     {
         FT_UInt glyph_code = 0;
@@ -5027,7 +4982,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     if (Long != TM->tmWeight)
     {
         /* Weight Penalty 3 */
-        /* The candidate's weight does not match the requested weight. 
+        /* The candidate's weight does not match the requested weight.
            Penalty * (weight difference/10) */
         GOT_PENALTY("Weight", 3 * (labs(Long - TM->tmWeight) / 10));
     }
@@ -5358,9 +5313,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             FontGdi->RequestWeight = FW_NORMAL;
 
         Face = FontGdi->SharedFace->Face;
-
-        //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
-
         if (!FontGdi->OriginalItalic)
             FontGdi->OriginalItalic = ItalicFromStyle(Face->style_name);
 
@@ -6378,7 +6330,7 @@ IntExtTextOutW(
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
                 TextLeft += FLOATOBJ_GetLong(&Scale);
                 DPRINT("New TextLeft2: %I64d\n", TextLeft);
             }
@@ -6520,15 +6472,14 @@ IntExtTextOutW(
             HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
                                            BMF_8BPP, BMF_TOPDOWN,
                                            realglyph->bitmap.buffer);
-            if ( !HSourceGlyph )
+            if (!HSourceGlyph)
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
-                // FT_Done_Glyph(realglyph);
                 bResult = FALSE;
                 break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-            if ( !SourceGlyphSurf )
+            if (!SourceGlyphSurf)
             {
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
@@ -6639,7 +6590,7 @@ IntExtTextOutW(
                 FLOATOBJ_Set1(&Scale);
 
             /* do the shift before multiplying to preserve precision */
-            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
             TextLeft += FLOATOBJ_GetLong(&Scale);
             DPRINT("New TextLeft2: %I64d\n", TextLeft);
         }
@@ -6668,7 +6619,6 @@ IntExtTextOutW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
-
     DC_vFinishBlit(dc, NULL);
 
     if (TextObj != NULL)
