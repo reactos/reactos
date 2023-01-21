@@ -574,7 +574,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         }
 
         /* query value */
-        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation, 
+        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation,
                                  InfoBuffer, sizeof(InfoBuffer), &Length);
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         if (!NT_SUCCESS(Status) || !pInfo->DataLength)
@@ -1756,7 +1756,7 @@ IntLoadFontsInRegistry(VOID)
         }
 
         /* query value */
-        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation,
                                  InfoBuffer, InfoSize, &Length);
         if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
         {
@@ -1770,7 +1770,7 @@ IntLoadFontsInRegistry(VOID)
                 break;
             }
             /* try again */
-            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation,
                                      InfoBuffer, InfoSize, &Length);
         }
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
@@ -2197,9 +2197,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
 
     TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
     if (TM->tmAveCharWidth == 0)
-    {
         TM->tmAveCharWidth = 1;
-    }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
@@ -4477,6 +4475,9 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
     DWORD num_ranges = 0;
     FT_Face face = Font->SharedFace->Face;
 
+    if (face->charmap == NULL)
+        return 0;
+
     if (face->charmap->encoding == FT_ENCODING_UNICODE)
     {
         FT_UInt glyph_code = 0;
@@ -4944,7 +4945,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     if (Long != TM->tmWeight)
     {
         /* Weight Penalty 3 */
-        /* The candidate's weight does not match the requested weight. 
+        /* The candidate's weight does not match the requested weight.
            Penalty * (weight difference/10) */
         GOT_PENALTY("Weight", 3 * (labs(Long - TM->tmWeight) / 10));
     }
@@ -6293,7 +6294,7 @@ IntExtTextOutW(
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
                 TextLeft += FLOATOBJ_GetLong(&Scale);
                 DPRINT("New TextLeft2: %I64d\n", TextLeft);
             }
@@ -6438,15 +6439,14 @@ IntExtTextOutW(
             HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
                                            BMF_8BPP, BMF_TOPDOWN,
                                            realglyph->bitmap.buffer);
-            if ( !HSourceGlyph )
+            if (!HSourceGlyph)
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
-                // FT_Done_Glyph(realglyph);
                 bResult = FALSE;
                 break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-            if ( !SourceGlyphSurf )
+            if (!SourceGlyphSurf)
             {
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
@@ -6557,7 +6557,7 @@ IntExtTextOutW(
                 FLOATOBJ_Set1(&Scale);
 
             /* do the shift before multiplying to preserve precision */
-            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
+            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6);
             TextLeft += FLOATOBJ_GetLong(&Scale);
             DPRINT("New TextLeft2: %I64d\n", TextLeft);
         }
@@ -6586,7 +6586,6 @@ IntExtTextOutW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
-
     DC_vFinishBlit(dc, NULL);
 
     if (TextObj != NULL)
