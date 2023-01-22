@@ -139,6 +139,7 @@ CcPerformReadAhead(
     ULONG Length;
     PPRIVATE_CACHE_MAP PrivateCacheMap;
     BOOLEAN Locked;
+    BOOLEAN Success;
 
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 
@@ -206,9 +207,18 @@ CcPerformReadAhead(
             goto Clear;
         }
 
-        Status = CcRosEnsureVacbResident(Vacb, TRUE, FALSE,
-                CurrentOffset % VACB_MAPPING_GRANULARITY, PartialLength);
-        if (!NT_SUCCESS(Status))
+        _SEH2_TRY
+        {
+            Success = CcRosEnsureVacbResident(Vacb, TRUE, FALSE,
+                    CurrentOffset % VACB_MAPPING_GRANULARITY, PartialLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Success = FALSE;
+        }
+        _SEH2_END
+
+        if (!Success)
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
             DPRINT1("Failed to read data: %lx!\n", Status);
@@ -234,8 +244,17 @@ CcPerformReadAhead(
             goto Clear;
         }
 
-        Status = CcRosEnsureVacbResident(Vacb, TRUE, FALSE, 0, PartialLength);
-        if (!NT_SUCCESS(Status))
+        _SEH2_TRY
+        {
+            Success = CcRosEnsureVacbResident(Vacb, TRUE, FALSE, 0, PartialLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Success = FALSE;
+        }
+        _SEH2_END
+
+        if (!Success)
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
             DPRINT1("Failed to read data: %lx!\n", Status);
