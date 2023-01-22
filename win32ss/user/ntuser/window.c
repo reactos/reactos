@@ -2979,9 +2979,9 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    /* Send destroy messages */
    IntSendDestroyMsg(UserHMGetHandle(Window));
 
-   // Destroy the default IME window if necessary
+   /* Destroy the default IME window if necessary */
    if (IS_IMM_MODE() && (ti != NULL) && !(ti->TIF_flags & TIF_INCLEANUP) &&
-       ti->spwndDefaultIme && ti->spwndDefaultIme != Window &&
+       ti->spwndDefaultIme && (ti->spwndDefaultIme != Window) &&
        !(Window->state & WNDS_DESTROYED) && !IS_WND_IMELIKE(Window))
    {
        if (IS_WND_CHILD(Window))
