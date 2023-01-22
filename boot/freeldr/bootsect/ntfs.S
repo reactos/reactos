@@ -73,8 +73,8 @@ main:
     mov ds,ax               // Make DS correct
     mov es,ax               // Make ES correct
     mov ss,ax               // Make SS correct
-    mov bp, HEX(7c00)
-    mov sp, HEX(7c00)       // Setup a stack
+    mov sp, HEX(7c00)
+    mov bp, sp              // Setup a stack
 
     cmp byte ptr [BootDrive], HEX(0ff)    // If they have specified a boot drive then use it
     jne GetDriveParameters
@@ -82,7 +82,7 @@ main:
     mov byte ptr [BootDrive], dl          // Save the boot drive
 
 GetDriveParameters:
-    mov  ax, HEX(0800)
+    mov  ah, 8
     mov  dl, byte ptr [BootDrive]               // Get boot drive in dl
     int  HEX(13)                                // Request drive parameters from the bios
     jnc  CalcDriveSize                          // If the call succeeded then calculate the drive size
@@ -219,8 +219,8 @@ ReadSectorsCHSLoop:
     mov  dh, dl                                 // Head in DH
     mov  dl, byte ptr [BootDrive]               // Drive number in DL
     mov  ch, al                                 // Cylinder in CX
-    ror  ah, 1                                  // Low 8 bits of cylinder in CH, high 2 bits
-    ror  ah, 1                                  //  in CL shifted to bits 6 & 7
+    ror  ah, 2                                  // Low 8 bits of cylinder in CH, high 2 bits
+                                                //  in CL shifted to bits 6 & 7
     or   cl, ah                                 // Or with sector number
     mov  ax, HEX(0201)
     int  HEX(13)    // DISK - READ SECTORS INTO MEMORY
@@ -309,6 +309,7 @@ BootFlagSignature:
 #define ATTRIBUTE_INDEX_ALLOCATION HEX(A0)
 #define FILE_MAGIC HEX(454c4946)
 #define INDX_MAGIC HEX(58444e49)
+#define NTFS_FILE_ROOT 5
 StartSearch:
     // Compute MFT start sector
     mov   eax, dword ptr [MftLocation]
@@ -346,24 +347,26 @@ StartSearch:
     mov   bp, sp
     sub   sp, HEX(10)
 
-    // Read Root Directory MFT
+    // Read Root Directory MFT into [2000:0]
     mov   ax, HEX(2000)
     mov   es, ax
     xor   bx, bx
     xor   edx, edx
-    mov   eax, 5
+    mov   eax, NTFS_FILE_ROOT
     call  ReadInode
 
+    // Finds freeldr.sys into index root's B-Tree
+    // and return its MFT index
     xor   ax, ax
     call  ExploreIndexRoot
 
+    // Read the MFT entry of freeldr.sys into [A00:0]
     push  eax
     mov   ax, HEX(A00)
     mov   es, ax
     pop   eax
     call  ReadInode
 
-DebugEnd:
     xor   ax, ax
     mov   ebx, HEX(30)
     call  FindAttributeHdr
