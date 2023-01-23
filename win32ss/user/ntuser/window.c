@@ -2945,7 +2945,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
     * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
     */
 
-   if ((ti != NULL) && (ti->pDeskInfo != NULL))
+   if (ti->pDeskInfo != NULL)
    {
       if (ti->pDeskInfo->hShellWindow == hWnd)
       {
@@ -2980,7 +2980,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    IntSendDestroyMsg(UserHMGetHandle(Window));
 
    /* Destroy the default IME window if necessary */
-   if (IS_IMM_MODE() && (ti != NULL) && !(ti->TIF_flags & TIF_INCLEANUP) &&
+   if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
        ti->spwndDefaultIme && (ti->spwndDefaultIme != Window) &&
        !(Window->state & WNDS_DESTROYED) && !IS_WND_IMELIKE(Window))
    {
