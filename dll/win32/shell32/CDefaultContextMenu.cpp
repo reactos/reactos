@@ -84,7 +84,7 @@ class CDefaultContextMenu :
         BOOL IsShellExtensionAlreadyLoaded(REFCLSID clsid);
         HRESULT LoadDynamicContextMenuHandler(HKEY hKey, REFCLSID clsid);
         BOOL EnumerateDynamicContextHandlerForKey(HKEY hRootKey);
-        UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast);
+        UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT* IndexMenu, UINT iIdCmdFirst, UINT iIdCmdLast);
         HRESULT DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink);
         HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi);
@@ -417,7 +417,7 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
 }
 
 UINT
-CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast)
+CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     UINT cIds = 0;
 
@@ -429,7 +429,7 @@ CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UIN
     {
         DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
 
-        HRESULT hr = info.pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, CMF_NORMAL);
+        HRESULT hr = info.pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, uFlags);
         if (SUCCEEDED(hr))
         {
             info.iIdCmdFirst = cIds;
@@ -636,7 +636,7 @@ CDefaultContextMenu::QueryContextMenu(
     idCmdNext = idCmdFirst + cIds;
 
     /* Add dynamic context menu handlers */
-    cIds += AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast);
+    cIds += AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast, uFlags);
     m_iIdSHEFirst = m_iIdSCMLast;
     m_iIdSHELast = cIds;
     idCmdNext = idCmdFirst + cIds;
