@@ -1120,8 +1120,7 @@ public:
         IN POINT *ppt OPTIONAL,
         IN HWND hwndExclude OPTIONAL,
         IN BOOL TrackUp,
-        IN PVOID Context OPTIONAL,
-        IN UINT uFlags = CMF_NORMAL)
+        IN PVOID Context OPTIONAL)
     {
         POINT pt;
         TPMPARAMS params;
@@ -1145,7 +1144,7 @@ public:
         }
 
         TRACE("Before Query\n");
-        hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, uFlags);
+        hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             TRACE("Query failed\n");
@@ -3008,7 +3007,7 @@ ChangePos:
             {
                 CComPtr<IContextMenu> ctxMenu;
                 CStartMenuBtnCtxMenu_CreateInstance(this, m_hWnd, &ctxMenu);
-                TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this, CMF_VERBSONLY);
+                TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
         else
@@ -3044,7 +3043,7 @@ ChangePos:
             {
 HandleTrayContextMenu:
                 /* Tray the default tray window context menu */
-                TrackCtxMenu(this, ppt, NULL, FALSE, this, CMF_NORMAL);
+                TrackCtxMenu(this, ppt, NULL, FALSE, this);
             }
         }
         return Ret;
