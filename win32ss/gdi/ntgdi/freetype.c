@@ -49,6 +49,8 @@
 #define TAB  L'\t'
 #define CR   L'\r'
 #define LF   L'\n'
+C_ASSERT(TAB < CR);
+C_ASSERT(LF < CR);
 
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
@@ -5909,7 +5911,8 @@ IntGetTextDisposition(
         }
         else
         {
-            if (*String == TAB || *String == LF || *String == CR) /* Ignore special characters */
+            /* Ignore special characters */
+            if (*String <= CR && (*String == TAB || *String == LF || *String == CR))
                 continue;
             glyph_index = get_glyph_index(face, *String);
         }
@@ -6310,7 +6313,8 @@ IntExtTextOutW(
         }
         else
         {
-            if (*String == TAB || *String == LF || *String == CR) /* Ignore special characters */
+            /* Ignore special characters */
+            if (*String <= CR && (*String == TAB || *String == LF || *String == CR))
                 continue;
             glyph_index = get_glyph_index(face, *String);
         }
