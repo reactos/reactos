@@ -46,9 +46,9 @@
     (((request) != FW_DONTCARE) && ((request) - (original) >= FW_BOLD - FW_MEDIUM))
 
 /* Special characters */
-#define TAB  (L'\t')
-#define CR   (L'\r')
-#define LF   (L'\n')
+#define TAB  L'\t'
+#define CR   L'\r'
+#define LF   L'\n'
 
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
@@ -5895,7 +5895,7 @@ IntGetTextDisposition(
     INT i, glyph_index;
     FT_BitmapGlyph realglyph;
     FT_Face face = Cache->Hashed.Face;
-    BOOL use_kerning = FT_HAS_KERNING(face), indexed = (ETO_GLYPH_INDEX & fuOptions);
+    BOOL use_kerning = FT_HAS_KERNING(face), indexed = (fuOptions & ETO_GLYPH_INDEX);
     ULONG previous = 0;
     FT_Vector delta;
 
@@ -6301,7 +6301,7 @@ IntExtTextOutW(
     Y64 = RealYStart64;
     previous = 0;
     DoBreak = FALSE;
-    indexed = (ETO_GLYPH_INDEX & fuOptions);
+    indexed = (fuOptions & ETO_GLYPH_INDEX);
     for (i = 0; i < Count; ++i, ++String)
     {
         if (indexed)
