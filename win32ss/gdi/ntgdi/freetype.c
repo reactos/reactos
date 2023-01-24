@@ -5909,10 +5909,11 @@ IntGetTextDisposition(
         }
         else
         {
-            /* Ignore special characters */
-            if (*String == TAB || *String == LF || *String == CR)
+            if (*String == TAB || *String == LF || *String == CR) /* Ignore special characters */
+            {
+                previous = 0;
                 continue;
-
+            }
             glyph_index = get_glyph_index(face, *String);
         }
         Cache->Hashed.GlyphIndex = glyph_index;
@@ -6312,10 +6313,11 @@ IntExtTextOutW(
         }
         else
         {
-            /* Ignore special characters */
-            if (*String == TAB || *String == LF || *String == CR)
+            if (*String == TAB || *String == LF || *String == CR) /* Ignore special characters */
+            {
+                previous = 0;
                 continue;
-
+            }
             glyph_index = get_glyph_index(face, *String);
         }
         Cache.Hashed.GlyphIndex = glyph_index;
