@@ -2424,10 +2424,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Create the IME window for pWnd */
-   if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(Window))
+   if (IS_IMM_MODE() && !pti->spwndDefaultIme && IntWantImeWindow(Window))
    {
       PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(Window, Window->hModule);
-      UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
+      UserAssignmentLock((PVOID*)&pti->spwndDefaultIme, pwndDefaultIme);
 
       if (pwndDefaultIme)
       {
