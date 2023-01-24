@@ -45,6 +45,11 @@
 #define EMUBOLD_NEEDED(original, request) \
     (((request) != FW_DONTCARE) && ((request) - (original) >= FW_BOLD - FW_MEDIUM))
 
+/* Special characters */
+#define TAB  (L'\t')
+#define CR   (L'\r')
+#define LF   (L'\n')
+
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
@@ -5890,15 +5895,26 @@ IntGetTextDisposition(
     INT i, glyph_index;
     FT_BitmapGlyph realglyph;
     FT_Face face = Cache->Hashed.Face;
-    BOOL use_kerning = FT_HAS_KERNING(face);
+    BOOL use_kerning = FT_HAS_KERNING(face), indexed = (ETO_GLYPH_INDEX & fuOptions);
     ULONG previous = 0;
     FT_Vector delta;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    for (i = 0; i < Count; ++i)
+    for (i = 0; i < Count; ++i, ++String)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        if (indexed)
+        {
+            glyph_index = *String;
+        }
+        else
+        {
+            /* Ignore special characters */
+            if (*String == TAB || *String == LF || *String == CR)
+                continue;
+
+            glyph_index = get_glyph_index(face, *String);
+        }
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6064,7 +6080,7 @@ IntExtTextOutW(
     PMATRIX pmxWorldToDevice;
     FT_Vector delta, vecAscent64, vecDescent64;
     LOGFONTW *plf;
-    BOOL use_kerning, bResult, DoBreak;
+    BOOL use_kerning, bResult, DoBreak, indexed;
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
 
@@ -6287,9 +6303,21 @@ IntExtTextOutW(
     Y64 = RealYStart64;
     previous = 0;
     DoBreak = FALSE;
-    for (i = 0; i < Count; ++i)
+    indexed = (ETO_GLYPH_INDEX & fuOptions);
+    for (i = 0; i < Count; ++i, ++String)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        if (indexed)
+        {
+            glyph_index = *String;
+        }
+        else
+        {
+            /* Ignore special characters */
+            if (*String == TAB || *String == LF || *String == CR)
+                continue;
+
+            glyph_index = get_glyph_index(face, *String);
+        }
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
