@@ -2423,21 +2423,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
           IntLinkHwnd(Window, hwndInsertAfter);
    }
 
-   /* Send the WM_NCCALCSIZE message */
-   {
-  // RECT rc;
-   MaxPos.x = Window->rcWindow.left;
-   MaxPos.y = Window->rcWindow.top;
-
-   Result = co_WinPosGetNonClientSize(Window, &Window->rcWindow, &Window->rcClient);
-   //rc = Window->rcWindow;
-   //Result = co_IntSendMessageNoWait(Window->head.h, WM_NCCALCSIZE, FALSE, (LPARAM)&rc);
-   //Window->rcClient = rc;
-
-   RECTL_vOffsetRect(&Window->rcWindow, MaxPos.x - Window->rcWindow.left,
-                                     MaxPos.y - Window->rcWindow.top);
-   }
-
    /* Create the IME window for pWnd */
    if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(Window))
    {
@@ -2463,6 +2448,21 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
          UserDerefObjectCo(pwndDefaultIme);
       }
+   }
+
+   /* Send the WM_NCCALCSIZE message */
+   {
+  // RECT rc;
+   MaxPos.x = Window->rcWindow.left;
+   MaxPos.y = Window->rcWindow.top;
+
+   Result = co_WinPosGetNonClientSize(Window, &Window->rcWindow, &Window->rcClient);
+   //rc = Window->rcWindow;
+   //Result = co_IntSendMessageNoWait(Window->head.h, WM_NCCALCSIZE, FALSE, (LPARAM)&rc);
+   //Window->rcClient = rc;
+
+   RECTL_vOffsetRect(&Window->rcWindow, MaxPos.x - Window->rcWindow.left,
+                                     MaxPos.y - Window->rcWindow.top);
    }
 
    /* Send the WM_CREATE message. */
