@@ -5912,7 +5912,7 @@ IntGetTextDisposition(
         else
         {
             /* Ignore special characters */
-            if (*String <= CR && (*String == TAB || *String == LF || *String == CR))
+            if (*String <= CR && (*String == CR || *String == TAB || *String == LF))
                 continue;
             glyph_index = get_glyph_index(face, *String);
         }
@@ -6314,7 +6314,7 @@ IntExtTextOutW(
         else
         {
             /* Ignore special characters */
-            if (*String <= CR && (*String == TAB || *String == LF || *String == CR))
+            if (*String <= CR && (*String == CR || *String == TAB || *String == LF))
                 continue;
             glyph_index = get_glyph_index(face, *String);
         }
