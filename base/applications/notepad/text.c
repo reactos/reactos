@@ -82,8 +82,7 @@ ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 static BOOL
 ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
-    DWORD adwEolnCount[3] = { 0, 0, 0 };
-    DWORD ich, cchText = *pcchText, cchNew;
+    DWORD cchNew, ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
     LPWSTR pszText = *ppszText, pszNew;
     BOOL bCR = FALSE;
     EOLN iEoln;
