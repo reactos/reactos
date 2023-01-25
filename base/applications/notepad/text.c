@@ -80,7 +80,7 @@ ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 }
 
 static BOOL
-ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEoln)
+ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
     DWORD adwEolnCount[3] = { 0, 0, 0 };
     DWORD ich, cchText = *pcchText, cchNew;
@@ -251,7 +251,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 
     pszAllocText[dwCharCount] = UNICODE_NULL;
 
-    if (!ProcessNewLines(phLocal, &pszAllocText, &dwCharCount, piEoln))
+    if (!ProcessNewLinesAndNulls(phLocal, &pszAllocText, &dwCharCount, piEoln))
         goto done;
 
     *pencFile = encFile;
