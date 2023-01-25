@@ -419,7 +419,6 @@ BOOL DoCloseFile(VOID)
 
 VOID DoOpenFile(LPCTSTR szFileName)
 {
-    static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
     TCHAR log[5];
     HLOCAL hLocal;
@@ -436,6 +435,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
         goto done;
     }
 
+    /* To make loading file quicker, we use the internal handle of EDIT control */
     hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
     if (!ReadText(hFile, &hLocal, &Globals.encFile, &Globals.iEoln))
     {
@@ -448,7 +448,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
      *  See http://support.microsoft.com/?kbid=260563
      */
-    if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, dotlog))
+    if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, _T(".LOG")))
     {
         static const TCHAR lf[] = _T("\r\n");
         SendMessage(Globals.hEdit, EM_SETSEL, GetWindowTextLength(Globals.hEdit), -1);
