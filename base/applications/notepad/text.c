@@ -22,6 +22,7 @@
  */
 
 #include "notepad.h"
+#include <assert.h>
 
 BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
 {
@@ -60,7 +61,7 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
+ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 {
     DWORD ichNew, ichOld;
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
@@ -77,6 +78,7 @@ ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
         }
     }
     pszNew[ichNew] = UNICODE_NULL;
+    assert(ichNew == cchNew);
 }
 
 static BOOL
@@ -130,7 +132,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOL
                 return FALSE; /* Failure */
             }
 
-            ReplaceNewLines(pszNew, pszText, cchText, (iEoln == EOLN_LF) ? L'\n' : L'\r');
+            ReplaceNewLines(pszNew, cchNew, pszText, cchText, (iEoln == EOLN_LF) ? L'\n' : L'\r');
 
             /* Replace with new data */
             LocalUnlock(*phLocal);
