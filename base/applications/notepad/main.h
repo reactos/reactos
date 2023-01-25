@@ -52,7 +52,7 @@ typedef enum
     EOLN_CRLF = 0,
     EOLN_LF   = 1,
     EOLN_CR   = 2
-} EOLN; /* NewLine code */
+} EOLN; /* End of line (NewLine) type */
 
 typedef struct
 {
