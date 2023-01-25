@@ -86,25 +86,27 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOL
 {
     DWORD cchNew, ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
     LPWSTR pszText = *ppszText, pszNew;
-    BOOL bCR = FALSE;
     EOLN iEoln;
     HLOCAL hLocal;
+    BOOL bPrevCR = FALSE;
 
-    /* Replace '\0' with SPACE. Count new lines. */
+    /* Replace '\0' with SPACE. Count newlines. */
     for (ich = 0; ich < cchText; ++ich)
     {
         WCHAR ch = pszText[ich];
         if (ch == UNICODE_NULL)
             pszText[ich] = L' ';
 
-        if (bCR && ch == '\n')
-            adwEolnCount[EOLN_CRLF]++;
-
-        bCR = (ch == L'\r');
-        if (bCR)
-            adwEolnCount[EOLN_CR]++;
-        if (ch == L'\n')
+        if (ch == '\n')
+        {
             adwEolnCount[EOLN_LF]++;
+            if (bPrevCR)
+                adwEolnCount[EOLN_CRLF]++;
+        }
+
+        bPrevCR = (ch == L'\r');
+        if (bPrevCR)
+            adwEolnCount[EOLN_CR]++;
     }
 
     /* Choose the newline code */
