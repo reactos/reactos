@@ -76,7 +76,6 @@ ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
             pszNew[ichNew++] = ch;
         }
     }
-
     pszNew[ichNew] = UNICODE_NULL;
 }
 
@@ -107,11 +106,13 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEol
             adwEolnCount[EOLN_LF]++;
     }
 
-    iEoln = EOLN_CRLF;
-    if (adwEolnCount[EOLN_LF] > adwEolnCount[EOLN_CRLF])
-        iEoln = EOLN_LF;
+    /* Choose the newline code */
     if (adwEolnCount[EOLN_CR] > adwEolnCount[EOLN_CRLF])
         iEoln = EOLN_CR;
+    else if (adwEolnCount[EOLN_LF] > adwEolnCount[EOLN_CRLF])
+        iEoln = EOLN_LF;
+    else
+        iEoln = EOLN_CRLF;
 
     switch (iEoln)
     {
@@ -120,17 +121,19 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEol
 
         case EOLN_LF:
         case EOLN_CR:
+            /* Allocate a buffer for EM_SETHANDLE */
             cchNew = cchText + adwEolnCount[iEoln];
             hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
             pszNew = LocalLock(hLocal);
             if (!pszNew)
             {
                 LocalFree(hLocal);
-                return FALSE;
+                return FALSE; /* Failure */
             }
 
             ReplaceNewLines(pszNew, pszText, cchText, (iEoln == EOLN_LF) ? L'\n' : L'\r');
 
+            /* Replace with new data */
             LocalUnlock(*phLocal);
             LocalFree(*phLocal);
             *phLocal = hLocal;
