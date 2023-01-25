@@ -111,7 +111,7 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEol
         bCR = (ch == L'\r');
         if (bCR)
             adwEolnCount[EOLN_CR]++;
-        else if (ch == L'\n')
+        if (ch == L'\n')
             adwEolnCount[EOLN_LF]++;
     }
 
@@ -131,7 +131,7 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEol
             cchNew = cchText + adwEolnCount[iEoln];
             hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
             pszNew = LocalLock(hLocal);
-            if (!hLocal || !pszNew)
+            if (!pszNew)
             {
                 LocalFree(hLocal);
                 return FALSE;
@@ -145,6 +145,7 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEol
             *ppszText = pszNew;
             *pcchText = cchNew;
             break;
+    DEFAULT_UNREACHABLE;
     }
 
     *piEoln = iEoln;
@@ -212,9 +213,8 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 
         CopyMemory(pszAllocText, pszText, dwCharCount * sizeof(WCHAR));
 
-        if (encFile == ENCODING_UTF16BE) /* Big endian */
+        if (encFile == ENCODING_UTF16BE) /* big endian; Swap bytes */
         {
-            /* Swap endian */
             BYTE b, *pb = (LPBYTE)pszAllocText;
             for (i = 0; i < dwCharCount * 2; i += 2)
             {
@@ -230,16 +230,12 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     case ENCODING_UTF8BOM:
         iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM) ? CP_UTF8 : CP_ACP);
 
+        dwCharCount = 0;
         if ((dwSize - dwPos) > 0)
         {
             dwCharCount = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, NULL, 0);
             if (dwCharCount == 0)
                 goto done;
-        }
-        else
-        {
-            /* special case for files with no characters (other than BOMs) */
-            dwCharCount = 0;
         }
 
         /* Re-allocate the buffer for EM_SETHANDLE */

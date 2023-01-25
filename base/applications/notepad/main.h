@@ -47,12 +47,12 @@ typedef enum
 // #define MIN_ENCODING   0
 // #define MAX_ENCODING   3
 
-/* NewLine code */
-typedef enum {
+typedef enum
+{
     EOLN_CRLF = 0,
     EOLN_LF   = 1,
     EOLN_CR   = 2
-} EOLN;
+} EOLN; /* NewLine code */
 
 typedef struct
 {
