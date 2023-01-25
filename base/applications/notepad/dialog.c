@@ -443,6 +443,8 @@ VOID DoOpenFile(LPCTSTR szFileName)
         goto done;
     }
     SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hLocal, 0);
+    /* No need of EM_SETMODIFY and EM_EMPTYUNDOBUFFER here. EM_SETHANDLE does instead. */
+
     SetFocus(Globals.hEdit);
 
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
