@@ -71,7 +71,6 @@ static VOID
 ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 {
     DWORD ichNew, ichOld;
-
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
         WCHAR ch = pszOld[ichOld];
@@ -95,14 +94,13 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEo
     DWORD ich, cchText = *pcchText, cchNew;
     LPWSTR pszText = *ppszText, pszNew;
     BOOL bCR = FALSE;
-    INT iEoln;
+    EOLN iEoln;
     HLOCAL hLocal;
 
-    /* Count new lines. Replace '\0' with SPACE. */
+    /* Replace '\0' with SPACE. Count new lines. */
     for (ich = 0; ich < cchText; ++ich)
     {
         WCHAR ch = pszText[ich];
-
         if (ch == UNICODE_NULL)
             pszText[ich] = L' ';
 
@@ -146,16 +144,13 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEo
             *ppszText = pszNew;
             *pcchText = cchNew;
             break;
-
-        default:
-            return FALSE;
     }
 
     return TRUE;
 }
 
 BOOL
-ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, int *piEoln)
+ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
     LPBYTE pBytes = NULL;
     LPWSTR pszText, pszAllocText = NULL;
@@ -382,7 +377,7 @@ done:
     return bSuccess;
 }
 
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, int iEoln)
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln)
 {
     WCHAR wcBom;
     LPCWSTR pszLF = L"\n";

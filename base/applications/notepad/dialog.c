@@ -442,10 +442,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
         ShowLastError();
         goto done;
     }
-
     SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hLocal, 0);
-    SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
-    SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     SetFocus(Globals.hEdit);
 
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
@@ -588,7 +585,7 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
                 if (hCombo)
-                    Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                    Globals.iEoln = (EOLN)SendMessage(hCombo, CB_GETCURSEL, 0, 0);
             }
             break;
     }
