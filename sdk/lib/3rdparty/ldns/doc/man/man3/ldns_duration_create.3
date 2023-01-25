@@ -1,0 +1,129 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_duration_type, ldns_duration_create, ldns_duration_create_from_string, ldns_duration_cleanup, ldns_duration_compare, ldns_duration2string, ldns_duration2time \- duration type and related functions
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_duration_type* ldns_duration_create(void);
+.PP
+ldns_duration_type* ldns_duration_create_from_string(const char* str);
+.PP
+void ldns_duration_cleanup(ldns_duration_type* duration);
+.PP
+int ldns_duration_compare(const ldns_duration_type* d1, const ldns_duration_type* d2);
+.PP
+char* ldns_duration2string(const ldns_duration_type* duration);
+.PP
+time_t ldns_duration2time(const ldns_duration_type* duration);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_duration_type\fR
+.br
+Duration.
+.br
+
+.br
+struct ldns_duration_struct
+.br
+{
+.br
+    time_t years;
+.br
+    time_t months;
+.br
+    time_t weeks;
+.br
+    time_t days;
+.br
+    time_t hours;
+.br
+    time_t minutes;
+.br
+    time_t seconds;
+.br
+};
+.br
+
+.br
+typedef struct ldns_duration_struct ldns_duration_type;
+.PP
+.HP
+\fIldns_duration_create\fR()
+Create a new 'instant' duration.
+\.br
+Returns ldns_duration_type* created duration
+
+.PP
+.HP
+\fIldns_duration_create_from_string\fR()
+Create a duration from string.
+\.br
+\fBstr\fR: string-format duration
+\.br
+Returns ldns_duration_type* created duration
+
+.PP
+.HP
+\fIldns_duration_cleanup\fR()
+Clean up duration.
+\.br
+\fBduration\fR: duration to be cleaned up
+
+.PP
+.HP
+\fIldns_duration_compare\fR()
+Compare durations.
+\.br
+\fBd1\fR: one duration
+\.br
+\fBd2\fR: another duration
+\.br
+Returns int 0 if equal, -1 if d1 < d2, 1 if d2 < d1
+
+.PP
+.HP
+\fIldns_duration2string\fR()
+Convert a duration to a string.
+\.br
+\fBduration\fR: duration to be converted
+\.br
+Returns char* string-format duration
+
+.PP
+.HP
+\fIldns_duration2time\fR()
+Convert a duration to a time.
+\.br
+\fBduration\fR: duration to be converted
+\.br
+Returns time_t time-format duration
+
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

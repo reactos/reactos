@@ -1,0 +1,5 @@
+These tools are examples of ldns usage. They are not meant for production
+systems and will not be supported as such.
+
+Compilation:
+autoreconf && ./configure && make

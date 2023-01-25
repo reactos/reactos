@@ -1,0 +1,10 @@
+NETLDNS is a functionality port of NLnet Labs' LDNS to the .NET
+2.0 framework, contributed by Alex Nicoll of the Carnegie Mellon
+University Software Engineering Institute.  NETLDNS is released
+under the BSD license.  NETLDNS uses Mihnea Radulescu's BigInteger
+Library (http://www.codeproject.com/KB/cs/BigInteger_Library.aspx)
+from CodeProject to help with key manipulation. Please contact Alex at
+anicoll@cert.org with inquiries or requests for newer versions.
+
+This project is not supported by NLnet Labs.
+

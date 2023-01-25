@@ -1,0 +1,206 @@
+/**
+   \page tutorial3_signzone Tutorial 3: Signing a zone file
+   \dontinclude ldns-signzone.c 
+   
+   The full source code can be found in \link examples/ldns-signzone.c \endlink
+
+   Of course, we start by the usual includes. Since we need a bit more here,
+   we'll add those right away.
+
+   \skipline include
+   \until define
+
+   Let's skip the boring usage() and sanity check functions, and dive right
+   into main().
+
+   \skipline main(int argc
+   \skipline {
+
+   We'll be reading another zone file, so let's prepare some variables for that.
+
+   \skipline zone
+   \until argi
+
+   We will create a separate zone structure for the signed zone, so let's have a clear name for the original one.
+
+   \skipline zone
+   \until zone
+
+   To sign a zone, we need keys, so we need some variables to read and store it;
+
+   \skipline key
+   \until status
+
+   The \ref ldns_key structure holds (private) keys. These can be of any
+   supported algorithm type; you can put an RSA key in it, an DSA key, or an
+   HMAC key. Public keys can simply be put in an \ref ldns_rr structure with
+   type \ref LDNS_RR_TYPE_DNSKEY.
+
+   The \ref ldns_key_list type is much like the \ref ldns_rr_list, only, you
+   guessed it, for \c ldns_key entries.
+
+
+   The signed zone will be stored in a new file.
+
+   \skipline file
+   \until file
+
+   And we have some command line options for the output zone.
+
+   \skipline tm
+   \until class
+
+   \c origin is a domain name, so it can be stored in an \ref ldns_rdf
+   variable with type \ref LDNS_RDF_TYPE_DNAME.
+
+   The next part is option parsing, which is pretty straightforward using \c
+   getopt(), so we'll skip this too. U can always look to the source of the
+   file to check it out.
+
+   Okay that's it for the variables, let's get to work!
+
+   First we'll try to read in the zone that is to be signed.
+
+   \skipline fopen(zone
+   \until } else {
+
+   If the file exists and can be read, we'll let ldns mold it into a zone
+   structure:
+
+   \skipline zone_new
+
+   This creates a new (\c new) zone from (\c frm) a filepointer (\c fp),
+   while remembering the current line (\c l) in the input file (for error
+   messages).
+
+   A pointer to the zone structure to be filled is passed as the first
+   argument, like in most \c new_frm functions.
+
+   Like a lot of ldns functions, this one returns a \c ldns_status
+   indicating success or the type of failure, so let us check that.
+
+   \skipline STATUS
+   \until } else {
+
+   If everything is ok so far, we check if the zone has a SOA record and contains actual data.
+
+   \skipline orig_soa
+   \until }
+   \until }
+   \until }
+   
+   Now that we have the complete zone in our memory, we won't be needing the file anymore.
+
+   \skipline fclose
+   \until }
+   
+   If there was no origin given, we'll use the one derived from the original zone file.
+
+   \skipline origin
+   \until }
+
+   No signing party can be complete without keys to sign with, let's fetch those.
+
+   Multiple key files can be specified on the command line, by using the
+   base names of the .key/.private file pairs.
+
+   \skipline key
+   \until fopen
+
+   As you can see, we append ".private" to the name, which should result in
+   the complete file name of the private key. Later we'll also form the
+   ".key" file name, which will be directly included in the signed zone.
+
+   If the file exists, we'll read it and create a \c ldns_key from its
+   contents, much like the way we read the zone earlier.
+
+   \skipline line_nr
+   \until STATUS
+
+   If this went ok, we need to set the inception and expiration times, which
+   are set in the keys, but will eventually end up in the RRSIGs generated
+   by those keys.
+
+   \skipline expiration
+   \until }
+   \skipline inception
+   \until }
+
+   And now that we have read the private keys, we read the public keys and
+   add them to the zone.
+
+   Reading them from the files works roughly the same as reading private
+   keys, but public keys are normal Resource Records, and they can be stored
+   in general \c ldns_rr structures.
+
+   \skipline FREE
+   \until }
+   \until }
+
+   With \c push() we add them to our key list and our zone. This function
+   clones the data, so we can safely free it after that.
+
+   \skipline push
+   \until free
+
+   And if we're done, we free the allocated memory for the file name.
+
+   \until FREE
+
+   If the reading did not work, we print an error. Finally, we move on to
+   the next key in the argument list.
+
+   \skipline } else {
+   \until }
+   \until }
+   \until }
+
+   Just to be sure, we add a little check to see if we actually have any keys now.
+   
+   \skipline count
+   \until }
+
+   So, we have our zone, we have our keys, let's do some signing!
+
+   \skipline sign
+
+   Yes. That's it. We now have a completely signed zone, \c ldns_zone_sign
+   checks the keys, and uses the zone signing keys to sign the data resource
+   records. NSEC and RRSIG resource records are generated and added to the
+   new zone.
+
+   So now that we have a signed zone, all that is left is to store it somewhere.
+
+   If no explicit output file name was given, we'll just append ".signed" to
+   the original zone file name.
+
+   \skipline outputfile
+   \until }
+
+   \c ldns_zone_sign returns NULL if the signing did not work, so we must check that.
+
+   \skipline signed_zone
+   \until } else {
+   
+   Writing to a file is no different than normal printing, so we'll print to
+   the file and close it.
+
+   \skipline print
+   \until }
+
+   And of course, give an error if the signing failed.
+
+   \skipline } else {
+   \until }
+
+   Just to be nice, let's free the rest of the data we allocated, and exit
+   with the right return value.
+
+   \skipline free
+   \until }
+
+   
+   
+
+
+*/

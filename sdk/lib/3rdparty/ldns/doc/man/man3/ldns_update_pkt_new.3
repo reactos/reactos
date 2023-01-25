@@ -1,0 +1,55 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_update_pkt_new \- create an update packet
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_pkt* ldns_update_pkt_new(ldns_rdf *zone_rdf, ldns_rr_class clas, const ldns_rr_list *pr_rrlist, const ldns_rr_list *up_rrlist, const ldns_rr_list *ad_rrlist);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_update_pkt_new\fR()
+create an update packet from zone name, class and the rr lists
+\.br
+\fBzone_rdf\fR: name of the zone
+The returned packet will take ownership of zone_rdf, so the caller should not free it
+\.br
+\fBclas\fR: zone class
+\.br
+\fBpr_rrlist\fR: list of Prerequisite Section RRs
+\.br
+\fBup_rrlist\fR: list of Updates Section RRs
+\.br
+\fBad_rrlist\fR: list of Additional Data Section RRs (currently unused)
+\.br
+Returns the new packet
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_update_pkt_tsig_add\fR, \fIldns_update_pkt_tsig_add\fR, \fIldns_update_zocount\fR, \fIldns_update_prcount\fR, \fIldns_update_upcount\fR, \fIldns_update_adcount\fR, \fIldns_update_set_zocount\fR, \fIldns_update_set_prcount\fR, \fIldns_update_set_upcount\fR, \fIldns_update_set_adcount\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

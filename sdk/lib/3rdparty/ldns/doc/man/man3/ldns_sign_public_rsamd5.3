@@ -1,0 +1,73 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_sign_public_dsa, ldns_sign_public_rsamd5, ldns_sign_public_rsasha1 \- sign buffer
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_rdf* ldns_sign_public_dsa(ldns_buffer *to_sign, DSA *key);
+.PP
+ldns_rdf* ldns_sign_public_rsamd5(ldns_buffer *to_sign, RSA *key);
+.PP
+ldns_rdf* ldns_sign_public_rsasha1(ldns_buffer *to_sign, RSA *key);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_sign_public_dsa\fR()
+Sign a buffer with the \%DSA key (hash with SHA1)
+
+\.br
+\fBto_sign\fR: The ldns_buffer containing raw data that is to be signed
+\.br
+\fBkey\fR: The \%DSA key structure to sign with
+\.br
+Returns a ldns_rdf for the \%RRSIG ldns_rr
+.PP
+.HP
+\fIldns_sign_public_rsamd5\fR()
+Sign a buffer with the \%RSA key (hash with MD5)
+\.br
+\fBto_sign\fR: buffer with the data
+\.br
+\fBkey\fR: the key to use
+\.br
+Returns a ldns_rdf with the signed data
+.PP
+.HP
+\fIldns_sign_public_rsasha1\fR()
+Sign a buffer with the \%RSA key (hash with SHA1)
+\.br
+\fBto_sign\fR: buffer with the data
+\.br
+\fBkey\fR: the key to use
+\.br
+Returns a ldns_rdf with the signed data
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_sign_public\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

@@ -1,0 +1,203 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_buffer, ldns_buffer_new, ldns_buffer_new_frm_data, ldns_buffer_clear, ldns_buffer_printf, ldns_buffer_free, ldns_buffer_copy, ldns_buffer_export, ldns_buffer_export2str, ldns_buffer2str \- buffers
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_buffer* ldns_buffer_new(size_t capacity);
+.PP
+void ldns_buffer_new_frm_data(ldns_buffer *buffer, const void *data, size_t size);
+.PP
+void ldns_buffer_clear(ldns_buffer *buffer);
+.PP
+int ldns_buffer_printf(ldns_buffer *buffer, const char *format, ...);
+.PP
+void ldns_buffer_free(ldns_buffer *buffer);
+.PP
+void ldns_buffer_copy(ldns_buffer* result, const ldns_buffer* from);
+.PP
+void* ldns_buffer_export(ldns_buffer *buffer);
+.PP
+char* ldns_buffer_export2str(ldns_buffer *buffer);
+.PP
+char* ldns_buffer2str(ldns_buffer *buffer);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_buffer\fR
+.br
+implementation of buffers to ease operations
+.br
+
+.br
+ldns_buffers can contain arbitrary information, per octet. You can write
+.br
+to the current end of a buffer, read from the current position, and
+.br
+access any data within it.
+.br
+
+.br
+Example use of buffers is in the source code of \\ref host2str.c
+.br
+struct ldns_struct_buffer
+.br
+{
+.br
+	\fBThe current position used for reading/writing:\fR 
+.br
+	size_t   _position;
+.br
+
+.br
+	\fBThe read/write limit:\fR
+.br
+	size_t   _limit;
+.br
+
+.br
+	\fBThe amount of data the buffer can contain:\fR
+.br
+	size_t   _capacity;
+.br
+
+.br
+	\fBThe data contained in the buffer:\fR
+.br
+	uint8_t *_data;
+.br
+
+.br
+	\fBIf the buffer is fixed it cannot be resized:\fR
+.br
+	unsigned _fixed : 1;
+.br
+
+.br
+	/** The current state of the buffer. If writing to the buffer fails
+.br
+	 * for any reason, this value is changed. This way, you can perform
+.br
+	 * multiple writes in sequence and check for success afterwards. */
+.br
+	ldns_status _status;
+.br
+};
+.br
+typedef struct ldns_struct_buffer ldns_buffer;
+.PP
+.HP
+\fIldns_buffer_new\fR()
+creates a new buffer with the specified capacity.
+
+\.br
+\fBcapacity\fR: the size (in bytes) to allocate for the buffer
+\.br
+Returns the created buffer
+.PP
+.HP
+\fIldns_buffer_new_frm_data\fR()
+creates a buffer with the specified data.  The data \%IS copied
+and \%MEMORY allocations are done.  The buffer is not fixed and can
+be resized using buffer_reserve().
+
+\.br
+\fBbuffer\fR: pointer to the buffer to put the data in
+\.br
+\fBdata\fR: the data to encapsulate in the buffer
+\.br
+\fBsize\fR: the size of the data
+.PP
+.HP
+\fIldns_buffer_clear\fR()
+clears the buffer and make it ready for writing.  The buffer's limit
+is set to the capacity and the position is set to 0.
+\.br
+\fBbuffer\fR: the buffer to clear
+.PP
+.HP
+\fIldns_buffer_printf\fR()
+prints to the buffer, increasing the capacity if required using
+buffer_reserve(). The buffer's position is set to the terminating '\\\\0'
+Returns the number of characters written (not including the
+terminating '\\\\0') or -1 on failure.
+.PP
+.HP
+\fIldns_buffer_free\fR()
+frees the buffer.
+\.br
+\fB*buffer\fR: the buffer to be freed
+\.br
+Returns void
+.PP
+.HP
+\fIldns_buffer_copy\fR()
+Copy contents of the from buffer to the result buffer and then flips 
+the result buffer. Data will be silently truncated if the result buffer is
+too small.
+\.br
+\fB*result\fR: resulting buffer which is copied to.
+\.br
+\fB*from\fR: what to copy to result.
+.PP
+.HP
+\fIldns_buffer_export\fR()
+Makes the buffer fixed and returns a pointer to the data.  The
+caller is responsible for free'ing the result.
+\.br
+\fB*buffer\fR: the buffer to be exported
+\.br
+Returns void
+.PP
+.HP
+\fIldns_buffer_export2str\fR()
+Exports and returns the data in the buffer as a null terminated
+char * string. The returned string must be freed by the caller.
+The buffer must be in write modus and may thus not have been flipped.
+The buffer is fixed after this function returns.
+
+\.br
+\fBbuffer\fR: buffer containing char * data
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.HP
+\fIldns_buffer2str\fR()
+Returns a copy of the data in the buffer as a null terminated
+char * string. The returned string must be freed by the caller.
+The buffer must be in write modus and may thus not have been flipped.
+
+\.br
+\fBbuffer\fR: buffer containing char * data
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_buffer_flip\fR, \fIldns_buffer_rewind\fR, \fIldns_buffer_position\fR, \fIldns_buffer_set_position\fR, \fIldns_buffer_skip\fR, \fIldns_buffer_limit\fR, \fIldns_buffer_set_limit\fR, \fIldns_buffer_capacity\fR, \fIldns_buffer_set_capacity\fR, \fIldns_buffer_reserve\fR, \fIldns_buffer_at\fR, \fIldns_buffer_begin\fR, \fIldns_buffer_end\fR, \fIldns_buffer_current\fR, \fIldns_buffer_remaining_at\fR, \fIldns_buffer_remaining\fR, \fIldns_buffer_available_at\fR, \fIldns_buffer_available\fR, \fIldns_buffer_status\fR, \fIldns_buffer_status_ok\fR, \fIldns_buffer_write_at\fR, \fIldns_buffer_write\fR, \fIldns_buffer_write_string_at\fR, \fIldns_buffer_write_string\fR, \fIldns_buffer_write_u8_at\fR, \fIldns_buffer_write_u8\fR, \fIldns_buffer_write_u16_at\fR, \fIldns_buffer_write_u16\fR, \fIldns_buffer_read_at\fR, \fIldns_buffer_read\fR, \fIldns_buffer_read_u8_at\fR, \fIldns_buffer_read_u8\fR, \fIldns_buffer_read_u16_at\fR, \fIldns_buffer_read_u16\fR, \fIldns_buffer_read_u32_at\fR, \fIldns_buffer_read_u32\fR, \fIldns_buffer_write_u32\fR, \fIldns_buffer_write_u32_at\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

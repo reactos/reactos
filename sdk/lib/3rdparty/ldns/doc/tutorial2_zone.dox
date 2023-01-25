@@ -1,0 +1,111 @@
+/**
+   \page tutorial2_zone Tutorial 2: Reading a zone file
+   \dontinclude ldns-read-zone.c 
+   
+   The full source code can be found in \link examples/ldns-read-zone.c \endlink
+   
+   ldns-read-zone reads a zone file, and prints it to stdout, with 1 resource record per line.
+
+   <pre>
+% cat example.zone
+$ORIGIN example.
+$TTL 600
+
+example.        IN SOA  example. op.example. (
+                                2004022501 ; serial
+                                28800      ; refresh (8 hours)
+                                7200       ; retry (2 hours)
+                                604800     ; expire (1 week)
+                                18000      ; minimum (5 hours)
+                                )
+
+@       IN      MX      10 mail.example.
+@       IN      NS      ns1
+@       IN      NS      ns2
+@       IN      A       123.123.123.123
+
+% ldns-read-zone example.zone
+example.        600     IN      SOA     example. op.example. 2004022501 28800 7200 604800 18000
+example.        600     IN      MX      10 mail.example.
+example.        600     IN      NS      ns1.example.
+example.        600     IN      NS      ns2.example.
+example.        600     IN      A       123.123.123.123
+   </pre>
+
+
+
+Again, let's start with including some necessary header files:
+
+\skipline include
+\until errno
+
+In this example, we are going to open a file, if that fails, we'll need errno.h to display an error message.
+
+Okay, let's declare the variables we are going to need today:
+
+\skipline filename
+\until ldns_status
+
+The only two ldns-specific types here are \c ldns_zone and \c ldns_status.
+  - \c ldns_zone is the structure that can contain a complete zone
+  - \c ldns_status again is used to check return values of ldns functions
+
+
+If we get no filename, we'll read standard input, otherwise, we'll try to
+open the given filename:
+\skipline if (argc == 0)
+\until exit(EXIT_FAILURE)
+\until }
+\until }
+
+
+With the \c FILE pointer in our hands, we visit ldns to pour it into a zone
+structure:
+\skipline ldns_zone_new_frm_fp_l
+
+There is also a \c ldns_zone_new_frm_fp, but this one also remembers the
+line number it was on, so we can use that if we encounter a parse error.
+
+Just like in \ref tutorial1_mx, the first argument is a pointer
+to the place ldns should store its creation in, and again, the return value
+is the status code.
+
+The second argument is the file pointer where our zone data should reside.
+
+The third argument, if not NULL, is a \c dname that contains the zones
+origin. It will place this dname after every name in the file that is not a
+fully qualified domain name.
+
+The fourth argument, if not 0, is the default TTL to use.
+
+Both these values can be specified in the zone file by setting \c $ORIGIN and \c $TTL.
+
+The fifth argument specifies the default class, which defaults to IN (\ref LDNS_RR_CLASS_IN).
+
+And finally, every time \c ldns_zone_new_frm_fp_l reads a line from the
+input file pointer, it will increment the value pointed to by the last
+argument with 1.
+
+
+Okay, with that, we should have a nice zone structure. Of course we need to
+check whether it has succeeded.
+
+\skipline LDNS_STATUS_OK
+\until deep_free
+
+If everything went well, we sort the zone if necessary, print it, and free it.
+
+Since \c ldns_zone contains other ldns structures, we use \c ldns_deep_free
+so that every \c ldns_rr_list, \c ldns_rr et cetera are freed too.
+
+\until line_nr);
+\until }
+
+If something went wrong, we use \c ldns_get_errorstr_by_id() to get a nice
+error string instead of just a status integer.
+
+And of course, we should play nice and close the file:
+\skipline fclose
+\until exit
+
+*/

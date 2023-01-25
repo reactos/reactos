@@ -1,0 +1,311 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_pkt_id, ldns_pkt_qr, ldns_pkt_aa, ldns_pkt_tc, ldns_pkt_rd, ldns_pkt_cd, ldns_pkt_ra, ldns_pkt_ad, ldns_pkt_get_opcode, ldns_pkt_get_rcode, ldns_pkt_qdcount, ldns_pkt_ancount, ldns_pkt_nscount, ldns_pkt_arcount, ldns_pkt_answerfrom, ldns_pkt_querytime, ldns_pkt_size, ldns_pkt_tsig, ldns_pkt_question, ldns_pkt_answer, ldns_pkt_authority, ldns_pkt_additional, ldns_pkt_get_section_clone, ldns_pkt_rr_list_by_name, ldns_pkt_rr_list_by_type, ldns_pkt_rr_list_by_name_and_type \- get ldns_pkt attributes
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ ldns_pkt_id();
+.PP
+bool ldns_pkt_qr(const ldns_pkt *p);
+.PP
+bool ldns_pkt_aa(const ldns_pkt *p);
+.PP
+bool ldns_pkt_tc(const ldns_pkt *p);
+.PP
+bool ldns_pkt_rd(const ldns_pkt *p);
+.PP
+bool ldns_pkt_cd(const ldns_pkt *p);
+.PP
+bool ldns_pkt_ra(const ldns_pkt *p);
+.PP
+bool ldns_pkt_ad(const ldns_pkt *p);
+.PP
+ldns_pkt_opcode ldns_pkt_get_opcode(const ldns_pkt *p);
+.PP
+ldns_pkt_rcode ldns_pkt_get_rcode(const ldns_pkt *p);
+.PP
+uint16_t ldns_pkt_qdcount(const ldns_pkt *p);
+.PP
+uint16_t ldns_pkt_ancount(const ldns_pkt *p);
+.PP
+uint16_t ldns_pkt_nscount(const ldns_pkt *p);
+.PP
+uint16_t ldns_pkt_arcount(const ldns_pkt *p);
+.PP
+ldns_rdf* ldns_pkt_answerfrom(const ldns_pkt *p);
+.PP
+uint32_t ldns_pkt_querytime(const ldns_pkt *p);
+.PP
+size_t ldns_pkt_size(const ldns_pkt *p);
+.PP
+ldns_rr* ldns_pkt_tsig(const ldns_pkt *p);
+.PP
+ldns_rr_list* ldns_pkt_question(const ldns_pkt *p);
+.PP
+ldns_rr_list* ldns_pkt_answer(const ldns_pkt *p);
+.PP
+ldns_rr_list* ldns_pkt_authority(const ldns_pkt *p);
+.PP
+ldns_rr_list* ldns_pkt_additional(const ldns_pkt *p);
+.PP
+ldns_rr_list* ldns_pkt_get_section_clone(const ldns_pkt *p, ldns_pkt_section s);
+.PP
+ldns_rr_list* ldns_pkt_rr_list_by_name(const ldns_pkt *p, const ldns_rdf *r, ldns_pkt_section s);
+.PP
+ldns_rr_list* ldns_pkt_rr_list_by_type(const ldns_pkt *p, ldns_rr_type t, ldns_pkt_section s);
+.PP
+ldns_rr_list* ldns_pkt_rr_list_by_name_and_type(const ldns_pkt *packet, const ldns_rdf *ownername, ldns_rr_type type, ldns_pkt_section sec);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_pkt_id\fR()
+.PP
+.HP
+\fIldns_pkt_qr\fR()
+Read the packet's qr bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_aa\fR()
+Read the packet's aa bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_tc\fR()
+Read the packet's tc bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_rd\fR()
+Read the packet's rd bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_cd\fR()
+Read the packet's cd bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_ra\fR()
+Read the packet's ra bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_ad\fR()
+Read the packet's ad bit
+\.br
+\fBp\fR: the packet
+\.br
+Returns value of the bit
+.PP
+.HP
+\fIldns_pkt_get_opcode\fR()
+Read the packet's code
+\.br
+\fBp\fR: the packet
+\.br
+Returns the opcode
+.PP
+.HP
+\fIldns_pkt_get_rcode\fR()
+Return the packet's response code
+\.br
+\fBp\fR: the packet
+\.br
+Returns the response code
+.PP
+.HP
+\fIldns_pkt_qdcount\fR()
+Return the packet's qd count 
+\.br
+\fBp\fR: the packet
+\.br
+Returns the qd count
+.PP
+.HP
+\fIldns_pkt_ancount\fR()
+Return the packet's an count
+\.br
+\fBp\fR: the packet
+\.br
+Returns the an count
+.PP
+.HP
+\fIldns_pkt_nscount\fR()
+Return the packet's ns count
+\.br
+\fBp\fR: the packet
+\.br
+Returns the ns count
+.PP
+.HP
+\fIldns_pkt_arcount\fR()
+Return the packet's ar count
+\.br
+\fBp\fR: the packet
+\.br
+Returns the ar count
+.PP
+.HP
+\fIldns_pkt_answerfrom\fR()
+Return the packet's answerfrom
+\.br
+\fBp\fR: packet
+\.br
+Returns the name of the server
+.PP
+.HP
+\fIldns_pkt_querytime\fR()
+Return the packet's querytime
+\.br
+\fBp\fR: the packet
+\.br
+Returns the querytime
+.PP
+.HP
+\fIldns_pkt_size\fR()
+Return the packet's size in bytes
+\.br
+\fBp\fR: the packet
+\.br
+Returns the size
+.PP
+.HP
+\fIldns_pkt_tsig\fR()
+Return the packet's tsig pseudo rr's
+\.br
+\fBp\fR: the packet
+\.br
+Returns the tsig rr
+.PP
+.HP
+\fIldns_pkt_question\fR()
+Return the packet's question section
+\.br
+\fBp\fR: the packet
+\.br
+Returns the section
+.PP
+.HP
+\fIldns_pkt_answer\fR()
+Return the packet's answer section
+\.br
+\fBp\fR: the packet
+\.br
+Returns the section
+.PP
+.HP
+\fIldns_pkt_authority\fR()
+Return the packet's authority section
+\.br
+\fBp\fR: the packet
+\.br
+Returns the section
+.PP
+.HP
+\fIldns_pkt_additional\fR()
+Return the packet's additional section
+\.br
+\fBp\fR: the packet
+\.br
+Returns the section
+.PP
+.HP
+\fIldns_pkt_get_section_clone\fR()
+return all the rr_list's in the packet. Clone the lists, instead
+of returning pointers. 
+\.br
+\fBp\fR: the packet to look in
+\.br
+\fBs\fR: what section(s) to return
+\.br
+Returns ldns_rr_list with the rr's or \%NULL if none were found
+.PP
+.HP
+\fIldns_pkt_rr_list_by_name\fR()
+return all the rr with a specific name from a packet. Optionally
+specify from which section in the packet
+\.br
+\fBp\fR: the packet
+\.br
+\fBr\fR: the name
+\.br
+\fBs\fR: the packet's section
+\.br
+Returns a list with the rr's or \%NULL if none were found
+.PP
+.HP
+\fIldns_pkt_rr_list_by_type\fR()
+return all the rr with a specific type from a packet. Optionally
+specify from which section in the packet
+\.br
+\fBp\fR: the packet
+\.br
+\fBt\fR: the type
+\.br
+\fBs\fR: the packet's section
+\.br
+Returns a list with the rr's or \%NULL if none were found
+.PP
+.HP
+\fIldns_pkt_rr_list_by_name_and_type\fR()
+return all the rr with a specific type and type from a packet. Optionally
+specify from which section in the packet
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBownername\fR: the name
+\.br
+\fBtype\fR: the type
+\.br
+\fBsec\fR: the packet's section
+\.br
+Returns a list with the rr's or \%NULL if none were found
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_pkt\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

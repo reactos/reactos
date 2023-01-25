@@ -1,0 +1,56 @@
+http://www.posadis.org/projects/poslib.php
+Poslib DNS library - Default branch
+
+http://www.posadis.org/poslib?DokuWiki=2b00f9da090fb9d4ad3d6e98b9c2f61f
+
+Poslib is the C++ library for applications using the Domain Name System
+that is used by all Posadis tools, including the Posadis DNS server and the
+Zoneedit and Dnsquery tools. It consists of a library for creating client
+applications using DNS, and a server library for DNS servers.
+
+
+FireDNS Library
+http://firestuff.org/projects/firedns
+FireDNS Library
+---------------
+(c) 2002 Ian Gulliver under the GNU Public License, Version 2.
+See GPL for more details.
+
+From libfiredns(3):
+
+libfiredns is a library for handling asynchronous DNS
+requests.  It provides a very simple interface for sending
+requests and parsing responses, as well as low-timeout
+blocking functions.  libfiredns functions have much lower
+timeouts than the stock functions and tend to be faster
+because they send requests to all configured system
+nameservers at the same time.
+
+If you have questions or comments, you can reach me at
+ian@penguinhosting.net.
+
+
+
+skadns
+
+ Skadns is Kind of an Asynchronous DNS client software.
+
+    * Kind of: it's small. Really small. But it just works.
+    * Asynchronous: all DNS operations are non-blocking.
+    * DNS client software: it's a DNS client, what you may know as a "stub resolver". To perform full DNS resolution, you will still need a full resolver like dnscache.
+
+ Similar work
+
+     * ares is an asynchronous DNS resolver library with a nice interface
+     * and more configuration options than skadns (and a very reasonable
+     * size). Use it if you find that skadns lacks configurability (you
+     * shouldn't need more than it provides, but well, you're the user).
+     * Yet it doesn't hide the DNS internals as opaquely as skadns does,
+     * giving you a bunch of fds to select() on instead of just one.
+         * adns works fine, and is small for a GNU project. Impressive. But
+	 * the interface is still too complex and much too generic - the
+	 * usual problems with GNU software.
+
+	 
+ADNS; documentation scares - is it still active
+simular aims - different ways

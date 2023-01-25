@@ -1,0 +1,15 @@
+$ORIGIN example.
+$TTL 600
+
+example.        IN SOA  example. admin.example. (
+                                2008022501 ; serial
+                                28800      ; refresh (8 hours)
+                                7200       ; retry (2 hours)
+                                604800     ; expire (1 week)
+                                18000      ; minimum (5 hours)
+                                )
+
+@       IN      MX      10 mail.example.
+@       IN      NS      ns1
+@       IN      NS      ns2
+@       IN      A       192.168.1.1

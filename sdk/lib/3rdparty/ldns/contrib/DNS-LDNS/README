@@ -1,0 +1,36 @@
+DNS::LDNS version 0.61
+======================
+
+DESCRIPTION
+
+DNS::LDNS is a perl OO-wrapper for the ldns library. For a detailed 
+description on how this library works, you are advised to read the ldns 
+documentation. For a functional description of the wrapper classes,
+please read the perldoc for DNS::LDNS and subclasses.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+    ldns
+
+AUTHOR
+
+Erik Pihl Ostlyngen, erik.ostlyngen@uninett.no
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2013 by UNINETT Norid AS
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.

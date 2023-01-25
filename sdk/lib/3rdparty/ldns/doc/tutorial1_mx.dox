@@ -1,0 +1,98 @@
+/**
+   \page tutorial1_mx Tutorial 1: Querying for MX records
+   \dontinclude ldns-mx.c 
+   
+   The full source code can be found in \link examples/ldns-mx.c \endlink
+   
+   ldns-mx is a simple tool that queries your default caching forwarder for
+   the MX (Mail exchange) record of the given domain.
+
+   <pre>
+   % ldns-mx nlnetlabs.nl
+   nlnetlabs.nl.   86400   IN      MX      100 omval.tednet.nl.
+   nlnetlabs.nl.   86400   IN      MX      50 open.nlnetlabs.nl.
+   </pre>
+  
+   First of all, we need to include the correct header files, so
+   that all functions are available to us:
+  
+   \skip include
+   \until dns.h
+
+   In this case we have used a configure script to generate a config.h file
+   that does all our inclusions for us, so that it can be compiled on
+   multiple platforms. If your platform supports the include files \c
+   stdint.h and \c stdlib.h, you can include these instead of using a
+   configure script.
+
+   The first included files are prerequisites that ldns needs to function.
+   The last one, of course, includes the functions of ldns itself.
+ 
+   In our main function, we declare some variables that we are going to use:
+
+   \skipline ldns_resolver
+   \until ldns_status
+
+   - The \c ldns_resolver structure keeps a list of nameservers, and can perform queries for us
+   - An \c ldns_rdf is a basic data type of dns, the RDATA. See \ref design for a description about the building blocks of DNS.
+     In this case, \c domain will be used to store the name the user specifies when calling the program
+   - An \c ldns_pkt is a DNS packet, for instance a complete query, or an answer
+   - The \c ldns_rr_list structure contains a list of DNS Resource Records (RRs). In this case, we will store the MX records we find in the list.
+   - \c ldns_status is the basic type for status messages in ldns. Most functions will return a value of this type.
+
+   First, we parse the command line argument (checks omitted on this page, see full source code), and store it in our \c domain variable:
+   \skipline ldns_dname_new_frm_str
+
+   This function takes a string containing a domain name (like
+   "nlnetlabs.nl") and returns an \c ldns_rdf representing that name. If
+   somehow the given string can not be parsed it returns NULL.
+
+   Then, we create the resolver structure:
+   \skipline ldns_resolver_new
+
+   Most of the functions work like this, the first argument is a pointer to
+   the structure where ldns should store its results (which is also a
+   pointer). The function returns a status code indicating success
+   (\ref LDNS_STATUS_OK) or an error number. Remember that these types of
+   functions allocate memory that you should free later (using the
+   ldns_free_<type> functions).
+
+   The second argument is the filename that contains information about the
+   resolver structure that is to be created. If this argument is NULL,
+   /etc/resolv.conf is used. The syntax of the file is like that of
+   /etc/resolv.conf.
+
+
+
+   We tell the resolver to query for our domain, type MX, of class IN:
+   \skipline ldns_resolver_search
+   \until )
+
+   The last argument contains flags to influence the type of query the
+   resolver structure sends. In this case, we want the nameserver to use
+   recursion, so that we'll get the final answer. Therefore, we specify the
+   \ref LDNS_RD (Recursion Desired) flag.
+
+   This should return a packet if everything goes well.
+
+   We get all RRs of type MX from the answer packet and store them in our list:
+   \skipline ldns_pkt_rr_list_by_type
+   \until )
+   
+   If this list is not empty, we sort and print it:
+   \skipline ldns_rr_list_sort
+   \skipline ldns_rr_list_print
+
+   And finally, just to be proper, we free our allocated data:
+   \skipline free(
+   \until resolver_deep_free
+
+   For structures that can contain other ldns structures, there are two types of free() function available
+     - \c ldns_free_<type> frees only the allocated data for the structure itself.
+     - \c ldns_deep_free_<type> frees the structure, and ALL structures that
+       are nested in it. For example, of you \c deep_free an ldns_rr_list,
+       all \c ldns_rr structures that were present in the list are also
+       freed.
+
+
+*/

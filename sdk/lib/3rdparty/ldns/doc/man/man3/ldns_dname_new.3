@@ -1,0 +1,73 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dname_new, ldns_dname_new_frm_str, ldns_dname_new_frm_data \- create a dname
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_rdf* ldns_dname_new(uint16_t s, void *data);
+.PP
+ldns_rdf* ldns_dname_new_frm_str(const char *str);
+.PP
+ldns_rdf* ldns_dname_new_frm_data(uint16_t size, const void *data);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dname_new\fR()
+Create a new dname rdf from a string. The data pointer
+is stored in the rdf, not a copy of the data
+\.br
+\fBs\fR: the size of the new dname
+\.br
+\fB*data\fR: pointer to the actual data
+
+\.br
+Returns ldns_rdf*
+.PP
+.HP
+\fIldns_dname_new_frm_str\fR()
+creates a new dname rdf from a string.
+\.br
+\fBstr\fR: string to use
+\.br
+Returns ldns_rdf* or \%NULL in case of an error
+.PP
+.HP
+\fIldns_dname_new_frm_data\fR()
+Create a new dname rdf from data (the data is copied)
+\.br
+\fBsize\fR: the size of the data
+\.br
+\fB*data\fR: pointer to the actual data
+
+\.br
+Returns ldns_rdf*
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_pkt_query_new_frm_str\fR, \fIldns_rdf_new_frm_str\fR, \fIldns_rr_new_frm_str\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

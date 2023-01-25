@@ -1,0 +1,17 @@
+$TTL 4500
+$ORIGIN myzone.org.
+
+myzone.org. 1000 IN SOA (
+	    ldns.myzone.org. 
+	    ns.ldns.myzone.org. 
+	    2012113030 		   
+	    12345 
+	    1827 
+	    2345678 
+	    87654 )
+
+ns.ldns     A 192.168.100.2
+ns2 5600 IN AAAA 2001:dead:dead::2
+ns2 6600 IN A 192.168.100.7
+ns1 3600 IN A 192.168.100.2
+ns1 4600 IN AAAA 2001:dead:dead::1

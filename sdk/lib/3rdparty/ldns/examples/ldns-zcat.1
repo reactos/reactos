@@ -1,0 +1,34 @@
+.TH ldns-zcat 1 "15 Dec 2005"
+.SH NAME
+ldns-zcat \- reunite (z)split up a zone files
+.SH SYNOPSIS
+.B ldns-zcat
+.IR zonefiles
+
+.SH DESCRIPTION
+.B ldns-zcat
+will read in a bunch of (z)split up zonefiles and creates a new larger
+zone file. The SOA record in the first part is used as the SOA record
+in the generated zone.
+.PP
+The resulted zone file is printed to standard output.
+
+.SH OPTIONS
+.TP
+.B -o ORIGIN
+use ORIGIN when reading in the zone
+
+.TP
+.B -v
+show the version number and exit
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005, 2006 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

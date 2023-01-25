@@ -1,0 +1,29 @@
+---
+abstract: 'Perl extension for the ldns library'
+author:
+  - 'Erik Ostlyngen <erik@uninett.no>'
+build_requires:
+  FindBin: '0'
+  Test::Exception: '0'
+  Test::More: '0'
+configure_requires:
+  Devel::CheckLib: '0.9'
+  ExtUtils::MakeMaker: '0'
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 6.024, CPAN::Meta::Converter version 2.150010'
+license: restrictive
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: DNS-LDNS
+requires:
+  AutoLoader: '0'
+  Carp: '0'
+  Exporter: '0'
+  XSLoader: '0'
+  perl: '5.014002'
+  strict: '0'
+  warnings: '0'
+version: '0.61'
+x_generated_by_perl: v5.34.0
+x_serialization_backend: 'YAML::Tiny version 1.73'

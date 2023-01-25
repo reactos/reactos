@@ -1,0 +1,179 @@
+.TH ldns-dane 1 "17 September 2012"
+.SH NAME
+ldns-dane \- verify or create TLS authentication with DANE (RFC6698)
+.SH SYNOPSIS
+.PD 0
+.B ldns-dane
+.IR [OPTIONS]
+.IR verify
+.IR name
+.IR port
+.PP
+.B ldns-dane
+.IR [OPTIONS]
+.IR -t
+.IR tlsafile
+.IR verify
+
+.B ldns-dane
+.IR [OPTIONS]
+.IR create
+.IR name
+.IR port
+.PP
+          [
+.IR Certificate-usage
+[
+.IR Selector
+[
+.IR Matching-type
+] ] ]
+
+.B ldns-dane
+.IR -h
+.PP
+.B ldns-dane
+.IR -v
+.PD 1
+
+.SH DESCRIPTION
+
+In the first form: 
+A TLS connection to \fIname\fR:\fIport\fR is established.
+The TLSA resource record(s) for \fIname\fR are used to authenticate
+the connection.
+
+In the second form:
+The TLSA record(s) are read from \fItlsafile\fR and used to authenticate
+the TLS service they reference.
+
+In the third form:
+A TLS connection to \fIname\fR:\fIport\fR is established and used to
+create the TLSA resource record(s) that would authenticate the connection.
+The parameters for TLSA rr creation are:
+
+.PD 0
+.I Certificate-usage\fR:
+.RS
+.IP "0 | PKIX-TA"
+CA constraint
+.IP "1 | PKIX-EE"
+Service certificate constraint
+.IP "2 | DANE-TA"
+Trust anchor assertion
+.IP "3 | DANE-EE"
+Domain-issued certificate (default)
+.RE
+
+.I Selector\fR:
+.RS
+.IP "0 | Cert"
+Full certificate
+.IP "1 | SPKI"
+SubjectPublicKeyInfo (default)
+.RE
+
+.I Matching-type\fR:
+.RS
+.IP "0 | Full"
+No hash used
+.IP "1 | SHA2-256"
+SHA-256 (default)
+.IP "2 | SHA2-512"
+SHA-512
+.RE
+.PD 1
+
+.SH OPTIONS
+.IP -4
+TLS connect IPv4 only
+.IP -6
+TLS connect IPv6 only
+.IP "-a \fIaddress\fR"
+Don't try to resolve \fIname\fR, but connect to \fIaddress\fR instead.
+
+This option may be given more than once.
+.IP -b
+print "\fIname\fR\. TYPE52 \\# \fIsize\fR \fIhexdata\fR" form instead
+of TLSA presentation format.
+.IP "-c \fIcertfile\fR"
+Do not TLS connect to \fIname\fR:\fIport\fR, but authenticate (or make
+TLSA records) for the certificate (chain) in \fIcertfile\fR instead.
+.IP -d
+Assume DNSSEC validity even when the TLSA records were acquired insecure
+or were bogus.
+.IP "-f \fICAfile\fR"
+Use CAfile to validate. @DEFAULT_CAFILE@
+.IP -h
+Print short usage help
+.IP -i
+Interact after connecting.
+.IP "-k \fIkeyfile\fR"
+Specify a file that contains a trusted DNSKEY or DS rr.
+Key(s) are used when chasing signatures (i.e. \fI-S\fR is given).
+
+This option may be given more than once.
+
+Alternatively, if \fB-k\fR is not specified, and a default trust anchor
+(@LDNS_TRUST_ANCHOR_FILE@) exists and contains a valid DNSKEY or DS record,
+it will be used as the trust anchor.
+.IP -n
+Do \fBnot\fR verify server name in certificate.
+.IP "-o \fIoffset\fR"
+When creating a "Trust anchor assertion" TLSA resource record,
+select the \fIoffset\fRth certificate offset from the end
+of the validation chain. 0 means the last certificate, 1 the one but last,
+2 the second but last, etc.
+
+When \fIoffset\fR is \-1 (the default), the last certificate
+is used (like with 0) that MUST be self-signed. This can help to make
+sure that the intended (self signed) trust anchor is actually present
+in the server certificate chain (which is a DANE requirement).
+.IP "-p \fICApath\fR"
+Use certificates in the \fICApath\fR directory to validate. @DEFAULT_CAPATH@
+.IP -s
+When creating TLSA resource records with the "CA Constraint" and the
+"Service Certificate Constraint" certificate usage, do not validate and
+assume PKIX is valid.
+
+For "CA Constraint" this means that verification should end with a
+self-signed certificate.
+.IP -S
+Chase signature(s) to a known key.
+
+Without this option, the local network is trusted to provide
+a DNSSEC resolver (i.e. AD bit is checked).
+.IP "-t \fItlsafile\fR"
+Read TLSA record(s) from \fItlsafile\fR. When \fIname\fR and \fIport\fR
+are also given, only TLSA records that match the \fIname\fR, \fIport\fR and
+\fItransport\fR are used. Otherwise the owner name of the TLSA record(s)
+will be used to determine \fIname\fR, \fIport\fR and \fItransport\fR.
+.IP -T
+Return exit status 2 for PKIX validated connections without (secure)
+TLSA records(s)
+.IP -u
+Use UDP transport instead of TCP.
+.IP -v
+Show version and exit.
+
+.SH "FILES"
+.TP
+@LDNS_TRUST_ANCHOR_FILE@
+The file from which trusted keys are loaded for signature chasing,
+when no \fB-k\fR option is given.
+
+.SH "SEE ALSO"
+.LP
+unbound-anchor(8)
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to \fIldns-team@nlnetlabs.nl\fR. 
+
+.SH COPYRIGHT
+Copyright (C) 2012 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+

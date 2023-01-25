@@ -1,0 +1,157 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_data_chain, ldns_dnssec_data_chain_struct, ldns_dnssec_trust_tree \- data structures for validation chains
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ ldns_dnssec_data_chain_struct();
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_data_chain\fR
+.br
+Chain structure that contains all DNSSEC data needed to
+.br
+verify an rrset
+.br
+struct ldns_dnssec_data_chain_struct
+.br
+{
+.br
+	ldns_rr_list *rrset;
+.br
+	ldns_rr_list *signatures;
+.br
+	ldns_rr_type parent_type;
+.br
+	ldns_dnssec_data_chain *parent;
+.br
+	ldns_pkt_rcode packet_rcode;
+.br
+	ldns_rr_type packet_qtype;
+.br
+	bool packet_nodata;
+.br
+};
+.br
+
+.br
+typedef struct ldns_dnssec_data_chain_struct ldns_dnssec_data_chain;
+.PP
+.HP
+\fIldns_dnssec_data_chain_struct\fR()
+.PP
+.HP
+\fIldns_dnssec_trust_tree\fR
+.br
+Tree structure that contains the relation of DNSSEC data,
+.br
+and their cryptographic status.
+.br
+
+.br
+This tree is derived from a data_chain, and can be used
+.br
+to look whether there is a connection between an RRSET
+.br
+and a trusted key. The tree only contains pointers to the
+.br
+data_chain, and therefore one should *never* free() the
+.br
+data_chain when there is still a trust tree derived from
+.br
+that chain.
+.br
+
+.br
+Example tree:
+.br
+    key   key    key
+.br
+      \\    |    /
+.br
+       \\   |   /
+.br
+        \\  |  /
+.br
+           ds
+.br
+           |
+.br
+          key
+.br
+           |
+.br
+          key
+.br
+           |
+.br
+           rr
+.br
+
+.br
+For each signature there is a parent; if the parent
+.br
+pointer is null, it couldn't be found and there was no
+.br
+denial; otherwise is a tree which contains either a
+.br
+DNSKEY, a DS, or a NSEC rr
+.br
+struct ldns_dnssec_trust_tree_struct
+.br
+{
+.br
+	ldns_rr *rr;
+.br
+	/* the complete rrset this rr was in */
+.br
+	ldns_rr_list *rrset;
+.br
+	ldns_dnssec_trust_tree *parents[LDNS_DNSSEC_TRUST_TREE_MAX_PARENTS];
+.br
+	ldns_status parent_status[LDNS_DNSSEC_TRUST_TREE_MAX_PARENTS];
+.br
+	/** for debugging, add signatures too (you might want
+.br
+	    those if they contain errors) */
+.br
+	ldns_rr *parent_signature[LDNS_DNSSEC_TRUST_TREE_MAX_PARENTS];
+.br
+	size_t parent_count;
+.br
+};
+.br
+
+.br
+typedef struct ldns_dnssec_trust_tree_struct ldns_dnssec_trust_tree;
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_data_chain_new\fR, \fIldns_dnssec_trust_tree_new\fR, \fIldns_dnssec_verify_denial\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

@@ -1,0 +1,101 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr2str, ldns_pkt2str, ldns_rdf2str, ldns_rr_list2str, ldns_key2str \- functions for conversions to string
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+char* ldns_rr2str(const ldns_rr *rr);
+.PP
+char* ldns_pkt2str(const ldns_pkt *pkt);
+.PP
+char* ldns_rdf2str(const ldns_rdf *rdf);
+.PP
+char* ldns_rr_list2str(const ldns_rr_list *rr_list);
+.PP
+char* ldns_key2str(const ldns_key *k);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr2str\fR()
+Converts the data in the resource record to presentation format and
+returns that as a char *.
+Remember to free it.
+
+\.br
+\fBrr\fR: The rdata field to convert
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.HP
+\fIldns_pkt2str\fR()
+Converts the data in the \%DNS packet to presentation format and
+returns that as a char *.
+Remember to free it.
+
+\.br
+\fBpkt\fR: The rdata field to convert
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.HP
+\fIldns_rdf2str\fR()
+Converts the data in the rdata field to presentation format and
+returns that as a char *.
+Remember to free it.
+
+\.br
+\fBrdf\fR: The rdata field to convert
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.HP
+\fIldns_rr_list2str\fR()
+Converts a list of resource records to presentation format
+and returns that as a char *.
+Remember to free it.
+
+\.br
+\fBrr_list\fR: the rr_list to convert to text
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.HP
+\fIldns_key2str\fR()
+Converts a private key to the test presentation fmt and
+returns that as a char *.
+Remember to free it.
+
+\.br
+\fBk\fR: the key to convert to text
+\.br
+Returns null terminated char * data, or \%NULL on error
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr_print\fR, \fIldns_rdf_print\fR, \fIldns_pkt_print\fR, \fIldns_rr_list_print\fR, \fIldns_resolver_print\fR, \fIldns_zone_print\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

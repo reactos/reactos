@@ -1,0 +1,14 @@
+TODO
+
+Features:
+* Drill: print appropriate DS RRs (relates to Bug #355)
+* ldns-signzone optout to be really optout
+* Compression when generating wireformat. Preferably with a configurable 
+  policy: refer only backwards, case sensitivity, only refer to other owner 
+  names, etc.
+
+Bugfixes:
+* Bug #279: fix return values for net.h functions, and related: make return
+  values for functions that cannot return memory-failure today. Needs medium
+  version increase because of API change.
+* Lazy ABI

@@ -1,0 +1,124 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_dnskey_flags, ldns_rr_dnskey_set_flags, ldns_rr_dnskey_protocol, ldns_rr_dnskey_set_protocol, ldns_rr_dnskey_algorithm, ldns_rr_dnskey_set_algorithm, ldns_rr_dnskey_key, ldns_rr_dnskey_set_key \- get and set DNSKEY RR rdata fields
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_rdf* ldns_rr_dnskey_flags(const ldns_rr *r);
+.PP
+bool ldns_rr_dnskey_set_flags(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_dnskey_protocol(const ldns_rr *r);
+.PP
+bool ldns_rr_dnskey_set_protocol(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_dnskey_algorithm(const ldns_rr *r);
+.PP
+bool ldns_rr_dnskey_set_algorithm(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_dnskey_key(const ldns_rr *r);
+.PP
+bool ldns_rr_dnskey_set_key(ldns_rr *r, ldns_rdf *f);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_dnskey_flags\fR()
+returns the flags of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the flags or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_dnskey_set_flags\fR()
+sets the flags of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the flags to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_dnskey_protocol\fR()
+returns the protocol of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the protocol or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_dnskey_set_protocol\fR()
+sets the protocol of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the protocol to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_dnskey_algorithm\fR()
+returns the algorithm of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the algorithm or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_dnskey_set_algorithm\fR()
+sets the algorithm of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the algorithm to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_dnskey_key\fR()
+returns the key data of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the key data or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_dnskey_set_key\fR()
+sets the key data of a \%LDNS_RR_TYPE_DNSKEY rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the key data to set
+\.br
+Returns true on success, false otherwise
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

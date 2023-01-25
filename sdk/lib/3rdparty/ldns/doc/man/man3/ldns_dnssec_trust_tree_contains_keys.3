@@ -1,0 +1,195 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_trust_tree_new, ldns_dnssec_trust_tree_free, ldns_dnssec_trust_tree_depth, ldns_dnssec_derive_trust_tree, ldns_dnssec_trust_tree_contains_keys, ldns_dnssec_trust_tree_print, ldns_dnssec_trust_tree_print_sm, ldns_dnssec_trust_tree_add_parent, ldns_dnssec_derive_trust_tree_normal_rrset, ldns_dnssec_derive_trust_tree_dnskey_rrset, ldns_dnssec_derive_trust_tree_ds_rrset, ldns_dnssec_derive_trust_tree_no_sig \- functions for ldns_dnssec_trust_tree
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_dnssec_trust_tree* ldns_dnssec_trust_tree_new(void);
+.PP
+void ldns_dnssec_trust_tree_free(ldns_dnssec_trust_tree *tree);
+.PP
+size_t ldns_dnssec_trust_tree_depth(ldns_dnssec_trust_tree *tree);
+.PP
+ldns_dnssec_trust_tree* ldns_dnssec_derive_trust_tree( ldns_dnssec_data_chain *data_chain, ldns_rr *rr);
+.PP
+ldns_status ldns_dnssec_trust_tree_contains_keys( ldns_dnssec_trust_tree *tree, ldns_rr_list *keys);
+.PP
+void ldns_dnssec_trust_tree_print(FILE *out, ldns_dnssec_trust_tree *tree, size_t tabs, bool extended);
+.PP
+ ldns_dnssec_trust_tree_print_sm();
+.PP
+ldns_status ldns_dnssec_trust_tree_add_parent(ldns_dnssec_trust_tree *tree, const ldns_dnssec_trust_tree *parent, const ldns_rr *parent_signature, const ldns_status parent_status);
+.PP
+void ldns_dnssec_derive_trust_tree_normal_rrset( ldns_dnssec_trust_tree *new_tree, ldns_dnssec_data_chain *data_chain, ldns_rr *cur_sig_rr);
+.PP
+void ldns_dnssec_derive_trust_tree_dnskey_rrset( ldns_dnssec_trust_tree *new_tree, ldns_dnssec_data_chain *data_chain, ldns_rr *cur_rr, ldns_rr *cur_sig_rr);
+.PP
+void ldns_dnssec_derive_trust_tree_ds_rrset( ldns_dnssec_trust_tree *new_tree, ldns_dnssec_data_chain *data_chain, ldns_rr *cur_rr);
+.PP
+void ldns_dnssec_derive_trust_tree_no_sig( ldns_dnssec_trust_tree *new_tree, ldns_dnssec_data_chain *data_chain);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_trust_tree_new\fR()
+Creates a new (empty) dnssec_trust_tree structure
+
+\.br
+Returns ldns_dnssec_trust_tree *
+.PP
+.HP
+\fIldns_dnssec_trust_tree_free\fR()
+Frees the dnssec_trust_tree recursively
+
+There is no deep free; all data in the trust tree
+consists of pointers to a data_chain
+
+\.br
+\fBtree\fR: The tree to free
+.PP
+.HP
+\fIldns_dnssec_trust_tree_depth\fR()
+returns the depth of the trust tree
+
+\.br
+\fBtree\fR: tree to calculate the depth of
+\.br
+Returns The depth of the tree
+.PP
+.HP
+\fIldns_dnssec_derive_trust_tree\fR()
+Generates a dnssec_trust_tree for the given rr from the
+given data_chain
+
+This does not clone the actual data; Don't free the
+data_chain before you are done with this tree
+
+\.br
+\fB*data_chain\fR: The chain to derive the trust tree from
+\.br
+\fB*rr\fR: The \%RR this tree will be about
+\.br
+Returns ldns_dnssec_trust_tree *
+.PP
+.HP
+\fIldns_dnssec_trust_tree_contains_keys\fR()
+Returns \%OK if there is a trusted path in the tree to one of 
+the \%DNSKEY or \%DS RRs in the given list
+
+\\param *tree The trust tree so search
+\\param *keys \%A ldns_rr_list of \%DNSKEY and \%DS rrs to look for
+
+\.br
+Returns \%LDNS_STATUS_OK if there is a trusted path to one of
+the keys, or the *first* error encountered
+if there were no paths
+.PP
+.HP
+\fIldns_dnssec_trust_tree_print\fR()
+Prints the dnssec_trust_tree structure to the given file
+stream.
+
+If a link status is not \%LDNS_STATUS_OK; the status and
+relevant signatures are printed too
+
+\.br
+\fB*out\fR: The file stream to print to
+\.br
+\fBtree\fR: The trust tree to print
+\.br
+\fBtabs\fR: Prepend each line with tabs*2 spaces
+\.br
+\fBextended\fR: If true, add little explanation lines to the output
+.PP
+.HP
+\fIldns_dnssec_trust_tree_print_sm\fR()
+.PP
+.HP
+\fIldns_dnssec_trust_tree_add_parent\fR()
+Adds a trust tree as a parent for the given trust tree
+
+\.br
+\fB*tree\fR: The tree to add the parent to
+\.br
+\fB*parent\fR: The parent tree to add
+\.br
+\fB*parent_signature\fR: The \%RRSIG relevant to this parent/child
+connection
+\.br
+\fBparent_status\fR: The \%DNSSEC status for this parent, child and \%RRSIG
+\.br
+Returns \%LDNS_STATUS_OK if the addition succeeds, error otherwise
+.PP
+.HP
+\fIldns_dnssec_derive_trust_tree_normal_rrset\fR()
+Sub function for derive_trust_tree that is used for a 'normal' rrset
+
+\.br
+\fBnew_tree\fR: The trust tree that we are building
+\.br
+\fBdata_chain\fR: The data chain containing the data for the trust tree
+\.br
+\fBcur_sig_rr\fR: The currently relevant signature
+.PP
+.HP
+\fIldns_dnssec_derive_trust_tree_dnskey_rrset\fR()
+Sub function for derive_trust_tree that is used for \%DNSKEY rrsets
+
+\.br
+\fBnew_tree\fR: The trust tree that we are building
+\.br
+\fBdata_chain\fR: The data chain containing the data for the trust tree
+\.br
+\fBcur_rr\fR: The currently relevant \%DNSKEY \%RR
+\.br
+\fBcur_sig_rr\fR: The currently relevant signature
+.PP
+.HP
+\fIldns_dnssec_derive_trust_tree_ds_rrset\fR()
+Sub function for derive_trust_tree that is used for \%DS rrsets
+
+\.br
+\fBnew_tree\fR: The trust tree that we are building
+\.br
+\fBdata_chain\fR: The data chain containing the data for the trust tree
+\.br
+\fBcur_rr\fR: The currently relevant \%DS \%RR
+.PP
+.HP
+\fIldns_dnssec_derive_trust_tree_no_sig\fR()
+Sub function for derive_trust_tree that is used when there are no
+signatures
+
+\.br
+\fBnew_tree\fR: The trust tree that we are building
+\.br
+\fBdata_chain\fR: The data chain containing the data for the trust tree
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_data_chain\fR, \fIldns_dnssec_trust_tree\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

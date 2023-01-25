@@ -1,0 +1,262 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rdf2buffer_str_a, ldns_rdf2buffer_str_aaaa, ldns_rdf2buffer_str_str, ldns_rdf2buffer_str_b64, ldns_rdf2buffer_str_hex, ldns_rdf2buffer_str_type, ldns_rdf2buffer_str_class, ldns_rdf2buffer_str_alg, ldns_rdf2buffer_str_loc, ldns_rdf2buffer_str_unknown, ldns_rdf2buffer_str_nsap, ldns_rdf2buffer_str_wks, ldns_rdf2buffer_str_nsec, ldns_rdf2buffer_str_period, ldns_rdf2buffer_str_tsigtime, ldns_rdf2buffer_str_apl, ldns_rdf2buffer_str_int16_data, ldns_rdf2buffer_str_int16, ldns_rdf2buffer_str_ipseckey \- lower level to string conversion functions
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_rdf2buffer_str_a(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_aaaa(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_str(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_b64(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_hex(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_type(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_class(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_alg(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_loc(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_unknown(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_nsap(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_wks(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_nsec(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_period(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_tsigtime(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_apl(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_int16_data(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_int16(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rdf2buffer_str_ipseckey(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rdf2buffer_str_a\fR()
+Converts an \%LDNS_RDF_TYPE_A rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_aaaa\fR()
+Converts an \%LDNS_RDF_TYPE_AAAA rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_str\fR()
+Converts an \%LDNS_RDF_TYPE_STR rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_b64\fR()
+Converts an LDNS_RDF_TYPE_B64 rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_hex\fR()
+Converts an \%LDNS_RDF_TYPE_HEX rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_type\fR()
+Converts an \%LDNS_RDF_TYPE_TYPE rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_class\fR()
+Converts an \%LDNS_RDF_TYPE_CLASS rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_alg\fR()
+Converts an \%LDNS_RDF_TYPE_ALG rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_loc\fR()
+Converts an \%LDNS_RDF_TYPE_LOC rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_unknown\fR()
+Converts an \%LDNS_RDF_TYPE_UNKNOWN rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_nsap\fR()
+Converts an \%LDNS_RDF_TYPE_NSAP rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_wks\fR()
+Converts an \%LDNS_RDF_TYPE_WKS rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_nsec\fR()
+Converts an \%LDNS_RDF_TYPE_NSEC rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_period\fR()
+Converts an \%LDNS_RDF_TYPE_PERIOD rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_tsigtime\fR()
+Converts an \%LDNS_RDF_TYPE_TSIGTIME rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_apl\fR()
+Converts an \%LDNS_RDF_TYPE_APL rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_int16_data\fR()
+Converts an LDNS_RDF_TYPE_INT16_DATA rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_int16\fR()
+Converts an LDNS_RDF_TYPE_INT16 rdata element to string format and adds it to the output buffer
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.HP
+\fIldns_rdf2buffer_str_ipseckey\fR()
+Converts an \%LDNS_RDF_TYPE_IPSECKEY rdata element to string format and adds it to the output buffer 
+\.br
+\fB*rdf\fR: The rdata to convert
+\.br
+\fB*output\fR: The buffer to add the data to
+\.br
+Returns \%LDNS_STATUS_OK on success, and error status on failure
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

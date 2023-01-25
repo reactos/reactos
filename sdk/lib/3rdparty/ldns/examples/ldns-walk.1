@@ -1,0 +1,61 @@
+.TH ldns-walk 1 "21 Nov 2005"
+.SH NAME
+ldns-walk \- Retrieve the contents of a DNSSEC signed zone
+.SH SYNOPSIS
+.B ldns-walk
+[
+.IR OPTION
+]
+.IR ZONE 
+
+.SH DESCRIPTION
+
+\fBldns-walk\fR is used to retrieve the contents of a DNSSEC signed zone.
+It does this through NSEC-walking (following the chain of NSEC records)
+and 'guessing' the next non-existent owner name for each NSEC.
+
+Note that it might get stuck on some wildcard records when used through a
+caching forwarder. This problem can be circumvented by querying the
+authoritative nameserver directly (with the @ argument).
+
+Of course the nameserver that is used must be DNSSEC-aware.
+
+.SH OPTIONS
+.TP
+\fB-4\fR
+Use only IPv4.
+
+.TP
+\fB-6\fR
+Use only IPv6.
+
+.TP
+\fB-f\fR
+Do a 'full' zone walk; by default, ldns-walk will only show the names, and types present at those names. If this option is given, all resource records will be printed.
+
+.TP
+\fB-s\fR \fIname\fR
+Start the walk with this owner name. Useful when continuing the walk for a
+large zone.
+
+.TP
+\fB-v\fR \fIverbosity\fR
+Verbosity level [1-5].
+
+.TP
+\fB@\fR \fInameserver\fR
+Send the queries to this nameserver.
+
+.SH BUGS
+The full zone walk function is not complete yet, it does not correctly print delegation records
+
+.SH AUTHOR
+Written by Jelte Jansen as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

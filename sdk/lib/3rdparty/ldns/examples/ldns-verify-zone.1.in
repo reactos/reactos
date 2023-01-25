@@ -1,0 +1,115 @@
+.TH ldns-verifyzone 1 "27 May 2008"
+.SH NAME
+ldns-verify-zone \- read a DNSSEC signed zone and verify it.
+.SH SYNOPSIS
+.B ldns-verify-zone 
+.IR ZONEFILE 
+
+.SH DESCRIPTION
+
+\fBldns-verify-zone\fR reads a DNS zone file and verifies it. 
+
+RRSIG resource records are checked against the DNSKEY set at the zone apex.
+
+Each name is checked for an NSEC(3), if appropriate.
+
+If ZONEMD resource records are present, one of them needs to match the zone content.
+
+.SH OPTIONS
+.TP
+\fB-h\fR
+Show usage and exit
+
+.TP
+\fB-a\fR
+Apex only, check only the zone apex
+
+.TP
+\fB-e\fR \fIperiod\fR
+Signatures may not expire within this period.
+Default no period is used.
+
+.TP
+\fB-i\fR \fIperiod\fR
+Signatures must have been valid at least this long.
+Default signatures should just be valid now.
+
+.TP
+\fB-k\fR \fIfile\fR
+A file that contains a trusted DNSKEY or DS rr.
+This option may be given more than once.
+
+Alternatively, if \fB-k\fR is not specified, and a default trust anchor
+(@LDNS_TRUST_ANCHOR_FILE@) exists and contains a valid DNSKEY or DS record,
+it will be used as the trust anchor.
+.TP
+\fB-p\fR \fI[0-100]\fR
+Only check this percentage of the zone.
+Which names to check is determined randomly.
+Defaults to 100.
+
+.TP
+\fB-S\fR
+Chase signature(s) to a known key.
+The network may be accessed to validate the zone's DNSKEYs. (implies \-k)
+
+.TP
+\fB-t\fR \fIYYYYMMDDhhmmss | [+|-]offset\fR
+Set the validation time either by an absolute time value or as an offset in seconds from the current time.
+
+.TP
+\fB-v\fR
+Show the version and exit
+
+.TP
+\fB-V\fR \fInumber\fR
+Set the verbosity level (default 3):
+
+ 0: Be silent
+ 1: Print result, and any errors
+ 2: Same as 1 for now
+ 3: Print result, any errors, and the names that are
+    being checked
+ 4: Same as 3 for now
+ 5: Print the zone after it has been read, the result, 
+    any errors, and the names that are being checked
+
+.TP
+\fB-Z\fR
+Requires a valid ZONEMD RR to be present. When given once, this option will
+permit verifying only the ZONEMD RR of an unsigned zone. When given more than
+once, the zone needs to be validly DNSSEC signed as well.
+
+.TP
+\fB-ZZZ\fR
+When three times a \fB-Z\fR option is given, the ZONEMD RR to be verified is
+considered "detached" and does not need to have valid signatures.
+
+.LP
+\fIperiod\fRs are given in ISO 8601 duration format:
+.RS
+P[n]Y[n]M[n]DT[n]H[n]M[n]S
+.RE
+.LP
+If no file is given standard input is read.
+
+.SH "FILES"
+.TP
+@LDNS_TRUST_ANCHOR_FILE@
+The file from which trusted keys are loaded for signature chasing,
+when no \fB-k\fR option is given.
+
+.SH "SEE ALSO"
+.LP
+unbound-anchor(8)
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2008 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

@@ -1,0 +1,71 @@
+.TH ldns-compare-zones 1 "17 Oct 2007"
+.SH NAME
+ldns-compare-zones \- read and compare two zonefiles and print differences
+.SH SYNOPSIS
+.B ldns-compare-zones
+.IR [-c]
+.IR [-U]
+.IR [-u]
+.IR [-i]
+.IR [-d]
+.IR [-z]
+.IR [-s]
+.IR ZONEFILE1
+.IR ZONEFILE2 
+.SH DESCRIPTION
+\fBldns-compare-zones\fR reads two DNS zone files and prints number of differences.
+.nf
+Output is formatted to:
+        +NUM_INS        \-NUM_DEL        ~NUM_CHG
+
+Except with the \fI-U\fR or \fI-u\fR option.  Then the output is formatted to:
+        +NUM_INS        \-NUM_DEL        ~NUM_CHG        =NUM_EQ
+
+.fi
+The major comparison is based on the owner name. If an owner name is present in zonefile 1, but not in zonefile 2, the resource records with this owner name are considered deleted, and counted as NUM_DEL. If an owner name is present in zonefile 2, but not in zonefile 1, the resource records with this owner name are considered inserted, and counted as NUM_INS. If an owner name is present in both, but there is a difference in the amount or content of the records, these are considered changed, and counted as NUM_CHG.
+.SH OPTIONS
+.TP
+\fB-c\fR
+Print resource records whose owner names are in both zone files, but with different resource records. (a.k.a. changed)
+.TP
+\fB-U\fR
+From resource records whose owner names are in both zone files, but with different resource records, print the unchanged records too (a.k.a. changed++).
+.TP
+\fB-u\fR
+Print resource records whose owner names are in both zone files, and which resource records are the same. (a.k.a. unchanged)
+.TP
+\fB-i\fR
+Print resource records whose owner names are present only in ZONEFILE2 (a.k.a. inserted)
+.TP
+\fB-d\fR
+Print resource records whose owner names are present only in ZONEFILE1 (a.k.a. deleted)
+.TP
+\fB-a\fR
+Print all changes (except unchanged). Specifying this option is the same as specifying \-c \-i
+and \-d.
+.TP
+\fB-z\fR
+Suppress zone sorting; this option is not recommended; it can cause records
+to be incorrectly marked as changed, depending of the nature of the changes.
+.TP
+\fB-s\fR
+Do not exclude the SOA record from the comparison.  The SOA record may
+then show up as changed due to a new serial number.  Off by default since
+you may be interested to know if (other zone apex elements) have changed.
+.TP
+\fB-e\fR
+Exit with status code 2 when zones differ.
+.TP
+\fB-h\fR
+Show usage and exit
+.TP
+\fB-v\fR
+Show the version and exit
+.SH AUTHOR
+Written by Ondřej Surý <ondrej@sury.org> for CZ.NIC, z.s.p.o. (czech domain registry)
+.SH REPORTING BUGS
+Report bugs to <ondrej@sury.org>.
+.SH COPYRIGHT
+Copyright (C) 2005 CZ.NIC, z.s.p.o.. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

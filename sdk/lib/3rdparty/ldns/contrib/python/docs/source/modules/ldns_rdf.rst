@@ -1,0 +1,47 @@
+Class ldns_rdf
+================================
+
+
+..	automodule:: ldns
+
+Class ldns_rdf
+------------------------------
+.. autoclass:: ldns_rdf
+	:members:
+	:undoc-members:
+
+Predefined constants
+------------------------------
+
+**RDF TYPE**
+	* LDNS_RDF_TYPE_NONE,
+	* LDNS_RDF_TYPE_DNAME,
+	* LDNS_RDF_TYPE_INT8,
+	* LDNS_RDF_TYPE_INT16,
+	* LDNS_RDF_TYPE_INT32,
+	* LDNS_RDF_TYPE_A,	
+	* LDNS_RDF_TYPE_AAAA,
+	* LDNS_RDF_TYPE_STR,
+	* LDNS_RDF_TYPE_APL,
+	* LDNS_RDF_TYPE_B32_EXT,
+	* LDNS_RDF_TYPE_B64,
+	* LDNS_RDF_TYPE_HEX,
+	* LDNS_RDF_TYPE_NSEC, 
+	* LDNS_RDF_TYPE_TYPE, 
+	* LDNS_RDF_TYPE_CLASS,
+	* LDNS_RDF_TYPE_CERT_ALG,
+	* LDNS_RDF_TYPE_ALG,
+	* LDNS_RDF_TYPE_UNKNOWN,
+	* LDNS_RDF_TYPE_TIME,
+	* LDNS_RDF_TYPE_PERIOD,
+	* LDNS_RDF_TYPE_TSIGTIME,
+	* LDNS_RDF_TYPE_HIP,
+	* LDNS_RDF_TYPE_INT16_DATA,
+	* LDNS_RDF_TYPE_SERVICE,
+	* LDNS_RDF_TYPE_LOC,
+	* LDNS_RDF_TYPE_WKS,
+	* LDNS_RDF_TYPE_NSAP,
+	* LDNS_RDF_TYPE_IPSECKEY,
+	* LDNS_RDF_TYPE_NSEC3_SALT,
+	* LDNS_RDF_TYPE_NSEC3_NEXT_OWNER
+

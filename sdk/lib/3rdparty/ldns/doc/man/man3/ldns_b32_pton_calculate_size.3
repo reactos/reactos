@@ -1,0 +1,54 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_b32_ntop_calculate_size, ldns_b32_pton_calculate_size, ldns_b64_ntop_calculate_size, ldns_b64_pton_calculate_size \- return size needed for b32 or b64 encoded or decoded data
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ ldns_b32_ntop_calculate_size();
+.PP
+ ldns_b32_pton_calculate_size();
+.PP
+ ldns_b64_ntop_calculate_size();
+.PP
+ ldns_b64_pton_calculate_size();
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_b32_ntop_calculate_size\fR()
+.PP
+.HP
+\fIldns_b32_pton_calculate_size\fR()
+.PP
+.HP
+\fIldns_b64_ntop_calculate_size\fR()
+.PP
+.HP
+\fIldns_b64_pton_calculate_size\fR()
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

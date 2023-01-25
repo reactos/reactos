@@ -1,0 +1,71 @@
+TYPEMAP
+DNS__LDNS__Zone         LDNS_GENERIC_STRUCT
+DNS__LDNS__RRList       LDNS_GENERIC_STRUCT
+DNS__LDNS__RR           LDNS_GENERIC_STRUCT
+DNS__LDNS__RData        LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecZone   LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecRRSets LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecRRs    LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecName   LDNS_GENERIC_STRUCT
+DNS__LDNS__RBTree       LDNS_GENERIC_STRUCT
+DNS__LDNS__RBNode       LDNS_GENERIC_STRUCT
+DNS__LDNS__Resolver     LDNS_GENERIC_STRUCT
+DNS__LDNS__Packet       LDNS_GENERIC_STRUCT
+DNS__LDNS__Key          LDNS_GENERIC_STRUCT
+DNS__LDNS__KeyList      LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecDataChain LDNS_GENERIC_STRUCT
+DNS__LDNS__DNSSecTrustTree LDNS_GENERIC_STRUCT
+Mortal_PV          Mortal_PV
+
+DNS__LDNS__RR__Opt      LDNS_GENERIC_STRUCT_OPT
+DNS__LDNS__RData__Opt   LDNS_GENERIC_STRUCT_OPT
+
+LDNS_Pkt_Opcode  T_ENUM
+LDNS_Pkt_Rcode   T_ENUM
+LDNS_Pkt_Section T_ENUM
+LDNS_Pkt_Type    T_ENUM
+LDNS_RR_Type     T_ENUM
+LDNS_RR_Class    T_ENUM
+LDNS_RDF_Type    T_ENUM
+LDNS_Hash        T_ENUM
+LDNS_Status      T_ENUM
+LDNS_Signing_Algorithm T_ENUM
+
+uint32_t        T_UV
+uint16_t        T_UV
+uint8_t         T_UV
+signed char     T_UV
+
+INPUT
+LDNS_GENERIC_STRUCT_OPT
+	if (!SvOK($arg)) {
+                $var = NULL;
+                }
+	else if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;$ntt=~s/::Opt$//;\$ntt}\")){
+                IV tmp = SvIV((SV*)SvRV($arg));
+                $var = INT2PTR($type, tmp);
+                }
+        else
+                croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;$ntt=~s/::Opt$//;\$ntt}\")
+
+INPUT
+LDNS_GENERIC_STRUCT
+	if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")){
+                IV tmp = SvIV((SV*)SvRV($arg));
+                $var = INT2PTR($type, tmp);
+                }
+        else
+                croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")
+
+OUTPUT
+LDNS_GENERIC_STRUCT
+	sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", (void*)$var);
+
+OUTPUT
+LDNS_GENERIC_STRUCT_OPT
+	sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;$ntt=~s/::Opt$//;\$ntt}\", (void*)$var);
+
+OUTPUT
+Mortal_PV
+        sv_setsv($arg, sv_2mortal(newSVpv($var, 0)));
+        free((void *)$var);

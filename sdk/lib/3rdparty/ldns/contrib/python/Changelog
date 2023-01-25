@@ -1,0 +1,92 @@
+1.6.17	2014-01-10
+	* Added ldns_rdf.data_as_bytearray(). The method returns a bytearray object
+	  containing rdf data.
+	* Changed the behaviour of ldns_resolver.trusted_key() in order to prevent
+	  memory corruption and leaks.
+	* Fixed memory leaks when destroying ldns_resolver.
+	* Removed ldns_pkt.section_count(), ldns_resolver.set_searchlist_count()
+	  because it is marked static in the library.
+	* Added ldns_pkt.new(), ldns_resolver.new().
+	* Marked as returning new object ldns_pkt.get_section_clone(),
+	  ldns_resolver.get_addr_by_name(), ldns_resolver.get_name_by_addr(),
+	  ldns_resolver.search().
+	* Added push cloning for ldns_pkt.safe_push_rr(),
+	  ldns_pkt.safe_push_rr_list(), ldns_pkt.set_additional(),
+	  ldns_pkt.set_answer(), ldns_pkt.set_answerfrom(),
+	  ldns_pkt.set_authority(), ldns_pkt.set_edns_data(),
+	  ldns_pkt.set_question(), ldns_pkt.set_tsig(),
+	  ldns_resolver.set_dnssec_anchors(), ldns_resolver.set_domain().
+	* Added pull cloning for ldns_pkt.answerfrom(), ldns_pkt.edns_data(),
+	  ldns_pkt.tsig(), ldns_resolver.axfr_last_pkt(),
+	  ldns_resolver.dnssec_anchors(), ldns_resolver.domain(),
+	  ldns_resolver.tsig_algorithm(), ldns_resolver.tsig_keydata(),
+	  ldns_resolver.tsig_keyname().
+	* Method ldns_rdf.reverse() now throws an exception when not applied
+	  on dname rdfs. This is to prevent assertion fails in ldns' C code.
+
+1.6.16	2012-11-13
+	* Fix typo in ldns_struct_pkt.opcode2str
+
+1.6.14	2012-10-23
+	* Added rich comparison methods for ldns_dname, ldns_rdf, ldns_rr and
+	  ldns_rr_list classes.
+	* Added deprecation warnings into ldns_rr.new_frm_fp() and
+	  ldns_rr.new_frm_fp_l() and others.
+	* Fixed ldns_rr.set_rdf(), which may cause memory leaks, because it
+	  returns new objects (in the scope of Python). Also it leaked memory,
+	  when the call was not successful.
+	* Fixed ldns_get_rr_list_hosts_frm_file, marked as newobject.
+	* Fixed ldns_rr_list.cat() to return bool as mentioned in documentation.
+	* Fixed ldns_rr_list_cat_clone, marked as newobject.
+	* Fixed ldns_rr_list.new_frm_file(). Exception argument was invalid.
+	* Fixed ldns_rr_list.push_rr() to return bool as mentioned in
+	  documentation.
+	* Fixed ldns_rr_list.push_rr_list() to return bool as mentioned in
+	  documentation.
+	* Fixed ldns_rr_list.set_rr(), which caused memory corruption, double free
+	  problems and memory leaks. (The wrapper used original function instead
+	  of its push cloned variant which was missing.)
+	* Fixed ldns_rr_list.set_rr_count(), added python exception raise in order
+	  to avoid assertion failure.
+	* Fixed ldns_rr_list.subtype_by_rdf(), marked as newobject.
+	* Added ldns_rr.to_canonical(), ldns_rr.is_question(),
+	  ldns_rr.type_by_name(), ldns_rr.class_by_name(), ldns_rr_list.new(),
+	  ldns_rr.set_question().
+	* Modified ldns_rr_list.owner() and ldns_rr.owner(), now returns ldns_dname.
+	* Fixed assertion failures for several methods when receiving incorrect but
+	  syntactically valid arguments (i.e., ldns_rr.a_address(),
+	  ldns_rr.dnskey_algorithm(), ldns_rr.dnskey_flags(),
+	  ldns_rr.dnskey_key(), ldns_rr.dnskey_protocol(),
+	  ldns_rr.mx_exchange(), ldns_rr.mx_preference(), ldns_rr.ns_nsdname(),
+	  ldns_rr.owner(), ldns_rr.rdf(), ldns_rr.rrsig_algorithm(),
+	  ldns_rr.rrsig_expiration(), ldns_rr.rrsig_inception(),
+	  ldns_rr.rrsig_keytag(), ldns_rr.rrsig_labels(), ldns_rr.rrsig_origttl(),
+	  ldns_rr.rrsig_sig(), ldns_rr.rrsig_signame(),
+	  ldns_rr.rrsig_typecovered(), ldns_rr_list.owner(), ldns_rr_list.rr())
+	* Fixed ldns_rr.a_address(), which was asserting when called
+	  on non A or AAAA type rr. Now returns None when fails.
+	* Added scripts for testing the basic functionality of the ldns_rr,
+	  ldns_rr_descriptor and ldns_rr_list class code.
+	* Improved documentation of ldns_rr, ldns_rr_descriptor and ldns_rr_list.
+	* Fixed automatic conversion from Python string to ldns_rdf and
+	  ldns_dname. Caused memory corruption when using Python 3.
+	* The Python 3 wrapper code now raises TypeError instead of ValueError
+	  when receiving a non FILE * argument when it should be a FILE *.
+	* Fixed wrong handling of _ldns_rr_list_free() and
+	  _ldns_rr_list_deep_free() when compiling with LDNS_DEBUG directive.
+	* Fixed malfunctioning ldns.ldns_rdf_new_frm_fp_l().
+	* Fixed malfunctioning ldns_drf.absolute() and ldns_dname.absolute().
+	* Marked several functions related to ldns_rdf and ldns_buffer as
+	  returning new objects.
+	* Method operating on ldns_dnames and returning dname ldns_rdfs now
+	  return ldns_dname instances.
+	* Improved documentation of ldns_buffer, ldns_rdf and ldns_dname
+	  classes.
+	* Methods ldns_buffer.available() and ldns_buffer.available_at() now
+	  return bool types as described in the documentation.
+	* Added scripts for testing the basic functionality of the ldns_buffer,
+	  ldns_rdf, ldns_dname class code.
+	* Added deprecation warnings to ldns_rdf methods operating on dname
+	  rdfs. The user is encouraged to converts dname ldns_rdfs to
+	  ldns_dnames.
+	* Extended ldns_dname constructor to accept ldns_rdfs containing dnames.

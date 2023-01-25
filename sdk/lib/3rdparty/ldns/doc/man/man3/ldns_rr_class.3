@@ -1,0 +1,623 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr, ldns_rr_class, ldns_rr_type, ldns_rr_compress, ldns_rr_list \- types representing dns resource records
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr\fR
+.br
+Resource Record
+.br
+
+.br
+This is the basic DNS element that contains actual data
+.br
+
+.br
+From RFC1035:
+.br
+<pre>
+.br
+3.2.1. Format
+.br
+
+.br
+All RRs have the same top level format shown below:
+.br
+
+.br
+                                    1  1  1  1  1  1
+.br
+      0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+    |                                               |
+.br
+    /                                               /
+.br
+    /                      NAME                     /
+.br
+    |                                               |
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+    |                      TYPE                     |
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+    |                     CLASS                     |
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+    |                      TTL                      |
+.br
+    |                                               |
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+    |                   RDLENGTH                    |
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--|
+.br
+    /                     RDATA                     /
+.br
+    /                                               /
+.br
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+.br
+
+.br
+where:
+.br
+
+.br
+NAME            an owner name, i.e., the name of the node to which this
+.br
+                resource record pertains.
+.br
+
+.br
+TYPE            two octets containing one of the RR TYPE codes.
+.br
+
+.br
+CLASS           two octets containing one of the RR CLASS codes.
+.br
+
+.br
+TTL             a 32 bit signed integer that specifies the time interval
+.br
+                that the resource record may be cached before the source
+.br
+                of the information should again be consulted.  Zero
+.br
+                values are interpreted to mean that the RR can only be
+.br
+                used for the transaction in progress, and should not be
+.br
+                cached.  For example, SOA records are always distributed
+.br
+                with a zero TTL to prohibit caching.  Zero values can
+.br
+                also be used for extremely volatile data.
+.br
+
+.br
+RDLENGTH        an unsigned 16 bit integer that specifies the length in
+.br
+                octets of the RDATA field.
+.br
+
+.br
+RDATA           a variable length string of octets that describes the
+.br
+                resource.  The format of this information varies
+.br
+                according to the TYPE and CLASS of the resource record.
+.br
+</pre>
+.br
+
+.br
+The actual amount and type of rdata fields depend on the RR type of the
+.br
+RR, and can be found by using \\ref ldns_rr_descriptor functions.
+.br
+struct ldns_struct_rr
+.br
+{
+.br
+	\fBOwner name, uncompressed:\fR
+.br
+	ldns_rdf	*_owner;
+.br
+	\fBTime to live:\fR
+.br
+	uint32_t	_ttl;
+.br
+	\fBNumber of data fields:\fR
+.br
+	size_t	        _rd_count;
+.br
+	\fBthe type of the RR. A, MX etc.:\fR
+.br
+	ldns_rr_type	_rr_type;
+.br
+	\fBClass of the resource record.:\fR
+.br
+	ldns_rr_class	_rr_class;
+.br
+	/* everything in the rdata is in network order */
+.br
+	\fBThe array of rdata's:\fR
+.br
+	ldns_rdf	 **_rdata_fields;
+.br
+	/**  question rr [it would be nicer if thous is after _rd_count]
+.br
+		 ABI change: Fix this in next major release
+.br
+	 */
+.br
+	bool		_rr_question;
+.br
+};
+.br
+typedef struct ldns_struct_rr ldns_rr;
+.PP
+.HP
+\fIldns_rr_class\fR
+.br
+ The different RR classes.
+.br
+enum ldns_enum_rr_class
+.br
+{
+.br
+	\fBthe Internet:\fR
+.br
+	LDNS_RR_CLASS_IN 	= 1,
+.br
+	\fBChaos class:\fR
+.br
+	LDNS_RR_CLASS_CH	= 3,
+.br
+	\fBHesiod (Dyer 87):\fR
+.br
+	LDNS_RR_CLASS_HS	= 4,
+.br
+    \fBNone class, dynamic update:\fR
+.br
+    LDNS_RR_CLASS_NONE      = 254,
+.br
+	\fBAny class:\fR
+.br
+	LDNS_RR_CLASS_ANY	= 255,
+.br
+
+.br
+	LDNS_RR_CLASS_FIRST     = 0,
+.br
+	LDNS_RR_CLASS_LAST      = 65535,
+.br
+	LDNS_RR_CLASS_COUNT     = LDNS_RR_CLASS_LAST - LDNS_RR_CLASS_FIRST + 1
+.br
+};
+.br
+typedef enum ldns_enum_rr_class ldns_rr_class;
+.PP
+.HP
+\fIldns_rr_type\fR
+.br
+The different RR types.
+.br
+enum ldns_enum_rr_type
+.br
+{
+.br
+	\fBa host address:\fR
+.br
+	LDNS_RR_TYPE_A = 1,
+.br
+	\fBan authoritative name server:\fR
+.br
+	LDNS_RR_TYPE_NS = 2,
+.br
+	\fBa mail destination (Obsolete - use MX):\fR
+.br
+	LDNS_RR_TYPE_MD = 3,
+.br
+	\fBa mail forwarder (Obsolete - use MX):\fR
+.br
+	LDNS_RR_TYPE_MF = 4,
+.br
+	\fBthe canonical name for an alias:\fR
+.br
+	LDNS_RR_TYPE_CNAME = 5,
+.br
+	\fBmarks the start of a zone of authority:\fR
+.br
+	LDNS_RR_TYPE_SOA = 6,
+.br
+	\fBa mailbox domain name (EXPERIMENTAL):\fR
+.br
+	LDNS_RR_TYPE_MB = 7,
+.br
+	\fBa mail group member (EXPERIMENTAL):\fR
+.br
+	LDNS_RR_TYPE_MG = 8,
+.br
+	\fBa mail rename domain name (EXPERIMENTAL):\fR
+.br
+	LDNS_RR_TYPE_MR = 9,
+.br
+	\fBa null RR (EXPERIMENTAL):\fR
+.br
+	LDNS_RR_TYPE_NULL = 10,
+.br
+	\fBa well known service description:\fR
+.br
+	LDNS_RR_TYPE_WKS = 11,
+.br
+	\fBa domain name pointer:\fR
+.br
+	LDNS_RR_TYPE_PTR = 12,
+.br
+	\fBhost information:\fR
+.br
+	LDNS_RR_TYPE_HINFO = 13,
+.br
+	\fBmailbox or mail list information:\fR
+.br
+	LDNS_RR_TYPE_MINFO = 14,
+.br
+	\fBmail exchange:\fR
+.br
+	LDNS_RR_TYPE_MX = 15,
+.br
+	\fBtext strings:\fR
+.br
+	LDNS_RR_TYPE_TXT = 16,
+.br
+	\fBRFC1183:\fR
+.br
+	LDNS_RR_TYPE_RP = 17,
+.br
+	\fBRFC1183:\fR
+.br
+	LDNS_RR_TYPE_AFSDB = 18,
+.br
+	\fBRFC1183:\fR
+.br
+	LDNS_RR_TYPE_X25 = 19,
+.br
+	\fBRFC1183:\fR
+.br
+	LDNS_RR_TYPE_ISDN = 20,
+.br
+	\fBRFC1183:\fR
+.br
+	LDNS_RR_TYPE_RT = 21,
+.br
+	\fBRFC1706:\fR
+.br
+	LDNS_RR_TYPE_NSAP = 22,
+.br
+	\fBRFC1348:\fR
+.br
+	LDNS_RR_TYPE_NSAP_PTR = 23,
+.br
+	\fB2535typecode:\fR
+.br
+	LDNS_RR_TYPE_SIG = 24,
+.br
+	\fB2535typecode:\fR
+.br
+	LDNS_RR_TYPE_KEY = 25,
+.br
+	\fBRFC2163:\fR
+.br
+	LDNS_RR_TYPE_PX = 26,
+.br
+	\fBRFC1712:\fR
+.br
+	LDNS_RR_TYPE_GPOS = 27,
+.br
+	\fBipv6 address:\fR
+.br
+	LDNS_RR_TYPE_AAAA = 28,
+.br
+	\fBLOC record  RFC1876:\fR
+.br
+	LDNS_RR_TYPE_LOC = 29,
+.br
+	\fB2535typecode:\fR
+.br
+	LDNS_RR_TYPE_NXT = 30,
+.br
+	\fBdraft-ietf-nimrod-dns-01.txt:\fR
+.br
+	LDNS_RR_TYPE_EID = 31,
+.br
+	\fBdraft-ietf-nimrod-dns-01.txt:\fR
+.br
+	LDNS_RR_TYPE_NIMLOC = 32,
+.br
+	\fBSRV record RFC2782:\fR
+.br
+	LDNS_RR_TYPE_SRV = 33,
+.br
+	\fBhttp://www.jhsoft.com/rfc/af-saa-0069.000.rtf:\fR
+.br
+	LDNS_RR_TYPE_ATMA = 34,
+.br
+	\fBRFC2915:\fR
+.br
+	LDNS_RR_TYPE_NAPTR = 35,
+.br
+	\fBRFC2230:\fR
+.br
+	LDNS_RR_TYPE_KX = 36,
+.br
+	\fBRFC2538:\fR
+.br
+	LDNS_RR_TYPE_CERT = 37,
+.br
+	\fBRFC2874:\fR
+.br
+	LDNS_RR_TYPE_A6 = 38,
+.br
+	\fBRFC2672:\fR
+.br
+	LDNS_RR_TYPE_DNAME = 39,
+.br
+	\fBdnsind-kitchen-sink-02.txt:\fR
+.br
+	LDNS_RR_TYPE_SINK = 40,
+.br
+	\fBOPT record RFC 6891:\fR
+.br
+	LDNS_RR_TYPE_OPT = 41,
+.br
+	\fBRFC3123:\fR
+.br
+	LDNS_RR_TYPE_APL = 42,
+.br
+	\fBRFC4034, RFC3658:\fR
+.br
+	LDNS_RR_TYPE_DS = 43,
+.br
+	\fBSSH Key Fingerprint:\fR
+.br
+	LDNS_RR_TYPE_SSHFP = 44, /* RFC 4255 */
+.br
+	\fBIPsec Key:\fR
+.br
+	LDNS_RR_TYPE_IPSECKEY = 45, /* RFC 4025 */
+.br
+	\fBDNSSEC:\fR
+.br
+	LDNS_RR_TYPE_RRSIG = 46, /* RFC 4034 */
+.br
+	LDNS_RR_TYPE_NSEC = 47, /* RFC 4034 */
+.br
+	LDNS_RR_TYPE_DNSKEY = 48, /* RFC 4034 */
+.br
+
+.br
+	LDNS_RR_TYPE_DHCID = 49, /* RFC 4701 */
+.br
+	/* NSEC3 */
+.br
+	LDNS_RR_TYPE_NSEC3 = 50, /* RFC 5155 */
+.br
+	LDNS_RR_TYPE_NSEC3PARAM = 51, /* RFC 5155 */
+.br
+	LDNS_RR_TYPE_NSEC3PARAMS = 51,
+.br
+	LDNS_RR_TYPE_TLSA = 52, /* RFC 6698 */
+.br
+	LDNS_RR_TYPE_SMIMEA = 53, /* RFC 8162 */
+.br
+
+.br
+	LDNS_RR_TYPE_HIP = 55, /* RFC 5205 */
+.br
+
+.br
+	\fBdraft-reid-dnsext-zs:\fR
+.br
+	LDNS_RR_TYPE_NINFO = 56,
+.br
+	\fBdraft-reid-dnsext-rkey:\fR
+.br
+	LDNS_RR_TYPE_RKEY = 57,
+.br
+        \fBdraft-ietf-dnsop-trust-history:\fR
+.br
+        LDNS_RR_TYPE_TALINK = 58,
+.br
+	LDNS_RR_TYPE_CDS = 59, /* RFC 7344 */
+.br
+	LDNS_RR_TYPE_CDNSKEY = 60, /* RFC 7344 */
+.br
+	LDNS_RR_TYPE_OPENPGPKEY = 61, /* RFC 7929 */
+.br
+	LDNS_RR_TYPE_CSYNC = 62, /* RFC 7477 */
+.br
+	LDNS_RR_TYPE_ZONEMD = 63, /* draft-ietf-dnsop-dns-zone-digest */
+.br
+	LDNS_RR_TYPE_SVCB = 64, /* draft-ietf-dnsop-svcb-https */
+.br
+	LDNS_RR_TYPE_HTTPS = 65, /* draft-ietf-dnsop-svcb-https */
+.br
+
+.br
+	LDNS_RR_TYPE_SPF = 99, /* RFC 4408 */
+.br
+
+.br
+	LDNS_RR_TYPE_UINFO = 100,
+.br
+	LDNS_RR_TYPE_UID = 101,
+.br
+	LDNS_RR_TYPE_GID = 102,
+.br
+	LDNS_RR_TYPE_UNSPEC = 103,
+.br
+
+.br
+	LDNS_RR_TYPE_NID = 104, /* RFC 6742 */
+.br
+	LDNS_RR_TYPE_L32 = 105, /* RFC 6742 */
+.br
+	LDNS_RR_TYPE_L64 = 106, /* RFC 6742 */
+.br
+	LDNS_RR_TYPE_LP = 107, /* RFC 6742 */
+.br
+
+.br
+	LDNS_RR_TYPE_EUI48 = 108, /* RFC 7043 */
+.br
+	LDNS_RR_TYPE_EUI64 = 109, /* RFC 7043 */
+.br
+
+.br
+	LDNS_RR_TYPE_TKEY = 249, /* RFC 2930 */
+.br
+	LDNS_RR_TYPE_TSIG = 250,
+.br
+	LDNS_RR_TYPE_IXFR = 251,
+.br
+	LDNS_RR_TYPE_AXFR = 252,
+.br
+	\fBA request for mailbox-related records (MB, MG or MR):\fR
+.br
+	LDNS_RR_TYPE_MAILB = 253,
+.br
+	\fBA request for mail agent RRs (Obsolete - see MX):\fR
+.br
+	LDNS_RR_TYPE_MAILA = 254,
+.br
+	\fBany type (wildcard):\fR
+.br
+	LDNS_RR_TYPE_ANY = 255,
+.br
+	LDNS_RR_TYPE_URI = 256, /* RFC 7553 */
+.br
+	LDNS_RR_TYPE_CAA = 257, /* RFC 6844 */
+.br
+	LDNS_RR_TYPE_AVC = 258, /* Cisco's DNS-AS RR, see www.dns-as.org */
+.br
+	LDNS_RR_TYPE_DOA = 259, /* draft-durand-doa-over-dns */
+.br
+
+.br
+	\fBdraft-ietf-mboned-driad-amt-discovery *:\fR
+.br
+	LDNS_RR_TYPE_AMTRELAY = 260,
+.br
+
+.br
+	\fBDNSSEC Trust Authorities:\fR
+.br
+	LDNS_RR_TYPE_TA = 32768,
+.br
+	/* RFC 4431, 5074, DNSSEC Lookaside Validation */
+.br
+	LDNS_RR_TYPE_DLV = 32769,
+.br
+
+.br
+	/* type codes from nsec3 experimental phase
+.br
+	LDNS_RR_TYPE_NSEC3 = 65324,
+.br
+	LDNS_RR_TYPE_NSEC3PARAMS = 65325, */
+.br
+	LDNS_RR_TYPE_FIRST = 0,
+.br
+	LDNS_RR_TYPE_LAST  = 65535,
+.br
+	LDNS_RR_TYPE_COUNT = LDNS_RR_TYPE_LAST - LDNS_RR_TYPE_FIRST + 1
+.br
+};
+.br
+typedef enum ldns_enum_rr_type ldns_rr_type;
+.PP
+.HP
+\fIldns_rr_compress\fR
+.br
+ Used to specify whether compression is allowed.
+.br
+enum ldns_enum_rr_compress
+.br
+{
+.br
+	\fBcompression is allowed:\fR
+.br
+	LDNS_RR_COMPRESS,
+.br
+	LDNS_RR_NO_COMPRESS
+.br
+};
+.br
+typedef enum ldns_enum_rr_compress ldns_rr_compress;
+.PP
+.HP
+\fIldns_rr_list\fR
+.br
+List or Set of Resource Records
+.br
+
+.br
+Contains a list of rr's <br>
+.br
+No official RFC-like checks are made
+.br
+struct ldns_struct_rr_list
+.br
+{
+.br
+	size_t _rr_count;
+.br
+	size_t _rr_capacity;
+.br
+	ldns_rr **_rrs;
+.br
+};
+.br
+typedef struct ldns_struct_rr_list ldns_rr_list;
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr_new\fR, \fIldns_rr_new_frm_type\fR, \fIldns_rr_new_frm_str\fR, \fIldns_rr_new_frm_fp\fR, \fIldns_rr_free\fR, \fIldns_rr_print\fR, \fIldns_rr_set_owner\fR, \fIldns_rr_set_ttl\fR, \fIldns_rr_set_type\fR, \fIldns_rr_set_rd_count\fR, \fIldns_rr_set_class\fR, \fIldns_rr_set_rdf\fR, \fIldns_rr_push_rdf\fR, \fIldns_rr_pop_rdf\fR, \fIldns_rr_rdf\fR, \fIldns_rr_owner\fR, \fIldns_rr_rd_count\fR, \fIldns_rr_ttl\fR, \fIldns_rr_get_class\fR, \fIldns_rr_list_rr_count\fR, \fIldns_rr_list_set_rr_count\fR, \fIldns_rr_list_new\fR, \fIldns_rr_list_free\fR, \fIldns_rr_list_cat\fR, \fIldns_rr_list_push_rr\fR, \fIldns_rr_list_pop_rr\fR, \fIldns_is_rrset\fR, \fIldns_rr_set_push_rr\fR, \fIldns_rr_set_pop_rr\fR, \fIldns_get_rr_class_by_name\fR, \fIldns_get_rr_type_by_name\fR, \fIldns_rr_list_clone\fR, \fIldns_rr_list_sort\fR, \fIldns_rr_compare\fR, \fIldns_rr_compare_ds\fR, \fIldns_rr_uncompressed_size\fR, \fIldns_rr2canonical\fR, \fIldns_rr_label_count\fR, \fIldns_is_rrset\fR, \fIldns_rr_descriptor\fR, \fIldns_rr_descript\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

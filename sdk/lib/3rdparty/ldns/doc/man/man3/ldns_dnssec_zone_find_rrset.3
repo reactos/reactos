@@ -1,0 +1,119 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_zone_find_rrset, ldns_dnssec_zone_new, ldns_dnssec_zone_free, ldns_dnssec_zone_add_rr, ldns_dnssec_zone_names_print, ldns_dnssec_zone_print, ldns_dnssec_zone_add_empty_nonterminals \- functions for ldns_dnssec_zone
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_dnssec_rrsets* ldns_dnssec_zone_find_rrset(const ldns_dnssec_zone *zone, const ldns_rdf *dname, ldns_rr_type type);
+.PP
+ldns_dnssec_zone* ldns_dnssec_zone_new(void);
+.PP
+void ldns_dnssec_zone_free(ldns_dnssec_zone *zone);
+.PP
+ldns_status ldns_dnssec_zone_add_rr(ldns_dnssec_zone *zone, ldns_rr *rr);
+.PP
+void ldns_dnssec_zone_names_print(FILE *out, const ldns_rbtree_t *tree, bool print_soa);
+.PP
+void ldns_dnssec_zone_print(FILE *out, const ldns_dnssec_zone *zone);
+.PP
+ldns_status ldns_dnssec_zone_add_empty_nonterminals(ldns_dnssec_zone *zone);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_zone_find_rrset\fR()
+Find the RRset with the given name and type in the zone
+
+\.br
+\fBzone\fR: the zone structure to find the RRset in
+\.br
+\fBdname\fR: the domain name of the RRset to find
+\.br
+\fBtype\fR: the type of the RRset to find
+\.br
+Returns the RRset, or \%NULL if not present
+.PP
+.HP
+\fIldns_dnssec_zone_new\fR()
+Creates a new dnssec_zone structure
+\.br
+Returns the allocated structure
+.PP
+.HP
+\fIldns_dnssec_zone_free\fR()
+Frees the given zone structure, and its rbtree of dnssec_names
+Individual ldns_rr RRs within those names are *not* freed
+\.br
+\fB*zone\fR: the zone to free
+.PP
+.HP
+\fIldns_dnssec_zone_add_rr\fR()
+Adds the given \%RR to the zone.
+It find whether there is a dnssec_name with that name present.
+If so, add it to that, if not create a new one. 
+Special handling of \%NSEC and \%RRSIG provided
+
+\.br
+\fBzone\fR: the zone to add the \%RR to
+\.br
+\fBrr\fR: The \%RR to add
+\.br
+Returns \%LDNS_STATUS_OK on success, an error code otherwise
+.PP
+.HP
+\fIldns_dnssec_zone_names_print\fR()
+Prints the rbtree of ldns_dnssec_name structures to the file descriptor
+
+\.br
+\fBout\fR: the file descriptor to print the names to
+\.br
+\fBtree\fR: the tree of ldns_dnssec_name structures to print
+\.br
+\fBprint_soa\fR: if true, print \%SOA records, if false, skip them
+.PP
+.HP
+\fIldns_dnssec_zone_print\fR()
+Prints the complete zone to the given file descriptor
+
+\.br
+\fBout\fR: the file descriptor to print to
+\.br
+\fBzone\fR: the dnssec_zone to print
+.PP
+.HP
+\fIldns_dnssec_zone_add_empty_nonterminals\fR()
+Adds explicit dnssec_name structures for the empty nonterminals
+in this zone. (this is needed for NSEC3 generation)
+
+\.br
+\fBzone\fR: the zone to check for empty nonterminals
+return \%LDNS_STATUS_OK on success.
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_zone\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

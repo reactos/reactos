@@ -1,0 +1,188 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_pkt2buffer_str, ldns_pktheader2buffer_str, ldns_rr2buffer_str, ldns_rr_list2buffer_str, ldns_rdf2buffer_str, ldns_key2buffer_str, ldns_pkt2buffer_wire, ldns_rr2buffer_wire, ldns_rdf2buffer_wire, ldns_rrsig2buffer_wire, ldns_rr_rdata2buffer_wire \- lower level conversions
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_pkt2buffer_str(ldns_buffer *output, const ldns_pkt *pkt);
+.PP
+ldns_status ldns_pktheader2buffer_str(ldns_buffer *output, const ldns_pkt *pkt);
+.PP
+ldns_status ldns_rr2buffer_str(ldns_buffer *output, const ldns_rr *rr);
+.PP
+ldns_status ldns_rr_list2buffer_str(ldns_buffer *output, const ldns_rr_list *list);
+.PP
+ldns_status ldns_rdf2buffer_str(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_key2buffer_str(ldns_buffer *output, const ldns_key *k);
+.PP
+ldns_status ldns_pkt2buffer_wire(ldns_buffer *output, const ldns_pkt *pkt);
+.PP
+ldns_status ldns_rr2buffer_wire(ldns_buffer *output, const ldns_rr *rr, int section);
+.PP
+ldns_status ldns_rdf2buffer_wire(ldns_buffer *output, const ldns_rdf *rdf);
+.PP
+ldns_status ldns_rrsig2buffer_wire(ldns_buffer *output, const ldns_rr *sigrr);
+.PP
+ldns_status ldns_rr_rdata2buffer_wire(ldns_buffer *output, const ldns_rr *rr);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_pkt2buffer_str\fR()
+Converts the data in the \%DNS packet to presentation
+format (as char *) and appends it to the given buffer
+
+\.br
+\fBoutput\fR: pointer to the buffer to append the data to
+\.br
+\fBpkt\fR: the pointer to the packet to convert
+\.br
+Returns status
+.PP
+.HP
+\fIldns_pktheader2buffer_str\fR()
+Converts the header of a packet to presentation format and appends it to
+the output buffer
+\.br
+\fBoutput\fR: the buffer to append output to
+\.br
+\fBpkt\fR: the packet to convert the header of
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rr2buffer_str\fR()
+Converts the data in the resource record to presentation
+format (as char *) and appends it to the given buffer.
+The presentation format of \%DNSKEY record is annotated with comments giving
+the id, type and size of the key.
+
+\.br
+\fBoutput\fR: pointer to the buffer to append the data to
+\.br
+\fBrr\fR: the pointer to the rr field to convert
+\.br
+Returns status
+.PP
+.HP
+\fIldns_rr_list2buffer_str\fR()
+Converts a rr_list to presentation format and appends it to
+the output buffer
+\.br
+\fBoutput\fR: the buffer to append output to
+\.br
+\fBlist\fR: the ldns_rr_list to print
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rdf2buffer_str\fR()
+Converts the data in the rdata field to presentation
+format (as char *) and appends it to the given buffer
+
+\.br
+\fBoutput\fR: pointer to the buffer to append the data to
+\.br
+\fBrdf\fR: the pointer to the rdafa field containing the data
+\.br
+Returns status
+.PP
+.HP
+\fIldns_key2buffer_str\fR()
+Converts the data in the \%DNS packet to presentation
+format (as char *) and appends it to the given buffer
+
+\.br
+\fBoutput\fR: pointer to the buffer to append the data to
+\.br
+\fBk\fR: the pointer to the private key to convert
+\.br
+Returns status
+.PP
+.HP
+\fIldns_pkt2buffer_wire\fR()
+Copies the packet data to the buffer in wire format
+\.br
+\fB*output\fR: buffer to append the result to
+\.br
+\fB*pkt\fR: packet to convert
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rr2buffer_wire\fR()
+Copies the rr data to the buffer in wire format
+\.br
+\fB*output\fR: buffer to append the result to
+\.br
+\fB*rr\fR: resource record to convert
+\.br
+\fBsection\fR: the section in the packet this rr is supposed to be in
+(to determine whether to add rdata or not)
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rdf2buffer_wire\fR()
+Copies the rdata data to the buffer in wire format
+\.br
+\fB*output\fR: buffer to append the result to
+\.br
+\fB*rdf\fR: rdata to convert
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rrsig2buffer_wire\fR()
+Converts a rrsig to wireformat \%BUT \%EXCLUDE the rrsig rdata
+This is needed in \%DNSSEC verification
+\.br
+\fBoutput\fR: buffer to append the result to
+\.br
+\fBsigrr\fR: signature rr to operate on
+\.br
+Returns ldns_status
+.PP
+.HP
+\fIldns_rr_rdata2buffer_wire\fR()
+Converts an rr's rdata to wireformat, while excluding
+the ownername and all the stuff before the rdata.
+This is needed in \%DNSSEC keytag calculation, the ds
+calculation from the key and maybe elsewhere.
+
+\.br
+\fB*output\fR: buffer where to put the result
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+Returns ldns_status
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_pkt2str\fR, \fIldns_rr2str\fR, \fIldns_rdf2str\fR, \fIldns_rr_list2str\fR, \fIldns_key2str\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

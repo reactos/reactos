@@ -1,0 +1,111 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_set_owner, ldns_rr_set_ttl, ldns_rr_set_type, ldns_rr_set_rd_count, ldns_rr_set_class, ldns_rr_set_rdf \- set ldns_rr attributes
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+void ldns_rr_set_owner(ldns_rr *rr, ldns_rdf *owner);
+.PP
+void ldns_rr_set_ttl(ldns_rr *rr, uint32_t ttl);
+.PP
+void ldns_rr_set_type(ldns_rr *rr, ldns_rr_type rr_type);
+.PP
+void ldns_rr_set_rd_count(ldns_rr *rr, size_t count);
+.PP
+void ldns_rr_set_class(ldns_rr *rr, ldns_rr_class rr_class);
+.PP
+ldns_rdf* ldns_rr_set_rdf(ldns_rr *rr, const ldns_rdf *f, size_t position);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_set_owner\fR()
+sets the owner in the rr structure.
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+\fB*owner\fR: set to this owner
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_set_ttl\fR()
+sets the ttl in the rr structure.
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+\fBttl\fR: set to this ttl
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_set_type\fR()
+sets the type in the rr.
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+\fBrr_type\fR: set to this type
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_set_rd_count\fR()
+sets the rd_count in the rr.
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+\fBcount\fR: set to this count
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_set_class\fR()
+sets the class in the rr.
+\.br
+\fB*rr\fR: rr to operate on
+\.br
+\fBrr_class\fR: set to this class
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_set_rdf\fR()
+sets a rdf member, it will be set on the
+position given. The old value is returned, like pop.
+\.br
+\fB*rr\fR: the rr to operate on
+\.br
+\fB*f\fR: the rdf to set
+\.br
+\fBposition\fR: the position the set the rdf
+\.br
+Returns the old value in the rr, \%NULL on failure
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR, \fIldns_rr_list\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

@@ -1,0 +1,133 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dane_create_tlsa_rr, ldns_dane_create_tlsa_owner, ldns_dane_cert2rdf, ldns_dane_select_certificate \- TLSA RR creation functions
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_dane_create_tlsa_rr(ldns_rr** tlsa, ldns_tlsa_certificate_usage certificate_usage, ldns_tlsa_selector selector, ldns_tlsa_matching_type matching_type, X509* cert);
+.PP
+ldns_status ldns_dane_create_tlsa_owner(ldns_rdf** tlsa_owner, const ldns_rdf* name, uint16_t port, ldns_dane_transport transport);
+.PP
+ldns_status ldns_dane_cert2rdf(ldns_rdf** rdf, X509* cert, ldns_tlsa_selector selector, ldns_tlsa_matching_type matching_type);
+.PP
+ldns_status ldns_dane_select_certificate(X509** selected_cert, X509* cert, STACK_OF(X509)* extra_certs, X509_STORE* pkix_validation_store, ldns_tlsa_certificate_usage cert_usage, int index);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dane_create_tlsa_rr\fR()
+Creates a \%TLSA resource record from the certificate.
+No \%PKIX validation is performed! The given certificate is used as data
+regardless the value of certificate_usage.
+
+\.br
+\fBtlsa\fR: The created \%TLSA resource record.
+\.br
+\fBcertificate_usage\fR: The value for the Certificate Usage field
+\.br
+\fBselector\fR: The value for the Selector field
+\.br
+\fBmatching_type\fR: The value for the Matching Type field
+\.br
+\fBcert\fR: The certificate which data will be represented
+
+\.br
+Returns \%LDNS_STATUS_OK on success or an error code otherwise.
+.PP
+.HP
+\fIldns_dane_create_tlsa_owner\fR()
+Creates a dname consisting of the given name, prefixed by the service port
+and type of transport: \%_<\%EM>port</\%EM>.\%_<\%EM>transport</\%EM>.<\%EM>name</\%EM>.
+
+\.br
+\fBtlsa_owner\fR: The created dname.
+\.br
+\fBname\fR: The dname that should be prefixed.
+\.br
+\fBport\fR: The service port number for which the name should be created.
+\.br
+\fBtransport\fR: The transport for which the name should be created.
+\.br
+Returns \%LDNS_STATUS_OK on success or an error code otherwise.
+.PP
+.HP
+\fIldns_dane_cert2rdf\fR()
+Creates a \%LDNS_RDF_TYPE_HEX type rdf based on the binary data chosen by
+the selector and encoded using matching_type.
+
+\.br
+\fBrdf\fR: The created created rdf of type \%LDNS_RDF_TYPE_HEX.
+\.br
+\fBcert\fR: The certificate from which the data is selected
+\.br
+\fBselector\fR: The full certificate or the public key
+\.br
+\fBmatching_type\fR: The full data or the SHA256 or SHA512 hash
+of the selected data
+\.br
+Returns \%LDNS_STATUS_OK on success or an error code otherwise.
+.PP
+.HP
+\fIldns_dane_select_certificate\fR()
+Selects the certificate from cert, extra_certs or the pkix_validation_store
+based on the value of cert_usage and index.
+
+\.br
+\fBselected_cert\fR: The selected cert.
+\.br
+\fBcert\fR: The certificate to validate (or not)
+\.br
+\fBextra_certs\fR: Intermediate certificates that might be necessary
+during validation. May be \%NULL, except when the certificate 
+usage is "Trust Anchor Assertion" because the trust anchor has
+to be provided.(otherwise choose a "Domain issued certificate!"
+\.br
+\fBpkix_validation_store\fR: Used when the certificate usage is 
+"\%CA constraint" or "Service Certificate Constraint" to 
+validate the certificate and, in case of "\%CA constraint",
+select the \%CA.
+When pkix_validation_store is \%NULL, validation is explicitly
+turned off and the behaviour is then the same as for "Trust
+anchor assertion" and "Domain issued certificate" respectively.
+\.br
+\fBcert_usage\fR: Which certificate to use and how to validate.
+\.br
+\fBindex\fR: Used to select the trust anchor when certificate usage
+is "Trust Anchor Assertion". 0 is the last certificate in the
+validation chain. 1 the one but last, etc. When index is -1,
+the last certificate is used that \%MUST be self-signed.
+This can help to make sure that the intended (self signed)
+trust anchor is actually present in extra_certs (which is a
+\%DANE requirement).
+
+\.br
+Returns \%LDNS_STATUS_OK on success or an error code otherwise.
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dane_verify\fR, \fIldns_dane_verify_rr\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

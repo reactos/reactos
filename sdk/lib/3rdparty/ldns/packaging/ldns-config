@@ -1,0 +1,47 @@
+#!/bin/sh
+
+prefix="/mingw32"
+exec_prefix="${prefix}"
+VERSION="1.8.3"
+CFLAGS="-DOPENSSL_API_COMPAT=10100 -fno-strict-aliasing -Wunused-function -Wstrict-prototypes -Wwrite-strings -W -Wall -g -O2"
+CPPFLAGS=" "
+LDFLAGS=" "
+PYTHON_CPPFLAGS=""
+PYTHON_LDFLAGS="@PYTHON_LDFLAGS@"
+LIBS=" -lws2_32 "
+LIBDIR="${exec_prefix}/lib"
+INCLUDEDIR="${prefix}/include"
+LIBVERSION="8:0:5"
+
+
+for arg in $@
+do
+    if [ $arg = "--cflags" ]
+    then
+        echo "-I${INCLUDEDIR}"
+    fi
+    if [ $arg = "--python-cflags" ]
+    then
+        echo "${PYTHON_CPPFLAGS} -I${INCLUDEDIR}"
+    fi
+    if [ $arg = "--libs" ]
+    then
+        echo "${LDFLAGS} -L${LIBDIR} ${LIBS} -lldns"
+    fi
+    if [ $arg = "--python-libs" ]
+    then
+        echo "${LDFLAGS} ${PYTHON_LDFLAGS} -L${LIBDIR} ${LIBS} -lldns"
+    fi
+    if [ $arg = "-h" ] || [ $arg = "--help" ]
+    then
+        echo "Usage: $0 [--cflags] [--python-cflags] [--libs] [--python-libs] [--version]"
+    fi
+    if [ $arg = "--version" ]
+    then
+        echo "${VERSION}"
+    fi
+    if [ $arg = "--libversion" ]
+    then
+        echo "${LIBVERSION}"
+    fi
+done

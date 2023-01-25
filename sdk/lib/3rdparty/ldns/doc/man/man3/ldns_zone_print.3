@@ -1,0 +1,154 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_zone, ldns_zone_new, ldns_zone_free, ldns_zone_deep_free, ldns_zone_new_frm_fp, ldns_zone_new_frm_fp_l, ldns_zone_print, ldns_zone_print_fmt \- ldns_zone creation, destruction and printing
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_zone * ldns_zone_new(void);
+.PP
+void ldns_zone_free(ldns_zone *zone);
+.PP
+void ldns_zone_deep_free(ldns_zone *zone);
+.PP
+ldns_status ldns_zone_new_frm_fp(ldns_zone **z, FILE *fp, const ldns_rdf *origin, uint32_t ttl, ldns_rr_class c);
+.PP
+ldns_status ldns_zone_new_frm_fp_l(ldns_zone **z, FILE *fp, const ldns_rdf *origin, uint32_t ttl, ldns_rr_class c, int *line_nr);
+.PP
+void ldns_zone_print(FILE *output, const ldns_zone *z);
+.PP
+void ldns_zone_print_fmt(FILE *output, const ldns_output_format *fmt, const ldns_zone *z);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_zone\fR
+.br
+DNS Zone
+.br
+
+.br
+A list of RR's with some
+.br
+extra information which comes from the SOA RR
+.br
+Note: nothing has been done to make this efficient (yet).
+.br
+struct ldns_struct_zone
+.br
+{
+.br
+	\fBthe soa defines a zone:\fR
+.br
+	ldns_rr 	*_soa;
+.br
+	/* basically a zone is a list of rr's */
+.br
+	ldns_rr_list 	*_rrs;
+.br
+	/* we could change this to be a b-tree etc etc todo */
+.br
+};
+.br
+typedef struct ldns_struct_zone ldns_zone;	
+.PP
+.HP
+\fIldns_zone_new\fR()
+create a new ldns_zone structure
+\.br
+Returns a pointer to a ldns_zone structure
+.PP
+.HP
+\fIldns_zone_free\fR()
+Frees the allocated memory for the zone, and the rr_list structure in it
+\.br
+\fBzone\fR: the zone to free
+.PP
+.HP
+\fIldns_zone_deep_free\fR()
+Frees the allocated memory for the zone, the soa rr in it, 
+and the rr_list structure in it, including the rr's in that. etc.
+\.br
+\fBzone\fR: the zone to free
+.PP
+.HP
+\fIldns_zone_new_frm_fp\fR()
+Create a new zone from a file
+\.br
+\fBz\fR: the new zone
+\.br
+\fB*fp\fR: the filepointer to use
+\.br
+\fB*origin\fR: the zones' origin
+\.br
+\fBttl\fR: default ttl to use
+\.br
+\fBc\fR: default class to use (\%IN)
+
+\.br
+Returns ldns_status mesg with an error or \%LDNS_STATUS_OK
+.PP
+.HP
+\fIldns_zone_new_frm_fp_l\fR()
+Create a new zone from a file, keep track of the line numbering
+\.br
+\fBz\fR: the new zone
+\.br
+\fB*fp\fR: the filepointer to use
+\.br
+\fB*origin\fR: the zones' origin
+\.br
+\fBttl\fR: default ttl to use
+\.br
+\fBc\fR: default class to use (\%IN)
+\.br
+\fBline_nr\fR: used for error msg, to get to the line number
+
+\.br
+Returns ldns_status mesg with an error or \%LDNS_STATUS_OK
+.PP
+.HP
+\fIldns_zone_print\fR()
+Print a zone structure * to output. Note the \%SOA record
+is included in this output
+\.br
+\fBoutput\fR: the fd to print to
+\.br
+\fBz\fR: the zone to print
+.PP
+.HP
+\fIldns_zone_print_fmt\fR()
+Print a zone structure * to output. Note the \%SOA record
+is included in this output
+\.br
+\fBoutput\fR: the fd to print to
+\.br
+\fBfmt\fR: format of the textual representation
+\.br
+\fBz\fR: the zone to print
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

@@ -1,0 +1,150 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_pkt_edns, ldns_pkt_edns_udp_size, ldns_pkt_edns_extended_rcode, ldns_pkt_edns_version, ldns_pkt_edns_z, ldns_pkt_edns_data, ldns_pkt_set_edns_udp_size, ldns_pkt_set_edns_extended_rcode, ldns_pkt_set_edns_version, ldns_pkt_set_edns_z, ldns_pkt_set_edns_data \- ldns_pkt ends0 related functions
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+bool ldns_pkt_edns(const ldns_pkt *packet);
+.PP
+uint16_t ldns_pkt_edns_udp_size(const ldns_pkt *packet);
+.PP
+uint8_t ldns_pkt_edns_extended_rcode(const ldns_pkt *packet);
+.PP
+uint8_t ldns_pkt_edns_version(const ldns_pkt *packet);
+.PP
+uint16_t ldns_pkt_edns_z(const ldns_pkt *packet);
+.PP
+ldns_rdf* ldns_pkt_edns_data(const ldns_pkt *packet);
+.PP
+void ldns_pkt_set_edns_udp_size(ldns_pkt *packet, uint16_t s);
+.PP
+void ldns_pkt_set_edns_extended_rcode(ldns_pkt *packet, uint8_t c);
+.PP
+void ldns_pkt_set_edns_version(ldns_pkt *packet, uint8_t v);
+.PP
+void ldns_pkt_set_edns_z(ldns_pkt *packet, uint16_t z);
+.PP
+void ldns_pkt_set_edns_data(ldns_pkt *packet, ldns_rdf *data);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_pkt_edns\fR()
+returns true if this packet needs and \%EDNS rr to be sent.
+At the moment the only reason is an expected packet
+size larger than 512 bytes, but for instance dnssec would
+be a good reason too.
+
+\.br
+\fBpacket\fR: the packet to check
+\.br
+Returns true if packet needs edns rr
+.PP
+.HP
+\fIldns_pkt_edns_udp_size\fR()
+return the packet's edns udp size
+\.br
+\fBpacket\fR: the packet
+\.br
+Returns the size
+.PP
+.HP
+\fIldns_pkt_edns_extended_rcode\fR()
+return the packet's edns extended rcode
+\.br
+\fBpacket\fR: the packet
+\.br
+Returns the rcode
+.PP
+.HP
+\fIldns_pkt_edns_version\fR()
+return the packet's edns version
+\.br
+\fBpacket\fR: the packet
+\.br
+Returns the version
+.PP
+.HP
+\fIldns_pkt_edns_z\fR()
+return the packet's edns z value
+\.br
+\fBpacket\fR: the packet
+\.br
+Returns the z value
+.PP
+.HP
+\fIldns_pkt_edns_data\fR()
+return the packet's \%EDNS data
+\.br
+\fBpacket\fR: the packet
+\.br
+Returns the data
+.PP
+.HP
+\fIldns_pkt_set_edns_udp_size\fR()
+Set the packet's edns udp size
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBs\fR: the size
+.PP
+.HP
+\fIldns_pkt_set_edns_extended_rcode\fR()
+Set the packet's edns extended rcode
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBc\fR: the code
+.PP
+.HP
+\fIldns_pkt_set_edns_version\fR()
+Set the packet's edns version
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBv\fR: the version
+.PP
+.HP
+\fIldns_pkt_set_edns_z\fR()
+Set the packet's edns z value
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBz\fR: the value
+.PP
+.HP
+\fIldns_pkt_set_edns_data\fR()
+Set the packet's \%EDNS data
+\.br
+\fBpacket\fR: the packet
+\.br
+\fBdata\fR: the data
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_pkt\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

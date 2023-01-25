@@ -1,0 +1,64 @@
+The libdns coding style guide
+
+* Use of tabs (real tabs, 8 positions long)
+* Spaces only after comma's, and in between operators.
+  And after keywords (if, while, for)
+* Underscores to make long names readable
+* prefix (exported) identifiers with 'ldns_'
+* no unneeded parentheses after 'return'
+* always curly brackets in if-statements
+* use defines for (weird) constants, and masks
+* type 'bool', constants 'true'/'false'. Don't compare bools for
+  equality.
+* always use LDNS_MALLOC/FREE etc, or the new/free/deep_free functions
+* buffer can scale, so don't alloc the max size, but the min size
+* make lint (uses splint) is your friend
+
+
+* Return values:
+	- status code (structure to fill is usually passed as a first argument)
+	- new/pointer: return pointer or NULL on error
+	- 'read' functions: ldns_status wire2thing(uint8_t *p, size_t max,
+	                                           size_t pos, *thing);
+	- void functions like ldns_rr_free
+	- bool functions
+
+* Parameter sequence: (dest, [dest_meta, ] src, [src_meta] etc)
+* structure/union field names start with _ when "private"
+* enum for rcode, opcode, types etc,
+	example:
+	enum ldns_rcode {
+		LDNS_RCODE_OK = 0,
+		...      = .,
+		LDNS_RCODE_FIRST = LDNS_RCODE_OK,
+		LDNS_RCODE_LAST = 15,	
+		LDNS_RCODE_COUNT = LDNS_RCODE_LAST + 1
+	}
+* Everything by reference, all data structures an optional _clone() function
+* arrays: ps[] with size_t p_count for the number of elements
+* _size for size in bytes
+* _free and _clone copies perform deep free/copy.
+
+* Standard abbreviations, don't abbreviate other names:
+
+    id          = identity
+    rr          = resource record
+    rrset       = resource record set
+    rdata       = resource data
+    rdf         = resource data field
+    rcode       = result code
+    qr          = query/resource bit
+    aa          = authoritative answer
+    tc          = truncated
+    rd          = recursion disabled
+    cd          = checking disabled
+    ra          = recursion available
+    ad          = authentic data
+    qdcount     = question section count
+    ancount     = answer section count
+    nscount     = authority section count
+    arcount     = additional section count
+
+ldns-<tools>
+* use exit(EXIT_FAILURE)/ exit(EXIT_SUCCESS)
+* 

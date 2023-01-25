@@ -1,0 +1,60 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_set_push_rr, ldns_rr_set_pop_rr \- push and pop rr on a rrset
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+bool ldns_rr_set_push_rr(ldns_rr_list *rr_list, ldns_rr *rr);
+.PP
+ldns_rr* ldns_rr_set_pop_rr(ldns_rr_list *rr_list);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_set_push_rr\fR()
+pushes an rr to an rrset (which really are rr_list's).
+\.br
+\fB*rr_list\fR: the rrset to push the rr to
+\.br
+\fB*rr\fR: the rr to push
+\.br
+Returns true if the push succeeded otherwise false
+.PP
+.HP
+\fIldns_rr_set_pop_rr\fR()
+pops the last rr from an rrset. This function is there only
+for the symmetry.
+\.br
+\fBrr_list\fR: the rr_list to pop from
+\.br
+Returns \%NULL if nothing to pop. Otherwise the popped \%RR
+
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR, \fIldns_rr_list\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

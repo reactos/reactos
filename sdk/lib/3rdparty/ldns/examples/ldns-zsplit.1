@@ -1,0 +1,43 @@
+.TH ldns-zsplit 1 "15 Dec 2005"
+.SH NAME
+ldns-zsplit \- split up a zone file
+.SH SYNOPSIS
+.B ldns-zsplit
+[
+.IR OPTIONS
+]
+.IR zonefile
+
+.SH DESCRIPTION
+
+.SH OPTIONS
+.TP
+.B -n NUMBER
+Split after NUMBER RRs, \fBldns-zsplit\fR will not split in
+the middle of an RRs.
+.PP
+Each part is saved with a numerical suffix, starting with .000. The
+largest suffix is thus .999.
+
+.TP
+.B -o ORIGIN
+use ORIGIN as origin when reading the zonefile.
+
+.TP
+.B -z
+Sort the zone before splitting.
+
+.TP
+.B -v
+Show version number and exit.
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005, 2006 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

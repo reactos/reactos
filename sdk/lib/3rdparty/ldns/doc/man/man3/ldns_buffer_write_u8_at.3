@@ -1,0 +1,242 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_buffer_write_at, ldns_buffer_write, ldns_buffer_write_string_at, ldns_buffer_write_string, ldns_buffer_write_u8_at, ldns_buffer_write_u8, ldns_buffer_write_u16_at, ldns_buffer_write_u16, ldns_buffer_read_at, ldns_buffer_read, ldns_buffer_read_u8_at, ldns_buffer_read_u8, ldns_buffer_read_u16_at, ldns_buffer_read_u16, ldns_buffer_read_u32_at, ldns_buffer_read_u32, ldns_buffer_write_u32, ldns_buffer_write_u32_at \- reading and writing buffers
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+void ldns_buffer_write_at(ldns_buffer *buffer, size_t at, const void *data, size_t count);
+.PP
+void ldns_buffer_write(ldns_buffer *buffer, const void *data, size_t count);
+.PP
+void ldns_buffer_write_string_at(ldns_buffer *buffer, size_t at, const char *str);
+.PP
+void ldns_buffer_write_string(ldns_buffer *buffer, const char *str);
+.PP
+void ldns_buffer_write_u8_at(ldns_buffer *buffer, size_t at, uint8_t data);
+.PP
+void ldns_buffer_write_u8(ldns_buffer *buffer, uint8_t data);
+.PP
+void ldns_buffer_write_u16_at(ldns_buffer *buffer, size_t at, uint16_t data);
+.PP
+void ldns_buffer_write_u16(ldns_buffer *buffer, uint16_t data);
+.PP
+void ldns_buffer_read_at(const ldns_buffer *buffer, size_t at, void *data, size_t count);
+.PP
+void ldns_buffer_read(ldns_buffer *buffer, void *data, size_t count);
+.PP
+uint8_t ldns_buffer_read_u8_at(const ldns_buffer *buffer, size_t at);
+.PP
+uint8_t ldns_buffer_read_u8(ldns_buffer *buffer);
+.PP
+uint16_t ldns_buffer_read_u16_at(ldns_buffer *buffer, size_t at);
+.PP
+uint16_t ldns_buffer_read_u16(ldns_buffer *buffer);
+.PP
+uint32_t ldns_buffer_read_u32_at(ldns_buffer *buffer, size_t at);
+.PP
+uint32_t ldns_buffer_read_u32(ldns_buffer *buffer);
+.PP
+void ldns_buffer_write_u32(ldns_buffer *buffer, uint32_t data);
+.PP
+void ldns_buffer_write_u32_at(ldns_buffer *buffer, size_t at, uint32_t data);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_buffer_write_at\fR()
+writes the given data to the buffer at the specified position
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position (in number of bytes) to write the data at
+\.br
+\fBdata\fR: pointer to the data to write to the buffer
+\.br
+\fBcount\fR: the number of bytes of data to write
+.PP
+.HP
+\fIldns_buffer_write\fR()
+writes count bytes of data to the current position of the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBdata\fR: the data to write
+\.br
+\fBcount\fR: the length of the data to write
+.PP
+.HP
+\fIldns_buffer_write_string_at\fR()
+copies the given (null-delimited) string to the specified position at the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer
+\.br
+\fBstr\fR: the string to write
+.PP
+.HP
+\fIldns_buffer_write_string\fR()
+copies the given (null-delimited) string to the current position at the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBstr\fR: the string to write
+.PP
+.HP
+\fIldns_buffer_write_u8_at\fR()
+writes the given byte of data at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer
+\.br
+\fBdata\fR: the 8 bits to write
+.PP
+.HP
+\fIldns_buffer_write_u8\fR()
+writes the given byte of data at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBdata\fR: the 8 bits to write
+.PP
+.HP
+\fIldns_buffer_write_u16_at\fR()
+writes the given 2 byte integer at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer
+\.br
+\fBdata\fR: the 16 bits to write
+.PP
+.HP
+\fIldns_buffer_write_u16\fR()
+writes the given 2 byte integer at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBdata\fR: the 16 bits to write
+.PP
+.HP
+\fIldns_buffer_read_at\fR()
+copies count bytes of data at the given position to the given data-array
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer to start
+\.br
+\fBdata\fR: buffer to copy to
+\.br
+\fBcount\fR: the length of the data to copy
+.PP
+.HP
+\fIldns_buffer_read\fR()
+copies count bytes of data at the current position to the given data-array
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBdata\fR: buffer to copy to
+\.br
+\fBcount\fR: the length of the data to copy
+.PP
+.HP
+\fIldns_buffer_read_u8_at\fR()
+returns the byte value at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer
+\.br
+Returns 1 byte integer
+.PP
+.HP
+\fIldns_buffer_read_u8\fR()
+returns the byte value at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+Returns 1 byte integer
+.PP
+.HP
+\fIldns_buffer_read_u16_at\fR()
+returns the 2-byte integer value at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: position in the buffer
+\.br
+Returns 2 byte integer
+.PP
+.HP
+\fIldns_buffer_read_u16\fR()
+returns the 2-byte integer value at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+Returns 2 byte integer
+.PP
+.HP
+\fIldns_buffer_read_u32_at\fR()
+returns the 4-byte integer value at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: position in the buffer
+\.br
+Returns 4 byte integer
+.PP
+.HP
+\fIldns_buffer_read_u32\fR()
+returns the 4-byte integer value at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+Returns 4 byte integer
+.PP
+.HP
+\fIldns_buffer_write_u32\fR()
+writes the given 4 byte integer at the current position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBdata\fR: the 32 bits to write
+.PP
+.HP
+\fIldns_buffer_write_u32_at\fR()
+writes the given 4 byte integer at the given position in the buffer
+\.br
+\fBbuffer\fR: the buffer
+\.br
+\fBat\fR: the position in the buffer
+\.br
+\fBdata\fR: the 32 bits to write
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_buffer\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

@@ -1,0 +1,194 @@
+.TH ldns-signzone 1 "13 March 2018"
+.SH NAME
+ldns-signzone \- sign a zonefile with DNSSEC data
+.SH SYNOPSIS
+.B ldns-signzone 
+[
+.IR OPTIONS
+]
+.IR ZONEFILE 
+.IR
+KEY 
+[KEY 
+[KEY] ...
+]
+
+.SH DESCRIPTION
+
+\fBldns-signzone\fR is used to generate a DNSSEC signed zone. When run it
+will create a new zonefile that contains RRSIG and NSEC resource records, as
+specified in RFC 4033, RFC 4034 and RFC 4035.
+
+Keys must be specified by their base name (i.e. without .private). If
+the DNSKEY that belongs to the key in the .private file is not present
+in the zone, it will be read from the file <base name>.key. If that
+file does not exist, the DNSKEY value will be generated from the
+private key.
+
+Multiple keys can be specified, Key Signing Keys are used as such when
+they are either already present in the zone, or specified in a .key
+file, and have the KSK bit set.
+
+.SH OPTIONS
+.TP
+\fB-b\fR
+Augments the zone and the RR's with extra comment texts for a more readable
+layout, easier to debug. DS records will have a bubblebabble version of
+the data in the comment text, NSEC3 records will have the unhashed owner names
+in the comment text.
+
+Without this option, only DNSKEY RR's will have their Key Tag annotated in
+the comment text.
+
+.TP
+\fB-d\fR
+Normally, if the DNSKEY RR for a key that is used to sign the zone is
+not found in the zone file, it will be read from .key, or derived from
+the private key (in that order). This option turns that feature off,
+so that only the signatures are added to the zone.
+
+.TP
+\fB-e\fR \fIdate\fR
+Set expiration date of the signatures to this date, the format can be
+YYYYMMDD[hhmmss], or a timestamp.
+
+.TP
+\fB-f\fR \fIfile\fR
+Use this file to store the signed zone in (default <originalfile>.signed)
+
+.TP
+\fB-i\fR \fIdate\fR
+Set inception date of the signatures to this date, the format can be
+YYYYMMDD[hhmmss], or a timestamp.
+
+.TP
+\fB-o\fR \fIorigin\fR
+Use this as the origin of the zone
+
+.TP
+\fB-u\fR
+set SOA serial to the number of seconds since 1-1-1970
+
+.TP
+\fB-v\fR
+Print the version and exit
+
+.TP
+\fB-z\fR \fI[scheme:]hash\fR
+Calculate the zone's digest and add those as ZONEMD RRs. The (optional)
+`scheme' must be `simple` (or 1) and `hash' should be `sha384' (or 1) or
+`sha512' (or 2).  This option can be given more than once.
+
+.TP
+\fB-Z\fR
+Allow ZONEMDs to be added without signing
+
+.TP
+\fB-A\fR
+Sign the DNSKEY record with all keys.  By default it is signed with a
+minimal number of keys, to keep the response size for the DNSKEY query
+small, and only the SEP keys that are passed are used.  If there are no
+SEP keys, the DNSKEY RRset is signed with the non\-SEP keys.  This option
+turns off the default and all keys are used to sign the DNSKEY RRset.
+
+.TP
+\fB-U\fR
+Sign with every unique algorithm in the provided keys.  The DNSKEY set
+is signed with all the SEP keys, plus all the non\-SEP keys that have an
+algorithm that was not presen in the SEP key set.
+
+.TP
+\fB-E\fR \fIname\fR
+Use the EVP cryptographic engine with the given name for signing. This
+can have some extra options; see ENGINE OPTIONS for more information.
+
+.TP
+\fB-K\fR \fIalgorithm-id,key-id\fR
+
+Use the key `key-id' as the signing key for algorithm `algorithm-id' as
+a Key Signing Key (KSK). This option is used when you use an OpenSSL engine,
+see ENGINE OPTIONS for more information.
+
+.TP
+\fB-k\fR \fIalgorithm-id,key-id\fR
+Use the key `key-id' as the signing key for algorithm `algorithm-id' as
+a Zone Signing Key (ZSK). This option is used when you use an OpenSSL
+engine, see ENGINE OPTIONS for more information.
+
+.TP
+\fB-n\fR
+Use NSEC3 instead of NSEC.
+
+.TP
+If you use NSEC3, you can specify the following extra options:
+
+.TP
+\fB-a\fR \fIalgorithm\fR
+Algorithm used to create the hashed NSEC3 owner names
+
+.TP
+\fB-p\fR
+Opt-out. All NSEC3 records in the zone will have the Opt-out flag set. After signing, you can add insecure delegations to the signed zone.
+
+.TP
+\fB-s\fR \fIstring\fR
+Salt
+
+.TP
+\fB-t\fR \fInumber\fR
+Number of hash iterations
+
+.SH ENGINE OPTIONS
+You can modify the possible engines, if supported, by setting an
+OpenSSL configuration file. This is done through the environment
+variable OPENSSL_CONF.
+
+The key options (\-k and \-K) work as follows: you specify a DNSSEC
+algorithm (using its symbolic name, for instance, RSASHA256
+or its numeric identifier, for instance, 8), followed by a comma
+and a key identifier (white space is not allowed between the
+algorithm and the comma and between the comma and the key identifier).
+
+The key identifier can be any of the following:
+
+    <id>
+    <slot>:<id>
+    id_<id>
+    slot_<slot>-id_<id>
+    label_<label>
+    slot_<slot>-label_<label>
+
+Where '<id>' is the PKCS #11 key identifier in hexadecimal
+notation, '<label>' is the PKCS #11 human-readable label, and '<slot>'
+is the slot number where the token is present.
+
+More recent versions of OpenSSL engines may support
+the PKCS #11 URI scheme (RFC 7512),
+please consult your engine's documentation.
+
+If not already present, a DNSKEY RR is generated from the key
+data, and added to the zone.
+
+.SH EXAMPLES
+
+.TP
+ldns-signzone nlnetlabs.nl Knlnetlabs.nl.+005+12273
+Sign the zone in the file 'nlnetlabs.nl' with the key in the
+files 'Knlnetlabs.nl.+005+12273.private'. If the DNSKEY is not present
+in the zone, use the key in the
+file 'Knlnetlabs.nl.+005+12273.key'. If that is not present, generate
+one with default values from 'Knlnetlabs.nl.+005+12273.private'.
+
+
+.SH AUTHORS
+Written by the ldns team as an example for ldns usage.
+.br
+Portions of engine support by Vadim Penzin <vadim@penzin.net>. 
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005-2008 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

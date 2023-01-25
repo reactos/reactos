@@ -1,0 +1,113 @@
+.TH ldns-read-zone 1 "30 May 2005"
+.SH NAME
+ldns-read-zone \- read a zonefile and print it
+.SH SYNOPSIS
+.B ldns-read-zone 
+.IR ZONEFILE 
+
+.SH DESCRIPTION
+
+\fBldns-read-zone\fR reads a DNS zone file and prints it. The output has 1
+resource record per line, and no pretty-printing makeup.
+
+.SH OPTIONS
+.TP
+\fB-0\fR
+Print a (null) for the RRSIG inception, expiry and key data. This option
+can be used when comparing different signing systems that use the same
+DNSKEYs for signing but would have a slightly different timings/jitter.
+
+.TP
+\fB-b\fR
+Include Bubble Babble encoding of DS's.
+
+.TP
+\fB-c\fR
+Canonicalize all resource records in the zone before printing
+
+.TP
+\fB-d\fR
+Only print DNSSEC data from the zone. This option skips every record
+that is not of type NSEC, NSEC3 or RRSIG. DNSKEY and DS records are not
+printed.
+
+.TP
+\fB-e\fR \fIRR type\fR
+Do not print RRs of the given \fIrr type\fR.
+This option may be given multiple times.
+\fB-e\fR is not meant to be used together with \fB-E\fR.
+
+.TP
+\fB-E\fR \fIRR type\fR
+Print only RRs of the given \fIrr type\fR.
+This option may be given multiple times.
+\fB-E\fR is not meant to be used together with \fB-e\fR.
+
+.TP
+\fB-h\fR
+Show usage and exit
+
+.TP
+\fB-n\fR
+Do not print the SOA record
+
+.TP
+\fB-p\fR
+Pad the SOA serial number with spaces so the number and the spaces together
+take ten characters. This is useful for in file serial number increments.
+
+.TP
+\fB-s\fR
+Strip DNSSEC data from the zone. This option skips every record
+that is of type NSEC, NSEC3 or RRSIG. DNSKEY and DS records are still
+printed.
+
+.TP
+\fB-S\fR \fI[[+|0]number | YYYYMMDDxx | unixtime ]\fR
+Set serial number to the given \fInumber\fR, or when preceded by a sign,
+offset the existing number with it. When giving the literal strings
+\fIYYYYMMDDxx\fR or \fIunixtime\fR, the serial number is tried to be reset
+in datecounter or in unixtime format respectively. Though is the updated serial
+number is smaller than the original one, the original one is simply
+increased by one.
+
+When updating a serial number, records of type NSEC, NSEC3, RRSIG and DNSKEY
+will be skipped when printing the zone.
+
+.TP
+\fB-u\fR \fIRR type\fR
+Mark \fIRR type\fR for printing in unknown type format.
+
+\fB-u\fR is not meant to be used together with \fB-U\fR.
+
+.TP
+\fB-U\fR \fIRR type\fR
+Mark \fIRR type\fR for \fBnot\fR printing in unknown type format.
+
+The first occurrence of the \fB-U\fR option marks all RR types for printing
+in unknown type format except for the given \fIRR type\fR.
+Subsequent \fB-U\fR options will clear the mark for those \fIRR type\fRs too,
+so that only the given \fIRR type\fRs will be printed in the presentation 
+format specific for those \fIRR type\fRs.
+
+\fB-U\fR is not meant to be used together with \fB-u\fR.
+
+.TP
+\fB-v\fR
+Show the version and exit
+
+.TP
+\fB-z\fR
+Sort the zone before printing (this implies \-c)
+
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

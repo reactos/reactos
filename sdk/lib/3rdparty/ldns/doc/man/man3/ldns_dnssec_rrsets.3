@@ -1,0 +1,178 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_zone, ldns_dnssec_name, ldns_dnssec_rrs, ldns_dnssec_rrsets \- data structures
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ ldns_dnssec_zone();
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_zone\fR()
+.PP
+.HP
+\fIldns_dnssec_name\fR
+.br
+Structure containing all resource records for a domain name
+.br
+Including the derived NSEC3, if present
+.br
+struct ldns_struct_dnssec_name
+.br
+{
+.br
+	/**
+.br
+	 * pointer to a dname containing the name.
+.br
+	 * Usually points to the owner name of the first RR of the first RRset
+.br
+	 */
+.br
+	ldns_rdf *name;
+.br
+	/** 
+.br
+	 * Usually, the name is a pointer to the owner name of the first rr for
+.br
+	 * this name, but sometimes there is no actual data to point to, 
+.br
+	 * for instance in
+.br
+	 * names representing empty nonterminals. If so, set name_alloced to true to
+.br
+	 * indicate that this data must also be freed when the name is freed
+.br
+	 */
+.br
+	bool name_alloced;
+.br
+	/**
+.br
+	 * The rrsets for this name
+.br
+	 */
+.br
+	ldns_dnssec_rrsets *rrsets;
+.br
+	/**
+.br
+	 * NSEC pointing to the next name (or NSEC3 pointing to the next NSEC3)
+.br
+	 */
+.br
+	ldns_rr *nsec;
+.br
+	/**
+.br
+	 * signatures for the NSEC record
+.br
+	 */
+.br
+	ldns_dnssec_rrs *nsec_signatures;
+.br
+	/**
+.br
+	 * Unlike what the name is_glue suggests, this field is set to true by
+.br
+	 * ldns_dnssec_zone_mark_glue() or ldns_dnssec_zone_mark_and_get_glue()
+.br
+	 * when the name, this dnssec_name struct represents, is occluded.
+.br
+	 * Names that contain other occluded rrsets and records with glue on
+.br
+	 * the delegation point will NOT have this bool set to true.
+.br
+	 * This field should NOT be read directly, but only via the 
+.br
+	 * ldns_dnssec_name_is_glue() function!
+.br
+	 */
+.br
+	bool is_glue;
+.br
+	/**
+.br
+	 * pointer to store the hashed name (only used when in an NSEC3 zone
+.br
+	 */
+.br
+	ldns_rdf *hashed_name;
+.br
+};
+.br
+
+.br
+typedef struct ldns_struct_dnssec_name ldns_dnssec_name;
+.PP
+.HP
+\fIldns_dnssec_rrs\fR
+.br
+Singly linked list of rrs
+.br
+struct ldns_struct_dnssec_rrs
+.br
+{
+.br
+	ldns_rr *rr;
+.br
+	ldns_dnssec_rrs *next;
+.br
+};
+.br
+
+.br
+typedef struct ldns_struct_dnssec_rrs ldns_dnssec_rrs;
+.PP
+.HP
+\fIldns_dnssec_rrsets\fR
+.br
+Singly linked list of RRsets
+.br
+struct ldns_struct_dnssec_rrsets
+.br
+{
+.br
+	ldns_dnssec_rrs *rrs;
+.br
+	ldns_rr_type type;
+.br
+	ldns_dnssec_rrs *signatures;
+.br
+	ldns_dnssec_rrsets *next;
+.br
+};
+.br
+
+.br
+typedef struct ldns_struct_dnssec_rrsets ldns_dnssec_rrsets;
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_zone_new\fR, \fIldns_dnssec_name_new\fR, \fIldns_dnssec_rrs_new\fR, \fIldns_dnssec_rrsets_new\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

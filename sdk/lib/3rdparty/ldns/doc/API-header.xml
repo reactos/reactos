@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd">
+<!-- $Id -->
+
+<?rfc toc="yes" ?>
+<?rfc compact="yes" ?>
+<?rfc editing="no" ?>
+<?rfc iprnotified="no" ?>
+<?rfc private="LibDNS API" ?>
+
+<rfc ipr="none" category="info" docName="API-00.txt">
+
+<front>
+<title>LibDNS API</title>
+    <author initials="R." surname="Gieben" fullname="Miek Gieben">
+     <organization>NLnet Labs</organization>
+      <address>
+        <postal>
+          <street>Kruislaan 419</street>
+          <city>Amsterdam</city>
+          <code>1098 VA</code>
+          <country>The Netherlands</country>
+        </postal>
+        <email>miek@nlnetlabs.nl</email>
+        <uri>http://www.nlnetlabs.nl</uri>
+      </address>
+    </author>
+    <author initials="J." surname="Jansen" fullname="Jelte Jansen">
+     <organization>NLnet Labs</organization>
+      <address>
+        <postal>
+          <street>Kruislaan 419</street>
+          <city>Amsterdam</city>
+          <code>1098 VA</code>
+          <country>The Netherlands</country>
+        </postal>
+        <email>jelte@nlnetlabs.nl</email>
+        <uri>http://www.nlnetlabs.nl</uri>
+      </address>
+    </author>
+    <author initials="E." surname="Rozendaal" fullname="Erik Rozendaal">
+     <organization>NLnet Labs</organization>
+      <address>
+        <postal>
+          <street>Kruislaan 419</street>
+          <city>Amsterdam</city>
+          <code>1098 VA</code>
+          <country>The Netherlands</country>
+        </postal>
+        <email>erik@nlnetlabs.nl</email>
+        <uri>http://www.nlnetlabs.nl</uri>
+      </address>
+    </author>
+<date month="January" year="2005" />
+<keyword>DNS</keyword>
+<keyword>Elite</keyword>
+<keyword>Hacking</keyword>
+<abstract>
+<t>
+A small abstract will come here, TBD.
+</t>
+</abstract>
+</front>
+
+<middle>
+
+<section title="Introduction">
+<t>
+LibDNS (or lDNS) is modelled after the Net::DNS perl library. It has
+been shown that Net::DNS  can be used efficiently for
+programming DNS aware applications. We want to bring the same
+level of efficiency to C programmers.
+</t>
+<t>
+The lDNS API consist of two layers. The top-layer, this is
+what is actually exported to the application via the library. And the
+bottom-layer, this is what lDNS needs to compile and function.
+</t>
+</section> <!-- "Introduction" -->
+
+<section title="Differences With Other Libraries">
+<t>
+Short intermezzo detailing differences with other libraries. Most important
+ones are the libc resolver interface (from BIND8) and the lwres_ interface
+from BIND9.
+</t>
+</section> <!-- "Differences with other libraries" -->
+
+<section title="Interfaces">
+<t>
+At its lowest level lDNS  is only dependent on libc. It uses a 
+few networking systems calls; socket, bind, send/recv and friends.
+</t>
+<t>
+Further more it is to be expected that lDNS will depend on OpenSSL for
+its cryptography.
+</t>
+<t>
+As said, lDNS is modelled after Net::DNS, therefore its application API
+looks very much like the one used for Net::DNS. Some modification are made
+of course, because not all functionality of Perl can be caught in C.
+</t>
+
+<t>
+This API document was written by carefully looking at the documentation
+contained in the Net::DNS Perl module.
+</t>
+</section> <!-- "Interfaces" -->

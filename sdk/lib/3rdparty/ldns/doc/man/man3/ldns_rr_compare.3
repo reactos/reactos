@@ -1,0 +1,64 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_compare, ldns_rr_compare_ds \- compare a ldns_rr
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+int ldns_rr_compare(const ldns_rr *rr1, const ldns_rr *rr2);
+.PP
+bool ldns_rr_compare_ds(const ldns_rr *rr1, const ldns_rr *rr2);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_compare\fR()
+compares two rrs. The \%TTL is not looked at.
+\.br
+\fBrr1\fR: the first one
+\.br
+\fBrr2\fR: the second one
+\.br
+Returns 0 if equal
+-1 if rr1 comes before rr2
++1 if rr2 comes before rr1
+.PP
+.HP
+\fIldns_rr_compare_ds\fR()
+returns true of the given rr's are equal.
+Also returns true if one record is a \%DS that represents the
+same \%DNSKEY record as the other record
+\.br
+\fBrr1\fR: the first rr
+\.br
+\fBrr2\fR: the second rr
+\.br
+Returns true if equal otherwise false
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR, \fIldns_rr_list\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

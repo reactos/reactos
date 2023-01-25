@@ -1,0 +1,98 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_data_chain_new, ldns_dnssec_data_chain_free, ldns_dnssec_data_chain_deep_free, ldns_dnssec_build_data_chain, ldns_dnssec_data_chain_print \- ldns_chain creation, destruction and printing
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_dnssec_data_chain* ldns_dnssec_data_chain_new(void);
+.PP
+void ldns_dnssec_data_chain_free(ldns_dnssec_data_chain *chain);
+.PP
+void ldns_dnssec_data_chain_deep_free(ldns_dnssec_data_chain *chain);
+.PP
+ldns_dnssec_data_chain* ldns_dnssec_build_data_chain(ldns_resolver *res, const uint16_t qflags, const ldns_rr_list *data_set, const ldns_pkt *pkt, ldns_rr *orig_rr);
+.PP
+void ldns_dnssec_data_chain_print(FILE *out, const ldns_dnssec_data_chain *chain);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_data_chain_new\fR()
+Creates a new dnssec_chain structure
+\.br
+Returns ldns_dnssec_data_chain *
+.PP
+.HP
+\fIldns_dnssec_data_chain_free\fR()
+Frees a dnssec_data_chain structure
+
+\.br
+\fB*chain\fR: The chain to free
+.PP
+.HP
+\fIldns_dnssec_data_chain_deep_free\fR()
+Frees a dnssec_data_chain structure, and all data
+contained therein
+
+\.br
+\fB*chain\fR: The dnssec_data_chain to free
+.PP
+.HP
+\fIldns_dnssec_build_data_chain\fR()
+Build an ldns_dnssec_data_chain, which contains all
+\%DNSSEC data that is needed to derive the trust tree later
+
+The data_set will be cloned
+
+\.br
+\fB*res\fR: resolver structure for further needed queries
+\.br
+\fBqflags\fR: resolution flags
+\.br
+\fB*data_set\fR: The original rrset where the chain ends
+\.br
+\fB*pkt\fR: optional, can contain the original packet
+(and hence the sigs and maybe the key)
+\.br
+\fB*orig_rr\fR: The original Resource Record
+
+\.br
+Returns the \%DNSSEC data chain
+.PP
+.HP
+\fIldns_dnssec_data_chain_print\fR()
+Prints the dnssec_data_chain to the given file stream
+
+\.br
+\fB*out\fR: The file stream to print to
+\.br
+\fB*chain\fR: The dnssec_data_chain to print
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_data_chain\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

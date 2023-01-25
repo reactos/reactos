@@ -1,0 +1,127 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_verify, ldns_verify_rrsig, ldns_verify_rrsig_keylist, ldns_verify_rrsig_keylist_notime, ldns_verify_notime \- verify rrsigs
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_verify(ldns_rr_list *rrset, ldns_rr_list *rrsig, const ldns_rr_list *keys, ldns_rr_list *good_keys);
+.PP
+ldns_status ldns_verify_rrsig(ldns_rr_list *rrset, ldns_rr *rrsig, ldns_rr *key);
+.PP
+ldns_status ldns_verify_rrsig_keylist(ldns_rr_list *rrset, ldns_rr *rrsig, const ldns_rr_list *keys, ldns_rr_list *good_keys);
+.PP
+ldns_status ldns_verify_rrsig_keylist_notime(const ldns_rr_list *rrset, const ldns_rr *rrsig, const ldns_rr_list *keys, ldns_rr_list *good_keys);
+.PP
+ldns_status ldns_verify_notime(ldns_rr_list *rrset, ldns_rr_list *rrsig, const ldns_rr_list *keys, ldns_rr_list *good_keys);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_verify\fR()
+Verifies a list of signatures for one rrset.
+
+\.br
+\fBrrset\fR: the rrset to verify
+\.br
+\fBrrsig\fR: a list of signatures to check
+\.br
+\fBkeys\fR: a list of keys to check with
+\.br
+\fBgood_keys\fR: if this is a (initialized) list, the pointer to keys
+from keys that validate one of the signatures
+are added to it
+\.br
+Returns status \%LDNS_STATUS_OK if there is at least one correct key
+.PP
+.HP
+\fIldns_verify_rrsig\fR()
+verify an rrsig with 1 key
+\.br
+\fBrrset\fR: the rrset
+\.br
+\fBrrsig\fR: the rrsig to verify
+\.br
+\fBkey\fR: the key to use
+\.br
+Returns status message whether verification succeeded.
+.PP
+.HP
+\fIldns_verify_rrsig_keylist\fR()
+Verifies an rrsig. All keys in the keyset are tried.
+\.br
+\fBrrset\fR: the rrset to check
+\.br
+\fBrrsig\fR: the signature of the rrset
+\.br
+\fBkeys\fR: the keys to try
+\.br
+\fBgood_keys\fR: if this is a (initialized) list, the pointer to keys
+from keys that validate one of the signatures
+are added to it
+\.br
+Returns a list of keys which validate the rrsig + rrset. Returns
+status \%LDNS_STATUS_OK if at least one key matched. Else an error.
+.PP
+.HP
+\fIldns_verify_rrsig_keylist_notime\fR()
+Verifies an rrsig. All keys in the keyset are tried. Time is not checked.
+\.br
+\fBrrset\fR: the rrset to check
+\.br
+\fBrrsig\fR: the signature of the rrset
+\.br
+\fBkeys\fR: the keys to try
+\.br
+\fBgood_keys\fR: if this is a (initialized) list, the pointer to keys
+from keys that validate one of the signatures
+are added to it
+\.br
+Returns a list of keys which validate the rrsig + rrset. Returns
+status \%LDNS_STATUS_OK if at least one key matched. Else an error.
+.PP
+.HP
+\fIldns_verify_notime\fR()
+Verifies a list of signatures for one rrset, but disregard the time.
+Inception and Expiration are not checked.
+
+\.br
+\fBrrset\fR: the rrset to verify
+\.br
+\fBrrsig\fR: a list of signatures to check
+\.br
+\fBkeys\fR: a list of keys to check with
+\.br
+\fBgood_keys\fR: if this is a (initialized) list, the pointer to keys
+from keys that validate one of the signatures
+are added to it
+\.br
+Returns status \%LDNS_STATUS_OK if there is at least one correct key
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_verify_rrsig_evp\fR, \fIldns_verify_rrsig_dsa\fR, \fIldns_verify_rrsig_rsasha1\fR, \fIldns_verify_rrsig_rsamd5\fR, \fIldns_sign_public\fR, \fIldns_zone_sign\fR, \fIldns_key\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

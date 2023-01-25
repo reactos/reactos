@@ -2,6 +2,7 @@
 add_subdirectory(adns)
 add_subdirectory(cardlib)
 add_subdirectory(freetype)
+add_subdirectory(ldns)
 add_subdirectory(libmpg123)
 add_subdirectory(libsamplerate)
 add_subdirectory(libwine)

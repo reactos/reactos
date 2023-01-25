@@ -1,0 +1,105 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_rrsets_new, ldns_dnssec_rrsets_free, ldns_dnssec_rrsets_type, ldns_dnssec_rrsets_set_type, ldns_dnssec_rrsets_add_rr, ldns_dnssec_rrsets_print \- functions for ldns_dnssec_rrsets
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_dnssec_rrsets* ldns_dnssec_rrsets_new(void);
+.PP
+void ldns_dnssec_rrsets_free(ldns_dnssec_rrsets *rrsets);
+.PP
+ldns_rr_type ldns_dnssec_rrsets_type(const ldns_dnssec_rrsets *rrsets);
+.PP
+ldns_status ldns_dnssec_rrsets_set_type(ldns_dnssec_rrsets *rrsets, ldns_rr_type type);
+.PP
+ldns_status ldns_dnssec_rrsets_add_rr(ldns_dnssec_rrsets *rrsets, ldns_rr *rr);
+.PP
+void ldns_dnssec_rrsets_print(FILE *out, const ldns_dnssec_rrsets *rrsets, bool follow);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_rrsets_new\fR()
+Creates a new list (entry) of RRsets
+\.br
+Returns the newly allocated structure
+.PP
+.HP
+\fIldns_dnssec_rrsets_free\fR()
+Frees the list of rrsets and their rrs, but *not* the ldns_rr
+records in the sets
+
+\.br
+\fBrrsets\fR: the data structure to free
+.PP
+.HP
+\fIldns_dnssec_rrsets_type\fR()
+Returns the rr type of the rrset (that is head of the given list)
+
+\.br
+\fBrrsets\fR: the rrset to get the type of
+\.br
+Returns the rr type
+.PP
+.HP
+\fIldns_dnssec_rrsets_set_type\fR()
+Sets the \%RR type of the rrset (that is head of the given list)
+
+\.br
+\fBrrsets\fR: the rrset to set the type of
+\.br
+\fBtype\fR: the type to set
+\.br
+Returns \%LDNS_STATUS_OK on success
+.PP
+.HP
+\fIldns_dnssec_rrsets_add_rr\fR()
+Add an ldns_rr to the corresponding RRset in the given list of RRsets.
+If it is not present, add it as a new RRset with 1 record.
+
+\.br
+\fBrrsets\fR: the list of rrsets to add the \%RR to
+\.br
+\fBrr\fR: the rr to add to the list of rrsets
+\.br
+Returns \%LDNS_STATUS_OK on success
+.PP
+.HP
+\fIldns_dnssec_rrsets_print\fR()
+Print the given list of rrsets to the given file descriptor
+
+\.br
+\fBout\fR: the file descriptor to print to
+\.br
+\fBrrsets\fR: the list of RRsets to print
+\.br
+\fBfollow\fR: if set to false, only print the first RRset
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_zone\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

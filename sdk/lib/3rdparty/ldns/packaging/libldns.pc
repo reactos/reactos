@@ -1,0 +1,13 @@
+prefix=/mingw32
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: ldns
+Description: Library for DNS programming
+URL: http://www.nlnetlabs.nl/projects/ldns
+Version: 1.8.3
+Requires: 
+Libs: -L${libdir} -lldns
+Libs.private: 
+Cflags: -I${includedir} 

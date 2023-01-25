@@ -1,0 +1,70 @@
+.TH ldns-notify 1 "9 Jan 2007"
+.SH NAME
+ldns-notify \- notify DNS servers that updates are available
+.SH SYNOPSIS
+.B ldns-notify
+[options]
+\-z zone
+.IR servers 
+
+.SH DESCRIPTION
+
+\fBldns-notify\fR sends a NOTIFY message to DNS servers. This tells them
+that an updated zone is available at the master servers. It can perform
+TSIG signatures and it can add a SOA serial number of the updated zone.
+If a server already has that serial number it will disregard the message.
+
+.SH OPTIONS
+.TP
+\fB-z zone\fR
+The zone that is updated.
+
+.TP
+\fB-I address\fR
+Source IP to send query from.
+
+.TP
+\fB-h\fR
+Show usage and exit
+
+.TP
+\fB-v\fR
+Show the version and exit
+
+.TP
+\fB-s serial\fR
+Append a SOA record indicating the serial number of the updated zone.
+
+.TP
+\fB-p port\fR
+Use port as destination port (default the DNS port 53) for the UDP packets.
+
+.TP
+\fB-y key:data[:algo] \fR
+Use the given TSIG key and base64-data, and optionally an algorithm to sign
+the NOTIFY. The algorithm defaults to hmac-md5.sig-alg.reg.int.
+
+.TP
+\fB-d\fR
+Print verbose debug information. The query that is sent and the query
+that is received.
+
+.TP
+\fB-r num\fR
+Specify the maximum number of retries before notify gives up trying to
+send the UDP packet.
+
+.SH EXIT CODE
+The program exits with a 0 exit code if all servers replied an 
+acknowledgement to the notify message, and a failure exit code otherwise. 
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

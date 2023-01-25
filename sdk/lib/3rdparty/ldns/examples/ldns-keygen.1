@@ -1,0 +1,69 @@
+.TH ldns-keygen 1 "27 May 2008"
+.SH NAME
+ldns-keygen \- generate a DNSSEC key pair
+.SH SYNOPSIS
+.B ldns-keygen 
+[
+.IR OPTION
+]
+.IR DOMAIN 
+
+.SH DESCRIPTION
+\fBldns-keygen\fR is used to generate a private/public keypair. When run, it
+will create 3 files; a .key file with the public DNSKEY, a .private
+file with the private keydata and a .ds with the DS record of the
+DNSKEY record.
+
+\fBldns-keygen\fR can also be used to create symmetric keys (for TSIG) by
+selecting the appropriate algorithm: \%\fIhmac-md5.sig-alg.reg.int\fR,
+\%\fIhmac-sha1\fR, \%\fIhmac-sha224\fR, \%\fIhmac-sha256\fR, \%\fIhmac-sha384\fR or \%\fIhmac-sha512\fR.
+In that case no DS record will be created and no .ds file.
+
+\fBldns-keygen\fR prints the basename for the key files:
+K<name>+<alg>+<id>
+
+.SH OPTIONS
+.TP
+\fB-a \fI<algorithm>\fR 
+Create a key with this algorithm. Specifying 'list' here gives a list of supported algorithms.
+Several alias names are also accepted (from older versions and other software),
+the list gives names from the RFC.  Also the plain algo number is accepted.
+
+.TP
+\fB-b \fI<bits>\fR 
+Use this many bits for the key length.
+
+.TP
+\fB-k\fR 
+When given, generate a key signing key. This just sets the flag field to
+257 instead of 256 in the DNSKEY RR in the .key file.
+
+.TP
+\fB-r \fIdevice\fR
+Make ldns-keygen use this file to seed the random generator with. This will
+default to /dev/random.
+
+.TP
+\fB-s\fR
+ldns-keygen will create symbolic links named \fB.private\fR to
+the new generated private key, \fB.key\fR to the public DNSKEY
+and \fB.ds\fR to the file containing DS record data.
+
+.TP
+\fB-f\fR
+force symlinks to be overwritten if they exist.
+
+.TP
+\fB-v\fR
+Show the version and exit
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005-2008 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

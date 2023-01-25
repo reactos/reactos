@@ -1,0 +1,131 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_descriptor, ldns_rr_descript, ldns_rr_descriptor_minimum, ldns_rr_descriptor_maximum, ldns_rr_descriptor_field_type \- rdata field descriptors
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+const ldns_rr_descriptor* ldns_rr_descript(uint16_t type);
+.PP
+size_t ldns_rr_descriptor_minimum(const ldns_rr_descriptor *descriptor);
+.PP
+size_t ldns_rr_descriptor_maximum(const ldns_rr_descriptor *descriptor);
+.PP
+ldns_rdf_type ldns_rr_descriptor_field_type(const ldns_rr_descriptor *descriptor, size_t field);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_descriptor\fR
+.br
+Contains all information about resource record types.
+.br
+
+.br
+This structure contains, for all rr types, the rdata fields that are defined.
+.br
+struct ldns_struct_rr_descriptor
+.br
+{
+.br
+	\fBType of the RR that is described here:\fR
+.br
+	ldns_rr_type    _type;
+.br
+	\fBTextual name of the RR type.:\fR
+.br
+	const char *_name;
+.br
+	\fBMinimum number of rdata fields in the RRs of this type.:\fR
+.br
+	uint8_t     _minimum;
+.br
+	\fBMaximum number of rdata fields in the RRs of this type.:\fR
+.br
+	uint8_t     _maximum;
+.br
+	\fBWireformat specification for the rr, i.e. the types of rdata fields in their respective order.:\fR
+.br
+	const ldns_rdf_type *_wireformat;
+.br
+	\fBSpecial rdf types:\fR
+.br
+	ldns_rdf_type _variable;
+.br
+	\fBSpecifies whether compression can be used for dnames in this RR type.:\fR
+.br
+	ldns_rr_compress _compress;
+.br
+	\fBThe number of DNAMEs in the _wireformat string, for parsing.:\fR
+.br
+	uint8_t _dname_count;
+.br
+};
+.br
+typedef struct ldns_struct_rr_descriptor ldns_rr_descriptor;
+.PP
+.HP
+\fIldns_rr_descript\fR()
+returns the resource record descriptor for the given rr type.
+
+\.br
+\fBtype\fR: the type value of the rr type
+\.br
+Returns the ldns_rr_descriptor for this type
+.PP
+.HP
+\fIldns_rr_descriptor_minimum\fR()
+returns the minimum number of rdata fields of the rr type this descriptor describes.
+
+\.br
+\fBdescriptor\fR: for an rr type
+\.br
+Returns the minimum number of rdata fields
+.PP
+.HP
+\fIldns_rr_descriptor_maximum\fR()
+returns the maximum number of rdata fields of the rr type this descriptor describes.
+
+\.br
+\fBdescriptor\fR: for an rr type
+\.br
+Returns the maximum number of rdata fields
+.PP
+.HP
+\fIldns_rr_descriptor_field_type\fR()
+returns the rdf type for the given rdata field number of the rr type for the given descriptor.
+
+\.br
+\fBdescriptor\fR: for an rr type
+\.br
+\fBfield\fR: the field number
+\.br
+Returns the rdf type for the field
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR, \fIldns_rdf\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

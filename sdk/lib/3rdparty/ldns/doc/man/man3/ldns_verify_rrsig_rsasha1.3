@@ -1,0 +1,78 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_verify_rrsig_dsa, ldns_verify_rrsig_rsasha1, ldns_verify_rrsig_rsamd5 \- verify signature data buffers
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_verify_rrsig_dsa(ldns_buffer *sig, ldns_buffer *rrset, ldns_buffer *key);
+.PP
+ldns_status ldns_verify_rrsig_rsasha1(ldns_buffer *sig, ldns_buffer *rrset, ldns_buffer *key);
+.PP
+ldns_status ldns_verify_rrsig_rsamd5(ldns_buffer *sig, ldns_buffer *rrset, ldns_buffer *key);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_verify_rrsig_dsa\fR()
+verifies a buffer with signature data (\%DSA) for a buffer with rrset data 
+with a buffer with key data.
+
+\.br
+\fBsig\fR: the signature data
+\.br
+\fBrrset\fR: the rrset data, sorted and processed for verification
+\.br
+\fBkey\fR: the key data
+.PP
+.HP
+\fIldns_verify_rrsig_rsasha1\fR()
+verifies a buffer with signature data (RSASHA1) for a buffer with rrset data 
+with a buffer with key data.
+
+\.br
+\fBsig\fR: the signature data
+\.br
+\fBrrset\fR: the rrset data, sorted and processed for verification
+\.br
+\fBkey\fR: the key data
+.PP
+.HP
+\fIldns_verify_rrsig_rsamd5\fR()
+verifies a buffer with signature data (RSAMD5) for a buffer with rrset data 
+with a buffer with key data.
+
+\.br
+\fBsig\fR: the signature data
+\.br
+\fBrrset\fR: the rrset data, sorted and processed for verification
+\.br
+\fBkey\fR: the key data
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_key\fR, \fIldns_sign_public\fR, \fIldns_zone_sign\fR, \fIldns_verify\fR, \fIldns_verify_rrsig\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

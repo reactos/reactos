@@ -1,0 +1,240 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_pkt_set_flags, ldns_pkt_set_id, ldns_pkt_set_qr, ldns_pkt_set_aa, ldns_pkt_set_tc, ldns_pkt_set_rd, ldns_pkt_set_cd, ldns_pkt_set_ra, ldns_pkt_set_ad, ldns_pkt_set_opcode, ldns_pkt_set_rcode, ldns_pkt_set_qdcount, ldns_pkt_set_ancount, ldns_pkt_set_nscount, ldns_pkt_set_arcount, ldns_pkt_set_answerfrom, ldns_pkt_set_querytime, ldns_pkt_set_size, ldns_pkt_set_section_count, ldns_pkt_set_tsig \- set ldns_pkt attributes
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+bool ldns_pkt_set_flags(ldns_pkt *pkt, uint16_t flags);
+.PP
+void ldns_pkt_set_id(ldns_pkt *p, uint16_t id);
+.PP
+void ldns_pkt_set_qr(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_aa(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_tc(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_rd(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_cd(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_ra(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_ad(ldns_pkt *p, bool b);
+.PP
+void ldns_pkt_set_opcode(ldns_pkt *p, ldns_pkt_opcode c);
+.PP
+void ldns_pkt_set_rcode(ldns_pkt *p, uint8_t c);
+.PP
+void ldns_pkt_set_qdcount(ldns_pkt *p, uint16_t c);
+.PP
+void ldns_pkt_set_ancount(ldns_pkt *p, uint16_t c);
+.PP
+void ldns_pkt_set_nscount(ldns_pkt *p, uint16_t c);
+.PP
+void ldns_pkt_set_arcount(ldns_pkt *p, uint16_t c);
+.PP
+void ldns_pkt_set_answerfrom(ldns_pkt *p, ldns_rdf *r);
+.PP
+void ldns_pkt_set_querytime(ldns_pkt *p, uint32_t t);
+.PP
+void ldns_pkt_set_size(ldns_pkt *p, size_t s);
+.PP
+void ldns_pkt_set_section_count(ldns_pkt *p, ldns_pkt_section s, uint16_t x);
+.PP
+void ldns_pkt_set_tsig(ldns_pkt *p, ldns_rr *t);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_pkt_set_flags\fR()
+sets the flags in a packet.
+\.br
+\fBpkt\fR: the packet to operate on
+\.br
+\fBflags\fR: ORed values: \%LDNS_QR| \%LDNS_AR for instance
+\.br
+Returns true on success otherwise false
+.PP
+.HP
+\fIldns_pkt_set_id\fR()
+Set the packet's id
+\.br
+\fBp\fR: the packet
+\.br
+\fBid\fR: the id to set
+.PP
+.HP
+\fIldns_pkt_set_qr\fR()
+Set the packet's qr bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_aa\fR()
+Set the packet's aa bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_tc\fR()
+Set the packet's tc bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_rd\fR()
+Set the packet's rd bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_cd\fR()
+Set the packet's cd bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_ra\fR()
+Set the packet's ra bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_ad\fR()
+Set the packet's ad bit
+\.br
+\fBp\fR: the packet
+\.br
+\fBb\fR: the value to set (boolean)
+.PP
+.HP
+\fIldns_pkt_set_opcode\fR()
+Set the packet's opcode
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the opcode
+.PP
+.HP
+\fIldns_pkt_set_rcode\fR()
+Set the packet's response code
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the rcode
+.PP
+.HP
+\fIldns_pkt_set_qdcount\fR()
+Set the packet's qd count
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the count
+.PP
+.HP
+\fIldns_pkt_set_ancount\fR()
+Set the packet's an count
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the count
+.PP
+.HP
+\fIldns_pkt_set_nscount\fR()
+Set the packet's ns count
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the count
+.PP
+.HP
+\fIldns_pkt_set_arcount\fR()
+Set the packet's arcount
+\.br
+\fBp\fR: the packet
+\.br
+\fBc\fR: the count
+.PP
+.HP
+\fIldns_pkt_set_answerfrom\fR()
+Set the packet's answering server
+\.br
+\fBp\fR: the packet
+\.br
+\fBr\fR: the address
+.PP
+.HP
+\fIldns_pkt_set_querytime\fR()
+Set the packet's query time
+\.br
+\fBp\fR: the packet
+\.br
+\fBt\fR: the querytime in msec
+.PP
+.HP
+\fIldns_pkt_set_size\fR()
+Set the packet's size
+\.br
+\fBp\fR: the packet
+\.br
+\fBs\fR: the size
+.PP
+.HP
+\fIldns_pkt_set_section_count\fR()
+Set a packet's section count to x
+\.br
+\fBp\fR: the packet
+\.br
+\fBs\fR: the section
+\.br
+\fBx\fR: the section count
+.PP
+.HP
+\fIldns_pkt_set_tsig\fR()
+Set the packet's tsig rr
+\.br
+\fBp\fR: the packet
+\.br
+\fBt\fR: the tsig rr
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_pkt\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

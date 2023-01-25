@@ -1,0 +1,48 @@
+--- apps/speed.c
++++ apps/speed.c
+@@ -99,6 +99,13 @@
+ #endif
+ #include <openssl/modes.h>
+ 
++/* fork() breaks AppleTVOS, WatchOS, AppleTVSimulator and WatchSimulator */
++/* Users should configure with -DNO_FORK */
++#if defined(NO_FORK)
++# undef HAVE_FORK
++# define HAVE_FORK 0
++#endif
++
+ #ifndef HAVE_FORK
+ # if defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_VXWORKS)
+ #  define HAVE_FORK 0
+@@ -110,6 +117,7 @@
+ #if HAVE_FORK
+ # undef NO_FORK
+ #else
++# undef NO_FORK
+ # define NO_FORK
+ #endif
+ 
+--- apps/ocsp.c
++++ apps/ocsp.c
+@@ -36,6 +36,13 @@
+ # include <openssl/x509v3.h>
+ # include <openssl/rand.h>
+ 
++/* fork() breaks AppleTVOS, WatchOS, AppleTVSimulator and WatchSimulator */
++/* Users should configure with -DNO_FORK */
++#if defined(NO_FORK)
++# undef HAVE_FORK
++# define HAVE_FORK 0
++#endif
++
+ #ifndef HAVE_FORK
+ # if defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_WINDOWS)
+ #  define HAVE_FORK 0
+@@ -47,6 +54,7 @@
+ #if HAVE_FORK
+ # undef NO_FORK
+ #else
++# undef NO_FORK
+ # define NO_FORK
+ #endif
+ 

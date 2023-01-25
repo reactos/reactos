@@ -1,0 +1,80 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dnssec_verify_denial, ldns_dnssec_verify_denial_nsec3 \- verify denial of existence
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_status ldns_dnssec_verify_denial(ldns_rr *rr, ldns_rr_list *nsecs, ldns_rr_list *rrsigs);
+.PP
+ldns_status ldns_dnssec_verify_denial_nsec3(ldns_rr *rr, ldns_rr_list *nsecs, ldns_rr_list *rrsigs, ldns_pkt_rcode packet_rcode, ldns_rr_type packet_qtype, bool packet_nodata);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dnssec_verify_denial\fR()
+denial is not just a river in egypt
+
+\.br
+\fBrr\fR: The (query) \%RR to check the denial of existence for
+\.br
+\fBnsecs\fR: The list of \%NSEC RRs that are supposed to deny the
+existence of the \%RR
+\.br
+\fBrrsigs\fR: The \%RRSIG \%RR covering the \%NSEC RRs
+\.br
+Returns \%LDNS_STATUS_OK if the \%NSEC RRs deny the existence, error code
+containing the reason they do not otherwise
+.PP
+.HP
+\fIldns_dnssec_verify_denial_nsec3\fR()
+Denial of existence using NSEC3 records
+Since NSEC3 is a bit more complicated than normal denial, some
+context arguments are needed
+
+\.br
+\fBrr\fR: The (query) \%RR to check the denial of existence for
+\.br
+\fBnsecs\fR: The list of NSEC3 RRs that are supposed to deny the
+existence of the \%RR
+\.br
+\fBrrsigs\fR: The \%RRSIG rr covering the \%NSEC RRs
+\.br
+\fBpacket_rcode\fR: The \%RCODE value of the packet that provided the
+NSEC3 RRs
+\.br
+\fBpacket_qtype\fR: The original query \%RR type
+\.br
+\fBpacket_nodata\fR: True if the providing packet had an empty \%ANSWER
+section
+\.br
+Returns \%LDNS_STATUS_OK if the NSEC3 RRs deny the existence, error code
+containing the reason they do not otherwise
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_dnssec_trust_tree\fR, \fIldns_dnssec_data_chain\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

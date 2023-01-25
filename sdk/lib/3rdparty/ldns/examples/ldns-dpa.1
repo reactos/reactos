@@ -1,0 +1,151 @@
+.TH dpa 1 "1 Nov 2005"
+.SH NAME
+dpa \- DNS Packet Analyzer. Analyze DNS packets in ip trace files
+.SH SYNOPSIS
+.B dpa
+[
+.IR OPTION
+]
+.IR TRACEFILE 
+
+.SH DESCRIPTION
+\fBdpa\fR is used to analyze dns packets in trace files. It has 3 main options: count, filter, and count uniques (i.e. count all different occurrences).
+
+.SH OPTIONS
+.TP
+\fB-c\fR \fIexpressionlist\fR
+Count occurrences of matching expressions
+
+.TP
+\fB-f\fR \fIexpression\fR
+Filter: only process packets that match the expression
+
+.TP
+\fB-h\fR 
+Show usage
+
+.TP
+\fB-p\fR
+Show the total number of correct DNS packets, and percentage of \-u and
+\-c values  (of the total of matching on the \-f filter. if no filter is
+given, percentages are on all correct dns packets)
+
+.TP
+\fB-of\fR \fIfile\fR
+Write all packets that match the \-f flag to file, as pcap data.
+
+.TP
+\fB-ofh\fR \fIfile\fR
+Write all packets that match the \-f flag to file, in hexadecimal format,
+readable by drill.
+
+.TP
+\fB-s\fR
+Show possible match names
+
+.TP
+\fB-s\fR \fImatchname\fR
+show possible match operators and values for name
+
+.TP
+\fB-sf\fR
+Only evaluate packets (in representation format) that match the \-f filter.
+If no \-f was given, evaluate all correct dns packets.
+
+.TP
+\fB-u\fR \fImatchnamelist\fR
+Count every occurrence of every value of the matchname (for instance, count all packetsizes, see EXAMPLES in ldns-dpa(1) ).
+
+.TP
+\fB-ua\fR
+For every matchname in \-u, show the average value of all matches. Behaviour for match types that do not have an integer value is undefined.
+
+.TP
+\fB-uac\fR
+For every matchname in \-u, show the average number of times this value was encountered.
+
+.TP
+\fB-um\fR \fInumber\fR
+Only show the results from \-u for values that occurred more than <number> times.
+
+.TP
+\fB-v\fR \fIlevel\fR
+Set verbosity to level (1-5, 5 being the highest). Mostly used for debugging.
+
+.TP
+\fB-notip\fR \fIfile\fR
+Write packets that were not recognized as IP packets to file (as pcap data).
+
+.TP
+\fB-baddns\fR \fIfile\fR
+Write dns packets that were too mangled to parse to file (as pcap data).
+
+.TP
+\fB-version\fR
+Show version and exit
+
+.SH LIST AND MATCHES
+
+A <matchnamelist> is a comma separated list of match names (use \-s to see possible match names).
+A <expressionlist> is a comma separated list of expressions.
+
+An expression has the following form:
+<expr>: (<expr>)
+        <expr> | <expr>
+        <expr> & <expr>
+        <match>
+
+<match>:        <matchname> <operator> <value>
+
+<operator>:
+	=	equal to <value>
+	!=	not equal to <value>
+	>	greater than <value>
+	<	lesser than <value>
+	>=	greater than or equal to <value>
+	<=	lesser than or equal to <value>
+	~=	contains <value>
+
+See the \-s option for possible matchnames, operators and values.
+
+.SH EXAMPLES
+
+.TP
+ldns-dpa \-u packetsize \-p test.tr
+Count all different packetsizes in test.tr and show the percentages.
+
+.TP
+ldns-dpa \-f "edns=1&qr=0" \-of edns.tr test.tr
+Filter out all edns enable queries in test.tr and put them in edns.tr
+
+.TP
+ldns-dpa \-f edns=1 \-c tc=1 \-u rcode test.tr
+For all edns packets, count the number of truncated packets and all their rcodes in test.tr.
+
+.TP
+ldns-dpa \-c tc=1,qr=0,qr=1,opcode=QUERY test.tr
+For all packets, count the number of truncated packets, the number of packets with qr=0, the number of packets with qr=1 and the number of queries in test.tr.
+
+.TP
+ldns-dpa \-u packetsize \-ua test.tr
+Show all packet sizes and the average packet size per packet.
+
+.TP
+ldns-dpa \-u srcaddress \-uac test.tr
+Show all packet source addresses and the average number of packets sent from this address.
+
+.TP
+sudo tcpdump \-i eth0 \-s 0 \-U \-w \- port 53 | ldns-dpa \-f qr=0 \-sf
+Print all query packets seen on the specified interface.
+
+
+.SH AUTHOR
+Written by Jelte Jansen for NLnetLabs.
+
+.SH REPORTING BUGS
+Report bugs to <jelte@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2005 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

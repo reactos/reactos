@@ -1,0 +1,72 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_dname_is_subdomain, ldns_dname_str_absolute, ldns_dname_label \- check properties of dnames
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+bool ldns_dname_is_subdomain(const ldns_rdf *sub, const ldns_rdf *parent);
+.PP
+bool ldns_dname_str_absolute(const char *dname_str);
+.PP
+ldns_rdf * ldns_dname_label(const ldns_rdf *rdf, uint8_t labelpos);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_dname_is_subdomain\fR()
+test whether the name sub falls under parent (i.e. is a subdomain
+of parent). This function will return false if the given dnames are
+equal.
+\.br
+\fBsub\fR: the name to test
+\.br
+\fBparent\fR: the parent's name
+\.br
+Returns true if sub falls under parent, otherwise false
+.PP
+.HP
+\fIldns_dname_str_absolute\fR()
+Checks whether the given dname string is absolute (i.e. ends with a '.')
+\.br
+\fB*dname_str\fR: a string representing the dname
+\.br
+Returns true or false
+.PP
+.HP
+\fIldns_dname_label\fR()
+look inside the rdf and if it is an \%LDNS_RDF_TYPE_DNAME
+try and retrieve a specific label. The labels are numbered
+starting from 0 (left most).
+\.br
+\fBrdf\fR: the rdf to look in
+\.br
+\fBlabelpos\fR: return the label with this number
+\.br
+Returns a ldns_rdf* with the label as name or \%NULL on error
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

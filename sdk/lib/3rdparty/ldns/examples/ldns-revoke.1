@@ -1,0 +1,27 @@
+.TH ldns-revoke 1 "23 Jul 2008"
+.SH NAME
+ldns-revoke \- sets the revoke bit of a DNSKEY
+.SH SYNOPSIS
+.B ldns-revoke
+.IR file
+
+.SH DESCRIPTION
+\fBldns-revoke\fR is used to revoke a public DNSKEY RR.
+When run it will read \fIfile\fR with a DNSKEY RR in it, 
+sets the revoke bit and write back the output to \fIfile\fR .
+
+.SH OPTIONS
+.TP
+\fB-n\fR
+Write the result to stdout instead of a file
+
+.SH AUTHOR
+Written by the ldns team as an example for ldns usage.
+
+.SH REPORTING BUGS
+Report bugs to <ldns-team@nlnetlabs.nl>. 
+
+.SH COPYRIGHT
+Copyright (C) 2008 NLnet Labs. This is free software. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

@@ -1,0 +1,232 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_rrsig_typecovered, ldns_rr_rrsig_set_typecovered, ldns_rr_rrsig_algorithm, ldns_rr_rrsig_set_algorithm, ldns_rr_rrsig_labels, ldns_rr_rrsig_set_labels, ldns_rr_rrsig_origttl, ldns_rr_rrsig_set_origttl, ldns_rr_rrsig_expiration, ldns_rr_rrsig_set_expiration, ldns_rr_rrsig_inception, ldns_rr_rrsig_set_inception, ldns_rr_rrsig_keytag, ldns_rr_rrsig_set_keytag, ldns_rr_rrsig_signame, ldns_rr_rrsig_set_signame, ldns_rr_rrsig_sig, ldns_rr_rrsig_set_sig \- get and set RRSIG RR rdata fields
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_rdf* ldns_rr_rrsig_typecovered(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_typecovered(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_algorithm(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_algorithm(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_labels(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_labels(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_origttl(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_origttl(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_expiration(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_expiration(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_inception(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_inception(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_keytag(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_keytag(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_signame(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_signame(ldns_rr *r, ldns_rdf *f);
+.PP
+ldns_rdf* ldns_rr_rrsig_sig(const ldns_rr *r);
+.PP
+bool ldns_rr_rrsig_set_sig(ldns_rr *r, ldns_rdf *f);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_rrsig_typecovered\fR()
+returns the type covered of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the type covered or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_typecovered\fR()
+sets the typecovered of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the typecovered to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_algorithm\fR()
+returns the algorithm of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the algorithm or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_algorithm\fR()
+sets the algorithm of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the algorithm to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_labels\fR()
+returns the number of labels of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the number of labels or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_labels\fR()
+sets the number of labels of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the number of labels to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_origttl\fR()
+returns the original \%TTL of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the original \%TTL or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_origttl\fR()
+sets the original \%TTL of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the original \%TTL to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_expiration\fR()
+returns the expiration time of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the expiration time or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_expiration\fR()
+sets the expiration date of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the expiration date to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_inception\fR()
+returns the inception time of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the inception time or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_inception\fR()
+sets the inception date of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the inception date to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_keytag\fR()
+returns the keytag of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the keytag or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_keytag\fR()
+sets the keytag of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the keytag to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_signame\fR()
+returns the signers name of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the signers name or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_signame\fR()
+sets the signers name of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the signers name to set
+\.br
+Returns true on success, false otherwise
+.PP
+.HP
+\fIldns_rr_rrsig_sig\fR()
+returns the signature data of a \%LDNS_RR_TYPE_RRSIG \%RR
+\.br
+\fBr\fR: the resource record
+\.br
+Returns a ldns_rdf* with the signature data or \%NULL on failure
+.PP
+.HP
+\fIldns_rr_rrsig_set_sig\fR()
+sets the signature data of a \%LDNS_RR_TYPE_RRSIG rr
+\.br
+\fBr\fR: the rr to use
+\.br
+\fBf\fR: the signature data to set
+\.br
+Returns true on success, false otherwise
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+.SH SEE ALSO
+\fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.

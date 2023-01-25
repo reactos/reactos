@@ -1,0 +1,123 @@
+.ad l
+.TH ldns 3 "30 May 2006"
+.SH NAME
+ldns_rr_new, ldns_rr_new_frm_type, ldns_rr_new_frm_str, ldns_rr_new_frm_fp, ldns_rr_free, ldns_rr_print \- ldns_rr creation, destruction and printing
+
+.SH SYNOPSIS
+#include <stdint.h>
+.br
+#include <stdbool.h>
+.br
+.PP
+#include <ldns/ldns.h>
+.PP
+ldns_rr* ldns_rr_new(void);
+.PP
+ldns_rr* ldns_rr_new_frm_type(ldns_rr_type t);
+.PP
+ldns_status ldns_rr_new_frm_str(ldns_rr **n, const char *str, uint32_t default_ttl, const ldns_rdf *origin, ldns_rdf **prev);
+.PP
+ldns_status ldns_rr_new_frm_fp(ldns_rr **rr, FILE *fp, uint32_t *default_ttl, ldns_rdf **origin, ldns_rdf **prev);
+.PP
+void ldns_rr_free(ldns_rr *rr);
+.PP
+void ldns_rr_print(FILE *output, const ldns_rr *rr);
+.PP
+
+.SH DESCRIPTION
+.HP
+\fIldns_rr_new\fR()
+creates a new rr structure.
+\.br
+Returns ldns_rr *
+.PP
+.HP
+\fIldns_rr_new_frm_type\fR()
+creates a new rr structure, based on the given type.
+alloc enough space to hold all the rdf's
+.PP
+.HP
+\fIldns_rr_new_frm_str\fR()
+creates an rr from a string.
+The string should be a fully filled-in rr, like
+ownername &lt;space&gt; \%TTL &lt;space&gt; \%CLASS &lt;space&gt;
+\%TYPE &lt;space&gt; \%RDATA.
+\.br
+\fBn\fR: the rr to return
+\.br
+\fBstr\fR: the string to convert
+\.br
+\fBdefault_ttl\fR: default ttl value for the rr.
+If 0 \%DEF_TTL will be used
+\.br
+\fBorigin\fR: when the owner is relative add this.
+The caller must ldns_rdf_deep_free it.
+\.br
+\fBprev\fR: the previous ownername. if this value is not \%NULL,
+the function overwrites this with the ownername found in this
+string. The caller must then ldns_rdf_deep_free it.
+\.br
+Returns a status msg describing an error or \%LDNS_STATUS_OK
+.PP
+.HP
+\fIldns_rr_new_frm_fp\fR()
+creates a new rr from a file containing a string.
+\.br
+\fBrr\fR: the new rr
+\.br
+\fBfp\fR: the file pointer to use
+\.br
+\fBdefault_ttl\fR: pointer to a default ttl for the rr. If \%NULL \%DEF_TTL will be used
+the pointer will be updated if the file contains a $\%TTL directive
+\.br
+\fBorigin\fR: when the owner is relative add this
+the pointer will be updated if the file contains a $\%ORIGIN directive
+The caller must ldns_rdf_deep_free it.
+\.br
+\fBprev\fR: when the owner is whitespaces use this as the * ownername
+the pointer will be updated after the call
+The caller must ldns_rdf_deep_free it.
+\.br
+Returns a ldns_status with an error or \%LDNS_STATUS_OK
+.PP
+.HP
+\fIldns_rr_free\fR()
+frees an \%RR structure
+\.br
+\fB*rr\fR: the \%RR to be freed
+\.br
+Returns void
+.PP
+.HP
+\fIldns_rr_print\fR()
+Prints the data in the resource record to the given file stream
+(in presentation format)
+
+\.br
+\fBoutput\fR: the file stream to print to
+\.br
+\fBrr\fR: the resource record to print
+\.br
+Returns void
+.PP
+.SH AUTHOR
+The ldns team at NLnet Labs.
+
+.SH REPORTING BUGS
+Please report bugs to ldns-team@nlnetlabs.nl or in 
+our bugzilla at
+http://www.nlnetlabs.nl/bugs/index.html
+
+.SH COPYRIGHT
+Copyright (c) 2004 - 2006 NLnet Labs.
+.PP
+Licensed under the BSD License. There is NO warranty; not even for
+MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+.SH SEE ALSO
+\fIldns_rr\fR, \fIldns_rr_list\fR.
+And \fBperldoc Net::DNS\fR, \fBRFC1034\fR,
+\fBRFC1035\fR, \fBRFC4033\fR, \fBRFC4034\fR  and \fBRFC4035\fR.
+.SH REMARKS
+This manpage was automatically generated from the ldns source code.
