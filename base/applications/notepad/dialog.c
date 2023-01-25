@@ -421,9 +421,8 @@ VOID DoOpenFile(LPCTSTR szFileName)
 {
     static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
-    LPTSTR pszText = NULL;
-    DWORD dwTextLen;
     TCHAR log[5];
+    HLOCAL hLocal;
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
@@ -437,13 +436,14 @@ VOID DoOpenFile(LPCTSTR szFileName)
         goto done;
     }
 
-    if (!ReadText(hFile, (LPWSTR *)&pszText, &dwTextLen, &Globals.encFile, &Globals.iEoln))
+    hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
+    if (!ReadText(hFile, &hLocal, &Globals.encFile, &Globals.iEoln))
     {
         ShowLastError();
         goto done;
     }
-    SetWindowText(Globals.hEdit, pszText);
 
+    SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hLocal, 0);
     SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     SetFocus(Globals.hEdit);
@@ -471,8 +471,6 @@ VOID DoOpenFile(LPCTSTR szFileName)
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
-    if (pszText)
-        HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_FileNew(VOID)

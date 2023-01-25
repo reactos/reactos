@@ -89,7 +89,7 @@ extern NOTEPAD_GLOBALS Globals;
 VOID SetFileName(LPCTSTR szFileName);
 
 /* from text.c */
-BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, int *piEoln);
+BOOL ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, int *piEoln);
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, int iEoln);
 
 /* from settings.c */

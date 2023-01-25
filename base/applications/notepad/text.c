@@ -23,31 +23,6 @@
 
 #include "notepad.h"
 
-static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, DWORD dwAppendLen)
-{
-    LPWSTR pszNewText;
-
-    if (dwAppendLen > 0)
-    {
-        if (*ppszText)
-        {
-            pszNewText = (LPWSTR) HeapReAlloc(GetProcessHeap(), 0, *ppszText, (*pdwTextLen + dwAppendLen) * sizeof(WCHAR));
-        }
-        else
-        {
-            pszNewText = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, dwAppendLen * sizeof(WCHAR));
-        }
-
-        if (!pszNewText)
-            return FALSE;
-
-        memcpy(pszNewText + *pdwTextLen, pszAppendText, dwAppendLen * sizeof(WCHAR));
-        *ppszText = pszNewText;
-        *pdwTextLen += dwAppendLen;
-    }
-    return TRUE;
-}
-
 BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
 {
     const signed char *pBytes = pText;
@@ -92,42 +67,119 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
     return ENCODING_ANSI;
 }
 
-BOOL
-ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, int *piEoln)
+static VOID
+ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 {
-    DWORD dwSize;
-    LPBYTE pBytes = NULL;
-    LPWSTR pszText;
-    LPWSTR pszAllocText = NULL;
-    DWORD dwPos, i;
-    DWORD dwCharCount;
-    BOOL bSuccess = FALSE;
-    BYTE b = 0;
-    ENCODING encFile = ENCODING_ANSI;
-    int iCodePage = 0;
-    WCHAR szCrlf[2] = {'\r', '\n'};
-    DWORD adwEolnCount[3] = {0, 0, 0};
+    DWORD ichNew, ichOld;
 
-    *ppszText = NULL;
-    *pdwTextLen = 0;
+    for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
+    {
+        WCHAR ch = pszOld[ichOld];
+        if (ch == chTarget)
+        {
+            pszNew[ichNew++] = L'\r';
+            pszNew[ichNew++] = L'\n';
+        }
+        else
+        {
+            pszNew[ichNew++] = ch;
+        }
+    }
+
+    pszNew[ichNew] = UNICODE_NULL;
+}
+
+static BOOL
+ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEolnCount[3])
+{
+    DWORD ich, cchText = *pcchText, cchNew;
+    LPWSTR pszText = *ppszText, pszNew;
+    BOOL bCR = FALSE;
+    INT iEoln;
+    HLOCAL hLocal;
+
+    /* Count new lines. Replace '\0' with SPACE. */
+    for (ich = 0; ich < cchText; ++ich)
+    {
+        WCHAR ch = pszText[ich];
+
+        if (ch == UNICODE_NULL)
+            pszText[ich] = L' ';
+
+        if (bCR && ch == '\n')
+            adwEolnCount[EOLN_CRLF]++;
+
+        bCR = (ch == L'\r');
+        if (bCR)
+            adwEolnCount[EOLN_CR]++;
+        else if (ch == L'\n')
+            adwEolnCount[EOLN_LF]++;
+    }
+
+    iEoln = EOLN_CRLF;
+    if (adwEolnCount[EOLN_LF] > adwEolnCount[EOLN_CRLF])
+        iEoln = EOLN_LF;
+    if (adwEolnCount[EOLN_CR] > adwEolnCount[EOLN_CRLF])
+        iEoln = EOLN_CR;
+
+    switch (iEoln)
+    {
+        case EOLN_CRLF:
+            break;
+
+        case EOLN_LF:
+        case EOLN_CR:
+            cchNew = cchText + adwEolnCount[iEoln];
+            hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
+            pszNew = LocalLock(hLocal);
+            if (!hLocal || !pszNew)
+            {
+                LocalFree(hLocal);
+                return FALSE;
+            }
+
+            ReplaceNewLines(pszNew, pszText, cchText, iEoln == EOLN_LF ? L'\n' : L'\r');
+
+            LocalUnlock(*phLocal);
+            LocalFree(*phLocal);
+            *phLocal = hLocal;
+            *ppszText = pszNew;
+            *pcchText = cchNew;
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
+ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, int *piEoln)
+{
+    LPBYTE pBytes = NULL;
+    LPWSTR pszText, pszAllocText = NULL;
+    DWORD dwSize, dwPos, i, dwCharCount, adwEolnCount[3] = {0, 0, 0};
+    BOOL bSuccess = FALSE;
+    ENCODING encFile = ENCODING_ANSI;
+    UINT iCodePage;
+    HANDLE hMapping = INVALID_HANDLE_VALUE;
+    HLOCAL hNewLocal;
 
     dwSize = GetFileSize(hFile, NULL);
     if (dwSize == INVALID_FILE_SIZE)
         goto done;
 
-    pBytes = HeapAlloc(GetProcessHeap(), 0, dwSize + 2);
+    hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (hMapping == NULL)
+        goto done;
+
+    pBytes = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, dwSize);
     if (!pBytes)
         goto done;
 
-    if (!ReadFile(hFile, pBytes, dwSize, &dwSize, NULL))
-        goto done;
-    dwPos = 0;
-
-    /* Make sure that there is a NUL character at the end, in any encoding */
-    pBytes[dwSize + 0] = '\0';
-    pBytes[dwSize + 1] = '\0';
-
     /* Look for Byte Order Marks */
+    dwPos = 0;
     if ((dwSize >= 2) && (pBytes[0] == 0xFF) && (pBytes[1] == 0xFE))
     {
         encFile = ENCODING_UTF16LE;
@@ -151,26 +203,36 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     switch(encFile)
     {
     case ENCODING_UTF16BE:
-        for (i = dwPos; i < dwSize-1; i += 2)
-        {
-            b = pBytes[i+0];
-            pBytes[i+0] = pBytes[i+1];
-            pBytes[i+1] = b;
-        }
-        /* fall through */
-
     case ENCODING_UTF16LE:
+        /* Re-allocate the buffer */
         pszText = (LPWSTR) &pBytes[dwPos];
         dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
+        hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
+        pszAllocText = LocalLock(hNewLocal);
+        if (pszAllocText == NULL)
+            goto done;
+        *phLocal = hNewLocal;
+
+        CopyMemory(pszAllocText, pszText, dwCharCount * sizeof(WCHAR));
+        pszAllocText[dwCharCount] = UNICODE_NULL;
+
+        if (encFile == ENCODING_UTF16BE)
+        {
+            /* Swap endian */
+            BYTE b, *pb = (LPBYTE)pszAllocText;
+            for (i = 0; i < dwCharCount; i += 2)
+            {
+                b = pb[i];
+                pb[i] = pb[i + 1];
+                pb[i + 1] = b;
+            }
+        }
         break;
 
     case ENCODING_ANSI:
     case ENCODING_UTF8:
     case ENCODING_UTF8BOM:
-        if (encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
-            iCodePage = CP_UTF8;
-        else
-            iCodePage = CP_ACP;
+        iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM) ? CP_UTF8 : CP_ACP);
 
         if ((dwSize - dwPos) > 0)
         {
@@ -184,9 +246,12 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
             dwCharCount = 0;
         }
 
-        pszAllocText = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (dwCharCount + 1) * sizeof(WCHAR));
+        /* Re-allocate the buffer */
+        hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
+        pszAllocText = LocalLock(hNewLocal);
         if (!pszAllocText)
             goto done;
+        *phLocal = hNewLocal;
 
         if ((dwSize - dwPos) > 0)
         {
@@ -194,58 +259,13 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
                 goto done;
         }
 
-        pszAllocText[dwCharCount] = '\0';
-        pszText = pszAllocText;
+        pszAllocText[dwCharCount] = UNICODE_NULL;
         break;
     DEFAULT_UNREACHABLE;
     }
 
-    dwPos = 0;
-    for (i = 0; i < dwCharCount; i++)
-    {
-        switch(pszText[i])
-        {
-        case '\r':
-            if ((i < dwCharCount-1) && (pszText[i+1] == '\n'))
-            {
-                i++;
-                adwEolnCount[EOLN_CRLF]++;
-                break;
-            }
-            /* fall through */
-
-        case '\n':
-            if (!Append(ppszText, pdwTextLen, &pszText[dwPos], i - dwPos))
-                return FALSE;
-            if (!Append(ppszText, pdwTextLen, szCrlf, ARRAY_SIZE(szCrlf)))
-                return FALSE;
-            dwPos = i + 1;
-
-            if (pszText[i] == '\r')
-                adwEolnCount[EOLN_CR]++;
-            else
-                adwEolnCount[EOLN_LF]++;
-            break;
-
-        case '\0':
-            pszText[i] = ' ';
-            break;
-        }
-    }
-
-    if (!*ppszText && (pszText == pszAllocText))
-    {
-        /* special case; don't need to reallocate */
-        *ppszText = pszAllocText;
-        *pdwTextLen = dwCharCount;
-        pszAllocText = NULL;
-    }
-    else
-    {
-        /* append last remaining text */
-        if (!Append(ppszText, pdwTextLen, &pszText[dwPos], i - dwPos + 1))
-            return FALSE;
-    }
+    if (!ProcessNewLines(phLocal, &pszAllocText, &dwCharCount, adwEolnCount))
+        goto done;
 
     /* chose which eoln to use */
     *piEoln = EOLN_CRLF;
@@ -259,16 +279,11 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
 
 done:
     if (pBytes)
-        HeapFree(GetProcessHeap(), 0, pBytes);
+        UnmapViewOfFile(pBytes);
+    if (hMapping != INVALID_HANDLE_VALUE)
+        CloseHandle(hMapping);
     if (pszAllocText)
-        HeapFree(GetProcessHeap(), 0, pszAllocText);
-
-    if (!bSuccess && *ppszText)
-    {
-        HeapFree(GetProcessHeap(), 0, *ppszText);
-        *ppszText = NULL;
-        *pdwTextLen = 0;
-    }
+        LocalUnlock(*phLocal);
     return bSuccess;
 }
 
