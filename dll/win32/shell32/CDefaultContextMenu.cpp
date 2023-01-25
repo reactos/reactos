@@ -24,6 +24,9 @@ typedef struct _StaticShellEntry_
     HKEY hkClass;
 } StaticShellEntry, *PStaticShellEntry;
 
+/* Maximum number of items that the callback can add. See also the comment where
+   this is being used. */
+#define MAX_MENU_ITEMS_ADDED_BY_CALLBACK 0x30
 
 //
 // verbs for InvokeCommandInfo
@@ -67,16 +70,20 @@ class CDefaultContextMenu :
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
+
+        // Ids and entries of commands added by various sources; "first" is the
+        // first valid id added, while "end" is the first id not included in the
+        // range.
         CAtlList<DynamicShellEntry> m_DynamicEntries;
         UINT m_iIdSHEFirst; /* first used id */
-        UINT m_iIdSHELast; /* last used id */
+        UINT m_iIdSHEEnd;
         CAtlList<StaticShellEntry> m_StaticEntries;
-        UINT m_iIdSCMFirst; /* first static used id */
-        UINT m_iIdSCMLast; /* last static used id */
-        UINT m_iIdCBFirst; /* first callback used id */
-        UINT m_iIdCBLast;  /* last callback used id */
-        UINT m_iIdDfltFirst; /* first default part id */
-        UINT m_iIdDfltLast; /* last default part id */
+        UINT m_iIdSCMFirst; /* static */
+        UINT m_iIdSCMEnd;
+        UINT m_iIdCBFirst; /* from callback */
+        UINT m_iIdCBEnd;
+        UINT m_iIdDfltFirst; /* default part */
+        UINT m_iIdDfltEnd;
 
         HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
         void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb);
@@ -144,13 +151,13 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
     m_iIdSHEFirst(0),
-    m_iIdSHELast(0),
+    m_iIdSHEEnd(0),
     m_iIdSCMFirst(0),
-    m_iIdSCMLast(0),
+    m_iIdSCMEnd(0),
     m_iIdCBFirst(0),
-    m_iIdCBLast(0),
+    m_iIdCBEnd(0),
     m_iIdDfltFirst(0),
-    m_iIdDfltLast(0)
+    m_iIdDfltEnd(0)
 {
 }
 
@@ -617,9 +624,10 @@ CDefaultContextMenu::QueryContextMenu(
     UINT uFlags)
 {
     HRESULT hr;
+    /* The next available free command id. */
     UINT idCmdNext = idCmdFirst;
-    UINT cIds = 0;
 
+    UINT added = 0;
     TRACE("BuildShellItemContextMenu entered\n");
 
     /* Load static verbs and shell extensions from registry */
@@ -630,42 +638,51 @@ CDefaultContextMenu::QueryContextMenu(
     }
 
     /* Add static context menu handlers */
-    cIds = AddStaticContextMenusToMenu(hMenu, &IndexMenu, idCmdFirst, idCmdLast);
-    m_iIdSCMFirst = 0;
-    m_iIdSCMLast = cIds;
-    idCmdNext = idCmdFirst + cIds;
+    added = AddStaticContextMenusToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast);
+    m_iIdSCMFirst = idCmdNext;
+    idCmdNext += added;
+    m_iIdSCMEnd = idCmdNext;
 
     /* Add dynamic context menu handlers */
-    cIds += AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast);
-    m_iIdSHEFirst = m_iIdSCMLast;
-    m_iIdSHELast = cIds;
-    idCmdNext = idCmdFirst + cIds;
-    TRACE("SH_LoadContextMenuHandlers first %x last %x\n", m_iIdSHEFirst, m_iIdSHELast);
+    added = AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast);
+    m_iIdSHEFirst = idCmdNext;
+    idCmdNext += added;
+    m_iIdSHEEnd = idCmdNext;
+
+    TRACE("SH_LoadContextMenuHandlers first %x end %x\n", m_iIdSHEFirst, m_iIdSHEEnd);
 
     /* Now let the callback add its own items */
-    QCMINFO qcminfo = {hMenu, IndexMenu, idCmdNext, idCmdLast, NULL};
+    m_iIdCBFirst = idCmdNext;
+    /* It won't tell us how many it will add though (what the maximium ID is
+       after the callback has been invoked); instead of recursively visiting
+       each menu item to find the largest id to use as an offset for later
+       items, we just allocate an id range to be added by the callback. While
+       somewhat hackier, it's fast & we're still telling the callback about this
+       available range in QCMINFO. */
+    m_iIdCBEnd = idCmdNext + MAX_MENU_ITEMS_ADDED_BY_CALLBACK;
+    idCmdNext = m_iIdCBEnd;
+
+    QCMINFO qcminfo = {hMenu, IndexMenu, m_iIdCBFirst, m_iIdCBEnd, NULL};
     if (SUCCEEDED(_DoCallback(DFM_MERGECONTEXTMENU, uFlags, &qcminfo)))
     {
-        UINT added = qcminfo.idCmdFirst - idCmdNext;
-        cIds += added;
-        IndexMenu += added;
-        m_iIdCBFirst = m_iIdSHELast;
-        m_iIdCBLast = cIds;
-        idCmdNext = idCmdFirst + cIds;
+        UINT cItems = GetMenuItemCount(hMenu);
+        IndexMenu = cItems;
     }
 
+    TRACE("SH_LoadContextMenuHandlers callback first %x end %x\n", m_iIdSHEFirst, m_iIdSHEEnd);
+
     if (uFlags & CMF_VERBSONLY)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdNext - idCmdFirst);
 
     /* If this is a background context menu we are done */
     if (!m_cidl)
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdNext - idCmdFirst);
 
     /* Get the attributes of the items */
     SFGAOF rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
     hr = m_psf->GetAttributesOf(m_cidl, m_apidl, &rfg);
     if (FAILED_UNEXPECTEDLY(hr))
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdNext - idCmdFirst);
 
     /* Add the default part of the menu */
     HMENU hmenuDefault = LoadMenu(_AtlBaseModule.GetResourceInstance(), L"MENU_SHV_FILE");
@@ -687,13 +704,15 @@ CDefaultContextMenu::QueryContextMenu(
         DeleteMenu(hmenuDefault, IDM_PROPERTIES, MF_BYCOMMAND);
 
     UINT idMax = Shell_MergeMenus(hMenu, GetSubMenu(hmenuDefault, 0), IndexMenu, idCmdNext, idCmdLast, 0);
-    m_iIdDfltFirst = cIds;
-    cIds += idMax - idCmdNext;
-    m_iIdDfltLast = cIds;
+    added = idMax - idCmdNext;
+
+    m_iIdDfltFirst = idCmdNext;
+    idCmdNext += added;
+    m_iIdDfltEnd = idCmdNext;
 
     DestroyMenu(hmenuDefault);
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdNext - idCmdFirst);
 }
 
 HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink)
@@ -1012,7 +1031,7 @@ HRESULT
 CDefaultContextMenu::InvokeShellExt(
     LPCMINVOKECOMMANDINFOEX lpcmi)
 {
-    TRACE("verb %p first %x last %x\n", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
+    TRACE("verb %p first %x end %x\n", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHEEnd);
 
     UINT idCmd = LOWORD(lpcmi->lpVerb);
     PDynamicShellEntry pEntry = GetDynamicEntry(idCmd);
@@ -1192,28 +1211,37 @@ CDefaultContextMenu::InvokeCommand(
     }
 
     CmdId = LOWORD(LocalInvokeInfo.lpVerb);
+    TRACE("Got command: 0x%x\n", CmdId);
 
-    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    TRACE("m_iIdSHE first: 0x%x end: 0x%x\n", m_iIdSHEFirst, m_iIdSHEEnd);
+    TRACE("m_iIdSCM first: 0x%x end: 0x%x\n", m_iIdSCMFirst, m_iIdSCMEnd);
+    TRACE("m_iIdCB first: 0x%x end: 0x%x\n", m_iIdCBFirst, m_iIdCBEnd);
+    TRACE("m_iIdDflt first: 0x%x end: 0x%x\n", m_iIdDfltFirst, m_iIdDfltEnd);
+
+    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHEEnd)
     {
         LocalInvokeInfo.lpVerb -= m_iIdSHEFirst;
+        TRACE("Translated as dynamic entry: 0x%x\n", LocalInvokeInfo.lpVerb);
         Result = InvokeShellExt(&LocalInvokeInfo);
         return Result;
     }
 
-    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
+    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMEnd)
     {
         LocalInvokeInfo.lpVerb -= m_iIdSCMFirst;
+        TRACE("Translated as static entry: 0x%x\n", LocalInvokeInfo.lpVerb);
         Result = InvokeRegVerb(&LocalInvokeInfo);
         return Result;
     }
 
-    if (m_iIdCBFirst != m_iIdCBLast && CmdId >= m_iIdCBFirst && CmdId < m_iIdCBLast)
+    if (CmdId >= m_iIdCBFirst && CmdId < m_iIdCBEnd)
     {
+        TRACE("Translated as command from callback: 0x%x\n", CmdId - m_iIdCBFirst);
         Result = _DoCallback(DFM_INVOKECOMMAND, CmdId - m_iIdCBFirst, NULL);
         return Result;
     }
 
-    if (m_iIdDfltFirst != m_iIdDfltLast && CmdId >= m_iIdDfltFirst && CmdId < m_iIdDfltLast)
+    if (CmdId >= m_iIdDfltFirst && CmdId < m_iIdDfltEnd)
     {
         CmdId -= m_iIdDfltFirst;
         /* See the definitions of IDM_CUT and co to see how this works */
@@ -1297,7 +1325,7 @@ CDefaultContextMenu::GetCommandString(
 
     UINT CmdId = LOWORD(idCommand);
 
-    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHEEnd)
     {
         idCommand -= m_iIdSHEFirst;
         PDynamicShellEntry pEntry = GetDynamicEntry(idCommand);
@@ -1312,7 +1340,7 @@ CDefaultContextMenu::GetCommandString(
                                              uMaxNameLen);
     }
 
-    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
+    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMEnd)
     {
         /* Validation just returns S_OK on a match. The id exists. */
         if (uFlags == GCS_VALIDATEA || uFlags == GCS_VALIDATEW)
@@ -1340,7 +1368,7 @@ CDefaultContextMenu::GetCommandString(
     }
 
     //FIXME: Should we handle callbacks here?
-    if (m_iIdDfltFirst != m_iIdDfltLast && CmdId >= m_iIdDfltFirst && CmdId < m_iIdDfltLast)
+    if (CmdId >= m_iIdDfltFirst && CmdId < m_iIdDfltEnd)
     {
         CmdId -= m_iIdDfltFirst;
         /* See the definitions of IDM_CUT and co to see how this works */
@@ -1443,7 +1471,7 @@ CDefaultContextMenu::HandleMenuMsg2(
     if (FAILED(hr))
         return S_FALSE;
 
-    if (CmdId < m_iIdSHEFirst || CmdId >= m_iIdSHELast)
+    if (CmdId < m_iIdSHEFirst || CmdId >= m_iIdSHEEnd)
         return S_FALSE;
 
     CmdId -= m_iIdSHEFirst;

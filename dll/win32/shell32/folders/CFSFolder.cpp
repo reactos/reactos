@@ -1811,13 +1811,15 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
         {
-            // Create an data object
+            // Create a data object
             CComHeapPtr<ITEMID_CHILD> pidlChild(ILClone(ILFindLastID(m_pidlRoot)));
             CComHeapPtr<ITEMIDLIST> pidlParent(ILClone(m_pidlRoot));
             ILRemoveLastID(pidlParent);
 
+            ITEMIDLIST* arrChildren[] = {pidlChild};
             CComPtr<IDataObject> pDataObj;
-            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+
+            HRESULT hr = SHCreateDataObject(pidlParent, 1, arrChildren, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
             if (!FAILED_UNEXPECTEDLY(hr))
             {
                 // Ask for a title to display

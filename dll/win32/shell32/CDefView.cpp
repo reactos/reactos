@@ -1292,7 +1292,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     /* A folder is special if it is the Desktop folder,
      * a network folder, or a Control Panel folder. */
-    m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent) 
+    m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent)
         || _ILIsControlPanel(ILFindLastID(m_pidlParent));
 
     /* Only force StatusBar part refresh if the state
@@ -1657,7 +1657,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         m_ListView.ClientToScreen(&pt);
     }
 
-    // This runs the message loop, calling back to us with f.e. WM_INITPOPUP (hence why m_hContextMenu and m_pCM exist) 
+    // This runs the message loop, calling back to us with f.e. WM_INITPOPUP (hence why m_hContextMenu and m_pCM exist)
     uCommand = TrackPopupMenu(m_hContextMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
                               pt.x, pt.y, 0, m_hWnd, NULL);
@@ -1667,7 +1667,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         return 0;
 
-    InvokeContextMenuCommand(m_pCM, uCommand - CONTEXT_MENU_BASE_ID, &pt);
+    InvokeContextMenuCommand(m_pCM, uCommand, &pt);
 
     return 0;
 }
@@ -2399,7 +2399,7 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     UINT CmdID;
     HRESULT hres = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdID);
     if (SUCCEEDED(hres))
-        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdID - CONTEXT_MENU_BASE_ID);
+        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdID);
 
     /* Forward the message to the IContextMenu2 */
     LRESULT result;
@@ -3617,14 +3617,14 @@ void CDefView::_HandleStatusBarResize(int nWidth)
     const int nLocationPartLength = 150;
     const int nRightPartsLength = nFileSizePartLength + nLocationPartLength;
     int nObjectsPartLength = nWidth - nRightPartsLength;
-    
+
     /* If the window is small enough just divide each part into thirds
      * This is the behavior of Windows Server 2003. */
     if (nObjectsPartLength <= nLocationPartLength)
         nObjectsPartLength = nFileSizePartLength = nWidth / 3;
 
     int nPartArray[] = {nObjectsPartLength, nObjectsPartLength + nFileSizePartLength, -1};
-    
+
     m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
 }
 
