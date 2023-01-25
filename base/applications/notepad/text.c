@@ -89,8 +89,9 @@ ReplaceNewLines(LPWSTR pszNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 }
 
 static BOOL
-ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEolnCount[3])
+ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
+    DWORD adwEolnCount[3] = { 0, 0, 0 };
     DWORD ich, cchText = *pcchText, cchNew;
     LPWSTR pszText = *ppszText, pszNew;
     BOOL bCR = FALSE;
@@ -136,7 +137,7 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEo
                 return FALSE;
             }
 
-            ReplaceNewLines(pszNew, pszText, cchText, iEoln == EOLN_LF ? L'\n' : L'\r');
+            ReplaceNewLines(pszNew, pszText, cchText, (iEoln == EOLN_LF) ? L'\n' : L'\r');
 
             LocalUnlock(*phLocal);
             LocalFree(*phLocal);
@@ -146,6 +147,7 @@ ProcessNewLines(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, DWORD adwEo
             break;
     }
 
+    *piEoln = iEoln;
     return TRUE;
 }
 
@@ -154,7 +156,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
     LPBYTE pBytes = NULL;
     LPWSTR pszText, pszAllocText = NULL;
-    DWORD dwSize, dwPos, i, dwCharCount, adwEolnCount[3] = {0, 0, 0};
+    DWORD dwSize, dwPos, i, dwCharCount;
     BOOL bSuccess = FALSE;
     ENCODING encFile = ENCODING_ANSI;
     UINT iCodePage;
@@ -199,7 +201,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     {
     case ENCODING_UTF16BE:
     case ENCODING_UTF16LE:
-        /* Re-allocate the buffer */
+        /* Re-allocate the buffer for EM_SETHANDLE */
         pszText = (LPWSTR) &pBytes[dwPos];
         dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
         hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
@@ -209,13 +211,12 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         *phLocal = hNewLocal;
 
         CopyMemory(pszAllocText, pszText, dwCharCount * sizeof(WCHAR));
-        pszAllocText[dwCharCount] = UNICODE_NULL;
 
-        if (encFile == ENCODING_UTF16BE)
+        if (encFile == ENCODING_UTF16BE) /* Big endian */
         {
             /* Swap endian */
             BYTE b, *pb = (LPBYTE)pszAllocText;
-            for (i = 0; i < dwCharCount; i += 2)
+            for (i = 0; i < dwCharCount * 2; i += 2)
             {
                 b = pb[i];
                 pb[i] = pb[i + 1];
@@ -241,7 +242,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
             dwCharCount = 0;
         }
 
-        /* Re-allocate the buffer */
+        /* Re-allocate the buffer for EM_SETHANDLE */
         hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
         pszAllocText = LocalLock(hNewLocal);
         if (!pszAllocText)
@@ -253,23 +254,16 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
             if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
                 goto done;
         }
-
-        pszAllocText[dwCharCount] = UNICODE_NULL;
         break;
     DEFAULT_UNREACHABLE;
     }
 
-    if (!ProcessNewLines(phLocal, &pszAllocText, &dwCharCount, adwEolnCount))
+    pszAllocText[dwCharCount] = UNICODE_NULL;
+
+    if (!ProcessNewLines(phLocal, &pszAllocText, &dwCharCount, piEoln))
         goto done;
 
-    /* chose which eoln to use */
-    *piEoln = EOLN_CRLF;
-    if (adwEolnCount[EOLN_LF] > adwEolnCount[*piEoln])
-        *piEoln = EOLN_LF;
-    if (adwEolnCount[EOLN_CR] > adwEolnCount[*piEoln])
-        *piEoln = EOLN_CR;
     *pencFile = encFile;
-
     bSuccess = TRUE;
 
 done:
