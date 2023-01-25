@@ -49,9 +49,9 @@ typedef enum
 
 typedef enum
 {
-    EOLN_CRLF = 0,
-    EOLN_LF   = 1,
-    EOLN_CR   = 2
+    EOLN_CRLF = 0, /* "\r\n" */
+    EOLN_LF   = 1, /* "\n" */
+    EOLN_CR   = 2  /* "\r" */
 } EOLN; /* End of line (NewLine) type */
 
 typedef struct
