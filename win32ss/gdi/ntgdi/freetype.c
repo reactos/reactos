@@ -5897,24 +5897,27 @@ IntGetTextDisposition(
     INT i, glyph_index;
     FT_BitmapGlyph realglyph;
     FT_Face face = Cache->Hashed.Face;
-    BOOL use_kerning = FT_HAS_KERNING(face), indexed = (fuOptions & ETO_GLYPH_INDEX);
+    BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta;
+    WCHAR ch;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    for (i = 0; i < Count; ++i, ++String)
+    for (i = 0; i < Count; ++i)
     {
-        if (indexed)
+        ch = *String++;
+        if (fuOptions & ETO_GLYPH_INDEX)
         {
-            glyph_index = *String;
+            glyph_index = ch;
         }
         else
         {
             /* Ignore special characters */
-            if (*String <= CR && (*String == CR || *String == TAB || *String == LF))
+            if (ch > CR || (ch != CR && ch != TAB && ch != LF))
+                glyph_index = get_glyph_index(face, ch);
+            else
                 continue;
-            glyph_index = get_glyph_index(face, *String);
         }
         Cache->Hashed.GlyphIndex = glyph_index;
 
@@ -6081,9 +6084,10 @@ IntExtTextOutW(
     PMATRIX pmxWorldToDevice;
     FT_Vector delta, vecAscent64, vecDescent64;
     LOGFONTW *plf;
-    BOOL use_kerning, bResult, DoBreak, indexed;
+    BOOL use_kerning, bResult, DoBreak;
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
+    WCHAR ch;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6304,19 +6308,20 @@ IntExtTextOutW(
     Y64 = RealYStart64;
     previous = 0;
     DoBreak = FALSE;
-    indexed = (fuOptions & ETO_GLYPH_INDEX);
-    for (i = 0; i < Count; ++i, ++String)
+    for (i = 0; i < Count; ++i)
     {
-        if (indexed)
+        ch = *String++;
+        if (fuOptions & ETO_GLYPH_INDEX)
         {
-            glyph_index = *String;
+            glyph_index = ch;
         }
         else
         {
             /* Ignore special characters */
-            if (*String <= CR && (*String == CR || *String == TAB || *String == LF))
+            if (ch > CR || (ch != CR && ch != TAB && ch != LF))
+                glyph_index = get_glyph_index(face, ch);
+            else
                 continue;
-            glyph_index = get_glyph_index(face, *String);
         }
         Cache.Hashed.GlyphIndex = glyph_index;
 
