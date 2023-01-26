@@ -96,6 +96,7 @@ class CNetConUiObject:
         PCUITEMID_CHILD m_pidl;
         CComPtr<IUnknown> m_pUnknown;
         CComPtr<IOleCommandTarget> m_lpOleCmd;
+        UINT m_iIdCmdFirst;
 
     public:
         CNetConUiObject();

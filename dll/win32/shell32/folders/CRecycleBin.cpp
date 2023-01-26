@@ -415,7 +415,7 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         BOOL ret = TRUE;
 
         /* restore file */
-        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1)) 
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
             ret = RestoreFile(Context.hDeletedFile);
         /* delete file */
         else
@@ -850,7 +850,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdFirst + id++;
     mii.fType = MFT_STRING;
-    iIdEmpty = 1;
+    iIdEmpty = idCmdFirst + 1;
 
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return E_FAIL;
@@ -867,7 +867,7 @@ HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
 
-    if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
+    if (IS_INTRESOURCE(lpcmi->lpVerb) && LOWORD(lpcmi->lpVerb) == iIdEmpty)
     {
         if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
         {

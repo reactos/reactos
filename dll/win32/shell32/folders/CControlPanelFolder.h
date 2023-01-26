@@ -91,6 +91,7 @@ class CCPLItemMenu:
 private:
     PITEMID_CHILD *m_apidl;
     UINT m_cidl;
+    UINT m_iIdCmdFirst;
 
 public:
     CCPLItemMenu();

@@ -2577,9 +2577,15 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     }
 
     UINT idCmd = LOWORD(lpici->lpVerb);
-    TRACE("idCmd: %d\n", idCmd);
 
-    switch (idCmd)
+    TRACE("idCmd: %d first: %d\n", idCmd, m_idCmdFirst);
+
+    if (idCmd < m_idCmdFirst || idCmd > m_idCmdFirst + IDCMD_OPENFILELOCATION) {
+      // Not in our range; fail so that more handlers can be called.
+      return E_FAIL;
+    }
+
+    switch (idCmd - m_idCmdFirst)
     {
     case IDCMD_OPEN:
         return DoOpen(lpici);

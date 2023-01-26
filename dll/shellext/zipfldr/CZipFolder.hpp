@@ -40,10 +40,12 @@ class CZipFolder :
     CStringA m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile;
+    UINT m_iIdCmdFirst;
 
 public:
     CZipFolder()
-        :m_UnzipFile(NULL)
+        :m_UnzipFile(NULL),
+         m_iIdCmdFirst(0)
     {
     }
 
@@ -502,7 +504,8 @@ public:
         if (!pici || (pici->cbSize != sizeof(CMINVOKECOMMANDINFO) && pici->cbSize != sizeof(CMINVOKECOMMANDINFOEX)))
             return E_INVALIDARG;
 
-        if (pici->lpVerb == MAKEINTRESOURCEA(0) || (HIWORD(pici->lpVerb) && !strcmp(pici->lpVerb, EXTRACT_VERBA)))
+        if (pici->lpVerb == MAKEINTRESOURCEA(m_iIdCmdFirst + 0)
+            || (HIWORD(pici->lpVerb) && !strcmp(pici->lpVerb, EXTRACT_VERBA)))
         {
             BSTR ZipFile = m_ZipFile.AllocSysString();
             InterlockedIncrement(&g_ModuleRefCnt);
@@ -520,6 +523,7 @@ public:
     STDMETHODIMP QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
         UINT idCmd = idCmdFirst;
+        m_iIdCmdFirst = idCmdFirst;
 
         if (!(uFlags & CMF_DEFAULTONLY))
         {

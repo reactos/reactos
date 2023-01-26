@@ -250,13 +250,13 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     return idCmd - idCmdFirst;
 }
 
-CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
+CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT idOffset)
 {
-    UINT idCmd = m_idCmdFirst + IdOffset;
-
+    // Offsets are assumed to be the items of the menu, e.g. 0 is the first
+    // item, 1 is the second, etc.
     MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_DATA;
-    if (GetMenuItemInfoW(m_hSubMenu, idCmd, FALSE, &mii))
+    if (GetMenuItemInfoW(m_hSubMenu, idOffset, FALSE, &mii))
         return reinterpret_cast<SENDTO_ITEM *>(mii.dwItemData);
 
     ERR("GetMenuItemInfoW: %ld\n", GetLastError());
@@ -335,7 +335,10 @@ CSendToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     WORD idCmd = LOWORD(lpici->lpVerb);
     TRACE("idCmd: %d\n", idCmd);
 
-    SENDTO_ITEM *pItem = FindItemFromIdOffset(idCmd);
+    if (!IS_INTRESOURCE(lpici->lpVerb) || idCmd < m_idCmdFirst)
+        return E_FAIL;
+
+    SENDTO_ITEM *pItem = FindItemFromIdOffset(idCmd - m_idCmdFirst);
     if (pItem)
     {
         hr = DoSendToItem(pItem, lpici);

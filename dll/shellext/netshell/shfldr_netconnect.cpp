@@ -400,7 +400,8 @@ HRESULT WINAPI CNetworkConnections::MapColumnToSCID(UINT column, SHCOLUMNID *psc
 */
 
 CNetConUiObject::CNetConUiObject()
-    : m_pidl(NULL)
+    : m_pidl(NULL),
+      m_iIdCmdFirst(0)
 {
 }
 
@@ -513,6 +514,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
 
+    m_iIdCmdFirst = idCmdFirst;
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
 
@@ -633,13 +635,15 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
         lpcmi->lpVerb = MAKEINTRESOURCEA(IDS_NET_RENAME);
 
-    if (HIWORD(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
+    if (HIWORD(lpcmi->lpVerb)
+        || LOWORD(lpcmi->lpVerb) < m_iIdCmdFirst
+        || LOWORD(lpcmi->lpVerb) > (m_iIdCmdFirst + 7))
     {
-        FIXME("Got invalid command\n");
+        FIXME("Got invalid command 0x%x with idCmdFirst 0x%x\n", lpcmi->lpVerb, m_iIdCmdFirst);
         return E_NOTIMPL;
     }
 
-    CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
+    CmdId = LOWORD(lpcmi->lpVerb) - m_iIdCmdFirst + IDS_NET_ACTIVATE;
 
     switch(CmdId)
     {

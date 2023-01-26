@@ -657,6 +657,7 @@ CCPLItemMenu::CCPLItemMenu()
 {
     m_apidl = NULL;
     m_cidl = 0;
+    m_iIdCmdFirst = 0;
 }
 
 HRESULT WINAPI CCPLItemMenu::Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
@@ -685,6 +686,7 @@ HRESULT WINAPI CCPLItemMenu::QueryContextMenu(
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDC_STATIC, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_STRING, MAKEINTRESOURCEW(IDS_CREATELINK), MFS_ENABLED);
 
+    m_iIdCmdFirst = idCmdFirst;
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 2);
 }
 
@@ -704,7 +706,7 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(0))
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(m_iIdCmdFirst + 0))
     {
         /* Hardcode the command here; Executing a cpl file would be fine but we also need to run things like console.dll */
         WCHAR wszParams[MAX_PATH];
@@ -716,7 +718,7 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         /* Note: we pass the applet name to Control_RunDLL to distinguish between multiple applets in one .cpl file */
         ShellExecuteW(NULL, NULL, wszFile, wszParams, NULL, 0);
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(1)) //FIXME
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(m_iIdCmdFirst + 1)) //FIXME
     {
         CComPtr<IDataObject> pDataObj;
         LPITEMIDLIST pidl = _ILCreateControlPanel();
