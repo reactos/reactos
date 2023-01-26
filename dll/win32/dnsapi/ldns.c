@@ -16,13 +16,11 @@
 DNS_STATUS
 DnsIntTranslateAdnsToDNS_STATUS(int Status)
 {
-    switch(Status)
+    switch (Status)
     {
-        case adns_s_ok:
+        case LDNS_STATUS_OK:
             return ERROR_SUCCESS;
 
-        case adns_s_nomemory:
-        case adns_s_systemfail:
         default: /* There really aren't any general errors in the dns part. */
             return ERROR_OUTOFMEMORY;
     }

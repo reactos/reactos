@@ -27,7 +27,7 @@
 
 #include <dnsrslvr_c.h>
 
-#include <adns.h>
+#include <ldns.h>
 
 typedef struct
 {
