@@ -529,6 +529,19 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
+/* Is Window Snap enabled? */
+BOOL IsWindowSnapEnabled(VOID)
+{
+    WCHAR szValue[16];
+    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
+                           REG_SZ, szValue, sizeof(szValue)))
+    {
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        return _wtoi(szValue);
+    }
+    return TRUE;
+}
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -813,7 +826,7 @@ IntDefWindowProc(
 
             if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
             {
-               if ((topWnd->style & WS_THICKFRAME) == 0)
+               if ((topWnd->style & WS_THICKFRAME) == 0 || !IsWindowSnapEnabled())
                {
                   return 0;
                }
