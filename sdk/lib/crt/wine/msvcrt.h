@@ -26,7 +26,7 @@
  *   Other conventions
  *      - To avoid conflicts with the standard C library,
  *        no msvcrt headers are included in the implementation.
- *      - Instead, symbols are duplicated here, prefixed with
+ *      - Instead, symbols are duplicated here, prefixed with 
  *        MSVCRT_, as explained above.
  *      - To avoid inconsistencies, a test for each symbol is
  *        added into tests/headers.c. Please always add a
