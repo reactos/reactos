@@ -9,7 +9,7 @@
 #include <atlstr.h>
 
 static VOID
-DoEntry(INT lineno, LPWSTR cmdline, INT argc_minus_1, ...)
+DoEntry(INT lineno, LPCWSTR cmdline, INT argc_minus_1, ...)
 {
     va_list va;
     va_start(va, argc_minus_1);
@@ -42,88 +42,25 @@ DoEntry(INT lineno, LPWSTR cmdline, INT argc_minus_1, ...)
 
 START_TEST(CommandLineToArgvW)
 {
-    {
-        WCHAR cmdline[] = L"";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"test.exe";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"test.exe ";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\t";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\r";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\n";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"\"This is a test.exe\"";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"\"This is a test.exe\" ";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"\"This is a test.exe\"\t";
-        DoEntry(__LINE__, cmdline, 0);
-    }
-    {
-        WCHAR cmdline[] = L"\"This is a test.exe\"\r";
-        DoEntry(__LINE__, cmdline, 1, L"\r");
-    }
-    {
-        WCHAR cmdline[] = L"\"This is a test.exe\"\n";
-        DoEntry(__LINE__, cmdline, 1, L"\n");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe a";
-        DoEntry(__LINE__, cmdline, 1, L"a");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\ta";
-        DoEntry(__LINE__, cmdline, 1, L"a");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\ra";
-        DoEntry(__LINE__, cmdline, 1, L"a");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe\na";
-        DoEntry(__LINE__, cmdline, 1, L"a");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe a b c";
-        DoEntry(__LINE__, cmdline, 3, L"a", L"b", L"c");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe a b \"c";
-        DoEntry(__LINE__, cmdline, 3, L"a", L"b", L"c");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe \"a b\" \"c d\"";
-        DoEntry(__LINE__, cmdline, 2, L"a b", L"c d");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe \"a \" d\"";
-        DoEntry(__LINE__, cmdline, 2, L"a ", L"d");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe \"0 1\"\" 2";
-        DoEntry(__LINE__, cmdline, 2, L"0 1\"", L"2");
-    }
-    {
-        WCHAR cmdline[] = L"test.exe \"0 1\"\"\" 2";
-        DoEntry(__LINE__, cmdline, 1, L"0 1\" 2");
-    }
+    DoEntry(__LINE__, L"", 0);
+    DoEntry(__LINE__, L"test.exe", 0);
+    DoEntry(__LINE__, L"test.exe ", 0);
+    DoEntry(__LINE__, L"test.exe\t", 0);
+    DoEntry(__LINE__, L"test.exe\r", 0);
+    DoEntry(__LINE__, L"test.exe\n", 0);
+    DoEntry(__LINE__, L"\"This is a test.exe\"", 0);
+    DoEntry(__LINE__, L"\"This is a test.exe\" ", 0);
+    DoEntry(__LINE__, L"\"This is a test.exe\"\t", 0);
+    DoEntry(__LINE__, L"\"This is a test.exe\"\r", 1, L"\r");
+    DoEntry(__LINE__, L"\"This is a test.exe\"\n", 1, L"\n");
+    DoEntry(__LINE__, L"test.exe a", 1, L"a");
+    DoEntry(__LINE__, L"test.exe\ta", 1, L"a");
+    DoEntry(__LINE__, L"test.exe\ra", 1, L"a");
+    DoEntry(__LINE__, L"test.exe\na", 1, L"a");
+    DoEntry(__LINE__, L"test.exe a b c", 3, L"a", L"b", L"c");
+    DoEntry(__LINE__, L"test.exe a b \"c", 3, L"a", L"b", L"c");
+    DoEntry(__LINE__, L"test.exe \"a b\" \"c d\"", 2, L"a b", L"c d");
+    DoEntry(__LINE__, L"test.exe \"a \" d\"", 2, L"a ", L"d");
+    DoEntry(__LINE__, L"test.exe \"0 1\"\" 2", 2, L"0 1\"", L"2");
+    DoEntry(__LINE__, L"test.exe \"0 1\"\"\" 2", 1, L"0 1\" 2");
 }
