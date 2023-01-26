@@ -532,7 +532,7 @@ DefWndScreenshot(PWND pWnd)
 /* Is Window Snap enabled? */
 BOOL IsWindowSnapEnabled(VOID)
 {
-    WCHAR szValue[16];
+    WCHAR szValue[2];
     if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
                            REG_SZ, szValue, sizeof(szValue)))
     {
