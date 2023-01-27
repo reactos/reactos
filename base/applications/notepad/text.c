@@ -203,6 +203,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     {
     case ENCODING_UTF16BE:
     case ENCODING_UTF16LE:
+    {
         /* Re-allocate the buffer for EM_SETHANDLE */
         pszText = (LPWSTR) &pBytes[dwPos];
         dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
