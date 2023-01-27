@@ -124,6 +124,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
 
         case EOLN_LF:
         case EOLN_CR:
+        {
             /* Allocate a buffer for EM_SETHANDLE */
             cchNew = cchText + adwEolnCount[iEoln];
             hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
