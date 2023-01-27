@@ -84,10 +84,9 @@ ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR
 static BOOL
 ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
-    DWORD cchNew, ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
-    LPWSTR pszText = *ppszText, pszNew;
+    DWORD ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
+    LPWSTR pszText = *ppszText;
     EOLN iEoln;
-    HLOCAL hLocal;
     BOOL bPrevCR = FALSE;
 
     /* Replace '\0' with SPACE. Count newlines. */
@@ -126,9 +125,9 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
         case EOLN_CR:
         {
             /* Allocate a buffer for EM_SETHANDLE */
-            cchNew = cchText + adwEolnCount[iEoln];
-            hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
-            pszNew = LocalLock(hLocal);
+            DWORD cchNew = cchText + adwEolnCount[iEoln];
+            HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
+            LPWSTR pszNew = LocalLock(hLocal);
             if (!pszNew)
             {
                 LocalFree(hLocal);
