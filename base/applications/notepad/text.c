@@ -255,6 +255,8 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
                 goto done;
         }
         break;
+    }
+
     DEFAULT_UNREACHABLE;
     }
 
