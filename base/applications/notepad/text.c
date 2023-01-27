@@ -82,7 +82,7 @@ ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR
 }
 
 static BOOL
-ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR* ppszText, LPDWORD pcchText, EOLN *piEoln)
+ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
     DWORD cchNew, ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
     LPWSTR pszText = *ppszText, pszNew;
