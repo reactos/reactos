@@ -537,7 +537,7 @@ BOOL IsWindowSnapEnabled(VOID)
                            REG_SZ, szValue, sizeof(szValue)))
     {
         szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-        return _wtoi(szValue);
+        return (_wtoi(szValue) != 0);
     }
     return TRUE;
 }
