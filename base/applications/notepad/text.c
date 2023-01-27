@@ -231,6 +231,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     case ENCODING_ANSI:
     case ENCODING_UTF8:
     case ENCODING_UTF8BOM:
+    {
         iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM) ? CP_UTF8 : CP_ACP);
 
         dwCharCount = 0;
