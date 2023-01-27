@@ -530,7 +530,7 @@ DefWndScreenshot(PWND pWnd)
 }
 
 /* Is Window Snap enabled? */
-BOOL IsWindowSnapEnabled(VOID)
+BOOL IntIsWindowSnapEnabled(VOID)
 {
     WCHAR szValue[2];
     if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
@@ -826,7 +826,7 @@ IntDefWindowProc(
 
             if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
             {
-               if ((topWnd->style & WS_THICKFRAME) == 0 || !IsWindowSnapEnabled())
+               if ((topWnd->style & WS_THICKFRAME) == 0 || !IntIsWindowSnapEnabled())
                {
                   return 0;
                }
