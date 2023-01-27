@@ -144,7 +144,9 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
             *ppszText = pszNew;
             *pcchText = cchNew;
             break;
-    DEFAULT_UNREACHABLE;
+        }
+
+        DEFAULT_UNREACHABLE;
     }
 
     *piEoln = iEoln;
