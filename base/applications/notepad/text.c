@@ -226,6 +226,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
             }
         }
         break;
+    }
 
     case ENCODING_ANSI:
     case ENCODING_UTF8:
