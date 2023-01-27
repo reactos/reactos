@@ -2552,6 +2552,14 @@ WSPIoctl(IN  SOCKET Handle,
             Errno = NO_ERROR;
             Ret = NO_ERROR;
             break;
+        case SIO_UDP_CONNRESET:
+            /* FIXME: It's a fix not to fail with unimplemented
+               This control code shoute controls whether UDP 
+               PORT_UNREACHABLE messages are reported.
+            */
+            Errno = NO_ERROR;
+            Ret = NO_ERROR;
+            break;
         default:
             Errno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
                                                  Handle,
