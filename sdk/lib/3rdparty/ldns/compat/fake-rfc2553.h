@@ -39,6 +39,13 @@
 #ifndef _FAKE_RFC2553_H
 #define _FAKE_RFC2553_H
 
+#define _TIMEZONE_DEFINED
+struct timezone {
+  int tz_minuteswest;
+  int tz_dsttime;
+};
+
+  extern int __cdecl gettimeofday (struct timeval *p, struct timezone *z);
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>

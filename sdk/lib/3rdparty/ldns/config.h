@@ -718,9 +718,9 @@ time_t timegm (struct tm *tm);
 #ifndef HAVE_GMTIME_R
 struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #endif
-#ifndef HAVE_LOCALTIME_R
-struct tm *localtime_r(const time_t *timep, struct tm *result);
-#endif
+// #ifndef HAVE_LOCALTIME_R
+// struct tm *localtime_r(const time_t *timep, struct tm *result);
+// #endif
 #ifndef HAVE_ISBLANK
 int isblank(int c);
 #endif /* !HAVE_ISBLANK */

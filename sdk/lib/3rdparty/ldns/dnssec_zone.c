@@ -1672,62 +1672,62 @@ error:
 	return NULL;
 }
 
-static ldns_rr_list *
-zone_digester_export(
-		zone_digester *zd, ldns_rr *soa, ldns_status *ret_st)
-{
-	ldns_status st = LDNS_STATUS_OK;
-	ldns_rr_list *rr_list = NULL;
-	ldns_rr *sha384 = NULL;
-	ldns_rr *sha512 = NULL;
+// static ldns_rr_list *
+// zone_digester_export(
+// 		zone_digester *zd, ldns_rr *soa, ldns_status *ret_st)
+// {
+// 	ldns_status st = LDNS_STATUS_OK;
+// 	ldns_rr_list *rr_list = NULL;
+// 	ldns_rr *sha384 = NULL;
+// 	ldns_rr *sha512 = NULL;
 
-	if (!zd || !soa)
-		st = LDNS_STATUS_NULL;
+// 	if (!zd || !soa)
+// 		st = LDNS_STATUS_NULL;
 
-	else if (ldns_rr_get_type(soa) != LDNS_RR_TYPE_SOA
-	     ||  ldns_rr_rd_count(soa) < 3)
-		st = LDNS_STATUS_ZONEMD_INVALID_SOA;
+// 	else if (ldns_rr_get_type(soa) != LDNS_RR_TYPE_SOA
+// 	     ||  ldns_rr_rd_count(soa) < 3)
+// 		st = LDNS_STATUS_ZONEMD_INVALID_SOA;
 
-	else if (!(rr_list = ldns_rr_list_new()))
-		st = LDNS_STATUS_MEM_ERR;
+// 	else if (!(rr_list = ldns_rr_list_new()))
+// 		st = LDNS_STATUS_MEM_ERR;
 
-	else if (zd->simple_sha384
-	     && !(sha384 = new_zonemd(soa, ZONEMD_HASH_SHA384)))
-		st = LDNS_STATUS_MEM_ERR;
+// 	else if (zd->simple_sha384
+// 	     && !(sha384 = new_zonemd(soa, ZONEMD_HASH_SHA384)))
+// 		st = LDNS_STATUS_MEM_ERR;
 
-	else if (zd->simple_sha512
-	     && !(sha512 = new_zonemd(soa, ZONEMD_HASH_SHA512)))
-		st = LDNS_STATUS_MEM_ERR;
+// 	else if (zd->simple_sha512
+// 	     && !(sha512 = new_zonemd(soa, ZONEMD_HASH_SHA512)))
+// 		st = LDNS_STATUS_MEM_ERR;
 
-	else if (zd->simple_sha384
-	     && !ldns_rr_list_push_rr(rr_list, sha384))
-		st = LDNS_STATUS_MEM_ERR;
+// 	else if (zd->simple_sha384
+// 	     && !ldns_rr_list_push_rr(rr_list, sha384))
+// 		st = LDNS_STATUS_MEM_ERR;
 
-	else if (zd->simple_sha512
-	     && !ldns_rr_list_push_rr(rr_list, sha512)) {
-		if (zd->simple_sha384)
-			sha384 = NULL; /* deleted by ldns_rr_list_deep_free */
-		st = LDNS_STATUS_MEM_ERR;
+// 	else if (zd->simple_sha512
+// 	     && !ldns_rr_list_push_rr(rr_list, sha512)) {
+// 		if (zd->simple_sha384)
+// 			sha384 = NULL; /* deleted by ldns_rr_list_deep_free */
+// 		st = LDNS_STATUS_MEM_ERR;
 
-	} else {
-		if (sha384)
-			ldns_sha384_final( ldns_rdf_data(ldns_rr_rdf(sha384,3))
-			                 , &zd->sha384_CTX);
-		if (sha512)
-			ldns_sha512_final( ldns_rdf_data(ldns_rr_rdf(sha512,3))
-			                 , &zd->sha512_CTX);
-		return rr_list;
-	}
-	if (ret_st)
-		*ret_st = st;
-	if (sha384)
-		ldns_rr_free(sha384);
-	if (sha512)
-		ldns_rr_free(sha512);
-	if (rr_list)
-		ldns_rr_list_deep_free(rr_list);
-	return NULL;
-}
+// 	} else {
+// 		if (sha384)
+// 			ldns_sha384_final( ldns_rdf_data(ldns_rr_rdf(sha384,3))
+// 			                 , &zd->sha384_CTX);
+// 		if (sha512)
+// 			ldns_sha512_final( ldns_rdf_data(ldns_rr_rdf(sha512,3))
+// 			                 , &zd->sha512_CTX);
+// 		return rr_list;
+// 	}
+// 	if (ret_st)
+// 		*ret_st = st;
+// 	if (sha384)
+// 		ldns_rr_free(sha384);
+// 	if (sha512)
+// 		ldns_rr_free(sha512);
+// 	if (rr_list)
+// 		ldns_rr_list_deep_free(rr_list);
+// 	return NULL;
+// }
 
 static ldns_status
 ldns_digest_zone(ldns_dnssec_zone *zone, zone_digester *zd)
@@ -1881,105 +1881,105 @@ ldns_dnssec_zone_verify_zonemd(ldns_dnssec_zone *zone)
 	return valid_zonemds ? LDNS_STATUS_OK : LDNS_STATUS_NO_VALID_ZONEMD;
 }
 
-#ifdef HAVE_SSL
-static ldns_status
-rr_list2dnssec_rrs(ldns_rr_list *rr_list, ldns_dnssec_rrs **rrs,
-		ldns_rr_list *new_rrs)
-{
-	ldns_rr *rr = NULL;
+// #ifdef HAVE_SSL
+// static ldns_status
+// rr_list2dnssec_rrs(ldns_rr_list *rr_list, ldns_dnssec_rrs **rrs,
+// 		ldns_rr_list *new_rrs)
+// {
+// 	ldns_rr *rr = NULL;
 
-	if (!rr_list || !rrs)
-		return LDNS_STATUS_NULL;
+// 	if (!rr_list || !rrs)
+// 		return LDNS_STATUS_NULL;
 
-	if (ldns_rr_list_rr_count(rr_list) == 0)
-		return LDNS_STATUS_OK;
+// 	if (ldns_rr_list_rr_count(rr_list) == 0)
+// 		return LDNS_STATUS_OK;
 
-	if (!*rrs) {
-		if (!(*rrs = ldns_dnssec_rrs_new()))
-			return LDNS_STATUS_MEM_ERR;
-		(*rrs)->rr = ldns_rr_list_pop_rr(rr_list);
-		if (new_rrs)
-			ldns_rr_list_push_rr(new_rrs, (*rrs)->rr);
-	}
-	while ((rr = ldns_rr_list_pop_rr(rr_list))) {
-		ldns_status st;
+// 	if (!*rrs) {
+// 		if (!(*rrs = ldns_dnssec_rrs_new()))
+// 			return LDNS_STATUS_MEM_ERR;
+// 		(*rrs)->rr = ldns_rr_list_pop_rr(rr_list);
+// 		if (new_rrs)
+// 			ldns_rr_list_push_rr(new_rrs, (*rrs)->rr);
+// 	}
+// 	while ((rr = ldns_rr_list_pop_rr(rr_list))) {
+// 		ldns_status st;
 	       
-		if ((st = ldns_dnssec_rrs_add_rr(*rrs, rr))) {
-			ldns_rr_list_push_rr(rr_list, rr);
-			return st;
-		} else if (new_rrs)
-			ldns_rr_list_push_rr(new_rrs, rr);
-	}
-	return LDNS_STATUS_OK;
-}
+// 		if ((st = ldns_dnssec_rrs_add_rr(*rrs, rr))) {
+// 			ldns_rr_list_push_rr(rr_list, rr);
+// 			return st;
+// 		} else if (new_rrs)
+// 			ldns_rr_list_push_rr(new_rrs, rr);
+// 	}
+// 	return LDNS_STATUS_OK;
+// }
 
 
-ldns_status
-dnssec_zone_equip_zonemd(ldns_dnssec_zone *zone,
-		ldns_rr_list *new_rrs, ldns_key_list *key_list, int signflags)
-{
-	ldns_status st = LDNS_STATUS_OK;
-	zone_digester zd;
-	ldns_rr_list *zonemd_rr_list = NULL;
-	ldns_rr_list *zonemd_rrsigs = NULL;
-	ldns_dnssec_rrsets *soa_rrset;
-	ldns_rr *soa_rr = NULL;
-	ldns_dnssec_rrsets **rrset_ref;
-	ldns_dnssec_rrsets *zonemd_rrset;
+// ldns_status
+// dnssec_zone_equip_zonemd(ldns_dnssec_zone *zone,
+// 		ldns_rr_list *new_rrs, ldns_key_list *key_list, int signflags)
+// {
+// 	ldns_status st = LDNS_STATUS_OK;
+// 	zone_digester zd;
+// 	ldns_rr_list *zonemd_rr_list = NULL;
+// 	ldns_rr_list *zonemd_rrsigs = NULL;
+// 	ldns_dnssec_rrsets *soa_rrset;
+// 	ldns_rr *soa_rr = NULL;
+// 	ldns_dnssec_rrsets **rrset_ref;
+// 	ldns_dnssec_rrsets *zonemd_rrset;
 
-	zone_digester_init(&zd);
-	if (signflags & LDNS_SIGN_WITH_ZONEMD_SIMPLE_SHA384)
-		zone_digester_add(&zd, ZONEMD_SCHEME_SIMPLE
-		                     , ZONEMD_HASH_SHA384);
+// 	zone_digester_init(&zd);
+// 	if (signflags & LDNS_SIGN_WITH_ZONEMD_SIMPLE_SHA384)
+// 		zone_digester_add(&zd, ZONEMD_SCHEME_SIMPLE
+// 		                     , ZONEMD_HASH_SHA384);
 
-	if (signflags & LDNS_SIGN_WITH_ZONEMD_SIMPLE_SHA512)
-		zone_digester_add(&zd, ZONEMD_SCHEME_SIMPLE
-		                     , ZONEMD_HASH_SHA512);
+// 	if (signflags & LDNS_SIGN_WITH_ZONEMD_SIMPLE_SHA512)
+// 		zone_digester_add(&zd, ZONEMD_SCHEME_SIMPLE
+// 		                     , ZONEMD_HASH_SHA512);
 
-	if ((st = ldns_digest_zone(zone, &zd)))
-		return st;
+// 	if ((st = ldns_digest_zone(zone, &zd)))
+// 		return st;
 
-	soa_rrset = ldns_dnssec_zone_find_rrset(
-			zone, zone->soa->name, LDNS_RR_TYPE_SOA);
-	if (!soa_rrset || !soa_rrset->rrs || !soa_rrset->rrs->rr)
-		return LDNS_STATUS_ZONEMD_INVALID_SOA;
-	soa_rr = soa_rrset->rrs->rr;
+// 	soa_rrset = ldns_dnssec_zone_find_rrset(
+// 			zone, zone->soa->name, LDNS_RR_TYPE_SOA);
+// 	if (!soa_rrset || !soa_rrset->rrs || !soa_rrset->rrs->rr)
+// 		return LDNS_STATUS_ZONEMD_INVALID_SOA;
+// 	soa_rr = soa_rrset->rrs->rr;
 
-	if (!(zonemd_rr_list = zone_digester_export(&zd, soa_rr, &st)))
-		return st;
+// 	if (!(zonemd_rr_list = zone_digester_export(&zd, soa_rr, &st)))
+// 		return st;
 	
-	/* - replace or add ZONEMD rrset */
-	rrset_ref = &zone->soa->rrsets; /* scan rrsets at apex */
-	while (*rrset_ref && (*rrset_ref)->type < LDNS_RR_TYPE_ZONEMD)
-		rrset_ref = &(*rrset_ref)->next;
-	if (*rrset_ref && (*rrset_ref)->type == LDNS_RR_TYPE_ZONEMD) {
-		/* reuse zonemd rrset */
-		zonemd_rrset = *rrset_ref;
-		ldns_dnssec_rrs_free(zonemd_rrset->rrs);
-		zonemd_rrset->rrs = NULL;
-		ldns_dnssec_rrs_free(zonemd_rrset->signatures);
-		zonemd_rrset->signatures = NULL;
-	} else {
-		/* insert zonemd rrset */
-		zonemd_rrset = ldns_dnssec_rrsets_new();
-		if (!zonemd_rrset) {
-			ldns_rr_list_deep_free(zonemd_rr_list);
-			return LDNS_STATUS_MEM_ERR;
-		}
-		zonemd_rrset->type = LDNS_RR_TYPE_ZONEMD;
-		zonemd_rrset->next = *rrset_ref;
-		*rrset_ref = zonemd_rrset;
-	}
-	if ((zonemd_rrsigs = ldns_sign_public(zonemd_rr_list, key_list)))
-		st = rr_list2dnssec_rrs(  zonemd_rrsigs
-		                       , &zonemd_rrset->signatures, new_rrs);
-	if (!st)
-		st = rr_list2dnssec_rrs(  zonemd_rr_list
-		                       , &zonemd_rrset->rrs, new_rrs);
-	ldns_rr_list_deep_free(zonemd_rr_list);
-	ldns_rr_list_deep_free(zonemd_rrsigs);
-	return st;
-}
+// 	/* - replace or add ZONEMD rrset */
+// 	rrset_ref = &zone->soa->rrsets; /* scan rrsets at apex */
+// 	while (*rrset_ref && (*rrset_ref)->type < LDNS_RR_TYPE_ZONEMD)
+// 		rrset_ref = &(*rrset_ref)->next;
+// 	if (*rrset_ref && (*rrset_ref)->type == LDNS_RR_TYPE_ZONEMD) {
+// 		/* reuse zonemd rrset */
+// 		zonemd_rrset = *rrset_ref;
+// 		ldns_dnssec_rrs_free(zonemd_rrset->rrs);
+// 		zonemd_rrset->rrs = NULL;
+// 		ldns_dnssec_rrs_free(zonemd_rrset->signatures);
+// 		zonemd_rrset->signatures = NULL;
+// 	} else {
+// 		/* insert zonemd rrset */
+// 		zonemd_rrset = ldns_dnssec_rrsets_new();
+// 		if (!zonemd_rrset) {
+// 			ldns_rr_list_deep_free(zonemd_rr_list);
+// 			return LDNS_STATUS_MEM_ERR;
+// 		}
+// 		zonemd_rrset->type = LDNS_RR_TYPE_ZONEMD;
+// 		zonemd_rrset->next = *rrset_ref;
+// 		*rrset_ref = zonemd_rrset;
+// 	}
+// 	if ((zonemd_rrsigs = ldns_sign_public(zonemd_rr_list, key_list)))
+// 		st = rr_list2dnssec_rrs(  zonemd_rrsigs
+// 		                       , &zonemd_rrset->signatures, new_rrs);
+// 	if (!st)
+// 		st = rr_list2dnssec_rrs(  zonemd_rr_list
+// 		                       , &zonemd_rrset->rrs, new_rrs);
+// 	ldns_rr_list_deep_free(zonemd_rr_list);
+// 	ldns_rr_list_deep_free(zonemd_rrsigs);
+// 	return st;
+// }
 
-#endif /* HAVE_SSL */
+// #endif /* HAVE_SSL */
 

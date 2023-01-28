@@ -9,12 +9,24 @@ add_definitions(
 
 list(APPEND SOURCE
     buffer.c
+    compat/b64_ntop.c
+    compat/b64_pton.c
+    compat/gettimeofday.c
+    compat/inet_ntop.c
+    compat/inet_pton.c
+    compat/strlcpy.c
     dname.c
+    dnssec_sign.c
+    dnssec_verify.c
+    dnssec_zone.c
+    dnssec.c
     duration.c
     edns.c
     error.c
     higher.c
     host2str.c
+    host2wire.c
+    keys.c
     linktest.c
     net.c
     packet.c
@@ -25,8 +37,11 @@ list(APPEND SOURCE
     resolver.c
     rr.c
     rr_functions.c
+    sha1.c
+    sha2.c
     str2host.c
     update.c
+    util.c
     wire2host.c
     zone.c)
         
