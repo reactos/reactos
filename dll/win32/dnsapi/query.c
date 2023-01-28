@@ -15,7 +15,7 @@
 
 #define NDEBUG
 #include <debug.h>
-
+// String to addy
 static
 BOOL
 ParseIpv4Address(
@@ -54,7 +54,7 @@ ParseIpv6Address(
     return FALSE;
 }
 
-
+// Create record
 static
 PDNS_RECORDW
 CreateRecordForIpAddress(
@@ -656,18 +656,18 @@ Query_Main(LPCWSTR Name,
            DWORD Options,
            PDNS_RECORD *QueryResultSet)
 {
-    adns_state astate;
-    int quflags = (Options & DNS_QUERY_NO_RECURSION) == 0 ? adns_qf_search : 0;
-    int adns_error;
-    adns_answer *answer;
-    LPSTR CurrentName;
+    // adns_state astate;
+    // quflags decides whether or not to do search
+    int quflags = (Options & DNS_QUERY_NO_RECURSION) == 0 ? LDNS_RESOLV_SEARCH : 0;
+    // adns_answer *answer;
+    // LPSTR CurrentName;
     unsigned CNameLoop;
     PFIXED_INFO network_info;
     ULONG network_info_blen = 0;
     DWORD network_info_result;
     PIP_ADDR_STRING pip;
     IP4_ADDRESS Address;
-    struct in_addr addr;
+    // struct in_addr addr;
     PCHAR HostWithDomainName;
     PCHAR AnsiName;
     size_t NameLen = 0;
@@ -681,6 +681,7 @@ Query_Main(LPCWSTR Name,
 
     switch (Type)
     {
+            // If the record is A type
     case DNS_TYPE_A:
         /* FIXME: how much instead of MAX_PATH? */
         NameLen = WideCharToMultiByte(CP_ACP,
@@ -757,36 +758,47 @@ Query_Main(LPCWSTR Name,
             return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
         }
 
+        ldns_resolver *res;
+        ldns_status status;
+        ldns_rdf *domain;
+        ldns_pkt *pkt;
         if ((Options & DNS_QUERY_NO_WIRE_QUERY) != 0)
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             return ERROR_FILE_NOT_FOUND;
         }
-
-        adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
-        if (adns_error != adns_s_ok)
+        status = ldns_resolver_new_frm_file(&res, NULL); // Init for status
+        if (status != LDNS_STATUS_OK)
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
+            return DnsIntTranslateAdnsToDNS_STATUS(status);
         }
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {
-            addr.s_addr = inet_addr(pip->IpAddress.String);
-            if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
-                adns_addserver(astate, addr);
+            // Get domain
+            domain = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, pip->IpAddress.String);
+            if (domain != NULL)
+            {
+                ldns_resolver_push_nameserver(res, domain);
+            }
+            // ldns_rdf_free(domain);
         }
         if (network_info->DomainName[0])
         {
-            adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
+            domain = ldns_dname_new_frm_str(network_info->DomainName);
+            pkt = ldns_resolver_search(res, domain, 0, 0, quflags);
+            // adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
         }
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
 
-        if (!adns_numservers(astate))
+        if (!ldns_resolver_nameserver_count(res)) // If there are no server stop
         {
             /* There are no servers to query so bail out */
-            adns_finish(astate);
+            ldns_resolver_deep_free(res);
+            ldns_pkt_free(pkt);
+            ldns_rdf_deep_free(domain);
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return ERROR_FILE_NOT_FOUND;
         }
@@ -803,81 +815,125 @@ Query_Main(LPCWSTR Name,
         * chains ourselves. Of course, there must be a limit to protect against
         * CNAME loops.
         */
+        /*
+         * ldns on the other hand does resolve chained CNAME records
+         */
 
 #define CNAME_LOOP_MAX 16
 
-        CurrentName = AnsiName;
+        domain = ldns_dname_new_frm_str(AnsiName);
 
         for (CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++)
         {
-            adns_error = adns_synchronous(astate, CurrentName, adns_r_addr, quflags, &answer);
 
-            if (adns_error != adns_s_ok)
+            status = ldns_resolver_query_status(&pkt, res, domain, LDNS_RR_TYPE_CNAME, LDNS_RR_CLASS_IN, quflags);
+
+            if (status != LDNS_STATUS_OK)
             {
-                adns_finish(astate);
+                // adns_finish(astate); TODO: replace with frees on LDNS
 
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+                ldns_resolver_deep_free(res);
+                ldns_pkt_free(pkt);
+                ldns_rdf_free(domain);
 
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
+                return DnsIntTranslateAdnsToDNS_STATUS(status);
             }
+            // Check if there are CNAME records
+            ldns_rr_list *rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_CNAME, LDNS_SECTION_ANSWER);
 
-            if (answer && answer->rrs.addr)
+            // If error occurred
+            if (!rrs)
             {
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+
+                ldns_resolver_deep_free(res);
+                ldns_pkt_free(pkt);
+                ldns_rdf_free(domain);
+                ldns_rr_list_deep_free(rrs);
+
+                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
+                return ERROR_OUTOFMEMORY;
+            }
+            // If there are no CNAME's
+            if (ldns_rr_list_rr_count(rrs) == 0)
+            {
+                ldns_rr_list_deep_free(rrs);
+                // Get A record
+                rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_ANSWER); // Get all
 
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
                 *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
 
                 if (NULL == *QueryResultSet)
                 {
-                    adns_finish(astate);
+                    ldns_rr_list_deep_free(rrs);
+                    ldns_resolver_deep_free(res);
+                    ldns_rdf_free(domain);
+                    ldns_pkt_free(pkt);
                     return ERROR_OUTOFMEMORY;
                 }
+                // If there are no A records
+                if (ldns_rr_list_rr_count(rrs) == 0)
+                {
+                    ldns_rr_list_deep_free(rrs);
+                    ldns_resolver_deep_free(res);
+                    ldns_rdf_free(domain);
+                    ldns_pkt_free(pkt);
+                    return ERROR_FILE_NOT_FOUND;
+                }
 
+                ldns_rr *rr = ldns_rr_list_rr(rrs, 0);
+                ldns_rdf *rdf = ldns_rr_a_address(rr); // Get Ip4Address
                 (*QueryResultSet)->pNext = NULL;
                 (*QueryResultSet)->wType = Type;
                 (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
                 (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
                 (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
-                (*QueryResultSet)->Data.A.IpAddress = answer->rrs.addr->addr.inet.sin_addr.s_addr;
+                (*QueryResultSet)->Data.A.IpAddress = ldns_rdf2native_int32(rdf);
 
-                adns_finish(astate);
+                ldns_rr_list_deep_free(rrs);
+                ldns_resolver_deep_free(res);
+                ldns_rdf_free(domain);
+                ldns_pkt_free(pkt);
 
                 (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
 
                 return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
             }
 
-            if (NULL == answer || adns_s_prohibitedcname != answer->status || NULL == answer->cname)
+            ldns_pkt_rcode r = ldns_pkt_get_rcode(pkt);
+            if (NULL == pkt || r != LDNS_RCODE_NOERROR)
             {
-                adns_finish(astate);
-
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+                ldns_rr_list_deep_free(rrs);
+                ldns_resolver_deep_free(res);
+                ldns_rdf_deep_free(domain);
+                ldns_pkt_free(pkt);
 
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
                 return ERROR_FILE_NOT_FOUND;
             }
 
-            if (CurrentName != AnsiName)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+            ldns_rdf_deep_free(domain);
 
-            CurrentName = (LPSTR)xstrsaveA(answer->cname);
+            ldns_rr *rr = ldns_rr_list_rr(rrs, 0);
+            ldns_rdf *rdf = ldns_rr_rdf(rr, 0);
+            ldns_dname2canonical(rdf);
+            domain = rdf;
 
-            if (!CurrentName)
+            if (!domain)
             {
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                adns_finish(astate);
+                ldns_rr_list_deep_free(rrs);
+                ldns_resolver_deep_free(res);
+                ldns_pkt_free(pkt);
                 return ERROR_OUTOFMEMORY;
             }
         }
 
-        adns_finish(astate);
+        ldns_resolver_deep_free(res);
+        ldns_pkt_free(pkt);
         RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+        ldns_rdf_deep_free(domain);
         return ERROR_FILE_NOT_FOUND;
 
     default:

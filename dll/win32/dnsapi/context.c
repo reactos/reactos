@@ -37,10 +37,12 @@ DnsAcquireContextHandle_W(DWORD CredentialsFlags,
                           PVOID Credentials,
                           HANDLE *ContextHandle)
 {
+
     if(CredentialsFlags)
     {
         PWINDNS_CONTEXT Context;
-        int adns_status;
+        // int adns_status;
+        ldns_status status;
 
         /* For now, don't worry about the user's identity. */
         Context = (PWINDNS_CONTEXT)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WINDNS_CONTEXT));
@@ -53,13 +55,14 @@ DnsAcquireContextHandle_W(DWORD CredentialsFlags,
 
         /* The real work here is to create an adns_state that will help us
          * do what we want to later. */
-        adns_status = adns_init(&Context->State, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
+        // adns_status = adns_init(&Context->State, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
+        status = ldns_resolver_new_frm_file(&Context->Resolver, NULL); // Init for status
 
-        if(adns_status != adns_s_ok)
+        if (status != LDNS_STATUS_OK)
         {
             *ContextHandle = 0;
             RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_status);
+            return DnsIntTranslateAdnsToDNS_STATUS(status);
         }
         else
         {
@@ -119,6 +122,7 @@ DnsReleaseContextHandle(HANDLE ContextHandle)
 {
     PWINDNS_CONTEXT Context = (PWINDNS_CONTEXT)ContextHandle;
 
-    adns_finish(Context->State);
+    // adns_finish(Context->State);
+    ldns_resolver_deep_free(Context->Resolver);
     RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
 }

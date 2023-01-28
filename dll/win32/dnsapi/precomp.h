@@ -31,7 +31,8 @@
 
 typedef struct
 {
-    adns_state State;
+    // adns_state State;
+    ldns_resolver *Resolver;
 } WINDNS_CONTEXT, *PWINDNS_CONTEXT;
 
 static inline LPWSTR dns_strdup_uw( const char *str )
