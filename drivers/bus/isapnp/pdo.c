@@ -847,8 +847,8 @@ IsaPnpRemoveLogicalDeviceDO(
     if (LogDev->FriendlyName)
         ExFreePoolWithTag(LogDev->FriendlyName, TAG_ISAPNP);
 
-    if (LogDev->Alternatives)
-        ExFreePoolWithTag(LogDev->Alternatives, TAG_ISAPNP);
+    if (LogDev->Descriptors)
+        ExFreePoolWithTag(LogDev->Descriptors, TAG_ISAPNP);
 
     Entry = LogDev->CompatibleIdList.Flink;
     while (Entry != &LogDev->CompatibleIdList)
@@ -983,18 +983,16 @@ IsaPdoPnp(
             break;
 
         case IRP_MN_SURPRISE_REMOVAL:
-            if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaPdoRemoveDevice(PdoExt, FALSE);
-            else
-                Status = IsaReadPortRemoveDevice(PdoExt, FALSE);
-            break;
-
         case IRP_MN_REMOVE_DEVICE:
+        {
+            BOOLEAN FinalRemove = (IrpSp->MinorFunction == IRP_MN_REMOVE_DEVICE);
+
             if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaPdoRemoveDevice(PdoExt, TRUE);
+                Status = IsaPdoRemoveDevice(PdoExt, FinalRemove);
             else
-                Status = IsaReadPortRemoveDevice(PdoExt, TRUE);
+                Status = IsaReadPortRemoveDevice(PdoExt, FinalRemove);
             break;
+        }
 
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
             Status = IsaPdoQueryPnpDeviceState(PdoExt, Irp);

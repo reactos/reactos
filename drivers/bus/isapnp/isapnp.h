@@ -26,9 +26,6 @@ extern "C" {
 /** @brief Maximum size of resource data structure supported by the driver. */
 #define ISAPNP_MAX_RESOURCEDATA 0x1000
 
-/** @brief Maximum number of Start DF tags supported by the driver. */
-#define ISAPNP_MAX_ALTERNATIVES 8
-
 typedef enum
 {
     dsStopped,
@@ -80,23 +77,40 @@ typedef struct _ISAPNP_COMPATIBLE_ID_ENTRY
     LIST_ENTRY IdLink;
 } ISAPNP_COMPATIBLE_ID_ENTRY, *PISAPNP_COMPATIBLE_ID_ENTRY;
 
-typedef struct _ISAPNP_ALTERNATIVES
+typedef enum
 {
-    ISAPNP_IO_DESCRIPTION Io[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_IRQ_DESCRIPTION Irq[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_DMA_DESCRIPTION Dma[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE_DESCRIPTION MemRange[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE32_DESCRIPTION MemRange32[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR Priority[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR IoIndex;
-    UCHAR IrqIndex;
-    UCHAR DmaIndex;
-    UCHAR MemRangeIndex;
-    UCHAR MemRange32Index;
+    dfNotStarted,
+    dfStarted,
+    dfDone
+} ISAPNP_DEPEDENT_FUNCTION_STATE;
 
-    _Field_range_(0, ISAPNP_MAX_ALTERNATIVES)
-    UCHAR Count;
-} ISAPNP_ALTERNATIVES, *PISAPNP_ALTERNATIVES;
+typedef struct _ISAPNP_RESOURCE
+{
+    UCHAR Type;
+#define ISAPNP_RESOURCE_TYPE_END               0
+#define ISAPNP_RESOURCE_TYPE_IO                1
+#define ISAPNP_RESOURCE_TYPE_IRQ               2
+#define ISAPNP_RESOURCE_TYPE_DMA               3
+#define ISAPNP_RESOURCE_TYPE_MEMRANGE          4
+#define ISAPNP_RESOURCE_TYPE_MEMRANGE32        5
+#define ISAPNP_RESOURCE_TYPE_START_DEPEDENT    6
+#define ISAPNP_RESOURCE_TYPE_END_DEPEDENT      7
+
+    union
+    {
+        ISAPNP_IO_DESCRIPTION IoDescription;
+        ISAPNP_IRQ_DESCRIPTION IrqDescription;
+        ISAPNP_DMA_DESCRIPTION DmaDescription;
+        ISAPNP_MEMRANGE_DESCRIPTION MemRangeDescription;
+        ISAPNP_MEMRANGE32_DESCRIPTION MemRange32Description;
+        UCHAR Prioprity;
+    };
+} ISAPNP_RESOURCE, *PISAPNP_RESOURCE;
+
+typedef struct _ISAPNP_DESCRIPTORS
+{
+    ISAPNP_RESOURCE Resources[ANYSIZE_ARRAY];
+} ISAPNP_DESCRIPTORS, *PISAPNP_DESCRIPTORS;
 
 typedef struct _ISAPNP_LOGICAL_DEVICE
 {
@@ -121,7 +135,7 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
     USHORT LogProdId;
     LIST_ENTRY CompatibleIdList;
     PSTR FriendlyName;
-    PISAPNP_ALTERNATIVES Alternatives;
+    PISAPNP_DESCRIPTORS Descriptors;
 
     ISAPNP_IO Io[8];
     ISAPNP_IRQ Irq[2];
@@ -239,46 +253,6 @@ IsaPnpReleaseDeviceDataLock(
     KeSetEvent(&FdoExt->DeviceSyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
-FORCEINLINE
-BOOLEAN
-HasIoAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Io[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasIrqAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Irq[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasDmaAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Dma[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemoryAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemory32Alternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange32[0].Length != 0);
-}
-
 /* isapnp.c */
 
 CODE_SEG("PAGE")
@@ -289,22 +263,19 @@ FindIoDescriptor(
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
     _Out_opt_ PUCHAR Information,
-    _Out_opt_ PULONG Length,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PULONG Length);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindIrqDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Vector,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Vector);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindDmaDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Channel,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Channel);
 
 CODE_SEG("PAGE")
 BOOLEAN
@@ -313,8 +284,7 @@ FindMemoryDescriptor(
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
     _Out_opt_ PBOOLEAN Memory32,
-    _Out_opt_ PUCHAR Information,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PUCHAR Information);
 
 CODE_SEG("PAGE")
 PIO_RESOURCE_REQUIREMENTS_LIST
