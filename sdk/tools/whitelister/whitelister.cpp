@@ -25,13 +25,13 @@ using namespace std;
 // Command to get whitelist entry:
 // reactos>git blame -L <Line>,<Line> --show-number --show-name <File Path>
 // e.g.:
-// E:\amd64\reactos>git blame -L 699,699 --show-number --show-name modules\rostests\apitests\advapi32\LockServiceDatabase.c
+// c:\reactos>git blame -L 699,699 --show-number --show-name modules\rostests\apitests\advapi32\LockServiceDatabase.c
 // 8400fdc0786b rostests/apitests/advapi32/LockDatabase.c 701 (Thomas Faber 2012-06-29 11:48:35 +0000 699)     ok_err(ERROR_SUCCESS);
 //
 // To reverse it use
 // reactos>git blame -L <Old Line>,<Old Line>  -s --reverse --show-number --show-name <old hash> <old file>
 // e.g.
-// E:\amd64\reactos>git blame -L 701,701 --reverse 8400fdc0786b rostests\apitests\advapi32\LockDatabase.c
+// c:\reactos>git blame -L 701,701 --reverse 8400fdc0786b rostests\apitests\advapi32\LockDatabase.c
 // f2bc1f0e1118 modules/rostests/apitests/advapi32/LockServiceDatabase.c (Roman Masanin 2021-07-24 21:23:58 +0300 701)     ok_err(ERROR_SUCCESS);
 //
 
@@ -170,6 +170,28 @@ GetWhiteListAttributesFromReason(string& Reason)
                      WLA_BROKEN_WIN10;
     }
 
+    // Optional architecture
+    if (Reason.find("#X86") != string::npos)
+    {
+        attributes |= WLA_ARCH_X86;
+    }
+    if (Reason.find("#X64") != string::npos)
+    {
+        attributes |= WLA_ARCH_X64;
+    }
+
+    // When no arch is specified, we assume it's all
+    if (!(attributes & WLA_ARCH_ANY))
+    {
+        attributes |= WLA_ARCH_ANY;
+    }
+
+    // Optional specifier for flaky tests
+    if (Reason.find("#FLAKY") != string::npos)
+    {
+        attributes |= WLA_FLAKY;
+    }
+
     Trace("Attributes = 0x%x\n", attributes);
     return attributes;
 }
@@ -243,8 +265,7 @@ AddWhitelistEntry(vector<WL_ENTRY> &Whitelist, string& Line, string& HeadHash, c
         string message = "ERROR: File with white-list entries '" + newFileName;
         message += "' Has uncommitted changes in the working tree.\n";
         message += "Please commit your changes first!";
-        fprintf(stderr, "%s", message.c_str());
-        throw exception();
+        throw runtime_error(message.c_str());
     }
 
     // Check if the hash matches HEAD
@@ -254,8 +275,7 @@ AddWhitelistEntry(vector<WL_ENTRY> &Whitelist, string& Line, string& HeadHash, c
         string message = "Whitelist entry not found in HEAD (" + HeadHash + ").\n";
         message += "Last revision is " + newHash + ".\n";
         message += "Please update white list file '" + WhiteListFileName + "'\n";
-        fprintf(stderr, "%s", message.c_str());
-        throw exception();
+        throw runtime_error(message.c_str());
     }
 
     // Get the short file name

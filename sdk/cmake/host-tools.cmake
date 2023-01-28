@@ -134,5 +134,5 @@ function(generate_whitelist_code _whitelist_file)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/whitelist.c
         COMMAND native-whitelister --gen-tables ${CMAKE_CURRENT_SOURCE_DIR}/${_whitelist_file} ${CMAKE_CURRENT_BINARY_DIR}/whitelist.c ${REACTOS_SOURCE_DIR}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_whitelist_file} ${CMAKE_CURRENT_SOURCE_DIR} native-spec2def)
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_whitelist_file} ${CMAKE_CURRENT_SOURCE_DIR} native-whitelister)
 endfunction()
