@@ -2559,6 +2559,13 @@ WSPIoctl(IN  SOCKET Handle,
             Errno = NO_ERROR;
             Ret = NO_ERROR;
             break;
+        case SIO_UDP_NETRESET:
+            /* FIXME: It's a fix not to fail with unimplemented
+               This code forces NET_UNREACHABLE messages to be ignored.
+            */
+            Errno = NO_ERROR;
+            Ret = NO_ERROR;
+            break;
         default:
             Errno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
                                                  Handle,
