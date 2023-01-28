@@ -2554,8 +2554,7 @@ WSPIoctl(IN  SOCKET Handle,
             break;
         case SIO_UDP_CONNRESET:
             /* FIXME: It's a fix not to fail with unimplemented
-               This control code shoute controls whether UDP 
-               PORT_UNREACHABLE messages are reported.
+               This code forces UDP PORT_UNREACHABLE messages to be ignored.
             */
             Errno = NO_ERROR;
             Ret = NO_ERROR;
