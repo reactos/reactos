@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite Spin lock test
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Kernel-Mode Test Suite Spin lock test
+ * COPYRIGHT:   Copyright 2011-2023 Thomas Faber (thomas.faber@reactos.org)
+ * COPYRIGHT:   Copyright 2021 Jérôme Gardou (jerome.gardou@reactos.org)
  */
 
 #ifndef _WIN64
@@ -265,13 +266,21 @@ TestSpinLock(
         CheckSpinLock(SpinLock, CheckData, 0);
         ok_bool_true(CheckData->TryAcquire(SpinLock, CheckData), "TryAcquire returned");
         CheckSpinLock(SpinLock, CheckData, 1);
+        /* A second TryToAcquire results in SPINLOCK_ALREADY_OWNED on checked builds */
         if (!KmtIsCheckedBuild)
         {
-            /* SPINLOCK_ALREADY_OWNED on checked build */
-            ok_bool_true(CheckData->TryAcquire(SpinLock, CheckData), "TryAcquire returned");
-            /* even a failing acquire sets irql */
-            ok_eq_uint(CheckData->Irql, CheckData->IrqlWhenAcquired);
-            CheckData->Irql = CheckData->OriginalIrql;
+            if (KmtIsMultiProcessorBuild)
+            {
+                /* In MP, this fails as you would expect */
+                ok_bool_false(CheckData->TryAcquire(SpinLock, CheckData), "TryAcquire returned");
+            }
+            else
+            {
+                /* In UP, this always succeeds: recursive acquires are illegal and parallel processors don't exist */
+                ok_bool_true(CheckData->TryAcquire(SpinLock, CheckData), "TryAcquire returned");
+                ok_eq_uint(CheckData->Irql, CheckData->IrqlWhenAcquired);
+                CheckData->Irql = CheckData->OriginalIrql;
+            }
             CheckSpinLock(SpinLock, CheckData, 1);
         }
         CheckData->Release(SpinLock, CheckData);
@@ -312,7 +321,16 @@ TestSpinLock(
             CheckSpinLock(SpinLock, CheckData, 1);
             if (!KmtIsCheckedBuild)
             {
-                ok_bool_true(CheckData->TryAcquireNoRaise(SpinLock, CheckData), "TryAcquireNoRaise returned");
+                if (KmtIsMultiProcessorBuild)
+                {
+                    /* In MP, this fails as you would expect */
+                    ok_bool_false(CheckData->TryAcquireNoRaise(SpinLock, CheckData), "TryAcquireNoRaise returned");
+                }
+                else
+                {
+                    /* In UP, this always succeeds: recursive acquires are illegal and parallel processors don't exist */
+                    ok_bool_true(CheckData->TryAcquireNoRaise(SpinLock, CheckData), "TryAcquireNoRaise returned");
+                }
                 CheckSpinLock(SpinLock, CheckData, 1);
             }
             CheckData->ReleaseNoLower(SpinLock, CheckData);
