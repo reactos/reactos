@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite MDL test
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Kernel-Mode Test Suite MDL test
+ * COPYRIGHT:   Copyright 2015,2023 Thomas Faber (thomas.faber@reactos.org)
+ * COPYRIGHT:   Copyright 2017 Pierre Schweitzer (pierre@reactos.org)
  */
 
 #include <kmt_test.h>
@@ -104,7 +105,7 @@ TestMmAllocatePagesForMdl(VOID)
     MmFreePagesFromMdl(Mdl);
     ExFreePoolWithTag(Mdl, 0);
 
-    /* try to allocate 2 GB -- should succeed but not map */
+    /* try to allocate 2 GB -- should succeed (possibly with fewer pages) but not map */
     Mdl = MmAllocatePagesForMdl(LowAddress,
                                 HighAddress,
                                 SkipBytes,
@@ -112,12 +113,12 @@ TestMmAllocatePagesForMdl(VOID)
     ok(Mdl != NULL, "MmAllocatePagesForMdl failed for 2 GB\n");
     if (Mdl != NULL)
     {
-        ok(MmGetMdlByteCount(Mdl) != 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
+        ok(MmGetMdlByteCount(Mdl) <= 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
         MdlPages = MmGetMdlPfnArray(Mdl);
         MdlPageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl), MmGetMdlByteCount(Mdl));
-        ok(MdlPageCount < 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
+        ok(MdlPageCount <= 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
         for (i = 0; i < MdlPageCount; i++)
         {
             if (MdlPages[i] == 0 ||
@@ -135,7 +136,7 @@ TestMmAllocatePagesForMdl(VOID)
         ok(SystemVa == NULL, "MmMapLockedPagesSpecifyCache succeeded for 2 GB\n");
         if (SystemVa != NULL)
             MmUnmapLockedPages(SystemVa, Mdl);
-        ok(MmGetMdlByteCount(Mdl) != 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
+        ok(MmGetMdlByteCount(Mdl) <= 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
         MmFreePagesFromMdl(Mdl);
