@@ -1,32 +1,53 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite Reserved Mapping test
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Kernel-Mode Test Suite Reserved Mapping test
+ * COPYRIGHT:   Copyright 2015,2023 Thomas Faber (thomas.faber@reactos.org)
+ * COPYRIGHT:   Copyright 2015 Pierre Schweitzer (pierre@reactos.org)
  */
 
 #include <kmt_test.h>
 
+static BOOLEAN g_IsPae;
+
 #ifdef _M_IX86
 
+#define IS_PAE() (g_IsPae)
+
 #define PTE_BASE    0xC0000000
-#define MiAddressToPte(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
-#define MiPteToAddress(_Pte) ((PVOID)((ULONG)(_Pte) << 10))
+
+#define MiAddressToPteX86(x) \
+    ((PULONG)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
+#define MiAddressToPtePAE(x) \
+    ((PULONGLONG)(((((ULONG)(x)) >> 12) << 3) + PTE_BASE))
+
+#define GET_PTE_VALUE_X86(Addr) (*MiAddressToPteX86(Addr))
+#define GET_PTE_VALUE_PAE(Addr) (*MiAddressToPtePAE(Addr))
+#define GET_PTE_VALUE(Addr) (IS_PAE() ? GET_PTE_VALUE_PAE(Addr) : GET_PTE_VALUE_X86(Addr))
+
+#define PTE_IS_VALID(PteValue) ((PteValue) & 1)
+
+#define PTE_GET_PFN_X86(PteValue) (((PteValue) >> PAGE_SHIFT) & 0x0fffffULL)
+#define PTE_GET_PFN_PAE(PteValue) (((PteValue) >> PAGE_SHIFT) & 0xffffffULL)
+#define PTE_GET_PFN(PteValue) (IS_PAE() ? PTE_GET_PFN_PAE(PteValue) : PTE_GET_PFN_X86(PteValue))
 
 #elif defined(_M_AMD64)
 
 #define PTI_SHIFT  12L
 #define PTE_BASE    0xFFFFF68000000000ULL
-PMMPTE
+PULONGLONG
 FORCEINLINE
 _MiAddressToPte(PVOID Address)
 {
     ULONG64 Offset = (ULONG64)Address >> (PTI_SHIFT - 3);
     Offset &= 0xFFFFFFFFFULL << 3;
-    return (PMMPTE)(PTE_BASE + Offset);
+    return (PULONGLONG)(PTE_BASE + Offset);
 }
 #define MiAddressToPte(x) _MiAddressToPte((PVOID)(x))
+
+#define GET_PTE_VALUE(Addr) (*_MiAddressToPte((PVOID)(Addr)))
+#define PTE_IS_VALID(PteValue) ((PteValue) & 1)
+#define PTE_GET_PFN(PteValue) (((PteValue) >> PAGE_SHIFT) & 0xFffffffffULL)
 
 #endif
 
@@ -54,30 +75,45 @@ ValidateMapping(
 {
     BOOLEAN Valid = TRUE;
 #if defined(_M_IX86) || defined(_M_AMD64)
-    PMMPTE PointerPte;
+    PUCHAR CurrentAddress;
+    ULONGLONG PteValue;
     ULONG i;
 
-    PointerPte = MiAddressToPte(BaseAddress);
     for (i = 0; i < ValidPtes; i++)
     {
+        CurrentAddress = (PUCHAR)BaseAddress + i * PAGE_SIZE;
+        PteValue = GET_PTE_VALUE(CurrentAddress);
         Valid = Valid &&
-                ok(PointerPte[i].u.Hard.Valid == 1,
-                   "[%lu] PTE %p is not valid\n", i, &PointerPte[i]);
+                ok(PTE_IS_VALID(PteValue),
+                   "[%lu] PTE for %p is not valid (0x%I64x)\n",
+                   i, CurrentAddress, PteValue);
 
         Valid = Valid &&
-                ok(PointerPte[i].u.Hard.PageFrameNumber == Pfns[i],
-                   "[%lu] PTE %p has PFN %Ix, expected %Ix\n",
-                   i, &PointerPte[i], PointerPte[i].u.Hard.PageFrameNumber, Pfns[i]);
+                ok(PTE_GET_PFN(PteValue) == Pfns[i],
+                   "[%lu] PTE for %p has PFN %Ix, expected %Ix\n",
+                   i, CurrentAddress, PTE_GET_PFN(PteValue), Pfns[i]);
     }
     for (; i < TotalPtes; i++)
     {
+        CurrentAddress = (PUCHAR)BaseAddress + i * PAGE_SIZE;
+        PteValue = GET_PTE_VALUE(CurrentAddress);
         Valid = Valid &&
-                ok_eq_hex(PointerPte[i].u.Long, 0UL);
+                ok(PteValue == 0,
+                   "[%lu] PTE for %p is nonzero (0x%I64x)\n",
+                   i, CurrentAddress, PteValue);
     }
+    CurrentAddress = (PUCHAR)BaseAddress - 1 * PAGE_SIZE;
+    PteValue = GET_PTE_VALUE(CurrentAddress);
     Valid = Valid &&
-            ok_eq_tag(PointerPte[-1].u.Long, PoolTag & ~1);
+            ok(PteValue == (PoolTag & ~1ULL),
+               "PTE for %p contains 0x%I64x, expected %x\n",
+               CurrentAddress, PteValue, PoolTag & ~1);
+    CurrentAddress = (PUCHAR)BaseAddress - 2 * PAGE_SIZE;
+    PteValue = GET_PTE_VALUE(CurrentAddress);
     Valid = Valid &&
-            ok_eq_ulong(PointerPte[-2].u.Long, (TotalPtes + 2) * 2);
+            ok(PteValue == (TotalPtes + 2) * 2,
+               "PTE for %p contains 0x%I64x, expected %x\n",
+               CurrentAddress, PteValue, (TotalPtes + 2) * 2);
 #endif
 
     return Valid;
@@ -243,6 +279,8 @@ TestMap(
 START_TEST(MmReservedMapping)
 {
     PVOID Mapping;
+
+    g_IsPae = ExIsProcessorFeaturePresent(PF_PAE_ENABLED);
 
     pMmAllocatePagesForMdlEx = KmtGetSystemRoutineAddress(L"MmAllocatePagesForMdlEx");
 
