@@ -2556,6 +2556,7 @@ WSPIoctl(IN  SOCKET Handle,
             /* FIXME: It's a fix not to fail with unimplemented
                This code forces UDP PORT_UNREACHABLE messages to be ignored.
             */
+            FIXME("SIO_UDP_CONNRESET stub\n");
             Errno = NO_ERROR;
             Ret = NO_ERROR;
             break;
@@ -2563,6 +2564,7 @@ WSPIoctl(IN  SOCKET Handle,
             /* FIXME: It's a fix not to fail with unimplemented
                This code forces NET_UNREACHABLE messages to be ignored.
             */
+            FIXME("SIO_UDP_NETRESET stub\n");
             Errno = NO_ERROR;
             Ret = NO_ERROR;
             break;
