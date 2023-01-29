@@ -272,7 +272,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     if (uFlags & (CMF_NOVERBS | CMF_VERBSONLY))
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
 
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
 
@@ -310,7 +310,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
         ++Count;
     }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst + Count);
 }
 
 HRESULT WINAPI
