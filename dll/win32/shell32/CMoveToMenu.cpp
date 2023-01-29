@@ -270,6 +270,9 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
     TRACE("CMoveToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
+    if (uFlags & (CMF_NOVERBS | CMF_VERBSONLY))
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
 
     // insert separator if necessary
