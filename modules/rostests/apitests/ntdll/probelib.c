@@ -49,6 +49,20 @@ QuerySetProcessValidator(
                     break;
                 }
 
+                /* This one works different from the others */
+                case ProcessUserModeIOPL:
+                {
+                    if (ExpectedStatus == STATUS_INFO_LENGTH_MISMATCH)
+                    {
+                        SpecialStatus = STATUS_ACCESS_VIOLATION;
+                    }
+                    else
+                    {
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    }
+                    break;
+                }
+
                 /* These classes don't belong in the query group */
                 case ProcessBasePriority:
                 case ProcessRaisePriority:
@@ -56,7 +70,6 @@ QuerySetProcessValidator(
                 case ProcessAccessToken:
                 case ProcessLdtSize:
                 case ProcessIoPortHandlers:
-                case ProcessUserModeIOPL:
                 case ProcessEnableAlignmentFaultFixup:
                 case ProcessAffinityMask:
                 case ProcessForegroundInformation:
@@ -116,9 +129,17 @@ QuerySetProcessValidator(
                     break;
                 }
 
+                /* This one works different from the others */
                 case ProcessUserModeIOPL:
                 {
-                    SpecialStatus = STATUS_PRIVILEGE_NOT_HELD;
+                    if (ExpectedStatus == STATUS_INFO_LENGTH_MISMATCH)
+                    {
+                        SpecialStatus = STATUS_ACCESS_VIOLATION;
+                    }
+                    else
+                    {
+                        SpecialStatus = STATUS_PRIVILEGE_NOT_HELD;
+                    }
                     break;
                 }
 
