@@ -98,9 +98,10 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
 
         if (ch == '\n')
         {
-            adwEolnCount[EOLN_LF]++;
             if (bPrevCR)
                 adwEolnCount[EOLN_CRLF]++;
+            else
+                adwEolnCount[EOLN_LF]++;
         }
 
         bPrevCR = (ch == L'\r');
