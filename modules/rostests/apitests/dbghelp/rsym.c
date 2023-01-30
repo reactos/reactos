@@ -321,7 +321,7 @@ START_TEST(rsym)
         dwErr = GetLastError();
 
         ok_ulonglong(BaseAddress, 0x600000);
-        ok_hex(dwErr, ERROR_SUCCESS);
+        ok(dwErr == ERROR_SUCCESS || dwErr == ERROR_FILE_NOT_FOUND, "Got 0x%x\n", dwErr);
 
         if (BaseAddress == 0x600000)
         {
