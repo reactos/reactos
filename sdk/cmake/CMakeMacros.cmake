@@ -273,7 +273,7 @@ function(add_cd_file)
     elseif(${_CD_DESTINATION} STREQUAL root)
         set(_CD_DESTINATION "")
     else()
-        string(REGEX REPLACE "\\breactos\\b" "ReactOS" _CD_DESTINATION "${_CD_DESTINATION}")
+        string(REGEX REPLACE "(^|[^A-Za-z0-9_])reactos($|[^A-Za-z0-9_])" "\\1ReactOS\\2" _CD_DESTINATION "${_CD_DESTINATION}")
     endif()
 
     if(NOT _CD_FOR)
