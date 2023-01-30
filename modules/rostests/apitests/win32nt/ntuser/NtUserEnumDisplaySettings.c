@@ -76,19 +76,21 @@ START_TEST(NtUserEnumDisplaySettings)
     Status = NtUserEnumDisplaySettings(NULL, 8, (DEVMODEW*)&data, 0);
     TEST(Status == STATUS_SUCCESS);
 
-    Status = NtUserEnumDisplaySettings(NULL, 247, (DEVMODEW*)&data, 0);
-    TEST(Status == STATUS_SUCCESS);
-    Status = NtUserEnumDisplaySettings(NULL, 248, (DEVMODEW*)&data, 0);
+    /* iModeNum out of range */
+    Status = NtUserEnumDisplaySettings(NULL, 5000, (DEVMODEW*)&data, 0);
     TEST(Status == STATUS_INVALID_PARAMETER_2);
 
+    /* Secret values? */
     Status = NtUserEnumDisplaySettings(NULL, -1, (DEVMODEW*)&data, 0);
     TEST(Status == STATUS_SUCCESS);
     Status = NtUserEnumDisplaySettings(NULL, -2, (DEVMODEW*)&data, 0);
     TEST(Status == STATUS_SUCCESS);
+
+    /* What's going on here? */
     Status = NtUserEnumDisplaySettings(NULL, -3, (DEVMODEW*)&data, 0);
-    TEST(Status == STATUS_SUCCESS);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_3);
     Status = NtUserEnumDisplaySettings(NULL, -4, (DEVMODEW*)&data, 0);
-    TEST(Status == STATUS_INVALID_PARAMETER_2);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_2);
 
     Status = NtUserEnumDisplaySettings(&usDeviceName, ENUM_CURRENT_SETTINGS, (DEVMODEW*)&data, 0);
     TEST(Status == STATUS_INVALID_PARAMETER_1);
