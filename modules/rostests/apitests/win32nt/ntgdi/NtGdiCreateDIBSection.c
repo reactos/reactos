@@ -93,21 +93,21 @@ START_TEST(NtGdiCreateDIBSection)
 
 
     /* Test a 0 HDC */
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection(0, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
-    TEST(GetLastError() == ERROR_NOT_ENOUGH_MEMORY);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
     /* Test a wrong HDC */
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection((HDC)(LONG_PTR)0xdeadbeef, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != 0);
     TEST(hbmp != 0);
-    TEST(GetLastError() == 8);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
     /* Test pbmi = NULL */
@@ -339,12 +339,12 @@ printf("dib with bitfileds: %p\n", hbmp);
     /* increased header size */
     pbih->biSize = sizeof(BITMAPINFOHEADER) + 4;
     cjHeader = pbih->biSize + cEntries * 4 + 8;
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
-    TEST(GetLastError() == 8);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
     /* increased header size */
@@ -397,12 +397,12 @@ printf("dib with bitfileds: %p\n", hbmp);
     cjHeader = bmi.bmiHeader.biSize + cEntries * 4 + 8;
 
     /* Test something simple */
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
-    TEST(GetLastError() == 8);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
 
@@ -437,23 +437,23 @@ printf("dib with bitfileds: %p\n", hbmp);
     cjHeader = pbV5h->bV5Size + cEntries * 4 + 8;
 
     /* Test something simple */
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
-    TEST(GetLastError() == 8);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
     /* increased header size */
     pbV5h->bV5Size = sizeof(BITMAPV5HEADER) + 64;
     cjHeader = pbV5h->bV5Size + cEntries * 4 + 8;
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     pvBits = 0;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
-    TEST(GetLastError() == 8);
+    ok_hex(GetLastError(), 0xdeadbeef);
     if (hbmp) DeleteObject(hbmp);
 
     /* Test section */
