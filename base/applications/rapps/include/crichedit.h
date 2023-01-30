@@ -46,7 +46,7 @@ public:
         CharFormat.dwMask = dwEffects;
         CharFormat.dwEffects = dwEffects;
 
-        SendMessageW(EM_SETCHARFORMAT, SCF_WORD | SCF_SELECTION, (LPARAM) &CharFormat);
+        SendMessageW(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM) &CharFormat);
 
         SendMessageW(EM_SETSEL, End, End + 1);
     }
