@@ -202,9 +202,9 @@ License:
 URL: http://www.catch22.net/tuts/cardlib
 
 Title: lwIP - A Lightweight TCP/IP stack
-Path: sdk/lib/drivers/lwip
+Path: drivers/network/tcpip/lwip
 Used Version: 1.4.1
-License: Modified BSD License (sdk/lib/drivers/lwip/COPYING)
+License: Modified BSD License (drivers/network/tcpip/lwip/COPYING)
 URL: https://savannah.nongnu.org/projects/lwip/
 
 Title: FreeType

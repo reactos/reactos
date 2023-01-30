@@ -19,6 +19,6 @@
 #include <lock.h>
 #include <interface.h>
 #include <ports.h>
-#include <chew/chew.h>
+#include <chew.h>
 
 #endif /* _IP_PCH_ */

@@ -1,14 +1,4 @@
 
-include_directories(
-    BEFORE include
-    ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include/ipv4)
-
-include_directories(
-    src/include
-    src/include/ipv4)
-
 list(APPEND SOURCE
     src/rosip.c
     src/rostcp.c
@@ -55,13 +45,18 @@ list(APPEND SOURCE
     src/core/snmp/mib_structs.c
     src/core/snmp/mib2.c
     src/core/snmp/msg_in.c
-    src/core/snmp/msg_out.c
-    precomp.h)
+    src/core/snmp/msg_out.c)
 
 add_library(lwip ${SOURCE})
+
+target_include_directories(lwip BEFORE
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include/ipv4)
+
 add_dependencies(lwip bugcodes xdk)
 add_pch(lwip precomp.h SOURCE)
 
-if((NOT MSVC) AND LTCG)
+if(NOT MSVC)
     target_compile_options(lwip PRIVATE -fno-builtin-malloc -fno-builtin-free)
 endif()

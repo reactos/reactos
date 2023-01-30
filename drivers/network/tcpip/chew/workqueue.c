@@ -7,11 +7,7 @@
  * PROGRAMMERS:     arty (ayerkes@speakeasy.net)
  */
 
-#include <ntddk.h>
-#include <chew/chew.h>
-
-#define NDEBUG
-//#include <debug.h>
+#include <wdm.h>
 
 #define FOURCC(w,x,y,z) (((w) << 24) | ((x) << 16) | ((y) << 8) | (z))
 #define CHEW_TAG FOURCC('C','H','E','W')

@@ -28,9 +28,13 @@ list(APPEND SOURCE
     transport/tcp/event.c
     transport/tcp/if.c
     transport/tcp/tcp.c
-    transport/udp/udp.c
-    precomp.h)
+    transport/udp/udp.c)
 
 add_library(ip ${SOURCE} ${ip_asm})
+
+target_include_directories(ip BEFORE
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include
+    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include/ipv4)
+
 add_pch(ip precomp.h SOURCE)
-add_dependencies(ip asm)
