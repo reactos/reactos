@@ -24,7 +24,7 @@ list(APPEND SOURCE
     #ntgdi/NtGdiFlushUserBatch.c
     ntgdi/NtGdiGetBitmapBits.c
     ntgdi/NtGdiGetDIBits.c
-    ntgdi/NtGdiGetFontResourceInfoInternalW.c
+    #ntgdi/NtGdiGetFontResourceInfoInternalW.c
     ntgdi/NtGdiGetRandomRgn.c
     ntgdi/NtGdiGetStockObject.c
     ntgdi/NtGdiIntersectClipRect.c

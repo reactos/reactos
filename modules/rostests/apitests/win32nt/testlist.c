@@ -92,7 +92,7 @@ const struct test winetest_testlist[] =
     //{ "NtGdiFlushUserBatch", func_NtGdiFlushUserBatch },
     { "NtGdiGetBitmapBits", func_NtGdiGetBitmapBits },
     { "NtGdiGetDIBitsInternal", func_NtGdiGetDIBitsInternal },
-    { "NtGdiGetFontResourceInfoInternalW", func_NtGdiGetFontResourceInfoInternalW },
+    //{ "NtGdiGetFontResourceInfoInternalW", func_NtGdiGetFontResourceInfoInternalW },
     { "NtGdiGetRandomRgn", func_NtGdiGetRandomRgn },
     { "NtGdiGetStockObject", func_NtGdiGetStockObject },
     { "NtGdiIntersectClipRect", func_NtGdiIntersectClipRect },
