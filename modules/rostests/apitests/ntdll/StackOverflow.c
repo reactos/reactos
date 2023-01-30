@@ -79,7 +79,11 @@ START_TEST(StackOverflow)
     /* Check TEB attributes */
     ok_ptr(NtCurrentTeb()->DeallocationStack, StackAllocationBase);
     ok_ptr(NtCurrentTeb()->NtTib.StackBase, (PVOID)((ULONG_PTR)MemoryBasicInfo.BaseAddress + MemoryBasicInfo.RegionSize));
+#ifdef _WIN64
+    ok_ptr(NtCurrentTeb()->NtTib.StackLimit, (PVOID)((ULONG_PTR)MemoryBasicInfo.BaseAddress - 2 * PAGE_SIZE));
+#else
     ok_ptr(NtCurrentTeb()->NtTib.StackLimit, (PVOID)((ULONG_PTR)MemoryBasicInfo.BaseAddress - PAGE_SIZE));
+#endif
     trace("Guaranteed stack size is %lu.\n", NtCurrentTeb()->GuaranteedStackBytes);
 
     /* Get its size */
@@ -111,7 +115,11 @@ START_TEST(StackOverflow)
     ok_ptr(MemoryBasicInfo.BaseAddress, NtCurrentTeb()->NtTib.StackLimit);
     ok_ptr(MemoryBasicInfo.AllocationBase, StackAllocationBase);
     ok_long(MemoryBasicInfo.AllocationProtect, PAGE_READWRITE);
+#ifdef _WIN64
+    ok_long(MemoryBasicInfo.RegionSize, 3 * PAGE_SIZE);
+#else
     ok_long(MemoryBasicInfo.RegionSize, 2 * PAGE_SIZE);
+#endif
     ok_long(MemoryBasicInfo.State, MEM_COMMIT);
     ok_long(MemoryBasicInfo.Protect, PAGE_READWRITE);
     ok_long(MemoryBasicInfo.Type, MEM_PRIVATE);
@@ -146,7 +154,11 @@ START_TEST(StackOverflow)
 
     /* Windows lets 2 pages between the reserved memory and the smallest possible stack address */
     ok((ULONG_PTR)LastStackAllocation > (ULONG_PTR)StackAllocationBase, "\n");
-    ok_long(PAGE_ROUND_DOWN(LastStackAllocation), (ULONG_PTR)StackAllocationBase + 2 * PAGE_SIZE);
+#ifdef _WIN64
+    ok_long(PAGE_ROUND_DOWN(LastStackAllocation), (ULONG_PTR)StackAllocationBase + 4 * PAGE_SIZE);
+#else
+    ok_long(PAGE_ROUND_DOWN(LastStackAllocation), (ULONG_PTR)StackAllocationBase + 3 * PAGE_SIZE);
+#endif
 
     /* And in fact, this is the true condition of the stack overflow */
     ok_ptr(NtCurrentTeb()->NtTib.StackLimit, (PVOID)((ULONG_PTR)StackAllocationBase + PAGE_SIZE));
