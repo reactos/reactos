@@ -2050,33 +2050,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       pWnd->strName.MaximumLength = WindowName->Length + sizeof(UNICODE_NULL);
    }
 
-   /* Create the IME window for pWnd */
-   if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
-   {
-      PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
-      UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
-
-      if (pwndDefaultIme)
-      {
-         HWND hImeWnd;
-         USER_REFERENCE_ENTRY Ref;
-         UserRefObjectCo(pwndDefaultIme, &Ref);
-
-         hImeWnd = UserHMGetHandle(pwndDefaultIme);
-
-         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_LOADTHREADLAYOUT, 0);
-
-         if (pti->pClientInfo->CI_flags & CI_IMMACTIVATE)
-         {
-            HKL hKL = pti->KeyboardLayout->hkl;
-            co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)hKL);
-            pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
-         }
-
-         UserDerefObjectCo(pwndDefaultIme);
-      }
-   }
-
    /* Correct the window style. */
    if ((pWnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
    {
@@ -2448,6 +2421,33 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
           IntLinkHwnd(Window, hwndInsertAfter);
+   }
+
+   /* Create the IME window for pWnd */
+   if (IS_IMM_MODE() && !pti->spwndDefaultIme && IntWantImeWindow(Window))
+   {
+      PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(Window, Window->hModule);
+      UserAssignmentLock((PVOID*)&pti->spwndDefaultIme, pwndDefaultIme);
+
+      if (pwndDefaultIme)
+      {
+         HWND hImeWnd;
+         USER_REFERENCE_ENTRY Ref;
+         UserRefObjectCo(pwndDefaultIme, &Ref);
+
+         hImeWnd = UserHMGetHandle(pwndDefaultIme);
+
+         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_LOADTHREADLAYOUT, 0);
+
+         if (pti->pClientInfo->CI_flags & CI_IMMACTIVATE)
+         {
+            HKL hKL = pti->KeyboardLayout->hkl;
+            co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)hKL);
+            pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
+         }
+
+         UserDerefObjectCo(pwndDefaultIme);
+      }
    }
 
    /* Send the WM_NCCALCSIZE message */
