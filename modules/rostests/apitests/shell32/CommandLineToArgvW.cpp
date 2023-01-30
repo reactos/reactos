@@ -25,7 +25,7 @@ DoEntry(INT lineno, LPCWSTR cmdline, INT argc_minus_1, ...)
         LPCWSTR arg2 = real_argv[i + 1];
         CStringA str1 = wine_dbgstr_w(arg1);
         CStringA str2 = wine_dbgstr_w(arg2);
-        ok(lstrcmpW(arg1, arg2) == 0, "Line %d: %s != %s\n", lineno, (LPCSTR)str1, (LPCSTR)str2);
+        ok(str1 == str2, "Line %d: %s != %s\n", lineno, (LPCSTR)str1, (LPCSTR)str2);
     }
 
     INT diff = abs(argc_minus_1 - real_argc_minus_1);
