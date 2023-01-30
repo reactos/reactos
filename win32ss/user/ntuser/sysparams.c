@@ -17,6 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 BOOL g_PaintDesktopVersion = FALSE;
+BOOL g_bWindowSnapEnabled = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -99,8 +100,6 @@ static const WCHAR* KEY_SHOWSNDS = L"Control Panel\\Accessibility\\ShowSounds";
 static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Preference";
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
-
-
 
 /** Loading the settings ******************************************************/
 
@@ -346,11 +345,25 @@ SpiUpdatePerUserSystemParameters(VOID)
     gdwLanguageToggleKey = UserGetLanguageToggle();
 }
 
+/* Is Window Snap enabled? */
+static BOOL IntIsWindowSnapEnabled(VOID)
+{
+    WCHAR szValue[2];
+    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
+                           REG_SZ, szValue, sizeof(szValue)))
+    {
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        return (_wtoi(szValue) != 0);
+    }
+    return TRUE;
+}
+
 BOOL
 InitSysParams(VOID)
 {
     SpiUpdatePerUserSystemParameters();
     gbSpiInitialized = TRUE;
+    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
     return TRUE;
 }
 
