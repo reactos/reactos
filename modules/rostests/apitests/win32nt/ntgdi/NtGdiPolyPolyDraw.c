@@ -82,20 +82,20 @@ Test_Params(void)
     TEST(ret == 0);
     TEST(GetLastError() == ERROR_INVALID_HANDLE);
 
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     ret = NtGdiPolyPolyDraw(hDC, Points, Count1, 2, 3);
     TEST(ret == 0);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_long(GetLastError(), 0xdeadbeef);
 
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     ret = NtGdiPolyPolyDraw(hDC, Points, Count1, 2, 4);
     TEST(ret == 0);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_long(GetLastError(), 0xdeadbeef);
 
-    SetLastError(0);
+    SetLastError(0xdeadbeef);
     ret = NtGdiPolyPolyDraw(hDC, Points, Count1, 2, 5);
     TEST(ret == 0);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_long(GetLastError(), 0xdeadbeef);
 
     SetLastError(0);
     ret = NtGdiPolyPolyDraw(hDC, Points, Count1, 2, 6);
