@@ -17,7 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 BOOL g_PaintDesktopVersion = FALSE;
-BOOL g_bWindowSnapEnabled = FALSE;
+BOOL g_bWindowSnapEnabled = TRUE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
