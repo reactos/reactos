@@ -16,11 +16,11 @@ _1 = %cdname%,%cdtagfile%,,""
 
 [SourceDisksNames.x86]
 ;1 = %cdname%,%cdtagfilei%,,\i386
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilei%,,\ReactOS
 
 [SourceDisksNames.amd64]
 ;1 = %cdname%,%cdtagfilea%,,\amd64
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilei%,,\ReactOS
 
 ;
 ; The directories listed in the [Directories] or [WinntDirectories] sections

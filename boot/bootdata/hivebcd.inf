@@ -31,12 +31,12 @@ BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\1100000
     00,00,00,00,\
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000002","Element",,"\reactos\system32\boot\rosload.efi"              ; path
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000002","Element",,"\ReactOS\system32\boot\rosload.efi"              ; path
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000004","Element",,"ReactOS Setup"                                   ; description
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000005","Element",,"en-US"                                           ; locale="en-US"
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\14000006","Element",0x10000,"{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}"   ; inherit={bootloadersettings}
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\16000060","Element",0x1,0x01                                           ; isolatedcontext=Yes
-BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\22000002","Element",,"\reactos"                                        ; systemroot=\Windows
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\22000002","Element",,"\ReactOS"                                        ; systemroot=\Windows
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\26000010","Element",0x1,0x01                                           ; detecthal=Yes
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\26000022","Element",0x1,0x01                                           ; winpe=Yes
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\260000b0","Element",0x1,0x01                                           ; ems=Yes
