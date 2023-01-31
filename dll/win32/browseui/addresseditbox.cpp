@@ -94,14 +94,20 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
     return E_NOTIMPL;
 }
 
+BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& strText)
+{
+    INT cchMax = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
+    strText.Allocate(cchMax);
+    fCombobox.GetWindowText(strText, cchMax);
+    return TRUE;
+}
+
 // Execute command line from address bar
 HRESULT CAddressEditBox::ExecuteCommandLine()
 {
     /* Get command line */
     CComHeapPtr<WCHAR> pszCmdLine;
-    INT cchCmdLine = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
-    pszCmdLine.Allocate(cchCmdLine);
-    fCombobox.GetWindowText(pszCmdLine, cchCmdLine);
+    GetComboBoxText(pszCmdLine);
 
     /* Split 1st parameter and trailing arguments */
     PWCHAR args = PathGetArgsW(pszCmdLine);
@@ -158,11 +164,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         return hr;
 
     /* Get the path to browse and expand it if needed */
-    LPWSTR input;
-    int inputLength = fCombobox.GetWindowTextLength() + 2;
-
-    input = new WCHAR[inputLength];
-    fCombobox.GetWindowText(input, inputLength);
+    CComHeapPtr<WCHAR> input;
+    GetComboBoxText(input);
 
     LPWSTR address;
     int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
@@ -221,10 +224,7 @@ cleanup:
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
 {
     CComHeapPtr<WCHAR> input;
-    int inputLength = fCombobox.GetWindowTextLength() + 2;
-
-    input.Allocate(inputLength);
-    fCombobox.GetWindowText(input, inputLength);
+    GetComboBoxText(input);
 
     ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), fCombobox.m_hWnd, MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TEXT), MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TITLE), MB_OK | MB_ICONERROR, input.m_pData);
 

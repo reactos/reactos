@@ -50,6 +50,7 @@ private:
     HRESULT STDMETHODCALLTYPE ShowFileNotFoundError(HRESULT hRet);
     HRESULT ExecuteCommandLine();
     HRESULT GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL);
+    BOOL GetComboBoxText(CComHeapPtr<WCHAR>& strText);
 public:
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
