@@ -65,6 +65,7 @@ ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
 {
     BOOL bPrevCR = FALSE;
     SIZE_T ichNew, ichOld;
+
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
         WCHAR ch = pszOld[ichOld];
@@ -89,14 +90,15 @@ ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
 
         bPrevCR = (ch == L'\r');
     }
+
     pszNew[ichNew] = UNICODE_NULL;
     assert(ichNew == cchNew);
 }
 
 static BOOL
-ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOLN *piEoln)
+ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
 {
-    DWORD ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
+    SIZE_T ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
     LPWSTR pszText = *ppszText;
     EOLN iEoln;
     BOOL bPrevCR = FALSE;
@@ -140,7 +142,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
     if (cNonCRLFs != 0)
     {
         /* Allocate a buffer for EM_SETHANDLE */
-        DWORD cchNew = cchText + cNonCRLFs;
+        SIZE_T cchNew = cchText + cNonCRLFs;
         HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
         LPWSTR pszNew = LocalLock(hLocal);
         if (!pszNew)
@@ -166,9 +168,10 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
 BOOL
 ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
-    LPBYTE pBytes = NULL;
-    LPWSTR pszText, pszAllocText = NULL;
-    DWORD dwSize, dwPos, i, dwCharCount;
+    PCHAR pBytes = NULL;
+    LPWSTR pszText, pszNewText = NULL;
+    DWORD dwSize, dwPos;
+    SIZE_T i, cchText, cbContent;
     BOOL bSuccess = FALSE;
     ENCODING encFile = ENCODING_ANSI;
     UINT iCodePage;
@@ -216,23 +219,23 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     {
         /* Re-allocate the buffer for EM_SETHANDLE */
         pszText = (LPWSTR) &pBytes[dwPos];
-        dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
-        hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
-        pszAllocText = LocalLock(hNewLocal);
-        if (pszAllocText == NULL)
+        cchText = (dwSize - dwPos) / sizeof(WCHAR);
+        hNewLocal = LocalReAlloc(*phLocal, (cchText + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
+        pszNewText = LocalLock(hNewLocal);
+        if (pszNewText == NULL)
             goto done;
-        *phLocal = hNewLocal;
 
-        CopyMemory(pszAllocText, pszText, dwCharCount * sizeof(WCHAR));
+        *phLocal = hNewLocal;
+        CopyMemory(pszNewText, pszText, cchText * sizeof(WCHAR));
 
         if (encFile == ENCODING_UTF16BE) /* big endian; Swap bytes */
         {
-            BYTE b, *pb = (LPBYTE)pszAllocText;
-            for (i = 0; i < dwCharCount * 2; i += 2)
+            BYTE tmp, *pb = (LPBYTE)pszNewText;
+            for (i = 0; i < cchText * 2; i += 2)
             {
-                b = pb[i];
+                tmp = pb[i];
                 pb[i] = pb[i + 1];
-                pb[i + 1] = b;
+                pb[i + 1] = tmp;
             }
         }
         break;
@@ -244,25 +247,32 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     {
         iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM) ? CP_UTF8 : CP_ACP);
 
-        dwCharCount = 0;
-        if ((dwSize - dwPos) > 0)
+        /* Get ready for ANSI-to-Wide conversion */
+        cbContent = dwSize - dwPos;
+        cchText = 0;
+        if (cbContent > 0)
         {
-            dwCharCount = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, NULL, 0);
-            if (dwCharCount == 0)
+            cchText = MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], (DWORD)cbContent, NULL, 0);
+            if (cchText == 0)
                 goto done;
         }
 
         /* Re-allocate the buffer for EM_SETHANDLE */
-        hNewLocal = LocalReAlloc(*phLocal, (dwCharCount + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
-        pszAllocText = LocalLock(hNewLocal);
-        if (!pszAllocText)
+        hNewLocal = LocalReAlloc(*phLocal, (cchText + 1) * sizeof(WCHAR), LMEM_MOVEABLE);
+        pszNewText = LocalLock(hNewLocal);
+        if (!pszNewText)
             goto done;
         *phLocal = hNewLocal;
 
-        if ((dwSize - dwPos) > 0)
+        /* Do ANSI-to-Wide conversion */
+        if (cbContent > 0)
         {
-            if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
+            if (!MultiByteToWideChar(iCodePage, 0,
+                                     &pBytes[dwPos], (DWORD)cbContent,
+                                     pszNewText, (DWORD)cchText))
+            {
                 goto done;
+            }
         }
         break;
     }
@@ -270,9 +280,9 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     DEFAULT_UNREACHABLE;
     }
 
-    pszAllocText[dwCharCount] = UNICODE_NULL;
+    pszNewText[cchText] = UNICODE_NULL;
 
-    if (!ProcessNewLinesAndNulls(phLocal, &pszAllocText, &dwCharCount, piEoln))
+    if (!ProcessNewLinesAndNulls(phLocal, &pszNewText, &cchText, piEoln))
         goto done;
 
     *pencFile = encFile;
@@ -283,7 +293,7 @@ done:
         UnmapViewOfFile(pBytes);
     if (hMapping != INVALID_HANDLE_VALUE)
         CloseHandle(hMapping);
-    if (pszAllocText)
+    if (pszNewText)
         LocalUnlock(*phLocal);
     return bSuccess;
 }
