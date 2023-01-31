@@ -105,6 +105,22 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
     return fCombobox.GetWindowText(pszText, cchMax);
 }
 
+HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
+{
+    CComPtr<IBrowserService> isb;
+    HRESULT hr;
+
+    hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = isb->GetPidl(pAbsolutePIDL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
 // Execute command line from address bar
 BOOL CAddressEditBox::ExecuteCommandLine()
 {
@@ -113,7 +129,7 @@ BOOL CAddressEditBox::ExecuteCommandLine()
     if (!GetComboBoxText(pszCmdLine))
         return FALSE;
 
-    /* Split 1st parameter and trailing arguments */
+    /* Split 1st parameter from trailing arguments */
     PWCHAR args = PathGetArgsW(pszCmdLine);
     if (args && *args)
     {
@@ -122,7 +138,7 @@ BOOL CAddressEditBox::ExecuteCommandLine()
         ++args;
     }
 
-    PathUnquoteSpacesW(pszCmdLine);
+    PathUnquoteSpacesW(pszCmdLine); /* Unquote the 1st parameter */
 
     /* Get ready for execution */
     SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
@@ -139,7 +155,7 @@ BOOL CAddressEditBox::ExecuteCommandLine()
         ILFree(pidl);
     }
 
-    if (!::ShellExecuteExW(&info))
+    if (!::ShellExecuteExW(&info)) /* Execute! */
         return FALSE;
 
     /* Execution succeeded. Reset the combobox. */
@@ -410,22 +426,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
     REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     return E_NOTIMPL;
-}
-
-HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
-{
-    CComPtr<IBrowserService> isb;
-    HRESULT hr;
-
-    hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = isb->GetPidl(pAbsolutePIDL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
