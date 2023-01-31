@@ -185,24 +185,22 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         return hr;
 
     /* Get the path to browse and expand it if needed */
-    CComHeapPtr<WCHAR> input;
-    GetComboBoxText(input);
+    CComHeapPtr<WCHAR> input, address;
+    if (!GetComboBoxText(input))
+        return E_FAIL;
 
-    LPWSTR address;
-    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
-
+    INT addressLength = ::ExpandEnvironmentStrings(input, NULL, 0);
     if (addressLength <= 0)
     {
-        address = input;
+        address.Attach(input.Detach());
     }
     else
     {
-        addressLength += 2;
-        address = new WCHAR[addressLength];
-        if (!ExpandEnvironmentStrings(input, address, addressLength))
+        if (!address.Allocate(addressLength + 2) ||
+            !::ExpandEnvironmentStrings(input, address, addressLength))
         {
-            delete[] address;
-            address = input;
+            address.Free();
+            address.Attach(input.Detach());
         }
     }
 
@@ -235,17 +233,14 @@ parseabsolute:
 cleanup:
     if (pidlCurrent)
         ILFree(pidlCurrent);
-    if (address != input)
-        delete[] address;
-    delete[] input;
-
     return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
 {
     CComHeapPtr<WCHAR> input;
-    GetComboBoxText(input);
+    if (!GetComboBoxText(input))
+        return E_FAIL;
 
     ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), fCombobox.m_hWnd, MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TEXT), MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TITLE), MB_OK | MB_ICONERROR, input.m_pData);
 
@@ -284,16 +279,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (FAILED(hr))
         return hr;
 
-    CComPtr<IBrowserService> pbs;
-    pisb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
-    if (FAILED(hr))
-        return hr;
-
     /*
      * Get the current pidl of the shellbrowser and check if it is the same with the parsed one
      */
     PIDLIST_ABSOLUTE pidl;
-    hr = pbs->GetPidl(&pidl);
+    hr = GetAbsolutePidl(&pidl);
     if (FAILED(hr))
         return hr;
 
