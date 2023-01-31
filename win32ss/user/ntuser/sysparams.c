@@ -214,6 +214,19 @@ SpiFixupValues(VOID)
 
 }
 
+/* Is Window Snap enabled? */
+static BOOL IntIsWindowSnapEnabled(VOID)
+{
+    WCHAR szValue[2];
+    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
+                           REG_SZ, szValue, sizeof(szValue)))
+    {
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        return (_wtoi(szValue) != 0);
+    }
+    return TRUE;
+}
+
 static
 VOID
 SpiUpdatePerUserSystemParameters(VOID)
@@ -343,19 +356,8 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
     gdwLanguageToggleKey = UserGetLanguageToggle();
-}
 
-/* Is Window Snap enabled? */
-static BOOL IntIsWindowSnapEnabled(VOID)
-{
-    WCHAR szValue[2];
-    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
-                           REG_SZ, szValue, sizeof(szValue)))
-    {
-        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-        return (_wtoi(szValue) != 0);
-    }
-    return TRUE;
+    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
 
 BOOL
@@ -363,7 +365,6 @@ InitSysParams(VOID)
 {
     SpiUpdatePerUserSystemParameters();
     gbSpiInitialized = TRUE;
-    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
     return TRUE;
 }
 
