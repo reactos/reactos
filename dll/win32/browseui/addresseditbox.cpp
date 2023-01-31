@@ -186,8 +186,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     if (!GetComboBoxText(input))
         return E_FAIL;
 
-    /* Expand the text */
-    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
+    INT addressLength = (wcschr(input, L'%') ? ::ExpandEnvironmentStrings(input, NULL, 0) : 0);
     if (addressLength <= 0 ||
         !address.Allocate(addressLength + 2) ||
         !::ExpandEnvironmentStrings(input, address, addressLength))
