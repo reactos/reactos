@@ -41,10 +41,7 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 {
     INT flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
 
-    if (dwSize <= 1)
-        return ENCODING_ANSI;
-
-    if (IsTextNonZeroASCII(pBytes, dwSize))
+    if (dwSize <= 1 || IsTextNonZeroASCII(pBytes, dwSize))
         return ENCODING_ANSI;
 
     if (IsTextUnicode(pBytes, dwSize, &flags))
