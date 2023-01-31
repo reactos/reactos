@@ -118,7 +118,7 @@ HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
     return S_OK;
 }
 
-// Execute command line from address bar
+/* Execute command line from address bar */
 BOOL CAddressEditBox::ExecuteCommandLine()
 {
     /* Get command line */
