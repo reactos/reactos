@@ -235,9 +235,7 @@ PIP_INTERFACE IPCreateInterface(
 
     TCPRegisterInterface(IF);
 
-#ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
-#endif
 
     return IF;
 }
@@ -253,9 +251,7 @@ VOID IPDestroyInterface(
 {
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X).\n", IF));
 
-#ifdef __NTDRIVER__
     RemoveTDIInterfaceEntity( IF );
-#endif
 
     TCPUnregisterInterface(IF);
 

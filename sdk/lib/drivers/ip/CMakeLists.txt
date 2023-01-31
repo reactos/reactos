@@ -1,6 +1,4 @@
 
-add_definitions(-D__NTDRIVER__)
-
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
     ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include

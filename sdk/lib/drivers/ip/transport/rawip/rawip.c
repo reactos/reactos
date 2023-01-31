@@ -341,9 +341,7 @@ NTSTATUS RawIPStartup(VOID)
  *     Status of operation
  */
 {
-#ifdef __NTDRIVER__
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
-#endif
 
   /* Register this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_RAW, RawIpReceive);

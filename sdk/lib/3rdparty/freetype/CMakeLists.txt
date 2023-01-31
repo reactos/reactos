@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__NTDRIVER__
     -DFT2_BUILD_LIBRARY)
 
 include_directories(include)

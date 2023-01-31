@@ -343,9 +343,7 @@ NTSTATUS UDPStartup(
 {
   NTSTATUS Status;
 
-#ifdef __NTDRIVER__
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
-#endif
 
   Status = PortsStartup( &UDPPorts, 1, UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 
