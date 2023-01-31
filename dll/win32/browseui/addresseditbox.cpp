@@ -101,16 +101,13 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
     INT cchMax = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
     if (!pszText.Allocate(cchMax))
         return FALSE;
-
     return fCombobox.GetWindowText(pszText, cchMax);
 }
 
 HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
 {
     CComPtr<IBrowserService> isb;
-    HRESULT hr;
-
-    hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+    HRESULT hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
