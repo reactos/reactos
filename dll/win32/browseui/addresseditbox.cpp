@@ -95,14 +95,16 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 }
 
 // Execute command line from address bar
-BOOL CAddressEditBox::ExecuteCommandLine()
+HRESULT CAddressEditBox::ExecuteCommandLine()
 {
-    CComHeapPtr<WCHAR> input;
-    INT inputLength = fCombobox.GetWindowTextLength() + 2;
-    input.Allocate(inputLength);
-    fCombobox.GetWindowText(input, inputLength);
+    /* Get command line */
+    CComHeapPtr<WCHAR> pszCmdLine;
+    INT cchCmdLine = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
+    pszCmdLine.Allocate(cchCmdLine);
+    fCombobox.GetWindowText(pszCmdLine, cchCmdLine);
 
-    PWCHAR args = PathGetArgsW(input);
+    /* Split 1st parameter and trailing arguments */
+    PWCHAR args = PathGetArgsW(pszCmdLine);
     if (args && *args)
     {
         --args;
@@ -110,18 +112,30 @@ BOOL CAddressEditBox::ExecuteCommandLine()
         ++args;
     }
 
-    PathUnquoteSpacesW(input);
+    PathUnquoteSpacesW(pszCmdLine);
 
     SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
-    info.lpFile = input;
+    info.lpFile = pszCmdLine;
     info.lpParameters = args;
     info.nShow = SW_SHOWNORMAL;
-    //info.lpDirectory = ...; // TODO: Set current directory
-    if (!::ShellExecuteExW(&info))
-        return FALSE;
 
-    // TODO: Revert fCombobox
-    return TRUE;
+    WCHAR dir[MAX_PATH] = L"";
+    PIDLIST_ABSOLUTE pidl;
+    if (SUCCEEDED(GetAbsolutePidl(&pidl)))
+    {
+        if (SHGetPathFromIDListW(pidl, dir) && PathIsDirectoryW(dir))
+            info.lpDirectory = dir; /* Set current directory */
+        ILFree(pidl);
+    }
+
+    if (!::ShellExecuteExW(&info))
+        return E_FAIL;
+
+    /* Reset combobox */
+    if (dir[0] != UNICODE_NULL)
+        fCombobox.SetWindowText(dir);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
@@ -231,10 +245,10 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
         /* If the destination path doesn't exist then display an error message */
         if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            if (ExecuteCommandLine())
+            if (SUCCEEDED(ExecuteCommandLine()))
                 return S_OK;
-
-            return ShowFileNotFoundError(hr);
+            else
+                return ShowFileNotFoundError(hr);
         }
 
         if (!pidlLastParsed)
@@ -393,10 +407,25 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
     return E_NOTIMPL;
 }
 
+HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
+{
+    CComPtr<IBrowserService> isb;
+    HRESULT hr;
+
+    hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = isb->GetPidl(pAbsolutePIDL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    CComPtr<IBrowserService> isb;
     CComPtr<IShellFolder> sf;
     HRESULT hr;
     PIDLIST_ABSOLUTE absolutePIDL;
@@ -417,12 +446,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         pidlLastParsed = NULL;
 
         /* Get the current pidl of the browser */
-        hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        hr = isb->GetPidl(&absolutePIDL);
-        if (FAILED_UNEXPECTEDLY(hr))
+        hr = GetAbsolutePidl(&absolutePIDL);
+        if (FAILED(hr))
             return hr;
 
         if (!absolutePIDL)
