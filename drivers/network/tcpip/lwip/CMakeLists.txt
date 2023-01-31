@@ -1,9 +1,5 @@
 
 list(APPEND SOURCE
-    src/rosip.c
-    src/rostcp.c
-    src/rosmem.c
-    src/sys_arch.c
     src/api/api_lib.c
     src/api/api_msg.c
     src/api/err.c
@@ -49,10 +45,9 @@ list(APPEND SOURCE
 
 add_library(lwip ${SOURCE})
 
-target_include_directories(lwip BEFORE
-    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
-    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include
-    PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/lwip/src/include/ipv4)
+target_include_directories(lwip
+    PUBLIC src/include
+    PUBLIC src/include/ipv4)
 
 add_dependencies(lwip bugcodes xdk)
 add_pch(lwip precomp.h SOURCE)

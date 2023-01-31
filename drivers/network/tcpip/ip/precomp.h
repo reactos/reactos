@@ -20,5 +20,6 @@
 #include <interface.h>
 #include <ports.h>
 #include <chew.h>
+#include "lwip_glue/lwip_glue.h"
 
 #endif /* _IP_PCH_ */

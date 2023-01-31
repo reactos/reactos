@@ -1,10 +1,7 @@
-#include "lwip/sys.h"
-#include "lwip/netif.h"
-#include "lwip/tcpip.h"
-
-#include "rosip.h"
-
 #include <debug.h>
+#include <lwip/tcpip.h>
+
+#include "lwip_glue.h"
 
 static const char * const tcp_state_str[] = {
   "CLOSED",

@@ -1,12 +1,10 @@
-#include "lwip/sys.h"
-#include "lwip/netif.h"
-#include "lwip/tcpip.h"
-
-#include "rosip.h"
-
-#include <debug.h>
+#include <lwip/netif.h>
+#include <lwip/tcpip.h>
 
 typedef struct netif* PNETIF;
+
+void
+sys_shutdown(void);
 
 void
 LibIPInsertPacket(void *ifarg,

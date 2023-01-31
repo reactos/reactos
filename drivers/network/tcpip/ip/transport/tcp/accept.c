@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-#include "rosip.h"
+#include <lwip_glue/lwip_glue.h>
 
 extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 

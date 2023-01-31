@@ -1,7 +1,4 @@
-#include "lwip/opt.h"
-
-#include "lwip/def.h"
-#include "lwip/mem.h"
+#include <lwip/mem.h>
 
 #ifndef LWIP_TAG
     #define LWIP_TAG 'PIwl'

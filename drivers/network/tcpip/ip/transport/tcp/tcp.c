@@ -21,7 +21,7 @@ PORT_SET TCPPorts;
 #include "lwip/init.h"
 #include "lwip/arch.h"
 
-#include "rosip.h"
+#include <lwip_glue/lwip_glue.h>
 
 NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 

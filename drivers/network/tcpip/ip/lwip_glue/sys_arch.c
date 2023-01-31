@@ -1,12 +1,7 @@
-#include "lwip/sys.h"
-
-#include "lwip/tcp.h"
-#include "lwip/pbuf.h"
-#include "lwip/err.h"
-
-#include "rosip.h"
-
 #include <debug.h>
+#include <lwip/sys.h>
+
+#include "lwip_glue.h"
 
 static LIST_ENTRY ThreadListHead;
 static KSPIN_LOCK ThreadListLock;
