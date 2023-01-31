@@ -61,35 +61,38 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
+ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld)
 {
     BOOL bPrevCR = FALSE;
     DWORD ichNew, ichOld;
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
         WCHAR ch = pszOld[ichOld];
-        switch (ch)
+
+        if (ch == L'\n')
         {
-            case L'\r':
-                if (ch == chTarget)
-                {
-                    pszNew[ichNew++] = L'\r';
-                    pszNew[ichNew++] = L'\n';
-                }
-                break;
-
-            case L'\n':
-                if (!bPrevCR)
-                {
-                    pszNew[ichNew++] = L'\r';
-                    pszNew[ichNew++] = L'\n';
-                }
-                break;
-
-            default:
-                pszNew[ichNew++] = ch;
-                break;
+            if (bPrevCR)
+            {
+                ichNew -= 2;
+                pszNew[ichNew++] = L'\r';
+                pszNew[ichNew++] = L'\n';
+            }
+            else
+            {
+                pszNew[ichNew++] = L'\r';
+                pszNew[ichNew++] = L'\n';
+            }
         }
+        else if (ch == '\r')
+        {
+            pszNew[ichNew++] = L'\r';
+            pszNew[ichNew++] = L'\n';
+        }
+        else
+        {
+            pszNew[ichNew++] = ch;
+        }
+
         bPrevCR = (ch == L'\r');
     }
     pszNew[ichNew] = UNICODE_NULL;
@@ -99,7 +102,7 @@ ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR
 static BOOL
 ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOLN *piEoln)
 {
-    DWORD ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 };
+    DWORD ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
     LPWSTR pszText = *ppszText;
     EOLN iEoln;
     BOOL bPrevCR = FALSE;
@@ -139,36 +142,27 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
     else
         iEoln = EOLN_CRLF;
 
-    switch (iEoln)
+    cNonCRLFs = adwEolnCount[EOLN_CR] + adwEolnCount[EOLN_LF];
+    if (cNonCRLFs != 0)
     {
-        case EOLN_CRLF:
-            break;
-
-        case EOLN_LF:
-        case EOLN_CR:
+        /* Allocate a buffer for EM_SETHANDLE */
+        DWORD cchNew = cchText + cNonCRLFs;
+        HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
+        LPWSTR pszNew = LocalLock(hLocal);
+        if (!pszNew)
         {
-            /* Allocate a buffer for EM_SETHANDLE */
-            DWORD cchNew = cchText + adwEolnCount[iEoln];
-            HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
-            LPWSTR pszNew = LocalLock(hLocal);
-            if (!pszNew)
-            {
-                LocalFree(hLocal);
-                return FALSE; /* Failure */
-            }
-
-            ReplaceNewLines(pszNew, cchNew, pszText, cchText, ((iEoln == EOLN_LF) ? L'\n' : L'\r'));
-
-            /* Replace with new data */
-            LocalUnlock(*phLocal);
-            LocalFree(*phLocal);
-            *phLocal = hLocal;
-            *ppszText = pszNew;
-            *pcchText = cchNew;
-            break;
+            LocalFree(hLocal);
+            return FALSE; /* Failure */
         }
 
-        DEFAULT_UNREACHABLE;
+        ReplaceNewLines(pszNew, cchNew, pszText, cchText);
+
+        /* Replace with new data */
+        LocalUnlock(*phLocal);
+        LocalFree(*phLocal);
+        *phLocal = hLocal;
+        *ppszText = pszNew;
+        *pcchText = cchNew;
     }
 
     *piEoln = iEoln;
