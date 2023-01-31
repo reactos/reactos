@@ -161,17 +161,15 @@ typedef struct
 #define SWAP_UINT32(x,y) do { UINT temp = (UINT)(x); (x) = (UINT)(y); (y) = temp; } while(0)
 #define ORDER_UINT(x,y) do { if ((UINT)(y) < (UINT)(x)) SWAP_UINT32((x),(y)); } while(0)
 
-/* used for disabled or read-only edit control */
-#define EDIT_NOTIFY_PARENT(es, wNotifyCode) \
-	do \
-	{ /* Notify parent which has created this edit control */ \
-	    TRACE("notification " #wNotifyCode " sent to hwnd=%p\n", es->hwndParent); \
-	    SendMessageW(es->hwndParent, WM_COMMAND, \
-		     MAKEWPARAM(GetWindowLongPtrW((es->hwndSelf),GWLP_ID), wNotifyCode), \
-		     (LPARAM)(es->hwndSelf)); \
-	} while(0)
-
 static const WCHAR empty_stringW[] = {0};
+static inline BOOL notify_parent(const EDITSTATE *es, INT code)
+{
+    HWND hwnd = es->hwndSelf;
+    TRACE("notification %d sent to %p.\n", code, es->hwndParent);
+    SendMessageW(es->hwndParent, WM_COMMAND, MAKEWPARAM(GetWindowLongPtrW(es->hwndSelf, GWLP_ID), code), (LPARAM)es->hwndSelf);
+    return IsWindow(hwnd);
+}
+
 static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap);
 
 /*********************************************************************
@@ -1452,7 +1450,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size)
 
 	if (es->buffer_size < size) {
 		WARN("FAILED !  We now have %d+1\n", es->buffer_size);
-		EDIT_NOTIFY_PARENT(es, EN_ERRSPACE);
+		notify_parent(es, EN_ERRSPACE);
 		return FALSE;
 	} else {
 		TRACE("We now have %d+1\n", es->buffer_size);
@@ -1499,7 +1497,7 @@ static void EDIT_UpdateTextRegion(EDITSTATE *es, HRGN hrgn, BOOL bErase)
 {
     if (es->flags & EF_UPDATE) {
         es->flags &= ~EF_UPDATE;
-        EDIT_NOTIFY_PARENT(es, EN_UPDATE);
+        if (!notify_parent(es, EN_UPDATE)) return;
     }
     InvalidateRgn(es->hwndSelf, hrgn, bErase);
 }
@@ -1514,7 +1512,7 @@ static void EDIT_UpdateText(EDITSTATE *es, const RECT *rc, BOOL bErase)
 {
     if (es->flags & EF_UPDATE) {
         es->flags &= ~EF_UPDATE;
-        EDIT_NOTIFY_PARENT(es, EN_UPDATE);
+        if (!notify_parent(es, EN_UPDATE)) return;
     }
     InvalidateRect(es->hwndSelf, rc, bErase);
 }
@@ -1790,9 +1788,9 @@ static BOOL EDIT_EM_LineScroll_internal(EDITSTATE *es, INT dx, INT dy)
 		EDIT_UpdateScrollInfo(es);
 	}
 	if (dx && !(es->flags & EF_HSCROLL_TRACK))
-		EDIT_NOTIFY_PARENT(es, EN_HSCROLL);
+		notify_parent(es, EN_HSCROLL);
 	if (dy && !(es->flags & EF_VSCROLL_TRACK))
-		EDIT_NOTIFY_PARENT(es, EN_VSCROLL);
+		notify_parent(es, EN_VSCROLL);
 	return TRUE;
 }
 
@@ -2652,8 +2650,9 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 
 	/* Issue the EN_MAXTEXT notification and continue with replacing text
          * so that buffer limit is honored. */
-	if ((honor_limit) && (size > es->buffer_limit)) {
-		EDIT_NOTIFY_PARENT(es, EN_MAXTEXT);
+	if ((honor_limit) && (size > es->buffer_limit))
+	{
+		if (!notify_parent(es, EN_MAXTEXT)) return;
 		/* Buffer limit can be smaller than the actual length of text in combobox */
 		if (es->buffer_limit < (tl - (e-s)))
 			strl = 0;
@@ -2711,7 +2710,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 			strl = 0;
 			e = s;
 			hrgn = CreateRectRgn(0, 0, 0, 0);
-			EDIT_NOTIFY_PARENT(es, EN_MAXTEXT);
+			if (!notify_parent(es, EN_MAXTEXT)) return;
 		}
 	}
 	else {
@@ -2728,7 +2727,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 				EDIT_CalcLineWidth_SL(es);
 			}
                         text_buffer_changed(es);
-			EDIT_NOTIFY_PARENT(es, EN_MAXTEXT);
+			if (!notify_parent(es, EN_MAXTEXT)) return;
 		}
 	}
 	
@@ -2819,7 +2818,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
         if(send_update || (es->flags & EF_UPDATE))
 	{
 	    es->flags &= ~EF_UPDATE;
-	    EDIT_NOTIFY_PARENT(es, EN_CHANGE);
+	    if (!notify_parent(es, EN_CHANGE)) return;
 	}
 	EDIT_InvalidateUniscribeData(es);
 }
@@ -3119,7 +3118,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	EDIT_EM_ReplaceSel(es, TRUE, utext, TRUE, TRUE);
 	EDIT_EM_SetSel(es, es->undo_position, es->undo_position + es->undo_insert_count, FALSE);
         /* send the notification after the selection start and end are set */
-        EDIT_NOTIFY_PARENT(es, EN_CHANGE);
+        if (!notify_parent(es, EN_CHANGE)) return TRUE;
 	EDIT_EM_ScrollCaret(es);
 	HeapFree(GetProcessHeap(), 0, utext);
 
@@ -3654,9 +3653,9 @@ static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 	/* throw away left over scroll when we lose focus */
 	es->wheelDeltaRemainder = 0;
 
-	if (es->hwndListBox == NULL)
-		EDIT_NOTIFY_PARENT(es, EN_KILLFOCUS);
-	else
+	if (es->hwndListBox == NULL) {
+		if (!notify_parent(es, EN_KILLFOCUS)) return 0;
+	} else
 	{ /* send the undocumented WM_CBLOSTTEXTFOCUS message to combobox */
 		hCombo = GetParent(es->hwndSelf);
 		lStyles = GetWindowLong(hCombo, GWL_STYLE);
@@ -3668,7 +3667,7 @@ static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
         DestroyCaret();
         if(!(es->style & ES_NOHIDESEL))
                 EDIT_InvalidateText(es, es->selection_start, es->selection_end);
-        EDIT_NOTIFY_PARENT(es, EN_KILLFOCUS);
+        if (!notify_parent(es, EN_KILLFOCUS)) return 0;
         /* throw away left over scroll when we lose focus */
         es->wheelDeltaRemainder = 0;
 #endif
@@ -3917,7 +3916,7 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
 	EDIT_SetCaretPos(es, es->selection_end,
 			 es->flags & EF_AFTER_WRAP);
 	ShowCaret(es->hwndSelf);
-	EDIT_NOTIFY_PARENT(es, EN_SETFOCUS);
+	notify_parent(es, EN_SETFOCUS);
 }
 
 
@@ -4029,8 +4028,8 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
      */
     if( !((es->style & ES_MULTILINE) || es->hwndListBox))
     {
-        EDIT_NOTIFY_PARENT(es, EN_UPDATE);
-        EDIT_NOTIFY_PARENT(es, EN_CHANGE);
+        if (!notify_parent(es, EN_UPDATE)) return;
+        if (!notify_parent(es, EN_CHANGE)) return;
     }
     EDIT_EM_ScrollCaret(es);
     EDIT_UpdateScrollInfo(es);    
@@ -4231,7 +4230,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		if (!dx) {
 			/* force scroll info update */
 			EDIT_UpdateScrollInfo(es);
-			EDIT_NOTIFY_PARENT(es, EN_HSCROLL);
+			notify_parent(es, EN_HSCROLL);
 		}
 		break;
 	case SB_ENDSCROLL:
@@ -4354,7 +4353,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		{
 			/* force scroll info update */
 			EDIT_UpdateScrollInfo(es);
-			EDIT_NOTIFY_PARENT(es, EN_VSCROLL);
+			notify_parent(es, EN_VSCROLL);
 		}
 		break;
 	case SB_ENDSCROLL:
