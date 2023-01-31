@@ -13,9 +13,12 @@
 
 
 static CLIPFORMAT g_DataObjectAttributes = 0;
+static BOOL g_UseOldMask;
 static const DWORD dwDefaultAttributeMask = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_STORAGE | SFGAO_CANRENAME | SFGAO_CANDELETE |
                                      SFGAO_READONLY | SFGAO_STREAM | SFGAO_FOLDER;
 static_assert(dwDefaultAttributeMask == 0x2044003B, "Unexpected default attribute mask");
+static DWORD dwOldFlags = SFGAO_CAPABILITYMASK | SFGAO_FILESYSTEM;
+
 
 
 struct TmpFile
@@ -143,8 +146,22 @@ static void test_AttributesRegistration()
     hr = CIDLData_CreateFromIDArray(parent, 1, &child, &spDataObject);
     ok_hr_ret(hr, S_OK);
 
+    {
+        FORMATETC fmt = { g_DataObjectAttributes, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        STGMEDIUM medium = {};
+        HRESULT hr = spDataObject->GetData(&fmt, &medium);
+
+        g_UseOldMask = hr != DV_E_FORMATETC;
+
+        if (SUCCEEDED(hr))
+            ReleaseStgMedium(&medium);
+    }
+    if (!g_UseOldMask)
+        dwOldFlags = 0;
+
+
     /* Not registered yet */
-    ok_attributes(spDataObject, DV_E_FORMATETC, 0, 0, 0);
+    ok_attributes(spDataObject, g_UseOldMask ? E_INVALIDARG : DV_E_FORMATETC, 0, 0, 0);
 
     /* Ask for attributes, without specifying any */
     DWORD dwAttributeMask = 0, dwAttributes = 0;
@@ -153,7 +170,7 @@ static void test_AttributesRegistration()
     ok_hr(hr, S_OK);
 
     /* Now there are attributes registered */
-    ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask, attributes, 1);
+    ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | dwOldFlags, attributes, 1);
 
     // Now add an additional mask value (our exe should have a propsheet!)
     dwAttributeMask = SFGAO_HASPROPSHEET;
@@ -163,7 +180,7 @@ static void test_AttributesRegistration()
     ok_hr(hr, S_OK);
 
     // Observe that this is now also cached
-    ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | SFGAO_HASPROPSHEET, attributes | SFGAO_HASPROPSHEET, 1);
+    ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | SFGAO_HASPROPSHEET | dwOldFlags, attributes | SFGAO_HASPROPSHEET, 1);
 }
 
 static void test_MultipleFiles()
@@ -256,7 +273,7 @@ static void test_MultipleFiles()
         UINT cItems = 123;
         hr = SHGetAttributesFromDataObject(spDataObject, dwAttributeMask, &dwAttributes, &cItems);
         ok_hr(hr, S_OK);
-        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask, attributes_first, 1);
+        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | dwOldFlags, attributes_first, 1);
     }
 
     {
@@ -269,7 +286,7 @@ static void test_MultipleFiles()
         UINT cItems = 123;
         hr = SHGetAttributesFromDataObject(spDataObject, dwAttributeMask, &dwAttributes, &cItems);
         ok_hr(hr, S_OK);
-        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask, attributes2, 2);
+        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | dwOldFlags, attributes2, 2);
     }
 
     {
@@ -282,7 +299,7 @@ static void test_MultipleFiles()
         UINT cItems = 123;
         hr = SHGetAttributesFromDataObject(spDataObject, dwAttributeMask, &dwAttributes, &cItems);
         ok_hr(hr, S_OK);
-        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask, attributes3, 3);
+        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | dwOldFlags, attributes3, 3);
     }
 
     {
@@ -295,7 +312,7 @@ static void test_MultipleFiles()
         UINT cItems = 123;
         hr = SHGetAttributesFromDataObject(spDataObject, dwAttributeMask, &dwAttributes, &cItems);
         ok_hr(hr, S_OK);
-        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask, attributes_last, 1);
+        ok_attributes(spDataObject, S_OK, dwDefaultAttributeMask | dwOldFlags, attributes_last, 1);
     }
 }
 
