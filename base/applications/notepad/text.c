@@ -61,10 +61,10 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld)
+ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
 {
     BOOL bPrevCR = FALSE;
-    DWORD ichNew, ichOld;
+    SIZE_T ichNew, ichOld;
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
         WCHAR ch = pszOld[ichOld];
