@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ * Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -94,20 +95,23 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
     return E_NOTIMPL;
 }
 
-BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& strText)
+BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 {
+    pszText.Free();
     INT cchMax = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
-    strText.Allocate(cchMax);
-    fCombobox.GetWindowText(strText, cchMax);
-    return TRUE;
+    if (!pszText.Allocate(cchMax))
+        return FALSE;
+
+    return fCombobox.GetWindowText(pszText, cchMax);
 }
 
 // Execute command line from address bar
-HRESULT CAddressEditBox::ExecuteCommandLine()
+BOOL CAddressEditBox::ExecuteCommandLine()
 {
     /* Get command line */
     CComHeapPtr<WCHAR> pszCmdLine;
-    GetComboBoxText(pszCmdLine);
+    if (!GetComboBoxText(pszCmdLine))
+        return FALSE;
 
     /* Split 1st parameter and trailing arguments */
     PWCHAR args = PathGetArgsW(pszCmdLine);
@@ -120,6 +124,7 @@ HRESULT CAddressEditBox::ExecuteCommandLine()
 
     PathUnquoteSpacesW(pszCmdLine);
 
+    /* Get ready for execution */
     SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
     info.lpFile = pszCmdLine;
     info.lpParameters = args;
@@ -135,13 +140,13 @@ HRESULT CAddressEditBox::ExecuteCommandLine()
     }
 
     if (!::ShellExecuteExW(&info))
-        return E_FAIL;
+        return FALSE;
 
-    /* Reset combobox */
+    /* Execution succeeded. Reset the combobox. */
     if (dir[0] != UNICODE_NULL)
         fCombobox.SetWindowText(dir);
 
-    return S_OK;
+    return TRUE;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
@@ -245,10 +250,10 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
         /* If the destination path doesn't exist then display an error message */
         if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            if (SUCCEEDED(ExecuteCommandLine()))
+            if (ExecuteCommandLine())
                 return S_OK;
-            else
-                return ShowFileNotFoundError(hr);
+
+            return ShowFileNotFoundError(hr);
         }
 
         if (!pidlLastParsed)
