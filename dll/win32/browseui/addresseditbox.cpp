@@ -94,6 +94,36 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
     return E_NOTIMPL;
 }
 
+// Execute command line from address bar
+BOOL CAddressEditBox::ExecuteCommandLine()
+{
+    CComHeapPtr<WCHAR> input;
+    INT inputLength = fCombobox.GetWindowTextLength() + 2;
+    input.Allocate(inputLength);
+    fCombobox.GetWindowText(input, inputLength);
+
+    PWCHAR args = PathGetArgsW(input);
+    if (args && *args)
+    {
+        --args;
+        *args = UNICODE_NULL;
+        ++args;
+    }
+
+    PathUnquoteSpacesW(input);
+
+    SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
+    info.lpFile = input;
+    info.lpParameters = args;
+    info.nShow = SW_SHOWNORMAL;
+    //info.lpDirectory = ...; // TODO: Set current directory
+    if (!::ShellExecuteExW(&info))
+        return FALSE;
+
+    // TODO: Revert fCombobox
+    return TRUE;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
     ULONG eaten;
@@ -200,7 +230,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 
         /* If the destination path doesn't exist then display an error message */
         if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            if (ExecuteCommandLine())
+                return S_OK;
+
             return ShowFileNotFoundError(hr);
+        }
 
         if (!pidlLastParsed)
             return E_FAIL;

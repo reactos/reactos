@@ -48,6 +48,7 @@ private:
     void FillOneLevel(int index, int levelIndent, int indent);
     LPITEMIDLIST GetItemData(int index);
     HRESULT STDMETHODCALLTYPE ShowFileNotFoundError(HRESULT hRet);
+    BOOL ExecuteCommandLine();
 public:
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
