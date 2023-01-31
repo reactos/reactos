@@ -71,13 +71,7 @@ ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld)
 
         if (ch == L'\n')
         {
-            if (bPrevCR)
-            {
-                ichNew -= 2;
-                pszNew[ichNew++] = L'\r';
-                pszNew[ichNew++] = L'\n';
-            }
-            else
+            if (!bPrevCR)
             {
                 pszNew[ichNew++] = L'\r';
                 pszNew[ichNew++] = L'\n';
