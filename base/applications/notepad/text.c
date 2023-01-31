@@ -63,19 +63,34 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 static VOID
 ReplaceNewLines(LPWSTR pszNew, DWORD cchNew, LPCWSTR pszOld, DWORD cchOld, WCHAR chTarget)
 {
+    BOOL bPrevCR = FALSE;
     DWORD ichNew, ichOld;
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
         WCHAR ch = pszOld[ichOld];
-        if (ch == chTarget)
+        switch (ch)
         {
-            pszNew[ichNew++] = L'\r';
-            pszNew[ichNew++] = L'\n';
+            case L'\r':
+                if (ch == chTarget)
+                {
+                    pszNew[ichNew++] = L'\r';
+                    pszNew[ichNew++] = L'\n';
+                }
+                break;
+
+            case L'\n':
+                if (!bPrevCR)
+                {
+                    pszNew[ichNew++] = L'\r';
+                    pszNew[ichNew++] = L'\n';
+                }
+                break;
+
+            default:
+                pszNew[ichNew++] = ch;
+                break;
         }
-        else
-        {
-            pszNew[ichNew++] = ch;
-        }
+        bPrevCR = (ch == L'\r');
     }
     pszNew[ichNew] = UNICODE_NULL;
     assert(ichNew == cchNew);
@@ -96,17 +111,24 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
         if (ch == UNICODE_NULL)
             pszText[ich] = L' ';
 
-        if (ch == '\n')
+        if (ch == L'\n')
         {
             if (bPrevCR)
+            {
+                adwEolnCount[EOLN_CR]--;
                 adwEolnCount[EOLN_CRLF]++;
+            }
             else
+            {
                 adwEolnCount[EOLN_LF]++;
+            }
+        }
+        else if (ch == '\r')
+        {
+            adwEolnCount[EOLN_CR]++;
         }
 
         bPrevCR = (ch == L'\r');
-        if (bPrevCR)
-            adwEolnCount[EOLN_CR]++;
     }
 
     /* Choose the newline code */
@@ -135,7 +157,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, LPDWORD pcchText, EOL
                 return FALSE; /* Failure */
             }
 
-            ReplaceNewLines(pszNew, cchNew, pszText, cchText, (iEoln == EOLN_LF) ? L'\n' : L'\r');
+            ReplaceNewLines(pszNew, cchNew, pszText, cchText, ((iEoln == EOLN_LF) ? L'\n' : L'\r'));
 
             /* Replace with new data */
             LocalUnlock(*phLocal);
