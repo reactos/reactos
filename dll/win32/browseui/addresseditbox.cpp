@@ -186,19 +186,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     if (!GetComboBoxText(input))
         return E_FAIL;
 
-    INT addressLength = ::ExpandEnvironmentStrings(input, NULL, 0);
-    if (addressLength <= 0)
+    /* Expand the text */
+    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
+    if (addressLength <= 0 ||
+        !address.Allocate(addressLength + 2) ||
+        !::ExpandEnvironmentStrings(input, address, addressLength))
     {
+        address.Free();
         address.Attach(input.Detach());
-    }
-    else
-    {
-        if (!address.Allocate(addressLength + 2) ||
-            !::ExpandEnvironmentStrings(input, address, addressLength))
-        {
-            address.Free();
-            address.Attach(input.Detach());
-        }
     }
 
     /* Try to parse a relative path and if it fails, try to browse an absolute path */
