@@ -310,92 +310,93 @@ static void test_SymFromAddr(HANDLE hProc, DWORD64 BaseAddress)
     DWORD64 Displacement;
     DWORD dwErr;
 
-    /* No address found before load address of module */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress -1, &Displacement, pSymbol);
-    dwErr = GetLastError();
-    ok_int(Ret, FALSE);
-    ok_hex(dwErr, ERROR_MOD_NOT_FOUND);
-
-    /* Right at the start of the module is recognized as the first symbol found */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0xffffffffffffffff);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "DllMain");
-
-    /* The actual first instruction of the function */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress + 0x1010, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "DllMain");
-
-    /* The last instruction in the function */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress + 0x102D, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0x1d);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "DllMain");
-
-    /* The padding below the function */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress + 0x102E, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0x1e);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "DllMain");
-
-    /* One byte before the next function */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress + 0x103f, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0x2f);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "DllMain");
-
-    /* First byte of the next function */
-    Displacement = 0;
-    INIT_PSYM(buffer);
-    Ret = SymFromAddr(hProc, BaseAddress + 0x1040, &Displacement, pSymbol);
-    ok_int(Ret, TRUE);
-    ok_ulonglong(Displacement, 0);
-    ok_ulonglong(pSymbol->ModBase, BaseAddress);
-    ok_hex(pSymbol->Flags, 0);
-    ok_ulonglong(pSymbol->Address, BaseAddress + 0x1040);
-    ok_hex(pSymbol->Tag, SymTagFunction);
-    ok_str(pSymbol->Name, "FfsChkdsk");
-
     if (!supports_pdb(hProc, BaseAddress))
     {
-        skip("dbghelp.dll too old or cannot read this symbol!\n");
+        skip("dbghelp.dll too old or cannot enumerate symbols!\n");
     }
     else
     {
+
+        /* No address found before load address of module */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress -1, &Displacement, pSymbol);
+        dwErr = GetLastError();
+        ok_int(Ret, FALSE);
+        ok_hex(dwErr, ERROR_MOD_NOT_FOUND);
+
+        /* Right at the start of the module is recognized as the first symbol found */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0xffffffffffffffff);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "DllMain");
+
+        /* The actual first instruction of the function */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress + 0x1010, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "DllMain");
+
+        /* The last instruction in the function */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress + 0x102D, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0x1d);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "DllMain");
+
+        /* The padding below the function */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress + 0x102E, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0x1e);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "DllMain");
+
+        /* One byte before the next function */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress + 0x103f, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0x2f);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1010);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "DllMain");
+
+        /* First byte of the next function */
+        Displacement = 0;
+        INIT_PSYM(buffer);
+        Ret = SymFromAddr(hProc, BaseAddress + 0x1040, &Displacement, pSymbol);
+        ok_int(Ret, TRUE);
+        ok_ulonglong(Displacement, 0);
+        ok_ulonglong(pSymbol->ModBase, BaseAddress);
+        ok_hex(pSymbol->Flags, 0);
+        ok_ulonglong(pSymbol->Address, BaseAddress + 0x1040);
+        ok_hex(pSymbol->Tag, SymTagFunction);
+        ok_str(pSymbol->Name, "FfsChkdsk");
+
         /* .idata */
         Displacement = 0;
         INIT_PSYM(buffer);
