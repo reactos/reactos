@@ -252,7 +252,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         cchText = 0;
         if (cbContent > 0)
         {
-            cchText = MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], (DWORD)cbContent, NULL, 0);
+            cchText = MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], (INT)cbContent, NULL, 0);
             if (cchText == 0)
                 goto done;
         }
@@ -268,8 +268,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         if (cbContent > 0)
         {
             if (!MultiByteToWideChar(iCodePage, 0,
-                                     &pBytes[dwPos], (DWORD)cbContent,
-                                     pszNewText, (DWORD)cchText))
+                                     &pBytes[dwPos], (INT)cbContent, pszNewText, (INT)cchText))
             {
                 goto done;
             }
