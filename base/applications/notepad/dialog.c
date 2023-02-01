@@ -448,7 +448,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     SetFocus(Globals.hEdit);
 
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
-     *  See http://support.microsoft.com/?kbid=260563
+     *  See http://web.archive.org/web/20090627165105/http://support.microsoft.com/kb/260563
      */
     if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, _T(".LOG")))
     {
