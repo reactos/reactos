@@ -418,7 +418,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
 
             /* if this is the taskbar, then we want to just exit */
-            if (IsTaskBar)
+            if (IsTaskBar || !g_bWindowSnapEnabled)
             {
                break;
             }

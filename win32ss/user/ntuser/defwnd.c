@@ -813,7 +813,7 @@ IntDefWindowProc(
 
             if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
             {
-               if ((topWnd->style & WS_THICKFRAME) == 0)
+               if ((topWnd->style & WS_THICKFRAME) == 0 || !g_bWindowSnapEnabled)
                {
                   return 0;
                }
