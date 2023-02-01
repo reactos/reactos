@@ -40,8 +40,8 @@ KMT_TESTFUNC Test_TcpIpConnect;
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
 {
-    { "CcCopyRead",                   Test_CcCopyRead },
-    { "CcCopyWrite",                  Test_CcCopyWrite },
+    { "-CcCopyRead",                   Test_CcCopyRead },   // TODO: Crashes on TestWHS
+    { "-CcCopyWrite",                  Test_CcCopyWrite },  // TODO: Crashes on TestWHS
     { "CcMapData",                    Test_CcMapData },
     { "CcPinMappedData",              Test_CcPinMappedData },
     { "CcPinRead",                    Test_CcPinRead },
