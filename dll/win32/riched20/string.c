@@ -161,7 +161,9 @@ void ME_StrDeleteV(ME_String *s, int nVChar, int nChars)
 static int
 ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
 {
+#ifndef __REACTOS__
   /* FIXME: Native also knows about punctuation */
+#endif
   TRACE("s==%s, start==%d, len==%d, code==%d\n",
         debugstr_wn(s, len), start, len, code);
 
@@ -173,13 +175,23 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
     case WB_MOVEWORDLEFT:
       while (start && ME_IsWSpace(s[start - 1]))
         start--;
+#ifdef __REACTOS__
+      while (start && !ME_IsWSpace(s[start - 1]) && !iswpunct(s[start - 1]))
+        start--;
+#else
       while (start && !ME_IsWSpace(s[start - 1]))
         start--;
+#endif
       return start;
     case WB_RIGHT:
     case WB_MOVEWORDRIGHT:
+#ifdef __REACTOS__
+      while (start < len && !ME_IsWSpace(s[start]) && !iswpunct(s[start]))
+        start++;
+#else
       while (start < len && !ME_IsWSpace(s[start]))
         start++;
+#endif
       while (start < len && ME_IsWSpace(s[start]))
         start++;
       return start;
