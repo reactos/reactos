@@ -193,9 +193,6 @@ BOOLEAN InitThreads()
     /* create thread2(same desktop) */
     if(!CreateTestThread(2, NULL)) return FALSE;
 
-    /* ugly ros hack to bypass desktop crapiness */
-    if(!CreateTestThread(6, L"ThreadTestDesktop")) return FALSE;
-
     /* create thread3(different desktop) */
     if(!CreateTestThread(3, L"ThreadTestDesktop")) return FALSE;
 
