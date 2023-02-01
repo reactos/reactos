@@ -128,12 +128,7 @@ BOOL CAddressEditBox::ExecuteCommandLine()
 
     /* Split 1st parameter from trailing arguments */
     PWCHAR args = PathGetArgsW(pszCmdLine);
-    if (args && *args)
-    {
-        --args;
-        *args = UNICODE_NULL;
-        ++args;
-    }
+    PathRemoveArgsW(pszCmdLine);
 
     PathUnquoteSpacesW(pszCmdLine); /* Unquote the 1st parameter */
 
