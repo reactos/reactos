@@ -223,10 +223,16 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
         {
             ok(pInfo->dwMajor == 2, "Expected pInfo->dwMajor to be 2, was: %d\n", pInfo->dwMajor);
             if (g_WinVersion >= _WIN32_WINNT_VISTA)
+            {
                 ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
+            }
             else
-                ok(pInfo->dwMinor >= 190915 && pInfo->dwMinor <= 230130,
-                   "Expected pInfo->dwMinor to be between 190915 and 230130, was: %d\n", pInfo->dwMinor);
+            {
+                SYSTEMTIME si = {0};
+                GetSystemTime(&si);
+                DWORD dwExpect = ((DWORD)si.wYear - 2000) * 10000 + si.wMonth * 100 + si.wDay;
+                ok(pInfo->dwMinor == dwExpect, "Expected pInfo->dwMinor to be %d, was: %d\n", dwExpect, pInfo->dwMinor);
+            }
 
             ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
