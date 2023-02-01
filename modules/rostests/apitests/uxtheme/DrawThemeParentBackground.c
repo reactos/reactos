@@ -186,7 +186,10 @@ void Test_Params()
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
     hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
-    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    if (IsThemeActive())
+        ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    else
+        skip("Theme not active\n");
 
     ReleaseDC(hWnd1, hdc);
     hdc = GetDC(hWnd2);
@@ -196,7 +199,10 @@ void Test_Params()
     ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
 
     hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
-    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    if (IsThemeActive())
+        ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    else
+        skip("Theme not active\n");
     ReleaseDC(hWnd2, hdc);
 
 

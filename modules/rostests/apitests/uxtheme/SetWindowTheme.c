@@ -45,7 +45,10 @@ void TestTheme(HWND hwnd)
     ok (hr == S_OK, "Expected S_OK got 0x%lx error\n", hr);
 
     htheme1 = OpenThemeData(hwnd, L"Toolbar");
-    ok (htheme1 != NULL, "OpenThemeData failed\n");
+    if (IsThemeActive())
+        ok (htheme1 != NULL, "OpenThemeData failed\n");
+    else
+        skip("Theme not active\n");
 
     hr = SetWindowTheme(hwnd, L"", L"");
     ok (hr == S_OK, "Expected S_OK got 0x%lx error\n", hr);
@@ -63,9 +66,15 @@ void TestTheme(HWND hwnd)
     ok (hr == S_OK, "Expected S_OK got 0x%lx error\n", hr);
 
     htheme2 = OpenThemeData(hwnd, L"Toolbar");
-    ok (htheme2 != NULL, "OpenThemeData failed\n");
-
-    ok(htheme1 != htheme2, "Expected different theme data\n");
+    if (IsThemeActive())
+    {
+        ok (htheme2 != NULL, "OpenThemeData failed\n");
+        ok(htheme1 != htheme2, "Expected different theme data\n");
+    }
+    else
+    {
+        skip("Theme not active\n");
+    }
 }
 
 START_TEST(SetWindowTheme)
@@ -77,4 +86,6 @@ START_TEST(SetWindowTheme)
 
     TestParams(hwnd);
     TestTheme(hwnd);
+
+    DestroyWindow(hwnd);
 }
