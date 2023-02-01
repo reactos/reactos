@@ -144,12 +144,11 @@ BOOL CAddressEditBox::ExecuteCommandLine()
     info.nShow = SW_SHOWNORMAL;
 
     WCHAR dir[MAX_PATH] = L"";
-    PIDLIST_ABSOLUTE pidl;
+    CComHeapPtr<ITEMIDLIST> pidl;
     if (SUCCEEDED(GetAbsolutePidl(&pidl)))
     {
         if (SHGetPathFromIDListW(pidl, dir) && PathIsDirectoryW(dir))
             info.lpDirectory = dir; /* Set current directory */
-        ILFree(pidl);
     }
 
     if (!::ShellExecuteExW(&info)) /* Execute! */
@@ -188,7 +187,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 
     INT addressLength = (wcschr(input, L'%') ? ::ExpandEnvironmentStrings(input, NULL, 0) : 0);
     if (addressLength <= 0 ||
-        !address.Allocate(addressLength + 2) ||
+        !address.Allocate(addressLength + 1) ||
         !::ExpandEnvironmentStrings(input, address, addressLength))
     {
         address.Free();
