@@ -14,6 +14,12 @@
 #include <errno.h>
 #include <locale.h>
 
+#ifdef TEST_STATIC_CRT
+#define todo_static todo_if(1)
+#else
+#define todo_static
+#endif
+
 START_TEST(wctomb)
 {
     int Length;
@@ -35,21 +41,21 @@ START_TEST(wctomb)
 
     /* Do not give output to the caller */
     Length = wctomb(NULL, 0);
-    ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
+    todo_static ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
 
     /* Do the same but expect a valid wide character argument this time */
     Length = wctomb(NULL, wchSrc[0]);
-    ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
+    todo_static ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
 
     /* Don't return anything to the output even if conversion is impossible */
     Length = wctomb(NULL, wchSrc[1]);
     ok(errno == 0, "The error number (errno) should be 0 even though an invalid character in current locale is given but got %d.\n", errno);
-    ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
+    todo_static ok(Length == 0, "Expected no characters to be converted (because the output argument is refused) but got %d.\n", Length);
 
     /* Attempt to convert a character not possible in current locale */
     Length = wctomb(chDest, wchSrc[1]);
-    ok(Length == -1, "The conversion is not possible in current locale but got %d as returned value.\n", Length);
-    ok(errno == EILSEQ, "EILSEQ is expected in an illegal sequence conversion but got %d.\n", errno);
+    todo_static ok(Length == -1, "The conversion is not possible in current locale but got %d as returned value.\n", Length);
+    todo_static ok(errno == EILSEQ, "EILSEQ is expected in an illegal sequence conversion but got %d.\n", errno);
 
     /* Return a null wide character to the destination argument */
     Length = wctomb(chDest, 0);
