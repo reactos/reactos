@@ -419,11 +419,9 @@ BOOL DoCloseFile(VOID)
 
 VOID DoOpenFile(LPCTSTR szFileName)
 {
-    static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
-    LPTSTR pszText = NULL;
-    DWORD dwTextLen;
     TCHAR log[5];
+    HLOCAL hLocal;
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
@@ -437,21 +435,22 @@ VOID DoOpenFile(LPCTSTR szFileName)
         goto done;
     }
 
-    if (!ReadText(hFile, (LPWSTR *)&pszText, &dwTextLen, &Globals.encFile, &Globals.iEoln))
+    /* To make loading file quicker, we use the internal handle of EDIT control */
+    hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
+    if (!ReadText(hFile, &hLocal, &Globals.encFile, &Globals.iEoln))
     {
         ShowLastError();
         goto done;
     }
-    SetWindowText(Globals.hEdit, pszText);
+    SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hLocal, 0);
+    /* No need of EM_SETMODIFY and EM_EMPTYUNDOBUFFER here. EM_SETHANDLE does instead. */
 
-    SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
-    SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     SetFocus(Globals.hEdit);
 
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
-     *  See http://support.microsoft.com/?kbid=260563
+     *  See http://web.archive.org/web/20090627165105/http://support.microsoft.com/kb/260563
      */
-    if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, dotlog))
+    if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, _T(".LOG")))
     {
         static const TCHAR lf[] = _T("\r\n");
         SendMessage(Globals.hEdit, EM_SETSEL, GetWindowTextLength(Globals.hEdit), -1);
@@ -471,8 +470,6 @@ VOID DoOpenFile(LPCTSTR szFileName)
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
-    if (pszText)
-        HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_FileNew(VOID)
@@ -590,7 +587,7 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
                 if (hCombo)
-                    Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                    Globals.iEoln = (EOLN)SendMessage(hCombo, CB_GETCURSEL, 0, 0);
             }
             break;
     }

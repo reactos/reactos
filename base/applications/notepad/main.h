@@ -47,9 +47,12 @@ typedef enum
 // #define MIN_ENCODING   0
 // #define MAX_ENCODING   3
 
-#define EOLN_CRLF           0
-#define EOLN_LF             1
-#define EOLN_CR             2
+typedef enum
+{
+    EOLN_CRLF = 0, /* "\r\n" */
+    EOLN_LF   = 1, /* "\n" */
+    EOLN_CR   = 2  /* "\r" */
+} EOLN; /* End of line (NewLine) type */
 
 typedef struct
 {
@@ -76,7 +79,7 @@ typedef struct
     TCHAR szStatusBarLineCol[MAX_PATH];
 
     ENCODING encFile;
-    int iEoln;
+    EOLN iEoln;
 
     FINDREPLACE find;
     WNDPROC EditProc;
@@ -89,8 +92,8 @@ extern NOTEPAD_GLOBALS Globals;
 VOID SetFileName(LPCTSTR szFileName);
 
 /* from text.c */
-BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, int *piEoln);
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, int iEoln);
+BOOL ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln);
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln);
 
 /* from settings.c */
 void NOTEPAD_LoadSettingsFromRegistry(void);
