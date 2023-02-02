@@ -138,12 +138,13 @@ BOOL CAddressEditBox::ExecuteCommandLine()
     info.lpParameters = args;
     info.nShow = SW_SHOWNORMAL;
 
+    /* Set current directory */
     WCHAR dir[MAX_PATH] = L"";
     CComHeapPtr<ITEMIDLIST> pidl;
     if (SUCCEEDED(GetAbsolutePidl(&pidl)))
     {
         if (SHGetPathFromIDListW(pidl, dir) && PathIsDirectoryW(dir))
-            info.lpDirectory = dir; /* Set current directory */
+            info.lpDirectory = dir;
     }
 
     if (!::ShellExecuteExW(&info)) /* Execute! */
