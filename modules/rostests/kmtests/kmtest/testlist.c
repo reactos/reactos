@@ -42,10 +42,10 @@ const KMT_TEST TestList[] =
 {
     { "-CcCopyRead",                   Test_CcCopyRead },   // TODO: Crashes on TestWHS
     { "-CcCopyWrite",                  Test_CcCopyWrite },  // TODO: Crashes on TestWHS
-    { "CcMapData",                    Test_CcMapData },
-    { "CcPinMappedData",              Test_CcPinMappedData },
-    { "CcPinRead",                    Test_CcPinRead },
-    { "CcSetFileSizes",               Test_CcSetFileSizes },
+    { "-CcMapData",                    Test_CcMapData },
+    { "-CcPinMappedData",              Test_CcPinMappedData },
+    { "-CcPinRead",                    Test_CcPinRead },
+    { "-CcSetFileSizes",               Test_CcSetFileSizes },
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },
