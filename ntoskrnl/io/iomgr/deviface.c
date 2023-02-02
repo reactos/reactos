@@ -26,6 +26,7 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
 
 static PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
 
+CODE_SEG("PAGE")
 static
 NTSTATUS
 OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
@@ -233,16 +234,20 @@ cleanup:
  * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  *
  */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
-                                 IN ACCESS_MASK DesiredAccess,
-                                 OUT PHANDLE DeviceInterfaceKey)
+IoOpenDeviceInterfaceRegistryKey(
+    _In_ PUNICODE_STRING SymbolicLinkName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE DeviceInterfaceKey)
 {
     HANDLE InstanceKey, DeviceParametersKey;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DeviceParametersU = RTL_CONSTANT_STRING(L"Device Parameters");
+
+    PAGED_CODE();
 
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,
@@ -295,12 +300,16 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
  * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  *
  */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
-                          IN CONST GUID *AliasInterfaceClassGuid,
-                          OUT PUNICODE_STRING AliasSymbolicLinkName)
+IoGetDeviceInterfaceAlias(
+    _In_ PUNICODE_STRING SymbolicLinkName,
+    _In_ const GUID *AliasInterfaceClassGuid,
+    _Out_ PUNICODE_STRING AliasSymbolicLinkName)
 {
+    PAGED_CODE();
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -308,10 +317,12 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
  * @brief
  * Returns the alias device interface of the specified device interface.
  */
+CODE_SEG("PAGE")
 static NTSTATUS
-IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
-                    IN ACCESS_MASK DesiredAccess,
-                    OUT HANDLE *pInterfaceKey)
+IopOpenInterfaceKey(
+    _In_ const GUID *InterfaceClassGuid,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ HANDLE *pInterfaceKey)
 {
     UNICODE_STRING LocalMachine = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\");
     UNICODE_STRING GuidString;
@@ -424,12 +435,14 @@ cleanup:
  * @return
  * Usual NTSTATUS
  */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
-                      IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-                      IN ULONG Flags,
-                      OUT PWSTR *SymbolicLinkList)
+IoGetDeviceInterfaces(
+    _In_ const GUID *InterfaceClassGuid,
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG Flags,
+    _Out_ PWSTR *SymbolicLinkList)
 {
     UNICODE_STRING Control = RTL_CONSTANT_STRING(L"Control");
     UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
@@ -922,12 +935,14 @@ cleanup:
  * @remarks
  * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
-                          IN CONST GUID *InterfaceClassGuid,
-                          IN PUNICODE_STRING ReferenceString OPTIONAL,
-                          OUT PUNICODE_STRING SymbolicLinkName)
+IoRegisterDeviceInterface(
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ const GUID *InterfaceClassGuid,
+    _In_opt_ PUNICODE_STRING ReferenceString,
+    _Out_ PUNICODE_STRING SymbolicLinkName)
 {
     PUNICODE_STRING InstancePath;
     UNICODE_STRING GuidString;
@@ -947,7 +962,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     NTSTATUS Status, SymLinkStatus;
     PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
 
-    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+    PAGED_CODE();
 
     DPRINT("IoRegisterDeviceInterface(): PDO %p, RefString: %wZ\n",
         PhysicalDeviceObject, ReferenceString);
@@ -1275,6 +1290,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
  * @remarks
  * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
@@ -1294,6 +1310,8 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     UNICODE_STRING LinkNameNoPrefix;
     USHORT i;
     USHORT ReferenceStringOffset;
+
+    PAGED_CODE();
 
     if (SymbolicLinkName == NULL)
     {
