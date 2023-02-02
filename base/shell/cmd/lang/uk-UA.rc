@@ -450,7 +450,7 @@ VER [/C][/R][/W]\n\n\
  Free Software Foundation; версiї 2 Лiцензiї, чи\n\
  (на ваш вибiр) будь-якої новiшої версiї.\n"
     STRING_VERSION_HELP5 "\nВiдсилайте звiти про помилки на <ros-dev@reactos.org>.\n\
-Оновлення доступнi на: http://www.reactos.org"
+Оновлення доступнi на: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS-версiя написана:\n"
     STRING_VERSION_HELP7 "\nReactOS-версiя написана:\n"
     STRING_VOL_HELP1 " Том в пристрої %c має мiтку %s\n"

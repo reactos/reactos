@@ -439,7 +439,7 @@ untuk daftar penghargaan."
     STRING_VERSION_HELP4 "\n Program ini adalah software bebas; anda dapat mendistribusikan dan/atau\n\
  mengubahnya di bawah ketentuan lisensi GNU General Public License sebagaimana dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
     STRING_VERSION_HELP5 "\nKirim laporan bug ke <ros-dev@reactos.org>.\n\
-Pemutakiran tersedia di: http://www.reactos.org"
+Pemutakiran tersedia di: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersi FreeDOS ditulis oleh:\n"
     STRING_VERSION_HELP7 "\nVersi ReactOS ditulis oleh:\n"
     STRING_VOL_HELP1 " Volume dalam drive %c adalah %s\n"

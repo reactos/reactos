@@ -2,7 +2,7 @@ Angelus' Wallpapers
 ===================
 Forum User "Angelus" (jedi.knight@wanadoo.es)
 Under Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-See forum thread: http://www.reactos.org/forum/viewtopic.php?f=25&t=6153
+See forum thread: https://reactos.org/forum/viewtopic.php?f=25&t=6153
 
 Bliss Series: 1; 2; 3 (Cristal ROS); 4 (DreamBliss)
 -------------

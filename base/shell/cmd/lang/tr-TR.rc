@@ -433,7 +433,7 @@ yayınlanan GNU Genel Kamu Lisansı'nın 2. sürümü ya da (sizin tercihinize g
 bir sürüm altında olmak kaydı ile, lisansın size sağladığı koşullar altında yeniden dağıtabilir ve\n\
 / veya değiştirebilirsiniz;\n"
     STRING_VERSION_HELP5 "\nHata raporlarını <jira.reactos.org> e-posta adresine bildirin.\n\
-Güncellemeleri takip etmek için: http://www.reactos.org"
+Güncellemeleri takip etmek için: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS sürümü şu kişi tarafından yazılmıştır:\n"
     STRING_VERSION_HELP7 "\nReactOS sürümü şu kişi tarafından yazılmıştır:\n"
     STRING_VOL_HELP1 " %c sürücüsündeki birim %s'dir\n"

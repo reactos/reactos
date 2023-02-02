@@ -27,7 +27,7 @@ questions,
 * Style
 
 There is a coding style used for ReactOS, it's described in a ReactOS's Wiki
-page called Coding Style: http://www.reactos.org/wiki/index.php/Coding_Style
+page called Coding Style: https://reactos.org/wiki/index.php/Coding_Style
 
 However, not all codebase complies with the rules outlined in that page, so
 if you need to hack some code which has not been yet formatted, it's wise

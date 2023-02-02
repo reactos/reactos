@@ -448,7 +448,7 @@ lista de los créditos."
  la Fundación de Software Libre; tanto en la versión 2 de la Licencia, o\n\
  (según tu elección) cualquier otra posterior.\n"
     STRING_VERSION_HELP5 "\nManda los informes de bugs a <ros-dev@reactos.org>.\n\
-Actualizaciones disponibles en: http://www.reactos.org"
+Actualizaciones disponibles en: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersión de FreeDOS escrita por:\n"
     STRING_VERSION_HELP7 "\nVersión de ReactOS escrita por:\n"
     STRING_VOL_HELP1 " El volumen en la unidad %c es %s\n"

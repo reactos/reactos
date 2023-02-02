@@ -2555,7 +2555,7 @@ AtapiChipInit(
                 * size goes below 32DW.  Setting it to 1 makes the watermark
                 * 64DW.
                 *
-                * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
+                * https://reactos.org/bugzilla/show_bug.cgi?id=6500
                 */
 
                 if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
