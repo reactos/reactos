@@ -44,15 +44,15 @@ class CLanStatus final :
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // IOleCommandTarget
         virtual HRESULT WINAPI QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
         virtual HRESULT WINAPI Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-    
+
     private:
         HRESULT InitializeNetTaskbarNotifications();
         HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
-        
+
         INetConnectionManager *m_lpNetMan;
         LONG m_ref;
         NOTIFICATION_ITEM *m_pHead;
@@ -166,7 +166,7 @@ UpdateLanStatusUiDlg(
 }
 
 VOID
-UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
+UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     MIB_IFROW IfEntry;
     HICON hIcon, hOldIcon = NULL;
@@ -196,7 +196,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
             hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_SHARED);
-            pContext->Status = 2; 
+            pContext->Status = 2;
         }
         else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
         {
@@ -232,7 +232,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     nid.cbSize = sizeof(nid);
     nid.uID = pContext->uID;
     nid.hWnd = pContext->hwndStatusDlg;
-    nid.uVersion = 3;
+    nid.uVersion = NOTIFYICON_VERSION;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
@@ -345,7 +345,7 @@ InsertColumnToListView(
 static
 VOID
 AddIPAddressToListView(
-    HWND hDlgCtrl, 
+    HWND hDlgCtrl,
     PIP_ADDR_STRING pAddr,
     INT Index)
 {
@@ -769,7 +769,7 @@ LANStatusUiDlg(
             {
                 if (pContext)
                 {
-                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg)); 
+                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg));
                     BringWindowToTop(GetParent(pContext->hwndDlg));
                 }
                 break;
@@ -784,7 +784,7 @@ LANStatusUiDlg(
             if (lppsn->hdr.code == PSN_APPLY || lppsn->hdr.code == PSN_RESET)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 pContext->hwndDlg = NULL;
                 return TRUE;
             }
@@ -809,7 +809,7 @@ InitializePropertyDialog(
 
     /* get the IfTable */
     dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
+    dwResult = GetAdaptersInfo(NULL, &dwSize);
     if (dwResult!= ERROR_BUFFER_OVERFLOW)
     {
         CoTaskMemFree(pStr);
@@ -926,7 +926,7 @@ LANStatusDlg(
             }
             break;
         case WM_SHOWSTATUSDLG:
-            if (LOWORD(lParam) == WM_LBUTTONDOWN)
+            if (LOWORD(lParam) == WM_LBUTTONUP)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 if (!pContext)
@@ -1041,7 +1041,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
                 nid.uFlags = NIF_MESSAGE;
-                nid.uVersion = 3;
+                nid.uVersion = NOTIFYICON_VERSION;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
 
