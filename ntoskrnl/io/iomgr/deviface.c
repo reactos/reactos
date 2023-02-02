@@ -1,12 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/iomgr/deviface.c
- * PURPOSE:         Device interface functions
- *
- * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
- *                  Matthew Brace (ismarc@austin.rr.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Device interface functions
+ * COPYRIGHT:   Copyright Filip Navara <xnavara@volny.cz>
+ *              Copyright Matthew Brace <ismarc@austin.rr.com>
+ *              Copyright Hervé Poussineau <hpoussin@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -212,30 +210,29 @@ cleanup:
     return Status;
 }
 
-/*++
- * @name IoOpenDeviceInterfaceRegistryKey
- * @unimplemented
- *
+/**
+ * @brief
  * Provides a handle to the device's interface instance registry key.
  * Documented in WDK.
  *
- * @param SymbolicLinkName
- *        Pointer to a string which identifies the device interface instance
+ * @param[in] SymbolicLinkName
+ * Pointer to a string which identifies the device interface instance.
  *
- * @param DesiredAccess
- *        Desired ACCESS_MASK used to access the key (like KEY_READ,
- *        KEY_WRITE, etc)
+ * @param[in] DesiredAccess
+ * Desired ACCESS_MASK used to access the key (like KEY_READ, KEY_WRITE, etc)
  *
- * @param DeviceInterfaceKey
- *        If a call has been succesfull, a handle to the registry key
- *        will be stored there
+ * @param[out] DeviceInterfaceKey
+ * If a call has been succesfull, a handle to the registry key will be stored
+ * there.
  *
- * @return Three different NTSTATUS values in case of errors, and STATUS_SUCCESS
- *         otherwise (see WDK for details)
+ * @return
+ * Three different NTSTATUS values in case of errors, and STATUS_SUCCESS
+ * otherwise (see WDK for details).
  *
- * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread
+ * @remarks
+ * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  *
- *--*/
+ */
 NTSTATUS
 NTAPI
 IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
@@ -275,29 +272,29 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
     return Status;
 }
 
-/*++
- * @name IoGetDeviceInterfaceAlias
- * @unimplemented
- *
- * Returns the alias device interface of the specified device interface
+/**
+ * @brief
+ * Returns the alias device interface of the specified device interface 
  * instance, if the alias exists.
  * Documented in WDK.
  *
- * @param SymbolicLinkName
- *        Pointer to a string which identifies the device interface instance
+ * @param[in] SymbolicLinkName
+ * Pointer to a string which identifies the device interface instance.
  *
- * @param AliasInterfaceClassGuid
- *        See WDK
+ * @param[in] AliasInterfaceClassGuid
+ * See WDK.
  *
- * @param AliasSymbolicLinkName
- *        See WDK
+ * @param[out] AliasSymbolicLinkName
+ * See WDK.
  *
- * @return Three different NTSTATUS values in case of errors, and STATUS_SUCCESS
- *         otherwise (see WDK for details)
+ * @return
+ * Three different NTSTATUS values in case of errors, and STATUS_SUCCESS
+ * otherwise (see WDK for details).
  *
- * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread
+ * @remarks
+ * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
  *
- *--*/
+ */
 NTSTATUS
 NTAPI
 IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
@@ -307,25 +304,10 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*++
- * @name IopOpenInterfaceKey
- *
- * Returns the alias device interface of the specified device interface
- *
- * @param InterfaceClassGuid
- *        FILLME
- *
- * @param DesiredAccess
- *        FILLME
- *
- * @param pInterfaceKey
- *        FILLME
- *
- * @return Usual NTSTATUS
- *
- * @remarks None
- *
- *--*/
+/**
+ * @brief
+ * Returns the alias device interface of the specified device interface.
+ */
 static NTSTATUS
 IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
                     IN ACCESS_MASK DesiredAccess,
@@ -412,43 +394,36 @@ cleanup:
     return Status;
 }
 
-/*++
- * @name IoGetDeviceInterfaces
- * @implemented
- *
+/**
+ * @brief
  * Returns a list of device interfaces of a particular device interface class.
- * Documented in WDK
+ * Documented in WDK.
  *
- * @param InterfaceClassGuid
- *        Points to a class GUID specifying the device interface class
+ * @param[in] InterfaceClassGuid
+ * Points to a class GUID specifying the device interface class.
  *
- * @param PhysicalDeviceObject
- *        Points to an optional PDO that narrows the search to only the
- *        device interfaces of the device represented by the PDO
+ * @param[in] PhysicalDeviceObject
+ * Points to an optional PDO that narrows the search to only the device
+ * interfaces of the device represented by the PDO.
  *
- * @param Flags
- *        Specifies flags that modify the search for device interfaces. The
- *        DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
- *        returned symbolic links should contain also disabled device
- *        interfaces in addition to the enabled ones.
+ * @param[in] Flags
+ * Specifies flags that modify the search for device interfaces.
+ * The DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
+ * returned symbolic links should contain also disabled device interfaces in
+ * addition to the enabled ones.
  *
- * @param SymbolicLinkList
- *        Points to a character pointer that is filled in on successful return
- *        with a list of unicode strings identifying the device interfaces
- *        that match the search criteria. The newly allocated buffer contains
- *        a list of symbolic link names. Each unicode string in the list is
- *        null-terminated; the end of the whole list is marked by an additional
- *        NULL. The caller is responsible for freeing the buffer (ExFreePool)
- *        when it is no longer needed.
- *        If no device interfaces match the search criteria, this routine
- *        returns STATUS_SUCCESS and the string contains a single NULL
- *        character.
+ * @param[out] SymbolicLinkList
+ * Points to a character pointer that is filled in on successful return with a
+ * list of unicode strings (in REG_MULTI_SZ format) identifying the device
+ * interfaces that match the search criteria. The newly allocated buffer
+ * contains a list of symbolic link names. The caller is responsible for freeing
+ * the buffer (ExFreePool) when it is no longer needed. If no device interfaces
+ * match the search criteria, this routine returns STATUS_SUCCESS and the string
+ * contains a single NULL character.
  *
- * @return Usual NTSTATUS
- *
- * @remarks None
- *
- *--*/
+ * @return
+ * Usual NTSTATUS
+ */
 NTSTATUS
 NTAPI
 IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
@@ -920,36 +895,33 @@ cleanup:
     return Status;
 }
 
-/*++
- * @name IoRegisterDeviceInterface
- * @implemented
- *
+/**
+ * @brief
  * Registers a device interface class, if it has not been previously registered,
  * and creates a new instance of the interface class, which a driver can
  * subsequently enable for use by applications or other system components.
  * Documented in WDK.
  *
- * @param PhysicalDeviceObject
- *        Points to an optional PDO that narrows the search to only the
- *        device interfaces of the device represented by the PDO
+ * @param[in] PhysicalDeviceObject
+ * Points to an optional PDO that narrows the search to only the device
+ * interfaces of the device represented by the PDO.
  *
- * @param InterfaceClassGuid
- *        Points to a class GUID specifying the device interface class
+ * @param[in] InterfaceClassGuid
+ * Points to a class GUID specifying the device interface class.
  *
- * @param ReferenceString
- *        Optional parameter, pointing to a unicode string. For a full
- *        description of this rather rarely used param (usually drivers
- *        pass NULL here) see WDK
+ * @param[in] ReferenceString
+ * Optional parameter, pointing to a unicode string. For a full description of
+ * this rather rarely used param (usually drivers pass NULL here).
  *
- * @param SymbolicLinkName
- *        Pointer to the resulting unicode string
+ * @param[out] SymbolicLinkName
+ * Pointer to the resulting unicode string.
  *
- * @return Usual NTSTATUS
+ * @return
+ * Usual NTSTATUS.
  *
- * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a
- *          system thread
- *
- *--*/
+ * @remarks
+ * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
+ */
 NTSTATUS
 NTAPI
 IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -1286,26 +1258,23 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     return NT_SUCCESS(Status) ? SymLinkStatus : Status;
 }
 
-/*++
- * @name IoSetDeviceInterfaceState
- * @implemented
+/**
+ * @brief
+ * Enables or disables an instance of a previously registered device interface
+ * class. Documented in WDK.
  *
- * Enables or disables an instance of a previously registered device
- * interface class.
- * Documented in WDK.
+ * @param[in] SymbolicLinkName
+ * Pointer to the string identifying instance to enable or disable.
  *
- * @param SymbolicLinkName
- *        Pointer to the string identifying instance to enable or disable
+ * @param[in] Enable
+ * TRUE = enable, FALSE = disable.
  *
- * @param Enable
- *        TRUE = enable, FALSE = disable
+ * @return
+ * Usual NTSTATUS
  *
- * @return Usual NTSTATUS
- *
- * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a
- *          system thread
- *
- *--*/
+ * @remarks
+ * Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread.
+ */
 NTSTATUS
 NTAPI
 IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
@@ -1470,5 +1439,3 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     DPRINT("Status %x\n", Status);
     return STATUS_SUCCESS;
 }
-
-/* EOF */
