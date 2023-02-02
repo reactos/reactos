@@ -1344,6 +1344,17 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
 );
 
 //
+// I/O Device Interfaces
+//
+NTSTATUS
+IopGetDeviceInterfaces(
+    _In_ const GUID *InterfaceClassGuid,
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN UseKernelPath,
+    _Out_ PZZWSTR *SymbolicLinkList);
+
+//
 // Device action
 //
 VOID

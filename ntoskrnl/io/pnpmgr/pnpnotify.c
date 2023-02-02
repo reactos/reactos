@@ -396,10 +396,12 @@ IoRegisterPlugPlayNotification(
                 UNICODE_STRING SymbolicLinkU;
                 PWSTR SymbolicLink;
 
-                Status = IoGetDeviceInterfaces((LPGUID)EventCategoryData,
-                                               NULL, /* PhysicalDeviceObject OPTIONAL */
-                                               0, /* Flags */
-                                               &SymbolicLinkList);
+                Status = IopGetDeviceInterfaces(
+                            (LPGUID)EventCategoryData,
+                            NULL, // PhysicalDeviceObject
+                            0,    // Flags
+                            TRUE, // UseKernelPath
+                            &SymbolicLinkList);
                 if (NT_SUCCESS(Status))
                 {
                     /* Enumerate SymbolicLinkList */
