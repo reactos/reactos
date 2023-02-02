@@ -45,7 +45,7 @@ const struct test winetest_testlist[] =
     { "CommandLineToArgvW", func_CommandLineToArgvW },
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
-    { "CUserNotification", func_CUserNotification },
+    //{ "CUserNotification", func_CUserNotification }, // Test is broken on Win 2003
     { "DragDrop", func_DragDrop },
     { "ExtractIconEx", func_ExtractIconEx },
     { "FindExecutable", func_FindExecutable },
