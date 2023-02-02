@@ -141,6 +141,24 @@ KmtLoadDriver(
 }
 
 /**
+ * @name KmtUnloadDriverKeepService
+ *
+ * Unload special-purpose driver (stop the service only)
+ */
+VOID
+KmtUnloadDriverKeepService(VOID)
+{
+    DWORD Error;
+
+    Error = KmtStopService(TestServiceName, &TestServiceHandle);
+
+    if (Error)
+    {
+        fprintf(stderr, "Failed to stop %ls service with error 0x%lx\n", TestServiceName, Error);
+    }
+}
+
+/**
  * @name KmtUnloadDriver
  *
  * Unload special-purpose driver (stop and delete the service)

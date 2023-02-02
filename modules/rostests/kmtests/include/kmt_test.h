@@ -170,6 +170,7 @@ VOID KmtFinishThread(IN PKTHREAD Thread OPTIONAL, IN PKEVENT Event OPTIONAL);
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
 DWORD KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
+VOID KmtUnloadDriverKeepService(VOID);
 VOID KmtUnloadDriver(VOID);
 DWORD KmtOpenDriver(VOID);
 VOID KmtCloseDriver(VOID);

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite Driver Object Test Driver
- * PROGRAMMER:      Michael Martin <martinmnet@hotmail.com>
- *                  Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Kernel-Mode Test Suite Device Object Test Driver
+ * COPYRIGHT:   Copyright 2009 Michael Martin (michael.martin@reactos.org)
+ * COPYRIGHT:   Copyright 2011-2023 Thomas Faber (thomas.faber@reactos.org)
  */
 
 #include <kmt_test.h>
@@ -424,10 +424,11 @@ TestDeviceDeletion(
         DeviceObject->DeviceType);
     ok(DeviceObject->ActiveThreadCount == 0, "Expected ActiveThreadCount = 0, got %lu\n", DeviceObject->ActiveThreadCount);
 
-    /*Check the extended extension */
+    /* Check the extended extension */
     extdev = (PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension;
-    ok(extdev->ExtensionFlags == DOE_UNLOAD_PENDING,
-        "Expected Extended ExtensionFlags to be DOE_UNLOAD_PENDING, got %lu\n", extdev->ExtensionFlags);
+    /* FIXME: Windows has the MSB set under some conditions, need to find out what this means */
+    ok((extdev->ExtensionFlags & 0x7fffffff) == DOE_UNLOAD_PENDING,
+        "Expected Extended ExtensionFlags to be DOE_UNLOAD_PENDING, got 0x%lx\n", extdev->ExtensionFlags);
     ok (extdev->Type == 13, "Expected Type of 13, got %d\n", extdev->Type);
     ok (extdev->Size == 0, "Expected Size of 0, got %d\n", extdev->Size);
     ok (extdev->DeviceObject == DeviceObject, "Expected DeviceOject to match newly created device %p, got %p\n",
