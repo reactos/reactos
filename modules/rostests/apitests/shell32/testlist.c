@@ -9,6 +9,7 @@ extern void func_CFSFolder(void);
 extern void func_CheckEscapes(void);
 extern void func_CIDLData(void);
 extern void func_CMyComputer(void);
+extern void func_CommandLineToArgvW(void);
 extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
@@ -41,6 +42,7 @@ const struct test winetest_testlist[] =
     { "CheckEscapes", func_CheckEscapes },
     { "CIDLData", func_CIDLData },
     { "CMyComputer", func_CMyComputer },
+    { "CommandLineToArgvW", func_CommandLineToArgvW },
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
     { "CUserNotification", func_CUserNotification },

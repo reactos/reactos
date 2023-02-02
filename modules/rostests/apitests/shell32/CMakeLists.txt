@@ -7,6 +7,7 @@ list(APPEND SOURCE
     CheckEscapes.cpp
     CIDLData.cpp
     CMyComputer.cpp
+    CommandLineToArgvW.cpp
     CShellDesktop.cpp
     CShellLink.cpp
     CUserNotification.cpp
