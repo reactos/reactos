@@ -903,7 +903,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         }
 
         pImeWnd = pimeui->spwnd;
-        hImeWnd = (pImeWnd ? UserHMGetHandle(pImeWnd) : NULL);
+        hImeWnd = UserHMGetHandleSafe(pImeWnd);
         if (hImeWnd)
             NtUserCallHwndLock(hImeWnd, HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD);
     }
