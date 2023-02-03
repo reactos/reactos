@@ -166,7 +166,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         6,
         24,
-        "https://reactos.org/uk/",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
