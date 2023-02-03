@@ -3,7 +3,7 @@
 // To revert conversion, please execute "code7bit -r <file>".
 /*
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
- *      https://reactos.org/uk/
+ *      https://reactos.org
  */
 
 #pragma once
