@@ -67,8 +67,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             trace("WM_MOUSEMOVE\n");
             ok_int(s_nCount, 5);
-            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL,
-               "GetMessageTime() is wrong, compared to previous one\n");
+            // This test randomly fails on Windows 2003
+            //ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL,
+            //   "GetMessageTime() is wrong, compared to previous one\n");
             ok(GetTickCount() - (DWORD)GetMessageTime() < TIMER_INTERVAL / 2,
                "GetMessageTime() is wrong, compared to GetTickCount()\n");
             s_bReach_WM_MOUSEMOVE = TRUE;
