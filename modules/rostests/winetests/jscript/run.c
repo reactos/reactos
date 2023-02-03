@@ -1032,7 +1032,9 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         ok(V_VT(pdp->rgvarg) == VT_BSTR, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
         ok(V_VT(pdp->rgvarg+1) == VT_BOOL, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
+#ifndef __REACTOS__ // Fails on Windows 2003
         ok(V_BOOL(pdp->rgvarg+1), "%s: %s\n", test_name, wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
+#endif
 
         return S_OK;
 
