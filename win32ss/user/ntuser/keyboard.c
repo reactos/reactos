@@ -913,7 +913,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
             // Snap from Active Window, Focus can be null.
-            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : 0);
+            SnapWindow(UserHMGetHandleSafe(pFocusQueue->spwndActive));
         }
         else
             SnapWindow(NULL); // Snap Desktop.
@@ -932,7 +932,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         if (Wnd) pti = Wnd->head.pti;
 
         /* Init message */
-        Msg.hwnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
+        Msg.hwnd = UserHMGetHandleSafe(Wnd);
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;

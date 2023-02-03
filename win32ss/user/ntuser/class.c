@@ -2263,9 +2263,9 @@ UserGetClassInfo(IN PCLS Class,
 
     lpwcx->cbClsExtra = Class->cbclsExtra;
     lpwcx->cbWndExtra = Class->cbwndExtra;
-    lpwcx->hIcon = Class->spicn ? UserHMGetHandle(Class->spicn) : NULL;
-    lpwcx->hCursor = Class->spcur ? UserHMGetHandle(Class->spcur) : NULL;
-    lpwcx->hIconSm = Class->spicnSm ? UserHMGetHandle(Class->spicnSm) : NULL;
+    lpwcx->hIcon = UserHMGetHandleSafe(Class->spicn);
+    lpwcx->hCursor = UserHMGetHandleSafe(Class->spcur);
+    lpwcx->hIconSm = UserHMGetHandleSafe(Class->spicnSm);
     lpwcx->hbrBackground = Class->hbrBackground;
 
     /* Copy non-string to user first. */

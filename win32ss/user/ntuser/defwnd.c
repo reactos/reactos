@@ -1065,7 +1065,7 @@ IntDefWindowProc(
              LONG Ret;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
-             hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+             hwndParent = UserHMGetHandleSafe(pwndParent);
              if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
              if (Ret) return (Ret);
          }
@@ -1087,7 +1087,7 @@ IntDefWindowProc(
          {
             HWND hwndParent;
             PWND pwndParent = IntGetParent(Wnd);
-            hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+            hwndParent = UserHMGetHandleSafe(pwndParent);
             return co_IntSendMessage( hwndParent, WM_MOUSEWHEEL, wParam, lParam);
          }
          break;

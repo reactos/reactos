@@ -1203,7 +1203,7 @@ IntGetPaintMessage(
    StartWnd = UserGetDesktopWindow();
    PaintWnd = IntFindWindowToRepaint(StartWnd, Thread);
 
-   Message->hwnd = PaintWnd ? UserHMGetHandle(PaintWnd) : NULL;
+   Message->hwnd = UserHMGetHandleSafe(PaintWnd);
 
    if (Message->hwnd == NULL && Thread->cPaintsReady)
    {

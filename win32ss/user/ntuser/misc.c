@@ -308,9 +308,11 @@ NtUserGetThreadState(
          ret = (gpqForeground == GetW32ThreadInfo()->MessageQueue);
          break;
       case THREADSTATE_GETCURSOR:
-         ret = (DWORD_PTR) (GetW32ThreadInfo()->MessageQueue->CursorObject ?
-                            UserHMGetHandle(GetW32ThreadInfo()->MessageQueue->CursorObject) : 0);
+      {
+         PCURICON_OBJECT CursorObject = GetW32ThreadInfo()->MessageQueue->CursorObject;
+         ret = (DWORD_PTR)UserHMGetHandleSafe(CursorObject);
          break;
+      }
       case THREADSTATE_GETMESSAGEEXTRAINFO:
          ret = (DWORD_PTR)MsqGetMessageExtraInfo();
          break;
@@ -495,9 +497,9 @@ NtUserGetGUIThreadInfo(
 
    /* FIXME: Add flag GUI_16BITTASK */
 
-   SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
-   SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
-   SafeGui.hwndCapture = MsgQueue->spwndCapture ? UserHMGetHandle(MsgQueue->spwndCapture) : 0;
+   SafeGui.hwndActive = UserHMGetHandleSafe(MsgQueue->spwndActive);
+   SafeGui.hwndFocus = UserHMGetHandleSafe(MsgQueue->spwndFocus);
+   SafeGui.hwndCapture = UserHMGetHandleSafe(MsgQueue->spwndCapture);
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;
    SafeGui.hwndCaret = CaretInfo->hWnd;
 

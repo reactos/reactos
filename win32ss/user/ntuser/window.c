@@ -1113,7 +1113,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 
    WndOldOwner = Wnd->spwndOwner;
 
-   ret = WndOldOwner ? UserHMGetHandle(WndOldOwner) : 0;
+   ret = UserHMGetHandleSafe(WndOldOwner);
    WndNewOwner = UserGetWindowObject(hWndNewOwner);
 
    if (!WndNewOwner && hWndNewOwner)
@@ -2780,7 +2780,7 @@ NtUserCreateWindowEx(
     {
         ERR("co_UserCreateWindowEx failed!\n");
     }
-    hwnd = pwnd ? UserHMGetHandle(pwnd) : NULL;
+    hwnd = UserHMGetHandleSafe(pwnd);
 
     UserLeave();
 
@@ -4234,11 +4234,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
       }
 
       case QUERY_WINDOW_ACTIVE:
-         Result = (DWORD_PTR)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);
+         Result = (DWORD_PTR)UserHMGetHandleSafe(pWnd->head.pti->MessageQueue->spwndActive);
          break;
 
       case QUERY_WINDOW_FOCUS:
-         Result = (DWORD_PTR)(pWnd->head.pti->MessageQueue->spwndFocus ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndFocus) : 0);
+         Result = (DWORD_PTR)UserHMGetHandleSafe(pWnd->head.pti->MessageQueue->spwndFocus);
          break;
 
       case QUERY_WINDOW_ISHUNG:

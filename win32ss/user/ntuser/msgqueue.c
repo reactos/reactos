@@ -2558,15 +2558,15 @@ MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd)
    switch(Type)
    {
       case MSQ_STATE_CAPTURE:
-         Prev = MessageQueue->spwndCapture ? UserHMGetHandle(MessageQueue->spwndCapture) : 0;
+         Prev = UserHMGetHandleSafe(MessageQueue->spwndCapture);
          MessageQueue->spwndCapture = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_ACTIVE:
-         Prev = MessageQueue->spwndActive ? UserHMGetHandle(MessageQueue->spwndActive) : 0;
+         Prev = UserHMGetHandleSafe(MessageQueue->spwndActive);
          MessageQueue->spwndActive = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_FOCUS:
-         Prev = MessageQueue->spwndFocus ? UserHMGetHandle(MessageQueue->spwndFocus) : 0;
+         Prev = UserHMGetHandleSafe(MessageQueue->spwndFocus);
          MessageQueue->spwndFocus = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_MENUOWNER:

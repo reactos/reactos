@@ -4758,7 +4758,7 @@ PopupMenuWndProc(
 
     case MM_GETMENUHANDLE: // wine'isms
     case MN_GETHMENU:
-         *lResult = (LRESULT)(pPopupMenu ? (pPopupMenu->spmenu ? UserHMGetHandle(pPopupMenu->spmenu) : NULL) : NULL);
+         *lResult = (LRESULT)(pPopupMenu ? UserHMGetHandleSafe(pPopupMenu->spmenu) : NULL);
          break;
 
     default:
@@ -5023,7 +5023,7 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
 
     Pos = MENU_FindSubMenu(&menu, pSubTarget );
 
-    *hMenu = (menu ? UserHMGetHandle(menu) : NULL);
+    *hMenu = UserHMGetHandleSafe(menu);
 
     return Pos;
 }
@@ -5402,7 +5402,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert)
       if ((!Menu || Menu->fFlags & MNF_SYSDESKMN) && Window->style & WS_SYSMENU)
       {
          Menu = MENU_GetSystemMenu(Window, NULL);
-         Window->SystemMenu = Menu ? UserHMGetHandle(Menu) : NULL;
+         Window->SystemMenu = UserHMGetHandleSafe(Menu);
       }
    }
 

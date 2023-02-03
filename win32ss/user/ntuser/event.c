@@ -222,10 +222,10 @@ IntNotifyWinEvent(
            UserRefObjectCo(pEH, &Ref);
            if (pEH->Flags & WINEVENT_INCONTEXT)
            {
-              TRACE("In       Event 0x%x, idObject %d hwnd %p\n", Event, idObject, pWnd ? UserHMGetHandle(pWnd) : NULL);
+              TRACE("In       Event 0x%x, idObject %d hwnd %p\n", Event, idObject, UserHMGetHandleSafe(pWnd));
               co_IntCallEventProc( UserHMGetHandle(pEH),
                                    Event,
-                                   pWnd ? UserHMGetHandle(pWnd) : NULL,
+                                   UserHMGetHandleSafe(pWnd),
                                    idObject,
                                    idChild,
                                    PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
@@ -236,10 +236,10 @@ IntNotifyWinEvent(
            }
            else
            {
-              TRACE("Out      Event 0x%x, idObject %d hwnd %p\n", Event, idObject, pWnd ? UserHMGetHandle(pWnd) : NULL);
+              TRACE("Out      Event 0x%x, idObject %d hwnd %p\n", Event, idObject, UserHMGetHandleSafe(pWnd));
               IntCallLowLevelEvent( pEH,
                                     Event,
-                                    pWnd ? UserHMGetHandle(pWnd) : NULL,
+                                    UserHMGetHandleSafe(pWnd),
                                     idObject,
                                     idChild,
                                     PtrToUint(NtCurrentTeb()->ClientId.UniqueThread));

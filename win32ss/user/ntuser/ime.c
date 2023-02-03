@@ -511,7 +511,7 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
 HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 {
     HIMC hOldImc = pWnd->hImc;
-    pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
+    pWnd->hImc = UserHMGetHandleSafe(pImc);
     return hOldImc;
 }
 
@@ -1677,7 +1677,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
                 if (!pwndTarget)
                     continue;
 
-                hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+                hIMC = UserHMGetHandleSafe(pIMC);
                 if (pwndTarget->hImc == hIMC || (bIgnoreNullImc && !pwndTarget->hImc))
                     continue;
 
@@ -1692,7 +1692,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 
     if (!bIgnoreNullImc || pWnd->hImc)
     {
-        hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+        hIMC = UserHMGetHandleSafe(pIMC);
         if (pWnd->hImc != hIMC)
         {
             IntAssociateInputContext(pWnd, pIMC);

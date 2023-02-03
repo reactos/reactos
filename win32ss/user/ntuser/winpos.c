@@ -1490,7 +1490,7 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
          if (!(Wnd = ValidateHwndNoErr(List[i])))
             continue;
 
-         Owner = Wnd->spwndOwner ? Wnd->spwndOwner->head.h : NULL;
+         Owner = UserHMGetHandleSafe(Wnd->spwndOwner);
 
          if (Owner != UserHMGetHandle(Window)) continue;
 
@@ -3186,7 +3186,7 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
    }
    UserLeave();
    TRACE("Leave NtUserChildWindowFromPointEx\n");
-   return pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+   return UserHMGetHandleSafe(pwndParent);
 }
 
 /*
@@ -3447,7 +3447,7 @@ NtUserRealChildWindowFromPoint(HWND Parent,
    }
    UserLeave();
    TRACE("Leave NtUserRealChildWindowFromPoint\n");
-   return pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+   return UserHMGetHandleSafe(pwndParent);
 }
 
 /*
