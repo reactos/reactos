@@ -33,7 +33,8 @@
 #ifdef HAVE_POLL
 #include <poll.h>
 #endif
-
+#include<debug.h>
+// #define NDEBUG
 ldns_status
 ldns_send(ldns_pkt **result_packet, ldns_resolver *r, const ldns_pkt *query_pkt)
 {
@@ -51,6 +52,7 @@ ldns_send(ldns_pkt **result_packet, ldns_resolver *r, const ldns_pkt *query_pkt)
 	    ldns_pkt2buffer_wire(qb, query_pkt) != LDNS_STATUS_OK) {
 		result = LDNS_STATUS_ERR;
 	} else {
+		DPRINT("Ldns Send Buffer\n");
         	result = ldns_send_buffer(result_packet, r, qb, tsig_mac);
 	}
 
@@ -342,7 +344,6 @@ ldns_tcp_send_from(uint8_t **result,  ldns_buffer *qbin,
 	uint8_t *answer;
 	
 	sockfd = ldns_tcp_bgsend_from(qbin, to, tolen, from, fromlen, timeout);
-	
 	if (sockfd == -1) {
 		return LDNS_STATUS_ERR;
 	}
@@ -374,6 +375,7 @@ ldns_udp_connect(const struct sockaddr_storage *to, struct timeval ATTR_UNUSED(t
 	int sockfd;
 
 #ifndef S_SPLINT_S
+	DPRINT("sa_family - %d\n",(int)((struct sockaddr*)to)->sa_family);
 	if ((sockfd = socket((int)((struct sockaddr*)to)->sa_family, SOCK_DGRAM, 
 					IPPROTO_UDP)) 
 			== SOCK_INVALID) {
@@ -389,6 +391,7 @@ ldns_udp_connect2(const struct sockaddr_storage *to, struct timeval ATTR_UNUSED(
 	int sockfd;
 
 #ifndef S_SPLINT_S
+	DPRINT("Socket sa_family - %lx\n", (int)((struct sockaddr*)to)->sa_family);
 	if ((sockfd = socket((int)((struct sockaddr*)to)->sa_family, SOCK_DGRAM, 
 					IPPROTO_UDP)) 
 			== SOCK_INVALID) {
@@ -405,22 +408,26 @@ ldns_udp_bgsend_from(ldns_buffer *qbin,
 		struct timeval timeout)
 {
 	int sockfd;
-
 	sockfd = ldns_udp_connect2(to, timeout);
-
+	DPRINT("Sockfd in ldns_udp_bgsend_from %d\n", sockfd);
 	if (sockfd == -1) {
 		return -1;
 	}
+	DPRINT("Socket connect Success\n");
 
+	DPRINT("Binding Socket \n");
 	if (from && bind(sockfd, (const struct sockaddr*)from, fromlen) == -1){
 		close_socket(sockfd);
 		return -1;
 	}
+	DPRINT("Socket Bind Success\n");
 
+	DPRINT("Query Socket\n");
 	if (ldns_udp_send_query(qbin, sockfd, to, tolen) == 0) {
 		close_socket(sockfd);
 		return -1;
 	}
+	DPRINT("Socket Query Success\n");
 	return sockfd;
 }
 
@@ -528,6 +535,11 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		src = ldns_rdf2native_sockaddr_storage_port(
 				ldns_resolver_source(r), 0, &src_len);
 	}
+	if(!src){
+		DPRINT("sockaddr src is null \n");
+	}else{
+		DPRINT("sockaddr src is not null \n");
+	}
 
 	/* loop through all defined nameservers */
 	for (i = 0; i < ldns_resolver_nameserver_count(r); i++) {
@@ -544,6 +556,11 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		ns = ldns_rdf2native_sockaddr_storage(ns_array[i],
 				ldns_resolver_port(r), &ns_len);
 
+		if(!ns){
+			DPRINT("sockaddr ns is null \n");
+		}else{
+			DPRINT("sockaddr ns is not null \n");
+		}
 
 #ifndef S_SPLINT_S
 		if ((ns->ss_family == AF_INET) &&
@@ -570,6 +587,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		/* reply_bytes implicitly handles our error */
 		if (ldns_resolver_usevc(r)) {
 			for (retries = ldns_resolver_retry(r); retries > 0; retries--) {
+				DPRINT("TCP Send From\n");
 				send_status = 
 					ldns_tcp_send_from(&reply_bytes, qb, 
 						ns, (socklen_t)ns_len,
@@ -583,6 +601,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		} else {
 			for (retries = ldns_resolver_retry(r); retries > 0; retries--) {
 				/* ldns_rdf_print(stdout, ns_array[i]); */
+				DPRINT("UDP Send From\n");
 				send_status = 
 					ldns_udp_send_from(&reply_bytes, qb,
 						ns,  (socklen_t)ns_len,

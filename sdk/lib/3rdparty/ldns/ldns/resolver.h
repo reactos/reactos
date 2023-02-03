@@ -801,6 +801,7 @@ void ldns_resolver_nameservers_randomize(ldns_resolver *r);
  */
 bool ldns_resolver_trusted_key(const ldns_resolver *r, ldns_rr_list * keys, ldns_rr_list * trusted_keys);
 
+/*** ReactOS ***/
 #ifdef __cplusplus
 }
 #endif

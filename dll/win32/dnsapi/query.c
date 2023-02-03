@@ -13,7 +13,7 @@
 #include <iphlpapi.h>
 #include <strsafe.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 // String to addy
 static
@@ -759,7 +759,7 @@ Query_Main(LPCWSTR Name,
         }
 
         ldns_resolver *res;
-        ldns_status status;
+        ldns_status status = LDNS_STATUS_OK;
         ldns_rdf *domain;
         ldns_pkt *pkt;
         if ((Options & DNS_QUERY_NO_WIRE_QUERY) != 0)
@@ -768,27 +768,38 @@ Query_Main(LPCWSTR Name,
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             return ERROR_FILE_NOT_FOUND;
         }
-        status = ldns_resolver_new_frm_file(&res, NULL); // Init for status
-        if (status != LDNS_STATUS_OK)
+        res = ldns_resolver_new(); // Init for status
+        // ldns_resolver_o
+        //  adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
+        if (!res || status != LDNS_STATUS_OK)
         {
+            DPRINT(
+                "Failed to make Resolver ldns_resolver_new (Status %lx) - %s\n", status,
+                ldns_get_errorstr_by_id(status));
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             return DnsIntTranslateAdnsToDNS_STATUS(status);
         }
+        DPRINT("Resolver created \n");
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {
             // Get domain
+            DPRINT("IpAddress for Rdf creation - %s\n", pip->IpAddress.String);
             domain = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, pip->IpAddress.String);
             if (domain != NULL)
             {
-                ldns_resolver_push_nameserver(res, domain);
+                status = ldns_resolver_push_nameserver(res, domain);
+                DPRINT("LDNS push nameserver returns (Status %lx) - %s\n", status, ldns_get_errorstr_by_id(status));
             }
             // ldns_rdf_free(domain);
         }
+        DPRINT("DomainName[0] - %s\n", network_info->DomainName);
         if (network_info->DomainName[0])
         {
+            DPRINT("Domain for Rdf creation - %s\n", network_info->DomainName);
             domain = ldns_dname_new_frm_str(network_info->DomainName);
-            pkt = ldns_resolver_search(res, domain, 0, 0, quflags);
+            status = ldns_resolver_search_status(&pkt, res, domain, 0, 0, quflags);
+            DPRINT("LDNS search returns (Status %lx)\n", status);
             // adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
         }
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
@@ -821,17 +832,19 @@ Query_Main(LPCWSTR Name,
 
 #define CNAME_LOOP_MAX 16
 
+        DPRINT("Chained CNAME Resolution Start\n");
+        DPRINT("Domain for Rdf creation - %s\n", AnsiName);
         domain = ldns_dname_new_frm_str(AnsiName);
 
         for (CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++)
         {
-
+            DPRINT("Begin Query\n");
             status = ldns_resolver_query_status(&pkt, res, domain, LDNS_RR_TYPE_CNAME, LDNS_RR_CLASS_IN, quflags);
 
             if (status != LDNS_STATUS_OK)
             {
                 // adns_finish(astate); TODO: replace with frees on LDNS
-
+                DPRINT("Query returns (Status %lx) - %s\n", status, ldns_get_errorstr_by_id(status));
                 ldns_resolver_deep_free(res);
                 ldns_pkt_free(pkt);
                 ldns_rdf_free(domain);
@@ -845,7 +858,7 @@ Query_Main(LPCWSTR Name,
             // If error occurred
             if (!rrs)
             {
-
+                DPRINT("RRs couldn't be made\n");
                 ldns_resolver_deep_free(res);
                 ldns_pkt_free(pkt);
                 ldns_rdf_free(domain);
