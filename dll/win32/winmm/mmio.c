@@ -374,6 +374,12 @@ static FOURCC MMIO_ParseExtA(LPCSTR szFileName)
     if (!szFileName)
 	return ret;
 
+#ifdef __REACTOS__
+    /* Check if the file name is empty (CORE-18810) */
+    if (!*szFileName)
+        return ret;
+#endif
+
     /* Find the last '.' */
     extStart = strrchr(szFileName,'.');
 
