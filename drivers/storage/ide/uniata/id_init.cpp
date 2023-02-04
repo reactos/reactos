@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     Some parts of code were taken from FreeBSD 5.1-6.1 ATA driver by
-        Søren Schmidt, Copyright (c) 1998-2007
+        SÃ¸ren Schmidt, Copyright (c) 1998-2007
     added IT8172 IDE controller support from Linux
     added VIA 8233/8235 fix from Linux
     added 80-pin cable detection from Linux for
@@ -2556,6 +2556,7 @@ AtapiChipInit(
                 * 64DW.
                 *
                 * https://reactos.org/bugzilla/show_bug.cgi?id=6500
+                * https://jira.reactos.org/browse/CORE-5897
                 */
 
                 if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
