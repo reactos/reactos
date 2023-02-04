@@ -2555,7 +2555,6 @@ AtapiChipInit(
                 * size goes below 32DW.  Setting it to 1 makes the watermark
                 * 64DW.
                 *
-                * https://reactos.org/bugzilla/show_bug.cgi?id=6500
                 * https://jira.reactos.org/browse/CORE-5897
                 */
 
