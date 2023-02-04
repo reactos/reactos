@@ -7,8 +7,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Kurulum Yardımcısı'na Hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Bu yardımcı ReactOS'u bilgisayarınıza kurar. Yardımcı, ReactOS'u düzgünce kurmak için siz ve bilgisayarınız üzerine biraz bilgi toplamaya gerek duyuyor.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS Kurulum Sihirbazı'na Hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Bu sihirbaz ReactOS'u bilgisayarınıza kurar. Sihirbaz, ReactOS'u düzgünce kurmak için siz ve bilgisayarınız üzerine biraz bilgi toplamaya gerek duyuyor.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Kur'la sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -43,12 +43,12 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bilgisayarınız için 15 ya da daha az damgadan olan bir ad yazınız. Bir ağ üzerindeyseniz bilgisayarınızın adı eşsiz olmalıdır.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Bilgisayarınız için 15 ya da daha az karakterlik bir ad yazınız. Bir ağ üzerindeyseniz bilgisayarınızın adı eşsiz olmalıdır.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Bilgisayar Adı:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Kur, bilgisayarınızda ""Yönetici"" olarak adlandırılan bir kullanıcı hesabı oluşturacaktır. Bilgisayarınıza tüm erişime gerek duyarsanız bu hesâbı kullanabilirsiniz.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "127 ya da daha az damgadan olan bir Yönetici şifresi yazınız.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Kur, bilgisayarınızda Yönetici adlı bir kullanıcı hesabı oluşturacaktır. Bilgisayarınıza tam erişime gerek duyarsanız bu hesabı kullanabilirsiniz.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "127 ya da daha az karakterlik bir Yönetici şifresi yazınız.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Yönetici Şifresi:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Şifreyi Doğrula:", IDC_STATIC, 54, 123, 105, 8
@@ -61,14 +61,14 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Dizge yerli ayârı, kullanmak istediğiniz uygulamaların diliyle eşleşmelidir. Kullanıcı yerli ayârı; sayıların, para birimlerinin ve zamanların nasıl görüneceğini denetler.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Sistem yerel ayarı, kullanmak istediğiniz uygulamaların diliyle eşleşmelidir. Kullanıcı yerel ayarı; sayıların, para birimlerinin ve zamanların nasıl görüneceğini denetler.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Dizge veyâ kullanıcı yerli ayarlarını değiştirmek için Husûsîleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 8
-    PUSHBUTTON "&Husûsîleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "Düğme takımı düzeni yazdığınızda gözüken damgaları denetler.", IDC_STATIC, 53, 86, 253, 8
+    LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 8
+    PUSHBUTTON "Ö&zelleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "Klavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Düğme takımı düzenini değiştirmek için Husûsîleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "H&usûsîleştir...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
+    LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "Öz&elleştir...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
@@ -77,17 +77,17 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Târih ve Saat:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Tarih ve Saat:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Zaman Dilimi:", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "&Gün ışığı tutum değişiklikleri için saati kendiliğinden ayarla.", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
+    LTEXT "Saat Dilimi:", IDC_STATIC, 53, 42, 253, 8
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "&Gündönümü değişiklikleri için saati otomatik ayarla.", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -171,7 +171,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS Kur"
-    IDS_UNKNOWN_ERROR "Bilinmeyen Yanlışlık"
+    IDS_UNKNOWN_ERROR "Bilinmeyen hata"
     IDS_REGISTERING_COMPONENTS "Bileşenler kaydediliyor..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary başarısız oldu: "
     IDS_GETPROCADDR_FAILED "GetProcAddr başarısız oldu: "
@@ -197,7 +197,7 @@ BEGIN
     IDS_WZD_PASSWORDEMPTY "Bir şifre girmelisiniz!"
     IDS_WZD_PASSWORDMATCH "Girdiğiniz şifreler uyuşmuyor. Lütfen istenen şifreyi yeniden giriniz."
     IDS_WZD_PASSWORDCHAR "Girdiğiniz şifre geçersiz damgalar içeriyor. Lütfen arı bir şifre giriniz."
-    IDS_WZD_LOCALTIME "Kur, yerli zamânı ayarlayamadı."
+    IDS_WZD_LOCALTIME "Kur, yerel saati ayarlayamadı."
 END
 
 STRINGTABLE
@@ -205,7 +205,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Aygıtlar kuruluyor..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\İzlence Kütükleri"
