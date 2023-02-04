@@ -1,8 +1,7 @@
 /*
  * PROJECT:     System setup
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for syssetup
+ * PURPOSE:     Ukraianian resource file
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
 
@@ -36,7 +35,7 @@ CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введіть своє повне ім'я і назву вашої компанії або організації.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Введіть своє повне ім'я та назву вашої організації.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Ім'я:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Організація:", IDC_STATIC, 54, 57, 44, 8
@@ -85,10 +84,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Дата й час", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Часовий пояс", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час", IDC_AUTODAYLIGHT, 53, 124, 219, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -118,7 +117,7 @@ BEGIN
     LTEXT "Завершення встановлення ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Ви успішно завершили встановлення ReactOS.\n\nПісля натиснення кнопки ""Завершити"" комп'ютер буде перезавантажений.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Якщо в дисковод вставлений компакт-диск, вийміть його. Потім для перезавантаження Вашого комп'ютера натистніть ""Завершити"".", IDC_STATIC, 115, 163, 195, 25
+    LTEXT "Якщо в дисковод вставлений компакт-диск, вийміть його. Для перезавантаження комп'ютера натистніть ""Завершити"".", IDC_STATIC, 115, 163, 195, 25
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -142,8 +141,8 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Подяки"
     IDS_ACKSUBTITLE "Інформація про розробників ReactOS і лізензійна угода"
-    IDS_OWNERTITLE "Налаштування ваших програм"
-    IDS_OWNERSUBTITLE "Ці особисті відомості будуть використані для налаштування ReactOS."
+    IDS_OWNERTITLE "Персональні дані"
+    IDS_OWNERSUBTITLE "Встановлення інформації про користувачів ReactOS."
     IDS_COMPUTERTITLE "Ім'я комп'ютера та пароль адміністратора"
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
     IDS_LOCALETITLE "Мова і стандарти"
@@ -193,7 +192,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Встановлення пристроїв..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"

@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Witamy w programie instalacyjnym ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Ten program pomoże w instalacji systemu ReactOS. W tym celu konieczne będzie zebranie informacji o twoim komputerze, by prawidłowo skonfigurować system operacyjny.", IDC_STATIC, 115, 40, 168, 100
-    LTEXT "Naciśnij Dalej, by kontynuować.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
@@ -19,7 +19,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 247, 19
     PUSHBUTTON "Pokaż &GPL..", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "Naciśnij Dalej, by kontynuować.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -49,7 +49,7 @@ BEGIN
     LTEXT "Podaj hasło administratora, nie dłuższe niż 127 znaków.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Hasło administratora:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Potwierdzenie hasła:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "&Potwierdź hasło:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -77,10 +77,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Data i czas", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Strefa czasowa", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automatycznie ustaw zegar przy &zmianie czasu (DST)", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Automatycznie ustaw zegar przy &zmianie czasu (DST)", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -133,11 +133,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Podziękowania"
-    IDS_ACKSUBTITLE "Wszyscy, bez których nie byłoby ReactOS, a także informacje o Licencji "
+    IDS_ACKSUBTITLE "Wszyscy, bez których nie byłoby ReactOS, a także informacje o Licencji"
     IDS_OWNERTITLE "Personalizacja systemu"
-    IDS_OWNERSUBTITLE "Program konfiguracyjny wykorzysta te informacje, aby spersonalizować system."
+    IDS_OWNERSUBTITLE "Instalator wykorzysta te informacje, aby spersonalizować system."
     IDS_COMPUTERTITLE "Nazwa komputera i hasło administratora"
-    IDS_COMPUTERSUBTITLE "Musisz podać nazwę swojego komputera a także hasło administratora."
+    IDS_COMPUTERSUBTITLE "Należy podać nazwę dla tego komputera oraz hasło administratora."
     IDS_LOCALETITLE "Opcje regionalne i językowe"
     IDS_LOCALESUBTITLE "Możesz ustawić ReactOS pod kątem języka i sposobu wyświetlania danych."
     IDS_DATETIMETITLE "Data i czas"
@@ -153,8 +153,8 @@ BEGIN
     IDS_REACTOS_SETUP "Ustawienia ReactOS"
     IDS_UNKNOWN_ERROR "Nieznany błąd"
     IDS_REGISTERING_COMPONENTS "Rejestracja składników..."
-    IDS_LOADLIBRARY_FAILED "Nieudane LoadLibrary : "
-    IDS_GETPROCADDR_FAILED "Nieudane GetProcAddr : "
+    IDS_LOADLIBRARY_FAILED "Nieudane LoadLibrary: "
+    IDS_GETPROCADDR_FAILED "Nieudane GetProcAddr: "
     IDS_REGSVR_FAILED "Nieudane DllRegisterServer: "
     IDS_DLLINSTALL_FAILED "Nieudane DllInstall: "
     IDS_TIMEOUT "Upłynął czas rejestracji"
@@ -171,13 +171,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Program instalacyjny nie może kontynuować dopóki nie wpiszesz swojego imienia i nazwiska."
-    IDS_WZD_SETCOMPUTERNAME "Program instalacyjny nie zdołał ustawić nowej nazwy komputera."
-    IDS_WZD_COMPUTERNAME "Program instalacyjny nie może kontynuować dopóki nie wpiszesz nazwy komputera."
+    IDS_WZD_NAME "Instalator nie może kontynuować dopóki nie wpiszesz swojego imienia i nazwiska."
+    IDS_WZD_SETCOMPUTERNAME "Instalator nie mógł zastosować nowej nazwy komputera."
+    IDS_WZD_COMPUTERNAME "Instalator nie może kontynuować dopóki nie wpiszesz nazwy komputera."
     IDS_WZD_PASSWORDEMPTY "Musisz wprowadzić hasło!"
-    IDS_WZD_PASSWORDMATCH "Oba wprowadzone hasła nie są identyczne. Musisz wpisać to samo hasło dwa razy."
+    IDS_WZD_PASSWORDMATCH "Wpisane hasła różnią się. Wpisz jeszcze raz żądane hasło."
     IDS_WZD_PASSWORDCHAR "Wprowadzone hasło zawiera nieodpowiednie znaki. Proszę wprowadzić hasło bez ich udziału."
-    IDS_WZD_LOCALTIME "Program instalacyjny nie zdołał ustawić czasu lokalnego."
+    IDS_WZD_LOCALTIME "Instalator nie mógł ustawić czasu lokalnego."
 END
 
 STRINGTABLE
@@ -185,7 +185,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Instalacja urządzeń..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
