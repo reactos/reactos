@@ -1,24 +1,10 @@
 /*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
  */
-
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -113,10 +99,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "日期和時間:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "時區:", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "夏時制自動調整時間(&D)", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "夏時制自動調整時間(&D)", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -200,7 +186,6 @@ BEGIN
     IDS_PROCESSSUBTITLE "請稍後..."
     IDS_THEMESELECTIONTITLE "外觀"
     IDS_THEMESELECTIONSUBTITLE "選擇您的主題。"
-
 END
 
 STRINGTABLE
