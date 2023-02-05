@@ -2881,7 +2881,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       }
    }
 
-   if (Window->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
+   if (Window->pcls && (Window->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME]))
    {
       if ((Window->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
       {
