@@ -1151,6 +1151,7 @@ BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
 #ifdef __REACTOS__
         if (dwWhich & 0x1)
         {
+        if (GetFileAttributes(lpszPath) != FILE_ATTRIBUTE_DIRECTORY)
 #endif
         lstrcpyW(lpszPath + iLen, pszExts[iChoose]);
         if (PathFileExistsW(lpszPath))
