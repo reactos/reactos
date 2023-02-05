@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Ukraianian resource file
+ * PURPOSE:     Ukrainian resource file
  * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
  *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
  *              Copyright 2018-2021 Yaroslav Kibysh <yanet.prod@gmail.com>
@@ -222,7 +222,7 @@ BEGIN
     IDS_WZD_NAME "Для продовження встановлення необхідно ввести ваше ім'я."
     IDS_WZD_SETCOMPUTERNAME "Програмі інсталяції не вдалося встановити ім'я комп'ютера."
     IDS_WZD_COMPUTERNAME "Для продовження встановлення необхідно ввести ім'я комп'ютера."
-    IDS_WZD_PASSWORDEMPTY "Ви маєте ввести пароль !"
+    IDS_WZD_PASSWORDEMPTY "Ви маєте ввести пароль!"
     IDS_WZD_PASSWORDMATCH "Паролі, які ви ввели, не співпадають. Будь ласка введіть потрібний пароль знову."
     IDS_WZD_PASSWORDCHAR "Пароль, який ви ввели, містить заборонені символи. Будь ласка введіть інший пароль."
     IDS_WZD_LOCALTIME "Програмі інсталяції не вдалося встановити місцевий час."

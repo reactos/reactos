@@ -213,7 +213,7 @@ BEGIN
     IDS_WZD_NAME "La procedura di installazione non può proseguire se non indicate il vostro nome."
     IDS_WZD_SETCOMPUTERNAME "La procedura di installazione non ha potuto impostare il nome del computer."
     IDS_WZD_COMPUTERNAME "La procedura di installazione non può proseguire se non indicate il nome del computer."
-    IDS_WZD_PASSWORDEMPTY "E' obbligatorio impostare la password !"
+    IDS_WZD_PASSWORDEMPTY "E' obbligatorio impostare la password!"
     IDS_WZD_PASSWORDMATCH "Le due password digitate non corrispondono. Digitate di nuovo le password."
     IDS_WZD_PASSWORDCHAR "La password contiene caratteri non validi. Digitate una password diversa."
     IDS_WZD_LOCALTIME "La procedura di installazione non ha potuto impostare l'ora locale."
