@@ -407,23 +407,25 @@ ldns_udp_connect2(const struct sockaddr_storage *to, struct timeval ATTR_UNUSED(
 
 #ifndef S_SPLINT_S
 	DPRINT("Socket sa_family - %lx\n", (int)((struct sockaddr*)to)->sa_family);
+	LDNS_CLEAR_ERRNO;
 	if ((sockfd = socket((int)((struct sockaddr*)to)->sa_family, SOCK_DGRAM, 
 					IPPROTO_UDP)) 
 			== SOCK_INVALID) {
                 return -1;
         }
+	LDNS_CAPTURE_ERRNO;
 #endif
 	return sockfd;
 }
 
 static int
-ldns_udp_bgsend_from(ldns_buffer *qbin,
+ldns_udp_bgsend_from(int sockfd, ldns_buffer *qbin,
 		const struct sockaddr_storage *to  , socklen_t tolen, 
 		const struct sockaddr_storage *from, socklen_t fromlen, 
 		struct timeval timeout)
 {
-	int sockfd;
-	sockfd = ldns_udp_connect2(to, timeout);
+	// int sockfd;
+	// sockfd = ldns_udp_connect2(to, timeout);
 	DPRINT("Sockfd in ldns_udp_bgsend_from %d\n", sockfd);
 	if (sockfd == -1) {
 		return -1;
@@ -443,42 +445,42 @@ ldns_udp_bgsend_from(ldns_buffer *qbin,
 
 	DPRINT("Query Socket\n");
 	if (ldns_udp_send_query(qbin, sockfd, to, tolen) == 0) {
-		DPRINT("For sure an error\n");
-		close_socket(sockfd);
-		return -1;
-		// return sockfd;
+		DPRINT("sendto Error\n");
+		// close_socket(sockfd);
+		// return -1;
+		return sockfd;
 	}
 	DPRINT("Socket Query Success\n");
 	return sockfd;
 }
 
 int
-ldns_udp_bgsend(ldns_buffer *qbin,
+ldns_udp_bgsend(int sockfd, ldns_buffer *qbin,
 		const struct sockaddr_storage *to  , socklen_t tolen, 
 		struct timeval timeout)
 {
-	int s = ldns_udp_bgsend_from(qbin, to, tolen, NULL, 0, timeout);
+	int s = ldns_udp_bgsend_from(sockfd, qbin, to, tolen, NULL, 0, timeout);
 	return s > 0 ? s : 0;
 }
 
 int
-ldns_udp_bgsend2(ldns_buffer *qbin,
+ldns_udp_bgsend2(int sockfd, ldns_buffer *qbin,
 		const struct sockaddr_storage *to  , socklen_t tolen, 
 		struct timeval timeout)
 {
-	return ldns_udp_bgsend_from(qbin, to, tolen, NULL, 0, timeout);
+	return ldns_udp_bgsend_from(sockfd, qbin, to, tolen, NULL, 0, timeout);
 }
 
 static ldns_status
-ldns_udp_send_from(uint8_t **result, ldns_buffer *qbin,
+ldns_udp_send_from(int sockfd, uint8_t **result, ldns_buffer *qbin,
 		const struct sockaddr_storage *to  , socklen_t tolen,
 		const struct sockaddr_storage *from, socklen_t fromlen,
 		struct timeval timeout, size_t *answer_size)
 {
-	int sockfd;
+	// int sockfd;
 	uint8_t *answer;
 
-	sockfd = ldns_udp_bgsend_from(qbin, to, tolen, from, fromlen, timeout);
+	sockfd = ldns_udp_bgsend_from(sockfd, qbin, to, tolen, from, fromlen, timeout);
 
 	if (sockfd == -1) {
 		return LDNS_STATUS_SOCKET_ERROR;
@@ -487,7 +489,7 @@ ldns_udp_send_from(uint8_t **result, ldns_buffer *qbin,
 	/* wait for an response*/
 	if(!ldns_sock_wait(sockfd, timeout, 0)) {
 		DPRINT("LDNS status network error\n");
-		close_socket(sockfd);
+		// close_socket(sockfd);
 		return LDNS_STATUS_NETWORK_ERR;
 	}
 
@@ -510,11 +512,11 @@ ldns_udp_send_from(uint8_t **result, ldns_buffer *qbin,
 }
 
 ldns_status
-ldns_udp_send(uint8_t **result, ldns_buffer *qbin,
+ldns_udp_send(int sockfd, uint8_t **result, ldns_buffer *qbin,
 		const struct sockaddr_storage *to  , socklen_t tolen,
 		struct timeval timeout, size_t *answer_size)
 {
-	return ldns_udp_send_from(result, qbin, to, tolen, NULL, 0,
+	return ldns_udp_send_from(sockfd, result, qbin, to, tolen, NULL, 0,
 			timeout, answer_size);
 }
 
@@ -627,7 +629,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 				/* ldns_rdf_print(stdout, ns_array[i]); */
 				DPRINT("UDP Send From\n");
 				send_status = 
-					ldns_udp_send_from(&reply_bytes, qb,
+					ldns_udp_send_from(r->_socket, &reply_bytes, qb,
 						ns,  (socklen_t)ns_len,
 						src, (socklen_t)src_len,
 						ldns_resolver_timeout(r),
@@ -654,6 +656,8 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 				return LDNS_STATUS_ERR;
 			} else {
 				LDNS_FREE(ns);
+		DPRINT("Sleeping. . .%d\n", ldns_resolver_retrans(r));
+		Sleep((unsigned int) ldns_resolver_retrans(r));
 				continue;
 			}
 		} 
@@ -688,7 +692,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		}
 
 		/* wait retrans seconds... */
-		DPRINT("Sleeping. . .\n");
+		DPRINT("Sleeping. . .%d\n", ldns_resolver_retrans(r));
 		Sleep((unsigned int) ldns_resolver_retrans(r));
 	}
 

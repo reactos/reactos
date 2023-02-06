@@ -88,7 +88,8 @@ Or you can just use the menu above to browse through the API docs.
 
 #ifndef LDNS_DNS_H
 #define LDNS_DNS_H
-
+#define LDNS_CAPTURE_ERRNO {errno = WSAGetLastError(); WSASetLastError(errno);}
+#define LDNS_CLEAR_ERRNO {WSASetLastError(errno=0);}
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -780,6 +780,7 @@ Query_Main(LPCWSTR Name,
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             return DnsIntTranslateAdnsToDNS_STATUS(status);
         }
+        ldns_resolver_set_retry(res, 1);
         DPRINT("Resolver created \n");
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {

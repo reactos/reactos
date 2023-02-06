@@ -41,7 +41,7 @@ extern "C" {
  * \param[out] result packet with the answer
  * \return status
  */
-ldns_status ldns_udp_send(uint8_t **result, ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout, size_t *answersize);
+ldns_status ldns_udp_send(int sockfd, uint8_t **result, ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout, size_t *answersize);
 
 /**
  * Send an udp query and don't wait for an answer but return
@@ -52,7 +52,7 @@ ldns_status ldns_udp_send(uint8_t **result, ldns_buffer *qbin, const struct sock
  * \param[in] timeout *unused*, was the timeout value for the network
  * \return the socket used or -1 on failure
  */
-int ldns_udp_bgsend2(ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout);
+int ldns_udp_bgsend2(int sockfd, ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout);
 
 /**
  * Send an udp query and don't wait for an answer but return
@@ -65,7 +65,7 @@ int ldns_udp_bgsend2(ldns_buffer *qbin, const struct sockaddr_storage *to, sockl
  * \param[in] timeout *unused*, was the timeout value for the network
  * \return the socket used or 0 on failure
  */
-int ldns_udp_bgsend(ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout);
+int ldns_udp_bgsend(int sockfd, ldns_buffer *qbin, const struct sockaddr_storage *to, socklen_t tolen, struct timeval timeout);
 
 /**
  * Send an tcp query and don't wait for an answer but return

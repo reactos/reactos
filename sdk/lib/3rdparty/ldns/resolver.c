@@ -698,8 +698,32 @@ ldns_resolver_new(void)
 
 	r->_timeout.tv_sec = LDNS_DEFAULT_TIMEOUT_SEC;
 	r->_timeout.tv_usec = LDNS_DEFAULT_TIMEOUT_USEC;
-
-	r->_socket = -1;
+	LDNS_CLEAR_ERRNO;
+	r->_socket = socket(AF_INET, SOCK_DGRAM, 
+					IPPROTO_UDP);
+	LDNS_CAPTURE_ERRNO;
+	if(r->_socket < 0){
+		DPRINT("Socket could not be created\n");
+		return NULL;
+	}
+	#ifdef ADNS_JGAA_WIN32
+		unsigned long on = 1;
+		if(ioctlsocket(r->_socket, FIONBIO, &on) != 0) {
+			/* ignore error, continue blockingly */
+			DPRINT("Received Error on Block\n");
+			return NULL;
+		}
+		DPRINT("Non block success\n");
+	#else 
+		int flag;
+		if((flag = fcntl(r->_socket, F_GETFL)) != -1) {
+			flag |= O_NONBLOCK;
+			if(fcntl(r->_socket, F_SETFL, flag) == -1) {
+				/* ignore error, continue blockingly */
+				return NULL;
+			}
+		}
+	#endif
 	r->_axfr_soa_count = 0;
 	r->_axfr_i = 0;
 	r->_cur_axfr_pkt = NULL;
