@@ -413,7 +413,7 @@ VER [/C][/R][/W]\n\n\
  第二版（如果您自己愿意，也可以是任何一个新的版本）规定的条款下自由地\n\
  传播和/或修改本软件。\n"
     STRING_VERSION_HELP5 "\nBug 报告发送到 <ros-dev@reactos.org>。\n\
-更新可在 http://www.reactos.org 查看。"
+更新可在 https://reactos.org 查看。"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
     STRING_VERSION_HELP7 "\nReactOS 版本作者：\n"
     STRING_VOL_HELP1 " 驱动器 %c 中的卷是 %s\n"

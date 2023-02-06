@@ -441,7 +441,7 @@ VER [/C][/R][/W]\n\n\
  (nach eigenem Belieben) jeder höheren Version veröffentlicht, verändern."
     STRING_VERSION_HELP5 "\nSenden Sie Fehlerberichte an <ros-dev@reactos.org>.\n\
 Updates sind auf der offiziellen ReactOS-Webseite verfügbar:\n\
-http://www.reactos.org"
+https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS-Version programmiert von:\n"
     STRING_VERSION_HELP7 "\nReactOS-Version programmiert von:\n"
     STRING_VOL_HELP1 " Datenträger im Laufwerk %c ist %s\n"

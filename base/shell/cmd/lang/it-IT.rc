@@ -448,7 +448,7 @@ elenco dei crediti."
  Free Software Foundation; a scelta la versione 2 della licenza o una\n\
  qualunque successiva.\n"
     STRING_VERSION_HELP5 "\nInviare le segnalazioni di anomalie a <ros-dev@reactos.org>.\n\
-Gli aggiornamenti sono disponibili presso: http://www.reactos.org"
+Gli aggiornamenti sono disponibili presso: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersione FreeDOS scritto da:\n"
     STRING_VERSION_HELP7 "\nVersione ReactOS scritto da:\n"
     STRING_VOL_HELP1 " Il Volume del disco %c è %s\n"

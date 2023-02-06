@@ -546,8 +546,8 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
     * Bump it up! This prevents the random errors in wine dce tests and with
     * proper bits set in DCX_CACHECOMPAREMASK.
     * Reference:
-    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
-    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
+    *   https://reactos.org/archives/public/ros-dev/2008-July/010498.html
+    *   https://reactos.org/archives/public/ros-dev/2008-July/010499.html
     */
    RemoveEntryList(&Dce->List);
    InsertHeadList(&LEDce, &Dce->List);

@@ -447,7 +447,7 @@ VER [/C][/R][/W]\n\n\
  希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒\n\
  布または改変することができます。\n"
     STRING_VERSION_HELP5 "\nバグ報告は <ros-dev@reactos.org> へ送ってください。\n\
-最新のバージョンは次のページから入手できます: http://www.reactos.org"
+最新のバージョンは次のページから入手できます: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS version written by:\n"
     STRING_VERSION_HELP7 "\nReactOS version written by:\n"
     STRING_VOL_HELP1 " ドライブ %c: のボリューム ラベルは %s です。\n"
