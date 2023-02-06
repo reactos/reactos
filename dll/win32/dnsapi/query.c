@@ -667,7 +667,7 @@ Query_Main(LPCWSTR Name,
     DWORD network_info_result;
     PIP_ADDR_STRING pip;
     IP4_ADDRESS Address;
-    // struct in_addr addr;
+    struct in_addr addr;
     PCHAR HostWithDomainName;
     PCHAR AnsiName;
     size_t NameLen = 0;
@@ -785,11 +785,12 @@ Query_Main(LPCWSTR Name,
         {
             // Get domain
             DPRINT("IpAddress for Rdf creation - %s\n", pip->IpAddress.String);
-            domain = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, pip->IpAddress.String);
-            if (domain != NULL)
+            addr.s_addr = inet_addr(pip->IpAddress.String);
+            if (addr.s_addr != INADDR_ANY && addr.s_addr != INADDR_NONE)
             {
+                domain = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, pip->IpAddress.String);
                 status = ldns_resolver_push_nameserver(res, domain);
-                DPRINT("LDNS push nameserver returns (Status %lx) - %s\n", status, ldns_get_errorstr_by_id(status));
+                // DPRINT("LDNS push nameserver returns (Status %lx) - %s\n", status, ldns_get_errorstr_by_id(status));
             }
             // ldns_rdf_free(domain);
         }
@@ -799,8 +800,8 @@ Query_Main(LPCWSTR Name,
             DPRINT("Domain for Rdf creation - %s\n", network_info->DomainName);
             domain = ldns_dname_new_frm_str(network_info->DomainName);
             status = ldns_resolver_search_status(&pkt, res, domain, 0, 0, quflags);
-            DPRINT("LDNS search returns (Status %lx)\n", status);
-            // adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
+            // DPRINT("LDNS search returns (Status %lx)\n", status);
+            //  adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
         }
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
 
@@ -835,12 +836,37 @@ Query_Main(LPCWSTR Name,
         DPRINT("Chained CNAME Resolution Start\n");
         DPRINT("Domain for Rdf creation - %s\n", AnsiName);
         domain = ldns_dname_new_frm_str(AnsiName);
-
+        ldns_rr_list *rrs;
         for (CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++)
         {
             DPRINT("Begin Query\n");
-            status = ldns_resolver_query_status(&pkt, res, domain, LDNS_RR_TYPE_CNAME, LDNS_RR_CLASS_IN, quflags);
-
+            status = ldns_resolver_query_status(&pkt, res, domain, 0, 0, LDNS_RD);
+            DPRINT("LDNS header opcode - %d\n", pkt->_header->_opcode); // Dont know what this means
+            if (pkt->_answerfrom)
+            { // Ip address of receiver!
+                DPRINT(
+                    "Here is adns return int32 to string %s\n",
+                    ldns_rdf2str(ldns_native2rdf_int32(LDNS_RDF_TYPE_A, 1777806926)));
+                DPRINT(
+                    "Here is adns return string to int32%d\n",
+                    ldns_rdf2native_int32(ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, "105.247.46.78")));
+                DPRINT(
+                    "Pkt -> _answerfrom is not null%s - type %d\n", ldns_rdf2str(pkt->_answerfrom),
+                    ldns_rdf_get_type(pkt->_answerfrom));
+                DPRINT("In native uint32t - %d\n", ldns_rdf2native_int32(pkt->_answerfrom));
+                // size_t sizet;
+                // struct sockaddr_in *sock =
+                //     (struct sockaddr_in *)ldns_rdf2native_sockaddr_storage(pkt->_answerfrom, 0, &sizet);
+                // DPRINT("From sockaddr_storage - %d\n", sock->sin_addr.s_addr);
+                size_t sizet;
+                struct sockaddr_in *sock = (struct sockaddr_in *)ldns_rdf2native_sockaddr_storage(
+                    ldns_native2rdf_int32(LDNS_RDF_TYPE_A, 1777806926), 0, &sizet);
+                DPRINT("From sockaddr_storage - %d\n", sock->sin_addr.s_addr);
+            }
+            else
+            {
+                DPRINT("Pkt -> answerfrom is null\n");
+            }
             if (status != LDNS_STATUS_OK)
             {
                 // adns_finish(astate); TODO: replace with frees on LDNS
@@ -852,27 +878,38 @@ Query_Main(LPCWSTR Name,
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
                 return DnsIntTranslateAdnsToDNS_STATUS(status);
             }
-            // Check if there are CNAME records
-            ldns_rr_list *rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_CNAME, LDNS_SECTION_ANSWER);
 
-            // If error occurred
-            if (!rrs)
+            ldns_pkt_rcode r = ldns_pkt_get_rcode(pkt);
+            DPRINT("Pkt RCODE - %d\n", r);
+            if (!pkt || r != LDNS_RCODE_NOERROR)
             {
-                DPRINT("RRs couldn't be made\n");
                 ldns_resolver_deep_free(res);
+                ldns_rdf_deep_free(domain);
                 ldns_pkt_free(pkt);
-                ldns_rdf_free(domain);
-                ldns_rr_list_deep_free(rrs);
 
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return ERROR_OUTOFMEMORY;
+                return ERROR_FILE_NOT_FOUND;
             }
+
+            // Check if there are CNAME records
+            rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_ANY, LDNS_SECTION_AUTHORITY);
+            DPRINT("Ldns section authority - %d\n", ldns_rr_list_rr_count(rrs));
+            rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_ANY, LDNS_SECTION_ANSWER);
+            DPRINT("Ldns section answer - %d\n", ldns_rr_list_rr_count(rrs));
+            rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_ANY, LDNS_SECTION_ADDITIONAL);
+            DPRINT("Ldns section additional - %d\n", ldns_rr_list_rr_count(rrs));
+            rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_ANY, LDNS_SECTION_QUESTION);
+            DPRINT("Ldns section question - %d\n", ldns_rr_list_rr_count(rrs));
+            rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_ANY, LDNS_SECTION_ANY);
+            DPRINT("Ldns section any - %d\n", ldns_rr_list_rr_count(rrs));
+
             // If there are no CNAME's
-            if (ldns_rr_list_rr_count(rrs) == 0)
+            if (!rrs)
             {
+                DPRINT("No CNAME's\n");
                 ldns_rr_list_deep_free(rrs);
                 // Get A record
-                rrs = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_ANSWER); // Get all
+                rrs = ldns_pkt_answer(pkt); // Get all
 
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
                 *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
@@ -886,55 +923,81 @@ Query_Main(LPCWSTR Name,
                     return ERROR_OUTOFMEMORY;
                 }
                 // If there are no A records
-                if (ldns_rr_list_rr_count(rrs) == 0)
+                if (!rrs)
                 {
+                    DPRINT("No records\n");
                     ldns_rr_list_deep_free(rrs);
                     ldns_resolver_deep_free(res);
                     ldns_rdf_free(domain);
                     ldns_pkt_free(pkt);
                     return ERROR_FILE_NOT_FOUND;
                 }
-
                 ldns_rr *rr = ldns_rr_list_rr(rrs, 0);
-                ldns_rdf *rdf = ldns_rr_a_address(rr); // Get Ip4Address
+                DPRINT("Found %d records\n", ldns_rr_list_rr_count(rrs));
+                // ldns_rr_list2buffer_wire(ldns_buffer, rrs);
+                if (!rr)
+                {
+                    DPRINT("rr is Null\n");
+                }
+                else
+                {
+                    DPRINT("rr is not null - Type %d\n", rr->_rr_type);
+                }
+                ldns_rdf *rdf = ldns_rr_rdf(rr, 0); // Get Ip4Address
+                if (!rdf)
+                {
+                    DPRINT("rdf is null\n");
+                }
+                else
+                {
+                    DPRINT("rdf is not null - %d\n", ldns_rdf_get_type(rdf));
+                }
+                // DPRINT("Received address of %s\n", ldns_rdf2str(rdf));
+                uint8_t buf_4[LDNS_IP4ADDRLEN];
+                buf_4[3] = ldns_rdf_data(rdf)[0];
+                buf_4[2] = ldns_rdf_data(rdf)[1];
+                buf_4[1] = ldns_rdf_data(rdf)[2];
+                buf_4[0] = ldns_rdf_data(rdf)[3];
+                ldns_rdf *rev = ldns_rdf_new_frm_data(LDNS_RDF_TYPE_A, LDNS_IP4ADDRLEN, (void *)&buf_4);
+                // DPRINT("Reverse of address is %s\n", ldns_rdf2str(rev));
                 (*QueryResultSet)->pNext = NULL;
                 (*QueryResultSet)->wType = Type;
                 (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
                 (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
                 (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
-                (*QueryResultSet)->Data.A.IpAddress = ldns_rdf2native_int32(rdf);
+                (*QueryResultSet)->Data.A.IpAddress = ldns_rdf2native_int32(rev);
 
-                ldns_rr_list_deep_free(rrs);
+                DPRINT("Free res\n");
                 ldns_resolver_deep_free(res);
-                ldns_rdf_free(domain);
+                DPRINT("Free pkt\n");
                 ldns_pkt_free(pkt);
+                // DPRINT("Free rrs\n");
+                // ldns_rr_list_deep_free(rrs);
+                DPRINT("Free domain\n");
+                ldns_rdf_free(domain);
+                DPRINT("Free rev\n");
+                ldns_rdf_deep_free(rev);
+                // DPRINT("Free rr\n");
+                // ldns_rr_free(rr);
 
                 (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
-
+                DPRINT("Where is it being doubly free??\n");
                 return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
-            }
-
-            ldns_pkt_rcode r = ldns_pkt_get_rcode(pkt);
-            if (NULL == pkt || r != LDNS_RCODE_NOERROR)
-            {
-                ldns_rr_list_deep_free(rrs);
-                ldns_resolver_deep_free(res);
-                ldns_rdf_deep_free(domain);
-                ldns_pkt_free(pkt);
-
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return ERROR_FILE_NOT_FOUND;
             }
 
             ldns_rdf_deep_free(domain);
 
             ldns_rr *rr = ldns_rr_list_rr(rrs, 0);
             ldns_rdf *rdf = ldns_rr_rdf(rr, 0);
+            DPRINT("Getting canonical name\n");
             ldns_dname2canonical(rdf);
             domain = rdf;
+            ldns_rr_free(rr);   // Free rr
+            ldns_rdf_free(rdf); // Free rdf
 
             if (!domain)
             {
+                DPRINT("Messed up getting canonical name\n");
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
                 ldns_rr_list_deep_free(rrs);
                 ldns_resolver_deep_free(res);
@@ -942,6 +1005,7 @@ Query_Main(LPCWSTR Name,
                 return ERROR_OUTOFMEMORY;
             }
         }
+        DPRINT("Out of Cname chain\n");
 
         ldns_resolver_deep_free(res);
         ldns_pkt_free(pkt);

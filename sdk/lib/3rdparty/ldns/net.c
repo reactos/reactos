@@ -52,8 +52,8 @@ ldns_send(ldns_pkt **result_packet, ldns_resolver *r, const ldns_pkt *query_pkt)
 	    ldns_pkt2buffer_wire(qb, query_pkt) != LDNS_STATUS_OK) {
 		result = LDNS_STATUS_ERR;
 	} else {
-		DPRINT("Ldns Send Buffer\n");
         	result = ldns_send_buffer(result_packet, r, qb, tsig_mac);
+		DPRINT("Ldns Send Buffer Status - %d\n", result);
 	}
 
 	ldns_buffer_free(qb);
@@ -80,6 +80,7 @@ ldns_rdf2native_sockaddr_storage_port(
         switch(ldns_rdf_get_type(rd)) {
                 case LDNS_RDF_TYPE_A:
 #ifndef S_SPLINT_S
+						DPRINT("ldns_rdf2native_sockaddr_storage_port is type A\n");
                         data->ss_family = AF_INET;
 #endif
                         data_in = (struct sockaddr_in*) data;
@@ -114,18 +115,20 @@ ldns_rdf2native_sockaddr_storage(
 static void
 ldns_sock_nonblock(int sockfd)
 {
-#ifdef HAVE_FCNTL
+#ifdef ADNS_JGAA_WIN32
+	unsigned long on = 1;
+	if(ioctlsocket(sockfd, FIONBIO, &on) != 0) {
+		/* ignore error, continue blockingly */
+		DPRINT("Received Error on Block\n");
+	}
+	DPRINT("Non block success\n");
+#else 
 	int flag;
 	if((flag = fcntl(sockfd, F_GETFL)) != -1) {
 		flag |= O_NONBLOCK;
 		if(fcntl(sockfd, F_SETFL, flag) == -1) {
 			/* ignore error, continue blockingly */
 		}
-	}
-#elif defined(HAVE_IOCTLSOCKET)
-	unsigned long on = 1;
-	if(ioctlsocket(sockfd, FIONBIO, &on) != 0) {
-		/* ignore error, continue blockingly */
 	}
 #endif
 }
@@ -134,18 +137,18 @@ ldns_sock_nonblock(int sockfd)
 static void
 ldns_sock_block(int sockfd)
 {
-#ifdef HAVE_FCNTL
+#ifdef ADNS_JGAA_WIN32
+	unsigned long off = 0;
+	if(ioctlsocket(sockfd, FIONBIO, &off) != 0) {
+		/* ignore error, continue */
+	}
+#else 
 	int flag;
 	if((flag = fcntl(sockfd, F_GETFL)) != -1) {
 		flag &= ~O_NONBLOCK;
 		if(fcntl(sockfd, F_SETFL, flag) == -1) {
 			/* ignore error, continue */
 		}
-	}
-#elif defined(HAVE_IOCTLSOCKET)
-	unsigned long off = 0;
-	if(ioctlsocket(sockfd, FIONBIO, &off) != 0) {
-		/* ignore error, continue */
 	}
 #endif
 }
@@ -155,37 +158,49 @@ static int
 ldns_sock_wait(int sockfd, struct timeval timeout, int write)
 {
 	int ret;
-#ifndef HAVE_POLL
+// #ifndef HAVE_POLL
 #ifndef S_SPLINT_S
+DPRINT("Doing Select\n");
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(FD_SET_T sockfd, &fds);
-	if(write)
+	WSASetLastError(errno=0);
+	if(write){
+		DPRINT("Write is true\n");
 		ret = select(sockfd+1, NULL, &fds, NULL, &timeout);
-	else
-		ret = select(sockfd+1, &fds, NULL, NULL, &timeout);
-#endif
-#else
-	struct pollfd pfds[2];
-
-	memset(&pfds[0], 0, sizeof(pfds[0]) * 2);
-
-	pfds[0].fd = sockfd;
-	pfds[0].events = POLLIN|POLLERR;
-
-	if (write) {
-		pfds[0].events |= POLLOUT;
 	}
-	
-	ret = poll(pfds, 1, (int)(timeout.tv_sec * 1000
-				+ timeout.tv_usec / 1000));
+	else{
+		DPRINT("Write is false\n");
+		ret = select(sockfd+1, &fds, NULL, NULL, &timeout);
+	}
+	errno = WSAGetLastError();
+	WSASetLastError(errno);
 #endif
-	if(ret == 0)
+// #else
+// 	struct pollfd pfds[2];
+
+// 	memset(&pfds[0], 0, sizeof(pfds[0]) * 2);
+
+// 	pfds[0].fd = sockfd;
+// 	pfds[0].events = POLLIN|POLLERR;
+
+// 	if (write) {
+// 		pfds[0].events |= POLLOUT;
+// 	}
+	
+// 	ret = poll(pfds, 1, (int)(timeout.tv_sec * 1000
+// 				+ timeout.tv_usec / 1000));
+// #endif
+	if(ret == 0){
 		/* timeout expired */
+		DPRINT("Timeout expiration\n");
 		return 0;
-	else if(ret == -1)
+	}
+	else if(ret == -1){
 		/* error */
+		DPRINT("Error on select\n");
 		return 0;
+	}
 	return 1;
 }
 
@@ -414,7 +429,11 @@ ldns_udp_bgsend_from(ldns_buffer *qbin,
 		return -1;
 	}
 	DPRINT("Socket connect Success\n");
-
+	if(!from){
+		DPRINT("From is Null!\n");
+	}else{
+		DPRINT("From is not Null\n");
+	}
 	DPRINT("Binding Socket \n");
 	if (from && bind(sockfd, (const struct sockaddr*)from, fromlen) == -1){
 		close_socket(sockfd);
@@ -424,8 +443,10 @@ ldns_udp_bgsend_from(ldns_buffer *qbin,
 
 	DPRINT("Query Socket\n");
 	if (ldns_udp_send_query(qbin, sockfd, to, tolen) == 0) {
+		DPRINT("For sure an error\n");
 		close_socket(sockfd);
 		return -1;
+		// return sockfd;
 	}
 	DPRINT("Socket Query Success\n");
 	return sockfd;
@@ -465,6 +486,7 @@ ldns_udp_send_from(uint8_t **result, ldns_buffer *qbin,
 
 	/* wait for an response*/
 	if(!ldns_sock_wait(sockfd, timeout, 0)) {
+		DPRINT("LDNS status network error\n");
 		close_socket(sockfd);
 		return LDNS_STATUS_NETWORK_ERR;
 	}
@@ -479,6 +501,7 @@ ldns_udp_send_from(uint8_t **result, ldns_buffer *qbin,
 
 	if (!answer) {
 		/* oops */
+		DPRINT("LDNS status network error after udp read wire\n");
 		return LDNS_STATUS_NETWORK_ERR;
 	}
 
@@ -553,6 +576,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		ldns_rdf_print(stdout, ns_array[i]);
 		printf("\n");
 		*/
+		DPRINT("Current nameserver - %s\n", ldns_rdf2str(ns_array[i]));
 		ns = ldns_rdf2native_sockaddr_storage(ns_array[i],
 				ldns_resolver_port(r), &ns_len);
 
@@ -664,6 +688,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		}
 
 		/* wait retrans seconds... */
+		DPRINT("Sleeping. . .\n");
 		Sleep((unsigned int) ldns_resolver_retrans(r));
 	}
 
@@ -726,13 +751,18 @@ ldns_udp_send_query(ldns_buffer *qbin, int sockfd, const struct sockaddr_storage
 		socklen_t tolen)
 {
 	ptrdiff_t bytes;
-
+	DPRINT("Send To operation\n");
+	WSASetLastError(errno=0);
 	bytes = sendto(sockfd, (void*)ldns_buffer_begin(qbin),
 			ldns_buffer_position(qbin), 0, (struct sockaddr *)to, tolen);
-
+	errno = WSAGetLastError();
+	WSASetLastError(errno);
+	DPRINT("Sendto got error msg - %s (%d)\n", strerror(errno), errno);
 	if (bytes == -1 || (size_t)bytes != ldns_buffer_position(qbin)) {
+		DPRINT("Maybe this is error\n");
 		return 0;
 	}
+	DPRINT("Success\n");
 	return bytes;
 }
 
@@ -746,6 +776,7 @@ ldns_udp_read_wire(int sockfd, size_t *size, struct sockaddr_storage *from,
 	wire = LDNS_XMALLOC(uint8_t, LDNS_MAX_PACKETLEN);
 	if (!wire) {
 		*size = 0;
+		DPRINT("udp_read_wire Wire is NULL???\n");
 		return NULL;
 	}
 
@@ -756,13 +787,14 @@ ldns_udp_read_wire(int sockfd, size_t *size, struct sockaddr_storage *from,
 	if (wire_size == -1 || wire_size == 0) {
 		*size = 0;
 		LDNS_FREE(wire);
+		DPRINT("Failed recvfrom\n");
 		return NULL;
 	}
 
 	*size = (size_t)wire_size;
 	wireout = LDNS_XREALLOC(wire, uint8_t, (size_t)wire_size);
 	if(!wireout) LDNS_FREE(wire);
-
+	DPRINT("Wired in size of %d\n", *size);
 	return wireout;
 }
 

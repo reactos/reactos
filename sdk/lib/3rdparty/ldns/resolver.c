@@ -681,14 +681,19 @@ ldns_resolver_new(void)
 	 * when there are multiple
 	 */
 	ldns_resolver_set_random(r, true);
-	// #ifdef ADNS_JGAA_WIN32
+	#ifdef ADNS_JGAA_WIN32
 	WSADATA wsaData;
+	WORD wVersionRequested = MAKEWORD(2,0);
 	int err;
-	err = WSAStartup(MAKEWORD(2, 0), &wsaData);
+	err = WSAStartup(wVersionRequested, &wsaData);
 	if(err!=0){
 		DPRINT("WSAStartup Failed\n");
 	}
-	// #endif
+	if(LOBYTE(wsaData.wVersion)!=2 || HIBYTE(wsaData.wVersion)!=0){
+		DPRINT("WSA Not Success\n");
+		WSACleanup();
+	}
+	#endif
 	ldns_resolver_set_debug(r, 0);
 
 	r->_timeout.tv_sec = LDNS_DEFAULT_TIMEOUT_SEC;
@@ -1124,6 +1129,10 @@ ldns_resolver_deep_free(ldns_resolver *res)
 		}
 		LDNS_FREE(res);
 	}
+	#ifdef ADNS_JGAA_WIN32
+	DPRINT("WSA cleanup\n");
+	WSACleanup();
+	#endif
 }
 
 ldns_status
