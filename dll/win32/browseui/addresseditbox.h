@@ -48,6 +48,9 @@ private:
     void FillOneLevel(int index, int levelIndent, int indent);
     LPITEMIDLIST GetItemData(int index);
     HRESULT STDMETHODCALLTYPE ShowFileNotFoundError(HRESULT hRet);
+    HRESULT GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL);
+    BOOL ExecuteCommandLine();
+    BOOL GetComboBoxText(CComHeapPtr<WCHAR>& pszText);
 public:
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);

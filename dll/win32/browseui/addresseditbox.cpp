@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ * Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -94,6 +95,68 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
     return E_NOTIMPL;
 }
 
+BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
+{
+    pszText.Free();
+    INT cchMax = fCombobox.GetWindowTextLength() + sizeof(UNICODE_NULL);
+    if (!pszText.Allocate(cchMax))
+        return FALSE;
+    return fCombobox.GetWindowText(pszText, cchMax);
+}
+
+HRESULT CAddressEditBox::GetAbsolutePidl(PIDLIST_ABSOLUTE *pAbsolutePIDL)
+{
+    CComPtr<IBrowserService> isb;
+    HRESULT hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = isb->GetPidl(pAbsolutePIDL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
+/* Execute command line from address bar */
+BOOL CAddressEditBox::ExecuteCommandLine()
+{
+    /* Get command line */
+    CComHeapPtr<WCHAR> pszCmdLine;
+    if (!GetComboBoxText(pszCmdLine))
+        return FALSE;
+
+    /* Split 1st parameter from trailing arguments */
+    PWCHAR args = PathGetArgsW(pszCmdLine);
+    PathRemoveArgsW(pszCmdLine);
+
+    PathUnquoteSpacesW(pszCmdLine); /* Unquote the 1st parameter */
+
+    /* Get ready for execution */
+    SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
+    info.lpFile = pszCmdLine;
+    info.lpParameters = args;
+    info.nShow = SW_SHOWNORMAL;
+
+    /* Set current directory */
+    WCHAR dir[MAX_PATH] = L"";
+    CComHeapPtr<ITEMIDLIST> pidl;
+    if (SUCCEEDED(GetAbsolutePidl(&pidl)))
+    {
+        if (SHGetPathFromIDListW(pidl, dir) && PathIsDirectoryW(dir))
+            info.lpDirectory = dir;
+    }
+
+    if (!::ShellExecuteExW(&info)) /* Execute! */
+        return FALSE;
+
+    /* Execution succeeded. Reset the combobox. */
+    if (dir[0] != UNICODE_NULL)
+        fCombobox.SetWindowText(dir);
+
+    return TRUE;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
     ULONG eaten;
@@ -114,28 +177,17 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         return hr;
 
     /* Get the path to browse and expand it if needed */
-    LPWSTR input;
-    int inputLength = fCombobox.GetWindowTextLength() + 2;
+    CComHeapPtr<WCHAR> input, address;
+    if (!GetComboBoxText(input))
+        return E_FAIL;
 
-    input = new WCHAR[inputLength];
-    fCombobox.GetWindowText(input, inputLength);
-
-    LPWSTR address;
-    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
-
-    if (addressLength <= 0)
+    INT addressLength = (wcschr(input, L'%') ? ::SHExpandEnvironmentStringsW(input, NULL, 0) : 0);
+    if (addressLength <= 0 ||
+        !address.Allocate(addressLength + 1) ||
+        !::SHExpandEnvironmentStringsW(input, address, addressLength))
     {
-        address = input;
-    }
-    else
-    {
-        addressLength += 2;
-        address = new WCHAR[addressLength];
-        if (!ExpandEnvironmentStrings(input, address, addressLength))
-        {
-            delete[] address;
-            address = input;
-        }
+        address.Free();
+        address.Attach(input.Detach());
     }
 
     /* Try to parse a relative path and if it fails, try to browse an absolute path */
@@ -167,20 +219,14 @@ parseabsolute:
 cleanup:
     if (pidlCurrent)
         ILFree(pidlCurrent);
-    if (address != input)
-        delete[] address;
-    delete[] input;
-
     return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
 {
     CComHeapPtr<WCHAR> input;
-    int inputLength = fCombobox.GetWindowTextLength() + 2;
-
-    input.Allocate(inputLength);
-    fCombobox.GetWindowText(input, inputLength);
+    if (!GetComboBoxText(input))
+        return E_FAIL;
 
     ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), fCombobox.m_hWnd, MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TEXT), MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TITLE), MB_OK | MB_ICONERROR, input.m_pData);
 
@@ -200,7 +246,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 
         /* If the destination path doesn't exist then display an error message */
         if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            if (ExecuteCommandLine())
+                return S_OK;
+
             return ShowFileNotFoundError(hr);
+        }
 
         if (!pidlLastParsed)
             return E_FAIL;
@@ -214,16 +265,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (FAILED(hr))
         return hr;
 
-    CComPtr<IBrowserService> pbs;
-    pisb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
-    if (FAILED(hr))
-        return hr;
-
     /*
      * Get the current pidl of the shellbrowser and check if it is the same with the parsed one
      */
     PIDLIST_ABSOLUTE pidl;
-    hr = pbs->GetPidl(&pidl);
+    hr = GetAbsolutePidl(&pidl);
     if (FAILED(hr))
         return hr;
 
@@ -361,7 +407,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    CComPtr<IBrowserService> isb;
     CComPtr<IShellFolder> sf;
     HRESULT hr;
     PIDLIST_ABSOLUTE absolutePIDL;
@@ -382,12 +427,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         pidlLastParsed = NULL;
 
         /* Get the current pidl of the browser */
-        hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        hr = isb->GetPidl(&absolutePIDL);
-        if (FAILED_UNEXPECTEDLY(hr))
+        hr = GetAbsolutePidl(&absolutePIDL);
+        if (FAILED(hr))
             return hr;
 
         if (!absolutePIDL)
