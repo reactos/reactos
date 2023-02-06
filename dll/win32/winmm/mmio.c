@@ -369,39 +369,40 @@ static FOURCC MMIO_ParseExtA(LPCSTR szFileName)
     LPSTR extEnd;
     LPSTR extStart;
 
+    CHAR ext[5];
+
     TRACE("(%s)\n", debugstr_a(szFileName));
 
     if (!szFileName)
 	return ret;
 
-    /* Find the last '.' */
-    extStart = strrchr(szFileName,'.');
+    /* Find the last '+' */
+    extEnd = strrchr(szFileName,'+');
 
-    if (!extStart) {
-         ERR("No . in szFileName: %s\n", debugstr_a(szFileName));
+    if (!extEnd) {
+        /* No + so just an extension */
+        return ret;
     } else {
-        CHAR ext[5];
-
-        /* Find the '+' afterwards */
-        extEnd = strchr(extStart,'+');
-        if (extEnd) {
-
-            if (extEnd - extStart - 1 > 4)
-                WARN("Extension length > 4\n");
-            lstrcpynA(ext, extStart + 1, min(extEnd-extStart,5));
-
-        } else {
-            /* No + so just an extension */
-            if (strlen(extStart) > 4) {
-                WARN("Extension length > 4\n");
+        /* Find the first '.' before '+' */
+        extStart = extEnd - 1;
+        while (*extStart != '.') {
+            if (extStart == szFileName) {
+                ERR("No extension in szFileName: %s\n", debugstr_a(szFileName));
+                return ret;
             }
-            lstrcpynA(ext, extStart + 1, 5);
+            extStart--;
         }
-        TRACE("Got extension: %s\n", debugstr_a(ext));
-
-        /* FOURCC codes identifying file-extensions must be uppercase */
-        ret = mmioStringToFOURCCA(ext, MMIO_TOUPPER);
     }
+
+    if (extEnd - extStart - 1 > 4)
+        WARN("Extension length > 4\n");
+    lstrcpynA(ext, extStart + 1, min(extEnd-extStart,5));
+
+    TRACE("Got extension: %s\n", debugstr_a(ext));
+
+    /* FOURCC codes identifying file-extensions must be uppercase */
+    ret = mmioStringToFOURCCA(ext, MMIO_TOUPPER);
+
     return ret;
 }
 
