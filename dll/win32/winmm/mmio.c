@@ -385,12 +385,12 @@ static FOURCC MMIO_ParseExtA(LPCSTR szFileName)
     } else {
         /* Find the first '.' before '+' */
         extStart = extEnd - 1;
-        while (*extStart != '.') {
-            if (extStart == szFileName) {
-                ERR("No extension in szFileName: %s\n", debugstr_a(szFileName));
-                return ret;
-            }
+        while (extStart >= szFileName && *extStart != '.') {
             extStart--;
+        }
+        if (extStart < szFileName) {
+            ERR("No extension in szFileName: %s\n", debugstr_a(szFileName));
+            return ret;
         }
     }
 
