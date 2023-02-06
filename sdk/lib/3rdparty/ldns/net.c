@@ -656,8 +656,8 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 				return LDNS_STATUS_ERR;
 			} else {
 				LDNS_FREE(ns);
-		DPRINT("Sleeping. . .%d\n", ldns_resolver_retrans(r));
-		Sleep((unsigned int) ldns_resolver_retrans(r));
+		// DPRINT("Sleeping. . .%d\n", ldns_resolver_retrans(r));
+		// Sleep((unsigned int) ldns_resolver_retrans(r));
 				continue;
 			}
 		} 
