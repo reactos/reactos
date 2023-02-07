@@ -8,6 +8,7 @@
  */
 
 #include "scsiport.h"
+#include "ntddft.h" // FT_BALANCED_READ_MODE
 
 #define NDEBUG
 #include <debug.h>
@@ -538,6 +539,11 @@ ScsiPortDeviceControl(
             status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        case FT_BALANCED_READ_MODE:
+            DPRINT1("FT_BALANCED_READ_MODE unimplemented!\n");
+            status = STATUS_NOT_IMPLEMENTED;
+            break;
+        
         default:
             DPRINT1("unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
             status = STATUS_NOT_SUPPORTED;
