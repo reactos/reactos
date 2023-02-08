@@ -1942,6 +1942,7 @@ UniataClaimLegacyPCIIDE(
 {
     NTSTATUS status;
     PCM_RESOURCE_LIST resourceList = NULL;
+    PCM_RESOURCE_LIST oldResList   = NULL;
     UNICODE_STRING devname;
 
     KdPrint2((PRINT_PREFIX "UniataClaimLegacyPCIIDE:\n"));
@@ -1967,11 +1968,10 @@ UniataClaimLegacyPCIIDE(
     if (!resourceList) {
         KdPrint2((PRINT_PREFIX "!resourceList\n"));
         status = STATUS_INSUFFICIENT_RESOURCES;
-del_do:
-        IoDeleteDevice(BMList[i].PciIdeDevObj);
-        BMList[i].PciIdeDevObj          = NULL;
-        return status;
+        goto del_do;
     }
+
+    oldResList = resourceList;
 
     RtlZeroMemory(
         resourceList,
@@ -2001,14 +2001,22 @@ del_do:
 
     if (!NT_SUCCESS(status)) {
         KdPrint2((PRINT_PREFIX "HalAssignSlotResources failed %#x\n", status));
-        // this is always deallocated inside HalAssignSlotResources() implementation
-        //ExFreePool(resourceList);
         goto del_do;
     }
+
+    ExFreePool(oldResList);
+    ExFreePool(resourceList);
 
     KdPrint2((PRINT_PREFIX "ok %#x\n", status));
     BMList[i].ChanInitOk |= 0x80;
 
+    return status;
+
+del_do:
+    IoDeleteDevice(BMList[i].PciIdeDevObj);
+    BMList[i].PciIdeDevObj          = NULL;
+    if (oldResList)
+        ExFreePool(oldResList);
     return status;
 } // end UniataClaimLegacyPCIIDE()
 
