@@ -287,12 +287,11 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     if (!fCurrentActiveBar)
     {
-        if (lpMsg)
+        if (lpMsg && TranslateMessage(lpMsg))
         {
-            TranslateMessage(lpMsg);
             DispatchMessage(lpMsg);
+            return S_OK;
         }
-        return S_OK;
     }
 
     return IUnknown_TranslateAcceleratorIO(fCurrentActiveBar->fTheBar, lpMsg);

@@ -259,24 +259,52 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
+WCHAR CAddressBand::GetAddressBarFocusKey()
+{
+    static WCHAR s_szKey[2] = L"";
+    if (s_szKey[0] == UNICODE_NULL)
+    {
+        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBARFOCUSKEY,
+                         s_szKey, _countof(s_szKey)))
+        {
+            s_szKey[0] = L'D'; /* Alt+D */
+        }
+    }
+    return s_szKey[0];
+}
+
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (lpMsg->hwnd == fEditControl)
+    switch (lpMsg->message)
     {
-        switch (lpMsg->message)
-        {
         case WM_SYSKEYDOWN:
+            if (lpMsg->wParam == GetAddressBarFocusKey()) /* Alt+D */
+            {
+                ::SetFocus(fEditControl);
+                return S_OK;
+            }
+            break;
+
         case WM_SYSKEYUP:
+            if (lpMsg->wParam == GetAddressBarFocusKey()) /* Alt+D */
+                return S_OK;
+            break;
+
         case WM_SYSCOMMAND:
         case WM_SYSDEADCHAR:
         case WM_SYSCHAR:
-            return S_FALSE;
-        }
-
-        TranslateMessage(lpMsg);
-        DispatchMessage(lpMsg);
-        return S_OK;
+            break;
     }
+
+    if (lpMsg->hwnd == fEditControl)
+    {
+        if (TranslateMessage(lpMsg))
+        {
+            DispatchMessage(lpMsg);
+            return S_OK;
+        }
+    }
+
     return S_FALSE;
 }
 

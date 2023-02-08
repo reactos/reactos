@@ -1217,9 +1217,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (lpMsg->hwnd == m_hWnd)
+    if (lpMsg->hwnd == m_hWnd && TranslateMessage(lpMsg))
     {
-        TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
         return S_OK;
     }

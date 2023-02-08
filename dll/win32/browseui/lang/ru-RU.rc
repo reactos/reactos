@@ -321,6 +321,7 @@ BEGIN
     IDS_BACK "Назад на ""%s"""
     IDS_FORWARD "Вперед на ""%s"""
     IDS_FOLDER_OPTIONS "Свойства папки"
+    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE

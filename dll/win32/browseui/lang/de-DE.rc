@@ -330,6 +330,7 @@ BEGIN
     IDS_BACK "Zurück zu %s"
     IDS_FORWARD "Vorwärts zu %s"
     IDS_FOLDER_OPTIONS "Ordneroptionen"
+    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 

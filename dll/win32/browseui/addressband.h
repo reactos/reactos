@@ -50,6 +50,7 @@ public:
 private:
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
+    static WCHAR GetAddressBarFocusKey();
 public:
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);

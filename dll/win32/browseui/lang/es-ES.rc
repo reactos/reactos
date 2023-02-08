@@ -321,6 +321,7 @@ BEGIN
     IDS_BACK "Volver a %s"
     IDS_FORWARD "Ir a %s"
     IDS_FOLDER_OPTIONS "Opciones de carpeta"
+    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE

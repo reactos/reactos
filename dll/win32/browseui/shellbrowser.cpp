@@ -2230,9 +2230,16 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::EnableModelessSB(BOOL fEnable)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD wID)
 {
-    if (!::TranslateAcceleratorW(m_hWnd, m_hAccel, pmsg))
-        return S_FALSE;
-    return S_OK;
+    if (::TranslateAcceleratorW(m_hWnd, m_hAccel, pmsg))
+        return S_OK;
+
+    for (SIZE_T i = 0; i < _countof(fClientBars); ++i)
+    {
+        if (IUnknown_TranslateAcceleratorIO(fClientBars[i].clientBar, pmsg) == S_OK)
+            return S_OK;
+    }
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
