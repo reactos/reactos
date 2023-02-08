@@ -30,7 +30,7 @@ BEGIN
         BEGIN
             MENUITEM "(Leer)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "F&avoriten", IDM_FAVORITES
+        POPUP "&Favoriten", IDM_FAVORITES
         BEGIN
             MENUITEM "(Leer)", -1, MFT_STRING, MFS_GRAYED
         END
