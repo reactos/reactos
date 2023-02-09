@@ -320,7 +320,6 @@ BEGIN
     IDS_BACK "Назад до %s"
     IDS_FORWARD "Вперед до %s"
     IDS_FOLDER_OPTIONS "Налаштування папки"
-    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE

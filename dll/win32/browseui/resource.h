@@ -131,7 +131,6 @@
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690
 #define IDS_FOLDER_OPTIONS       58691
-#define IDS_ADDRESSBARFOCUSKEY   58692
 
 #define IDS_CANCELLING           16
 #define IDS_REMAINING            17

@@ -314,7 +314,6 @@ BEGIN
     IDS_BACK "Geri (%s Adresine)"
     IDS_FORWARD "İleri (%s Adresine)"
     IDS_FOLDER_OPTIONS "Dizin Seçenekleri"
-    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE

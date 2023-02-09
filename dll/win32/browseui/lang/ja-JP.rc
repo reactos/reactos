@@ -330,7 +330,6 @@ BEGIN
     IDS_BACK "%s へ戻る"
     IDS_FORWARD "%s へ進む"
     IDS_FOLDER_OPTIONS "フォルダ オプション"
-    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE

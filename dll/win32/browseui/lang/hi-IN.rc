@@ -312,7 +312,6 @@ BEGIN
     IDS_BACK "%s पर वापस"
     IDS_FORWARD "%s के लिए आगे"
     IDS_FOLDER_OPTIONS "Folder Options"
-    IDS_ADDRESSBARFOCUSKEY "D"
 END
 
 STRINGTABLE
