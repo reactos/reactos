@@ -43,7 +43,7 @@ CAddressBand::CAddressBand()
     fGoButton = NULL;
     fComboBox = NULL;
     fGoButtonShown = false;
-    m_chAddressBarFocusKey = UNICODE_NULL;
+    m_chFocusKey = UNICODE_NULL;
 }
 
 CAddressBand::~CAddressBand()
@@ -262,17 +262,17 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
 
 WCHAR CAddressBand::GetFocusKey()
 {
-    if (m_chAddressBarFocusKey != UNICODE_NULL)
-        return m_chAddressBarFocusKey;
+    if (m_chFocusKey != UNICODE_NULL)
+        return m_chFocusKey;
 
     CStringW strLabel(MAKEINTRESOURCEW(IDS_ADDRESSBANDLABEL));
     INT ich = strLabel.Find(L'&');
     if (ich == -1)
-        m_chAddressBarFocusKey = L'D'; /* Alt+D */
+        m_chFocusKey = L'D'; /* Alt+D */
     else
-        m_chAddressBarFocusKey = (WCHAR)(INT_PTR)CharUpperW((LPWSTR)(INT_PTR)strLabel[ich + 1]);
+        m_chFocusKey = (WCHAR)(INT_PTR)CharUpperW((LPWSTR)(INT_PTR)strLabel[ich + 1]);
 
-    return m_chAddressBarFocusKey;
+    return m_chFocusKey;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
