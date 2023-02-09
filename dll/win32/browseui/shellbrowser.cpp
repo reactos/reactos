@@ -350,6 +350,7 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
+    HRESULT ShowSysMenuContextMenu(INT xPos, INT yPos);
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -601,6 +602,7 @@ public:
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -647,6 +649,7 @@ public:
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -3548,6 +3551,60 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     if (fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
+    return 0;
+}
+
+HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
+{
+    HRESULT hr;
+    LPCITEMIDLIST pidlChild;
+    CComPtr<IShellFolder> pFolder;
+    CComPtr<IContextMenu> pContextMenu;
+
+    hr = SHBindToParent(fCurrentDirectoryPIDL, IID_IShellFolder, (void **)&pFolder, &pidlChild);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    HMENU hMenu = CreatePopupMenu();
+    UINT uFlags = CMF_NORMAL;
+    hr = pContextMenu->QueryContextMenu(hMenu, 0, 0, 0xFFFF, uFlags);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        ::DestroyMenu(hMenu);
+        return hr;
+    }
+
+    ::SetForegroundWindow(m_hWnd);
+    UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                               xPos, yPos, 0, m_hWnd, NULL);
+    if (id != 0)
+    {
+        CMINVOKECOMMANDINFO info = { sizeof(info), CMIC_MASK_FLAG_NO_UI, m_hWnd, MAKEINTRESOURCEA(id) };
+        pContextMenu->InvokeCommand(&info);
+    }
+
+    ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
+    ::DestroyMenu(hMenu);
+
+    return S_OK;
+}
+
+LRESULT CShellBrowser::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if ((HWND)wParam == m_hWnd && fCurrentDirectoryPIDL)
+    {
+        INT nHitTest = ::SendMessageW(m_hWnd, WM_NCHITTEST, 0, lParam);
+        if (nHitTest == HTSYSMENU)
+        {
+            if (ShowSysMenuContextMenu(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) == S_OK)
+                bHandled = TRUE;
+        }
+    }
     return 0;
 }
 
