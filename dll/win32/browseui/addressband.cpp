@@ -261,16 +261,18 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
 
 WCHAR CAddressBand::GetAddressBarFocusKey()
 {
-    static WCHAR s_szKey[2] = L"";
-    if (s_szKey[0] == UNICODE_NULL)
-    {
-        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBARFOCUSKEY,
-                         s_szKey, _countof(s_szKey)))
-        {
-            s_szKey[0] = L'D'; /* Alt+D */
-        }
-    }
-    return s_szKey[0];
+    static WCHAR s_chKey = UNICODE_NULL;
+    if (s_chKey != UNICODE_NULL)
+        return s_chKey;
+
+    CStringW strLabel(MAKEINTRESOURCEW(IDS_ADDRESSBANDLABEL));
+    INT ich = strLabel.Find(L'&');
+    if (strLabel.IsEmpty() || ich == -1)
+        s_chKey = L'D'; /* Alt+D */
+    else
+        s_chKey = (WCHAR)(INT_PTR)CharUpperW((LPWSTR)(INT_PTR)strLabel[ich + 1]);
+
+    return s_chKey;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
