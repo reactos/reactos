@@ -179,6 +179,21 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     if (dwSize == INVALID_FILE_SIZE)
         goto done;
 
+    if (dwSize == 0) // If file is empty
+    {
+        hNewLocal = LocalReAlloc(*phLocal, sizeof(UNICODE_NULL), LMEM_MOVEABLE);
+        pszNewText = LocalLock(hNewLocal);
+        if (hNewLocal == NULL || pszNewText == NULL)
+            goto done;
+
+        *pszNewText = UNICODE_NULL;
+
+        *phLocal = hNewLocal;
+        *piEoln = EOLN_CRLF;
+        *pencFile = ENCODING_UTF8;
+        return TRUE;
+    }
+
     hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     if (hMapping == NULL)
         goto done;
