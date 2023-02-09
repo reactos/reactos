@@ -260,7 +260,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
-WCHAR CAddressBand::GetAddressBarFocusKey()
+WCHAR CAddressBand::GetFocusKey()
 {
     if (m_chAddressBarFocusKey != UNICODE_NULL)
         return m_chAddressBarFocusKey;
@@ -280,7 +280,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
     switch (lpMsg->message)
     {
         case WM_SYSKEYDOWN:
-            if (lpMsg->wParam == GetAddressBarFocusKey()) /* Alt+D */
+            if (lpMsg->wParam == GetFocusKey()) /* Alt+D */
             {
                 ::SetFocus(fEditControl);
                 return S_OK;
@@ -288,7 +288,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
             break;
 
         case WM_SYSKEYUP:
-            if (lpMsg->wParam == GetAddressBarFocusKey()) /* Alt+D */
+            if (lpMsg->wParam == GetFocusKey()) /* Alt+D */
                 return S_OK;
             break;
 

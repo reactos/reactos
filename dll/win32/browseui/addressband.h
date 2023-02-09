@@ -50,7 +50,7 @@ public:
 private:
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
-    WCHAR GetAddressBarFocusKey();
+    WCHAR GetFocusKey();
     WCHAR m_chAddressBarFocusKey;
 public:
     // *** IDeskBand methods ***
