@@ -727,7 +727,8 @@ SetDIBitsToDevice(
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
     /*
      if ( !pDc_Attr || // DC is Public
@@ -742,6 +743,7 @@ SetDIBitsToDevice(
             TRUE,
             NULL);
     }
+Exit:
     if (Bits != pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
     if (lpbmi != pConvertedInfo)
@@ -826,8 +828,7 @@ StretchDIBits(
         }
     }
 #endif
-    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize,
-        FALSE);
+    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
     {
         return 0;
@@ -864,7 +865,8 @@ StretchDIBits(
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
     /*
      if ( !pDc_Attr ||
@@ -878,6 +880,7 @@ StretchDIBits(
             ConvertedInfoSize, cjBmpScanSize,
             NULL);
     }
+Exit:
     if (pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
     if (lpBitsInfo != pConvertedInfo)
