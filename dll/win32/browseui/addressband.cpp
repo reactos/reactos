@@ -267,7 +267,7 @@ WCHAR CAddressBand::GetAddressBarFocusKey()
 
     CStringW strLabel(MAKEINTRESOURCEW(IDS_ADDRESSBANDLABEL));
     INT ich = strLabel.Find(L'&');
-    if (strLabel.IsEmpty() || ich == -1)
+    if (ich == -1)
         s_chKey = L'D'; /* Alt+D */
     else
         s_chKey = (WCHAR)(INT_PTR)CharUpperW((LPWSTR)(INT_PTR)strLabel[ich + 1]);
