@@ -187,6 +187,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
             goto done;
 
         *pszNewText = UNICODE_NULL;
+        LocalUnlock(hNewLocal);
 
         *phLocal = hNewLocal;
         *piEoln = EOLN_CRLF;
