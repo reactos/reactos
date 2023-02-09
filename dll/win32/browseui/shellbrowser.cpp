@@ -3558,14 +3558,9 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
 {
     HRESULT hr;
     LPCITEMIDLIST pidlChild;
-    CComPtr<IShellFolder> pFolder;
     CComPtr<IContextMenu> pContextMenu;
 
-    hr = SHBindToParent(fCurrentDirectoryPIDL, IID_IShellFolder, (void **)&pFolder, &pidlChild);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
+    hr = fCurrentShellFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
