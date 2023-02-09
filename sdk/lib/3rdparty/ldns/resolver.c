@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <ldns/ldns.h>
 #include <strings.h>
+#define NDEBUG
 #include <debug.h>
-//#define NDEBUG
 
 /* Access function for reading
  * and setting the different Resolver

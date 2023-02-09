@@ -13,7 +13,7 @@
 #include <iphlpapi.h>
 #include <strsafe.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 // String to addy
 static
