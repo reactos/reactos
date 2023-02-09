@@ -3569,23 +3569,49 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    HMENU hMenu = CreatePopupMenu();
+    HMENU hMenu = ::CreatePopupMenu();
+
     UINT uFlags = CMF_NORMAL;
-    hr = pContextMenu->QueryContextMenu(hMenu, 0, 0, 0xFFFF, uFlags);
+    hr = pContextMenu->QueryContextMenu(hMenu, ::GetMenuItemCount(hMenu), FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, uFlags);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         ::DestroyMenu(hMenu);
         return hr;
     }
 
+    // Delete 'Open' menu item
+    ::DeleteMenu(hMenu, 0, MF_BYPOSITION);
+
+    // Insert 'Close' menu item and make it default
+#define ID_CLOSE (FCIDM_SHVIEWLAST + 1)
+    WCHAR szClose[] = L"&Close"; // TODO: Make it resource
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_TYPE | MIIM_STATE, MFT_STRING, MFS_DEFAULT };
+    mii.wID = ID_CLOSE;
+    mii.dwTypeData = szClose;
+    ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
+
     ::SetForegroundWindow(m_hWnd);
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                                xPos, yPos, 0, m_hWnd, NULL);
-    if (id != 0)
+    switch (id)
     {
-        CMINVOKECOMMANDINFO info = { sizeof(info), CMIC_MASK_FLAG_NO_UI, m_hWnd, MAKEINTRESOURCEA(id) };
-        pContextMenu->InvokeCommand(&info);
+        case ID_CLOSE:
+            ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+            break;
+
+        default:
+            if (id != 0)
+            {
+                CMINVOKECOMMANDINFO info =
+                {
+                    sizeof(info), CMIC_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK,
+                    m_hWnd, MAKEINTRESOURCEA(id)
+                };
+                pContextMenu->InvokeCommand(&info);
+            }
+            break;
     }
+#undef ID_CLOSE
 
     ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
     ::DestroyMenu(hMenu);
