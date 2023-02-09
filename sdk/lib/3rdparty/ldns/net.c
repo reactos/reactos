@@ -53,7 +53,7 @@ ldns_send(ldns_pkt **result_packet, ldns_resolver *r, const ldns_pkt *query_pkt)
 		result = LDNS_STATUS_ERR;
 	} else {
         	result = ldns_send_buffer(result_packet, r, qb, tsig_mac);
-		DPRINT("Ldns Send Buffer Status - %d\n", result);
+		// DPRINT("Ldns Send Buffer Status - %d\n", result);
 	}
 
 	ldns_buffer_free(qb);
@@ -80,7 +80,7 @@ ldns_rdf2native_sockaddr_storage_port(
         switch(ldns_rdf_get_type(rd)) {
                 case LDNS_RDF_TYPE_A:
 #ifndef S_SPLINT_S
-						DPRINT("ldns_rdf2native_sockaddr_storage_port is type A\n");
+						// DPRINT("ldns_rdf2native_sockaddr_storage_port is type A\n");
                         data->ss_family = AF_INET;
 #endif
                         data_in = (struct sockaddr_in*) data;
@@ -160,21 +160,22 @@ ldns_sock_wait(int sockfd, struct timeval timeout, int write)
 	int ret;
 // #ifndef HAVE_POLL
 #ifndef S_SPLINT_S
-DPRINT("Doing Select\n");
+DPRINT("doing Beforeselect\n");
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(FD_SET_T sockfd, &fds);
-	WSASetLastError(errno=0);
+	DPRINT("Doing select with timeout - tv_sec %d, tv_usec %d\n", timeout.tv_sec, timeout.tv_usec);
+	LDNS_CLEAR_ERRNO;
 	if(write){
-		DPRINT("Write is true\n");
+		// DPRINT("Write is true\n");
 		ret = select(sockfd+1, NULL, &fds, NULL, &timeout);
 	}
 	else{
-		DPRINT("Write is false\n");
+		// DPRINT("Write is false\n");
 		ret = select(sockfd+1, &fds, NULL, NULL, &timeout);
 	}
-	errno = WSAGetLastError();
-	WSASetLastError(errno);
+	LDNS_CAPTURE_ERRNO;
+	DPRINT("Select got strerror(errno) - %s (errno %d)\n", strerror(errno), errno);
 #endif
 // #else
 // 	struct pollfd pfds[2];
@@ -194,6 +195,7 @@ DPRINT("Doing Select\n");
 	if(ret == 0){
 		/* timeout expired */
 		DPRINT("Timeout expiration\n");
+		DPRINT("doing Afterselect\n");
 		return 0;
 	}
 	else if(ret == -1){
@@ -201,6 +203,7 @@ DPRINT("Doing Select\n");
 		DPRINT("Error on select\n");
 		return 0;
 	}
+	DPRINT("doing Afterselect\n");
 	return 1;
 }
 
@@ -390,7 +393,7 @@ ldns_udp_connect(const struct sockaddr_storage *to, struct timeval ATTR_UNUSED(t
 	int sockfd;
 
 #ifndef S_SPLINT_S
-	DPRINT("sa_family - %d\n",(int)((struct sockaddr*)to)->sa_family);
+	// DPRINT("sa_family - %d\n",(int)((struct sockaddr*)to)->sa_family);
 	if ((sockfd = socket((int)((struct sockaddr*)to)->sa_family, SOCK_DGRAM, 
 					IPPROTO_UDP)) 
 			== SOCK_INVALID) {
@@ -406,7 +409,7 @@ ldns_udp_connect2(const struct sockaddr_storage *to, struct timeval ATTR_UNUSED(
 	int sockfd;
 
 #ifndef S_SPLINT_S
-	DPRINT("Socket sa_family - %lx\n", (int)((struct sockaddr*)to)->sa_family);
+	// DPRINT("Socket sa_family - %lx\n", (int)((struct sockaddr*)to)->sa_family);
 	LDNS_CLEAR_ERRNO;
 	if ((sockfd = socket((int)((struct sockaddr*)to)->sa_family, SOCK_DGRAM, 
 					IPPROTO_UDP)) 
@@ -426,31 +429,31 @@ ldns_udp_bgsend_from(int sockfd, ldns_buffer *qbin,
 {
 	// int sockfd;
 	// sockfd = ldns_udp_connect2(to, timeout);
-	DPRINT("Sockfd in ldns_udp_bgsend_from %d\n", sockfd);
-	if (sockfd == -1) {
-		return -1;
-	}
-	DPRINT("Socket connect Success\n");
-	if(!from){
-		DPRINT("From is Null!\n");
-	}else{
-		DPRINT("From is not Null\n");
-	}
-	DPRINT("Binding Socket \n");
+	// DPRINT("Sockfd is %d\n", sockfd);
+	// if (sockfd == -1) {
+	// 	return -1;
+	// }
+	// DPRINT("Socket connect Success\n");
+	// if(!from){
+	// 	DPRINT("From is Null!\n");
+	// }else{
+	// 	DPRINT("From is not Null\n");
+	// }
+	// DPRINT("Binding Socket \n");
 	if (from && bind(sockfd, (const struct sockaddr*)from, fromlen) == -1){
-		close_socket(sockfd);
+		// close_socket(sockfd);
 		return -1;
 	}
-	DPRINT("Socket Bind Success\n");
+	// DPRINT("Socket Bind Success\n");
 
-	DPRINT("Query Socket\n");
+	// DPRINT("Query Socket\n");
 	if (ldns_udp_send_query(qbin, sockfd, to, tolen) == 0) {
-		DPRINT("sendto Error\n");
+		// DPRINT("sendto Error\n");
 		// close_socket(sockfd);
 		// return -1;
 		return sockfd;
 	}
-	DPRINT("Socket Query Success\n");
+	// DPRINT("Socket Query Success\n");
 	return sockfd;
 }
 
@@ -488,7 +491,7 @@ ldns_udp_send_from(int sockfd, uint8_t **result, ldns_buffer *qbin,
 
 	/* wait for an response*/
 	if(!ldns_sock_wait(sockfd, timeout, 0)) {
-		DPRINT("LDNS status network error\n");
+		// DPRINT("LDNS status network error\n");
 		// close_socket(sockfd);
 		return LDNS_STATUS_NETWORK_ERR;
 	}
@@ -499,11 +502,11 @@ ldns_udp_send_from(int sockfd, uint8_t **result, ldns_buffer *qbin,
         ldns_sock_nonblock(sockfd);
 
 	answer = ldns_udp_read_wire(sockfd, answer_size, NULL, NULL);
-	close_socket(sockfd);
+	// close_socket(sockfd);
 
 	if (!answer) {
 		/* oops */
-		DPRINT("LDNS status network error after udp read wire\n");
+		// DPRINT("LDNS status network error after udp read wire\n");
 		return LDNS_STATUS_NETWORK_ERR;
 	}
 
@@ -560,11 +563,6 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		src = ldns_rdf2native_sockaddr_storage_port(
 				ldns_resolver_source(r), 0, &src_len);
 	}
-	if(!src){
-		DPRINT("sockaddr src is null \n");
-	}else{
-		DPRINT("sockaddr src is not null \n");
-	}
 
 	/* loop through all defined nameservers */
 	for (i = 0; i < ldns_resolver_nameserver_count(r); i++) {
@@ -578,15 +576,9 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		ldns_rdf_print(stdout, ns_array[i]);
 		printf("\n");
 		*/
-		DPRINT("Current nameserver - %s\n", ldns_rdf2str(ns_array[i]));
+		DPRINT("Using server - %d\n", i);
 		ns = ldns_rdf2native_sockaddr_storage(ns_array[i],
 				ldns_resolver_port(r), &ns_len);
-
-		if(!ns){
-			DPRINT("sockaddr ns is null \n");
-		}else{
-			DPRINT("sockaddr ns is not null \n");
-		}
 
 #ifndef S_SPLINT_S
 		if ((ns->ss_family == AF_INET) &&
@@ -627,7 +619,7 @@ ldns_send_buffer(ldns_pkt **result, ldns_resolver *r, ldns_buffer *qb, ldns_rdf 
 		} else {
 			for (retries = ldns_resolver_retry(r); retries > 0; retries--) {
 				/* ldns_rdf_print(stdout, ns_array[i]); */
-				DPRINT("UDP Send From\n");
+				DPRINT("Using UDP\n");
 				send_status = 
 					ldns_udp_send_from(r->_socket, &reply_bytes, qb,
 						ns,  (socklen_t)ns_len,
@@ -756,17 +748,16 @@ ldns_udp_send_query(ldns_buffer *qbin, int sockfd, const struct sockaddr_storage
 {
 	ptrdiff_t bytes;
 	DPRINT("Send To operation\n");
-	WSASetLastError(errno=0);
+	LDNS_CLEAR_ERRNO;
 	bytes = sendto(sockfd, (void*)ldns_buffer_begin(qbin),
 			ldns_buffer_position(qbin), 0, (struct sockaddr *)to, tolen);
-	errno = WSAGetLastError();
-	WSASetLastError(errno);
+	LDNS_CAPTURE_ERRNO;
 	DPRINT("Sendto got error msg - %s (%d)\n", strerror(errno), errno);
 	if (bytes == -1 || (size_t)bytes != ldns_buffer_position(qbin)) {
-		DPRINT("Maybe this is error\n");
+		// DPRINT("Maybe this is error\n");
 		return 0;
 	}
-	DPRINT("Success\n");
+	// DPRINT("Success\n");
 	return bytes;
 }
 
@@ -783,10 +774,11 @@ ldns_udp_read_wire(int sockfd, size_t *size, struct sockaddr_storage *from,
 		DPRINT("udp_read_wire Wire is NULL???\n");
 		return NULL;
 	}
-
+	DPRINT("Doing recvfrom\n");
+	LDNS_CLEAR_ERRNO;
 	wire_size = recvfrom(sockfd, (void*)wire, LDNS_MAX_PACKETLEN, 0, 
 			(struct sockaddr *)from, fromlen);
-
+	LDNS_CAPTURE_ERRNO;
 	/* recvfrom can also return 0 */
 	if (wire_size == -1 || wire_size == 0) {
 		*size = 0;
@@ -798,7 +790,7 @@ ldns_udp_read_wire(int sockfd, size_t *size, struct sockaddr_storage *from,
 	*size = (size_t)wire_size;
 	wireout = LDNS_XREALLOC(wire, uint8_t, (size_t)wire_size);
 	if(!wireout) LDNS_FREE(wire);
-	DPRINT("Wired in size of %d\n", *size);
+	DPRINT("Recvfrom got size of %d\n", *size);
 	return wireout;
 }
 
@@ -1027,7 +1019,7 @@ ldns_axfr_start(ldns_resolver *resolver, const ldns_rdf *domain, ldns_rr_class c
 		if (status != LDNS_STATUS_OK) {
 			/* to prevent problems on subsequent calls to 
 			 * ldns_axfr_start we have to close the socket here! */
-			close_socket(resolver->_socket);
+			// close_socket(resolver->_socket);
 			resolver->_socket = 0;
 
 			ldns_pkt_free(query);

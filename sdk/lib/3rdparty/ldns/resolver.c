@@ -286,12 +286,12 @@ ldns_resolver_pop_nameserver(ldns_resolver *r)
 	return pop;
 }
 
-static const char *instrum_getenv(const char *envvar) {
-  const char *value;
+// static const char *instrum_getenv(const char *envvar) {
+//   const char *value;
 
-  value= getenv(envvar);
-  return value;
-}
+//   value= getenv(envvar);
+//   return value;
+// }
 ldns_status
 ldns_resolver_push_nameserver(ldns_resolver *r, const ldns_rdf *n)
 {
@@ -622,34 +622,34 @@ ldns_resolver_new(void)
 		return NULL;
 	}
 
-	const char* res_options = instrum_getenv("RES_OPTIONS");
-	const char* adns_res_options = instrum_getenv("ADNS_RES_OPTIONS");
-	DPRINT("Res Opt Env Variable - %s\n", res_options);
-	DPRINT("Adns Res Opt Env Variable - %s\n", adns_res_options);
-	const char* res_conf = instrum_getenv("RES_CONF");
-	const char* adns_res_conf = instrum_getenv("ADNS_RES_CONF");
-	DPRINT("Res Conf Env Variable - %s\n", res_conf);
-	DPRINT("Adns Res Conf Env Variable - %s\n", adns_res_conf);
-  	FILE* f = fopen(res_conf,"r");
-	if(!f){
-		DPRINT("Res Conf - File Not Found\n");
-	}else{
-		DPRINT("Res Conf - File Found\n");
-	}
-  	f = fopen(adns_res_conf,"r");
-	if(!f){
-		DPRINT("Adns Res Conf - File Not Found\n");
-	}else{
-		DPRINT("Adns Res Conf - File Found\n");
-	}
-	const char* local_domain = instrum_getenv("LOCALDOMAIN");
-	const char* adns_local_domain = instrum_getenv("ADNS_LOCALDOMAIN");
-	DPRINT("Local Domain Env Variable - %s\n", local_domain);
-	DPRINT("Adns Local Domain Env Variable - %s\n", adns_local_domain);
-	const char* res_conf_text = instrum_getenv("RES_CONF_TEXT");
-	const char* adns_res_conf_text = instrum_getenv("ADNS_RES_CONF_TEXT");
-	DPRINT("Res Conf Text Env Variable - %s\n", res_conf_text);
-	DPRINT("Adns Res Conf Text Env Variable - %s\n", adns_res_conf_text);
+	// const char* res_options = instrum_getenv("RES_OPTIONS");
+	// const char* adns_res_options = instrum_getenv("ADNS_RES_OPTIONS");
+	// DPRINT("Res Opt Env Variable - %s\n", res_options);
+	// DPRINT("Adns Res Opt Env Variable - %s\n", adns_res_options);
+	// const char* res_conf = instrum_getenv("RES_CONF");
+	// const char* adns_res_conf = instrum_getenv("ADNS_RES_CONF");
+	// DPRINT("Res Conf Env Variable - %s\n", res_conf);
+	// DPRINT("Adns Res Conf Env Variable - %s\n", adns_res_conf);
+  	// FILE* f = fopen(res_conf,"r");
+	// if(!f){
+	// 	DPRINT("Res Conf - File Not Found\n");
+	// }else{
+	// 	DPRINT("Res Conf - File Found\n");
+	// }
+  	// f = fopen(adns_res_conf,"r");
+	// if(!f){
+	// 	DPRINT("Adns Res Conf - File Not Found\n");
+	// }else{
+	// 	DPRINT("Adns Res Conf - File Found\n");
+	// }
+	// const char* local_domain = instrum_getenv("LOCALDOMAIN");
+	// const char* adns_local_domain = instrum_getenv("ADNS_LOCALDOMAIN");
+	// DPRINT("Local Domain Env Variable - %s\n", local_domain);
+	// DPRINT("Adns Local Domain Env Variable - %s\n", adns_local_domain);
+	// const char* res_conf_text = instrum_getenv("RES_CONF_TEXT");
+	// const char* adns_res_conf_text = instrum_getenv("ADNS_RES_CONF_TEXT");
+	// DPRINT("Res Conf Text Env Variable - %s\n", res_conf_text);
+	// DPRINT("Adns Res Conf Text Env Variable - %s\n", adns_res_conf_text);
 
 	r->_searchlist = NULL;
 	r->_nameservers = NULL;
@@ -689,6 +689,7 @@ ldns_resolver_new(void)
 	if(err!=0){
 		DPRINT("WSAStartup Failed\n");
 	}
+	DPRINT("Startup Success\n");
 	if(LOBYTE(wsaData.wVersion)!=2 || HIBYTE(wsaData.wVersion)!=0){
 		DPRINT("WSA Not Success\n");
 		WSACleanup();
@@ -704,13 +705,18 @@ ldns_resolver_new(void)
 	LDNS_CAPTURE_ERRNO;
 	if(r->_socket < 0){
 		DPRINT("Socket could not be created\n");
+		DPRINT("WSACleanup\n");
+		WSACleanup();
 		return NULL;
 	}
+	DPRINT("Udpsocket is - %d\n", r->_socket);
 	#ifdef ADNS_JGAA_WIN32
 		unsigned long on = 1;
 		if(ioctlsocket(r->_socket, FIONBIO, &on) != 0) {
 			/* ignore error, continue blockingly */
 			DPRINT("Received Error on Block\n");
+			DPRINT("WSACleanup\n");
+			WSACleanup();
 			return NULL;
 		}
 		DPRINT("Non block success\n");
