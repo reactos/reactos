@@ -130,16 +130,19 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         while (*s)
             if (*s++=='"')
                 break;
+        /* skip to the first argument, if any */
+        while (*s==' ' || *s=='\t')
+            s++;
     }
     else
     {
         /* The executable path ends at the next space, no matter what */
-        while (*s && *s!=' ' && *s!='\t')
+        while (*s && *s!=' ' && *s!='\t' && *s!='\r' && *s!='\n')
+            s++;
+        /* skip to the first argument, if any */
+        while (*s==' ' || *s=='\t' || *s=='\r' || *s=='\n')
             s++;
     }
-    /* skip to the first argument, if any */
-    while (*s==' ' || *s=='\t')
-        s++;
     if (*s)
         argc++;
 
@@ -214,21 +217,26 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             }
             *d++=*s++;
         }
+        /* close the executable path */
+        *d++=0;
+        /* skip to the first argument and initialize it if any */
+        while (*s==' ' || *s=='\t')
+            s++;
     }
     else
     {
         /* The executable path ends at the next space, no matter what */
-        while (*d && *d!=' ' && *d!='\t')
+        while (*d && *d!=' ' && *d!='\t' && *d!='\r' && *d!='\n')
             d++;
         s=d;
         if (*s)
             s++;
+        /* close the executable path */
+        *d++=0;
+        /* skip to the first argument and initialize it if any */
+        while (*s==' ' || *s=='\t' || *s=='\r' || *s=='\n')
+            s++;
     }
-    /* close the executable path */
-    *d++=0;
-    /* skip to the first argument and initialize it if any */
-    while (*s==' ' || *s=='\t')
-        s++;
     if (!*s)
     {
         /* There are no parameters so we are all done */
