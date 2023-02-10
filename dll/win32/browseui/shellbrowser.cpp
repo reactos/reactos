@@ -3611,28 +3611,28 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     CComPtr<IShellFolder> pFolder;
     LPCITEMIDLIST pidlChild;
 
+    // Prepare for context menu
     hr = SHBindToParent(fCurrentDirectoryPIDL, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
     hr = pFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    HMENU hMenu = ::CreatePopupMenu();
-
+    // Query context menu
 #define CMDID_FIRST 0x1000
 #define CMDID_LAST  0x7000
 #define CMDID_CLOSE 0x7001
     UINT uFlags = CMF_NORMAL;
-    INT cItems = ::GetMenuItemCount(hMenu);
-    hr = pContextMenu->QueryContextMenu(hMenu, cItems, CMDID_FIRST, CMDID_LAST, uFlags);
+    HMENU hMenu = ::CreatePopupMenu();
+    hr = pContextMenu->QueryContextMenu(hMenu, 0, CMDID_FIRST, CMDID_LAST, uFlags);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         ::DestroyMenu(hMenu);
         return hr;
     }
 
+    // Delete some menu items
     DeleteUnwantedVerbItems(pContextMenu, hMenu, CMDID_FIRST, CMDID_LAST);
     DeleteDuplicateSeparators(hMenu);
 #undef CMDID_FIRST
