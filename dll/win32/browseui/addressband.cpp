@@ -262,16 +262,17 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
 
 WCHAR CAddressBand::GetFocusKey()
 {
-    if (m_chFocusKey != UNICODE_NULL)
+    CStringW strLabel(MAKEINTRESOURCEW(IDS_ADDRESSBANDLABEL));
+    if (m_chFocusKey != UNICODE_NULL && m_strAddressLabel == strLabel)
         return m_chFocusKey;
 
-    CStringW strLabel(MAKEINTRESOURCEW(IDS_ADDRESSBANDLABEL));
     INT ich = strLabel.Find(L'&');
     if (ich == -1)
         m_chFocusKey = L'D'; /* Alt+D */
     else
         m_chFocusKey = (WCHAR)(INT_PTR)CharUpperW((LPWSTR)(INT_PTR)strLabel[ich + 1]);
 
+    m_strAddressLabel = strLabel;
     return m_chFocusKey;
 }
 

@@ -49,6 +49,7 @@ public:
     virtual ~CAddressBand();
 private:
     WCHAR m_chFocusKey;
+    CStringW m_strAddressLabel;
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
     WCHAR GetFocusKey();
