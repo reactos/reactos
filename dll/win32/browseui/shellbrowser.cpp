@@ -3622,7 +3622,6 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     // Query context menu
 #define CMDID_FIRST 0x1000
 #define CMDID_LAST  0x7000
-#define CMDID_CLOSE 0x7001
     UINT uFlags = CMF_NORMAL;
     HMENU hMenu = ::CreatePopupMenu();
     hr = pContextMenu->QueryContextMenu(hMenu, 0, CMDID_FIRST, CMDID_LAST, uFlags);
@@ -3635,6 +3634,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     // Delete some menu items
     DeleteUnwantedVerbItems(pContextMenu, hMenu, CMDID_FIRST, CMDID_LAST);
     DeleteDuplicateSeparators(hMenu);
+    C_ASSERT(!(CMDID_FIRST <= SC_CLOSE && SC_CLOSE <= CMDID_LAST));
 #undef CMDID_FIRST
 #undef CMDID_LAST
 
@@ -3650,7 +3650,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
     mii.fType = MFT_STRING;
     mii.fState = MFS_DEFAULT;
-    mii.wID = CMDID_CLOSE;
+    mii.wID = SC_CLOSE;
     mii.dwTypeData = szClose;
     mii.hbmpItem = HBMMENU_POPUP_CLOSE;
     ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
@@ -3669,7 +3669,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                                xPos, yPos, 0, m_hWnd, NULL);
     // Action!
-    if (id == CMDID_CLOSE)
+    if (id == SC_CLOSE)
     {
         ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
     }
@@ -3681,7 +3681,6 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
         };
         pContextMenu->InvokeCommand(&info);
     }
-#undef CMDID_CLOSE
 
     // Clean up
     ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
