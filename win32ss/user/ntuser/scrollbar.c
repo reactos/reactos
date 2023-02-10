@@ -543,9 +543,9 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    /* Set the scroll pos */
    if (lpsi->fMask & SIF_POS)
    {
+      OldPos = Info->nPos;
       if (Info->nPos != lpsi->nPos)
       {
-         OldPos = Info->nPos;
          Info->nPos = lpsi->nPos;
          pSBData->pos = lpsi->nPos;
       }
@@ -686,14 +686,15 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
                IntRefeshScrollInterior(Window, nBar, psbi);
             }
          }
-         else  /* Using Themes */
+         else /* Using Themes */
          {
             RECTL UpdateRect = psbi->rcScrollBar;
             UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
             UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
             UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
             UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
-            co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+            if (bChangeParams || (OldPos != pSBData->pos))
+                co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
          }
       }
    }
