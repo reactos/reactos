@@ -2531,6 +2531,8 @@ HRESULT WINAPI ShellExecCmdLine(
     }
     else
     {
+        PCWSTR apPathList[2];
+
         pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
         if (szFile[0] != UNICODE_NULL && szFile[1] == L':' &&
             szFile[2] == UNICODE_NULL)
@@ -2551,30 +2553,10 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
-        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, szFile, L".com", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, L".com", _countof(szFile2), szFile2, NULL))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-        }
-        else if (SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, lpCommand, L".exe", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, lpCommand, L".com", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, L".exe", _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, L".com", _countof(szFile2), szFile2, NULL))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-            pchParams = NULL;
-        }
 
-        if (pwszStartDir)
-        {
-            SetCurrentDirectoryW(szCurDir);
-        }
+        apPathList[0] = pwszStartDir;
+        apPathList[1] = NULL;
+        PathFindOnPathExW(szFile, apPathList, WHICH_DEFAULT);
 
         if (!(dwSeclFlags & SECL_ALLOW_NONEXE))
         {
