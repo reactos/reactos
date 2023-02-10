@@ -3554,31 +3554,91 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
+static VOID DeleteSpecificVerbItems(IContextMenu *pContextMenu, HMENU hMenu, INT idFirst, INT idLast)
+{
+    CHAR verb[32];
+    INT cItems = ::GetMenuItemCount(hMenu);
+    for (INT iMenu = cItems - 1; iMenu >= 0; --iMenu) // In reverse order, to keep the indexes
+    {
+        // Get menu ID
+        MENUITEMINFOW mii = { sizeof(mii), MIIM_ID };
+        GetMenuItemInfoW(hMenu, iMenu, TRUE, &mii);
+        if (mii.wID == 0)
+            continue;
+
+        // Get the verb from menu ID
+        verb[0] = 0;
+        HRESULT hr = pContextMenu->GetCommandString(mii.wID - idFirst, GCS_VERBA, NULL, verb, _countof(verb));
+        if (FAILED(hr))
+            continue;
+
+        if (_strcmpi(verb, "open") == 0 ||
+            _strcmpi(verb, "link") == 0 ||
+            _strcmpi(verb, "rename") == 0 ||
+            _strcmpi(verb, "delete") == 0)
+        {
+            ::DeleteMenu(hMenu, iMenu, MF_BYPOSITION);
+        }
+    }
+}
+
+static VOID DeleteDuplicateSeparators(HMENU hMenu)
+{
+    INT cItems = ::GetMenuItemCount(hMenu);
+    BOOL bPrevSep = FALSE;
+    for (INT iMenu = cItems - 1; iMenu >= 0; --iMenu) // In reverse order, to keep the indexes
+    {
+        // Get menu ID
+        MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE };
+        GetMenuItemInfoW(hMenu, iMenu, TRUE, &mii);
+        if (mii.fType == MFT_SEPARATOR)
+        {
+            if (bPrevSep)
+                ::DeleteMenu(hMenu, iMenu, MF_BYPOSITION);
+            bPrevSep = TRUE;
+        }
+        else
+        {
+            bPrevSep = FALSE;
+        }
+    }
+}
+
 HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
 {
     HRESULT hr;
-    LPCITEMIDLIST pidlChild;
     CComPtr<IContextMenu> pContextMenu;
+    CComPtr<IShellFolder> pFolder;
+    LPCITEMIDLIST pidlChild;
 
-    hr = fCurrentShellFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
+    hr = SHBindToParent(fCurrentDirectoryPIDL, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_IContextMenu, NULL, (void **)&pContextMenu);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     HMENU hMenu = ::CreatePopupMenu();
 
+#define CMDID_FIRST 0x1000
+#define CMDID_LAST  0x7000
     UINT uFlags = CMF_NORMAL;
-    hr = pContextMenu->QueryContextMenu(hMenu, ::GetMenuItemCount(hMenu), FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, uFlags);
+    INT cItems = ::GetMenuItemCount(hMenu);
+    hr = pContextMenu->QueryContextMenu(hMenu, cItems, CMDID_FIRST, CMDID_LAST, uFlags);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         ::DestroyMenu(hMenu);
         return hr;
     }
 
-    // Delete 'Open' menu item
-    ::DeleteMenu(hMenu, 0, MF_BYPOSITION);
+    DeleteSpecificVerbItems(pContextMenu, hMenu, CMDID_FIRST, CMDID_LAST);
+    DeleteDuplicateSeparators(hMenu);
+#undef CMDID_FIRST
+#undef CMDID_LAST
 
     // Insert 'Close' menu item and make it default
-#define ID_CLOSE (FCIDM_SHVIEWLAST + 1)
+#define ID_CLOSE 0x100
     WCHAR szClose[] = L"&Close"; // TODO: Make it resource
     MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_TYPE | MIIM_STATE, MFT_STRING, MFS_DEFAULT };
     mii.wID = ID_CLOSE;
