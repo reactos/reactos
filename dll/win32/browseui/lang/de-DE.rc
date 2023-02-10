@@ -318,7 +318,7 @@ STRINGTABLE
 BEGIN
     IDS_ADDRESSMENUTEXT "&Address"
     IDS_HISTORYTEXT "&Verlauf\tCtrl+H"
-    IDS_CLOSE "&Close"
+    IDS_CLOSE "&Close\tAlt+F4"
 END
 
 STRINGTABLE

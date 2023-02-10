@@ -3588,7 +3588,7 @@ static VOID DeleteDuplicateSeparators(HMENU hMenu)
     BOOL bPrevSep = FALSE;
     for (INT iMenu = cItems - 1; iMenu >= 0; --iMenu) // In reverse order, to keep the indexes
     {
-        // Get menu ID
+        // Get menu type
         MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE };
         GetMenuItemInfoW(hMenu, iMenu, TRUE, &mii);
         if (mii.fType == MFT_SEPARATOR)
