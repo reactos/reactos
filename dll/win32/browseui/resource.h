@@ -127,7 +127,6 @@
 #define IDS_FOLDERSLABEL         12919
 #define IDS_ADDRESSMENUTEXT      13137
 #define IDS_HISTORYTEXT          13169
-#define IDS_CLOSE                13170
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690

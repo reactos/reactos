@@ -3638,14 +3638,20 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
 #undef CMDID_FIRST
 #undef CMDID_LAST
 
+    // Get 'Close' menu item string from system menu
+    WCHAR szClose[128];
+    HMENU hSysMenu = ::GetSystemMenu(m_hWnd, FALSE);
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE };
+    mii.dwTypeData = szClose;
+    mii.cch = _countof(szClose);
+    if (!::GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii))
+        StringCchCopyW(szClose, _countof(szClose), L"&Close\tAlt+F4");
     // Insert 'Close' menu item and make it default
-    CStringW strClose(MAKEINTRESOURCEW(IDS_CLOSE));
-    MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
     mii.fType = MFT_STRING;
     mii.fState = MFS_DEFAULT;
     mii.wID = CMDID_CLOSE;
-    mii.dwTypeData = const_cast<LPWSTR>((LPCWSTR)strClose);
+    mii.dwTypeData = szClose;
     mii.hbmpItem = HBMMENU_POPUP_CLOSE;
     ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
     // Insert a separator
