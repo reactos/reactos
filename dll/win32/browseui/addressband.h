@@ -48,10 +48,10 @@ public:
     CAddressBand();
     virtual ~CAddressBand();
 private:
+    WCHAR m_chFocusKey;
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
     WCHAR GetFocusKey();
-    WCHAR m_chFocusKey;
 public:
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);
