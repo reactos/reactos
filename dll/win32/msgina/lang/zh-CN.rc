@@ -248,7 +248,7 @@ END
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "注销“%S”"
+    IDS_SHUTDOWN_LOGOFF "注销 %s"
     IDS_SHUTDOWN_SHUTDOWN "关闭"
     IDS_SHUTDOWN_RESTART "重新启动"
     IDS_SHUTDOWN_SLEEP "睡眠"
