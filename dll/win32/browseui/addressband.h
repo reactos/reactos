@@ -49,7 +49,7 @@ public:
     virtual ~CAddressBand();
 private:
     WCHAR m_chFocusKey;
-    CStringW m_strAddressLabel;
+    LANGID m_wLangId;
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
     WCHAR GetFocusKey();
