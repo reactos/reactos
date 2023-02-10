@@ -1944,6 +1944,7 @@ UniataClaimLegacyPCIIDE(
     PCM_RESOURCE_LIST resourceList = NULL;
     UNICODE_STRING devname;
 #ifdef __REACTOS__
+    DbgBreakPoint();
     PCM_RESOURCE_LIST oldResList = NULL;
 #endif
 
