@@ -82,7 +82,7 @@ if (NOT MSVC AND ((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (CMAKE_C_COMPILER_VER
     add_compile_options(-ffile-prefix-map=${REACTOS_SOURCE_DIR}=)
     add_compile_options(-ffile-prefix-map=${_PATH_PREFIX}=)
 else()
-    string(LENGTH ${_PATH_PREFIX} _PATH_PREFIX_LENGTH)
+    string(LENGTH "${_PATH_PREFIX}" _PATH_PREFIX_LENGTH)
     string(LENGTH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_LENGTH)
     math(EXPR REACTOS_SOURCE_DIR_LENGTH "${REACTOS_SOURCE_DIR_LENGTH} + 1")
     add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:__RELFILE__=&__FILE__[__FILE__[0] == '.' ? ${_PATH_PREFIX_LENGTH} : ${REACTOS_SOURCE_DIR_LENGTH}]>")

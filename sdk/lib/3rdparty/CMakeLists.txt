@@ -1,5 +1,4 @@
 
-add_subdirectory(adns)
 add_subdirectory(cardlib)
 add_subdirectory(freetype)
 add_subdirectory(ldns)
