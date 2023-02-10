@@ -3658,9 +3658,11 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     mi.dwStyle |= MNS_NOCHECK;
     ::SetMenuInfo(hMenu, &mi);
 
+    // Display the menu
     ::SetForegroundWindow(m_hWnd);
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                                xPos, yPos, 0, m_hWnd, NULL);
+    // Action!
     if (id == CMDID_CLOSE)
     {
         ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
@@ -3675,6 +3677,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     }
 #undef CMDID_CLOSE
 
+    // Clean up
     ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
     ::DestroyMenu(hMenu);
 
