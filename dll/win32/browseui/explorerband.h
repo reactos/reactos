@@ -60,6 +60,7 @@ private:
     BOOL m_bNavigating;
     BOOL m_bFocused;
     DWORD m_dwBandID;
+    BOOL m_isEditing;
     HIMAGELIST m_hImageList;
     HTREEITEM  m_hRoot;
     HTREEITEM  m_oldSelected;

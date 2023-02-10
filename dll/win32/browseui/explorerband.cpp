@@ -149,6 +149,7 @@ CExplorerBand::CExplorerBand()
     , m_fVisible(FALSE)
     , m_bNavigating(FALSE)
     , m_dwBandID(0)
+    , m_isEditing(FALSE)
     , m_pidlCurrent(NULL)
 {
 }
@@ -1217,6 +1218,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
+    if (m_isEditing)
+        return S_FALSE;
+    
     if (lpMsg->hwnd == m_hWnd)
     {
         TranslateMessage(lpMsg);
@@ -1315,6 +1319,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                 hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
                 if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME) && theResult)
                     *theResult = 0;
+                 m_isEditing = TRUE;
                 return S_OK;
             }
             case TVN_ENDLABELEDITW:
@@ -1323,6 +1328,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                 NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
                 HRESULT hr;
 
+                m_isEditing = FALSE;
                 if (theResult)
                     *theResult = 0;
                 if (dispInfo->item.pszText)
