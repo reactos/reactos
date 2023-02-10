@@ -3554,7 +3554,7 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-static VOID DeleteSpecificVerbItems(IContextMenu *pContextMenu, HMENU hMenu, INT idFirst, INT idLast)
+static VOID DeleteUnwantedVerbItems(IContextMenu *pContextMenu, HMENU hMenu, INT idFirst, INT idLast)
 {
     CHAR verb[32];
     INT cItems = ::GetMenuItemCount(hMenu);
@@ -3633,7 +3633,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
         return hr;
     }
 
-    DeleteSpecificVerbItems(pContextMenu, hMenu, CMDID_FIRST, CMDID_LAST);
+    DeleteUnwantedVerbItems(pContextMenu, hMenu, CMDID_FIRST, CMDID_LAST);
     DeleteDuplicateSeparators(hMenu);
 #undef CMDID_FIRST
 #undef CMDID_LAST
