@@ -50,7 +50,6 @@ struct _StaticInvokeCommandMap_
     { "rename", FCIDM_SHVIEW_RENAME},
 };
 
-
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
@@ -85,7 +84,7 @@ class CDefaultContextMenu :
         BOOL IsShellExtensionAlreadyLoaded(const CLSID *pclsid);
         HRESULT LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid);
         BOOL EnumerateDynamicContextHandlerForKey(HKEY hRootKey);
-        UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast);
+        UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT* IndexMenu, UINT iIdCmdFirst, UINT iIdCmdLast);
         HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink);
         HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi);
@@ -152,7 +151,6 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_iIdCBLast(0),
     m_iIdDfltFirst(0),
     m_iIdDfltLast(0)
-
 {
 }
 
@@ -348,7 +346,6 @@ HRESULT
 CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid)
 {
     HRESULT hr;
-
     TRACE("LoadDynamicContextMenuHandler entered with This %p hKey %p pclsid %s\n", this, hKey, wine_dbgstr_guid(pclsid));
 
     if (IsShellExtensionAlreadyLoaded(pclsid))
@@ -470,7 +467,7 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
 }
 
 UINT
-CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast)
+CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     UINT cIds = 0;
 
@@ -480,7 +477,7 @@ CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UIN
     PDynamicShellEntry pEntry = m_pDynamicEntries;
     do
     {
-        HRESULT hr = pEntry->pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, CMF_NORMAL);
+        HRESULT hr = pEntry->pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, uFlags);
         if (SUCCEEDED(hr))
         {
             pEntry->iIdCmdFirst = cIds;
@@ -502,7 +499,7 @@ UINT
 CDefaultContextMenu::AddStaticContextMenusToMenu(
     HMENU hMenu,
     UINT* pIndexMenu,
-    UINT iIdCmdFirst, 
+    UINT iIdCmdFirst,
     UINT iIdCmdLast)
 {
     MENUITEMINFOW mii;
@@ -688,7 +685,7 @@ CDefaultContextMenu::QueryContextMenu(
     idCmdNext = idCmdFirst + cIds;
 
     /* Add dynamic context menu handlers */
-    cIds += AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast);
+    cIds += AddShellExtensionsToMenu(hMenu, &IndexMenu, idCmdNext, idCmdLast, uFlags);
     m_iIdSHEFirst = m_iIdSCMLast;
     m_iIdSHELast = cIds;
     idCmdNext = idCmdFirst + cIds;
