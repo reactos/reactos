@@ -1942,8 +1942,10 @@ UniataClaimLegacyPCIIDE(
 {
     NTSTATUS status;
     PCM_RESOURCE_LIST resourceList = NULL;
-    PCM_RESOURCE_LIST oldResList   = NULL;
     UNICODE_STRING devname;
+#ifdef __REACTOS__
+    PCM_RESOURCE_LIST oldResList = NULL;
+#endif
 
     KdPrint2((PRINT_PREFIX "UniataClaimLegacyPCIIDE:\n"));
 
@@ -1968,14 +1970,23 @@ UniataClaimLegacyPCIIDE(
     if (!resourceList) {
         KdPrint2((PRINT_PREFIX "!resourceList\n"));
         status = STATUS_INSUFFICIENT_RESOURCES;
+#ifdef __REACTOS__
         goto del_do;
+#else
+del_do:
+        IoDeleteDevice(BMList[i].PciIdeDevObj);
+        BMList[i].PciIdeDevObj          = NULL;
+        return status;
+#endif
     }
-
-    oldResList = resourceList;
 
     RtlZeroMemory(
         resourceList,
         sizeof(CM_RESOURCE_LIST));
+
+#ifdef __REACTOS__
+    oldResList = resourceList;
+#endif
 
     // IoReportDetectedDevice() should be used for WDM OSes
 
@@ -2001,23 +2012,29 @@ UniataClaimLegacyPCIIDE(
 
     if (!NT_SUCCESS(status)) {
         KdPrint2((PRINT_PREFIX "HalAssignSlotResources failed %#x\n", status));
+        // this is always deallocated inside HalAssignSlotResources() implementation
+        //ExFreePool(resourceList);
         goto del_do;
     }
 
-    ExFreePool(oldResList);
+#ifdef __REACTOS__
     ExFreePool(resourceList);
+    ExFreePool(oldResList);
+#endif
 
     KdPrint2((PRINT_PREFIX "ok %#x\n", status));
     BMList[i].ChanInitOk |= 0x80;
 
     return status;
 
+#if __REACTOS__
 del_do:
-    IoDeleteDevice(BMList[i].PciIdeDevObj);
-    BMList[i].PciIdeDevObj          = NULL;
-    if (oldResList)
-        ExFreePool(oldResList);
-    return status;
+        IoDeleteDevice(BMList[i].PciIdeDevObj);
+        BMList[i].PciIdeDevObj          = NULL;
+        if (oldResList)
+            ExFreePool(oldResList);
+        return status;
+#endif
 } // end UniataClaimLegacyPCIIDE()
 
 
