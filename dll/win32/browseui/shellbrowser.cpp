@@ -3641,12 +3641,22 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
     // Insert 'Close' menu item and make it default
     CStringW strClose(MAKEINTRESOURCEW(IDS_CLOSE));
     MENUITEMINFOW mii = { sizeof(mii) };
-    mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING;
+    mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
     mii.fType = MFT_STRING;
     mii.fState = MFS_DEFAULT;
     mii.wID = CMDID_CLOSE;
     mii.dwTypeData = const_cast<LPWSTR>((LPCWSTR)strClose);
+    mii.hbmpItem = HBMMENU_POPUP_CLOSE;
     ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
+    // Insert a separator
+    mii.fMask = MIIM_FTYPE;
+    mii.fType = MFT_SEPARATOR;
+    ::InsertMenuItemW(hMenu, 1, TRUE, &mii);
+    // No left-side space for checkmarks
+    MENUINFO mi = { sizeof(mi), MIM_STYLE };
+    ::GetMenuInfo(hMenu, &mi);
+    mi.dwStyle |= MNS_NOCHECK;
+    ::SetMenuInfo(hMenu, &mi);
 
     ::SetForegroundWindow(m_hWnd);
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
