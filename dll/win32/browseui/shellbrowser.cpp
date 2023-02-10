@@ -3623,6 +3623,7 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
 
 #define CMDID_FIRST 0x1000
 #define CMDID_LAST  0x7000
+#define CMDID_CLOSE 0x7001
     UINT uFlags = CMF_NORMAL;
     INT cItems = ::GetMenuItemCount(hMenu);
     hr = pContextMenu->QueryContextMenu(hMenu, cItems, CMDID_FIRST, CMDID_LAST, uFlags);
@@ -3638,35 +3639,31 @@ HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
 #undef CMDID_LAST
 
     // Insert 'Close' menu item and make it default
-#define ID_CLOSE 0x100
-    WCHAR szClose[] = L"&Close"; // TODO: Make it resource
-    MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_TYPE | MIIM_STATE, MFT_STRING, MFS_DEFAULT };
-    mii.wID = ID_CLOSE;
-    mii.dwTypeData = szClose;
+    CStringW strClose(MAKEINTRESOURCEW(IDS_CLOSE));
+    MENUITEMINFOW mii = { sizeof(mii) };
+    mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING;
+    mii.fType = MFT_STRING;
+    mii.fState = MFS_DEFAULT;
+    mii.wID = CMDID_CLOSE;
+    mii.dwTypeData = const_cast<LPWSTR>((LPCWSTR)strClose);
     ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
 
     ::SetForegroundWindow(m_hWnd);
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                                xPos, yPos, 0, m_hWnd, NULL);
-    switch (id)
+    if (id == CMDID_CLOSE)
     {
-        case ID_CLOSE:
-            ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
-            break;
-
-        default:
-            if (id != 0)
-            {
-                CMINVOKECOMMANDINFO info =
-                {
-                    sizeof(info), CMIC_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK,
-                    m_hWnd, MAKEINTRESOURCEA(id)
-                };
-                pContextMenu->InvokeCommand(&info);
-            }
-            break;
+        ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
     }
-#undef ID_CLOSE
+    else if (id != 0)
+    {
+        CMINVOKECOMMANDINFO info =
+        {
+            sizeof(info), CMIC_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK, m_hWnd, MAKEINTRESOURCEA(id)
+        };
+        pContextMenu->InvokeCommand(&info);
+    }
+#undef CMDID_CLOSE
 
     ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
     ::DestroyMenu(hMenu);
