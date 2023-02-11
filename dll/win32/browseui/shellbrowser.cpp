@@ -350,7 +350,7 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
-    HRESULT ShowSysMenuContextMenu(INT xPos, INT yPos);
+    HRESULT ShowSysContextMenu(INT xPos, INT yPos);
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -3604,7 +3604,7 @@ static VOID DeleteDuplicateSeparators(HMENU hMenu)
     }
 }
 
-HRESULT CShellBrowser::ShowSysMenuContextMenu(INT xPos, INT yPos)
+HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
 {
     HRESULT hr;
     CComPtr<IContextMenu> pContextMenu;
@@ -3697,7 +3697,7 @@ LRESULT CShellBrowser::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         INT nHitTest = ::SendMessageW(m_hWnd, WM_NCHITTEST, 0, lParam);
         if (nHitTest == HTSYSMENU)
         {
-            if (ShowSysMenuContextMenu(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) == S_OK)
+            if (ShowSysContextMenu(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) == S_OK)
                 bHandled = TRUE;
         }
     }
