@@ -3644,21 +3644,22 @@ HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
     MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE };
     mii.dwTypeData = szClose;
     mii.cch = _countof(szClose);
-    ::GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii);
+    if (::GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii))
+    {
+        // Insert 'Close' menu item and make it default
+        mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
+        mii.fType = MFT_STRING;
+        mii.fState = MFS_DEFAULT;
+        mii.wID = SC_CLOSE;
+        mii.dwTypeData = szClose;
+        mii.hbmpItem = HBMMENU_POPUP_CLOSE;
+        ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
 
-    // Insert 'Close' menu item and make it default
-    mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
-    mii.fType = MFT_STRING;
-    mii.fState = MFS_DEFAULT;
-    mii.wID = SC_CLOSE;
-    mii.dwTypeData = szClose;
-    mii.hbmpItem = HBMMENU_POPUP_CLOSE;
-    ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
-
-    // Insert a separator
-    mii.fMask = MIIM_FTYPE;
-    mii.fType = MFT_SEPARATOR;
-    ::InsertMenuItemW(hMenu, 1, TRUE, &mii);
+        // Insert a separator
+        mii.fMask = MIIM_FTYPE;
+        mii.fType = MFT_SEPARATOR;
+        ::InsertMenuItemW(hMenu, 1, TRUE, &mii);
+    }
 
     // No left-side space for checkmarks
     MENUINFO mi = { sizeof(mi), MIM_STYLE };
