@@ -153,21 +153,34 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = StrRetToBufW(&ret, pidlChild, buf, 4095);
+    hr = StrRetToBufW(&ret, pidlChild, buf, _countof(buf));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    INT indexClosed, indexOpen;
-    indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+    if (index == -1)
+    {
+        INT indexClosed, indexOpen;
+        indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
-    COMBOBOXEXITEMW item = {0};
-    item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
-    item.iItem = -1;
-    item.iImage = indexClosed;
-    item.iSelectedImage = indexOpen;
-    item.pszText = buf;
-    item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
-    fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+        COMBOBOXEXITEMW item = {0};
+        item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+        item.iItem = -1;
+        item.iImage = indexClosed;
+        item.iSelectedImage = indexOpen;
+        item.pszText = buf;
+        item.lParam = reinterpret_cast<LPARAM>((LPCITEMIDLIST)absolutePIDL);
+        fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+
+        if (SHGetPathFromIDListW(absolutePIDL, buf))
+            ::SetWindowTextW(fEditWindow.m_hWnd, buf);
+
+        absolutePIDL.Detach();
+    }
+    else
+    {
+        if (SHGetPathFromIDListW(absolutePIDL, buf))
+            ::SetWindowTextW(fEditWindow.m_hWnd, buf);
+    }
 
     return S_OK;
 }
@@ -405,12 +418,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
         {
             if (HIWORD(wParam) == CBN_SELCHANGE)
             {
+                ERR("CBN_SELCHANGE\n");
                 UINT selectedIndex = SendMessageW((HWND)lParam, CB_GETCURSEL, 0, 0);
                 pidlLastParsed = ILClone((LPITEMIDLIST)SendMessageW((HWND)lParam, CB_GETITEMDATA, selectedIndex, 0));
                 Execute(0);
             }
             else if (HIWORD(wParam) == CBN_CLOSEUP)
             {
+                ERR("CBN_CLOSEUP\n");
                 RefreshAddress();
             }
             break;

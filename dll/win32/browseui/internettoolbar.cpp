@@ -850,17 +850,26 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::TranslateAcceleratorIO(LPMSG lpMsg)
     if (fMenuBar)
         hr = IUnknown_TranslateAcceleratorIO(fMenuBar, lpMsg);
     if (hr == S_OK)
+    {
+        ERR("OK\n");
         return hr;
+    }
 
     if (fControlsBar)
         hr = IUnknown_TranslateAcceleratorIO(fControlsBar, lpMsg);
     if (hr == S_OK)
+    {
+        ERR("OK\n");
         return hr;
+    }
 
     if (fNavigationBar)
         hr = IUnknown_TranslateAcceleratorIO(fNavigationBar, lpMsg);
     if (hr == S_OK)
+    {
+        ERR("OK\n");
         return hr;
+    }
 
     return S_FALSE;
 }

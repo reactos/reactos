@@ -284,11 +284,14 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
         case WM_KEYDOWN:
             if (lpMsg->wParam == VK_F4) /* F4 key */
             {
-                SetFocus();
-                BOOL bDown = (BOOL)SendMessageW(CB_GETDROPPEDSTATE, 0, 0);
-                bDown = !bDown; /* Toggle */
-                SendMessageW(CB_SHOWDROPDOWN, bDown, 0);
-                return S_OK;
+                if (lpMsg->hwnd != fComboBox && lpMsg->hwnd != m_hWnd)
+                {
+                    ::SetFocus(fComboBox);
+                    BOOL bDown = (BOOL)::SendMessageW(fComboBox, CB_GETDROPPEDSTATE, 0, 0);
+                    bDown = !bDown;
+                    ::SendMessageW(fComboBox, CB_SHOWDROPDOWN, bDown, 0);
+                    return S_OK;
+                }
             }
             break;
 
@@ -300,23 +303,23 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
         case WM_SYSKEYDOWN:
             if (lpMsg->wParam == GetFocusKey()) /* Alt+D */
             {
-                SetFocus();
+                ::SetFocus(fEditControl);
                 return S_OK;
             }
-            break;
+            return S_FALSE;
 
         case WM_SYSKEYUP:
             if (lpMsg->wParam == GetFocusKey()) /* Alt+D */
                 return S_OK;
-            break;
+            return S_FALSE;
 
         case WM_SYSCOMMAND:
         case WM_SYSDEADCHAR:
         case WM_SYSCHAR:
-            break;
+            return S_FALSE;
     }
 
-    if (lpMsg->hwnd == fEditControl || lpMsg->hwnd == fComboBox)
+    if (lpMsg->hwnd == fEditControl || lpMsg->hwnd == fComboBox || lpMsg->hwnd == m_hWnd)
     {
         TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);

@@ -1202,12 +1202,12 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::UIActivateIO(BOOL fActivate, LPMSG lpMs
         SetActiveWindow();
     }
     // TODO: handle message
-    if(lpMsg)
+    if (lpMsg && TranslateMessage(lpMsg))
     {
-        TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
+        return S_OK;
     }
-    return S_OK;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
