@@ -399,7 +399,7 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
 	mmioAscend(wma->hFile, &mmckInfo, 0);
     }
 
-    /* Empty file*/
+    /* Empty file */
     if (alb.numVideoFrames == 0) {
         return FALSE;
     }
