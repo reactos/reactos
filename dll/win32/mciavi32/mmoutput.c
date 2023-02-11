@@ -398,6 +398,12 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
 
 	mmioAscend(wma->hFile, &mmckInfo, 0);
     }
+
+    /* Empty file*/
+    if (alb.numVideoFrames == 0) {
+        return FALSE;
+    }
+
     if (alb.numVideoFrames != wma->dwPlayableVideoFrames) {
 	WARN("AVI header says %d frames, we found %d video frames, reducing playable frames\n",
 	     wma->dwPlayableVideoFrames, alb.numVideoFrames);
