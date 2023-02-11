@@ -619,6 +619,9 @@ double MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
 
     if (wma->dwCurrVideoFrame != wma->dwCachedFrame)
     {
+        if (wma->dwCurrVideoFrame >= wma->dwPlayableVideoFrames)
+            return 0;
+
         if (!wma->lpVideoIndex[wma->dwCurrVideoFrame].dwOffset)
 	    return 0;
 
