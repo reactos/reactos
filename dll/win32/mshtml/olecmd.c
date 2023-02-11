@@ -241,6 +241,13 @@ static HRESULT exec_print(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn,
         return S_OK;
     }
 
+#ifdef __REACTOS__
+    // returning here fixes CORE-16884. Maybe use this until printing works.
+    ERR("Aborting print, to work around CORE-16884\n");
+    nsIWebBrowserPrint_Release(nsprint);
+    return S_OK;
+#endif
+
     nsres = nsIWebBrowserPrint_GetGlobalPrintSettings(nsprint, &settings);
     if(NS_FAILED(nsres))
         ERR("GetCurrentPrintSettings failed: %08x\n", nsres);
