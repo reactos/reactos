@@ -3644,8 +3644,8 @@ HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
     MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE };
     mii.dwTypeData = szClose;
     mii.cch = _countof(szClose);
-    if (!::GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii))
-        StringCchCopyW(szClose, _countof(szClose), L"&Close\tAlt+F4");
+    ::GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii);
+
     // Insert 'Close' menu item and make it default
     mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_BITMAP;
     mii.fType = MFT_STRING;
@@ -3654,10 +3654,12 @@ HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
     mii.dwTypeData = szClose;
     mii.hbmpItem = HBMMENU_POPUP_CLOSE;
     ::InsertMenuItemW(hMenu, 0, TRUE, &mii);
+
     // Insert a separator
     mii.fMask = MIIM_FTYPE;
     mii.fType = MFT_SEPARATOR;
     ::InsertMenuItemW(hMenu, 1, TRUE, &mii);
+
     // No left-side space for checkmarks
     MENUINFO mi = { sizeof(mi), MIM_STYLE };
     ::GetMenuInfo(hMenu, &mi);
@@ -3668,7 +3670,8 @@ HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
     ::SetForegroundWindow(m_hWnd);
     UINT id = ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                                xPos, yPos, 0, m_hWnd, NULL);
-    // Action!
+    ::DestroyMenu(hMenu);
+
     if (id == SC_CLOSE)
     {
         ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
@@ -3681,10 +3684,6 @@ HRESULT CShellBrowser::ShowSysContextMenu(INT xPos, INT yPos)
         };
         pContextMenu->InvokeCommand(&info);
     }
-
-    // Clean up
-    ::PostMessageW(m_hWnd, WM_NULL, 0, 0);
-    ::DestroyMenu(hMenu);
 
     return S_OK;
 }
