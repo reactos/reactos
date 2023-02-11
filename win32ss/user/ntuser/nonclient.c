@@ -403,20 +403,15 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          DWORD ExStyleTB, StyleTB;
          BOOL IsTaskBar;
 
-         /* Test for typical TaskBar ExStyle Values */
+         // We want to forbid snapping operations on the TaskBar
+         // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
          ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
-         TRACE("ExStyle=%x\n", ExStyleTB);
-
-         /* Test for typical TaskBar Style Values */
          StyleTB = (Style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-         TRACE("Style=%x\n", StyleTB);
-
-         /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
          IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
                      && (ExStyleTB == WS_EX_TOOLWINDOW);
-         TRACE("IsTaskBar=%d\n", IsTaskBar);
+         TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", StyleTB, ExStyleTB, IsTaskBar);
 
-         // check for snapping if was moved by caption
+          // check for snapping if was moved by caption
          if (!IsTaskBar && hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
             RECT snapRect;

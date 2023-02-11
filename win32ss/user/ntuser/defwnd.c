@@ -792,25 +792,20 @@ IntDefWindowProc(
          if (g_bWindowSnapEnabled && (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN)))
          {
             BOOL IsTaskBar;
-            DWORD Style;
-            DWORD ExStyle;
+            DWORD StyleTB;
+            DWORD ExStyleTB;
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
 
-            /* Test for typical TaskBar ExStyle Values */
-            ExStyle = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
-            TRACE("ExStyle=%x\n", ExStyle);
+            // We want to forbid snapping operations on the TaskBar
+            // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
+            ExStyleTB = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
+            StyleTB = (topWnd->style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
+            IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+                        && (ExStyleTB == WS_EX_TOOLWINDOW);
+            TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", StyleTB, ExStyleTB, IsTaskBar);
 
-            /* Test for typical TaskBar Style Values */
-            Style = (topWnd->style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-            TRACE("Style=%x\n", Style);
-
-            /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
-            IsTaskBar = (Style == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
-                        && (ExStyle == WS_EX_TOOLWINDOW);
-            TRACE("IsTaskBar=%d\n", IsTaskBar);
-
-            if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
+            if (topWnd && !IsTaskBar)
             {
                if ((topWnd->style & WS_THICKFRAME) == 0)
                   return 0;
