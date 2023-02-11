@@ -403,17 +403,16 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       {
          /* Test for typical TaskBar ExStyle Values */
          ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
-         TRACE("ExStyle is '%x'.\n", ExStyleTB);
+         TRACE("ExStyle=%x\n", ExStyleTB);
 
          /* Test for typical TaskBar Style Values */
-         StyleTB = (Style & (WS_POPUP | WS_VISIBLE |
-                        WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-         TRACE("Style is '%x'.\n", StyleTB);
+         StyleTB = (Style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
+         TRACE("Style=%x\n", StyleTB);
 
          /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
          IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
                      && (ExStyleTB == WS_EX_TOOLWINDOW);
-         TRACE("This %s the TaskBar.\n", IsTaskBar ? "is" : "is not");
+         TRACE("IsTaskBar=%d\n", IsTaskBar);
 
          // check for snapping if was moved by caption
          if (hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
@@ -424,9 +423,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
             /* if this is the taskbar, then we want to just exit */
             if (IsTaskBar)
-            {
                break;
-            }
+
             // snap to left
             if (pt.x <= snapRect.left)
             {
@@ -439,7 +437,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                snapRect.left = (snapRect.right - snapRect.left) / 2 + snapRect.left;
                doSideSnap = TRUE;
             }
-            
+
             if (doSideSnap)
             {
                co_WinPosSetWindowPos(pwnd,
@@ -463,7 +461,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          }
          break;
       }
-      
+
       /* Exit on Return or Esc */
       if (msg.message == WM_KEYDOWN &&
           (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
@@ -1290,7 +1288,7 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
    SIZE WindowBorders;
    RECT OrigRect;
    LONG Style = Wnd->style;
-   LONG  exStyle = Wnd->ExStyle; 
+   LONG exStyle = Wnd->ExStyle;
 
    if (Rect == NULL)
    {
@@ -1667,7 +1665,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
     {
       PMENU SysMenu = IntGetSystemMenu(pWnd, FALSE);
       UINT state = IntGetMenuState(SysMenu ? UserHMGetHandle(SysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND);
-                  
+
       /* If the close item of the sysmenu is disabled or not present do nothing */
       if ((state & (MF_DISABLED | MF_GRAYED)) || (state == 0xFFFFFFFF))
           break;
@@ -1679,12 +1677,12 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
     case HTBOTTOM:
     {
       RECT sizingRect = pWnd->rcWindow, mouseRect;
-      
+
       if (pWnd->ExStyle & WS_EX_MDICHILD)
           break;
-      
+
       UserSystemParametersInfo(SPI_GETWORKAREA, 0, &mouseRect, 0);
-        
+
       co_WinPosSetWindowPos(pWnd,
                             NULL,
                             sizingRect.left,
@@ -1705,7 +1703,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
  *
  * Handle a WM_NCRBUTTONDOWN message. Called from DefWindowProc().
  */
-LRESULT NC_HandleNCRButtonDown( PWND pwnd, WPARAM wParam, LPARAM lParam ) 
+LRESULT NC_HandleNCRButtonDown(PWND pwnd, WPARAM wParam, LPARAM lParam)
 {
   MSG msg;
   INT hittest = wParam;
