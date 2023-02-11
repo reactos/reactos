@@ -1,3 +1,4 @@
+
 /*++
 
 Copyright (c) 2002-2016 Alexandr A. Telyatnikov (Alter)
@@ -2027,10 +2028,10 @@ del_do:
 
     return status;
 
-#if __REACTOS__
+#ifdef __REACTOS__
 del_do:
         IoDeleteDevice(BMList[i].PciIdeDevObj);
-        BMList[i].PciIdeDevObj          = NULL;
+        BMList[i].PciIdeDevObj = NULL;
         if (oldResList)
             ExFreePool(oldResList);
         return status;
