@@ -1217,8 +1217,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (lpMsg->hwnd == m_hWnd && TranslateMessage(lpMsg))
+    if (lpMsg->hwnd == m_hWnd)
     {
+        TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
         return S_OK;
     }
@@ -1234,7 +1235,6 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID)
     memcpy(pClassID, &CLSID_ExplorerBand, sizeof(CLSID));
     return S_OK;
 }
-
 
 // *** IPersistStream methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::IsDirty()

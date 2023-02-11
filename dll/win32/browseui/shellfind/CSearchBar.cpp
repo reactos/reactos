@@ -464,8 +464,9 @@ HRESULT STDMETHODCALLTYPE CSearchBar::TranslateAcceleratorIO(LPMSG lpMsg)
     if (IsDialogMessage(lpMsg))
         return S_OK;
 
-    if ((lpMsg->hwnd == m_hWnd || IsChild(lpMsg->hwnd)) && TranslateMessage(lpMsg))
+    if (lpMsg->hwnd == m_hWnd || IsChild(lpMsg->hwnd))
     {
+        TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
         return S_OK;
     }

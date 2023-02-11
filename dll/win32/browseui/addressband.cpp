@@ -281,10 +281,26 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     switch (lpMsg->message)
     {
+        case WM_KEYDOWN:
+            if (lpMsg->wParam == VK_F4) /* F4 key */
+            {
+                SetFocus();
+                BOOL bDown = (BOOL)SendMessageW(CB_GETDROPPEDSTATE, 0, 0);
+                bDown = !bDown; /* Toggle */
+                SendMessageW(CB_SHOWDROPDOWN, bDown, 0);
+                return S_OK;
+            }
+            break;
+
+        case WM_KEYUP:
+            if (lpMsg->wParam == VK_F4) /* F4 key */
+                return S_OK;
+            break;
+
         case WM_SYSKEYDOWN:
             if (lpMsg->wParam == GetFocusKey()) /* Alt+D */
             {
-                ::SetFocus(fEditControl);
+                SetFocus();
                 return S_OK;
             }
             break;
@@ -300,13 +316,11 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
             break;
     }
 
-    if (lpMsg->hwnd == fEditControl)
+    if (lpMsg->hwnd == fEditControl || lpMsg->hwnd == fComboBox)
     {
-        if (TranslateMessage(lpMsg))
-        {
-            DispatchMessage(lpMsg);
-            return S_OK;
-        }
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+        return S_OK;
     }
 
     return S_FALSE;
