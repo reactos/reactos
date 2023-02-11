@@ -256,8 +256,6 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    //PMONITOR mon = 0; Don't port sync from wine!!! This breaks explorer task bar sizing!!
    //                  The task bar can grow in size and can not reduce due to the change
    //                  in the work area.
-   DWORD ExStyleTB, StyleTB;
-   BOOL IsTaskBar;
 
    Style = pwnd->style;
    ExStyle = pwnd->ExStyle;
@@ -393,14 +391,18 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
-      if (!g_bWindowSnapEnabled) /* If no WindowSnapEnabled: Exit on button-up, Return, or Esc */
-      {
-         if((msg.message == WM_LBUTTONUP) ||
-           ((msg.message == WM_KEYDOWN) &&
-           ((msg.wParam == VK_RETURN) || (msg.wParam == VK_ESCAPE)))) break;
+      if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
+         break; // Exit on Return or Esc
+
+      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP))
+      { // If no WindowSnapEnabled: Exit on button-up immediately
+         break;
       }
-      else if (msg.message == WM_LBUTTONUP) /* If WindowSnapEnabled: Exit on button-up */
-      {
+      else if (g_bWindowSnapEnabled && msg.message == WM_LBUTTONUP)
+      { // If WindowSnapEnabled: Decide whether to snap before exiting
+         DWORD ExStyleTB, StyleTB;
+         BOOL IsTaskBar;
+
          /* Test for typical TaskBar ExStyle Values */
          ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
          TRACE("ExStyle=%x\n", ExStyleTB);
@@ -415,15 +417,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          TRACE("IsTaskBar=%d\n", IsTaskBar);
 
          // check for snapping if was moved by caption
-         if (hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
+         if (!IsTaskBar && hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
             RECT snapRect;
             BOOL doSideSnap = FALSE;
             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
-
-            /* if this is the taskbar, then we want to just exit */
-            if (IsTaskBar)
-               break;
 
             // snap to left
             if (pt.x <= snapRect.left)
@@ -459,13 +457,6 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                }
             }
          }
-         break;
-      }
-
-      /* Exit on Return or Esc */
-      if (msg.message == WM_KEYDOWN &&
-          (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
-      {
          break;
       }
 
