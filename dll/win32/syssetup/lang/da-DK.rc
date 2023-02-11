@@ -1,20 +1,9 @@
 /*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Danish resource file
+ * TRANSLATORS: Copyright 2004 Filip Navara
+ *              Copyright 2004 Eric Kohl
  */
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
@@ -232,7 +221,7 @@ BEGIN
     IDS_WZD_NAME "Setup cannot continue until you enter your name."
     IDS_WZD_SETCOMPUTERNAME "Setup failed to set the computer name."
     IDS_WZD_COMPUTERNAME "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY "You must enter a password !"
+    IDS_WZD_PASSWORDEMPTY "You must enter a password!"
     IDS_WZD_PASSWORDMATCH "The passwords you entered do not match. Please enter the desired password again."
     IDS_WZD_PASSWORDCHAR "The password you entered contains invalid characters. Please enter a cleaned password."
     IDS_WZD_LOCALTIME "Setup was unable to set the local time."
