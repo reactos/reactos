@@ -393,8 +393,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
-      /* Exit on button-up */
-      if (msg.message == WM_LBUTTONUP)
+      if (!g_bWindowSnapEnabled) /* If no WindowSnapEnabled: Exit on button-up, Return, or Esc */
+      {
+         if((msg.message == WM_LBUTTONUP) ||
+           ((msg.message == WM_KEYDOWN) &&
+           ((msg.wParam == VK_RETURN) || (msg.wParam == VK_ESCAPE)))) break;
+      }
+      else if (msg.message == WM_LBUTTONUP) /* If WindowSnapEnabled: Exit on button-up */
       {
          /* Test for typical TaskBar ExStyle Values */
          ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
@@ -418,7 +423,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
 
             /* if this is the taskbar, then we want to just exit */
-            if (IsTaskBar || !g_bWindowSnapEnabled)
+            if (IsTaskBar)
             {
                break;
             }

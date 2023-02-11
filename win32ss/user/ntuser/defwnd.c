@@ -792,7 +792,7 @@ IntDefWindowProc(
                co_IntSendMessage(UserHMGetHandle(Wnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(Wnd), MAKELPARAM(-1, -1));
             }
          }
-         if (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN))
+         if (g_bWindowSnapEnabled && (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN)))
          {
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
@@ -813,7 +813,7 @@ IntDefWindowProc(
 
             if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
             {
-               if ((topWnd->style & WS_THICKFRAME) == 0 || !g_bWindowSnapEnabled)
+               if ((topWnd->style & WS_THICKFRAME) == 0)
                {
                   return 0;
                }
