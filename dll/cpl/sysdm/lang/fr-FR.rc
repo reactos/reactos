@@ -28,10 +28,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Gestionnaire de Périphériques", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX "Gestionnaire de périphériques", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "Le gestionnaire de périphériques liste tous les périphériques matériels de votre ordinateur. Utiliser le Gestionnaire de périphériques pour changer les propriétés d'un périphérique.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON "&Gestionnaire de Périphériques...", IDC_HARDWARE_DEVICE_MANAGER, 135, 48, 110, 14
+    LTEXT "Le Gestionnaire de périphériques liste tous les périphériques matériels de votre ordinateur. Utiliser le Gestionnaire de périphériques pour changer les propriétés d'un périphérique.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON "&Gestionnaire de périphériques...", IDC_HARDWARE_DEVICE_MANAGER, 135, 48, 110, 14
     GROUPBOX "Assistant Matériel", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "L'Assistant matériel vous aide à installer, désinstaller, réparer, débrancher, éjecter et configurer votre matériel.", IDC_STATIC, 42, 90, 204, 24
