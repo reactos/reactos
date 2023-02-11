@@ -1077,11 +1077,6 @@ public:
 
         HKEY hKey = NULL;
         LONG lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, 0, samDesired, &hKey);
-        if (lRes != ERROR_SUCCESS)
-        {
-            samDesired |= KEY_WOW64_64KEY;
-            lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, 0, samDesired, &hKey);
-        }
         if (lRes == ERROR_SUCCESS)
         {
             Close();
@@ -1104,13 +1099,6 @@ public:
         LONG lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, 0, lpszClass,
                                      dwOptions, samDesired, lpSecAttr, &hKey,
                                      lpdwDisposition);
-        if (lRes != ERROR_SUCCESS)
-        {
-            samDesired |= KEY_WOW64_64KEY;
-            lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, 0, lpszClass,
-                                    dwOptions, samDesired, lpSecAttr, &hKey,
-                                    lpdwDisposition);
-        }
         if (lRes == ERROR_SUCCESS)
         {
             Close();
