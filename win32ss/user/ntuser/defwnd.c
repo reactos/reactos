@@ -544,9 +544,6 @@ IntDefWindowProc(
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
    USER_REFERENCE_ENTRY Ref;
-   BOOL IsTaskBar;
-   DWORD Style;
-   DWORD ExStyle;
 
    if (Msg > WM_USER) return 0;
 
@@ -794,6 +791,9 @@ IntDefWindowProc(
          }
          if (g_bWindowSnapEnabled && (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN)))
          {
+            BOOL IsTaskBar;
+            DWORD Style;
+            DWORD ExStyle;
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
 
