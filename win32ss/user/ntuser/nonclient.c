@@ -411,7 +411,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                      && (ExStyleTB == WS_EX_TOOLWINDOW);
          TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", StyleTB, ExStyleTB, IsTaskBar);
 
-          // check for snapping if was moved by caption
+         // check for snapping if was moved by caption
          if (!IsTaskBar && hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
             RECT snapRect;
