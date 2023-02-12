@@ -213,7 +213,7 @@ BOOL CAddressEditBox::ExecuteCommandLine()
     PathUnquoteSpacesW(pszCmdLine); /* Unquote the 1st parameter */
 
     /* Get ready for execution */
-    SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK, m_hWnd };
+    SHELLEXECUTEINFOW info = { sizeof(info), SEE_MASK_FLAG_NO_UI, m_hWnd };
     info.lpFile = pszCmdLine;
     info.lpParameters = args;
     info.nShow = SW_SHOWNORMAL;
