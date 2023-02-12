@@ -4,6 +4,7 @@
  *  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2002 Andriy Palamarchuk
+ *  Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -332,48 +333,46 @@ GetPrintingRect(HDC hdc, RECT margins)
 
 static BOOL DoSaveFile(VOID)
 {
-    BOOL bRet = TRUE;
+    BOOL bRet = FALSE;
     HANDLE hFile;
-    LPTSTR pTemp;
-    DWORD size;
+    DWORD cchText;
 
-    hFile = CreateFile(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
-                       NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(hFile == INVALID_HANDLE_VALUE)
+    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
         return FALSE;
     }
 
-    size = GetWindowTextLength(Globals.hEdit) + 1;
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(*pTemp));
-    if (!pTemp)
+    cchText = GetWindowTextLengthW(Globals.hEdit);
+    if (cchText <= 0)
     {
-        CloseHandle(hFile);
-        ShowLastError();
-        return FALSE;
+        bRet = TRUE;
     }
-    size = GetWindowText(Globals.hEdit, pTemp, size);
-
-    if (size)
+    else
     {
-        if (!WriteText(hFile, (LPWSTR)pTemp, size, Globals.encFile, Globals.iEoln))
+        HLOCAL hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
+        LPWSTR pszText = LocalLock(hLocal);
+        if (pszText)
         {
-            ShowLastError();
-            bRet = FALSE;
+            bRet = WriteText(hFile, pszText, cchText, Globals.encFile, Globals.iEoln);
+            if (!bRet)
+                ShowLastError();
+
+            LocalUnlock(hLocal);
         }
         else
         {
-            SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
-            bRet = TRUE;
+            ShowLastError();
         }
     }
 
     CloseHandle(hFile);
-    HeapFree(GetProcessHeap(), 0, pTemp);
 
     if (bRet)
     {
+        SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
         SetFileName(Globals.szFileName);
     }
 
