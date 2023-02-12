@@ -671,9 +671,15 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
     if (!pidl)
         return SHSetStrRet(&pDetails->str, _AtlBaseModule.GetResourceInstance(), g_ColumnDefs[iColumn].iResource);
 
-    if (iColumn == 1)
+    if (iColumn == IDS_COL_LOCATION_COLNUM)
     {
         return SHSetStrRet(&pDetails->str, _ILGetPath(pidl));
+    }
+
+    if (iColumn == IDS_COL_RELEVANCE_COLNUM)
+    {
+        /* TODO: Fill once the relevance is calculated */
+        return SHSetStrRet(&pDetails->str, "");
     }
 
     return GetDisplayNameOf(pidl, SHGDN_NORMAL, &pDetails->str);
