@@ -1,4 +1,3 @@
-
 /*++
 
 Copyright (c) 2002-2016 Alexandr A. Telyatnikov (Alter)
@@ -1942,8 +1941,8 @@ UniataClaimLegacyPCIIDE(
     )
 {
     NTSTATUS status;
-    PCM_RESOURCE_LIST resourceList = NULL;
     UNICODE_STRING devname;
+    PCM_RESOURCE_LIST resourceList = NULL;
 #ifdef __REACTOS__
     PCM_RESOURCE_LIST oldResList = NULL;
 #endif
@@ -2030,11 +2029,11 @@ del_do:
 
 #ifdef __REACTOS__
 del_do:
-        IoDeleteDevice(BMList[i].PciIdeDevObj);
-        BMList[i].PciIdeDevObj = NULL;
-        if (oldResList)
-            ExFreePool(oldResList);
-        return status;
+    IoDeleteDevice(BMList[i].PciIdeDevObj);
+    BMList[i].PciIdeDevObj = NULL;
+    if (oldResList)
+        ExFreePool(oldResList);
+    return status;
 #endif
 } // end UniataClaimLegacyPCIIDE()
 
