@@ -2101,7 +2101,11 @@ co_WinPosSetWindowPos(
 
       /* We need to redraw what wasn't visible before or force a redraw */
       if ((WinPos.flags & (SWP_FRAMECHANGED | SWP_SHOWWINDOW)) ||
-          (((WinPos.flags & SWP_AGG_NOGEOMETRYCHANGE) != SWP_AGG_NOGEOMETRYCHANGE) && VisAfter != NULL))
+          ((((WinPos.flags & SWP_AGG_NOGEOMETRYCHANGE) != SWP_AGG_NOGEOMETRYCHANGE) ||
+          /* This fixes CORE-18830 */
+          ((Window->style & (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN)) ==
+          (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN)))
+          && VisAfter != NULL))
       {
          PREGION DirtyRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
          if (DirtyRgn)
