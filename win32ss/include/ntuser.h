@@ -227,6 +227,12 @@ typedef struct _PROCMARKHEAD
     struct _PROCESSINFO *ppi;
 } PROCMARKHEAD, *PPROCMARKHEAD;
 
+/**
+ * @note
+ * Use UserHMGetHandleSafe() by default if obj has not been checked for NULL already.
+ * Use UserHMGetHandle() if obj has been checked for NULL already, or if it contains
+ * a function-call (to not call that function twice).
+ **/
 #define UserHMGetHandle(obj) ((obj)->head.h)
 #define UserHMGetHandleSafe(obj) ((obj) ? (obj)->head.h : NULL)
 
