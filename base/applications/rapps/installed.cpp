@@ -148,7 +148,7 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
 
     dwSize = min(dwAllocated, dwSize);
     // CString takes care of zero-terminating it
-    String.ReleaseBuffer(dwSize / sizeof(WCHAR));
+    String.ReleaseBuffer();
 
     if (Result != ERROR_SUCCESS)
     {
@@ -164,7 +164,7 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
         if (dwLen > 0)
         {
             BOOL bSuccess = ExpandEnvironmentStringsW(String, Tmp.GetBuffer(dwLen), dwLen) == dwLen;
-            Tmp.ReleaseBuffer(dwLen - 1);
+            Tmp.ReleaseBuffer();
             if (bSuccess)
             {
                 String = Tmp;
