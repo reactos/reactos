@@ -415,7 +415,7 @@ UserPaintCaption(PWND pWnd, INT Flags)
         /*
          * This will cause uxtheme to either paint the themed caption or call
          * RealUserDrawCaption in order to draw the classic caption when themes
-         * are disabled but the themes service is enabled
+         * are disabled but the themes service is enabled.
          */
          TRACE("UDCB Flags %08x\n", Flags);
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
