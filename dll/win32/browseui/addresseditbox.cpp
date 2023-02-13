@@ -125,17 +125,6 @@ HRESULT CAddressEditBox::RefreshAddress()
     /* Fill the combobox */
     PopulateComboBox(absolutePIDL);
 
-    /* Find the current item in the combobox and select it */
-    CComPtr<IShellFolder> psfDesktop;
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return S_OK;
-
-    STRRET ret;
-    hr = psfDesktop->GetDisplayNameOf(absolutePIDL, SHGDN_FORADDRESSBAR, &ret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return S_OK;
-
     /* Add the item that will be visible when the combobox is not expanded */
     LPCITEMIDLIST pidlChild;
     CComPtr<IShellFolder> sf;
@@ -158,6 +147,7 @@ HRESULT CAddressEditBox::RefreshAddress()
     WCHAR szPathOrName[MAX_PATH];
     if (!SHGetPathFromIDListW(absolutePIDL, szPathOrName))
     {
+        STRRET ret;
         hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -172,7 +162,6 @@ HRESULT CAddressEditBox::RefreshAddress()
     item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
 
     fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item)); /* Set it! */
-
     return S_OK;
 }
 
