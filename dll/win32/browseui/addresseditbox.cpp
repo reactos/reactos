@@ -107,7 +107,6 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 HRESULT CAddressEditBox::RefreshAddress()
 {
     HRESULT hr;
-    WCHAR szName[4096], szPath[MAX_PATH];
 
     if (pidlLastParsed)
         ILFree(pidlLastParsed);
@@ -158,22 +157,18 @@ HRESULT CAddressEditBox::RefreshAddress()
     item.iSelectedImage = indexOpen;
 
     /* Set the path if filesystem; otherwise use the name */
-    if (SHGetPathFromIDListW(absolutePIDL, szPath))
-    {
-        item.pszText = szPath;
-    }
-    else
+    WCHAR szPathOrName[MAX_PATH];
+    if (!SHGetPathFromIDListW(absolutePIDL, szPathOrName))
     {
         hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        hr = StrRetToBufW(&ret, pidlChild, szName, _countof(szName));
+        hr = StrRetToBufW(&ret, pidlChild, szPathOrName, _countof(szPathOrName));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-
-        item.pszText = szName;
     }
+    item.pszText = szPathOrName;
 
     /* Ownership of absolutePIDL will be moved to fCombobox. See CBEN_DELETEITEM */
     item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
