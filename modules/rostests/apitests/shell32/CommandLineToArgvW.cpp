@@ -81,7 +81,7 @@ START_TEST(CommandLineToArgvW)
     DoEntry(__LINE__, L"test.exe \"a\"\n", 2, L"a\n");
     DoEntry(__LINE__, L"test.exe \"a\"\v", 2, L"a\v");
     DoEntry(__LINE__, L"test.exe \"a\"\f", 2, L"a\f");
-    DoEntry(__LINE__, L"test.exe \u3000" L"a", 2, "\u3000" L"a");
+    DoEntry(__LINE__, L"test.exe \u3000" L"a", 2, L"\u3000" L"a");
     DoEntry(__LINE__, L"test.exe \"a b\"", 2, L"a b");
     DoEntry(__LINE__, L"test.exe \"a\tb\"", 2, L"a\tb");
     DoEntry(__LINE__, L"test.exe \"a\rb\"", 2, L"a\rb");
