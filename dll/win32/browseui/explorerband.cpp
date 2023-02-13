@@ -1218,10 +1218,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (m_isEditing)
-        return S_FALSE;
-
-    if (lpMsg->hwnd == m_hWnd)
+    if (lpMsg->hwnd == m_hWnd ||
+        (m_isEditing && IsChild(lpMsg->hwnd)))
     {
         TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
@@ -1298,6 +1296,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
             case TVN_BEGINDRAG:
             case TVN_BEGINRDRAG:
                 OnTreeItemDragging((LPNMTREEVIEW)lParam, pNotifyHeader->code == TVN_BEGINRDRAG);
+                break;
             case TVN_BEGINLABELEDITW:
             {
                 // TODO: put this in a function ? (mostly copypasta from CDefView)
@@ -1317,9 +1316,10 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                     return E_FAIL;
 
                 hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
-                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME) && theResult)
+                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME))
                 {
-                    *theResult = 0;
+                    if (theResult)
+                        *theResult = 0;
                     m_isEditing = TRUE;
                 }
                 return S_OK;
