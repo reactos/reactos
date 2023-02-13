@@ -77,10 +77,10 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
             if (NT_SUCCESS(Status))
             {
                 /* Allocate the port in the port bitmap */
-                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-
-                /* This should never fail */
-                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+                UINT AllocatedPort = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                /* This should never fail unless all ports are in use */
+                ASSERT(AllocatedPort != (UINT)-1);
+                Connection->AddressFile->Port = AllocatedPort;
             }
         }
     }
