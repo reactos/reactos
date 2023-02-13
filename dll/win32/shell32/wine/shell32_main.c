@@ -131,16 +131,16 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             if (*s++=='"')
                 break;
         /* skip to the first argument, if any */
-        while (*s==' ' || *s=='\t')
+        while (isblank(*s))
             s++;
     }
     else
     {
         /* The executable path ends at the next space, no matter what */
-        while (*s && *s!=' ' && *s!='\t' && *s!='\r' && *s!='\n')
+        while (*s && !isspace(*s))
             s++;
         /* skip to the first argument, if any */
-        while (*s==' ' || *s=='\t' || *s=='\r' || *s=='\n')
+        while (isblank(*s))
             s++;
     }
     if (*s)
@@ -150,10 +150,10 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     qcount=bcount=0;
     while (*s)
     {
-        if ((*s==' ' || *s=='\t') && qcount==0)
+        if (isblank(*s) && qcount==0)
         {
             /* skip to the next argument and count it if any */
-            while (*s==' ' || *s=='\t')
+            while (isblank(*s))
                 s++;
             if (*s)
                 argc++;
@@ -220,13 +220,13 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         /* close the executable path */
         *d++=0;
         /* skip to the first argument and initialize it if any */
-        while (*s==' ' || *s=='\t')
+        while (isblank(*s))
             s++;
     }
     else
     {
         /* The executable path ends at the next space, no matter what */
-        while (*d && *d!=' ' && *d!='\t' && *d!='\r' && *d!='\n')
+        while (*d && !isspace(*d))
             d++;
         s=d;
         if (*s)
@@ -234,9 +234,10 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         /* close the executable path */
         *d++=0;
         /* skip to the first argument and initialize it if any */
-        while (*s==' ' || *s=='\t' || *s=='\r' || *s=='\n')
+        while (isblank(*s))
             s++;
     }
+
     if (!*s)
     {
         /* There are no parameters so we are all done */
@@ -250,7 +251,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     qcount=bcount=0;
     while (*s)
     {
-        if ((*s==' ' || *s=='\t') && qcount==0)
+        if (isblank(*s) && qcount==0)
         {
             /* close the argument */
             *d++=0;
@@ -259,7 +260,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             /* skip to the next one and initialize it if any */
             do {
                 s++;
-            } while (*s==' ' || *s=='\t');
+            } while (isblank(*s));
             if (*s)
                 argv[argc++]=d;
         }
