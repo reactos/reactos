@@ -722,11 +722,11 @@ STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PC
     WORD wColumn = LOWORD(lParam);
     switch (wColumn)
     {
-    case 0: // Name
+    case COL_NAME_INDEX: // Name
         break;
-    case 1: // Path
+    case COL_LOCATION_INDEX: // Path
         return MAKE_COMPARE_HRESULT(StrCmpW(_ILGetPath(pidl1), _ILGetPath(pidl2)));
-    case 2: // Relevance
+    case COL_RELEVANCE_INDEX: // Relevance
         return E_NOTIMPL;
     default: // Default columns
         wColumn -= _countof(g_ColumnDefs) - 1;
