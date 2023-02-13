@@ -106,15 +106,13 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 
 HRESULT CAddressEditBox::RefreshAddress()
 {
-    HRESULT hr;
-
     if (pidlLastParsed)
         ILFree(pidlLastParsed);
     pidlLastParsed = NULL;
 
     /* Get the current pidl of the browser */
     CComHeapPtr<ITEMIDLIST> absolutePIDL;
-    hr = GetAbsolutePidl(&absolutePIDL);
+    HRESULT hr = GetAbsolutePidl(&absolutePIDL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
