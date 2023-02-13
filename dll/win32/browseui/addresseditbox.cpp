@@ -107,8 +107,10 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 HRESULT CAddressEditBox::RefreshAddress()
 {
     if (pidlLastParsed)
+    {
         ILFree(pidlLastParsed);
-    pidlLastParsed = NULL;
+        pidlLastParsed = NULL;
+    }
 
     /* Get the current pidl of the browser */
     CComHeapPtr<ITEMIDLIST> absolutePIDL;
@@ -116,11 +118,7 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (!absolutePIDL)
-    {
-        ERR("Got no PIDL, investigate me!\n");
-        return S_OK;
-    }
+    ATLASSERT(absolutePIDL != NULL);
 
     /* Fill the combobox */
     PopulateComboBox(absolutePIDL);
@@ -133,12 +131,11 @@ HRESULT CAddressEditBox::RefreshAddress()
         return hr;
 
     /* Get image list indexes */
-    INT indexClosed, indexOpen;
-    indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+    INT indexOpen;
+    INT indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
     /* Get ready to set the displayed item */
-    COMBOBOXEXITEMW item = { 0 };
-    item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+    COMBOBOXEXITEMW item = { CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM };
     item.iItem = -1; /* -1 to specify the displayed item */
     item.iImage = indexClosed;
     item.iSelectedImage = indexOpen;
