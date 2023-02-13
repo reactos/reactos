@@ -106,11 +106,7 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 
 HRESULT CAddressEditBox::RefreshAddress()
 {
-    CComPtr<IShellFolder> sf;
     HRESULT hr;
-    CComHeapPtr<ITEMIDLIST> absolutePIDL;
-    LPCITEMIDLIST pidlChild;
-    STRRET ret;
     WCHAR szName[4096], szPath[MAX_PATH];
 
     if (pidlLastParsed)
@@ -118,8 +114,9 @@ HRESULT CAddressEditBox::RefreshAddress()
     pidlLastParsed = NULL;
 
     /* Get the current pidl of the browser */
+    CComHeapPtr<ITEMIDLIST> absolutePIDL;
     hr = GetAbsolutePidl(&absolutePIDL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!absolutePIDL)
@@ -137,24 +134,15 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 
+    STRRET ret;
     hr = psfDesktop->GetDisplayNameOf(absolutePIDL, SHGDN_FORADDRESSBAR, &ret);
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 
-    hr = StrRetToBufW(&ret, absolutePIDL, szName, 4095);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return S_OK;
-
     /* Add the item that will be visible when the combobox is not expanded */
+    LPCITEMIDLIST pidlChild;
+    CComPtr<IShellFolder> sf;
     hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = StrRetToBufW(&ret, pidlChild, szName, _countof(szName));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -171,15 +159,26 @@ HRESULT CAddressEditBox::RefreshAddress()
 
     /* Set the path if filesystem; otherwise use the name */
     if (SHGetPathFromIDListW(absolutePIDL, szPath))
+    {
         item.pszText = szPath;
+    }
     else
+    {
+        hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = StrRetToBufW(&ret, pidlChild, szName, _countof(szName));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
         item.pszText = szName;
+    }
 
     /* Ownership of absolutePIDL will be moved to fCombobox. See CBEN_DELETEITEM */
     item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
 
-    /* Set it! */
-    fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+    fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item)); /* Set it! */
 
     return S_OK;
 }
