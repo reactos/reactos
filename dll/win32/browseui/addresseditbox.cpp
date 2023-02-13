@@ -129,15 +129,10 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    /* Get image list indexes */
-    INT indexOpen;
-    INT indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
-
     /* Get ready to set the displayed item */
     COMBOBOXEXITEMW item = { CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM };
     item.iItem = -1; /* -1 to specify the displayed item */
-    item.iImage = indexClosed;
-    item.iSelectedImage = indexOpen;
+    item.iImage = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &item.iSelectedImage);
 
     /* Set the path if filesystem; otherwise use the name */
     WCHAR szPathOrName[MAX_PATH];
