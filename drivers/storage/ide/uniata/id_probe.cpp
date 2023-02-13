@@ -1970,14 +1970,14 @@ UniataClaimLegacyPCIIDE(
     if (!resourceList) {
         KdPrint2((PRINT_PREFIX "!resourceList\n"));
         status = STATUS_INSUFFICIENT_RESOURCES;
-#ifdef __REACTOS__
-        goto del_do;
-#else
 del_do:
         IoDeleteDevice(BMList[i].PciIdeDevObj);
         BMList[i].PciIdeDevObj          = NULL;
-        return status;
+#ifdef __REACTOS__
+        if (oldResList)
+            ExFreePool(oldResList);
 #endif
+        return status;
     }
 
     RtlZeroMemory(
@@ -2026,15 +2026,6 @@ del_do:
     BMList[i].ChanInitOk |= 0x80;
 
     return status;
-
-#ifdef __REACTOS__
-del_do:
-    IoDeleteDevice(BMList[i].PciIdeDevObj);
-    BMList[i].PciIdeDevObj = NULL;
-    if (oldResList)
-        ExFreePool(oldResList);
-    return status;
-#endif
 } // end UniataClaimLegacyPCIIDE()
 
 
