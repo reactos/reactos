@@ -118,9 +118,8 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    ATLASSERT(absolutePIDL != NULL);
-
     /* Fill the combobox */
+    ATLASSERT(absolutePIDL != NULL);
     PopulateComboBox(absolutePIDL);
 
     /* Add the item that will be visible when the combobox is not expanded */
