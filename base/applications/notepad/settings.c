@@ -167,7 +167,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     else
     {
         /* If no settings are found in the registry, then use default values */
-        Globals.bShowStatusBar = FALSE;
+        Globals.bShowStatusBar = TRUE;
         Globals.bWrapLongLines = FALSE;
         SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
 
