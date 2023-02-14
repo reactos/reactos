@@ -3010,6 +3010,7 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
    return pwndHit ? pwndHit : Parent;
 }
 
+/* Win: _DeferWindowPos(PSMWP, PWND, PWND, ...) */
 HDWP
 FASTCALL
 IntDeferWindowPos( HDWP hdwp,
