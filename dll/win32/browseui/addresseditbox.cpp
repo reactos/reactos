@@ -106,12 +106,6 @@ BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
 
 HRESULT CAddressEditBox::RefreshAddress()
 {
-    if (pidlLastParsed)
-    {
-        ILFree(pidlLastParsed);
-        pidlLastParsed = NULL;
-    }
-
     /* Get the current pidl of the browser */
     CComHeapPtr<ITEMIDLIST> absolutePIDL;
     HRESULT hr = GetAbsolutePidl(&absolutePIDL);
@@ -123,7 +117,7 @@ HRESULT CAddressEditBox::RefreshAddress()
     PopulateComboBox(absolutePIDL);
 
     /* Add the item that will be visible when the combobox is not expanded */
-    LPCITEMIDLIST pidlChild;
+    PCITEMID_CHILD pidlChild;
     CComPtr<IShellFolder> sf;
     hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -464,7 +458,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     {
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
+        if (pidlLastParsed)
+        {
+            ILFree(pidlLastParsed);
+            pidlLastParsed = NULL;
+        }
+
         RefreshAddress();
+        break;
     }
     return S_OK;
 }
