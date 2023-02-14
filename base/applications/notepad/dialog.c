@@ -932,16 +932,17 @@ VOID DoShowHideStatusBar(VOID)
         LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH - 1);
     }
 
-    /* Update visibility of status bar */
-    ShowWindowAsync(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
-
     /* Update layout of controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
-    /* Update content with current row/column text */
-    DIALOG_StatusBarUpdateCaretPos();
+    if (Globals.hStatusBar == NULL)
+        return;
 
-    /* Update line endings and encoding on the status bar */
+    /* Update visibility of status bar */
+    ShowWindowAsync(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
+
+    /* Update status bar contents */
+    DIALOG_StatusBarUpdateCaretPos();
     DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
 }
