@@ -635,7 +635,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     }
 
     DoCreateEditWindow();
-    DoShowStatusBar(Globals.bShowStatusBar);
+    DoShowHideStatusBar();
 
     NOTEPAD_InitData();
     DIALOG_FileNew();

@@ -911,10 +911,10 @@ VOID DIALOG_EditTimeDate(VOID)
     SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szText);
 }
 
-VOID DoShowStatusBar(BOOL bShow)
+VOID DoShowHideStatusBar(VOID)
 {
     /* Check if status bar object already exists. */
-    if (bShow && Globals.hStatusBar == NULL)
+    if (Globals.bShowStatusBar && Globals.hStatusBar == NULL)
     {
         /* Try to create the status bar */
         Globals.hStatusBar = CreateStatusWindow(WS_CHILD | CCS_BOTTOM | SBARS_SIZEGRIP,
@@ -933,8 +933,7 @@ VOID DoShowStatusBar(BOOL bShow)
     }
 
     /* Update visibility of status bar */
-    ShowWindowAsync(Globals.hStatusBar, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
-    Globals.bShowStatusBar = bShow;
+    ShowWindowAsync(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
 
     /* Update layout of controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
@@ -1055,7 +1054,7 @@ VOID DIALOG_EditWrap(VOID)
         EnableMenuItem(Globals.hMenu, CMD_GOTO, MF_BYCOMMAND | MF_ENABLED);
 
     DoCreateEditWindow();
-    DoShowStatusBar(Globals.bShowStatusBar);
+    DoShowHideStatusBar();
 }
 
 VOID DIALOG_SelectFont(VOID)
@@ -1220,7 +1219,8 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
 
 VOID DIALOG_ViewStatusBar(VOID)
 {
-    DoShowStatusBar(!Globals.bShowStatusBar);
+    Globals.bShowStatusBar = !Globals.bShowStatusBar;
+    DoShowHideStatusBar();
 }
 
 VOID DIALOG_HelpContents(VOID)
