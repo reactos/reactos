@@ -34,7 +34,7 @@ static ATOM aFINDMSGSTRING;
 VOID NOTEPAD_EnableSearchMenu()
 {
     BOOL bEmpty = (GetWindowTextLengthW(Globals.hEdit) == 0);
-    UINT uEnable = (bEmpty ? (MF_BYCOMMAND | MF_GRAYED) : (MF_BYCOMMAND | MF_ENABLED));
+    UINT uEnable = MF_BYCOMMAND | (bEmpty ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH, uEnable);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, uEnable);
 }
