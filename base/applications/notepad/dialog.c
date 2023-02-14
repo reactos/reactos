@@ -938,12 +938,9 @@ VOID DoShowHideStatusBar(VOID)
     /* Update layout of controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
-    /* Set the status bar for multiple-text output */
-    DIALOG_StatusBarAlignParts();
-
     /* Update content with current row/column text */
     DIALOG_StatusBarUpdateCaretPos();
-    
+
     /* Update line endings and encoding on the status bar */
     DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
