@@ -314,6 +314,15 @@ IntWinListChildren(PWND Window)
     return List;
 }
 
+static BOOL
+IntWndIsDefaultIme(_In_ PWND Window)
+{
+    PTHREADINFO pti = Window->head.pti;
+
+    return (IS_IMM_MODE() && !(pti->TIF_flags & TIF_INCLEANUP) &&
+            Window == pti->spwndDefaultIme);
+}
+
 HWND* FASTCALL
 IntWinListOwnedPopups(PWND Window)
 {
@@ -327,7 +336,7 @@ IntWinListOwnedPopups(PWND Window)
 
     for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
     {
-        if (Child->spwndOwner == Window)
+        if (Child->spwndOwner == Window && !IntWndIsDefaultIme(Child))
             ++NumOwned;
     }
 
@@ -342,7 +351,7 @@ IntWinListOwnedPopups(PWND Window)
     Index = 0;
     for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
     {
-        if (Child->spwndOwner == Window)
+        if (Child->spwndOwner == Window && !IntWndIsDefaultIme(Child))
             List[Index++] = Child->head.h;
     }
     List[Index] = NULL;
@@ -2807,7 +2816,6 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
     HWND* List;
     HWND* phWnd;
     PWND pWnd;
-    PTHREADINFO pti = Window->head.pti;
     USER_REFERENCE_ENTRY Ref;
 
     List = IntWinListOwnedPopups(Window);
@@ -2821,12 +2829,6 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
             continue;
         ASSERT(pWnd->spwndOwner == Window);
         ASSERT(pWnd != Window);
-
-        if (IS_IMM_MODE() && !(pti->TIF_flags & TIF_INCLEANUP) &&
-            pWnd == pti->spwndDefaultIme)
-        {
-            continue;
-        }
 
         WndSetOwner(pWnd, NULL);
         if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
@@ -4679,8 +4681,7 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
    {
       if (!(pWnd = ValidateHwndNoErr( win_array[count] )))
          continue;
-      if (pWnd->spwndOwner != OwnerWnd)
-         continue;
+      ASSERT(pWnd->spwndOwner == OwnerWnd);
 
       if (fShow)
       {
