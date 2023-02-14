@@ -33,16 +33,10 @@ static ATOM aFINDMSGSTRING;
 
 VOID NOTEPAD_EnableSearchMenu()
 {
-    if (GetWindowTextLengthW(Globals.hEdit) == 0)
-    {
-        EnableMenuItem(Globals.hMenu, CMD_SEARCH, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, MF_BYCOMMAND | MF_GRAYED);
-    }
-    else
-    {
-        EnableMenuItem(Globals.hMenu, CMD_SEARCH, MF_BYCOMMAND | MF_ENABLED);
-        EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, MF_BYCOMMAND | MF_ENABLED);
-    }
+    BOOL bEmpty = (GetWindowTextLengthW(Globals.hEdit) == 0);
+    UINT uEnable = (bEmpty ? (MF_BYCOMMAND | MF_GRAYED) : (MF_BYCOMMAND | MF_ENABLED));
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH, uEnable);
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, uEnable);
 }
 
 /***********************************************************************
