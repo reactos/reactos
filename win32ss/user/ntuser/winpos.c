@@ -3100,7 +3100,8 @@ END:
     return retvalue;
 }
 
-BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
+/* Win: xxxEndDeferWindowPosEx */
+BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 {
     PSMWP pDWP;
     PCVR winpos;
@@ -3130,7 +3131,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
 
         UserRefObjectCo(pwnd, &Ref);
 
-        if ( sAsync )
+        if (bAsync)
         {
            LRESULT lRes;
            PWINDOWPOS ppos = ExAllocatePoolWithTag(PagedPool, sizeof(WINDOWPOS), USERTAG_SWP);
