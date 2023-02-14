@@ -990,9 +990,6 @@ VOID DoCreateEditWindow(VOID)
     /* Update wrap status into the main menu and recover style flags */
     dwStyle = (Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE);
 
-    /* Update previous changes */
-    DrawMenuBar(Globals.hMainWnd);
-
     /* Create the new edit control */
     Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE,
                                    EDIT_CLASS,
@@ -1006,7 +1003,6 @@ VOID DoCreateEditWindow(VOID)
                                    NULL,
                                    Globals.hInstance,
                                    NULL);
-
     if (Globals.hEdit == NULL)
     {
         if (pTemp)
@@ -1039,6 +1035,9 @@ VOID DoCreateEditWindow(VOID)
     /* Finally shows new edit control and set focus into it. */
     ShowWindow(Globals.hEdit, SW_SHOW);
     SetFocus(Globals.hEdit);
+
+    /* Re-arrange controls */
+    PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 }
 
 VOID DIALOG_EditWrap(VOID)
