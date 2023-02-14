@@ -4,9 +4,11 @@
  * PURPOSE:          Windows
  * FILE:             win32ss/user/ntuser/winpos.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserWinpos);
 
 /* GLOBALS *******************************************************************/
@@ -3103,6 +3105,83 @@ END:
     return retvalue;
 }
 
+/* Win: xxxImeWindowPosChanged */
+static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
+{
+    PWND pwnd, pwndDesktop, pwndNode;
+    PTHREADINFO pti;
+    PWINDOWLIST pWL;
+    HWND hwnd, hImeWnd, *phwnd;
+    PIMEWND pImeWnd;
+    PIMEUI pimeui;
+
+    pwndDesktop = UserGetDesktopWindow();
+    if (!pwndDesktop)
+        return;
+
+    pti = gptiCurrent;
+    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, pti);
+    if (!pWL)
+        return;
+
+    /* Scan the changed windows */
+    phwnd = pWL->ahwnd;
+    for (hwnd = *phwnd; hwnd != HWND_TERMINATOR; hwnd = *phwnd++)
+    {
+        if (pti->TIF_flags & TIF_INCLEANUP)
+            break;
+
+        pwnd = ValidateHwndNoErr(hwnd);
+        if (!pwnd ||
+            pwnd->head.pti != pti ||
+            pwnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
+        {
+            continue;
+        }
+        /* Now pwnd is an IME window or an IME UI window of the current thread */
+
+        /* Get hImeWnd from pwnd */
+        _SEH2_TRY
+        {
+            ProbeForRead(pwnd, sizeof(IMEWND), 1);
+            pImeWnd = (PIMEWND)pwnd;
+            pimeui = pImeWnd->pimeui;
+            ProbeForRead(pimeui, sizeof(IMEUI), 1);
+            hImeWnd = pimeui->hwndIMC;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            hImeWnd = NULL;
+        }
+        _SEH2_END;
+
+        if (!hImeWnd)
+            continue;
+
+        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window / the IME UI window  */
+        UserReferenceObject(pwnd);
+        for (pwndNode = ValidateHwndNoErr(hImeWnd);
+             pwndNode && pwndNode != pwndDesktop;
+             pwndNode = pwndNode->spwndParent)
+        {
+            INT icvr, ccvr = psmwp->ccvr;
+            PCVR pcvr = psmwp->acvr;
+            for (icvr = 0; icvr < ccvr; ++icvr, ++pcvr)
+            {
+                if (UserHMGetHandle(pwndNode) != pcvr->pos.hwnd)
+                    continue;
+
+                if ((pcvr->pos.flags & (SWP_NOMOVE | SWP_NOSIZE)) != (SWP_NOMOVE | SWP_NOSIZE))
+                    co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+                break;
+            }
+        }
+        UserDereferenceObject(pwnd);
+    }
+
+    IntFreeHwndList(pWL);
+}
+
 /* Win: xxxEndDeferWindowPosEx */
 BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 {
@@ -3165,6 +3244,10 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 
         UserDerefObjectCo(pwnd);
     }
+
+    if (IS_IMM_MODE())
+        IntImeWindowPosChanged(pDWP);
+
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
     UserDereferenceObject(pDWP);
     UserDeleteObject(hdwp, TYPE_SETWINDOWPOS);
