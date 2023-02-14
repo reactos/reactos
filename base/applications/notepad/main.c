@@ -279,33 +279,31 @@ static VOID NOTEPAD_InitData(VOID)
 /***********************************************************************
  * Enable/disable items on the menu based on control state
  */
-static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
+static VOID NOTEPAD_InitMenuPopup(HMENU hMenu, LPARAM index)
 {
-    int enable;
+    DWORD dwRange;
+    UINT uEnable;
+    BOOL bCanUndo, bCanPaste, bCanSelectAll;
 
     UNREFERENCED_PARAMETER(index);
 
-    CheckMenuItem(menu, CMD_WRAP,
-        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, CMD_WRAP, (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, CMD_STATUSBAR, (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
 
-    if (Globals.bShowStatusBar)
-        CheckMenuItem(menu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(menu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
+    bCanUndo = (BOOL)SendMessageW(Globals.hEdit, EM_CANUNDO, 0, 0);
+    EnableMenuItem(hMenu, CMD_UNDO, (bCanUndo ? MF_ENABLED : MF_GRAYED));
 
-    EnableMenuItem(menu, CMD_UNDO,
-        SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
-    EnableMenuItem(menu, CMD_PASTE,
-        IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
-    enable = (int) SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
-    enable = (HIWORD(enable) == LOWORD(enable)) ? MF_GRAYED : MF_ENABLED;
-    EnableMenuItem(menu, CMD_CUT, enable);
-    EnableMenuItem(menu, CMD_COPY, enable);
-    EnableMenuItem(menu, CMD_DELETE, enable);
-    EnableMenuItem(menu, CMD_SELECT_ALL,
-        GetWindowTextLength(Globals.hEdit) ? MF_ENABLED : MF_GRAYED);
+    bCanPaste = IsClipboardFormatAvailable(CF_TEXT);
+    EnableMenuItem(hMenu, CMD_PASTE, (bCanPaste ? MF_ENABLED : MF_GRAYED));
 
-    DrawMenuBar(Globals.hMainWnd);
+    dwRange = (DWORD)SendMessageW(Globals.hEdit, EM_GETSEL, 0, 0);
+    uEnable = (HIWORD(dwRange) == LOWORD(dwRange)) ? MF_GRAYED : MF_ENABLED;
+    EnableMenuItem(hMenu, CMD_CUT, uEnable);
+    EnableMenuItem(hMenu, CMD_COPY, uEnable);
+    EnableMenuItem(hMenu, CMD_DELETE, uEnable);
+
+    bCanSelectAll = (GetWindowTextLengthW(Globals.hEdit) != 0);
+    EnableMenuItem(hMenu, CMD_SELECT_ALL, (bCanSelectAll ? MF_ENABLED : MF_GRAYED));
 }
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
