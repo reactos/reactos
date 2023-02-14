@@ -2917,6 +2917,7 @@ co_WinPosWindowFromPoint(
    return Window;
 }
 
+/* Win: _RealChildWindowFromPoint */
 PWND FASTCALL
 IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
 {
