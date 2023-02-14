@@ -40,6 +40,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 
 DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
+#ifdef __REACTOS__
+CRITICAL_SECTION COMDLG32_OpenFileLock DECLSPEC_HIDDEN;
+#endif
 
 static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
 
@@ -76,6 +79,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 		DisableThreadLibraryCalls(hInstance);
 
 		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
+#ifdef __REACTOS__
+		InitializeCriticalSection(&COMDLG32_OpenFileLock);
+#endif
 
 		/* SHELL */
 		GPA(COMDLG32_SHSimpleIDListFromPathAW, SHELL32_hInstance, (LPCSTR)162);
@@ -84,6 +90,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 	case DLL_PROCESS_DETACH:
             if (Reserved) break;
             if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES) TlsFree(COMDLG32_TlsIndex);
+#ifdef __REACTOS__
+            DeleteCriticalSection(&COMDLG32_OpenFileLock);
+#endif
             break;
 	}
 	return TRUE;
