@@ -992,10 +992,7 @@ VOID DoCreateEditWindow(VOID)
     }
 
     /* Update wrap status into the main menu and recover style flags */
-    if (Globals.bWrapLongLines)
-        dwStyle = EDIT_STYLE_WRAP;
-    else
-        dwStyle = EDIT_STYLE;
+    dwStyle = (Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE);
 
     /* Update previous changes */
     DrawMenuBar(Globals.hMainWnd);
@@ -1053,13 +1050,9 @@ VOID DIALOG_EditWrap(VOID)
     Globals.bWrapLongLines = !Globals.bWrapLongLines;
 
     if (Globals.bWrapLongLines)
-    {
-        EnableMenuItem(Globals.hMenu, CMD_GOTO, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-    }
+        EnableMenuItem(Globals.hMenu, CMD_GOTO, MF_BYCOMMAND | MF_GRAYED);
     else
-    {
         EnableMenuItem(Globals.hMenu, CMD_GOTO, MF_BYCOMMAND | MF_ENABLED);
-    }
 
     DoCreateEditWindow();
     DoShowStatusBar(Globals.bShowStatusBar);
