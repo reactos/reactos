@@ -116,9 +116,9 @@ HRESULT CAddressEditBox::RefreshAddress()
     ATLASSERT(absolutePIDL != NULL);
     PopulateComboBox(absolutePIDL);
 
-    /* Add the item that will be visible when the combobox is not expanded */
-    PCITEMID_CHILD pidlChild;
+    /* Get pShellFolder and pidlChild */
     CComPtr<IShellFolder> pShellFolder;
+    PCITEMID_CHILD pidlChild;
     hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &pShellFolder), &pidlChild);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
