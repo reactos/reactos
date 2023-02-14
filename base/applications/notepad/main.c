@@ -436,10 +436,11 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         DoOpenFile(szFileName);
         break;
     }
-    case WM_CHAR:
+
     case WM_INITMENUPOPUP:
         NOTEPAD_InitMenuPopup((HMENU)wParam, lParam);
         break;
+
     default:
         if (msg == aFINDMSGSTRING)
         {
