@@ -2959,6 +2959,7 @@ IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
    return pwndHit ? pwndHit : Parent;
 }
 
+/* Win: _ChildWindowFromPointEx */
 PWND APIENTRY
 IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
 {
