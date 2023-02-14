@@ -938,9 +938,6 @@ VOID DoShowHideStatusBar(VOID)
     /* Update layout of controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
-    /* Update menu mar with the previous changes */
-    DrawMenuBar(Globals.hMainWnd);
-
     /* Set the status bar for multiple-text output */
     DIALOG_StatusBarAlignParts();
 
