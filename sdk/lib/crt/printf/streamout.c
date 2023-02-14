@@ -432,6 +432,10 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             else if (chr == _T('w')) flags |= FLAG_WIDECHAR;
             else if (chr == _T('L')) flags |= 0; // FIXME: long double
             else if (chr == _T('F')) flags |= 0; // FIXME: what is that?
+            else if (chr == _T('z') && *format && strchr("udxXion", *format))
+            {
+                flags |= FLAG_INTPTR;
+            }
             else if (chr == _T('l'))
             {
                 /* Check if this is the 2nd 'l' in a row */
