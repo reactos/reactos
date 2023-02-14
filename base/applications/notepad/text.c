@@ -167,7 +167,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOL
 BOOL
 ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
-    PCHAR pBytes = NULL;
+    LPBYTE pBytes = NULL;
     LPWSTR pszText, pszNewText = NULL;
     DWORD dwSize, dwPos;
     SIZE_T i, cchText, cbContent;
@@ -224,7 +224,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     }
     else
     {
-        encFile = AnalyzeEncoding((const char *)pBytes, dwSize);
+        encFile = AnalyzeEncoding((LPCSTR)pBytes, dwSize);
     }
 
     switch(encFile)
@@ -267,7 +267,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         cchText = 0;
         if (cbContent > 0)
         {
-            cchText = MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], (INT)cbContent, NULL, 0);
+            cchText = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], (INT)cbContent, NULL, 0);
             if (cchText == 0)
                 goto done;
         }
@@ -282,8 +282,8 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         /* Do ANSI-to-Wide conversion */
         if (cbContent > 0)
         {
-            if (!MultiByteToWideChar(iCodePage, 0,
-                                     &pBytes[dwPos], (INT)cbContent, pszNewText, (INT)cchText))
+            if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], (INT)cbContent,
+                                     pszNewText, (INT)cchText))
             {
                 goto done;
             }
