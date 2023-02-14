@@ -1510,6 +1510,9 @@ static BOOL export_key(WCHAR *file_name, WCHAR *path, BOOL unicode)
     fclose(fp);
 
     RegCloseKey(key);
+#ifdef __REACTOS__      /* Fixes CORE-18603: Remove this when Wine Bug 54491 is fixed and synched back */
+    ret = TRUE;
+#endif
     return ret;
 }
 
