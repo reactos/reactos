@@ -118,22 +118,22 @@ HRESULT CAddressEditBox::RefreshAddress()
 
     /* Add the item that will be visible when the combobox is not expanded */
     PCITEMID_CHILD pidlChild;
-    CComPtr<IShellFolder> sf;
-    hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    CComPtr<IShellFolder> pShellFolder;
+    hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &pShellFolder), &pidlChild);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     /* Get ready to set the displayed item */
     COMBOBOXEXITEMW item = { CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM };
     item.iItem = -1; /* -1 to specify the displayed item */
-    item.iImage = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &item.iSelectedImage);
+    item.iImage = SHMapPIDLToSystemImageListIndex(pShellFolder, pidlChild, &item.iSelectedImage);
 
     /* Set the path if filesystem; otherwise use the name */
     WCHAR szPathOrName[MAX_PATH];
     if (!SHGetPathFromIDListW(absolutePIDL, szPathOrName))
     {
         STRRET ret;
-        hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+        hr = pShellFolder->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
