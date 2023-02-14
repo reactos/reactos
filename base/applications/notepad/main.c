@@ -285,13 +285,13 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 
     UNREFERENCED_PARAMETER(index);
 
-    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
+    CheckMenuItem(menu, CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
 
     if (Globals.bShowStatusBar)
-        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(menu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
     else
-        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(menu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
 
     EnableMenuItem(menu, CMD_UNDO,
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
