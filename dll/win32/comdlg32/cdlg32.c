@@ -22,6 +22,9 @@
 #include "cdlg.h"
 
 DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
+#ifdef __REACTOS__
+CRITICAL_SECTION COMDLG32_OpenFileLock DECLSPEC_HIDDEN;
+#endif
 
 static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
 
@@ -70,6 +73,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 		DisableThreadLibraryCalls(hInstance);
 
 		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
+#ifdef __REACTOS__
+		InitializeCriticalSection(&COMDLG32_OpenFileLock);
+#endif
 
 		/* ITEMIDLIST */
 		GPA(COMDLG32_PIDL_ILIsEqual, SHELL32_hInstance, (LPCSTR)21L);
@@ -97,6 +103,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 	case DLL_PROCESS_DETACH:
             if (Reserved) break;
             if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES) TlsFree(COMDLG32_TlsIndex);
+#ifdef __REACTOS__
+            DeleteCriticalSection(&COMDLG32_OpenFileLock);
+#endif
             if(SHFOLDER_hInstance) FreeLibrary(SHFOLDER_hInstance);
             break;
 	}
