@@ -288,7 +288,7 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
 
-    if (IsWindowVisible(Globals.hStatusBar))
+    if (Globals.bShowStatusBar)
         CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
@@ -408,8 +408,11 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         MoveWindow(Globals.hEdit, 0, 0, rc.right, rc.bottom, TRUE);
 
-        /* Align status bar parts, only if the status bar resize operation succeeds */
-        DIALOG_StatusBarAlignParts();
+        if (Globals.bShowStatusBar)
+        {
+            /* Align status bar parts, only if the status bar resize operation succeeds */
+            DIALOG_StatusBarAlignParts();
+        }
         break;
     }
 
