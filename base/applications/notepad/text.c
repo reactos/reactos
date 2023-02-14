@@ -39,7 +39,7 @@ BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
 
 ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 {
-    INT flags = IS_TEXT_UNICODE_STATISTICS;
+    INT flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
 
     if (dwSize <= 1 || IsTextNonZeroASCII(pBytes, dwSize))
         return ENCODING_ANSI;
@@ -47,8 +47,6 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
     if (IsTextUnicode(pBytes, dwSize, &flags))
         return ENCODING_UTF16LE;
 
-    flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
-    IsTextUnicode(pBytes, dwSize, &flags);
     if (((flags & IS_TEXT_UNICODE_REVERSE_MASK) == IS_TEXT_UNICODE_REVERSE_STATISTICS))
         return ENCODING_UTF16BE;
 
