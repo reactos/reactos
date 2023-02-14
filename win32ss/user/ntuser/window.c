@@ -4681,8 +4681,7 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
    {
       if (!(pWnd = ValidateHwndNoErr( win_array[count] )))
          continue;
-      if (pWnd->spwndOwner != OwnerWnd)
-         continue;
+      ASSERT(pWnd->spwndOwner == OwnerWnd);
 
       if (fShow)
       {
