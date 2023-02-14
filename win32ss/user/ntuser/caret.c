@@ -222,6 +222,7 @@ co_IntSetCaretPos(int X, int Y)
    return FALSE;
 }
 
+/* Win: zzzHideCaret */
 BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 {
    PTHREADINFO pti;
@@ -257,6 +258,7 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    return TRUE;
 }
 
+/* Win: zzzShowCaret */
 BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 {
    PTHREADINFO pti;
