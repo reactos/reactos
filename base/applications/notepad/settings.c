@@ -157,9 +157,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         Globals.main_rect.right = Globals.main_rect.left + dx;
         Globals.main_rect.bottom = Globals.main_rect.top + dy;
 
-        /* invert value because DIALOG_ViewStatusBar will be called to show it */
-        Globals.bShowStatusBar = !Globals.bShowStatusBar;
-
         if (dwPointSize != 0)
             Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
         else

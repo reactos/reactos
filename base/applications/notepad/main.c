@@ -641,8 +641,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     UpdateWindow(Globals.hMainWnd);
     DragAcceptFiles(Globals.hMainWnd, TRUE);
 
-    DIALOG_ViewStatusBar();
-
     if (!HandleCommandLine(cmdline))
     {
         return 0;
