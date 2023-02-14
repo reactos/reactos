@@ -911,17 +911,13 @@ VOID DIALOG_EditTimeDate(VOID)
     SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szText);
 }
 
-VOID DoCreateStatusBar(VOID)
+VOID DoShowStatusBar(BOOL bShow)
 {
-    RECT rc;
-    RECT rcstatus;
-    BOOL bStatusBarVisible;
-
     /* Check if status bar object already exists. */
-    if (Globals.hStatusBar == NULL)
+    if (bShow && Globals.hStatusBar == NULL)
     {
         /* Try to create the status bar */
-        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP,
+        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | CCS_BOTTOM | SBARS_SIZEGRIP,
                                                 NULL,
                                                 Globals.hMainWnd,
                                                 CMD_STATUSBAR_WND_ID);
@@ -936,51 +932,15 @@ VOID DoCreateStatusBar(VOID)
         LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH - 1);
     }
 
-    /* Set status bar visiblity according to the settings. */
-    if ((Globals.bWrapLongLines != FALSE) || (Globals.bShowStatusBar == FALSE))
-    {
-        bStatusBarVisible = FALSE;
-        ShowWindow(Globals.hStatusBar, SW_HIDE);
-    }
-    else
-    {
-        bStatusBarVisible = TRUE;
-        ShowWindow(Globals.hStatusBar, SW_SHOW);
-        SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0);
-    }
+    /* Update visibility of status bar */
+    ShowWindowAsync(Globals.hStatusBar, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
+    Globals.bShowStatusBar = bShow;
 
-    /* Set check state in show status bar item. */
-    if (bStatusBarVisible)
-    {
-        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
-    }
-    else
-    {
-        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
-    }
+    /* Update layout of controls */
+    PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
     /* Update menu mar with the previous changes */
     DrawMenuBar(Globals.hMainWnd);
-
-    /* Sefety test is edit control exists */
-    if (Globals.hEdit != NULL)
-    {
-        /* Retrieve the sizes of the controls */
-        GetClientRect(Globals.hMainWnd, &rc);
-        GetClientRect(Globals.hStatusBar, &rcstatus);
-
-        /* If status bar is currently visible, update dimensions of edit control */
-        if (bStatusBarVisible)
-            rc.bottom -= (rcstatus.bottom - rcstatus.top);
-
-        /* Resize edit control to right size. */
-        MoveWindow(Globals.hEdit,
-                   rc.left,
-                   rc.top,
-                   rc.right - rc.left,
-                   rc.bottom - rc.top,
-                   TRUE);
-    }
 
     /* Set the status bar for multiple-text output */
     DIALOG_StatusBarAlignParts();
@@ -1033,13 +993,9 @@ VOID DoCreateEditWindow(VOID)
 
     /* Update wrap status into the main menu and recover style flags */
     if (Globals.bWrapLongLines)
-    {
         dwStyle = EDIT_STYLE_WRAP;
-        EnableMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-    } else {
+    else
         dwStyle = EDIT_STYLE;
-        EnableMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_ENABLED);
-    }
 
     /* Update previous changes */
     DrawMenuBar(Globals.hMainWnd);
@@ -1087,9 +1043,6 @@ VOID DoCreateEditWindow(VOID)
                                                  GWLP_WNDPROC,
                                                  (LONG_PTR)EDIT_WndProc);
 
-    /* Create/update status bar */
-    DoCreateStatusBar();
-
     /* Finally shows new edit control and set focus into it. */
     ShowWindow(Globals.hEdit, SW_SHOW);
     SetFocus(Globals.hEdit);
@@ -1109,6 +1062,7 @@ VOID DIALOG_EditWrap(VOID)
     }
 
     DoCreateEditWindow();
+    DoShowStatusBar(Globals.bShowStatusBar);
 }
 
 VOID DIALOG_SelectFont(VOID)
@@ -1273,9 +1227,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
 
 VOID DIALOG_ViewStatusBar(VOID)
 {
-    Globals.bShowStatusBar = !Globals.bShowStatusBar;
-
-    DoCreateStatusBar();
+    DoShowStatusBar(!Globals.bShowStatusBar);
 }
 
 VOID DIALOG_HelpContents(VOID)
