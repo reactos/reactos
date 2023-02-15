@@ -3138,14 +3138,17 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         /* Now pwnd is an IME window of the current thread */
 
         /* Get the IME focus window from pwnd */
+        hwndImeFocus = NULL;
         _SEH2_TRY
         {
             ProbeForRead(pwnd, sizeof(IMEWND), 1);
             pImeWnd = (PIMEWND)pwnd;
             pimeui = pImeWnd->pimeui;
-
-            ProbeForRead(pimeui, sizeof(IMEUI), 1);
-            hwndImeFocus = pimeui->hwndIMC;
+            if (pimeui)
+            {
+                ProbeForRead(pimeui, sizeof(IMEUI), 1);
+                hwndImeFocus = pimeui->hwndIMC;
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -3153,15 +3156,12 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         }
         _SEH2_END;
 
-        if (!hwndImeFocus)
-            continue;
-
         /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME focus window */
         pwnd = ValidateHwndNoErr(hwndImeFocus);
         if (pwnd)
         {
             UserReferenceObject(pwnd);
-            co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+            co_IntSendMessage(hwndImeFocus, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
             UserDereferenceObject(pwnd);
         }
     }
