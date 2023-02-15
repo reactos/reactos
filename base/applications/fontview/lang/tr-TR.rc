@@ -1,13 +1,20 @@
-/* TRANSLATOR: 2013, 2014, 2017 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* 
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2014, 2017 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
 STRINGTABLE
 BEGIN
     IDS_INSTALL "&Kur..."
     IDS_PRINT "&Yazdır..."
     IDS_STRING "Pijamalı hasta, yağız şoföre çabucak güvendi. 1234567890"
     IDS_OPEN "Yazı Tipi Aç..."
-    IDS_ERROR "Yanlışlık"
+    IDS_ERROR "Hata"
     IDS_ERROR_NOMEM "Bu işlemi bitirmek için yeterli bellek yok."
     IDS_ERROR_NOFONT "%1 dosyası, geçerli bir yazı tipi dosyası değil."
     IDS_ERROR_NOCLASS "Pencere sınıfı başlatılamadı."

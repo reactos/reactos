@@ -17,53 +17,53 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "Usage:\n\
-  regedit [options] [filename] [reg_key]\n\n\
-Options:\n\
-  [no option]    Launch the graphical version of this program.\n\
-  /L:system.dat  The location of the system.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /R:user.dat    The location of the user.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /C             Import the contents of a registry file.\n\
-  /D             Delete a specified registry key.\n\
-  /E             Export the contents of a specified registry key to a file.\n\
-                 If no key is specified, the entire registry is exported.\n\
-  /S             Silent mode. No messages will be displayed.\n\
-  /V             Launch the GUI in advanced mode. Ignored.\n\
-  /?             Display this information and exit.\n\
-  [filename]     The location of the file containing registry information to\n\
-                 be imported. When used with [/E], this option specifies the\n\
-                 file location where registry information will be exported.\n\
-  [reg_key]      The registry key to be modified.\n\
+    STRING_USAGE "Kullanım:\n\
+  regedit [seçenekler] [dosya adı] [reg_key]\n\n\
+Seçenekler:\n\
+  [seçenek yok]  Bu programın grafik sürümünü başlatın.\n\
+  /L:system.dat  Değiştirilecek system.dat dosyasının konumu.\n\
+                 Diğer tüm anahtarlarla uyumludur. Yok sayıldı.\n\
+  /R:user.dat    Değiştirilecek user.dat dosyasının konumu.\n\
+                 Diğer tüm anahtarlarla uyumludur. Yok sayıldı.\n\
+  /C             Bir kayıt defteri dosyasının içeriğini içe aktarın.\n\
+  /D             Belirli bir kayıt defteri anahtarını silin.\n\
+  /E             Belirli bir kayıt defteri anahtarının içeriğini bir dosyaya aktarın.\n\
+                 Herhangi bir anahtar belirtilmezse, kayıt defterinin tamamı verilir.\n\
+  /S             Sessiz mod. Hiçbir mesaj görüntülenmeyecek.\n\
+  /V             Grafik arayüzünü gelişmiş modda başlatın. Yok sayıldı.\n\
+  /?             Bu bilgiyi görüntüleyin ve çıkın.\n\
+  [dosya adı]    İçe aktarılacak kayıt bilgilerini içeren dosyanın konumu.\n\
+                 [/E] ile kullanıldığında, bu seçenek, kayıt bilgilerinin\n\
+                 dışa aktarılacağı dosya konumunu belirtir.\n\
+  [reg_key]      Değiştirilecek kayıt defteri anahtarı.\n\
 \n\
-Usage examples:\n\
+Örnekler:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
   regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
-    STRING_INVALID_SWITCH "regedit: Invalid or unrecognized switch [%1]\n"
-    STRING_HELP "Type ""regedit /?"" for help.\n"
-    STRING_NO_FILENAME "regedit: No filename was specified.\n"
-    STRING_NO_REG_KEY "regedit: No registry key was specified for removal.\n"
-    STRING_FILE_NOT_FOUND "regedit: The file '%1' was not found.\n"
-    STRING_CANNOT_OPEN_FILE "regedit: Unable to open the file '%1'.\n"
-    STRING_UNHANDLED_ACTION "regedit: Unhandled action.\n"
-    STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
-    STRING_INVALID_HEX "regedit: Invalid hexadecimal value.\n"
-    STRING_CSV_HEX_ERROR "regedit: Unable to convert hexadecimal data. An invalid value was encountered at '%1'.\n"
-    STRING_ESCAPE_SEQUENCE "regedit: Unrecognized escape sequence [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Unsupported registry data type [0x%1!x!]\n"
-    STRING_UNEXPECTED_EOL "regedit: Unexpected end of line in '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: The line '%1' was not recognized.\n"
-    STRING_SETVALUE_FAILED "regedit: Unable to add the registry value '%1' to '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Unable to open the registry key '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Unsupported registry data type [0x%1!x!] encountered in '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: The registry value '%1' will be exported as binary data.\n"
-    STRING_INVALID_SYSTEM_KEY "regedit: Invalid system key [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Unable to export '%1'. The specified registry key was not found.\n"
-    STRING_DELETE_FAILED "regedit: Unable to delete the registry key '%1'.\n"
-    STRING_UNKNOWN_TYPE "Unknown Type"
-    STRING_INVALID_LINE_SYNTAX, "regedit: The line contains invalid syntax.\n"
+    STRING_INVALID_SWITCH "regedit: Geçersiz veya tanınmayan anahtar [%1]\n"
+    STRING_HELP "Yardım için ""regedit /?"" yazın.\n"
+    STRING_NO_FILENAME "regedit: Dosya adı belirtilmedi.\n"
+    STRING_NO_REG_KEY "regedit: Kaldırma için kayıt defteri anahtarı belirtilmedi.\n"
+    STRING_FILE_NOT_FOUND "regedit: '%1' dosyası bulunamadı.\n"
+    STRING_CANNOT_OPEN_FILE "regedit: '%1' dosyası açılamıyor.\n"
+    STRING_UNHANDLED_ACTION "regedit: İşlenmemiş eylem.\n"
+    STRING_OUT_OF_MEMORY "regedit: Bellek yetersiz! (%1!S!, satır %2!u!)\n"
+    STRING_INVALID_HEX "regedit: Geçersiz onaltılık değer.\n"
+    STRING_CSV_HEX_ERROR "regedit: Onaltılık veriler dönüştürülemiyor. '%1' konumunda geçersiz bir değerle karşılaşıldı.\n"
+    STRING_ESCAPE_SEQUENCE "regedit: Tanınmayan kaçış sırası [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Desteklenmeyen kayıt veri türü [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: '%1' içinde beklenmeyen satır sonu.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: '%1' satırı tanınmadı.\n"
+    STRING_SETVALUE_FAILED "regedit: '%1' kayıt defteri değeri '%2'ye eklenemiyor.\n"
+    STRING_OPEN_KEY_FAILED "regedit: '%1' kayıt defteri anahtarı açılamıyor.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: '%2' içinde desteklenmeyen kayıt defteri veri türü [0x%1!x!] ile karşılaşıldı.\n"
+    STRING_EXPORT_AS_BINARY "regedit: '%1' kayıt defteri değeri, ikili veri olarak dışa aktarılacak.\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: Geçersiz sistem anahtarı [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: '%1' dışa aktarılamıyor. Belirtilen kayıt defteri anahtarı bulunamadı.\n"
+    STRING_DELETE_FAILED "regedit: '%1' kayıt defteri anahtarı silinemiyor.\n"
+    STRING_UNKNOWN_TYPE "Bilinmeyen Tür"
+    STRING_INVALID_LINE_SYNTAX, "regedit: Satır geçersiz sözdizimi içeriyor.\n"
 END
 
 /* Menus */
@@ -114,7 +114,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&İzinler...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
+        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
@@ -150,7 +150,7 @@ BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM "&İkili Veriyi Değiştir...", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
+        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
     END
     POPUP ""

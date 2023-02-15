@@ -19,28 +19,28 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
-    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
-    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+    IDS_ACTIVE_FAIL "\nDiskPart, bölümü etkin olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin olarak işaretledi.\n"
+    IDS_ACTIVE_ALREADY "\nGeçerli bölüm zaten etkin olarak işaretlendi.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
-    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+    IDS_CLEAN_FAIL "\nDiskPart diski temizleyemedi.\nBu diskteki veriler kurtarılamaz olabilir.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart, diski temizlemeyi başardı.\n"
+    IDS_CLEAN_SYSTEM "\nSeçilen disk, bilgisayarınızın çalışması için gereklidir ve temizlenemez.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
-    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart belirtilen bölümü oluşturamadı.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturmayı başardı.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
-    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart, seçilen bölümü silemedi.\nLütfen seçilen bölümün silmek için geçerli olduğundan emin olun.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart seçilen bölümü başarıyla sildi.\n"
 END
 
 /* Disk Information Labels */
@@ -49,8 +49,8 @@ BEGIN
     IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tür"
     IDS_DETAIL_INFO_STATUS "Durum"
-    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
-    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_PATH   "Yol   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Hedef : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Konum Yolu"
     IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu"
@@ -60,21 +60,21 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hazırda Bekletme Dosyası Diski"
     IDS_DETAIL_INFO_CRASH_DSK "Çöküş Dökümü Diski"
     IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
-    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
-    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
-    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
-    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
-    IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
-    IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
+    IDS_DETAIL_PARTITION_NUMBER "Bölüm %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Tür                 : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Gizli               : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Etkin               : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Bayt cinsinden ofset: %I64u\n"
+    IDS_DETAIL_NO_DISKS "\nBu birime bağlı disk yok.\n"
+    IDS_DETAIL_NO_VOLUME "\nBu bölümle ilişkilendirilmiş bir birim yok.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
-    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size:  %lu\n"
+    IDS_FILESYSTEMS_CURRENT "Geçerli Dosya Sistemi\n"
+    IDS_FILESYSTEMS_FORMATTING "Biçimlendirme için kullanılabilen dosya sistemleri\n"
+    IDS_FILESYSTEMS_TYPE "Tür         : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Küme boyutu :  %lu\n"
 END
 
 STRINGTABLE
@@ -84,9 +84,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
-    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
-    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+    IDS_INACTIVE_FAIL "\nDiskPart, bölümü etkin değil olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin değil olarak işaretledi.\n"
+    IDS_INACTIVE_ALREADY "\nGeçerli bölüm zaten etkin değil olarak işaretlendi.\n"
 END
 
 /* Detail header titles */
@@ -99,9 +99,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_HEAD "  Birim  ###  Hrf  Etiket       DS     Dür         Boyut    Durum    Bilgi\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "%c Birim  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -123,15 +123,15 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nGeçersiz bölüm.\n\n"
     IDS_SELECT_NO_VOLUME "\nŞimdilik bir birim seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_VOLUME "\nBirim %lu şimdi seçilen birimdir.\n\n"
-    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nGeçersiz birim.\n\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
-    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
-    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
-    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+    IDS_SETID_FAIL "\nDiskPart, bölüm türünü değiştiremedi.\n"
+    IDS_SETID_SUCCESS "\nBölüm türü başarıyla değiştirildi.\n"
+    IDS_SETID_INVALID_FORMAT "\nBölüm türünün biçimi geçersiz.\n"
+    IDS_SETID_INVALID_TYPE "\nBölüm türü geçersiz.\n"
 END
 
 /* Disk Status */
@@ -168,26 +168,26 @@ BEGIN
     IDS_HELP_CONVERT                   "Farklı disk biçimleri arasında dönüştür.\n"
 
     IDS_HELP_CREATE                    "Bir birim, bölüm ya da sanal disk oluştur.\n"
-    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
-    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
-    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
-    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
-    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
-    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
-    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
-    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+    IDS_HELP_CREATE_PARTITION          "Bir bölüm oluşturun.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Bir EFI bölümü oluşturun.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Genişletilmiş bir bölüm oluşturun.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Mantıksal bir sürücü oluşturun.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Bir MSR bölümü oluşturun.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Bir birincil bölüm oluşturun.\n"
+    IDS_HELP_CREATE_VOLUME             "Bir birim oluşturun.\n"
+    IDS_HELP_CREATE_VDISK              "Bir sanal disk dosyası oluşturun.\n"
 
     IDS_HELP_DELETE                    "Bir nesne sil.\n"
-    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
-    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
-    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+    IDS_HELP_DELETE_DISK               "Bir disk sil.\n"
+    IDS_HELP_DELETE_PARTITION          "Bir bölüm sil.\n"
+    IDS_HELP_DELETE_VOLUME             "Bir birim sil.\n"
 
     IDS_HELP_DETACH                    "Bir sanal disk alanı ayırır.\n"
 
     IDS_HELP_DETAIL                    "Bir nesne hakkında ayrıntılar sağla.\n"
-    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
-    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
-    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+    IDS_HELP_DETAIL_DISK               "Disk detaylarıını görüntüle.\n"
+    IDS_HELP_DETAIL_PARTITION          "Bölüm detaylarını görüntüle.\n"
+    IDS_HELP_DETAIL_VOLUME             "Birim detaylarını görüntüle.\n"
 
     IDS_HELP_EXIT                      "DiskPart'tan çık.\n"
     IDS_HELP_EXPAND                    "Bir sanal disk üzerinde en çok kullanılabilir boyutu genişletir.\n"
@@ -200,10 +200,10 @@ BEGIN
     IDS_HELP_INACTIVE                  "Seçili bölümü devre dışı olarak işaretle.\n"
 
     IDS_HELP_LIST                      "Nesnelerin bir tablosunu görüntüle.\n"
-    IDS_HELP_LIST_DISK                 "List disks.\n"
-    IDS_HELP_LIST_PARTITION            "List partitions.\n"
-    IDS_HELP_LIST_VOLUME               "List volumes.\n"
-    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+    IDS_HELP_LIST_DISK                 "Diskleri listele.\n"
+    IDS_HELP_LIST_PARTITION            "Bölümleri listele.\n"
+    IDS_HELP_LIST_VOLUME               "Birimleri listele.\n"
+    IDS_HELP_LIST_VDISK                "Sanal disk dosyalarını listeleme.\n"
 
     IDS_HELP_MERGE                     "Bir alt diski üstleriyle birleştirir.\n"
     IDS_HELP_OFFLINE                   "Çevrim içi olarak şimdilik imlenen bir nesneyi çevrim dışı yap.\n"
@@ -217,10 +217,10 @@ BEGIN
     IDS_HELP_SAN                       "Şimdilik ön yüklenen işletim sistemi için SAN ilkesini görüntüle ya da ayarla.\n"
 
     IDS_HELP_SELECT                    "Odağı bir nesneye kaydır.\n"
-    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
-    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
-    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
-    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+    IDS_HELP_SELECT_DISK               "Odağı diske taşır.\n"
+    IDS_HELP_SELECT_PARTITION          "Odağı bölüme taşır.\n"
+    IDS_HELP_SELECT_VOLUME             "Odağı birime taşır.\n"
+    IDS_HELP_SELECT_VDISK              "Odağı sanal diske taşır.\n"
 
     IDS_HELP_SETID                     "Bölüm türünü değiştir.\n"
     IDS_HELP_SHRINK                    "Seçili birimin boyutunu düşür.\n"
@@ -232,8 +232,8 @@ END
 /* Common Error Messages */
 STRINGTABLE
 BEGIN
-    IDS_ERROR_MSG_NO_SCRIPT "Betik açmada yanlışlık: %s\n"
-    IDS_ERROR_MSG_BAD_ARG "Argüman işlemede yanlışlık: %s\n"
-    IDS_ERROR_INVALID_ARGS "Geçersiz değiştirgenler\n"
-    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
+    IDS_ERROR_MSG_NO_SCRIPT "Betik açmada hata: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "Değişken işlemede hata: %s\n"
+    IDS_ERROR_INVALID_ARGS "Geçersiz değişkenler\n"
+    IDS_ERROR_NO_MEDIUM "Cihazda ortam yok.\n"
 END

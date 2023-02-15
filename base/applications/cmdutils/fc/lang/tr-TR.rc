@@ -2,40 +2,40 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them.\n\
+    IDS_USAGE "İki dosyayı veya dosya grubunu karşılaştırır ve aralarındaki farkları\n\
+görüntüler.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [surucu1:][yol1]dosyaadi1 [surucu2:][yol2]dosyaadi2\n\
+FC /B [surucu1:][yol1]dosyaadi1 [surucu2:][yol2]dosyaadi2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+  /A         Her fark kümesi için yalnızca ilk ve son satırları görüntüler.\n\
+  /B         İkili karşılaştırma gerçekleştirir.\n\
+  /C         Harflerin durumunu dikkate almaz.\n\
+  /L         Dosyaları ASCII metni olarak karşılaştırır.\n\
+  /LBn       Maksimum ardışık uyumsuzlukları belirtilen satır\n\
+             sayısına ayarlar (varsayılan: 100).\n\
+  /N         Bir ASCII karşılaştırmasında satır numaralarını görüntüler.\n\
+  /OFF[LINE] Çevrimdışı özellik ayarlı dosyaları atlamaz.\n\
+  /T         Sekmeleri boşluklara genişletmez (varsayılan: genişlet).\n\
+  /U         Dosyaları UNICODE metin dosyaları olarak karşılaştırın.\n\
+  /W         Karşılaştırma için boşlukları (sekmeler ve boşluklar) sıkıştırır.\n\
+  /nnnn      Uyuşmazlıktan sonra eşleşmesi gereken ardışık satır sayısını\n\
+             belirtir (varsayılan: 2).\n\
+  [surucu1:][yol1]dosyaadi1\n\
+             Karşılaştırılacak ilk dosyayı veya dosya grubunu belirtir.\n\
+  [surucu2:][yol2]dosyaadi2\n\
+             Karşılaştırılacak ikinci dosyayı veya dosya grubunu belirtir.\n"
+    IDS_NO_DIFFERENCE "FC: farkla karşılaşılmadı\n"
+    IDS_LONGER_THAN "FC: %ls, %ls'den daha uzun\n"
+    IDS_COMPARING "%ls ve %ls dosyaları karşılaştırılıyor\n"
+    IDS_OUT_OF_MEMORY "FC: Bellek yetersiz\n"
+    IDS_CANNOT_READ "FC: %ls'den okunamıyor\n"
+    IDS_INVALID_SWITCH "FC: Geçersiz Anahtar\n"
+    IDS_CANNOT_OPEN "FC: %ls açılamıyor - Böyle bir dosya veya klasör yok\n"
+    IDS_NEEDS_FILES "FC: Yetersiz sayıda dosya belirtimi\n"
+    IDS_CANT_USE_WILDCARD "Joker karakter ('*' ve '?') henüz desteklenmiyor\n"
+    IDS_DIFFERENT "FC: Dosya %ls ve %ls farklı\n"
+    IDS_TOO_LARGE "FC: Dosya %ls çok büyük\n"
+    IDS_RESYNC_FAILED "Yeniden eşitleme başarısız oldu. Dosyalar çok farklı.\n"
 END

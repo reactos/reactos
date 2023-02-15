@@ -37,5 +37,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Donanımı Güvenli Kaldır"
-    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
+    IDS_CPLDESCRIPTION "Aygıtları bilgisayarınızdan güvenle çıkarın veya çıkarın."
 END

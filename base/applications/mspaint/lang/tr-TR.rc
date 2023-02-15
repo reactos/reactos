@@ -238,8 +238,8 @@ BEGIN
     IDS_ANGLE "Açı -89 ile 89 arasında olmalıdır."
     IDS_LOADERRORTEXT "%s dosyası yüklenemedi."
 	IDS_ENLARGEPROMPTTEXT "Panodaki resim bit eşleminden daha büyük.\nBit eşlemin genişletilmişini ister misiniz?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
+    IDS_BOLD "Kalın"
+    IDS_ITALIC "İtalik"
+    IDS_UNDERLINE "Altı Çizgili"
+    IDS_VERTICAL "Düşey"
 END

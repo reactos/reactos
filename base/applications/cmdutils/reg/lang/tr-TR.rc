@@ -1,94 +1,100 @@
-/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* 
+ * PROJECT:     ReactOS Registry Console Tool
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2015-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage:\n\
-  REG [operation] [parameters]\n\n\
-Supported operations:\n\
+    STRING_USAGE, "Kullanım:\n\
+  REG [islem] [secenekler]\n\n\
+Desteklenen işlemler:\n\
   ADD | COPY | DELETE | EXPORT | IMPORT | QUERY\n\n\
-For help on a specific operation, type:\n\
-  REG [operation] /?\n\n"
+Belirli bir işlemle ilgili yardım için şunu yazın:\n\
+  REG [islem] /?\n\n"
 
-    STRING_ADD_USAGE, "REG ADD <key> [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n\n\
-  Adds a key to the registry or adds a new value to a given registry key.\n\n\
-  <key>\n\
-     The registry key to add or, if either [/v] or [/ve] is specified,\n\
-     the key in which to add the new registry data.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_ADD_USAGE, "REG ADD <anahtar> [/v deger_adı | /ve] [/t tür] [/s ayirici] [/d veri] [/f]\n\n\
+  Kayıt defterine bir anahtar ekler veya belirli bir kayıt defteri anahtarına yeni bir değer ekler.\n\n\
+  <anahtar>\n\
+     Eklenecek kayıt defteri anahtarı veya [/v] ya da [/ve] belirtilmişse,\n\
+     yeni kayıt defteri verilerinin ekleneceği anahtar.\n\
+     Biçim: KÖK\\AltAnahtar\n\n\
+     KÖK: Önceden tanımlanmış bir kayıt defteri anahtarı. Bu, aşağıdakilerden biri olmalıdır:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to add.\n\n\
+     AltAnahtar: Belirli bir KÖK anahtarı altındaki bir kayıt defteri anahtarının tam yolu.\n\n\
+  /v <deger_adi>\n\
+     Eklenecek kayıt defteri değerinin adı.\n\n\
   /ve\n\
-     Add an unnamed registry value. This option modifies the (Default)\n\
-     registry value.\n\n\
-  /t <type>\n\
-     The type of data to add to the registry. If [/t] is specified,\n\
-     <type> must be one of the following:\n\n\
+     Adsız bir kayıt defteri değeri ekleyin. Bu seçenek, (Varsayılan)\n\
+     kayıt defteri değerini değiştirir.\n\n\
+  /t <tur>\n\
+     Kayıt defterine eklenecek veri türü. [/t] belirtilirse,\n\
+     <tur> aşağıdakilerden biri olmalıdır:\n\n\
          REG_SZ    | REG_MULTI_SZ | REG_EXPAND_SZ\n\
          REG_DWORD | REG_BINARY   | REG_NONE\n\n\
-     If [/t] is not specified, the default data type is REG_SZ.\n\n\
-  /s <separator>\n\
-     The character used to separate strings in REG_MULTI_SZ data.\n\
-     If [/s] is not specified, the default separator is \\0.\n\n\
-  /d <data>\n\
-     The data to add to the new registry value.\n\n\
+     [/t] belirtilmezse, varsayılan veri türü REG_SZ'dir.\n\n\
+  /s <ayirici>\n\
+     REG_MULTI_SZ verilerinde dizileri ayırmak için kullanılan karakter.\n\
+     [/s] belirtilmezse, varsayılan ayırıcı \\0'dır.\n\n\
+  /d <veri>\n\
+     Yeni kayıt defteri değerine eklenecek veriler.\n\n\
   /f\n\
-     Modify the registry without prompting for confirmation.\n\n"
+     Onay istemeden kayıt defterini değiştirin.\n\n"
 
-    STRING_DELETE_USAGE, "REG DELETE <key> [/v value_name | /ve | /va] [/f]\n\n\
-  Deletes a registry key (including all subkeys and values), or deletes\n\
-  one or more values from a given registry key.\n\n\
-  <key>\n\
-     The registry key to delete or, if one of [/v], [/ve] or [/va] is\n\
-     specified, the registry key in which to delete one or more values.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_DELETE_USAGE, "REG DELETE <anahtar> [/v deger_adi | /ve | /va] [/f]\n\n\
+  Bir kayıt defteri anahtarını (tüm alt anahtarlar ve değerler dahil) siler veya\n\
+  belirli bir kayıt defteri anahtarından bir veya daha fazla değeri siler.\n\n\
+  <anahtar>\n\
+     Silinecek kayıt defteri anahtarı veya [/v], [/ve] veya [/va]'dan biri\n\
+     belirtilmişse, bir veya daha fazla değerin silineceği kayıt defteri anahtarı.\n\n\
+     Biçim: KÖK\\AltAnahtar \n\n\
+     KÖK: Önceden tanımlanmış bir kayıt defteri anahtarı. Bu, aşağıdakilerden biri olmalıdır:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to delete.\n\n\
+     AltAnahtar: Belirli bir KÖK anahtarı altındaki bir kayıt defteri anahtarının tam yolu.\n\n\
+  /v <deger_adi>\n\
+     Silinecek kayıt defteri değerinin adı.\n\n\
   /ve\n\
-     Delete an unnamed registry value. This option deletes the (Default)\n\
-     registry value.\n\n\
+     Adsız bir kayıt defteri değerini silin. Bu seçenek (Varsayılan) kayıt defteri\n\
+     değerini siler.\n\n\
   /va\n\
-     Delete all values from a registry key.\n\n\
+     Bir kayıt defteri anahtarından tüm değerleri silin.\n\n\
   /f\n\
-     Delete a registry key (including all subkeys and values) without\n\
-     prompting for confirmation.\n\n"
-
-    STRING_QUERY_USAGE, "REG QUERY <key> [/v value_name | /ve] [/s]\n\n\
-  Queries a specified registry key and lists all immediate subkeys, values\n\
-  and data within that key. Use [/s] to recursively query each subkey.\n\n\
-  <key>\n\
-     The registry key to query.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+     Onay istemeden bir kayıt defteri anahtarını (tüm alt anahtarlar\n\
+     ve değerler dahil) silin.\n\n"
+    STRING_QUERY_USAGE, "REG QUERY <anahtar> [/v deger_adi | /ve] [/s]\n\n\
+  Belirli bir kayıt defteri anahtarını sorgular ve bu anahtar içindeki tüm\n\
+  anlık alt anahtarları, değerleri ve verileri listeler. Her bir alt anahtarı\n\
+  yinelemeli olarak sorgulamak için [/s] kullanın.\n\n\
+  <anahtar>\n\
+     Sorgulanacak kayıt defteri anahtarı.\n\n\
+     Biçim: KÖK\\AltAnahtar\n\n\
+     KÖK: Önceden tanımlanmış bir kayıt defteri anahtarı. Bu, aşağıdakilerden biri olmalıdır:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  /v <value_name>\n\
-     The name of the registry value to query. If neither [/v] nor [/ve] is\n\
-     specified, all values under <key> are listed.\n\n\
+     AltAnahtar: Belirli bir KÖK anahtarı altındaki bir kayıt defteri anahtarının tam yolu.\n\n\
+  /v <deger_adi>\n\
+     Sorgulanacak kayıt defteri değerinin adı. Ne [/v] ne de [/ve] belirtilmezse, <key> altındaki\n\
+     tüm değerler listelenir.\n\n\
  /ve\n\
-     Query an unnamed registry value. This option queries the (Default)\n\
-     registry value.\n\n\
+     Adsız bir kayıt defteri değerini sorgulayın. Bu seçenek, (Varsayılan) kayıt defteri\n\
+     değerini sorgular.\n\n\
   /s\n\
-     List all registry entries under <key> and its subkeys.\n\n"
+     <anahtar> ve alt anahtarları altındaki tüm kayıt defteri girdilerini listeleyin.\n\n"
 
     STRING_SUCCESS, "İşlem başarıyla bitirildi\n"
     STRING_INVALID_KEY, "reg: Geçersiz anahtar adı\n"
@@ -96,16 +102,16 @@ For help on a specific operation, type:\n\
     STRING_NO_REMOTE, "reg: Uzak makineye erişilemiyor\n"
     STRING_VALUE_NONEXIST, "reg: Sistem belirtilen kayıt defteri anahtarını ya da değerini bulamadı\n"
     STRING_UNSUPPORTED_TYPE, "reg: Desteklenmeyen tür\n"
-    STRING_MISSING_NUMBER, "reg: The option [/d] must be followed by a valid numeric value\n"
+    STRING_MISSING_NUMBER, "reg: [/d] seçeneğinin ardından geçerli bir sayısal değer gelmelidir\n"
     STRING_MISSING_HEXDATA, "reg: [/d] seçeneği geçerli bir onaltılık değerle izlenmelidir\n"
     STRING_UNHANDLED_TYPE, "reg: İşlenemeyen kayıt defteri veri türü [/t 0x%1!x!, /d %2]\n"
     STRING_OVERWRITE_VALUE, """%1"" kayıt defteri değeri önceden var. Üzerine yazmak ister misiniz?"
 
-    STRING_YES, "Y"
-    STRING_NO, "N"
-    STRING_ALL, "A"
+    STRING_YES, "E"
+    STRING_NO, "H"
+    STRING_ALL, "T"
     STRING_YESNO, " (Evet|Hayır)"
-    STRING_YESNOALL, " (Yes|No|All)"
+    STRING_YESNOALL, " (Evet|Hayır|Tümü)"
     STRING_CANCELLED, "Kayıt defteri işlemi iptal edildi\n"
     STRING_DEFAULT_VALUE, "(Varsayılan)"
     STRING_DELETE_VALUE, """%1"" kayıt defteri değerini silmek istediğinize emin misiniz?"
@@ -120,65 +126,66 @@ For help on a specific operation, type:\n\
     STRING_FUNC_HELP, "Yardım için ""REG %1 /?"" yazınız.\n"
     STRING_VALUE_NOT_SET, "(Değer belirlenmemiş.)"
 
-    STRING_IMPORT_USAGE, "REG IMPORT <file>\n\n\
-  Imports keys, values and data from a given file into the registry.\n\n\
-  <file>\n\
-     The name and path of the registry file to import.\n\n"
+    STRING_IMPORT_USAGE, "REG IMPORT <dosya>\n\n\
+  Belirli bir dosyadaki anahtarları, değerleri ve verileri kayıt defterine aktarır.\n\n\
+  <dosya>\n\
+     İçe aktarılacak kayıt defteri dosyasının adı ve yolu.\n\n"
 
     STRING_FILE_NOT_FOUND, "reg: '%1' dosyası bulunamadı.\n"
     STRING_ESCAPE_SEQUENCE, "reg: Tanımlanamayan kaçış dizisi [\\%1!c!]\n"
 
-    STRING_EXPORT_USAGE, "REG EXPORT <key> <file> [/y]\n\n\
-  Exports a specified registry key (including all subkeys and values)\n\
-  to a file.\n\n\
-  <key>\n\
-     The registry key to export.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_EXPORT_USAGE, "REG EXPORT <anahtar> <dosya> [/y]\n\n\
+  Belirtilen bir kayıt defteri anahtarını (tüm alt anahtarlar ve değerler dahil)\n\
+  bir dosyaya verir.\n\n\
+  <anahtar>\n\
+     Dışa aktarılacak kayıt defteri anahtarı.\n\n\
+     Biçim: KÖK\\AltAnahtar\n\n\
+     KÖK: Önceden tanımlanmış bir kayıt defteri anahtarı. Bu, aşağıdakilerden biri olmalıdır:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
-  <file>\n\
-     The name and path of the registry file that will be created.\n\
-     This file must have a .reg extension.\n\n\
+     AltAnahtar: Belirli bir KÖK anahtarı altındaki bir kayıt defteri anahtarının tam yolu.\n\n\
+  <dosya>\n\
+     Oluşturulacak kayıt defteri dosyasının adı ve yolu.\n\
+     Bu dosya .reg uzantısına sahip olmalıdır.\n\n\
   /y\n\
-     Overwrite <file> without prompting for confirmation.\n\n"
+     Onay istemeden <dosya> dosyasının üzerine yaz.\n\n"
 
     STRING_INVALID_SYSTEM_KEY, "reg: Geçersiz sistem tuşu [%1]\n"
     STRING_OVERWRITE_FILE, "'%1' dosyası çoktan var. Üzerine yazmak ister misiniz?"
-    STRING_KEY_NONEXIST, "reg: Unable to find the specified registry key\n"
-    STRING_KEY_IMPORT_FAILED, "reg: Unable to import the registry key '%1'\n"
+    STRING_KEY_NONEXIST, "reg: Belirtilen kayıt defteri anahtarı bulunamadı\n"
+    STRING_KEY_IMPORT_FAILED, "reg: '%1' kayıt defteri anahtarı içe aktarılamıyor\n"
 
     STRING_REG_VIEW_USAGE, "  /reg:32\n\
-     Access the registry using the 32-bit view.\n\n\
+     32 bit görünümü kullanarak kayıt defterine erişin.\n\n\
   /reg:64\n\
-     Access the registry using the 64-bit view.\n\n"
-    STRING_ACCESS_DENIED, "reg: Unable to access or create the specified registry key\n"
+     64 bit görünümü kullanarak kayıt defterine erişin.\n\n"
+    STRING_ACCESS_DENIED, "reg: Belirtilen kayıt defteri anahtarına erişilemiyor veya oluşturulamıyor\n"
 
-    STRING_COPY_USAGE, "REG COPY <key1> <key2> [/s] [/f]\n\n\
-  Copies the contents of a specified registry key to another location.\n\
-  By default, this operation only copies registry values. Use [/s] to\n\
-  recursively copy all subkeys and values.\n\n\
-  <key1>, <key2>\n\
-     Registry keys specifying the source (<key1>) and destination (<key2>)\n\
-     of the data. If <key2> does not exist, it is created.\n\n\
-     Format: ROOT\\Subkey\n\n\
-     ROOT: A predefined registry key. This must be one of the following:\n\n\
+    STRING_COPY_USAGE, "REG COPY <anahtar1> <anahtar2> [/s] [/f]\n\n\
+  Belirli bir kayıt defteri anahtarının içeriğini başka bir konuma\n\
+  kopyalar. Varsayılan olarak, bu işlem yalnızca kayıt defteri\n\
+  değerlerini kopyalar. Tüm alt anahtarları ve değerleri yinelemeli\n\
+  olarak kopyalamak için [/s] öğesini kullanın.\n\n\
+  <anahtar1>, <anahtar2>\n\
+     Verilerin kaynağını (<anahtar1>) ve hedefini (<anahtar2>) belirten\n\
+     kayıt defteri anahtarları. <anahtar2> yoksa, oluşturulur.\n\n\
+     Biçim: KÖK\\AltAnahtar\n\n\
+     KÖK: Önceden tanımlanmış bir kayıt defteri anahtarı. Bu, aşağıdakilerden biri olmalıdır:\n\n\
          HKEY_LOCAL_MACHINE  | HKLM\n\
          HKEY_CURRENT_USER   | HKCU\n\
          HKEY_CLASSES_ROOT   | HKCR\n\
          HKEY_USERS          | HKU\n\
          HKEY_CURRENT_CONFIG | HKCC\n\n\
-     Subkey: The full path to a registry key under a given ROOT key.\n\n\
+     AltAnahtar: Belirli bir KÖK anahtarı altındaki bir kayıt defteri anahtarının tam yolu.\n\n\
   /s\n\
-     Copy all subkeys and values from <key1> to <key2>.\n\n\
+     <anahtar1>'den <anahtar2>'ye tüm alt anahtarları ve değerleri kopyalayın.\n\n\
   /f\n\
-     Overwrite all registry data in <key2> without prompting for confirmation.\n\
-     This option does not modify subkeys and values that only exist in <key2>.\n\n"
+     Onay istemeden <anahtar2> içindeki tüm kayıt defteri verilerinin üzerine yazın.\n\
+     Bu seçenek, yalnızca <anahtar2> içinde bulunan alt anahtarları ve değerleri değiştirmez.\n\n"
 
-    STRING_COPY_SRC_DEST_SAME, "reg: The source and destination keys cannot be the same\n"
-    STRING_COPY_CONFIRM, "The value '%1\\%2' already exists in the destination key. Do you want to overwrite it?"
+    STRING_COPY_SRC_DEST_SAME, "reg: Kaynak ve hedef anahtarlar aynı olamaz\n"
+    STRING_COPY_CONFIRM, "Hedef anahtarında '%1\\%2' değeri zaten var. Üzerine yazmak istiyor musunuz?"
 }

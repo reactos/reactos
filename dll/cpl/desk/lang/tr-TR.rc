@@ -156,23 +156,23 @@ END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
+    GROUPBOX "Masaüstü simgeleri", IDC_STATIC, 6, 4, 212, 40
+    CONTROL "&Belgelerim", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
+    CONTROL "&Ağ Konumlarım", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
+    CONTROL "&Bu bilgisayar", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
+    CONTROL "&İnternet tarayıcısı", IDC_ICONS_INTERNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
-    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+    PUSHBUTTON "S&imgeyi Değiştir...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
+    PUSHBUTTON "Va&rsayılana döndür", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
