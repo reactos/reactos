@@ -3162,7 +3162,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
              pwndNode && pwndNode != pwndDesktop;
              pwndNode = pwndNode->spwndParent)
         {
-            /* Find whether the pwndNode is changed its position */
+            /* Check whether pwndNode is changed its position */
             HWND hwndNode = UserHMGetHandle(pwndNode);
             PCVR winpos = psmwp->acvr;
             INT icvr, ccvr = psmwp->ccvr;
