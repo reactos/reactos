@@ -3109,7 +3109,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
     PWND pwnd, pwndDesktop;
     PWINDOWLIST pWL;
-    HWND hwnd, *phwnd, hwndFocus;
+    HWND hwnd, *phwnd, hwndImeFocus;
     PIMEWND pImeWnd;
     PIMEUI pimeui;
 
@@ -3145,19 +3145,19 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
             pimeui = pImeWnd->pimeui;
 
             ProbeForRead(pimeui, sizeof(IMEUI), 1);
-            hwndFocus = pimeui->hwndIMC;
+            hwndImeFocus = pimeui->hwndIMC;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            hwndFocus = NULL;
+            hwndImeFocus = NULL;
         }
         _SEH2_END;
 
-        if (!hwndFocus)
+        if (!hwndImeFocus)
             continue;
 
-        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the focus window */
-        pwnd = ValidateHwndNoErr(hwndFocus);
+        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME focus window */
+        pwnd = ValidateHwndNoErr(hwndImeFocus);
         if (pwnd)
         {
             UserReferenceObject(pwnd);
