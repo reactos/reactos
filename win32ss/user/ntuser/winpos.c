@@ -3175,7 +3175,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 
                 /* Now found position change of hwndImeFocus or its ancestor.
                    Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
-                co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+                co_IntSendMessage(hwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
                 break;
             }
             if (icvr < ccvr)
