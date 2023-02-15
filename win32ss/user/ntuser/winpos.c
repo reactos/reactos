@@ -3107,7 +3107,7 @@ END:
 
 static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
-    PWND pwnd, pwndDesktop;
+    PWND pwnd, pwndDesktop, pwndImeFocus;
     PWINDOWLIST pWL;
     HWND hwnd, *phwnd, hwndImeFocus;
     PIMEWND pImeWnd;
@@ -3157,12 +3157,12 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         _SEH2_END;
 
         /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME focus window */
-        pwnd = ValidateHwndNoErr(hwndImeFocus);
-        if (pwnd)
+        pwndImeFocus = ValidateHwndNoErr(hwndImeFocus);
+        if (pwndImeFocus)
         {
-            UserReferenceObject(pwnd);
+            UserReferenceObject(pwndImeFocus);
             co_IntSendMessage(hwndImeFocus, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-            UserDereferenceObject(pwnd);
+            UserDereferenceObject(pwndImeFocus);
         }
     }
 
