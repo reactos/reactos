@@ -939,7 +939,7 @@ VOID DoShowHideStatusBar(VOID)
         return;
 
     /* Update visibility of status bar */
-    ShowWindowAsync(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
+    ShowWindow(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
 
     /* Update status bar contents */
     DIALOG_StatusBarUpdateCaretPos();
