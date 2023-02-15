@@ -3157,7 +3157,6 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         _SEH2_END;
 
         /* Scan hwndImeFocus and its ancestors */
-        UserReferenceObject(pwnd);
         for (pwndNode = ValidateHwndNoErr(hwndImeFocus);
              pwndNode && pwndNode != pwndDesktop;
              pwndNode = pwndNode->spwndParent)
@@ -3181,7 +3180,6 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
             if (icvr < ccvr)
                 break; /* Found a position change and the task is done, so get out of here */
         }
-        UserDereferenceObject(pwnd);
     }
 
     IntFreeHwndList(pWL);
