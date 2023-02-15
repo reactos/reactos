@@ -3160,6 +3160,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         pwndImeFocus = ValidateHwndNoErr(hwndImeFocus);
         if (pwndImeFocus)
         {
+            /* FIXME: Use psmwp to check if the position is changed */
             UserReferenceObject(pwndImeFocus);
             co_IntSendMessage(hwndImeFocus, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
             UserDereferenceObject(pwndImeFocus);
