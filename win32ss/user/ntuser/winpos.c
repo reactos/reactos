@@ -3164,13 +3164,13 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         {
             /* Find whether the pwndNode is changed its position */
             HWND hwndNode = UserHMGetHandle(pwndNode);
-            PCVR pcvr = psmwp->acvr;
+            PCVR winpos = psmwp->acvr;
             INT icvr, ccvr = psmwp->ccvr;
-            for (icvr = 0; icvr < ccvr; ++icvr, ++pcvr)
+            for (icvr = 0; icvr < ccvr; ++icvr, ++winpos)
             {
-                if (hwndNode != pcvr->pos.hwnd)
+                if (hwndNode != winpos->pos.hwnd)
                     continue; /* Not matched */
-                if ((pcvr->pos.flags & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
+                if ((winpos->pos.flags & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
                     continue; /* No change */
 
                 /* Now found a position change of hwndImeFocus or its ancestor.
@@ -3179,7 +3179,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
                 break;
             }
             if (icvr < ccvr)
-                break; /* Found a position change, so get out of here */
+                break; /* Found a position change and the task is done, so get out of here */
         }
         UserDereferenceObject(pwnd);
     }
