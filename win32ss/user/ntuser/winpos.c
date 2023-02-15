@@ -3105,7 +3105,6 @@ END:
     return retvalue;
 }
 
-/* Win: xxxImeWindowPosChanged */
 static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
     PWND pwnd, pwndDesktop, pwndNode;
