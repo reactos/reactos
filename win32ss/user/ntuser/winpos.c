@@ -3173,13 +3173,13 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
                 if ((pcvr->pos.flags & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
                     continue; /* No change */
 
-                /* Now found position change of hwndImeFocus or its ancestor.
+                /* Now found a position change of hwndImeFocus or its ancestor.
                    Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
                 co_IntSendMessage(hwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
                 break;
             }
             if (icvr < ccvr)
-                break; /* Found position change, so get out of here */
+                break; /* Found a position change, so get out of here */
         }
         UserDereferenceObject(pwnd);
     }
