@@ -3135,7 +3135,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         {
             continue;
         }
-        /* Now pwnd is an IME window or an IME UI window of the current thread */
+        /* Now pwnd is an IME window of the current thread */
 
         /* Get hImeWnd from pwnd */
         _SEH2_TRY
@@ -3155,7 +3155,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         if (!hImeWnd)
             continue;
 
-        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window / the IME UI window  */
+        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
         UserReferenceObject(pwnd);
         for (pwndNode = ValidateHwndNoErr(hImeWnd);
              pwndNode && pwndNode != pwndDesktop;
