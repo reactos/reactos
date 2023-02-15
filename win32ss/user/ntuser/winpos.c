@@ -3107,7 +3107,7 @@ END:
 
 static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
-    PWND pwnd, pwndDesktop, pwndImeFocus;
+    PWND pwnd, pwndDesktop, pwndNode;
     PWINDOWLIST pWL;
     HWND hwnd, *phwnd, hwndImeFocus;
     PIMEWND pImeWnd;
@@ -3156,15 +3156,32 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         }
         _SEH2_END;
 
-        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME focus window */
-        pwndImeFocus = ValidateHwndNoErr(hwndImeFocus);
-        if (pwndImeFocus)
+        /* Scan hwndImeFocus and its ancestors */
+        UserReferenceObject(pwnd);
+        for (pwndNode = ValidateHwndNoErr(hwndImeFocus);
+             pwndNode && pwndNode != pwndDesktop;
+             pwndNode = pwndNode->spwndParent)
         {
-            /* FIXME: Use psmwp to check if the position is changed */
-            UserReferenceObject(pwndImeFocus);
-            co_IntSendMessage(hwndImeFocus, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-            UserDereferenceObject(pwndImeFocus);
+            /* Find whether the pwndNode is changed its position */
+            HWND hwndNode = UserHMGetHandle(pwndNode);
+            PCVR pcvr = psmwp->acvr;
+            INT icvr, ccvr = psmwp->ccvr;
+            for (icvr = 0; icvr < ccvr; ++icvr, ++pcvr)
+            {
+                if (hwndNode != pcvr->pos.hwnd)
+                    continue; /* Not matched */
+                if ((pcvr->pos.flags & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
+                    continue; /* No change */
+
+                /* Now found position change of hwndImeFocus or its ancestor.
+                   Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
+                co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+                break;
+            }
+            if (icvr < ccvr)
+                break; /* Found position change, so get out of here */
         }
+        UserDereferenceObject(pwnd);
     }
 
     IntFreeHwndList(pWL);
