@@ -3107,9 +3107,9 @@ END:
 
 static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
-    PWND pwnd, pwndDesktop, pwndNode;
+    PWND pwnd, pwndDesktop;
     PWINDOWLIST pWL;
-    HWND hwnd, hImeWnd, *phwnd;
+    HWND hwnd, *phwnd, hwndFocus;
     PIMEWND pImeWnd;
     PIMEUI pimeui;
 
@@ -3137,43 +3137,33 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         }
         /* Now pwnd is an IME window of the current thread */
 
-        /* Get hImeWnd from pwnd */
+        /* Get hwndIMC from pwnd */
         _SEH2_TRY
         {
             ProbeForRead(pwnd, sizeof(IMEWND), 1);
             pImeWnd = (PIMEWND)pwnd;
             pimeui = pImeWnd->pimeui;
+
             ProbeForRead(pimeui, sizeof(IMEUI), 1);
-            hImeWnd = pimeui->hwndIMC;
+            hwndFocus = pimeui->hwndIMC;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            hImeWnd = NULL;
+            hwndFocus = NULL;
         }
         _SEH2_END;
 
-        if (!hImeWnd)
+        if (!hwndFocus)
             continue;
 
-        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
-        UserReferenceObject(pwnd);
-        for (pwndNode = ValidateHwndNoErr(hImeWnd);
-             pwndNode && pwndNode != pwndDesktop;
-             pwndNode = pwndNode->spwndParent)
+        /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the focus window */
+        pwnd = ValidateHwndNoErr(hwndFocus);
+        if (pwnd)
         {
-            INT icvr, ccvr = psmwp->ccvr;
-            PCVR pcvr = psmwp->acvr;
-            for (icvr = 0; icvr < ccvr; ++icvr, ++pcvr)
-            {
-                if (UserHMGetHandle(pwndNode) != pcvr->pos.hwnd)
-                    continue;
-
-                if ((pcvr->pos.flags & (SWP_NOMOVE | SWP_NOSIZE)) != (SWP_NOMOVE | SWP_NOSIZE))
-                    co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-                break;
-            }
+            UserReferenceObject(pwnd);
+            co_IntSendMessage(UserHMGetHandle(pwnd), WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+            UserDereferenceObject(pwnd);
         }
-        UserDereferenceObject(pwnd);
     }
 
     IntFreeHwndList(pWL);
