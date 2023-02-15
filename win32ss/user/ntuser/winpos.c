@@ -3137,7 +3137,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         }
         /* Now pwnd is an IME window of the current thread */
 
-        /* Get hwndIMC from pwnd */
+        /* Get the IME focus window from pwnd */
         _SEH2_TRY
         {
             ProbeForRead(pwnd, sizeof(IMEWND), 1);
