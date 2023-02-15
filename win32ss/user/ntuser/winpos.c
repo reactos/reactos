@@ -3108,7 +3108,6 @@ END:
 static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
 {
     PWND pwnd, pwndDesktop, pwndNode;
-    PTHREADINFO pti;
     PWINDOWLIST pWL;
     HWND hwnd, hImeWnd, *phwnd;
     PIMEWND pImeWnd;
@@ -3118,8 +3117,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
     if (!pwndDesktop)
         return;
 
-    pti = gptiCurrent;
-    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, pti);
+    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, gptiCurrent);
     if (!pWL)
         return;
 
@@ -3127,12 +3125,12 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
     phwnd = pWL->ahwnd;
     for (hwnd = *phwnd; hwnd != HWND_TERMINATOR; hwnd = *phwnd++)
     {
-        if (pti->TIF_flags & TIF_INCLEANUP)
+        if (gptiCurrent->TIF_flags & TIF_INCLEANUP)
             break;
 
         pwnd = ValidateHwndNoErr(hwnd);
         if (!pwnd ||
-            pwnd->head.pti != pti ||
+            pwnd->head.pti != gptiCurrent ||
             pwnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
         {
             continue;
