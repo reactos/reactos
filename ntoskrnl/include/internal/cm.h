@@ -96,6 +96,12 @@
 #define CMP_ENLIST_KCB_LOCKED_EXCLUSIVE                 0x2
 
 //
+// CmpBuildAndLockKcbArray & CmpLockKcbArray Flags
+//
+#define CMP_LOCK_KCB_ARRAY_EXCLUSIVE                    0x1
+#define CMP_LOCK_KCB_ARRAY_SHARED                       0x2
+
+//
 // Unload Flags
 //
 #define CMP_UNLOCK_KCB_LOCKED                    0x1
@@ -118,6 +124,12 @@
     ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_KEY_CONTROL_BLOCK))
 #define CM_DELAYS_PER_PAGE                              \
     ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_DELAY_ALLOC))
+
+//
+// Cache Lookup & KCB Array constructs
+//
+#define CMP_SUBKEY_LEVELS_DEPTH_LIMIT   32
+#define CMP_KCBS_IN_ARRAY_LIMIT         (CMP_SUBKEY_LEVELS_DEPTH_LIMIT + 2)
 
 //
 // Value Search Results
@@ -401,6 +413,15 @@ typedef struct _HIVE_LIST_ENTRY
     BOOLEAN ThreadStarted;
     BOOLEAN Allocate;
 } HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
+
+//
+// Hash Cache Stack
+//
+typedef struct _CM_HASH_CACHE_STACK
+{
+    UNICODE_STRING NameOfKey;
+    ULONG ConvKey;
+} CM_HASH_CACHE_STACK, *PCM_HASH_CACHE_STACK;
 
 //
 // Parse context for Key Object
@@ -995,6 +1016,23 @@ DelistKeyBodyFromKCB(
 
 VOID
 NTAPI
+CmpUnLockKcbArray(
+    _In_ PULONG LockedKcbs
+);
+
+PULONG
+NTAPI
+CmpBuildAndLockKcbArray(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ ULONG KcbLockFlags,
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _Inout_ PULONG OuterStackArray,
+    _In_ ULONG TotalRemainingSubkeys,
+    _In_ ULONG MatchRemainSubkeyLevel
+);
+
+VOID
+NTAPI
 CmpAcquireTwoKcbLocksExclusiveByKey(
     IN ULONG ConvKey1,
     IN ULONG ConvKey2
@@ -1084,6 +1122,7 @@ CmpCreateLinkNode(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN PACCESS_STATE AccessState,
+    IN PULONG KcbsLocked,
     IN UNICODE_STRING Name,
     IN KPROCESSOR_MODE AccessMode,
     IN ULONG CreateOptions,
