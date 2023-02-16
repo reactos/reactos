@@ -1133,12 +1133,12 @@ CmpCreateLinkNode(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN PACCESS_STATE AccessState,
-    IN PULONG KcbsLocked,
     IN UNICODE_STRING Name,
     IN KPROCESSOR_MODE AccessMode,
     IN ULONG CreateOptions,
     IN PCM_PARSE_CONTEXT Context,
     IN PCM_KEY_CONTROL_BLOCK ParentKcb,
+    IN PULONG KcbsLocked,
     OUT PVOID *Object
 );
 
