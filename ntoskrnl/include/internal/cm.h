@@ -1015,7 +1015,6 @@ DelistKeyBodyFromKCB(
 );
 
 VOID
-NTAPI
 CmpUnLockKcbArray(
     _In_ PULONG LockedKcbs
 );

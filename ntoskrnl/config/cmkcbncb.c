@@ -1135,6 +1135,154 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
 }
 
 VOID
+CmpUnLockKcbArray(
+    _In_ PULONG KcbArray)
+{
+    ULONG i;
+
+    /* Release the locked KCBs in reverse order */
+    for (i = KcbArray[0]; i > 0; i--)
+    {
+        CmpReleaseKcbLockByIndex(KcbArray[i]);
+    }
+}
+
+static
+VOID
+CmpLockKcbArray(
+    _In_ PULONG KcbArray,
+    _In_ ULONG KcbLockFlags)
+{
+    ULONG i;
+
+    /* Lock the KCBs */
+    for (i = 1; i <= KcbArray[0]; i++)
+    {
+        if (KcbLockFlags & CMP_LOCK_KCB_ARRAY_EXCLUSIVE)
+        {
+            CmpAcquireKcbLockExclusiveByIndex(KcbArray[i]);
+        }
+        else // CMP_LOCK_KCB_ARRAY_SHARED
+        {
+            CmpAcquireKcbLockSharedByIndex(KcbArray[i]);
+        }
+    }
+}
+
+static
+VOID
+CmpSortKcbArray(
+    _Inout_ PULONG KcbArray)
+{
+    ULONG i, j, k, KcbCount;
+
+    /* Ensure we don't go above the limit of KCBs we can hold */
+    KcbCount = KcbArray[0];
+    ASSERT(KcbCount < CMP_KCBS_IN_ARRAY_LIMIT);
+
+    /* Exchange-Sort the array in ascending order. Complexity: O[n^2] */
+    for (i = 1; i <= KcbCount; i++)
+    {
+        for (j = i + 1; j <= KcbCount; j++)
+        {
+            if (KcbArray[i] > KcbArray[j])
+            {
+                ULONG Temp = KcbArray[i];
+                KcbArray[i] = KcbArray[j];
+                KcbArray[j] = Temp;
+            }
+        }
+    }
+
+    /* Now remove any duplicated indices on the sorted array if any */
+    for (i = 1; i <= KcbCount; i++)
+    {
+        for (j = i + 1; j <= KcbCount; j++)
+        {
+            if (KcbArray[i] == KcbArray[j])
+            {
+                for (k = j; k <= KcbCount; k++)
+                {
+                    KcbArray[k - 1] = KcbArray[k];
+                }
+
+                j--;
+                KcbCount--;
+            }
+        }
+    }
+
+    /* Update the KCB count */
+    KcbArray[0] = KcbCount;
+}
+
+PULONG
+NTAPI
+CmpBuildAndLockKcbArray(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ ULONG KcbLockFlags,
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _Inout_ PULONG OuterStackArray,
+    _In_ ULONG TotalRemainingSubkeys,
+    _In_ ULONG MatchRemainSubkeyLevel)
+{
+    ULONG KcbIndex = 1, HashStackIndex, TotalRemaining;
+    PULONG LockedKcbs = NULL;
+    PCM_KEY_CONTROL_BLOCK ParentKcb = Kcb->ParentKcb;;
+
+    /* These parameters are expected */
+    ASSERT(HashCacheStack != NULL);
+    ASSERT(Kcb != NULL);
+    ASSERT(OuterStackArray != NULL);
+
+    /*
+     * Ensure when we build an array of KCBs to lock, that
+     * we don't go beyond the boundary the limit allows us
+     * to. 1 is the current KCB we would want to lock
+     * alongside with the remaining key levels in the formula.
+     */
+    TotalRemaining = (1 + TotalRemainingSubkeys) - MatchRemainSubkeyLevel;
+    ASSERT(TotalRemaining <= CMP_KCBS_IN_ARRAY_LIMIT);
+
+    /* Count the parent if we have one */
+    if (ParentKcb)
+    {
+        /* Ensure we are still below the limit and add the parent to KCBs to lock */
+        if (TotalRemainingSubkeys == MatchRemainSubkeyLevel)
+        {
+            TotalRemaining++;
+            ASSERT(TotalRemaining <= CMP_KCBS_IN_ARRAY_LIMIT);
+            OuterStackArray[KcbIndex++] = GET_HASH_INDEX(ParentKcb->ConvKey);
+        }
+    }
+
+    /* Add the current KCB */
+    OuterStackArray[KcbIndex++] = GET_HASH_INDEX(Kcb->ConvKey);
+
+    /* Loop over the hash stack and grab the hashes for locking (they will be converted to indices) */
+    for (HashStackIndex = 0;
+         HashStackIndex < TotalRemainingSubkeys;
+         HashStackIndex++)
+    {
+        OuterStackArray[KcbIndex++] = GET_HASH_INDEX(HashCacheStack[HashStackIndex].ConvKey);
+    }
+
+    /*
+     * Store how many KCBs we need to lock and sort the array.
+     * Remove any duplicated indices from the array if any.
+     */
+    OuterStackArray[0] = KcbIndex - 1;
+    CmpSortKcbArray(OuterStackArray);
+
+    /* Lock them */
+    CmpLockKcbArray(OuterStackArray, KcbLockFlags);
+
+    /* Give the locked KCBs to caller now */
+    LockedKcbs = OuterStackArray;
+    return LockedKcbs;
+}
+
+VOID
 NTAPI
 CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
                               IN BOOLEAN LockHeld)
