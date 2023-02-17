@@ -180,18 +180,20 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryByte(hKey, _T("lfStrikeOut"), &Globals.lfFont.lfStrikeOut);
         QueryByte(hKey, _T("lfUnderline"), &Globals.lfFont.lfUnderline);
         QueryDword(hKey, _T("lfWeight"), (DWORD*)&Globals.lfFont.lfWeight);
+        dwPointSize = 100;
+        QueryDword(hKey, _T("iPointSize"), &dwPointSize);
+        Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
+
         QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
         QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
+
         QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader));
         QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter));
+
         QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMargins.left);
         QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMargins.top);
         QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
         QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
-
-        dwPointSize = 100;
-        QueryDword(hKey, _T("iPointSize"), &dwPointSize);
-        Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
 
         QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
         QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
