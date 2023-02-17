@@ -112,10 +112,10 @@ static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD
 
 void NOTEPAD_ResetSettings(void)
 {
-    INT base_length = (GetSystemMetrics(SM_CXSCREEN) > GetSystemMetrics(SM_CYSCREEN)) ?
-                       GetSystemMetrics(SM_CYSCREEN) : GetSystemMetrics(SM_CXSCREEN);
-    INT dx = (INT)(base_length * .95), dy = dx * 3 / 4;
-    SetRect(&Globals.main_rect, 0, 0, dx, dy);
+    Globals.main_rect.left = CW_USEDEFAULT;
+    Globals.main_rect.top = CW_USEDEFAULT;
+    Globals.main_rect.right = Globals.main_rect.left + CW_USEDEFAULT;
+    Globals.main_rect.bottom = Globals.main_rect.top + CW_USEDEFAULT;
 
     Globals.bShowStatusBar = TRUE;
     Globals.bWrapLongLines = FALSE;
