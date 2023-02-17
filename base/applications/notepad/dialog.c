@@ -1162,27 +1162,13 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID DIALOG_GoTo(VOID)
 {
     GOTO_DATA GotoData;
-    DWORD dwStart, dwEnd;
-    INT ich, iLine, nLength = GetWindowTextLength(Globals.hEdit);
-
-    /* Get text and lock it */
-    HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
-    if (!pszText)
-        return;
+    DWORD dwStart = 0, dwEnd = 0;
+    INT ich, cch = GetWindowTextLength(Globals.hEdit);
 
     /* Get the total line number and the current line number */
-    GotoData.iLine = GotoData.cLines = 1;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
-    for (ich = 0; ich < nLength; ++ich)
-    {
-        if (pszText[ich] == '\n')
-        {
-            if (ich < (INT)dwStart)
-                ++GotoData.iLine;
-            ++GotoData.cLines;
-        }
-    }
+    GotoData.iLine = (INT)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, dwStart, 0) + 1;
+    GotoData.cLines = (INT)SendMessage(Globals.hEdit, EM_GETLINECOUNT, 0, 0);
 
     /* Ask the user for line number */
     if (DialogBoxParam(Globals.hInstance,
@@ -1194,18 +1180,17 @@ VOID DIALOG_GoTo(VOID)
         --GotoData.iLine; /* Make it zero-based */
 
         /* Get ich (the target character index) from line number */
-        for (ich = iLine = 0; ich < nLength && iLine < GotoData.iLine; ++ich)
-        {
-            if (pszText[ich] == '\n')
-                ++iLine;
-        }
+        if (GotoData.iLine <= 0)
+            ich = 0;
+        else if (GotoData.iLine >= GotoData.cLines)
+            ich = cch;
+        else
+            ich = (INT)SendMessage(Globals.hEdit, EM_LINEINDEX, GotoData.iLine, 0);
 
         /* Move the caret */
         SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
-
-    LocalUnlock(hLocal); /* Unlock the text */
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
