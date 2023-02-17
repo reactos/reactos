@@ -120,13 +120,10 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
 {
     HKEY hKey;
     HFONT hFont;
-    DWORD dwPointSize;
-    INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    DWORD cx, cy;
+    DWORD dwPointSize, cx, cy;
+    DWORD cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
 
-    /*
-     * Set the default values
-     */
+    /* Set the default values */
     Globals.bShowStatusBar = TRUE;
     Globals.bWrapLongLines = FALSE;
     SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
@@ -139,6 +136,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     Globals.main_rect.top = CW_USEDEFAULT;
     cx = min((cxScreen * 3) / 4, 640);
     cy = min((cyScreen * 3) / 4, 480);
+    dwPointSize = 100;
 
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
@@ -147,9 +145,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) != ERROR_SUCCESS)
         hKey = NULL;
 
-    /*
-     * Load the values from registry
-     */
+    /* Load the values from registry */
     if (hKey)
     {
         QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
@@ -163,6 +159,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryByte(hKey, _T("lfStrikeOut"), &Globals.lfFont.lfStrikeOut);
         QueryByte(hKey, _T("lfUnderline"), &Globals.lfFont.lfUnderline);
         QueryDword(hKey, _T("lfWeight"), (DWORD*)&Globals.lfFont.lfWeight);
+        QueryDword(hKey, _T("iPointSize"), &dwPointSize);
 
         QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
         QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
@@ -178,6 +175,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryDword(hKey, _T("iWindowPosDY"), &cy);
     }
 
+    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
     Globals.main_rect.right = Globals.main_rect.left + cx;
     Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
@@ -199,11 +197,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
                    ARRAY_SIZE(Globals.szFooter));
     }
-
-    dwPointSize = 100;
-    if (hKey)
-        QueryDword(hKey, _T("iPointSize"), &dwPointSize);
-    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
 
     if (hKey)
         RegCloseKey(hKey);
