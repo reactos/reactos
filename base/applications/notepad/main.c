@@ -285,13 +285,8 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 
     UNREFERENCED_PARAMETER(index);
 
-    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
-        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
-    if (!Globals.bWrapLongLines)
-    {
-        CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
-            MF_BYCOMMAND | (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
-    }
+    CheckMenuItem(menu, CMD_WRAP, (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(menu, CMD_STATUSBAR, (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
     EnableMenuItem(menu, CMD_UNDO,
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
     EnableMenuItem(menu, CMD_PASTE,
@@ -304,7 +299,6 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 
     EnableMenuItem(menu, CMD_SELECT_ALL,
         GetWindowTextLength(Globals.hEdit) ? MF_ENABLED : MF_GRAYED);
-    DrawMenuBar(Globals.hMainWnd);
 }
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -394,56 +388,24 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_SIZE:
     {
-        if ((Globals.bShowStatusBar != FALSE) && (Globals.bWrapLongLines == FALSE))
+        RECT rc;
+        GetClientRect(hWnd, &rc);
+
+        if (Globals.bShowStatusBar)
         {
-            RECT rcStatusBar;
-            HDWP hdwp;
+            RECT rcStatus;
+            SendMessageW(Globals.hStatusBar, WM_SIZE, 0, 0);
+            GetWindowRect(Globals.hStatusBar, &rcStatus);
+            rc.bottom -= rcStatus.bottom - rcStatus.top;
+        }
 
-            if (!GetWindowRect(Globals.hStatusBar, &rcStatusBar))
-                break;
+        MoveWindow(Globals.hEdit, 0, 0, rc.right, rc.bottom, TRUE);
 
-            hdwp = BeginDeferWindowPos(2);
-            if (hdwp == NULL)
-                break;
-
-            hdwp = DeferWindowPos(hdwp,
-                                  Globals.hEdit,
-                                  NULL,
-                                  0,
-                                  0,
-                                  LOWORD(lParam),
-                                  HIWORD(lParam) - (rcStatusBar.bottom - rcStatusBar.top),
-                                  SWP_NOZORDER | SWP_NOMOVE);
-
-            if (hdwp == NULL)
-                break;
-
-            hdwp = DeferWindowPos(hdwp,
-                                  Globals.hStatusBar,
-                                  NULL,
-                                  0,
-                                  0,
-                                  LOWORD(lParam),
-                                  LOWORD(wParam),
-                                  SWP_NOZORDER);
-
-            if (hdwp == NULL)
-                break;
-                
-            EndDeferWindowPos(hdwp);
-
+        if (Globals.bShowStatusBar)
+        {
             /* Align status bar parts, only if the status bar resize operation succeeds */
             DIALOG_StatusBarAlignParts();
         }
-        else
-            SetWindowPos(Globals.hEdit,
-                         NULL,
-                         0,
-                         0,
-                         LOWORD(lParam),
-                         HIWORD(lParam),
-                         SWP_NOZORDER | SWP_NOMOVE);
-
         break;
     }
 
@@ -467,10 +429,11 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         DoOpenFile(szFileName);
         break;
     }
-    case WM_CHAR:
+
     case WM_INITMENUPOPUP:
         NOTEPAD_InitMenuPopup((HMENU)wParam, lParam);
         break;
+
     default:
         if (msg == aFINDMSGSTRING)
         {
@@ -669,6 +632,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     }
 
     DoCreateEditWindow();
+    DoShowHideStatusBar();
 
     NOTEPAD_InitData();
     DIALOG_FileNew();
@@ -676,8 +640,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     ShowWindow(Globals.hMainWnd, show);
     UpdateWindow(Globals.hMainWnd);
     DragAcceptFiles(Globals.hMainWnd, TRUE);
-
-    DIALOG_ViewStatusBar();
 
     if (!HandleCommandLine(cmdline))
     {
