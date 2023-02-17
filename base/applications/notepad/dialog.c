@@ -1128,30 +1128,32 @@ CALLBACK
 DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static PGOTO_DATA s_pGotoData;
-    INT iLine;
 
-    switch(uMsg) {
-    case WM_INITDIALOG:
-        s_pGotoData = (PGOTO_DATA)lParam;
-        SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pGotoData->iLine, FALSE);
-        return TRUE; /* Set focus */
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pGotoData = (PGOTO_DATA)lParam;
+            SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pGotoData->iLine, FALSE);
+            return TRUE; /* Set focus */
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK)
+        case WM_COMMAND:
         {
-            iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
-            if (iLine < 0 || s_pGotoData->cLines < iLine)
+            if (LOWORD(wParam) == IDOK)
             {
-                // TODO: Should we display error message?
+                INT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                if (iLine < 0 || s_pGotoData->cLines < iLine)
+                {
+                    // TODO: Should we display error message?
+                }
+                s_pGotoData->iLine = iLine;
+                EndDialog(hwndDialog, IDOK);
             }
-            s_pGotoData->iLine = iLine;
-            EndDialog(hwndDialog, IDOK);
+            else if (LOWORD(wParam) == IDCANCEL)
+            {
+                EndDialog(hwndDialog, IDCANCEL);
+            }
+            break;
         }
-        else if (LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hwndDialog, IDCANCEL);
-        }
-        break;
     }
 
     return FALSE;
