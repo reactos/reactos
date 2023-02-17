@@ -122,15 +122,14 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     HFONT hFont;
     DWORD dwPointSize;
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    INT cx = min((cxScreen * 3) / 4, 640), cy = min((cyScreen * 3) / 4, 480);
+    INT cx, cy;
 
-    Globals.main_rect.left = CW_USEDEFAULT;
-    Globals.main_rect.top = CW_USEDEFAULT;
-
+    /*
+     * Set the default values
+     */
     Globals.bShowStatusBar = TRUE;
     Globals.bWrapLongLines = FALSE;
     SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
-
     ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
     Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
     Globals.lfFont.lfHeight = HeightFromPointSize(100);
@@ -140,9 +139,13 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
 
+    /* Open the target registry key */
     if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) != ERROR_SUCCESS)
         hKey = NULL;
 
+    /*
+     * Load the settings from registry
+     */
     QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
     QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
     QueryDword(hKey, _T("lfEscapement"), (DWORD*)&Globals.lfFont.lfEscapement);
@@ -184,6 +187,10 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
     QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
 
+    Globals.main_rect.left = CW_USEDEFAULT;
+    Globals.main_rect.top = CW_USEDEFAULT;
+    cx = min((cxScreen * 3) / 4, 640);
+    cy = min((cyScreen * 3) / 4, 480);
     QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
     QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
     QueryDword(hKey, _T("iWindowPosDX"), (DWORD*)&cx);
