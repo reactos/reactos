@@ -41,11 +41,10 @@ typedef enum
     ENCODING_UTF16LE =  1,
     ENCODING_UTF16BE =  2,
     ENCODING_UTF8    =  3,
-    ENCODING_UTF8BOM =  4
+    ENCODING_UTF8BOM =  4,
+    //ENCODING_DEFAULT = ENCODING_ANSI,
+    ENCODING_DEFAULT = ENCODING_UTF8,
 } ENCODING;
-
-// #define MIN_ENCODING   0
-// #define MAX_ENCODING   3
 
 typedef enum
 {

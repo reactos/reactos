@@ -482,7 +482,7 @@ VOID DIALOG_FileNew(VOID)
     SetWindowText(Globals.hEdit, NULL);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     Globals.iEoln = EOLN_CRLF;
-    Globals.encFile = ENCODING_UTF8;
+    Globals.encFile = ENCODING_DEFAULT;
 
     NOTEPAD_EnableSearchMenu();
     DIALOG_StatusBarUpdateAll();

@@ -42,7 +42,7 @@ static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
     INT flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
 
     if (IsTextNonZeroASCII(pBytes, dwSize))
-        return ENCODING_UTF8;
+        return ENCODING_DEFAULT;
 
     if (IsTextUnicode(pBytes, dwSize, &flags))
         return ENCODING_UTF16LE;
@@ -191,7 +191,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 
         *phLocal = hNewLocal;
         *piEoln = EOLN_CRLF;
-        *pencFile = ENCODING_UTF8;
+        *pencFile = ENCODING_DEFAULT;
         return TRUE;
     }
 
