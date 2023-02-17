@@ -26,13 +26,13 @@
 
 static BOOL IsTextNonZeroASCII(LPCVOID pText, DWORD dwSize)
 {
-    const signed char *pBytes = pText;
+    const signed char *pch = pText;
     while (dwSize-- > 0)
     {
-        if (*pBytes <= 0)
+        if (*pch <= 0)
             return FALSE;
 
-        ++pBytes;
+        ++pch;
     }
     return TRUE;
 }
