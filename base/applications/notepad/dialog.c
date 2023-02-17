@@ -1159,8 +1159,8 @@ VOID DIALOG_GoTo(VOID)
     int nLength, i;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
     size_t cch = LocalSize(hLocal) / sizeof(TCHAR);
+    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
     if (!pszText)
         return;
