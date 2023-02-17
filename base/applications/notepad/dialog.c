@@ -1117,48 +1117,52 @@ VOID DIALOG_Replace(VOID)
     DIALOG_SearchDialog(ReplaceText);
 }
 
+typedef struct tagGOTO_DATA
+{
+    LONG iLine;
+    LONG cLines;
+} GOTO_DATA, *PGOTO_DATA;
+
 static INT_PTR
 CALLBACK
 DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    BOOL bResult = FALSE;
-    HWND hTextBox;
-    TCHAR szText[32];
+    static PGOTO_DATA s_pData;
+    INT iLine;
 
     switch(uMsg) {
     case WM_INITDIALOG:
-        hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-        _sntprintf(szText, ARRAY_SIZE(szText), _T("%Id"), lParam);
-        SetWindowText(hTextBox, szText);
-        break;
+        s_pData = (PGOTO_DATA)lParam;
+        SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pData->iLine, FALSE);
+        return TRUE;
+
     case WM_COMMAND:
         if (HIWORD(wParam) == BN_CLICKED)
         {
             if (LOWORD(wParam) == IDOK)
             {
-                hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-                GetWindowText(hTextBox, szText, ARRAY_SIZE(szText));
-                EndDialog(hwndDialog, _ttoi(szText));
-                bResult = TRUE;
+                iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                // FIXME: Check boundary
+                s_pData->iLine = iLine;
+                EndDialog(hwndDialog, IDOK);
             }
             else if (LOWORD(wParam) == IDCANCEL)
             {
-                EndDialog(hwndDialog, 0);
-                bResult = TRUE;
+                EndDialog(hwndDialog, IDCANCEL);
             }
         }
         break;
     }
 
-    return bResult;
+    return FALSE;
 }
 
 VOID DIALOG_GoTo(VOID)
 {
-    INT_PTR nLine;
+    GOTO_DATA Data;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    INT i, nLength = GetWindowTextLength(Globals.hEdit);
+    INT ich, nLength = GetWindowTextLength(Globals.hEdit);
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
     if (!pszText)
@@ -1166,28 +1170,33 @@ VOID DIALOG_GoTo(VOID)
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
-    nLine = 1;
-    for (i = 0; (i < (int) dwStart) && pszText[i]; i++)
+    Data.iLine = 1;
+    Data.cLines = 1;
+    for (ich = 0; ich < nLength && pszText[ich]; ++ich)
     {
-        if (pszText[i] == '\n')
-            nLine++;
+        if (pszText[ich] == '\n')
+        {
+            if (ich < (INT)dwStart)
+                Data.iLine++;
+            Data.cLines++;
+        }
     }
 
-    nLine = DialogBoxParam(Globals.hInstance,
-                           MAKEINTRESOURCE(DIALOG_GOTO),
-                           Globals.hMainWnd,
-                           DIALOG_GoTo_DialogProc,
-                           nLine);
-    if (nLine >= 1)
+    if (DialogBoxParam(Globals.hInstance,
+                       MAKEINTRESOURCE(DIALOG_GOTO),
+                       Globals.hMainWnd,
+                       DIALOG_GoTo_DialogProc,
+                       (LPARAM)&Data) == IDOK)
     {
-        for (i = 0; pszText[i] && (nLine > 1) && (i < nLength); i++)
+        INT iLine = Data.iLine;
+        for (ich = 0; ich < nLength && pszText[ich] && (iLine > 1); ++ich)
         {
-            if (pszText[i] == '\n')
-                nLine--;
+            if (pszText[ich] == '\n')
+                iLine--;
         }
-        if (nLine == 0)
-            i = nLength;
-        SendMessage(Globals.hEdit, EM_SETSEL, i, i);
+        if (iLine == 0)
+            ich = nLength;
+        SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
 
