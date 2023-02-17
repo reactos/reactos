@@ -1156,7 +1156,7 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return FALSE;
+    return 0;
 }
 
 VOID DIALOG_GoTo(VOID)
