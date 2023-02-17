@@ -463,6 +463,39 @@ static int AlertFileDoesNotExist(LPCTSTR szFileName)
                                MB_ICONEXCLAMATION | MB_YESNO);
 }
 
+BOOL PathExists(LPWSTR filename)
+{
+    BOOL ret = TRUE;
+    LPWSTR pch1 = wcsrchr(filename, L'\\');
+    LPWSTR pch2 = wcsrchr(filename, L'/');
+
+    if (!pch1 && !pch2)
+        return TRUE;
+
+    if (pch1 && pch2)
+    {
+        if (pch1 < pch2)
+            pch2 = NULL;
+        else
+            pch1 = NULL;
+    }
+
+    if (pch1)
+    {
+        *pch1 = 0;
+        ret = (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES);
+        *pch1 = L'\\';
+    }
+    else if (pch2)
+    {
+        *pch2 = 0;
+        ret = (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES);
+        *pch2 = L'/';
+    }
+
+    return ret;
+}
+
 static BOOL HandleCommandLine(LPTSTR cmdline)
 {
     BOOL ret = TRUE, bPrint = FALSE;
@@ -470,6 +503,7 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
     WCHAR szFileName[MAX_PATH];
     INT i, argc = __argc;
     LPWSTR *argv = __wargv;
+    DWORD dwError = ERROR_SUCCESS;
 
     UNREFERENCED_PARAMETER(cmdline);
 
@@ -486,11 +520,8 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
         else if (filename)
         {
             /* The parameters specified the multiple files */
-            SetLastError(ERROR_INVALID_NAME);
-            ShowLastError();
-            filename = NULL;
-            bPrint = FALSE;
-            break;
+            dwError = ERROR_INVALID_NAME;
+            goto Error;
         }
         else
         {
@@ -501,6 +532,12 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
     if (filename)
     {
         BOOL file_exists = FileExists(filename);
+
+        if (!PathExists(filename))
+        {
+            dwError = ERROR_PATH_NOT_FOUND;
+            goto Error;
+        }
 
         if (!file_exists && !HasFileExtension(filename))
         {
@@ -527,6 +564,11 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
         }
     }
 
+    return ret;
+
+Error:
+    SetLastError(dwError);
+    ShowLastError();
     return ret;
 }
 
