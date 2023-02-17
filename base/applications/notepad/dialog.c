@@ -1163,10 +1163,11 @@ VOID DIALOG_GoTo(VOID)
 {
     GOTO_DATA GotoData;
     DWORD dwStart, dwEnd;
-    HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
     INT ich, iLine, nLength = GetWindowTextLength(Globals.hEdit);
-    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
+    /* Get text and lock it */
+    HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
+    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
     if (!pszText)
         return;
 
@@ -1204,7 +1205,7 @@ VOID DIALOG_GoTo(VOID)
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
 
-    LocalUnlock(hLocal);
+    LocalUnlock(hLocal); /* Unlock the text */
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
