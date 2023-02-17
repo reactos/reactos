@@ -480,9 +480,12 @@ done:
 VOID DIALOG_FileNew(VOID)
 {
     /* Close any files and prompt to save changes */
-    if (DoCloseFile()) {
+    if (DoCloseFile())
+    {
         SetWindowText(Globals.hEdit, empty_str);
         SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
+        Globals.iEoln = EOLN_CRLF;
+        Globals.encFile = ENCODING_UTF8;
         SetFocus(Globals.hEdit);
         NOTEPAD_EnableSearchMenu();
         DIALOG_StatusBarUpdateAll();
