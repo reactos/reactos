@@ -135,6 +135,10 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     Globals.lfFont.lfHeight = HeightFromPointSize(100);
     Globals.lfFont.lfWeight = FW_NORMAL;
     Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+    Globals.main_rect.left = CW_USEDEFAULT;
+    Globals.main_rect.top = CW_USEDEFAULT;
+    cx = min((cxScreen * 3) / 4, 640);
+    cy = min((cyScreen * 3) / 4, 480);
 
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
@@ -167,7 +171,15 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMargins.top);
         QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
         QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
+
+        QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
+        QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
+        QueryDword(hKey, _T("iWindowPosDX"), &cx);
+        QueryDword(hKey, _T("iWindowPosDY"), &cy);
     }
+
+    Globals.main_rect.right = Globals.main_rect.left + cx;
+    Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
     if (!hKey || !QueryString(hKey, _T("lfFaceName"),
                               Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName)))
@@ -192,20 +204,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     if (hKey)
         QueryDword(hKey, _T("iPointSize"), &dwPointSize);
     Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
-
-    Globals.main_rect.left = CW_USEDEFAULT;
-    Globals.main_rect.top = CW_USEDEFAULT;
-    cx = min((cxScreen * 3) / 4, 640);
-    cy = min((cyScreen * 3) / 4, 480);
-    if (hKey)
-    {
-        QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
-        QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
-        QueryDword(hKey, _T("iWindowPosDX"), &cx);
-        QueryDword(hKey, _T("iWindowPosDY"), &cy);
-    }
-    Globals.main_rect.right = Globals.main_rect.left + cx;
-    Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
     if (hKey)
         RegCloseKey(hKey);
