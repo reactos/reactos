@@ -113,8 +113,7 @@ static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD
 void NOTEPAD_ResetSettings(void)
 {
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    INT cx = min((cxScreen * 2) / 3, 640);
-    INT cy = min((cyScreen * 2) / 3, 480);
+    INT cx = min((cxScreen * 2) / 3, 640), cy = min((cyScreen * 2) / 3, 480);
 
     Globals.main_rect.left = CW_USEDEFAULT;
     Globals.main_rect.top = CW_USEDEFAULT;
@@ -137,6 +136,7 @@ void NOTEPAD_ResetSettings(void)
     Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
     Globals.lfFont.lfHeight = HeightFromPointSize(100);
     Globals.lfFont.lfWeight = FW_NORMAL;
+    Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
     LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
                ARRAY_SIZE(Globals.lfFont.lfFaceName));
 
@@ -147,9 +147,6 @@ void NOTEPAD_ResetSettings(void)
         case LANG_JAPANESE:
         case LANG_KOREAN:
             Globals.lfFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-            break;
-        default:
-            Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
             break;
     }
 }
