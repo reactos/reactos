@@ -167,7 +167,6 @@ static VOID DIALOG_StatusBarUpdateEncoding(VOID)
 
 static VOID DIALOG_StatusBarUpdateAll(VOID)
 {
-    DIALOG_StatusBarAlignParts();
     DIALOG_StatusBarUpdateCaretPos();
     DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
@@ -947,6 +946,7 @@ VOID DoShowHideStatusBar(VOID)
     ShowWindow(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
 
     /* Update status bar contents */
+    DIALOG_StatusBarAlignParts();
     DIALOG_StatusBarUpdateAll();
 }
 
