@@ -1164,7 +1164,7 @@ VOID DIALOG_GoTo(VOID)
     if (!pszText)
         return;
 
-    nLength = lstrlen(pszText);
+    nLength = (INT)_tcslen(pszText);
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
@@ -1179,7 +1179,6 @@ VOID DIALOG_GoTo(VOID)
                            Globals.hMainWnd,
                            DIALOG_GoTo_DialogProc,
                            nLine);
-
     if (nLine >= 1)
     {
         for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
