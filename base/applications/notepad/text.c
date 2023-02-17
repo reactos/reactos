@@ -37,11 +37,11 @@ BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
     return TRUE;
 }
 
-ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
+static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
 {
     INT flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
 
-    if (dwSize <= 1 || IsTextNonZeroASCII(pBytes, dwSize))
+    if (dwSize == 0 || IsTextNonZeroASCII(pBytes, dwSize))
         return ENCODING_UTF8;
 
     if (IsTextUnicode(pBytes, dwSize, &flags))
@@ -51,7 +51,7 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
         return ENCODING_UTF16BE;
 
     /* is it UTF-8? */
-    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (LPCSTR)pBytes, dwSize, NULL, 0))
         return ENCODING_UTF8;
 
     return ENCODING_ANSI;
@@ -222,7 +222,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     }
     else
     {
-        encFile = AnalyzeEncoding((LPCSTR)pBytes, dwSize);
+        encFile = AnalyzeEncoding(pBytes, dwSize);
     }
 
     switch(encFile)
