@@ -110,7 +110,7 @@ static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD
     return TRUE;
 }
 
-void NOTEPAD_ResetSettings(void)
+static void NOTEPAD_ResetSettings(void)
 {
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
     INT cx = min((cxScreen * 3) / 4, 640), cy = min((cyScreen * 3) / 4, 480);
