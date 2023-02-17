@@ -1141,10 +1141,7 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (LOWORD(wParam) == IDOK)
             {
                 INT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
-                if (iLine < 0 || s_pGotoData->cLines < iLine)
-                {
-                    // TODO: Should we display error message?
-                }
+                // TODO: Should we display error message?
                 s_pGotoData->iLine = iLine;
                 EndDialog(hwndDialog, IDOK);
             }
