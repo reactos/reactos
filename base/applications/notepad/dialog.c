@@ -1160,11 +1160,12 @@ VOID DIALOG_GoTo(VOID)
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
+    size_t cchMax = LocalSize(hLocal) / sizeof(TCHAR);
 
-    if (!pszText)
+    if (!pszText || StringCchLength(pszText, cchMax, &cchMax) != S_OK)
         return;
 
-    nLength = (INT)_tcslen(pszText);
+    nLength = (INT)cchMax;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
