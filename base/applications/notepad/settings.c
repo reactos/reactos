@@ -146,59 +146,69 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     /*
      * Load the values from registry
      */
-    QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
-    QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
-    QueryDword(hKey, _T("lfEscapement"), (DWORD*)&Globals.lfFont.lfEscapement);
-    if (!QueryString(hKey, _T("lfFaceName"), Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName)))
+    if (hKey)
+    {
+        QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
+        QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
+        QueryDword(hKey, _T("lfEscapement"), (DWORD*)&Globals.lfFont.lfEscapement);
+        QueryByte(hKey, _T("lfItalic"), &Globals.lfFont.lfItalic);
+        QueryDword(hKey, _T("lfOrientation"), (DWORD*)&Globals.lfFont.lfOrientation);
+        QueryByte(hKey, _T("lfOutPrecision"), &Globals.lfFont.lfOutPrecision);
+        QueryByte(hKey, _T("lfPitchAndFamily"), &Globals.lfFont.lfPitchAndFamily);
+        QueryByte(hKey, _T("lfQuality"), &Globals.lfFont.lfQuality);
+        QueryByte(hKey, _T("lfStrikeOut"), &Globals.lfFont.lfStrikeOut);
+        QueryByte(hKey, _T("lfUnderline"), &Globals.lfFont.lfUnderline);
+        QueryDword(hKey, _T("lfWeight"), (DWORD*)&Globals.lfFont.lfWeight);
+
+        QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
+        QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
+
+        QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMargins.left);
+        QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMargins.top);
+        QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
+        QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
+    }
+
+    if (!hKey || !QueryString(hKey, _T("lfFaceName"),
+                              Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName)))
     {
         LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
                    ARRAY_SIZE(Globals.lfFont.lfFaceName));
     }
-    QueryByte(hKey, _T("lfItalic"), &Globals.lfFont.lfItalic);
-    QueryDword(hKey, _T("lfOrientation"), (DWORD*)&Globals.lfFont.lfOrientation);
-    QueryByte(hKey, _T("lfOutPrecision"), &Globals.lfFont.lfOutPrecision);
-    QueryByte(hKey, _T("lfPitchAndFamily"), &Globals.lfFont.lfPitchAndFamily);
-    QueryByte(hKey, _T("lfQuality"), &Globals.lfFont.lfQuality);
-    QueryByte(hKey, _T("lfStrikeOut"), &Globals.lfFont.lfStrikeOut);
-    QueryByte(hKey, _T("lfUnderline"), &Globals.lfFont.lfUnderline);
-    QueryDword(hKey, _T("lfWeight"), (DWORD*)&Globals.lfFont.lfWeight);
 
-    dwPointSize = 100;
-    QueryDword(hKey, _T("iPointSize"), &dwPointSize);
-    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
-
-    QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
-    QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
-
-    if (!QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader)))
+    if (!hKey || !QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader)))
     {
         LoadString(Globals.hInstance, STRING_PAGESETUP_HEADERVALUE, Globals.szHeader,
                    ARRAY_SIZE(Globals.szHeader));
     }
 
-    if (!QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter)))
+    if (!hKey || !QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter)))
     {
         LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
                    ARRAY_SIZE(Globals.szFooter));
     }
 
-    QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMargins.left);
-    QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMargins.top);
-    QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
-    QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
+    dwPointSize = 100;
+    if (hKey)
+        QueryDword(hKey, _T("iPointSize"), &dwPointSize);
+    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
 
     Globals.main_rect.left = CW_USEDEFAULT;
     Globals.main_rect.top = CW_USEDEFAULT;
     cx = min((cxScreen * 3) / 4, 640);
     cy = min((cyScreen * 3) / 4, 480);
-    QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
-    QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
-    QueryDword(hKey, _T("iWindowPosDX"), &cx);
-    QueryDword(hKey, _T("iWindowPosDY"), &cy);
+    if (hKey)
+    {
+        QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
+        QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
+        QueryDword(hKey, _T("iWindowPosDX"), &cx);
+        QueryDword(hKey, _T("iWindowPosDY"), &cy);
+    }
     Globals.main_rect.right = Globals.main_rect.left + cx;
     Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
-    RegCloseKey(hKey);
+    if (hKey)
+        RegCloseKey(hKey);
 
     /* WORKAROUND: Far East Asian users may not have suitable fixed-pitch fonts. */
     switch (PRIMARYLANGID(GetUserDefaultLangID()))
