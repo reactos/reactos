@@ -79,7 +79,11 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
                 /* Allocate the port in the port bitmap */
                 UINT AllocatedPort = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
                 /* This should never fail unless all ports are in use */
-                ASSERT(AllocatedPort != (UINT)-1);
+                if (AllocatedPort == (UINT) -1)
+                {
+                    ERR("No more ports available.\n");
+                    return STATUS_TOO_MANY_ADDRESSES;
+                }
                 Connection->AddressFile->Port = AllocatedPort;
             }
         }
