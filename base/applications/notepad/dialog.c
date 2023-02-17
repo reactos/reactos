@@ -1142,7 +1142,10 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (LOWORD(wParam) == IDOK)
             {
                 iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
-                // FIXME: Check boundary
+                if (iLine < 0 || s_pData->cLines < iLine)
+                {
+                    // TODO: Should we display error message?
+                }
                 s_pData->iLine = iLine;
                 EndDialog(hwndDialog, IDOK);
             }
@@ -1162,7 +1165,7 @@ VOID DIALOG_GoTo(VOID)
     GOTO_DATA Data;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    INT ich, nLength = GetWindowTextLength(Globals.hEdit);
+    INT ich, iLine, nLength = GetWindowTextLength(Globals.hEdit);
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
     if (!pszText)
@@ -1170,15 +1173,14 @@ VOID DIALOG_GoTo(VOID)
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
-    Data.iLine = 1;
-    Data.cLines = 1;
+    Data.iLine = Data.cLines = 1;
     for (ich = 0; ich < nLength && pszText[ich]; ++ich)
     {
         if (pszText[ich] == '\n')
         {
             if (ich < (INT)dwStart)
-                Data.iLine++;
-            Data.cLines++;
+                ++Data.iLine;
+            ++Data.cLines;
         }
     }
 
@@ -1188,14 +1190,21 @@ VOID DIALOG_GoTo(VOID)
                        DIALOG_GoTo_DialogProc,
                        (LPARAM)&Data) == IDOK)
     {
-        INT iLine = Data.iLine;
-        for (ich = 0; ich < nLength && pszText[ich] && (iLine > 1); ++ich)
+        --Data.iLine; /* Base zero */
+
+        if (Data.iLine >= Data.cLines)
         {
-            if (pszText[ich] == '\n')
-                iLine--;
-        }
-        if (iLine == 0)
             ich = nLength;
+        }
+        else
+        {
+            for (ich = iLine = 0; ich < nLength && pszText[ich] && iLine < Data.iLine; ++ich)
+            {
+                if (pszText[ich] == '\n')
+                    ++iLine;
+            }
+        }
+
         SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
