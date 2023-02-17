@@ -129,14 +129,13 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
     ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
     Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
-    Globals.lfFont.lfHeight = HeightFromPointSize(100);
+    dwPointSize = 100;
     Globals.lfFont.lfWeight = FW_NORMAL;
     Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
     Globals.main_rect.left = CW_USEDEFAULT;
     Globals.main_rect.top = CW_USEDEFAULT;
     cx = min((cxScreen * 3) / 4, 640);
     cy = min((cyScreen * 3) / 4, 480);
-    dwPointSize = 100;
 
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
