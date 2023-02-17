@@ -170,7 +170,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
     DWORD dwSize, dwPos;
     SIZE_T i, cchText, cbContent;
     BOOL bSuccess = FALSE;
-    ENCODING encFile = ENCODING_UTF8;
+    ENCODING encFile;
     UINT iCodePage;
     HANDLE hMapping = INVALID_HANDLE_VALUE;
     HLOCAL hNewLocal;
