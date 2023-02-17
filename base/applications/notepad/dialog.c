@@ -1168,11 +1168,9 @@ VOID DIALOG_GoTo(VOID)
     if (!pszText)
         return;
 
-    /* We have to get the current line number */
-    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
-
     /* Get the total line number and the current line number */
     GotoData.iLine = GotoData.cLines = 1;
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
     for (ich = 0; ich < nLength && pszText[ich]; ++ich)
     {
         if (pszText[ich] == '\n')
