@@ -483,7 +483,6 @@ VOID DIALOG_FileNew(VOID)
     /* Close any files and prompt to save changes */
     if (DoCloseFile())
     {
-        SetFocus(Globals.hEdit);
         NOTEPAD_EnableSearchMenu();
         DIALOG_StatusBarUpdateAll();
     }
