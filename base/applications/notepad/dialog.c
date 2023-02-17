@@ -1159,14 +1159,13 @@ VOID DIALOG_GoTo(VOID)
     LPTSTR pszText;
     int nLength, i;
     DWORD dwStart, dwEnd;
+    HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
 
-    nLength = GetWindowTextLength(Globals.hEdit);
-    pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(*pszText));
+    pszText = (LPTSTR)LocalLock(hLocal);
     if (!pszText)
         return;
 
-    /* Retrieve current text */
-    GetWindowText(Globals.hEdit, pszText, nLength + 1);
+    nLength = lstrlen(pszText);
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
@@ -1189,10 +1188,14 @@ VOID DIALOG_GoTo(VOID)
             if (pszText[i] == '\n')
                 nLine--;
         }
+        LocalUnlock(hLocal);
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
-    HeapFree(GetProcessHeap(), 0, pszText);
+    else
+    {
+        LocalUnlock(hLocal);
+    }
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
