@@ -1162,8 +1162,11 @@ VOID DIALOG_GoTo(VOID)
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
     size_t cchMax = LocalSize(hLocal) / sizeof(TCHAR);
 
-    if (!pszText || StringCchLength(pszText, cchMax, &cchMax) != S_OK)
+    if (!pszText)
         return;
+
+    if (StringCchLength(pszText, cchMax, &cchMax) != S_OK)
+        goto Quit;
 
     nLength = (INT)cchMax;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
@@ -1191,6 +1194,7 @@ VOID DIALOG_GoTo(VOID)
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
 
+Quit:
     LocalUnlock(hLocal);
 }
 
