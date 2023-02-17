@@ -22,7 +22,6 @@
 
 #include "notepad.h"
 
-#include <assert.h>
 #include <winreg.h>
 
 static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
@@ -103,9 +102,10 @@ static BOOL QueryBool(HKEY hKey, LPCTSTR pszValueName, BOOL *pbResult)
 
 static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD dwResultLength)
 {
+    if (dwResultLength == 0)
+        return FALSE;
     if (!QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultLength * sizeof(TCHAR)))
         return FALSE;
-    assert(dwResultLength > 0);
     pszResult[dwResultLength - 1] = 0; /* Avoid buffer overrun */
     return TRUE;
 }
