@@ -101,12 +101,12 @@ static BOOL QueryBool(HKEY hKey, LPCTSTR pszValueName, BOOL *pbResult)
     return TRUE;
 }
 
-static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD dwResultLen)
+static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD dwResultLength)
 {
-    if (!QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultLen * sizeof(TCHAR)))
+    if (!QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultLength * sizeof(TCHAR)))
         return FALSE;
-    assert(dwResultLen > 0);
-    pszResult[dwResultLen - 1] = 0; /* Avoid buffer overrun */
+    assert(dwResultLength > 0);
+    pszResult[dwResultLength - 1] = 0; /* Avoid buffer overrun */
     return TRUE;
 }
 
