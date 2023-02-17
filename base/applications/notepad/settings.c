@@ -122,7 +122,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     HFONT hFont;
     DWORD dwPointSize;
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    INT cx, cy;
+    DWORD cx, cy;
 
     /*
      * Set the default values
@@ -193,8 +193,8 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     cy = min((cyScreen * 3) / 4, 480);
     QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
     QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
-    QueryDword(hKey, _T("iWindowPosDX"), (DWORD*)&cx);
-    QueryDword(hKey, _T("iWindowPosDY"), (DWORD*)&cy);
+    QueryDword(hKey, _T("iWindowPosDX"), &cx);
+    QueryDword(hKey, _T("iWindowPosDY"), &cy);
     Globals.main_rect.right = Globals.main_rect.left + cx;
     Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
