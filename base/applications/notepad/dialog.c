@@ -1183,13 +1183,14 @@ VOID DIALOG_GoTo(VOID)
         }
     }
 
+    /* Ask the user for line number */
     if (DialogBoxParam(Globals.hInstance,
                        MAKEINTRESOURCE(DIALOG_GOTO),
                        Globals.hMainWnd,
                        DIALOG_GoTo_DialogProc,
                        (LPARAM)&GotoData) == IDOK)
     {
-        --GotoData.iLine; /* Base zero */
+        --GotoData.iLine; /* Make it zero-based */
 
         /* Get ich (the target character index) from line number */
         for (ich = iLine = 0; ich < nLength && iLine < GotoData.iLine; ++ich)
@@ -1198,6 +1199,7 @@ VOID DIALOG_GoTo(VOID)
                 ++iLine;
         }
 
+        /* Move the caret */
         SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
