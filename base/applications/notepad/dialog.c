@@ -479,7 +479,7 @@ VOID DIALOG_FileNew(VOID)
     if (!DoCloseFile())
         return;
 
-    SetWindowText(Globals.hEdit, empty_str);
+    SetWindowText(Globals.hEdit, NULL);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     Globals.iEoln = EOLN_CRLF;
     Globals.encFile = ENCODING_UTF8;
