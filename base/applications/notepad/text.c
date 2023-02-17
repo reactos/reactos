@@ -41,7 +41,7 @@ static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
 {
     INT flags = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
 
-    if (dwSize == 0 || IsTextNonZeroASCII(pBytes, dwSize))
+    if (IsTextNonZeroASCII(pBytes, dwSize))
         return ENCODING_UTF8;
 
     if (IsTextUnicode(pBytes, dwSize, &flags))
