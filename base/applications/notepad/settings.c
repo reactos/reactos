@@ -144,7 +144,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         hKey = NULL;
 
     /*
-     * Load the settings from registry
+     * Load the values from registry
      */
     QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
     QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
