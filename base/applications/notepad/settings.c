@@ -22,6 +22,7 @@
 
 #include "notepad.h"
 
+#include <assert.h>
 #include <winreg.h>
 
 static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
@@ -100,9 +101,55 @@ static BOOL QueryBool(HKEY hKey, LPCTSTR pszValueName, BOOL *pbResult)
     return TRUE;
 }
 
-static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD dwResultSize)
+static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD cchResult)
 {
-    return QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultSize * sizeof(TCHAR));
+    if (QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, cchResult * sizeof(TCHAR)))
+    {
+        assert(cchResult > 0);
+        pszResult[cchResult - 1] = 0; /* Avoid buffer overrun */
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void NOTEPAD_ResetSettings(void)
+{
+    INT base_length = (GetSystemMetrics(SM_CXSCREEN) > GetSystemMetrics(SM_CYSCREEN)) ?
+                       GetSystemMetrics(SM_CYSCREEN) : GetSystemMetrics(SM_CXSCREEN);
+    INT dx = (INT)(base_length * .95), dy = dx * 3 / 4;
+    SetRect(&Globals.main_rect, 0, 0, dx, dy);
+
+    Globals.bShowStatusBar = TRUE;
+    Globals.bWrapLongLines = FALSE;
+    SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
+
+    /* FIXME: Globals.fSaveWindowPositions = FALSE; */
+    /* FIXME: Globals.fMLE_is_broken = FALSE; */
+
+    LoadString(Globals.hInstance, STRING_PAGESETUP_HEADERVALUE, Globals.szHeader,
+               ARRAY_SIZE(Globals.szHeader));
+    LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
+               ARRAY_SIZE(Globals.szFooter));
+
+    ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
+    Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
+    Globals.lfFont.lfHeight = HeightFromPointSize(100);
+    Globals.lfFont.lfWeight = FW_NORMAL;
+    LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
+               ARRAY_SIZE(Globals.lfFont.lfFaceName));
+
+    /* WORKAROUND: Far East Asian users may not have suitable fixed-pitch fonts. */
+    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            Globals.lfFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+            break;
+        default:
+            Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+            break;
+    }
 }
 
 /***********************************************************************
@@ -115,18 +162,14 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
 {
     HKEY hKey = NULL;
     HFONT hFont;
-    DWORD dwPointSize = 0;
-    INT base_length, dx, dy;
 
-    base_length = (GetSystemMetrics(SM_CXSCREEN) > GetSystemMetrics(SM_CYSCREEN)) ?
-                  GetSystemMetrics(SM_CYSCREEN) : GetSystemMetrics(SM_CXSCREEN);
-
-    dx = (INT)(base_length * .95);
-    dy = dx * 3 / 4;
-    SetRect(&Globals.main_rect, 0, 0, dx, dy);
+    NOTEPAD_ResetSettings();
 
     if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
     {
+        INT dx, dy;
+        DWORD dwPointSize = 0;
+
         QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
         QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
         QueryDword(hKey, _T("lfEscapement"), (DWORD*)&Globals.lfFont.lfEscapement);
@@ -163,50 +206,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
             Globals.lfFont.lfHeight = HeightFromPointSize(100);
 
         RegCloseKey(hKey);
-    }
-    else
-    {
-        /* If no settings are found in the registry, then use default values */
-        Globals.bShowStatusBar = TRUE;
-        Globals.bWrapLongLines = FALSE;
-        SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
-
-        /* FIXME: Globals.fSaveWindowPositions = FALSE; */
-        /* FIXME: Globals.fMLE_is_broken = FALSE; */
-
-        LoadString(Globals.hInstance, STRING_PAGESETUP_HEADERVALUE, Globals.szHeader,
-                   ARRAY_SIZE(Globals.szHeader));
-        LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
-                   ARRAY_SIZE(Globals.szFooter));
-
-        ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
-        Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
-        Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
-        Globals.lfFont.lfEscapement = 0;
-        LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
-                   ARRAY_SIZE(Globals.lfFont.lfFaceName));
-        Globals.lfFont.lfItalic = FALSE;
-        Globals.lfFont.lfOrientation = 0;
-        Globals.lfFont.lfOutPrecision = OUT_STRING_PRECIS;
-
-        /* WORKAROUND: Far East Asian users may not have suitable fixed-pitch fonts. */
-        switch (PRIMARYLANGID(GetUserDefaultLangID()))
-        {
-            case LANG_CHINESE:
-            case LANG_JAPANESE:
-            case LANG_KOREAN:
-                Globals.lfFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-                break;
-            default:
-                Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
-                break;
-        }
-
-        Globals.lfFont.lfQuality = PROOF_QUALITY;
-        Globals.lfFont.lfStrikeOut = FALSE;
-        Globals.lfFont.lfUnderline = FALSE;
-        Globals.lfFont.lfWeight = FW_NORMAL;
-        Globals.lfFont.lfHeight = HeightFromPointSize(100);
     }
 
     hFont = CreateFontIndirect(&Globals.lfFont);
