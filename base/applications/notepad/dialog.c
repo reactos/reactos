@@ -1166,7 +1166,7 @@ VOID DIALOG_GoTo(VOID)
         return;
 
     if (StringCchLength(pszText, cchMax, &cchMax) != S_OK)
-        goto Quit;
+        goto Quit; /* Avoid buffer overrun */
 
     nLength = (INT)cchMax;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
