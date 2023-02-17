@@ -1165,7 +1165,7 @@ VOID DIALOG_GoTo(VOID)
     DWORD dwStart = 0, dwEnd = 0;
     INT ich, cch = GetWindowTextLength(Globals.hEdit);
 
-    /* Get the total line number and the current line number */
+    /* Get the current line number and the total line number */
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
     GotoData.iLine = (INT)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, dwStart, 0) + 1;
     GotoData.cLines = (INT)SendMessage(Globals.hEdit, EM_GETLINECOUNT, 0, 0);
