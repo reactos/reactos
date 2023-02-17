@@ -1156,12 +1156,11 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID DIALOG_GoTo(VOID)
 {
     INT_PTR nLine;
-    LPTSTR pszText;
     int nLength, i;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
+    LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
-    pszText = (LPTSTR)LocalLock(hLocal);
     if (!pszText)
         return;
 
@@ -1188,14 +1187,11 @@ VOID DIALOG_GoTo(VOID)
             if (pszText[i] == '\n')
                 nLine--;
         }
-        LocalUnlock(hLocal);
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
-    else
-    {
-        LocalUnlock(hLocal);
-    }
+
+    LocalUnlock(hLocal);
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
