@@ -140,7 +140,8 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
 
-    RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey);
+    if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) != ERROR_SUCCESS)
+        hKey = NULL;
 
     QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
     QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
