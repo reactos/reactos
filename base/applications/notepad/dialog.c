@@ -1173,7 +1173,7 @@ VOID DIALOG_GoTo(VOID)
     /* Get the total line number and the current line number */
     GotoData.iLine = GotoData.cLines = 1;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
-    for (ich = 0; ich < nLength && pszText[ich]; ++ich)
+    for (ich = 0; ich < nLength; ++ich)
     {
         if (pszText[ich] == '\n')
         {
@@ -1191,8 +1191,8 @@ VOID DIALOG_GoTo(VOID)
     {
         --GotoData.iLine; /* Base zero */
 
-        /* Get ich from line number */
-        for (ich = iLine = 0; ich < nLength && pszText[ich] && iLine < GotoData.iLine; ++ich)
+        /* Get ich (the target character index) from line number */
+        for (ich = iLine = 0; ich < nLength && iLine < GotoData.iLine; ++ich)
         {
             if (pszText[ich] == '\n')
                 ++iLine;
