@@ -471,12 +471,11 @@ VOID DoOpenFile(LPCTSTR szFileName)
     SetFileName(szFileName);
     UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
+    DIALOG_StatusBarUpdateAll();
 
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
-
-    DIALOG_StatusBarUpdateAll();
 }
 
 VOID DIALOG_FileNew(VOID)
