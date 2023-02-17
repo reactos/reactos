@@ -24,7 +24,7 @@
 #include "notepad.h"
 #include <assert.h>
 
-BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
+static BOOL IsTextNonZeroASCII(LPCVOID pText, DWORD dwSize)
 {
     const signed char *pBytes = pText;
     while (dwSize-- > 0)
