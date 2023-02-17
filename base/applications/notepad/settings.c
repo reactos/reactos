@@ -113,7 +113,7 @@ static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD
 void NOTEPAD_ResetSettings(void)
 {
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    INT cx = min((cxScreen * 2) / 3, 640), cy = min((cyScreen * 2) / 3, 480);
+    INT cx = min((cxScreen * 3) / 4, 640), cy = min((cyScreen * 3) / 4, 480);
 
     Globals.main_rect.left = CW_USEDEFAULT;
     Globals.main_rect.top = CW_USEDEFAULT;
