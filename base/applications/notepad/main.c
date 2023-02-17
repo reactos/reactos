@@ -580,6 +580,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
+    Globals.encFile = ENCODING_UTF8;
     NOTEPAD_LoadSettingsFromRegistry();
 
     ZeroMemory(&wndclass, sizeof(wndclass));
