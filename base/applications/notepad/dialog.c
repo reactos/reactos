@@ -1156,19 +1156,14 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID DIALOG_GoTo(VOID)
 {
     INT_PTR nLine;
-    int nLength, i;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    size_t cch = LocalSize(hLocal) / sizeof(TCHAR);
+    INT i, nLength = GetWindowTextLength(Globals.hEdit);
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
 
     if (!pszText)
         return;
 
-    if (StringCchLength(pszText, cch, &cch) != S_OK)
-        goto Quit; /* Avoid buffer overrun */
-
-    nLength = (INT)cch;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
@@ -1196,7 +1191,6 @@ VOID DIALOG_GoTo(VOID)
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
 
-Quit:
     LocalUnlock(hLocal);
 }
 
