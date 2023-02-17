@@ -1160,15 +1160,15 @@ VOID DIALOG_GoTo(VOID)
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
     LPTSTR pszText = (LPTSTR)LocalLock(hLocal);
-    size_t cchMax = LocalSize(hLocal) / sizeof(TCHAR);
+    size_t cch = LocalSize(hLocal) / sizeof(TCHAR);
 
     if (!pszText)
         return;
 
-    if (StringCchLength(pszText, cchMax, &cchMax) != S_OK)
+    if (StringCchLength(pszText, cch, &cch) != S_OK)
         goto Quit; /* Avoid buffer overrun */
 
-    nLength = (INT)cchMax;
+    nLength = (INT)cch;
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
     nLine = 1;
@@ -1185,11 +1185,13 @@ VOID DIALOG_GoTo(VOID)
                            nLine);
     if (nLine >= 1)
     {
-        for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
+        for (i = 0; pszText[i] && (nLine > 1) && (i < nLength); i++)
         {
             if (pszText[i] == '\n')
                 nLine--;
         }
+        if (nLine == 0)
+            i = nLength;
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
