@@ -103,13 +103,11 @@ static BOOL QueryBool(HKEY hKey, LPCTSTR pszValueName, BOOL *pbResult)
 
 static BOOL QueryString(HKEY hKey, LPCWSTR pszValueName, LPWSTR pszResult, DWORD cchResult)
 {
-    if (QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, cchResult * sizeof(TCHAR)))
-    {
-        assert(cchResult > 0);
-        pszResult[cchResult - 1] = 0; /* Avoid buffer overrun */
-        return TRUE;
-    }
-    return FALSE;
+    if (!QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, cchResult * sizeof(TCHAR)))
+        return FALSE;
+    assert(cchResult > 0);
+    pszResult[cchResult - 1] = 0; /* Avoid buffer overrun */
+    return TRUE;
 }
 
 void NOTEPAD_ResetSettings(void)
