@@ -1175,22 +1175,24 @@ VOID DIALOG_GoTo(VOID)
                        MAKEINTRESOURCE(DIALOG_GOTO),
                        Globals.hMainWnd,
                        DIALOG_GoTo_DialogProc,
-                       (LPARAM)&GotoData) == IDOK)
+                       (LPARAM)&GotoData) != IDOK)
     {
-        --GotoData.iLine; /* Make it zero-based */
-
-        /* Get ich (the target character index) from line number */
-        if (GotoData.iLine <= 0)
-            ich = 0;
-        else if (GotoData.iLine >= GotoData.cLines)
-            ich = cch;
-        else
-            ich = (INT)SendMessage(Globals.hEdit, EM_LINEINDEX, GotoData.iLine, 0);
-
-        /* Move the caret */
-        SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
-        SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
+        return; /* Canceled */
     }
+
+    --GotoData.iLine; /* Make it zero-based */
+
+    /* Get ich (the target character index) from line number */
+    if (GotoData.iLine <= 0)
+        ich = 0;
+    else if (GotoData.iLine >= GotoData.cLines)
+        ich = cch;
+    else
+        ich = (INT)SendMessage(Globals.hEdit, EM_LINEINDEX, GotoData.iLine, 0);
+
+    /* Move the caret */
+    SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
+    SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
