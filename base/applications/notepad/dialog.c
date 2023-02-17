@@ -1119,40 +1119,37 @@ VOID DIALOG_Replace(VOID)
 
 typedef struct tagGOTO_DATA
 {
-    LONG iLine;
-    LONG cLines;
+    INT iLine;
+    INT cLines;
 } GOTO_DATA, *PGOTO_DATA;
 
 static INT_PTR
 CALLBACK
 DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static PGOTO_DATA s_pData;
+    static PGOTO_DATA s_pGotoData;
     INT iLine;
 
     switch(uMsg) {
     case WM_INITDIALOG:
-        s_pData = (PGOTO_DATA)lParam;
-        SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pData->iLine, FALSE);
-        return TRUE;
+        s_pGotoData = (PGOTO_DATA)lParam;
+        SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pGotoData->iLine, FALSE);
+        return TRUE; /* Set focus */
 
     case WM_COMMAND:
-        if (HIWORD(wParam) == BN_CLICKED)
+        if (LOWORD(wParam) == IDOK)
         {
-            if (LOWORD(wParam) == IDOK)
+            iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+            if (iLine < 0 || s_pGotoData->cLines < iLine)
             {
-                iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
-                if (iLine < 0 || s_pData->cLines < iLine)
-                {
-                    // TODO: Should we display error message?
-                }
-                s_pData->iLine = iLine;
-                EndDialog(hwndDialog, IDOK);
+                // TODO: Should we display error message?
             }
-            else if (LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hwndDialog, IDCANCEL);
-            }
+            s_pGotoData->iLine = iLine;
+            EndDialog(hwndDialog, IDOK);
+        }
+        else if (LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hwndDialog, IDCANCEL);
         }
         break;
     }
@@ -1162,7 +1159,7 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 VOID DIALOG_GoTo(VOID)
 {
-    GOTO_DATA Data;
+    GOTO_DATA GotoData;
     DWORD dwStart, dwEnd;
     HLOCAL hLocal = (HLOCAL)SendMessage(Globals.hEdit, EM_GETHANDLE, 0, 0);
     INT ich, iLine, nLength = GetWindowTextLength(Globals.hEdit);
@@ -1171,16 +1168,18 @@ VOID DIALOG_GoTo(VOID)
     if (!pszText)
         return;
 
+    /* We have to get the current line number */
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
 
-    Data.iLine = Data.cLines = 1;
+    /* Get the total line number and the current line number */
+    GotoData.iLine = GotoData.cLines = 1;
     for (ich = 0; ich < nLength && pszText[ich]; ++ich)
     {
         if (pszText[ich] == '\n')
         {
             if (ich < (INT)dwStart)
-                ++Data.iLine;
-            ++Data.cLines;
+                ++GotoData.iLine;
+            ++GotoData.cLines;
         }
     }
 
@@ -1188,21 +1187,15 @@ VOID DIALOG_GoTo(VOID)
                        MAKEINTRESOURCE(DIALOG_GOTO),
                        Globals.hMainWnd,
                        DIALOG_GoTo_DialogProc,
-                       (LPARAM)&Data) == IDOK)
+                       (LPARAM)&GotoData) == IDOK)
     {
-        --Data.iLine; /* Base zero */
+        --GotoData.iLine; /* Base zero */
 
-        if (Data.iLine >= Data.cLines)
+        /* Get ich from line number */
+        for (ich = iLine = 0; ich < nLength && pszText[ich] && iLine < GotoData.iLine; ++ich)
         {
-            ich = nLength;
-        }
-        else
-        {
-            for (ich = iLine = 0; ich < nLength && pszText[ich] && iLine < Data.iLine; ++ich)
-            {
-                if (pszText[ich] == '\n')
-                    ++iLine;
-            }
+            if (pszText[ich] == '\n')
+                ++iLine;
         }
 
         SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
