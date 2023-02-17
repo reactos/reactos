@@ -165,6 +165,14 @@ static VOID DIALOG_StatusBarUpdateEncoding(VOID)
     SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_ENCODING, (LPARAM)szText);
 }
 
+static VOID DIALOG_StatusBarUpdateAll(VOID)
+{
+    DIALOG_StatusBarAlignParts();
+    DIALOG_StatusBarUpdateCaretPos();
+    DIALOG_StatusBarUpdateLineEndings();
+    DIALOG_StatusBarUpdateEncoding();
+}
+
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags)
 {
     TCHAR szMessage[MAX_STRING_LEN];
@@ -462,13 +470,11 @@ VOID DoOpenFile(LPCTSTR szFileName)
     UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
 
-    /* Update line endings and encoding on the status bar */
-    DIALOG_StatusBarUpdateLineEndings();
-    DIALOG_StatusBarUpdateEncoding();
-
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
+
+    DIALOG_StatusBarUpdateAll();
 }
 
 VOID DIALOG_FileNew(VOID)
@@ -479,6 +485,7 @@ VOID DIALOG_FileNew(VOID)
         SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
         SetFocus(Globals.hEdit);
         NOTEPAD_EnableSearchMenu();
+        DIALOG_StatusBarUpdateAll();
     }
 }
 
@@ -626,11 +633,7 @@ BOOL DIALOG_FileSaveAs(VOID)
         if (DoSaveFile())
         {
             UpdateWindowCaption(TRUE);
-            
-            /* Update line endings and encoding on the status bar */
-            DIALOG_StatusBarUpdateLineEndings();
-            DIALOG_StatusBarUpdateEncoding();
-            
+            DIALOG_StatusBarUpdateAll();
             return TRUE;
         }
         else
@@ -942,9 +945,7 @@ VOID DoShowHideStatusBar(VOID)
     ShowWindow(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
 
     /* Update status bar contents */
-    DIALOG_StatusBarUpdateCaretPos();
-    DIALOG_StatusBarUpdateLineEndings();
-    DIALOG_StatusBarUpdateEncoding();
+    DIALOG_StatusBarUpdateAll();
 }
 
 VOID DoCreateEditWindow(VOID)
