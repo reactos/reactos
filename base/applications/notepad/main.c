@@ -465,87 +465,69 @@ static int AlertFileDoesNotExist(LPCTSTR szFileName)
 
 static BOOL HandleCommandLine(LPTSTR cmdline)
 {
-    BOOL opt_print = FALSE;
+    BOOL ret = TRUE, bPrint = FALSE;
+    LPWSTR filename = NULL;
+    WCHAR szFileName[MAX_PATH];
+    INT i, argc = __argc;
+    LPWSTR *argv = __wargv;
 
-    while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
+    UNREFERENCED_PARAMETER(cmdline);
+
+    for (i = 1; i < argc; ++i)
     {
-        TCHAR option;
-
-        if (*cmdline++ == _T(' ')) continue;
-
-        option = *cmdline;
-        if (option) cmdline++;
-        while (*cmdline == _T(' ')) cmdline++;
-
-        switch(option)
+        LPWSTR arg = argv[i];
+        if (arg[0] == L'-' || arg[0] == L'/')
         {
-            case 'p':
-            case 'P':
-                opt_print = TRUE;
-                break;
+            if (lstrcmpiW(arg, L"/p") == 0)
+                bPrint = TRUE;
+            /* Otherwise just ignore the flag */
+            continue;
+        }
+        else if (filename)
+        {
+            /* The parameters specified the multiple files */
+            SetLastError(ERROR_INVALID_NAME);
+            ShowLastError();
+            filename = NULL;
+            bPrint = FALSE;
+            break;
+        }
+        else
+        {
+            filename = arg;
         }
     }
 
-    if (*cmdline)
+    if (filename)
     {
-        /* file name is passed in the command line */
-        LPCTSTR file_name = NULL;
-        BOOL file_exists = FALSE;
-        TCHAR buf[MAX_PATH];
+        BOOL file_exists = FileExists(filename);
 
-        if (cmdline[0] == _T('"'))
+        if (!file_exists && !HasFileExtension(filename))
         {
-            cmdline++;
-            cmdline[lstrlen(cmdline) - 1] = 0;
-        }
+            /* Add .txt extension */
+            StringCchCopyW(szFileName, ARRAY_SIZE(szFileName), filename);
+            StringCchCatW(szFileName, ARRAY_SIZE(szFileName), L".txt");
+            filename = szFileName;
 
-        file_name = cmdline;
-        if (FileExists(file_name))
-        {
-            file_exists = TRUE;
-        }
-        else if (!HasFileExtension(cmdline))
-        {
-            static const TCHAR txt[] = _T(".txt");
-
-            /* try to find file with ".txt" extension */
-            if (!_tcscmp(txt, cmdline + _tcslen(cmdline) - _tcslen(txt)))
-            {
-                file_exists = FALSE;
-            }
-            else
-            {
-                _tcsncpy(buf, cmdline, MAX_PATH - _tcslen(txt) - 1);
-                _tcscat(buf, txt);
-                file_name = buf;
-                file_exists = FileExists(file_name);
-            }
+            file_exists = FileExists(filename);
         }
 
         if (file_exists)
         {
-            DoOpenFile(file_name);
-            InvalidateRect(Globals.hMainWnd, NULL, FALSE);
-            if (opt_print)
+            DoOpenFile(filename);
+            if (bPrint)
             {
                 DIALOG_FilePrint();
-                return FALSE;
+                ret = FALSE; /* Quit after printing */
             }
         }
-        else
+        else if (AlertFileDoesNotExist(filename) == IDYES)
         {
-            switch (AlertFileDoesNotExist(file_name)) {
-            case IDYES:
-                DoOpenFile(file_name);
-                break;
-
-            case IDNO:
-                break;
-            }
+            DoOpenFile(filename);
         }
     }
 
-    return TRUE;
+    return ret;
 }
 
 /***********************************************************************
@@ -642,9 +624,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     DragAcceptFiles(Globals.hMainWnd, TRUE);
 
     if (!HandleCommandLine(cmdline))
-    {
         return 0;
-    }
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
