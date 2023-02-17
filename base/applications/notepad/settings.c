@@ -158,15 +158,16 @@ void NOTEPAD_ResetSettings(void)
  */
 void NOTEPAD_LoadSettingsFromRegistry(void)
 {
-    HKEY hKey = NULL;
+    HKEY hKey;
     HFONT hFont;
+    INT dx, dy;
+    DWORD dwPointSize;
 
     NOTEPAD_ResetSettings();
 
     if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
     {
-        INT dx, dy;
-        DWORD dwPointSize = 0;
+        dwPointSize = 100;
 
         QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
         QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
@@ -198,10 +199,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         Globals.main_rect.right = Globals.main_rect.left + dx;
         Globals.main_rect.bottom = Globals.main_rect.top + dy;
 
-        if (dwPointSize != 0)
-            Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
-        else
-            Globals.lfFont.lfHeight = HeightFromPointSize(100);
+        Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
 
         RegCloseKey(hKey);
     }
