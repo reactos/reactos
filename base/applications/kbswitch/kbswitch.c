@@ -28,10 +28,10 @@
 
 PKBSWITCHSETHOOKS    KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
-UINT ShellHookMessage = 0;
 
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
+HWND      g_hMainWnd = NULL;
 HMODULE   g_hHookDLL = NULL;
 ULONG     ulCurrentLayoutNum = 1;
 HICON     g_hTrayIcon = NULL;
@@ -700,6 +700,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
+            g_hMainWnd = hwnd;
+
             if (!SetHooks())
             {
                 MessageBox(NULL, TEXT("SetHooks failed."), NULL, MB_ICONERROR);
@@ -720,6 +722,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
+        case WM_WINDOW_CREATE:
+        case WM_WINDOW_DESTROY:
         {
             HWND hwndFore = GetForegroundWindow();
             if (RememberLastActive(hwnd, hwndFore))
@@ -854,6 +858,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
             PostQuitMessage(0);
+            g_hMainWnd = NULL;
             break;
         }
 
@@ -862,15 +867,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             if (Message == s_uTaskbarRestart)
             {
                 AddTrayIcon(hwnd);
-                break;
-            }
-            else if (Message == ShellHookMessage)
-            {
-                if (wParam == HSHELL_LANGUAGE)
-                    PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
-                else if (wParam == HSHELL_WINDOWACTIVATED)
-                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, wParam, lParam);
-
                 break;
             }
             return DefWindowProc(hwnd, Message, wParam, lParam);
@@ -886,7 +882,6 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     WNDCLASS WndClass;
     MSG msg;
     HANDLE hMutex;
-    HWND hwnd;
 
     switch (GetUserDefaultUILanguage())
     {
@@ -921,9 +916,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         return 1;
     }
 
-    hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
-    ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
-    RegisterShellHookWindow(hwnd);
+    CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
 
     while (GetMessage(&msg, NULL, 0, 0))
     {

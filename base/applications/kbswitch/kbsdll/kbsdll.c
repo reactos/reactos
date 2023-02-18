@@ -7,16 +7,27 @@
 
 #include "../kbswitch.h"
 
-HHOOK hWinHook = NULL;
-HHOOK hShellHook = NULL;
 HINSTANCE hInstance = NULL;
-HWND hKbSwitchWnd = NULL;
 
-static VOID
-PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-    PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
-}
+#ifdef _MSC_VER
+    #define SHARED(name)
+#else
+    #define SHARED(name) __attribute__((section(name), shared))
+#endif
+
+#ifdef _MSC_VER
+    #pragma data_seg(".shared")
+#endif
+
+/* The following handles are shared throughout the system: */
+HHOOK hWinHook SHARED(".shared") = NULL;
+HHOOK hShellHook SHARED(".shared") = NULL;
+HWND hKbSwitchWnd SHARED(".shared") = NULL;
+
+#ifdef _MSC_VER
+    #pragma data_seg()
+    #pragma comment(linker, "/section:.shared,rws")
+#endif
 
 LRESULT CALLBACK
 WinHookProc(int code, WPARAM wParam, LPARAM lParam)
@@ -33,7 +44,7 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != hKbSwitchWnd)
             {
-                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
+                PostMessage(hKbSwitchWnd, WM_WINDOW_ACTIVATE, wParam, lParam);
             }
         }
         break;
@@ -53,10 +64,20 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
     switch (code)
     {
         case HSHELL_LANGUAGE:
-        {
-            PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
-        }
-        break;
+            PostMessage(hKbSwitchWnd, WM_LANG_CHANGED, wParam, lParam);
+            break;
+
+        case HSHELL_WINDOWACTIVATED:
+            PostMessageW(hKbSwitchWnd, WM_WINDOW_ACTIVATE, wParam, lParam);
+            break;
+
+        case HSHELL_WINDOWCREATED:
+            PostMessageW(hKbSwitchWnd, WM_WINDOW_CREATE, wParam, lParam);
+            break;
+
+        case HSHELL_WINDOWDESTROYED:
+            PostMessageW(hKbSwitchWnd, WM_WINDOW_DESTROY, wParam, lParam);
+            break;
     }
 
     return CallNextHookEx(hShellHook, code, wParam, lParam);
