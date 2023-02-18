@@ -715,13 +715,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
+        case WM_LANG_CHANGED: /* Comes from kbsdll.dll */
         {
             UpdateLanguageDisplay(hwnd, (HKL)lParam);
             break;
         }
 
-        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
+        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll */
         case WM_WINDOW_CREATE:
         case WM_WINDOW_DESTROY:
         {
