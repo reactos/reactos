@@ -692,11 +692,11 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - strlen(Text)) / 2;
+        coPos.X = (SHORT)((xScreen - strlen(Text)) / 2);
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {
-        coPos.X = coPos.X - strlen(Text);
+        coPos.X = (SHORT)(coPos.X - strlen(Text));
 
         if (Flags & TEXT_PADDING_SMALL)
         {
