@@ -41,6 +41,7 @@ SHORT yScreen = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+/* TODO: Replace CONSOLE_SetStatusTextXV with CONSOLE_SetStatusTextXV_Improved */
 VOID
 CONSOLE_SetStatusTextXV(
     IN SHORT x,
@@ -74,7 +75,7 @@ CONSOLE_Init(VOID)
     xScreen = csbi.dwSize.X;
     yScreen = csbi.dwSize.Y;
 
-    /* Test */
+    /* TODO: Delete this test code later */
     {
         DWORD i;
         FILETIME ft0, ft1;
