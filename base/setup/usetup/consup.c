@@ -675,12 +675,9 @@ CONSOLE_SetStyledText(
     IN LPCSTR Text)
 {
     COORD coPos;
-    DWORD Length;
 
     coPos.X = x;
     coPos.Y = y;
-
-    Length = (ULONG)strlen(Text);
 
     if (Flags & TEXT_TYPE_STATUS)
     {
@@ -695,11 +692,11 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - Length) / 2;
+        coPos.X = (xScreen - strlen(Text)) / 2;
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {
-        coPos.X = coPos.X - Length;
+        coPos.X = coPos.X - strlen(Text);
 
         if (Flags & TEXT_PADDING_SMALL)
         {
