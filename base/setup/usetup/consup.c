@@ -509,7 +509,7 @@ CONSOLE_SetStatusTextXV_Improved(
     CHAR Buffer[128];
     INT nLength;
 
-    RtlFillMemory(Buffer, sizeof(Buffer), ' ');
+    RtlFillMemory(Buffer, xScreen, ' ');
     nLength = vsprintf(&Buffer[x], fmt, args);
     Buffer[nLength] = ' ';
 
