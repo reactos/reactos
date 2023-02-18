@@ -41,6 +41,17 @@ SHORT yScreen = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+CONSOLE_SetStatusTextXV(
+    IN SHORT x,
+    IN LPCSTR fmt,
+    IN va_list args);
+VOID
+CONSOLE_SetStatusTextXV_Improved(
+    IN SHORT x,
+    IN LPCSTR fmt,
+    IN va_list args);
+
 BOOLEAN
 CONSOLE_Init(VOID)
 {
@@ -62,6 +73,32 @@ CONSOLE_Init(VOID)
     }
     xScreen = csbi.dwSize.X;
     yScreen = csbi.dwSize.Y;
+
+    /* Test */
+    {
+        DWORD i;
+        FILETIME ft0, ft1;
+        GetSystemTimeAsFileTime(&ft0);
+        for (i = 0; i < 10000; ++i)
+        {
+            va_list va;
+            CONSOLE_SetStatusTextXV(0, "TESTTESTTEST", va);
+        }
+        GetSystemTimeAsFileTime(&ft1);
+        DPRINT1("CONSOLE_SetStatusTextXV: %d\n", ft1.dwLowDateTime - ft0.dwLowDateTime);
+    }
+    {
+        DWORD i;
+        FILETIME ft0, ft1;
+        GetSystemTimeAsFileTime(&ft0);
+        for (i = 0; i < 10000; ++i)
+        {
+            va_list va;
+            CONSOLE_SetStatusTextXV_Improved(0, "TESTTESTTEST", va);
+        }
+        GetSystemTimeAsFileTime(&ft1);
+        DPRINT1("CONSOLE_SetStatusTextXV_Improved: %d\n", ft1.dwLowDateTime - ft0.dwLowDateTime);
+    }
 
     return TRUE;
 }
@@ -455,6 +492,36 @@ CONSOLE_SetStatusTextXV(
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
                                  (ULONG)strlen(Buffer),
+                                 coPos,
+                                 &Written);
+}
+
+VOID
+CONSOLE_SetStatusTextXV_Improved(
+    IN SHORT x,
+    IN LPCSTR fmt,
+    IN va_list args)
+{
+    COORD coPos;
+    DWORD Written;
+    CHAR Buffer[128];
+    INT nLength;
+
+    RtlFillMemory(Buffer, sizeof(Buffer), ' ');
+    nLength = vsprintf(&Buffer[x], fmt, args);
+    Buffer[nLength] = ' ';
+
+    coPos.X = 0;
+    coPos.Y = yScreen - 1;
+    FillConsoleOutputAttribute(StdOutput,
+                               BACKGROUND_WHITE,
+                               xScreen,
+                               coPos,
+                               &Written);
+    coPos.X = 0;
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Buffer,
+                                 xScreen,
                                  coPos,
                                  &Written);
 }
