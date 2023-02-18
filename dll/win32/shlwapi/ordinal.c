@@ -4131,6 +4131,14 @@ HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD si
     if(RegQueryValueExW(hkey, value, NULL, &type, (LPBYTE)buf, &sz) != ERROR_SUCCESS)
         return E_FAIL;
 
+#ifdef __REACTOS__
+    if (wcschr(buf, L'%') != NULL)
+    {
+        WCHAR szExpanded[MAX_PATH];
+        ExpandEnvironmentStrings(buf, szExpanded, ARRAY_SIZE(szExpanded));
+        lstrcpynW(buf, szExpanded, size);
+    }
+#endif
     return SHLoadIndirectString(buf, buf, size, NULL);
 }
 
