@@ -3152,7 +3152,7 @@ static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ERR("Exception!\n");
+            FIXME("Exception!\n");
             hwndImeFocus = NULL;
         }
         _SEH2_END;
