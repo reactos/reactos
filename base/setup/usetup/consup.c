@@ -511,7 +511,7 @@ CONSOLE_SetStatusTextXV_Improved(
 
     RtlFillMemory(Buffer, xScreen, ' ');
     nLength = vsprintf(&Buffer[x], fmt, args);
-    Buffer[nLength] = ' ';
+    Buffer[x + nLength] = ' ';
 
     coPos.X = 0;
     coPos.Y = yScreen - 1;
