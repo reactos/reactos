@@ -523,7 +523,6 @@ CONSOLE_SetStatusTextXV_Improved(
                                xScreen,
                                coPos,
                                &Written);
-    coPos.X = 0;
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
                                  xScreen,
