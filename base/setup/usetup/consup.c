@@ -82,6 +82,7 @@ CONSOLE_Init(VOID)
         for (i = 0; i < 10000; ++i)
         {
             va_list va;
+            *(int*)&va = 0;
             CONSOLE_SetStatusTextXV(0, "TESTTESTTEST", va);
         }
         GetSystemTimeAsFileTime(&ft1);
@@ -94,6 +95,7 @@ CONSOLE_Init(VOID)
         for (i = 0; i < 10000; ++i)
         {
             va_list va;
+            *(int*)&va = 0;
             CONSOLE_SetStatusTextXV_Improved(0, "TESTTESTTEST", va);
         }
         GetSystemTimeAsFileTime(&ft1);
