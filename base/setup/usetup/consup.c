@@ -41,18 +41,6 @@ SHORT yScreen = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-/* TODO: Replace CONSOLE_SetStatusTextXV with CONSOLE_SetStatusTextXV_Improved */
-VOID
-CONSOLE_SetStatusTextXV(
-    IN SHORT x,
-    IN LPCSTR fmt,
-    IN va_list args);
-VOID
-CONSOLE_SetStatusTextXV_Improved(
-    IN SHORT x,
-    IN LPCSTR fmt,
-    IN va_list args);
-
 BOOLEAN
 CONSOLE_Init(VOID)
 {
@@ -74,34 +62,6 @@ CONSOLE_Init(VOID)
     }
     xScreen = csbi.dwSize.X;
     yScreen = csbi.dwSize.Y;
-
-    /* TODO: Delete this test code later */
-    {
-        DWORD i;
-        FILETIME ft0, ft1;
-        GetSystemTimeAsFileTime(&ft0);
-        for (i = 0; i < 10000; ++i)
-        {
-            va_list va;
-            *(int*)&va = 0;
-            CONSOLE_SetStatusTextXV(0, "TESTTESTTEST", va);
-        }
-        GetSystemTimeAsFileTime(&ft1);
-        DPRINT1("CONSOLE_SetStatusTextXV: %d\n", ft1.dwLowDateTime - ft0.dwLowDateTime);
-    }
-    {
-        DWORD i;
-        FILETIME ft0, ft1;
-        GetSystemTimeAsFileTime(&ft0);
-        for (i = 0; i < 10000; ++i)
-        {
-            va_list va;
-            *(int*)&va = 0;
-            CONSOLE_SetStatusTextXV_Improved(0, "TESTTESTTEST", va);
-        }
-        GetSystemTimeAsFileTime(&ft1);
-        DPRINT1("CONSOLE_SetStatusTextXV_Improved: %d\n", ft1.dwLowDateTime - ft0.dwLowDateTime);
-    }
 
     return TRUE;
 }
@@ -463,7 +423,6 @@ CONSOLE_SetUnderlinedTextXY(
                                 &Written);
 }
 
-/* This is the target function */
 VOID
 CONSOLE_SetStatusTextXV(
     IN SHORT x,
@@ -473,45 +432,9 @@ CONSOLE_SetStatusTextXV(
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
-
-    vsprintf(Buffer, fmt, args);
-
-    coPos.X = 0;
-    coPos.Y = yScreen - 1;
-
-    FillConsoleOutputAttribute(StdOutput,
-                               BACKGROUND_WHITE,
-                               xScreen,
-                               coPos,
-                               &Written);
-
-    /* This function call causes blinking */
-    FillConsoleOutputCharacterA(StdOutput,
-                                ' ',
-                                xScreen,
-                                coPos,
-                                &Written);
-
-    coPos.X = x;
-
-    WriteConsoleOutputCharacterA(StdOutput,
-                                 Buffer,
-                                 (ULONG)strlen(Buffer),
-                                 coPos,
-                                 &Written);
-}
-
-VOID
-CONSOLE_SetStatusTextXV_Improved(
-    IN SHORT x,
-    IN LPCSTR fmt,
-    IN va_list args)
-{
-    COORD coPos;
-    DWORD Written;
-    CHAR Buffer[128];
     INT nLength;
 
+    ASSERT(xScreen <= sizeof(Buffer));
     memset(Buffer, ' ', xScreen);
     nLength = vsprintf(&Buffer[x], fmt, args);
     Buffer[x + nLength] = ' ';
