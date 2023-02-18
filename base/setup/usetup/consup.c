@@ -462,6 +462,7 @@ CONSOLE_SetUnderlinedTextXY(
                                 &Written);
 }
 
+/* This is the target function */
 VOID
 CONSOLE_SetStatusTextXV(
     IN SHORT x,
@@ -483,6 +484,7 @@ CONSOLE_SetStatusTextXV(
                                coPos,
                                &Written);
 
+    /* This function call causes blinking */
     FillConsoleOutputCharacterA(StdOutput,
                                 ' ',
                                 xScreen,
