@@ -228,13 +228,7 @@ static void AlertPrintError(void)
  */
 BOOL FileExists(LPCTSTR szFilename)
 {
-    WIN32_FIND_DATA entry;
-    HANDLE hFile;
-
-    hFile = FindFirstFile(szFilename, &entry);
-    FindClose(hFile);
-
-    return (hFile != INVALID_HANDLE_VALUE);
+    return GetFileAttributes(szFilename) != INVALID_FILE_ATTRIBUTES;
 }
 
 BOOL HasFileExtension(LPCTSTR szFilename)
