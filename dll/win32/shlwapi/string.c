@@ -2878,6 +2878,9 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
     WCHAR *dllname = NULL;
     HMODULE hmod = NULL;
     HRESULT hr = E_FAIL;
+#ifdef __REACTOS__
+    WCHAR szExpanded[MAX_PATH];
+#endif
 
     TRACE("(%s %p %08x %p)\n", debugstr_w(src), dst, dst_len, reserved);
 
@@ -2886,6 +2889,13 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
         WCHAR *index_str;
         int index;
 
+#ifdef __REACTOS__
+        if (wcschr(src, '%') != NULL)
+        {
+            ExpandEnvironmentStrings(src, szExpanded, ARRAYSIZE(szExpanded));
+            src = szExpanded;
+        }
+#endif
         dst[0] = 0;
         dllname = StrDupW(src + 1);
         index_str = strchrW(dllname, ',');
