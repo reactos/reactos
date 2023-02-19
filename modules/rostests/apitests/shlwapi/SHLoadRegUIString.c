@@ -17,15 +17,11 @@ static FN_SHLoadRegUIStringW pSHLoadRegUIStringW = NULL;
 static void test_SHLoadRegUIStringA(HKEY hKey)
 {
     HRESULT hr;
-    CHAR szTestValue[MAX_PATH];
     CHAR szBuff[MAX_PATH];
-
-    GetWindowsDirectoryA(szTestValue, _countof(szTestValue));
-    lstrcatA(szTestValue, "\\TEST");
 
     hr = pSHLoadRegUIStringA(hKey, "TestValue1", szBuff, _countof(szBuff));
     ok_long(hr, S_OK);
-    ok_str(szBuff, szTestValue);
+    ok_str(szBuff, "%WINDIR%\\TEST");
 
     hr = pSHLoadRegUIStringA(hKey, "TestValue2", szBuff, _countof(szBuff));
     ok_long(hr, S_OK);
@@ -35,11 +31,7 @@ static void test_SHLoadRegUIStringA(HKEY hKey)
 static void test_SHLoadRegUIStringW(HKEY hKey)
 {
     HRESULT hr;
-    WCHAR szTestValue[MAX_PATH];
     WCHAR szBuff[MAX_PATH];
-
-    GetWindowsDirectoryW(szTestValue, _countof(szTestValue));
-    lstrcatW(szTestValue, L"\\TEST");
 
     hr = pSHLoadRegUIStringW(hKey, L"TestValue1", szBuff, _countof(szBuff));
     ok_long(hr, S_OK);
