@@ -1140,7 +1140,20 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             if (LOWORD(wParam) == IDOK)
             {
-                s_pGotoData->iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                INT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                if (iLine <= 0 || s_pGotoData->cLines < iLine) /* Out of range */
+                {
+                    /* Show error message */
+                    WCHAR title[128], text[256];
+                    LoadStringW(Globals.hInstance, STRING_NOTEPAD, title, ARRAY_SIZE(title));
+                    LoadStringW(Globals.hInstance, STRING_LINE_NUMBER_OUT_OF_RANGE, text, ARRAY_SIZE(text));
+                    MessageBoxW(hwndDialog, text, title, MB_OK);
+
+                    SendDlgItemMessageW(hwndDialog, ID_LINENUMBER, EM_SETSEL, 0, -1);
+                    SetFocus(GetDlgItem(hwndDialog, ID_LINENUMBER));
+                    break;
+                }
+                s_pGotoData->iLine = iLine;
                 EndDialog(hwndDialog, IDOK);
             }
             else if (LOWORD(wParam) == IDCANCEL)
