@@ -435,7 +435,7 @@
 435 stdcall -noname CLSIDFromProgIDWrap(wstr ptr) ole32.CLSIDFromProgID
 436 stdcall -noname CLSIDFromStringWrap(wstr ptr)
 437 stdcall -noname IsOS(long)
-438 stub -noname SHLoadRegUIStringA
+438 stdcall -noname SHLoadRegUIStringA(ptr str ptr long)
 439 stdcall -noname SHLoadRegUIStringW(ptr wstr ptr long)
 440 stdcall -noname SHGetWebFolderFilePathA(str ptr long)
 441 stdcall -noname SHGetWebFolderFilePathW(wstr ptr long)

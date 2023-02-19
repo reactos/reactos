@@ -51,6 +51,12 @@ START_TEST(SHLoadRegUIString)
     static const WCHAR s_szTestValue2[] = L"@shlwapi_resource_dll.dll%EmptyEnvVar%,-3";
     HMODULE hSHLWAPI;
 
+    if (!PathFileExistsW(L"shlwapi_resource_dll.dll"))
+    {
+        skip("File 'shlwapi_resource_dll.dll' does not exist\n");
+        return;
+    }
+
     SetEnvironmentVariableW(L"EmptyEnvVar", L"");
 
     /* Get procedures */
