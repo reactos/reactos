@@ -935,7 +935,7 @@ VOID DoShowHideStatusBar(VOID)
     }
 
     /* Update layout of controls */
-    PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
+    SendMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
     if (Globals.hStatusBar == NULL)
         return;
@@ -944,7 +944,6 @@ VOID DoShowHideStatusBar(VOID)
     ShowWindow(Globals.hStatusBar, (Globals.bShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
 
     /* Update status bar contents */
-    DIALOG_StatusBarAlignParts();
     DIALOG_StatusBarUpdateAll();
 }
 
