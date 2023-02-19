@@ -429,14 +429,15 @@ CONSOLE_SetStatusTextXV(
     IN LPCSTR fmt,
     IN va_list args)
 {
+    INT nLength;
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
-    INT nLength;
 
     ASSERT(xScreen <= sizeof(Buffer));
-    memset(Buffer, ' ', xScreen);
+    memset(Buffer, ' ', min(sizeof(Buffer), xScreen));
     nLength = vsprintf(&Buffer[x], fmt, args);
+    ASSERT(x + nLength < sizeof(Buffer));
     Buffer[x + nLength] = ' ';
 
     coPos.X = 0;
