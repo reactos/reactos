@@ -42,20 +42,16 @@ static void test_SHLoadRegUIStringW(HKEY hKey)
     ok_wstr(szBuff, L"Test string one.");
 }
 
+BOOL extract_resource(const WCHAR* Filename, LPCWSTR ResourceName);
+
 START_TEST(SHLoadRegUIString)
 {
     LONG error;
     HKEY hKey;
     DWORD cbValue;
     static const WCHAR s_szTestValue1[] = L"%WINDIR%\\TEST";
-    static const WCHAR s_szTestValue2[] = L"@shlwapi_resource_dll.dll%EmptyEnvVar%,-3";
+    static const WCHAR s_szTestValue2[] = L"@SHLoadRegUIString.dll%EmptyEnvVar%,-3";
     HMODULE hSHLWAPI;
-
-    if (!PathFileExistsW(L"shlwapi_resource_dll.dll"))
-    {
-        skip("File 'shlwapi_resource_dll.dll' does not exist\n");
-        return;
-    }
 
     SetEnvironmentVariableW(L"EmptyEnvVar", L"");
 
@@ -66,6 +62,12 @@ START_TEST(SHLoadRegUIString)
     if (!pSHLoadRegUIStringA || !pSHLoadRegUIStringW)
     {
         skip("No procedure found\n");
+        return;
+    }
+
+    if (!extract_resource(L"SHLoadRegUIString.dll", MAKEINTRESOURCEW(101)))
+    {
+        skip("File 'SHLoadRegUIString.dll' cannot be extracted\n");
         return;
     }
 
@@ -87,5 +89,8 @@ START_TEST(SHLoadRegUIString)
 
     /* Delete the test values and close the key */
     RegDeleteValueW(hKey, L"TestValue1");
+    RegDeleteValueW(hKey, L"TestValue2");
     RegCloseKey(hKey);
+
+    DeleteFileW(L"SHLoadRegUIString.dll");
 }
