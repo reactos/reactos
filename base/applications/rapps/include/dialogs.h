@@ -17,6 +17,6 @@ MainWindowLoop(class CAppDB *db, INT nShowCmd);
 VOID
 DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);
 BOOL
-DownloadApplication(CApplicationInfo *pAppInfo);
+DownloadApplication(CAppInfo *pAppInfo);
 BOOL
-DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bIsModal);
+DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, BOOL bIsModal);

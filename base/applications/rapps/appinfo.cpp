@@ -10,12 +10,12 @@
 #include "rapps.h"
 #include "appview.h"
 
-CApplicationInfo::CApplicationInfo(const CStringW &Identifier, AppsCategories Category)
+CAppInfo::CAppInfo(const CStringW &Identifier, AppsCategories Category)
     : szIdentifier(Identifier), iCategory(Category)
 {
 }
 
-CApplicationInfo::~CApplicationInfo()
+CAppInfo::~CAppInfo()
 {
 }
 
@@ -24,7 +24,7 @@ CAvailableApplicationInfo::CAvailableApplicationInfo(
     const CStringW &PkgName,
     AppsCategories Category,
     const CPathW &BasePath)
-    : CApplicationInfo(PkgName, Category), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
+    : CAppInfo(PkgName, Category), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
 {
     m_Parser->GetString(L"Name", szDisplayName);
     m_Parser->GetString(L"Version", szDisplayVersion);
@@ -369,7 +369,7 @@ CInstalledApplicationInfo::CInstalledApplicationInfo(
     const CStringW &KeyName,
     AppsCategories Category,
     int KeyIndex)
-    : CApplicationInfo(KeyName, Category), m_hKey(Key), iKeyIndex(KeyIndex)
+    : CAppInfo(KeyName, Category), m_hKey(Key), iKeyIndex(KeyIndex)
 {
     if (GetApplicationRegString(L"DisplayName", szDisplayName))
     {

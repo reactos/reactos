@@ -53,11 +53,11 @@ HandleInstallCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLef
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> Applications;
+    CAtlList<CAppInfo *> Applications;
     for (int i = 0; i < argcLeft; i++)
     {
         LPCWSTR PackageName = argvLeft[i];
-        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
+        CAppInfo *AppInfo = db->FindByPackageName(PackageName);
         if (AppInfo)
         {
             Applications.AddTail(AppInfo);
@@ -77,7 +77,7 @@ HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> Applications;
+    CAtlList<CAppInfo *> Applications;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
     if (InfHandle == INVALID_HANDLE_VALUE)
     {
@@ -92,7 +92,7 @@ HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         {
             if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
             {
-                CApplicationInfo *AppInfo = db->FindByPackageName(szPkgName);
+                CAppInfo *AppInfo = db->FindByPackageName(szPkgName);
                 if (AppInfo)
                 {
                     Applications.AddTail(AppInfo);
@@ -114,7 +114,7 @@ HandleFindCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> List;
+    CAtlList<CAppInfo *> List;
     db->GetApps(List, ENUM_ALL_AVAILABLE);
 
     for (int i = 0; i < argcLeft; i++)
@@ -125,7 +125,7 @@ HandleFindCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         POSITION CurrentListPosition = List.GetHeadPosition();
         while (CurrentListPosition)
         {
-            CApplicationInfo *Info = List.GetNext(CurrentListPosition);
+            CAppInfo *Info = List.GetNext(CurrentListPosition);
 
             if (SearchPatternMatch(Info->szDisplayName, lpszSearch) || SearchPatternMatch(Info->szComments, lpszSearch))
             {
@@ -151,7 +151,7 @@ HandleInfoCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     for (int i = 0; i < argcLeft; i++)
     {
         LPCWSTR PackageName = argvLeft[i];
-        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
+        CAppInfo *AppInfo = db->FindByPackageName(PackageName);
         if (!AppInfo)
         {
             ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_NOT_FOUND, PackageName);

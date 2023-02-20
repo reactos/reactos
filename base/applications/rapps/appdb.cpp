@@ -18,12 +18,12 @@ static REGSAM g_RegSamEnum[3] = {KEY_WOW64_32KEY, KEY_WOW64_32KEY, KEY_WOW64_64K
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
 static VOID
-ClearList(CAtlList<CApplicationInfo *> &list)
+ClearList(CAtlList<CAppInfo *> &list)
 {
     POSITION InfoListPosition = list.GetHeadPosition();
     while (InfoListPosition)
     {
-        CApplicationInfo *Info = list.GetNext(InfoListPosition);
+        CAppInfo *Info = list.GetNext(InfoListPosition);
         delete Info;
     }
     list.RemoveAll();
@@ -34,13 +34,13 @@ CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
     m_BasePath.Canonicalize();
 }
 
-CApplicationInfo *
+CAppInfo *
 CAppDB::FindByPackageName(const CStringW &name)
 {
     POSITION CurrentListPosition = m_Available.GetHeadPosition();
     while (CurrentListPosition)
     {
-        CApplicationInfo *Info = m_Available.GetNext(CurrentListPosition);
+        CAppInfo *Info = m_Available.GetNext(CurrentListPosition);
         if (Info->szIdentifier == name)
         {
             return Info;
@@ -50,16 +50,16 @@ CAppDB::FindByPackageName(const CStringW &name)
 }
 
 void
-CAppDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const
+CAppDB::GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const
 {
     const BOOL UseInstalled = IsInstalledEnum(Type);
-    const CAtlList<CApplicationInfo *> &list = UseInstalled ? m_Installed : m_Available;
+    const CAtlList<CAppInfo *> &list = UseInstalled ? m_Installed : m_Available;
     const BOOL IncludeAll = UseInstalled ? (Type == ENUM_ALL_INSTALLED) : (Type == ENUM_ALL_AVAILABLE);
 
     POSITION CurrentListPosition = list.GetHeadPosition();
     while (CurrentListPosition)
     {
-        CApplicationInfo *Info = list.GetNext(CurrentListPosition);
+        CAppInfo *Info = list.GetNext(CurrentListPosition);
 
         if (IncludeAll || Type == Info->iCategory)
         {
@@ -91,7 +91,7 @@ CAppDB::EnumerateFiles()
         PathRemoveExtensionW(szPkgName.GetBuffer(MAX_PATH));
         szPkgName.ReleaseBuffer();
 
-        CApplicationInfo *Info = FindByPackageName(szPkgName);
+        CAppInfo *Info = FindByPackageName(szPkgName);
         ATLASSERT(Info == NULL);
         if (!Info)
         {
@@ -263,7 +263,7 @@ CAppDB::RemoveCached()
 }
 
 BOOL
-CAppDB::RemoveInstalledAppFromRegistry(const CApplicationInfo *Info)
+CAppDB::RemoveInstalledAppFromRegistry(const CAppInfo *Info)
 {
     // Validate that this is actually an installed app / update
     ATLASSERT(Info->iCategory == ENUM_INSTALLED_APPLICATIONS || Info->iCategory == ENUM_UPDATES);

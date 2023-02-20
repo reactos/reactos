@@ -9,8 +9,8 @@ class CAppDB
 {
   private:
     CPathW m_BasePath;
-    CAtlList<CApplicationInfo *> m_Available;
-    CAtlList<CApplicationInfo *> m_Installed;
+    CAtlList<CAppInfo *> m_Available;
+    CAtlList<CAppInfo *> m_Installed;
 
     BOOL
     EnumerateFiles();
@@ -19,8 +19,8 @@ class CAppDB
     CAppDB(const CStringW &path);
 
     VOID
-    GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const;
-    CApplicationInfo *
+    GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const;
+    CAppInfo *
     FindByPackageName(const CStringW &name);
 
     VOID
@@ -31,5 +31,5 @@ class CAppDB
     RemoveCached();
 
     BOOL
-    RemoveInstalledAppFromRegistry(const CApplicationInfo *Info);
+    RemoveInstalledAppFromRegistry(const CAppInfo *Info);
 };

@@ -85,7 +85,7 @@ struct DownloadInfo
     DownloadInfo()
     {
     }
-    DownloadInfo(const CApplicationInfo &AppInfo) : DLType(DLTYPE_APPLICATION)
+    DownloadInfo(const CAppInfo &AppInfo) : DLType(DLTYPE_APPLICATION)
     {
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
@@ -1052,7 +1052,7 @@ CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 // CDownloadManager
 
 BOOL
-DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bIsModal)
+DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, BOOL bIsModal)
 {
     if (AppsList.IsEmpty())
         return FALSE;
@@ -1060,7 +1060,7 @@ DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bI
     POSITION CurrentListPosition = AppsList.GetHeadPosition();
     while (CurrentListPosition)
     {
-        const CApplicationInfo *Info = AppsList.GetNext(CurrentListPosition);
+        const CAppInfo *Info = AppsList.GetNext(CurrentListPosition);
         CDownloadManager::Add(DownloadInfo(*Info));
     }
 
@@ -1071,7 +1071,7 @@ DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bI
 }
 
 BOOL
-DownloadApplication(CApplicationInfo *pAppInfo)
+DownloadApplication(CAppInfo *pAppInfo)
 {
     if (!pAppInfo)
         return FALSE;
