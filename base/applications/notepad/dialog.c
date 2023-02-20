@@ -242,68 +242,41 @@ BOOL HasFileExtension(LPCTSTR szFilename)
 
 int GetSelectionTextLength(HWND hWnd)
 {
-    DWORD dwStart = 0;
-    DWORD dwEnd = 0;
-
+    DWORD dwStart = 0, dwEnd = 0;
     SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-
     return dwEnd - dwStart;
 }
 
 int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
 {
-    DWORD dwStart = 0;
-    DWORD dwEnd = 0;
-    DWORD dwSize;
-    HRESULT hResult;
-    LPTSTR lpTemp;
-
-    if (!lpString)
-    {
-        return 0;
-    }
+    DWORD dwStart = 0, dwEnd = 0;
+    INT cchText = GetWindowTextLength(hWnd);
+    LPTSTR pszText;
+    HLOCAL hLocal;
+    HRESULT hr;
 
     SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-
-    if (dwStart == dwEnd)
-    {
+    if (!lpString || dwStart == dwEnd || cchText == 0)
         return 0;
-    }
 
-    dwSize = GetWindowTextLength(hWnd) + 1;
-    lpTemp = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(TCHAR));
-    if (!lpTemp)
-    {
+    hLocal = (HLOCAL)SendMessage(hWnd, EM_GETHANDLE, 0, 0);
+    pszText = (LPTSTR)LocalLock(hLocal);
+    if (!pszText)
         return 0;
-    }
 
-    dwSize = GetWindowText(hWnd, lpTemp, dwSize);
+    hr = StringCchCopyN(lpString, nMaxCount, pszText + dwStart, dwEnd - dwStart);
+    LocalUnlock(hLocal);
 
-    if (!dwSize)
-    {
-        HeapFree(GetProcessHeap(), 0, lpTemp);
-        return 0;
-    }
-
-    hResult = StringCchCopyN(lpString, nMaxCount, lpTemp + dwStart, dwEnd - dwStart);
-    HeapFree(GetProcessHeap(), 0, lpTemp);
-
-    switch (hResult)
+    switch (hr)
     {
         case S_OK:
-        {
             return dwEnd - dwStart;
-        }
 
         case STRSAFE_E_INSUFFICIENT_BUFFER:
-        {
             return nMaxCount - 1;
-        }
 
         default:
-        {
             return 0;
-        }
     }
 }
 
