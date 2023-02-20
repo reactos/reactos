@@ -143,7 +143,7 @@ DoWatchDestFileName(LPCWSTR FileName)
 
 /* FUNCTIONS ****************************************************************/
 
-VOID StopWatch(LPCSTR Name)
+VOID StopWatch(LPCSTR Name OPTIONAL)
 {
     static FILETIME s_ft;
     static LPCSTR s_name;
