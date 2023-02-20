@@ -130,6 +130,4 @@ PopupError(IN PCCH Text,
            IN PINPUT_RECORD Ir,
            IN ULONG WaitEvent);
 
-VOID StopWatch(LPCSTR Name OPTIONAL);
-
 #endif /* _USETUP_PCH_ */
