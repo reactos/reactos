@@ -434,7 +434,6 @@ CONSOLE_SetStatusTextXV(
     DWORD Written;
     CHAR Buffer[128];
 
-    ASSERT(xScreen <= sizeof(Buffer));
     memset(Buffer, ' ', min(sizeof(Buffer), xScreen));
     nLength = vsprintf(&Buffer[x], fmt, args);
     ASSERT(x + nLength < sizeof(Buffer));
