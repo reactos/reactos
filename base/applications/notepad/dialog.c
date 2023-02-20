@@ -1175,8 +1175,8 @@ VOID DIALOG_GoTo(VOID)
 
     /* Get the current line number and the total line number */
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
-    GotoData.iLine = (INT)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, dwStart, 0) + 1;
-    GotoData.cLines = (INT)SendMessage(Globals.hEdit, EM_GETLINECOUNT, 0, 0);
+    GotoData.iLine = (UINT)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, dwStart, 0) + 1;
+    GotoData.cLines = (UINT)SendMessage(Globals.hEdit, EM_GETLINECOUNT, 0, 0);
 
     /* Ask the user for line number */
     if (DialogBoxParam(Globals.hInstance,
