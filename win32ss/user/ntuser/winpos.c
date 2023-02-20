@@ -1770,8 +1770,8 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
         {
             continue;
         }
-        /* Now hwndNode is an IME window of the current thread */
 
+        /* Now hwndNode is an IME window of the current thread */
         UserRefObjectCo(pwndNode, &Ref);
         co_IntSendMessage(hwndNode, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
         UserDerefObjectCo(pwndNode);
