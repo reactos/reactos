@@ -4142,7 +4142,8 @@ HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size
         return hr;
 
     WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buf, size, NULL, NULL);
-    buf[size - 1] = 0; /* Avoid buffer overrun */
+    if (size > 0)
+        buf[size - 1] = 0; /* Avoid buffer overrun */
     return S_OK;
 }
 
