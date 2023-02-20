@@ -2337,7 +2337,7 @@ co_WinPosSetWindowPos(
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
 
-   /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI if necessary */
+   /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME windows if necessary */
    if ((WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE)) != (SWP_NOMOVE | SWP_NOSIZE))
    {
       if (IS_IMM_MODE())
