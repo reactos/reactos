@@ -2,14 +2,14 @@
 #define _RAPPS_H
 
 #if DBG && !defined(_DEBUG)
-    #define _DEBUG  // CORE-17505
+#define _DEBUG // CORE-17505
 #endif
 
 #include "defines.h"
 
 #include "dialogs.h"
-#include "installed.h"
-#include "available.h"
+#include "applicationinfo.h"
+#include "applicationdb.h"
 #include "misc.h"
 #include "configparser.h"
 

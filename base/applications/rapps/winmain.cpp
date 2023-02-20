@@ -13,7 +13,7 @@
 #include <gdiplus.h>
 #include <conutils.h>
 
-LPCWSTR szWindowClass = L"ROSAPPMGR";
+LPCWSTR szWindowClass = L"ROSAPPMGR2";
 
 HWND hMainWnd;
 HINSTANCE hInst;
@@ -25,8 +25,8 @@ END_OBJECT_MAP()
 CComModule gModule;
 CAtlWinModule gWinModule;
 
-
-INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
+INT WINAPI
+wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
 {
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;

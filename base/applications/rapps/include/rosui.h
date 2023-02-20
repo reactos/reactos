@@ -9,13 +9,12 @@
 
 #include <atlwin.h>
 
-template<class T, INT GrowthRate = 10>
-class CPointerArray
+template <class T, INT GrowthRate = 10> class CPointerArray
 {
-protected:
+  protected:
     HDPA m_hDpa;
 
-public:
+  public:
     CPointerArray()
     {
         m_hDpa = DPA_Create(GrowthRate);
@@ -26,26 +25,30 @@ public:
         DPA_DestroyCallback(m_hDpa, s_OnRemoveItem, this);
     }
 
-private:
-    static INT CALLBACK s_OnRemoveItem(PVOID ptr, PVOID context)
+  private:
+    static INT CALLBACK
+    s_OnRemoveItem(PVOID ptr, PVOID context)
     {
-        CPointerArray * self = (CPointerArray*) context;
-        return (INT) self->OnRemoveItem(reinterpret_cast<T*>(ptr));
+        CPointerArray *self = (CPointerArray *)context;
+        return (INT)self->OnRemoveItem(reinterpret_cast<T *>(ptr));
     }
 
-    static INT CALLBACK s_OnCompareItems(PVOID p1, PVOID p2, LPARAM lParam)
+    static INT CALLBACK
+    s_OnCompareItems(PVOID p1, PVOID p2, LPARAM lParam)
     {
-        CPointerArray * self = (CPointerArray*) lParam;
-        return self->OnCompareItems(reinterpret_cast<T*>(p1), reinterpret_cast<T*>(p2));
+        CPointerArray *self = (CPointerArray *)lParam;
+        return self->OnCompareItems(reinterpret_cast<T *>(p1), reinterpret_cast<T *>(p2));
     }
 
-public:
-    virtual BOOL OnRemoveItem(T * ptr)
+  public:
+    virtual BOOL
+    OnRemoveItem(T *ptr)
     {
         return TRUE;
     }
 
-    virtual INT OnCompareItems(T * p1, T * p2)
+    virtual INT
+    OnCompareItems(T *p1, T *p2)
     {
         INT_PTR t = (reinterpret_cast<INT_PTR>(p2) - reinterpret_cast<INT_PTR>(p1));
         if (t > 0)
@@ -55,38 +58,45 @@ public:
         return 0;
     }
 
-public:
-    INT GetCount() const
+  public:
+    INT
+    GetCount() const
     {
         return DPA_GetPtrCount(m_hDpa);
     }
 
-    T* Get(INT i) const
+    T *
+    Get(INT i) const
     {
-        return (T*) DPA_GetPtr(m_hDpa, i);
+        return (T *)DPA_GetPtr(m_hDpa, i);
     }
 
-    BOOL Set(INT i, T* ptr)
+    BOOL
+    Set(INT i, T *ptr)
     {
         return DPA_SetPtr(m_hDpa, i, ptr);
     }
 
-    INT Insert(INT at, T* ptr)
+    INT
+    Insert(INT at, T *ptr)
     {
         return DPA_InsertPtr(m_hDpa, at, ptr);
     }
 
-    INT Append(T* ptr)
+    INT
+    Append(T *ptr)
     {
         return DPA_InsertPtr(m_hDpa, DA_LAST, ptr);
     }
 
-    INT IndexOf(T* ptr) const
+    INT
+    IndexOf(T *ptr) const
     {
         return DPA_GetPtrIndex(m_hDpa, ptr);
     }
 
-    BOOL Remove(T* ptr)
+    BOOL
+    Remove(T *ptr)
     {
         INT i = IndexOf(ptr);
         if (i < 0)
@@ -94,38 +104,41 @@ public:
         return RemoveAt(i);
     }
 
-    BOOL RemoveAt(INT i)
+    BOOL
+    RemoveAt(INT i)
     {
         PVOID ptr = DPA_DeletePtr(m_hDpa, i);
         if (ptr != NULL)
         {
-            OnRemoveItem(reinterpret_cast<T*>(ptr));
+            OnRemoveItem(reinterpret_cast<T *>(ptr));
             return TRUE;
         }
         return FALSE;
     }
 
-    BOOL Clear()
+    BOOL
+    Clear()
     {
         DPA_EnumCallback(s_OnRemoveItem, this);
         return DPA_DeleteAllPtrs(m_hDpa);
     }
 
-    BOOL Sort()
+    BOOL
+    Sort()
     {
         return DPA_Sort(m_hDpa, s_OnCompareItems, (LPARAM)this);
     }
 
-    INT Search(T* item, INT iStart, UINT uFlags)
+    INT
+    Search(T *item, INT iStart, UINT uFlags)
     {
         return DPA_Search(m_hDpa, item, 0, s_OnCompareItems, (LPARAM)this, 0);
     }
 };
 
-class CUiRect
-    : public RECT
+class CUiRect : public RECT
 {
-public:
+  public:
     CUiRect()
     {
         left = right = top = bottom = 0;
@@ -140,28 +153,25 @@ public:
     }
 };
 
-class CUiMargin
-    : public CUiRect
+class CUiMargin : public CUiRect
 {
-public:
+  public:
     CUiMargin()
     {
     }
 
-    CUiMargin(INT all)
-        : CUiRect(all, all, all, all)
+    CUiMargin(INT all) : CUiRect(all, all, all, all)
     {
     }
 
-    CUiMargin(INT horz, INT vert)
-        : CUiRect(horz, vert, horz, vert)
+    CUiMargin(INT horz, INT vert) : CUiRect(horz, vert, horz, vert)
     {
     }
 };
 
 class CUiMeasure
 {
-public:
+  public:
     enum MeasureType
     {
         Type_FitContent = 0,
@@ -170,11 +180,11 @@ public:
         Type_FitParent = 3
     };
 
-private:
+  private:
     MeasureType m_Type;
     INT m_Value;
 
-public:
+  public:
     CUiMeasure()
     {
         m_Type = Type_FitContent;
@@ -187,40 +197,45 @@ public:
         m_Value = value;
     }
 
-    INT ComputeMeasure(INT parent, INT content)
+    INT
+    ComputeMeasure(INT parent, INT content)
     {
         switch (m_Type)
         {
-        case Type_FitContent:
-            return content;
-        case Type_Fixed:
-            return m_Value;
-        case Type_Percent:
-            return max(content, parent * m_Value / 100);
-        case Type_FitParent:
-            return parent;
+            case Type_FitContent:
+                return content;
+            case Type_Fixed:
+                return m_Value;
+            case Type_Percent:
+                return max(content, parent * m_Value / 100);
+            case Type_FitParent:
+                return parent;
         }
 
         return 0;
     }
 
-public:
-    static CUiMeasure FitContent()
+  public:
+    static CUiMeasure
+    FitContent()
     {
         return CUiMeasure(Type_FitContent, 0);
     }
 
-    static CUiMeasure FitParent()
+    static CUiMeasure
+    FitParent()
     {
         return CUiMeasure(Type_FitParent, 0);
     }
 
-    static CUiMeasure Fixed(INT pixels)
+    static CUiMeasure
+    Fixed(INT pixels)
     {
         return CUiMeasure(Type_Fixed, pixels);
     }
 
-    static CUiMeasure Percent(INT percent)
+    static CUiMeasure
+    Percent(INT percent)
     {
         return CUiMeasure(Type_Percent, percent);
     }
@@ -236,20 +251,21 @@ enum CUiAlignment
 
 class CUiBox
 {
-public:
+  public:
     CUiMargin m_Margin;
 
     CUiAlignment m_HorizontalAlignment;
     CUiAlignment m_VerticalAlignment;
 
-protected:
+  protected:
     CUiBox()
     {
         m_HorizontalAlignment = UiAlign_LeftTop;
         m_VerticalAlignment = UiAlign_LeftTop;
     }
 
-    virtual VOID ComputeRect(RECT parentRect, RECT currentRect, RECT* newRect)
+    virtual VOID
+    ComputeRect(RECT parentRect, RECT currentRect, RECT *newRect)
     {
         parentRect.left += m_Margin.left;
         parentRect.right -= m_Margin.right;
@@ -269,60 +285,62 @@ protected:
 
         switch (m_HorizontalAlignment)
         {
-        case UiAlign_LeftTop:
-            currentRect.right = currentRect.left + szCurrent.cx;
-            break;
-        case UiAlign_Middle:
-            currentRect.left = parentRect.left + (szParent.cx - szCurrent.cx) / 2;
-            currentRect.right = currentRect.left + szCurrent.cx;
-            break;
-        case UiAlign_RightBtm:
-            currentRect.left = currentRect.right - szCurrent.cx;
-            break;
-        default:
-            break;
+            case UiAlign_LeftTop:
+                currentRect.right = currentRect.left + szCurrent.cx;
+                break;
+            case UiAlign_Middle:
+                currentRect.left = parentRect.left + (szParent.cx - szCurrent.cx) / 2;
+                currentRect.right = currentRect.left + szCurrent.cx;
+                break;
+            case UiAlign_RightBtm:
+                currentRect.left = currentRect.right - szCurrent.cx;
+                break;
+            default:
+                break;
         }
 
         switch (m_VerticalAlignment)
         {
-        case UiAlign_LeftTop:
-            currentRect.bottom = currentRect.top + szCurrent.cy;
-            break;
-        case UiAlign_Middle:
-            currentRect.top = parentRect.top + (szParent.cy - szCurrent.cy) / 2;
-            currentRect.bottom = currentRect.top + szCurrent.cy;
-            break;
-        case UiAlign_RightBtm:
-            currentRect.top = currentRect.bottom - szCurrent.cy;
-            break;
-        default:
-            break;
+            case UiAlign_LeftTop:
+                currentRect.bottom = currentRect.top + szCurrent.cy;
+                break;
+            case UiAlign_Middle:
+                currentRect.top = parentRect.top + (szParent.cy - szCurrent.cy) / 2;
+                currentRect.bottom = currentRect.top + szCurrent.cy;
+                break;
+            case UiAlign_RightBtm:
+                currentRect.top = currentRect.bottom - szCurrent.cy;
+                break;
+            default:
+                break;
         }
 
         *newRect = currentRect;
     }
 
-
-public:
-    virtual VOID ComputeMinimalSize(SIZE* size)
+  public:
+    virtual VOID
+    ComputeMinimalSize(SIZE *size)
     {
         // Override in subclass
         size->cx = max(size->cx, 0);
         size->cy = min(size->cy, 0);
     };
 
-    virtual VOID ComputeContentBounds(RECT* rect)
-    {
+    virtual VOID
+    ComputeContentBounds(RECT *rect){
         // Override in subclass
     };
 
-    virtual DWORD_PTR CountSizableChildren()
+    virtual DWORD_PTR
+    CountSizableChildren()
     {
         // Override in subclass
         return 0;
     };
 
-    virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
+    virtual HDWP
+    OnParentSize(RECT parentRect, HDWP hDwp)
     {
         // Override in subclass
         return NULL;
@@ -331,19 +349,25 @@ public:
 
 class CUiPrimitive
 {
-protected:
-    CUiPrimitive * m_Parent;
+  protected:
+    CUiPrimitive *m_Parent;
 
-public:
-    virtual ~CUiPrimitive() {}
+  public:
+    virtual ~CUiPrimitive()
+    {
+    }
 
-    virtual CUiBox * AsBox() { return NULL; }
+    virtual CUiBox *
+    AsBox()
+    {
+        return NULL;
+    }
 };
 
-class CUiCollection :
-    public CPointerArray < CUiPrimitive >
+class CUiCollection : public CPointerArray<CUiPrimitive>
 {
-    virtual BOOL OnRemoveItem(CUiPrimitive * ptr)
+    virtual BOOL
+    OnRemoveItem(CUiPrimitive *ptr)
     {
         delete ptr;
         return TRUE;
@@ -352,19 +376,20 @@ class CUiCollection :
 
 class CUiContainer
 {
-protected:
+  protected:
     CUiCollection m_Children;
 
-public:
-    CUiCollection& Children() { return m_Children; }
+  public:
+    CUiCollection &
+    Children()
+    {
+        return m_Children;
+    }
 };
 
-class CUiPanel :
-    public CUiPrimitive,
-    public CUiBox,
-    public CUiContainer
+class CUiPanel : public CUiPrimitive, public CUiBox, public CUiContainer
 {
-public:
+  public:
     CUiMeasure m_Width;
     CUiMeasure m_Height;
 
@@ -378,13 +403,18 @@ public:
     {
     }
 
-    virtual CUiBox * AsBox() { return this; }
+    virtual CUiBox *
+    AsBox()
+    {
+        return this;
+    }
 
-    virtual VOID ComputeMinimalSize(SIZE* size)
+    virtual VOID
+    ComputeMinimalSize(SIZE *size)
     {
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 box->ComputeMinimalSize(size);
@@ -392,11 +422,12 @@ public:
         }
     };
 
-    virtual VOID ComputeContentBounds(RECT* rect)
+    virtual VOID
+    ComputeContentBounds(RECT *rect)
     {
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 box->ComputeContentBounds(rect);
@@ -404,12 +435,13 @@ public:
         }
     };
 
-    virtual DWORD_PTR CountSizableChildren()
+    virtual DWORD_PTR
+    CountSizableChildren()
     {
         INT count = 0;
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 count += box->CountSizableChildren();
@@ -418,7 +450,8 @@ public:
         return count;
     }
 
-    virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
+    virtual HDWP
+    OnParentSize(RECT parentRect, HDWP hDwp)
     {
         RECT rect = {0};
 
@@ -435,7 +468,7 @@ public:
 
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 hDwp = box->OnParentSize(rect, hDwp);
@@ -446,24 +479,30 @@ public:
     }
 };
 
-template<class T = CWindow>
-class CUiWindow :
-    public CUiPrimitive,
-    public CUiBox,
-    public T
+template <class T = CWindow> class CUiWindow : public CUiPrimitive, public CUiBox, public T
 {
-public:
-    virtual CUiBox * AsBox() { return this; }
+  public:
+    virtual CUiBox *
+    AsBox()
+    {
+        return this;
+    }
 
-    HWND GetWindow() { return T::m_hWnd; }
+    HWND
+    GetWindow()
+    {
+        return T::m_hWnd;
+    }
 
-    virtual VOID ComputeMinimalSize(SIZE* size)
+    virtual VOID
+    ComputeMinimalSize(SIZE *size)
     {
         // TODO: Maybe use WM_GETMINMAXINFO?
         return CUiBox::ComputeMinimalSize(size);
     };
 
-    virtual VOID ComputeContentBounds(RECT* rect)
+    virtual VOID
+    ComputeContentBounds(RECT *rect)
     {
         RECT r;
         ::GetWindowRect(T::m_hWnd, &r);
@@ -473,12 +512,14 @@ public:
         rect->bottom = max(rect->bottom, r.bottom);
     };
 
-    virtual DWORD_PTR CountSizableChildren()
+    virtual DWORD_PTR
+    CountSizableChildren()
     {
         return 1;
     };
 
-    virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
+    virtual HDWP
+    OnParentSize(RECT parentRect, HDWP hDwp)
     {
         RECT rect;
 
@@ -488,16 +529,21 @@ public:
 
         if (hDwp)
         {
-            return ::DeferWindowPos(hDwp, T::m_hWnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
+            return ::DeferWindowPos(
+                hDwp, T::m_hWnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+                SWP_NOACTIVATE | SWP_NOZORDER);
         }
         else
         {
-            T::SetWindowPos(NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER | SWP_DEFERERASE);
+            T::SetWindowPos(
+                NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+                SWP_NOACTIVATE | SWP_NOZORDER | SWP_DEFERERASE);
             return NULL;
         }
     };
 
-    virtual VOID AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> & TabOrderList)
+    virtual VOID
+    AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList)
     {
         TabOrderList.Add(T::m_hWnd);
         return;
@@ -511,7 +557,8 @@ public:
         }
     }
 
-    VOID GetWindowTextW(ATL::CStringW& szText)
+    VOID
+    GetWindowTextW(CStringW &szText)
     {
         INT length = CWindow::GetWindowTextLengthW() + 1;
         CWindow::GetWindowTextW(szText.GetBuffer(length), length);
@@ -519,15 +566,11 @@ public:
     }
 };
 
-class CUiSplitPanel :
-    public CUiPrimitive,
-    public CUiBox,
-    public CWindowImpl<CUiSplitPanel>
+class CUiSplitPanel : public CUiPrimitive, public CUiBox, public CWindowImpl<CUiSplitPanel>
 {
     static const INT THICKNESS = 4;
 
-protected:
-
+  protected:
     HCURSOR m_hCursor;
 
     CUiPanel m_First;
@@ -537,7 +580,7 @@ protected:
 
     BOOL m_HasOldRect;
 
-public:
+  public:
     INT m_Pos;
     BOOL m_Horizontal;
     BOOL m_DynamicFirst;
@@ -549,25 +592,41 @@ public:
 
     CUiSplitPanel()
     {
+        m_hCursor = NULL;
         m_Width = CUiMeasure::FitParent();
         m_Height = CUiMeasure::FitParent();
         m_Pos = 100;
+        m_Horizontal = FALSE;
         m_MinFirst = 100;
         m_MinSecond = 100;
         m_DynamicFirst = FALSE;
         m_HasOldRect = FALSE;
+        memset(&m_LastRect, 0, sizeof(m_LastRect));
     }
 
     virtual ~CUiSplitPanel()
     {
     }
 
-    virtual CUiBox * AsBox() { return this; }
+    virtual CUiBox *
+    AsBox()
+    {
+        return this;
+    }
 
-    CUiCollection& First() { return m_First.Children(); }
-    CUiCollection& Second() { return m_Second.Children(); }
+    CUiCollection &
+    First()
+    {
+        return m_First.Children();
+    }
+    CUiCollection &
+    Second()
+    {
+        return m_Second.Children();
+    }
 
-    virtual VOID ComputeMinimalSize(SIZE* size)
+    virtual VOID
+    ComputeMinimalSize(SIZE *size)
     {
         if (m_Horizontal)
             size->cx = max(size->cx, THICKNESS);
@@ -577,7 +636,8 @@ public:
         m_Second.ComputeMinimalSize(size);
     };
 
-    virtual VOID ComputeContentBounds(RECT* rect)
+    virtual VOID
+    ComputeContentBounds(RECT *rect)
     {
         RECT r;
 
@@ -592,7 +652,8 @@ public:
         rect->bottom = max(rect->bottom, r.bottom);
     };
 
-    virtual DWORD_PTR CountSizableChildren()
+    virtual DWORD_PTR
+    CountSizableChildren()
     {
         INT count = 1;
         count += m_First.CountSizableChildren();
@@ -600,7 +661,8 @@ public:
         return count;
     };
 
-    virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
+    virtual HDWP
+    OnParentSize(RECT parentRect, HDWP hDwp)
     {
         RECT rect = {0};
 
@@ -691,73 +753,72 @@ public:
 
         if (hDwp)
         {
-            return DeferWindowPos(hDwp, NULL,
-                                  splitter.left, splitter.top,
-                                  splitter.right - splitter.left,
-                                  splitter.bottom - splitter.top,
-                                  SWP_NOACTIVATE | SWP_NOZORDER);
+            return DeferWindowPos(
+                hDwp, NULL, splitter.left, splitter.top, splitter.right - splitter.left, splitter.bottom - splitter.top,
+                SWP_NOACTIVATE | SWP_NOZORDER);
         }
         else
         {
-            SetWindowPos(NULL,
-                         splitter.left, splitter.top,
-                         splitter.right - splitter.left,
-                         splitter.bottom - splitter.top,
-                         SWP_NOACTIVATE | SWP_NOZORDER);
+            SetWindowPos(
+                NULL, splitter.left, splitter.top, splitter.right - splitter.left, splitter.bottom - splitter.top,
+                SWP_NOACTIVATE | SWP_NOZORDER);
             return NULL;
         }
     };
 
-private:
-    BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+  private:
+    BOOL
+    ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId)
     {
         theResult = 0;
         switch (Msg)
         {
-        case WM_SETCURSOR:
-            SetCursor(m_hCursor);
-            theResult = TRUE;
-            break;
+            case WM_SETCURSOR:
+                SetCursor(m_hCursor);
+                theResult = TRUE;
+                break;
 
-        case WM_LBUTTONDOWN:
-            SetCapture();
-            break;
+            case WM_LBUTTONDOWN:
+                SetCapture();
+                break;
 
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-            if (GetCapture() == m_hWnd)
-            {
-                ReleaseCapture();
-            }
-            break;
+            case WM_LBUTTONUP:
+            case WM_RBUTTONDOWN:
+                if (GetCapture() == m_hWnd)
+                {
+                    ReleaseCapture();
+                }
+                break;
 
-        case WM_MOUSEMOVE:
-            if (GetCapture() == m_hWnd)
-            {
-                POINT Point;
-                GetCursorPos(&Point);
-                ::ScreenToClient(GetParent(), &Point);
-                if (m_Horizontal)
-                    SetPos(Point.y);
-                else
-                    SetPos(Point.x);
-            }
-            break;
+            case WM_MOUSEMOVE:
+                if (GetCapture() == m_hWnd)
+                {
+                    POINT Point;
+                    GetCursorPos(&Point);
+                    ::ScreenToClient(GetParent(), &Point);
+                    if (m_Horizontal)
+                        SetPos(Point.y);
+                    else
+                        SetPos(Point.x);
+                }
+                break;
 
-        default:
-            return FALSE;
+            default:
+                return FALSE;
         }
 
         return TRUE;
     }
 
-public:
-    INT GetPos()
+  public:
+    INT
+    GetPos()
     {
         return m_Pos;
     }
 
-    VOID SetPos(INT NewPos)
+    VOID
+    SetPos(INT NewPos)
     {
         RECT rcParent;
 
@@ -792,15 +853,18 @@ public:
 
         HDWP hdwp = NULL;
         hdwp = BeginDeferWindowPos(count);
-        if (hdwp) hdwp = OnParentSize(m_LastRect, hdwp);
-        if (hdwp) EndDeferWindowPos(hdwp);
+        if (hdwp)
+            hdwp = OnParentSize(m_LastRect, hdwp);
+        if (hdwp)
+            EndDeferWindowPos(hdwp);
     }
 
-public:
+  public:
     DECLARE_WND_CLASS_EX(_T("SplitterWindowClass"), CS_HREDRAW | CS_VREDRAW, COLOR_BTNFACE)
 
     /* Create splitter bar */
-    HWND Create(HWND hwndParent)
+    HWND
+    Create(HWND hwndParent)
     {
         if (m_Horizontal)
             m_hCursor = LoadCursor(0, IDC_SIZENS);

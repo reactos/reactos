@@ -15,7 +15,8 @@ static HANDLE hLog = NULL;
 static BOOL bIsSys64ResultCached = FALSE;
 static BOOL bIsSys64Result = FALSE;
 
-VOID CopyTextToClipboard(LPCWSTR lpszText)
+VOID
+CopyTextToClipboard(LPCWSTR lpszText)
 {
     if (!OpenClipboard(NULL))
     {
@@ -31,7 +32,7 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     cchBuffer = wcslen(lpszText) + 1;
     ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
 
-    Buffer = (PWCHAR) GlobalLock(ClipBuffer);
+    Buffer = (PWCHAR)GlobalLock(ClipBuffer);
     hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
     GlobalUnlock(ClipBuffer);
 
@@ -41,7 +42,8 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     CloseClipboard();
 }
 
-VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
+VOID
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
@@ -80,7 +82,8 @@ VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
     }
 }
 
-BOOL StartProcess(const ATL::CStringW& Path, BOOL Wait)
+BOOL
+StartProcess(const CStringW &Path, BOOL Wait)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
@@ -138,7 +141,8 @@ BOOL StartProcess(const ATL::CStringW& Path, BOOL Wait)
     return TRUE;
 }
 
-BOOL GetStorageDirectory(ATL::CStringW& Directory)
+BOOL
+GetStorageDirectory(CStringW &Directory)
 {
     static CStringW CachedDirectory;
     static BOOL CachedDirectoryInitialized = FALSE;
@@ -172,7 +176,8 @@ BOOL GetStorageDirectory(ATL::CStringW& Directory)
     return !Directory.IsEmpty();
 }
 
-VOID InitLogs()
+VOID
+InitLogs()
 {
     if (!SettingsInfo.bLogEnabled)
     {
@@ -184,9 +189,10 @@ VOID InitLogs()
     DWORD dwDisp, dwData;
     ATL::CRegKey key;
 
-    if (key.Create(HKEY_LOCAL_MACHINE,
-                   L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager",
-                   REG_NONE, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &dwDisp) != ERROR_SUCCESS)
+    if (key.Create(
+            HKEY_LOCAL_MACHINE,
+            L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager", REG_NONE,
+            REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &dwDisp) != ERROR_SUCCESS)
     {
         return;
     }
@@ -196,26 +202,20 @@ VOID InitLogs()
         return;
     }
 
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
-             EVENTLOG_INFORMATION_TYPE;
+    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
 
-    if ((key.SetStringValue(L"EventMessageFile",
-                            szPath,
-                            REG_EXPAND_SZ) == ERROR_SUCCESS)
-        && (key.SetStringValue(L"CategoryMessageFile",
-                               szPath,
-                               REG_EXPAND_SZ) == ERROR_SUCCESS)
-        && (key.SetDWORDValue(L"TypesSupported",
-                              dwData) == ERROR_SUCCESS)
-        && (key.SetDWORDValue(L"CategoryCount",
-                              dwCategoryNum) == ERROR_SUCCESS))
+    if ((key.SetStringValue(L"EventMessageFile", szPath, REG_EXPAND_SZ) == ERROR_SUCCESS) &&
+        (key.SetStringValue(L"CategoryMessageFile", szPath, REG_EXPAND_SZ) == ERROR_SUCCESS) &&
+        (key.SetDWORDValue(L"TypesSupported", dwData) == ERROR_SUCCESS) &&
+        (key.SetDWORDValue(L"CategoryCount", dwCategoryNum) == ERROR_SUCCESS))
 
     {
         hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
     }
 }
 
-VOID FreeLogs()
+VOID
+FreeLogs()
 {
     if (hLog)
     {
@@ -223,15 +223,15 @@ VOID FreeLogs()
     }
 }
 
-BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
+BOOL
+WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
     if (!SettingsInfo.bLogEnabled)
     {
         return TRUE;
     }
 
-    if (!ReportEventW(hLog, wType, 0, dwEventID,
-                      NULL, 1, 0, &lpMsg, NULL))
+    if (!ReportEventW(hLog, wType, 0, dwEventID, NULL, 1, 0, &lpMsg, NULL))
     {
         return FALSE;
     }
@@ -239,19 +239,16 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
     return TRUE;
 }
 
-BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
-                                 const ATL::CStringW& szRegName,
-                                 BOOL IsUserKey,
-                                 REGSAM keyWow)
+BOOL
+GetInstalledVersion_WowUser(CStringW *szVersionResult, const CStringW &szRegName, BOOL IsUserKey, REGSAM keyWow)
 {
     BOOL bHasSucceded = FALSE;
     ATL::CRegKey key;
-    ATL::CStringW szVersion;
-    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + szRegName;
+    CStringW szVersion;
+    CStringW szPath = CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + szRegName;
 
-    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                 szPath.GetString(),
-                 keyWow | KEY_READ) != ERROR_SUCCESS)
+    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szPath.GetString(), keyWow | KEY_READ) !=
+        ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -260,9 +257,7 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
     {
         ULONG dwSize = MAX_PATH * sizeof(WCHAR);
 
-        if (key.QueryStringValue(L"DisplayVersion",
-                                 szVersion.GetBuffer(MAX_PATH),
-                                 &dwSize) == ERROR_SUCCESS)
+        if (key.QueryStringValue(L"DisplayVersion", szVersion.GetBuffer(MAX_PATH), &dwSize) == ERROR_SUCCESS)
         {
             szVersion.ReleaseBuffer();
             *szVersionResult = szVersion;
@@ -276,67 +271,23 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
     else
     {
         bHasSucceded = TRUE;
-        szVersion.ReleaseBuffer();
     }
 
     return bHasSucceded;
 }
 
-BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegName)
+BOOL
+GetInstalledVersion(CStringW *pszVersion, const CStringW &szRegName)
 {
-    return (!szRegName.IsEmpty()
-            && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
+    return (
+        !szRegName.IsEmpty() && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY) ||
+                                 GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY) ||
+                                 GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY) ||
+                                 GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
 }
 
-BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore)
-{
-    WCHAR pszPathBuffer[MAX_PATH]; // buffer to store result
-    WCHAR pszPathCopy[MAX_PATH];
-
-    if (!PathCanonicalizeW(pszPathCopy, pszPath))
-    {
-        return FALSE;
-    }
-
-    PathRemoveBackslashW(pszPathCopy);
-
-    if (StringCchCopyW(pszPathBuffer, _countof(pszPathBuffer), pszPathCopy) != S_OK)
-    {
-        return FALSE;
-    }
-
-    if (!PathAppendW(pszPathBuffer, pszMore))
-    {
-        return FALSE;
-    }
-
-    size_t PathLen;
-    if (StringCchLengthW(pszPathCopy, _countof(pszPathCopy), &PathLen) != S_OK)
-    {
-        return FALSE;
-    }
-    int CommonPrefixLen = PathCommonPrefixW(pszPathCopy, pszPathBuffer, NULL);
-
-    if ((unsigned int)CommonPrefixLen != PathLen)
-    {
-        // pszPathBuffer should be a file/folder under pszPath.
-        // but now common prefix len is smaller than length of pszPathCopy
-        // hacking use ".." ?
-        return FALSE;
-    }
-
-    if (StringCchCopyW(pszPath, MAX_PATH, pszPathBuffer) != S_OK)
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-BOOL IsSystem64Bit()
+BOOL
+IsSystem64Bit()
 {
     if (bIsSys64ResultCached)
     {
@@ -345,12 +296,14 @@ BOOL IsSystem64Bit()
     }
 
     SYSTEM_INFO si;
-    typedef void (WINAPI *LPFN_PGNSI)(LPSYSTEM_INFO);
-    LPFN_PGNSI pGetNativeSystemInfo = (LPFN_PGNSI)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetNativeSystemInfo");
+    typedef void(WINAPI * LPFN_PGNSI)(LPSYSTEM_INFO);
+    LPFN_PGNSI pGetNativeSystemInfo =
+        (LPFN_PGNSI)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetNativeSystemInfo");
     if (pGetNativeSystemInfo)
     {
         pGetNativeSystemInfo(&si);
-        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 || si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
+        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ||
+            si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
         {
             bIsSys64Result = TRUE;
         }
@@ -364,7 +317,8 @@ BOOL IsSystem64Bit()
     return bIsSys64Result;
 }
 
-INT GetSystemColorDepth()
+INT
+GetSystemColorDepth()
 {
     DEVMODEW pDevMode;
     INT ColorDepth;
@@ -380,18 +334,31 @@ INT GetSystemColorDepth()
 
     switch (pDevMode.dmBitsPerPel)
     {
-    case 32: ColorDepth = ILC_COLOR32; break;
-    case 24: ColorDepth = ILC_COLOR24; break;
-    case 16: ColorDepth = ILC_COLOR16; break;
-    case  8: ColorDepth = ILC_COLOR8;  break;
-    case  4: ColorDepth = ILC_COLOR4;  break;
-    default: ColorDepth = ILC_COLOR;   break;
+        case 32:
+            ColorDepth = ILC_COLOR32;
+            break;
+        case 24:
+            ColorDepth = ILC_COLOR24;
+            break;
+        case 16:
+            ColorDepth = ILC_COLOR16;
+            break;
+        case 8:
+            ColorDepth = ILC_COLOR8;
+            break;
+        case 4:
+            ColorDepth = ILC_COLOR4;
+            break;
+        default:
+            ColorDepth = ILC_COLOR;
+            break;
     }
 
     return ColorDepth;
 }
 
-void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
+void
+UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
 {
     // Note that LONGLONG is a 64-bit value
     LONGLONG ll;
@@ -401,7 +368,8 @@ void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
     pFileTime->dwHighDateTime = ll >> 32;
 }
 
-BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
+BOOL
+SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
 {
     if (!*szNeedle)
         return TRUE;

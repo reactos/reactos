@@ -5,16 +5,19 @@
 
 class CConfigParser
 {
-    const ATL::CStringW szConfigPath;
+    const CStringW szConfigPath;
     CSimpleMap<CStringW, CStringW> m_Keys;
 
-    void CacheINI();
-    void ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Section, BOOL isArch);
+    void
+    CacheINI();
+    void
+    ReadSection(CStringW &Buffer, const CStringW &Section, BOOL isArch);
 
-public:
-    CConfigParser(const ATL::CStringW& FileName);
+  public:
+    CConfigParser(const CStringW &FileName);
 
-    BOOL GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
-    BOOL GetInt(const ATL::CStringW& KeyName, INT& iResult);
+    BOOL
+    GetString(const CStringW &KeyName, CStringW &ResultString);
+    BOOL
+    GetInt(const CStringW &KeyName, INT &iResult);
 };
-

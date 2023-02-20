@@ -12,9 +12,10 @@
 #include <setupapi.h>
 #include <conutils.h>
 
-BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
+static BOOL
+MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
 {
-    WCHAR FirstCharList[] = { L'-', L'/' };
+    WCHAR FirstCharList[] = {L'-', L'/'};
 
     for (UINT i = 0; i < _countof(FirstCharList); i++)
     {
@@ -26,7 +27,8 @@ BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
     return FALSE;
 }
 
-void InitRappsConsole()
+static void
+InitRappsConsole()
 {
     // First, try to attach to our parent's console
     if (!AttachConsole(ATTACH_PARENT_PROCESS))
@@ -41,40 +43,32 @@ void InitRappsConsole()
     ConInitStdStreams(); // Initialize the Console Standard Streams
 }
 
-
-BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
+static BOOL
+HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
-    if (argcLeft == 0)
+    if (argcLeft < 1)
     {
         InitRappsConsole();
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
         return FALSE;
     }
 
-    ATL::CSimpleArray<ATL::CStringW> PkgNameList;
-
+    CAtlList<CApplicationInfo *> Applications;
     for (int i = 0; i < argcLeft; i++)
     {
-        PkgNameList.Add(argvLeft[i]);
+        LPCWSTR PackageName = argvLeft[i];
+        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
+        if (AppInfo)
+        {
+            Applications.AddTail(AppInfo);
+        }
     }
 
-    CAvailableApps apps;
-    apps.UpdateAppsDB();
-    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
-
-    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindAppsByPkgNameList(PkgNameList);
-    if (arrAppInfo.GetSize() > 0)
-    {
-        DownloadListOfApplications(arrAppInfo, TRUE);
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
+    return DownloadListOfApplications(Applications, TRUE);
 }
 
-BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
+static BOOL
+HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft != 1)
     {
@@ -83,7 +77,7 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
         return FALSE;
     }
 
-    ATL::CSimpleArray<ATL::CStringW> PkgNameList;
+    CAtlList<CApplicationInfo *> Applications;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
     if (InfHandle == INVALID_HANDLE_VALUE)
     {
@@ -98,42 +92,21 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
         {
             if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
             {
-                PkgNameList.Add(szPkgName);
+                CApplicationInfo *AppInfo = db->FindByPackageName(szPkgName);
+                if (AppInfo)
+                {
+                    Applications.AddTail(AppInfo);
+                }
             }
         } while (SetupFindNextLine(&Context, &Context));
     }
     SetupCloseInfFile(InfHandle);
 
-    CAvailableApps apps;
-    apps.UpdateAppsDB();
-    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
-
-    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindAppsByPkgNameList(PkgNameList);
-    if (arrAppInfo.GetSize() > 0)
-    {
-        DownloadListOfApplications(arrAppInfo, TRUE);
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
+    return DownloadListOfApplications(Applications, TRUE);
 }
 
-BOOL CALLBACK CmdFindAppEnum(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param)
-{
-    LPCWSTR lpszSearch = (LPCWSTR)param;
-    if (!SearchPatternMatch(Info->m_szName, lpszSearch) &&
-        !SearchPatternMatch(Info->m_szDesc, lpszSearch))
-    {
-        return TRUE;
-    }
-
-    ConPrintf(StdOut, L"%s (%s)\n", Info->m_szName.GetString(), Info->m_szPkgName.GetString());
-    return TRUE;
-}
-
-BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+static BOOL
+HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -141,20 +114,33 @@ BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         return FALSE;
     }
 
-    CAvailableApps apps;
-    apps.UpdateAppsDB();
+    CAtlList<CApplicationInfo *> List;
+    db->GetApps(List, ENUM_ALL_AVAILABLE);
 
     for (int i = 0; i < argcLeft; i++)
     {
-        ConResMsgPrintf(StdOut, NULL, IDS_CMD_FIND_RESULT_FOR, argvLeft[i]);
-        apps.Enum(ENUM_ALL_AVAILABLE, CmdFindAppEnum, argvLeft[i]);
+        LPCWSTR lpszSearch = argvLeft[i];
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_FIND_RESULT_FOR, lpszSearch);
+
+        POSITION CurrentListPosition = List.GetHeadPosition();
+        while (CurrentListPosition)
+        {
+            CApplicationInfo *Info = List.GetNext(CurrentListPosition);
+
+            if (SearchPatternMatch(Info->szDisplayName, lpszSearch) || SearchPatternMatch(Info->szComments, lpszSearch))
+            {
+                ConPrintf(StdOut, L"%s (%s)\n", Info->szDisplayName.GetString(), Info->szIdentifier.GetString());
+            }
+        }
+
         ConPrintf(StdOut, L"\n");
     }
 
     return TRUE;
 }
 
-BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+static BOOL
+HandleInfoCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -162,70 +148,67 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         return FALSE;
     }
 
-    CAvailableApps apps;
-    apps.UpdateAppsDB();
-    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
-
     for (int i = 0; i < argcLeft; i++)
     {
-        CAvailableApplicationInfo *AppInfo = apps.FindAppByPkgName(argvLeft[i]);
+        LPCWSTR PackageName = argvLeft[i];
+        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
         if (!AppInfo)
         {
-            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_NOT_FOUND, argvLeft[i]);
+            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_NOT_FOUND, PackageName);
         }
         else
         {
-            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_INFO, argvLeft[i]);
-            // TODO: code about extracting information from CAvailableApplicationInfo (in appview.cpp, class CAppRichEdit)
-            // is in a mess. It should be refactored, and should not placed in class CAppRichEdit.
-            // and the code here should reused that code after refactor.
+            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_INFO, PackageName);
 
-            ConPuts(StdOut, AppInfo->m_szName);
+            ConPuts(StdOut, AppInfo->szDisplayName);
 
-            if (AppInfo->m_szVersion)
+            if (!AppInfo->szDisplayVersion.IsEmpty())
             {
                 ConResPrintf(StdOut, IDS_AINFO_VERSION);
-                ConPuts(StdOut, AppInfo->m_szVersion);
+                ConPuts(StdOut, AppInfo->szDisplayVersion);
             }
 
-            if (AppInfo->m_szLicense)
+            CStringW License, Size, UrlSite, UrlDownload;
+            AppInfo->GetDisplayInfo(License, Size, UrlSite, UrlDownload);
+
+            if (!License.IsEmpty())
             {
                 ConResPrintf(StdOut, IDS_AINFO_LICENSE);
-                ConPuts(StdOut, AppInfo->m_szLicense);
+                ConPuts(StdOut, License);
             }
 
-            if (AppInfo->m_szSize)
+            if (!Size.IsEmpty())
             {
                 ConResPrintf(StdOut, IDS_AINFO_SIZE);
-                ConPuts(StdOut, AppInfo->m_szSize);
+                ConPuts(StdOut, Size);
             }
 
-            if (AppInfo->m_szUrlSite)
+            if (!UrlSite.IsEmpty())
             {
                 ConResPrintf(StdOut, IDS_AINFO_URLSITE);
-                ConPuts(StdOut, AppInfo->m_szUrlSite);
+                ConPuts(StdOut, UrlSite);
             }
 
-            if (AppInfo->m_szDesc)
+            if (AppInfo->szComments)
             {
                 ConResPrintf(StdOut, IDS_AINFO_DESCRIPTION);
-                ConPuts(StdOut, AppInfo->m_szDesc);
+                ConPuts(StdOut, AppInfo->szComments);
             }
 
-            if (AppInfo->m_szUrlDownload)
+            if (!UrlDownload.IsEmpty())
             {
                 ConResPrintf(StdOut, IDS_AINFO_URLDOWNLOAD);
-                ConPuts(StdOut, AppInfo->m_szUrlDownload);
+                ConPuts(StdOut, UrlDownload);
             }
-
-            ConPrintf(StdOut, L"\n");
+            ConPuts(StdOut, L"\n");
         }
-        ConPrintf(StdOut, L"\n");
+        ConPuts(StdOut, L"\n");
     }
     return TRUE;
 }
 
-VOID PrintHelpCommand()
+static VOID
+PrintHelpCommand()
 {
     ConPrintf(StdOut, L"\n");
     ConResPuts(StdOut, IDS_APPTITLE);
@@ -235,7 +218,8 @@ VOID PrintHelpCommand()
     ConPrintf(StdOut, L"%ls\n", UsageString);
 }
 
-BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
+BOOL
+ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
@@ -244,6 +228,17 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         return FALSE;
     }
+
+    CStringW Directory;
+    GetStorageDirectory(Directory);
+    CApplicationDB db(Directory);
+
+    if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
+    {
+        db.RemoveCached();
+    }
+    db.UpdateAvailable();
+    db.UpdateInstalled();
 
     if (argc == 1) // RAPPS is launched without options
     {
@@ -262,10 +257,7 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             return FALSE;
         }
 
-        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
-            CAvailableApps::ForceUpdateAppsDB();
-
-        MainWindowLoop(nCmdShow);
+        MainWindowLoop(&db, nCmdShow);
 
         if (hMutex)
             CloseHandle(hMutex);
@@ -275,22 +267,22 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
     {
-        return HandleInstallCommand(argv[1], argc - 2, argv + 2);
+        return HandleInstallCommand(&db, argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_SETUP))
     {
-        return HandleSetupCommand(argv[1], argc - 2, argv + 2);
+        return HandleSetupCommand(&db, argv[1], argc - 2, argv + 2);
     }
 
     InitRappsConsole();
 
     if (MatchCmdOption(argv[1], CMD_KEY_FIND))
     {
-        return HandleFindCommand(argv[1], argc - 2, argv + 2);
+        return HandleFindCommand(&db, argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_INFO))
     {
-        return HandleInfoCommand(argv[1], argc - 2, argv + 2);
+        return HandleInfoCommand(&db, argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_HELP) || MatchCmdOption(argv[1], CMD_KEY_HELP_ALT))
     {

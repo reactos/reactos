@@ -10,23 +10,23 @@
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
 
- /*
-  * Based on Wine dlls/shdocvw/shdocvw_main.c
-  *
-  * This library is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU Lesser General Public
-  * License as published by the Free Software Foundation; either
-  * version 2.1 of the License, or (at your option) any later version.
-  *
-  * This library is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this library; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-  */
+/*
+ * Based on Wine dlls/shdocvw/shdocvw_main.c
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 #include "rapps.h"
 
 #include <shlobj_undoc.h>
@@ -55,7 +55,6 @@
 #define CERT_SUBJECT_INFO "rapps.reactos.org"
 #endif
 
-
 enum DownloadType
 {
     DLTYPE_APPLICATION,
@@ -73,35 +72,37 @@ enum DownloadStatus
     DLSTATUS_FINISHED = IDS_STATUS_FINISHED
 };
 
-ATL::CStringW LoadStatusString(DownloadStatus StatusParam)
+CStringW
+LoadStatusString(DownloadStatus StatusParam)
 {
-    ATL::CStringW szString;
+    CStringW szString;
     szString.LoadStringW(StatusParam);
     return szString;
 }
 
 struct DownloadInfo
 {
-    DownloadInfo() {}
-    DownloadInfo(const CAvailableApplicationInfo& AppInfo)
-        : DLType(DLTYPE_APPLICATION)
-        , szUrl(AppInfo.m_szUrlDownload)
-        , szName(AppInfo.m_szName)
-        , szSHA1(AppInfo.m_szSHA1)
-        , SizeInBytes(AppInfo.m_SizeBytes)
+    DownloadInfo()
     {
+    }
+    DownloadInfo(const CApplicationInfo &AppInfo) : DLType(DLTYPE_APPLICATION)
+    {
+        AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
+        szName = AppInfo.szDisplayName;
     }
 
     DownloadType DLType;
-    ATL::CStringW szUrl;
-    ATL::CStringW szName;
-    ATL::CStringW szSHA1;
+    CStringW szUrl;
+    CStringW szName;
+    CStringW szSHA1;
     ULONG SizeInBytes;
 };
 
 struct DownloadParam
 {
-    DownloadParam() : Dialog(NULL), AppInfo(), szCaption(NULL) {}
+    DownloadParam() : Dialog(NULL), AppInfo(), szCaption(NULL)
+    {
+    }
     DownloadParam(HWND dlg, const ATL::CSimpleArray<DownloadInfo> &info, LPCWSTR caption)
         : Dialog(dlg), AppInfo(info), szCaption(caption)
     {
@@ -112,18 +113,17 @@ struct DownloadParam
     LPCWSTR szCaption;
 };
 
-
-class CDownloaderProgress
-    : public CWindowImpl<CDownloaderProgress, CWindow, CControlWinTraits>
+class CDownloaderProgress : public CWindowImpl<CDownloaderProgress, CWindow, CControlWinTraits>
 {
-    ATL::CStringW m_szProgressText;
+    CStringW m_szProgressText;
 
-public:
+  public:
     CDownloaderProgress()
     {
     }
 
-    VOID SetMarquee(BOOL Enable)
+    VOID
+    SetMarquee(BOOL Enable)
     {
         if (Enable)
             ModifyStyle(0, PBS_MARQUEE, 0);
@@ -133,7 +133,8 @@ public:
         SendMessage(PBM_SETMARQUEE, Enable, 0);
     }
 
-    VOID SetProgress(ULONG ulProgress, ULONG ulProgressMax)
+    VOID
+    SetProgress(ULONG ulProgress, ULONG ulProgressMax)
     {
         WCHAR szProgress[100];
 
@@ -141,31 +142,30 @@ public:
         StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
 
         /* use our subclassed progress bar text subroutine */
-        ATL::CStringW ProgressText;
+        CStringW ProgressText;
 
         if (ulProgressMax)
         {
             /* total size is known */
             WCHAR szProgressMax[100];
-            UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
+            UINT uiPercentage = ((ULONGLONG)ulProgress * 100) / ulProgressMax;
 
             /* send the current progress to the progress bar */
-            if (!IsWindow()) return;
+            if (!IsWindow())
+                return;
             SendMessage(PBM_SETPOS, uiPercentage, 0);
 
             /* format total download size */
             StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 
             /* generate the text on progress bar */
-            ProgressText.Format(L"%u%% \x2014 %ls / %ls",
-                                uiPercentage,
-                                szProgress,
-                                szProgressMax);
+            ProgressText.Format(L"%u%% \x2014 %ls / %ls", uiPercentage, szProgress, szProgressMax);
         }
         else
         {
             /* send the current progress to the progress bar */
-            if (!IsWindow()) return;
+            if (!IsWindow())
+                return;
             SendMessage(PBM_SETPOS, 0, 0);
 
             /* total size is not known, display only current size */
@@ -173,18 +173,21 @@ public:
         }
 
         /* and finally display it */
-        if (!IsWindow()) return;
+        if (!IsWindow())
+            return;
         SetWindowText(ProgressText.GetString());
     }
 
-    LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    LRESULT
+    OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
         return TRUE;
     }
 
-    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    LRESULT
+    OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        PAINTSTRUCT  ps;
+        PAINTSTRUCT ps;
         HDC hDC = BeginPaint(&ps), hdcMem;
         HBITMAP hbmMem;
         HANDLE hOld;
@@ -204,16 +207,14 @@ public:
         hOld = SelectObject(hdcMem, hbmMem);
 
         /* call the original draw code and redirect it to our memory buffer */
-        DefWindowProc(uMsg, (WPARAM) hdcMem, lParam);
+        DefWindowProc(uMsg, (WPARAM)hdcMem, lParam);
 
         /* draw our nifty progress text over it */
         SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
-        DrawShadowText(hdcMem, m_szProgressText.GetString(), m_szProgressText.GetLength(),
-                       &myRect,
-                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
-                       GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DDKSHADOW),
-                       1, 1);
+        DrawShadowText(
+            hdcMem, m_szProgressText.GetString(), m_szProgressText.GetLength(), &myRect,
+            DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE, GetSysColor(COLOR_CAPTIONTEXT),
+            GetSysColor(COLOR_3DDKSHADOW), 1, 1);
 
         /* transfer the off-screen DC to the screen */
         BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
@@ -227,7 +228,8 @@ public:
         return 0;
     }
 
-    LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    LRESULT
+    OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
         PCWSTR pszText = (PCWSTR)lParam;
         if (pszText)
@@ -250,21 +252,21 @@ public:
     }
 
     BEGIN_MSG_MAP(CDownloaderProgress)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-        MESSAGE_HANDLER(WM_PAINT, OnPaint)
-        MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
+    MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+    MESSAGE_HANDLER(WM_PAINT, OnPaint)
+    MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
     END_MSG_MAP()
 };
 
-class CDowloadingAppsListView
-    : public CListView
+class CDowloadingAppsListView : public CListView
 {
-public:
-    HWND Create(HWND hwndParent)
+  public:
+    HWND
+    Create(HWND hwndParent)
     {
         RECT r = {10, 150, 320, 350};
-        const DWORD style = WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL
-            | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | LVS_NOCOLUMNHEADER;
+        const DWORD style = WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
+                            LVS_NOCOLUMNHEADER;
 
         HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE);
 
@@ -274,7 +276,8 @@ public:
         return hwnd;
     }
 
-    VOID LoadList(ATL::CSimpleArray<DownloadInfo> arrInfo)
+    VOID
+    LoadList(ATL::CSimpleArray<DownloadInfo> arrInfo)
     {
         for (INT i = 0; i < arrInfo.GetSize(); ++i)
         {
@@ -282,13 +285,15 @@ public:
         }
     }
 
-    VOID SetDownloadStatus(INT ItemIndex, DownloadStatus Status)
+    VOID
+    SetDownloadStatus(INT ItemIndex, DownloadStatus Status)
     {
-        ATL::CStringW szBuffer = LoadStatusString(Status);
+        CStringW szBuffer = LoadStatusString(Status);
         SetItemText(ItemIndex, 1, szBuffer.GetString());
     }
 
-    BOOL AddItem(INT ItemIndex, LPWSTR lpText)
+    BOOL
+    AddItem(INT ItemIndex, LPWSTR lpText)
     {
         LVITEMW Item;
 
@@ -301,15 +306,16 @@ public:
         return InsertItem(&Item);
     }
 
-    VOID AddRow(INT RowIndex, LPCWSTR szAppName, const DownloadStatus Status)
+    VOID
+    AddRow(INT RowIndex, LPCWSTR szAppName, const DownloadStatus Status)
     {
-        ATL::CStringW szStatus = LoadStatusString(Status);
-        AddItem(RowIndex,
-                const_cast<LPWSTR>(szAppName));
+        CStringW szStatus = LoadStatusString(Status);
+        AddItem(RowIndex, const_cast<LPWSTR>(szAppName));
         SetDownloadStatus(RowIndex, Status);
     }
 
-    BOOL AddColumn(INT Index, INT Width, INT Format)
+    BOOL
+    AddColumn(INT Index, INT Width, INT Format)
     {
         LVCOLUMNW Column;
         ZeroMemory(&Column, sizeof(Column));
@@ -324,7 +330,8 @@ public:
 };
 
 #ifdef USE_CERT_PINNING
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInfo, CLocalPtr<char>& issuerInfo)
+static BOOL
+CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char> &subjectInfo, CLocalPtr<char> &issuerInfo)
 {
     DWORD certInfoLength;
     INTERNET_CERTIFICATE_INFOA certInfo;
@@ -343,10 +350,7 @@ static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInf
 
     /* Despite what the header indicates, the implementation of INTERNET_CERTIFICATE_INFO is not Unicode-aware. */
     certInfoLength = sizeof(certInfo);
-    if (!InternetQueryOptionA(hFile,
-                              INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
-                              &certInfo,
-                              &certInfoLength))
+    if (!InternetQueryOptionA(hFile, INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT, &certInfo, &certInfoLength))
     {
         return FALSE;
     }
@@ -365,9 +369,10 @@ static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInf
 }
 #endif
 
-inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
+inline VOID
+MessageBox_LoadString(HWND hMainWnd, INT StringID)
 {
-    ATL::CStringW szMsgText;
+    CStringW szMsgText;
     if (szMsgText.LoadStringW(StringID))
     {
         MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
@@ -382,138 +387,147 @@ class CDownloadManager
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
     static BOOL bModal;
-    static VOID UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
-public:
-    static VOID Add(DownloadInfo info);
-    static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
-    static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static unsigned int WINAPI ThreadFunc(LPVOID Context);
+    static VOID
+    UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
+
+  public:
+    static VOID
+    Add(DownloadInfo info);
+    static VOID
+    Download(const DownloadInfo &DLInfo, BOOL bIsModal = FALSE);
+    static INT_PTR CALLBACK
+    DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static unsigned int WINAPI
+    ThreadFunc(LPVOID Context);
     static VOID LaunchDownloadDialog(BOOL);
 };
 
-
 // CDownloadManager
-ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsDownloadList;
-CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
-CDownloaderProgress                     CDownloadManager::ProgressBar;
-BOOL                                    CDownloadManager::bCancelled = FALSE;
-BOOL                                    CDownloadManager::bModal = FALSE;
+ATL::CSimpleArray<DownloadInfo> CDownloadManager::AppsDownloadList;
+CDowloadingAppsListView CDownloadManager::DownloadsListView;
+CDownloaderProgress CDownloadManager::ProgressBar;
+BOOL CDownloadManager::bCancelled = FALSE;
+BOOL CDownloadManager::bModal = FALSE;
 
-VOID CDownloadManager::Add(DownloadInfo info)
+VOID
+CDownloadManager::Add(DownloadInfo info)
 {
     AppsDownloadList.Add(info);
 }
 
-VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
+VOID
+CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
 {
     AppsDownloadList.RemoveAll();
     AppsDownloadList.Add(DLInfo);
     LaunchDownloadDialog(bIsModal);
 }
 
-INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static WCHAR szCaption[MAX_PATH];
 
     switch (uMsg)
     {
-    case WM_INITDIALOG:
-    {
-        HICON hIconSm, hIconBg;
-        ATL::CStringW szTempCaption;
-
-        bCancelled = FALSE;
-
-        if (hMainWnd)
+        case WM_INITDIALOG:
         {
-            hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
-            hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+            HICON hIconSm, hIconBg;
+            CStringW szTempCaption;
+
+            bCancelled = FALSE;
+
+            if (hMainWnd)
+            {
+                hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
+                hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+            }
+            if (!hMainWnd || (!hIconBg || !hIconSm))
+            {
+                /* Load the default icon */
+                hIconBg = hIconSm = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+            }
+
+            if (hIconBg && hIconSm)
+            {
+                SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
+                SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
+            }
+
+            HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
+            if (Item)
+            {
+                // initialize the default values for our nifty progress bar
+                // and subclass it so that it learns to print a status text
+                ProgressBar.SubclassWindow(Item);
+                ProgressBar.SendMessage(PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+                ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
+                if (AppsDownloadList.GetSize() > 0)
+                    ProgressBar.SetProgress(0, AppsDownloadList[0].SizeInBytes);
+            }
+
+            // Add a ListView
+            HWND hListView = DownloadsListView.Create(Dlg);
+            if (!hListView)
+            {
+                return FALSE;
+            }
+            DownloadsListView.LoadList(AppsDownloadList);
+
+            // Get a dlg string for later use
+            GetWindowTextW(Dlg, szCaption, _countof(szCaption));
+
+            // Hide a placeholder from displaying
+            szTempCaption = szCaption;
+            szTempCaption.Replace(L"%ls", L"");
+            SetWindowText(Dlg, szTempCaption.GetString());
+
+            ShowWindow(Dlg, SW_SHOW);
+
+            // Start download process
+            DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
+            unsigned int ThreadId;
+            HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *)param, 0, &ThreadId);
+            if (!Thread)
+            {
+                return FALSE;
+            }
+
+            CloseHandle(Thread);
+            AppsDownloadList.RemoveAll();
+            return TRUE;
         }
-        if (!hMainWnd || (!hIconBg || !hIconSm))
-        {
-            /* Load the default icon */
-            hIconBg = hIconSm = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-        }
 
-        if (hIconBg && hIconSm)
-        {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
-        }
-
-        HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
-        if (Item)
-        {
-            // initialize the default values for our nifty progress bar
-            // and subclass it so that it learns to print a status text
-            ProgressBar.SubclassWindow(Item);
-            ProgressBar.SendMessage(PBM_SETRANGE, 0, MAKELPARAM(0, 100));
-            ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
-            if (AppsDownloadList.GetSize() > 0)
-                ProgressBar.SetProgress(0, AppsDownloadList[0].SizeInBytes);
-        }
-
-        // Add a ListView
-        HWND hListView = DownloadsListView.Create(Dlg);
-        if (!hListView)
-        {
+        case WM_COMMAND:
+            if (wParam == IDCANCEL)
+            {
+                bCancelled = TRUE;
+                PostMessageW(Dlg, WM_CLOSE, 0, 0);
+            }
             return FALSE;
-        }
-        DownloadsListView.LoadList(AppsDownloadList);
 
-        // Get a dlg string for later use
-        GetWindowTextW(Dlg, szCaption, _countof(szCaption));
+        case WM_CLOSE:
+            if (ProgressBar)
+                ProgressBar.UnsubclassWindow(TRUE);
+            if (CDownloadManager::bModal)
+            {
+                ::EndDialog(Dlg, 0);
+            }
+            else
+            {
+                ::DestroyWindow(Dlg);
+            }
+            return TRUE;
 
-        // Hide a placeholder from displaying
-        szTempCaption = szCaption;
-        szTempCaption.Replace(L"%ls", L"");
-        SetWindowText(Dlg, szTempCaption.GetString());
-
-        ShowWindow(Dlg, SW_SHOW);
-
-        // Start download process
-        DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
-        unsigned int ThreadId;
-        HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
-        if (!Thread)
-        {
+        default:
             return FALSE;
-        }
-
-        CloseHandle(Thread);
-        AppsDownloadList.RemoveAll();
-        return TRUE;
-    }
-
-    case WM_COMMAND:
-        if (wParam == IDCANCEL)
-        {
-            bCancelled = TRUE;
-            PostMessageW(Dlg, WM_CLOSE, 0, 0);
-        }
-        return FALSE;
-
-    case WM_CLOSE:
-        if (ProgressBar)
-            ProgressBar.UnsubclassWindow(TRUE);
-        if (CDownloadManager::bModal)
-        {
-            ::EndDialog(Dlg, 0);
-        }
-        else
-        {
-            ::DestroyWindow(Dlg);
-        }
-        return TRUE;
-
-    default:
-        return FALSE;
     }
 }
 
 BOOL UrlHasBeenCopied;
 
-VOID CDownloadManager::UpdateProgress(
+VOID
+CDownloadManager::UpdateProgress(
     HWND hDlg,
     ULONG ulProgress,
     ULONG ulProgressMax,
@@ -522,15 +536,17 @@ VOID CDownloadManager::UpdateProgress(
 {
     HWND Item;
 
-    if (!IsWindow(hDlg)) return;
+    if (!IsWindow(hDlg))
+        return;
     ProgressBar.SetProgress(ulProgress, ulProgressMax);
 
-    if (!IsWindow(hDlg)) return;
+    if (!IsWindow(hDlg))
+        return;
     Item = GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS);
     if (Item && szStatusText && wcslen(szStatusText) > 0 && UrlHasBeenCopied == FALSE)
     {
         SIZE_T len = wcslen(szStatusText) + 1;
-        ATL::CStringW buf;
+        CStringW buf;
         DWORD dummyLen;
 
         /* beautify our url for display purposes */
@@ -551,21 +567,16 @@ VOID CDownloadManager::UpdateProgress(
     }
 }
 
-BOOL ShowLastError(
-    HWND hWndOwner,
-    BOOL bInetError,
-    DWORD dwLastError)
+BOOL
+ShowLastError(HWND hWndOwner, BOOL bInetError, DWORD dwLastError)
 {
     CLocalPtr<WCHAR> lpMsg;
 
-    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_IGNORE_INSERTS |
-                        (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
-                        (bInetError ? GetModuleHandleW(L"wininet.dll") : NULL),
-                        dwLastError,
-                        LANG_USER_DEFAULT,
-                        (LPWSTR)&lpMsg,
-                        0, NULL))
+    if (!FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS |
+                (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
+            (bInetError ? GetModuleHandleW(L"wininet.dll") : NULL), dwLastError, LANG_USER_DEFAULT, (LPWSTR)&lpMsg, 0,
+            NULL))
     {
         DPRINT1("FormatMessageW unexpected failure (err %d)\n", GetLastError());
         return FALSE;
@@ -575,12 +586,13 @@ BOOL ShowLastError(
     return TRUE;
 }
 
-unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
+unsigned int WINAPI
+CDownloadManager::ThreadFunc(LPVOID param)
 {
-    ATL::CStringW Path;
+    CPathW Path;
     PWSTR p, q;
 
-    HWND hDlg = static_cast<DownloadParam*>(param)->Dialog;
+    HWND hDlg = static_cast<DownloadParam *>(param)->Dialog;
     HWND Item;
     INT iAppId;
 
@@ -599,11 +611,12 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
-    const ATL::CSimpleArray<DownloadInfo> &InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
-    LPCWSTR szCaption = static_cast<DownloadParam*>(param)->szCaption;
-    ATL::CStringW szNewCaption;
+    const ATL::CSimpleArray<DownloadInfo> &InfoArray = static_cast<DownloadParam *>(param)->AppInfo;
+    LPCWSTR szCaption = static_cast<DownloadParam *>(param)->szCaption;
+    CStringW szNewCaption;
 
-    const DWORD dwUrlConnectFlags = INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION;
+    const DWORD dwUrlConnectFlags =
+        INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION;
 
     if (InfoArray.GetSize() <= 0)
     {
@@ -614,7 +627,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     for (iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
         // Reset progress bar
-        if (!IsWindow(hDlg)) break;
+        if (!IsWindow(hDlg))
+            break;
         Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -638,20 +652,21 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Change caption to show the currently downloaded app
-        switch(InfoArray[iAppId].DLType)
+        switch (InfoArray[iAppId].DLType)
         {
-        case DLTYPE_APPLICATION:
-            szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
-            break;
-        case DLTYPE_DBUPDATE:
-            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
-            break;
-        case DLTYPE_DBUPDATE_UNOFFICIAL:
-            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
-            break;
+            case DLTYPE_APPLICATION:
+                szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
+                break;
+            case DLTYPE_DBUPDATE:
+                szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
+                break;
+            case DLTYPE_DBUPDATE_UNOFFICIAL:
+                szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
+                break;
         }
 
-        if (!IsWindow(hDlg)) goto end;
+        if (!IsWindow(hDlg))
+            goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // build the path for the download
@@ -674,31 +689,28 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
 
         // is the path valid? can we access it?
-        if (GetFileAttributesW(Path.GetString()) == INVALID_FILE_ATTRIBUTES)
+        if (GetFileAttributesW(Path) == INVALID_FILE_ATTRIBUTES)
         {
-            if (!CreateDirectoryW(Path.GetString(), NULL))
+            if (!CreateDirectoryW(Path, NULL))
             {
                 ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
         }
 
-        // append a \ to the provided file system path, and the filename portion from the URL after that
-
-        PathAddBackslashW(Path.GetBuffer(MAX_PATH));
         switch (InfoArray[iAppId].DLType)
         {
-        case DLTYPE_DBUPDATE:
-        case DLTYPE_DBUPDATE_UNOFFICIAL:
-            PathAppendW(Path.GetBuffer(), APPLICATION_DATABASE_NAME);
-            break;
-        case DLTYPE_APPLICATION:
-            PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
-            break;
+            case DLTYPE_DBUPDATE:
+            case DLTYPE_DBUPDATE_UNOFFICIAL:
+                Path += APPLICATION_DATABASE_NAME;
+                break;
+            case DLTYPE_APPLICATION:
+                Path += (LPWSTR)(p + 1); // use the filename retrieved from URL
+                break;
         }
-        Path.ReleaseBuffer();
 
-        if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
+        if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] &&
+            GetFileAttributesW(Path) != INVALID_FILE_ATTRIBUTES)
         {
             // only open it in case of total correctness
             if (VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path))
@@ -706,7 +718,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Add the download URL
-        if (!IsWindow(hDlg)) goto end;
+        if (!IsWindow(hDlg))
+            goto end;
         SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, InfoArray[iAppId].szUrl.GetString());
 
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_DOWNLOADING);
@@ -718,16 +731,17 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         /* FIXME: this should just be using the system-wide proxy settings */
         switch (SettingsInfo.Proxy)
         {
-        case 0: // preconfig
-        default:
-            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-            break;
-        case 1: // direct (no proxy)
-            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-            break;
-        case 2: // use proxy
-            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PROXY, SettingsInfo.szProxyServer, SettingsInfo.szNoProxyFor, 0);
-            break;
+            case 0: // preconfig
+            default:
+                hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+                break;
+            case 1: // direct (no proxy)
+                hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+                break;
+            case 2: // use proxy
+                hOpen = InternetOpenW(
+                    lpszAgent, INTERNET_OPEN_TYPE_PROXY, SettingsInfo.szProxyServer, SettingsInfo.szNoProxyFor, 0);
+                break;
         }
 
         if (!hOpen)
@@ -743,7 +757,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         urlLength = InfoArray[iAppId].szUrl.GetLength();
         urlComponents.dwSchemeLength = urlLength + 1;
-        urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
+        urlComponents.lpszScheme = (LPWSTR)malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         {
@@ -753,12 +767,9 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         dwContentLen = 0;
 
-        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP ||
-            urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
-                                     dwUrlConnectFlags,
-                                     0);
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0, dwUrlConnectFlags, 0);
             if (!hFile)
             {
                 if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
@@ -783,14 +794,14 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             // query content length
-            HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatusLen, NULL);
+            HttpQueryInfoW(
+                hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatusLen, NULL);
         }
         else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0,
-                                     dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
-                                     0);
+            hFile =
+                InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0, dwUrlConnectFlags | INTERNET_FLAG_PASSIVE, 0);
             if (!hFile)
             {
                 if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
@@ -847,8 +858,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
 #ifdef USE_CERT_PINNING
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
-        if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
-            (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
+        if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) && (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
             CLocalPtr<char> subjectName, issuerName;
             CStringA szMsgText;
@@ -861,10 +871,9 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             else
             {
                 if (strcmp(subjectName, CERT_SUBJECT_INFO) ||
-                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) &&
-                    strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
+                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) && strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
                 {
-                    szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char*)subjectName, (const char*)issuerName);
+                    szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char *)subjectName, (const char *)issuerName);
                     bAskQuestion = true;
                 }
             }
@@ -879,7 +888,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 #endif
 
-        hOut = CreateFileW(Path.GetString(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
+        hOut = CreateFileW(Path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
 
         if (hOut == INVALID_HANDLE_VALUE)
         {
@@ -903,7 +912,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
-            if (!IsWindow(hDlg)) goto end;
+            if (!IsWindow(hDlg))
+                goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         } while (dwBytesRead && !bCancelled);
 
@@ -922,7 +932,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             ProgressBar.SetMarquee(FALSE);
 
             dwContentLen = dwCurrentBytesRead;
-            if (!IsWindow(hDlg)) goto end;
+            if (!IsWindow(hDlg))
+                goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         }
 
@@ -930,7 +941,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         verify its integrity by using the native advapi32.A_SHA1 functions */
         if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] != 0)
         {
-            ATL::CStringW szMsgText;
+            CStringW szMsgText;
 
             // change a few strings in the download dialog to reflect the verification process
             if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_TITLE))
@@ -939,12 +950,13 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                 goto end;
             }
 
-            if (!IsWindow(hDlg)) goto end;
+            if (!IsWindow(hDlg))
+                goto end;
             SetWindowTextW(hDlg, szMsgText.GetString());
-            ::SetDlgItemText(hDlg, IDC_DOWNLOAD_STATUS, Path.GetString());
+            ::SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, Path);
 
             // this may take a while, depending on the file size
-            if (!VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path.GetString()))
+            if (!VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path))
             {
                 if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
                 {
@@ -952,13 +964,14 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                     goto end;
                 }
 
-                if (!IsWindow(hDlg)) goto end;
+                if (!IsWindow(hDlg))
+                    goto end;
                 MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
                 goto end;
             }
         }
 
-run:
+    run:
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_WAITING_INSTALL);
 
         // run it
@@ -968,7 +981,7 @@ run:
             shExInfo.cbSize = sizeof(shExInfo);
             shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
             shExInfo.lpVerb = L"open";
-            shExInfo.lpFile = Path.GetString();
+            shExInfo.lpFile = Path;
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
 
@@ -977,15 +990,16 @@ run:
 
             if (ShellExecuteExW(&shExInfo))
             {
-                //reflect installation progress in the titlebar
-                //TODO: make a separate string with a placeholder to include app name?
-                ATL::CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
-                if (!IsWindow(hDlg)) goto end;
+                // reflect installation progress in the titlebar
+                // TODO: make a separate string with a placeholder to include app name?
+                CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
+                if (!IsWindow(hDlg))
+                    goto end;
                 SetWindowTextW(hDlg, szMsgText.GetString());
 
                 DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_INSTALLING);
 
-                //TODO: issue an install operation separately so that the apps could be downloaded in the background
+                // TODO: issue an install operation separately so that the apps could be downloaded in the background
                 WaitForSingleObject(shExInfo.hProcess, INFINITE);
                 CloseHandle(shExInfo.hProcess);
             }
@@ -995,7 +1009,7 @@ run:
             }
         }
 
-end:
+    end:
         if (hOut != INVALID_HANDLE_VALUE)
             CloseHandle(hOut);
 
@@ -1006,50 +1020,48 @@ end:
         if (bTempfile)
         {
             if (bCancelled || (SettingsInfo.bDelInstaller && (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)))
-                DeleteFileW(Path.GetString());
+                DeleteFileW(Path);
         }
 
-        if (!IsWindow(hDlg)) return 0;
+        if (!IsWindow(hDlg))
+            return 0;
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_FINISHED);
     }
 
-    delete static_cast<DownloadParam*>(param);
-    if (!IsWindow(hDlg)) return 0;
+    delete static_cast<DownloadParam *>(param);
+    if (!IsWindow(hDlg))
+        return 0;
     SendMessageW(hDlg, WM_CLOSE, 0, 0);
     return 0;
 }
 
-//TODO: Reuse the dialog
-VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
+// TODO: Reuse the dialog
+VOID
+CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
     CDownloadManager::bModal = bIsModal;
     if (bIsModal)
     {
-        DialogBoxW(hInst,
-                   MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-                   hMainWnd,
-                   DownloadDlgProc);
+        DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DownloadDlgProc);
     }
     else
     {
-        CreateDialogW(hInst,
-                      MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-                      hMainWnd,
-                      DownloadDlgProc);
+        CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DownloadDlgProc);
     }
 }
 // CDownloadManager
 
-
-BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
+BOOL
+DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bIsModal)
 {
-    if (AppsList.GetSize() == 0)
+    if (AppsList.IsEmpty())
         return FALSE;
 
-    // Initialize shared variables
-    for (INT i = 0; i < AppsList.GetSize(); ++i)
+    POSITION CurrentListPosition = AppsList.GetHeadPosition();
+    while (CurrentListPosition)
     {
-        CDownloadManager::Add(AppsList[i]); // implicit conversion to DownloadInfo
+        const CApplicationInfo *Info = AppsList.GetNext(CurrentListPosition);
+        CDownloadManager::Add(DownloadInfo(*Info));
     }
 
     // Create a dialog and issue a download process
@@ -1058,7 +1070,8 @@ BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInf
     return TRUE;
 }
 
-BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
+BOOL
+DownloadApplication(CApplicationInfo *pAppInfo)
 {
     if (!pAppInfo)
         return FALSE;
@@ -1067,7 +1080,8 @@ BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
     return TRUE;
 }
 
-VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
+VOID
+DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
 {
     static DownloadInfo DatabaseDLInfo;
     DatabaseDLInfo.szUrl = lpUrl;
@@ -1075,4 +1089,3 @@ VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
     DatabaseDLInfo.DLType = IsOfficial ? DLTYPE_DBUPDATE : DLTYPE_DBUPDATE_UNOFFICIAL;
     CDownloadManager::Download(DatabaseDLInfo, TRUE);
 }
-

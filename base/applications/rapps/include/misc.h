@@ -17,32 +17,39 @@
 #define CurrentArchitecture L"ppc"
 #endif
 
-VOID CopyTextToClipboard(LPCWSTR lpszText);
-VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
-BOOL StartProcess(const ATL::CStringW &Path, BOOL Wait);
-BOOL GetStorageDirectory(ATL::CStringW &lpDirectory);
+VOID
+CopyTextToClipboard(LPCWSTR lpszText);
+VOID
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
+BOOL
+StartProcess(const CStringW &Path, BOOL Wait);
+BOOL
+GetStorageDirectory(CStringW &lpDirectory);
 
-VOID InitLogs();
-VOID FreeLogs();
-BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg);
-BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegName);
+VOID
+InitLogs();
+VOID
+FreeLogs();
+BOOL
+WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg);
+BOOL
+GetInstalledVersion(CStringW *pszVersion, const CStringW &szRegName);
 
-BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
-                         const ATL::CStringW& szCabDir,
-                         const ATL::CStringW& szOutputDir);
+BOOL
+ExtractFilesFromCab(const CStringW &szCabName, const CStringW &szCabDir, const CStringW &szOutputDir);
 
-BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore);
+BOOL
+IsSystem64Bit();
 
-BOOL IsSystem64Bit();
+INT
+GetSystemColorDepth();
 
-INT GetSystemColorDepth();
+void
+UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 
-void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
+BOOL
+SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 
-BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
-
-template<class T>
-class CLocalPtr : public CHeapPtr<T, CLocalAllocator>
+template <class T> class CLocalPtr : public CHeapPtr<T, CLocalAllocator>
 {
 };
-

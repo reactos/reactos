@@ -11,25 +11,31 @@
 
 class SettingsField
 {
-public:
-    virtual ~SettingsField() { ; }
-    virtual BOOL Save(CRegKey &key) = 0;
-    virtual BOOL Load(CRegKey &key) = 0;
+  public:
+    virtual ~SettingsField()
+    {
+        ;
+    }
+    virtual BOOL
+    Save(CRegKey &key) = 0;
+    virtual BOOL
+    Load(CRegKey &key) = 0;
 };
 
 class SettingsFieldBool : public SettingsField
 {
-public:
-    SettingsFieldBool(BOOL *pValue, LPCWSTR szRegName)
-        : m_pValueStore(pValue), m_RegName(szRegName)
+  public:
+    SettingsFieldBool(BOOL *pValue, LPCWSTR szRegName) : m_pValueStore(pValue), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetDWORDValue(m_RegName, (DWORD)(*m_pValueStore)) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         DWORD dwField;
         LONG lResult = key.QueryDWORDValue(m_RegName, dwField);
@@ -41,24 +47,25 @@ public:
         return TRUE;
     }
 
-private:
-    BOOL *m_pValueStore;     // where to read/store the value
-    LPCWSTR m_RegName;       // key name in registery
+  private:
+    BOOL *m_pValueStore; // where to read/store the value
+    LPCWSTR m_RegName;   // key name in registery
 };
 
 class SettingsFieldInt : public SettingsField
 {
-public:
-    SettingsFieldInt(INT *pValue, LPCWSTR szRegName)
-        : m_pValueStore(pValue), m_RegName(szRegName)
+  public:
+    SettingsFieldInt(INT *pValue, LPCWSTR szRegName) : m_pValueStore(pValue), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetDWORDValue(m_RegName, (DWORD)(*m_pValueStore)) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         DWORD dwField;
         LONG lResult = key.QueryDWORDValue(m_RegName, dwField);
@@ -70,38 +77,40 @@ public:
         return TRUE;
     }
 
-private:
-    INT *m_pValueStore;      // where to read/store the value
-    LPCWSTR m_RegName;       // key name in registery
+  private:
+    INT *m_pValueStore; // where to read/store the value
+    LPCWSTR m_RegName;  // key name in registery
 };
 
 class SettingsFieldString : public SettingsField
 {
-public:
+  public:
     SettingsFieldString(WCHAR *pString, ULONG cchLen, LPCWSTR szRegName)
         : m_pStringStore(pString), m_StringLen(cchLen), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetStringValue(m_RegName, m_pStringStore) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         ULONG nChar = m_StringLen - 1; // make sure the terminating L'\0'
         LONG lResult = key.QueryStringValue(m_RegName, m_pStringStore, &nChar);
         return lResult == ERROR_SUCCESS;
     }
 
-private:
-    WCHAR *m_pStringStore;        // where to read/store the value
-    ULONG m_StringLen;            // string length, in chars
-    LPCWSTR m_RegName;            // key name in registery
+  private:
+    WCHAR *m_pStringStore; // where to read/store the value
+    ULONG m_StringLen;     // string length, in chars
+    LPCWSTR m_RegName;     // key name in registery
 };
 
-
-void AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
+void
+AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
 {
     infoFields.AddTail(new SettingsFieldBool(&(settings.bSaveWndPos), L"bSaveWndPos"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bUpdateAtStart), L"bUpdateAtStart"));
@@ -122,7 +131,8 @@ void AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &se
     return;
 }
 
-BOOL SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
+BOOL
+SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
     BOOL bAllSuccess = TRUE;
     ATL::CAtlList<SettingsField *> infoFields;
@@ -143,7 +153,8 @@ BOOL SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     return bAllSuccess;
 }
 
-BOOL LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
+BOOL
+LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
     BOOL bAllSuccess = TRUE;
     ATL::CAtlList<SettingsField *> infoFields;
@@ -164,9 +175,10 @@ BOOL LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     return bAllSuccess;
 }
 
-VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+VOID
+FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
-    ATL::CStringW szDownloadDir;
+    CStringW szDownloadDir;
     ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
 
     pSettingsInfo->bSaveWndPos = TRUE;
@@ -190,9 +202,8 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     PathAppendW(szDownloadDir.GetBuffer(MAX_PATH), L"\\RAPPS Downloads");
     szDownloadDir.ReleaseBuffer();
 
-    ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir,
-        _countof(pSettingsInfo->szDownloadDir),
-        szDownloadDir.GetString(),
+    CStringW::CopyChars(
+        pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), szDownloadDir.GetString(),
         szDownloadDir.GetLength() + 1);
 
     pSettingsInfo->bDelInstaller = FALSE;
@@ -203,7 +214,8 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->Height = 450;
 }
 
-BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo)
+BOOL
+LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
     ATL::CRegKey RegKey;
     if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) != ERROR_SUCCESS)
@@ -214,7 +226,8 @@ BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo)
     return LoadAllSettings(RegKey, *pSettingsInfo);
 }
 
-BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
+BOOL
+SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
 {
     WINDOWPLACEMENT wp;
     ATL::CRegKey RegKey;
@@ -228,13 +241,13 @@ BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
         pSettingsInfo->Top = wp.rcNormalPosition.top;
         pSettingsInfo->Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
         pSettingsInfo->Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-        pSettingsInfo->Maximized = (wp.showCmd == SW_MAXIMIZE
-            || (wp.showCmd == SW_SHOWMINIMIZED
-                && (wp.flags & WPF_RESTORETOMAXIMIZED)));
+        pSettingsInfo->Maximized =
+            (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
-    if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL,
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
+    if (RegKey.Create(
+            HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) !=
+        ERROR_SUCCESS)
     {
         return FALSE;
     }

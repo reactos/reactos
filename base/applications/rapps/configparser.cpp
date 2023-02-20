@@ -24,12 +24,11 @@ struct CSectionNames
 };
 static CSectionNames g_Names;
 
-
-static
-ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName)
+static CStringW
+GetINIFullPath(const CStringW &FileName)
 {
-    ATL::CStringW szDir;
-    ATL::CStringW szBuffer;
+    CStringW szDir;
+    CStringW szBuffer;
 
     GetStorageDirectory(szDir);
     szBuffer.Format(L"%ls\\rapps\\%ls", szDir.GetString(), FileName.GetString());
@@ -37,13 +36,13 @@ ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName)
     return szBuffer;
 }
 
-CConfigParser::CConfigParser(const ATL::CStringW& FileName)
-    : szConfigPath(GetINIFullPath(FileName))
+CConfigParser::CConfigParser(const CStringW &FileName) : szConfigPath(GetINIFullPath(FileName))
 {
     CacheINI();
 }
 
-void CConfigParser::ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Section, BOOL isArch)
+void
+CConfigParser::ReadSection(CStringW &Buffer, const CStringW &Section, BOOL isArch)
 {
     DWORD len = 512;
     DWORD result;
@@ -84,7 +83,7 @@ void CConfigParser::ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Sect
                     continue;
                 }
 
-                CString value = tmp.Mid(idx+1);
+                CString value = tmp.Mid(idx + 1);
                 m_Keys.Add(key, value);
             }
             else
@@ -99,7 +98,8 @@ void CConfigParser::ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Sect
     }
 }
 
-VOID CConfigParser::CacheINI()
+VOID
+CConfigParser::CacheINI()
 {
     // Cache section names
     if (g_Names.ArchSpecific.Locale.IsEmpty())
@@ -135,7 +135,6 @@ VOID CConfigParser::CacheINI()
     }
     ReadSection(Buffer, g_Names.ArchSpecific.Section, TRUE);
 
-
     ReadSection(Buffer, g_Names.ArchNeutral.Locale, FALSE);
     if (!g_Names.ArchNeutral.LocaleNeutral.IsEmpty())
     {
@@ -144,7 +143,8 @@ VOID CConfigParser::CacheINI()
     ReadSection(Buffer, g_Names.ArchNeutral.Section, FALSE);
 }
 
-BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+BOOL
+CConfigParser::GetString(const CStringW &KeyName, CStringW &ResultString)
 {
     int nIndex = m_Keys.FindKey(KeyName);
     if (nIndex >= 0)
@@ -157,9 +157,10 @@ BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
     return FALSE;
 }
 
-BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
+BOOL
+CConfigParser::GetInt(const CStringW &KeyName, INT &iResult)
 {
-    ATL::CStringW Buffer;
+    CStringW Buffer;
 
     iResult = 0;
 
