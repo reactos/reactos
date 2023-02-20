@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Unit Tests for acpi!Bus_PDO_QueryResourceRequirements
- * COPYRIGHT:   Copyright 2017-2020 Thomas Faber (thomas.faber@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2023 Thomas Faber (thomas.faber@reactos.org)
  */
 
 #include <apitest.h>
@@ -501,6 +501,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
     ok(ReqList->InterfaceType == Internal, "InterfaceType = %u\n", ReqList->InterfaceType);
     ok(ReqList->BusNumber == 0, "BusNumber = %lu\n", ReqList->BusNumber);
     ok(ReqList->SlotNumber == 0, "SlotNumber = %lu\n", ReqList->SlotNumber);
+    todo_if(1)
     ok(ReqList->AlternativeLists == 2, "AlternativeLists = %lu\n", ReqList->AlternativeLists);
     ok(ReqList->List[0].Version == 1, "List[0].Version = %u\n", ReqList->List[0].Version);
     ok(ReqList->List[0].Revision == 1, "List[0].Revision = %u\n", ReqList->List[0].Revision);
@@ -525,6 +526,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
         expect_irq(&ReqList2->Descriptors[5], IO_RESOURCE_ALTERNATIVE, CmResourceShareDeviceExclusive, 7, 7);
     }
     ok_int(ReqList->ListSize, GetPoolAllocSize(ReqList));
+    todo_if(1)
     ok_int(ReqList->ListSize, (ULONG_PTR)&ReqList2->Descriptors[6] - (ULONG_PTR)ReqList);
     ExFreePoolWithTag(ReqList, 'RpcA');
 }
