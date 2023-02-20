@@ -1745,6 +1745,38 @@ ForceNCPaintErase(PWND Wnd, HRGN hRgn, PREGION pRgn)
    }
 }
 
+static VOID FASTCALL IntImeWindowPosChanged(VOID)
+{
+    HWND hwndNode, *phwnd;
+    PWND pwndNode, pwndDesktop = UserGetDesktopWindow();
+    PWINDOWLIST pWL;
+
+    if (!pwndDesktop)
+        return;
+
+    /* Enumerate the windows to get the IME windows (of default and non-default) */
+    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, gptiCurrent);
+    if (!pWL)
+        return;
+
+    phwnd = pWL->ahwnd;
+    for (hwndNode = *phwnd; hwndNode != HWND_TERMINATOR; hwndNode = *phwnd++)
+    {
+        pwndNode = ValidateHwndNoErr(hwndNode);
+        if (pwndNode == NULL ||
+            pwndNode->head.pti != gptiCurrent ||
+            pwndNode->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
+        {
+            continue;
+        }
+
+        /* Now hwndNode is an IME window of the current thread */
+        co_IntSendMessage(hwndNode, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+    }
+
+    IntFreeHwndList(pWL);
+}
+
 /* x and y are always screen relative */
 BOOLEAN FASTCALL
 co_WinPosSetWindowPos(
@@ -2303,6 +2335,13 @@ co_WinPosSetWindowPos(
       PWND pWnd = ValidateHwndNoErr(WinPos.hwnd);
       if (pWnd)
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+
+   /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI if necessary */
+   if ((WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE)) != (SWP_NOMOVE | SWP_NOSIZE))
+   {
+      if (IS_IMM_MODE())
+          IntImeWindowPosChanged();
    }
 
    if(bPointerInWindow != IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
@@ -3105,87 +3144,6 @@ END:
     return retvalue;
 }
 
-static VOID FASTCALL IntImeWindowPosChanged(PSMWP psmwp)
-{
-    PWND pwnd, pwndDesktop, pwndNode;
-    PWINDOWLIST pWL;
-    HWND hwnd, *phwnd, hwndImeFocus;
-    PIMEWND pImeWnd;
-    PIMEUI pimeui;
-
-    pwndDesktop = UserGetDesktopWindow();
-    if (!pwndDesktop)
-        return;
-
-    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, gptiCurrent);
-    if (!pWL)
-        return;
-
-    /* Scan the changed windows */
-    phwnd = pWL->ahwnd;
-    for (hwnd = *phwnd; hwnd != HWND_TERMINATOR; hwnd = *phwnd++)
-    {
-        if (gptiCurrent->TIF_flags & TIF_INCLEANUP)
-            break;
-
-        pwnd = ValidateHwndNoErr(hwnd);
-        if (!pwnd ||
-            pwnd->head.pti != gptiCurrent ||
-            pwnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
-        {
-            continue;
-        }
-        /* Now pwnd is an IME window of the current thread */
-
-        /* Get the IME focus window from pwnd */
-        hwndImeFocus = NULL;
-        _SEH2_TRY
-        {
-            ProbeForRead(pwnd, sizeof(IMEWND), 1);
-            pImeWnd = (PIMEWND)pwnd;
-            pimeui = pImeWnd->pimeui;
-            if (pimeui)
-            {
-                ProbeForRead(pimeui, sizeof(IMEUI), 1);
-                hwndImeFocus = pimeui->hwndIMC;
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ERR("Exception! 0x%08X\n", _SEH2_GetExceptionCode());
-            hwndImeFocus = NULL;
-        }
-        _SEH2_END;
-
-        /* Scan hwndImeFocus and its ancestors */
-        for (pwndNode = ValidateHwndNoErr(hwndImeFocus);
-             pwndNode && pwndNode != pwndDesktop;
-             pwndNode = pwndNode->spwndParent)
-        {
-            /* Check whether pwndNode is changed its position */
-            HWND hwndNode = UserHMGetHandle(pwndNode);
-            PCVR winpos = psmwp->acvr;
-            INT icvr, ccvr = psmwp->ccvr;
-            for (icvr = 0; icvr < ccvr; ++icvr, ++winpos)
-            {
-                if (hwndNode != winpos->pos.hwnd)
-                    continue; /* Not matched */
-                if ((winpos->pos.flags & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
-                    continue; /* No change */
-
-                /* Now found a position change of hwndImeFocus or its ancestor.
-                   Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME window */
-                co_IntSendMessage(hwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-                break;
-            }
-            if (icvr < ccvr)
-                break; /* Found a position change and the task is done, so get out of here */
-        }
-    }
-
-    IntFreeHwndList(pWL);
-}
-
 /* Win: xxxEndDeferWindowPosEx */
 BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 {
@@ -3248,9 +3206,6 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 
         UserDerefObjectCo(pwnd);
     }
-
-    if (IS_IMM_MODE())
-        IntImeWindowPosChanged(pDWP);
 
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
     UserDereferenceObject(pDWP);
