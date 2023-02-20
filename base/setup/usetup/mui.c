@@ -254,13 +254,11 @@ MUIGetString(
     ULONG i;
     const MUI_STRING * entry;
     CHAR szErr[128];
-#if 1
     /* Cached for speed */
     static ULONG s_OldNumber = (ULONG)-1;
     static PCSTR s_OldString = NULL;
     if (s_OldNumber == Number)
         return s_OldString;
-#endif
 
     entry = FindMUIStringEntries();
     if (entry)
@@ -269,10 +267,8 @@ MUIGetString(
         {
             if (entry[i].Number == Number)
             {
-#if 1
                 s_OldNumber = Number;
                 s_OldString = entry[i].String;
-#endif
                 return entry[i].String;
             }
         }
