@@ -167,7 +167,6 @@ static VOID DIALOG_StatusBarUpdateEncoding(VOID)
 
 static VOID DIALOG_StatusBarUpdateAll(VOID)
 {
-    DIALOG_StatusBarAlignParts();
     DIALOG_StatusBarUpdateCaretPos();
     DIALOG_StatusBarUpdateLineEndings();
     DIALOG_StatusBarUpdateEncoding();
@@ -405,8 +404,6 @@ BOOL DoCloseFile(VOID)
                 break;
 
             case IDCANCEL:
-                return FALSE;
-
             default:
                 return FALSE;
         }
@@ -463,24 +460,26 @@ VOID DoOpenFile(LPCTSTR szFileName)
     SetFileName(szFileName);
     UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
+    DIALOG_StatusBarUpdateAll();
 
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
-
-    DIALOG_StatusBarUpdateAll();
 }
 
 VOID DIALOG_FileNew(VOID)
 {
     /* Close any files and prompt to save changes */
-    if (DoCloseFile()) {
-        SetWindowText(Globals.hEdit, empty_str);
-        SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
-        SetFocus(Globals.hEdit);
-        NOTEPAD_EnableSearchMenu();
-        DIALOG_StatusBarUpdateAll();
-    }
+    if (!DoCloseFile())
+        return;
+
+    SetWindowText(Globals.hEdit, NULL);
+    SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
+    Globals.iEoln = EOLN_CRLF;
+    Globals.encFile = ENCODING_DEFAULT;
+
+    NOTEPAD_EnableSearchMenu();
+    DIALOG_StatusBarUpdateAll();
 }
 
 VOID DIALOG_FileNewWindow(VOID)
@@ -930,7 +929,7 @@ VOID DoShowHideStatusBar(VOID)
     }
 
     /* Update layout of controls */
-    PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
+    SendMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
 
     if (Globals.hStatusBar == NULL)
         return;
