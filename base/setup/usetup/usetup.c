@@ -143,6 +143,23 @@ DoWatchDestFileName(LPCWSTR FileName)
 
 /* FUNCTIONS ****************************************************************/
 
+VOID StopWatch(LPCSTR Name)
+{
+    static FILETIME s_ft;
+    static LPCSTR s_name;
+    FILETIME ft;
+    if (Name)
+    {
+        s_name = Name;
+        GetSystemTimeAsFileTime(&s_ft);
+    }
+    else
+    {
+        GetSystemTimeAsFileTime(&ft);
+        DPRINT1("StopWatch: %s: %lu\n", s_name, ft.dwLowDateTime - s_ft.dwLowDateTime);
+    }
+}
+
 static VOID
 PrintString(IN PCSTR fmt,...)
 {
@@ -3767,7 +3784,9 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   "Free Memory");
 
     /* Do the file copying */
+    StopWatch("DoFileCopy");
     DoFileCopy(&USetupData, FileCopyCallback, &CopyContext);
+    StopWatch(NULL);
 
     /* If we get here, we're done, so cleanup the progress bar */
     DestroyProgressBar(CopyContext.ProgressBar);
