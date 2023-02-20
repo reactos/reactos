@@ -449,7 +449,7 @@ CONSOLE_SetStatusTextXV(
                                &Written);
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
-                                 xScreen,
+                                 min(sizeof(Buffer), xScreen),
                                  coPos,
                                  &Written);
 }
