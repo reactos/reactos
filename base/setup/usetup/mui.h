@@ -72,6 +72,10 @@ PCSTR
 MUIGetString(
     ULONG Number);
 
+PCSTR
+MUIGetStringCached(
+    ULONG Number);
+
 const MUI_ENTRY *
 MUIGetEntry(
     IN ULONG Page,

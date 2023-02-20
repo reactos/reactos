@@ -3641,8 +3641,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetString(STRING_DELETING),
-                                      DstFileName);
+                CONSOLE_SetStatusText(MUIGetStringCached(STRING_DELETING), DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -3662,8 +3661,7 @@ FileCopyCallback(PVOID Context,
                 else
                     Param2 = STRING_RENAMING;
 
-                CONSOLE_SetStatusText(MUIGetString(Param2),
-                                      SrcFileName, DstFileName);
+                CONSOLE_SetStatusText(MUIGetStringCached(Param2), SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -3675,8 +3673,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetString(STRING_COPYING),
-                                      DstFileName);
+                CONSOLE_SetStatusText(MUIGetStringCached(STRING_COPYING), DstFileName);
 #ifdef __REACTOS__ /* HACK */
                 DoWatchDestFileName(DstFileName);
 #endif

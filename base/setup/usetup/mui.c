@@ -254,11 +254,6 @@ MUIGetString(
     ULONG i;
     const MUI_STRING * entry;
     CHAR szErr[128];
-    /* Cached for speed */
-    static ULONG s_OldNumber = (ULONG)-1;
-    static PCSTR s_OldString = NULL;
-    if (s_OldNumber == Number)
-        return s_OldString;
 
     entry = FindMUIStringEntries();
     if (entry)
@@ -267,8 +262,6 @@ MUIGetString(
         {
             if (entry[i].Number == Number)
             {
-                s_OldNumber = Number;
-                s_OldString = entry[i].String;
                 return entry[i].String;
             }
         }
@@ -282,6 +275,21 @@ MUIGetString(
                POPUP_WAIT_NONE);
 
     return "<nostring>";
+}
+
+PCSTR
+MUIGetStringCached(
+    ULONG Number)
+{
+    /* Cached for speed */
+    static ULONG s_OldNumber = MAXULONG;
+    static PCSTR s_OldString = NULL;
+    if (s_OldNumber == Number)
+        return s_OldString;
+
+    s_OldNumber = Number;
+    s_OldString = MUIGetString(Number);
+    return s_OldString;
 }
 
 /**
