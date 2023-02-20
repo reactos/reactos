@@ -365,8 +365,12 @@ NTSTATUS TCPConnect
         return Status;
     }
 
-    /* Copy bind address into connection */
-    Connection->AddressFile->Address.Address.IPv4Address = bindaddr.addr;
+    /* Check if we had an unspecified address */
+    if (Connection->AddressFile->Address.Address.IPv4Address != bindaddr.addr)
+    {
+         /* We did, so we need to copy back the address */
+         Connection->AddressFile->Address.Address.IPv4Address = bindaddr.addr;
+    }
     /* Check if we had an unspecified port */
     if (!Connection->AddressFile->Port)
     {
