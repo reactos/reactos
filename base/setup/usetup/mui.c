@@ -100,7 +100,7 @@ IsLanguageAvailable(
 
 static
 const MUI_ENTRY *
-FindMUIEntriesOfPage(
+FindMUIEntriesOfPageNoCache(
     IN ULONG PageNumber)
 {
     ULONG muiIndex = 0;
@@ -119,6 +119,22 @@ FindMUIEntriesOfPage(
     }
 
     return NULL;
+}
+
+static
+const MUI_ENTRY *
+FindMUIEntriesOfPage(
+    IN ULONG PageNumber)
+{
+    /* Cached for speed */
+    static ULONG s_OldPageNumber = MAXULONG;
+    static const MUI_ENTRY *s_OldEntry = NULL;
+    if (PageNumber == s_OldPageNumber)
+        return s_OldEntry;
+
+    s_OldPageNumber = PageNumber;
+    s_OldEntry = FindMUIEntriesOfPageNoCache(PageNumber);
+    return s_OldEntry;
 }
 
 static
