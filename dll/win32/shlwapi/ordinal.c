@@ -4146,8 +4146,8 @@ HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size
         buf[size - 1] = ANSI_NULL; /* Avoid buffer overrun */
     return S_OK;
 }
-
 #endif
+
 /*************************************************************************
  * @  [SHLWAPI.439]
  */
