@@ -2033,6 +2033,7 @@ WSPConnect(SOCKET Handle,
         if (Socket->SharedData->NonBlocking)
             Status = STATUS_CANT_WAIT;
         TRACE("Leaving (Pending)\n");
+        Socket->SharedData->State = SocketConnected;
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
 
