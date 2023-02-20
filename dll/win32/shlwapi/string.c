@@ -2892,7 +2892,7 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
 #ifdef __REACTOS__
         if (wcschr(src, '%') != NULL)
         {
-            ExpandEnvironmentStrings(src, szExpanded, ARRAYSIZE(szExpanded));
+            ExpandEnvironmentStringsW(src, szExpanded, ARRAY_SIZE(szExpanded));
             src = szExpanded;
         }
 #endif

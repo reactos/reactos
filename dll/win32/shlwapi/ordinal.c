@@ -4128,13 +4128,13 @@ BOOL WINAPI IsOS(DWORD feature)
 HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size)
 {
     WCHAR valueW[MAX_PATH], bufferW[MAX_PATH];
-    DWORD sz = ARRAY_SIZE(bufferW) * sizeof(CHAR);
+    DWORD dwSize = ARRAY_SIZE(bufferW) * sizeof(CHAR);
     HRESULT hr;
 
     MultiByteToWideChar(CP_ACP, 0, value, -1, valueW, ARRAY_SIZE(valueW));
     valueW[ARRAY_SIZE(valueW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
-    if (RegQueryValueExW(hkey, valueW, NULL, NULL, (LPBYTE)bufferW, &sz) != ERROR_SUCCESS)
+    if (RegQueryValueExW(hkey, valueW, NULL, NULL, (LPBYTE)bufferW, &dwSize) != ERROR_SUCCESS)
         return E_FAIL;
 
     hr = SHLoadIndirectString(bufferW, bufferW, ARRAY_SIZE(bufferW), NULL);
@@ -4143,7 +4143,7 @@ HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size
 
     WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buf, size, NULL, NULL);
     if (size > 0)
-        buf[size - 1] = 0; /* Avoid buffer overrun */
+        buf[size - 1] = ANSI_NULL; /* Avoid buffer overrun */
     return S_OK;
 }
 
