@@ -1750,6 +1750,7 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
     HWND hwndNode, *phwnd;
     PWND pwndNode, pwndDesktop = UserGetDesktopWindow();
     PWINDOWLIST pWL;
+    USER_REFERENCE_ENTRY Ref;
 
     if (!pwndDesktop)
         return;
@@ -1769,9 +1770,11 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
         {
             continue;
         }
-
         /* Now hwndNode is an IME window of the current thread */
+
+        UserRefObjectCo(pwndNode, &Ref);
         co_IntSendMessage(hwndNode, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+        UserDerefObjectCo(pwndNode);
     }
 
     IntFreeHwndList(pWL);
