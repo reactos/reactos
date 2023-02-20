@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Classes for working with available applications
- * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                    (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
+ *              Copyright 2020 He Yang (1160386205@qq.com)
  *              Copyright 2021-2023 Mark Jansen <mark.jansen@reactos.org>
  */
 

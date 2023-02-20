@@ -2,12 +2,12 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Displaying a download dialog
- * COPYRIGHT:   Copyright 2001 John R. Sheets             (for CodeWeavers)
- *              Copyright 2004 Mike McCormack             (for CodeWeavers)
- *              Copyright 2005 Ge van Geldorp             (gvg@reactos.org)
- *              Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
+ * COPYRIGHT:   Copyright 2001 John R. Sheets (for CodeWeavers)
+ *              Copyright 2004 Mike McCormack (for CodeWeavers)
+ *              Copyright 2005 Ge van Geldorp (gvg@reactos.org)
+ *              Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
 
 /*

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Functions to load / save settings from reg.
- * COPYRIGHT:   Copyright 2020 He Yang           (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"

@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Functions to parse command-line flags and process them
  * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                (1160386205@qq.com)
+ *              Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"
