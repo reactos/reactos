@@ -1,6 +1,6 @@
 #pragma once
 
-#include "applicationinfo.h"
+#include "appinfo.h"
 
 #include <windef.h>
 #include <atlsimpcoll.h>

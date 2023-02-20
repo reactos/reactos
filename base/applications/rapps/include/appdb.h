@@ -3,7 +3,7 @@
 #include <atlcoll.h>
 #include <atlpath.h>
 
-#include "applicationinfo.h"
+#include "appinfo.h"
 
 class CApplicationDB
 {

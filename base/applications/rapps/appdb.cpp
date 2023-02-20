@@ -8,7 +8,7 @@
  */
 
 #include "rapps.h"
-#include "applicationdb.h"
+#include "appdb.h"
 #include "configparser.h"
 #include "settings.h"
 
