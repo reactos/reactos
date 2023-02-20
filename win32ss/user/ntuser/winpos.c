@@ -1763,6 +1763,9 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
     phwnd = pWL->ahwnd;
     for (hwndNode = *phwnd; hwndNode != HWND_TERMINATOR; hwndNode = *phwnd++)
     {
+        if (gptiCurrent->TIF_flags & TIF_INCLEANUP)
+            break;
+
         pwndNode = ValidateHwndNoErr(hwndNode);
         if (pwndNode == NULL ||
             pwndNode->head.pti != gptiCurrent ||
