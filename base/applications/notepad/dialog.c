@@ -1119,8 +1119,8 @@ VOID DIALOG_Replace(VOID)
 
 typedef struct tagGOTO_DATA
 {
-    INT iLine;
-    INT cLines;
+    UINT iLine;
+    UINT cLines;
 } GOTO_DATA, *PGOTO_DATA;
 
 static INT_PTR
@@ -1140,7 +1140,7 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             if (LOWORD(wParam) == IDOK)
             {
-                INT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                UINT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
                 if (iLine <= 0 || s_pGotoData->cLines < iLine) /* Out of range */
                 {
                     /* Show error message */
