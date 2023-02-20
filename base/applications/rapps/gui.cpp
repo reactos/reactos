@@ -86,7 +86,7 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CApplicationDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -785,7 +785,7 @@ CMainWindow::HandleTabOrder(int direction)
 // **** CMainWindow ****
 
 VOID
-MainWindowLoop(CApplicationDB *db, INT nShowCmd)
+MainWindowLoop(CAppDB *db, INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;

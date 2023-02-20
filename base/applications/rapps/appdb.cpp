@@ -29,13 +29,13 @@ ClearList(CAtlList<CApplicationInfo *> &list)
     list.RemoveAll();
 }
 
-CApplicationDB::CApplicationDB(const CStringW &path) : m_BasePath(path)
+CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
 {
     m_BasePath.Canonicalize();
 }
 
 CApplicationInfo *
-CApplicationDB::FindByPackageName(const CStringW &name)
+CAppDB::FindByPackageName(const CStringW &name)
 {
     POSITION CurrentListPosition = m_Available.GetHeadPosition();
     while (CurrentListPosition)
@@ -50,7 +50,7 @@ CApplicationDB::FindByPackageName(const CStringW &name)
 }
 
 void
-CApplicationDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const
+CAppDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const
 {
     const BOOL UseInstalled = IsInstalledEnum(Type);
     const CAtlList<CApplicationInfo *> &list = UseInstalled ? m_Installed : m_Available;
@@ -69,7 +69,7 @@ CApplicationDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type)
 }
 
 BOOL
-CApplicationDB::EnumerateFiles()
+CAppDB::EnumerateFiles()
 {
     ClearList(m_Available);
 
@@ -118,7 +118,7 @@ CApplicationDB::EnumerateFiles()
 }
 
 VOID
-CApplicationDB::UpdateAvailable()
+CAppDB::UpdateAvailable()
 {
     if (!CreateDirectoryW(m_BasePath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
         return;
@@ -142,7 +142,7 @@ CApplicationDB::UpdateAvailable()
 }
 
 VOID
-CApplicationDB::UpdateInstalled()
+CAppDB::UpdateInstalled()
 {
     // Remove all old entries
     ClearList(m_Installed);
@@ -239,7 +239,7 @@ DeleteWithWildcard(const CPathW &Dir, const CStringW &Filter)
 }
 
 VOID
-CApplicationDB::RemoveCached()
+CAppDB::RemoveCached()
 {
     // Delete icons
     CPathW AppsPath = m_BasePath;
@@ -263,7 +263,7 @@ CApplicationDB::RemoveCached()
 }
 
 BOOL
-CApplicationDB::RemoveInstalledAppFromRegistry(const CApplicationInfo *Info)
+CAppDB::RemoveInstalledAppFromRegistry(const CApplicationInfo *Info)
 {
     // Validate that this is actually an installed app / update
     ATLASSERT(Info->iCategory == ENUM_INSTALLED_APPLICATIONS || Info->iCategory == ENUM_UPDATES);

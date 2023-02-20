@@ -11,7 +11,7 @@ CreateSettingsDlg(HWND hwnd);
 
 // Main window
 VOID
-MainWindowLoop(class CApplicationDB *db, INT nShowCmd);
+MainWindowLoop(class CAppDB *db, INT nShowCmd);
 
 // Download dialogs
 VOID

@@ -44,7 +44,7 @@ InitRappsConsole()
 }
 
 static BOOL
-HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleInstallCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -68,7 +68,7 @@ HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR 
 }
 
 static BOOL
-HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft != 1)
     {
@@ -106,7 +106,7 @@ HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *a
 }
 
 static BOOL
-HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleFindCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -140,7 +140,7 @@ HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *ar
 }
 
 static BOOL
-HandleInfoCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleInfoCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -231,7 +231,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     CStringW Directory;
     GetStorageDirectory(Directory);
-    CApplicationDB db(Directory);
+    CAppDB db(Directory);
 
     if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
     {

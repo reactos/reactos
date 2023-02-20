@@ -5,7 +5,7 @@
 
 #include "appinfo.h"
 
-class CApplicationDB
+class CAppDB
 {
   private:
     CPathW m_BasePath;
@@ -16,7 +16,7 @@ class CApplicationDB
     EnumerateFiles();
 
   public:
-    CApplicationDB(const CStringW &path);
+    CAppDB(const CStringW &path);
 
     VOID
     GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const;

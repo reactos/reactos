@@ -54,7 +54,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 
     CApplicationView *m_ApplicationView = NULL;
 
-    CApplicationDB *m_Db;
+    CAppDB *m_Db;
     CAtlList<CApplicationInfo *> m_Selected;
 
     BOOL bUpdating = FALSE;
@@ -63,7 +63,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     AppsCategories SelectedEnumType;
 
   public:
-    CMainWindow(CApplicationDB *db);
+    CMainWindow(CAppDB *db);
 
     ~CMainWindow();
 
