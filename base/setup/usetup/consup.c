@@ -429,32 +429,26 @@ CONSOLE_SetStatusTextXV(
     IN LPCSTR fmt,
     IN va_list args)
 {
+    INT nLength;
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
 
-    vsprintf(Buffer, fmt, args);
+    memset(Buffer, ' ', min(sizeof(Buffer), xScreen));
+    nLength = vsprintf(&Buffer[x], fmt, args);
+    ASSERT(x + nLength < sizeof(Buffer));
+    Buffer[x + nLength] = ' ';
 
     coPos.X = 0;
     coPos.Y = yScreen - 1;
-
     FillConsoleOutputAttribute(StdOutput,
                                BACKGROUND_WHITE,
                                xScreen,
                                coPos,
                                &Written);
-
-    FillConsoleOutputCharacterA(StdOutput,
-                                ' ',
-                                xScreen,
-                                coPos,
-                                &Written);
-
-    coPos.X = x;
-
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
-                                 (ULONG)strlen(Buffer),
+                                 min(sizeof(Buffer), xScreen),
                                  coPos,
                                  &Written);
 }
