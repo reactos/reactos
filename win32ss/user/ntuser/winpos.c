@@ -1747,7 +1747,7 @@ ForceNCPaintErase(PWND Wnd, HRGN hRgn, PREGION pRgn)
 
 static VOID FASTCALL IntImeWindowPosChanged(VOID)
 {
-    HWND hwndNode, *phwnd;
+    HWND *phwnd;
     PWND pwndNode, pwndDesktop = UserGetDesktopWindow();
     PWINDOWLIST pWL;
     USER_REFERENCE_ENTRY Ref;
