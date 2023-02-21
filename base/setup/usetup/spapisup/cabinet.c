@@ -140,7 +140,7 @@ typedef struct _CFDATA
 void *__cdecl
 malloc(size_t size)
 {
-    return RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, size);
+    return RtlAllocateHeap(ProcessHeap, 0, size);
 }
 
 void __cdecl
