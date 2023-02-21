@@ -4,9 +4,11 @@
  * PURPOSE:          Windows
  * FILE:             win32ss/user/ntuser/winpos.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserWinpos);
 
 /* GLOBALS *******************************************************************/
@@ -1743,6 +1745,43 @@ ForceNCPaintErase(PWND Wnd, HRGN hRgn, PREGION pRgn)
    }
 }
 
+static VOID FASTCALL IntImeWindowPosChanged(VOID)
+{
+    HWND *phwnd;
+    PWND pwndNode, pwndDesktop = UserGetDesktopWindow();
+    PWINDOWLIST pWL;
+    USER_REFERENCE_ENTRY Ref;
+
+    if (!pwndDesktop)
+        return;
+
+    /* Enumerate the windows to get the IME windows (of default and non-default) */
+    pWL = IntBuildHwndList(pwndDesktop->spwndChild, IACE_LIST, gptiCurrent);
+    if (!pWL)
+        return;
+
+    for (phwnd = pWL->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+    {
+        if (gptiCurrent->TIF_flags & TIF_INCLEANUP)
+            break;
+
+        pwndNode = ValidateHwndNoErr(*phwnd);
+        if (pwndNode == NULL ||
+            pwndNode->head.pti != gptiCurrent ||
+            pwndNode->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
+        {
+            continue;
+        }
+
+        /* Now hwndNode is an IME window of the current thread */
+        UserRefObjectCo(pwndNode, &Ref);
+        co_IntSendMessage(*phwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
+        UserDerefObjectCo(pwndNode);
+    }
+
+    IntFreeHwndList(pWL);
+}
+
 /* x and y are always screen relative */
 BOOLEAN FASTCALL
 co_WinPosSetWindowPos(
@@ -2301,6 +2340,13 @@ co_WinPosSetWindowPos(
       PWND pWnd = ValidateHwndNoErr(WinPos.hwnd);
       if (pWnd)
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+
+   /* Send WM_IME_SYSTEM:IMS_UPDATEIMEUI to the IME windows if necessary */
+   if ((WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE)) != (SWP_NOMOVE | SWP_NOSIZE))
+   {
+      if (IS_IMM_MODE())
+          IntImeWindowPosChanged();
    }
 
    if(bPointerInWindow != IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
@@ -3165,6 +3211,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 
         UserDerefObjectCo(pwnd);
     }
+
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
     UserDereferenceObject(pDWP);
     UserDeleteObject(hdwp, TYPE_SETWINDOWPOS);
