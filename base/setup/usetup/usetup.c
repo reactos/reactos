@@ -3624,7 +3624,8 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetString(STRING_DELETING), DstFileName);
+                CONSOLE_SetStatusText(MUIGetString(STRING_DELETING),
+                                      DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -3644,7 +3645,8 @@ FileCopyCallback(PVOID Context,
                 else
                     Param2 = STRING_RENAMING;
 
-                CONSOLE_SetStatusText(MUIGetString(Param2), SrcFileName, DstFileName);
+                CONSOLE_SetStatusText(MUIGetString(Param2),
+                                      SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
