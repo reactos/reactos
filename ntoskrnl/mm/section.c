@@ -3672,9 +3672,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         /* FIXME: We should likely flush only when last mapping is deleted */
         while (ViewSize > 0)
         {
-            ULONG FlushSize = ViewSize > (PAGE_ROUND_DOWN(MAXULONG)) ? 
-                                PAGE_ROUND_DOWN(MAXULONG) :
-                                ViewSize;
+            ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
             MmFlushSegment(FileObject->SectionObjectPointer,
                            &ViewOffset,
                            FlushSize,
