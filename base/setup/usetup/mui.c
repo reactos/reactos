@@ -293,21 +293,6 @@ MUIGetString(
     return "<nostring>";
 }
 
-PCSTR
-MUIGetStringCached(
-    ULONG Number)
-{
-    /* Cached for speed */
-    static ULONG s_OldNumber = MAXULONG;
-    static PCSTR s_OldString = NULL;
-    if (s_OldNumber == Number)
-        return s_OldString;
-
-    s_OldNumber = Number;
-    s_OldString = MUIGetString(Number);
-    return s_OldString;
-}
-
 /**
  * @MUIGetEntry
  *

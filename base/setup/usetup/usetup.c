@@ -3617,6 +3617,8 @@ FileCopyCallback(PVOID Context,
 
             if (Notification == SPFILENOTIFY_STARTDELETE)
             {
+                static PCSTR s_pszDeleting = NULL; /* Cached for speed */
+
                 /* Display delete message */
                 ASSERT(Param2 == FILEOP_DELETE);
 
@@ -3624,7 +3626,10 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetStringCached(STRING_DELETING), DstFileName);
+                if (s_pszDeleting == NULL)
+                    s_pszDeleting = MUIGetString(STRING_DELETING);
+
+                CONSOLE_SetStatusText(s_pszDeleting, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -3644,10 +3649,12 @@ FileCopyCallback(PVOID Context,
                 else
                     Param2 = STRING_RENAMING;
 
-                CONSOLE_SetStatusText(MUIGetStringCached(Param2), SrcFileName, DstFileName);
+                CONSOLE_SetStatusText(MUIGetString(Param2), SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
+                static PCSTR s_pszCopying = NULL; /* Cached for speed */
+
                 /* Display copy message */
                 ASSERT(Param2 == FILEOP_COPY);
 
@@ -3656,7 +3663,10 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetStringCached(STRING_COPYING), DstFileName);
+                if (s_pszCopying == NULL)
+                    s_pszCopying = MUIGetString(STRING_COPYING);
+
+                CONSOLE_SetStatusText(s_pszCopying, DstFileName);
 #ifdef __REACTOS__ /* HACK */
                 DoWatchDestFileName(DstFileName);
 #endif
