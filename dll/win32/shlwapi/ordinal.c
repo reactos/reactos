@@ -4121,6 +4121,33 @@ BOOL WINAPI IsOS(DWORD feature)
     return FALSE;
 }
 
+#ifdef __REACTOS__
+/*************************************************************************
+ * @  [SHLWAPI.438]
+ */
+HRESULT WINAPI SHLoadRegUIStringA(HKEY hkey, LPCSTR value, LPSTR buf, DWORD size)
+{
+    WCHAR valueW[MAX_PATH], bufferW[MAX_PATH];
+    DWORD dwSize = ARRAY_SIZE(bufferW) * sizeof(CHAR);
+    HRESULT hr;
+
+    MultiByteToWideChar(CP_ACP, 0, value, -1, valueW, ARRAY_SIZE(valueW));
+    valueW[ARRAY_SIZE(valueW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+
+    if (RegQueryValueExW(hkey, valueW, NULL, NULL, (LPBYTE)bufferW, &dwSize) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    hr = SHLoadIndirectString(bufferW, bufferW, ARRAY_SIZE(bufferW), NULL);
+    if (FAILED(hr))
+        return hr;
+
+    WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buf, size, NULL, NULL);
+    if (size > 0)
+        buf[size - 1] = ANSI_NULL; /* Avoid buffer overrun */
+    return S_OK;
+}
+#endif
+
 /*************************************************************************
  * @  [SHLWAPI.439]
  */
