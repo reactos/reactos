@@ -1765,7 +1765,7 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
         if (gptiCurrent->TIF_flags & TIF_INCLEANUP)
             break;
 
-        pwndNode = ValidateHwndNoErr(hwndNode);
+        pwndNode = ValidateHwndNoErr(*phwnd);
         if (pwndNode == NULL ||
             pwndNode->head.pti != gptiCurrent ||
             pwndNode->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
