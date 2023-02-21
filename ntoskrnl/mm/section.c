@@ -3684,6 +3684,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         FsRtlReleaseFile(FileObject);
         MmDereferenceSegment(Segment);
     }
+
     /* Notify debugger */
     if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
 
