@@ -3662,7 +3662,6 @@ FileCopyCallback(PVOID Context,
 
                 if (s_pszCopying == NULL)
                     s_pszCopying = MUIGetString(STRING_COPYING);
-
                 CONSOLE_SetStatusText(s_pszCopying, DstFileName);
 #ifdef __REACTOS__ /* HACK */
                 DoWatchDestFileName(DstFileName);
