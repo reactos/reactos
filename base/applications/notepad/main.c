@@ -560,6 +560,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     HMONITOR monitor;
     MONITORINFO info;
     INT x, y;
+    RECT rcIntersect;
 
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
@@ -609,10 +610,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     x = Globals.main_rect.left;
     y = Globals.main_rect.top;
-    if (Globals.main_rect.left >= info.rcWork.right ||
-        Globals.main_rect.top >= info.rcWork.bottom ||
-        Globals.main_rect.right < info.rcWork.left ||
-        Globals.main_rect.bottom < info.rcWork.top)
+    if (!IntersectRect(&rcIntersect, &Globals.main_rect, &info.rcWork))
         x = y = CW_USEDEFAULT;
 
     Globals.hMainWnd = CreateWindow(className,
