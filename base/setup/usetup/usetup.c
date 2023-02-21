@@ -3617,8 +3617,6 @@ FileCopyCallback(PVOID Context,
 
             if (Notification == SPFILENOTIFY_STARTDELETE)
             {
-                static PCSTR s_pszDeleting = NULL; /* Cached for speed */
-
                 /* Display delete message */
                 ASSERT(Param2 == FILEOP_DELETE);
 
@@ -3626,10 +3624,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                if (s_pszDeleting == NULL)
-                    s_pszDeleting = MUIGetString(STRING_DELETING);
-
-                CONSOLE_SetStatusText(s_pszDeleting, DstFileName);
+                CONSOLE_SetStatusText(MUIGetString(STRING_DELETING), DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
