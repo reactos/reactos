@@ -117,6 +117,11 @@ static void COMDLG32_FR_HandleWMCommand(HWND hDlgWnd, COMDLG32_FR_Data *pData, i
 
 		case IDCANCEL:
 			pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd) | FR_DIALOGTERM;
+#ifdef __REACTOS__
+			if(pData->fr.Flags & FR_WINE_UNICODE)
+				SendMessageA(pData->fr.hwndOwner, FindReplaceMessage, 0, (LPARAM)pData->user_fr.frw);
+			else
+#endif
 			SendMessageA(pData->fr.hwndOwner, FindReplaceMessage, 0, (LPARAM)pData->user_fr.fra);
 		        DestroyWindow(hDlgWnd);
 			break;
