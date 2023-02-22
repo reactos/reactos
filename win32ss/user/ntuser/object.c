@@ -875,18 +875,17 @@ PVOID FASTCALL UserAssignmentUnlock(PVOID *ppvObj)
 VOID FASTCALL UserThreadLock1(PVOID pobj, PTL pTL)
 {
     pTL->next = gptiCurrent->ptl;
-    gptiCurrent->ptl = pTL;
     pTL->pobj = pobj;
+    gptiCurrent->ptl = pTL;
     if (pobj)
         UserReferenceObject(pobj);
 }
 
 PVOID FASTCALL UserThreadUnlock1(VOID)
 {
-    PTHREADINFO pTI = gptiCurrent;
-    PTL pTL = pTI->ptl;
+    PTL pTL = gptiCurrent->ptl;
     PVOID pobj = pTL->pobj;
-    pTI->ptl = pTL->next;
+    gptiCurrent->ptl = pTL->next;
     if (pobj && UserDereferenceObject(pobj))
         return NULL;
     return pobj;
