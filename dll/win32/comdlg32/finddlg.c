@@ -92,6 +92,9 @@ static void COMDLG32_FR_HandleWMCommand(HWND hDlgWnd, COMDLG32_FR_Data *pData, i
 	pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
 	if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
 		pData->user_fr.fra->Flags |= FR_DOWN;
+#ifdef __REACTOS__
+        ERR("Id, NotifyCode: 0x%X, 0x%X\n", Id, NotifyCode);
+#endif
 
 	if(NotifyCode == BN_CLICKED)
         {
@@ -168,6 +171,12 @@ Replace:
 			EnableWindow(GetDlgItem(hDlgWnd, psh2), enable);
                 }
 	}
+#ifdef __REACTOS__
+        else if (NotifyCode == EN_KILLFOCUS && Id == edt1)
+        {
+		pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd);
+        }
+#endif
 }
 
 /***********************************************************************
