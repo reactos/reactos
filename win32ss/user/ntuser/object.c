@@ -871,3 +871,22 @@ PVOID FASTCALL UserAssignmentUnlock(PVOID *ppvObj)
 
     return pvOld;
 }
+
+VOID FASTCALL ThreadLock1(PVOID pobj, PTL pTL)
+{
+    pTL->next = gptiCurrent->ptl;
+    gptiCurrent->ptl = pTL;
+    pTL->pobj = pobj;
+    if (pobj)
+        UserReferenceObject(pobj);
+}
+
+PVOID FASTCALL ThreadUnlock1(VOID)
+{
+    PTHREADINFO pTI = gptiCurrent;
+    PTL pTL = pTI->ptl;
+    pTI->ptl = pTL->next;
+    if (pTL->pobj && UserDereferenceObject(pTL->pobj))
+        return NULL;
+    return pTL->pobj;
+}
