@@ -257,7 +257,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
       case HTERROR:
       {
          //// This is the real fix for CORE-6129! This was a "Code hole".
-         TL tl;
+         USER_REFERENCE_ENTRY Ref;
 
          if (Msg == WM_LBUTTONDOWN)
          {
@@ -273,10 +273,10 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
 
                   co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-                  UserThreadLock1(pwndPopUP, &tl);
+                  UserRefObjectCo(pwndPopUP, &Ref);
                   //UserSetActiveWindow(pwndPopUP);
                   co_IntSetForegroundWindow(pwndPopUP); // HACK
-                  UserThreadUnlock1();
+                  UserDerefObjectCo(pwndPopUP);
 
                   // If the change was made, break out.
                   if (pwndOrigActive != gpqForeground->spwndActive)
@@ -543,7 +543,7 @@ IntDefWindowProc(
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
-   TL tl;
+   USER_REFERENCE_ENTRY Ref;
 
    if (Msg > WM_USER) return 0;
 
@@ -643,9 +643,9 @@ IntDefWindowProc(
                co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
             break;
          }
-         UserThreadLock1(Wnd->spwndParent, &tl);
+         UserRefObjectCo(Wnd->spwndParent, &Ref);
          lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
-         UserThreadUnlock1();
+         UserDerefObjectCo(Wnd->spwndParent);
          break;
 
       case WM_KEYF1:
