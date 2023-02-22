@@ -151,7 +151,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 {
     PTHREADINFO pti;
     PWND pImeWnd;
-    TL tl;
+    USER_REFERENCE_ENTRY Ref;
     HWND hImeWnd;
     WPARAM wParam;
     LPARAM lParam;
@@ -167,7 +167,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     if (!pImeWnd)
         return;
 
-    UserThreadLock(&tl, pImeWnd);
+    UserRefObjectCo(pImeWnd, &Ref);
 
     hImeWnd = UserHMGetHandle(pImeWnd);
     wParam = (bActivate ? IMS_IMEACTIVATE : IMS_IMEDEACTIVATE);
@@ -178,7 +178,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     else
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, wParam, lParam);
 
-    UserThreadUnlock(&tl);
+    UserDerefObjectCo(pImeWnd);
 }
 
 //
