@@ -1083,82 +1083,90 @@ VOID DIALOG_Replace(VOID)
     DIALOG_SearchDialog(ReplaceText);
 }
 
+typedef struct tagGOTO_DATA
+{
+    UINT iLine;
+    UINT cLines;
+} GOTO_DATA, *PGOTO_DATA;
+
 static INT_PTR
 CALLBACK
 DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    BOOL bResult = FALSE;
-    HWND hTextBox;
-    TCHAR szText[32];
+    static PGOTO_DATA s_pGotoData;
 
-    switch(uMsg) {
-    case WM_INITDIALOG:
-        hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-        _sntprintf(szText, ARRAY_SIZE(szText), _T("%Id"), lParam);
-        SetWindowText(hTextBox, szText);
-        break;
-    case WM_COMMAND:
-        if (HIWORD(wParam) == BN_CLICKED)
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pGotoData = (PGOTO_DATA)lParam;
+            SetDlgItemInt(hwndDialog, ID_LINENUMBER, s_pGotoData->iLine, FALSE);
+            return TRUE; /* Set focus */
+
+        case WM_COMMAND:
         {
             if (LOWORD(wParam) == IDOK)
             {
-                hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-                GetWindowText(hTextBox, szText, ARRAY_SIZE(szText));
-                EndDialog(hwndDialog, _ttoi(szText));
-                bResult = TRUE;
+                UINT iLine = GetDlgItemInt(hwndDialog, ID_LINENUMBER, NULL, FALSE);
+                if (iLine <= 0 || s_pGotoData->cLines < iLine) /* Out of range */
+                {
+                    /* Show error message */
+                    WCHAR title[128], text[256];
+                    LoadStringW(Globals.hInstance, STRING_NOTEPAD, title, ARRAY_SIZE(title));
+                    LoadStringW(Globals.hInstance, STRING_LINE_NUMBER_OUT_OF_RANGE, text, ARRAY_SIZE(text));
+                    MessageBoxW(hwndDialog, text, title, MB_OK);
+
+                    SendDlgItemMessageW(hwndDialog, ID_LINENUMBER, EM_SETSEL, 0, -1);
+                    SetFocus(GetDlgItem(hwndDialog, ID_LINENUMBER));
+                    break;
+                }
+                s_pGotoData->iLine = iLine;
+                EndDialog(hwndDialog, IDOK);
             }
             else if (LOWORD(wParam) == IDCANCEL)
             {
-                EndDialog(hwndDialog, 0);
-                bResult = TRUE;
+                EndDialog(hwndDialog, IDCANCEL);
             }
+            break;
         }
-        break;
     }
 
-    return bResult;
+    return 0;
 }
 
 VOID DIALOG_GoTo(VOID)
 {
-    INT_PTR nLine;
-    LPTSTR pszText;
-    int nLength, i;
-    DWORD dwStart, dwEnd;
+    GOTO_DATA GotoData;
+    DWORD dwStart = 0, dwEnd = 0;
+    INT ich, cch = GetWindowTextLength(Globals.hEdit);
 
-    nLength = GetWindowTextLength(Globals.hEdit);
-    pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(*pszText));
-    if (!pszText)
-        return;
-
-    /* Retrieve current text */
-    GetWindowText(Globals.hEdit, pszText, nLength + 1);
+    /* Get the current line number and the total line number */
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
+    GotoData.iLine = (UINT)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, dwStart, 0) + 1;
+    GotoData.cLines = (UINT)SendMessage(Globals.hEdit, EM_GETLINECOUNT, 0, 0);
 
-    nLine = 1;
-    for (i = 0; (i < (int) dwStart) && pszText[i]; i++)
+    /* Ask the user for line number */
+    if (DialogBoxParam(Globals.hInstance,
+                       MAKEINTRESOURCE(DIALOG_GOTO),
+                       Globals.hMainWnd,
+                       DIALOG_GoTo_DialogProc,
+                       (LPARAM)&GotoData) != IDOK)
     {
-        if (pszText[i] == '\n')
-            nLine++;
+        return; /* Canceled */
     }
 
-    nLine = DialogBoxParam(Globals.hInstance,
-                           MAKEINTRESOURCE(DIALOG_GOTO),
-                           Globals.hMainWnd,
-                           DIALOG_GoTo_DialogProc,
-                           nLine);
+    --GotoData.iLine; /* Make it zero-based */
 
-    if (nLine >= 1)
-    {
-        for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
-        {
-            if (pszText[i] == '\n')
-                nLine--;
-        }
-        SendMessage(Globals.hEdit, EM_SETSEL, i, i);
-        SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
-    }
-    HeapFree(GetProcessHeap(), 0, pszText);
+    /* Get ich (the target character index) from line number */
+    if (GotoData.iLine <= 0)
+        ich = 0;
+    else if (GotoData.iLine >= GotoData.cLines)
+        ich = cch;
+    else
+        ich = (INT)SendMessage(Globals.hEdit, EM_LINEINDEX, GotoData.iLine, 0);
+
+    /* Move the caret */
+    SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
+    SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
