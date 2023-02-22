@@ -167,7 +167,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     if (!pImeWnd)
         return;
 
-    UserThreadLock1(pImeWnd, &tl);
+    UserThreadLock(&tl, pImeWnd);
 
     hImeWnd = UserHMGetHandle(pImeWnd);
     wParam = (bActivate ? IMS_IMEACTIVATE : IMS_IMEDEACTIVATE);
@@ -178,7 +178,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     else
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, wParam, lParam);
 
-    UserThreadUnlock1();
+    UserThreadUnlock(&tl);
 }
 
 //
@@ -224,9 +224,9 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
       MSG msg;
       PWND pwndCapture = pti->MessageQueue->spwndCapture;
 
-      UserThreadLock1(pwndCapture, &tl);
+      UserThreadLock(&tl, pwndCapture);
       co_IntSendMessage(UserHMGetHandle(pwndCapture), WM_CANCELMODE, 0, 0);
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
       /* Generate mouse move message */
       msg.message = WM_MOUSEMOVE;
@@ -287,9 +287,9 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
                { // FALSE if the window is being deactivated,
                  // ThreadId that owns the window being activated.
                  //ERR("IDW : WM_ACTIVATEAPP(0) hwnd %p tid Old %p New %p\n",UserHMGetHandle(cWindow),OldTID,tid);
-                 UserThreadLock1(cWindow, &tl);
+                 UserThreadLock(&tl, cWindow);
                  co_IntSendMessage(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)tid);
-                 UserThreadUnlock1();
+                 UserThreadUnlock(&tl);
                }
             }
          }
@@ -332,9 +332,10 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
       //
       pti->MessageQueue->spwndFocus = NULL; // Null out Focus.
 
-      UserThreadLock1(pwndFocus, &tl);
+      UserThreadLock(&tl, pwndFocus);
       co_IntSendMessage(UserHMGetHandle(pwndFocus), WM_KILLFOCUS, 0, 0);
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
+
       if (IS_IMM_MODE())
       {
          IntFocusSetInputContext(pwndFocus, FALSE, FALSE);
@@ -1686,9 +1687,9 @@ NtUserSetActiveWindow(HWND hWnd)
    {
       pwndPrev = gptiCurrent->MessageQueue->spwndActive;
       hWndPrev = (pwndPrev ? UserHMGetHandle(pwndPrev) : NULL);
-      if (Window) UserThreadLock1(Window, &tl);
+      if (Window) UserThreadLock(&tl, Window);
       UserSetActiveWindow(Window);
-      if (Window) UserThreadUnlock1();
+      if (Window) UserThreadUnlock(&tl);
       RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
    }
    RETURN( NULL);
@@ -1740,9 +1741,9 @@ NtUserSetFocus(HWND hWnd)
          RETURN(NULL);
       }
 
-      UserThreadLock1(Window, &tl);
+      UserThreadLock(&tl, Window);
       ret = co_UserSetFocus(Window);
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
       RETURN(ret);
    }

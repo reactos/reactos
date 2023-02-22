@@ -599,7 +599,7 @@ NtUserCallHwndLock(
         goto Exit;
     }
 
-    UserThreadLock1(Window, &tl);
+    UserThreadLock(&tl, Window);
 
     /* FIXME: Routine can be 0x53 - 0x5E */
     switch (Routine)
@@ -674,7 +674,7 @@ NtUserCallHwndLock(
             break;
     }
 
-    UserThreadUnlock1();
+    UserThreadUnlock(&tl);
 
 Exit:
     TRACE("Leave NtUserCallHwndLock, ret=%u\n", Ret);
@@ -899,7 +899,7 @@ NtUserCallHwndParamLock(
         goto Exit;
     }
 
-    UserThreadLock1(Window, &tl);
+    UserThreadLock(&tl, Window);
 
     switch (Routine)
     {
@@ -916,7 +916,7 @@ NtUserCallHwndParamLock(
         }
     }
 
-    UserThreadUnlock1();
+    UserThreadUnlock(&tl);
 
 Exit:
 

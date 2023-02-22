@@ -1252,9 +1252,9 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       RETURN(FALSE);
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    Status = MmCopyToCaller(psbi, &sbi, sizeof(SCROLLBARINFO));
    if(!NT_SUCCESS(Status))
@@ -1312,9 +1312,9 @@ NtUserSBGetParms(
       RETURN(FALSE);
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    Ret = co_IntGetScrollInfo(Window, fnBar, &SBDataSafe, &psi);
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    _SEH2_TRY
    {
@@ -1359,7 +1359,7 @@ NtUserEnableScrollBar(
       Window = NULL;
       RETURN(FALSE);
    }
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
 
    if (!co_IntCreateScrollBars(Window))
    {
@@ -1415,7 +1415,7 @@ NtUserEnableScrollBar(
 
 CLEANUP:
    if (Window)
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
    TRACE("Leave NtUserEnableScrollBar, ret=%i\n",_ret_);
    UserLeave();
@@ -1445,7 +1445,7 @@ NtUserSetScrollInfo(
       Window = NULL;
       RETURN( 0);
    }
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
 
    Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
    if(!NT_SUCCESS(Status))
@@ -1458,7 +1458,7 @@ NtUserSetScrollInfo(
 
 CLEANUP:
    if (Window)
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
    TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", _ret_);
    UserLeave();
@@ -1482,10 +1482,10 @@ NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
       RETURN(0);
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
                                             (nBar == SB_HORZ) ? 0 : bShow);
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    RETURN(ret);
 
@@ -1522,7 +1522,7 @@ NtUserSetScrollBarInfo(
    {
       RETURN( FALSE);
    }
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
 
    Obj = SBOBJ_TO_SBID(idObject);
    if(!SBID_IS_VALID(Obj))
@@ -1555,7 +1555,7 @@ NtUserSetScrollBarInfo(
 
 CLEANUP:
    if (Window)
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
    TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n",_ret_);
    UserLeave();

@@ -439,11 +439,11 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
       RETURN(FALSE);
    }
 
-   if (Window) UserThreadLock1(Window, &tl);
+   if (Window) UserThreadLock(&tl, Window);
 
    ret = co_UserShowCaret(Window);
 
-   if (Window) UserThreadUnlock1();
+   if (Window) UserThreadUnlock(&tl);
 
    RETURN(ret);
 
@@ -470,11 +470,11 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
       RETURN(FALSE);
    }
 
-   if (Window) UserThreadLock1(Window, &tl);
+   if (Window) UserThreadLock(&tl, Window);
 
    ret = co_UserHideCaret(Window);
 
-   if (Window) UserThreadUnlock1();
+   if (Window) UserThreadUnlock(&tl);
 
    RETURN(ret);
 

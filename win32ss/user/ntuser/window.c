@@ -2442,7 +2442,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       {
          HWND hImeWnd;
          TL tl;
-         UserThreadLock1(pwndDefaultIme, &tl);
+         UserThreadLock(&tl, pwndDefaultIme);
 
          hImeWnd = UserHMGetHandle(pwndDefaultIme);
 
@@ -2455,7 +2455,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
          }
 
-         UserThreadUnlock1();
+         UserThreadUnlock(&tl);
       }
    }
 
@@ -3037,9 +3037,9 @@ NtUserDestroyWindow(HWND Wnd)
       RETURN(FALSE);
    }
 
-   UserThreadLock1(Window, &tl); // FIXME: Dunno if win should be reffed during destroy...
+   UserThreadLock(&tl, Window); // FIXME: Dunno if win should be reffed during destroy...
    ret = co_UserDestroyWindow(Window);
-   UserThreadUnlock1(); // FIXME: Dunno if win should be reffed during destroy...
+   UserThreadUnlock(&tl); // FIXME: Dunno if win should be reffed during destroy...
 
    RETURN(ret);
 
@@ -3780,7 +3780,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       RETURN( FALSE);
    }
 
-   UserThreadLock1(WndShell, &tl);
+   UserThreadLock(&tl, WndShell);
    WndShell->state2 |= WNDS2_BOTTOMMOST;
    co_WinPosSetWindowPos(WndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
@@ -3798,7 +3798,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    UserRegisterHotKey(WndShell, SC_TASKLIST, MOD_CONTROL, VK_ESCAPE);
 
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    ObDereferenceObject(WinStaObject);
    RETURN( TRUE);

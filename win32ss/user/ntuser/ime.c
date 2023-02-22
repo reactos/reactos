@@ -2212,12 +2212,12 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
             HWND hImeWnd;
             TL tl;
 
-            UserThreadLock1(pwndIMC, &tl);
+            UserThreadLock(&tl, pwndIMC);
 
             hImeWnd = UserHMGetHandle(pwndIMC);
             co_IntSendMessage(hImeWnd, WM_IME_NOTIFY, IMN_CLOSESTATUSWINDOW, 0);
 
-            UserThreadUnlock1();
+            UserThreadUnlock(&tl);
         }
     }
 
@@ -2277,9 +2277,9 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (bDifferent)
         KeDetachProcess();
 
-    UserThreadLock1(pwndUI, &tl);
+    UserThreadLock(&tl, pwndUI);
     ret = co_IntSendMessage(UserHMGetHandle(pwndUI), uMsg, wParam, lParam);
-    UserThreadUnlock1();
+    UserThreadUnlock(&tl);
 
     // Attach to the process if necessary
     if (bDifferent)

@@ -1774,9 +1774,9 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
         }
 
         /* Now hwndNode is an IME window of the current thread */
-        UserThreadLock1(pwndNode, &tl);
+        UserThreadLock(&tl, pwndNode);
         co_IntSendMessage(*phwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-        UserThreadUnlock1();
+        UserThreadUnlock(&tl);
     }
 
     IntFreeHwndList(pWL);
@@ -3178,7 +3178,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
         if (!pwnd)
            continue;
 
-        UserThreadLock1(pwnd, &tl);
+        UserThreadLock(&tl, pwnd);
 
         if (bAsync)
         {
@@ -3209,7 +3209,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
         if (res && (winpos->pos.flags & (SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER)) == SWP_NOZORDER )
            EngSetLastError(ERROR_SUCCESS);
 
-        UserThreadUnlock1();
+        UserThreadUnlock(&tl);
     }
 
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
@@ -3557,9 +3557,9 @@ NtUserSetWindowPos(
       else if (cy > 32767) cy = 32767;
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    ret = co_WinPosSetWindowPos(Window, hWndInsertAfter, X, Y, cx, cy, uFlags);
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    RETURN(ret);
 
@@ -3778,9 +3778,9 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
       RETURN(FALSE);
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    ret = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
    if (-1 == (int) ret || !ret) ret = FALSE;
 
    RETURN(ret);
@@ -3817,9 +3817,9 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
       RETURN(FALSE);
    }
 
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
    ret = co_WinPosShowWindow(Window, nCmdShow);
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    RETURN(ret);
 

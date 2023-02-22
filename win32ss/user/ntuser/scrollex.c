@@ -594,7 +594,7 @@ NtUserScrollWindowEx(
       Window = NULL; /* prevent deref at cleanup */
       RETURN(ERROR);
    }
-   UserThreadLock1(Window, &tl);
+   UserThreadLock(&tl, Window);
 
    _SEH2_TRY
    {
@@ -655,7 +655,7 @@ NtUserScrollWindowEx(
 
 CLEANUP:
    if (Window)
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
 
    TRACE("Leave NtUserScrollWindowEx, ret=%lu\n",_ret_);
    UserLeave();

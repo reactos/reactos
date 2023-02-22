@@ -797,13 +797,13 @@ SpiNotifyNCMetricsChanged(VOID)
         if(!pwndCurrent)
             continue;
 
-        UserThreadLock1(pwndCurrent, &tl);
+        UserThreadLock(&tl, pwndCurrent);
         co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
                                               pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
                                               ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top,
                               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
                               SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
-        UserThreadUnlock1();
+        UserThreadUnlock(&tl);
     }
 
     ExFreePoolWithTag(ahwnd, USERTAG_WINDOWLIST);

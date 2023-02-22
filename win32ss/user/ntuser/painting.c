@@ -2070,14 +2070,14 @@ NtUserRedrawWindow(
        ERR("NTRW: Caller is passing Window Region 1\n");
    }
 
-   UserThreadLock1(Wnd, &tl);
+   UserThreadLock(&tl, Wnd);
 
    Ret = co_UserRedrawWindow( Wnd,
                               lprcUpdate ? &SafeUpdateRect : NULL,
                               RgnUpdate,
                               flags);
 
-   UserThreadUnlock1();
+   UserThreadUnlock(&tl);
 
    RETURN( Ret);
 

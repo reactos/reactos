@@ -6431,9 +6431,9 @@ NtUserSetMenu(
    if (!(Window->style & WS_MINIMIZE) && (Repaint || Changed))
    {
       TL tl;
-      UserThreadLock1(Window, &tl);
+      UserThreadLock(&tl, Window);
       co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-      UserThreadUnlock1();
+      UserThreadUnlock(&tl);
    }
 
    RETURN( TRUE);

@@ -275,9 +275,9 @@ NtUserNotifyWinEvent(
 
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
-      if (Window) UserThreadLock1(Window, &tl);
+      if (Window) UserThreadLock(&tl, Window);
       IntNotifyWinEvent( Event, Window, idObject, idChild, WEF_SETBYWNDPTI);
-      if (Window) UserThreadUnlock1();
+      if (Window) UserThreadUnlock(&tl);
    }
    UserLeave();
 }
