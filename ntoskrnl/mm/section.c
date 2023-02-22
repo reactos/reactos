@@ -3659,7 +3659,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         }
         ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT));
 
-        PFILE_OBJECT FileObject = Segment->FileObject;
+        FileObject = Segment->FileObject;
         FsRtlAcquireFileExclusive(FileObject);
 
         /* Don't bother for auto-delete closed file. */
