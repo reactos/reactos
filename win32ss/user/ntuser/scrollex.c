@@ -583,7 +583,7 @@ NtUserScrollWindowEx(
    NTSTATUS Status = STATUS_SUCCESS;
    PWND Window = NULL;
    RECTL rcScroll, rcClip, rcUpdate;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserScrollWindowEx\n");
    UserEnterExclusive();
@@ -594,7 +594,7 @@ NtUserScrollWindowEx(
       Window = NULL; /* prevent deref at cleanup */
       RETURN(ERROR);
    }
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
 
    _SEH2_TRY
    {
@@ -655,7 +655,7 @@ NtUserScrollWindowEx(
 
 CLEANUP:
    if (Window)
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
 
    TRACE("Leave NtUserScrollWindowEx, ret=%lu\n",_ret_);
    UserLeave();

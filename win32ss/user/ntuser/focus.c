@@ -1663,7 +1663,7 @@ CLEANUP:
 HWND APIENTRY
 NtUserSetActiveWindow(HWND hWnd)
 {
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    HWND hWndPrev;
    PWND Window, pwndPrev;
    DECLARE_RETURN(HWND);
@@ -1686,9 +1686,9 @@ NtUserSetActiveWindow(HWND hWnd)
    {
       pwndPrev = gptiCurrent->MessageQueue->spwndActive;
       hWndPrev = (pwndPrev ? UserHMGetHandle(pwndPrev) : NULL);
-      if (Window) UserRefObjectCo(Window, &Ref);
+      if (Window) UserThreadLock1(Window, &tl);
       UserSetActiveWindow(Window);
-      if (Window) UserDerefObjectCo(Window);
+      if (Window) UserThreadUnlock1();
       RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
    }
    RETURN( NULL);
@@ -1725,7 +1725,7 @@ HWND APIENTRY
 NtUserSetFocus(HWND hWnd)
 {
    PWND Window;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    DECLARE_RETURN(HWND);
    HWND ret;
 
@@ -1740,9 +1740,9 @@ NtUserSetFocus(HWND hWnd)
          RETURN(NULL);
       }
 
-      UserRefObjectCo(Window, &Ref);
+      UserThreadLock1(Window, &tl);
       ret = co_UserSetFocus(Window);
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
 
       RETURN(ret);
    }

@@ -1235,7 +1235,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    PWND Window;
    BOOL Ret;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserGetScrollBarInfo\n");
    UserEnterExclusive();
@@ -1252,9 +1252,9 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
 
    Status = MmCopyToCaller(psbi, &sbi, sizeof(SCROLLBARINFO));
    if(!NT_SUCCESS(Status))
@@ -1285,7 +1285,7 @@ NtUserSBGetParms(
    BOOL Ret;
    SBDATA SBDataSafe;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserGetScrollInfo\n");
    UserEnterShared();
@@ -1312,9 +1312,9 @@ NtUserSBGetParms(
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    Ret = co_IntGetScrollInfo(Window, fnBar, &SBDataSafe, &psi);
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
 
    _SEH2_TRY
    {
@@ -1348,7 +1348,7 @@ NtUserEnableScrollBar(
    PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
    BOOL Chg = FALSE;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
@@ -1356,9 +1356,10 @@ NtUserEnableScrollBar(
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
+      Window = NULL;
       RETURN(FALSE);
    }
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
 
    if (!co_IntCreateScrollBars(Window))
    {
@@ -1414,7 +1415,7 @@ NtUserEnableScrollBar(
 
 CLEANUP:
    if (Window)
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
 
    TRACE("Leave NtUserEnableScrollBar, ret=%i\n",_ret_);
    UserLeave();
@@ -1433,7 +1434,7 @@ NtUserSetScrollInfo(
    NTSTATUS Status;
    SCROLLINFO ScrollInfo;
    DECLARE_RETURN(DWORD);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
@@ -1441,9 +1442,10 @@ NtUserSetScrollInfo(
    if(!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
+      Window = NULL;
       RETURN( 0);
    }
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
 
    Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
    if(!NT_SUCCESS(Status))
@@ -1456,7 +1458,7 @@ NtUserSetScrollInfo(
 
 CLEANUP:
    if (Window)
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
 
    TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", _ret_);
    UserLeave();
@@ -1470,7 +1472,7 @@ NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
    PWND Window;
    DECLARE_RETURN(DWORD);
    DWORD ret;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserShowScrollBar\n");
    UserEnterExclusive();
@@ -1480,10 +1482,10 @@ NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
       RETURN(0);
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
                                             (nBar == SB_HORZ) ? 0 : bShow);
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
 
    RETURN(ret);
 
@@ -1511,7 +1513,7 @@ NtUserSetScrollBarInfo(
    NTSTATUS Status;
    LONG Obj;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserSetScrollBarInfo\n");
    UserEnterExclusive();
@@ -1520,7 +1522,7 @@ NtUserSetScrollBarInfo(
    {
       RETURN( FALSE);
    }
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
 
    Obj = SBOBJ_TO_SBID(idObject);
    if(!SBID_IS_VALID(Obj))
@@ -1553,7 +1555,7 @@ NtUserSetScrollBarInfo(
 
 CLEANUP:
    if (Window)
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
 
    TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n",_ret_);
    UserLeave();

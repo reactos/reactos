@@ -543,7 +543,7 @@ IntDefWindowProc(
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    if (Msg > WM_USER) return 0;
 
@@ -643,9 +643,9 @@ IntDefWindowProc(
                co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
             break;
          }
-         UserRefObjectCo(Wnd->spwndParent, &Ref);
+         UserThreadLock1(Wnd->spwndParent, &tl);
          lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
-         UserDerefObjectCo(Wnd->spwndParent);
+         UserThreadUnlock1();
          break;
 
       case WM_KEYF1:

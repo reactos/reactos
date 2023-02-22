@@ -3027,7 +3027,7 @@ NtUserDestroyWindow(HWND Wnd)
    PWND Window;
    DECLARE_RETURN(BOOLEAN);
    BOOLEAN ret;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserDestroyWindow\n");
    UserEnterExclusive();
@@ -3037,9 +3037,9 @@ NtUserDestroyWindow(HWND Wnd)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref); // FIXME: Dunno if win should be reffed during destroy...
+   UserThreadLock1(Window, &tl); // FIXME: Dunno if win should be reffed during destroy...
    ret = co_UserDestroyWindow(Window);
-   UserDerefObjectCo(Window); // FIXME: Dunno if win should be reffed during destroy...
+   UserThreadUnlock1(); // FIXME: Dunno if win should be reffed during destroy...
 
    RETURN(ret);
 
@@ -3716,7 +3716,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    PWINSTATION_OBJECT WinStaObject;
    PWND WndShell, WndListView;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    NTSTATUS Status;
    PTHREADINFO ti;
 
@@ -3780,7 +3780,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       RETURN( FALSE);
    }
 
-   UserRefObjectCo(WndShell, &Ref);
+   UserThreadLock1(WndShell, &tl);
    WndShell->state2 |= WNDS2_BOTTOMMOST;
    co_WinPosSetWindowPos(WndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
@@ -3798,7 +3798,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    UserRegisterHotKey(WndShell, SC_TASKLIST, MOD_CONTROL, VK_ESCAPE);
 
-   UserDerefObjectCo(WndShell);
+   UserThreadUnlock1();
 
    ObDereferenceObject(WinStaObject);
    RETURN( TRUE);

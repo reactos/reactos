@@ -259,7 +259,7 @@ NtUserNotifyWinEvent(
    LONG  idChild)
 {
    PWND Window = NULL;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    UserEnterExclusive();
 
    /* Validate input */
@@ -275,9 +275,9 @@ NtUserNotifyWinEvent(
 
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
-      if (Window) UserRefObjectCo(Window, &Ref);
+      if (Window) UserThreadLock1(Window, &tl);
       IntNotifyWinEvent( Event, Window, idObject, idChild, WEF_SETBYWNDPTI);
-      if (Window) UserDerefObjectCo(Window);
+      if (Window) UserThreadUnlock1();
    }
    UserLeave();
 }

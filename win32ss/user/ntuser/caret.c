@@ -427,7 +427,7 @@ APIENTRY
 NtUserShowCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
@@ -439,11 +439,11 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
       RETURN(FALSE);
    }
 
-   if (Window) UserRefObjectCo(Window, &Ref);
+   if (Window) UserThreadLock1(Window, &tl);
 
    ret = co_UserShowCaret(Window);
 
-   if (Window) UserDerefObjectCo(Window);
+   if (Window) UserThreadUnlock1();
 
    RETURN(ret);
 
@@ -458,7 +458,7 @@ APIENTRY
 NtUserHideCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
@@ -470,11 +470,11 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
       RETURN(FALSE);
    }
 
-   if (Window) UserRefObjectCo(Window, &Ref);
+   if (Window) UserThreadLock1(Window, &tl);
 
    ret = co_UserHideCaret(Window);
 
-   if (Window) UserDerefObjectCo(Window);
+   if (Window) UserThreadUnlock1();
 
    RETURN(ret);
 

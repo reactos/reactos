@@ -2011,7 +2011,7 @@ NtUserRedrawWindow(
    RECTL SafeUpdateRect;
    PWND Wnd;
    BOOL Ret;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
    NTSTATUS Status = STATUS_SUCCESS;
    PREGION RgnUpdate = NULL;
    DECLARE_RETURN(BOOL);
@@ -2070,14 +2070,14 @@ NtUserRedrawWindow(
        ERR("NTRW: Caller is passing Window Region 1\n");
    }
 
-   UserRefObjectCo(Wnd, &Ref);
+   UserThreadLock1(Wnd, &tl);
 
    Ret = co_UserRedrawWindow( Wnd,
                               lprcUpdate ? &SafeUpdateRect : NULL,
                               RgnUpdate,
                               flags);
 
-   UserDerefObjectCo(Wnd);
+   UserThreadUnlock1();
 
    RETURN( Ret);
 

@@ -6430,10 +6430,10 @@ NtUserSetMenu(
    // Not minimized and please repaint!!!
    if (!(Window->style & WS_MINIMIZE) && (Repaint || Changed))
    {
-      USER_REFERENCE_ENTRY Ref;
-      UserRefObjectCo(Window, &Ref);
+      TL tl;
+      UserThreadLock1(Window, &tl);
       co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-      UserDerefObjectCo(Window);
+      UserThreadUnlock1();
    }
 
    RETURN( TRUE);

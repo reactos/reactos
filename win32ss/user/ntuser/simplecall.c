@@ -588,7 +588,7 @@ NtUserCallHwndLock(
 {
     BOOL Ret = FALSE;
     PWND Window;
-    USER_REFERENCE_ENTRY Ref;
+    TL tl;
 
     TRACE("Enter NtUserCallHwndLock\n");
     UserEnterExclusive();
@@ -599,7 +599,7 @@ NtUserCallHwndLock(
         goto Exit;
     }
 
-    UserRefObjectCo(Window, &Ref);
+    UserThreadLock1(Window, &tl);
 
     /* FIXME: Routine can be 0x53 - 0x5E */
     switch (Routine)
@@ -674,7 +674,7 @@ NtUserCallHwndLock(
             break;
     }
 
-    UserDerefObjectCo(Window);
+    UserThreadUnlock1();
 
 Exit:
     TRACE("Leave NtUserCallHwndLock, ret=%u\n", Ret);
@@ -888,7 +888,7 @@ NtUserCallHwndParamLock(
 {
     DWORD Ret = FALSE;
     PWND Window;
-    USER_REFERENCE_ENTRY Ref;
+    TL tl;
 
     TRACE("Enter NtUserCallHwndParamLock\n");
     UserEnterExclusive();
@@ -899,7 +899,7 @@ NtUserCallHwndParamLock(
         goto Exit;
     }
 
-    UserRefObjectCo(Window, &Ref);
+    UserThreadLock1(Window, &tl);
 
     switch (Routine)
     {
@@ -916,7 +916,7 @@ NtUserCallHwndParamLock(
         }
     }
 
-    UserDerefObjectCo(Window);
+    UserThreadUnlock1();
 
 Exit:
 
