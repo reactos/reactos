@@ -1750,7 +1750,7 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
     HWND *phwnd;
     PWND pwndNode, pwndDesktop = UserGetDesktopWindow();
     PWINDOWLIST pWL;
-    USER_REFERENCE_ENTRY Ref;
+    TL tl;
 
     if (!pwndDesktop)
         return;
@@ -1774,9 +1774,9 @@ static VOID FASTCALL IntImeWindowPosChanged(VOID)
         }
 
         /* Now hwndNode is an IME window of the current thread */
-        UserRefObjectCo(pwndNode, &Ref);
+        UserThreadLock1(pwndNode, &tl);
         co_IntSendMessage(*phwnd, WM_IME_SYSTEM, IMS_UPDATEIMEUI, 0);
-        UserDerefObjectCo(pwndNode);
+        UserThreadUnlock1();
     }
 
     IntFreeHwndList(pWL);
@@ -3761,7 +3761,7 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
    PWND Window;
    BOOL ret;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserShowWindowAsync\n");
    UserEnterExclusive();
@@ -3778,9 +3778,9 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    ret = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
    if (-1 == (int) ret || !ret) ret = FALSE;
 
    RETURN(ret);
