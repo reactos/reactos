@@ -883,10 +883,11 @@ VOID FASTCALL UserThreadLock1(PVOID pobj, PTL pTL)
 
 PVOID FASTCALL UserThreadUnlock1(VOID)
 {
+    PVOID pobj = pTL->pobj;
     PTHREADINFO pTI = gptiCurrent;
     PTL pTL = pTI->ptl;
     pTI->ptl = pTL->next;
-    if (pTL->pobj && UserDereferenceObject(pTL->pobj))
+    if (pobj && UserDereferenceObject(pobj))
         return NULL;
-    return pTL->pobj;
+    return pobj;
 }
