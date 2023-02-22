@@ -257,7 +257,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
       case HTERROR:
       {
          //// This is the real fix for CORE-6129! This was a "Code hole".
-         USER_REFERENCE_ENTRY Ref;
+         TL tl;
 
          if (Msg == WM_LBUTTONDOWN)
          {
@@ -273,10 +273,10 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
 
                   co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-                  UserRefObjectCo(pwndPopUP, &Ref);
+                  UserThreadLock1(pwndPopUP, &tl);
                   //UserSetActiveWindow(pwndPopUP);
                   co_IntSetForegroundWindow(pwndPopUP); // HACK
-                  UserDerefObjectCo(pwndPopUP);
+                  UserThreadUnlock1();
 
                   // If the change was made, break out.
                   if (pwndOrigActive != gpqForeground->spwndActive)

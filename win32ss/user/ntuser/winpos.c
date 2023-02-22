@@ -3168,7 +3168,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
     for (i = 0, winpos = pDWP->acvr; res && i < pDWP->ccvr; i++, winpos++)
     {
         PWND pwnd;
-        USER_REFERENCE_ENTRY Ref;
+        TL tl;
 
         TRACE("hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
                winpos->pos.hwnd, winpos->pos.hwndInsertAfter, winpos->pos.x, winpos->pos.y,
@@ -3178,7 +3178,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
         if (!pwnd)
            continue;
 
-        UserRefObjectCo(pwnd, &Ref);
+        UserThreadLock1(pwnd, &tl);
 
         if (bAsync)
         {
@@ -3209,7 +3209,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
         if (res && (winpos->pos.flags & (SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER)) == SWP_NOZORDER )
            EngSetLastError(ERROR_SUCCESS);
 
-        UserDerefObjectCo(pwnd);
+        UserThreadUnlock1();
     }
 
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
@@ -3516,7 +3516,7 @@ NtUserSetWindowPos(
    DECLARE_RETURN(BOOL);
    PWND Window, pWndIA;
    BOOL ret;
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserSetWindowPos\n");
    UserEnterExclusive();
@@ -3557,9 +3557,9 @@ NtUserSetWindowPos(
       else if (cy > 32767) cy = 32767;
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    ret = co_WinPosSetWindowPos(Window, hWndInsertAfter, X, Y, cx, cy, uFlags);
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
 
    RETURN(ret);
 
@@ -3800,7 +3800,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    PWND Window;
    BOOL ret;
    DECLARE_RETURN(BOOL);
-   USER_REFERENCE_ENTRY Ref;
+   TL tl;
 
    TRACE("Enter NtUserShowWindow hWnd %p SW_ %d\n",hWnd, nCmdShow);
    UserEnterExclusive();
@@ -3817,9 +3817,9 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref);
+   UserThreadLock1(Window, &tl);
    ret = co_WinPosShowWindow(Window, nCmdShow);
-   UserDerefObjectCo(Window);
+   UserThreadUnlock1();
 
    RETURN(ret);
 

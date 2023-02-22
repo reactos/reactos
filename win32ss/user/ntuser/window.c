@@ -2441,8 +2441,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       if (pwndDefaultIme)
       {
          HWND hImeWnd;
-         USER_REFERENCE_ENTRY Ref;
-         UserRefObjectCo(pwndDefaultIme, &Ref);
+         TL tl;
+         UserThreadLock1(pwndDefaultIme, &tl);
 
          hImeWnd = UserHMGetHandle(pwndDefaultIme);
 
@@ -2455,7 +2455,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
          }
 
-         UserDerefObjectCo(pwndDefaultIme);
+         UserThreadUnlock1();
       }
    }
 

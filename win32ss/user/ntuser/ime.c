@@ -2210,14 +2210,14 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
         if (pwndIMC && pwndIMC->head.pti && !(pwndIMC->head.pti->TIF_flags & TIF_INCLEANUP))
         {
             HWND hImeWnd;
-            USER_REFERENCE_ENTRY Ref;
+            TL tl;
 
-            UserRefObjectCo(pwndIMC, &Ref);
+            UserThreadLock1(pwndIMC, &tl);
 
             hImeWnd = UserHMGetHandle(pwndIMC);
             co_IntSendMessage(hImeWnd, WM_IME_NOTIFY, IMN_CLOSESTATUSWINDOW, 0);
 
-            UserDerefObjectCo(pwndIMC);
+            UserThreadUnlock1();
         }
     }
 
@@ -2235,7 +2235,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     LRESULT ret = 0;
     IMEUI SafeImeUI;
     BOOL bDifferent = FALSE;
-    USER_REFERENCE_ENTRY Ref;
+    TL tl;
 
     // Attach to the process if necessary
     if (ptiIME != GetW32ThreadInfo())
@@ -2277,9 +2277,9 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (bDifferent)
         KeDetachProcess();
 
-    UserRefObjectCo(pwndUI, &Ref);
+    UserThreadLock1(pwndUI, &tl);
     ret = co_IntSendMessage(UserHMGetHandle(pwndUI), uMsg, wParam, lParam);
-    UserDerefObjectCo(pwndUI);
+    UserThreadUnlock1();
 
     // Attach to the process if necessary
     if (bDifferent)

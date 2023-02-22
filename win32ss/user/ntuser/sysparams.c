@@ -781,7 +781,7 @@ SpiNotifyNCMetricsChanged(VOID)
 {
     PWND pwndDesktop, pwndCurrent;
     HWND *ahwnd;
-    USER_REFERENCE_ENTRY Ref;
+    TL tl;
     int i;
 
     pwndDesktop = UserGetDesktopWindow();
@@ -797,13 +797,13 @@ SpiNotifyNCMetricsChanged(VOID)
         if(!pwndCurrent)
             continue;
 
-        UserRefObjectCo(pwndCurrent, &Ref);
+        UserThreadLock1(pwndCurrent, &tl);
         co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
                                               pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
                                               ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top,
                               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
                               SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
-        UserDerefObjectCo(pwndCurrent);
+        UserThreadUnlock1();
     }
 
     ExFreePoolWithTag(ahwnd, USERTAG_WINDOWLIST);
