@@ -3636,6 +3636,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     {
         PMM_SECTION_SEGMENT Segment = MemoryArea->SectionData.Segment;
         PMMVAD Vad = &MemoryArea->VadNode;
+        PFILE_OBJECT FileObject;
         SIZE_T ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
         LARGE_INTEGER ViewOffset;
         ViewOffset.QuadPart = MemoryArea->SectionData.ViewOffset;
