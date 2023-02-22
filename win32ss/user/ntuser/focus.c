@@ -190,7 +190,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 BOOL FASTCALL
 IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
 {
-   TL tl;
+   USER_REFERENCE_ENTRY Ref;
    PTHREADINFO ptiPrev;
    PWND pwndPrev;
    BOOL InAAPM = FALSE;
@@ -224,9 +224,9 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
       MSG msg;
       PWND pwndCapture = pti->MessageQueue->spwndCapture;
 
-      UserThreadLock(&tl, pwndCapture);
+      UserRefObjectCo(pwndCapture, &Ref);
       co_IntSendMessage(UserHMGetHandle(pwndCapture), WM_CANCELMODE, 0, 0);
-      UserThreadUnlock(&tl);
+      UserDerefObjectCo(pwndCapture);
 
       /* Generate mouse move message */
       msg.message = WM_MOUSEMOVE;
@@ -287,9 +287,9 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
                { // FALSE if the window is being deactivated,
                  // ThreadId that owns the window being activated.
                  //ERR("IDW : WM_ACTIVATEAPP(0) hwnd %p tid Old %p New %p\n",UserHMGetHandle(cWindow),OldTID,tid);
-                 UserThreadLock(&tl, cWindow);
+                 UserRefObjectCo(cWindow, &Ref);
                  co_IntSendMessage(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)tid);
-                 UserThreadUnlock(&tl);
+                 UserDerefObjectCo(cWindow);
                }
             }
          }
@@ -332,14 +332,13 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
       //
       pti->MessageQueue->spwndFocus = NULL; // Null out Focus.
 
-      UserThreadLock(&tl, pwndFocus);
+      UserRefObjectCo(pwndFocus, &Ref);
       co_IntSendMessage(UserHMGetHandle(pwndFocus), WM_KILLFOCUS, 0, 0);
-      UserThreadUnlock(&tl);
-
       if (IS_IMM_MODE())
       {
          IntFocusSetInputContext(pwndFocus, FALSE, FALSE);
       }
+      UserDerefObjectCo(pwndFocus);
    }
 
    if (InAAPM) pti->TIF_flags &= ~TIF_INACTIVATEAPPMSG;
