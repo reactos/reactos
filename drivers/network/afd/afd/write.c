@@ -394,7 +394,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 {
                     NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
                     Irp->IoStatus.Status = Status;
-                    Irp->IoStatus.Information = Status == STATUS_SUCCESS ? SendReq->BufferArray[0].len : 0;
+                    Irp->IoStatus.Information = ((Status == STATUS_SUCCESS) ? SendReq->BufferArray[0].len : 0);
                     (void)IoSetCancelRoutine(Irp, NULL);
                     UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
                     UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
@@ -664,7 +664,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             {
                 NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
                 Irp->IoStatus.Status = Status;
-                Irp->IoStatus.Information = Status == STATUS_SUCCESS ? SendReq->BufferArray[0].len : 0;
+                Irp->IoStatus.Information = ((Status == STATUS_SUCCESS) ? SendReq->BufferArray[0].len : 0);
                 (void)IoSetCancelRoutine(Irp, NULL);
                 UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
                 UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
