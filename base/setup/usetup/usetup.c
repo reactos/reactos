@@ -3660,7 +3660,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                if (s_pszCopying == NULL)
+                if (!s_pszCopying)
                     s_pszCopying = MUIGetString(STRING_COPYING);
                 CONSOLE_SetStatusText(s_pszCopying, DstFileName);
 #ifdef __REACTOS__ /* HACK */
