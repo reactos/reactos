@@ -815,6 +815,8 @@ BEGIN
     IDS_MOVEERROR "Не удаётся переместить '%s': %s"
     IDS_COPYERROR "Не удаётся скопировать '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
     IDS_DELETEITEM_CAPTION "Подтверждение удаления файла"

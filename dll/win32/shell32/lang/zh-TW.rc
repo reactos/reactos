@@ -815,6 +815,8 @@ BEGIN
     IDS_MOVEERROR "無法移動「%s」：%s"
     IDS_COPYERROR "無法複製「%s」：%s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "無法建立資料夾「%1」"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
     IDS_DELETEITEM_CAPTION "確認刪除檔案"

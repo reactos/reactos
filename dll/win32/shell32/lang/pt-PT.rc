@@ -808,8 +808,10 @@ BEGIN
     IDS_MOVEERROR "Impossivel mover '%s': %s"
     IDS_COPYERROR "Impossivel copiar '%s': %s"
 
-    IDS_CREATEFOLDER_DENIED "Impossivel criar pasta '%1'"
-    IDS_CREATEFOLDER_CAPTION "Impossivel criar pasta"
+    IDS_CREATEFILE_DENIED "Não foi possível criar o ficheiro %1"
+    IDS_CREATEFILE_CAPTION "Erro ao criar o ficheiro"
+    IDS_CREATEFOLDER_DENIED "Não foi possível criar a pasta '%1'"
+    IDS_CREATEFOLDER_CAPTION "Erro ao criar pasta"
     IDS_DELETEITEM_CAPTION "Confirmar exclusão do ficheiro"
     IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
     IDS_DELETEITEM_TEXT "Tem a certeza que deseja excluir '%1'?"

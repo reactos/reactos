@@ -807,6 +807,8 @@ BEGIN
     IDS_MOVEERROR "Cannot move '%s': %s"
     IDS_COPYERROR "Cannot copy '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "Nem sikerült a(z) '%1' mappa létrehozása."
     IDS_CREATEFOLDER_CAPTION "Nem sikerült létrehozni a mappát"
     IDS_DELETEITEM_CAPTION "Állomány törlés megerősítése"

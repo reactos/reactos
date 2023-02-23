@@ -817,6 +817,8 @@ BEGIN
     IDS_MOVEERROR "Cannot move '%s': %s"
     IDS_COPYERROR "Cannot copy '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Could not create file %1"
+    IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
     IDS_DELETEITEM_CAPTION "Confirmar eliminación de archivos"
