@@ -212,6 +212,7 @@ InfpFindFirstLine(PINFCACHE Cache,
       DPRINT1("MALLOC() failed\n");
       return INF_STATUS_NO_MEMORY;
     }
+  ZEROMEMORY(*Context, sizeof(INFCONTEXT));
   (*Context)->Inf = (PVOID)Cache;
   (*Context)->Section = CacheSection->Id;
   (*Context)->Line = CacheLine->Id;

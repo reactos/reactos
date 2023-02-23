@@ -55,6 +55,7 @@ Output(POUTPUTBUFFER OutBuf, PCWSTR Text)
           OutBuf->Status = INF_STATUS_NO_MEMORY;
           return;
         }
+      ZEROMEMORY(NewBuf, NewSize);
 
       /* Need to copy old contents? */
       if (NULL != OutBuf->Buffer)
@@ -200,6 +201,7 @@ InfpFindOrAddSection(PINFCACHE Cache,
       DPRINT1("MALLOC() failed\n");
       return INF_STATUS_NO_MEMORY;
     }
+  ZEROMEMORY(*Context, sizeof(INFCONTEXT));
 
   (*Context)->Inf = Cache;
   (*Context)->Line = 0;
