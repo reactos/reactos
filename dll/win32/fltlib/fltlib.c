@@ -1,10 +1,10 @@
 /*
-* PROJECT:         Filesystem Filter Manager library
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            dll/win32/fltlib/fltlib.c
-* PURPOSE:
-* PROGRAMMERS:     Ged Murphy (ged.murphy@reactos.org)
-*/
+ * PROJECT:     Filesystem Filter Manager library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Implementing Filter Manager interfaces in user-mode
+ * COPYRIGHT:   Ged Murphy <ged.murphy@reactos.org>
+ *              Copyright 2023 Ratin Gao <ratin@knsoft.org>
+ */
 
 #include <stdarg.h>
 
@@ -19,7 +19,11 @@
 #include <ndk/rtlfuncs.h>
 #include <fltmgr_shared.h>
 
+#include <pseh/pseh2.h>
+
 /* DATA ****************************************************************************/
+
+#define NT_FACILITY(Status) ((((ULONG)(Status)) >> 16) & 0xFFF)
 
 static
 HRESULT
@@ -27,11 +31,16 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
                  _In_ BOOL Load);
 
 static
-DWORD
-SendIoctl(_In_ HANDLE Handle,
-          _In_ ULONG IoControlCode,
-          _In_reads_bytes_opt_(BufferSize) LPVOID lpInBuffer,
-          _In_ DWORD BufferSize);
+HRESULT
+FilterpDeviceIoControl(
+    _In_ HANDLE hFltMgr,
+    _In_ DWORD dwControlCode,
+    _In_reads_bytes_opt_(nInBufferSize) LPVOID lpInBuffer,
+    _In_ DWORD nInBufferSize,
+    _Out_writes_bytes_to_opt_(nOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer,
+    _In_ DWORD nOutBufferSize,
+    _Out_opt_ LPDWORD lpBytesReturned,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped);
 
 
 /* PUBLIC FUNCTIONS ****************************************************************/
@@ -56,15 +65,53 @@ FilterUnload(_In_ LPCWSTR lpFilterName)
 /* PRIVATE FUNCTIONS ****************************************************************/
 
 HRESULT
-NtStatusToHResult(_In_ NTSTATUS Status)
+FilterHResultFromNtStatus(_In_ NTSTATUS Status)
 {
-    HRESULT hr;
-    hr = RtlNtStatusToDosError(Status);
-    if (hr != ERROR_SUCCESS)
+    HRESULT Result;
+    ULONG DosError;
+
+    /* Check facility code of the status */
+    if (NT_FACILITY(Status))
     {
-        hr = (ULONG)hr | 0x80070000;
+        if (NT_FACILITY(Status) == FACILITY_FILTER_MANAGER)
+        {
+            /* Translate FilterManager specified status (STATUS_FLT_XXX) case-by-case */
+            if (Status == STATUS_FLT_BUFFER_TOO_SMALL)
+            {
+                Result = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            }
+            else
+            {
+                /* Translate other FilterManager error codes by FILTER_HRESULT_FROM_FLT_NTSTATUS macro */
+                Result = FILTER_HRESULT_FROM_FLT_NTSTATUS(Status);
+            }
+        }
+        else
+        {
+            /* Facility is not FilterManager, return E_FAIL */
+            Result = E_FAIL;
+        }
     }
-    return hr;
+    else if (Status == STATUS_TIMEOUT)
+    {
+        Result = HRESULT_FROM_WIN32(WAIT_TIMEOUT);
+    }
+    else
+    {
+        /* Translate status to Win32 error */
+        DosError = RtlNtStatusToDosError(Status);
+
+        /* If RtlNtStatusToDosError didn't translate the status, we return the return value as-is */
+        if ((LONG)(DosError) <= 0)
+        {
+            return DosError;
+        }
+
+        /* Convert Win32 error to HRESULT */
+        Result = HRESULT_FROM_WIN32(DosError);
+    }
+
+    return Result;
 }
 
 static
@@ -76,7 +123,9 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
     HANDLE hFltMgr;
     SIZE_T StringLength;
     SIZE_T BufferLength;
+    DWORD dwBytesReturned;
     DWORD dwError;
+    HRESULT hr;
 
     /* Get a handle to the filter manager */
     hFltMgr = CreateFileW(L"\\\\.\\fltmgr",
@@ -109,48 +158,144 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
     CopyMemory(FilterName->FilterName, lpFilterName, StringLength);
 
     /* Tell the filter manager to load the filter for us */
-    dwError = SendIoctl(hFltMgr,
-                        Load ? IOCTL_FILTER_LOAD : IOCTL_FILTER_UNLOAD,
-                        FilterName,
-                        BufferLength);
+    hr = FilterpDeviceIoControl(hFltMgr,
+                                Load ? IOCTL_FILTER_LOAD : IOCTL_FILTER_UNLOAD,
+                                FilterName,
+                                BufferLength,
+                                NULL,
+                                0,
+                                &dwBytesReturned,
+                                NULL);
 
-    /* Cleanup and bail*/
+    /* Cleanup and bail */
     RtlFreeHeap(GetProcessHeap(), 0, FilterName);
     CloseHandle(hFltMgr);
 
-    return HRESULT_FROM_WIN32(dwError);
+    return hr;
 }
 
 static
-DWORD
-SendIoctl(_In_ HANDLE Handle,
-          _In_ ULONG IoControlCode,
-          _In_reads_bytes_opt_(BufferSize) LPVOID lpInBuffer,
-          _In_ DWORD BufferSize)
+HRESULT
+FilterpDeviceIoControl(
+    _In_ HANDLE hFltMgr,
+    _In_ DWORD dwControlCode,
+    _In_reads_bytes_opt_(nInBufferSize) LPVOID lpInBuffer,
+    _In_ DWORD nInBufferSize,
+    _Out_writes_bytes_to_opt_(nOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer,
+    _In_ DWORD nOutBufferSize,
+    _Out_opt_ LPDWORD lpBytesReturned,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped)
 {
-    IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
+    DEVICE_TYPE DeviceType;
+    PVOID ApcContext;
+    IO_STATUS_BLOCK IoStatusBlock;
 
-    Status = NtDeviceIoControlFile(Handle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &IoStatusBlock,
-                                   IoControlCode,
-                                   lpInBuffer,
-                                   BufferSize,
-                                   NULL,
-                                   0);
-    if (Status == STATUS_PENDING)
+    /* Get device type of control code */
+    DeviceType = DEVICE_TYPE_FROM_CTL_CODE(dwControlCode);
+
+    /* Check for asynchronous operation */
+    if (lpOverlapped)
     {
-        Status = NtWaitForSingleObject(Handle, FALSE, NULL);
-        if (NT_SUCCESS(Status))
+        /* Set pending status */
+        lpOverlapped->Internal = STATUS_PENDING;
+
+        /* No completion port notification if low-order bit of hEvent was set */
+        ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
+
+        /* Send file system control or device control according to the device type */
+        if (DeviceType == FILE_DEVICE_FILE_SYSTEM)
         {
-            Status = IoStatusBlock.Status;
+            Status = NtFsControlFile(hFltMgr,
+                                     lpOverlapped->hEvent,
+                                     NULL,
+                                     ApcContext,
+                                     (PIO_STATUS_BLOCK)lpOverlapped,
+                                     dwControlCode,
+                                     lpInBuffer,
+                                     nInBufferSize,
+                                     lpOutBuffer,
+                                     nOutBufferSize);
+        }
+        else
+        {
+            Status = NtDeviceIoControlFile(hFltMgr,
+                                           lpOverlapped->hEvent,
+                                           NULL,
+                                           ApcContext,
+                                           (PIO_STATUS_BLOCK)lpOverlapped,
+                                           dwControlCode,
+                                           lpInBuffer,
+                                           nInBufferSize,
+                                           lpOutBuffer,
+                                           nOutBufferSize);
+        }
+
+        /* Return the number of bytes transferred if no error */
+        if (!NT_ERROR(Status) && lpBytesReturned)
+        {
+            /* Protect with SEH */
+            _SEH2_TRY
+            {
+                /* Return the bytes */
+                *lpBytesReturned = (DWORD)lpOverlapped->InternalHigh;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Return zero bytes */
+                *lpBytesReturned = 0;
+            }
+            _SEH2_END;
         }
     }
+    else
+    {
+        /* Set to 0 as default but seems Windows didn't set this */
+        IoStatusBlock.Information = 0;
 
-    return RtlNtStatusToDosError(Status);
+        /* Send file system control or device control according to the device type */
+        if (DeviceType == FILE_DEVICE_FILE_SYSTEM)
+        {
+            Status = NtFsControlFile(hFltMgr,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &IoStatusBlock,
+                                     dwControlCode,
+                                     lpInBuffer,
+                                     nInBufferSize,
+                                     lpOutBuffer,
+                                     nOutBufferSize);
+        }
+        else
+        {
+            Status = NtDeviceIoControlFile(hFltMgr,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &IoStatusBlock,
+                                           dwControlCode,
+                                           lpInBuffer,
+                                           nInBufferSize,
+                                           lpOutBuffer,
+                                           nOutBufferSize);
+        }
+
+        /* Wait if operation still in progress */
+        if (Status == STATUS_PENDING)
+        {
+            Status = NtWaitForSingleObject(hFltMgr, FALSE, NULL);
+            if (NT_SUCCESS(Status))
+            {
+                Status = IoStatusBlock.Status;
+            }
+        }
+
+        /* IoStatusBlock.Information is request-dependent and we already set it to 0 at the beginning */
+        *lpBytesReturned = (DWORD)IoStatusBlock.Information;
+    }
+
+    return ((Status == STATUS_SUCCESS) ? S_OK : FilterHResultFromNtStatus(Status));
 }
 
 BOOL

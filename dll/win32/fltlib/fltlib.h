@@ -1,6 +1,6 @@
 #pragma once
 
 HRESULT
-NtStatusToHResult(
+FilterHResultFromNtStatus(
     _In_ NTSTATUS Status
 );

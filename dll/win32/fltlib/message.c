@@ -117,7 +117,7 @@ FilterConnectCommunicationPort(_In_ LPCWSTR lpPortName,
     }
     else
     {
-        hr = NtStatusToHResult(Status);
+        hr = FilterHResultFromNtStatus(Status);
     }
 
     /* Cleanup and return */

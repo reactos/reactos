@@ -17,6 +17,7 @@ FIREWIRE=0x12:FACILITY_FIREWIRE_ERROR_CODE
 Cluster=0x13:FACILITY_CLUSTER_ERROR_CODE
 ACPI=0x14:FACILITY_ACPI_ERROR_CODE
 SXS=0x15:FACILITY_SXS_ERROR_CODE
+FilterManager=0x1C:FACILITY_FILTER_MANAGER
 )
 LanguageNames=(English=0x409:MSG00409)
 
@@ -1094,6 +1095,14 @@ Facility=Cluster
 SymbolicName=STATUS_CLUSTER_NODE_ALREADY_MEMBER
 Language=English
 The cluster node is already a member of the cluster.
+.
+
+MessageId=0x1
+Severity=Warning
+Facility=FilterManager
+SymbolicName=STATUS_FLT_BUFFER_TOO_SMALL
+Language=English
+The buffer is too small to contain the entry. No information has been written to the buffer.
 .
 
 MessageId=0x1
