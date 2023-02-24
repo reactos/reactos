@@ -511,6 +511,15 @@ CmpDestroyHiveViewList(
 );
 
 //
+// Security Management Functions
+//
+NTSTATUS
+CmpAssignSecurityDescriptor(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
+
+//
 // Security Cache Functions
 //
 VOID

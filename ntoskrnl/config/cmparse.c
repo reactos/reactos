@@ -367,14 +367,14 @@ CmpDoCreateChild(IN PHHIVE Hive,
                               CmpKeyObjectType->TypeInfo.PoolType);
     if (NT_SUCCESS(Status))
     {
-        Status = CmpSecurityMethod(*Object,
-                                   AssignSecurityDescriptor,
-                                   NULL,
-                                   NewDescriptor,
-                                   NULL,
-                                   NULL,
-                                   CmpKeyObjectType->TypeInfo.PoolType,
-                                   &CmpKeyObjectType->TypeInfo.GenericMapping);
+        /*
+         * FIXME: We must acquire a security lock when assigning
+         * a security descriptor to this hive but since the
+         * CmpAssignSecurityDescriptor function does nothing
+         * (we lack the necessary security management implementations
+         * anyway), do not do anything for now.
+         */
+        Status = CmpAssignSecurityDescriptor(Kcb, NewDescriptor);
     }
 
     /* Now that the security descriptor is copied in the hive, we can free the original */
