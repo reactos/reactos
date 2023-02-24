@@ -3650,6 +3650,8 @@ FileCopyCallback(PVOID Context,
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
+                static PCSTR s_pszCopying = NULL; /* Cached for speed */
+
                 /* Display copy message */
                 ASSERT(Param2 == FILEOP_COPY);
 
@@ -3658,8 +3660,9 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                CONSOLE_SetStatusText(MUIGetString(STRING_COPYING),
-                                      DstFileName);
+                if (!s_pszCopying)
+                    s_pszCopying = MUIGetString(STRING_COPYING);
+                CONSOLE_SetStatusText(s_pszCopying, DstFileName);
 #ifdef __REACTOS__ /* HACK */
                 DoWatchDestFileName(DstFileName);
 #endif
