@@ -2499,7 +2499,11 @@ WSPIoctl(IN  SOCKET Handle,
                     *((PVOID *)lpvOutBuffer) = WSPConnectEx;
                     cbRet = sizeof(PVOID);
                     Errno = NO_ERROR;
-                    Ret = NO_ERROR;
+                    /* See CORE-14966 and associated commits.
+                     * Original line below was 'Ret = NO_ERROR:'.
+                     * This caused winetest ws2_32:sock to hang.
+                     * This new Ret value allows the test to complete. */
+                    Ret = SOCKET_ERROR;
                 }
                 else if (IsEqualGUID(&DisconnectExGUID, lpvInBuffer))
                 {
@@ -2513,7 +2517,11 @@ WSPIoctl(IN  SOCKET Handle,
                     *((PVOID *)lpvOutBuffer) = WSPGetAcceptExSockaddrs;
                     cbRet = sizeof(PVOID);
                     Errno = NO_ERROR;
-                    Ret = NO_ERROR;
+                    /* See CORE-14966 and associated commits.
+                     * Original line below was 'Ret = NO_ERROR:'.
+                     * This caused winetest ws2_32:sock to hang.
+                     * This new Ret value allows the test to complete. */
+                    Ret = SOCKET_ERROR;
                 }
                 else
                 {
