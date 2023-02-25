@@ -651,6 +651,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     while (GetMessage(&msg, 0, 0, 0))
     {
+        /* Make F3 key effective on Find/Replace dialog */
         if (msg.hwnd != Globals.hMainWnd &&
             msg.message == WM_KEYDOWN && msg.wParam == VK_F3 &&
             GetAncestor(msg.hwnd, GA_PARENT) == Globals.hFindReplaceDlg)
