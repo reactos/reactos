@@ -626,7 +626,7 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    // it does not use the default icon! And it does not check for DS_MODALFRAME.
    if (!hIcon && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME))
    {
-      if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
+      hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
       if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
    }
    if (hIcon)
@@ -1181,7 +1181,7 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
    SIZE WindowBorders;
    RECT OrigRect;
    LONG Style = Wnd->style;
-   LONG  exStyle = Wnd->ExStyle; 
+   LONG exStyle = Wnd->ExStyle;
 
    if (Rect == NULL)
    {
@@ -1558,7 +1558,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
     {
       PMENU SysMenu = IntGetSystemMenu(pWnd, FALSE);
       UINT state = IntGetMenuState(SysMenu ? UserHMGetHandle(SysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND);
-                  
+
       /* If the close item of the sysmenu is disabled or not present do nothing */
       if ((state & (MF_DISABLED | MF_GRAYED)) || (state == 0xFFFFFFFF))
           break;
@@ -1577,7 +1577,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
  *
  * Handle a WM_NCRBUTTONDOWN message. Called from DefWindowProc().
  */
-LRESULT NC_HandleNCRButtonDown( PWND pwnd, WPARAM wParam, LPARAM lParam ) 
+LRESULT NC_HandleNCRButtonDown(PWND pwnd, WPARAM wParam, LPARAM lParam)
 {
   MSG msg;
   INT hittest = wParam;

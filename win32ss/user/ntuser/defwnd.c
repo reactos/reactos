@@ -401,20 +401,19 @@ UserPaintCaption(PWND pWnd, INT Flags)
   {
       if (pWnd->state & WNDS_HASCAPTION && pWnd->head.pti->MessageQueue == gpqForeground)
          Flags |= DC_ACTIVE;
-    /* 
+    /*
      * When themes are not enabled we can go on and paint the non client area.
      * However if we do that with themes enabled we will draw a classic frame.
      * This is solved by sending a themes specific message to notify the themes
-     * engine that the caption needs to be redrawn 
+     * engine that the caption needs to be redrawn
      */
       if (gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
       {
-        /* 
+        /*
          * This will cause uxtheme to either paint the themed caption or call
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
-         TRACE("UDCB Flags %08x\n");
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
       }
       else
@@ -436,7 +435,7 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     HICON hIcon, hIconSmall, hIconOld;
 
     if ( wParam > ICON_SMALL2 )
-    {  
+    {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
@@ -486,8 +485,7 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
-        default:
-            break;
+        DEFAULT_UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }

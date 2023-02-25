@@ -96,8 +96,6 @@ static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Prefe
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
 
-
-
 /** Loading the settings ******************************************************/
 
 static
@@ -149,7 +147,7 @@ SpiLoadTimeOut(VOID)
     {
         return 0;
     }
-    if (wcslen(szApplicationName) == 0) return 0;
+    if (szApplicationName[0] == 0) return 0;
     return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 0);
 }
 
@@ -936,7 +934,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
