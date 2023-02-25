@@ -2503,6 +2503,7 @@ WSPIoctl(IN  SOCKET Handle,
                      * Original line below was 'Ret = NO_ERROR:'.
                      * This caused winetest ws2_32:sock to hang.
                      * This new Ret value allows the test to complete. */
+                    ERR("SIO_GET_EXTENSION_FUNCTION_POINTER UNIMPLEMENTED!\n");
                     Ret = SOCKET_ERROR;
                 }
                 else if (IsEqualGUID(&DisconnectExGUID, lpvInBuffer))
@@ -2521,6 +2522,7 @@ WSPIoctl(IN  SOCKET Handle,
                      * Original line below was 'Ret = NO_ERROR:'.
                      * This caused winetest ws2_32:sock to hang.
                      * This new Ret value allows the test to complete. */
+                    ERR("SIO_GET_EXTENSION_FUNCTION_POINTER UNIMPLEMENTED!\n");
                     Ret = SOCKET_ERROR;
                 }
                 else
