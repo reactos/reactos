@@ -235,6 +235,9 @@ typedef struct _CM_KEY_BODY
     struct _CM_NOTIFY_BLOCK *NotifyBlock;
     HANDLE ProcessID;
     LIST_ENTRY KeyBodyList;
+
+    /* ReactOS specific -- boolean flag to avoid recursive locking of the KCB */
+    BOOLEAN KcbLocked;
 } CM_KEY_BODY, *PCM_KEY_BODY;
 
 //

@@ -284,6 +284,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody = (PCM_KEY_BODY)(*Object);
     KeyBody->Type = CM_KEY_BODY_TYPE;
     KeyBody->KeyControlBlock = NULL;
+    KeyBody->KcbLocked = FALSE;
 
     /* Check if we had a class */
     if (ParseContext->Class.Length > 0)
@@ -702,6 +703,15 @@ CmpDoOpen(IN PHHIVE Hive,
         /* Link to the KCB */
         EnlistKeyBodyWithKCB(KeyBody, 0);
 
+        /*
+         * We are already holding a lock against the KCB that is assigned
+         * to this key body. This is to prevent a potential deadlock on
+         * CmpSecurityMethod as ObCheckObjectAccess will invoke the Object
+         * Manager to call that method, of which CmpSecurityMethod would
+         * attempt to acquire a lock again.
+         */
+        KeyBody->KcbLocked = TRUE;
+
         if (!ObCheckObjectAccess(*Object,
                                  AccessState,
                                  FALSE,
@@ -711,6 +721,12 @@ CmpDoOpen(IN PHHIVE Hive,
             /* Access check failed */
             ObDereferenceObject(*Object);
         }
+
+        /*
+         * We are done, the lock we are holding will be released
+         * once the registry parsing is done.
+         */
+        KeyBody->KcbLocked = FALSE;
     }
     else
     {

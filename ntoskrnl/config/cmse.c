@@ -281,10 +281,15 @@ CmpSecurityMethod(IN PVOID ObjectBody,
     /* Acquire the KCB lock */
     if (OperationCode == QuerySecurityDescriptor)
     {
-        CmpAcquireKcbLockShared(Kcb);
+        /* Avoid recursive locking if somebody already holds it */
+        if (!((PCM_KEY_BODY)ObjectBody)->KcbLocked)
+        {
+            CmpAcquireKcbLockShared(Kcb);
+        }
     }
     else
     {
+        ASSERT(!((PCM_KEY_BODY)ObjectBody)->KcbLocked);
         CmpAcquireKcbLockExclusive(Kcb);
     }
 
@@ -334,8 +339,14 @@ CmpSecurityMethod(IN PVOID ObjectBody,
             KeBugCheckEx(SECURITY_SYSTEM, 0, STATUS_INVALID_PARAMETER, 0, 0);
     }
 
-    /* Release the KCB lock */
-    CmpReleaseKcbLock(Kcb);
+    /*
+     * Release the KCB lock, but only if we locked it ourselves and
+     * nobody else was locking it by themselves.
+     */
+    if (!((PCM_KEY_BODY)ObjectBody)->KcbLocked)
+    {
+        CmpReleaseKcbLock(Kcb);
+    }
 
     /* Release the hive lock */
     CmpUnlockRegistry();
