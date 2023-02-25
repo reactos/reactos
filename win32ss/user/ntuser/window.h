@@ -4,6 +4,7 @@ extern ATOM AtomMessage;
 extern ATOM AtomWndObj; /* WNDOBJ list */
 extern ATOM AtomLayer;
 extern ATOM AtomFlashWndState;
+extern BOOL g_bWindowSnapEnabled;
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
