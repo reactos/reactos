@@ -168,6 +168,12 @@ Replace:
 			EnableWindow(GetDlgItem(hDlgWnd, psh2), enable);
                 }
 	}
+#ifdef __REACTOS__
+        else if (NotifyCode == EN_KILLFOCUS && Id == edt1)
+        {
+		pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd);
+        }
+#endif
 }
 
 /***********************************************************************
