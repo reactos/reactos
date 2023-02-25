@@ -649,7 +649,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
-    while (GetMessage(&msg, 0, 0, 0))
+    while (GetMessage(&msg, NULL, 0, 0))
     {
         if (!TranslateAccelerator(Globals.hMainWnd, hAccel, &msg) &&
             !IsDialogMessage(Globals.hFindReplaceDlg, &msg))
