@@ -37,6 +37,7 @@ VOID NOTEPAD_EnableSearchMenu()
     UINT uEnable = MF_BYCOMMAND | (bEmpty ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH, uEnable);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, uEnable);
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH_PREV, uEnable);
 }
 
 /***********************************************************************
@@ -86,6 +87,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_SEARCH_NEXT: DIALOG_SearchNext(); break;
     case CMD_REPLACE:     DIALOG_Replace(); break;
     case CMD_GOTO:        DIALOG_GoTo(); break;
+    case CMD_SEARCH_PREV: DIALOG_SearchPrev(); break;
 
     case CMD_WRAP: DIALOG_EditWrap(); break;
     case CMD_FONT: DIALOG_SelectFont(); break;

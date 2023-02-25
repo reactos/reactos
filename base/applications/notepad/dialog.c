@@ -1072,6 +1072,16 @@ VOID DIALOG_Search(VOID)
 
 VOID DIALOG_SearchNext(VOID)
 {
+    Globals.find.Flags |= FR_DOWN;
+    if (Globals.find.lpstrFindWhat != NULL)
+        NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
+    else
+        DIALOG_Search();
+}
+
+VOID DIALOG_SearchPrev(VOID)
+{
+    Globals.find.Flags &= ~FR_DOWN;
     if (Globals.find.lpstrFindWhat != NULL)
         NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
     else
