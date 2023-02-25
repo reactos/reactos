@@ -84,10 +84,10 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_TIME_DATE:  DIALOG_EditTimeDate(); break;
 
     case CMD_SEARCH:      DIALOG_Search(); break;
-    case CMD_SEARCH_NEXT: DIALOG_SearchNext(); break;
+    case CMD_SEARCH_NEXT: DIALOG_SearchNext(TRUE); break;
     case CMD_REPLACE:     DIALOG_Replace(); break;
     case CMD_GOTO:        DIALOG_GoTo(); break;
-    case CMD_SEARCH_PREV: DIALOG_SearchPrev(); break;
+    case CMD_SEARCH_PREV: DIALOG_SearchNext(FALSE); break;
 
     case CMD_WRAP: DIALOG_EditWrap(); break;
     case CMD_FONT: DIALOG_SelectFont(); break;
