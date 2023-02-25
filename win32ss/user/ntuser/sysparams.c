@@ -17,6 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 BOOL g_PaintDesktopVersion = FALSE;
+BOOL g_bWindowSnapEnabled = TRUE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -99,8 +100,6 @@ static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Prefe
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
 
-
-
 /** Loading the settings ******************************************************/
 
 static
@@ -152,7 +151,7 @@ SpiLoadTimeOut(VOID)
     {
         return 0;
     }
-    if (wcslen(szApplicationName) == 0) return 0;
+    if (szApplicationName[0] == 0) return 0;
     return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 0);
 }
 
@@ -212,6 +211,18 @@ SpiFixupValues(VOID)
     gspv.tmCaptionFont.tmHeight = 11;
     gspv.tmCaptionFont.tmExternalLeading = 2;
 
+}
+
+static BOOL IntIsWindowSnapEnabled(VOID)
+{
+    WCHAR szValue[2];
+    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
+                           REG_SZ, szValue, sizeof(szValue)))
+    {
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        return (_wtoi(szValue) != 0);
+    }
+    return TRUE;
 }
 
 static
@@ -336,6 +347,8 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
     gdwLanguageToggleKey = UserGetLanguageToggle();
+
+    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
 
 BOOL
@@ -943,7 +956,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 

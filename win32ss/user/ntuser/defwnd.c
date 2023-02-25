@@ -401,20 +401,19 @@ UserPaintCaption(PWND pWnd, INT Flags)
   {
       if (pWnd->state & WNDS_HASCAPTION && pWnd->head.pti->MessageQueue == gpqForeground)
          Flags |= DC_ACTIVE;
-    /* 
+    /*
      * When themes are not enabled we can go on and paint the non client area.
      * However if we do that with themes enabled we will draw a classic frame.
      * This is solved by sending a themes specific message to notify the themes
-     * engine that the caption needs to be redrawn 
+     * engine that the caption needs to be redrawn
      */
       if (gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
       {
-        /* 
+        /*
          * This will cause uxtheme to either paint the themed caption or call
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
-         TRACE("UDCB Flags %08x\n");
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
       }
       else
@@ -436,7 +435,7 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     HICON hIcon, hIconSmall, hIconOld;
 
     if ( wParam > ICON_SMALL2 )
-    {  
+    {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
@@ -486,8 +485,7 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
-        default:
-            break;
+        DEFAULT_UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
@@ -539,9 +537,6 @@ IntDefWindowProc(
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
    USER_REFERENCE_ENTRY Ref;
-   BOOL IsTaskBar;
-   DWORD Style;
-   DWORD ExStyle;
 
    if (Msg > WM_USER) return 0;
 
@@ -784,32 +779,27 @@ IntDefWindowProc(
                co_IntSendMessage(UserHMGetHandle(Wnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(Wnd), MAKELPARAM(-1, -1));
             }
          }
-         if (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN))
+         if (g_bWindowSnapEnabled && (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN)))
          {
+            BOOL IsTaskBar;
+            DWORD StyleTB;
+            DWORD ExStyleTB;
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
 
-            /* Test for typical TaskBar ExStyle Values */
-            ExStyle = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
-            TRACE("ExStyle is '%x'.\n", ExStyle);
+            // We want to forbid snapping operations on the TaskBar
+            // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
+            ExStyleTB = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
+            StyleTB = (topWnd->style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
+            IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+                        && (ExStyleTB == WS_EX_TOOLWINDOW);
+            TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", ExStyleTB, StyleTB, IsTaskBar);
 
-            /* Test for typical TaskBar Style Values */
-            Style = (topWnd->style & (WS_POPUP | WS_VISIBLE |
-                        WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-            TRACE("Style is '%x'.\n", Style);
-
-            /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
-            IsTaskBar = (Style == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
-                        && (ExStyle == WS_EX_TOOLWINDOW);
-            TRACE("This %s the TaskBar.\n", IsTaskBar ? "is" : "is not");
-
-            if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
+            if (topWnd && !IsTaskBar)
             {
                if ((topWnd->style & WS_THICKFRAME) == 0)
-               {
                   return 0;
-               }
-               
+
                if (wParam == VK_DOWN)
                {
                    if (topWnd->style & WS_MAXIMIZE)
@@ -827,7 +817,7 @@ IntDefWindowProc(
                else if (wParam == VK_UP)
                {
                   RECT currentRect;
-                  if ((topWnd->InternalPos.NormalRect.right == topWnd->InternalPos.NormalRect.left) || 
+                  if ((topWnd->InternalPos.NormalRect.right == topWnd->InternalPos.NormalRect.left) ||
                       (topWnd->InternalPos.NormalRect.top == topWnd->InternalPos.NormalRect.bottom))
                   {
                       currentRect = topWnd->rcWindow;
