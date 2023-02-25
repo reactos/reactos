@@ -651,6 +651,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     while (GetMessage(&msg, 0, 0, 0))
     {
+        if (msg.hwnd != Globals.hMainWnd &&
+            msg.message == WM_KEYDOWN && msg.wParam == VK_F3)
+        {
+            msg.hwnd = Globals.hMainWnd;
+        }
+
         if (!IsDialogMessage(Globals.hFindReplaceDlg, &msg) &&
             !TranslateAccelerator(Globals.hMainWnd, hAccel, &msg))
         {
