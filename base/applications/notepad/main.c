@@ -658,5 +658,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
             DispatchMessage(&msg);
         }
     }
+
+    DestroyAcceleratorTable(hAccel);
+
     return (int) msg.wParam;
 }
