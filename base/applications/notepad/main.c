@@ -130,7 +130,7 @@ NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, INT iTextLength, 
         if (dwPosition > 0)
         {
             if (_istalnum(*(pchPosition - 1)) || *(pchPosition - 1) == _T('_'))
-               bMatches = FALSE;
+                bMatches = FALSE;
         }
         if ((INT)dwPosition + iTargetLength < iTextLength)
         {
