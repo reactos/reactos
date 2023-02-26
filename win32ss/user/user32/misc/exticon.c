@@ -616,6 +616,15 @@ static UINT ICO_ExtractIconExW(
             goto end;
         }
 
+#ifdef __REACTOS__
+        /* Check for boundary limit (and overflow) */
+        if (((ULONG_PTR)(rootresdir + 1) < (ULONG_PTR)rootresdir) ||
+            ((ULONG_PTR)(rootresdir + 1) > (ULONG_PTR)peimage + fsizel))
+        {
+            goto end;
+        }
+#endif
+
 	  /* search for the group icon directory */
 	  if (!(icongroupresdir = find_entry_by_id(rootresdir, LOWORD(RT_GROUP_ICON), rootresdir)))
 	  {
