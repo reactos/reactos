@@ -398,10 +398,6 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
         *lpCandidate = *pCF;
         ret = TRUE;
     }
-    else
-    {
-        ERR("Out of boundary\n");
-    }
 
     ImmUnlockIMC(hIMC);
     TRACE("ret: %d\n", ret);
