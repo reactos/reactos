@@ -1053,7 +1053,6 @@ static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
         ZeroMemory(&Globals.find, sizeof(Globals.find));
         Globals.find.lStructSize = sizeof(Globals.find);
         Globals.find.hwndOwner = Globals.hMainWnd;
-        Globals.find.hInstance = Globals.hInstance;
         Globals.find.lpstrFindWhat = Globals.szFindText;
         Globals.find.wFindWhatLen = ARRAY_SIZE(Globals.szFindText);
         Globals.find.lpstrReplaceWith = Globals.szReplaceText;
