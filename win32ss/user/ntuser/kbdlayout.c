@@ -1123,7 +1123,7 @@ NTAPI
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE hFile, // See https://bugtraq.securityfocus.com/detail/50056B96.6040306
     IN DWORD offTable, // Offset to KbdTables
-    IN PVOID pUnknown,
+    IN PVOID pUnknown, // Not used?
     IN HKL hOldKL,
     IN PUNICODE_STRING pustrKLID,
     IN DWORD dwNewKL,
