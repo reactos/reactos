@@ -877,7 +877,7 @@ co_IntLoadKeyboardLayoutEx(
     HKL hNewKL,
     UINT Flags)
 {
-    PKL pOldKL, pNewKL, pLastKL;
+    PKL pOldKL, pNewKL;
 
     if (hNewKL == NULL || (pWinSta->Flags & WSS_NOIO))
         return NULL;
@@ -904,8 +904,8 @@ co_IntLoadKeyboardLayoutEx(
         if (gspklBaseLayout)
         {
             /* Find last not unloaded layout */
-            pLastKL = gspklBaseLayout->pklPrev;
-            while (pLastKL != gspklBaseLayout && pLastKL->dwKL_Flags & KLF_UNLOAD)
+            PKL pLastKL = gspklBaseLayout->pklPrev;
+            while (pLastKL != gspklBaseLayout && (pLastKL->dwKL_Flags & KLF_UNLOAD))
                 pLastKL = pLastKL->pklPrev;
 
             /* Add new layout to the list */
