@@ -1125,13 +1125,13 @@ NtUserLoadKeyboardLayoutEx(
     IN DWORD offTable, // Offset to KbdTables
     IN PVOID pUnknown, // Not used?
     IN HKL hOldKL,
-    IN PUNICODE_STRING pustrKLID,
+    IN PUNICODE_STRING puszKLID,
     IN DWORD dwNewKL,
     IN UINT Flags)
 {
-    HKL hRetKL, hNewKL = (HKL)(DWORD_PTR)dwNewKL;
+    HKL hRetKL;
     WCHAR Buffer[KL_NAMELENGTH];
-    UNICODE_STRING ustrSafeKLID;
+    UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
@@ -1143,12 +1143,12 @@ NtUserLoadKeyboardLayoutEx(
         return NULL;
     }
 
-    RtlInitEmptyUnicodeString(&ustrSafeKLID, Buffer, sizeof(Buffer));
+    RtlInitEmptyUnicodeString(&uszSafeKLID, Buffer, sizeof(Buffer));
     _SEH2_TRY
     {
-        ProbeForRead(pustrKLID, sizeof(*pustrKLID), 1);
-        ProbeForRead(pustrKLID->Buffer, sizeof(pustrKLID->Length), 1);
-        RtlCopyUnicodeString(&ustrSafeKLID, pustrKLID);
+        ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
+        ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
+        RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1164,8 +1164,8 @@ NtUserLoadKeyboardLayoutEx(
                                         hOldKL,
                                         offTable,
                                         pUnknown,
-                                        &ustrSafeKLID,
-                                        hNewKL,
+                                        &uszSafeKLID,
+                                        (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
     UserLeave();
     return hRetKL;
