@@ -1119,7 +1119,7 @@ cleanup:
 HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-    IN HANDLE hFile, // See downloads.securityfocus.com/vulnerabilities/exploits/43774.c
+    IN HANDLE hFile, // See https://bugtraq.securityfocus.com/detail/50056B96.6040306
     IN DWORD offTable, // Offset to KbdTables
     IN PVOID pUnknown,
     IN HKL hOldKL,
