@@ -2738,7 +2738,7 @@ NTAPI
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE hFile,
     IN DWORD offTable,
-    IN PVOID pUnknown,
+    IN PVOID pTables,
     IN HKL hOldKL,
     IN PUNICODE_STRING puszKLID,
     IN DWORD dwNewKL,

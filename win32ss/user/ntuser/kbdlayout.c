@@ -872,7 +872,7 @@ co_IntLoadKeyboardLayoutEx(
     HANDLE hFile,
     HKL hOldKL,
     DWORD offTable,
-    PVOID pUnknown,
+    PVOID pTables,
     PUNICODE_STRING puszSafeKLID,
     HKL hNewKL,
     UINT Flags)
@@ -943,6 +943,23 @@ co_IntLoadKeyboardLayoutEx(
     /* FIXME: KLF_REPLACELANG */
 
     return hNewKL;
+}
+
+HANDLE FASTCALL IntVerifySystemFileHandle(HANDLE hFile)
+{
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, KernelMode,
+                                                (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Status: 0x%08X\n", Status);
+        return NULL;
+    }
+
+    /* FIXME: Is the file in Windows directory? */
+
+    ObDereferenceObject(FileObject);
+    return hFile;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1114,7 +1131,7 @@ cleanup:
  * Loads keyboard layout with given locale id
  *
  * NOTE: We adopt a different design from Microsoft's one for security reason.
- *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
+ *       We don't use 3rd parameter of NtUserLoadKeyboardLayoutEx.
  *
  * https://www.infosecmatter.com/metasploit-module-library/?mm=post/windows/escalate/ms10_073_kbdlayout
  */
@@ -1123,7 +1140,7 @@ NTAPI
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE hFile, // See https://bugtraq.securityfocus.com/detail/50056B96.6040306
     IN DWORD offTable, // Offset to KbdTables
-    IN PVOID pUnknown, // Not used?
+    IN PVOID pTables, // Not used?
     IN HKL hOldKL,
     IN PUNICODE_STRING puszKLID,
     IN DWORD dwNewKL,
@@ -1133,6 +1150,7 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
+    HANDLE hSafeFile;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
@@ -1149,6 +1167,8 @@ NtUserLoadKeyboardLayoutEx(
         ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
         ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
+
+        // FIXME: pTables
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1158,15 +1178,25 @@ NtUserLoadKeyboardLayoutEx(
     _SEH2_END;
 
     UserEnterExclusive();
+
+    hSafeFile = (hFile ? IntVerifySystemFileHandle(hFile) : NULL);
+
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
-                                        hFile,
+                                        hSafeFile,
                                         hOldKL,
                                         offTable,
-                                        pUnknown,
+                                        pTables,
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
+    if (hSafeFile)
+    {
+        ZwClose(hSafeFile);
+
+        // FIXME: pTables
+    }
+
     UserLeave();
     return hRetKL;
 }
