@@ -722,6 +722,7 @@ VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
  * @unimplemented
  *
  * NOTE: We adopt a different design from Microsoft's one due to security reason.
+ *       See NtUserLoadKeyboardLayoutEx.
  */
 HKL APIENTRY
 IntLoadKeyboardLayout(
