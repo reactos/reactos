@@ -868,14 +868,14 @@ PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 
 HKL APIENTRY
 co_IntLoadKeyboardLayoutEx(
-    PWINSTATION_OBJECT pWinSta,
-    HANDLE hFile,
-    HKL hOldKL,
-    DWORD offTable,
-    PVOID pTables,
-    PUNICODE_STRING puszSafeKLID,
-    HKL hNewKL,
-    UINT Flags)
+    IN OUT PWINSTATION_OBJECT pWinSta,
+    IN HANDLE hFile,
+    IN HKL hOldKL,
+    IN DWORD offTable,
+    IN OUT PVOID pSafeTables,
+    IN PUNICODE_STRING puszSafeKLID,
+    IN HKL hNewKL,
+    IN UINT Flags)
 {
     PKL pOldKL, pNewKL;
 
