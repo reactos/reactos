@@ -869,15 +869,12 @@ PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 HKL APIENTRY
 co_IntLoadKeyboardLayoutEx(
     IN OUT PWINSTATION_OBJECT pWinSta,
-    IN HANDLE hSafeFile,
     IN HKL hOldKL,
     IN PUNICODE_STRING puszSafeKLID,
     IN HKL hNewKL,
     IN UINT Flags)
 {
     PKL pOldKL, pNewKL;
-
-    UNREFERENCED_PARAMETER(hSafeFile);
 
     if (hNewKL == NULL || (pWinSta->Flags & WSS_NOIO))
         return NULL;
@@ -943,23 +940,6 @@ co_IntLoadKeyboardLayoutEx(
     /* FIXME: KLF_REPLACELANG */
 
     return hNewKL;
-}
-
-HANDLE FASTCALL IntVerifySystemFileHandle(HANDLE hFile)
-{
-    PFILE_OBJECT FileObject;
-    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, KernelMode,
-                                                (PVOID*)&FileObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("0x%08X\n", Status);
-        return NULL;
-    }
-
-    /* FIXME: Is the file in Windows directory? */
-
-    ObDereferenceObject(FileObject);
-    return hFile;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1131,7 +1111,7 @@ cleanup:
  * Loads keyboard layout with given locale id
  *
  * NOTE: We adopt a different design from Microsoft's one due to security reason.
- *       We don't use the 3rd parameter pTables of NtUserLoadKeyboardLayoutEx.
+ *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
  *       See https://bugtraq.securityfocus.com/detail/50056B96.6040306
  */
 HKL
@@ -1149,8 +1129,8 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile;
 
+    UNREFERENCED_PARAMETER(hFile);
     UNREFERENCED_PARAMETER(offTable);
     UNREFERENCED_PARAMETER(pTables);
 
@@ -1179,16 +1159,12 @@ NtUserLoadKeyboardLayoutEx(
 
     UserEnterExclusive();
 
-    hSafeFile = (hFile ? IntVerifySystemFileHandle(hFile) : NULL);
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
-                                        hSafeFile,
                                         hOldKL,
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
-    if (hSafeFile)
-        ZwClose(hSafeFile);
 
     UserLeave();
     return hRetKL;
