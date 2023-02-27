@@ -369,12 +369,12 @@ cleanup:
 }
 
 /*
- * UserLoadKbdLayout
+ * co_UserLoadKbdLayout
  *
  * Loads keyboard layout and creates KL object
  */
 static PKL
-UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
+co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
 {
     LCID lCid;
     CHARSETINFO cs;
@@ -896,7 +896,7 @@ co_IntLoadKeyboardLayoutEx(
     if (!pNewKL)
     {
         /* It wasn't, so load it. */
-        pNewKL = UserLoadKbdLayout(puszSafeKLID, hNewKL);
+        pNewKL = co_UserLoadKbdLayout(puszSafeKLID, hNewKL);
         if (!pNewKL)
             return NULL;
 
