@@ -2734,14 +2734,14 @@ NtUserKillTimer(
     UINT_PTR uIDEvent);
 
 HKL
-NTAPI
+APIENTRY
 NtUserLoadKeyboardLayoutEx(
-    IN HANDLE Handle,
+    IN HANDLE hFile,
     IN DWORD offTable,
-    IN PUNICODE_STRING puszKeyboardName,
-    IN HKL hKL,
-    IN PUNICODE_STRING puszKLID,
-    IN DWORD dwKLID,
+    IN PVOID pUnknown,
+    IN HKL hOldKL,
+    IN PUNICODE_STRING pustrKLID,
+    IN DWORD dwNewKL,
     IN UINT Flags);
 
 BOOL
