@@ -1126,14 +1126,7 @@ cleanup:
 }
 
 /*
- * NtUserLoadKeyboardLayoutEx
- *
- * Loads keyboard layout with given locale id
- *
- * NOTE: We adopt a different design from Microsoft's one for security reason.
- *       We don't use 3rd parameter of NtUserLoadKeyboardLayoutEx.
- *
- * https://www.infosecmatter.com/metasploit-module-library/?mm=post/windows/escalate/ms10_073_kbdlayout
+ * NtUserLoadKeyboardLayoutEx - Loads keyboard layout with given locale id
  */
 HKL
 NTAPI
@@ -1180,13 +1173,12 @@ NtUserLoadKeyboardLayoutEx(
     UserEnterExclusive();
 
     hSafeFile = (hFile ? IntVerifySystemFileHandle(hFile) : NULL);
-
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
                                         hSafeFile,
                                         hOldKL,
                                         offTable,
-                                        pTables,
+                                        pTables, /* This must be a safe table */
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
@@ -1194,7 +1186,7 @@ NtUserLoadKeyboardLayoutEx(
     {
         ZwClose(hSafeFile);
 
-        // FIXME: pTables
+        /* FIXME: pTables */
     }
 
     UserLeave();
