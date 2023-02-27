@@ -125,14 +125,6 @@ BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow);
 VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd);
 VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd);
 
-PVOID FASTCALL
-IntReAllocatePoolWithTag(
-    POOL_TYPE PoolType,
-    PVOID pOld,
-    SIZE_T cbOld,
-    SIZE_T cbNew,
-    ULONG Tag);
-
 static inline
 VOID
 WndSetOwner(_Inout_ PWND pwnd, _In_opt_ PWND pwndOwner)
