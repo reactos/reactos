@@ -873,7 +873,7 @@ co_IntLoadKeyboardLayoutEx(
     HKL hOldKL,
     DWORD offTable,
     PVOID pUnknown,
-    PUNICODE_STRING pustrSafeKLID,
+    PUNICODE_STRING puszSafeKLID,
     HKL hNewKL,
     UINT Flags)
 {
@@ -897,7 +897,7 @@ co_IntLoadKeyboardLayoutEx(
     if (!pNewKL)
     {
         /* It wasn't, so load it. */
-        pNewKL = UserLoadKbdLayout(pustrSafeKLID, hNewKL);
+        pNewKL = UserLoadKbdLayout(puszSafeKLID, hNewKL);
         if (!pNewKL)
             return NULL;
 
@@ -1131,7 +1131,7 @@ NtUserLoadKeyboardLayoutEx(
 {
     HKL hRetKL, hNewKL = (HKL)(DWORD_PTR)dwNewKL;
     WCHAR Buffer[KL_NAMELENGTH];
-    UNICODE_STRING ustrSafeKLID;
+    UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
@@ -1143,12 +1143,12 @@ NtUserLoadKeyboardLayoutEx(
         return NULL;
     }
 
-    RtlInitEmptyUnicodeString(&ustrSafeKLID, Buffer, sizeof(Buffer));
+    RtlInitEmptyUnicodeString(&uszSafeKLID, Buffer, sizeof(Buffer));
     _SEH2_TRY
     {
         ProbeForRead(puzKLID, sizeof(*puzKLID), 1);
         ProbeForRead(puzKLID->Buffer, sizeof(puzKLID->Length), 1);
-        RtlCopyUnicodeString(&ustrSafeKLID, puzKLID);
+        RtlCopyUnicodeString(&uszSafeKLID, puzKLID);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1164,7 +1164,7 @@ NtUserLoadKeyboardLayoutEx(
                                         hOldKL,
                                         offTable,
                                         pUnknown,
-                                        &ustrSafeKLID,
+                                        &uszSafeKLID,
                                         hNewKL,
                                         Flags);
     UserLeave();
