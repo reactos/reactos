@@ -1178,7 +1178,7 @@ NtUserLoadKeyboardLayoutEx(
                                         hSafeFile,
                                         hOldKL,
                                         offTable,
-                                        pTables, /* This must be a safe table */
+                                        pTables, /* FIXME: This must be a safe table */
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
