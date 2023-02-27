@@ -1125,7 +1125,7 @@ NtUserLoadKeyboardLayoutEx(
     IN DWORD offTable, // Offset to KbdTables
     IN PVOID pUnknown,
     IN HKL hOldKL,
-    IN PUNICODE_STRING puzKLID,
+    IN PUNICODE_STRING pustrKLID,
     IN DWORD dwNewKL,
     IN UINT Flags)
 {
@@ -1146,9 +1146,9 @@ NtUserLoadKeyboardLayoutEx(
     RtlInitEmptyUnicodeString(&ustrSafeKLID, Buffer, sizeof(Buffer));
     _SEH2_TRY
     {
-        ProbeForRead(puzKLID, sizeof(*puzKLID), 1);
-        ProbeForRead(puzKLID->Buffer, sizeof(puzKLID->Length), 1);
-        RtlCopyUnicodeString(&ustrSafeKLID, puzKLID);
+        ProbeForRead(pustrKLID, sizeof(*pustrKLID), 1);
+        ProbeForRead(pustrKLID->Buffer, sizeof(pustrKLID->Length), 1);
+        RtlCopyUnicodeString(&ustrSafeKLID, pustrKLID);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

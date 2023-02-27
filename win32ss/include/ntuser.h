@@ -2740,7 +2740,7 @@ NtUserLoadKeyboardLayoutEx(
     IN DWORD offTable,
     IN PVOID pUnknown,
     IN HKL hOldKL,
-    IN PUNICODE_STRING puszKLID,
+    IN PUNICODE_STRING pustrKLID,
     IN DWORD dwNewKL,
     IN UINT Flags);
 
