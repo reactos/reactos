@@ -1126,7 +1126,9 @@ cleanup:
 }
 
 /*
- * NtUserLoadKeyboardLayoutEx - Loads keyboard layout with given locale id
+ * NtUserLoadKeyboardLayoutEx
+ *
+ * Loads keyboard layout with given locale id
  */
 HKL
 NTAPI
@@ -1181,7 +1183,7 @@ NtUserLoadKeyboardLayoutEx(
                                         hSafeFile,
                                         hOldKL,
                                         offTable,
-                                        pTables, /* FIXME: This must be a safe table */
+                                        pTables, /* FIXME: This must be safe */
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
