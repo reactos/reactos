@@ -806,7 +806,7 @@ IntLoadKeyboardLayout(
                 szImeFileName[_countof(szImeFileName) - 1] = UNICODE_NULL;
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
 
-                /* We don't allow the invalid "IME File" values for security reason */
+                /* We don't allow the invalid "IME File" values due to security reason */
                 if (dwType != REG_SZ || szImeFileName[0] == 0 ||
                     wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
                     GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
