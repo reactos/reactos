@@ -2734,7 +2734,7 @@ NtUserKillTimer(
     UINT_PTR uIDEvent);
 
 HKL
-APIENTRY
+NTAPI
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE hFile,
     IN DWORD offTable,

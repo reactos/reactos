@@ -1117,7 +1117,7 @@ cleanup:
  *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
  */
 HKL
-APIENTRY
+NTAPI
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE hFile, // hFile (See downloads.securityfocus.com/vulnerabilities/exploits/43774.c)
     IN DWORD offTable, // Offset to KbdTables
