@@ -869,9 +869,7 @@ PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 HKL APIENTRY
 co_IntLoadKeyboardLayoutEx(
     IN OUT PWINSTATION_OBJECT pWinSta,
-    IN HANDLE hFile,
     IN HKL hOldKL,
-    IN DWORD offTable,
     IN PUNICODE_STRING puszSafeKLID,
     IN HKL hNewKL,
     IN UINT Flags)
@@ -942,23 +940,6 @@ co_IntLoadKeyboardLayoutEx(
     /* FIXME: KLF_REPLACELANG */
 
     return hNewKL;
-}
-
-HANDLE FASTCALL IntVerifySystemFileHandle(HANDLE hFile)
-{
-    PFILE_OBJECT FileObject;
-    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, KernelMode,
-                                                (PVOID*)&FileObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Status: 0x%08X\n", Status);
-        return NULL;
-    }
-
-    /* FIXME: Is the file in Windows directory? */
-
-    ObDereferenceObject(FileObject);
-    return hFile;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1128,13 +1109,17 @@ cleanup:
  * NtUserLoadKeyboardLayoutEx
  *
  * Loads keyboard layout with given locale id
+ *
+ * NOTE: We adopt a different design from Microsoft's one for security reason.
+ *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
+ *       See https://bugtraq.securityfocus.com/detail/50056B96.6040306
  */
 HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-    IN HANDLE hFile, // See https://bugtraq.securityfocus.com/detail/50056B96.6040306
-    IN DWORD offTable, // Offset to KbdTables
-    IN PVOID pTables, // Not used?
+    IN HANDLE hFile,
+    IN DWORD offTable,
+    IN PVOID pTables,
     IN HKL hOldKL,
     IN PUNICODE_STRING puszKLID,
     IN DWORD dwNewKL,
@@ -1144,7 +1129,10 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile;
+
+    UNREFERENCED_PARAMETER(hFile);
+    UNREFERENCED_PARAMETER(offTable);
+    UNREFERENCED_PARAMETER(pTables);
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
@@ -1171,20 +1159,12 @@ NtUserLoadKeyboardLayoutEx(
 
     UserEnterExclusive();
 
-    hSafeFile = (hFile ? IntVerifySystemFileHandle(hFile) : NULL);
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
-                                        hSafeFile,
                                         hOldKL,
-                                        offTable,
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
-    if (hSafeFile)
-    {
-        ZwClose(hSafeFile);
-    }
-
     UserLeave();
     return hRetKL;
 }
