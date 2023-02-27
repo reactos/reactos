@@ -1115,6 +1115,8 @@ cleanup:
  *
  * NOTE: We adopt a different design from Microsoft's one for security reason.
  *       We don't use the 1st and 3rd parameters of NtUserLoadKeyboardLayoutEx.
+ *
+ * https://www.infosecmatter.com/metasploit-module-library/?mm=post/windows/escalate/ms10_073_kbdlayout
  */
 HKL
 NTAPI
