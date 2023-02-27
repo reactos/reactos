@@ -872,7 +872,6 @@ co_IntLoadKeyboardLayoutEx(
     IN HANDLE hFile,
     IN HKL hOldKL,
     IN DWORD offTable,
-    IN OUT PVOID pSafeTables,
     IN PUNICODE_STRING puszSafeKLID,
     IN HKL hNewKL,
     IN UINT Flags)
@@ -1162,11 +1161,6 @@ NtUserLoadKeyboardLayoutEx(
         ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
         ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
-
-        if (pTables)
-        {
-            /* FIXME: pTables */
-        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1183,15 +1177,12 @@ NtUserLoadKeyboardLayoutEx(
                                         hSafeFile,
                                         hOldKL,
                                         offTable,
-                                        pTables, /* FIXME: This must be safe */
                                         &uszSafeKLID,
                                         (HKL)(DWORD_PTR)dwNewKL,
                                         Flags);
     if (hSafeFile)
     {
         ZwClose(hSafeFile);
-
-        /* FIXME: pTables */
     }
 
     UserLeave();
