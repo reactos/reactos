@@ -1161,7 +1161,10 @@ NtUserLoadKeyboardLayoutEx(
         ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
 
-        /* FIXME: pTables */
+        if (pTables)
+        {
+            /* FIXME: pTables */
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
