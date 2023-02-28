@@ -99,5 +99,5 @@ void NOTEPAD_LoadSettingsFromRegistry(void);
 void NOTEPAD_SaveSettingsToRegistry(void);
 
 /* from main.c */
-BOOL NOTEPAD_FindNext(FINDREPLACE *, BOOL , BOOL );
+BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert);
 VOID NOTEPAD_EnableSearchMenu(VOID);

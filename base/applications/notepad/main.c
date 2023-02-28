@@ -5,7 +5,7 @@
  *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2002 Andriy Palamarchuk
- *  Copyright 2020 Katayama Hirofumi MZ
+ *  Copyright 2020-2023 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,7 @@ VOID NOTEPAD_EnableSearchMenu()
     UINT uEnable = MF_BYCOMMAND | (bEmpty ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH, uEnable);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, uEnable);
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH_PREV, uEnable);
 }
 
 /***********************************************************************
@@ -83,9 +84,10 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_TIME_DATE:  DIALOG_EditTimeDate(); break;
 
     case CMD_SEARCH:      DIALOG_Search(); break;
-    case CMD_SEARCH_NEXT: DIALOG_SearchNext(); break;
+    case CMD_SEARCH_NEXT: DIALOG_SearchNext(TRUE); break;
     case CMD_REPLACE:     DIALOG_Replace(); break;
     case CMD_GOTO:        DIALOG_GoTo(); break;
+    case CMD_SEARCH_PREV: DIALOG_SearchNext(FALSE); break;
 
     case CMD_WRAP: DIALOG_EditWrap(); break;
     case CMD_FONT: DIALOG_SelectFont(); break;
@@ -647,14 +649,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
-    while (GetMessage(&msg, 0, 0, 0))
+    while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!IsDialogMessage(Globals.hFindReplaceDlg, &msg) &&
-            !TranslateAccelerator(Globals.hMainWnd, hAccel, &msg))
+        if (!TranslateAccelerator(Globals.hMainWnd, hAccel, &msg) &&
+            !IsDialogMessage(Globals.hFindReplaceDlg, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
+
+    DestroyAcceleratorTable(hAccel);
+
     return (int) msg.wParam;
 }
