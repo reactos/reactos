@@ -956,7 +956,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
         return NULL;
     }
 
-    /* FIXME: Is the file in Windows directory? */
+    /* FIXME: Is the file in the system directory? */
 
     ObDereferenceObject(FileObject);
     return hFile;
