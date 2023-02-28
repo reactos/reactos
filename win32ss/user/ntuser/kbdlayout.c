@@ -958,7 +958,8 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 
     /* FIXME: Is the file in the system directory? */
 
-    ObDereferenceObject(FileObject);
+    if (FileObject)
+        ObDereferenceObject(FileObject);
     return hFile;
 }
 
