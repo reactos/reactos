@@ -948,8 +948,13 @@ co_IntLoadKeyboardLayoutEx(
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     PFILE_OBJECT FileObject;
-    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, UserMode,
-                                                (PVOID*)&FileObject, NULL);
+    NTSTATUS Status;
+
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, UserMode,
+                                       (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         ERR("0x%08X\n", Status);
@@ -960,6 +965,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 
     if (FileObject)
         ObDereferenceObject(FileObject);
+
     return hFile;
 }
 
