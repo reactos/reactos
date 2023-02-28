@@ -948,7 +948,7 @@ co_IntLoadKeyboardLayoutEx(
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     PFILE_OBJECT FileObject;
-    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, KernelMode,
+    NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, UserMode,
                                                 (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
