@@ -945,7 +945,7 @@ co_IntLoadKeyboardLayoutEx(
     return hNewKL;
 }
 
-HANDLE FASTCALL IntVerifySystemFileHandle(HANDLE hFile)
+HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     PFILE_OBJECT FileObject;
     NTSTATUS Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, KernelMode,
@@ -1179,7 +1179,7 @@ NtUserLoadKeyboardLayoutEx(
 
     UserEnterExclusive();
 
-    hSafeFile = (hFile ? IntVerifySystemFileHandle(hFile) : NULL);
+    hSafeFile = (hFile ? IntVerifyKeyboardFileHandle(hFile) : NULL);
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
                                         hSafeFile,
