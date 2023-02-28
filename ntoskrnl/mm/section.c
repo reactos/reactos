@@ -706,7 +706,7 @@ l_ReadHeaderFromFile:
             DIE(("Memory gap between section %u and the previous\n", i));
 
         /* ignore explicit BSS sections */
-        if(pishSectionHeaders[i].SizeOfRawData != 0)
+        if(pishSectionHeaders[i].PointerToRawData != 0 && pishSectionHeaders[i].SizeOfRawData != 0)
         {
             /* validate the alignment */
 #if 0
@@ -2794,7 +2794,7 @@ MmCreatePhysicalMemorySection(VOID)
     PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
     PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -2827,7 +2827,7 @@ MmInitSectionImplementation(VOID)
 
     MmCreatePhysicalMemorySection();
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -2940,7 +2940,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(FileObject);
-        return(Status);
+        return Status;
     }
     /*
      * Initialize it
@@ -2999,7 +2999,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
         {
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(STATUS_SECTION_NOT_EXTENDED);
+            return STATUS_SECTION_NOT_EXTENDED;
         }
     }
 
@@ -3019,7 +3019,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     {
         ObDereferenceObject(Section);
         ObDereferenceObject(FileObject);
-        return(Status);
+        return Status;
     }
 
     /*
@@ -3035,7 +3035,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
             //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(STATUS_NO_MEMORY);
+            return STATUS_NO_MEMORY;
         }
         Section->Segment = Segment;
         Segment->ReferenceCount = 1;
@@ -3092,7 +3092,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 #endif
     //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
     *SectionObject = Section;
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -3739,7 +3739,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
         return STATUS_INVALID_FILE_FOR_SECTION;
 
 #ifndef NEWCC
-    if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+    if (!CcIsFileCached(FileObject))
     {
         DPRINT1("Denying section creation due to missing cache initialization\n");
         return STATUS_INVALID_FILE_FOR_SECTION;
@@ -3761,7 +3761,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(FileObject);
-        return(Status);
+        return Status;
     }
 
     /*
@@ -3782,7 +3782,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
         {
             ObDereferenceObject(FileObject);
             ObDereferenceObject(Section);
-            return(STATUS_NO_MEMORY);
+            return STATUS_NO_MEMORY;
         }
 
         RtlZeroMemory(ImageSectionObject, sizeof(MM_IMAGE_SECTION_OBJECT));
@@ -3806,7 +3806,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(Status);
+            return Status;
         }
 
         Section->ImageSection = ImageSectionObject;
@@ -3822,7 +3822,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             ExFreePool(ImageSectionObject);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(Status);
+            return Status;
         }
 
         if (NULL != InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
@@ -3855,7 +3855,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
         {
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(Status);
+            return Status;
         }
 
         ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
@@ -3878,20 +3878,21 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 #endif
     //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
     *SectionObject = Section;
-    return(Status);
+    return Status;
 }
 
 
 
 static NTSTATUS
-MmMapViewOfSegment(PMMSUPPORT AddressSpace,
-                   PROS_SECTION_OBJECT Section,
-                   PMM_SECTION_SEGMENT Segment,
-                   PVOID* BaseAddress,
-                   SIZE_T ViewSize,
-                   ULONG Protect,
-                   ULONG ViewOffset,
-                   ULONG AllocationType)
+MmMapViewOfSegment(
+    PMMSUPPORT AddressSpace,
+    PROS_SECTION_OBJECT Section,
+    PMM_SECTION_SEGMENT Segment,
+    PVOID* BaseAddress,
+    SIZE_T ViewSize,
+    ULONG Protect,
+    ULONG ViewOffset,
+    ULONG AllocationType)
 {
     PMEMORY_AREA MArea;
     NTSTATUS Status;
@@ -3940,7 +3941,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
     {
         DPRINT1("Mapping between 0x%p and 0x%p failed (%X).\n",
                 (*BaseAddress), (char*)(*BaseAddress) + ViewSize, Status);
-        return(Status);
+        return Status;
     }
 
     ObReferenceObject((PVOID)Section);
@@ -3956,7 +3957,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
     MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                        ViewSize, 0, Protect);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
@@ -4078,7 +4079,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
                  BaseAddress);
     if (MemoryArea == NULL)
     {
-        return(STATUS_UNSUCCESSFUL);
+        return STATUS_UNSUCCESSFUL;
     }
 
     Section = MemoryArea->Data.SectionData.Section;
@@ -4123,7 +4124,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
     }
     MmUnlockSectionSegment(Segment);
     ObDereferenceObject(Section);
-    return(Status);
+    return Status;
 }
 
 NTSTATUS
@@ -4220,7 +4221,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     /* Notify debugger */
     if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
@@ -4440,7 +4441,7 @@ NtQuerySection(
 
     ObDereferenceObject(Section);
 
-    return(Status);
+    return Status;
 }
 
 /**********************************************************************
@@ -4596,14 +4597,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
             if ((*BaseAddress) != NULL)
             {
                 MmUnlockAddressSpace(AddressSpace);
-                return(STATUS_CONFLICTING_ADDRESSES);
+                return STATUS_CONFLICTING_ADDRESSES;
             }
             /* Otherwise find a gap to map the image. */
             ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), MM_VIRTMEM_GRANULARITY, FALSE);
             if (ImageBase == 0)
             {
                 MmUnlockAddressSpace(AddressSpace);
-                return(STATUS_CONFLICTING_ADDRESSES);
+                return STATUS_CONFLICTING_ADDRESSES;
             }
             /* Remember that we loaded image at a different base address */
             NotAtBase = TRUE;
@@ -4626,7 +4627,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
             if (!NT_SUCCESS(Status))
             {
                 MmUnlockAddressSpace(AddressSpace);
-                return(Status);
+                return Status;
             }
         }
 
@@ -4669,7 +4670,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         if ((ViewOffset % PAGE_SIZE) != 0)
         {
             MmUnlockAddressSpace(AddressSpace);
-            return(STATUS_MAPPED_ALIGNMENT);
+            return STATUS_MAPPED_ALIGNMENT;
         }
 
         if ((*ViewSize) == 0)
@@ -4696,7 +4697,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         if (!NT_SUCCESS(Status))
         {
             MmUnlockAddressSpace(AddressSpace);
-            return(Status);
+            return Status;
         }
     }
 
@@ -4782,15 +4783,12 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     return TRUE;
 }
 
-
-
-
 /*
  * @implemented
  */
 BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-                     IN MMFLUSH_TYPE   FlushType)
+                     IN MMFLUSH_TYPE FlushType)
 {
     BOOLEAN Result = TRUE;
 #ifdef NEWCC
@@ -4834,7 +4832,8 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PSIZE_T ViewSize)
@@ -4870,7 +4869,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
     }
 
     MmLockSectionSegment(Section->Segment);
-
 
     Status = MmMapViewOfSegment(AddressSpace,
                                 Section,
