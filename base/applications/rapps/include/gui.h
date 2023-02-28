@@ -54,8 +54,8 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 
     CApplicationView *m_ApplicationView = NULL;
 
-    CApplicationDB *m_Db;
-    CAtlList<CApplicationInfo *> m_Selected;
+    CAppDB *m_Db;
+    CAtlList<CAppInfo *> m_Selected;
 
     BOOL bUpdating = FALSE;
 
@@ -63,7 +63,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     AppsCategories SelectedEnumType;
 
   public:
-    CMainWindow(CApplicationDB *db);
+    CMainWindow(CAppDB *db);
 
     ~CMainWindow();
 
@@ -106,7 +106,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     VOID
     UpdateApplicationsList(AppsCategories EnumType, BOOL bReload = FALSE);
     VOID
-    AddApplicationsToView(CAtlList<CApplicationInfo *> &List);
+    AddApplicationsToView(CAtlList<CAppInfo *> &List);
 
   public:
     static ATL::CWndClassInfo &
@@ -123,7 +123,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     // this function is called when application-view is asked to install an application
     // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
     BOOL
-    InstallApplication(CApplicationInfo *Info);
+    InstallApplication(CAppInfo *Info);
 
     // this function is called when search text is changed
     BOOL

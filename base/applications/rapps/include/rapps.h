@@ -8,8 +8,8 @@
 #include "defines.h"
 
 #include "dialogs.h"
-#include "applicationinfo.h"
-#include "applicationdb.h"
+#include "appinfo.h"
+#include "appdb.h"
 #include "misc.h"
 #include "configparser.h"
 

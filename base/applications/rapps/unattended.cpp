@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Functions to parse command-line flags and process them
  * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                (1160386205@qq.com)
+ *              Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"
@@ -44,7 +44,7 @@ InitRappsConsole()
 }
 
 static BOOL
-HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleInstallCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -53,11 +53,11 @@ HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR 
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> Applications;
+    CAtlList<CAppInfo *> Applications;
     for (int i = 0; i < argcLeft; i++)
     {
         LPCWSTR PackageName = argvLeft[i];
-        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
+        CAppInfo *AppInfo = db->FindByPackageName(PackageName);
         if (AppInfo)
         {
             Applications.AddTail(AppInfo);
@@ -68,7 +68,7 @@ HandleInstallCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR 
 }
 
 static BOOL
-HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft != 1)
     {
@@ -77,7 +77,7 @@ HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *a
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> Applications;
+    CAtlList<CAppInfo *> Applications;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
     if (InfHandle == INVALID_HANDLE_VALUE)
     {
@@ -92,7 +92,7 @@ HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *a
         {
             if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
             {
-                CApplicationInfo *AppInfo = db->FindByPackageName(szPkgName);
+                CAppInfo *AppInfo = db->FindByPackageName(szPkgName);
                 if (AppInfo)
                 {
                     Applications.AddTail(AppInfo);
@@ -106,7 +106,7 @@ HandleSetupCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *a
 }
 
 static BOOL
-HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleFindCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -114,7 +114,7 @@ HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *ar
         return FALSE;
     }
 
-    CAtlList<CApplicationInfo *> List;
+    CAtlList<CAppInfo *> List;
     db->GetApps(List, ENUM_ALL_AVAILABLE);
 
     for (int i = 0; i < argcLeft; i++)
@@ -125,7 +125,7 @@ HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *ar
         POSITION CurrentListPosition = List.GetHeadPosition();
         while (CurrentListPosition)
         {
-            CApplicationInfo *Info = List.GetNext(CurrentListPosition);
+            CAppInfo *Info = List.GetNext(CurrentListPosition);
 
             if (SearchPatternMatch(Info->szDisplayName, lpszSearch) || SearchPatternMatch(Info->szComments, lpszSearch))
             {
@@ -140,7 +140,7 @@ HandleFindCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *ar
 }
 
 static BOOL
-HandleInfoCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+HandleInfoCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
     if (argcLeft < 1)
     {
@@ -151,7 +151,7 @@ HandleInfoCommand(CApplicationDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *ar
     for (int i = 0; i < argcLeft; i++)
     {
         LPCWSTR PackageName = argvLeft[i];
-        CApplicationInfo *AppInfo = db->FindByPackageName(PackageName);
+        CAppInfo *AppInfo = db->FindByPackageName(PackageName);
         if (!AppInfo)
         {
             ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_NOT_FOUND, PackageName);
@@ -231,7 +231,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     CStringW Directory;
     GetStorageDirectory(Directory);
-    CApplicationDB db(Directory);
+    CAppDB db(Directory);
 
     if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
     {

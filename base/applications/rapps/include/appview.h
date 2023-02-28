@@ -177,7 +177,7 @@ class CAppInfoDisplay : public CUiWindow<CWindowImpl<CAppInfoDisplay>>
     Create(HWND hwndParent);
 
     VOID
-    ShowAppInfo(CApplicationInfo *Info);
+    ShowAppInfo(CAppInfo *Info);
     VOID
     SetWelcomeText();
     VOID
@@ -263,7 +263,7 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
     SetViewMode(DWORD ViewMode);
 
     BOOL
-    AddApplication(CApplicationInfo *AppInfo, BOOL InitialCheckState);
+    AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState);
 
     // this function is called when parent window receiving an notification about checkstate changing
     VOID
@@ -397,7 +397,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL
-    AddApplication(CApplicationInfo *InstAppInfo, BOOL InitialCheckState);
+    AddApplication(CAppInfo *InstAppInfo, BOOL InitialCheckState);
     VOID
     SetWatermark(const CStringW &Text);
 

@@ -914,7 +914,7 @@ CAppInfoDisplay::Create(HWND hwndParent)
 }
 
 VOID
-CAppInfoDisplay::ShowAppInfo(CApplicationInfo *Info)
+CAppInfoDisplay::ShowAppInfo(CAppInfo *Info)
 {
     CStringW ScrnshotLocation;
     if (Info->RetrieveScreenshot(ScrnshotLocation))
@@ -1280,7 +1280,7 @@ CAppsListView::SetViewMode(DWORD ViewMode)
 }
 
 BOOL
-CAppsListView::AddApplication(CApplicationInfo *AppInfo, BOOL InitialCheckState)
+CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
 {
     if (ApplicationViewType == AppViewTypeInstalledApps)
     {
@@ -1474,7 +1474,7 @@ CApplicationView::ProcessWindowMessage(
                             if (ApplicationViewType == AppViewTypeAvailableApps)
                             {
                                 m_MainWindow->InstallApplication(
-                                    (CApplicationInfo *)m_ListView->GetItemData(Item->iItem));
+                                    (CAppInfo *)m_ListView->GetItemData(Item->iItem));
                             }
                         }
                     }
@@ -1851,7 +1851,7 @@ CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 }
 
 BOOL
-CApplicationView::AddApplication(CApplicationInfo *AppInfo, BOOL InitialCheckState)
+CApplicationView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
 {
     return m_ListView->AddApplication(AppInfo, InitialCheckState);
 }
@@ -1897,7 +1897,7 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
 {
     if (CallbackParam)
     {
-        CApplicationInfo *Info = static_cast<CApplicationInfo *>(CallbackParam);
+        CAppInfo *Info = static_cast<CAppInfo *>(CallbackParam);
         m_AppsInfo->ShowAppInfo(Info);
 
         if (ApplicationViewType == AppViewTypeInstalledApps)

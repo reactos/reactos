@@ -65,11 +65,11 @@ IsInstalledEnum(INT x)
 
 class CAppRichEdit;
 
-class CApplicationInfo
+class CAppInfo
 {
   public:
-    CApplicationInfo(const CStringW &Identifier, AppsCategories Category);
-    virtual ~CApplicationInfo();
+    CAppInfo(const CStringW &Identifier, AppsCategories Category);
+    virtual ~CAppInfo();
 
     const CStringW szIdentifier; // PkgName or KeyName
     const AppsCategories iCategory;
@@ -97,7 +97,7 @@ class CApplicationInfo
     UninstallApplication(BOOL bModify) = 0;
 };
 
-class CAvailableApplicationInfo : public CApplicationInfo
+class CAvailableApplicationInfo : public CAppInfo
 {
     class CConfigParser *m_Parser;
     CSimpleArray<CStringW> m_szScrnshotLocation;
@@ -143,7 +143,7 @@ class CAvailableApplicationInfo : public CApplicationInfo
     UninstallApplication(BOOL bModify) override;
 };
 
-class CInstalledApplicationInfo : public CApplicationInfo
+class CInstalledApplicationInfo : public CAppInfo
 {
     CRegKey m_hKey;
     CStringW m_szInstallDate;

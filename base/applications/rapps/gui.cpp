@@ -2,9 +2,9 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     GUI classes for RAPPS
- * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                  (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2015 David Quintana (gigaherz@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
+ *              Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"
@@ -86,7 +86,7 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CApplicationDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -276,7 +276,7 @@ CMainWindow::RemoveSelectedAppFromRegistry()
 
     if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        CApplicationInfo *InstalledApp = (CApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+        CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
         if (!InstalledApp)
             return FALSE;
 
@@ -292,7 +292,7 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     if (!IsInstalledEnum(SelectedEnumType))
         return FALSE;
 
-    CApplicationInfo *InstalledApp = (CApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+    CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
     if (!InstalledApp)
         return FALSE;
 
@@ -517,7 +517,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
-                        CApplicationInfo *App = (CApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+                        CAppInfo *App = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
                         if (App)
                         {
                             InstallApplication(App);
@@ -578,12 +578,12 @@ CMainWindow::UpdateStatusBarText()
 }
 
 VOID
-CMainWindow::AddApplicationsToView(CAtlList<CApplicationInfo *> &List)
+CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
 {
     POSITION CurrentListPosition = List.GetHeadPosition();
     while (CurrentListPosition)
     {
-        CApplicationInfo *Info = List.GetNext(CurrentListPosition);
+        CAppInfo *Info = List.GetNext(CurrentListPosition);
         if (szSearchPattern.IsEmpty() || SearchPatternMatch(Info->szDisplayName, szSearchPattern) ||
             SearchPatternMatch(Info->szComments, szSearchPattern))
         {
@@ -613,7 +613,7 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload)
         // set the display type of application-view. this will remove all the item in application-view too.
         m_ApplicationView->SetDisplayAppType(AppViewTypeInstalledApps);
 
-        CAtlList<CApplicationInfo *> List;
+        CAtlList<CAppInfo *> List;
         m_Db->GetApps(List, EnumType);
         AddApplicationsToView(List);
     }
@@ -632,7 +632,7 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload)
         }
         else
         {
-            CAtlList<CApplicationInfo *> List;
+            CAtlList<CAppInfo *> List;
             m_Db->GetApps(List, EnumType);
             AddApplicationsToView(List);
         }
@@ -697,7 +697,7 @@ CMainWindow::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
     if (bUpdating)
         return;
 
-    CApplicationInfo *Info = (CApplicationInfo *)CallbackParam;
+    CAppInfo *Info = (CAppInfo *)CallbackParam;
 
     if (bChecked)
     {
@@ -720,7 +720,7 @@ CMainWindow::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
 // this function is called when one or more application(s) should be installed
 // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
 BOOL
-CMainWindow::InstallApplication(CApplicationInfo *Info)
+CMainWindow::InstallApplication(CAppInfo *Info)
 {
     if (Info)
     {
@@ -785,7 +785,7 @@ CMainWindow::HandleTabOrder(int direction)
 // **** CMainWindow ****
 
 VOID
-MainWindowLoop(CApplicationDB *db, INT nShowCmd)
+MainWindowLoop(CAppDB *db, INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;

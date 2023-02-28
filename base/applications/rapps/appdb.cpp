@@ -2,13 +2,13 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Classes for working with available applications
- * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                    (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
+ *              Copyright 2020 He Yang (1160386205@qq.com)
  *              Copyright 2021-2023 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "rapps.h"
-#include "applicationdb.h"
+#include "appdb.h"
 #include "configparser.h"
 #include "settings.h"
 
@@ -18,29 +18,29 @@ static REGSAM g_RegSamEnum[3] = {KEY_WOW64_32KEY, KEY_WOW64_32KEY, KEY_WOW64_64K
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
 static VOID
-ClearList(CAtlList<CApplicationInfo *> &list)
+ClearList(CAtlList<CAppInfo *> &list)
 {
     POSITION InfoListPosition = list.GetHeadPosition();
     while (InfoListPosition)
     {
-        CApplicationInfo *Info = list.GetNext(InfoListPosition);
+        CAppInfo *Info = list.GetNext(InfoListPosition);
         delete Info;
     }
     list.RemoveAll();
 }
 
-CApplicationDB::CApplicationDB(const CStringW &path) : m_BasePath(path)
+CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
 {
     m_BasePath.Canonicalize();
 }
 
-CApplicationInfo *
-CApplicationDB::FindByPackageName(const CStringW &name)
+CAppInfo *
+CAppDB::FindByPackageName(const CStringW &name)
 {
     POSITION CurrentListPosition = m_Available.GetHeadPosition();
     while (CurrentListPosition)
     {
-        CApplicationInfo *Info = m_Available.GetNext(CurrentListPosition);
+        CAppInfo *Info = m_Available.GetNext(CurrentListPosition);
         if (Info->szIdentifier == name)
         {
             return Info;
@@ -50,16 +50,16 @@ CApplicationDB::FindByPackageName(const CStringW &name)
 }
 
 void
-CApplicationDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type) const
+CAppDB::GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const
 {
     const BOOL UseInstalled = IsInstalledEnum(Type);
-    const CAtlList<CApplicationInfo *> &list = UseInstalled ? m_Installed : m_Available;
+    const CAtlList<CAppInfo *> &list = UseInstalled ? m_Installed : m_Available;
     const BOOL IncludeAll = UseInstalled ? (Type == ENUM_ALL_INSTALLED) : (Type == ENUM_ALL_AVAILABLE);
 
     POSITION CurrentListPosition = list.GetHeadPosition();
     while (CurrentListPosition)
     {
-        CApplicationInfo *Info = list.GetNext(CurrentListPosition);
+        CAppInfo *Info = list.GetNext(CurrentListPosition);
 
         if (IncludeAll || Type == Info->iCategory)
         {
@@ -69,7 +69,7 @@ CApplicationDB::GetApps(CAtlList<CApplicationInfo *> &List, AppsCategories Type)
 }
 
 BOOL
-CApplicationDB::EnumerateFiles()
+CAppDB::EnumerateFiles()
 {
     ClearList(m_Available);
 
@@ -91,7 +91,7 @@ CApplicationDB::EnumerateFiles()
         PathRemoveExtensionW(szPkgName.GetBuffer(MAX_PATH));
         szPkgName.ReleaseBuffer();
 
-        CApplicationInfo *Info = FindByPackageName(szPkgName);
+        CAppInfo *Info = FindByPackageName(szPkgName);
         ATLASSERT(Info == NULL);
         if (!Info)
         {
@@ -118,7 +118,7 @@ CApplicationDB::EnumerateFiles()
 }
 
 VOID
-CApplicationDB::UpdateAvailable()
+CAppDB::UpdateAvailable()
 {
     if (!CreateDirectoryW(m_BasePath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
         return;
@@ -142,7 +142,7 @@ CApplicationDB::UpdateAvailable()
 }
 
 VOID
-CApplicationDB::UpdateInstalled()
+CAppDB::UpdateInstalled()
 {
     // Remove all old entries
     ClearList(m_Installed);
@@ -239,7 +239,7 @@ DeleteWithWildcard(const CPathW &Dir, const CStringW &Filter)
 }
 
 VOID
-CApplicationDB::RemoveCached()
+CAppDB::RemoveCached()
 {
     // Delete icons
     CPathW AppsPath = m_BasePath;
@@ -263,7 +263,7 @@ CApplicationDB::RemoveCached()
 }
 
 BOOL
-CApplicationDB::RemoveInstalledAppFromRegistry(const CApplicationInfo *Info)
+CAppDB::RemoveInstalledAppFromRegistry(const CAppInfo *Info)
 {
     // Validate that this is actually an installed app / update
     ATLASSERT(Info->iCategory == ENUM_INSTALLED_APPLICATIONS || Info->iCategory == ENUM_UPDATES);

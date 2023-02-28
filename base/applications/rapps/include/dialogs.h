@@ -1,6 +1,6 @@
 #pragma once
 
-#include "applicationinfo.h"
+#include "appinfo.h"
 
 #include <windef.h>
 #include <atlsimpcoll.h>
@@ -11,12 +11,12 @@ CreateSettingsDlg(HWND hwnd);
 
 // Main window
 VOID
-MainWindowLoop(class CApplicationDB *db, INT nShowCmd);
+MainWindowLoop(class CAppDB *db, INT nShowCmd);
 
 // Download dialogs
 VOID
 DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);
 BOOL
-DownloadApplication(CApplicationInfo *pAppInfo);
+DownloadApplication(CAppInfo *pAppInfo);
 BOOL
-DownloadListOfApplications(const CAtlList<CApplicationInfo *> &AppsList, BOOL bIsModal);
+DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, BOOL bIsModal);
