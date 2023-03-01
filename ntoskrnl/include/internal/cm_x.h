@@ -16,7 +16,7 @@
 // Returns the index into the hash table, or the entry itself
 //
 #define GET_HASH_INDEX(ConvKey)                                     \
-    GET_HASH_KEY(ConvKey) % CmpHashTableSize
+    (GET_HASH_KEY(ConvKey) % CmpHashTableSize)
 #define GET_HASH_ENTRY(Table, ConvKey)                              \
     (&Table[GET_HASH_INDEX(ConvKey)])
 #define ASSERT_VALID_HASH(h)                                        \
