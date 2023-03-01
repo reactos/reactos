@@ -109,30 +109,36 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
  */
 
 static BOOL
-NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int iTextLength, DWORD dwPosition)
+NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, INT iTextLength, DWORD dwPosition)
 {
     BOOL bMatches;
     size_t iTargetLength;
+    LPCTSTR pchPosition;
 
-    if ((!pFindReplace) || (!pszText))
-    {
+    if (!pFindReplace || !pszText)
         return FALSE;
-    }
 
     iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+    pchPosition = &pszText[dwPosition];
 
     /* Make proper comparison */
     if (pFindReplace->Flags & FR_MATCHCASE)
-        bMatches = !_tcsncmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+        bMatches = !_tcsncmp(pchPosition, pFindReplace->lpstrFindWhat, iTargetLength);
     else
-        bMatches = !_tcsnicmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+        bMatches = !_tcsnicmp(pchPosition, pFindReplace->lpstrFindWhat, iTargetLength);
 
-    if (bMatches && pFindReplace->Flags & FR_WHOLEWORD)
+    if (bMatches && (pFindReplace->Flags & FR_WHOLEWORD))
     {
-        if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
-            bMatches = FALSE;
-        if ((dwPosition < (DWORD) iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
-            bMatches = FALSE;
+        if (dwPosition > 0)
+        {
+            if (_istalnum(*(pchPosition - 1)) || *(pchPosition - 1) == _T('_'))
+                bMatches = FALSE;
+        }
+        if ((INT)dwPosition + iTargetLength < iTextLength)
+        {
+            if (_istalnum(pchPosition[iTargetLength]) || pchPosition[iTargetLength] == _T('_'))
+                bMatches = FALSE;
+        }
     }
 
     return bMatches;
