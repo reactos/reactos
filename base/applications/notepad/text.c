@@ -58,56 +58,56 @@ static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
+ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCTSTR pszOld, SIZE_T cchOld)
 {
     BOOL bPrevCR = FALSE;
     SIZE_T ichNew, ichOld;
 
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
-        WCHAR ch = pszOld[ichOld];
+        TCHAR ch = pszOld[ichOld];
 
-        if (ch == L'\n')
+        if (ch == _T('\n'))
         {
             if (!bPrevCR)
             {
-                pszNew[ichNew++] = L'\r';
-                pszNew[ichNew++] = L'\n';
+                pszNew[ichNew++] = _T('\r');
+                pszNew[ichNew++] = _T('\n');
             }
         }
-        else if (ch == '\r')
+        else if (ch == _T('\r'))
         {
-            pszNew[ichNew++] = L'\r';
-            pszNew[ichNew++] = L'\n';
+            pszNew[ichNew++] = _T('\r');
+            pszNew[ichNew++] = _T('\n');
         }
         else
         {
             pszNew[ichNew++] = ch;
         }
 
-        bPrevCR = (ch == L'\r');
+        bPrevCR = (ch == _T('\r'));
     }
 
-    pszNew[ichNew] = UNICODE_NULL;
+    pszNew[ichNew] = _T('\0');
     assert(ichNew == cchNew);
 }
 
 static BOOL
-ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
+ProcessNewLinesAndNulls(HLOCAL *phLocal, LPTSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
 {
     SIZE_T ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
-    LPWSTR pszText = *ppszText;
+    LPTSTR pszText = *ppszText;
     EOLN iEoln;
     BOOL bPrevCR = FALSE;
 
     /* Replace '\0' with SPACE. Count newlines. */
     for (ich = 0; ich < cchText; ++ich)
     {
-        WCHAR ch = pszText[ich];
-        if (ch == UNICODE_NULL)
-            pszText[ich] = L' ';
+        TCHAR ch = pszText[ich];
+        if (ch == _T('\0'))
+            pszText[ich] = _T(' ');
 
-        if (ch == L'\n')
+        if (ch == _T('\n'))
         {
             if (bPrevCR)
             {
@@ -119,12 +119,12 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOL
                 adwEolnCount[EOLN_LF]++;
             }
         }
-        else if (ch == '\r')
+        else if (ch == _T('\r'))
         {
             adwEolnCount[EOLN_CR]++;
         }
 
-        bPrevCR = (ch == L'\r');
+        bPrevCR = (ch == _T('\r'));
     }
 
     /* Choose the newline code */
@@ -140,8 +140,8 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOL
     {
         /* Allocate a buffer for EM_SETHANDLE */
         SIZE_T cchNew = cchText + cNonCRLFs;
-        HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
-        LPWSTR pszNew = LocalLock(hLocal);
+        HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(TCHAR));
+        LPTSTR pszNew = LocalLock(hLocal);
         if (!pszNew)
         {
             LocalFree(hLocal);
@@ -166,7 +166,7 @@ BOOL
 ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
     LPBYTE pBytes = NULL;
-    LPWSTR pszText, pszNewText = NULL;
+    LPTSTR pszText, pszNewText = NULL;
     DWORD dwSize, dwPos;
     SIZE_T i, cchText, cbContent;
     BOOL bSuccess = FALSE;
@@ -181,12 +181,12 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 
     if (dwSize == 0) // If file is empty
     {
-        hNewLocal = LocalReAlloc(*phLocal, sizeof(UNICODE_NULL), LMEM_MOVEABLE);
+        hNewLocal = LocalReAlloc(*phLocal, sizeof(_T('\0')), LMEM_MOVEABLE);
         pszNewText = LocalLock(hNewLocal);
         if (hNewLocal == NULL || pszNewText == NULL)
             goto done;
 
-        *pszNewText = UNICODE_NULL;
+        *pszNewText = _T('\0');
         LocalUnlock(hNewLocal);
 
         *phLocal = hNewLocal;
@@ -195,7 +195,7 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
         return TRUE;
     }
 
-    hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    hMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     if (hMapping == NULL)
         goto done;
 
@@ -405,7 +405,7 @@ done:
     return bSuccess;
 }
 
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln)
+BOOL WriteText(HANDLE hFile, LPCTSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln)
 {
     WCHAR wcBom;
     LPCWSTR pszLF = L"\n";
