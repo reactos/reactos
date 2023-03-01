@@ -1048,15 +1048,17 @@ static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
         return;
     }
 
-    ZeroMemory(&Globals.find, sizeof(Globals.find));
-    Globals.find.lStructSize = sizeof(Globals.find);
-    Globals.find.hwndOwner = Globals.hMainWnd;
-    Globals.find.hInstance = Globals.hInstance;
-    Globals.find.lpstrFindWhat = Globals.szFindText;
-    Globals.find.wFindWhatLen = ARRAY_SIZE(Globals.szFindText);
-    Globals.find.lpstrReplaceWith = Globals.szReplaceText;
-    Globals.find.wReplaceWithLen = ARRAY_SIZE(Globals.szReplaceText);
-    Globals.find.Flags = FR_DOWN;
+    if (!Globals.find.lpstrFindWhat)
+    {
+        ZeroMemory(&Globals.find, sizeof(Globals.find));
+        Globals.find.lStructSize = sizeof(Globals.find);
+        Globals.find.hwndOwner = Globals.hMainWnd;
+        Globals.find.lpstrFindWhat = Globals.szFindText;
+        Globals.find.wFindWhatLen = ARRAY_SIZE(Globals.szFindText);
+        Globals.find.lpstrReplaceWith = Globals.szReplaceText;
+        Globals.find.wReplaceWithLen = ARRAY_SIZE(Globals.szReplaceText);
+        Globals.find.Flags = FR_DOWN;
+    }
 
     /* We only need to create the modal FindReplace dialog which will */
     /* notify us of incoming events using hMainWnd Window Messages    */
