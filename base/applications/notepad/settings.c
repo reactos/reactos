@@ -26,7 +26,6 @@
 
 static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
 
-
 static LONG HeightFromPointSize(DWORD dwPointSize)
 {
     LONG lHeight;
@@ -111,12 +110,11 @@ static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_LoadSettingsFromRegistry
  *
  *  Load settings from registry HKCU\Software\Microsoft\Notepad.
  */
-void NOTEPAD_LoadSettingsFromRegistry(void)
+VOID NOTEPAD_LoadSettingsFromRegistry(VOID)
 {
     HKEY hKey;
     HFONT hFont;
@@ -126,7 +124,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     /* Set the default values */
     Globals.bShowStatusBar = TRUE;
     Globals.bWrapLongLines = FALSE;
-    SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
+    SetRect(&Globals.lMargins, 750, 1000, 750, 1000); /* in 100th millimeters */
     ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
     Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
     dwPointSize = 100;
@@ -231,12 +229,11 @@ static BOOL SaveString(HKEY hKey, LPCTSTR pszValueNameT, LPCTSTR pszValue)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_SaveSettingsToRegistry
  *
  *  Save settings to registry HKCU\Software\Microsoft\Notepad.
  */
-void NOTEPAD_SaveSettingsToRegistry(void)
+VOID NOTEPAD_SaveSettingsToRegistry(VOID)
 {
     HKEY hKey;
     DWORD dwDisposition;

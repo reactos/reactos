@@ -30,11 +30,13 @@
 
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
+static const TCHAR className[] = _T("Notepad");
+static const TCHAR winName[] = _T("Notepad");
 
-VOID NOTEPAD_EnableSearchMenu()
+VOID NOTEPAD_EnableSearchMenu(VOID)
 {
     BOOL bEmpty = (GetWindowTextLength(Globals.hEdit) == 0);
-    UINT uEnable = (bEmpty ? MF_GRAYED : MF_ENABLED);
+    UINT uEnable = MF_BYCOMMAND | (bEmpty ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH, uEnable);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT, uEnable);
     EnableMenuItem(Globals.hMenu, CMD_SEARCH_PREV, uEnable);
@@ -47,7 +49,9 @@ VOID NOTEPAD_EnableSearchMenu()
  */
 VOID SetFileName(LPCTSTR szFileName)
 {
-    StringCchCopy(Globals.szFileName, ARRAY_SIZE(Globals.szFileName), szFileName);
+    if (Globals.szFileName != szFileName)
+        StringCchCopy(Globals.szFileName, ARRAY_SIZE(Globals.szFileName), szFileName);
+
     Globals.szFileTitle[0] = 0;
     GetFileTitle(szFileName, Globals.szFileTitle, ARRAY_SIZE(Globals.szFileTitle));
 
@@ -238,7 +242,7 @@ static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
     /* Move caret to top */
     SendMessage(Globals.hEdit, EM_SETSEL, 0, 0);
 
-    /* Repeat replacing. Show alert at first */
+    /* Repeat replacing, only showing alert at first */
     while (NOTEPAD_FindNext(pFindReplace, TRUE, bShowAlert))
     {
         bShowAlert = FALSE;
@@ -341,27 +345,29 @@ LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /***********************************************************************
  *           NOTEPAD_WndProc
  */
-static LRESULT CALLBACK
+static LRESULT
+CALLBACK
 NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
     case WM_CREATE:
+    {
+        Globals.hMainWnd = hWnd;
         Globals.hMenu = GetMenu(hWnd);
 
-        /* Accept Drag & Drop */
-        DragAcceptFiles(hWnd, TRUE);
+        DragAcceptFiles(hWnd, TRUE); /* Accept Drag & Drop */
 
         /* Create controls */
-        DoReCreateEditWindow(hWnd);
-        DoShowHideStatusBar(hWnd);
+        DoReCreateEditWindow();
+        DoShowHideStatusBar();
 
         // For now, the "Help" dialog is disabled due to the lack of HTML Help support
         EnableMenuItem(Globals.hMenu, CMD_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
 
-        /* Initialize file information */
-        DIALOG_FileNew();
+        DIALOG_FileNew(); /* Initialize file info */
         break;
+    }
 
     case WM_COMMAND:
         switch (HIWORD(wParam))
@@ -390,6 +396,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_DESTROY:
+    {
         if (Globals.hFont)
             DeleteObject(Globals.hFont);
         if (Globals.hDevMode)
@@ -400,6 +407,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         NOTEPAD_SaveSettingsToRegistry();
         PostQuitMessage(0);
         break;
+    }
 
     case WM_SIZE:
     {
@@ -409,7 +417,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (Globals.bShowStatusBar)
         {
             RECT rcStatus;
-            SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0);
+            SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0); /* Auto-Reposition */
             GetWindowRect(Globals.hStatusBar, &rcStatus);
             rc.bottom -= rcStatus.bottom - rcStatus.top;
         }
@@ -577,8 +585,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     MONITORINFO info;
     INT x, y;
     RECT rcIntersect;
-    static const TCHAR className[] = _T("Notepad");
-    static const TCHAR winName[] = _T("Notepad");
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
         SetProcessDefaultLayout(LAYOUT_RTL);
@@ -587,6 +593,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     aFINDMSGSTRING = (ATOM)RegisterWindowMessage(FINDMSGSTRING);
 
+    InitCommonControls();
     NOTEPAD_InitData(hInstance);
     NOTEPAD_LoadSettingsFromRegistry();
 
@@ -606,7 +613,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
                                         0);
 
     if (!RegisterClassEx(&wndclass))
-        return FALSE;
+    {
+        ShowLastError();
+        return 1;
+    }
 
     /* Setup windows */
 
@@ -619,17 +629,18 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     if (!IntersectRect(&rcIntersect, &Globals.main_rect, &info.rcWork))
         x = y = CW_USEDEFAULT;
 
-    Globals.hMainWnd = CreateWindow(className,
-                                    winName,
-                                    WS_OVERLAPPEDWINDOW,
-                                    x,
-                                    y,
-                                    Globals.main_rect.right - Globals.main_rect.left,
-                                    Globals.main_rect.bottom - Globals.main_rect.top,
-                                    NULL,
-                                    NULL,
-                                    hInstance,
-                                    NULL);
+    /* Globals.hMainWnd will be set in WM_CREATE */
+    CreateWindow(className,
+                 winName,
+                 WS_OVERLAPPEDWINDOW,
+                 x,
+                 y,
+                 Globals.main_rect.right - Globals.main_rect.left,
+                 Globals.main_rect.bottom - Globals.main_rect.top,
+                 NULL,
+                 NULL,
+                 hInstance,
+                 NULL);
     if (!Globals.hMainWnd)
     {
         ShowLastError();

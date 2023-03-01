@@ -58,7 +58,7 @@ static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCTSTR pszOld, SIZE_T cchOld)
+ReplaceNewLines(LPTSTR pszNew, SIZE_T cchNew, LPCTSTR pszOld, SIZE_T cchOld)
 {
     BOOL bPrevCR = FALSE;
     SIZE_T ichNew, ichOld;
@@ -166,7 +166,7 @@ BOOL
 ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 {
     LPBYTE pBytes = NULL;
-    LPTSTR pszText, pszNewText = NULL;
+    LPWSTR pszText, pszNewText = NULL;
     DWORD dwSize, dwPos;
     SIZE_T i, cchText, cbContent;
     BOOL bSuccess = FALSE;
@@ -181,12 +181,12 @@ ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln)
 
     if (dwSize == 0) // If file is empty
     {
-        hNewLocal = LocalReAlloc(*phLocal, sizeof(_T('\0')), LMEM_MOVEABLE);
+        hNewLocal = LocalReAlloc(*phLocal, sizeof(UNICODE_NULL), LMEM_MOVEABLE);
         pszNewText = LocalLock(hNewLocal);
         if (hNewLocal == NULL || pszNewText == NULL)
             goto done;
 
-        *pszNewText = _T('\0');
+        *pszNewText = UNICODE_NULL;
         LocalUnlock(hNewLocal);
 
         *phLocal = hNewLocal;
@@ -323,9 +323,9 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENC
     int iBufferSize, iRequiredBytes;
     BYTE b;
 
-    while(dwPos < dwTextLen)
+    while (dwPos < dwTextLen)
     {
-        switch(encFile)
+        switch (encFile)
         {
             case ENCODING_UTF16LE:
                 pBytes = (LPBYTE) &pszText[dwPos];
@@ -405,7 +405,7 @@ done:
     return bSuccess;
 }
 
-BOOL WriteText(HANDLE hFile, LPCTSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln)
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln)
 {
     WCHAR wcBom;
     LPCWSTR pszLF = L"\n";
@@ -427,9 +427,9 @@ BOOL WriteText(HANDLE hFile, LPCTSTR pszText, DWORD dwTextLen, ENCODING encFile,
     {
         /* Find the next eoln */
         dwNext = dwPos;
-        while(dwNext < dwTextLen)
+        while (dwNext < dwTextLen)
         {
-            if (pszText[dwNext] == '\r' && pszText[dwNext + 1] == '\n')
+            if (pszText[dwNext] == L'\r' && pszText[dwNext + 1] == L'\n')
                 break;
             dwNext++;
         }
@@ -469,8 +469,7 @@ BOOL WriteText(HANDLE hFile, LPCTSTR pszText, DWORD dwTextLen, ENCODING encFile,
 
         /* Skip \r\n */
         dwPos = dwNext + 2;
-    }
-    while (dwPos < dwTextLen);
+    } while (dwPos < dwTextLen);
 
     return TRUE;
 }

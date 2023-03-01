@@ -57,7 +57,7 @@ VOID DIALOG_HelpAboutNotepad(VOID);
 
 VOID DIALOG_TimeDate(VOID);
 
-int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags);
+INT DIALOG_StringMsgBox(HWND hParent, INT formatId, LPCTSTR szString, DWORD dwFlags);
 
 INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -67,5 +67,6 @@ BOOL FileExists(LPCTSTR szFilename);
 BOOL HasFileExtension(LPCTSTR szFilename);
 BOOL DoCloseFile(VOID);
 VOID DoOpenFile(LPCTSTR szFileName);
-VOID DoShowHideStatusBar(HWND hMainWnd);
-VOID DoReCreateEditWindow(HWND hMainWnd);
+VOID DoShowHideStatusBar(VOID);
+VOID DoReCreateEditWindow(VOID);
+VOID UpdateWindowCaption(BOOL clearModifyAlert);
