@@ -14,6 +14,7 @@
 #include <wingdi.h>
 #include <winuser.h>
 #include <tchar.h>
+#include <stdlib.h>
 #include <scrnsave.h>
 
 // Screen Saver window class
@@ -33,6 +34,7 @@ UINT        MyHelpMessage;
 
 // Local house keeping
 static POINT pt_orig;
+static BOOL pt_init = FALSE;
 
 static int ISSPACE(TCHAR c)
 {
@@ -65,11 +67,6 @@ static LRESULT WINAPI SysScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 {
     switch(uMsg)
     {
-        case WM_CREATE:
-            // Mouse is not supposed to move from this position
-            GetCursorPos(&pt_orig);
-            break;
-
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
@@ -114,12 +111,17 @@ LRESULT WINAPI DefScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             POINT pt;
             GetCursorPos(&pt);
-            // TODO: Implement mouse move threshold. See:
-            // http://svn.reactos.org/svn/reactos/trunk/rosapps/applications/screensavers/starfield/screensaver.c?r1=67455&r2=67454&pathrev=67455
-            if (pt.x == pt_orig.x && pt.y == pt_orig.y)
-                break;
 
-            // Fall through
+            if (!pt_init)
+            {
+                pt_orig = pt;
+                pt_init = TRUE;
+                break;
+            }
+
+            if (abs(pt.x-pt_orig.x) > 10 || abs(pt.y-pt_orig.y) > 10)
+                PostMessage(hWnd, WM_CLOSE, 0, 0);
+            break;
         }
 
         case WM_LBUTTONDOWN:
