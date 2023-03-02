@@ -69,7 +69,7 @@ SepDumpAceFlags(
 #define ACE_FLAG_PRINT(x)  \
     if (AceFlags & x)      \
     {                      \
-        DbgPrint(#x "\n"); \
+        DPRINT(#x "\n"); \
     }
 
     ACE_FLAG_PRINT(OBJECT_INHERIT_ACE);
@@ -107,24 +107,23 @@ SepDumpAces(
              * Just fail gracefully and stop further
              * debugging of ACEs.
              */
-            DbgPrint("SepDumpAces(): Failed to find the next ACE, stop dumping info...\n");
+            DPRINT("SepDumpAces(): Failed to find the next ACE, stop dumping info...\n");
             return;
         }
 
-        DbgPrint("================== %lu# ACE DUMP INFO ==================\n", AceIndex);
-        DbgPrint("Ace -> 0x%p\n", Ace);
-        DbgPrint("Ace->Header -> 0x%p\n", Ace->Header);
-        DbgPrint("Ace->Header.AceType -> %s\n", SepGetAceTypeString(Ace->Header.AceType));
-        DbgPrint("Ace->AccessMask -> 0x%08lx\n", Ace->AccessMask);
+        DPRINT("================== %lu# ACE DUMP INFO ==================\n", AceIndex);
+        DPRINT("Ace -> 0x%p\n", Ace);
+        DPRINT("Ace->Header.AceType -> %s\n", SepGetAceTypeString(Ace->Header.AceType));
+        DPRINT("Ace->AccessMask -> 0x%08lx\n", Ace->AccessMask);
 
         Sid = SepGetSidFromAce(Ace->Header.AceType, Ace);
         ASSERT(Sid);
         RtlConvertSidToUnicodeString(&SidString, Sid, TRUE);
-        DbgPrint("Ace SID -> %wZ\n", &SidString);
+        DPRINT("Ace SID -> %wZ\n", &SidString);
         RtlFreeUnicodeString(&SidString);
 
-        DbgPrint("Ace->Header.AceSize -> %u\n", Ace->Header.AceSize);
-        DbgPrint("Ace->Header.AceFlags:\n");
+        DPRINT("Ace->Header.AceSize -> %u\n", Ace->Header.AceSize);
+        DPRINT("Ace->Header.AceFlags:\n");
         SepDumpAceFlags(Ace->Header.AceFlags);
     }
 }
@@ -140,10 +139,10 @@ SepDumpAclInfo(
     _In_ BOOLEAN IsSacl)
 {
     /* Dump relevant info */
-    DbgPrint("================== %s DUMP INFO ==================\n", IsSacl ? "SACL" : "DACL");
-    DbgPrint("Acl->AclRevision -> %u\n", Acl->AclRevision);
-    DbgPrint("Acl->AclSize -> %u\n", Acl->AclSize);
-    DbgPrint("Acl->AceCount -> %u\n", Acl->AceCount);
+    DPRINT("================== %s DUMP INFO ==================\n", IsSacl ? "SACL" : "DACL");
+    DPRINT("Acl->AclRevision -> %u\n", Acl->AclRevision);
+    DPRINT("Acl->AclSize -> %u\n", Acl->AclSize);
+    DPRINT("Acl->AceCount -> %u\n", Acl->AceCount);
 
     /* Dump all the ACEs present on this ACL */
     SepDumpAces(Acl);
@@ -161,7 +160,7 @@ SepDumpSdControlInfo(
 #define SD_CONTROL_PRINT(x) \
     if (SdControl & x)      \
     {                       \
-        DbgPrint(#x "\n");  \
+        DPRINT(#x "\n");  \
     }
 
     SD_CONTROL_PRINT(SE_OWNER_DEFAULTED);
@@ -200,7 +199,7 @@ SepDumpSidsOfToken(
     for (SidIndex = 0; SidIndex < SidCount; SidIndex++)
     {
         RtlConvertSidToUnicodeString(&SidString, Sids[SidIndex].Sid, TRUE);
-        DbgPrint("%lu# %wZ\n", SidIndex, &SidString);
+        DPRINT("%lu# %wZ\n", SidIndex, &SidString);
         RtlFreeUnicodeString(&SidString);
     }
 }
@@ -231,17 +230,17 @@ SepDumpSdDebugInfo(
     Sacl = SepGetSaclFromDescriptor(SecurityDescriptor);
     Dacl = SepGetDaclFromDescriptor(SecurityDescriptor);
 
-    DbgPrint("================== SECURITY DESCRIPTOR DUMP INFO ==================\n");
-    DbgPrint("SecurityDescriptor -> 0x%p\n", SecurityDescriptor);
-    DbgPrint("SecurityDescriptor->Revision -> %u\n", SecurityDescriptor->Revision);
-    DbgPrint("SecurityDescriptor->Control:\n");
+    DPRINT("================== SECURITY DESCRIPTOR DUMP INFO ==================\n");
+    DPRINT("SecurityDescriptor -> 0x%p\n", SecurityDescriptor);
+    DPRINT("SecurityDescriptor->Revision -> %u\n", SecurityDescriptor->Revision);
+    DPRINT("SecurityDescriptor->Control:\n");
     SepDumpSdControlInfo(SecurityDescriptor->Control);
 
     /* Dump the Owner SID if the SD belongs to an owner */
     if (OwnerSid)
     {
         RtlConvertSidToUnicodeString(&SidString, OwnerSid, TRUE);
-        DbgPrint("SD Owner SID -> %wZ\n", &SidString);
+        DPRINT("SD Owner SID -> %wZ\n", &SidString);
         RtlFreeUnicodeString(&SidString);
     }
 
@@ -249,7 +248,7 @@ SepDumpSdDebugInfo(
     if (GroupSid)
     {
         RtlConvertSidToUnicodeString(&SidString, GroupSid, TRUE);
-        DbgPrint("SD Group SID -> %wZ\n", &SidString);
+        DPRINT("SD Group SID -> %wZ\n", &SidString);
         RtlFreeUnicodeString(&SidString);
     }
 
@@ -283,26 +282,26 @@ SepDumpTokenDebugInfo(
     }
 
     /* Dump relevant token info */
-    DbgPrint("================== ACCESS TOKEN DUMP INFO ==================\n");
-    DbgPrint("Token -> 0x%p\n", Token);
-    DbgPrint("Token->ImageFileName -> %s\n", Token->ImageFileName);
-    DbgPrint("Token->TokenSource.SourceName -> \"%-.*s\"\n",
+    DPRINT("================== ACCESS TOKEN DUMP INFO ==================\n");
+    DPRINT("Token -> 0x%p\n", Token);
+    DPRINT("Token->ImageFileName -> %s\n", Token->ImageFileName);
+    DPRINT("Token->TokenSource.SourceName -> \"%-.*s\"\n",
              RTL_NUMBER_OF(Token->TokenSource.SourceName),
              Token->TokenSource.SourceName);
-    DbgPrint("Token->TokenSource.SourceIdentifier -> %lu.%lu\n",
+    DPRINT("Token->TokenSource.SourceIdentifier -> %lu.%lu\n",
              Token->TokenSource.SourceIdentifier.HighPart,
              Token->TokenSource.SourceIdentifier.LowPart);
 
     RtlConvertSidToUnicodeString(&SidString, Token->PrimaryGroup, TRUE);
-    DbgPrint("Token primary group SID -> %wZ\n", &SidString);
+    DPRINT("Token primary group SID -> %wZ\n", &SidString);
     RtlFreeUnicodeString(&SidString);
 
-    DbgPrint("Token user and groups SIDs:\n");
+    DPRINT("Token user and groups SIDs:\n");
     SepDumpSidsOfToken(Token->UserAndGroups, Token->UserAndGroupCount);
 
     if (SeTokenIsRestricted(Token))
     {
-        DbgPrint("Token restricted SIDs:\n");
+        DPRINT("Token restricted SIDs:\n");
         SepDumpSidsOfToken(Token->RestrictedSids, Token->RestrictedSidCount);
     }
 }
@@ -321,10 +320,10 @@ SepDumpAccessRightsStats(
         return;
     }
 
-    DbgPrint("================== ACCESS CHECK RIGHTS STATISTICS ==================\n");
-    DbgPrint("Remaining access rights -> 0x%08lx\n", AccessRights->RemainingAccessRights);
-    DbgPrint("Granted access rights -> 0x%08lx\n", AccessRights->GrantedAccessRights);
-    DbgPrint("Denied access rights -> 0x%08lx\n", AccessRights->DeniedAccessRights);
+    DPRINT("================== ACCESS CHECK RIGHTS STATISTICS ==================\n");
+    DPRINT("Remaining access rights -> 0x%08lx\n", AccessRights->RemainingAccessRights);
+    DPRINT("Granted access rights -> 0x%08lx\n", AccessRights->GrantedAccessRights);
+    DPRINT("Denied access rights -> 0x%08lx\n", AccessRights->DeniedAccessRights);
 }
 
 /* EOF */
