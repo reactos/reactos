@@ -726,6 +726,8 @@ VOID DIALOG_FilePrint(VOID)
     if (!GetSelectionTextLength(Globals.hEdit))
         printer.Flags |= PD_NOSELECTION;
 
+    printer.nFromPage = 1;
+    printer.nToPage = MAXWORD;
     printer.nMinPage = 1;
     printer.nMaxPage = MAXWORD;
 
