@@ -283,24 +283,19 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
 static RECT
 GetPrintingRect(HDC hdc, RECT margins)
 {
-    int iLogPixelsX, iLogPixelsY;
-    int iHorzRes, iVertRes;
-    int iPhysPageX, iPhysPageY, iPhysPageW, iPhysPageH;
+    INT iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
+    INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
+    INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
+    INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
     RECT rcPrintRect;
 
-    iPhysPageX = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    iPhysPageY = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-    iPhysPageW = GetDeviceCaps(hdc, PHYSICALWIDTH);
-    iPhysPageH = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-    iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
-    iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
-    iHorzRes = GetDeviceCaps(hdc, HORZRES);
-    iVertRes = GetDeviceCaps(hdc, VERTRES);
+#define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
+#define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
 
-    rcPrintRect.left = (margins.left * iLogPixelsX / 2540) - iPhysPageX;
-    rcPrintRect.top = (margins.top * iLogPixelsY / 2540) - iPhysPageY;
-    rcPrintRect.right = iHorzRes - (((margins.left * iLogPixelsX / 2540) - iPhysPageX) + ((margins.right * iLogPixelsX / 2540) - (iPhysPageW - iPhysPageX - iHorzRes)));
-    rcPrintRect.bottom = iVertRes - (((margins.top * iLogPixelsY / 2540) - iPhysPageY) + ((margins.bottom * iLogPixelsY / 2540) - (iPhysPageH - iPhysPageY - iVertRes)));
+    rcPrintRect.left = CONVERT_X(margins.left);
+    rcPrintRect.top = CONVERT_Y(margins.top);
+    rcPrintRect.right = iHorzRes - CONVERT_X(margins.right);
+    rcPrintRect.bottom = iVertRes - CONVERT_Y(margins.bottom);
 
     return rcPrintRect;
 }
@@ -614,34 +609,109 @@ BOOL DIALOG_FileSaveAs(VOID)
     }
 }
 
+#define XPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSX), 72)
+#define YPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSY), 72)
+
+static VOID
+DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const SYSTEMTIME *pstNow)
+{
+    TCHAR szText[512], szField[64];
+    const TCHAR *pchFormat;
+    UINT uAlign = DT_CENTER, uFlags = DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
+
+    Rectangle(hDC, pRect->left, pRect->top, pRect->right, pRect->bottom); /* Draw a rectangle */
+    InflateRect(pRect, -XPOINTS2PIXELS(hDC, 3), 0); /* Shrink 3pt */
+
+    szText[0] = 0;
+
+    for (pchFormat = pszFormat; *pchFormat; ++pchFormat)
+    {
+        if (*pchFormat != _T('&'))
+        {
+            szField[0] = *pchFormat;
+            szField[1] = 0;
+            StringCchCat(szText, ARRAY_SIZE(szText), szField);
+            continue;
+        }
+
+        ++pchFormat;
+        if (*pchFormat == 0)
+            break;
+
+        switch (_totupper(*pchFormat)) /* Make it uppercase */
+        {
+            case _T('&'): /* Found double ampersand */
+                StringCchCat(szText, ARRAY_SIZE(szText), TEXT("&"));
+                break;
+
+            case _T('L'): /* Left */
+                DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
+                szText[0] = 0;
+                uAlign = DT_LEFT;
+                break;
+
+            case _T('C'): /* Center */
+                DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
+                szText[0] = 0;
+                uAlign = DT_CENTER;
+                break;
+
+            case _T('R'): /* Right */
+                DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
+                szText[0] = 0;
+                uAlign = DT_RIGHT;
+                break;
+
+            case _T('D'): /* Date */
+                GetDateFormat(LOCALE_USER_DEFAULT, 0, pstNow, NULL,
+                              szField, (INT)ARRAY_SIZE(szField));
+                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                break;
+
+            case _T('T'): /* Time */
+                GetTimeFormat(LOCALE_USER_DEFAULT, 0, pstNow, NULL,
+                              szField, (INT)ARRAY_SIZE(szField));
+                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                break;
+
+            case _T('F'): /* Filename */
+                StringCchCat(szText, ARRAY_SIZE(szText), Globals.szFileTitle);
+                break;
+
+            case _T('P'): /* Page number */
+                StringCchPrintf(szField, ARRAY_SIZE(szField), TEXT("%u"), nPageNo);
+                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                break;
+
+            default: /* Otherwise */
+                szField[0] = _T('&');
+                szField[1] = *pchFormat;
+                szField[2] = 0;
+                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                break;
+        }
+    }
+
+    DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
+}
+
 VOID DIALOG_FilePrint(VOID)
 {
     DOCINFO di;
-    TEXTMETRIC tm;
+    TEXTMETRIC tmHeader, tmText;
     PRINTDLG printer;
     SIZE szMetric;
-    int border;
-    int xLeft, yTop, pagecount, dopage, copycount;
-    unsigned int i;
-    LOGFONT hdrFont;
-    HFONT font, old_font=0;
-    DWORD size;
-    LPTSTR pTemp;
-    static const TCHAR times_new_roman[] = _T("Times New Roman");
+    INT xLeft, yTop, CopyCount, PageCount, cyHeader, cyFooter, cySpacing;
+    BOOL bSkipPage;
+    DWORD ich, cchText, iColumn;
+    LOGFONT HeaderLogFont, BodyLogFont;
+    HFONT hHeaderFont, hBodyFont, hOldFont;
+    LPTSTR pTemp = NULL;
     RECT rcPrintRect;
+    SYSTEMTIME stNow;
+    HDC hDC;
 
-    /* Get a small font and print some header info on each page */
-    ZeroMemory(&hdrFont, sizeof(hdrFont));
-    hdrFont.lfHeight = 100;
-    hdrFont.lfWeight = FW_BOLD;
-    hdrFont.lfCharSet = ANSI_CHARSET;
-    hdrFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
-    hdrFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    hdrFont.lfQuality = PROOF_QUALITY;
-    hdrFont.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
-    _tcscpy(hdrFont.lfFaceName, times_new_roman);
-
-    font = CreateFontIndirect(&hdrFont);
+    GetLocalTime(&stNow);
 
     /* Get Current Settings */
     ZeroMemory(&printer, sizeof(printer));
@@ -654,179 +724,202 @@ VOID DIALOG_FilePrint(VOID)
 
     /* Disable the selection radio button if there is no text selected */
     if (!GetSelectionTextLength(Globals.hEdit))
-    {
-        printer.Flags = printer.Flags | PD_NOSELECTION;
-    }
+        printer.Flags |= PD_NOSELECTION;
 
-    printer.nFromPage = 0;
     printer.nMinPage = 1;
-    /* we really need to calculate number of pages to set nMaxPage and nToPage */
-    printer.nToPage = (WORD)-1;
-    printer.nMaxPage = (WORD)-1;
-
-    /* Let commdlg manage copy settings */
-    printer.nCopies = (WORD)PD_USEDEVMODECOPIES;
+    printer.nMaxPage = MAXWORD;
 
     printer.hDevMode = Globals.hDevMode;
     printer.hDevNames = Globals.hDevNames;
 
     if (!PrintDlg(&printer))
-    {
-        DeleteObject(font);
         return;
-    }
 
+    assert(printer.hDC != NULL);
+    hDC = printer.hDC;
     Globals.hDevMode = printer.hDevMode;
     Globals.hDevNames = printer.hDevNames;
 
-    assert(printer.hDC != 0);
+    /* Create the body text font for printing */
+    GetObject(Globals.hFont, sizeof(BodyLogFont), &BodyLogFont);
+    BodyLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 12); /* 12pt */
+    hBodyFont = CreateFontIndirect(&BodyLogFont);
 
-    /* initialize DOCINFO */
+    /* Create the header/footer font */
+    ZeroMemory(&HeaderLogFont, sizeof(HeaderLogFont));
+    HeaderLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 10); /* 10pt */
+    HeaderLogFont.lfWeight = FW_BOLD;
+    HeaderLogFont.lfCharSet = DEFAULT_CHARSET;
+    _tcscpy(HeaderLogFont.lfFaceName, BodyLogFont.lfFaceName);
+    hHeaderFont = CreateFontIndirect(&HeaderLogFont);
+
+    /* Start a document */
+    ZeroMemory(&di, sizeof(di));
     di.cbSize = sizeof(DOCINFO);
     di.lpszDocName = Globals.szFileTitle;
-    di.lpszOutput = NULL;
-    di.lpszDatatype = NULL;
-    di.fwType = 0;
-
-    if (StartDoc(printer.hDC, &di) <= 0)
+    if (StartDoc(hDC, &di) <= 0)
     {
-        DeleteObject(font);
-        return;
+        AlertPrintError();
+        goto Quit;
     }
-
 
     /* Get the file text */
     if (printer.Flags & PD_SELECTION)
-    {
-        size = GetSelectionTextLength(Globals.hEdit) + 1;
-    }
+        cchText = GetSelectionTextLength(Globals.hEdit);
     else
-    {
-        size = GetWindowTextLength(Globals.hEdit) + 1;
-    }
+        cchText = GetWindowTextLength(Globals.hEdit);
 
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(TCHAR));
+    pTemp = HeapAlloc(GetProcessHeap(), 0, (cchText + 1) * sizeof(TCHAR));
     if (!pTemp)
     {
-        EndDoc(printer.hDC);
-        DeleteObject(font);
         ShowLastError();
-        return;
+        AbortDoc(hDC); /* Cancel printing */
+        goto Quit;
     }
 
     if (printer.Flags & PD_SELECTION)
-    {
-        size = GetSelectionText(Globals.hEdit, pTemp, size);
-    }
+        GetSelectionText(Globals.hEdit, pTemp, cchText + 1);
     else
-    {
-        size = GetWindowText(Globals.hEdit, pTemp, size);
-    }
+        GetWindowText(Globals.hEdit, pTemp, cchText + 1);
 
     /* Get the current printing area */
-    rcPrintRect = GetPrintingRect(printer.hDC, Globals.lMargins);
+    rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
 
     /* Ensure that each logical unit maps to one pixel */
-    SetMapMode(printer.hDC, MM_TEXT);
+    SetMapMode(hDC, MM_TEXT);
 
-    /* Needed to get the correct height of a text line */
-    GetTextMetrics(printer.hDC, &tm);
+    /* TODO: Show the progress */
 
-    border = 15;
-    for (copycount=1; copycount <= printer.nCopies; copycount++) {
-        i = 0;
-        pagecount = 1;
-        do {
-            /* Don't start a page if none of the conditions below are true */
-            dopage = 0;
-
-            /* The user wants to print the current selection */
+    for (CopyCount = 1; CopyCount <= printer.nCopies; ++CopyCount)
+    {
+        PageCount = 1;
+        for (ich = 0; ich < cchText; ++PageCount)
+        {
             if (printer.Flags & PD_SELECTION)
+                bSkipPage = FALSE; /* Selection is specified. The selected text is to be printed */
+            else if (!(printer.Flags & PD_PAGENUMS))
+                bSkipPage = FALSE; /* The user wants to print all the pages */
+            else if (printer.nFromPage <= PageCount && PageCount <= printer.nToPage)
+                bSkipPage = FALSE; /* Page numbers are specified and the current page is in range */
+            else
+                bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
+
+            hOldFont = SelectObject(hDC, hHeaderFont);
+            GetTextMetrics(hDC, &tmHeader);
+
+            /* Calculate the header and footer heights */
+            cyHeader = cyFooter = 2 * tmHeader.tmHeight;
+            cySpacing = YPOINTS2PIXELS(hDC, 4); /* 4pt */
+
+            if (!Globals.szHeader[0])
+                cyHeader = cySpacing = 0;
+            if (!Globals.szFooter[0])
+                cyFooter = 0;
+
+            if (!bSkipPage)
             {
-                dopage = 1;
-            }
-
-            /* The user wants to print the entire document */
-            if (!(printer.Flags & PD_PAGENUMS) && !(printer.Flags & PD_SELECTION))
-            {
-                dopage = 1;
-            }
-
-            /* The user wants to print a specified range of pages */
-            if ((pagecount >= printer.nFromPage && pagecount <= printer.nToPage))
-            {
-                dopage = 1;
-            }
-
-            old_font = SelectObject(printer.hDC, font);
-
-            if (dopage) {
-                if (StartPage(printer.hDC) <= 0) {
-                    SelectObject(printer.hDC, old_font);
-                    EndDoc(printer.hDC);
-                    DeleteDC(printer.hDC);
-                    HeapFree(GetProcessHeap(), 0, pTemp);
-                    DeleteObject(font);
+                if (StartPage(hDC) <= 0) /* Start a new page */
+                {
+                    SelectObject(hDC, hOldFont);
+                    AbortDoc(hDC); /* Cancel printing */
                     AlertPrintError();
-                    return;
+                    goto Quit;
                 }
 
-                SetViewportOrgEx(printer.hDC, rcPrintRect.left, rcPrintRect.top, NULL);
-
-                /* Write a rectangle and header at the top of each page */
-                Rectangle(printer.hDC, border, border, rcPrintRect.right - border, border + tm.tmHeight * 2);
-                /* I don't know what's up with this TextOut command. This comes out
-                kind of mangled.
-                */
-                TextOut(printer.hDC,
-                        border * 2,
-                        border + tm.tmHeight / 2,
-                        Globals.szFileTitle,
-                        lstrlen(Globals.szFileTitle));
+                if (cyHeader > 0) /* Draw the page header */
+                {
+                    RECT rc = rcPrintRect;
+                    rc.bottom = rc.top + cyHeader;
+                    DrawHeaderOrFooter(hDC, &rc, Globals.szHeader, PageCount, &stNow);
+                }
             }
 
             /* The starting point for the main text */
-            xLeft = 0;
-            yTop = border + tm.tmHeight * 4;
+            xLeft = rcPrintRect.left;
+            yTop = rcPrintRect.top + cyHeader + cySpacing;
 
-            SelectObject(printer.hDC, old_font);
+            SelectObject(hDC, hOldFont);
 
-            /* Since outputting strings is giving me problems, output the main
-             * text one character at a time. */
-            do {
-                if (pTemp[i] == '\n') {
-                    xLeft = 0;
-                    yTop += tm.tmHeight;
+            /* Draw the body text */
+            hOldFont = SelectObject(hDC, hBodyFont);
+            GetTextMetrics(hDC, &tmText);
+            iColumn = 0;
+            while (ich < cchText)
+            {
+                if (pTemp[ich] == _T('\r')) /* CR */
+                {
+                    ++ich;
+                    continue;
                 }
-                else if (pTemp[i] != '\r') {
-                    if (dopage)
-                        TextOut(printer.hDC, xLeft, yTop, &pTemp[i], 1);
 
-                    /* We need to get the width for each individual char, since a proportional font may be used */
-                    GetTextExtentPoint32(printer.hDC, &pTemp[i], 1, &szMetric);
-                    xLeft += szMetric.cx;
-
-                    /* Insert a line break if the current line does not fit into the printing area */
-                    if (xLeft > rcPrintRect.right)
+                if (pTemp[ich] == _T('\n')) /* NewLine (LF) */
+                {
+                    yTop += tmText.tmHeight;
+                    xLeft = rcPrintRect.left;
+                    iColumn = 0;
+                }
+                else
+                {
+                    if (pTemp[ich] == _T('\t')) /* Tab */
                     {
-                        xLeft = 0;
-                        yTop = yTop + tm.tmHeight;
+                        INT nTabWidth = 8 - (iColumn % 8);
+                        TCHAR chSpace = TEXT(' ');
+                        GetTextExtentPoint32(hDC, &chSpace, 1, &szMetric);
+
+                        xLeft += szMetric.cx * nTabWidth;
+                        iColumn += nTabWidth;
+                    }
+                    else
+                    {
+                        if (!bSkipPage)
+                            TextOut(hDC, xLeft, yTop, &pTemp[ich], 1);
+
+                        /* We need to get the width for each individual char,
+                           since a proportional font may be used */
+                        GetTextExtentPoint32(hDC, &pTemp[ich], 1, &szMetric);
+                        xLeft += szMetric.cx;
+                        ++iColumn;
+                    }
+
+                    /* Insert a line break if the next position reached the right edge */
+                    if (xLeft + szMetric.cx >= rcPrintRect.right)
+                    {
+                        yTop += tmText.tmHeight;
+                        xLeft = rcPrintRect.left;
+                        iColumn = 0;
                     }
                 }
-            } while (i++ < size && yTop < rcPrintRect.bottom);
 
-            if (dopage)
-                EndPage(printer.hDC);
-            pagecount++;
-        } while (i < size);
+                ++ich;
+                if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
+                    break; /* The next line reached the body bottom */
+            }
+            SelectObject(hDC, hOldFont);
+
+            if (!bSkipPage)
+            {
+                if (cyFooter > 0) /* Draw the page footer */
+                {
+                    RECT rc = rcPrintRect;
+                    rc.top = rc.bottom - cyFooter;
+                    hOldFont = SelectObject(hDC, hHeaderFont);
+                    DrawHeaderOrFooter(hDC, &rc, Globals.szFooter, PageCount, &stNow);
+                    SelectObject(hDC, hOldFont);
+                }
+
+                EndPage(hDC); /* Finish the page */
+            }
+        }
     }
 
-    if (old_font != 0)
-        SelectObject(printer.hDC, old_font);
-    EndDoc(printer.hDC);
-    DeleteDC(printer.hDC);
-    HeapFree(GetProcessHeap(), 0, pTemp);
-    DeleteObject(font);
+    EndDoc(hDC); /* Finish the document */
+
+Quit: /* Clean up */
+    DeleteDC(hDC);
+    DeleteObject(hHeaderFont);
+    DeleteObject(hBodyFont);
+    if (pTemp)
+        HeapFree(GetProcessHeap(), 0, pTemp);
 }
 
 VOID DIALOG_FileExit(VOID)
