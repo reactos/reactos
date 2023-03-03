@@ -839,16 +839,7 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
 
             /* Calculate a tab width */
 #define TAB_STOP 8
-            if (0)
-            {
-                nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
-            }
-            else
-            {
-                ch = _T('x');
-                GetTextExtentPoint32(hDC, &ch, 1, &MetricSize);
-                nTabWidth = TAB_STOP * MetricSize.cx;
-            }
+            nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
 #undef TAB_STOP
 
 #define FLUSH() do { \
