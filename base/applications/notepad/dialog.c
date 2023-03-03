@@ -305,44 +305,45 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
 #undef CONVERT_X
 #undef CONVERT_Y
 
-    if (!IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) ||
-        !EqualRect(&rcIntersect, prcPrintRect))
+    if (IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) &&
+        EqualRect(&rcIntersect, prcPrintRect))
     {
-        /* Do you want to adjust the margin? */
-        LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
-        LoadString(Globals.hInstance, STRING_NOTEPAD, szTitle, ARRAY_SIZE(szTitle));
-        id = MessageBox(Globals.hMainWnd, szText, szTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
-        if (id == IDCANCEL)
-            return FALSE;
+        return TRUE;
+    }
 
-        if (id == IDYES)
-        {
+    /* Do you want to adjust the margin? */
+    LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
+    LoadString(Globals.hInstance, STRING_NOTEPAD, szTitle, ARRAY_SIZE(szTitle));
+    id = MessageBox(Globals.hMainWnd, szText, szTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+    if (id == IDCANCEL)
+        return FALSE;
+    if (id == IDNO)
+        return TRUE;
+
 #define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
 #define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
-            if (rcPhysical.left < prcPrintRect->left)
-            {
-                prcPrintRect->left = rcPhysical.left;
-                pMargins->left = UNCONVERT_X(rcPhysical.left);
-            }
-            if (rcPhysical.top < prcPrintRect->top)
-            {
-                prcPrintRect->top = rcPhysical.top;
-                pMargins->top = UNCONVERT_Y(rcPhysical.top);
-            }
-            if (rcPhysical.right < prcPrintRect->right)
-            {
-                prcPrintRect->right = rcPhysical.right;
-                pMargins->right = UNCONVERT_X(iHorzRes - rcPhysical.right);
-            }
-            if (rcPhysical.bottom < prcPrintRect->bottom)
-            {
-                prcPrintRect->bottom = rcPhysical.bottom;
-                pMargins->bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
-            }
+    if (rcPhysical.left < prcPrintRect->left)
+    {
+        prcPrintRect->left = rcPhysical.left;
+        pMargins->left = UNCONVERT_X(rcPhysical.left);
+    }
+    if (rcPhysical.top < prcPrintRect->top)
+    {
+        prcPrintRect->top = rcPhysical.top;
+        pMargins->top = UNCONVERT_Y(rcPhysical.top);
+    }
+    if (rcPhysical.right < prcPrintRect->right)
+    {
+        prcPrintRect->right = rcPhysical.right;
+        pMargins->right = UNCONVERT_X(iHorzRes - rcPhysical.right);
+    }
+    if (rcPhysical.bottom < prcPrintRect->bottom)
+    {
+        prcPrintRect->bottom = rcPhysical.bottom;
+        pMargins->bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
+    }
 #undef UNCONVERT_X
 #undef UNCONVERT_Y
-        }
-    }
 
     return TRUE;
 }
