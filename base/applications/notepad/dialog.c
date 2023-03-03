@@ -843,7 +843,7 @@ VOID DIALOG_FilePrint(VOID)
             SelectObject(hDC, hOldFont);
 
 
-            /* Draw the body text */
+            /* Start drawing the body text */
             hOldFont = SelectObject(hDC, hBodyFont);
             GetTextMetrics(hDC, &tmText);
             iColumn = 0;
@@ -855,7 +855,7 @@ VOID DIALOG_FilePrint(VOID)
     ichStart = ich; \
     xStart = xLeft; \
 } while (0)
-
+            /* The drawing loop */
             for (ichStart = ich; ich < cchText; )
             {
                 if (pTemp[ich] == _T('\r')) /* CR */
@@ -912,14 +912,10 @@ VOID DIALOG_FilePrint(VOID)
                 ++ich; /* Next char */
 
                 if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
-                {
-                    /* The next line reached the body bottom */
-                    break;
-                }
+                    break; /* The next line reached the body bottom */
             }
 
-            /* Flush! */
-            FLUSH();
+            FLUSH(); /* Flush! */
 #undef FLUSH
 
             SelectObject(hDC, hOldFont);
