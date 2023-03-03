@@ -291,11 +291,12 @@ GetPrintingRect(HDC hdc, RECT margins)
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
-
     rcPrintRect.left = CONVERT_X(margins.left);
     rcPrintRect.top = CONVERT_Y(margins.top);
     rcPrintRect.right = iHorzRes - CONVERT_X(margins.right);
     rcPrintRect.bottom = iVertRes - CONVERT_Y(margins.bottom);
+#undef CONVERT_X
+#undef CONVERT_Y
 
     return rcPrintRect;
 }
