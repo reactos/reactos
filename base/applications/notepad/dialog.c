@@ -711,8 +711,6 @@ VOID DIALOG_FilePrint(VOID)
     SYSTEMTIME stNow;
     HDC hDC;
 
-    GetLocalTime(&stNow);
-
     /* Get Current Settings */
     ZeroMemory(&printer, sizeof(printer));
     printer.lStructSize = sizeof(printer);
@@ -735,12 +733,14 @@ VOID DIALOG_FilePrint(VOID)
     printer.hDevNames = Globals.hDevNames;
 
     if (!PrintDlg(&printer))
-        return;
+        return; /* The user canceled printing */
 
     assert(printer.hDC != NULL);
     hDC = printer.hDC;
     Globals.hDevMode = printer.hDevMode;
     Globals.hDevNames = printer.hDevNames;
+
+    GetLocalTime(&stNow);
 
     /* Create the body text font for printing */
     GetObject(Globals.hFont, sizeof(BodyLogFont), &BodyLogFont);
