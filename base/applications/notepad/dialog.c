@@ -700,7 +700,7 @@ VOID DIALOG_FilePrint(VOID)
     DOCINFO di;
     TEXTMETRIC tmHeader, tmText;
     PRINTDLG printer;
-    SIZE szMetric;
+    SIZE MetricSize;
     INT xLeft, xStart, yTop, CopyCount, PageCount, cyHeader, cyFooter, cySpacing;
     BOOL bSkipPage;
     DWORD ich, ichStart, cchText, iColumn;
@@ -710,6 +710,7 @@ VOID DIALOG_FilePrint(VOID)
     RECT rcPrintRect;
     SYSTEMTIME stNow;
     HDC hDC;
+    TCHAR ch;
 
     /* Get Current Settings */
     ZeroMemory(&printer, sizeof(printer));
@@ -864,7 +865,9 @@ VOID DIALOG_FilePrint(VOID)
             /* The drawing-body loop */
             for (ichStart = ich; ich < cchText; )
             {
-                if (pTemp[ich] == _T('\r')) /* CR */
+                ch = pTemp[ich];
+
+                if (ch == _T('\r')) /* CR */
                 {
                     FLUSH(); /* Flush! */
 
@@ -872,7 +875,7 @@ VOID DIALOG_FilePrint(VOID)
                     continue;
                 }
 
-                if (pTemp[ich] == _T('\n')) /* NewLine (LF) */
+                if (ch == _T('\n')) /* NewLine (LF) */
                 {
                     FLUSH(); /* Flush! */
 
@@ -883,7 +886,7 @@ VOID DIALOG_FilePrint(VOID)
                 }
                 else
                 {
-                    if (pTemp[ich] == _T('\t')) /* Tab */
+                    if (ch == _T('\t')) /* Tab */
                     {
                         INT nTabWidth = 8 - (iColumn % 8);
                         TCHAR chSpace = TEXT(' ');
@@ -891,22 +894,23 @@ VOID DIALOG_FilePrint(VOID)
                         FLUSH(); /* Flush! */
 
                         /* Go to the next tab stop */
-                        GetTextExtentPoint32(hDC, &chSpace, 1, &szMetric);
-                        xLeft += szMetric.cx * nTabWidth;
+                        GetTextExtentPoint32(hDC, &chSpace, 1, &MetricSize);
+                        xLeft += MetricSize.cx * nTabWidth;
                         xStart = xLeft;
                         iColumn += nTabWidth;
                     }
                     else /* One normal char */
                     {
-                        GetTextExtentPoint32(hDC, &pTemp[ich], 1, &szMetric);
-                        xLeft += szMetric.cx;
+                        GetTextExtentPoint32(hDC, &ch, 1, &MetricSize);
+                        xLeft += MetricSize.cx;
                         ++iColumn;
                     }
 
                     /* Insert a line break if the next position reached the right edge */
-                    if (xLeft + szMetric.cx >= rcPrintRect.right)
+                    if (xLeft + MetricSize.cx >= rcPrintRect.right)
                     {
-                        FLUSH(); /* Flush! */
+                        if (ch != _T('\t'))
+                            FLUSH(); /* Flush! */
 
                         /* Next line */
                         yTop += tmText.tmHeight;
