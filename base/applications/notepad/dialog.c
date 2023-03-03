@@ -320,6 +320,7 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     if (id == IDNO)
         return TRUE;
 
+    /* Yes: Adjust the margin */
 #define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
 #define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
     if (rcPhysical.left < prcPrintRect->left)
