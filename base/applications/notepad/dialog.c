@@ -298,6 +298,11 @@ GetPrintingRect(HDC hdc, RECT margins)
 #undef CONVERT_X
 #undef CONVERT_Y
 
+    /*
+     * TODO: We have to check whether the logical margins are larger than the physical margins,
+     *       using PHYSICALOFFSETX, PHYSICALOFFSETY, PHYSICALWIDTH, PHYSICALHEIGHT
+     */
+
     return rcPrintRect;
 }
 
