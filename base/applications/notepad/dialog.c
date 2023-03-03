@@ -323,12 +323,12 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     /* Yes: Adjust the margin */
 #define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
 #define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
-    if (rcPhysical.left < prcPrintRect->left)
+    if (prcPrintRect->left < rcPhysical.left)
     {
         prcPrintRect->left = rcPhysical.left;
         pMargins->left = UNCONVERT_X(rcPhysical.left);
     }
-    if (rcPhysical.top < prcPrintRect->top)
+    if (prcPrintRect->top < rcPhysical.top)
     {
         prcPrintRect->top = rcPhysical.top;
         pMargins->top = UNCONVERT_Y(rcPhysical.top);
