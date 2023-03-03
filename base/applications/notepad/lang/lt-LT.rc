@@ -134,6 +134,7 @@ STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&f"
     STRING_PAGESETUP_FOOTERVALUE "Puslapis &p"
+    STRING_PAGESETUP_ADJUSTMARGIN "The current margin is narrower than the physical margin. Do you want to adjust the margin?"
     STRING_NOTEPAD "Notepad"
     STRING_ERROR "KLAIDA"
     STRING_WARNING "ĮSPĖJIMAS"

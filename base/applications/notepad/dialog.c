@@ -287,7 +287,9 @@ GetPrintingRect(HDC hdc, RECT margins)
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
-    RECT rcPrintRect;
+    RECT rcPrintRect, rcPhysical, rcIntersect;
+    TCHAR szText[MAX_STRING_LEN];
+    INT id;
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
@@ -295,13 +297,32 @@ GetPrintingRect(HDC hdc, RECT margins)
     rcPrintRect.top = CONVERT_Y(margins.top);
     rcPrintRect.right = iHorzRes - CONVERT_X(margins.right);
     rcPrintRect.bottom = iVertRes - CONVERT_Y(margins.bottom);
+    rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
+    rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
 #undef CONVERT_X
 #undef CONVERT_Y
 
-    /*
-     * TODO: We have to check whether the logical margins are larger than the physical margins,
-     *       using PHYSICALOFFSETX, PHYSICALOFFSETY, PHYSICALWIDTH, PHYSICALHEIGHT
-     */
+    if (!IntersectRect(&rcIntersect, &rcPrintRect, &rcPhysical) ||
+        !EqualRect(&rcIntersect, &rcPrintRect))
+    {
+        /* Do you adjust the margin? */
+        LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
+        id = MessageBox(Globals.hMainWnd, szText, NULL, MB_ICONERROR | MB_YESNO);
+        if (id == IDYES)
+        {
+            rcPrintRect = rcPhysical;
+#define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
+#define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
+            Globals.lMargins.left = UNCONVERT_X(rcPhysical.left);
+            Globals.lMargins.top = UNCONVERT_Y(rcPhysical.top);
+            Globals.lMargins.right = UNCONVERT_X(iHorzRes - rcPhysical.right);
+            Globals.lMargins.bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
+#undef UNCONVERT_X
+#undef UNCONVERT_Y
+        }
+    }
 
     return rcPrintRect;
 }
@@ -719,7 +740,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     LPTSTR pszTempText;
     SYSTEMTIME stNow;
     HDC hDC = pPrinter->hDC;
-    RECT rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
+    RECT rcPrintRect;
     BOOL ret = FALSE;
 
     GetLocalTime(&stNow);
@@ -780,6 +801,9 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Ensure that each logical unit maps to one pixel */
     SetMapMode(hDC, MM_TEXT);
+
+    /* Get the printing area */
+    rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
 
     /* TODO: Show the progress */
 
