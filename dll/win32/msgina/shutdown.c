@@ -53,6 +53,7 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     PGINA_CONTEXT pgContext;
     HBITMAP hBitmap;
     HBITMAP hImageStrip;
+    DWORD ShutdownDialogId;
     DWORD ShutdownOptions;
     HBRUSH hBrush;
     HFONT hfFont;
@@ -61,7 +62,8 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     BOOL bReasonUI;
     BOOL bFriendlyUI;
     BOOL bIsButtonHot[NUMBER_OF_BUTTONS];
-    BOOL bIsDialogModal;
+    BOOL bTimer;
+    UINT_PTR iTimer;
     WNDPROC OldButtonProc;
 } SHUTDOWN_DLG_CONTEXT, *PSHUTDOWN_DLG_CONTEXT;
 
@@ -637,11 +639,30 @@ CreateToolTipForButtons(
 }
 
 VOID
-ReplaceRequiredButton(
+EndFriendlyDialog(
     HWND hDlg,
-    HINSTANCE hInstance,
-    BOOL bIsAltKeyPressed,
-    BOOL bIsSleepButtonReplaced)
+    PSHUTDOWN_DLG_CONTEXT pContext)
+{
+    if (pContext->bTimer)
+    {
+        KillTimer(hDlg, pContext->iTimer);
+    }   
+    DeleteObject(pContext->hBitmap);
+    DeleteObject(pContext->hBrush);
+    DeleteObject(pContext->hImageStrip);
+    DeleteObject(pContext->hfFont);
+
+    /* Remove the subclass from the buttons */
+    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+    {
+        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+    }
+}
+
+VOID
+ChangeRequiredButton(
+    HWND hDlg,
+    PSHUTDOWN_DLG_CONTEXT pContext)
 {
     int destID = IDC_BUTTON_SLEEP;
     int targetedID = IDC_BUTTON_HIBERNATE;
@@ -650,7 +671,7 @@ ReplaceRequiredButton(
     WCHAR szBuffer[30];
 
     /* If the sleep button has been already replaced earlier, bring sleep button back to its original position */
-    if (bIsSleepButtonReplaced)
+    if (pContext->bIsSleepButtonReplaced)
     {
         destID = IDC_BUTTON_HIBERNATE;
         targetedID = IDC_BUTTON_SLEEP;
@@ -662,7 +683,7 @@ ReplaceRequiredButton(
     /* Get the position of the destination button */
     GetWindowRect(hwndDest, &rect);
 
-    /* Get the corrected translated coordinates which is relative to the client window */
+    /* Get the corrected translated coordinates which is relative to the client window */  
     MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
 
     /* Set the position of targeted button and hide the destination button */
@@ -678,31 +699,34 @@ ReplaceRequiredButton(
     ShowWindow(hwndTarget, SW_SHOW);
     SetFocus(hwndTarget);
 
-    if (bIsAltKeyPressed)
+    if (!pContext->bIsSleepButtonReplaced)
     {
-        if (!bIsSleepButtonReplaced)
-        {
-            GetDlgItemTextW(hDlg, IDC_BUTTON_HIBERNATE, szBuffer, _countof(szBuffer));
-            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-        }
-        else
-        {
-            GetDlgItemTextW(hDlg, IDC_BUTTON_SLEEP, szBuffer, _countof(szBuffer));
-            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-        }
+        LoadStringW(pContext->pgContext->hDllInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
+        SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
     }
     else
     {
-        if (!bIsSleepButtonReplaced)
-        {
-            LoadStringW(hInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
-            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-        }
-        else
-        {
-            LoadStringW(hInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
-            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-        }
+        LoadStringW(pContext->pgContext->hDllInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
+        SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
+    }
+    InvalidateRect(hDlg, NULL, FALSE);
+}
+
+VOID OnTimer(
+    HWND hDlg,
+    PSHUTDOWN_DLG_CONTEXT pContext)
+{
+    BOOL ReplaceButton = !!(GetKeyState(VK_SHIFT) & 0x8000);
+
+    if (ReplaceButton && !pContext->bIsSleepButtonReplaced)
+    {
+        ChangeRequiredButton(hDlg, pContext);
+        pContext->bIsSleepButtonReplaced = TRUE;
+    }
+    else if (!ReplaceButton && pContext->bIsSleepButtonReplaced)
+    {
+        ChangeRequiredButton(hDlg, pContext);
+        pContext->bIsSleepButtonReplaced = FALSE;
     }
 }
 
@@ -848,140 +872,141 @@ ShutdownOnInit(
     HDC hdc;
     LONG lfHeight;
 
-    /* Create font for the IDC_TURN_OFF_STATIC static control */
-    hdc = GetDC(hDlg);
-    lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    ReleaseDC(hDlg, hdc);
-    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
-    SendDlgItemMessageW(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
-
-    /* Create a brush for static controls for fancy shut down dialog */
-    pContext->hBrush = CreateSolidBrush(DARK_GREY_COLOR);
-
-    pContext->hImageStrip = LoadBitmapW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
-
-    hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_ACTION);
-
-    /* Clear the content before it's used */
-    SendMessageW(hwndList, CB_RESETCONTENT, 0, 0);
-
-    /* Set the boolean flags to false */
-    pContext->bIsSleepButtonReplaced = FALSE;
-
-    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+    if (pContext->bFriendlyUI)
     {
-        pContext->bIsButtonHot[i] = FALSE;
-    }
+        /* Create font for the IDC_TURN_OFF_STATIC static control */
+        hdc = GetDC(hDlg);
+        lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(hDlg, hdc);
+        pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+        SendDlgItemMessageW(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
 
-    /* Log off */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_LOGOFF)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_LOGOFF, szBuffer, _countof(szBuffer));
-        StringCchPrintfW(szBuffer2, _countof(szBuffer2), szBuffer, pgContext->UserName);
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer2);
-        if (idx != CB_ERR)
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_LOGOFF);
-    }
+        /* Create a brush for static controls for fancy shut down dialog */
+        pContext->hBrush = CreateSolidBrush(DARK_GREY_COLOR);
 
-    /* Shut down - DEFAULT */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_POWER_OFF)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_SHUTDOWN, szBuffer, _countof(szBuffer));
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-        if (idx != CB_ERR)
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
-    }
-    else if (pContext->bFriendlyUI)
-    {
-        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN), FALSE);
-    }
+        /* Gather image strip */
+        pContext->hImageStrip = LoadBitmapW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
+        
+        /* Set the boolean flags to false */
+        pContext->bIsSleepButtonReplaced = FALSE;
+        pContext->bTimer = FALSE;
 
-    /* Restart */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_REBOOT)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_RESTART, szBuffer, _countof(szBuffer));
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-        if (idx != CB_ERR)
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
-    }
-    else if (pContext->bFriendlyUI)
-    {
-        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_REBOOT), FALSE);
-    }
-
-    // if (pContext->ShutdownOptions & 0x08) {}
-
-    /* Sleep */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_SLEEP)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-        if (idx != CB_ERR)
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_SLEEP);
-    }
-    else if (pContext->bFriendlyUI)
-    {
-        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
-    }
-
-    // if (pContext->ShutdownOptions & 0x20) {}
-
-    /* Hibernate */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_HIBERNATE)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-        if (idx != CB_ERR)
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_HIBERNATE);
-    }
-    else if (pContext->bFriendlyUI)
-    {
-        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
-    }
-
-    // if (pContext->ShutdownOptions & 0x80) {}
-
-    /* Set the default shut down selection */
-    count = SendMessageW(hwndList, CB_GETCOUNT, 0, 0);
-    for (i = 0; i < count; i++)
-    {
-        if (SendMessageW(hwndList, CB_GETITEMDATA, i, 0) == pgContext->nShutdownAction)
+        for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
         {
-            SendMessageW(hwndList, CB_SETCURSEL, i, 0);
-            break;
+            pContext->bIsButtonHot[i] = FALSE;
+        }
+
+       EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
+       EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
+
+        /* Create tool tips for the buttons of fancy log off dialog */
+        CreateToolTipForButtons(IDC_BUTTON_HIBERNATE,
+                                IDS_SHUTDOWN_HIBERNATE_DESC,
+                                hDlg, IDS_SHUTDOWN_HIBERNATE,
+                                pContext->pgContext->hDllInstance);
+        CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN,
+                                IDS_SHUTDOWN_SHUTDOWN_DESC,
+                                hDlg, IDS_SHUTDOWN_SHUTDOWN,
+                            pContext->pgContext->hDllInstance);
+        CreateToolTipForButtons(IDC_BUTTON_REBOOT,
+                                IDS_SHUTDOWN_RESTART_DESC,
+                                hDlg, IDS_SHUTDOWN_RESTART,
+                                pContext->pgContext->hDllInstance);
+        CreateToolTipForButtons(IDC_BUTTON_SLEEP,
+                                IDS_SHUTDOWN_SLEEP_DESC,
+                                hDlg, IDS_SHUTDOWN_SLEEP,
+                                pContext->pgContext->hDllInstance);
+
+        /* Gather old button func */
+        pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
+
+        /* Make buttons to remember pContext and subclass the buttons */
+        for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+        {
+            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_USERDATA, (LONG_PTR)pContext);
+            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
+        }
+
+        if (pContext->ShutdownDialogId == IDD_SHUTDOWN_FANCY && IsPwrSuspendAllowed())
+        {
+            pContext->iTimer = SetTimer(hDlg, 0, 50, NULL);
+            pContext->bTimer = TRUE;
         }
     }
 
-    /* Create tool tips for the buttons of fancy log off dialog */
-    CreateToolTipForButtons(IDC_BUTTON_HIBERNATE,
-                  IDS_SHUTDOWN_HIBERNATE_DESC,
-                  hDlg, IDS_SHUTDOWN_HIBERNATE,
-                  pContext->pgContext->hDllInstance);
-    CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN,
-                  IDS_SHUTDOWN_SHUTDOWN_DESC,
-                  hDlg, IDS_SHUTDOWN_SHUTDOWN,
-                  pContext->pgContext->hDllInstance);
-    CreateToolTipForButtons(IDC_BUTTON_REBOOT,
-                  IDS_SHUTDOWN_RESTART_DESC,
-                  hDlg, IDS_SHUTDOWN_RESTART,
-                  pContext->pgContext->hDllInstance);
-    CreateToolTipForButtons(IDC_BUTTON_SLEEP,
-                  IDS_SHUTDOWN_SLEEP_DESC,
-                  hDlg, IDS_SHUTDOWN_SLEEP,
-                  pContext->pgContext->hDllInstance);
-
-    /* Gather old button func */
-    pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
-
-    /* Make buttons to remember pContext and subclass the buttons */
-    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+    else
     {
-        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_USERDATA, (LONG_PTR)pContext);
-        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
-    }
+        hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_ACTION);
 
-    /* Update the choice description based on the current selection */
-    UpdateShutdownDesc(hDlg, pContext);
+        /* Clear the content before it's used */
+        SendMessageW(hwndList, CB_RESETCONTENT, 0, 0);
+
+        /* Log off */
+        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_LOGOFF)
+        {
+            LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_LOGOFF, szBuffer, _countof(szBuffer));
+            StringCchPrintfW(szBuffer2, _countof(szBuffer2), szBuffer, pgContext->UserName);
+            idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer2);
+            if (idx != CB_ERR)
+                SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_LOGOFF);
+        }
+
+        /* Shut down - DEFAULT */
+        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_POWER_OFF)
+        {
+            LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_SHUTDOWN, szBuffer, _countof(szBuffer));
+            idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+            if (idx != CB_ERR)
+                SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+        }
+
+        /* Restart */
+        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_REBOOT)
+        {
+            LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_RESTART, szBuffer, _countof(szBuffer));
+            idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+            if (idx != CB_ERR)
+                SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+        }
+
+        // if (pContext->ShutdownOptions & 0x08) {}
+
+        /* Sleep */
+        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_SLEEP)
+        {
+            LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
+            idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+            if (idx != CB_ERR)
+                SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_SLEEP);
+        }
+
+        // if (pContext->ShutdownOptions & 0x20) {}
+
+        /* Hibernate */
+        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_HIBERNATE)
+        {
+            LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
+            idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+            if (idx != CB_ERR)
+                SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_HIBERNATE);
+        }
+
+        // if (pContext->ShutdownOptions & 0x80) {}
+
+        /* Set the default shut down selection */
+        count = SendMessageW(hwndList, CB_GETCOUNT, 0, 0);
+        for (i = 0; i < count; i++)
+        {
+            if (SendMessageW(hwndList, CB_GETITEMDATA, i, 0) == pgContext->nShutdownAction)
+            {
+                SendMessageW(hwndList, CB_SETCURSEL, i, 0);
+                break;
+            }
+        }
+    
+        /* Update the choice description based on the current selection */
+        UpdateShutdownDesc(hDlg, pContext);
+    }
 }
 
 static VOID
@@ -1027,23 +1052,13 @@ ShutdownDialogProc(
             SetWindowLongPtrW(hDlg, GWLP_USERDATA, (LONG_PTR)pContext);
 
             ShutdownOnInit(hDlg, pContext);
-
-            /* Draw the logo bitmap */
-            pContext->hBitmap =
-                LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             return TRUE;
         }
 
         case WM_DESTROY:
-            DeleteObject(pContext->hBitmap);
-            DeleteObject(pContext->hBrush);
-            DeleteObject(pContext->hImageStrip);
-            DeleteObject(pContext->hfFont);
-
-            /* Remove the subclass from the buttons */
-            for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+            if (pContext->bFriendlyUI)
             {
-                SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+                EndFriendlyDialog(hDlg, pContext);
             }
             return TRUE;
 
@@ -1059,45 +1074,15 @@ ShutdownDialogProc(
                 if (!pContext->bCloseDlg)
                 {
                     pContext->bCloseDlg = TRUE;
-
-                    if (pContext->bIsDialogModal)
-                    {
-                        EndDialog(hDlg, 0);
-                    }
-                    else
-                    {
-                        DestroyWindow(hDlg);
-                        PostQuitMessage(0);
-                    }
+                    EndDialog(hDlg, IDCANCEL);
                 }
             }
             return FALSE;
         }
 
-        case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            if (pContext->hBitmap)
-            {
-                BeginPaint(hDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
-                EndPaint(hDlg, &ps);
-            }
-            return TRUE;
-        }
-
         case WM_CLOSE:
             pContext->bCloseDlg = TRUE;
-
-            if (pContext->bIsDialogModal)
-            {
-                EndDialog(hDlg, IDCANCEL);
-            }
-            else
-            {
-                DestroyWindow(hDlg);
-                PostQuitMessage(IDCANCEL);
-            }
+            EndDialog(hDlg, IDCANCEL);
             break;
 
         case WM_COMMAND:
@@ -1122,16 +1107,7 @@ ShutdownDialogProc(
                 case IDCANCEL:
                 case IDHELP:
                     pContext->bCloseDlg = TRUE;
-
-                    if (pContext->bIsDialogModal)
-                    {
-                        EndDialog(hDlg, LOWORD(wParam));
-                    }
-                    else
-                    {
-                        DestroyWindow(hDlg);
-                        PostQuitMessage(LOWORD(wParam));
-                    }
+                    EndDialog(hDlg, LOWORD(wParam));
                     break;
 
                 case IDC_SHUTDOWN_ACTION:
@@ -1178,6 +1154,10 @@ ShutdownDialogProc(
             }
             break;
         }
+        
+        case WM_TIMER:
+            OnTimer(hDlg, pContext);
+            return TRUE;
 
         default:
             return FALSE;
@@ -1193,10 +1173,6 @@ ShutdownDialog(
 {
     INT_PTR ret;
     SHUTDOWN_DLG_CONTEXT Context;
-    BOOL bIsAltKeyPressed = FALSE;
-    DWORD ShutdownDialogId = IDD_SHUTDOWN;
-    MSG Msg;
-    HWND hDlg;
 
 #if 0
     DWORD ShutdownOptions;
@@ -1208,13 +1184,13 @@ ShutdownDialog(
 
     Context.pgContext = pgContext;
     Context.ShutdownOptions = ShutdownOptions;
+    Context.ShutdownDialogId = IDD_SHUTDOWN;
     Context.bCloseDlg = FALSE;
     Context.bReasonUI = GetShutdownReasonUI();
     Context.bFriendlyUI = ShellIsFriendlyUIActive();
 
     if (pgContext->hWlx && pgContext->pWlxFuncs && !Context.bFriendlyUI)
     {
-        Context.bIsDialogModal = TRUE;
         ret = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                       pgContext->hDllInstance,
                                                       MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN),
@@ -1228,90 +1204,19 @@ ShutdownDialog(
         {
             if (IsShowHibernateButtonActive())
             {
-                ShutdownDialogId = IDD_SHUTDOWN_FANCY_LONG;
+                Context.ShutdownDialogId = IDD_SHUTDOWN_FANCY_LONG;
             }
             else
             {
-                ShutdownDialogId = IDD_SHUTDOWN_FANCY;
+                Context.ShutdownDialogId = IDD_SHUTDOWN_FANCY;
             }
         }
 
-        Context.bIsDialogModal = FALSE;
-        hDlg = CreateDialogParamW(pgContext->hDllInstance,
-                                  MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : ShutdownDialogId),
-                                  hwndDlg,
-                                  ShutdownDialogProc,
-                                  (LPARAM)&Context);
-
-        ShowWindow(hDlg, SW_SHOW);
-
-        /* Detect either Alt or Shift key have been pressed or released */
-        while (GetMessageW(&Msg, NULL, 0, 0))
-        {
-            if (!IsDialogMessageW(hDlg, &Msg))
-            {
-                TranslateMessage(&Msg);
-                DispatchMessageW(&Msg);
-            }
-
-            switch (Msg.message)
-            {
-                case WM_SYSKEYDOWN:
-                {
-                    /* If the Alt key has been pressed once, add prefix to static controls */
-                    if (Msg.wParam == VK_MENU && !bIsAltKeyPressed)
-                    {
-                        AddPrefixToStaticTexts(hDlg, Context.bIsSleepButtonReplaced);
-                        bIsAltKeyPressed = TRUE;
-                    }
-                }
-                break;
-
-                case WM_KEYDOWN:
-                {
-                    /*
-                     * If the Shift key has been pressed once, and both hibernate button and sleep button are enabled
-                     * replace the sleep button with hibernate button
-                     */
-                    if (Msg.wParam == VK_SHIFT)
-                    {
-                        if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && !Context.bIsSleepButtonReplaced)
-                        {
-                            if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
-                            {
-                                ReplaceRequiredButton(hDlg,
-                                                      pgContext->hDllInstance,
-                                                      bIsAltKeyPressed,
-                                                      Context.bIsSleepButtonReplaced);
-                                Context.bIsSleepButtonReplaced = TRUE;
-                            }
-                        }
-                    }
-                }
-                break;
-
-                case WM_KEYUP:
-                {
-                    /*  If the Shift key has been released after being pressed, replace the hibernate button with sleep button again */
-                    if (Msg.wParam == VK_SHIFT)
-                    {
-                        if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && Context.bIsSleepButtonReplaced)
-                        {
-                            if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
-                            {
-                                ReplaceRequiredButton(hDlg,
-                                                      pgContext->hDllInstance,
-                                                      bIsAltKeyPressed,
-                                                      Context.bIsSleepButtonReplaced);
-                                Context.bIsSleepButtonReplaced = FALSE;
-                            }
-                        }
-                    }
-                }
-                break;
-            }
-        }
-        ret = Msg.wParam;
+        ret = DialogBoxParamW(pgContext->hDllInstance,
+                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : Context.ShutdownDialogId),
+                              hwndDlg,
+                              ShutdownDialogProc,
+                              (LPARAM)&Context);
     }
 
 #if 0

@@ -1522,11 +1522,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
     CComPtr<IUnknown> fadeHandler;
-    BOOL bIsAltKeyPressed = FALSE;
-    MSG Msg;
     HWND parent = NULL;
-    HWND hWndChild = NULL;
-    WCHAR szBuffer[30];
     DWORD LogoffDialogID = IDD_LOG_OFF;
     LOGOFF_DLG_CONTEXT Context;
 
@@ -1539,36 +1535,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
         LogoffDialogID = IDD_LOG_OFF_FANCY;
     }
 
-    hWndChild = CreateDialogParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
-    ShowWindow(hWndChild, SW_SHOWNORMAL);
-
-     /* Detect either Alt key has been pressed */
-    while (GetMessageW(&Msg, NULL, 0, 0))
-    {
-        if(!IsDialogMessageW(hWndChild, &Msg))
-        {
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
-        }
-
-        switch (Msg.message)
-        {
-            case WM_SYSKEYDOWN:
-            {
-                /* If the Alt key has been pressed once, add prefix to static controls */
-                if (Msg.wParam == VK_MENU && !bIsAltKeyPressed && Context.bFriendlyUI)
-                {
-                    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
-                    {
-                        GetDlgItemTextW(hWndChild, IDC_LOG_OFF_BUTTON + i, szBuffer, _countof(szBuffer));
-                        SetDlgItemTextW(hWndChild, IDC_LOG_OFF_STATIC + i, szBuffer);
-                    }
-                    bIsAltKeyPressed = TRUE;
-                }
-            }
-            break;
-        }
-    }
+    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
     return 0;
 }
 
