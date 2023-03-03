@@ -858,7 +858,7 @@ VOID DIALOG_FilePrint(VOID)
     ichStart = ich; \
     xStart = xLeft; \
 } while (0)
-            /* The drawing loop */
+            /* The drawing-body loop */
             for (ichStart = ich; ich < cchText; )
             {
                 if (pTemp[ich] == _T('\r')) /* CR */
