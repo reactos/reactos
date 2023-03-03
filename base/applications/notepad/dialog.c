@@ -840,8 +840,14 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 #undef TAB_STOP
 
 #define FLUSH() do { \
-    if (!bSkipPage) \
-        TextOut(hDC, xStart, yTop, &pszTempText[ichStart], ich - ichStart); \
+    if (ichStart < ich) { \
+        TCHAR chPrint = pszTempText[ichStart]; \
+        assert(chPrint != _T('\t')); \
+        assert(chPrint != _T('\r')); \
+        assert(chPrint != _T('\n')); \
+        if (!bSkipPage) \
+            TextOut(hDC, xStart, yTop, &pszTempText[ichStart], ich - ichStart); \
+    } \
     ichStart = ich; \
     xStart = xLeft; \
 } while (0)
@@ -855,6 +861,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                     FLUSH(); /* Flush! */
 
                     ++ich; /* Next char */
+                    ichStart = ich;
                     continue;
                 }
 
@@ -897,6 +904,8 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                 }
 
                 ++ich; /* Next char */
+                if (ch == _T('\t') || ch == _T('\n'))
+                    ichStart = ich;
 
                 if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
                     break; /* The next line reached the body bottom */
