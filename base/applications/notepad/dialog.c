@@ -914,8 +914,6 @@ VOID DIALOG_FilePrint(VOID)
                 if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
                 {
                     /* The next line reached the body bottom */
-
-                    FLUSH(); /* Flush! */
                     break;
                 }
             }
