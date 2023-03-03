@@ -612,6 +612,10 @@ BOOL DIALOG_FileSaveAs(VOID)
 #define XPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSX), 72)
 #define YPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSY), 72)
 
+/*
+ * See also:
+ * https://support.microsoft.com/en-us/windows/changing-header-and-footer-commands-in-notepad-c1b0e27b-497d-c478-c4c1-0da491cac148
+ */
 static VOID
 DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const SYSTEMTIME *pstNow)
 {
