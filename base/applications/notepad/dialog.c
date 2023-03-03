@@ -839,7 +839,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
             nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
 #undef TAB_STOP
 
-#define FLUSH() do { \
+#define DO_FLUSH() do { \
     if (ichStart < ich) { \
         TCHAR *pch = &pszTempText[ichStart]; \
         assert(*pch != _T('\t')); \
@@ -858,7 +858,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
                 if (ch == _T('\r')) /* CR */
                 {
-                    FLUSH(); /* Flush! */
+                    DO_FLUSH();
 
                     ++ich; /* Next char */
                     ichStart = ich;
@@ -867,7 +867,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
                 if (ch == _T('\n')) /* NewLine (LF) */
                 {
-                    FLUSH(); /* Flush! */
+                    DO_FLUSH();
 
                     /* Next line */
                     yTop += tmText.tmHeight;
@@ -879,7 +879,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                     {
                         INT nStepWidth = nTabWidth - ((xLeft - rcPrintRect.left) % nTabWidth);
 
-                        FLUSH(); /* Flush! */
+                        DO_FLUSH();
 
                         /* Go to the next tab stop */
                         xLeft += nStepWidth;
@@ -895,7 +895,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                     if (xLeft + MetricSize.cx >= rcPrintRect.right)
                     {
                         if (ch != _T('\t'))
-                            FLUSH(); /* Flush! */
+                            DO_FLUSH();
 
                         /* Next line */
                         yTop += tmText.tmHeight;
@@ -911,9 +911,9 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                     break; /* The next line reached the body bottom */
             }
 
-            FLUSH(); /* Flush! */
+            DO_FLUSH();
             SelectObject(hDC, hOldFont); /* De-select the font */
-#undef FLUSH
+#undef DO_FLUSH
 
             /* The epilogue of a page */
             if (!bSkipPage)
