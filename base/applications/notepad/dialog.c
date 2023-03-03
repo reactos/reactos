@@ -894,9 +894,8 @@ VOID DIALOG_FilePrint(VOID)
                         xStart = xLeft;
                         iColumn += nTabWidth;
                     }
-                    else
+                    else /* One normal char */
                     {
-                        /* One char */
                         GetTextExtentPoint32(hDC, &pTemp[ich], 1, &szMetric);
                         xLeft += szMetric.cx;
                         ++iColumn;
@@ -908,14 +907,15 @@ VOID DIALOG_FilePrint(VOID)
                         /* Flush! */
                         FLUSH();
 
-                        /* Go to the next line */
+                        /* Next line */
                         yTop += tmText.tmHeight;
                         xLeft = xStart = rcPrintRect.left;
                         iColumn = 0;
                     }
                 }
 
-                ++ich;
+                ++ich; /* Next char */
+
                 if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
                 {
                     /* The next line reached the body bottom */
