@@ -841,12 +841,12 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
 #define FLUSH() do { \
     if (ichStart < ich) { \
-        TCHAR chPrint = pszTempText[ichStart]; \
-        assert(chPrint != _T('\t')); \
-        assert(chPrint != _T('\r')); \
-        assert(chPrint != _T('\n')); \
+        TCHAR *pch = &pszTempText[ichStart]; \
+        assert(*pch != _T('\t')); \
+        assert(*pch != _T('\r')); \
+        assert(*pch != _T('\n')); \
         if (!bSkipPage) \
-            TextOut(hDC, xStart, yTop, &pszTempText[ichStart], ich - ichStart); \
+            TextOut(hDC, xStart, yTop, pch, ich - ichStart); \
     } \
     ichStart = ich; \
     xStart = xLeft; \
