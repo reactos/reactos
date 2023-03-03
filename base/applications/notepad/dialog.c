@@ -701,7 +701,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
 }
 
-BOOL DoPrint(LPPRINTDLG pPrinter)
+static BOOL DoPrint(LPPRINTDLG pPrinter)
 {
     DOCINFO di;
     TEXTMETRIC tmHeader, tmText;
