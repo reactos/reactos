@@ -767,6 +767,9 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     GetLocalTime(&stNow);
 
+    /* Ensure that each logical unit maps to one pixel */
+    SetMapMode(hDC, MM_TEXT);
+
     /* Get the printing area */
     if (!GetPrintingRect(hDC, &Globals.lMargins, &rcPrintRect))
         return FALSE; /* The user canceled printing */
@@ -824,9 +827,6 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         AlertPrintError();
         goto Quit;
     }
-
-    /* Ensure that each logical unit maps to one pixel */
-    SetMapMode(hDC, MM_TEXT);
 
     /* TODO: Show the progress */
 
