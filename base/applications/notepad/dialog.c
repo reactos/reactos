@@ -744,7 +744,7 @@ VOID DIALOG_FilePrint(VOID)
     GetLocalTime(&stNow);
 
     /* Create the body text font for printing */
-    GetObject(Globals.hFont, sizeof(BodyLogFont), &BodyLogFont);
+    BodyLogFont = Globals.lfFont;
     BodyLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 11); /* 11pt */
     hBodyFont = CreateFontIndirect(&BodyLogFont);
 
