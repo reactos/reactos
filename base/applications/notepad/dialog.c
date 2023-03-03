@@ -719,19 +719,6 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
 
     GetLocalTime(&stNow);
 
-    /* Start a document */
-    ZeroMemory(&di, sizeof(di));
-    di.cbSize = sizeof(DOCINFO);
-    di.lpszDocName = Globals.szFileTitle;
-    if (StartDoc(hDC, &di) <= 0)
-    {
-        AlertPrintError();
-        return FALSE;
-    }
-
-    hHeaderFont = hBodyFont = NULL;
-    pszTempText = NULL;
-
     /* Create the body text font for printing */
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -YPOINTS2PIXELS(hDC, 11); /* 11pt */
@@ -739,7 +726,7 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
     if (hBodyFont == NULL)
     {
         ShowLastError();
-        goto CancelPrint;
+        return FALSE;
     }
 
     /* Create the header/footer font */
@@ -752,7 +739,8 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
     if (hHeaderFont == NULL)
     {
         ShowLastError();
-        goto CancelPrint;
+        DeleteObject(hBodyFont);
+        return FALSE;
     }
 
     /* Get the text length */
@@ -766,7 +754,6 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
     if (!pszTempText)
     {
         ShowLastError();
-        AbortDoc(hDC); /* Cancel printing */
         goto Quit;
     }
 
@@ -775,6 +762,16 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
         GetSelectionText(Globals.hEdit, pszTempText, cchText + 1);
     else
         GetWindowText(Globals.hEdit, pszTempText, cchText + 1);
+
+    /* Start a document */
+    ZeroMemory(&di, sizeof(di));
+    di.cbSize = sizeof(DOCINFO);
+    di.lpszDocName = Globals.szFileTitle;
+    if (StartDoc(hDC, &di) <= 0)
+    {
+        AlertPrintError();
+        goto Quit;
+    }
 
     /* Get the current printing area */
     rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
@@ -819,9 +816,9 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
             {
                 if (StartPage(hDC) <= 0) /* Start a new page */
                 {
-                    SelectObject(hDC, hOldFont);
                     AlertPrintError();
-                    goto CancelPrint;
+                    SelectObject(hDC, hOldFont);
+                    goto CancelPrinting;
                 }
 
                 if (cyHeader > 0) /* Draw the page header */
@@ -937,7 +934,7 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
                 if (EndPage(hDC) <= 0)
                 {
                     AlertPrintError();
-                    goto CancelPrint;
+                    goto CancelPrinting;
                 }
             }
         }
@@ -958,7 +955,7 @@ Quit: /* Clean up */
         HeapFree(GetProcessHeap(), 0, pszTempText);
     return ret;
 
-CancelPrint:
+CancelPrinting:
     AbortDoc(hDC);
     goto Quit;
 }
