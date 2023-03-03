@@ -703,12 +703,13 @@ VOID DIALOG_FilePrint(VOID)
     SIZE MetricSize;
     INT xLeft, xStart, yTop, CopyCount, PageCount, cyHeader, cyFooter, cySpacing, nTabWidth;
     BOOL bSkipPage;
-    DWORD ich, ichStart, cchText, iColumn;
+    DWORD ich, ichStart, cchText;
     LOGFONT HeaderLogFont, BodyLogFont;
     HFONT hHeaderFont, hBodyFont, hOldFont;
     LPTSTR pTemp = NULL;
     RECT rcPrintRect;
     SYSTEMTIME stNow;
+    TCHAR ch;
 
     /* Get Current Settings */
     ZeroMemory(&printer, sizeof(printer));
@@ -847,9 +848,21 @@ VOID DIALOG_FilePrint(VOID)
             xLeft = rcPrintRect.left;
             yTop = rcPrintRect.top + cyHeader + cySpacing;
             hOldFont = SelectObject(printer.hDC, hBodyFont); /* Select the body font */
-
             GetTextMetrics(printer.hDC, &tmText);
-            nTabWidth = tmText.tmAveCharWidth * 8;
+
+            /* Calculate a tab width */
+#define TAB_STOP 8
+            if (0)
+            {
+                nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
+            }
+            else
+            {
+                ch = _T('x');
+                GetTextExtentPoint32(printer.hDC, &ch, 1, &MetricSize);
+                nTabWidth = TAB_STOP * MetricSize.cx;
+            }
+#undef TAB_STOP
 
 #define FLUSH() do { \
     if (!bSkipPage) \
@@ -858,9 +871,9 @@ VOID DIALOG_FilePrint(VOID)
     xStart = xLeft; \
 } while (0)
             /* The drawing-body loop */
-            for (ichStart = ich, xStart = xLeft, iColumn = 0; ich < cchText; )
+            for (ichStart = ich, xStart = xLeft; ich < cchText; )
             {
-                TCHAR ch = pTemp[ich];
+                ch = pTemp[ich];
 
                 if (ch == _T('\r')) /* CR */
                 {
@@ -877,13 +890,11 @@ VOID DIALOG_FilePrint(VOID)
                     /* Next line */
                     yTop += tmText.tmHeight;
                     xLeft = xStart = rcPrintRect.left;
-                    iColumn = 0;
                 }
                 else
                 {
                     if (ch == _T('\t')) /* Tab */
                     {
-                        INT cchStep = 8 - (8 % iColumn);
                         INT nStepWidth = nTabWidth - ((xLeft - rcPrintRect.left) % nTabWidth);
 
                         FLUSH(); /* Flush! */
@@ -891,13 +902,11 @@ VOID DIALOG_FilePrint(VOID)
                         /* Go to the next tab stop */
                         xLeft += nStepWidth;
                         xStart = xLeft;
-                        iColumn += cchStep;
                     }
                     else /* One normal char */
                     {
                         GetTextExtentPoint32(printer.hDC, &ch, 1, &MetricSize);
                         xLeft += MetricSize.cx;
-                        ++iColumn;
                     }
 
                     /* Insert a line break if the next position reached the right edge */
@@ -909,7 +918,6 @@ VOID DIALOG_FilePrint(VOID)
                         /* Next line */
                         yTop += tmText.tmHeight;
                         xLeft = xStart = rcPrintRect.left;
-                        iColumn = 0;
                     }
                 }
 
