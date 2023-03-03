@@ -767,6 +767,10 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     GetLocalTime(&stNow);
 
+    /* Get the printing area */
+    if (!GetPrintingRect(hDC, &Globals.lMargins, &rcPrintRect))
+        return FALSE; /* The user canceled printing */
+
     /* Create the body text font for printing */
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -YPOINTS2PIXELS(hDC, 11); /* 11pt */
@@ -823,13 +827,6 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Ensure that each logical unit maps to one pixel */
     SetMapMode(hDC, MM_TEXT);
-
-    /* Get the printing area */
-    if (!GetPrintingRect(hDC, &Globals.lMargins, &rcPrintRect))
-    {
-        AlertPrintError();
-        goto CancelPrinting;
-    }
 
     /* TODO: Show the progress */
 
