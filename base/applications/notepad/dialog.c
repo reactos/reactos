@@ -853,6 +853,7 @@ VOID DIALOG_FilePrint(VOID)
             GetTextMetrics(hDC, &tmText);
             iColumn = 0;
             xStart = xLeft;
+            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
 
 #define FLUSH() do { \
     if (!bSkipPage) \
@@ -861,7 +862,6 @@ VOID DIALOG_FilePrint(VOID)
     xStart = xLeft; \
 } while (0)
             /* The drawing-body loop */
-            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
             for (ichStart = ich; ich < cchText; )
             {
                 if (pTemp[ich] == _T('\r')) /* CR */
