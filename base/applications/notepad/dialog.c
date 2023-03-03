@@ -821,6 +821,7 @@ VOID DIALOG_FilePrint(VOID)
             if (!Globals.szFooter[0])
                 cyFooter = 0;
 
+            /* The prologue of a page */
             if (!bSkipPage)
             {
                 if (StartPage(hDC) <= 0) /* Start a new page */
@@ -844,7 +845,6 @@ VOID DIALOG_FilePrint(VOID)
             yTop = rcPrintRect.top + cyHeader + cySpacing;
 
             SelectObject(hDC, hOldFont);
-
 
             /* Start drawing the body text */
             hOldFont = SelectObject(hDC, hBodyFont);
@@ -923,6 +923,7 @@ VOID DIALOG_FilePrint(VOID)
 
             SelectObject(hDC, hOldFont);
 
+            /* The epilogue of a page */
             if (!bSkipPage)
             {
                 if (cyFooter > 0) /* Draw the page footer */
