@@ -844,14 +844,11 @@ VOID DIALOG_FilePrint(VOID)
                 }
             }
 
-            /* The starting point for the main text */
-            xLeft = rcPrintRect.left;
-            yTop = rcPrintRect.top + cyHeader + cySpacing;
-
             SelectObject(hDC, hOldFont); /* De-select the font */
 
             /* Start drawing the body text */
-            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
+            xLeft = rcPrintRect.left;
+            yTop = rcPrintRect.top + cyHeader + cySpacing;
             GetTextMetrics(hDC, &tmText);
             iColumn = 0;
             xStart = xLeft;
@@ -863,6 +860,7 @@ VOID DIALOG_FilePrint(VOID)
     xStart = xLeft; \
 } while (0)
             /* The drawing-body loop */
+            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
             for (ichStart = ich; ich < cchText; )
             {
                 if (pTemp[ich] == _T('\r')) /* CR */
@@ -923,9 +921,8 @@ VOID DIALOG_FilePrint(VOID)
             }
 
             FLUSH(); /* Flush! */
-#undef FLUSH
-
             SelectObject(hDC, hOldFont); /* De-select the font */
+#undef FLUSH
 
             /* The epilogue of a page */
             if (!bSkipPage)
