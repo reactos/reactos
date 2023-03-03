@@ -765,7 +765,7 @@ VOID DIALOG_FilePrint(VOID)
         goto Quit;
     }
 
-    /* Get the file text */
+    /* Get the text length */
     if (printer.Flags & PD_SELECTION)
         cchText = GetSelectionTextLength(Globals.hEdit);
     else
