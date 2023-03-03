@@ -308,7 +308,7 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     if (IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) &&
         EqualRect(&rcIntersect, prcPrintRect))
     {
-        return TRUE;
+        return TRUE; /* The margin setting is OK */
     }
 
     /* Do you want to adjust the margin? */
