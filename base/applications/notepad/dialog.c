@@ -745,12 +745,12 @@ VOID DIALOG_FilePrint(VOID)
 
     /* Create the body text font for printing */
     GetObject(Globals.hFont, sizeof(BodyLogFont), &BodyLogFont);
-    BodyLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 12); /* 12pt */
+    BodyLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 11); /* 11pt */
     hBodyFont = CreateFontIndirect(&BodyLogFont);
 
     /* Create the header/footer font */
     ZeroMemory(&HeaderLogFont, sizeof(HeaderLogFont));
-    HeaderLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 10); /* 10pt */
+    HeaderLogFont.lfHeight = -YPOINTS2PIXELS(hDC, 9); /* 9pt */
     HeaderLogFont.lfWeight = FW_BOLD;
     HeaderLogFont.lfCharSet = DEFAULT_CHARSET;
     _tcscpy(HeaderLogFont.lfFaceName, BodyLogFont.lfFaceName);
