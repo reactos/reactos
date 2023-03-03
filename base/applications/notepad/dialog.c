@@ -288,7 +288,7 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
     RECT rcPhysical, rcIntersect;
-    TCHAR szText[MAX_STRING_LEN];
+    TCHAR szText[MAX_STRING_LEN], szTitle[MAX_STRING_LEN];
     INT id;
 
     rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
@@ -310,7 +310,8 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     {
         /* Do you want to adjust the margin? */
         LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
-        id = MessageBox(Globals.hMainWnd, szText, NULL, MB_ICONINFORMATION | MB_YESNOCANCEL);
+        LoadString(Globals.hInstance, STRING_NOTEPAD, szTitle, ARRAY_SIZE(szTitle));
+        id = MessageBox(Globals.hMainWnd, szText, szTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
         if (id == IDCANCEL)
             return FALSE;
 
@@ -328,12 +329,12 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
                 prcPrintRect->top = rcPhysical.top;
                 pMargins->top = UNCONVERT_Y(rcPhysical.top);
             }
-            if (prcPrintRect->right < rcPhysical.right)
+            if (rcPhysical.right < prcPrintRect->right)
             {
                 prcPrintRect->right = rcPhysical.right;
                 pMargins->right = UNCONVERT_X(iHorzRes - rcPhysical.right);
             }
-            if (prcPrintRect->bottom < rcPhysical.bottom)
+            if (rcPhysical.bottom < prcPrintRect->bottom)
             {
                 prcPrintRect->bottom = rcPhysical.bottom;
                 pMargins->bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
