@@ -798,10 +798,8 @@ VOID DIALOG_FilePrint(VOID)
     /* The printing-copies loop */
     for (CopyCount = 1; CopyCount <= printer.nCopies; ++CopyCount)
     {
-        PageCount = 1;
-
         /* The printing-pages loop */
-        for (ich = 0; ich < cchText; ++PageCount)
+        for (PageCount = 1, ich = 0; ich < cchText; ++PageCount)
         {
             /* Preparation of a page */
 
@@ -852,8 +850,6 @@ VOID DIALOG_FilePrint(VOID)
             xLeft = rcPrintRect.left;
             yTop = rcPrintRect.top + cyHeader + cySpacing;
             GetTextMetrics(hDC, &tmText);
-            iColumn = 0;
-            xStart = xLeft;
             hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
 
 #define FLUSH() do { \
@@ -863,7 +859,7 @@ VOID DIALOG_FilePrint(VOID)
     xStart = xLeft; \
 } while (0)
             /* The drawing-body loop */
-            for (ichStart = ich; ich < cchText; )
+            for (ichStart = ich, xStart = xLeft, iColumn = 0; ich < cchText; )
             {
                 ch = pTemp[ich];
 
