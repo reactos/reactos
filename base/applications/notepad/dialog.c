@@ -712,10 +712,10 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     LOGFONT lfHeader, lfBody;
     HFONT hOldFont, hHeaderFont, hBodyFont;
     LPTSTR pszTempText;
-    RECT rcPrintRect;
     SYSTEMTIME stNow;
     TCHAR ch;
     HDC hDC = pPrinter->hDC;
+    RECT rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
     BOOL ret = FALSE;
 
     GetLocalTime(&stNow);
@@ -773,9 +773,6 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         AlertPrintError();
         goto Quit;
     }
-
-    /* Get the current printing area */
-    rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
 
     /* Ensure that each logical unit maps to one pixel */
     SetMapMode(hDC, MM_TEXT);
