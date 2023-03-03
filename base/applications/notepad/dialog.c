@@ -713,7 +713,6 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     HFONT hOldFont, hHeaderFont, hBodyFont;
     LPTSTR pszTempText;
     SYSTEMTIME stNow;
-    TCHAR ch;
     HDC hDC = pPrinter->hDC;
     RECT rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
     BOOL ret = FALSE;
@@ -849,7 +848,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
             /* The drawing-body loop */
             for (ichStart = ich, xStart = xLeft; ich < cchText; )
             {
-                ch = pszTempText[ich];
+                TCHAR ch = pszTempText[ich];
 
                 if (ch == _T('\r')) /* CR */
                 {
