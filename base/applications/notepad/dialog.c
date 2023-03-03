@@ -771,6 +771,7 @@ VOID DIALOG_FilePrint(VOID)
     else
         cchText = GetWindowTextLength(Globals.hEdit);
 
+    /* Allocate a buffer for the text */
     pTemp = HeapAlloc(GetProcessHeap(), 0, (cchText + 1) * sizeof(TCHAR));
     if (!pTemp)
     {
@@ -800,6 +801,9 @@ VOID DIALOG_FilePrint(VOID)
         /* The printing-pages loop */
         for (ich = 0; ich < cchText; ++PageCount)
         {
+            /* Preparation of a page */
+
+            /* Should we skip this page? */
             if (printer.Flags & PD_SELECTION)
                 bSkipPage = FALSE; /* Selection is specified. The selected text is to be printed */
             else if (!(printer.Flags & PD_PAGENUMS))
@@ -809,10 +813,10 @@ VOID DIALOG_FilePrint(VOID)
             else
                 bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
 
-            hOldFont = SelectObject(hDC, hHeaderFont);
-            GetTextMetrics(hDC, &tmHeader);
+            hOldFont = SelectObject(hDC, hHeaderFont); /* Select the header font */
 
             /* Calculate the header and footer heights */
+            GetTextMetrics(hDC, &tmHeader);
             cyHeader = cyFooter = 2 * tmHeader.tmHeight;
             cySpacing = YPOINTS2PIXELS(hDC, 4); /* 4pt */
 
@@ -844,10 +848,10 @@ VOID DIALOG_FilePrint(VOID)
             xLeft = rcPrintRect.left;
             yTop = rcPrintRect.top + cyHeader + cySpacing;
 
-            SelectObject(hDC, hOldFont);
+            SelectObject(hDC, hOldFont); /* De-select the font */
 
             /* Start drawing the body text */
-            hOldFont = SelectObject(hDC, hBodyFont);
+            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
             GetTextMetrics(hDC, &tmText);
             iColumn = 0;
             xStart = xLeft;
@@ -921,7 +925,7 @@ VOID DIALOG_FilePrint(VOID)
             FLUSH(); /* Flush! */
 #undef FLUSH
 
-            SelectObject(hDC, hOldFont);
+            SelectObject(hDC, hOldFont); /* De-select the font */
 
             /* The epilogue of a page */
             if (!bSkipPage)
