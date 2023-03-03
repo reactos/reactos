@@ -947,10 +947,8 @@ BOOL DoPrint(LPPRINTDLG pPrinter)
         ret = TRUE;
 
 Quit: /* Clean up */
-    if (hHeaderFont)
-        DeleteObject(hHeaderFont);
-    if (hBodyFont)
-        DeleteObject(hBodyFont);
+    DeleteObject(hHeaderFont);
+    DeleteObject(hBodyFont);
     if (pszTempText)
         HeapFree(GetProcessHeap(), 0, pszTempText);
     return ret;
