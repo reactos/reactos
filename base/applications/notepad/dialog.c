@@ -780,6 +780,7 @@ VOID DIALOG_FilePrint(VOID)
         goto Quit;
     }
 
+    /* Get the text */
     if (printer.Flags & PD_SELECTION)
         GetSelectionText(Globals.hEdit, pTemp, cchText + 1);
     else
