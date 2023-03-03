@@ -138,7 +138,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
         if (Kcb)
         {
             /* Delist the key */
-            DelistKeyBodyFromKCB(KeyBody, FALSE);
+            DelistKeyBodyFromKCB(KeyBody, KeyBody->KcbLocked);
 
             /* Dereference the KCB */
             CmpDelayDerefKeyControlBlock(Kcb);
