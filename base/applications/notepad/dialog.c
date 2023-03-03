@@ -860,18 +860,15 @@ VOID DIALOG_FilePrint(VOID)
             {
                 if (pTemp[ich] == _T('\r')) /* CR */
                 {
-                    /* Flush! */
-                    FLUSH();
+                    FLUSH(); /* Flush! */
 
-                    /* Next char */
-                    ++ich;
+                    ++ich; /* Next char */
                     continue;
                 }
 
                 if (pTemp[ich] == _T('\n')) /* NewLine (LF) */
                 {
-                    /* Flush! */
-                    FLUSH();
+                    FLUSH(); /* Flush! */
 
                     /* Next line */
                     yTop += tmText.tmHeight;
@@ -885,8 +882,7 @@ VOID DIALOG_FilePrint(VOID)
                         INT nTabWidth = 8 - (iColumn % 8);
                         TCHAR chSpace = TEXT(' ');
 
-                        /* Flush! */
-                        FLUSH();
+                        FLUSH(); /* Flush! */
 
                         /* Go to the next tab stop */
                         GetTextExtentPoint32(hDC, &chSpace, 1, &szMetric);
@@ -904,8 +900,7 @@ VOID DIALOG_FilePrint(VOID)
                     /* Insert a line break if the next position reached the right edge */
                     if (xLeft + szMetric.cx >= rcPrintRect.right)
                     {
-                        /* Flush! */
-                        FLUSH();
+                        FLUSH(); /* Flush! */
 
                         /* Next line */
                         yTop += tmText.tmHeight;
@@ -920,9 +915,7 @@ VOID DIALOG_FilePrint(VOID)
                 {
                     /* The next line reached the body bottom */
 
-                    /* Flush! */
-                    FLUSH();
-
+                    FLUSH(); /* Flush! */
                     break;
                 }
             }
