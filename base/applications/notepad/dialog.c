@@ -280,51 +280,70 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
     }
 }
 
-static RECT
-GetPrintingRect(HDC hdc, RECT margins)
+static BOOL
+GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
 {
     INT iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
-    RECT rcPrintRect, rcPhysical, rcIntersect;
+    RECT rcPhysical, rcIntersect;
     TCHAR szText[MAX_STRING_LEN];
     INT id;
 
-#define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
-#define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
-    rcPrintRect.left = CONVERT_X(margins.left);
-    rcPrintRect.top = CONVERT_Y(margins.top);
-    rcPrintRect.right = iHorzRes - CONVERT_X(margins.right);
-    rcPrintRect.bottom = iVertRes - CONVERT_Y(margins.bottom);
     rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
     rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
     rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
+
+#define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
+#define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
+    prcPrintRect->left = CONVERT_X(pMargins->left);
+    prcPrintRect->top = CONVERT_Y(pMargins->top);
+    prcPrintRect->right = iHorzRes - CONVERT_X(pMargins->right);
+    prcPrintRect->bottom = iVertRes - CONVERT_Y(pMargins->bottom);
 #undef CONVERT_X
 #undef CONVERT_Y
 
-    if (!IntersectRect(&rcIntersect, &rcPrintRect, &rcPhysical) ||
-        !EqualRect(&rcIntersect, &rcPrintRect))
+    if (!IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) ||
+        !EqualRect(&rcIntersect, prcPrintRect))
     {
-        /* Do you adjust the margin? */
+        /* Do you want to adjust the margin? */
         LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
-        id = MessageBox(Globals.hMainWnd, szText, NULL, MB_ICONERROR | MB_YESNO);
+        id = MessageBox(Globals.hMainWnd, szText, NULL, MB_ICONINFORMATION | MB_YESNOCANCEL);
+        if (id == IDCANCEL)
+            return FALSE;
+
         if (id == IDYES)
         {
-            rcPrintRect = rcPhysical;
 #define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
 #define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
-            Globals.lMargins.left = UNCONVERT_X(rcPhysical.left);
-            Globals.lMargins.top = UNCONVERT_Y(rcPhysical.top);
-            Globals.lMargins.right = UNCONVERT_X(iHorzRes - rcPhysical.right);
-            Globals.lMargins.bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
+            if (rcPhysical.left < prcPrintRect->left)
+            {
+                prcPrintRect->left = rcPhysical.left;
+                pMargins->left = UNCONVERT_X(rcPhysical.left);
+            }
+            if (rcPhysical.top < prcPrintRect->top)
+            {
+                prcPrintRect->top = rcPhysical.top;
+                pMargins->top = UNCONVERT_Y(rcPhysical.top);
+            }
+            if (prcPrintRect->right < rcPhysical.right)
+            {
+                prcPrintRect->right = rcPhysical.right;
+                pMargins->right = UNCONVERT_X(iHorzRes - rcPhysical.right);
+            }
+            if (prcPrintRect->bottom < rcPhysical.bottom)
+            {
+                prcPrintRect->bottom = rcPhysical.bottom;
+                pMargins->bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
+            }
 #undef UNCONVERT_X
 #undef UNCONVERT_Y
         }
     }
 
-    return rcPrintRect;
+    return TRUE;
 }
 
 static BOOL DoSaveFile(VOID)
@@ -803,7 +822,11 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     SetMapMode(hDC, MM_TEXT);
 
     /* Get the printing area */
-    rcPrintRect = GetPrintingRect(hDC, Globals.lMargins);
+    if (!GetPrintingRect(hDC, &Globals.lMargins, &rcPrintRect))
+    {
+        AlertPrintError();
+        goto CancelPrinting;
+    }
 
     /* TODO: Show the progress */
 
