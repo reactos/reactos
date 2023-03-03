@@ -792,9 +792,12 @@ VOID DIALOG_FilePrint(VOID)
 
     /* TODO: Show the progress */
 
+    /* The printing-copies loop */
     for (CopyCount = 1; CopyCount <= printer.nCopies; ++CopyCount)
     {
         PageCount = 1;
+
+        /* The printing-pages loop */
         for (ich = 0; ich < cchText; ++PageCount)
         {
             if (printer.Flags & PD_SELECTION)
