@@ -846,9 +846,9 @@ VOID DIALOG_FilePrint(VOID)
             /* Start drawing the body text */
             xLeft = rcPrintRect.left;
             yTop = rcPrintRect.top + cyHeader + cySpacing;
-            GetTextMetrics(printer.hDC, &tmText);
             hOldFont = SelectObject(printer.hDC, hBodyFont); /* Select the body font */
 
+            GetTextMetrics(printer.hDC, &tmText);
             nTabWidth = tmText.tmAveCharWidth * 8;
 
 #define FLUSH() do { \
