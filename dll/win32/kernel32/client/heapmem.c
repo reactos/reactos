@@ -1275,6 +1275,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     VM_COUNTERS VmCounters;
     QUOTA_LIMITS QuotaLimits;
     ULONGLONG PageFile, PhysicalMemory;
+    NTSTATUS Status;
 
     if (lpBuffer->dwLength != sizeof(*lpBuffer))
     {
@@ -1283,10 +1284,15 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     }
 
     /* Query performance information */
-    NtQuerySystemInformation(SystemPerformanceInformation,
-                             &PerformanceInfo,
-                             sizeof(PerformanceInfo),
-                             NULL);
+    Status = NtQuerySystemInformation(SystemPerformanceInformation,
+                                      &PerformanceInfo,
+                                      sizeof(PerformanceInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
     /* Calculate memory load */
     lpBuffer->dwMemoryLoad = ((DWORD)(BaseStaticServerData->SysInfo.NumberOfPhysicalPages -
@@ -1304,16 +1310,27 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     lpBuffer->ullAvailPhys = PhysicalMemory;
 
     /* Query VM and Quota Limits */
-    NtQueryInformationProcess(NtCurrentProcess(),
-                              ProcessQuotaLimits,
-                              &QuotaLimits,
-                              sizeof(QUOTA_LIMITS),
-                              NULL);
-    NtQueryInformationProcess(NtCurrentProcess(),
-                              ProcessVmCounters,
-                              &VmCounters,
-                              sizeof(VM_COUNTERS),
-                              NULL);
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessQuotaLimits,
+                                       &QuotaLimits,
+                                       sizeof(QUOTA_LIMITS),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessVmCounters,
+                                       &VmCounters,
+                                       sizeof(VM_COUNTERS),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
     /* Save the commit limit */
     lpBuffer->ullTotalPageFile = min(QuotaLimits.PagefileLimit,
