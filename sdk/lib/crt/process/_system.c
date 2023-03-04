@@ -41,10 +41,7 @@ int system(const char *command)
       return 1;
   }
 
-// should return 127 or 0 ( MS ) if the shell is not found
-// _set_errno(ENOENT);
-
-  if (szComSpec == NULL)
+  if (!szComSpec || GetFileAttributesA(szComSpec) == INVALID_FILE_ATTRIBUTES)
   {
     szComSpec = "cmd.exe";
   }
@@ -138,10 +135,7 @@ int CDECL _wsystem(const wchar_t* cmd)
             return 1;
     }
 
-    // should return 127 or 0 ( MS ) if the shell is not found
-    // _set_errno(ENOENT);
-
-    if (szComSpec == NULL)
+    if (szComSpec == NULL || GetFileAttributesW(szComSpec) == INVALID_FILE_ATTRIBUTES)
         szComSpec = L"cmd.exe";
 
     /* split the path from shell command */
