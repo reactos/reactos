@@ -181,9 +181,9 @@ set(baseaddress_itss                           0x745e0000)
 set(baseaddress_joy                            0x745a0000)
 set(baseaddress_jscript                        0x74400000)
 set(baseaddress_jsproxy                        0x743d0000)
-set(baseaddress_kbdeo                          0x743b0000)
-set(baseaddress_kbdrost                        0x74390000)
-set(baseaddress_kbdsf                          0x74370000)
+#set(baseaddress_kbdeo                          0x743b0000) #unwanted, should vanish when rerunning the script
+#set(baseaddress_kbdrost                        0x74390000) #unwanted, should vanish when rerunning the script
+#set(baseaddress_kbdsf                          0x74370000) #unwanted, should vanish when rerunning the script
 set(baseaddress_kbsdll                         0x74340000)
 set(baseaddress_kernel32_vista                 0x74320000)
 set(baseaddress_ksuser                         0x742f0000)
@@ -196,7 +196,7 @@ set(baseaddress_load_notifications             0x73cd0000)
 set(baseaddress_loadperf                       0x73ca0000)
 set(baseaddress_localmon                       0x73c40000)
 set(baseaddress_localspl                       0x73b50000)
-set(baseaddress_localspl_apitest               0x73b20000)
+set(baseaddress_localspl_apitest.dll           0x73b20000) #module name corrected manually
 set(baseaddress_localui                        0x73ad0000)
 set(baseaddress_lpk                            0x73aa0000)
 set(baseaddress_lsasrv                         0x73a20000)
