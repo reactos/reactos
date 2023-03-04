@@ -152,7 +152,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     wcscat(szCmdLine, L" /C ");
     wcscat(szCmdLine, cmd);
 
-    // command file has invalid format ENOEXEC
+    /* command file has invalid format ENOEXEC */
 
     memset(&StartupInfo, 0, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
