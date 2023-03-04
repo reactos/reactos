@@ -27,7 +27,7 @@ int system(const char *command)
   STARTUPINFOA StartupInfo;
   char *s;
   BOOL result;
-  DWORD dwExitCode;
+  DWORD exit_code;
 
   szComSpec = getenv("COMSPEC");
 
@@ -68,7 +68,7 @@ int system(const char *command)
 
 //command file has invalid format ENOEXEC
 
-  memset (&StartupInfo, 0, sizeof(StartupInfo));
+  ZeroMemory(&StartupInfo, 0, sizeof(StartupInfo));
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
@@ -98,24 +98,23 @@ int system(const char *command)
 
   CloseHandle(ProcessInformation.hThread);
 
-// system should wait untill the calling process is finished
+  /* Wait for the process to exit */
   WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-  GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
+  GetExitCodeProcess(ProcessInformation.hProcess, &exit_code);
   CloseHandle(ProcessInformation.hProcess);
 
-  return (int)dwExitCode;
+  return (int)exit_code;
 }
 
 int CDECL _wsystem(const wchar_t* cmd)
 {
     wchar_t *szCmdLine = NULL;
     wchar_t *szComSpec = NULL;
-
-    PROCESS_INFORMATION ProcessInformation;
-    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION process_info;
+    STARTUPINFOW startup_info;
     wchar_t *s;
     BOOL result;
-    DWORD dwExitCode;
+    DWORD exit_code;
 
     szComSpec = _wgetenv(L"COMSPEC");
 
@@ -154,16 +153,17 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     /* command file has invalid format ENOEXEC */
 
-    memset(&StartupInfo, 0, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-    StartupInfo.wShowWindow = SW_SHOWDEFAULT;
+    ZeroMemory(&startup_info, 0, sizeof(startup_info));
+    startup_info.cb = sizeof(startup_info);
+    startup_info.dwFlags = STARTF_USESHOWWINDOW;
+    startup_info.wShowWindow = SW_SHOWDEFAULT;
 
     /* In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
        thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process. */
 
     /* SIGCHILD should be blocked aswell */
 
+    /* Create the process to execute the command */
     result = CreateProcessW(szComSpec,
                             szCmdLine,
                             NULL,
@@ -172,8 +172,8 @@ int CDECL _wsystem(const wchar_t* cmd)
                             CREATE_NEW_PROCESS_GROUP,
                             NULL,
                             NULL,
-                            &StartupInfo,
-                            &ProcessInformation);
+                            &startup_info,
+                            &process_info);
     free(szCmdLine);
 
     if (!result)
@@ -182,13 +182,13 @@ int CDECL _wsystem(const wchar_t* cmd)
         return -1;
     }
 
-    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(process_info.hThread);
 
-    /* _wsystem should wait until the calling process is finished */
-    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-    GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
+    /* Wait for the process to exit */
+    WaitForSingleObject(process_info.hProcess, INFINITE);
+    GetExitCodeProcess(process_info.hProcess, &exit_code);
 
-    CloseHandle(ProcessInformation.hProcess);
+    CloseHandle(process_info.hProcess);
 
-    return (int)dwExitCode;
+    return (int)exit_code;
 }
