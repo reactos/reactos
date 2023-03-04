@@ -27,8 +27,7 @@ int system(const char *command)
   STARTUPINFOA StartupInfo;
   char *s;
   BOOL result;
-
-  int nStatus;
+  DWORD dwExitCode;
 
   szComSpec = getenv("COMSPEC");
 
@@ -105,10 +104,11 @@ int system(const char *command)
   CloseHandle(ProcessInformation.hThread);
 
 // system should wait untill the calling process is finished
-  _cwait(&nStatus,(intptr_t)ProcessInformation.hProcess,0);
+  WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+  GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
   CloseHandle(ProcessInformation.hProcess);
 
-  return nStatus;
+  return (int)dwExitCode;
 }
 
 int CDECL _wsystem(const wchar_t* cmd)
@@ -120,8 +120,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     STARTUPINFOW StartupInfo;
     wchar_t *s;
     BOOL result;
-
-    int nStatus;
+    DWORD dwExitCode;
 
     szComSpec = _wgetenv(L"COMSPEC");
 
@@ -163,11 +162,8 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     memset(&StartupInfo, 0, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved= NULL;
     StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
     StartupInfo.wShowWindow = SW_SHOWDEFAULT;
-    StartupInfo.lpReserved2 = NULL;
-    StartupInfo.cbReserved2 = 0;
 
     // According to ansi standards the new process should ignore  SIGINT and SIGQUIT
     // In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
@@ -195,9 +191,11 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     CloseHandle(ProcessInformation.hThread);
 
-    // system should wait untill the calling process is finished
-    _cwait(&nStatus, (intptr_t)ProcessInformation.hProcess, 0);
+    // system should wait until the calling process is finished
+    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+    GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
+
     CloseHandle(ProcessInformation.hProcess);
 
-    return nStatus;
+    return (int)dwExitCode;
 }
