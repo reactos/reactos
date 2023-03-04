@@ -70,16 +70,11 @@ int system(const char *command)
 
   memset (&StartupInfo, 0, sizeof(StartupInfo));
   StartupInfo.cb = sizeof(StartupInfo);
-  StartupInfo.lpReserved= NULL;
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
-  StartupInfo.lpReserved2 = NULL;
-  StartupInfo.cbReserved2 = 0;
 
-// According to ansi standards the new process should ignore  SIGINT and SIGQUIT
 // In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
 // thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process.
-
 
 //SIGCHILD should be blocked aswell
 
@@ -124,8 +119,7 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     szComSpec = _wgetenv(L"COMSPEC");
 
-    // system should return 0 if cmd is null and the shell is found
-
+    /* _wsystem should return 0 if cmd is null and the shell is found */
     if (cmd == NULL)
     {
         if (szComSpec == NULL)
@@ -158,18 +152,17 @@ int CDECL _wsystem(const wchar_t* cmd)
     wcscat(szCmdLine, L" /C ");
     wcscat(szCmdLine, cmd);
 
-    //command file has invalid format ENOEXEC
+    // command file has invalid format ENOEXEC
 
     memset(&StartupInfo, 0, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
     StartupInfo.wShowWindow = SW_SHOWDEFAULT;
 
-    // According to ansi standards the new process should ignore  SIGINT and SIGQUIT
-    // In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
-    // thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process.
+    /* In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
+       thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process. */
 
-    //SIGCHILD should be blocked aswell
+    /* SIGCHILD should be blocked aswell */
 
     result = CreateProcessW(szComSpec,
                             szCmdLine,
@@ -191,7 +184,7 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     CloseHandle(ProcessInformation.hThread);
 
-    // system should wait until the calling process is finished
+    /* _wsystem should wait until the calling process is finished */
     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
     GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
 
