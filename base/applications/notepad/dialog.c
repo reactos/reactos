@@ -659,8 +659,8 @@ BOOL DIALOG_FileSaveAs(VOID)
 }
 
 /* Convert the points into pixels */
-#define XPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSX), 72)
-#define YPOINTS2PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSY), 72)
+#define X_POINTS_TO_PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSX), 72)
+#define Y_POINTS_TO_PIXELS(hDC, points) MulDiv((points), GetDeviceCaps((hDC), LOGPIXELSY), 72)
 
 /*
  * See also:
@@ -674,7 +674,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     UINT uAlign = DT_CENTER, uFlags = DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
 
     Rectangle(hDC, pRect->left, pRect->top, pRect->right, pRect->bottom); /* Draw a rectangle */
-    InflateRect(pRect, -XPOINTS2PIXELS(hDC, 3), 0); /* Shrink 3pt */
+    InflateRect(pRect, -X_POINTS_TO_PIXELS(hDC, 3), 0); /* Shrink 3pt */
 
     szText[0] = 0;
 
@@ -774,7 +774,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Create the body text font for printing */
     lfBody = Globals.lfFont;
-    lfBody.lfHeight = -YPOINTS2PIXELS(hPrinterDC, 11); /* 11pt */
+    lfBody.lfHeight = -Y_POINTS_TO_PIXELS(hPrinterDC, 11); /* 11pt */
     hBodyFont = CreateFontIndirect(&lfBody);
     if (hBodyFont == NULL)
     {
@@ -784,7 +784,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Create the header/footer font */
     ZeroMemory(&lfHeader, sizeof(lfHeader));
-    lfHeader.lfHeight = -YPOINTS2PIXELS(hPrinterDC, 9); /* 9pt */
+    lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(hPrinterDC, 9); /* 9pt */
     lfHeader.lfWeight = FW_BOLD;
     lfHeader.lfCharSet = DEFAULT_CHARSET;
     StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
@@ -831,7 +831,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     /* Calculate the header and footer heights */
     GetTextMetrics(hPrinterDC, &tmHeader);
     cyHeader = cyFooter = 2 * tmHeader.tmHeight;
-    cySpacing = YPOINTS2PIXELS(hPrinterDC, 4); /* 4pt */
+    cySpacing = Y_POINTS_TO_PIXELS(hPrinterDC, 4); /* 4pt */
 
     if (!Globals.szHeader[0])
         cyHeader = cySpacing = 0;
