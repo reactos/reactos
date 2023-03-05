@@ -25,15 +25,15 @@ START_TEST(system)
     ok_int(ret, 1);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
-    ret = system("dir");
+    ret = system("echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", "cmd.exe");
-    ret = system("dir");
+    ret = system("echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
-    ret = system("dir");
+    ret = system("echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", NULL);

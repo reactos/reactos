@@ -25,15 +25,15 @@ START_TEST(_wsystem)
     ok_int(ret, 1);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
-    ret = _wsystem(L"dir");
+    ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"cmd.exe");
-    ret = _wsystem(L"dir");
+    ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
-    ret = _wsystem(L"dir");
+    ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
