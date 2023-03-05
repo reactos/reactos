@@ -842,9 +842,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
             ichStart = pData->ich;
 
         if (yTop + tmText.tmHeight >= printRect.bottom - pData->cyFooter)
-        {
             break; /* The next line reached the body bottom */
-        }
     }
 
     DO_FLUSH();
