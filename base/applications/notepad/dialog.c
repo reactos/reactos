@@ -287,7 +287,7 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
-    RECT rcPhysical, rcIntersect;
+    RECT rcPhysical;
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
@@ -302,12 +302,6 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
     rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
     rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
-
-    if (IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) &&
-        EqualRect(&rcIntersect, prcPrintRect))
-    {
-        return TRUE; /* The margin setting is OK */
-    }
 
     /* Adjust the margin */
     prcPrintRect->left = max(prcPrintRect->left, rcPhysical.left);
