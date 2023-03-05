@@ -771,10 +771,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     INT xLeft, xStart, yTop, nTabWidth;
     BOOL bSkipPage;
     HFONT hOldFont;
-    DWORD ich = pData->ich;
-    DWORD ichStart = ich;
-
-    /* Preparation of a page */
+    DWORD ich = pData->ich, ichStart = pData->ich;
 
     /* Should we skip this page? */
     if (pPrinter->Flags & PD_SELECTION)
@@ -830,12 +827,13 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     ichStart = ich; \
     xStart = xLeft; \
 } while (0)
+
     /* The drawing-body loop */
     for (ichStart = ich, xStart = xLeft; ich < pData->cchText; )
     {
         TCHAR ch = pData->pszText[ich];
 
-        if (ch == _T('\r')) /* CR */
+        if (ch == _T('\r'))
         {
             DO_FLUSH();
 
@@ -844,7 +842,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
             continue;
         }
 
-        if (ch == _T('\n')) /* NewLine (LF) */
+        if (ch == _T('\n'))
         {
             DO_FLUSH();
 
@@ -854,7 +852,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
         }
         else
         {
-            if (ch == _T('\t')) /* Tab */
+            if (ch == _T('\t'))
             {
                 INT nStepWidth = nTabWidth - ((xLeft - printRect.left) % nTabWidth);
 
@@ -864,7 +862,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
                 xLeft += nStepWidth;
                 xStart = xLeft;
             }
-            else /* One normal char */
+            else /* Normal char */
             {
                 GetTextExtentPoint32(pPrinter->hDC, &ch, 1, &MetricSize);
                 xLeft += MetricSize.cx;
