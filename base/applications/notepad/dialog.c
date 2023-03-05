@@ -288,8 +288,6 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
     RECT rcPhysical, rcIntersect;
-    TCHAR szText[MAX_STRING_LEN], szTitle[MAX_STRING_LEN];
-    INT id;
 
     rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
     rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
@@ -311,40 +309,15 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
         return TRUE; /* The margin setting is OK */
     }
 
-    /* Do you want to adjust the margin? */
-    LoadString(Globals.hInstance, STRING_PAGESETUP_ADJUSTMARGIN, szText, ARRAY_SIZE(szText));
-    LoadString(Globals.hInstance, STRING_NOTEPAD, szTitle, ARRAY_SIZE(szTitle));
-    id = MessageBox(Globals.hMainWnd, szText, szTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
-    if (id == IDCANCEL)
-        return FALSE;
-    if (id == IDNO)
-        return TRUE;
-
-    /* Yes: Adjust the margin */
-#define UNCONVERT_X(x) MulDiv((x), 2540, iLogPixelsX) /* pixels to 100th millimeters */
-#define UNCONVERT_Y(y) MulDiv((y), 2540, iLogPixelsY) /* pixels to 100th millimeters */
+    /* Adjust the margin */
     if (prcPrintRect->left < rcPhysical.left)
-    {
         prcPrintRect->left = rcPhysical.left;
-        pMargins->left = UNCONVERT_X(rcPhysical.left);
-    }
     if (prcPrintRect->top < rcPhysical.top)
-    {
         prcPrintRect->top = rcPhysical.top;
-        pMargins->top = UNCONVERT_Y(rcPhysical.top);
-    }
     if (rcPhysical.right < prcPrintRect->right)
-    {
         prcPrintRect->right = rcPhysical.right;
-        pMargins->right = UNCONVERT_X(iHorzRes - rcPhysical.right);
-    }
     if (rcPhysical.bottom < prcPrintRect->bottom)
-    {
         prcPrintRect->bottom = rcPhysical.bottom;
-        pMargins->bottom = UNCONVERT_Y(iVertRes - rcPhysical.bottom);
-    }
-#undef UNCONVERT_X
-#undef UNCONVERT_Y
 
     return TRUE;
 }

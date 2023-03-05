@@ -134,7 +134,6 @@ STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&f"
     STRING_PAGESETUP_FOOTERVALUE "Page &p"
-    STRING_PAGESETUP_ADJUSTMARGIN "The current margin is narrower than the physical margin.\r\n\r\nDo you want to adjust the margin?"
     STRING_NOTEPAD "Bloc-notes"
     STRING_ERROR "ERREUR"
     STRING_WARNING "ATTENTION"
