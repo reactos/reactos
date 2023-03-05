@@ -721,9 +721,9 @@ VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
 /*
  * @unimplemented
  *
- * NOTE: We adopt a different design from Microsoft's one for security reason.
+ * NOTE: We adopt a different design from Microsoft's one due to security reason.
+ *       See NtUserLoadKeyboardLayoutEx.
  */
-/* Win: LoadKeyboardLayoutWorker */
 HKL APIENTRY
 IntLoadKeyboardLayout(
     _In_    HKL     hklUnload,
@@ -733,7 +733,6 @@ IntLoadKeyboardLayout(
     _In_    BOOL    unknown5)
 {
     DWORD dwKLID, dwHKL, dwType, dwSize;
-    UNICODE_STRING ustrKbdName;
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
     WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
@@ -807,7 +806,7 @@ IntLoadKeyboardLayout(
                 szImeFileName[_countof(szImeFileName) - 1] = UNICODE_NULL;
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
 
-                /* We don't allow the invalid "IME File" values for security reason */
+                /* We don't allow the invalid "IME File" values due to security reason */
                 if (dwType != REG_SZ || szImeFileName[0] == 0 ||
                     wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
                     GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
@@ -833,9 +832,8 @@ IntLoadKeyboardLayout(
 
     dwHKL = MAKELONG(wLow, wHigh);
 
-    ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName, NULL, &ustrKLID, dwHKL, Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, NULL, hklUnload, &ustrKLID, dwHKL, Flags);
     CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
     return hNewKL;
 }
