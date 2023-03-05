@@ -25,7 +25,6 @@ int system(const char *command)
 
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOA StartupInfo;
-  char *s;
   BOOL result;
   DWORD exit_code;
   char cmd_exe[MAX_PATH];
@@ -48,25 +47,16 @@ int system(const char *command)
     szComSpec = cmd_exe;
   }
 
-  /* split the path from shell command */
-  s = max(strrchr(szComSpec, '\\'), strrchr(szComSpec, '/'));
-  if (s == NULL)
-    s = szComSpec;
-  else
-    s++;
-
-  szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1);
+  szCmdLine = malloc(1 + strlen(szComSpec) + 5 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
      _set_errno(ENOMEM);
      return -1;
   }
 
-  strcpy(szCmdLine, s);
-  s = strrchr(szCmdLine, '.');
-  if (s)
-    *s = 0;
-  strcat(szCmdLine, " /C ");
+  strcpy(szCmdLine, "\"");
+  strcat(szCmdLine, szComSpec);
+  strcat(szCmdLine, "\" /C ");
   strcat(szCmdLine, command);
 
 //command file has invalid format ENOEXEC
@@ -117,7 +107,6 @@ int CDECL _wsystem(const wchar_t* cmd)
     wchar_t *szComSpec = NULL;
     PROCESS_INFORMATION process_info;
     STARTUPINFOW startup_info;
-    wchar_t *s;
     BOOL result;
     DWORD exit_code;
     wchar_t cmd_exe[MAX_PATH];
@@ -140,25 +129,16 @@ int CDECL _wsystem(const wchar_t* cmd)
         szComSpec = cmd_exe;
     }
 
-    /* split the path from shell command */
-    s = max(wcsrchr(szComSpec, L'\\'), wcsrchr(szComSpec, L'/'));
-    if (s == NULL)
-        s = szComSpec;
-    else
-        s++;
-
-    szCmdLine = malloc((wcslen(s) + 4 + wcslen(cmd) + 1) * sizeof(wchar_t));
+    szCmdLine = malloc((1 + wcslen(szComSpec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
     if (szCmdLine == NULL)
     {
         _set_errno(ENOMEM);
         return -1;
     }
 
-    wcscpy(szCmdLine, s);
-    s = wcsrchr(szCmdLine, L'.');
-    if (s)
-        *s = 0;
-    wcscat(szCmdLine, L" /C ");
+    wcscpy(szCmdLine, L"\"");
+    wcscat(szCmdLine, szComSpec);
+    wcscat(szCmdLine, L"\" /C ");
     wcscat(szCmdLine, cmd);
 
     /* command file has invalid format ENOEXEC */
