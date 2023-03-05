@@ -778,8 +778,10 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
 
 #define DO_FLUSH() do { \
-    if (ichStart < pData->ich && !bSkipPage) \
+    if (ichStart < pData->ich && !bSkipPage) { \
+        TCHAR *pch = &pData->pszText[ichStart]; \
         TextOut(pPrinter->hDC, xStart, yTop, pch, pData->ich - ichStart); \
+    } \
     ichStart = pData->ich; \
     xStart = xLeft; \
 } while (0)
