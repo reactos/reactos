@@ -779,8 +779,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 
 #define DO_FLUSH() do { \
     if (ichStart < pData->ich && !bSkipPage) { \
-        TCHAR *pch = &pData->pszText[ichStart]; \
-        TextOut(pPrinter->hDC, xStart, yTop, pch, pData->ich - ichStart); \
+        TextOut(pPrinter->hDC, xStart, yTop, &pData->pszText[ichStart], pData->ich - ichStart); \
     } \
     ichStart = pData->ich; \
     xStart = xLeft; \
