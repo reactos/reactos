@@ -14,7 +14,6 @@
 #include <string.h>
 #include <process.h>
 
-
 /*
  * @implemented
  */
@@ -26,7 +25,7 @@ int system(const char *command)
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOA StartupInfo;
   BOOL result;
-  DWORD exit_code;
+  int status;
   char cmd_exe[MAX_PATH];
 
   szComSpec = getenv("COMSPEC");
@@ -44,7 +43,7 @@ int system(const char *command)
     szComSpec = cmd_exe;
   }
 
-  szCmdLine = LocalAlloc(LPTR, 1 + strlen(szComSpec) + 5 + strlen(command) + 1);
+  szCmdLine = malloc(1 + strlen(szComSpec) + 5 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
      _dosmaperr(GetLastError());
@@ -78,7 +77,7 @@ int system(const char *command)
 			  NULL,
 			  &StartupInfo,
 			  &ProcessInformation);
-  LocalFree(szCmdLine);
+  free(szCmdLine);
 
   if (result == FALSE)
   {
@@ -89,23 +88,22 @@ int system(const char *command)
   CloseHandle(ProcessInformation.hThread);
 
   /* Wait for the process to exit */
-  WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-  GetExitCodeProcess(ProcessInformation.hProcess, &exit_code);
+  _cwait(&status, (intptr_t)ProcessInformation.hProcess, 0);
 
   CloseHandle(ProcessInformation.hProcess);
 
   _set_errno(0);
-  return (int)exit_code;
+  return status;
 }
 
-int CDECL _wsystem(const wchar_t* cmd)
+int CDECL _wsystem(const wchar_t *cmd)
 {
     wchar_t *cmdline = NULL;
     wchar_t *comspec = NULL;
     PROCESS_INFORMATION process_info;
     STARTUPINFOW startup_info;
     BOOL result;
-    DWORD exit_code;
+    int status;
     wchar_t cmd_exe[MAX_PATH];
 
     comspec = _wgetenv(L"COMSPEC");
@@ -123,7 +121,7 @@ int CDECL _wsystem(const wchar_t* cmd)
         comspec = cmd_exe;
     }
 
-    cmdline = LocalAlloc(LPTR, (1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
+    cmdline = malloc((1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
     if (cmdline == NULL)
     {
         _dosmaperr(GetLastError());
@@ -158,7 +156,7 @@ int CDECL _wsystem(const wchar_t* cmd)
                             NULL,
                             &startup_info,
                             &process_info);
-    LocalFree(cmdline);
+    free(cmdline);
 
     if (!result)
     {
@@ -169,11 +167,10 @@ int CDECL _wsystem(const wchar_t* cmd)
     CloseHandle(process_info.hThread);
 
     /* Wait for the process to exit */
-    WaitForSingleObject(process_info.hProcess, INFINITE);
-    GetExitCodeProcess(process_info.hProcess, &exit_code);
+    _cwait(&status, (intptr_t)process_info.hProcess, 0);
 
     CloseHandle(process_info.hProcess);
 
     _set_errno(0);
-    return (int)exit_code;
+    return status;
 }
