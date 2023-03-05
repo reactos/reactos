@@ -280,23 +280,21 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
     }
 }
 
-static BOOL
-GetPrintingRect(IN HDC hdc, OUT LPRECT prcPrintRect, IN LPCRECT pMargins)
+static RECT
+GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins)
 {
     INT iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
     INT iHorzRes = GetDeviceCaps(hdc, HORZRES); /* in pixels */
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
-    RECT rcPhysical;
+    RECT rcPrintRect, rcPhysical;
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
-    SetRect(prcPrintRect,
+    SetRect(&rcPrintRect,
             CONVERT_X(pMargins->left), CONVERT_Y(pMargins->top),
             iHorzRes - CONVERT_X(pMargins->right),
             iVertRes - CONVERT_Y(pMargins->bottom));
-#undef CONVERT_X
-#undef CONVERT_Y
 
     rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
     rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
@@ -304,12 +302,12 @@ GetPrintingRect(IN HDC hdc, OUT LPRECT prcPrintRect, IN LPCRECT pMargins)
     rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
 
     /* Adjust the margin */
-    prcPrintRect->left = max(prcPrintRect->left, rcPhysical.left);
-    prcPrintRect->top = max(prcPrintRect->top, rcPhysical.top);
-    prcPrintRect->right = min(prcPrintRect->right, rcPhysical.right);
-    prcPrintRect->bottom = min(prcPrintRect->bottom, rcPhysical.bottom);
+    rcPrintRect.left = max(rcPrintRect.left, rcPhysical.left);
+    rcPrintRect.top = max(rcPrintRect.top, rcPhysical.top);
+    rcPrintRect.right = min(rcPrintRect.right, rcPhysical.right);
+    rcPrintRect.bottom = min(rcPrintRect.bottom, rcPhysical.bottom);
 
-    return TRUE;
+    return rcPrintRect;
 }
 
 static BOOL DoSaveFile(VOID)
@@ -911,8 +909,7 @@ static BOOL DoPrintDocument(LPPRINTDLG pPrinter)
 
     GetLocalTime(&printData.stNow);
 
-    if (!GetPrintingRect(pPrinter->hDC, &printData.printRect, &Globals.lMargins))
-        return FALSE; /* The user canceled printing */
+    printData.printRect = GetPrintingRect(pPrinter->hDC, &Globals.lMargins);
 
     if (!DoCreatePrintFonts(pPrinter, &printData))
     {
