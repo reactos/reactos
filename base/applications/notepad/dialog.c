@@ -749,7 +749,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
 
 static BOOL DoPrint(LPPRINTDLG pPrinter)
 {
-    DOCINFO di;
+    DOCINFO docInfo;
     TEXTMETRIC tmHeader, tmText;
     SIZE MetricSize;
     INT xLeft, xStart, yTop, CopyCount, PageCount, cyHeader, cyFooter, cySpacing, nTabWidth;
@@ -759,22 +759,22 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     HFONT hOldFont, hHeaderFont, hBodyFont;
     LPTSTR pszTempText;
     SYSTEMTIME stNow;
-    HDC hDC = pPrinter->hDC;
+    HDC hPrinterDC = pPrinter->hDC;
     RECT rcPrintRect;
     BOOL ret = FALSE;
 
     GetLocalTime(&stNow);
 
     /* Ensure that each logical unit maps to one pixel */
-    SetMapMode(hDC, MM_TEXT);
+    SetMapMode(hPrinterDC, MM_TEXT);
 
     /* Get the printing area */
-    if (!GetPrintingRect(hDC, &Globals.lMargins, &rcPrintRect))
+    if (!GetPrintingRect(hPrinterDC, &Globals.lMargins, &rcPrintRect))
         return FALSE; /* The user canceled printing */
 
     /* Create the body text font for printing */
     lfBody = Globals.lfFont;
-    lfBody.lfHeight = -YPOINTS2PIXELS(hDC, 11); /* 11pt */
+    lfBody.lfHeight = -YPOINTS2PIXELS(hPrinterDC, 11); /* 11pt */
     hBodyFont = CreateFontIndirect(&lfBody);
     if (hBodyFont == NULL)
     {
@@ -784,7 +784,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Create the header/footer font */
     ZeroMemory(&lfHeader, sizeof(lfHeader));
-    lfHeader.lfHeight = -YPOINTS2PIXELS(hDC, 9); /* 9pt */
+    lfHeader.lfHeight = -YPOINTS2PIXELS(hPrinterDC, 9); /* 9pt */
     lfHeader.lfWeight = FW_BOLD;
     lfHeader.lfCharSet = DEFAULT_CHARSET;
     StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
@@ -817,14 +817,28 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         GetWindowText(Globals.hEdit, pszTempText, cchText + 1);
 
     /* Start a document */
-    ZeroMemory(&di, sizeof(di));
-    di.cbSize = sizeof(DOCINFO);
-    di.lpszDocName = Globals.szFileTitle;
-    if (StartDoc(hDC, &di) <= 0)
+    ZeroMemory(&docInfo, sizeof(docInfo));
+    docInfo.cbSize = sizeof(DOCINFO);
+    docInfo.lpszDocName = Globals.szFileTitle;
+    if (StartDoc(hPrinterDC, &docInfo) <= 0)
     {
         AlertPrintError();
         goto Quit;
     }
+
+    hOldFont = SelectObject(hPrinterDC, hHeaderFont); /* Select the header font */
+
+    /* Calculate the header and footer heights */
+    GetTextMetrics(hPrinterDC, &tmHeader);
+    cyHeader = cyFooter = 2 * tmHeader.tmHeight;
+    cySpacing = YPOINTS2PIXELS(hPrinterDC, 4); /* 4pt */
+
+    if (!Globals.szHeader[0])
+        cyHeader = cySpacing = 0;
+    if (!Globals.szFooter[0])
+        cyFooter = 0;
+
+    SelectObject(hPrinterDC, hOldFont); /* De-select the font */
 
     /* TODO: Show the progress */
 
@@ -846,25 +860,14 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
             else
                 bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
 
-            hOldFont = SelectObject(hDC, hHeaderFont); /* Select the header font */
-
-            /* Calculate the header and footer heights */
-            GetTextMetrics(hDC, &tmHeader);
-            cyHeader = cyFooter = 2 * tmHeader.tmHeight;
-            cySpacing = YPOINTS2PIXELS(hDC, 4); /* 4pt */
-
-            if (!Globals.szHeader[0])
-                cyHeader = cySpacing = 0;
-            if (!Globals.szFooter[0])
-                cyFooter = 0;
-
             /* The prologue of a page */
+            hOldFont = SelectObject(hPrinterDC, hHeaderFont); /* Select the header font */
             if (!bSkipPage)
             {
-                if (StartPage(hDC) <= 0) /* Start a new page */
+                if (StartPage(hPrinterDC) <= 0)
                 {
                     AlertPrintError();
-                    SelectObject(hDC, hOldFont);
+                    SelectObject(hPrinterDC, hOldFont);
                     goto CancelPrinting;
                 }
 
@@ -872,17 +875,16 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                 {
                     RECT rc = rcPrintRect;
                     rc.bottom = rc.top + cyHeader;
-                    DrawHeaderOrFooter(hDC, &rc, Globals.szHeader, PageCount, &stNow);
+                    DrawHeaderOrFooter(hPrinterDC, &rc, Globals.szHeader, PageCount, &stNow);
                 }
             }
-
-            SelectObject(hDC, hOldFont); /* De-select the font */
+            SelectObject(hPrinterDC, hOldFont); /* De-select the font */
 
             /* Start drawing the body text */
             xLeft = rcPrintRect.left;
             yTop = rcPrintRect.top + cyHeader + cySpacing;
-            hOldFont = SelectObject(hDC, hBodyFont); /* Select the body font */
-            GetTextMetrics(hDC, &tmText);
+            hOldFont = SelectObject(hPrinterDC, hBodyFont); /* Select the body font */
+            GetTextMetrics(hPrinterDC, &tmText);
 
             /* Calculate a tab width */
 #define TAB_STOP 8
@@ -896,7 +898,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         assert(*pch != _T('\r')); \
         assert(*pch != _T('\n')); \
         if (!bSkipPage) \
-            TextOut(hDC, xStart, yTop, pch, ich - ichStart); \
+            TextOut(hPrinterDC, xStart, yTop, pch, ich - ichStart); \
     } \
     ichStart = ich; \
     xStart = xLeft; \
@@ -937,7 +939,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                     }
                     else /* One normal char */
                     {
-                        GetTextExtentPoint32(hDC, &ch, 1, &MetricSize);
+                        GetTextExtentPoint32(hPrinterDC, &ch, 1, &MetricSize);
                         xLeft += MetricSize.cx;
                     }
 
@@ -962,7 +964,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
             }
 
             DO_FLUSH();
-            SelectObject(hDC, hOldFont); /* De-select the font */
+            SelectObject(hPrinterDC, hOldFont); /* De-select the font */
 #undef DO_FLUSH
 
             /* The epilogue of a page */
@@ -972,13 +974,12 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
                 {
                     RECT rc = rcPrintRect;
                     rc.top = rc.bottom - cyFooter;
-                    hOldFont = SelectObject(hDC, hHeaderFont);
-                    DrawHeaderOrFooter(hDC, &rc, Globals.szFooter, PageCount, &stNow);
-                    SelectObject(hDC, hOldFont);
+                    hOldFont = SelectObject(hPrinterDC, hHeaderFont);
+                    DrawHeaderOrFooter(hPrinterDC, &rc, Globals.szFooter, PageCount, &stNow);
+                    SelectObject(hPrinterDC, hOldFont);
                 }
 
-                /* Finish the page */
-                if (EndPage(hDC) <= 0)
+                if (EndPage(hPrinterDC) <= 0)
                 {
                     AlertPrintError();
                     goto CancelPrinting;
@@ -987,8 +988,7 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         }
     }
 
-    /* Finish the document */
-    if (EndDoc(hDC) <= 0)
+    if (EndDoc(hPrinterDC) <= 0)
         AlertPrintError();
     else
         ret = TRUE;
@@ -1001,7 +1001,7 @@ Quit: /* Clean up */
     return ret;
 
 CancelPrinting:
-    AbortDoc(hDC);
+    AbortDoc(hPrinterDC);
     goto Quit;
 }
 
