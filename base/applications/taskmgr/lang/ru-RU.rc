@@ -138,8 +138,8 @@ BEGIN
         END
         MENUITEM "Задать &соответствие...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "&Свойства", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Открыть расположение файла", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
