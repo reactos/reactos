@@ -747,35 +747,205 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     DrawText(hDC, szText, -1, pRect, uAlign | uFlags);
 }
 
+typedef struct
+{
+    LPPRINTDLG pPrinter;
+    RECT rcPrintRect;
+    SYSTEMTIME stNow;
+    HFONT hHeaderFont;
+    HFONT hBodyFont;
+    LPTSTR pszText;
+    DWORD ich;
+    DWORD cchText;
+    INT cyHeader;
+    INT cySpacing;
+    INT cyFooter;
+} PRINT_DATA, *PPRINT_DATA;
+
+static BOOL DoPrintPage(PPRINT_DATA pPrintData, DWORD PageCount)
+{
+    LPPRINTDLG pPrinter = pPrintData->pPrinter;
+    RECT rcPrintRect = pPrintData->rcPrintRect;
+    TEXTMETRIC tmText;
+    SIZE MetricSize;
+    INT xLeft, xStart, yTop, nTabWidth;
+    BOOL bSkipPage;
+    HFONT hOldFont;
+    DWORD ich = pPrintData->ich;
+    DWORD ichStart = ich;
+
+    /* Preparation of a page */
+
+    /* Should we skip this page? */
+    if (pPrinter->Flags & PD_SELECTION)
+        bSkipPage = FALSE; /* Selection is specified. The selected text is to be printed */
+    else if (!(pPrinter->Flags & PD_PAGENUMS))
+        bSkipPage = FALSE; /* The user wants to print all the pages */
+    else if (pPrinter->nFromPage <= PageCount && PageCount <= pPrinter->nToPage)
+        bSkipPage = FALSE; /* Page numbers are specified and the current page is in range */
+    else
+        bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
+
+    /* The prologue of a page */
+    hOldFont = SelectObject(pPrinter->hDC, pPrintData->hHeaderFont); /* Select the header font */
+    if (!bSkipPage)
+    {
+        if (StartPage(pPrinter->hDC) <= 0)
+        {
+            AlertPrintError();
+            SelectObject(pPrinter->hDC, hOldFont);
+            return FALSE;
+        }
+
+        if (pPrintData->cyHeader > 0)
+        {
+            /* Draw the page header */
+            RECT rc = rcPrintRect;
+            rc.bottom = rc.top + pPrintData->cyHeader;
+            DrawHeaderOrFooter(pPrinter->hDC, &rc, Globals.szHeader, PageCount, &stNow);
+        }
+    }
+    SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
+
+    /* Start drawing the body text */
+    xLeft = rcPrintRect.left;
+    yTop = rcPrintRect.top + pPrintData->cyHeader + pPrintData->cySpacing;
+    hOldFont = SelectObject(pPrinter->hDC, pPrintData->hBodyFont); /* Select the body font */
+    GetTextMetrics(pPrinter->hDC, &tmText);
+
+    /* Calculate a tab width */
+#define TAB_STOP 8
+    nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
+#undef TAB_STOP
+
+#define DO_FLUSH() do { \
+    if (ichStart < ich) { \
+        TCHAR *pch = &pPrintData->pszText[ichStart]; \
+        assert(*pch != _T('\t')); \
+        assert(*pch != _T('\r')); \
+        assert(*pch != _T('\n')); \
+        if (!bSkipPage) \
+            TextOut(pPrinter->hDC, xStart, yTop, pch, ich - ichStart); \
+    } \
+    ichStart = ich; \
+    xStart = xLeft; \
+} while (0)
+    /* The drawing-body loop */
+    for (ichStart = ich, xStart = xLeft; ich < pPrintData->cchText; )
+    {
+        TCHAR ch = pPrintData->pszText[ich];
+
+        if (ch == _T('\r')) /* CR */
+        {
+            DO_FLUSH();
+
+            ++ich; /* Next char */
+            ichStart = ich;
+            continue;
+        }
+
+        if (ch == _T('\n')) /* NewLine (LF) */
+        {
+            DO_FLUSH();
+
+            /* Next line */
+            yTop += tmText.tmHeight;
+            xLeft = xStart = rcPrintRect.left;
+        }
+        else
+        {
+            if (ch == _T('\t')) /* Tab */
+            {
+                INT nStepWidth = nTabWidth - ((xLeft - rcPrintRect.left) % nTabWidth);
+
+                DO_FLUSH();
+
+                /* Go to the next tab stop */
+                xLeft += nStepWidth;
+                xStart = xLeft;
+            }
+            else /* One normal char */
+            {
+                GetTextExtentPoint32(pPrinter->hDC, &ch, 1, &MetricSize);
+                xLeft += MetricSize.cx;
+            }
+
+            /* Insert a line break if the next position reached the right edge */
+            if (xLeft + MetricSize.cx >= rcPrintRect.right)
+            {
+                if (ch != _T('\t'))
+                    DO_FLUSH();
+
+                /* Next line */
+                yTop += tmText.tmHeight;
+                xLeft = xStart = rcPrintRect.left;
+            }
+        }
+
+        ++ich; /* Next char */
+        if (ch == _T('\t') || ch == _T('\n'))
+            ichStart = ich;
+
+        if (yTop + tmText.tmHeight >= rcPrintRect.bottom - pPrintData->cyFooter)
+        {
+            break; /* The next line reached the body bottom */
+        }
+    }
+
+    DO_FLUSH();
+    SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
+#undef DO_FLUSH
+
+    /* The epilogue of a page */
+    if (!bSkipPage)
+    {
+        if (pPrintData->cyFooter > 0)
+        {
+            /* Draw the page footer */
+            RECT rc = rcPrintRect;
+            rc.top = rc.bottom - pPrintData->cyFooter;
+            hOldFont = SelectObject(pPrinter->hDC, pPrintData->hHeaderFont);
+            DrawHeaderOrFooter(pPrinter->hDC, &rc, Globals.szFooter, PageCount, &stNow);
+            SelectObject(pPrinter->hDC, hOldFont);
+        }
+
+        if (EndPage(pPrinter->hDC) <= 0)
+        {
+            AlertPrintError();
+            return FALSE;
+        }
+    }
+
+    pPrintData->ich = ich;
+    return TRUE;
+}
+
 static BOOL DoPrint(LPPRINTDLG pPrinter)
 {
     DOCINFO docInfo;
-    TEXTMETRIC tmHeader, tmText;
-    SIZE MetricSize;
-    INT xLeft, xStart, yTop, CopyCount, PageCount, cyHeader, cyFooter, cySpacing, nTabWidth;
-    BOOL bSkipPage;
-    DWORD ich, ichStart, cchText;
-    LOGFONT lfHeader, lfBody;
-    HFONT hOldFont, hHeaderFont, hBodyFont;
-    LPTSTR pszTempText;
-    SYSTEMTIME stNow;
-    RECT rcPrintRect;
+    PRINT_DATA PrintData;
+    DWORD CopyCount, PageCount;
+    TEXTMETRIC tmHeader;
     BOOL ret = FALSE;
+    LOGFONT lfBody, lfHeader;
+    HFONT hOldFont;
 
-    GetLocalTime(&stNow);
+    ZeroMemory(&PrintData, sizeof(PRINT_DATA));
+    PrintData.pPrinter = pPrinter;
+    GetLocalTime(&PrintData.stNow);
 
     /* Ensure that each logical unit maps to one pixel */
     SetMapMode(pPrinter->hDC, MM_TEXT);
 
     /* Get the printing area */
-    if (!GetPrintingRect(pPrinter->hDC, &Globals.lMargins, &rcPrintRect))
+    if (!GetPrintingRect(pPrinter->hDC, &Globals.lMargins, &PrintData.rcPrintRect))
         return FALSE; /* The user canceled printing */
 
     /* Create the body text font for printing */
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, 11); /* 11pt */
-    hBodyFont = CreateFontIndirect(&lfBody);
-    if (hBodyFont == NULL)
+    PrintData.hBodyFont = CreateFontIndirect(&lfBody);
+    if (PrintData.hBodyFont == NULL)
     {
         ShowLastError();
         return FALSE;
@@ -787,23 +957,23 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     lfHeader.lfWeight = FW_BOLD;
     lfHeader.lfCharSet = DEFAULT_CHARSET;
     StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
-    hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (hHeaderFont == NULL)
+    PrintData.hHeaderFont = CreateFontIndirect(&lfHeader);
+    if (PrintData.hHeaderFont == NULL)
     {
         ShowLastError();
-        DeleteObject(hBodyFont);
+        DeleteObject(PrintData.hBodyFont);
         return FALSE;
     }
 
     /* Get the text length */
     if (pPrinter->Flags & PD_SELECTION)
-        cchText = GetSelectionTextLength(Globals.hEdit);
+        PrintData.cchText = GetSelectionTextLength(Globals.hEdit);
     else
-        cchText = GetWindowTextLength(Globals.hEdit);
+        PrintData.cchText = GetWindowTextLength(Globals.hEdit);
 
     /* Allocate a buffer for the text */
-    pszTempText = HeapAlloc(GetProcessHeap(), 0, (cchText + 1) * sizeof(TCHAR));
-    if (!pszTempText)
+    PrintData.pszText = HeapAlloc(GetProcessHeap(), 0, (PrintData.cchText + 1) * sizeof(TCHAR));
+    if (!PrintData.pszText)
     {
         ShowLastError();
         goto Quit;
@@ -811,9 +981,9 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
 
     /* Get the text */
     if (pPrinter->Flags & PD_SELECTION)
-        GetSelectionText(Globals.hEdit, pszTempText, cchText + 1);
+        GetSelectionText(Globals.hEdit, PrintData.pszText, PrintData.cchText + 1);
     else
-        GetWindowText(Globals.hEdit, pszTempText, cchText + 1);
+        GetWindowText(Globals.hEdit, PrintData.pszText, PrintData.cchText + 1);
 
     /* Start a document */
     ZeroMemory(&docInfo, sizeof(docInfo));
@@ -825,17 +995,17 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         goto Quit;
     }
 
-    hOldFont = SelectObject(pPrinter->hDC, hHeaderFont); /* Select the header font */
+    hOldFont = SelectObject(pPrinter->hDC, PrintData.hHeaderFont); /* Select the header font */
 
     /* Calculate the header and footer heights */
     GetTextMetrics(pPrinter->hDC, &tmHeader);
-    cyHeader = cyFooter = 2 * tmHeader.tmHeight;
-    cySpacing = Y_POINTS_TO_PIXELS(pPrinter->hDC, 4); /* 4pt */
+    PrintData.cyHeader = PrintData.cyFooter = 2 * tmHeader.tmHeight;
+    PrintData.cySpacing = Y_POINTS_TO_PIXELS(pPrinter->hDC, 4); /* 4pt */
 
     if (!Globals.szHeader[0])
-        cyHeader = cySpacing = 0;
+        PrintData.cyHeader = PrintData.cySpacing = 0;
     if (!Globals.szFooter[0])
-        cyFooter = 0;
+        PrintData.cyFooter = 0;
 
     SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
 
@@ -845,147 +1015,10 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
     for (CopyCount = 1; CopyCount <= pPrinter->nCopies; ++CopyCount)
     {
         /* The printing-pages loop */
-        for (PageCount = 1, ich = 0; ich < cchText; ++PageCount)
+        for (PageCount = 1, PrintData.ich = 0; PrintData.ich < PrintData.cchText; ++PageCount)
         {
-            /* Preparation of a page */
-
-            /* Should we skip this page? */
-            if (pPrinter->Flags & PD_SELECTION)
-                bSkipPage = FALSE; /* Selection is specified. The selected text is to be printed */
-            else if (!(pPrinter->Flags & PD_PAGENUMS))
-                bSkipPage = FALSE; /* The user wants to print all the pages */
-            else if (pPrinter->nFromPage <= PageCount && PageCount <= pPrinter->nToPage)
-                bSkipPage = FALSE; /* Page numbers are specified and the current page is in range */
-            else
-                bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
-
-            /* The prologue of a page */
-            hOldFont = SelectObject(pPrinter->hDC, hHeaderFont); /* Select the header font */
-            if (!bSkipPage)
-            {
-                if (StartPage(pPrinter->hDC) <= 0)
-                {
-                    AlertPrintError();
-                    SelectObject(pPrinter->hDC, hOldFont);
-                    goto CancelPrinting;
-                }
-
-                if (cyHeader > 0)
-                {
-                    /* Draw the page header */
-                    RECT rc = rcPrintRect;
-                    rc.bottom = rc.top + cyHeader;
-                    DrawHeaderOrFooter(pPrinter->hDC, &rc, Globals.szHeader, PageCount, &stNow);
-                }
-            }
-            SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
-
-            /* Start drawing the body text */
-            xLeft = rcPrintRect.left;
-            yTop = rcPrintRect.top + cyHeader + cySpacing;
-            hOldFont = SelectObject(pPrinter->hDC, hBodyFont); /* Select the body font */
-            GetTextMetrics(pPrinter->hDC, &tmText);
-
-            /* Calculate a tab width */
-#define TAB_STOP 8
-            nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
-#undef TAB_STOP
-
-#define DO_FLUSH() do { \
-    if (ichStart < ich) { \
-        TCHAR *pch = &pszTempText[ichStart]; \
-        assert(*pch != _T('\t')); \
-        assert(*pch != _T('\r')); \
-        assert(*pch != _T('\n')); \
-        if (!bSkipPage) \
-            TextOut(pPrinter->hDC, xStart, yTop, pch, ich - ichStart); \
-    } \
-    ichStart = ich; \
-    xStart = xLeft; \
-} while (0)
-            /* The drawing-body loop */
-            for (ichStart = ich, xStart = xLeft; ich < cchText; )
-            {
-                TCHAR ch = pszTempText[ich];
-
-                if (ch == _T('\r')) /* CR */
-                {
-                    DO_FLUSH();
-
-                    ++ich; /* Next char */
-                    ichStart = ich;
-                    continue;
-                }
-
-                if (ch == _T('\n')) /* NewLine (LF) */
-                {
-                    DO_FLUSH();
-
-                    /* Next line */
-                    yTop += tmText.tmHeight;
-                    xLeft = xStart = rcPrintRect.left;
-                }
-                else
-                {
-                    if (ch == _T('\t')) /* Tab */
-                    {
-                        INT nStepWidth = nTabWidth - ((xLeft - rcPrintRect.left) % nTabWidth);
-
-                        DO_FLUSH();
-
-                        /* Go to the next tab stop */
-                        xLeft += nStepWidth;
-                        xStart = xLeft;
-                    }
-                    else /* One normal char */
-                    {
-                        GetTextExtentPoint32(pPrinter->hDC, &ch, 1, &MetricSize);
-                        xLeft += MetricSize.cx;
-                    }
-
-                    /* Insert a line break if the next position reached the right edge */
-                    if (xLeft + MetricSize.cx >= rcPrintRect.right)
-                    {
-                        if (ch != _T('\t'))
-                            DO_FLUSH();
-
-                        /* Next line */
-                        yTop += tmText.tmHeight;
-                        xLeft = xStart = rcPrintRect.left;
-                    }
-                }
-
-                ++ich; /* Next char */
-                if (ch == _T('\t') || ch == _T('\n'))
-                    ichStart = ich;
-
-                if (yTop + tmText.tmHeight >= rcPrintRect.bottom - cyFooter)
-                    break; /* The next line reached the body bottom */
-            }
-
-            DO_FLUSH();
-            SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
-#undef DO_FLUSH
-
-            /* The epilogue of a page */
-            if (!bSkipPage)
-            {
-                if (cyFooter > 0)
-                {
-                    /* Draw the page footer */
-                    RECT rc = rcPrintRect;
-                    rc.top = rc.bottom - cyFooter;
-                    hOldFont = SelectObject(pPrinter->hDC, hHeaderFont);
-                    DrawHeaderOrFooter(pPrinter->hDC, &rc, Globals.szFooter, PageCount, &stNow);
-                    SelectObject(pPrinter->hDC, hOldFont);
-                }
-
-                if (EndPage(pPrinter->hDC) <= 0)
-                {
-                    AlertPrintError();
-                    goto CancelPrinting;
-                }
-            }
+            if (!DoPrintPage(&PrintData, PageCount))
+                goto CancelPrinting;
         }
     }
 
@@ -995,10 +1028,10 @@ static BOOL DoPrint(LPPRINTDLG pPrinter)
         ret = TRUE;
 
 Quit: /* Clean up */
-    DeleteObject(hHeaderFont);
-    DeleteObject(hBodyFont);
-    if (pszTempText)
-        HeapFree(GetProcessHeap(), 0, pszTempText);
+    DeleteObject(PrintData.hHeaderFont);
+    DeleteObject(PrintData.hBodyFont);
+    if (PrintData.pszText)
+        HeapFree(GetProcessHeap(), 0, PrintData.pszText);
     return ret;
 
 CancelPrinting:
