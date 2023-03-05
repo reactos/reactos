@@ -630,7 +630,7 @@ BOOL DIALOG_FileSaveAs(VOID)
 static VOID
 DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const SYSTEMTIME *pstNow)
 {
-    TCHAR szText[512], szField[64];
+    TCHAR szText[256], szField[128];
     const TCHAR *pchFormat;
     UINT uAlign = DT_CENTER, uFlags = DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
 
