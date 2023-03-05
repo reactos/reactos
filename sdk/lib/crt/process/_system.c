@@ -21,11 +21,10 @@ int system(const char *command)
 {
   char *szCmdLine = NULL;
   char *szComSpec = NULL;
-
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOA StartupInfo;
   BOOL result;
-  int status;
+  int exit_code;
   char cmd_exe[MAX_PATH];
 
   szComSpec = getenv("COMSPEC");
@@ -46,8 +45,8 @@ int system(const char *command)
   szCmdLine = malloc(1 + strlen(szComSpec) + 5 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
-     _dosmaperr(GetLastError());
-     return -1;
+    _set_errno(ENOMEM);
+    return -1;
   }
 
   strcpy(szCmdLine, "\"");
@@ -88,12 +87,12 @@ int system(const char *command)
   CloseHandle(ProcessInformation.hThread);
 
   /* Wait for the process to exit */
-  _cwait(&status, (intptr_t)ProcessInformation.hProcess, 0);
+  _cwait(&exit_code, (intptr_t)ProcessInformation.hProcess, 0);
 
   CloseHandle(ProcessInformation.hProcess);
 
   _set_errno(0);
-  return status;
+  return exit_code;
 }
 
 int CDECL _wsystem(const wchar_t *cmd)
@@ -103,7 +102,7 @@ int CDECL _wsystem(const wchar_t *cmd)
     PROCESS_INFORMATION process_info;
     STARTUPINFOW startup_info;
     BOOL result;
-    int status;
+    int exit_code;
     wchar_t cmd_exe[MAX_PATH];
 
     comspec = _wgetenv(L"COMSPEC");
@@ -124,7 +123,7 @@ int CDECL _wsystem(const wchar_t *cmd)
     cmdline = malloc((1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
     if (cmdline == NULL)
     {
-        _dosmaperr(GetLastError());
+        _set_errno(ENOMEM);
         return -1;
     }
 
@@ -167,10 +166,10 @@ int CDECL _wsystem(const wchar_t *cmd)
     CloseHandle(process_info.hThread);
 
     /* Wait for the process to exit */
-    _cwait(&status, (intptr_t)process_info.hProcess, 0);
+    _cwait(&exit_code, (intptr_t)process_info.hProcess, 0);
 
     CloseHandle(process_info.hProcess);
 
     _set_errno(0);
-    return status;
+    return exit_code;
 }
