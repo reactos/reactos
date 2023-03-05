@@ -34,10 +34,7 @@ int system(const char *command)
 // system should return 0 if command is null and the shell is found
 
   if (command == NULL) {
-    if (szComSpec == NULL)
-      return 0;
-    else
-      return 1;
+    return (szComSpec == NULL) ? 0 : 1;
   }
 
   if (!szComSpec || GetFileAttributesA(szComSpec) == INVALID_FILE_ATTRIBUTES)
@@ -47,10 +44,10 @@ int system(const char *command)
     szComSpec = cmd_exe;
   }
 
-  szCmdLine = malloc(1 + strlen(szComSpec) + 5 + strlen(command) + 1);
+  szCmdLine = LocalAlloc(LPTR, 1 + strlen(szComSpec) + 5 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
-     _set_errno(ENOMEM);
+     _dosmaperr(GetLastError());
      return -1;
   }
 
@@ -81,7 +78,7 @@ int system(const char *command)
 			  NULL,
 			  &StartupInfo,
 			  &ProcessInformation);
-  free(szCmdLine);
+  LocalFree(szCmdLine);
 
   if (result == FALSE)
   {
@@ -116,10 +113,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     /* _wsystem should return 0 if cmd is null and the shell is found */
     if (cmd == NULL)
     {
-        if (comspec == NULL)
-            return 0;
-        else
-            return 1;
+        return (comspec == NULL) ? 0 : 1;
     }
 
     if (comspec == NULL || GetFileAttributesW(comspec) == INVALID_FILE_ATTRIBUTES)
@@ -129,10 +123,10 @@ int CDECL _wsystem(const wchar_t* cmd)
         comspec = cmd_exe;
     }
 
-    cmdline = malloc((1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
+    cmdline = LocalAlloc(LPTR, (1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
     if (cmdline == NULL)
     {
-        _set_errno(ENOMEM);
+        _dosmaperr(GetLastError());
         return -1;
     }
 
@@ -164,7 +158,7 @@ int CDECL _wsystem(const wchar_t* cmd)
                             NULL,
                             &startup_info,
                             &process_info);
-    free(cmdline);
+    LocalFree(cmdline);
 
     if (!result)
     {
