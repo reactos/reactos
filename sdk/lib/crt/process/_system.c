@@ -79,7 +79,7 @@ int system(const char *command)
 // In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
 // thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process.
 
-//SIGCHILD should be blocked aswell
+//SIGCHILD should be blocked as well
 
   result = CreateProcessA(szComSpec,
 	                  szCmdLine,
@@ -107,6 +107,7 @@ int system(const char *command)
 
   CloseHandle(ProcessInformation.hProcess);
 
+  _set_errno(0);
   return (int)exit_code;
 }
 
@@ -170,7 +171,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     /* In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
        thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process. */
 
-    /* SIGCHILD should be blocked aswell */
+    /* SIGCHILD should be blocked as well */
 
     /* Create the process to execute the command */
     result = CreateProcessW(szComSpec,
@@ -199,5 +200,6 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     CloseHandle(process_info.hProcess);
 
+    _set_errno(0);
     return (int)exit_code;
 }
