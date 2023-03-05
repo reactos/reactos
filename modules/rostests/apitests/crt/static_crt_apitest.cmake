@@ -17,7 +17,6 @@ list(APPEND SOURCE_STATIC
     strcpy.c
     strlen.c
     strtoul.c
-    system.c
     wcstombs.c
     wcstoul.c
     wctomb.c

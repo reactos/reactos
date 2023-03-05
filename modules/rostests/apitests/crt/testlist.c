@@ -40,6 +40,7 @@ extern void func_wcsnlen(void);
 extern void func_wcstombs(void);
 extern void func_wcstoul(void);
 extern void func_wctomb(void);
+extern void func__wsystem(void);
 extern void func___getmainargs(void);
 
 extern void func_static_construct(void);
@@ -58,7 +59,12 @@ const struct test winetest_testlist[] =
     { "strcpy", func_strcpy },
     { "strlen", func_strlen },
     { "strtoul", func_strtoul },
+#if defined(TEST_CRTDLL) || defined(TEST_MSVCRT)
     { "system", func_system },
+#endif
+#if defined(TEST_MSVCRT)
+    { "_wsystem", func__wsystem },
+#endif
     { "wcstoul", func_wcstoul },
     { "wctomb", func_wctomb },
     { "wcstombs", func_wcstombs },
