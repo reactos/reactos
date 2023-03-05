@@ -118,7 +118,6 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
 
         fileHPPM = fileVPPM = 2834;
         ZeroMemory(&fileTime, sizeof(fileTime));
-        isFile = FALSE;
     }
     else
     {
