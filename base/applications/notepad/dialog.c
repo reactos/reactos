@@ -1018,7 +1018,10 @@ static BOOL DoPrintDocument(LPPRINTDLG pPrinter)
         for (PageCount = 1, printData.ich = 0; printData.ich < printData.cchText; ++PageCount)
         {
             if (!DoPrintPage(&printData, PageCount))
-                goto CancelPrinting;
+            {
+                AbortDoc(pPrinter->hDC);
+                goto Quit;
+            }
         }
     }
 
@@ -1033,10 +1036,6 @@ Quit: /* Clean up */
     if (printData.pszText)
         HeapFree(GetProcessHeap(), 0, printData.pszText);
     return ret;
-
-CancelPrinting:
-    AbortDoc(pPrinter->hDC);
-    goto Quit;
 }
 
 VOID DIALOG_FilePrint(VOID)
