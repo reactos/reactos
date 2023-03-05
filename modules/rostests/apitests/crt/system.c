@@ -8,13 +8,6 @@
 #include <apitest.h>
 #include <apitest_guard.h>
 
-#define WIN32_NO_STATUS
-#include <stdio.h>
-#include <tchar.h>
-#include <pseh/pseh2.h>
-#include <ndk/mmfuncs.h>
-#include <ndk/rtlfuncs.h>
-
 START_TEST(system)
 {
     int ret;
