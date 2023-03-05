@@ -1293,8 +1293,6 @@ static inline void text_buffer_changed(EDITSTATE *es)
  */
 static void EDIT_LockBuffer(EDITSTATE *es)
 {
-        if (es->hlocapp) return;
-
 	if (!es->text) {
 
 #ifdef __REACTOS__
@@ -1358,8 +1356,6 @@ static void EDIT_LockBuffer(EDITSTATE *es)
  */
 static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 {
-        if (es->hlocapp) return;
-
 	/* Edit window might be already destroyed */
 	if(!IsWindow(es->hwndSelf))
 	{
@@ -5346,12 +5342,12 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	}
 
 #ifdef __REACTOS__
-	/* ReactOS: check GetWindowLong in case es has been destroyed during processing */
-	if (IsWindow(hwnd) && es && GetWindowLongPtrW(hwnd, 0))
-		EDIT_UnlockBuffer(es, FALSE);
+        /* ReactOS: check GetWindowLong in case es has been destroyed during processing */
+        if (IsWindow(hwnd) && es && msg != EM_GETHANDLE && GetWindowLongPtrW(hwnd, 0))
 #else
-	if (IsWindow(hwnd) && es) EDIT_UnlockBuffer(es, FALSE);
+        if (IsWindow(hwnd) && es && msg != EM_GETHANDLE)
 #endif
+            EDIT_UnlockBuffer(es, FALSE);
 
         TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 
