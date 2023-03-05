@@ -859,40 +859,34 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 {
     LPPRINTDLG pPrinter = pData->pPrinter;
-    RECT printRect = pData->printRect;
     BOOL bSkipPage;
     HFONT hOldFont;
 
     /* Should we skip this page? */
-    if (pPrinter->Flags & PD_SELECTION)
-        bSkipPage = FALSE; /* Selection is specified. The selected text is to be printed */
-    else if (!(pPrinter->Flags & PD_PAGENUMS))
-        bSkipPage = FALSE; /* The user wants to print all the pages */
-    else if (pPrinter->nFromPage <= PageCount && PageCount <= pPrinter->nToPage)
-        bSkipPage = FALSE; /* Page numbers are specified and the current page is in range */
-    else
-        bSkipPage = TRUE;  /* Out of range. Skip the page with calculating its contents */
+    bSkipPage = !(pPrinter->Flags & PD_SELECTION) &&
+                (pPrinter->Flags & PD_PAGENUMS) &&
+                !(pPrinter->nFromPage <= PageCount && PageCount <= pPrinter->nToPage);
 
     /* The prologue of a page */
-    hOldFont = SelectObject(pPrinter->hDC, pData->hHeaderFont); /* Select the header font */
     if (!bSkipPage)
     {
         if (StartPage(pPrinter->hDC) <= 0)
         {
             AlertPrintError();
-            SelectObject(pPrinter->hDC, hOldFont);
             return FALSE;
         }
 
         if (pData->cyHeader > 0)
         {
             /* Draw the page header */
-            RECT rc = printRect;
+            RECT rc = pData->printRect;
             rc.bottom = rc.top + pData->cyHeader;
+
+            hOldFont = SelectObject(pPrinter->hDC, pData->hHeaderFont);
             DrawHeaderOrFooter(pPrinter->hDC, &rc, Globals.szHeader, PageCount, &pData->stNow);
+            SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
         }
     }
-    SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
 
     hOldFont = SelectObject(pPrinter->hDC, pData->hBodyFont);
     DoPrintBody(pData, PageCount, bSkipPage);
@@ -904,7 +898,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
         if (pData->cyFooter > 0)
         {
             /* Draw the page footer */
-            RECT rc = printRect;
+            RECT rc = pData->printRect;
             rc.top = rc.bottom - pData->cyFooter;
 
             hOldFont = SelectObject(pPrinter->hDC, pData->hHeaderFont);
