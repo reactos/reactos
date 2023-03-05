@@ -728,7 +728,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     LPPRINTDLG pPrinter = pData->pPrinter;
     RECT printRect = pData->printRect;
     INT xLeft = printRect.left, yTop = printRect.top + pData->cyHeader + pData->cySpacing;
-    INT xStart, nTabWidth;
+    INT xStart, tabWidth;
     DWORD ichStart;
     SIZE MetricSize;
     TEXTMETRIC tmText;
@@ -736,7 +736,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     /* Calculate a tab width */
 #define TAB_STOP 8
     GetTextMetrics(pPrinter->hDC, &tmText);
-    nTabWidth = TAB_STOP * tmText.tmAveCharWidth;
+    tabWidth = TAB_STOP * tmText.tmAveCharWidth;
 
 #define DO_FLUSH() do { \
     if (ichStart < pData->ich && !bSkipPage) { \
@@ -772,7 +772,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
         {
             if (ch == _T('\t'))
             {
-                INT nStepWidth = nTabWidth - ((xLeft - printRect.left) % nTabWidth);
+                INT nStepWidth = tabWidth - ((xLeft - printRect.left) % tabWidth);
 
                 DO_FLUSH();
 
