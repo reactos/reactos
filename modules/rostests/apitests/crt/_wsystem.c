@@ -11,12 +11,12 @@
 START_TEST(_wsystem)
 {
     int ret;
+    WCHAR szCmdExe[MAX_PATH];
+
+    GetSystemDirectoryW(szCmdExe, _countof(szCmdExe));
+    lstrcatW(szCmdExe, L"\\cmd.exe");
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
-    ret = _wsystem(NULL);
-    ok_int(ret, 1);
-
-    SetEnvironmentVariableW(L"COMSPEC", L"cmd.exe");
     ret = _wsystem(NULL);
     ok_int(ret, 1);
 
@@ -24,15 +24,19 @@ START_TEST(_wsystem)
     ret = _wsystem(NULL);
     ok_int(ret, 1);
 
+    SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
+    ret = _wsystem(NULL);
+    ok_int(ret, 1);
+
     SetEnvironmentVariableW(L"COMSPEC", NULL);
     ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
-    SetEnvironmentVariableW(L"COMSPEC", L"cmd.exe");
+    SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
-    SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
+    SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     ret = _wsystem(L"echo This is a test");
     ok_int(ret, 0);
 
@@ -40,11 +44,11 @@ START_TEST(_wsystem)
     ret = _wsystem(L"InvalidCommandLine");
     ok_int(ret, 1);
 
-    SetEnvironmentVariableW(L"COMSPEC", L"cmd.exe");
+    SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     ret = _wsystem(L"InvalidCommandLine");
     ok_int(ret, 1);
 
-    SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
+    SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     ret = _wsystem(L"InvalidCommandLine");
     ok_int(ret, 1);
 }
