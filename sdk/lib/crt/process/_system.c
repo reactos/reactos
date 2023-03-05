@@ -28,7 +28,7 @@ int system(const char *command)
   char *s;
   BOOL result;
   DWORD exit_code;
-  CHAR szCmdExe[MAX_PATH];
+  char szCmdExe[MAX_PATH];
 
   szComSpec = getenv("COMSPEC");
 
@@ -44,7 +44,7 @@ int system(const char *command)
   if (!szComSpec || GetFileAttributesA(szComSpec) == INVALID_FILE_ATTRIBUTES)
   {
     GetSystemDirectoryA(szCmdExe, _countof(szCmdExe));
-    lstrcatA(szCmdExe, "cmd.exe");
+    lstrcatA(szCmdExe, "\\cmd.exe");
     szComSpec = szCmdExe;
   }
 
@@ -118,7 +118,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     wchar_t *s;
     BOOL result;
     DWORD exit_code;
-    WCHAR szCmdExe[MAX_PATH];
+    wchar_t szCmdExe[MAX_PATH];
 
     szComSpec = _wgetenv(L"COMSPEC");
 
@@ -134,7 +134,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     if (szComSpec == NULL || GetFileAttributesW(szComSpec) == INVALID_FILE_ATTRIBUTES)
     {
         GetSystemDirectoryW(szCmdExe, _countof(szCmdExe));
-        lstrcatW(szCmdExe, L"cmd.exe");
+        lstrcatW(szCmdExe, L"\\cmd.exe");
         szComSpec = szCmdExe;
     }
 
