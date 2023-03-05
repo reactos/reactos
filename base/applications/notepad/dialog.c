@@ -281,7 +281,7 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
 }
 
 static BOOL
-GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
+GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
 {
     INT iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
@@ -296,10 +296,10 @@ GetPrintingRect(IN HDC hdc, IN OUT LPRECT pMargins, OUT LPRECT prcPrintRect)
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
-    prcPrintRect->left = CONVERT_X(pMargins->left);
-    prcPrintRect->top = CONVERT_Y(pMargins->top);
-    prcPrintRect->right = iHorzRes - CONVERT_X(pMargins->right);
-    prcPrintRect->bottom = iVertRes - CONVERT_Y(pMargins->bottom);
+    SetRect(prcPrintRect,
+            CONVERT_X(pMargins->left), CONVERT_Y(pMargins->top),
+            iHorzRes - CONVERT_X(pMargins->right),
+            iVertRes - CONVERT_Y(pMargins->bottom));
 #undef CONVERT_X
 #undef CONVERT_Y
 
