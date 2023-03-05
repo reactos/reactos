@@ -289,11 +289,6 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
     INT iVertRes = GetDeviceCaps(hdc, VERTRES); /* in pixels */
     RECT rcPhysical, rcIntersect;
 
-    rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
-    rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-    rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
-
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
 #define CONVERT_Y(y) MulDiv((y), iLogPixelsY, 2540) /* 100th millimeters to pixels */
     SetRect(prcPrintRect,
@@ -302,6 +297,11 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
             iVertRes - CONVERT_Y(pMargins->bottom));
 #undef CONVERT_X
 #undef CONVERT_Y
+
+    rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
+    rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
 
     if (IntersectRect(&rcIntersect, prcPrintRect, &rcPhysical) &&
         EqualRect(&rcIntersect, prcPrintRect))
