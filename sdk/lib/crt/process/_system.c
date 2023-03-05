@@ -76,8 +76,8 @@ int system(const char *command)
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
 
-// In order to disable Ctrl+C, the process is created with CREATE_NEW_PROCESS_GROUP,
-// thus SetConsoleCtrlHandler(NULL, TRUE) is made on behalf of the new process.
+// In order to disable Ctrl+C, the process is created with CREATE_NEW_PROCESS_GROUP.
+// Thus, SetConsoleCtrlHandler(NULL, TRUE) is made on behalf of the new process.
 
 //SIGCHILD should be blocked as well
 
@@ -168,8 +168,8 @@ int CDECL _wsystem(const wchar_t* cmd)
     startup_info.dwFlags = STARTF_USESHOWWINDOW;
     startup_info.wShowWindow = SW_SHOWDEFAULT;
 
-    /* In order to disable Ctrl+C the process is created with CREATE_NEW_PROCESS_GROUP,
-       thus SetConsoleCtrlHandler(NULL, TRUE) is made on behalf of the new process. */
+    /* In order to disable Ctrl+C, the process is created with CREATE_NEW_PROCESS_GROUP.
+       Thus, SetConsoleCtrlHandler(NULL, TRUE) is made on behalf of the new process. */
 
     /* SIGCHILD should be blocked as well */
 
