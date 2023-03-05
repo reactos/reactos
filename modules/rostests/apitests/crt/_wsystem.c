@@ -17,54 +17,63 @@ START_TEST(_wsystem)
     lstrcatW(szCmdExe, L"\\cmd.exe");
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);

@@ -17,54 +17,63 @@ START_TEST(system)
     lstrcatA(szCmdExe, "\\cmd.exe");
 
     SetEnvironmentVariableA("COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = system(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = system(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = system(NULL);
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = system("echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = system("echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = system("echo This is a test");
     err = errno;
     ok_int(ret, 0);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
+    errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
+    errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);
     ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
+    errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
     err = errno;
     ok_int(ret, 1);
