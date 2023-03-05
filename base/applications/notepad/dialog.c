@@ -281,7 +281,7 @@ int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
 }
 
 static BOOL
-GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
+GetPrintingRect(IN HDC hdc, OUT LPRECT prcPrintRect, IN LPCRECT pMargins)
 {
     INT iLogPixelsX = GetDeviceCaps(hdc, LOGPIXELSX);
     INT iLogPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
@@ -911,7 +911,7 @@ static BOOL DoPrintDocument(LPPRINTDLG pPrinter)
 
     GetLocalTime(&printData.stNow);
 
-    if (!GetPrintingRect(pPrinter->hDC, &Globals.lMargins, &printData.printRect))
+    if (!GetPrintingRect(pPrinter->hDC, &printData.printRect, &Globals.lMargins))
         return FALSE; /* The user canceled printing */
 
     if (!DoCreatePrintFonts(pPrinter, &printData))
