@@ -103,43 +103,43 @@ int system(const char *command)
 
 int CDECL _wsystem(const wchar_t* cmd)
 {
-    wchar_t *szCmdLine = NULL;
-    wchar_t *szComSpec = NULL;
+    wchar_t *cmdline = NULL;
+    wchar_t *comspec = NULL;
     PROCESS_INFORMATION process_info;
     STARTUPINFOW startup_info;
     BOOL result;
     DWORD exit_code;
     wchar_t cmd_exe[MAX_PATH];
 
-    szComSpec = _wgetenv(L"COMSPEC");
+    comspec = _wgetenv(L"COMSPEC");
 
     /* _wsystem should return 0 if cmd is null and the shell is found */
     if (cmd == NULL)
     {
-        if (szComSpec == NULL)
+        if (comspec == NULL)
             return 0;
         else
             return 1;
     }
 
-    if (szComSpec == NULL || GetFileAttributesW(szComSpec) == INVALID_FILE_ATTRIBUTES)
+    if (comspec == NULL || GetFileAttributesW(comspec) == INVALID_FILE_ATTRIBUTES)
     {
         GetSystemDirectoryW(cmd_exe, _countof(cmd_exe));
         lstrcatW(cmd_exe, L"\\cmd.exe");
-        szComSpec = cmd_exe;
+        comspec = cmd_exe;
     }
 
-    szCmdLine = malloc((1 + wcslen(szComSpec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
-    if (szCmdLine == NULL)
+    cmdline = malloc((1 + wcslen(comspec) + 5 + wcslen(cmd) + 1) * sizeof(wchar_t));
+    if (cmdline == NULL)
     {
         _set_errno(ENOMEM);
         return -1;
     }
 
-    wcscpy(szCmdLine, L"\"");
-    wcscat(szCmdLine, szComSpec);
-    wcscat(szCmdLine, L"\" /C ");
-    wcscat(szCmdLine, cmd);
+    wcscpy(cmdline, L"\"");
+    wcscat(cmdline, comspec);
+    wcscat(cmdline, L"\" /C ");
+    wcscat(cmdline, cmd);
 
     /* command file has invalid format ENOEXEC */
 
@@ -154,8 +154,8 @@ int CDECL _wsystem(const wchar_t* cmd)
     /* SIGCHILD should be blocked as well */
 
     /* Create the process to execute the command */
-    result = CreateProcessW(szComSpec,
-                            szCmdLine,
+    result = CreateProcessW(comspec,
+                            cmdline,
                             NULL,
                             NULL,
                             TRUE,
@@ -164,7 +164,7 @@ int CDECL _wsystem(const wchar_t* cmd)
                             NULL,
                             &startup_info,
                             &process_info);
-    free(szCmdLine);
+    free(cmdline);
 
     if (!result)
     {
