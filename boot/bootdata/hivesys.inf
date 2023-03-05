@@ -3058,8 +3058,8 @@ SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память дл�
 TCPSVCS_SERVICE="Простые службы TCP/IP"
 TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="Сервисы ReactOS Telnet"
-TELNETD_SERVICE_DESCRIPTION="Сервисы ReactOS Telnet"
+TELNETD_SERVICE="Сервис ReactOS Telnet"
+TELNETD_SERVICE_DESCRIPTION="Сервис ReactOS Telnet"
 
 THEMES_SERVICE="Темы"
 THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
