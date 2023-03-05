@@ -793,7 +793,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
         {
             DO_FLUSH();
 
-            ++pData->ich; /* Next char */
+            pData->ich++; /* Next char */
             ichStart = pData->ich;
             continue;
         }
@@ -836,7 +836,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
             }
         }
 
-        ++pData->ich; /* Next char */
+        pData->ich++; /* Next char */
         if (ch == _T('\t') || ch == _T('\n'))
             ichStart = pData->ich;
 
