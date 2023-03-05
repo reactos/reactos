@@ -21,21 +21,21 @@ START_TEST(_wsystem)
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
-    ok_int(err, 0);
+    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
-    ok_int(err, 0);
+    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
     err = errno;
     ok_int(ret, 1);
-    ok_int(err, 0);
+    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
     errno = 0xDEADBEEF;
