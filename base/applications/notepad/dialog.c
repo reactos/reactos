@@ -730,7 +730,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     INT xLeft = printRect.left, yTop = printRect.top + pData->cyHeader + pData->cySpacing;
     INT xStart, tabWidth;
     DWORD ichStart;
-    SIZE MetricSize;
+    SIZE charMetrics;
     TEXTMETRIC tmText;
 
     /* Calculate a tab width */
@@ -782,12 +782,12 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
             }
             else /* Normal char */
             {
-                GetTextExtentPoint32(pPrinter->hDC, &ch, 1, &MetricSize);
-                xLeft += MetricSize.cx;
+                GetTextExtentPoint32(pPrinter->hDC, &ch, 1, &charMetrics);
+                xLeft += charMetrics.cx;
             }
 
             /* Insert a line break if the next position reached the right edge */
-            if (xLeft + MetricSize.cx >= printRect.right)
+            if (xLeft + charMetrics.cx >= printRect.right)
             {
                 if (ch != _T('\t'))
                     DO_FLUSH();
