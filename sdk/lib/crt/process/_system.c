@@ -43,7 +43,7 @@ int system(const char *command)
   if (!szComSpec || GetFileAttributesA(szComSpec) == INVALID_FILE_ATTRIBUTES)
   {
     GetSystemDirectoryA(cmd_exe, _countof(cmd_exe));
-    lstrcatA(cmd_exe, "\\cmd.exe");
+    strcat(cmd_exe, "\\cmd.exe");
     szComSpec = cmd_exe;
   }
 
@@ -61,7 +61,7 @@ int system(const char *command)
 
 //command file has invalid format ENOEXEC
 
-  ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+  memset(&StartupInfo, 0, sizeof(StartupInfo));
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
@@ -125,7 +125,7 @@ int CDECL _wsystem(const wchar_t* cmd)
     if (comspec == NULL || GetFileAttributesW(comspec) == INVALID_FILE_ATTRIBUTES)
     {
         GetSystemDirectoryW(cmd_exe, _countof(cmd_exe));
-        lstrcatW(cmd_exe, L"\\cmd.exe");
+        wcscat(cmd_exe, L"\\cmd.exe");
         comspec = cmd_exe;
     }
 
@@ -143,7 +143,7 @@ int CDECL _wsystem(const wchar_t* cmd)
 
     /* command file has invalid format ENOEXEC */
 
-    ZeroMemory(&startup_info, sizeof(startup_info));
+    memset(&startup_info, 0, sizeof(startup_info));
     startup_info.cb = sizeof(startup_info);
     startup_info.dwFlags = STARTF_USESHOWWINDOW;
     startup_info.wShowWindow = SW_SHOWDEFAULT;
