@@ -290,8 +290,8 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
     RECT rcPhysical, rcIntersect;
 
     rcPhysical.left = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     rcPhysical.right = rcPhysical.left + GetDeviceCaps(hdc, PHYSICALWIDTH);
+    rcPhysical.top = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     rcPhysical.bottom = rcPhysical.top + GetDeviceCaps(hdc, PHYSICALHEIGHT);
 
 #define CONVERT_X(x) MulDiv((x), iLogPixelsX, 2540) /* 100th millimeters to pixels */
@@ -310,14 +310,10 @@ GetPrintingRect(IN HDC hdc, IN LPCRECT pMargins, OUT LPRECT prcPrintRect)
     }
 
     /* Adjust the margin */
-    if (prcPrintRect->left < rcPhysical.left)
-        prcPrintRect->left = rcPhysical.left;
-    if (prcPrintRect->top < rcPhysical.top)
-        prcPrintRect->top = rcPhysical.top;
-    if (rcPhysical.right < prcPrintRect->right)
-        prcPrintRect->right = rcPhysical.right;
-    if (rcPhysical.bottom < prcPrintRect->bottom)
-        prcPrintRect->bottom = rcPhysical.bottom;
+    prcPrintRect->left = max(prcPrintRect->left, rcPhysical.left);
+    prcPrintRect->top = max(prcPrintRect->top, rcPhysical.top);
+    prcPrintRect->right = min(prcPrintRect->right, rcPhysical.right);
+    prcPrintRect->bottom = min(prcPrintRect->bottom, rcPhysical.bottom);
 
     return TRUE;
 }
