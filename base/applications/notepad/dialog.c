@@ -682,9 +682,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     {
         if (*pchFormat != _T('&'))
         {
-            szField[0] = *pchFormat;
-            szField[1] = 0;
-            StringCchCat(szText, ARRAY_SIZE(szText), szField);
+            StringCchCatN(szText, ARRAY_SIZE(szText), pchFormat, 1);
             continue;
         }
 
