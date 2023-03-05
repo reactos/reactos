@@ -10,7 +10,7 @@
 
 START_TEST(_wsystem)
 {
-    int ret, err;
+    int ret;
     WCHAR szCmdExe[MAX_PATH];
 
     GetSystemDirectoryW(szCmdExe, _countof(szCmdExe));
@@ -19,63 +19,54 @@ START_TEST(_wsystem)
     SetEnvironmentVariableW(L"COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = _wsystem(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = _wsystem(L"echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", L"InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 
     SetEnvironmentVariableW(L"COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = _wsystem(L"InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 }

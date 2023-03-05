@@ -10,7 +10,7 @@
 
 START_TEST(system)
 {
-    int ret, err;
+    int ret;
     CHAR szCmdExe[MAX_PATH];
 
     GetSystemDirectoryA(szCmdExe, _countof(szCmdExe));
@@ -19,63 +19,54 @@ START_TEST(system)
     SetEnvironmentVariableA("COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = system(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = system(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = system(NULL);
-    err = errno;
+    ok_int(errno, 0xDEADBEEF);
     ok_int(ret, 1);
-    ok_int(err, 0xDEADBEEF);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 0);
-    ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    err = errno;
+    ok_int(errno, 0);
     ok_int(ret, 1);
-    ok_int(err, 0);
 }
