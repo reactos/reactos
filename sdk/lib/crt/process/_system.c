@@ -104,6 +104,7 @@ int system(const char *command)
   /* Wait for the process to exit */
   WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
   GetExitCodeProcess(ProcessInformation.hProcess, &exit_code);
+
   CloseHandle(ProcessInformation.hProcess);
 
   return (int)exit_code;
