@@ -981,7 +981,7 @@ list(APPEND SOURCE_MSVCRT
 #    _wstrdate_s
 #    _wstrtime.c
 #    _wstrtime_s
-#    _wsystem.c
+    _wsystem.c
 #    _wtempnam.c
 #    _wtempnam_dbg
 #    _wtmpnam.c
@@ -1189,7 +1189,7 @@ list(APPEND SOURCE_MSVCRT
 #    swprintf_s.c
 #    swscanf.c
 #    swscanf_s.c
-#    system.c
+    system.c
 #    tan.c
 #    tanh.c
 #    time.c

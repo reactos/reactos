@@ -480,7 +480,7 @@ list(APPEND SOURCE_CRTDLL
 #    strxfrm.c
 #    swprintf.c
 #    swscanf.c
-#    system.c
+    system.c
 #    tan.c
 #    tanh.c
 #    time.c
