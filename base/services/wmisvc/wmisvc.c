@@ -65,6 +65,9 @@ UpdateServiceStatus(DWORD dwState)
     else
         ServiceStatus.dwWaitHint = 0;
 
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
     SetServiceStatus(ServiceStatusHandle,
                      &ServiceStatus);
 }
@@ -106,7 +109,6 @@ ServiceControlHandler(DWORD dwControl,
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("  Control %lu received\n");
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
