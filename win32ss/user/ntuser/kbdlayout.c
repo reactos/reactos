@@ -461,24 +461,20 @@ BOOLEAN UserKbdLayoutCleanup(PVOID Object)
  */
 BOOLEAN UserKbdFileCleanup(PVOID Object)
 {
-    PKBDFILE pkf = Object;
-    PKBDFILE *ppkfLink = &gpkfList;
+    PKBDFILE pkf = Object, *ppkfLink;
     NT_ASSERT(pkf != NULL);
 
     if (!pkf)
         return FALSE;
 
-    /* Find previous object */
-    while (*ppkfLink)
+    for (ppkfLink = &gpkfList; *ppkfLink; ppkfLink = &(*ppkfLink)->pkfNext)
     {
         if (*ppkfLink == pkf)
+        {
+            *ppkfLink = pkf->pkfNext;
             break;
-
-        ppkfLink = &(*ppkfLink)->pkfNext;
+        }
     }
-
-    if (*ppkfLink == pkf)
-        *ppkfLink = pkf->pkfNext;
 
     EngUnloadImage(pkf->hBase);
     UserHeapFree(Object);
