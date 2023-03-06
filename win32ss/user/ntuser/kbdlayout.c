@@ -442,7 +442,7 @@ BOOLEAN UserKbdLayoutCleanup(PVOID Object)
     NT_ASSERT(pKL != NULL);
 
     if (!pKL)
-        return FALSE;
+        return TRUE;
 
     if (pKL->piiex)
         ExFreePoolWithTag(pKL->piiex, USERTAG_IME);
@@ -465,7 +465,7 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
     NT_ASSERT(pkf != NULL);
 
     if (!pkf)
-        return FALSE;
+        return TRUE;
 
     /* Remove pkf from gpkfList */
     for (ppkfLink = &gpkfList; *ppkfLink; ppkfLink = &(*ppkfLink)->pkfNext)
