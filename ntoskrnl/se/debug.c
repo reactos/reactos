@@ -13,6 +13,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef NDEBUG
 /**
  * @brief
  * Converts an Access Control Entry (ACE) type to a string.
@@ -204,6 +205,7 @@ SepDumpSidsOfToken(
         RtlFreeUnicodeString(&SidString);
     }
 }
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -215,9 +217,11 @@ VOID
 SepDumpSdDebugInfo(
     _In_opt_ PISECURITY_DESCRIPTOR SecurityDescriptor)
 {
+#ifndef NDEBUG
     UNICODE_STRING SidString;
     PSID OwnerSid, GroupSid;
     PACL Dacl, Sacl;
+#endif
 
     /* Don't dump anything if no SD was provided */
     if (!SecurityDescriptor)
@@ -225,6 +229,7 @@ SepDumpSdDebugInfo(
         return;
     }
 
+#ifndef NDEBUG
     /* Cache the necessary security buffers to dump info from */
     OwnerSid = SepGetOwnerFromDescriptor(SecurityDescriptor);
     GroupSid = SepGetGroupFromDescriptor(SecurityDescriptor);
@@ -264,6 +269,7 @@ SepDumpSdDebugInfo(
     {
         SepDumpAclInfo(Dacl, FALSE);
     }
+#endif
 }
 
 /**
@@ -274,7 +280,9 @@ VOID
 SepDumpTokenDebugInfo(
     _In_opt_ PTOKEN Token)
 {
+#ifndef NDEBUG
     UNICODE_STRING SidString;
+#endif
 
     /* Don't dump anything if no token was provided */
     if (!Token)
@@ -282,6 +290,7 @@ SepDumpTokenDebugInfo(
         return;
     }
 
+#ifndef NDEBUG
     /* Dump relevant token info */
     DbgPrint("================== ACCESS TOKEN DUMP INFO ==================\n");
     DbgPrint("Token -> 0x%p\n", Token);
@@ -305,6 +314,7 @@ SepDumpTokenDebugInfo(
         DbgPrint("Token restricted SIDs:\n");
         SepDumpSidsOfToken(Token->RestrictedSids, Token->RestrictedSidCount);
     }
+#endif
 }
 
 /**
@@ -321,10 +331,12 @@ SepDumpAccessRightsStats(
         return;
     }
 
+#ifndef NDEBUG
     DbgPrint("================== ACCESS CHECK RIGHTS STATISTICS ==================\n");
     DbgPrint("Remaining access rights -> 0x%08lx\n", AccessRights->RemainingAccessRights);
     DbgPrint("Granted access rights -> 0x%08lx\n", AccessRights->GrantedAccessRights);
     DbgPrint("Denied access rights -> 0x%08lx\n", AccessRights->DeniedAccessRights);
+#endif
 }
 
 /* EOF */
