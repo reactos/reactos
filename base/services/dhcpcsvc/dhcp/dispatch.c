@@ -75,9 +75,9 @@ dispatch(void)
     if (!Events[0])
          return;
     AdapterStateChangedEvent = Events[0];
-    
+
     Events[1] = WSA_INVALID_EVENT;
-    
+
     ApiLock();
 
     do {
@@ -155,7 +155,7 @@ dispatch(void)
         else if (count == WAIT_OBJECT_0 + 1)
         {
             /* Packet received */
-            
+
             /* WSA events are manual reset events */
             WSAResetEvent(Events[1]);
         }

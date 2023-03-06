@@ -328,7 +328,10 @@ UpdateServiceStatus(DWORD dwState)
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
 
-    ServiceStatus.dwControlsAccepted = 0;
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_STOP;
+    else
+        ServiceStatus.dwControlsAccepted = 0;
 
     ServiceStatus.dwWin32ExitCode = 0;
     ServiceStatus.dwServiceSpecificExitCode = 0;
@@ -378,7 +381,7 @@ ServiceControlHandler(DWORD dwControl,
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
-        default :
+        default:
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
