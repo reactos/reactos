@@ -44,7 +44,7 @@ static WCHAR ServiceName[] = L"winmgmt";
 
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
-static HANDLE ShutdownEvent;
+static HANDLE hStopEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -66,6 +66,9 @@ UpdateServiceStatus(DWORD dwState)
     else
         ServiceStatus.dwWaitHint = 0;
 
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
     SetServiceStatus(ServiceStatusHandle,
                      &ServiceStatus);
 }
@@ -82,7 +85,7 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("  SERVICE_CONTROL_STOP received\n");
-            SetEvent(ShutdownEvent);
+            SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
@@ -104,12 +107,11 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("  SERVICE_CONTROL_SHUTDOWN received\n");
-            SetEvent(ShutdownEvent);
+            SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("  Control %lu received\n");
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
@@ -131,13 +133,16 @@ ServiceMain(DWORD argc, LPTSTR *argv)
         return;
     }
 
-    ShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    hStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (hStopEvent == NULL)
+        goto done;
 
     UpdateServiceStatus(SERVICE_RUNNING);
 
-    WaitForSingleObject(ShutdownEvent, INFINITE);
-    CloseHandle(ShutdownEvent);
+    WaitForSingleObject(hStopEvent, INFINITE);
+    CloseHandle(hStopEvent);
 
+done:
     UpdateServiceStatus(SERVICE_STOPPED);
 }
 
