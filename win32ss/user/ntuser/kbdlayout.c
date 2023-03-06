@@ -467,6 +467,7 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
     if (!pkf)
         return FALSE;
 
+    /* Remove pkf from gpkfList */
     for (ppkfLink = &gpkfList; *ppkfLink; ppkfLink = &(*ppkfLink)->pkfNext)
     {
         if (*ppkfLink == pkf)
