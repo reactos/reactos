@@ -49,7 +49,7 @@ int bad_options_max = 5;
 void	parse_options(struct packet *);
 void	parse_option_buffer(struct packet *, unsigned char *, int);
 int	store_options(unsigned char *, int, struct tree_cache **,
-	    unsigned char *, int, int, int, int);
+	    unsigned char *, int, int, int);
 
 
 /*
@@ -197,12 +197,10 @@ parse_option_buffer(struct packet *packet,
  */
 int
 cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
-    int mms, struct tree_cache **options,
-    int overload, /* Overload flags that may be set. */
-    int terminate, int bootpp, u_int8_t *prl, int prl_len)
+    int mms, struct tree_cache **options)
 {
 	unsigned char priority_list[300], buffer[4096];
-	int priority_len, main_buffer_size, mainbufix, bufix;
+	int priority_len, main_buffer_size, mainbufix;
 	int option_size, length;
 
 	/*
@@ -223,8 +221,6 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 
 	if (mms)
 		main_buffer_size = mms - DHCP_FIXED_LEN;
-	else if (bootpp)
-		main_buffer_size = 64;
 	else
 		main_buffer_size = 576 - DHCP_FIXED_LEN;
 
@@ -254,14 +250,6 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 		    inpacket->options[DHO_DHCP_PARAMETER_REQUEST_LIST].data,
 		    prlen);
 		priority_len += prlen;
-		prl = priority_list;
-	} else if (prl) {
-		if (prl_len + priority_len > sizeof(priority_list))
-			prl_len = sizeof(priority_list) - priority_len;
-
-		memcpy(&priority_list[priority_len], prl, prl_len);
-		priority_len += prl_len;
-		prl = priority_list;
 	} else {
 		memcpy(&priority_list[priority_len],
 		    dhcp_option_default_priority_list,
@@ -272,11 +260,9 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 	/* Copy the options into the big buffer... */
 	option_size = store_options(
 	    buffer,
-	    (main_buffer_size - 7 + ((overload & 1) ? DHCP_FILE_LEN : 0) +
-		((overload & 2) ? DHCP_SNAME_LEN : 0)),
+	    main_buffer_size - 7,
 	    options, priority_list, priority_len, main_buffer_size,
-	    (main_buffer_size + ((overload & 1) ? DHCP_FILE_LEN : 0)),
-	    terminate);
+	    main_buffer_size);
 
 	/* Put the cookie up front... */
 	memcpy(outpacket->options, DHCP_OPTIONS_COOKIE, 4);
@@ -305,33 +291,7 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 
 		memcpy(&outpacket->options[mainbufix],
 		    buffer, main_buffer_size - mainbufix);
-		bufix = main_buffer_size - mainbufix;
 		length = DHCP_FIXED_NON_UDP + mainbufix;
-		if (overload & 1) {
-			if (option_size - bufix <= DHCP_FILE_LEN) {
-				memcpy(outpacket->file,
-				    &buffer[bufix], option_size - bufix);
-				mainbufix = option_size - bufix;
-				if (mainbufix < DHCP_FILE_LEN)
-					outpacket->file[mainbufix++] = (char)DHO_END;
-				while (mainbufix < DHCP_FILE_LEN)
-					outpacket->file[mainbufix++] = (char)DHO_PAD;
-			} else {
-				memcpy(outpacket->file,
-				    &buffer[bufix], DHCP_FILE_LEN);
-				bufix += DHCP_FILE_LEN;
-			}
-		}
-		if ((overload & 2) && option_size < bufix) {
-			memcpy(outpacket->sname,
-			    &buffer[bufix], option_size - bufix);
-
-			mainbufix = option_size - bufix;
-			if (mainbufix < DHCP_SNAME_LEN)
-				outpacket->file[mainbufix++] = (char)DHO_END;
-			while (mainbufix < DHCP_SNAME_LEN)
-				outpacket->file[mainbufix++] = (char)DHO_PAD;
-		}
 	}
 	return (length);
 }
@@ -342,9 +302,9 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 int
 store_options(unsigned char *buffer, int buflen, struct tree_cache **options,
     unsigned char *priority_list, int priority_len, int first_cutoff,
-    int second_cutoff, int terminate)
+    int second_cutoff)
 {
-	int bufix = 0, option_stored[256], i, ix, tto;
+	int bufix = 0, option_stored[256], i, ix;
 
 	/* Zero out the stored-lengths array. */
 	memset(option_stored, 0, sizeof(option_stored));
@@ -379,13 +339,6 @@ store_options(unsigned char *buffer, int buflen, struct tree_cache **options,
 
 		/* We should now have a constant length for the option. */
 		length = options[code]->len;
-
-		/* Do we add a NUL? */
-		if (terminate && dhcp_options[code].format[0] == 't') {
-			length++;
-			tto = 1;
-		} else
-			tto = 0;
 
 		/* Try to store the option. */
 
@@ -426,13 +379,8 @@ store_options(unsigned char *buffer, int buflen, struct tree_cache **options,
 			/* Everything looks good - copy it in! */
 			buffer[bufix] = code;
 			buffer[bufix + 1] = incr;
-			if (tto && incr == length) {
-				memcpy(buffer + bufix + 2,
-				    options[code]->value + ix, incr - 1);
-				buffer[bufix + 2 + incr - 1] = 0;
-			} else
-				memcpy(buffer + bufix + 2,
-				    options[code]->value + ix, incr);
+			memcpy(buffer + bufix + 2,
+			   options[code]->value + ix, incr);
 			length -= incr;
 			ix += incr;
 			bufix += 2 + incr;

@@ -60,6 +60,9 @@ UpdateServiceStatus(DWORD dwState)
     else
         ServiceStatus.dwWaitHint = 0;
 
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
     SetServiceStatus(ServiceStatusHandle,
                      &ServiceStatus);
 }
