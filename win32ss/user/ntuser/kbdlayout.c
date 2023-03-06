@@ -436,17 +436,37 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     return pKl;
 }
 
-/*
- * UnloadKbdFile
- *
- * Destroys specified Keyboard File object
- */
-static
-VOID
-UnloadKbdFile(_In_ PKBDFILE pkf)
+BOOLEAN UserKbdLayoutCleanup(PVOID Object)
 {
+    PKL pKL = Object;
+    NT_ASSERT(pKL != NULL);
+
+    if (!pKL)
+        return FALSE;
+
+    if (pKL->piiex)
+        ExFreePoolWithTag(pKL->piiex, USERTAG_IME);
+
+    if (pKL->spkf)
+        UserDeleteObject(pKL->spkf->head.h, TYPE_KBDFILE);
+
+    UserHeapFree(Object);
+    return TRUE;
+}
+
+/*
+ * UserKbdFileCleanup
+ *
+ * Clean up specified Keyboard File object
+ */
+BOOLEAN UserKbdFileCleanup(PVOID Object)
+{
+    PKBDFILE pkf = Object;
     PKBDFILE *ppkfLink = &gpkfList;
     NT_ASSERT(pkf != NULL);
+
+    if (!pkf)
+        return FALSE;
 
     /* Find previous object */
     while (*ppkfLink)
@@ -461,47 +481,7 @@ UnloadKbdFile(_In_ PKBDFILE pkf)
         *ppkfLink = pkf->pkfNext;
 
     EngUnloadImage(pkf->hBase);
-    UserDeleteObject(pkf->head.h, TYPE_KBDFILE);
-}
-
-/*
- * UserUnloadKbl
- *
- * Unloads specified Keyboard Layout if possible
- */
-BOOL
-UserUnloadKbl(PKL pKl)
-{
-    /* According to msdn, UnloadKeyboardLayout can fail
-       if the keyboard layout identifier was preloaded. */
-    if (pKl == gspklBaseLayout)
-    {
-        if (pKl->pklNext == pKl->pklPrev)
-        {
-            /* There is only one layout */
-            return FALSE;
-        }
-
-        /* Set next layout as default */
-        gspklBaseLayout = pKl->pklNext;
-    }
-
-    if (pKl->head.cLockObj > 1)
-    {
-        /* Layout is used by other threads */
-        pKl->dwKL_Flags |= KLF_UNLOAD;
-        return FALSE;
-    }
-
-    /* Unload the layout */
-    pKl->pklPrev->pklNext = pKl->pklNext;
-    pKl->pklNext->pklPrev = pKl->pklPrev;
-    UnloadKbdFile(pKl->spkf);
-    if (pKl->piiex)
-    {
-        ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
-    }
-    UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+    UserHeapFree(Object);
     return TRUE;
 }
 
@@ -573,7 +553,7 @@ IntReorderKeyboardLayouts(
     pNewKL->pklPrev = pOldKL->pklPrev;
     pOldKL->pklPrev->pklNext = pNewKL;
     pOldKL->pklPrev = pNewKL;
-    gspklBaseLayout = pNewKL; /* Should we use UserAssignmentLock? */
+    UserAssignmentLock((PVOID*)&gspklBaseLayout, pNewKL);
 }
 
 /*
@@ -818,8 +798,8 @@ co_IntUnloadKeyboardLayoutEx(
 
     if (gspklBaseLayout == pKL && pKL != pKL->pklNext)
     {
-        /* Set next layout as default (FIXME: Use UserAssignmentLock?) */
-        gspklBaseLayout = pKL->pklNext;
+        /* Set next layout as default */
+        UserAssignmentLock((PVOID*)&gspklBaseLayout, pKL->pklNext);
     }
 
     UserDerefObjectCo(pKL); /* Release reference */
@@ -844,6 +824,24 @@ IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
         return FALSE;
     }
     return co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0);
+}
+
+static VOID co_IntFreeImeKeyboardLayouts(PWINSTATION_OBJECT pWinSta)
+{
+    // TODO:
+}
+
+static PKL co_IntFreeKeyboardLayouts(PWINSTATION_OBJECT pWinSta, BOOL bUnloadAll)
+{
+    PKL pKL = IntHKLtoPKL(gptiCurrent, (HKL)(DWORD_PTR)HKL_NEXT);
+    while (pKL)
+    {
+        co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0x80000000);
+        pKL = IntHKLtoPKL(gptiCurrent, (HKL)(DWORD_PTR)HKL_NEXT);
+    }
+    if (bUnloadAll)
+        return UserAssignmentUnlock((PVOID*)&gspklBaseLayout);
+    return pKL;
 }
 
 PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
@@ -887,10 +885,20 @@ co_IntLoadKeyboardLayoutEx(
     {
         pOldKL = UserHklToKbl(hOldKL);
         if (pOldKL)
-            UserUnloadKbl(pOldKL);
+            co_IntUnloadKeyboardLayoutEx(pWinSta, pOldKL, 0x80000000);
     }
 
-    /* FIXME: It seems KLF_RESET is only supported for WINLOGON */
+    /* It seems KLF_RESET is only supported for WINLOGON */
+    if (Flags & KLF_RESET)
+    {
+        if (gpidLogon != PsGetCurrentProcessId())
+        {
+            EngSetLastError(ERROR_INVALID_FLAGS);
+            return 0;
+        }
+        co_IntFreeImeKeyboardLayouts(pWinSta);
+        co_IntFreeKeyboardLayouts(pWinSta, FALSE);
+    }
 
     /* Let's see if layout was already loaded. */
     pNewKL = UserHklToKbl(hNewKL);
@@ -919,7 +927,7 @@ co_IntLoadKeyboardLayoutEx(
             /* This is the first layout */
             pNewKL->pklNext = pNewKL;
             pNewKL->pklPrev = pNewKL;
-            gspklBaseLayout = pNewKL;
+            UserAssignmentLock((PVOID*)&gspklBaseLayout, pNewKL);
         }
 
         pNewKL->piiex = co_UserImmLoadLayout(hNewKL);
