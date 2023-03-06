@@ -436,24 +436,6 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     return pKl;
 }
 
-BOOLEAN UserKbdLayoutCleanup(PVOID Object)
-{
-    PKL pKL = Object;
-    NT_ASSERT(pKL != NULL);
-
-    if (!pKL)
-        return TRUE;
-
-    if (pKL->piiex)
-        ExFreePoolWithTag(pKL->piiex, USERTAG_IME);
-
-    if (pKL->spkf)
-        UserDeleteObject(pKL->spkf->head.h, TYPE_KBDFILE);
-
-    UserHeapFree(Object);
-    return TRUE;
-}
-
 /*
  * UserKbdFileCleanup
  *
@@ -478,6 +460,24 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
     }
 
     EngUnloadImage(pkf->hBase);
+    UserHeapFree(Object);
+    return TRUE;
+}
+
+BOOLEAN UserKbdLayoutCleanup(PVOID Object)
+{
+    PKL pKL = Object;
+    NT_ASSERT(pKL != NULL);
+
+    if (!pKL)
+        return TRUE;
+
+    if (pKL->piiex)
+        ExFreePoolWithTag(pKL->piiex, USERTAG_IME);
+
+    if (pKL->spkf)
+        UserDeleteObject(pKL->spkf->head.h, TYPE_KBDFILE);
+
     UserHeapFree(Object);
     return TRUE;
 }
