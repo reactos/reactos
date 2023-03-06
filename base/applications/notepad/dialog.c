@@ -633,8 +633,15 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     TCHAR szText[256], szField[128];
     const TCHAR *pchFormat;
     UINT uAlign = DT_CENTER, uFlags = DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
+    HGDIOBJ hOldPen, hOldBrush;
 
-    Rectangle(hDC, pRect->left, pRect->top, pRect->right, pRect->bottom); /* Draw a rectangle */
+    /* Draw a rectangle */
+    hOldPen = SelectObject(hDC, GetStockObject(BLACK_PEN));
+    hOldBrush = SelectObject(hDC, GetStockObject(NULL_BRUSH));
+    Rectangle(hDC, pRect->left, pRect->top, pRect->right, pRect->bottom);
+    SelectObject(hDC, hOldBrush);
+    SelectObject(hDC, hOldPen);
+
     InflateRect(pRect, -X_POINTS_TO_PIXELS(hDC, 3), 0); /* Shrink 3pt */
 
     szText[0] = 0;
