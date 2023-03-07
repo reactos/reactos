@@ -1118,10 +1118,10 @@ VOID DIALOG_FilePrint(VOID)
         ShowLastError();
         return;
     }
+
     printer = &printData->printer;
     printer->lStructSize = sizeof(PRINTDLG);
     printer->hwndOwner = Globals.hMainWnd;
-    printer->hInstance = Globals.hInstance;
 
     /* Set some default flags */
     printer->Flags = PD_RETURNDC | PD_SELECTION;
@@ -1130,7 +1130,8 @@ VOID DIALOG_FilePrint(VOID)
     if (!GetSelectionTextLength(Globals.hEdit))
         printer->Flags |= PD_NOSELECTION;
 
-    printer->nFromPage = printData->currentPage = 1;
+    printData->currentPage = 1;
+    printer->nFromPage = 1;
     printer->nToPage = MAXWORD;
     printer->nMinPage = 1;
     printer->nMaxPage = MAXWORD;
