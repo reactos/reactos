@@ -359,8 +359,6 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
 cleanup:
     if (hKey)
         ZwClose(hKey);
-    if (pkf)
-        UserDereferenceObject(pkf); // we dont need ptr anymore
     if (!pRet)
     {
         /* We have failed - destroy created object */
