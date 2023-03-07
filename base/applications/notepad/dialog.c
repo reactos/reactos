@@ -1043,7 +1043,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
             SetDlgItemText(hwnd, IDC_PRINTING_PAGE, NULL);
 
-            s_hThread = CreateThread(NULL, 0, PrintThreadFunc, (LPVOID)lParam, 0, NULL);
+            s_hThread = CreateThread(NULL, 0, PrintThreadFunc, s_printData, 0, NULL);
             if (!s_hThread)
             {
                 /* Show status */
