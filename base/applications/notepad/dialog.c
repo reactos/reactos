@@ -906,10 +906,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
     lfHeader.lfWeight = FW_BOLD;
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (!pPrintData->hHeaderFont)
-        return FALSE;
-
-    return TRUE;
+    return pPrintData->hHeaderFont != NULL;
 }
 
 #define PRINTING_MESSAGE (WM_USER + 100)
