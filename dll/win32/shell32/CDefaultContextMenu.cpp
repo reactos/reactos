@@ -926,7 +926,7 @@ CDefaultContextMenu::DoCreateNewFolder(
     CComPtr<IShellView> psv;
 
     /* Notify the view object about the new item */
-    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW, (LPCVOID)wszName, NULL);
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, (LPCVOID)wszName, NULL);
 
     if (!m_site)
         return S_OK;
