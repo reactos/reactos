@@ -313,6 +313,9 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
         return NULL;
     }
 
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(pkf);
+
     /* Set keyboard layout name */
     swprintf(pkf->awchKF, L"%wZ", pwszKLID);
 
@@ -391,7 +394,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     pKl->hkl = hKL;
     pKl->spkf = UserLoadKbdFile(pustrKLID);
 
-    /* Dereference keyboard layout */
+    /* Release the extra reference (UserCreateObject added 2 references) */
     UserDereferenceObject(pKl);
 
     /* If we failed, remove KL object */
