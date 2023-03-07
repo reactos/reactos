@@ -754,6 +754,8 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     } \
     ichStart = pData->ich; \
     xStart = xLeft; \
+    if (pData->status == STRING_PRINTCANCELING) \
+        return FALSE; \
 } while (0)
 
     /* The drawing-body loop */
@@ -823,7 +825,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 {
     LPPRINTDLG pPrinter = &pData->printer;
-    BOOL bSkipPage;
+    BOOL bSkipPage, ret;
     HFONT hOldFont;
 
     /* Should we skip this page? */
@@ -837,6 +839,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
         if (StartPage(pPrinter->hDC) <= 0)
         {
             AlertPrintError();
+            pData->status = STRING_PRINTFAILED;
             return FALSE;
         }
 
@@ -853,8 +856,10 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     }
 
     hOldFont = SelectObject(pPrinter->hDC, pData->hBodyFont);
-    DoPrintBody(pData, PageCount, bSkipPage);
+    ret = DoPrintBody(pData, PageCount, bSkipPage);
     SelectObject(pPrinter->hDC, hOldFont);
+    if (!ret)
+        return FALSE; /* Canceled */
 
     /* The epilogue of a page */
     if (!bSkipPage)
@@ -873,6 +878,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
         if (EndPage(pPrinter->hDC) <= 0)
         {
             AlertPrintError();
+            pData->status = STRING_PRINTFAILED;
             return FALSE;
         }
     }
@@ -988,7 +994,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
             if (!DoPrintPage(printData, PageCount))
             {
                 AbortDoc(pPrinter->hDC); /* Cancel printing */
-                printData->status = STRING_PRINTFAILED;
                 goto Quit;
             }
         }
