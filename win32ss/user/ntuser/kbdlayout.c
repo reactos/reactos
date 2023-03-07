@@ -654,6 +654,7 @@ IntImmActivateLayout(
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
     pti->pClientInfo->hKL = pKL->hkl;
+    pti->CodePage = pKL->CodePage;
 }
 
 static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
@@ -666,13 +667,13 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
         if (ptiNode->KeyboardLayout == pKL && (ptiNode->TIF_flags & TIF_INCLEANUP))
             continue;
 
-        if (IS_IMM_MODE())
+        _SEH2_TRY
         {
-            IntImmActivateLayout(ptiNode, pKL);
-        }
-        else
-        {
-            _SEH2_TRY
+            if (IS_IMM_MODE())
+            {
+                IntImmActivateLayout(ptiNode, pKL);
+            }
+            else
             {
                 UserAssignmentLock((PVOID*)&ptiNode->KeyboardLayout, pKL);
                 pClientInfo = ptiNode->pClientInfo;
@@ -680,12 +681,12 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
                 pClientInfo->CodePage = pKL->CodePage;
                 pClientInfo->hKL = pKL->hkl;
             }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                NOTHING;
-            }
-            _SEH2_END;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            NOTHING;
+        }
+        _SEH2_END;
     }
 }
 
