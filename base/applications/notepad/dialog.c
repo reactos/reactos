@@ -886,8 +886,8 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     return TRUE;
 }
 
-#define HEADER_FONT_SIZE    9  /* 9pt */
 #define BODY_FONT_SIZE      11 /* 11pt */
+#define HEADER_FONT_SIZE    9  /* 9pt */
 #define SPACING_HEIGHT      4  /* 4pt */
 
 static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
@@ -902,11 +902,9 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
         return FALSE;
 
     /* Create the header/footer font */
-    ZeroMemory(&lfHeader, sizeof(lfHeader));
+    lfHeader = Globals.lfFont;
     lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
     lfHeader.lfWeight = FW_BOLD;
-    lfHeader.lfCharSet = DEFAULT_CHARSET;
-    StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
     if (!pPrintData->hHeaderFont)
         return FALSE;
