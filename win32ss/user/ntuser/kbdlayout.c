@@ -630,7 +630,6 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     return pklPrev;
 }
 
-// Win: xxxImmActivateLayout
 VOID APIENTRY
 IntImmActivateLayout(
     _Inout_ PTHREADINFO pti,
