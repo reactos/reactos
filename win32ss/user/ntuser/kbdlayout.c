@@ -442,7 +442,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
  *
  * Clean up specified Keyboard File object
  */
-BOOLEAN UserKbdFileCleanup(PVOID Object)
+VOID FreeKbdFile(PVOID Object)
 {
     PKBDFILE pkf = Object, *ppkfLink;
 
@@ -459,11 +459,10 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
     }
 
     EngUnloadImage(pkf->hBase);
-    UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
-    return TRUE;
+    UserHeapFree(Object);
 }
 
-BOOLEAN UserKbdLayoutCleanup(PVOID Object)
+VOID FreeKbdLayout(PVOID Object)
 {
     PKL pKL = Object;
 
@@ -482,8 +481,7 @@ BOOLEAN UserKbdLayoutCleanup(PVOID Object)
     if (gspklBaseLayout == pKL)
         gspklBaseLayout = NULL;
 
-    UserDeleteObject(UserHMGetHandle(pKL), TYPE_KBDLAYOUT);
-    return TRUE;
+    UserHeapFree(Object);
 }
 
 /*

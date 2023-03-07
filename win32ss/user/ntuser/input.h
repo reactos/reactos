@@ -75,8 +75,8 @@ VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
-BOOLEAN UserKbdFileCleanup(PVOID Object);
-BOOLEAN UserKbdLayoutCleanup(PVOID Object);
+VOID FreeKbdFile(PVOID Object);
+VOID FreeKbdLayout(PVOID Object);
 
 extern int gLanguageToggleKeyState;
 extern DWORD gdwLanguageToggleKey;
