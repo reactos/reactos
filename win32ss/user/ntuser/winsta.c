@@ -128,8 +128,7 @@ IntWinStaObjectDelete(
 
     RtlDestroyAtomTable(WinSta->AtomTable);
 
-    /* FIXME: Please move gspklBaseLayout to WinSta->spklList */
-    UserAssignmentUnlock((PVOID*)&gspklBaseLayout);
+    UserAssignmentUnlock((PVOID*)&WinSta->spklList);
 
     return STATUS_SUCCESS;
 }
