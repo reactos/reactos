@@ -1151,9 +1151,9 @@ VOID DIALOG_FilePrint(VOID)
         LocalFree(printData);
         return; /* The user canceled printing */
     }
+    assert(printer->hDC != NULL);
 
     /* Ensure that each logical unit maps to one pixel */
-    assert(printer->hDC != NULL);
     SetMapMode(printer->hDC, MM_TEXT);
 
     if (DialogBoxParam(Globals.hInstance,
