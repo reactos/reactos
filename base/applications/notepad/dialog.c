@@ -717,7 +717,9 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
 
 typedef struct
 {
-    LPPRINTDLG pPrinter;
+    PRINTDLG printer;
+    HWND hwndDlg;
+    INT pageNum;
     RECT printRect;
     SYSTEMTIME stNow;
     HFONT hHeaderFont;
@@ -730,9 +732,11 @@ typedef struct
     INT cyFooter;
 } PRINT_DATA, *PPRINT_DATA;
 
+#define PRINTING_MESSAGE (WM_USER + 100)
+
 static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 {
-    LPPRINTDLG pPrinter = pData->pPrinter;
+    LPPRINTDLG pPrinter = &pData->printer;
     RECT printRect = pData->printRect;
     INT xLeft = printRect.left, yTop = printRect.top + pData->cyHeader + pData->cySpacing;
     INT xStart, tabWidth;
@@ -819,7 +823,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 
 static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 {
-    LPPRINTDLG pPrinter = pData->pPrinter;
+    LPPRINTDLG pPrinter = &pData->printer;
     BOOL bSkipPage;
     HFONT hOldFont;
 
@@ -881,15 +885,15 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 #define BODY_FONT_SIZE      9  /* 9pt */
 #define SPACING_HEIGHT      4  /* 4pt */
 
-static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
+static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA printData)
 {
     LOGFONT lfBody, lfHeader;
 
     /* Create the main text font for printing */
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
-    pPrintData->hBodyFont = CreateFontIndirect(&lfBody);
-    if (pPrintData->hBodyFont == NULL)
+    printData->hBodyFont = CreateFontIndirect(&lfBody);
+    if (printData->hBodyFont == NULL)
         return FALSE;
 
     /* Create the header/footer font */
@@ -898,49 +902,51 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfWeight = FW_BOLD;
     lfHeader.lfCharSet = DEFAULT_CHARSET;
     StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
-    pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (pPrintData->hHeaderFont == NULL)
+    printData->hHeaderFont = CreateFontIndirect(&lfHeader);
+    if (printData->hHeaderFont == NULL)
         return FALSE;
 
     return TRUE;
 }
 
-static BOOL DoPrintDocument(LPPRINTDLG pPrinter)
+static BOOL DoPrintDocument(PPRINT_DATA printData)
 {
     DOCINFO docInfo;
-    PRINT_DATA printData = { pPrinter };
     DWORD CopyCount, PageCount;
     TEXTMETRIC tmHeader;
     BOOL ret = FALSE;
     HFONT hOldFont;
+    LPPRINTDLG pPrinter = &printData->printer;
 
-    GetLocalTime(&printData.stNow);
+    GetLocalTime(&printData->stNow);
 
-    printData.printRect = GetPrintingRect(pPrinter->hDC, &Globals.lMargins);
+    printData->printRect = GetPrintingRect(pPrinter->hDC, &Globals.lMargins);
 
-    if (!DoCreatePrintFonts(pPrinter, &printData))
+    if (!DoCreatePrintFonts(pPrinter, printData))
     {
         ShowLastError();
+        pPrinter->lCustData = STRING_PRINTFAILED;
         goto Quit;
     }
 
     if (pPrinter->Flags & PD_SELECTION)
-        printData.cchText = GetSelectionTextLength(Globals.hEdit);
+        printData->cchText = GetSelectionTextLength(Globals.hEdit);
     else
-        printData.cchText = GetWindowTextLength(Globals.hEdit);
+        printData->cchText = GetWindowTextLength(Globals.hEdit);
 
     /* Allocate a buffer for the text */
-    printData.pszText = HeapAlloc(GetProcessHeap(), 0, (printData.cchText + 1) * sizeof(TCHAR));
-    if (!printData.pszText)
+    printData->pszText = HeapAlloc(GetProcessHeap(), 0, (printData->cchText + 1) * sizeof(TCHAR));
+    if (!printData->pszText)
     {
         ShowLastError();
+        pPrinter->lCustData = STRING_PRINTFAILED;
         goto Quit;
     }
 
     if (pPrinter->Flags & PD_SELECTION)
-        GetSelectionText(Globals.hEdit, printData.pszText, printData.cchText + 1);
+        GetSelectionText(Globals.hEdit, printData->pszText, printData->cchText + 1);
     else
-        GetWindowText(Globals.hEdit, printData.pszText, printData.cchText + 1);
+        GetWindowText(Globals.hEdit, printData->pszText, printData->cchText + 1);
 
     /* Start a document */
     ZeroMemory(&docInfo, sizeof(docInfo));
@@ -953,81 +959,204 @@ static BOOL DoPrintDocument(LPPRINTDLG pPrinter)
     }
 
     /* Calculate the header and footer heights */
-    hOldFont = SelectObject(pPrinter->hDC, printData.hHeaderFont);
+    hOldFont = SelectObject(pPrinter->hDC, printData->hHeaderFont);
     GetTextMetrics(pPrinter->hDC, &tmHeader);
-    printData.cyHeader = printData.cyFooter = 2 * tmHeader.tmHeight;
-    printData.cySpacing = Y_POINTS_TO_PIXELS(pPrinter->hDC, SPACING_HEIGHT);
+    printData->cyHeader = printData->cyFooter = 2 * tmHeader.tmHeight;
+    printData->cySpacing = Y_POINTS_TO_PIXELS(pPrinter->hDC, SPACING_HEIGHT);
     SelectObject(pPrinter->hDC, hOldFont); /* De-select the font */
     if (!Globals.szHeader[0])
-        printData.cyHeader = printData.cySpacing = 0;
+        printData->cyHeader = printData->cySpacing = 0;
     if (!Globals.szFooter[0])
-        printData.cyFooter = 0;
+        printData->cyFooter = 0;
 
     /* The printing-copies loop */
     for (CopyCount = 1; CopyCount <= pPrinter->nCopies; ++CopyCount)
     {
         /* The printing-pages loop */
-        for (PageCount = 1, printData.ich = 0; printData.ich < printData.cchText; ++PageCount)
+        for (PageCount = 1, printData->ich = 0; printData->ich < printData->cchText; ++PageCount)
         {
-            if (!DoPrintPage(&printData, PageCount))
+            pPrinter->nFromPage = PageCount;
+            PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+
+            if (pPrinter->lCustData == STRING_PRINTCANCELING)
             {
                 AbortDoc(pPrinter->hDC); /* Cancel printing */
+                pPrinter->lCustData = STRING_PRINTCANCELED;
+                goto Quit;
+            }
+
+            if (!DoPrintPage(printData, PageCount))
+            {
+                AbortDoc(pPrinter->hDC); /* Cancel printing */
+                pPrinter->lCustData = STRING_PRINTFAILED;
                 goto Quit;
             }
         }
     }
 
     if (EndDoc(pPrinter->hDC) <= 0)
+    {
         AlertPrintError();
+        pPrinter->lCustData = STRING_PRINTFAILED;
+    }
     else
+    {
         ret = TRUE;
+        pPrinter->lCustData = STRING_PRINTCOMPLETE;
+    }
 
 Quit: /* Clean up */
-    DeleteObject(printData.hHeaderFont);
-    DeleteObject(printData.hBodyFont);
-    if (printData.pszText)
-        HeapFree(GetProcessHeap(), 0, printData.pszText);
+    PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+    DeleteObject(printData->hHeaderFont);
+    DeleteObject(printData->hBodyFont);
+    if (printData->pszText)
+        HeapFree(GetProcessHeap(), 0, printData->pszText);
     return ret;
+}
+
+static DWORD WINAPI PrintThreadFunc(LPVOID arg)
+{
+    PPRINT_DATA printData = arg;
+    PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+    DoPrintDocument(printData);
+    return 0;
+}
+
+static INT_PTR CALLBACK
+DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TCHAR szText[MAX_STRING_LEN], szPage[64];
+    static PPRINT_DATA s_printData = NULL;
+    static LPPRINTDLG s_printer = NULL;
+    static HANDLE s_hThread = NULL;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwnd, DWLP_USER, lParam);
+            s_printData = (PPRINT_DATA)lParam;
+            s_printer = &s_printData->printer;
+            s_printData->hwndDlg = hwnd;
+
+            SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
+            SetDlgItemText(hwnd, IDC_PRINTING_PAGE, NULL);
+
+            s_hThread = CreateThread(NULL, 0, PrintThreadFunc, (LPVOID)lParam, 0, NULL);
+            if (!s_hThread)
+            {
+                s_printer->lCustData = STRING_PRINTFAILED;
+                LoadString(Globals.hInstance, s_printer->lCustData, szText, ARRAY_SIZE(szText));
+                SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+
+                EndDialog(hwnd, IDABORT);
+                return FALSE;
+            }
+
+            s_printer->lCustData = STRING_NOWPRINTING;
+            LoadString(Globals.hInstance, s_printer->lCustData, szText, ARRAY_SIZE(szText));
+            SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+            return TRUE;
+
+        case PRINTING_MESSAGE:
+            switch (s_printer->lCustData)
+            {
+                case STRING_NOWPRINTING:
+                    LoadString(Globals.hInstance, s_printer->lCustData, szText, ARRAY_SIZE(szText));
+                    SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+                    LoadString(Globals.hInstance, STRING_PRINTINGPAGE, szPage, ARRAY_SIZE(szPage));
+                    StringCchPrintf(szText, ARRAY_SIZE(szText), szPage, s_printer->nFromPage);
+                    SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
+                    break;
+
+                case STRING_PRINTCOMPLETE:
+                    EndDialog(hwnd, IDOK);
+                    break;
+
+                case STRING_PRINTCANCELED:
+                case STRING_PRINTFAILED:
+                    LoadString(Globals.hInstance, s_printer->lCustData, szText, ARRAY_SIZE(szText));
+                    SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+            }
+            break;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDCANCEL)
+            {
+                EnableWindow(GetDlgItem(hwnd, IDCANCEL), FALSE);
+                s_printer->lCustData = STRING_PRINTCANCELING;
+                LoadString(Globals.hInstance, s_printer->lCustData, szText, ARRAY_SIZE(szText));
+                SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+                PostMessage(hwnd, PRINTING_MESSAGE, 0, 0);
+            }
+            break;
+
+        case WM_DESTROY:
+            CloseHandle(s_hThread);
+            DeleteDC(s_printer->hDC);
+            LocalFree(s_printData);
+            s_printer = NULL;
+            s_printData = NULL;
+            break;
+    }
+
+    return 0;
 }
 
 VOID DIALOG_FilePrint(VOID)
 {
-    PRINTDLG printer;
+    LPPRINTDLG printer;
+    PPRINT_DATA printData = LocalAlloc(LPTR, sizeof(PRINT_DATA));
+    if (!printData)
+    {
+        ShowLastError();
+        return;
+    }
+    printer = &printData->printer;
 
     /* Get Current Settings */
-    ZeroMemory(&printer, sizeof(printer));
-    printer.lStructSize = sizeof(printer);
-    printer.hwndOwner = Globals.hMainWnd;
-    printer.hInstance = Globals.hInstance;
+    ZeroMemory(printer, sizeof(PRINTDLG));
+    printer->lStructSize = sizeof(PRINTDLG);
+    printer->hwndOwner = Globals.hMainWnd;
+    printer->hInstance = Globals.hInstance;
 
     /* Set some default flags */
-    printer.Flags = PD_RETURNDC | PD_SELECTION;
+    printer->Flags = PD_RETURNDC | PD_SELECTION;
 
     /* Disable the selection radio button if there is no text selected */
     if (!GetSelectionTextLength(Globals.hEdit))
-        printer.Flags |= PD_NOSELECTION;
+        printer->Flags |= PD_NOSELECTION;
 
-    printer.nFromPage = 1;
-    printer.nToPage = MAXWORD;
-    printer.nMinPage = 1;
-    printer.nMaxPage = MAXWORD;
+    printer->nFromPage = 1;
+    printer->nToPage = MAXWORD;
+    printer->nMinPage = 1;
+    printer->nMaxPage = MAXWORD;
 
-    printer.hDevMode = Globals.hDevMode;
-    printer.hDevNames = Globals.hDevNames;
+    printer->hDevMode = Globals.hDevMode;
+    printer->hDevNames = Globals.hDevNames;
 
-    if (!PrintDlg(&printer))
+    if (!PrintDlg(printer))
+    {
+        LocalFree(printData);
         return; /* The user canceled printing */
+    }
 
-    assert(printer.hDC != NULL);
-    Globals.hDevMode = printer.hDevMode;
-    Globals.hDevNames = printer.hDevNames;
+    assert(printer->hDC != NULL);
+    Globals.hDevMode = printer->hDevMode;
+    Globals.hDevNames = printer->hDevNames;
 
     /* Ensure that each logical unit maps to one pixel */
-    SetMapMode(printer.hDC, MM_TEXT);
+    SetMapMode(printer->hDC, MM_TEXT);
 
-    DoPrintDocument(&printer);
-
-    DeleteDC(printer.hDC);
+    if (DialogBoxParam(Globals.hInstance,
+                       MAKEINTRESOURCE(DIALOG_PRINTING),
+                       Globals.hMainWnd,
+                       DIALOG_Printing_DialogProc,
+                       (LPARAM)printer) == IDABORT)
+    {
+        AlertPrintError();
+    }
 }
 
 VOID DIALOG_FileExit(VOID)
