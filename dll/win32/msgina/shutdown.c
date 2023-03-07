@@ -48,6 +48,12 @@
 #define BUTTON_SLEEP_FOCUSED            (CY_BITMAP + BUTTON_SLEEP_PRESSED)
 #define BUTTON_SLEEP_DISABLED           (CY_BITMAP + BUTTON_SLEEP_FOCUSED)
 
+/* For bIsButtonHot */
+#define SHUTDOWN_BUTTON_HOT             0
+#define REBOOT_BUTTON_HOT               1
+#define SLEEP_BUTTON_HOT                2
+#define HIBERNATE_BUTTON_HOT            3
+
 typedef struct _SHUTDOWN_DLG_CONTEXT
 {
     PGINA_CONTEXT pgContext;
@@ -335,7 +341,7 @@ DrawIconOnOwnerDrawnButtons(
                     {
                         y = BUTTON_SHUTDOWN_PRESSED;
                     }
-                    else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
+                    else if (pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SHUTDOWN_FOCUSED;
                     }
@@ -358,7 +364,7 @@ DrawIconOnOwnerDrawnButtons(
                     {
                         y = BUTTON_REBOOT_PRESSED;
                     }
-                    else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
+                    else if (pContext->bIsButtonHot[REBOOT_BUTTON_HOT] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_REBOOT_FOCUSED;
                     }
@@ -386,8 +392,8 @@ DrawIconOnOwnerDrawnButtons(
                     {
                         y = BUTTON_SLEEP_PRESSED;
                     }
-                    else if ((pdis->CtlID == IDC_BUTTON_SLEEP && pContext->bIsButtonHot[2]) ||
-                             (pdis->CtlID == IDC_BUTTON_HIBERNATE && pContext->bIsButtonHot[3]) ||
+                    else if ((pdis->CtlID == IDC_BUTTON_SLEEP && pContext->bIsButtonHot[SLEEP_BUTTON_HOT]) ||
+                             (pdis->CtlID == IDC_BUTTON_HIBERNATE && pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT]) ||
                              (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SLEEP_FOCUSED;
@@ -506,8 +512,7 @@ OwnerDrawButtonSubclass(
     LPARAM lParam)
 {
     PSHUTDOWN_DLG_CONTEXT pContext;
-    pContext = (PSHUTDOWN_DLG_CONTEXT)GetWindowLongPtrW(hButton, GWLP_USERDATA);
-
+    pContext = (PSHUTDOWN_DLG_CONTEXT)GetWindowLongPtrW(GetParent(hButton), GWLP_USERDATA);
     int buttonID = GetDlgCtrlID(hButton);
 
     switch (uMsg)
@@ -520,21 +525,29 @@ OwnerDrawButtonSubclass(
             if (GetCapture() != hButton)
             {
                 SetCapture(hButton);
-                if (buttonID == IDC_BUTTON_SHUTDOWN)
+
+                switch (buttonID)
                 {
-                    pContext->bIsButtonHot[0] = TRUE;
-                }
-                else if (buttonID == IDC_BUTTON_REBOOT)
-                {
-                    pContext->bIsButtonHot[1] = TRUE;
-                }
-                else if (buttonID == IDC_BUTTON_SLEEP)
-                {
-                    pContext->bIsButtonHot[2] = TRUE;
-                }
-                else if (buttonID == IDC_BUTTON_HIBERNATE)
-                {
-                    pContext->bIsButtonHot[3] = TRUE;
+                    case IDC_BUTTON_SHUTDOWN:
+                    {
+                        pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = TRUE;
+                        break;
+                    }
+                    case IDC_BUTTON_REBOOT:
+                    {
+                        pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = TRUE;
+                        break;
+                    }
+                    case IDC_BUTTON_SLEEP:
+                    {
+                        pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = TRUE;
+                        break;
+                    }
+                    case IDC_BUTTON_HIBERNATE:
+                    {
+                        pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = TRUE;
+                        break;
+                    }
                 }
                 SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
             }
@@ -545,21 +558,29 @@ OwnerDrawButtonSubclass(
             if (hwndTarget != hButton)
             {
                 ReleaseCapture();
-                if (buttonID == IDC_BUTTON_SHUTDOWN)
+
+                switch (buttonID)
                 {
-                    pContext->bIsButtonHot[0] = FALSE;
-                }
-                else if (buttonID == IDC_BUTTON_REBOOT)
-                {
-                    pContext->bIsButtonHot[1] = FALSE;
-                }
-                else if (buttonID == IDC_BUTTON_SLEEP)
-                {
-                    pContext->bIsButtonHot[2] = FALSE;
-                }
-                else if (buttonID == IDC_BUTTON_HIBERNATE)
-                {
-                    pContext->bIsButtonHot[3] = FALSE;
+                    case IDC_BUTTON_SHUTDOWN:
+                    {
+                        pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = FALSE;
+                        break;
+                    }
+                    case IDC_BUTTON_REBOOT:
+                    {
+                        pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = FALSE;
+                        break;
+                    }
+                    case IDC_BUTTON_SLEEP:
+                    {
+                        pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = FALSE;
+                        break;
+                    }
+                    case IDC_BUTTON_HIBERNATE:
+                    {
+                        pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = FALSE;
+                        break;
+                    }
                 }
             }
             InvalidateRect(hButton, NULL, FALSE);
@@ -581,26 +602,6 @@ OwnerDrawButtonSubclass(
         }
     }
     return CallWindowProcW(pContext->OldButtonProc, hButton, uMsg, wParam, lParam);
-}
-
-VOID
-AddPrefixToStaticTexts(
-    HWND hDlg,
-    BOOL bIsSleepButtonReplaced)
-{
-    WCHAR szBuffer[30];
-
-    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
-    {
-        GetDlgItemTextW(hDlg, IDC_BUTTON_HIBERNATE + i, szBuffer, _countof(szBuffer));
-        SetDlgItemTextW(hDlg, IDC_HIBERNATE_STATIC + i, szBuffer);
-    }
-
-    if (bIsSleepButtonReplaced)
-    {
-        GetDlgItemTextW(hDlg, IDC_BUTTON_HIBERNATE, szBuffer, _countof(szBuffer));
-        SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-    }
 }
 
 VOID
@@ -655,7 +656,7 @@ EndFriendlyDialog(
     /* Remove the subclass from the buttons */
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
-        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
     }
 }
 
@@ -891,40 +892,21 @@ ShutdownOnInit(
         pContext->bIsSleepButtonReplaced = FALSE;
         pContext->bTimer = FALSE;
 
-        for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
-        {
-            pContext->bIsButtonHot[i] = FALSE;
-        }
-
        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
-
-        /* Create tool tips for the buttons of fancy log off dialog */
-        CreateToolTipForButtons(IDC_BUTTON_HIBERNATE,
-                                IDS_SHUTDOWN_HIBERNATE_DESC,
-                                hDlg, IDS_SHUTDOWN_HIBERNATE,
-                                pContext->pgContext->hDllInstance);
-        CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN,
-                                IDS_SHUTDOWN_SHUTDOWN_DESC,
-                                hDlg, IDS_SHUTDOWN_SHUTDOWN,
-                            pContext->pgContext->hDllInstance);
-        CreateToolTipForButtons(IDC_BUTTON_REBOOT,
-                                IDS_SHUTDOWN_RESTART_DESC,
-                                hDlg, IDS_SHUTDOWN_RESTART,
-                                pContext->pgContext->hDllInstance);
-        CreateToolTipForButtons(IDC_BUTTON_SLEEP,
-                                IDS_SHUTDOWN_SLEEP_DESC,
-                                hDlg, IDS_SHUTDOWN_SLEEP,
-                                pContext->pgContext->hDllInstance);
 
         /* Gather old button func */
         pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
 
-        /* Make buttons to remember pContext and subclass the buttons */
+        /* Set bIsButtonHot to false, create tooltips for each buttons, make buttons to remember pContext and subclass the buttons */
         for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
         {
-            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_USERDATA, (LONG_PTR)pContext);
-            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
+            pContext->bIsButtonHot[i] = FALSE;
+            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
+            CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN + i,
+                                    IDS_SHUTDOWN_SHUTDOWN_DESC + i,
+                                    hDlg, IDS_SHUTDOWN_SHUTDOWN + i,
+                                    pContext->pgContext->hDllInstance);
         }
 
         if (pContext->ShutdownDialogId == IDD_SHUTDOWN_FANCY && IsPwrSuspendAllowed())
