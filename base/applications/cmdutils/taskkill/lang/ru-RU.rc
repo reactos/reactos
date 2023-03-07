@@ -19,5 +19,5 @@ STRINGTABLE
     STRING_TERMINATE_FAILED, "Ошибка: Не удается завершить процесс ""%1"".\n"
     STRING_SELF_TERMINATION, "Ошибка: Процесс не может завершить сам себя.\n"
     STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
-    STRING_INVALID_SYNTAX, "Ошибка: неверный синтаксис.\n"
+    STRING_INVALID_SYNTAX, "Ошибка: Неверный синтаксис.\n"
 }
