@@ -1046,12 +1046,12 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             s_hThread = CreateThread(NULL, 0, PrintThreadFunc, (LPVOID)lParam, 0, NULL);
             if (!s_hThread)
             {
+                /* Show status */
                 s_printData->status = STRING_PRINTFAILED;
                 LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
                 SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
 
                 EndDialog(hwnd, IDABORT);
-                break;
             }
             return TRUE;
 
@@ -1059,14 +1059,14 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (s_printData->status)
             {
                 case STRING_NOWPRINTING:
-                    /* Show status */
-                    LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
-                    SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
-
                     /* Show page */
                     LoadString(Globals.hInstance, STRING_PRINTINGPAGE, szPage, ARRAY_SIZE(szPage));
                     StringCchPrintf(szText, ARRAY_SIZE(szText), szPage, s_printData->currentPage);
                     SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
+
+                    /* Show status */
+                    LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
+                    SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
                     break;
 
                 case STRING_PRINTCOMPLETE:
@@ -1088,10 +1088,11 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (LOWORD(wParam) == IDCANCEL)
             {
                 EnableWindow(GetDlgItem(hwnd, IDCANCEL), FALSE);
+
+                /* Show status */
                 s_printData->status = STRING_PRINTCANCELING;
                 LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
                 SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
-                PostMessage(hwnd, PRINTING_MESSAGE, 0, 0);
             }
             break;
 
