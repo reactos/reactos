@@ -892,7 +892,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, BODY_FONT_SIZE);
     pPrintData->hBodyFont = CreateFontIndirect(&lfBody);
-    if (pPrintData->hBodyFont == NULL)
+    if (!pPrintData->hBodyFont)
         return FALSE;
 
     /* Create the header/footer font */
@@ -902,7 +902,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfCharSet = DEFAULT_CHARSET;
     StringCchCopy(lfHeader.lfFaceName, ARRAY_SIZE(lfHeader.lfFaceName), lfBody.lfFaceName);
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (pPrintData->hHeaderFont == NULL)
+    if (!pPrintData->hHeaderFont)
         return FALSE;
 
     return TRUE;
