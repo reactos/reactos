@@ -75,7 +75,7 @@ ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
                 pszNew[ichNew++] = L'\n';
             }
         }
-        else if (ch == _T('\r'))
+        else if (ch == L'\r')
         {
             pszNew[ichNew++] = L'\r';
             pszNew[ichNew++] = L'\n';
