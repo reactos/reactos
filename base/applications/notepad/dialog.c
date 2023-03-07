@@ -1122,8 +1122,6 @@ VOID DIALOG_FilePrint(VOID)
     printer = &printData->printer;
     printer->lStructSize = sizeof(PRINTDLG);
     printer->hwndOwner = Globals.hMainWnd;
-
-    /* Set some default flags */
     printer->Flags = PD_RETURNDC | PD_SELECTION;
 
     /* Disable the selection radio button if there is no text selected */
