@@ -663,7 +663,7 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 
     for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNode->ptiSibling)
     {
-        if (ptiNode->KeyboardLayout == pKL && (ptiNode->TIF_flags & TIF_INCLEANUP))
+        if (ptiNode->KeyboardLayout == pKL || (ptiNode->TIF_flags & TIF_INCLEANUP))
             continue;
 
         _SEH2_TRY
