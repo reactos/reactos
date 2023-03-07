@@ -886,7 +886,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     return TRUE;
 }
 
-#define BODY_FONT_SIZE      11 /* 11pt */
+#define BODY_FONT_SIZE      10 /* 10pt */
 #define HEADER_FONT_SIZE    9  /* 9pt */
 #define SPACING_HEIGHT      4  /* 4pt */
 
