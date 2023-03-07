@@ -913,11 +913,11 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
 static BOOL DoPrintDocument(PPRINT_DATA printData)
 {
     DOCINFO docInfo;
+    LPPRINTDLG pPrinter = &printData->printer;
     DWORD CopyCount, PageCount;
     TEXTMETRIC tmHeader;
     BOOL ret = FALSE;
     HFONT hOldFont;
-    LPPRINTDLG pPrinter = &printData->printer;
 
     GetLocalTime(&printData->stNow);
 
@@ -1018,6 +1018,7 @@ Quit: /* Clean up */
 static DWORD WINAPI PrintThreadFunc(LPVOID arg)
 {
     PPRINT_DATA printData = arg;
+    printData->status = STRING_NOWPRINTING;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
     DoPrintDocument(printData);
     return 0;
@@ -1050,12 +1051,8 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
 
                 EndDialog(hwnd, IDABORT);
-                return FALSE;
+                break;
             }
-
-            s_printData->status = STRING_NOWPRINTING;
-            LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
-            SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
             return TRUE;
 
         case PRINTING_MESSAGE:
