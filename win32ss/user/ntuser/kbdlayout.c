@@ -446,11 +446,7 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
 {
     PKBDFILE pkf = Object, *ppkfLink;
 
-    NT_ASSERT(pkf != NULL);
     NT_ASSERT(UserIsEnteredExclusive());
-
-    if (!pkf)
-        return TRUE;
 
     /* Remove pkf from gpkfList */
     for (ppkfLink = &gpkfList; *ppkfLink; ppkfLink = &(*ppkfLink)->pkfNext)
@@ -471,11 +467,7 @@ BOOLEAN UserKbdLayoutCleanup(PVOID Object)
 {
     PKL pKL = Object;
 
-    NT_ASSERT(pKL != NULL);
     NT_ASSERT(UserIsEnteredExclusive());
-
-    if (!pKL)
-        return TRUE;
 
     /* Remove pKL from the list */
     pKL->pklPrev->pklNext = pKL->pklNext;
