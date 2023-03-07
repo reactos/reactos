@@ -733,8 +733,6 @@ typedef struct
     INT cyFooter;
 } PRINT_DATA, *PPRINT_DATA;
 
-#define PRINTING_MESSAGE (WM_USER + 100)
-
 static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
 {
     LPPRINTDLG pPrinter = &pData->printer;
@@ -909,6 +907,8 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
 
     return TRUE;
 }
+
+#define PRINTING_MESSAGE (WM_USER + 100)
 
 static BOOL DoPrintDocument(PPRINT_DATA printData)
 {
