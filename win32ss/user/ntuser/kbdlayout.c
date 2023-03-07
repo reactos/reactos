@@ -477,6 +477,7 @@ BOOLEAN UserKbdLayoutCleanup(PVOID Object)
     if (!pKL)
         return TRUE;
 
+    /* Remove pKL from the list */
     pKL->pklPrev->pklNext = pKL->pklNext;
     pKL->pklNext->pklPrev = pKL->pklPrev;
 
