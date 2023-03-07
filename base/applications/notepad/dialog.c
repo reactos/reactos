@@ -1007,6 +1007,8 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     }
 
 Quit: /* Clean up */
+    if (printData->status == STRING_PRINTCANCELING)
+        printData->status = STRING_PRINTCANCELED;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
