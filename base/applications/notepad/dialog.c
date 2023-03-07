@@ -1113,6 +1113,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 VOID DIALOG_FilePrint(VOID)
 {
+    BOOL ret;
     LPPRINTDLG printer;
     PPRINT_DATA printData = LocalAlloc(LPTR, sizeof(PRINT_DATA));
     if (!printData)
@@ -1139,17 +1140,20 @@ VOID DIALOG_FilePrint(VOID)
     printer->hDevMode = Globals.hDevMode;
     printer->hDevNames = Globals.hDevNames;
 
-    if (!PrintDlg(printer))
+    ret = PrintDlg(printer);
+
+    /* NOTE: hDevMode and hDevMode can change even if PrintDlg returns FALSE. */
+    Globals.hDevMode = printer->hDevMode;
+    Globals.hDevNames = printer->hDevNames;
+
+    if (!ret)
     {
         LocalFree(printData);
         return; /* The user canceled printing */
     }
 
-    assert(printer->hDC != NULL);
-    Globals.hDevMode = printer->hDevMode;
-    Globals.hDevNames = printer->hDevNames;
-
     /* Ensure that each logical unit maps to one pixel */
+    assert(printer->hDC != NULL);
     SetMapMode(printer->hDC, MM_TEXT);
 
     if (DialogBoxParam(Globals.hInstance,
