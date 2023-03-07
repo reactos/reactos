@@ -1059,22 +1059,27 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (s_printData->status)
             {
                 case STRING_NOWPRINTING:
+                    /* Show status */
                     LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+
+                    /* Show page */
                     LoadString(Globals.hInstance, STRING_PRINTINGPAGE, szPage, ARRAY_SIZE(szPage));
                     StringCchPrintf(szText, ARRAY_SIZE(szText), szPage, s_printData->currentPage);
                     SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
                     break;
 
                 case STRING_PRINTCOMPLETE:
-                    EndDialog(hwnd, IDOK);
-                    break;
-
                 case STRING_PRINTCANCELED:
                 case STRING_PRINTFAILED:
+                    /* Show status */
                     LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
-                    EndDialog(hwnd, IDCANCEL);
+
+                    if (s_printData->status == STRING_PRINTCOMPLETE)
+                        EndDialog(hwnd, IDOK);
+                    else
+                        EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
@@ -1092,6 +1097,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
             CloseHandle(s_hThread);
+            s_hThread = NULL;
             DeleteDC(s_printer->hDC);
             LocalFree(s_printData);
             s_printer = NULL;
