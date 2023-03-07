@@ -656,6 +656,39 @@ IntImmActivateLayout(
     pti->pClientInfo->hKL = pKL->hkl;
 }
 
+static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
+{
+    PTHREADINFO ptiNode;
+    PCLIENTINFO pClientInfo;
+
+    for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNode->ptiSibling)
+    {
+        if (ptiNode->KeyboardLayout == pKL && (ptiNode->TIF_flags & TIF_INCLEANUP))
+            continue;
+
+        if (IS_IMM_MODE())
+        {
+            IntImmActivateLayout(ptiNode, pKL);
+        }
+        else
+        {
+            _SEH2_TRY
+            {
+                UserAssignmentLock((PVOID*)&ptiNode->KeyboardLayout, pKL);
+                pClientInfo = ptiNode->pClientInfo;
+                ProbeForWrite(pClientInfo, sizeof(CLIENTINFO), 1);
+                pClientInfo->CodePage = pKL->CodePage;
+                pClientInfo->hKL = pKL->hkl;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                NOTHING;
+            }
+            _SEH2_END;
+        }
+    }
+}
+
 /* Win: xxxInternalActivateKeyboardLayout */
 HKL APIENTRY
 co_UserActivateKeyboardLayout(
@@ -699,7 +732,7 @@ co_UserActivateKeyboardLayout(
     }
     else if (uFlags & KLF_SETFORPROCESS)
     {
-        FIXME("KLF_SETFORPROCESS\n");
+        co_IntActivateKeyboardLayoutForProcess(pti->ppi, pKL);
     }
     else
     {
@@ -748,7 +781,7 @@ co_UserActivateKeyboardLayout(
             if (pImeWnd)
             {
                 UserRefObjectCo(pImeWnd, &Ref2);
-                BOOL bProcess = !!(pti->TIF_flags & KLF_SETFORPROCESS);
+                BOOL bProcess = !!(uFlags & KLF_SETFORPROCESS);
                 hImeWnd = UserHMGetHandle(pImeWnd);
                 co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bProcess);
                 UserDerefObjectCo(pImeWnd);
