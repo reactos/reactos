@@ -1098,8 +1098,11 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
-            CloseHandle(s_hThread);
-            s_hThread = NULL;
+            if (s_hThread)
+            {
+                CloseHandle(s_hThread);
+                s_hThread = NULL;
+            }
             DeleteDC(s_printer->hDC);
             LocalFree(s_printData);
             s_printer = NULL;
