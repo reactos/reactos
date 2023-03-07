@@ -1060,6 +1060,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (s_printData->status)
             {
                 case STRING_NOWPRINTING:
+                case STRING_PRINTCANCELING:
                     /* Show page */
                     LoadString(Globals.hInstance, STRING_PRINTINGPAGE, szPage, ARRAY_SIZE(szPage));
                     StringCchPrintf(szText, ARRAY_SIZE(szText), szPage, s_printData->currentPage);
@@ -1086,14 +1087,11 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDCANCEL)
+            if (LOWORD(wParam) == IDCANCEL && s_printData->status == STRING_NOWPRINTING)
             {
                 EnableWindow(GetDlgItem(hwnd, IDCANCEL), FALSE);
-
-                /* Show status */
                 s_printData->status = STRING_PRINTCANCELING;
-                LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
-                SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
+                PostMessage(hwnd, PRINTING_MESSAGE, 0, 0);
             }
             break;
 
