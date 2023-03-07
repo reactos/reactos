@@ -1010,10 +1010,11 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
         printData->status = STRING_PRINTFAILED;
     }
 
-Quit: /* Clean up */
+Quit:
     if (printData->status == STRING_PRINTCANCELING)
         printData->status = STRING_PRINTCANCELED;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+    /* Clean up */
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
     if (printData->pszText)
