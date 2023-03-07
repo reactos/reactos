@@ -994,15 +994,15 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
         }
     }
 
-    if (EndDoc(pPrinter->hDC) <= 0)
-    {
-        AlertPrintError();
-        printData->status = STRING_PRINTFAILED;
-    }
-    else
+    if (EndDoc(pPrinter->hDC) > 0)
     {
         ret = TRUE;
         printData->status = STRING_PRINTCOMPLETE;
+    }
+    else
+    {
+        AlertPrintError();
+        printData->status = STRING_PRINTFAILED;
     }
 
 Quit: /* Clean up */
