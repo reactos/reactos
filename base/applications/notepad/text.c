@@ -58,56 +58,56 @@ static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
 }
 
 static VOID
-ReplaceNewLines(LPTSTR pszNew, SIZE_T cchNew, LPCTSTR pszOld, SIZE_T cchOld)
+ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
 {
     BOOL bPrevCR = FALSE;
     SIZE_T ichNew, ichOld;
 
     for (ichOld = ichNew = 0; ichOld < cchOld; ++ichOld)
     {
-        TCHAR ch = pszOld[ichOld];
+        WCHAR ch = pszOld[ichOld];
 
-        if (ch == _T('\n'))
+        if (ch == L'\n')
         {
             if (!bPrevCR)
             {
-                pszNew[ichNew++] = _T('\r');
-                pszNew[ichNew++] = _T('\n');
+                pszNew[ichNew++] = L'\r';
+                pszNew[ichNew++] = L'\n';
             }
         }
         else if (ch == _T('\r'))
         {
-            pszNew[ichNew++] = _T('\r');
-            pszNew[ichNew++] = _T('\n');
+            pszNew[ichNew++] = L'\r';
+            pszNew[ichNew++] = L'\n';
         }
         else
         {
             pszNew[ichNew++] = ch;
         }
 
-        bPrevCR = (ch == _T('\r'));
+        bPrevCR = (ch == L'\r');
     }
 
-    pszNew[ichNew] = _T('\0');
+    pszNew[ichNew] = UNICODE_NULL;
     assert(ichNew == cchNew);
 }
 
 static BOOL
-ProcessNewLinesAndNulls(HLOCAL *phLocal, LPTSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
+ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
 {
     SIZE_T ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
-    LPTSTR pszText = *ppszText;
+    LPWSTR pszText = *ppszText;
     EOLN iEoln;
     BOOL bPrevCR = FALSE;
 
     /* Replace '\0' with SPACE. Count newlines. */
     for (ich = 0; ich < cchText; ++ich)
     {
-        TCHAR ch = pszText[ich];
-        if (ch == _T('\0'))
-            pszText[ich] = _T(' ');
+        WCHAR ch = pszText[ich];
+        if (ch == UNICODE_NULL)
+            pszText[ich] = L' ';
 
-        if (ch == _T('\n'))
+        if (ch == L'\n')
         {
             if (bPrevCR)
             {
@@ -119,12 +119,12 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPTSTR *ppszText, SIZE_T *pcchText, EOL
                 adwEolnCount[EOLN_LF]++;
             }
         }
-        else if (ch == _T('\r'))
+        else if (ch == L'\r')
         {
             adwEolnCount[EOLN_CR]++;
         }
 
-        bPrevCR = (ch == _T('\r'));
+        bPrevCR = (ch == L'\r');
     }
 
     /* Choose the newline code */
@@ -140,8 +140,8 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPTSTR *ppszText, SIZE_T *pcchText, EOL
     {
         /* Allocate a buffer for EM_SETHANDLE */
         SIZE_T cchNew = cchText + cNonCRLFs;
-        HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(TCHAR));
-        LPTSTR pszNew = LocalLock(hLocal);
+        HLOCAL hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
+        LPWSTR pszNew = LocalLock(hLocal);
         if (!pszNew)
         {
             LocalFree(hLocal);
