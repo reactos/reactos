@@ -266,8 +266,8 @@ static const struct
     { NULL,                     NULL,                       NULL },                 /* TYPE_DDECONV */
     { NULL,                     NULL,                       NULL },                 /* TYPE_DDEXACT */
     { AllocSysObject,           /*UserMonitorCleanup*/NULL, FreeSysObject },        /* TYPE_MONITOR */
-    { AllocSysObject,           UserKbdLayoutCleanup,       FreeSysObject },        /* TYPE_KBDLAYOUT */
-    { AllocSysObject,           UserKbdFileCleanup,         FreeSysObject },        /* TYPE_KBDFILE */
+    { AllocSysObject,           UserKbdLayoutCleanup,       FreeSysObject },       /* TYPE_KBDLAYOUT */
+    { AllocSysObject,           UserKbdFileCleanup,         FreeSysObject },       /* TYPE_KBDFILE */
     { AllocThreadObject,        IntRemoveEvent,             FreeThreadObject },     /* TYPE_WINEVENTHOOK */
     { AllocSysObject,           /*UserTimerCleanup*/NULL,   FreeSysObject },        /* TYPE_TIMER */
     { AllocInputContextObject,  UserDestroyInputContext,    UserFreeInputContext }, /* TYPE_INPUTCONTEXT */

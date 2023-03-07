@@ -389,11 +389,11 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
         return NULL;
     }
 
-    pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(pustrKLID);
-
     /* Release the extra reference (UserCreateObject added 2 references) */
     UserDereferenceObject(pKl);
+
+    pKl->hkl = hKL;
+    pKl->spkf = UserLoadKbdFile(pustrKLID);
 
     /* If we failed, remove KL object */
     if (!pKl->spkf)
@@ -445,7 +445,9 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
 BOOLEAN UserKbdFileCleanup(PVOID Object)
 {
     PKBDFILE pkf = Object, *ppkfLink;
+
     NT_ASSERT(pkf != NULL);
+    NT_ASSERT(UserIsEnteredExclusive());
 
     if (!pkf)
         return TRUE;
@@ -461,25 +463,33 @@ BOOLEAN UserKbdFileCleanup(PVOID Object)
     }
 
     EngUnloadImage(pkf->hBase);
-    UserHeapFree(Object);
+    UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
     return TRUE;
 }
 
 BOOLEAN UserKbdLayoutCleanup(PVOID Object)
 {
     PKL pKL = Object;
+
     NT_ASSERT(pKL != NULL);
+    NT_ASSERT(UserIsEnteredExclusive());
 
     if (!pKL)
         return TRUE;
+
+    pKL->pklPrev->pklNext = pKL->pklNext;
+    pKL->pklNext->pklPrev = pKL->pklPrev;
 
     if (pKL->piiex)
         ExFreePoolWithTag(pKL->piiex, USERTAG_IME);
 
     if (pKL->spkf)
-        UserDeleteObject(pKL->spkf->head.h, TYPE_KBDFILE);
+        UserDereferenceObject(pKL->spkf);
 
-    UserHeapFree(Object);
+    if (gspklBaseLayout == pKL)
+        gspklBaseLayout = NULL;
+
+    UserDeleteObject(UserHMGetHandle(pKL), TYPE_KBDLAYOUT);
     return TRUE;
 }
 
