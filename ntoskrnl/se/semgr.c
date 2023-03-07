@@ -1,11 +1,11 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security manager infrastructure
- * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Copyright Eric Kohl
- *                  Copyright Aleksey Bragin
- *                  Copyright Alex Ionescu <alex@relsoft.net>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security manager infrastructure
+ * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright Eric Kohl
+ *              Copyright Aleksey Bragin
+ *              Copyright Alex Ionescu <alex@relsoft.net>
  */
 
 /* INCLUDES *******************************************************************/

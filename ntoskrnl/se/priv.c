@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security privileges support
- * COPYRIGHT:       Copyright Alex Ionescu <alex@relsoft.net>
- *                  Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Copyright Eric Kohl
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security privileges support
+ * COPYRIGHT:   Copyright Alex Ionescu <alex@relsoft.net>
+ *              Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/

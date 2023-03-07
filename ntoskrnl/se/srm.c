@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security Reference Monitor Server
- * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Copyright Pierre Schweitzer <pierre@reactos.org>
- *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security Reference Monitor Server
+ * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

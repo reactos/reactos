@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security object type list support routines
- * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security object type list support routines
+ * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

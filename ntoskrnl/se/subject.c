@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security subject context support routines
- * COPYRIGHT:       Copyright Alex Ionescu <alex@relsoft.net>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security subject context support routines
+ * COPYRIGHT:   Copyright Alex Ionescu <alex@relsoft.net>
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security auditing functions
- * COPYRIGHT:       Copyright Eric Kohl
- *                  Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security auditing functions
+ * COPYRIGHT:   Copyright Eric Kohl
+ *              Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Access control lists (ACLs) implementation
- * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Access control lists (ACLs) implementation
+ * COPYRIGHT:   Copyright David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *******************************************************************/
