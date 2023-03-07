@@ -688,7 +688,6 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
     }
 }
 
-/* Win: xxxInternalActivateKeyboardLayout */
 HKL APIENTRY
 co_UserActivateKeyboardLayout(
     _Inout_ PKL     pKL,
