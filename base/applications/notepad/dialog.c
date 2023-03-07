@@ -985,12 +985,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
             printData->currentPage = PageCount;
             PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
 
-            if (printData->status == STRING_PRINTCANCELING)
-            {
-                AbortDoc(pPrinter->hDC); /* Cancel printing */
-                goto Quit;
-            }
-
             if (!DoPrintPage(printData, PageCount))
             {
                 AbortDoc(pPrinter->hDC); /* Cancel printing */
