@@ -323,10 +323,15 @@ SepDumpTokenDebugInfo(
  */
 VOID
 SepDumpAccessRightsStats(
-    _In_opt_ PACCESS_CHECK_RIGHTS AccessRights)
+    _In_ PACCESS_CHECK_RIGHTS AccessRights)
 {
-    /* Don't dump anything if no access check rights list was provided */
-    if (!AccessRights)
+    /*
+     * Dump the access rights only if we have remaining rights
+     * to dump in the first place. RemainingAccessRights can be 0
+     * if access check procedure has failed prematurely and this
+     * member hasn't been filled yet.
+     */
+    if (!AccessRights->RemainingAccessRights)
     {
         return;
     }

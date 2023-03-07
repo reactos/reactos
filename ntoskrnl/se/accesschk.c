@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Security access check control implementation
- * COPYRIGHT:       Copyright 2014 Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Copyright 2014 Eric Kohl
- *                  Copyright 2022 George Bișoc <george.bisoc@reactos.org>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Security access check control implementation
+ * COPYRIGHT:   Copyright 2014 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2014 Eric Kohl
+ *              Copyright 2022-2023 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,69 +14,6 @@
 #include <debug.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-/**
- * @brief
- * Allocates memory for the internal access check rights
- * data structure and initializes it for use for the kernel.
- * The purpose of this piece of data is to track down the
- * remaining, granted and denied access rights whilst we
- * are doing an access check procedure.
- *
- * @return
- * Returns a pointer to allocated and initialized access
- * check rights, otherwise NULL is returned.
- */
-PACCESS_CHECK_RIGHTS
-SepInitAccessCheckRights(VOID)
-{
-    PACCESS_CHECK_RIGHTS AccessRights;
-
-    PAGED_CODE();
-
-    /* Allocate some pool for access check rights */
-    AccessRights = ExAllocatePoolWithTag(PagedPool,
-                                         sizeof(ACCESS_CHECK_RIGHTS),
-                                         TAG_ACCESS_CHECK_RIGHT);
-
-    /* Bail out if we failed */
-    if (!AccessRights)
-    {
-        return NULL;
-    }
-
-    /* Initialize the structure */
-    AccessRights->RemainingAccessRights = 0;
-    AccessRights->GrantedAccessRights = 0;
-    AccessRights->DeniedAccessRights = 0;
-
-    return AccessRights;
-}
-
-/**
- * @brief
- * Frees an allocated access check rights from
- * memory space after access check procedures
- * have finished.
- *
- * @param[in] AccessRights
- * A pointer to access check rights of which is
- * to be freed from memory.
- *
- * @return
- * Nothing.
- */
-VOID
-SepFreeAccessCheckRights(
-    _In_ PACCESS_CHECK_RIGHTS AccessRights)
-{
-    PAGED_CODE();
-
-    if (AccessRights)
-    {
-        ExFreePoolWithTag(AccessRights, TAG_ACCESS_CHECK_RIGHT);
-    }
-}
 
 /**
  * @brief
@@ -91,6 +28,13 @@ SepFreeAccessCheckRights(
  * which means the algorithm will perform analysis against ACEs on behalf of the
  * requestor that gave us the acknowledgement that he desires MAXIMUM_ALLOWED access
  * right or AccessCheckRegular if the requestor wants a subset of access rights.
+ *
+ * @param[in] RemainingAccess
+ * The remaining access rights that have yet to be granted to the calling thread
+ * whomst requests access to a certain object. This parameter mustn't be 0 as
+ * the remaining rights are left to be addressed. This is the case if we have
+ * to address the remaining rights on a regular subset basis (the requestor
+ * didn't ask for MAXIMUM_ALLOWED). Otherwise this parameter can be 0.
  *
  * @param[in] Dacl
  * The discretionary access control list to be given to this function. This DACL
@@ -113,12 +57,6 @@ SepFreeAccessCheckRights(
  * for restricted SIDs only when doing an equaility comparison check between the
  * two identifiers.
  *
- * @param[in] AccessRightsAllocated
- * If this parameter is set to TRUE, the function will not allocate the access
- * check rights again. This is typical when we have to do additional analysis
- * of ACEs because a token has restricted SIDs (see IsTokenRestricted parameter)
- * of which we already initialized the access check rights pointer before.
- *
  * @param[in] PrincipalSelfSid
  * A pointer to a security identifier that represents a principal. A principal
  * identifies a user object which is associated with its own security descriptor.
@@ -140,43 +78,30 @@ SepFreeAccessCheckRights(
  * question represents the number of elements in such array. This parameter must be 0
  * if no array list is provided.
  *
- * @param[in] RemainingAccess
- * The remaining access rights that have yet to be granted to the calling thread
- * whomst requests access to a certain object. This parameter mustn't be 0 as
- * the remaining rights are left to be addressed. This is the case if we have
- * to address the remaining rights on a regular subset basis (the requestor
- * didn't ask for MAXIMUM_ALLOWED). Otherwise this parameter can be 0.
- *
- * @return
- * Returns a pointer to initialized access check rights after ACE analysis
- * has finished. This pointer contains the rights that have been acquired
- * in order to determine if access can be granted to the calling thread.
- * Typically this pointer contains the remaining, denied and granted rights.
- *
- * Otherwise NULL is returned and thus access check procedure can't any longer
- * continue further. We have prematurely failed this access check operation
- * at this point.
+ * @param[in,out] AccessCheckRights
+ * A pointer to a structure that contains the access check rights. This function fills
+ * up this structure with remaining, granted and denied rights to the caller for
+ * access check. Henceforth, this parameter must not be NULL!
  */
-PACCESS_CHECK_RIGHTS
+VOID
 SepAnalyzeAcesFromDacl(
     _In_ ACCESS_CHECK_RIGHT_TYPE ActionType,
+    _In_ ACCESS_MASK RemainingAccess,
     _In_ PACL Dacl,
     _In_ PACCESS_TOKEN AccessToken,
     _In_ PACCESS_TOKEN PrimaryAccessToken,
     _In_ BOOLEAN IsTokenRestricted,
-    _In_ BOOLEAN AccessRightsAllocated,
     _In_opt_ PSID PrincipalSelfSid,
     _In_ PGENERIC_MAPPING GenericMapping,
     _In_opt_ POBJECT_TYPE_LIST ObjectTypeList,
     _In_ ULONG ObjectTypeListLength,
-    _In_ ACCESS_MASK RemainingAccess)
+    _Inout_ PACCESS_CHECK_RIGHTS AccessCheckRights)
 {
     NTSTATUS Status;
     PACE CurrentAce;
     ULONG AceIndex;
     PSID Sid;
     ACCESS_MASK Access;
-    PACCESS_CHECK_RIGHTS AccessRights;
 
     PAGED_CODE();
 
@@ -190,25 +115,6 @@ SepAnalyzeAcesFromDacl(
 
     /* TODO: To be removed once we support compound ACEs handling in Se */
     DBG_UNREFERENCED_PARAMETER(PrimaryAccessToken);
-
-    /*
-     * Allocate memory for access check rights if
-     * we have not done it so. Otherwise just use
-     * the already allocated pointer. This is
-     * typically when we have to do additional
-     * ACEs analysis because the token has
-     * restricted SIDs so we have allocated this
-     * pointer before.
-     */
-    if (!AccessRightsAllocated)
-    {
-        AccessRights = SepInitAccessCheckRights();
-        if (!AccessRights)
-        {
-            DPRINT1("SepAnalyzeAcesFromDacl(): Failed to initialize the access check rights!\n");
-            return NULL;
-        }
-    }
 
     /* Determine how we should analyze the ACEs */
     switch (ActionType)
@@ -239,6 +145,7 @@ SepAnalyzeAcesFromDacl(
                     {
                         /* Get the SID from this ACE */
                         Sid = SepGetSidFromAce(ACCESS_DENIED_ACE_TYPE, CurrentAce);
+                        ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, TRUE, IsTokenRestricted))
                         {
@@ -252,14 +159,15 @@ SepAnalyzeAcesFromDacl(
                             }
 
                             /* Deny access rights that have not been granted yet */
-                            AccessRights->DeniedAccessRights |= (Access & ~AccessRights->GrantedAccessRights);
-                            DPRINT("SepAnalyzeAcesFromDacl(): DeniedAccessRights 0x%08lx\n", AccessRights->DeniedAccessRights);
+                            AccessCheckRights->DeniedAccessRights |= (Access & ~AccessCheckRights->GrantedAccessRights);
+                            DPRINT("SepAnalyzeAcesFromDacl(): DeniedAccessRights 0x%08lx\n", AccessCheckRights->DeniedAccessRights);
                         }
                     }
                     else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
                     {
                         /* Get the SID from this ACE */
                         Sid = SepGetSidFromAce(ACCESS_ALLOWED_ACE_TYPE, CurrentAce);
+                        ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, FALSE, IsTokenRestricted))
                         {
@@ -273,8 +181,8 @@ SepAnalyzeAcesFromDacl(
                             }
 
                             /* Grant access rights that have not been denied yet */
-                            AccessRights->GrantedAccessRights |= (Access & ~AccessRights->DeniedAccessRights);
-                            DPRINT("SepAnalyzeAcesFromDacl(): GrantedAccessRights 0x%08lx\n", AccessRights->GrantedAccessRights);
+                            AccessCheckRights->GrantedAccessRights |= (Access & ~AccessCheckRights->DeniedAccessRights);
+                            DPRINT("SepAnalyzeAcesFromDacl(): GrantedAccessRights 0x%08lx\n", AccessCheckRights->GrantedAccessRights);
                         }
                     }
                     else
@@ -296,7 +204,8 @@ SepAnalyzeAcesFromDacl(
         case AccessCheckRegular:
         {
             /* Cache the remaining access rights to be addressed */
-            AccessRights->RemainingAccessRights = RemainingAccess;
+            ASSERT(RemainingAccess != 0);
+            AccessCheckRights->RemainingAccessRights = RemainingAccess;
 
             /* Loop over the DACL to retrieve ACEs */
             for (AceIndex = 0; AceIndex < Dacl->AceCount; AceIndex++)
@@ -317,6 +226,7 @@ SepAnalyzeAcesFromDacl(
                     {
                         /* Get the SID from this ACE */
                         Sid = SepGetSidFromAce(ACCESS_DENIED_ACE_TYPE, CurrentAce);
+                        ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, TRUE, IsTokenRestricted))
                         {
@@ -334,10 +244,10 @@ SepAnalyzeAcesFromDacl(
                              * granted. Access is implicitly denied for
                              * the calling thread. Track this access right.
                              */
-                            if (AccessRights->RemainingAccessRights & Access)
+                            if (AccessCheckRights->RemainingAccessRights & Access)
                             {
                                 DPRINT("SepAnalyzeAcesFromDacl(): Refuted access 0x%08lx\n", Access);
-                                AccessRights->DeniedAccessRights |= Access;
+                                AccessCheckRights->DeniedAccessRights |= Access;
                                 break;
                             }
                         }
@@ -346,6 +256,7 @@ SepAnalyzeAcesFromDacl(
                     {
                         /* Get the SID from this ACE */
                         Sid = SepGetSidFromAce(ACCESS_ALLOWED_ACE_TYPE, CurrentAce);
+                        ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, FALSE, IsTokenRestricted))
                         {
@@ -358,13 +269,13 @@ SepAnalyzeAcesFromDacl(
                                 RtlMapGenericMask(&Access, GenericMapping);
                             }
 
-                            /* Remove granted rights */
-                            DPRINT("SepAnalyzeAcesFromDacl(): RemainingAccessRights 0x%08lx  Access 0x%08lx\n", AccessRights->RemainingAccessRights, Access);
-                            AccessRights->RemainingAccessRights &= ~Access;
-                            DPRINT("SepAnalyzeAcesFromDacl(): RemainingAccessRights 0x%08lx\n", AccessRights->RemainingAccessRights);
+                            /* Remove the remaining rights */
+                            DPRINT("SepAnalyzeAcesFromDacl(): RemainingAccessRights 0x%08lx  Access 0x%08lx\n", AccessCheckRights->RemainingAccessRights, Access);
+                            AccessCheckRights->RemainingAccessRights &= ~Access;
+                            DPRINT("SepAnalyzeAcesFromDacl(): RemainingAccessRights 0x%08lx\n", AccessCheckRights->RemainingAccessRights);
 
                             /* Track the granted access right */
-                            AccessRights->GrantedAccessRights |= Access;
+                            AccessCheckRights->GrantedAccessRights |= Access;
                         }
                     }
                     else
@@ -381,9 +292,6 @@ SepAnalyzeAcesFromDacl(
         /* We shouldn't reach here */
         DEFAULT_UNREACHABLE;
     }
-
-    /* Return the access rights that we've got */
-    return AccessRights;
 }
 
 /**
@@ -486,7 +394,7 @@ SepAccessCheck(
     BOOLEAN Defaulted;
     NTSTATUS Status;
     PACCESS_TOKEN Token = NULL;
-    PACCESS_CHECK_RIGHTS AccessCheckRights = NULL;
+    ACCESS_CHECK_RIGHTS AccessCheckRights = {0};
 
     PAGED_CODE();
 
@@ -604,31 +512,17 @@ SepAccessCheck(
     if (DesiredAccess & MAXIMUM_ALLOWED)
     {
         /* Perform access checks against ACEs from this DACL */
-        AccessCheckRights = SepAnalyzeAcesFromDacl(AccessCheckMaximum,
-                                                   Dacl,
-                                                   Token,
-                                                   PrimaryAccessToken,
-                                                   FALSE,
-                                                   FALSE,
-                                                   PrincipalSelfSid,
-                                                   GenericMapping,
-                                                   ObjectTypeList,
-                                                   ObjectTypeListLength,
-                                                   0);
-
-        /*
-         * Getting the access check rights is very
-         * important as we have to do access checks
-         * depending on the kind of rights we get.
-         * Fail prematurely if we can't...
-         */
-        if (!AccessCheckRights)
-        {
-            DPRINT1("SepAccessCheck(): Failed to obtain access check rights!\n");
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            PreviouslyGrantedAccess = 0;
-            goto ReturnCommonStatus;
-        }
+        SepAnalyzeAcesFromDacl(AccessCheckMaximum,
+                               0,
+                               Dacl,
+                               Token,
+                               PrimaryAccessToken,
+                               FALSE,
+                               PrincipalSelfSid,
+                               GenericMapping,
+                               ObjectTypeList,
+                               ObjectTypeListLength,
+                               &AccessCheckRights);
 
         /*
          * Perform further access checks if this token
@@ -636,21 +530,21 @@ SepAccessCheck(
          */
         if (SeTokenIsRestricted(Token))
         {
-            AccessCheckRights = SepAnalyzeAcesFromDacl(AccessCheckMaximum,
-                                                       Dacl,
-                                                       Token,
-                                                       PrimaryAccessToken,
-                                                       TRUE,
-                                                       TRUE,
-                                                       PrincipalSelfSid,
-                                                       GenericMapping,
-                                                       ObjectTypeList,
-                                                       ObjectTypeListLength,
-                                                       0);
+            SepAnalyzeAcesFromDacl(AccessCheckMaximum,
+                                   0,
+                                   Dacl,
+                                   Token,
+                                   PrimaryAccessToken,
+                                   TRUE,
+                                   PrincipalSelfSid,
+                                   GenericMapping,
+                                   ObjectTypeList,
+                                   ObjectTypeListLength,
+                                   &AccessCheckRights);
         }
 
         /* Fail if some rights have not been granted */
-        RemainingAccess &= ~(MAXIMUM_ALLOWED | AccessCheckRights->GrantedAccessRights);
+        RemainingAccess &= ~(MAXIMUM_ALLOWED | AccessCheckRights.GrantedAccessRights);
         if (RemainingAccess != 0)
         {
             DPRINT1("SepAccessCheck(): Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
@@ -660,7 +554,7 @@ SepAccessCheck(
         }
 
         /* Set granted access right and access status */
-        PreviouslyGrantedAccess |= AccessCheckRights->GrantedAccessRights;
+        PreviouslyGrantedAccess |= AccessCheckRights.GrantedAccessRights;
         if (PreviouslyGrantedAccess != 0)
         {
             Status = STATUS_SUCCESS;
@@ -676,36 +570,22 @@ SepAccessCheck(
     }
 
     /* Grant rights according to the DACL */
-    AccessCheckRights = SepAnalyzeAcesFromDacl(AccessCheckRegular,
-                                               Dacl,
-                                               Token,
-                                               PrimaryAccessToken,
-                                               FALSE,
-                                               FALSE,
-                                               PrincipalSelfSid,
-                                               GenericMapping,
-                                               ObjectTypeList,
-                                               ObjectTypeListLength,
-                                               RemainingAccess);
-
-    /*
-     * Getting the access check rights is very
-     * important as we have to do access checks
-     * depending on the kind of rights we get.
-     * Fail prematurely if we can't...
-     */
-    if (!AccessCheckRights)
-    {
-        DPRINT1("SepAccessCheck(): Failed to obtain access check rights!\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        PreviouslyGrantedAccess = 0;
-        goto ReturnCommonStatus;
-    }
+    SepAnalyzeAcesFromDacl(AccessCheckRegular,
+                           RemainingAccess,
+                           Dacl,
+                           Token,
+                           PrimaryAccessToken,
+                           FALSE,
+                           PrincipalSelfSid,
+                           GenericMapping,
+                           ObjectTypeList,
+                           ObjectTypeListLength,
+                           &AccessCheckRights);
 
     /* Fail if some rights have not been granted */
-    if (AccessCheckRights->RemainingAccessRights != 0)
+    if (AccessCheckRights.RemainingAccessRights != 0)
     {
-        DPRINT1("SepAccessCheck(): Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights->RemainingAccessRights, DesiredAccess);
+        DPRINT1("SepAccessCheck(): Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
         PreviouslyGrantedAccess = 0;
         Status = STATUS_ACCESS_DENIED;
         goto ReturnCommonStatus;
@@ -717,22 +597,22 @@ SepAccessCheck(
      */
     if (SeTokenIsRestricted(Token))
     {
-        AccessCheckRights = SepAnalyzeAcesFromDacl(AccessCheckRegular,
-                                                   Dacl,
-                                                   Token,
-                                                   PrimaryAccessToken,
-                                                   TRUE,
-                                                   TRUE,
-                                                   PrincipalSelfSid,
-                                                   GenericMapping,
-                                                   ObjectTypeList,
-                                                   ObjectTypeListLength,
-                                                   RemainingAccess);
+        SepAnalyzeAcesFromDacl(AccessCheckRegular,
+                               RemainingAccess,
+                               Dacl,
+                               Token,
+                               PrimaryAccessToken,
+                               TRUE,
+                               PrincipalSelfSid,
+                               GenericMapping,
+                               ObjectTypeList,
+                               ObjectTypeListLength,
+                               &AccessCheckRights);
 
         /* Fail if some rights have not been granted */
-        if (AccessCheckRights->RemainingAccessRights != 0)
+        if (AccessCheckRights.RemainingAccessRights != 0)
         {
-            DPRINT1("SepAccessCheck(): Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights->RemainingAccessRights, DesiredAccess);
+            DPRINT1("SepAccessCheck(): Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
             PreviouslyGrantedAccess = 0;
             Status = STATUS_ACCESS_DENIED;
             goto ReturnCommonStatus;
@@ -770,13 +650,9 @@ ReturnCommonStatus:
     {
         SepDumpSdDebugInfo(SecurityDescriptor);
         SepDumpTokenDebugInfo(Token);
-        SepDumpAccessRightsStats(AccessCheckRights);
+        SepDumpAccessRightsStats(&AccessCheckRights);
     }
 #endif
-
-    /* Free the allocated access check rights */
-    SepFreeAccessCheckRights(AccessCheckRights);
-    AccessCheckRights = NULL;
 
     return NT_SUCCESS(Status);
 }

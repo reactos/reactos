@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Internal header for the Security Manager
- * COPYRIGHT:       Copyright Eric Kohl
- *                  Copyright 2022 George Bișoc <george.bisoc@reactos.org>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Internal header for the Security Manager
+ * COPYRIGHT:   Copyright Eric Kohl
+ *              Copyright 2022 George Bișoc <george.bisoc@reactos.org>
  */
 
 #pragma once
@@ -303,7 +303,7 @@ SepDumpTokenDebugInfo(
 
 VOID
 SepDumpAccessRightsStats(
-    _In_opt_ PACCESS_CHECK_RIGHTS AccessRights);
+    _In_ PACCESS_CHECK_RIGHTS AccessRights);
 #endif // DBG
 
 //
