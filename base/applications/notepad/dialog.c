@@ -999,21 +999,22 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
         }
     }
 
-    if (EndDoc(pPrinter->hDC) > 0)
-    {
-        ret = TRUE;
-        printData->status = STRING_PRINTCOMPLETE;
-    }
-    else
+    if (EndDoc(pPrinter->hDC) <= 0)
     {
         AlertPrintError();
         printData->status = STRING_PRINTFAILED;
+    }
+    else
+    {
+        ret = TRUE;
+        printData->status = STRING_PRINTCOMPLETE;
     }
 
 Quit:
     if (printData->status == STRING_PRINTCANCELING)
         printData->status = STRING_PRINTCANCELED;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+
     /* Clean up */
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
@@ -1025,6 +1026,7 @@ Quit:
 static DWORD WINAPI PrintThreadFunc(LPVOID arg)
 {
     PPRINT_DATA printData = arg;
+    printData->currentPage = 1;
     printData->status = STRING_NOWPRINTING;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
     DoPrintDocument(printData);
@@ -1036,7 +1038,6 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TCHAR szText[MAX_STRING_LEN], szPage[64];
     static PPRINT_DATA s_printData = NULL;
-    static LPPRINTDLG s_printer = NULL;
     static HANDLE s_hThread = NULL;
 
     switch (uMsg)
@@ -1044,7 +1045,6 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
             SetWindowLongPtr(hwnd, DWLP_USER, lParam);
             s_printData = (PPRINT_DATA)lParam;
-            s_printer = &s_printData->printer;
             s_printData->hwndDlg = hwnd;
 
             SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
@@ -1109,10 +1109,8 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 CloseHandle(s_hThread);
                 s_hThread = NULL;
             }
-            DeleteDC(s_printer->hDC);
+            DeleteDC(s_printData->printer.hDC);
             LocalFree(s_printData);
-            s_printer = NULL;
-            s_printData = NULL;
             break;
     }
 
@@ -1139,7 +1137,6 @@ VOID DIALOG_FilePrint(VOID)
     if (!GetSelectionTextLength(Globals.hEdit))
         printer->Flags |= PD_NOSELECTION;
 
-    printData->currentPage = 1;
     printer->nFromPage = 1;
     printer->nToPage = MAXWORD;
     printer->nMinPage = 1;
@@ -1149,7 +1146,6 @@ VOID DIALOG_FilePrint(VOID)
     printer->hDevNames = Globals.hDevNames;
 
     ret = PrintDlg(printer);
-
     /* NOTE: Even if PrintDlg returns FALSE, the values of hDevMode and hDevNames may
              have changed. */
     Globals.hDevMode = printer->hDevMode;
