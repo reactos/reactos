@@ -653,7 +653,6 @@ IntImmActivateLayout(
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
     pti->pClientInfo->hKL = pKL->hkl;
-    pti->CodePage = pKL->CodePage;
 }
 
 static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
