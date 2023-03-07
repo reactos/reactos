@@ -982,7 +982,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
             if (printData->status == STRING_PRINTCANCELING)
             {
                 AbortDoc(pPrinter->hDC); /* Cancel printing */
-                printData->status = STRING_PRINTCANCELED;
                 goto Quit;
             }
 
