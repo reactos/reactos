@@ -1142,7 +1142,8 @@ VOID DIALOG_FilePrint(VOID)
 
     ret = PrintDlg(printer);
 
-    /* NOTE: hDevMode and hDevMode can change even if PrintDlg returns FALSE. */
+    /* NOTE: Even if PrintDlg returns FALSE, the values of hDevMode and hDevNames may
+             have changed. */
     Globals.hDevMode = printer->hDevMode;
     Globals.hDevNames = printer->hDevNames;
 
