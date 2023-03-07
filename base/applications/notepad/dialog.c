@@ -1119,9 +1119,6 @@ VOID DIALOG_FilePrint(VOID)
         return;
     }
     printer = &printData->printer;
-
-    /* Get Current Settings */
-    ZeroMemory(printer, sizeof(PRINTDLG));
     printer->lStructSize = sizeof(PRINTDLG);
     printer->hwndOwner = Globals.hMainWnd;
     printer->hInstance = Globals.hInstance;
