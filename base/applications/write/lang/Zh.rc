@@ -21,9 +21,6 @@
 
 #include "resources.h"
 
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE

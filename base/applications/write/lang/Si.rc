@@ -22,8 +22,6 @@
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
     IDS_FAILED, "Zagon programa Wordpad ni uspel"

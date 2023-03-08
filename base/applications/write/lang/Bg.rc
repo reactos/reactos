@@ -22,13 +22,7 @@
 /* https://reactos.org/wiki/Bulgarian_translation */
 /* LOCATION: \base\applications\write\lang */
 
-/* WARNING */
-/* Do NOT save this file with BOM */
-
 #include "resources.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 

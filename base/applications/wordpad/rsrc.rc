@@ -25,8 +25,9 @@
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad"
 #define REACTOS_STR_INTERNAL_NAME     "wordpad"
 #define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe"
-
 #include <reactos/version.rc>
+
+#include <reactos/manifest_exe.rc>
 
 MAINACCELTABLE ACCELERATORS
 BEGIN
@@ -66,8 +67,6 @@ IDI_RTFDOC ICON "res/document.ico"
 
 /* @makedep: zoom.cur */
 IDC_ZOOM CURSOR "res/zoom.cur"
-
-#include <reactos/manifest_exe.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
