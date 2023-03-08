@@ -1566,6 +1566,8 @@ VOID DIALOG_FilePageSetup(void)
     page.lpfnPageSetupHook = DIALOG_PAGESETUP_Hook;
 
     PageSetupDlg(&page);
+    /* NOTE: Even if PageSetupDlg returns FALSE, the values of hDevMode, hDevNames and
+             rtMargin may have changed */
 
     Globals.hDevMode = page.hDevMode;
     Globals.hDevNames = page.hDevNames;
