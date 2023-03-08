@@ -663,29 +663,27 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 
     for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNode->ptiSibling)
     {
-        if (ptiNode->KeyboardLayout == pKL || (ptiNode->TIF_flags & TIF_INCLEANUP))
-            continue;
+        IntReferenceThreadInfo(ptiNode);
 
-        _SEH2_TRY
+        if (ptiNode->KeyboardLayout == pKL || (ptiNode->TIF_flags & TIF_INCLEANUP))
         {
-            if (bImmMode)
-            {
-                IntImmActivateLayout(ptiNode, pKL);
-            }
-            else
-            {
-                UserAssignmentLock((PVOID*)&ptiNode->KeyboardLayout, pKL);
-                pClientInfo = ptiNode->pClientInfo;
-                ProbeForWrite(pClientInfo, sizeof(CLIENTINFO), 1);
-                pClientInfo->CodePage = pKL->CodePage;
-                pClientInfo->hKL = pKL->hkl;
-            }
+            IntDereferenceThreadInfo(ptiNode);
+            continue;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+
+        if (bImmMode)
         {
-            NOTHING;
+            IntImmActivateLayout(ptiNode, pKL);
         }
-        _SEH2_END;
+        else
+        {
+            UserAssignmentLock((PVOID*)&ptiNode->KeyboardLayout, pKL);
+            pClientInfo = ptiNode->pClientInfo;
+            pClientInfo->CodePage = pKL->CodePage;
+            pClientInfo->hKL = pKL->hkl;
+        }
+
+        IntDereferenceThreadInfo(ptiNode);
     }
 }
 
