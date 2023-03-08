@@ -586,8 +586,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     INT x, y;
     RECT rcIntersect;
 
-    if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
-        SetProcessDefaultLayout(LAYOUT_RTL);
+    switch (PRIMARYLANGID(GetUserDefaultUILanguage()))
+    {
+        case LANG_ARABIC:
+        case LANG_HEBREW:
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
+    }
 
     UNREFERENCED_PARAMETER(prev);
 
