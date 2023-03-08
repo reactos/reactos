@@ -898,7 +898,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfBody = Globals.lfFont;
     lfBody.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, BODY_FONT_SIZE);
     pPrintData->hBodyFont = CreateFontIndirect(&lfBody);
-    if (!pPrintData->hBodyFont)
+    if (pPrintData->hBodyFont == NULL)
         return FALSE;
 
     /* Create the header/footer font */
@@ -906,7 +906,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
     lfHeader.lfWeight = FW_BOLD;
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (!pPrintData->hHeaderFont)
+    if (pPrintData->hHeaderFont == NULL)
         return FALSE;
 
     return TRUE;
@@ -1005,13 +1005,14 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
 Quit:
     if (printData->status == STRING_PRINTCANCELING)
         printData->status = STRING_PRINTCANCELED;
-    PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
 
     /* Clean up */
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
     if (printData->pszText)
         HeapFree(GetProcessHeap(), 0, printData->pszText);
+
+    PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
     return ret;
 }
 
