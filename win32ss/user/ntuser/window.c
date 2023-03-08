@@ -85,13 +85,15 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
 
 PWND FASTCALL VerifyWnd(PWND pWnd)
 {
-   if (!pWnd ||
-       UserObjectInDestroy(UserHMGetHandle(pWnd)) ||
-       pWnd->state & WNDS_DESTROYED ||
-       pWnd->state2 & WNDS2_INDESTROY)
-      return NULL;
+    if (!pWnd ||
+        UserObjectInDestroy(UserHMGetHandle(pWnd)) ||
+        (pWnd->state & WNDS_DESTROYED) ||
+        (pWnd->state2 & WNDS2_INDESTROY))
+    {
+        return NULL;
+    }
 
-   return pWnd;
+    return pWnd;
 }
 
 PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
