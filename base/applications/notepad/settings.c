@@ -111,7 +111,6 @@ static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_LoadSettingsFromRegistry
  *
  *  Load settings from registry HKCU\Software\Microsoft\Notepad.
@@ -231,7 +230,6 @@ static BOOL SaveString(HKEY hKey, LPCTSTR pszValueNameT, LPCTSTR pszValue)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_SaveSettingsToRegistry
  *
  *  Save settings to registry HKCU\Software\Microsoft\Notepad.
