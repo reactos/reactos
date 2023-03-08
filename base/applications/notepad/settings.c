@@ -211,7 +211,7 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     }
 
     hFont = CreateFontIndirect(&Globals.lfFont);
-    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)hFont, (LPARAM)TRUE);
+    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
     if (hFont)
     {
         if (Globals.hFont)

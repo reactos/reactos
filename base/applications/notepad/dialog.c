@@ -141,7 +141,7 @@ VOID DIALOG_StatusBarAlignParts(VOID)
     parts[0] = max(parts[0], defaultWidths[0]);
     parts[1] = max(parts[1], defaultWidths[0] + defaultWidths[1]);
 
-    SendMessageW(Globals.hStatusBar, SB_SETPARTS, (WPARAM)ARRAY_SIZE(parts), (LPARAM)parts);
+    SendMessageW(Globals.hStatusBar, SB_SETPARTS, ARRAY_SIZE(parts), (LPARAM)parts);
 }
 
 static VOID DIALOG_StatusBarUpdateLineEndings(VOID)
@@ -1032,7 +1032,7 @@ VOID DIALOG_FilePrint(VOID)
 
 VOID DIALOG_FileExit(VOID)
 {
-    PostMessage(Globals.hMainWnd, WM_CLOSE, 0, 0l);
+    PostMessage(Globals.hMainWnd, WM_CLOSE, 0, 0);
 }
 
 VOID DIALOG_EditUndo(VOID)
@@ -1062,7 +1062,7 @@ VOID DIALOG_EditDelete(VOID)
 
 VOID DIALOG_EditSelectAll(VOID)
 {
-    SendMessage(Globals.hEdit, EM_SETSEL, 0, (LPARAM)-1);
+    SendMessage(Globals.hEdit, EM_SETSEL, 0, -1);
 }
 
 VOID DIALOG_EditTimeDate(VOID)
@@ -1233,7 +1233,7 @@ VOID DIALOG_SelectFont(VOID)
 
         Globals.hFont = CreateFontIndirect(&lf);
         Globals.lfFont = lf;
-        SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)TRUE);
+        SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, TRUE);
         if (currfont != NULL)
             DeleteObject(currfont);
     }
