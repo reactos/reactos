@@ -28,16 +28,6 @@ wWinMain(HINSTANCE hThisInstance,
     int Ret = 1;
     INITCOMMONCONTROLSEX icex;
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
-
     hInstance = hThisInstance;
     ProcessHeap = GetProcessHeap();
 

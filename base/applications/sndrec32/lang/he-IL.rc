@@ -1,5 +1,13 @@
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
+/*
+ * Enable RTL mirroring by adding two left-to-right marks (LRMs)
+ * in front of the FileDescription value of the version stamping.
+ */
+#undef REACTOS_STR_FILE_DESCRIPTION
+#define REACTOS_STR_FILE_DESCRIPTION    L"\x200e\x200e" L"ReactOS Sound Recorder"
+#include <reactos/version.rc>
+
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT

@@ -215,15 +215,6 @@ int WINAPI wWinMain(HINSTANCE hInstance,
         return 0;
     }
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
     /* Store instance handle in our global variable */
     hInst = hInstance;
 

@@ -790,19 +790,6 @@ _tWinMain(HINSTANCE hInst,
         return 0;
     }
 
-#if 0
-    /* Mirroring is enabled from within the resources */
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
-#endif
-
     hInstance = hInst;
 
     /* Load icons */

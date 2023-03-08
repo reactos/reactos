@@ -888,15 +888,6 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     HANDLE hMutex;
     HWND hwnd;
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-        default:
-            break;
-    }
-
     hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
     if (!hMutex)
         return 1;
