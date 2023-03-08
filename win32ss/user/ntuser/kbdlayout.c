@@ -657,13 +657,14 @@ IntImmActivateLayout(
 
 static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 {
-    PTHREADINFO ptiNode;
+    PTHREADINFO ptiNode, ptiNext;
     PCLIENTINFO pClientInfo;
     BOOL bImmMode = IS_IMM_MODE();
 
-    for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNode->ptiSibling)
+    for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNext)
     {
         IntReferenceThreadInfo(ptiNode);
+        ptiNext = ptiNode->ptiSibling;
 
         if (ptiNode->KeyboardLayout == pKL || (ptiNode->TIF_flags & TIF_INCLEANUP))
         {
