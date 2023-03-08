@@ -614,7 +614,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
                                         GetSystemMetrics(SM_CXSMICON),
                                         GetSystemMetrics(SM_CYSMICON),
                                         0);
-
     if (!RegisterClassEx(&wndclass))
     {
         ShowLastError();
