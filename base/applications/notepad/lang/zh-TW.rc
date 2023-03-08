@@ -186,7 +186,7 @@ BEGIN
     STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
     STRING_NOWPRINTING "Now printing page..."
     STRING_PRINTCANCELING "The print job is being canceled..."
-    STRING_PRINTCOMPLETE "Printing is successfully complete."
+    STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
     STRING_PRINTFAILED "Printing is failed."
 
