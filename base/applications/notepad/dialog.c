@@ -1003,15 +1003,14 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     }
 
 Quit:
-    if (printData->status == STRING_PRINTCANCELING)
-        printData->status = STRING_PRINTCANCELED;
-
     /* Clean up */
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
     if (printData->pszText)
         HeapFree(GetProcessHeap(), 0, printData->pszText);
 
+    if (printData->status == STRING_PRINTCANCELING)
+        printData->status = STRING_PRINTCANCELED;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
     return ret;
 }
