@@ -659,6 +659,7 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 {
     PTHREADINFO ptiNode;
     PCLIENTINFO pClientInfo;
+    BOOL bImmMode = IS_IMM_MODE();
 
     for (ptiNode = ppi->ptiList; ptiNode; ptiNode = ptiNode->ptiSibling)
     {
@@ -667,7 +668,7 @@ static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 
         _SEH2_TRY
         {
-            if (IS_IMM_MODE())
+            if (bImmMode)
             {
                 IntImmActivateLayout(ptiNode, pKL);
             }
