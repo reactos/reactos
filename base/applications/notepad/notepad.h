@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Notepad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Privide a simple text editor for ReactOS
+ * PURPOSE:     Prividing a Window-compatible simple text editor for ReactOS
  * COPYRIGHT:   Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *              Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *              Copyright 2002 Andriy Palamarchuk
@@ -77,7 +77,7 @@ typedef struct
     TCHAR szFileName[MAX_PATH];
     TCHAR szFileTitle[MAX_PATH];
     TCHAR szFilter[512];
-    RECT lMargins;
+    RECT lMargins; /* The margin values in 100th millimeters */
     TCHAR szHeader[MAX_PATH];
     TCHAR szFooter[MAX_PATH];
     TCHAR szStatusBarLineCol[MAX_PATH];
