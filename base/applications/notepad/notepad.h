@@ -1,12 +1,12 @@
 /*
- * PROJECT:   ReactOS Notepad
- * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:   Providing a Windows-compatible simple text editor for ReactOS
- * COPYRIGHT: Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
- *            Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *            Copyright 2002 Andriy Palamarchuk
- *            Copyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>
- *            Copyright 2020-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:    ReactOS Notepad
+ * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:    Providing a Windows-compatible simple text editor for ReactOS
+ * COPYRIGHT:  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *             Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *             Copyright 2002 Andriy Palamarchuk
+ *             Copyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>
+ *             Copyright 2020-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
