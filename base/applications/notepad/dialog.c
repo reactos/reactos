@@ -1099,7 +1099,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 s_hThread = NULL;
             }
             DeleteDC(s_printData->printer.hDC);
-            LocalFree(s_printData);
+            s_printData = LocalFree(s_printData);
             break;
     }
 
