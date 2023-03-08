@@ -91,7 +91,6 @@ typedef struct
 
 extern NOTEPAD_GLOBALS Globals;
 
-/* from text.c */
 BOOL ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln);
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln);
 
