@@ -700,7 +700,11 @@ co_UserActivateKeyboardLayout(
     PWND pTargetWnd, pImeWnd;
     HWND hTargetWnd, hImeWnd;
     USER_REFERENCE_ENTRY Ref1, Ref2;
-    PCLIENTINFO ClientInfo = pti->pClientInfo;
+    PCLIENTINFO ClientInfo;
+    BOOL bForProcess = !!(uFlags & KLF_SETFORPROCESS);
+
+    IntReferenceThreadInfo(pti);
+    ClientInfo = pti->pClientInfo;
 
     if (pti->KeyboardLayout)
     {
@@ -714,16 +718,16 @@ co_UserActivateKeyboardLayout(
         FIXME("KLF_RESET\n");
     }
 
-    if (!(uFlags & KLF_SETFORPROCESS) && pKL == pti->KeyboardLayout)
+    if (!bForProcess && pKL == pti->KeyboardLayout)
+    {
+        IntDereferenceThreadInfo(pti);
         return hOldKL;
+    }
 
     pKL->wchDiacritic = 0;
 
     if (pOldKL)
-    {
-        IntReferenceThreadInfo(pti);
         UserRefObjectCo(pOldKL, &Ref1);
-    }
 
     if (pti->TIF_flags & TIF_CSRSSTHREAD)
     {
@@ -731,7 +735,7 @@ co_UserActivateKeyboardLayout(
         ClientInfo->CodePage = pKL->CodePage;
         ClientInfo->hKL = pKL->hkl;
     }
-    else if (uFlags & KLF_SETFORPROCESS)
+    else if (bForProcess)
     {
         co_IntActivateKeyboardLayoutForProcess(pti->ppi, pKL);
     }
@@ -782,20 +786,17 @@ co_UserActivateKeyboardLayout(
             if (pImeWnd)
             {
                 UserRefObjectCo(pImeWnd, &Ref2);
-                BOOL bProcess = !!(uFlags & KLF_SETFORPROCESS);
                 hImeWnd = UserHMGetHandle(pImeWnd);
-                co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bProcess);
+                co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bForProcess);
                 UserDerefObjectCo(pImeWnd);
             }
         }
     }
 
     if (pOldKL)
-    {
         UserDerefObjectCo(pOldKL);
-        IntDereferenceThreadInfo(pti);
-    }
 
+    IntDereferenceThreadInfo(pti);
     return hOldKL;
 }
 
