@@ -655,7 +655,7 @@ IntImmActivateLayout(
     pti->pClientInfo->hKL = pKL->hkl;
 }
 
-static VOID co_IntActivateKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
+static VOID co_IntSetKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
 {
     PTHREADINFO ptiNode, ptiNext;
     PCLIENTINFO pClientInfo;
@@ -737,7 +737,7 @@ co_UserActivateKeyboardLayout(
     }
     else if (bForProcess)
     {
-        co_IntActivateKeyboardLayoutForProcess(pti->ppi, pKL);
+        co_IntSetKeyboardLayoutForProcess(pti->ppi, pKL);
     }
     else
     {
