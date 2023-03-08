@@ -1014,11 +1014,11 @@ Quit:
 
 static DWORD WINAPI PrintThreadFunc(LPVOID arg)
 {
-    PPRINT_DATA printData = arg;
-    printData->currentPage = 1;
-    printData->status = STRING_NOWPRINTING;
-    PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
-    return DoPrintDocument(printData);
+    PPRINT_DATA pData = arg;
+    pData->currentPage = 1;
+    pData->status = STRING_NOWPRINTING;
+    PostMessage(pData->hwndDlg, PRINTING_MESSAGE, 0, 0);
+    return DoPrintDocument(pData);
 }
 
 static INT_PTR CALLBACK
