@@ -979,6 +979,7 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
 
             if (!DoPrintPage(printData, PageCount))
             {
+                assert(printData->status != STRING_PRINTCOMPLETE);
                 AbortDoc(pPrinter->hDC); /* Cancel printing */
                 goto Quit;
             }
@@ -988,12 +989,11 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     if (EndDoc(pPrinter->hDC) <= 0)
     {
         printData->status = STRING_PRINTFAILED;
+        goto Quit;
     }
-    else
-    {
-        ret = TRUE;
-        printData->status = STRING_PRINTCOMPLETE;
-    }
+
+    ret = TRUE;
+    printData->status = STRING_PRINTCOMPLETE;
 
 Quit:
     DeleteObject(printData->hHeaderFont);
