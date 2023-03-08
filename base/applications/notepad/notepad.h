@@ -30,13 +30,11 @@
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 
-#define EDIT_STYLE_WRAP (WS_CHILD | WS_VSCROLL \
-    | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL)
-#define EDIT_STYLE (EDIT_STYLE_WRAP | WS_HSCROLL | ES_AUTOHSCROLL)
+#define EDIT_STYLE_WRAP (WS_CHILD | WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL)
+#define EDIT_STYLE      (EDIT_STYLE_WRAP | WS_HSCROLL | ES_AUTOHSCROLL)
+#define EDIT_CLASS      _T("EDIT")
 
-#define EDIT_CLASS          _T("EDIT")
-
-#define MAX_STRING_LEN      255
+#define MAX_STRING_LEN  255
 
 /* Values are indexes of the items in the Encoding combobox. */
 typedef enum
