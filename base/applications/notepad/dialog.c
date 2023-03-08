@@ -909,7 +909,7 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     if (!pPrintData->hHeaderFont)
         return FALSE;
 
-    return tRUE;
+    return TRUE;
 }
 
 #define PRINTING_MESSAGE (WM_USER + 100)
