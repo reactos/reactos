@@ -1413,7 +1413,7 @@ VOID DIALOG_HelpAboutNotepad(VOID)
     LoadString(Globals.hInstance, STRING_NOTEPAD_AUTHORS, szNotepadAuthors, ARRAY_SIZE(szNotepadAuthors));
 
     ShellAbout(Globals.hMainWnd, szNotepad, szNotepadAuthors, notepadIcon);
-    DeleteObject(notepadIcon);
+    DestroyIcon(notepadIcon);
 }
 
 /***********************************************************************
