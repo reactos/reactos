@@ -1026,24 +1026,24 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TCHAR szText[MAX_STRING_LEN];
     static TCHAR s_szPageFormat[64];
-    static PPRINT_DATA s_printData = NULL;
+    static PPRINT_DATA s_pData = NULL;
     static HANDLE s_hThread = NULL;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            s_printData = (PPRINT_DATA)lParam;
-            s_printData->hwndDlg = hwnd;
+            s_pData = (PPRINT_DATA)lParam;
+            s_pData->hwndDlg = hwnd;
 
             SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
             GetDlgItemText(hwnd, IDC_PRINTING_PAGE, s_szPageFormat, ARRAY_SIZE(s_szPageFormat));
             SetDlgItemText(hwnd, IDC_PRINTING_PAGE, NULL);
 
-            s_hThread = CreateThread(NULL, 0, PrintThreadFunc, s_printData, 0, NULL);
+            s_hThread = CreateThread(NULL, 0, PrintThreadFunc, s_pData, 0, NULL);
             if (!s_hThread)
             {
-                s_printData->status = STRING_PRINTFAILED;
-                LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
+                s_pData->status = STRING_PRINTFAILED;
+                LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
                 SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
 
                 EndDialog(hwnd, IDABORT);
@@ -1051,25 +1051,25 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         case PRINTING_MESSAGE:
-            switch (s_printData->status)
+            switch (s_pData->status)
             {
                 case STRING_NOWPRINTING:
                 case STRING_PRINTCANCELING:
                     StringCchPrintf(szText, ARRAY_SIZE(szText), s_szPageFormat,
-                                    s_printData->currentPage);
+                                    s_pData->currentPage);
                     SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
 
-                    LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
+                    LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
                     break;
 
                 case STRING_PRINTCOMPLETE:
                 case STRING_PRINTCANCELED:
                 case STRING_PRINTFAILED:
-                    LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
+                    LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
 
-                    if (s_printData->status == STRING_PRINTCOMPLETE)
+                    if (s_pData->status == STRING_PRINTCOMPLETE)
                         EndDialog(hwnd, IDOK);
                     else
                         EndDialog(hwnd, IDCANCEL);
@@ -1078,10 +1078,10 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDCANCEL && s_printData->status == STRING_NOWPRINTING)
+            if (LOWORD(wParam) == IDCANCEL && s_pData->status == STRING_NOWPRINTING)
             {
                 EnableWindow(GetDlgItem(hwnd, IDCANCEL), FALSE);
-                s_printData->status = STRING_PRINTCANCELING;
+                s_pData->status = STRING_PRINTCANCELING;
                 PostMessage(hwnd, PRINTING_MESSAGE, 0, 0);
             }
             break;
@@ -1092,8 +1092,8 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 CloseHandle(s_hThread);
                 s_hThread = NULL;
             }
-            DeleteDC(s_printData->printer.hDC);
-            s_printData = LocalFree(s_printData);
+            DeleteDC(s_pData->printer.hDC);
+            s_pData = LocalFree(s_pData);
             break;
     }
 
