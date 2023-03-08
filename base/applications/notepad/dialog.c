@@ -837,7 +837,6 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
     {
         if (StartPage(pPrinter->hDC) <= 0)
         {
-            AlertPrintError();
             pData->status = STRING_PRINTFAILED;
             return FALSE;
         }
@@ -876,7 +875,6 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 
         if (EndPage(pPrinter->hDC) <= 0)
         {
-            AlertPrintError();
             pData->status = STRING_PRINTFAILED;
             return FALSE;
         }
@@ -927,7 +925,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
 
     if (!DoCreatePrintFonts(pPrinter, printData))
     {
-        ShowLastError();
         printData->status = STRING_PRINTFAILED;
         goto Quit;
     }
@@ -941,7 +938,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     printData->pszText = HeapAlloc(GetProcessHeap(), 0, (printData->cchText + 1) * sizeof(TCHAR));
     if (!printData->pszText)
     {
-        ShowLastError();
         printData->status = STRING_PRINTFAILED;
         goto Quit;
     }
@@ -957,7 +953,7 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     docInfo.lpszDocName = Globals.szFileTitle;
     if (StartDoc(pPrinter->hDC, &docInfo) <= 0)
     {
-        AlertPrintError();
+        printData->status = STRING_PRINTFAILED;
         goto Quit;
     }
 
@@ -991,7 +987,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
 
     if (EndDoc(pPrinter->hDC) <= 0)
     {
-        AlertPrintError();
         printData->status = STRING_PRINTFAILED;
     }
     else
@@ -1043,9 +1038,6 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (!s_hThread)
             {
                 s_pData->status = STRING_PRINTFAILED;
-                LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
-                SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
-
                 EndDialog(hwnd, IDABORT);
             }
             return TRUE;
@@ -1071,8 +1063,10 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (s_pData->status == STRING_PRINTCOMPLETE)
                         EndDialog(hwnd, IDOK);
-                    else
+                    else if (s_pData->status == STRING_PRINTCANCELED)
                         EndDialog(hwnd, IDCANCEL);
+                    else
+                        EndDialog(hwnd, IDABORT);
                     break;
             }
             break;
