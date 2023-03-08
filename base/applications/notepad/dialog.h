@@ -69,3 +69,4 @@ BOOL DoCloseFile(VOID);
 VOID DoOpenFile(LPCTSTR szFileName);
 VOID DoShowHideStatusBar(VOID);
 VOID DoCreateEditWindow(VOID);
+void UpdateWindowCaption(BOOL clearModifyAlert);
