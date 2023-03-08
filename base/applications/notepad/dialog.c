@@ -988,19 +988,17 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     if (EndDoc(pPrinter->hDC) <= 0)
     {
         printData->status = STRING_PRINTFAILED;
+        goto Quit;
     }
-    else
-    {
-        ret = TRUE;
-        printData->status = STRING_PRINTCOMPLETE;
-    }
+
+    ret = TRUE;
+    printData->status = STRING_PRINTCOMPLETE;
 
 Quit:
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
     if (printData->pszText)
         HeapFree(GetProcessHeap(), 0, printData->pszText);
-
     if (printData->status == STRING_PRINTCANCELING)
         printData->status = STRING_PRINTCANCELED;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
@@ -1118,8 +1116,7 @@ VOID DIALOG_FilePrint(VOID)
     printer->hDevNames = Globals.hDevNames;
 
     ret = PrintDlg(printer);
-    /* NOTE: Even if PrintDlg returns FALSE, the values of hDevMode and hDevNames may
-             have changed. */
+    /* NOTE: Even if PrintDlg returns FALSE, hDevMode and hDevNames may have changed. */
     Globals.hDevMode = printer->hDevMode;
     Globals.hDevNames = printer->hDevNames;
 
@@ -1549,9 +1546,8 @@ VOID DIALOG_FilePageSetup(void)
     page.lpfnPageSetupHook = DIALOG_PAGESETUP_Hook;
 
     PageSetupDlg(&page);
-    /* NOTE: Even if PageSetupDlg returns FALSE, the values of hDevMode, hDevNames and
-             rtMargin may have changed */
 
+    /* NOTE: Even if PageSetupDlg returns FALSE, the following members may have changed */
     Globals.hDevMode = page.hDevMode;
     Globals.hDevNames = page.hDevNames;
     Globals.lMargins = page.rtMargin;
