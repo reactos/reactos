@@ -1024,7 +1024,8 @@ static DWORD WINAPI PrintThreadFunc(LPVOID arg)
 static INT_PTR CALLBACK
 DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szText[MAX_STRING_LEN], szPage[64];
+    TCHAR szText[MAX_STRING_LEN];
+    static TCHAR s_szPageFormat[64];
     static PPRINT_DATA s_printData = NULL;
     static HANDLE s_hThread = NULL;
 
@@ -1035,6 +1036,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             s_printData->hwndDlg = hwnd;
 
             SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
+            GetDlgItemText(hwnd, IDC_PRINTING_PAGE, s_szPageFormat, ARRAY_SIZE(s_szPageFormat));
             SetDlgItemText(hwnd, IDC_PRINTING_PAGE, NULL);
 
             s_hThread = CreateThread(NULL, 0, PrintThreadFunc, s_printData, 0, NULL);
@@ -1053,8 +1055,8 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case STRING_NOWPRINTING:
                 case STRING_PRINTCANCELING:
-                    LoadString(Globals.hInstance, STRING_PRINTINGPAGE, szPage, ARRAY_SIZE(szPage));
-                    StringCchPrintf(szText, ARRAY_SIZE(szText), szPage, s_printData->currentPage);
+                    StringCchPrintf(szText, ARRAY_SIZE(szText), s_szPageFormat,
+                                    s_printData->currentPage);
                     SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
 
                     LoadString(Globals.hInstance, s_printData->status, szText, ARRAY_SIZE(szText));
