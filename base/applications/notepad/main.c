@@ -20,7 +20,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
 
 #include "notepad.h"
@@ -41,7 +40,6 @@ VOID NOTEPAD_EnableSearchMenu()
 }
 
 /***********************************************************************
- *
  *           SetFileName
  *
  *  Sets Global File Name.
@@ -57,7 +55,6 @@ VOID SetFileName(LPCTSTR szFileName)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_MenuCommand
  *
  *  All handling of main menu events
@@ -104,10 +101,8 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_FindTextAt
  */
-
 static BOOL
 NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, INT iTextLength, DWORD dwPosition)
 {
@@ -145,10 +140,8 @@ NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, INT iTextLength, 
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_FindNext
  */
-
 BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
 {
     int iTextLength, iTargetLength;
@@ -235,10 +228,8 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_ReplaceAll
  */
-
 static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
 {
     BOOL bShowAlert = TRUE;
@@ -252,10 +243,8 @@ static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_FindTerm
  */
-
 static VOID NOTEPAD_FindTerm(VOID)
 {
     Globals.hFindReplaceDlg = NULL;
@@ -341,7 +330,6 @@ LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 /***********************************************************************
- *
  *           NOTEPAD_WndProc
  */
 static LRESULT
@@ -557,7 +545,6 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
 }
 
 /***********************************************************************
- *
  *           WinMain
  */
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int show)

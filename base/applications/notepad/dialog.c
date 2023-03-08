@@ -1417,7 +1417,6 @@ VOID DIALOG_HelpAboutNotepad(VOID)
 }
 
 /***********************************************************************
- *
  *           DIALOG_FilePageSetup
  */
 VOID DIALOG_FilePageSetup(void)
@@ -1443,10 +1442,8 @@ VOID DIALOG_FilePageSetup(void)
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
  *           DIALOG_PAGESETUP_Hook
  */
-
 static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
