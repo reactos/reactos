@@ -75,7 +75,7 @@ VOID ShowLastError(VOID)
                       0,
                       NULL);
 
-        MessageBox(NULL, lpMsgBuf, szTitle, MB_OK | MB_ICONERROR);
+        MessageBox(Globals.hMainWnd, lpMsgBuf, szTitle, MB_OK | MB_ICONERROR);
         LocalFree(lpMsgBuf);
     }
 }
