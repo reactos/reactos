@@ -720,7 +720,10 @@ co_UserActivateKeyboardLayout(
     pKL->wchDiacritic = 0;
 
     if (pOldKL)
+    {
+        IntReferenceThreadInfo(pti);
         UserRefObjectCo(pOldKL, &Ref1);
+    }
 
     if (pti->TIF_flags & TIF_CSRSSTHREAD)
     {
@@ -788,7 +791,11 @@ co_UserActivateKeyboardLayout(
     }
 
     if (pOldKL)
+    {
         UserDerefObjectCo(pOldKL);
+        IntDereferenceThreadInfo(pti);
+    }
+
     return hOldKL;
 }
 
