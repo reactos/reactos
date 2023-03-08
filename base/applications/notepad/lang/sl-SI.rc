@@ -137,7 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
-    CTEXT "Page %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    CTEXT "Stran %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Cancel", IDCANCEL, 50, 75, 60, 20
 END
 
