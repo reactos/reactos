@@ -754,8 +754,7 @@ static BOOL DoPrintBody(PPRINT_DATA pData, DWORD PageCount, BOOL bSkipPage)
     } \
     ichStart = pData->ich; \
     xStart = xLeft; \
-    if (pData->status == STRING_PRINTCANCELING) \
-        return FALSE; \
+    if (pData->status == STRING_PRINTCANCELING) return FALSE; \
 } while (0)
 
     /* The drawing-body loop */
@@ -907,7 +906,10 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
     lfHeader.lfWeight = FW_BOLD;
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    return pPrintData->hHeaderFont != NULL;
+    if (pPrintData->hHeaderFont == NULL)
+        return FALSE;
+
+    return TRUE;
 }
 
 static BOOL DoPrintDocument(PPRINT_DATA printData)
