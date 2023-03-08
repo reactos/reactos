@@ -1001,7 +1001,6 @@ static BOOL DoPrintDocument(PPRINT_DATA printData)
     }
 
 Quit:
-    /* Clean up */
     DeleteObject(printData->hHeaderFont);
     DeleteObject(printData->hBodyFont);
     if (printData->pszText)
