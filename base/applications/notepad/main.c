@@ -573,6 +573,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
 
+    /* Arabic and Hebrew are Right-to-Left */
     switch (PRIMARYLANGID(GetUserDefaultUILanguage()))
     {
         case LANG_ARABIC:
