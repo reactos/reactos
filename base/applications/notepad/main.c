@@ -573,14 +573,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
 
-    switch (GetUserDefaultUILanguage())
+    switch (PRIMARYLANGID(GetUserDefaultUILanguage()))
     {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-        SetProcessDefaultLayout(LAYOUT_RTL);
-        break;
-
-    default:
-        break;
+        case LANG_ARABIC:
+        case LANG_HEBREW:
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
     }
 
     UNREFERENCED_PARAMETER(prev);
