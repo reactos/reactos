@@ -1021,8 +1021,7 @@ static DWORD WINAPI PrintThreadFunc(LPVOID arg)
     printData->currentPage = 1;
     printData->status = STRING_NOWPRINTING;
     PostMessage(printData->hwndDlg, PRINTING_MESSAGE, 0, 0);
-    DoPrintDocument(printData);
-    return 0;
+    return DoPrintDocument(printData);
 }
 
 static INT_PTR CALLBACK
