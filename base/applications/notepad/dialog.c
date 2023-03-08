@@ -889,6 +889,7 @@ static BOOL DoPrintPage(PPRINT_DATA pData, DWORD PageCount)
 #define BODY_FONT_SIZE      10 /* 10pt */
 #define HEADER_FONT_SIZE    9  /* 9pt */
 #define SPACING_HEIGHT      4  /* 4pt */
+#define PRINTING_MESSAGE (WM_USER + 100)
 
 static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
 {
@@ -906,13 +907,8 @@ static BOOL DoCreatePrintFonts(LPPRINTDLG pPrinter, PPRINT_DATA pPrintData)
     lfHeader.lfHeight = -Y_POINTS_TO_PIXELS(pPrinter->hDC, HEADER_FONT_SIZE);
     lfHeader.lfWeight = FW_BOLD;
     pPrintData->hHeaderFont = CreateFontIndirect(&lfHeader);
-    if (pPrintData->hHeaderFont == NULL)
-        return FALSE;
-
-    return TRUE;
+    return pPrintData->hHeaderFont != NULL;
 }
-
-#define PRINTING_MESSAGE (WM_USER + 100)
 
 static BOOL DoPrintDocument(PPRINT_DATA printData)
 {
