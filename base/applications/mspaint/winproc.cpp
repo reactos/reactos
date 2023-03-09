@@ -72,18 +72,18 @@ void CMainWindow::alignChildrenToMainWindow()
         h = clientRect.bottom - 3;
     }
 
-    RECT statusBarRect0;
-    int statusBarBorders[3];
-    int statusBarHeight = 0;
-    if (::IsWindow(hStatusBar))
+    INT statusBarHeight = 0;
+    if (::IsWindowVisible(hStatusBar))
     {
+        RECT statusBarRect0;
+        INT statusBarBorders[3];
         ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
         ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
         statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
     }
 
     if (scrollboxWindow.IsWindow())
-        scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
+        scrollboxWindow.MoveWindow(x, y, w, h - statusBarHeight, TRUE);
     if (paletteWindow.IsWindow())
         paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
 }
