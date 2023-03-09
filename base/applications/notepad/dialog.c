@@ -1407,13 +1407,11 @@ VOID DIALOG_HelpAboutNotepad(VOID)
     TCHAR szNotepad[MAX_STRING_LEN];
     TCHAR szNotepadAuthors[MAX_STRING_LEN];
 
-    HICON notepadIcon = LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON));
-
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
     LoadString(Globals.hInstance, STRING_NOTEPAD_AUTHORS, szNotepadAuthors, ARRAY_SIZE(szNotepadAuthors));
 
-    ShellAbout(Globals.hMainWnd, szNotepad, szNotepadAuthors, notepadIcon);
-    DestroyIcon(notepadIcon);
+    ShellAbout(Globals.hMainWnd, szNotepad, szNotepadAuthors,
+               LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON)));
 }
 
 /***********************************************************************
