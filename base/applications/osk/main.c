@@ -503,6 +503,8 @@ int OSK_Close(void)
     OSK_ReleaseKey(SCAN_CODE_60); // Left alt
     OSK_ReleaseKey(SCAN_CODE_62); // Right alt
     OSK_ReleaseKey(SCAN_CODE_64); // Right ctrl
+    OSK_ReleaseKey(SCAN_CODE_127); // Left Super/Win key
+    OSK_ReleaseKey(SCAN_CODE_128); // Right Super/Win key
 
     /* Destroy child controls */
     OSK_DestroyKeys();
