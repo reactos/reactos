@@ -666,6 +666,7 @@ static VOID co_IntSetKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
         IntReferenceThreadInfo(ptiNode);
         ptiNext = ptiNode->ptiSibling;
 
+        /* Skip this thread if its keyboard layout is already the correct one, or if it's dying */
         if (ptiNode->KeyboardLayout == pKL || (ptiNode->TIF_flags & TIF_INCLEANUP))
         {
             IntDereferenceThreadInfo(ptiNode);
