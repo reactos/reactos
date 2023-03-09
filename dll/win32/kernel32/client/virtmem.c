@@ -37,22 +37,13 @@ VirtualAllocEx(IN HANDLE hProcess,
         return NULL;
     }
 
-    /* Handle any possible exceptions */
-    _SEH2_TRY
-    {
-        /* Allocate the memory */
-        Status = NtAllocateVirtualMemory(hProcess,
-                                         &lpAddress,
-                                         0,
-                                         &dwSize,
-                                         flAllocationType,
-                                         flProtect);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
+    /* Allocate the memory */
+    Status = NtAllocateVirtualMemory(hProcess,
+                                     &lpAddress,
+                                     0,
+                                     &dwSize,
+                                     flAllocationType,
+                                     flProtect);
 
     /* Check for status */
     if (!NT_SUCCESS(Status))
