@@ -163,6 +163,7 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
+        arch/amd64/misc.S
         arch/amd64/pnpbios.S
         arch/amd64/linux.S)
 
