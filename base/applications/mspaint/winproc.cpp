@@ -75,11 +75,11 @@ void CMainWindow::alignChildrenToMainWindow()
     INT statusBarHeight = 0;
     if (::IsWindowVisible(hStatusBar))
     {
-        RECT statusBarRect0;
-        INT statusBarBorders[3];
-        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
-        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
-        statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
+        RECT Rect;
+        INT borders[3];
+        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&Rect);
+        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&borders);
+        statusBarHeight = Rect.bottom - Rect.top + borders[1];
     }
 
     if (scrollboxWindow.IsWindow())
