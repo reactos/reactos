@@ -729,8 +729,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWSTATUSBAR:
-            ::ShowWindow(hStatusBar, ::IsWindowVisible(hStatusBar) ? SW_HIDE : SW_SHOW);
-            registrySettings.ShowStatusBar = ::IsWindowVisible(hStatusBar);
+            registrySettings.ShowStatusBar = !::IsWindowVisible(hStatusBar);
+            ::ShowWindow(hStatusBar, (registrySettings.ShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
             alignChildrenToMainWindow();
             break;
         case IDM_FORMATICONBAR:
