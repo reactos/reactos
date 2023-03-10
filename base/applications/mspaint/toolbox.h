@@ -9,7 +9,7 @@
 
 #pragma once
 
-class CToolBox : public CWindowImpl<CMainWindow>
+class CToolBox : public CWindowImpl<CToolBox>
 {
 public:
     DECLARE_WND_CLASS_EX(_T("ToolBox"), CS_DBLCLKS, COLOR_BTNFACE)
