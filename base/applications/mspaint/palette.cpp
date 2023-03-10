@@ -79,7 +79,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     HBITMAP hbm = ::CreateCompatibleBitmap(hDC, rcClient.right, rcClient.bottom);
     HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbm);
 
-    /* Fill the background (since WM_ERASEBKGND handling is nuked) */
+    /* Fill the background (since WM_ERASEBKGND handling is disabled) */
     ::FillRect(hMemDC, &rcClient, (HBRUSH)(COLOR_3DFACE + 1));
 
     /* Draw the big box */
