@@ -57,27 +57,37 @@ void CMainWindow::alignChildrenToMainWindow()
         rcSpace.bottom -= rc.bottom - rc.top;
     }
 
+    HDWP hDWP = ::BeginDeferWindowPos(3);
+
     if (::IsWindowVisible(toolBoxContainer))
     {
-        toolBoxContainer.GetWindowRect(&rc);
-        rcSpace.left += rc.right - rc.left;
+        INT toolBoxWidth = 52;
+        hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
+                                rcSpace.left, rcSpace.top,
+                                toolBoxWidth, rcSpace.bottom - rcSpace.top,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+        rcSpace.left += toolBoxWidth;
     }
 
     if (::IsWindowVisible(paletteWindow))
     {
         INT paletteHeight = 49;
-        paletteWindow.MoveWindow(rcSpace.left, rcSpace.top,
-                                 rcSpace.right - rcSpace.left, paletteHeight,
-                                 TRUE);
+        hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
+                                rcSpace.left, rcSpace.top,
+                                rcSpace.right - rcSpace.left, paletteHeight,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
         rcSpace.top += paletteHeight;
     }
 
     if (scrollboxWindow.IsWindow())
     {
-        scrollboxWindow.MoveWindow(rcSpace.left, rcSpace.top,
-                                   rcSpace.right - rcSpace.left, rcSpace.bottom - rcSpace.top,
-                                   TRUE);
+        hDWP = ::DeferWindowPos(hDWP, scrollboxWindow, NULL,
+                                rcSpace.left, rcSpace.top,
+                                rcSpace.right - rcSpace.left, rcSpace.bottom - rcSpace.top,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
     }
+
+    ::EndDeferWindowPos(hDWP);
 }
 
 void CMainWindow::saveImage(BOOL overwrite)
