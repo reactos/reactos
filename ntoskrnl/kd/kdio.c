@@ -577,24 +577,6 @@ KdpScreenInit(
     }
 }
 
-#ifdef KDBG
-/* KDBG FUNCTIONS ************************************************************/
-
-/* NOTE: This may be moved completely into kdb_symbols.c */
-VOID NTAPI
-KdbInitialize(PKD_DISPATCH_TABLE DispatchTable, ULONG BootPhase);
-
-VOID
-NTAPI
-KdpKdbgInit(
-    _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase)
-{
-    /* Forward the call */
-    KdbInitialize(DispatchTable, BootPhase);
-}
-#endif
-
 
 /* GENERAL FUNCTIONS *********************************************************/
 

@@ -3880,3 +3880,50 @@ KdbpCliInit(VOID)
 
     ExFreePool(FileBuffer);
 }
+
+
+static VOID
+NTAPI
+KdbDebugPrint(
+    PCH Message,
+    ULONG Length)
+{
+    /* Nothing here */
+}
+
+/**
+ * @brief   Initializes the KDBG debugger.
+ *
+ * @param[in]   DispatchTable
+ * Pointer to the KD dispatch table.
+ *
+ * @param[in]   BootPhase
+ * Phase of initialization.
+ *
+ * @return  None.
+ * @note    Also known as "KdpKdbgInit".
+ **/
+VOID
+NTAPI
+KdbInitialize(
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase)
+{
+    if (BootPhase == 0)
+    {
+        /* Write out the functions that we support for now */
+        DispatchTable->KdpInitRoutine = KdbInitialize;
+        DispatchTable->KdpPrintRoutine = KdbDebugPrint;
+
+        /* Register as a Provider */
+        InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+    }
+
+    if (BootPhase <= 1)
+    {
+        /* Initialize symbols support */
+        KdbSymInit(BootPhase);
+    }
+}
+
+/* EOF */

@@ -78,11 +78,7 @@ KdpDebugLogInit(
     _In_ ULONG BootPhase);
 
 #ifdef KDBG
-VOID
-NTAPI
-KdpKdbgInit(
-    _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
-    _In_ ULONG BootPhase);
+#define KdpKdbgInit KdbInitialize
 #endif
 
 

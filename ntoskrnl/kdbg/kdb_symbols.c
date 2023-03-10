@@ -330,31 +330,19 @@ KdbSymProcessSymbols(
     KeSetEvent(&SymbolsToLoadEvent, IO_NO_INCREMENT, FALSE);
 }
 
-VOID
-NTAPI
-KdbDebugPrint(
-    PCH Message,
-    ULONG Length)
-{
-    /* Nothing here */
-}
 
-
-/*! \brief Initializes the KDB symbols implementation.
+/**
+ * @brief   Initializes the KDB symbols implementation.
  *
- * \param DispatchTable         Pointer to the KD dispatch table
- * \param BootPhase             Phase of initialization
- */
+ * @param[in]   BootPhase
+ * Phase of initialization.
+ *
+ * @return  None.
+ **/
 VOID
-NTAPI
-KdbInitialize(
-    _In_ PKD_DISPATCH_TABLE DispatchTable,
+KdbSymInit(
     _In_ ULONG BootPhase)
 {
-    PCHAR p1, p2;
-    SHORT Found = FALSE;
-    CHAR YesNo;
-
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
     LoadSymbols = FALSE;
@@ -367,19 +355,16 @@ KdbInitialize(
 
     if (BootPhase == 0)
     {
-        /* Write out the functions that we support for now */
-        DispatchTable->KdpInitRoutine = KdbInitialize;
-        DispatchTable->KdpPrintRoutine = KdbDebugPrint;
-
-        /* Register as a Provider */
-        InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+        PCHAR p1, p2;
+        SHORT Found = FALSE;
+        CHAR YesNo;
 
         /* Perform actual initialization of symbol module */
         //NtoskrnlModuleObject->PatchInformation = NULL;
         //LdrHalModuleObject->PatchInformation = NULL;
 
         /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
-        * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
+         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
         ASSERT(KeLoaderBlock);
         p1 = KeLoaderBlock->LoadOptions;
         while ('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
@@ -425,13 +410,18 @@ KdbInitialize(
         HANDLE Thread;
         NTSTATUS Status;
         KIRQL OldIrql;
+        PLIST_ENTRY ListEntry;
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);
         KeInitializeSpinLock(&SymbolsToLoadLock);
         KeInitializeEvent(&SymbolsToLoadEvent, SynchronizationEvent, FALSE);
 
-        Status = PsCreateSystemThread(&Thread, THREAD_ALL_ACCESS, NULL, NULL, NULL, LoadSymbolsRoutine, NULL);
+        Status = PsCreateSystemThread(&Thread,
+                                      THREAD_ALL_ACCESS,
+                                      NULL, NULL, NULL,
+                                      LoadSymbolsRoutine,
+                                      NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed starting symbols loader thread: 0x%08x\n", Status);
@@ -443,12 +433,12 @@ KdbInitialize(
 
         KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
 
-        PLIST_ENTRY ListEntry = PsLoadedModuleList.Flink;
-        while (ListEntry != &PsLoadedModuleList)
+        for (ListEntry = PsLoadedModuleList.Flink;
+             ListEntry != &PsLoadedModuleList;
+             ListEntry = ListEntry->Flink)
         {
             PLDR_DATA_TABLE_ENTRY LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
             KdbSymProcessSymbols(LdrEntry, TRUE);
-            ListEntry = ListEntry->Flink;
         }
 
         KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);

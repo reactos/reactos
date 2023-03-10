@@ -82,6 +82,12 @@ KdbpStackSwitchAndCall(
 
 extern PCHAR KdbInitFileBuffer;
 
+VOID
+NTAPI
+KdbInitialize(
+    _In_ PKD_DISPATCH_TABLE DispatchTable,
+    _In_ ULONG BootPhase);
+
 BOOLEAN
 NTAPI
 KdbRegisterCliCallback(
@@ -158,13 +164,16 @@ KdbpSymFindModule(
 BOOLEAN
 KdbSymPrintAddress(
     IN PVOID Address,
-    IN PCONTEXT Context
-);
+    IN PCONTEXT Context);
 
 VOID
 KdbSymProcessSymbols(
     _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
     _In_ BOOLEAN Load);
+
+VOID
+KdbSymInit(
+    _In_ ULONG BootPhase);
 
 /* from kdb.c */
 
