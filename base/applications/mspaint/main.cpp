@@ -239,9 +239,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* creating the status bar */
     hStatusBar =
-        CreateWindowEx(0, STATUSCLASSNAME, NULL, SBARS_SIZEGRIP | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd,
+        CreateWindowEx(0, STATUSCLASSNAME, NULL, SBARS_SIZEGRIP | WS_CHILD, 0, 0, 0, 0, hwnd,
                        NULL, hThisInstance, NULL);
     SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
+    if (registrySettings.ShowStatusBar)
+        ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
 
     RECT scrlClientWindowPos = {0, 0, 0 + 500, 0 + 500};
     scrlClientWindow.Create(scrollboxWindow.m_hWnd, scrlClientWindowPos, NULL, WS_CHILD | WS_VISIBLE);
