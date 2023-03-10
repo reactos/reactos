@@ -13,9 +13,9 @@
 #define CXY_COLORBOX        16 /* width / height of a normal color box */
 #define CXY_SELECTEDBOX     15 /* width / height of a selected color box */
 #define CXY_BIGBOX          (CXY_COLORBOX * 2) /* width / height of the big box */
-#define X_COLORBOX_OFFSET   (CXY_BIGBOX + 2)
 #define X_MARGIN 4 /* horizontal margin */
 #define Y_MARGIN ((rcClient.bottom / 2) - CXY_COLORBOX) /* center position minus one color box */
+#define X_COLORBOX_OFFSET   (X_MARGIN + CXY_BIGBOX + 4)
 #define COLOR_COUNT         28
 #define HALF_COLOR_COUNT    (COLOR_COUNT / 2)
 
@@ -36,7 +36,7 @@ static VOID getColorBoxRect(LPRECT prc, const RECT& rcClient, INT iColor)
 {
     INT dx = (iColor % HALF_COLOR_COUNT) * CXY_COLORBOX; /* delta x */
     INT dy = (iColor / HALF_COLOR_COUNT) * CXY_COLORBOX; /* delta y */
-    prc->left   = (X_MARGIN + X_COLORBOX_OFFSET) + dx;
+    prc->left   = X_COLORBOX_OFFSET + dx;
     prc->right  = prc->left + CXY_COLORBOX;
     prc->top    = Y_MARGIN + dy;
     prc->bottom = prc->top + CXY_COLORBOX;
@@ -48,8 +48,7 @@ INT CPaletteWindow::DoHitTest(INT xPos, INT yPos) const
     GetClientRect(&rcClient);
 
     /* delta x and y */
-    INT dx = (xPos - (X_MARGIN + X_COLORBOX_OFFSET));
-    INT dy = (yPos - Y_MARGIN);
+    INT dx = (xPos - X_COLORBOX_OFFSET), dy = (yPos - Y_MARGIN);
 
     /* horizontal and vertical indexes */
     INT ix = (dx / CXY_COLORBOX), iy = (dy / CXY_COLORBOX);
