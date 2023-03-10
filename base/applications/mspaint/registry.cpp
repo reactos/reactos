@@ -101,7 +101,7 @@ void RegistrySettings::Load()
         ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos,     TRUE);
         ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos,     TRUE);
         ReadDWORD(view, _T("UnitSetting"),   UnitSetting,   FALSE);
-        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar, FALSE);
+        ReadDWORD(view, _T("ShowStatusBar"), (DWORD&)ShowStatusBar, FALSE);
 
         ULONG pnBytes = sizeof(WINDOWPLACEMENT);
         view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
@@ -126,7 +126,7 @@ void RegistrySettings::Load()
         ReadDWORD(text, _T("PointSize"),    PointSize,      FALSE);
         ReadDWORD(text, _T("PositionX"),    FontsPositionX, FALSE);
         ReadDWORD(text, _T("PositionY"),    FontsPositionY, FALSE);
-        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool,   FALSE);
+        ReadDWORD(text, _T("ShowTextTool"), (DWORD&)ShowTextTool, FALSE);
         ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
     }
 

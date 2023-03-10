@@ -40,8 +40,8 @@ public:
     DWORD CharSet;
     DWORD FontsPositionX;
     DWORD FontsPositionY;
-    DWORD ShowTextTool;
-    DWORD ShowStatusBar;
+    BOOL ShowTextTool;
+    BOOL ShowStatusBar;
 
     enum WallpaperStyle {
         TILED,
