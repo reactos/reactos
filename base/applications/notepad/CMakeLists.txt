@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     dialog.c
     main.c
+    printing.c
     settings.c
     text.c
     notepad.h)
