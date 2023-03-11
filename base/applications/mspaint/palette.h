@@ -10,7 +10,7 @@
 
 #define CXY_COLORBOX   16 /* width / height of a normal color box */
 #define CXY_BIGBOX     (CXY_COLORBOX * 2) /* width / height of the big box */
-#define CY_PALETTE     (4 + CXY_BIGBOX + 4)
+#define CY_PALETTE     (6 + CXY_BIGBOX + 6)
 
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
