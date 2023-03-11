@@ -4,7 +4,7 @@
  * FILE:            base/applications/osk/lang/en-US.rc
  * PURPOSE:         On screen keyboard (Portuguese resource).
  * PROGRAMMERS:     Copyright Denis ROBERT
- * TRANSLATION:     VALMOR FLORES (valmorflores@gmail.com)
+ * TRANSLATION:     Valmor Flores (valmorflores@gmail.com)
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
