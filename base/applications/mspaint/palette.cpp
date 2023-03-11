@@ -65,8 +65,6 @@ LRESULT CPaletteWindow::OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     return TRUE; /* Avoid flickering */
 }
 
-#undef USE_MEMDC // TODO: To be removed. Debugging now...
-
 LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     RECT rc, rcClient;
@@ -75,15 +73,11 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
 
-#ifdef USE_MEMDC
     /* To avoid flickering, we use a memory bitmap.
        The left and top values are zeros in client rectangle */
     HDC hMemDC = ::CreateCompatibleDC(hDC);
     HBITMAP hbm = ::CreateCompatibleBitmap(hDC, rcClient.right, rcClient.bottom);
     HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbm);
-#else
-    HDC hMemDC = hDC;
-#endif
 
     /* Fill the background (since WM_ERASEBKGND handling is disabled) */
     ::FillRect(hMemDC, &rcClient, (HBRUSH)(COLOR_3DFACE + 1));
@@ -127,10 +121,8 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     /* Transfer bits (hDC <-- hMemDC) */
     ::BitBlt(hDC, 0, 0, rcClient.right, rcClient.bottom, hMemDC, 0, 0, SRCCOPY);
 
-#ifdef USE_MEMDC
     ::SelectObject(hMemDC, hbmOld);
     ::DeleteDC(hMemDC);
-#endif
     EndPaint(&ps);
     return 0;
 }
