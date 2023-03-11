@@ -7,7 +7,7 @@
  * TRANSLATION:     Valmor Flores (valmorflores@gmail.com)
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
@@ -21,23 +21,23 @@ BEGIN
         MENUITEM "Teclado extendido", IDM_ENHANCED_KB, CHECKED
         MENUITEM "Teclado simples", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Layout padrao", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Bloquear layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "Estilo padrão", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Bloquear estilo", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "101 teclas", IDM_101_KEYS, CHECKED, GRAYED
         MENUITEM "102 teclas", IDM_102_KEYS, GRAYED
         MENUITEM "106 teclas", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Configurações"
+    POPUP "Definições"
     BEGIN
         MENUITEM "Sempre no topo", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Ativar som de clique", IDM_CLICK_SOUND
+        MENUITEM "&Activar som de clique", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Modo digitação...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Fonte...", IDM_FONT
+        MENUITEM "&Tipo de letra...", IDM_FONT
     END
 
     POPUP "Ajuda"
@@ -55,8 +55,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Teclado Virtual fornece um nível de funcionalidade para usuários com necessidades especiais. Usuários com dificuldades motoras necessitam de um software para uso diário.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Não exibir esta mensagem novamente", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "O Teclado Virtual fornece um nível de funcionalidades para utilizadores com necessidades especiais. Utilizadores com dificuldades motoras necessitam de um software para uso diário.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Não mostrar esta mensagem novamente", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
