@@ -26,7 +26,8 @@
 
 #include <shlobj.h>
 #include <strsafe.h>
-#ifdef _MSC_VER
+
+#if defined(_MSC_VER) && !defined(NDEBUG)
     #include <crtdbg.h> /* For _CrtSetDbgFlag (MSVC only) */
 #endif
 
