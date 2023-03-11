@@ -45,6 +45,8 @@ HCURSOR hCurZoom;
 HCURSOR hCurPen;
 HCURSOR hCurAirbrush;
 
+HWND hToolBtn[16];
+
 HINSTANCE hProgInstance;
 
 TCHAR filepathname[1000];
