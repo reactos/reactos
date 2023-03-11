@@ -36,6 +36,18 @@ static DWORD s_cchName;
 static const WCHAR s_empty[] = L"";
 static const WCHAR s_backslash[] = L"\\";
 
+/* TODO: Hack. To be removed */
+#define wcslen(s) wcslen_hack(s, __LINE__)
+size_t wcslen_hack(LPCWSTR psz, INT line)
+{
+    {
+        WCHAR sz[256];
+        wsprintfW(sz, L"%d: %10s\n", line, psz);
+        OutputDebugStringW(sz);
+    }
+    return lstrlenW(psz);
+}
+
 extern VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName);
 
 BOOL DoEvents(VOID)
@@ -91,11 +103,18 @@ static BOOL
 CompareData(
     DWORD   dwType,
     LPCWSTR psz1,
-    LPCWSTR psz2)
+    size_t cb1,
+    LPCWSTR psz2,
+    size_t cb2)
 {
-    INT i, cch1 = wcslen(psz1), cch2 = wcslen(psz2);
+    ssize_t i;
+    size_t cch1, cch2;
     if (dwType == REG_SZ || dwType == REG_EXPAND_SZ)
     {
+        StringCbLengthW(psz1, cb1 / sizeof(WCHAR), &cb1);
+        StringCbLengthW(psz2, cb2 / sizeof(WCHAR), &cb2);
+        cch1 = cb1 / sizeof(WCHAR);
+        cch2 = cb2 / sizeof(WCHAR);
         if (s_dwFlags & RSF_WHOLESTRING)
         {
             if (s_dwFlags & RSF_MATCHCASE)
@@ -106,6 +125,7 @@ CompareData(
                                           NORM_IGNORECASE, psz1, cch1, psz2, cch2);
         }
 
+        if (cch1 > cch2)
         for(i = 0; i <= cch1 - cch2; i++)
         {
             if (s_dwFlags & RSF_MATCHCASE)
@@ -193,14 +213,14 @@ BOOL RegFindRecurse(
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
     if (pszValueName == NULL)
-        pszValueName = ppszNames[0];
+        fPast = TRUE;
 
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
             goto err;
 
-        if (!fPast && _wcsicmp(ppszNames[i], pszValueName) == 0)
+        if (!fPast && pszValueName && _wcsicmp(ppszNames[i], pszValueName) == 0)
         {
             fPast = TRUE;
             continue;
@@ -237,7 +257,7 @@ BOOL RegFindRecurse(
         pb[cb] = pb[cb + 1] = pb[cb + 2] = 0;
 
         if ((s_dwFlags & RSF_LOOKATDATA) &&
-                CompareData(type, (LPWSTR) pb, s_szFindWhat))
+                CompareData(type, (LPWSTR) pb, cb, s_szFindWhat, wcslen(s_szFindWhat)))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
             if (ppszNames[i][0] == 0)
