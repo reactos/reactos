@@ -74,6 +74,7 @@ void RegistrySettings::LoadPresets()
     FontsPositionX = 0;
     FontsPositionY = 0;
     ShowTextTool = TRUE;
+    ShowStatusBar = TRUE;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -100,6 +101,7 @@ void RegistrySettings::Load()
         ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos,     TRUE);
         ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos,     TRUE);
         ReadDWORD(view, _T("UnitSetting"),   UnitSetting,   FALSE);
+        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar, FALSE);
 
         ULONG pnBytes = sizeof(WINDOWPLACEMENT);
         view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
@@ -152,6 +154,7 @@ void RegistrySettings::Store()
         view.SetDWORDValue(_T("ThumbXPos"),     ThumbXPos);
         view.SetDWORDValue(_T("ThumbYPos"),     ThumbYPos);
         view.SetDWORDValue(_T("UnitSetting"),   UnitSetting);
+        view.SetDWORDValue(_T("ShowStatusBar"), ShowStatusBar);
 
         view.SetBinaryValue(_T("WindowPlacement"), &WindowPlacement, sizeof(WINDOWPLACEMENT));
     }

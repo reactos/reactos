@@ -41,6 +41,7 @@ public:
     DWORD FontsPositionX;
     DWORD FontsPositionY;
     DWORD ShowTextTool;
+    DWORD ShowStatusBar;
 
     enum WallpaperStyle {
         TILED,
