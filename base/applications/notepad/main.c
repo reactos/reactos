@@ -26,6 +26,9 @@
 
 #include <shlobj.h>
 #include <strsafe.h>
+#ifdef _MSC_VER
+    #include <crtdbg.h> /* For _CrtSetDbgFlag (MSVC only) */
+#endif
 
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
@@ -656,5 +659,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     DestroyAcceleratorTable(hAccel);
 
-    return (int) msg.wParam;
+#if defined(_MSC_VER) && !defined(NDEBUG)
+    // For detecting memory leak (MSVC only)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    return (INT)msg.wParam;
 }
