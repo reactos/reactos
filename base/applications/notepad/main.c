@@ -27,7 +27,7 @@
 #include <shlobj.h>
 #include <strsafe.h>
 
-#if defined(_MSC_VER) && !defined(NDEBUG)
+#if defined(_MSC_VER) && defined(_DEBUG)
     #include <crtdbg.h> /* For _CrtSetDbgFlag (MSVC only) */
 #endif
 
@@ -660,8 +660,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     DestroyAcceleratorTable(hAccel);
 
-#if defined(_MSC_VER) && !defined(NDEBUG)
-    /* For detecting memory leak (MSVC only) */
+#if defined(_MSC_VER) && defined(_DEBUG)
+    /* Report any memory leaks */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
