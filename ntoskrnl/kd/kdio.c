@@ -26,7 +26,6 @@ static KSPIN_LOCK KdpDebugLogSpinLock;
 static KEVENT KdpLoggerThreadEvent;
 static HANDLE KdpLogFileHandle;
 ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
-extern ULONG ExpInitializationPhase;
 
 static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
