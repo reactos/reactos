@@ -18,7 +18,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     HIMAGELIST hImageList;
     HBITMAP tempBm;
     int i;
-    TCHAR tooltips[16][30];
+    TCHAR tooltips[NUM_TOOLS][30];
 
     /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
     RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};
@@ -32,7 +32,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     DeleteObject(tempBm);
     toolbar.SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    for(i = 0; i < 16; i++)
+    for (i = 0; i < NUM_TOOLS; i++)
     {
         TBBUTTON tbbutton;
         int wrapnow = 0;
