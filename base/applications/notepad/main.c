@@ -253,12 +253,17 @@ static VOID NOTEPAD_FindTerm(VOID)
 /***********************************************************************
  * Data Initialization
  */
-static VOID NOTEPAD_InitData(VOID)
+static VOID NOTEPAD_InitData(HINSTANCE hInstance)
 {
-    LPTSTR p = Globals.szFilter;
+    LPTSTR p;
     static const TCHAR txt_files[] = _T("*.txt");
     static const TCHAR all_files[] = _T("*.*");
 
+    ZeroMemory(&Globals, sizeof(Globals));
+    Globals.hInstance = hInstance;
+    Globals.encFile = ENCODING_DEFAULT;
+
+    p = Globals.szFilter;
     p += LoadString(Globals.hInstance, STRING_TEXT_FILES_TXT, p, MAX_STRING_LEN) + 1;
     _tcscpy(p, txt_files);
     p += ARRAY_SIZE(txt_files);
@@ -340,7 +345,16 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
 
     case WM_CREATE:
+        Globals.hMainWnd = hWnd;
         Globals.hMenu = GetMenu(hWnd);
+
+        DragAcceptFiles(hWnd, TRUE); /* Accept Drag & Drop */
+
+        /* Create controls */
+        DoCreateEditWindow();
+        DoShowHideStatusBar();
+
+        DIALOG_FileNew(); /* Initialize file info */
 
         // For now, the "Help" dialog is disabled due to the lack of HTML Help support
         EnableMenuItem(Globals.hMenu, CMD_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
@@ -354,20 +368,9 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         NOTEPAD_MenuCommand(LOWORD(wParam));
         break;
 
-    case WM_DESTROYCLIPBOARD:
-        /*MessageBox(Globals.hMainWnd, "Empty clipboard", "Debug", MB_ICONEXCLAMATION);*/
-        break;
-
     case WM_CLOSE:
-        if (DoCloseFile()) {
-            if (Globals.hFont)
-                DeleteObject(Globals.hFont);
-            if (Globals.hDevMode)
-                GlobalFree(Globals.hDevMode);
-            if (Globals.hDevNames)
-                GlobalFree(Globals.hDevNames);
+        if (DoCloseFile())
             DestroyWindow(hWnd);
-        }
         break;
 
     case WM_QUERYENDSESSION:
@@ -377,6 +380,12 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_DESTROY:
+        if (Globals.hFont)
+            DeleteObject(Globals.hFont);
+        if (Globals.hDevMode)
+            GlobalFree(Globals.hDevMode);
+        if (Globals.hDevNames)
+            GlobalFree(Globals.hDevNames);
         SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)Globals.EditProc);
         NOTEPAD_SaveSettingsToRegistry();
         PostQuitMessage(0);
@@ -574,9 +583,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     aFINDMSGSTRING = (ATOM)RegisterWindowMessage(FINDMSGSTRING);
 
-    ZeroMemory(&Globals, sizeof(Globals));
-    Globals.hInstance = hInstance;
-    Globals.encFile = ENCODING_DEFAULT;
+    NOTEPAD_InitData(hInstance);
     NOTEPAD_LoadSettingsFromRegistry();
 
     ZeroMemory(&wndclass, sizeof(wndclass));
@@ -591,11 +598,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     wndclass.hIconSm = (HICON)LoadImage(hInstance,
                                         MAKEINTRESOURCE(IDI_NPICON),
                                         IMAGE_ICON,
-                                        16,
-                                        16,
+                                        GetSystemMetrics(SM_CXSMICON),
+                                        GetSystemMetrics(SM_CYSMICON),
                                         0);
-
-    if (!RegisterClassEx(&wndclass)) return FALSE;
+    if (!RegisterClassEx(&wndclass))
+    {
+        ShowLastError();
+        return 1;
+    }
 
     /* Setup windows */
 
@@ -608,37 +618,29 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     if (!IntersectRect(&rcIntersect, &Globals.main_rect, &info.rcWork))
         x = y = CW_USEDEFAULT;
 
-    Globals.hMainWnd = CreateWindow(className,
-                                    winName,
-                                    WS_OVERLAPPEDWINDOW,
-                                    x,
-                                    y,
-                                    Globals.main_rect.right - Globals.main_rect.left,
-                                    Globals.main_rect.bottom - Globals.main_rect.top,
-                                    NULL,
-                                    NULL,
-                                    Globals.hInstance,
-                                    NULL);
+    /* Globals.hMainWnd will be set in WM_CREATE handling */
+    CreateWindow(className,
+                 winName,
+                 WS_OVERLAPPEDWINDOW,
+                 x,
+                 y,
+                 Globals.main_rect.right - Globals.main_rect.left,
+                 Globals.main_rect.bottom - Globals.main_rect.top,
+                 NULL,
+                 NULL,
+                 Globals.hInstance,
+                 NULL);
     if (!Globals.hMainWnd)
     {
         ShowLastError();
-        ExitProcess(1);
+        return 1;
     }
-
-    DoCreateEditWindow();
-    DoShowHideStatusBar();
-
-    NOTEPAD_InitData();
-    DIALOG_FileNew();
 
     ShowWindow(Globals.hMainWnd, show);
     UpdateWindow(Globals.hMainWnd);
-    DragAcceptFiles(Globals.hMainWnd, TRUE);
 
     if (!HandleCommandLine(cmdline))
-    {
         return 0;
-    }
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
