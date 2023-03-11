@@ -8,6 +8,10 @@
 
 #pragma once
 
+#define CXY_COLORBOX   16 /* width / height of a normal color box */
+#define CXY_BIGBOX     (CXY_COLORBOX * 2) /* width / height of the big box */
+#define CY_PALETTE     (5 + CXY_BIGBOX + 5)
+
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
 public:

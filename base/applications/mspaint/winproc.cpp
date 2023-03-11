@@ -70,12 +70,11 @@ void CMainWindow::alignChildrenToMainWindow()
 
     if (::IsWindowVisible(paletteWindow))
     {
-        INT paletteHeight = 49;
         hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
                                 rcSpace.left, rcSpace.top,
-                                rcSpace.right - rcSpace.left, paletteHeight,
+                                rcSpace.right - rcSpace.left, CY_PALETTE,
                                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
-        rcSpace.top += paletteHeight;
+        rcSpace.top += CY_PALETTE;
     }
 
     if (scrollboxWindow.IsWindow())
