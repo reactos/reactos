@@ -61,12 +61,11 @@ void CMainWindow::alignChildrenToMainWindow()
 
     if (::IsWindowVisible(toolBoxContainer))
     {
-        INT toolBoxWidth = 52;
         hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
                                 rcSpace.left, rcSpace.top,
-                                toolBoxWidth, rcSpace.bottom - rcSpace.top,
+                                CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
                                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
-        rcSpace.left += toolBoxWidth;
+        rcSpace.left += CX_TOOLBAR;
     }
 
     if (::IsWindowVisible(paletteWindow))
