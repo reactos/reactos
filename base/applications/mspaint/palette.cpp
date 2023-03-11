@@ -13,7 +13,7 @@
 #define CXY_SELECTEDBOX     15 /* width / height of a selected color box */
 #define X_MARGIN 4 /* horizontal margin */
 #define Y_MARGIN ((rcClient.bottom / 2) - CXY_COLORBOX) /* center position minus one color box */
-#define X_COLORBOX_OFFSET   (X_MARGIN + CXY_BIGBOX + 4)
+#define X_COLORBOX_OFFSET   (X_MARGIN + CXY_BIGBOX + X_MARGIN)
 #define COLOR_COUNT         28
 #define HALF_COLOR_COUNT    (COLOR_COUNT / 2)
 
