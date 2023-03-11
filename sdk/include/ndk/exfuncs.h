@@ -396,9 +396,9 @@ NTAPI
 NtQuerySystemEnvironmentValueEx(
     _In_ PUNICODE_STRING VariableName,
     _In_ LPGUID VendorGuid,
-    _In_ PVOID Value,
+    _Out_opt_ PVOID Value,
     _Inout_ PULONG ReturnLength,
-    _Inout_ PULONG Attributes
+    _Out_opt_ PULONG Attributes
 );
 
 __kernel_entry
@@ -550,9 +550,9 @@ NTAPI
 NtSetSystemEnvironmentValueEx(
     _In_ PUNICODE_STRING VariableName,
     _In_ LPGUID VendorGuid,
-    _In_ PVOID Value,
-    _Inout_ PULONG ReturnLength,
-    _Inout_ PULONG Attributes
+    _In_reads_bytes_opt_(ValueLength) PVOID Value,
+    _In_ ULONG ValueLength,
+    _In_ ULONG Attributes
 );
 
 __kernel_entry
