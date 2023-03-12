@@ -13,3 +13,7 @@ freeldr:
 
 ROSTESTS:
   - modules/rostests/**
+
+TRANSLATION:
+  - ***/lang/*
+  
