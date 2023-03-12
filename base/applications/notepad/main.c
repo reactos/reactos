@@ -471,6 +471,7 @@ static int AlertFileDoesNotExist(LPCTSTR szFileName)
 static BOOL HandleCommandLine(LPTSTR cmdline)
 {
     BOOL opt_print = FALSE;
+    TCHAR szPath[MAX_PATH];
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
     {
@@ -527,9 +528,11 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
             }
         }
 
+        GetFullPathName(file_name, ARRAY_SIZE(szPath), szPath, NULL);
+
         if (file_exists)
         {
-            DoOpenFile(file_name);
+            DoOpenFile(szPath);
             InvalidateRect(Globals.hMainWnd, NULL, FALSE);
             if (opt_print)
             {
@@ -539,9 +542,10 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
         }
         else
         {
-            switch (AlertFileDoesNotExist(file_name)) {
+            switch (AlertFileDoesNotExist(file_name))
+            {
             case IDYES:
-                DoOpenFile(file_name);
+                DoOpenFile(szPath);
                 break;
 
             case IDNO:
