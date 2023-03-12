@@ -394,12 +394,15 @@ SepAccessCheck(
     BOOLEAN Defaulted;
     NTSTATUS Status;
     PACCESS_TOKEN Token = NULL;
-    ACCESS_CHECK_RIGHTS AccessCheckRights = {0};
+    ACCESS_CHECK_RIGHTS AccessCheckRights;
 
     PAGED_CODE();
 
     /* A security descriptor must be expected for access checks */
     ASSERT(SecurityDescriptor);
+
+    /* Fill the whole access rights array with zeros */
+    RtlZeroMemory(&AccessCheckRights, sizeof(ACCESS_CHECK_RIGHTS));
 
     /* Check for no access desired */
     if (!DesiredAccess)
