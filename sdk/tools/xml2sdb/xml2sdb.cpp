@@ -17,7 +17,7 @@ static const GUID GUID_NULL = { 0 };
 static const char szCompilerVersion[] = "1.7.0.1";
 
 #if !defined(C_ASSERT)
-#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
+#define C_ASSERT(expr) int __C_ASSERT__(int c_assert[(expr) ? 1 : -1])
 #endif
 
 
