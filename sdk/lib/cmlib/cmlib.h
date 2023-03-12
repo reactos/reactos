@@ -28,7 +28,7 @@
     #define NTDDI_VERSION   NTDDI_WS03SP4 // This is the ReactOS NT kernel version
 
     /* C_ASSERT Definition */
-    #define C_ASSERT(expr) int __C_ASSERT__(int c_assert[(expr) ? 1 : -1])
+    #define C_ASSERT(expr) typedef char __C_ASSERT__[(expr) ? 1 : -1]
 
     #ifdef _WIN32
     #define strncasecmp _strnicmp
