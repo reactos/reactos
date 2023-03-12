@@ -185,12 +185,13 @@ ExpDebuggerWorker(
  *--*/
 NTSTATUS
 NTAPI
-NtSystemDebugControl(SYSDBG_COMMAND ControlCode,
-                     PVOID InputBuffer,
-                     ULONG InputBufferLength,
-                     PVOID OutputBuffer,
-                     ULONG OutputBufferLength,
-                     PULONG ReturnLength)
+NtSystemDebugControl(
+    _In_ SYSDBG_COMMAND ControlCode,
+    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _Out_opt_ PULONG ReturnLength)
 {
     switch (ControlCode)
     {
