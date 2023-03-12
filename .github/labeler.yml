@@ -15,5 +15,5 @@ ROSTESTS:
   - modules/rostests/**
 
 TRANSLATION:
-  - ***/lang/*
+  - "***/lang/*.rc"
   
