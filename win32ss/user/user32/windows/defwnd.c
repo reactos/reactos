@@ -561,7 +561,7 @@ User32DefWindowProc(HWND hWnd,
             else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
             else NewHkl = (HKL) lParam;
 
-            NtUserActivateKeyboardLayout(NewHkl, 0);
+            NtUserActivateKeyboardLayout(NewHkl, KLF_SETFORPROCESS);
 
             return TRUE;
         }
