@@ -557,10 +557,7 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
     return TRUE;
 }
 
-/***********************************************************************
- *           WinMain
- */
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int show)
+static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
 {
     MSG msg;
     HACCEL hAccel;
@@ -582,8 +579,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     default:
         break;
     }
-
-    UNREFERENCED_PARAMETER(prev);
 
     aFINDMSGSTRING = (ATOM)RegisterWindowMessage(FINDMSGSTRING);
 
@@ -660,10 +655,22 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     DestroyAcceleratorTable(hAccel);
 
+    return (INT)msg.wParam;
+}
+
+/***********************************************************************
+ *           WinMain
+ */
+INT WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, INT show)
+{
+    INT ret = NOTEPAD_Main(hInstance, cmdline, show);
+
+    UNREFERENCED_PARAMETER(prev);
+
 #if defined(_MSC_VER) && defined(_DEBUG)
     /* Report any memory leaks */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    return (INT)msg.wParam;
+    return ret;
 }
