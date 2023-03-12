@@ -33,7 +33,7 @@
 #endif
 
 #if !defined(C_ASSERT)
-#define C_ASSERT(expr) int __C_ASSERT__(int c_assert[(expr) ? 1 : -1])
+#define C_ASSERT(expr) typedef char __C_ASSERT__[(expr) ? 1 : -1]
 #endif
 
 #if defined(_WIN32)
