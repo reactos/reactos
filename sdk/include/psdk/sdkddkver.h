@@ -79,22 +79,22 @@ Abstract:
 #define _WIN32_IE_WIN10                     _WIN32_IE_IE110
 
 /* NTDDI_VERSION */
-#define NTDDI_WIN2K                         0x05000000
+#define NTDDI_WIN2K                         0x05000000      // Windows 2000
 #define NTDDI_WIN2KSP1                      0x05000100
 #define NTDDI_WIN2KSP2                      0x05000200
 #define NTDDI_WIN2KSP3                      0x05000300
 #define NTDDI_WIN2KSP4                      0x05000400
-#define NTDDI_WINXP                         0x05010000
+#define NTDDI_WINXP                         0x05010000      // Windows XP
 #define NTDDI_WINXPSP1                      0x05010100
 #define NTDDI_WINXPSP2                      0x05010200
 #define NTDDI_WINXPSP3                      0x05010300
 #define NTDDI_WINXPSP4                      0x05010400
-#define NTDDI_WS03                          0x05020000
+#define NTDDI_WS03                          0x05020000      // Windows Server 2003
 #define NTDDI_WS03SP1                       0x05020100
 #define NTDDI_WS03SP2                       0x05020200
 #define NTDDI_WS03SP3                       0x05020300
 #define NTDDI_WS03SP4                       0x05020400
-#define NTDDI_WIN6                          0x06000000
+#define NTDDI_WIN6                          0x06000000      // Windows Vista
 #define NTDDI_WIN6SP1                       0x06000100
 #define NTDDI_WIN6SP2                       0x06000200
 #define NTDDI_WIN6SP3                       0x06000300
@@ -105,22 +105,33 @@ Abstract:
 #define NTDDI_VISTASP2                      NTDDI_WIN6SP2
 #define NTDDI_VISTASP3                      NTDDI_WIN6SP3
 #define NTDDI_VISTASP4                      NTDDI_WIN6SP4
-#define NTDDI_WS08                          NTDDI_WIN6SP1
+#define NTDDI_WS08                          NTDDI_WIN6SP1   // Windows Server 2008
 #define NTDDI_WS08SP2                       NTDDI_WIN6SP2
 #define NTDDI_WS08SP3                       NTDDI_WIN6SP3
 #define NTDDI_WS08SP4                       NTDDI_WIN6SP4
-#define NTDDI_WIN7                          0x06010000
-#define NTDDI_WIN8                          0x06020000
-#define NTDDI_WINBLUE                       0x06030000
-#define NTDDI_WINTHRESHOLD                  0x0A000000
+#define NTDDI_WIN7                          0x06010000      // Windows 7
+#define NTDDI_WIN8                          0x06020000      // Windows 8
+#define NTDDI_WINBLUE                       0x06030000      // Windows 8.1
+#define NTDDI_WINTHRESHOLD                  0x0A000000      // Windows 10.0.10240 / 1507 / Threshold 1
 #define NTDDI_WIN10                         0x0A000000
-#define NTDDI_WIN10_TH2                     0x0A000001
-#define NTDDI_WIN10_RS1                     0x0A000002
-#define NTDDI_WIN10_RS2                     0x0A000003
-#define NTDDI_WIN10_RS3                     0x0A000004
-#define NTDDI_WIN10_RS4                     0x0A000005
-#define NTDDI_WIN10_RS5                     0x0A000006
-#define NTDDI_WIN10_19H1                    0x0A000007
+#define NTDDI_WIN10_TH2                     0x0A000001      // Windows 10.0.10586 / 1511 / Threshold 2
+#define NTDDI_WIN10_RS1                     0x0A000002      // Windows 10.0.14393 / 1607 / Redstone 1
+#define NTDDI_WIN10_RS2                     0x0A000003      // Windows 10.0.15063 / 1703 / Redstone 2
+#define NTDDI_WIN10_RS3                     0x0A000004      // Windows 10.0.16299 / 1709 / Redstone 3
+#define NTDDI_WIN10_RS4                     0x0A000005      // Windows 10.0.17134 / 1803 / Redstone 4
+#define NTDDI_WIN10_RS5                     0x0A000006      // Windows 10.0.17763 / 1809 / Redstone 5
+#define NTDDI_WIN10_19H1                    0x0A000007      // Windows 10.0.18362 / 1903 / 19H1 "Titanium"
+                                                            //         10.0.18363 / Vanadium
+#define NTDDI_WIN10_VB                      0x0A000008      // Windows 10.0.19041 / 2004 / Vibranium
+#define NTDDI_WIN10_MN                      0x0A000009      // Windows 10.0.19042 / 20H2 / Manganese
+#define NTDDI_WIN10_FE                      0x0A00000A      // Windows 10.0.19043 / 21H1 / Ferrum
+#define NTDDI_WIN10_CO                      0x0A00000B      // Windows 10.0.19044 / 21H2 / Cobalt
+#define NTDDI_WIN11_CO                      NTDDI_WIN10_CO  // Windows 10.0.22000 / 21H2 / Cobalt
+#define NTDDI_WIN11                         NTDDI_WIN11_CO
+#define NTDDI_WIN10_NI                      0x0A00000C      // Windows 10.0.22621 / 22H2 / Nickel
+#define NTDDI_WIN11_NI                      NTDDI_WIN10_NI
+#define NTDDI_WIN10_CU                      0x0A00000D      // Windows 10.0.22621 / 22H2 / Copper
+// NTDDI_WIN11_CU
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL
