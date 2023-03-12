@@ -101,6 +101,9 @@ typedef enum _SYSDBG_COMMAND
 #if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
     SysDbgGetLiveKernelDump = 37,
 #endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_VB)
+    SysDbgKdPullRemoteFile = 38,
+#endif
 } SYSDBG_COMMAND;
 
 //
@@ -247,6 +250,15 @@ typedef struct _SYSDBG_LIVEDUMP_CONTROL
 } SYSDBG_LIVEDUMP_CONTROL, *PSYSDBG_LIVEDUMP_CONTROL;
 
 #endif // (NTDDI_VERSION >= NTDDI_WINBLUE)
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_VB)
+
+typedef struct _SYSDBG_KD_PULL_REMOTE_FILE
+{
+    UNICODE_STRING ImageFileName;
+} SYSDBG_KD_PULL_REMOTE_FILE, *PSYSDBG_KD_PULL_REMOTE_FILE;
+
+#endif
 
 //
 // KD Structures
