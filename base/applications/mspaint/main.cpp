@@ -6,9 +6,11 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 /* FUNCTIONS ********************************************************/
 
@@ -158,6 +160,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
+
+#ifdef _DEBUG
+    /* Report any memory leaks on exit */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     /* init font for text tool */
     ZeroMemory(&lfTextFont, sizeof(lfTextFont));
