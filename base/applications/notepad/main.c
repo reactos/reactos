@@ -27,8 +27,8 @@
 #include <shlobj.h>
 #include <strsafe.h>
 
-#if defined(_MSC_VER) && defined(_DEBUG)
-    #include <crtdbg.h> /* For _CrtSetDbgFlag (MSVC only) */
+#ifdef _DEBUG
+#include <crtdbg.h>
 #endif
 
 NOTEPAD_GLOBALS Globals;
