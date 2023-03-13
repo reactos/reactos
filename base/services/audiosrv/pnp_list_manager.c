@@ -1,12 +1,14 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/pnp_list_manager.c
- * PURPOSE:          Audio Service List Manager
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service List Manager
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #include "audiosrv.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /*
     Device descriptor
@@ -20,13 +22,10 @@ CreateDeviceDescriptor(WCHAR* path, BOOL is_enabled)
     int path_length = WideStringSize(path);
     int size = sizeof(PnP_AudioDevice) + path_length;
 
-/*    printf("path_length %d, total %d\n", path_length, size);*/
-
     device = malloc(size);
-
-    if ( ! device )
+    if (! device)
     {
-        logmsg("Failed to create a device descriptor (malloc fail)\n");
+        DPRINT("Failed to malloc device descriptor\n");
         return NULL;
     }
 
@@ -65,18 +64,13 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
 
     LockAudioDeviceList();
 
-/*
-    printf("list size is %d\n", audio_device_list->size);
-    printf("device info size is %d bytes\n", device_info_size);
-*/
-
     /* We DON'T want to overshoot the end of the buffer! */
-    if ( audio_device_list->size + device_info_size > audio_device_list->max_size )
+    if (audio_device_list->size + device_info_size > audio_device_list->max_size)
     {
-        /*printf("max_size would be exceeded! Failing...\n");*/
-        
+        /*DPRINT("failed, max_size would be exceeded\n");*/
+
         UnlockAudioDeviceList();
-        
+
         return FALSE;
     }
 
@@ -91,7 +85,7 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
 
     UnlockAudioDeviceList();
 
-    logmsg("Device added to list\n");
+    DPRINT("Device added to list\n");
 
     return TRUE;
 }
@@ -99,11 +93,9 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
 BOOL
 CreateAudioDeviceList(DWORD max_size)
 {
-/*    printf("Initializing memory device list lock\n");*/
-
-    if ( ! InitializeAudioDeviceListLock() )
+    if (!InitializeAudioDeviceListLock())
     {
-        /*printf("Failed!\n");*/
+        /*DPRINT("Failed\n");*/
         return FALSE;
     }
 
@@ -112,7 +104,7 @@ CreateAudioDeviceList(DWORD max_size)
        turning up before we're ready... */
     LockAudioDeviceList();
 
-    logmsg("Creating file mapping\n");
+    DPRINT("Creating file mapping\n");
     /* Expose our device list to the world */
     device_list_file = CreateFileMappingW(INVALID_HANDLE_VALUE,
                                           NULL,
@@ -120,10 +112,9 @@ CreateAudioDeviceList(DWORD max_size)
                                           0,
                                           max_size,
                                           AUDIO_LIST_NAME);
-
-    if ( ! device_list_file )
+    if (!device_list_file)
     {
-        logmsg("Creation of audio device list failed (err %d)\n", GetLastError());
+        DPRINT("Creation of audio device list failed (err %d)\n", GetLastError());
 
         UnlockAudioDeviceList();
         KillAudioDeviceListLock();
@@ -131,17 +122,16 @@ CreateAudioDeviceList(DWORD max_size)
         return FALSE;
     }
 
-    logmsg("Mapping view of file\n");
+    DPRINT("Mapping view of file\n");
     /* Of course, we'll need to access the list ourselves */
     audio_device_list = MapViewOfFile(device_list_file,
                                       FILE_MAP_WRITE,
                                       0,
                                       0,
                                       max_size);
-
-    if ( ! audio_device_list )
+    if (!audio_device_list)
     {
-        logmsg("MapViewOfFile FAILED (err %d)\n", GetLastError());
+        DPRINT("MapViewOfFile FAILED (err %d)\n", GetLastError());
 
         CloseHandle(device_list_file);
         device_list_file = NULL;
@@ -162,28 +152,28 @@ CreateAudioDeviceList(DWORD max_size)
 
     UnlockAudioDeviceList();
 
-    logmsg("Device list created\n");
+    DPRINT("Device list created\n");
 
     return TRUE;
 }
 
 VOID
-DestroyAudioDeviceList()
+DestroyAudioDeviceList(VOID)
 {
-    logmsg("Destroying device list\n");
+    DPRINT("Destroying device list\n");
 
     LockAudioDeviceList();
 
-    /*printf("Unmapping view\n");*/
+    /*DPRINT("Unmapping view\n");*/
     UnmapViewOfFile(audio_device_list);
     audio_device_list = NULL;
 
-    /*printf("Closing memory mapped file\n");*/
+    /*DPRINT("Closing memory mapped file\n");*/
     CloseHandle(device_list_file);
     device_list_file = NULL;
 
     UnlockAudioDeviceList();
 
-    /*printf("Killing devlist lock\n");*/
+    /*DPRINT("Killing devlist lock\n");*/
     KillAudioDeviceListLock();
 }
