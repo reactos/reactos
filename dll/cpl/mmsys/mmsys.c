@@ -553,10 +553,10 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         return ERROR_DI_DO_DEFAULT;
     }
 
-    hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
+    hService = OpenService(hSCManager, L"AudioSrv", SERVICE_ALL_ACCESS);
     if (hService)
     {
-        /* Make RosAudioSrv start automatically */
+        /* Make AudioSrv start automatically */
         ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         StartService(hService, 0, NULL);

@@ -1478,14 +1478,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 
 ; Audio Service
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Group",0x00000000,"Audio"
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Type",0x00010001,0x00000010
 
 ; Background Intelligent Transfer Service (BITS)
 HKLM,"SYSTEM\CurrentControlSet\Services\BITS","DisplayName",0x00000000,%BITS_SERVICE%
