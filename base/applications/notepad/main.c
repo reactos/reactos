@@ -27,6 +27,10 @@
 #include <shlobj.h>
 #include <strsafe.h>
 
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
+
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
 
@@ -565,9 +569,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     MONITORINFO info;
     INT x, y;
     RECT rcIntersect;
-
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
+
+#ifdef _DEBUG
+    /* Report any memory leaks on exit */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     switch (GetUserDefaultUILanguage())
     {
