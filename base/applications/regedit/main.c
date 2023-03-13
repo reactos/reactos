@@ -20,6 +20,10 @@
 
 #include "regedit.h"
 
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
+
 BOOL ProcessCmdLine(WCHAR *cmdline);
 
 const WCHAR *reg_class_namesW[] = {L"HKEY_LOCAL_MACHINE", L"HKEY_USERS",
@@ -204,6 +208,11 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
+
+#ifdef _DEBUG
+    /* Report any memory leaks on exit */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
