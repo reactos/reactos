@@ -557,7 +557,10 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
     return TRUE;
 }
 
-static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
+/***********************************************************************
+ *           WinMain
+ */
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int show)
 {
     MSG msg;
     HACCEL hAccel;
@@ -579,6 +582,8 @@ static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
     default:
         break;
     }
+
+    UNREFERENCED_PARAMETER(prev);
 
     aFINDMSGSTRING = (ATOM)RegisterWindowMessage(FINDMSGSTRING);
 
@@ -632,6 +637,10 @@ static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
     if (!Globals.hMainWnd)
     {
         ShowLastError();
+#if defined(_MSC_VER) && defined(_DEBUG)
+        /* Report any memory leaks */
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
         return 1;
     }
 
@@ -639,7 +648,13 @@ static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
     UpdateWindow(Globals.hMainWnd);
 
     if (!HandleCommandLine(cmdline))
+    {
+#if defined(_MSC_VER) && defined(_DEBUG)
+        /* Report any memory leaks */
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
         return 0;
+    }
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
@@ -655,22 +670,10 @@ static INT NOTEPAD_Main(HINSTANCE hInstance, LPTSTR cmdline, INT show)
 
     DestroyAcceleratorTable(hAccel);
 
-    return (INT)msg.wParam;
-}
-
-/***********************************************************************
- *           WinMain
- */
-INT WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, INT show)
-{
-    INT ret = NOTEPAD_Main(hInstance, cmdline, show);
-
-    UNREFERENCED_PARAMETER(prev);
-
 #if defined(_MSC_VER) && defined(_DEBUG)
     /* Report any memory leaks */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    return ret;
+    return (int)msg.wParam;
 }
