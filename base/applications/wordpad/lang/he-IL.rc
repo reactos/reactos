@@ -20,6 +20,14 @@
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
+/*
+ * Enable RTL mirroring by adding two left-to-right marks (LRMs)
+ * in front of the FileDescription value of the version stamping.
+ */
+#undef REACTOS_STR_FILE_DESCRIPTION
+#define REACTOS_STR_FILE_DESCRIPTION    L"\x200e\x200e" L"ReactOS WordPad"
+#include <reactos/version.rc>
+
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&קובץ"

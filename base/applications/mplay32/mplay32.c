@@ -1473,16 +1473,6 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     hInstance = hInst;
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
-
     LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle));
 
     WndClass.cbSize            = sizeof(WndClass);

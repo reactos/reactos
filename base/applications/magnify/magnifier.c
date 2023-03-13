@@ -81,16 +81,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
-
     /* Initialize global strings */
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     MyRegisterClass(hInstance);

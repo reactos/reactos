@@ -108,16 +108,6 @@ wWinMain(HINSTANCE hThisInstance,
 	WNDCLASSEXW wincl;
 	LPCWSTR fileName;
 
-    switch (GetUserDefaultUILanguage())
-    {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
-
-    default:
-      break;
-    }
-
 	g_hInstance = hThisInstance;
 
 	/* Get unicode command line */

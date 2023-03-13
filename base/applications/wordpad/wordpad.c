@@ -2663,16 +2663,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
 
     InitCommonControlsEx(&classes);
 
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
-
     hAccel = LoadAcceleratorsW(hInstance, wszAccelTable);
 
     wc.cbSize = sizeof(wc);

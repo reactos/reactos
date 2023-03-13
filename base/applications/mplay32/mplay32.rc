@@ -3,12 +3,12 @@
 
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Multimedia Player"
 #define REACTOS_STR_INTERNAL_NAME     "mplay32"
 #define REACTOS_STR_ORIGINAL_FILENAME "mplay32.exe"
 #include <reactos/version.rc>
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
 IDI_MAIN ICON "resources/mplay32.ico"

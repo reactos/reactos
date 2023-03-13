@@ -34,11 +34,6 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nSh
     gModule.Init(ObjectMap, hInstance, NULL);
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
-    {
-        SetProcessDefaultLayout(LAYOUT_RTL);
-    }
-
     hInst = hInstance;
 
     BOOL bIsFirstLaunch = !LoadSettings(&SettingsInfo);
