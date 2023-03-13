@@ -569,9 +569,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     MONITORINFO info;
     INT x, y;
     RECT rcIntersect;
-
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
+
+#if defined(_MSC_VER) && defined(_DEBUG)
+    /* Report any memory leaks */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     switch (GetUserDefaultUILanguage())
     {
@@ -637,10 +641,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     if (!Globals.hMainWnd)
     {
         ShowLastError();
-#if defined(_MSC_VER) && defined(_DEBUG)
-        /* Report any memory leaks */
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
         return 1;
     }
 
@@ -648,13 +648,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     UpdateWindow(Globals.hMainWnd);
 
     if (!HandleCommandLine(cmdline))
-    {
-#if defined(_MSC_VER) && defined(_DEBUG)
-        /* Report any memory leaks */
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
         return 0;
-    }
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
@@ -669,11 +663,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     }
 
     DestroyAcceleratorTable(hAccel);
-
-#if defined(_MSC_VER) && defined(_DEBUG)
-    /* Report any memory leaks */
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
 
     return (int) msg.wParam;
 }
