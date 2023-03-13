@@ -83,8 +83,8 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "一般的な設定かカスタム設定のどちらを使うかをお選び下さい:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "一般的な設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "カスタム設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "一般的な設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "カスタム設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "ReactOS ネットワークのクライアント、ReactOS ネットワークのファイルとプリンタ共有、自動アドレッシングによるTCP/IP通信プロトコルを使ってネットワーク接続を作成します。", IDC_STATIC, 65, 45, 240, 30
     LTEXT "手動によるネットワーク コンポーネントの設定を可能にします。", IDC_STATIC, 65, 90, 243, 20
 END

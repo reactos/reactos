@@ -83,8 +83,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Выберите режим настройки сети:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Обычный режим настройки", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Расширенный режим настройки", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Обычный режим настройки", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Расширенный режим настройки", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Создает сетевые соединения, используя клиент для сетей ReactOS, Общие файлы и принтеры для сетей ReactOS и транспортный протокол TCP/IP с автоматической адресацией.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Позволяет вам настроить сетевые компоненты вручную.", IDC_STATIC, 65, 90, 243, 20
 END

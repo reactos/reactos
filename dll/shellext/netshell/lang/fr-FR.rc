@@ -83,8 +83,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Faut-il utiliser des paramètres par défaut ou des spécifiques :", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Paramètres par défaut", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Paramètres spécifiques", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Paramètres par défaut", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Paramètres spécifiques", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Crée les connexions réseau en utilisant le client pour les réseaux ReactOS, le partage des fichiers et des imprimantes pour les réseaux ReactOS, et le protocole de transport TCP/IP avec adressage automatique.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Cela vous autorise à configurer manuellement les composants réseau.", IDC_STATIC, 65, 90, 243, 20
 END
