@@ -1,9 +1,8 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/pnp.c
- * PURPOSE:          Audio Service Plug and Play
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service Plug and Play
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #include "audiosrv.h"
@@ -15,6 +14,9 @@
 #include <ks.h>
 #include <ksmedia.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static HDEVNOTIFY device_notification_handle = NULL;
 
 /*
@@ -23,7 +25,7 @@ static HDEVNOTIFY device_notification_handle = NULL;
 */
 
 BOOL
-ProcessExistingDevices()
+ProcessExistingDevices(VOID)
 {
     SP_DEVICE_INTERFACE_DATA interface_data;
     SP_DEVINFO_DATA device_data;
@@ -42,8 +44,6 @@ ProcessExistingDevices()
                                       NULL,
                                       NULL);
 
-/*    printf("%s:\n", ClassString); */
-
     interface_data.cbSize = sizeof(interface_data);
     interface_data.Reserved = 0;
 
@@ -60,7 +60,7 @@ ProcessExistingDevices()
 
     if ( ! detail_data )
     {
-        logmsg("ProcessExistingDevices() failed to allocate detail_data\n");
+        DPRINT("failed to allocate detail_data\n");
         return TRUE;
     }
 
@@ -124,7 +124,7 @@ ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device)
 */
 
 BOOL
-RegisterForDeviceNotifications()
+RegisterForDeviceNotifications(VOID)
 {
     DEV_BROADCAST_DEVICEINTERFACE notification_filter;
 
@@ -141,10 +141,9 @@ RegisterForDeviceNotifications()
                                     DEVICE_NOTIFY_SERVICE_HANDLE
 /* |
                                    DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
-
-    if ( ! device_notification_handle )
+    if (!device_notification_handle)
     {
-        logmsg("RegisterDeviceNotification() failed with error %d\n", GetLastError());
+        DPRINT("failed with error %d\n", GetLastError());
     }
 
     return ( device_notification_handle != NULL );
@@ -156,11 +155,12 @@ RegisterForDeviceNotifications()
     called.
 */
 
-VOID UnregisterDeviceNotifications()
+VOID
+UnregisterDeviceNotifications(VOID)
 {
     /* TODO -- NOT IMPLEMENTED! */
 
-    if ( device_notification_handle )
+    if (device_notification_handle)
     {
         /* TODO */
         device_notification_handle = NULL;
@@ -177,12 +177,12 @@ HandleDeviceEvent(
     DWORD dwEventType,
     LPVOID lpEventData)
 {
-    switch ( dwEventType )
+    switch (dwEventType)
     {
-        case DBT_DEVICEARRIVAL :
+        case DBT_DEVICEARRIVAL:
         {
             DEV_BROADCAST_DEVICEINTERFACE* incoming_device =
-                (DEV_BROADCAST_DEVICEINTERFACE*) lpEventData;
+                (DEV_BROADCAST_DEVICEINTERFACE*)lpEventData;
 
             return ProcessDeviceArrival(incoming_device);
         }
