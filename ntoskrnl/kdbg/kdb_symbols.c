@@ -26,7 +26,7 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE
 }
 IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
-static BOOLEAN LoadSymbols;
+static BOOLEAN LoadSymbols = FALSE;
 static LIST_ENTRY SymbolsToLoad;
 static KSPIN_LOCK SymbolsToLoadLock;
 static KEVENT SymbolsToLoadEvent;
@@ -345,23 +345,22 @@ KdbSymInit(
 {
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
-    LoadSymbols = FALSE;
-
-#if DBG
-    /* Load symbols only if we have 96Mb of RAM or more */
-    if (MmNumberOfPhysicalPages >= 0x6000)
-        LoadSymbols = TRUE;
-#endif
-
     if (BootPhase == 0)
     {
         PCHAR p1, p2;
         SHORT Found = FALSE;
         CHAR YesNo;
 
-        /* Perform actual initialization of symbol module */
-        //NtoskrnlModuleObject->PatchInformation = NULL;
-        //LdrHalModuleObject->PatchInformation = NULL;
+        /*
+         * Default symbols loading strategy:
+         * In DBG builds, load symbols only if we have 96MB of RAM or more.
+         * In REL builds, do not load them by default.
+         */
+#if DBG
+        LoadSymbols = (MmNumberOfPhysicalPages >= 0x6000);
+#else
+        LoadSymbols = FALSE;
+#endif
 
         /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
          * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
@@ -405,12 +404,20 @@ KdbSymInit(
             p1 = p2;
         }
     }
-    else if ((BootPhase == 1) && LoadSymbols)
+    else if (BootPhase == 1)
     {
         HANDLE Thread;
         NTSTATUS Status;
         KIRQL OldIrql;
         PLIST_ENTRY ListEntry;
+
+        /* Do not load symbols if we have less than 96MB of RAM */
+        if (MmNumberOfPhysicalPages < 0x6000)
+            LoadSymbols = FALSE;
+
+        /* Continue this phase only if we need to load symbols */
+        if (!LoadSymbols)
+            return;
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);
