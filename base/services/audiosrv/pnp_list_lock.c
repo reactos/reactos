@@ -1,9 +1,8 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/pnp_list_lock.c
- * PURPOSE:          Audio Service Plug and Play list locking mechanism
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service Plug and Play list locking mechanism
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #include "audiosrv.h"
