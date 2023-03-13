@@ -2171,9 +2171,46 @@ KdDisableDebugger(VOID)
     return KdDisableDebuggerWithLock(TRUE);
 }
 
-/*
- * @unimplemented
- */
+/**
+ * @brief
+ * Perform various queries to the kernel debugger.
+ *
+ * @param[in]   Command
+ * A SYSDBG_COMMAND value describing the kernel debugger command to perform.
+ *
+ * @param[in]   InputBuffer
+ * Pointer to a user-provided input command-specific buffer, whose length
+ * is given by InputBufferLength.
+ *
+ * @param[in]   InputBufferLength
+ * The size (in bytes) of the buffer pointed by InputBuffer.
+ *
+ * @param[out]  OutputBuffer
+ * Pointer to a user-provided command-specific output buffer, whose length
+ * is given by OutputBufferLength.
+ *
+ * @param[in]   OutputBufferLength
+ * The size (in bytes) of the buffer pointed by OutputBuffer.
+ *
+ * @param[out]  ReturnLength
+ * Optional pointer to a ULONG variable that receives the actual length of
+ * data written written in the output buffer. It is always zero, except for
+ * the live dump commands where an actual non-zero length is returned.
+ *
+ * @param[in]   PreviousMode
+ *      FILLME
+ *
+ * @return
+ * STATUS_SUCCESS in case of success, or a proper error code otherwise.
+ *
+ * @remarks
+ * - This is a kernel-mode function, accessible only by kernel-mode drivers.
+ *
+ * @note
+ * See: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2004-2339
+ *
+ * @see NtSystemDebugControl()
+ **/
 NTSTATUS
 NTAPI
 KdSystemDebugControl(
