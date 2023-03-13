@@ -146,54 +146,75 @@ ExpDebuggerWorker(
     }
 }
 
-/*++
- * @name NtSystemDebugControl
- * @implemented
+/**
+ * @brief
+ * Perform various queries to the kernel debugger.
  *
- * Perform various queries to debugger.
- * This API is subject to test-case creation to further evaluate its
- * abilities (if needed to at all)
+ * @param[in]   Command
+ * A SYSDBG_COMMAND value describing the kernel debugger command to perform.
  *
- * See: http://www.osronline.com/showthread.cfm?link=93915
- *      http://void.ru/files/Ntexapi.h
- *      http://www.codeguru.com/code/legacy/system/ntexapi.zip
- *      http://www.securityfocus.com/bid/9694
+ * @param[in]   InputBuffer
+ * Pointer to a user-provided input command-specific buffer, whose length
+ * is given by InputBufferLength.
  *
- * @param ControlCode
- *        Description of the parameter. Wrapped to more lines on ~70th
- *        column.
+ * @param[in]   InputBufferLength
+ * The size (in bytes) of the buffer pointed by InputBuffer.
  *
- * @param InputBuffer
- *        FILLME
+ * @param[out]  OutputBuffer
+ * Pointer to a user-provided command-specific output buffer, whose length
+ * is given by OutputBufferLength.
  *
- * @param InputBufferLength
- *        FILLME
+ * @param[in]   OutputBufferLength
+ * The size (in bytes) of the buffer pointed by OutputBuffer.
  *
- * @param OutputBuffer
- *        FILLME
+ * @param[out]  ReturnLength
+ * Optional pointer to a ULONG variable that receives the actual length of
+ * data written written in the output buffer. It is always zero, except for
+ * the live dump commands where an actual non-zero length is returned.
  *
- * @param OutputBufferLength
- *        FILLME
+ * @return
+ * STATUS_SUCCESS in case of success, or a proper error code otherwise.
  *
-  * @param ReturnLength
- *        FILLME
+ * @remarks
  *
- * @return STATUS_SUCCESS in case of success, proper error code otherwise
+ * - The caller must have SeDebugPrivilege, otherwise the function fails
+ *   with STATUS_ACCESS_DENIED.
  *
- * @remarks None
+ * - Only the live dump commands: SysDbgGetTriageDump, and SysDbgGetLiveKernelDump
+ *   (Win8.1+) are available even if the debugger is disabled or absent.
  *
- *--*/
+ * - The following system-critical commands are not accessible anymore
+ *   for user-mode usage with this API on NT 5.2+ (Windows 2003 SP1 and later)
+ *   systems:
+ *
+ *   SysDbgQueryVersion,
+ *   SysDbgReadVirtual and SysDbgWriteVirtual,
+ *   SysDbgReadPhysical and SysDbgWritePhysical,
+ *   SysDbgReadControlSpace and SysDbgWriteControlSpace,
+ *   SysDbgReadIoSpace and SysDbgWriteIoSpace,
+ *   SysDbgReadMsr and SysDbgWriteMsr,
+ *   SysDbgReadBusData and SysDbgWriteBusData,
+ *   SysDbgCheckLowMemory.
+ *
+ *   For these, NtSystemDebugControl() will return STATUS_NOT_IMPLEMENTED.
+ *   They are now available from kernel-mode only with KdSystemDebugControl().
+ *
+ * @note
+ * See: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2004-2339
+ *
+ * @see KdSystemDebugControl()
+ **/
 NTSTATUS
 NTAPI
 NtSystemDebugControl(
-    _In_ SYSDBG_COMMAND ControlCode,
+    _In_ SYSDBG_COMMAND Command,
     _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,
     _In_ ULONG InputBufferLength,
     _Out_writes_bytes_(OutputBufferLength) PVOID OutputBuffer,
     _In_ ULONG OutputBufferLength,
     _Out_opt_ PULONG ReturnLength)
 {
-    switch (ControlCode)
+    switch (Command)
     {
         case SysDbgQueryModuleInformation:
         case SysDbgQueryTraceInformation:
@@ -226,10 +247,11 @@ NtSystemDebugControl(
         case SysDbgSetPrintBufferSize:
         case SysDbgGetKdUmExceptionEnable:
         case SysDbgSetKdUmExceptionEnable:
+
         case SysDbgGetKdBlockEnable:
         case SysDbgSetKdBlockEnable:
             return KdSystemDebugControl(
-                ControlCode,
+                Command,
                 InputBuffer, InputBufferLength,
                 OutputBuffer, OutputBufferLength,
                 ReturnLength, KeGetPreviousMode());
