@@ -430,7 +430,8 @@ KdpSetCommonState(IN ULONG NewState,
 
 VOID
 NTAPI
-KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+KdpSysGetVersion(
+    _Out_ PDBGKD_GET_VERSION64 Version)
 {
     /* Copy the version block */
     KdpMoveMemory(Version,
