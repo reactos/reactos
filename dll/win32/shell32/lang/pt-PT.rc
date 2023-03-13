@@ -854,7 +854,7 @@ BEGIN
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Iniciar\\Programas"
-    IDS_PERSONAL "OS Meus Documentos"
+    IDS_PERSONAL "Os Meus Documentos"
     IDS_FAVORITES "Favoritos"
     IDS_STARTUP "Menu Iniciar\\Programas\\Iniciar"
     IDS_RECENT "Recentes"
