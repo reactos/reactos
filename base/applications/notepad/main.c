@@ -572,8 +572,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
 
-#if defined(_MSC_VER) && defined(_DEBUG)
-    /* Report any memory leaks at exit */
+#ifdef _DEBUG
+    /* Report any memory leaks on exit */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
