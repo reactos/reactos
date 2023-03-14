@@ -47,45 +47,45 @@ zoomTo(int newZoom, int mouseX, int mouseY)
 
 void CMainWindow::alignChildrenToMainWindow()
 {
-    int x, y, w, h;
-    RECT clientRect;
+    RECT clientRect, rc;
     GetClientRect(&clientRect);
+    RECT rcSpace = clientRect;
+
+    if (::IsWindowVisible(hStatusBar))
+    {
+        ::GetWindowRect(hStatusBar, &rc);
+        rcSpace.bottom -= rc.bottom - rc.top;
+    }
+
+    HDWP hDWP = ::BeginDeferWindowPos(3);
 
     if (::IsWindowVisible(toolBoxContainer))
     {
-        x = 56;
-        w = clientRect.right - 56;
-    }
-    else
-    {
-        x = 0;
-        w = clientRect.right;
-    }
-    if (::IsWindowVisible(paletteWindow))
-    {
-        y = 49;
-        h = clientRect.bottom - 49;
-    }
-    else
-    {
-        y = 3;
-        h = clientRect.bottom - 3;
+        hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
+                                rcSpace.left, rcSpace.top,
+                                CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+        rcSpace.left += CX_TOOLBAR;
     }
 
-    INT statusBarHeight = 0;
-    if (::IsWindowVisible(hStatusBar))
+    if (::IsWindowVisible(paletteWindow))
     {
-        RECT Rect;
-        INT borders[3];
-        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&Rect);
-        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&borders);
-        statusBarHeight = Rect.bottom - Rect.top + borders[1];
+        hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
+                                rcSpace.left, rcSpace.top,
+                                rcSpace.right - rcSpace.left, CY_PALETTE,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+        rcSpace.top += CY_PALETTE;
     }
 
     if (scrollboxWindow.IsWindow())
-        scrollboxWindow.MoveWindow(x, y, w, h - statusBarHeight, TRUE);
-    if (paletteWindow.IsWindow())
-        paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
+    {
+        hDWP = ::DeferWindowPos(hDWP, scrollboxWindow, NULL,
+                                rcSpace.left, rcSpace.top,
+                                rcSpace.right - rcSpace.left, rcSpace.bottom - rcSpace.top,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+    }
+
+    ::EndDeferWindowPos(hDWP);
 }
 
 void CMainWindow::saveImage(BOOL overwrite)
@@ -369,11 +369,10 @@ LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
     if (::IsWindow(hStatusBar))
     {
-        ::SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
+        ::SendMessage(hStatusBar, WM_SIZE, 0, 0);
         ::SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
     }
     alignChildrenToMainWindow();
-    Invalidate(TRUE);
     return 0;
 }
 
