@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <ntstrsafe.h>
 
 static
 BOOL
@@ -56,7 +57,106 @@ SizeOfSector(VOID)
     return SectorSize;
 }
 
-START_TEST(NtWriteFile)
+static void test_FileAppendData(void)
+{
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK Iosb;
+    FILE_POSITION_INFORMATION FilePosInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    CHAR Buffer[4096];
+    SIZE_T BufferSize = sizeof(Buffer);
+    size_t cbDataLen;
+    UNICODE_STRING FileName = RTL_CONSTANT_STRING(L"\\SystemRoot\\test.txt");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          FILE_WRITE_DATA | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &Iosb,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ,
+                          FILE_OPEN_IF,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+
+    RtlStringCbCopyA((PCHAR)Buffer, sizeof(Buffer), "Test NtCreateFile");
+    RtlStringCbLengthA(Buffer, sizeof(Buffer), &cbDataLen);
+
+    Status = NtWriteFile(FileHandle, NULL, NULL, NULL, &Iosb,
+                         Buffer, cbDataLen, NULL, NULL);
+
+    ok_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(FileHandle);
+    ok_hex(Status, STATUS_SUCCESS);
+
+    Status = NtCreateFile(&FileHandle,
+                          FILE_APPEND_DATA | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &Iosb,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_OPEN,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+
+
+    Status = NtQueryInformationFile(FileHandle,
+                                    &Iosb,
+                                    &FilePosInfo,
+                                    sizeof(FilePosInfo),
+                                    FilePositionInformation);
+
+    ok_hex(Status, STATUS_SUCCESS);
+    ok(FilePosInfo.CurrentByteOffset.u.LowPart == 0, "Wrong File Pos %Id. Expected 0\n", (UINT)FilePosInfo.CurrentByteOffset.u.LowPart);
+
+    RtlStringCbCopyA((PCHAR)Buffer, sizeof(Buffer), " FILE_APPEND_DATA");
+    RtlStringCbLengthA(Buffer, sizeof(Buffer), &cbDataLen);
+
+    Status = NtWriteFile(FileHandle, NULL, NULL, NULL, &Iosb,
+                         Buffer, cbDataLen, NULL, NULL);
+
+    ok_hex(Status, STATUS_SUCCESS);
+
+    Status = NtClose(FileHandle);
+    ok_hex(Status, STATUS_SUCCESS);
+
+    Status = NtCreateFile(&FileHandle,
+                          FILE_GENERIC_READ,
+                          &ObjectAttributes,
+                          &Iosb,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_OPEN,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+
+    ok_hex(Status, STATUS_SUCCESS);
+
+    Status = NtReadFile(FileHandle, NULL, NULL, NULL, &Iosb, Buffer,  BufferSize, NULL, NULL);
+
+    ok_hex(Status, STATUS_SUCCESS);
+
+    ok(lstrcmp(Buffer, "Test NtCreateFile FILE_APPEND_DATA") == 0, "Wrong Text in buffer. Got %s\n", (PCHAR)Buffer);
+
+    Status = NtClose(FileHandle);
+    ok_hex(Status, STATUS_SUCCESS);
+    Status = NtDeleteFile(&ObjectAttributes);
+    ok_hex(Status, STATUS_SUCCESS);
+}
+
+static void test_NtWriteFile()
 {
     NTSTATUS Status;
     HANDLE FileHandle;
@@ -94,6 +194,7 @@ START_TEST(NtWriteFile)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
+
     Status = NtCreateFile(&FileHandle,
                           FILE_WRITE_DATA | DELETE | SYNCHRONIZE,
                           &ObjectAttributes,
@@ -316,4 +417,13 @@ START_TEST(NtWriteFile)
                                  &BufferSize,
                                  MEM_RELEASE);
     ok_hex(Status, STATUS_SUCCESS);
+}
+
+START_TEST(NtWriteFile)
+{
+
+    test_NtWriteFile();
+
+    test_FileAppendData();
+
 }
