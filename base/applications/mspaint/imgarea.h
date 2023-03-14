@@ -10,7 +10,7 @@
 
 #pragma once
 
-class CImgAreaWindow : public CWindowImpl<CMainWindow>
+class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
     CImgAreaWindow() : drawing(FALSE)
