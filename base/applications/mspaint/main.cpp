@@ -340,7 +340,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
 
     /* Make the window visible on the screen */
-    ShowWindow (hwnd, nFunsterStil);
+    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
 
     /* inform the system, that the main window accepts dropped files */
     DragAcceptFiles(hwnd, TRUE);
