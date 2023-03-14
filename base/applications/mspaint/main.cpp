@@ -194,7 +194,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
 
     /* create main window */
-    RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
+    RECT mainWindowPos = { CW_USEDEFAULT, CW_USEDEFAULT };
+    mainWindowPos.right = mainWindowPos.left + 544;
+    mainWindowPos.bottom = mainWindowPos.top + 375;
     hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
 
     RECT fullscreenWindowPos = {0, 0, 100, 100};
@@ -337,10 +339,19 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     imageArea.SendMessage(WM_SIZE, 0, 0);
 
     /* by moving the window, the things in WM_SIZE are done */
-    mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
+    if (registrySettings.WindowPlacement.length)
+    {
+        RECT rc = registrySettings.WindowPlacement.rcNormalPosition;
+        mainWindow.MoveWindow(rc.left, rc.top,
+                              rc.right - rc.left, rc.bottom - rc.top,
+                              TRUE);
+    }
 
     /* Make the window visible on the screen */
-    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
+    if (registrySettings.WindowPlacement.showCmd == SW_MAXIMIZE)
+        ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    else
+        ShowWindow(hwnd, SW_SHOWNORMAL);
 
     /* inform the system, that the main window accepts dropped files */
     DragAcceptFiles(hwnd, TRUE);
