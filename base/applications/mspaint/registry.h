@@ -11,7 +11,7 @@
 class RegistrySettings
 {
 private:
-    void LoadPresets();
+    void LoadPresets(INT nCmdShow);
 
 public:
     DWORD BMPHeight;
@@ -51,7 +51,7 @@ public:
 
     static void SetWallpaper(LPCTSTR szFileName, WallpaperStyle style);
 
-    void Load();
+    void Load(INT nCmdShow);
     void Store();
     void SetMostRecentFile(LPCTSTR szPathName);
 };

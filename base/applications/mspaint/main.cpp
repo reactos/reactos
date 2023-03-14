@@ -189,14 +189,12 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
 
     /* load settings from registry */
-    registrySettings.Load();
+    registrySettings.Load(nCmdShow);
     showMiniature = registrySettings.ShowThumbnail;
     imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
 
     /* create main window */
-    RECT mainWindowPos = { CW_USEDEFAULT, CW_USEDEFAULT };
-    mainWindowPos.right = mainWindowPos.left + 544;
-    mainWindowPos.bottom = mainWindowPos.top + 375;
+    RECT mainWindowPos = registrySettings.WindowPlacement.rcNormalPosition;
     hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
 
     RECT fullscreenWindowPos = {0, 0, 100, 100};
@@ -338,20 +336,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* placing the size boxes around the image */
     imageArea.SendMessage(WM_SIZE, 0, 0);
 
-    /* by moving the window, the things in WM_SIZE are done */
-    if (registrySettings.WindowPlacement.length)
-    {
-        RECT rc = registrySettings.WindowPlacement.rcNormalPosition;
-        mainWindow.MoveWindow(rc.left, rc.top,
-                              rc.right - rc.left, rc.bottom - rc.top,
-                              TRUE);
-    }
-
     /* Make the window visible on the screen */
-    if (registrySettings.WindowPlacement.showCmd == SW_MAXIMIZE)
-        ShowWindow(hwnd, SW_SHOWMAXIMIZED);
-    else
-        ShowWindow(hwnd, SW_SHOWNORMAL);
+    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
 
     /* inform the system, that the main window accepts dropped files */
     DragAcceptFiles(hwnd, TRUE);
