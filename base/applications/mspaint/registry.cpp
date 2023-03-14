@@ -82,8 +82,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
     RECT& rc = WindowPlacement.rcNormalPosition;
-    rc.left = CW_USEDEFAULT;
-    rc.top = CW_USEDEFAULT;
+    rc.left = rc.top = CW_USEDEFAULT;
     rc.right = rc.left + 544;
     rc.bottom = rc.top + 375;
     WindowPlacement.showCmd = nCmdShow;
