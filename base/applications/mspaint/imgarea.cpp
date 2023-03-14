@@ -98,7 +98,6 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     sizeboxRightBottom.MoveWindow(
                GRIP_SIZE + Zoomed(imgXRes),
                GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
-    UpdateScrollbox();
     return 0;
 }
 

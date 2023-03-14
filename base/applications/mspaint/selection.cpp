@@ -107,8 +107,6 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (m_iAction != ACTION_MOVE)
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
     m_bMoving = TRUE;
-    scrlClientWindow.InvalidateRect(NULL, TRUE);
-    scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
     imageArea.InvalidateRect(NULL, FALSE);
     imageArea.SendMessage(WM_PAINT, 0, 0);
     m_rgbBack = paletteModel.GetBgColor();
