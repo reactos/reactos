@@ -1,6 +1,10 @@
 
 include_directories(BEFORE .)
 
+if(DBG)
+    add_definitions(-D_DEBUG=1)
+endif()
+
 list(APPEND SOURCE
     about.c
     childwnd.c
