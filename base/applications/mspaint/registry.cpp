@@ -81,7 +81,6 @@ void RegistrySettings::LoadPresets()
     strFontName = lf.lfFaceName;
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
-    WindowPlacement.showCmd = SW_SHOWNORMAL;
 }
 
 void RegistrySettings::Load()
