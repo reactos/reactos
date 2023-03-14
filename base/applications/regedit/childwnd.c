@@ -384,7 +384,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
         DestroyIcon(g_pChildWnd->hArrowIcon);
-        free(g_pChildWnd);
+        HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;
