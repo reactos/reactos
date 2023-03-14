@@ -5,7 +5,6 @@ Signature = "$ReactOS$"
 
 HKLM,"SYSTEM\CurrentControlSet\Control","CurrentUser",2,"USERNAME"
 HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\Video",,0x00000012
 
@@ -575,12 +574,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000410","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout File",0x00000000,"kbdja.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Text",0x00000000,%JAPANESE%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5061"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Id",0x00000000,"0001"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout File",0x00000000,"kbdko.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Text",0x00000000,%KOREAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5063"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Id",0x00000000,"0001"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000413","Layout File",0x00000000,"kbdne.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000413","Layout Text",0x00000000,%DUTCH%
@@ -695,10 +692,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5043"
 
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout File",0x00000000,"kbdlv1.dll"
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Text",0x00000000,%LATVIAN_QUERTY%
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5044"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout File",0x00000000,"kbdlt1.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout Text",0x00000000,%LITHUANIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5088"
@@ -731,10 +724,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Text",0x00000000,%GEORGIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5119"
 
-;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout File",0x00000000,"kbdfo.dll"
-;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout Text",0x00000000,%FAEROESE%
-;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5108"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout File",0x00000000,"kbdindev.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Text",0x00000000,%DEVANAGARI%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5096"
@@ -754,10 +743,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout File",0x00000000,"kbdinben.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",0x00000000,%BENGALI%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
-
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout File",0x00000000,"kbdinben.dll"
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Text",0x00000000,"Bengali"
-; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout File",0x00000000,"kbdinguj.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Text",0x00000000,%GUJARATI%
@@ -1389,11 +1374,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "SpoolerGroup", \
  "AudioGroup", \
  "SmartCardGroup", \
- "NetworkProvider" \
+ "NetworkProvider", \
  "RemoteValidation", \
  "NetDDEGroup", \
  "Parallel arbitrator", \
- "Extended Base" \
+ "Extended Base", \
  "PCI Configuration", \
  "MS Transactions"
 
@@ -1499,7 +1484,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"AudioGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
@@ -1582,7 +1567,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,%WORKSTATION_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,%WORKSTATION_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"NetworkProvider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x00000002
@@ -2143,7 +2128,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 
 [Strings]
 
@@ -2230,7 +2214,6 @@ GERMAN = "German"
 GREEK = "Greek"
 GUJARATI = "Gujarati"
 IRISH = "Irish"
-FAEROESE = "Faeroese"
 FINNISH = "Finnish"
 FRENCH = "French"
 GEORGIAN = "Georgian"
@@ -2243,7 +2226,6 @@ KAZAKH = "Kazakh"
 KOREAN = "Korean"
 LATIN_AMERICAN = "Latin American"
 LATVIAN = "Latvian"
-LATVIAN_QUERTY = "Latvian (QUERTY)"
 LITHUANIAN = "Lithuanian"
 MACEDONIAN = "Macedonian (FYRO)"
 MALAYALAM = "Malayalam"
@@ -2368,7 +2350,6 @@ GERMAN = "Niemiecki"
 GREEK = "Grecki"
 GUJARATI = "Gujarati"
 IRISH = "Irlandzki"
-FAEROESE = "Faeroese"
 FINNISH = "Fiński"
 FRENCH = "Francuski"
 GEORGIAN = "Gruziński"
@@ -2381,7 +2362,6 @@ KAZAKH = "Kazachski"
 KOREAN = "Koreański"
 LATIN_AMERICAN = "Latynoamerykański"
 LATVIAN = "Łotewski"
-LATVIAN_QUERTY = "Łotewski (QUERTY)"
 LITHUANIAN = "Litewski"
 MACEDONIAN = "Macedoński (FYRO)"
 MALAYALAM = "Malajalam"
@@ -2506,7 +2486,6 @@ GERMAN = "Germană"
 GREEK = "Greacă"
 GUJARATI = "Gujarati"
 IRISH = "Irlandeză"
-FAEROESE = "Faeroese"
 FINNISH = "Finlandeză"
 FRENCH = "Franceză"
 GEORGIAN = "Georgiană"
@@ -2519,7 +2498,6 @@ KAZAKH = "Kazahă"
 KOREAN = "Coreeană"
 LATIN_AMERICAN = "Iberoamericană"
 LATVIAN = "Letonă"
-LATVIAN_QUERTY = "Letonă (QUERTY)"
 LITHUANIAN = "Lituaniană"
 MACEDONIAN = "Macedonă (FYRO)"
 MALAYALAM = "Malayalam"
@@ -2556,7 +2534,6 @@ US_DVORAK_RIGHT = "Dvorak SUA pentru mâna dreaptă"
 US_INTERNATIONAL = "SUA internațională"
 UZBEK_CYRILLIC = "Uzbecă (alfabet chirilic)"
 VIETNAMESE = "Vietnameză"
-
 
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
@@ -2595,9 +2572,6 @@ SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память дл�
 TCPSVCS_SERVICE="Простые службы TCP/IP"
 TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="ReactOS Telnet Service"
-TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
-
 THEMES_SERVICE="Темы"
 THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
 
@@ -2609,6 +2583,5 @@ WLANSVC_SERVICE_DESCRIPTION="Обеспечивает поддержку бес�
 
 WORKSTATION_SERVICE="Рабочая станция"
 WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку сетевых подключений и связь."
-
 
 ; EOF
