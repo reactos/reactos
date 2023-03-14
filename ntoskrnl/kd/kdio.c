@@ -229,7 +229,7 @@ KdpDebugLogInit(
         /* Register for later BootPhase 2 reinitialization */
         DispatchTable->KdpInitRoutine = KdpDebugLogInit;
 
-        HalDisplayString("\r\n   File log debugging enabled\r\n\r\n");
+        HalDisplayString("   File log debugging enabled\r\n");
     }
     else if (BootPhase >= 2)
     {
@@ -413,7 +413,7 @@ KdpSerialInit(
     }
     else if (BootPhase == 1)
     {
-        HalDisplayString("\r\n   Serial debugging enabled\r\n\r\n");
+        HalDisplayString("   Serial debugging enabled\r\n");
     }
 
     return STATUS_SUCCESS;
@@ -526,7 +526,7 @@ KdpScreenInit(
         /* Take control of the display */
         KdpScreenAcquire();
 
-        HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
+        HalDisplayString("   Screen debugging enabled\r\n");
     }
 
     return STATUS_SUCCESS;

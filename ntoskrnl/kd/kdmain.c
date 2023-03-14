@@ -305,6 +305,9 @@ KdDebuggerInitialize1(
     BOOLEAN Success = FALSE;
     BOOLEAN ReinitForPhase2 = FALSE;
 
+    /* Make space for the displayed providers' signons */
+    HalDisplayString("\r\n");
+
     /* Call the registered providers */
     for (CurrentEntry = KdProviders.Flink;
          CurrentEntry != &KdProviders; NOTHING)
@@ -328,6 +331,9 @@ KdDebuggerInitialize1(
         Success = (Success || NT_SUCCESS(CurrentTable->InitStatus));
         ReinitForPhase2 = (ReinitForPhase2 || CurrentTable->KdpInitRoutine);
     }
+
+    /* Make space for the displayed providers' signons */
+    HalDisplayString("\r\n");
 
     NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
 
