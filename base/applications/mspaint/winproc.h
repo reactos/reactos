@@ -12,7 +12,7 @@
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("MainWindow"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(_T("MSPaintApp"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CMainWindow)
         MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
