@@ -171,6 +171,9 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
         QueryDword(hKey, _T("iWindowPosDX"), &cx);
         QueryDword(hKey, _T("iWindowPosDY"), &cy);
+
+        QueryString(hKey, _T("searchString"), Globals.szFindText, ARRAY_SIZE(Globals.szFindText));
+        QueryString(hKey, _T("replaceString"), Globals.szReplaceText, ARRAY_SIZE(Globals.szReplaceText));
     }
 
     Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
@@ -270,6 +273,8 @@ void NOTEPAD_SaveSettingsToRegistry(void)
         SaveDword(hKey, _T("iWindowPosY"), Globals.main_rect.top);
         SaveDword(hKey, _T("iWindowPosDX"), Globals.main_rect.right - Globals.main_rect.left);
         SaveDword(hKey, _T("iWindowPosDY"), Globals.main_rect.bottom - Globals.main_rect.top);
+        SaveString(hKey, _T("searchString"), Globals.szFindText);
+        SaveString(hKey, _T("replaceString"), Globals.szReplaceText);
 
         RegCloseKey(hKey);
     }
