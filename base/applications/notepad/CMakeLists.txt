@@ -1,4 +1,8 @@
 
+if(DBG)
+    add_definitions(-D_DEBUG=1)
+endif()
+
 list(APPEND SOURCE
     dialog.c
     main.c
