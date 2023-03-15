@@ -223,13 +223,18 @@ BOOL RegFindRecurse(
                                   NULL, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
-        pb = malloc(cb);
+        pb = malloc(cb + 3); /* To avoid buffer overrun, append 3 NULs */
         if (pb == NULL)
             goto err;
         lResult = RegQueryValueExW(hSubKey, ppszNames[i], NULL, &type,
                                   pb, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
+
+        /* To avoid buffer overrun, append 3 NUL bytes.
+           NOTE: cb can be an odd number although UNICODE_NULL is two bytes.
+           Two bytes at odd position is not enough to avoid buffer overrun. */
+        pb[cb] = pb[cb + 1] = pb[cb + 2] = 0;
 
         if ((s_dwFlags & RSF_LOOKATDATA) &&
                 CompareData(type, (LPWSTR) pb, s_szFindWhat))
