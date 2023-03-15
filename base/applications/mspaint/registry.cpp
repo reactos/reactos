@@ -194,8 +194,7 @@ void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
     if (szPathName && szPathName[0])
         SHAddToRecentDocs(SHARD_PATHW, szPathName);
 
-    INT iFound = -1;
-    for (INT i = MAX_RECENT_FILES - 1; i > 0; --i)
+    for (INT i = MAX_RECENT_FILES - 1, iFound = -1; i > 0; --i)
     {
         if (iFound < 0 && strFiles[i].CompareNoCase(szPathName) == 0)
             iFound = i;

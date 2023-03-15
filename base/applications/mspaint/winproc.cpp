@@ -301,14 +301,11 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         CPath pathFile(strFile);
         pathFile.CompactPathEx(40);
 
-        TCHAR sz[32];
-        CString strText = _T("&");
-        strText += _itot(iItem + 1, sz, 10);
-        strText += _T(' ');
-        strText += (LPCWSTR)pathFile;
+        TCHAR szText[MAX_PATH + 8];
+        wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
 
         INT iMenuItem = (cItems - 2) + iItem;
-        InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, strText);
+        InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, szText);
     }
 }
 
@@ -322,9 +319,6 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     switch (lParam)
     {
         case 0: /* File menu */
-            if (hPopupMenu != GetSubMenu(menu, 0))
-                break;
-
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
