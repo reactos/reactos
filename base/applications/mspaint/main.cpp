@@ -21,12 +21,6 @@ ToolsModel toolsModel;
 
 SelectionModel selectionModel;
 
-LOGFONT lfTextFont;
-HFONT hfontTextFont;
-HWND hwndEditCtl;
-LPTSTR textToolText = NULL;
-int textToolTextMaxLen = 0;
-
 PaletteModel paletteModel;
 
 RegistrySettings registrySettings;
@@ -165,13 +159,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Report any memory leaks on exit */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-
-    /* init font for text tool */
-    ZeroMemory(&lfTextFont, sizeof(lfTextFont));
-    lfTextFont.lfHeight = 0;
-    lfTextFont.lfWeight = FW_NORMAL;
-    lfTextFont.lfCharSet = DEFAULT_CHARSET;
-    hfontTextFont = CreateFontIndirect(&lfTextFont);
 
     hProgInstance = hThisInstance;
 

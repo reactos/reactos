@@ -26,11 +26,6 @@ extern ToolsModel toolsModel;
 class SelectionModel;
 extern SelectionModel selectionModel;
 
-extern LOGFONT lfTextFont;
-extern HFONT hfontTextFont;
-extern LPTSTR textToolText;
-extern int textToolTextMaxLen;
-
 class PaletteModel;
 extern PaletteModel paletteModel;
 
