@@ -249,7 +249,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     if (registrySettings.ShowStatusBar)
         ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
 
-    /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
+    // Creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn
     RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
     imageArea.Create(scrollboxWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
 
