@@ -528,7 +528,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE4:
         {
             INT iFile = LOWORD(wParam) - IDM_FILE1;
-            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFiles[iFile], TRUE);
+            if (ConfirmSave())
+                DoLoadImageFile(m_hWnd, registrySettings.strFiles[iFile], TRUE);
             break;
         }
         case IDM_EDITUNDO:
