@@ -50,7 +50,7 @@ CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
 /* FUNCTIONS ********************************************************/
 
 void
-UpdateScrollbox()
+UpdateScrollbox(HWND hwnd)
 {
     CRect tempRect;
     CSize sizeImageArea;
@@ -61,15 +61,13 @@ UpdateScrollbox()
     scrollboxWindow.GetWindowRect(&tempRect);
     sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
 
-    INT imgXRes = imageModel.GetWidth();
-    INT imgYRes = imageModel.GetHeight();
-    sizeImageArea = { imgXRes, imgYRes };
+    SIZE sizeZoomed = { Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()) };
 
     /* show/hide the scrollbars */
-    vmode = (sizeScrollBox.cy < sizeImageArea.cy ? 0 :
-                (sizeScrollBox.cy < sizeImageArea.cy + HSCROLL_WIDTH ? 1 : 2));
-    hmode = (sizeScrollBox.cx < sizeImageArea.cx ? 0 :
-                (sizeScrollBox.cx < sizeImageArea.cx + VSCROLL_WIDTH ? 1 : 2));
+    vmode = (sizeScrollBox.cy < sizeZoomed.cy ? 0 :
+                (sizeScrollBox.cy < sizeZoomed.cy + HSCROLL_WIDTH ? 1 : 2));
+    hmode = (sizeScrollBox.cx < sizeZoomed.cx ? 0 :
+                (sizeScrollBox.cx < sizeZoomed.cx + VSCROLL_WIDTH ? 1 : 2));
     scrollboxWindow.ShowScrollBar(SB_VERT, sp_mx[vmode][hmode].bVert);
     scrollboxWindow.ShowScrollBar(SB_HORZ, sp_mx[vmode][hmode].bHoriz);
 
@@ -77,22 +75,49 @@ UpdateScrollbox()
     si.fMask  = SIF_PAGE | SIF_RANGE;
     si.nMin   = 0;
 
-    si.nMax   = sizeImageArea.cx +
-                    (sp_mx[vmode][hmode].bVert == TRUE ? HSCROLL_WIDTH : 0);
+    si.nMax   = sizeZoomed.cx + (GRIP_SIZE * 2) +
+                (sp_mx[vmode][hmode].bVert ? HSCROLL_WIDTH : 0);
     si.nPage  = sizeScrollBox.cx;
     scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
 
-    si.nMax   = sizeImageArea.cy +
-                    (sp_mx[vmode][hmode].bHoriz == TRUE ? VSCROLL_WIDTH : 0);
+    si.nMax   = sizeZoomed.cy + (GRIP_SIZE * 2) +
+                (sp_mx[vmode][hmode].bHoriz ? VSCROLL_WIDTH : 0);
     si.nPage  = sizeScrollBox.cy;
     scrollboxWindow.SetScrollInfo(SB_VERT, &si);
 
-    if (imageArea.IsWindow())
+    INT dx = -scrollboxWindow.GetScrollPos(SB_HORZ);
+    INT dy = -scrollboxWindow.GetScrollPos(SB_VERT);
+
+    if (sizeboxLeftTop.IsWindow())
     {
-        imageArea.MoveWindow(
-            GRIP_SIZE - scrollboxWindow.GetScrollPos(SB_HORZ),
-            GRIP_SIZE - scrollboxWindow.GetScrollPos(SB_VERT),
-            sizeImageArea.cx, sizeImageArea.cy, TRUE);
+        sizeboxLeftTop.MoveWindow(dx, dy, GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxCenterTop.MoveWindow(dx + GRIP_SIZE + (sizeZoomed.cx - GRIP_SIZE) / 2,
+                                    dy,
+                                    GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxRightTop.MoveWindow(dx + GRIP_SIZE + sizeZoomed.cx,
+                                   dy,
+                                   GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxLeftCenter.MoveWindow(dx,
+                                     dy + GRIP_SIZE + (sizeZoomed.cy - GRIP_SIZE) / 2,
+                                     GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxRightCenter.MoveWindow(dx + GRIP_SIZE + sizeZoomed.cx,
+                                      dy + GRIP_SIZE + (sizeZoomed.cy - GRIP_SIZE) / 2,
+                                      GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxLeftBottom.MoveWindow(dx,
+                                     dy + GRIP_SIZE + sizeZoomed.cy,
+                                     GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxCenterBottom.MoveWindow(dx + GRIP_SIZE + (sizeZoomed.cx - GRIP_SIZE) / 2,
+                                       dy + GRIP_SIZE + sizeZoomed.cy,
+                                       GRIP_SIZE, GRIP_SIZE, TRUE);
+        sizeboxRightBottom.MoveWindow(dx + GRIP_SIZE + sizeZoomed.cx,
+                                      dy + GRIP_SIZE + sizeZoomed.cy,
+                                      GRIP_SIZE, GRIP_SIZE, TRUE);
+    }
+
+    if (imageArea.IsWindow() && hwnd != imageArea.m_hWnd)
+    {
+        imageArea.MoveWindow(GRIP_SIZE + dx, GRIP_SIZE + dy,
+                             sizeZoomed.cx, sizeZoomed.cy, TRUE);
     }
 }
 
@@ -100,7 +125,7 @@ LRESULT CScrollboxWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     if (m_hWnd)
     {
-        UpdateScrollbox();
+        UpdateScrollbox(m_hWnd);
     }
     return 0;
 }
@@ -131,9 +156,7 @@ LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             break;
     }
     SetScrollInfo(SB_HORZ, &si);
-    imageArea.MoveWindow(-GetScrollPos(SB_HORZ), -GetScrollPos(SB_VERT),
-                         Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
-                         Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
+    UpdateScrollbox(m_hWnd);
     return 0;
 }
 
@@ -163,9 +186,7 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             break;
     }
     SetScrollInfo(SB_VERT, &si);
-    imageArea.MoveWindow(-GetScrollPos(SB_HORZ), -GetScrollPos(SB_VERT),
-                         Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
-                         Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
+    UpdateScrollbox(m_hWnd);
     return 0;
 }
 
