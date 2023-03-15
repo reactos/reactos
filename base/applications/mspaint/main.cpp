@@ -249,13 +249,13 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     if (registrySettings.ShowStatusBar)
         ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
 
-    /* create selection window (initially hidden) */
-    RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
-    selectionWindow.Create(scrollboxWindow.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
-
     /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
     RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
     imageArea.Create(scrollboxWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
+
+    /* create selection window (initially hidden) */
+    RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
+    selectionWindow.Create(imageArea.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
 
     if (__argc >= 2)
     {
