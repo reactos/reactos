@@ -275,53 +275,57 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     return 0;
 }
 
+void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
+{
+    BOOL isBMP = _tcsicmp(PathFindExtensionW(filepathname), _T(".bmp")) == 0;
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile && isBMP));
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile && isBMP));
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile && isBMP));
+
+    for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
+        RemoveMenu(hPopupMenu, IDM_FILE1 + iItem, MF_BYCOMMAND);
+
+    if (registrySettings.strFiles[0].IsEmpty())
+        return;
+
+    RemoveMenu(hPopupMenu, IDM_FILEMOSTRECENTLYUSEDFILE, MF_BYCOMMAND);
+
+    INT cItems = GetMenuItemCount(hPopupMenu);
+
+    for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
+    {
+        CString& strFile = registrySettings.strFiles[iItem];
+        if (strFile.IsEmpty())
+            break;
+
+        CPath pathFile(strFile);
+        pathFile.CompactPathEx(40);
+
+        TCHAR sz[32];
+        CString strText = _T("&");
+        strText += _itot(iItem + 1, sz, 10);
+        strText += _T(' ');
+        strText += (LPCWSTR)pathFile;
+
+        INT iMenuItem = (cItems - 2) + iItem;
+        InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, strText);
+    }
+}
+
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = GetMenu();
     BOOL trueSelection =
         (::IsWindowVisible(selectionWindow) &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
-    BOOL isBMP;
+
     switch (lParam)
     {
         case 0: /* File menu */
-            if ((HMENU)wParam != GetSubMenu(menu, 0))
+            if (hPopupMenu != GetSubMenu(menu, 0))
                 break;
 
-            isBMP = _wcsicmp(PathFindExtensionW(filepathname), L".bmp") == 0;
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile && isBMP));
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile && isBMP));
-            EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile && isBMP));
-
-            RemoveMenu(menu, IDM_FILE1, MF_BYCOMMAND);
-            RemoveMenu(menu, IDM_FILE2, MF_BYCOMMAND);
-            RemoveMenu(menu, IDM_FILE3, MF_BYCOMMAND);
-            RemoveMenu(menu, IDM_FILE4, MF_BYCOMMAND);
-            if (!registrySettings.strFile1.IsEmpty())
-            {
-                RemoveMenu(menu, IDM_FILEMOSTRECENTLYUSEDFILE, MF_BYCOMMAND);
-                CPath pathFile1(registrySettings.strFile1);
-                pathFile1.CompactPathEx(30);
-                if (!registrySettings.strFile2.IsEmpty())
-                {
-                    CPath pathFile2(registrySettings.strFile2);
-                    pathFile2.CompactPathEx(30);
-                    if (!registrySettings.strFile3.IsEmpty())
-                    {
-                        CPath pathFile3(registrySettings.strFile3);
-                        pathFile3.CompactPathEx(30);
-                        if (!registrySettings.strFile4.IsEmpty())
-                        {
-                            CPath pathFile4(registrySettings.strFile4);
-                            pathFile4.CompactPathEx(30);
-                            InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE4, _T("4 ") + pathFile4);
-                        }
-                        InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE3, _T("3 ") + pathFile3);
-                    }
-                    InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE2, _T("2 ") + pathFile2);
-                }
-                InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE1, _T("1 ") + pathFile1);
-            }
+            ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
             EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
@@ -517,23 +521,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             RegistrySettings::SetWallpaper(filepathname, RegistrySettings::STRETCHED);
             break;
         case IDM_FILE1:
-        {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile1, TRUE);
-            break;
-        }
         case IDM_FILE2:
-        {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile2, TRUE);
-            break;
-        }
         case IDM_FILE3:
-        {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile3, TRUE);
-            break;
-        }
         case IDM_FILE4:
         {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile4, TRUE);
+            INT iFile = LOWORD(wParam) - IDM_FILE1;
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFiles[iFile], TRUE);
             break;
         }
         case IDM_EDITUNDO:

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#define MAX_RECENT_FILES 4
+
 class RegistrySettings
 {
 private:
@@ -27,10 +29,7 @@ public:
     DWORD UnitSetting;
     WINDOWPLACEMENT WindowPlacement;
 
-    CString strFile1;
-    CString strFile2;
-    CString strFile3;
-    CString strFile4;
+    CString strFiles[MAX_RECENT_FILES];
 
     CString strFontName;
     DWORD PointSize;

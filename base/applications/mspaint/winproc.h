@@ -46,4 +46,7 @@ public:
     void saveImage(BOOL overwrite);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
+
+protected:
+    void ProcessFileMenu(HMENU hPopupMenu);
 };
