@@ -277,7 +277,15 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 {
-    BOOL isBMP = _tcsicmp(PathFindExtensionW(filepathname), _T(".bmp")) == 0;
+    LPCTSTR dotext = PathFindExtensionW(filepathname);
+    BOOL isBMP = FALSE;
+    if (_tcsicmp(dotext, _T(".bmp")) == 0 ||
+        _tcsicmp(dotext, _T(".dib")) == 0 ||
+        _tcsicmp(dotext, _T(".rle")) == 0)
+    {
+        isBMP = TRUE;
+    }
+
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile && isBMP));
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile && isBMP));
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile && isBMP));
@@ -302,7 +310,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         pathFile.CompactPathEx(40);
 
         TCHAR szText[MAX_PATH + 8];
-        wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
+        wsprintf(szText, _T("&%u %.64s"), iItem + 1, (LPCTSTR)pathFile);
 
         INT iMenuItem = (cItems - 2) + iItem;
         InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, szText);
