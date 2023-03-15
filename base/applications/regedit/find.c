@@ -36,18 +36,6 @@ static DWORD s_cchName;
 static const WCHAR s_empty[] = L"";
 static const WCHAR s_backslash[] = L"\\";
 
-/* TODO: Hack. To be removed */
-#define wcslen(s) wcslen_hack(s, __LINE__)
-size_t wcslen_hack(LPCWSTR psz, INT line)
-{
-    {
-        WCHAR sz[256];
-        wsprintfW(sz, L"%d: %10s\n", line, psz);
-        OutputDebugStringW(sz);
-    }
-    return lstrlenW(psz);
-}
-
 extern VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName);
 
 BOOL DoEvents(VOID)
@@ -100,46 +88,26 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
 }
 
 static BOOL
-CompareData(
-    DWORD   dwType,
-    LPCWSTR psz1,
-    size_t cb1,
-    LPCWSTR psz2,
-    size_t cb2)
+CompareData(DWORD dwType, LPCVOID pv1, size_t cb1)
 {
-    ssize_t i;
-    size_t cch1, cch2;
-    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ)
+    DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? NORM_IGNORECASE : 0);
+    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
     {
-        StringCbLengthW(psz1, cb1 / sizeof(WCHAR), &cb1);
-        StringCbLengthW(psz2, cb2 / sizeof(WCHAR), &cb2);
-        cch1 = cb1 / sizeof(WCHAR);
-        cch2 = cb2 / sizeof(WCHAR);
-        if (s_dwFlags & RSF_WHOLESTRING)
-        {
-            if (s_dwFlags & RSF_MATCHCASE)
-                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
-                                          psz1, cch1, psz2, cch2);
-            else
-                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
-                                          NORM_IGNORECASE, psz1, cch1, psz2, cch2);
-        }
+        /* We don't assume that pv1 is UNICODE_NULL-terminated */
+        LPCWCH pch1 = pv1, pch2 = s_szFindWhat;
+        size_t cch1 = cb1 / sizeof(WCHAR), cch2 = wcslen(s_szFindWhat);
+        size_t i;
 
-        if (cch1 > cch2)
-        for(i = 0; i <= cch1 - cch2; i++)
+        if (s_dwFlags & RSF_WHOLESTRING)
+            return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1, cch1, pch2, cch2);
+
+        if (cch1 < cch2)
+            return FALSE;
+
+        for (i = 0; i <= cch1 - cch2; i++)
         {
-            if (s_dwFlags & RSF_MATCHCASE)
-            {
-                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
-                                       psz1 + i, cch2, psz2, cch2))
-                    return TRUE;
-            }
-            else
-            {
-                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
-                                       NORM_IGNORECASE, psz1 + i, cch2, psz2, cch2))
-                    return TRUE;
-            }
+            if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1 + i, cch2, pch2, cch2))
+                return TRUE;
         }
     }
     return FALSE;
@@ -163,7 +131,7 @@ BOOL RegFindRecurse(
     LONG lResult;
     WCHAR szSubKey[MAX_PATH];
     DWORD i, c, cb, type;
-    BOOL fPast = FALSE;
+    BOOL fPast;
     LPWSTR *ppszNames = NULL;
     LPBYTE pb = NULL;
 
@@ -189,6 +157,7 @@ BOOL RegFindRecurse(
         goto err;
     ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
+    /* Get the value names of the current key */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -212,15 +181,16 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
-    if (pszValueName == NULL)
-        fPast = TRUE;
+    /* If pszValueName is not specified, then search the values entirely in the key */
+    fPast = (pszValueName == NULL);
 
-    for(i = 0; i < c; i++)
+    /* Search in the value entries */
+    for (i = 0; i < c; i++)
     {
         if (DoEvents())
             goto err;
 
-        if (!fPast && pszValueName && _wcsicmp(ppszNames[i], pszValueName) == 0)
+        if (!fPast && _wcsicmp(ppszNames[i], pszValueName) == 0)
         {
             fPast = TRUE;
             continue;
@@ -232,10 +202,7 @@ BOOL RegFindRecurse(
                 CompareName(ppszNames[i], s_szFindWhat))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
-            if (ppszNames[i][0] == 0)
-                *ppszFoundValueName = NULL;
-            else
-                *ppszFoundValueName = _wcsdup(ppszNames[i]);
+            *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
 
@@ -243,7 +210,7 @@ BOOL RegFindRecurse(
                                   NULL, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
-        pb = malloc(cb + 3); /* To avoid buffer overrun, append 3 NULs */
+        pb = malloc(cb);
         if (pb == NULL)
             goto err;
         lResult = RegQueryValueExW(hSubKey, ppszNames[i], NULL, &type,
@@ -251,19 +218,10 @@ BOOL RegFindRecurse(
         if (lResult != ERROR_SUCCESS)
             goto err;
 
-        /* To avoid buffer overrun, append 3 NUL bytes.
-           NOTE: cb can be an odd number although UNICODE_NULL is two bytes.
-           Two bytes at odd position is not enough to avoid buffer overrun. */
-        pb[cb] = pb[cb + 1] = pb[cb + 2] = 0;
-
-        if ((s_dwFlags & RSF_LOOKATDATA) &&
-                CompareData(type, (LPWSTR) pb, cb, s_szFindWhat, wcslen(s_szFindWhat)))
+        if ((s_dwFlags & RSF_LOOKATDATA) && CompareData(type, pb, cb))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
-            if (ppszNames[i][0] == 0)
-                *ppszFoundValueName = NULL;
-            else
-                *ppszFoundValueName = _wcsdup(ppszNames[i]);
+            *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
         free(pb);
@@ -278,6 +236,7 @@ BOOL RegFindRecurse(
     }
     ppszNames = NULL;
 
+    /* Get the count of the sub-keys */
     lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
@@ -287,6 +246,7 @@ BOOL RegFindRecurse(
         goto err;
     ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
+    /* Get the the sub-key names */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -310,6 +270,7 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
+    /* Search in the sub-keys */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -335,6 +296,7 @@ BOOL RegFindRecurse(
             goto success;
         }
 
+        /* Search in the value entries of the sub-key */
         if (RegFindRecurse(hSubKey, ppszNames[i], NULL, ppszFoundSubKey,
                            ppszFoundValueName))
         {
@@ -391,7 +353,7 @@ BOOL RegFindWalk(
     WCHAR szKeyName[MAX_PATH];
     WCHAR szSubKey[MAX_PATH];
     LPWSTR pch;
-    BOOL fPast;
+    BOOL fPast, fKeyMatched;
     LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
@@ -490,7 +452,8 @@ BOOL RegFindWalk(
                 goto success;
             }
 
-            if (RegFindRecurse(hSubKey, ppszNames[i], NULL,
+            fKeyMatched = (_wcsicmp(ppszNames[i], szKeyName) == 0);
+            if (RegFindRecurse(hSubKey, ppszNames[i], (fKeyMatched ? pszValueName : NULL),
                                ppszFoundSubKey, ppszFoundValueName))
             {
                 LPWSTR psz = *ppszFoundSubKey;

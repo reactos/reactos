@@ -97,7 +97,7 @@ void ShowAboutBox(HWND hWnd);
 LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 void ResizeWnd(int cx, int cy);
 LPCWSTR get_root_key_name(HKEY hRootKey);
-VOID UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath);
+VOID UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone);
 
 /* edit.c */
 BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin);
@@ -125,7 +125,7 @@ BOOL ExportRegistryFile(HWND hWnd);
 
 /* listview.c */
 HWND CreateListView(HWND hwndParent, HMENU id, INT cx);
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath);
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone);
 WCHAR *GetValueName(HWND hwndLV, int iStartAt);
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
 BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
