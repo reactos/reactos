@@ -298,7 +298,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 
     RemoveMenu(hPopupMenu, IDM_FILEMOSTRECENTLYUSEDFILE, MF_BYCOMMAND);
 
-    INT cItems = GetMenuItemCount(hPopupMenu);
+    INT cMenuItems = GetMenuItemCount(hPopupMenu);
 
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
     {
@@ -306,13 +306,15 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         if (strFile.IsEmpty())
             break;
 
+        // Shorten the long pathname by "..."
+#define MAX_RECENT_PATHNAME_DISPLAY 30
         CPath pathFile(strFile);
-        pathFile.CompactPathEx(40);
+        pathFile.CompactPathEx(MAX_RECENT_PATHNAME_DISPLAY);
 
-        TCHAR szText[MAX_PATH + 8];
-        wsprintf(szText, _T("&%u %.64s"), iItem + 1, (LPCTSTR)pathFile);
+        TCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
+        wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
 
-        INT iMenuItem = (cItems - 2) + iItem;
+        INT iMenuItem = (cMenuItems - 2) + iItem;
         InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, szText);
     }
 }
