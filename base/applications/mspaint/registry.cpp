@@ -213,9 +213,7 @@ void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
     if (strFiles[0].CompareNoCase(szPathName) != 0)
     {
         for (INT i = MAX_RECENT_FILES - 1; i > 0; --i)
-        {
             strFiles[i] = strFiles[i - 1];
-        }
 
         strFiles[0] = szPathName;
     }
