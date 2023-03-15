@@ -11,77 +11,40 @@
 #include "precomp.h"
 #include <atltypes.h>
 
-/*
- * Scrollbar functional modes:
- * 0  view < canvas
- * 1  view < canvas + scroll width
- * 2  view >= canvas + scroll width
- *
- * Matrix of scrollbar presence (VERTICAL,HORIZONTAL) given by
- * vertical & horizontal scrollbar modes (view:canvas ratio):
- *
- *           horizontal mode
- *             |      0      |      1      |      2
- * vertical ---+-------------+-------------+------------
- *   mode    0 |  TRUE,TRUE  |  TRUE,TRUE  |  TRUE,FALSE
- *          ---+-------------+-------------+------------
- *           1 |  TRUE,TRUE  | FALSE,FALSE | FALSE,FALSE
- *          ---+-------------+-------------+------------
- *           2 | FALSE,TRUE  | FALSE,FALSE | FALSE,FALSE
- */
-
-struct ScrollbarPresence
-{
-    BOOL bVert;
-    BOOL bHoriz;
-};
-
-CONST ScrollbarPresence sp_mx[3][3] =
-{
-    { {  TRUE,TRUE  }, {  TRUE,TRUE  }, {  TRUE,FALSE } },
-    { {  TRUE,TRUE  }, { FALSE,FALSE }, { FALSE,FALSE } },
-    { { FALSE,TRUE  }, { FALSE,FALSE }, { FALSE,FALSE } }
-};
-
-CONST INT HSCROLL_WIDTH = ::GetSystemMetrics(SM_CYHSCROLL);
-CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
-
-
 /* FUNCTIONS ********************************************************/
 
 void
 UpdateScrollbox(HWND hwnd)
 {
     CRect tempRect;
-    CSize sizeImageArea;
-    CSize sizeScrollBox;
-    INT vmode, hmode;
+    CSize sizeImageArea, sizeScrollBox;
     SCROLLINFO si;
 
-    scrollboxWindow.GetWindowRect(&tempRect);
+    scrollboxWindow.GetClientRect(&tempRect);
     sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
 
     SIZE sizeZoomed = { Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()) };
+    SIZE sizeWhole = { sizeZoomed.cx + (GRIP_SIZE * 2), sizeZoomed.cy + (GRIP_SIZE * 2) };
 
     /* show/hide the scrollbars */
-    vmode = (sizeScrollBox.cy < sizeZoomed.cy ? 0 :
-                (sizeScrollBox.cy < sizeZoomed.cy + HSCROLL_WIDTH ? 1 : 2));
-    hmode = (sizeScrollBox.cx < sizeZoomed.cx ? 0 :
-                (sizeScrollBox.cx < sizeZoomed.cx + VSCROLL_WIDTH ? 1 : 2));
-    scrollboxWindow.ShowScrollBar(SB_VERT, sp_mx[vmode][hmode].bVert);
-    scrollboxWindow.ShowScrollBar(SB_HORZ, sp_mx[vmode][hmode].bHoriz);
+    scrollboxWindow.ShowScrollBar(SB_HORZ, sizeScrollBox.cx < sizeWhole.cx);
+    scrollboxWindow.ShowScrollBar(SB_VERT, sizeScrollBox.cy < sizeWhole.cy);
+
+    if (sizeScrollBox.cx < sizeWhole.cx || sizeScrollBox.cy < sizeWhole.cy)
+    {
+        scrollboxWindow.GetClientRect(&tempRect);
+        sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
+    }
 
     si.cbSize = sizeof(SCROLLINFO);
     si.fMask  = SIF_PAGE | SIF_RANGE;
     si.nMin   = 0;
 
-    si.nMax   = sizeZoomed.cx + (GRIP_SIZE * 2) +
-                (sp_mx[vmode][hmode].bVert ? HSCROLL_WIDTH : 0);
+    si.nMax   = sizeWhole.cx;
     si.nPage  = sizeScrollBox.cx;
     scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
 
-    si.nMax   = sizeZoomed.cy + (GRIP_SIZE * 2) +
-                (sp_mx[vmode][hmode].bHoriz ? VSCROLL_WIDTH : 0);
+    si.nMax   = sizeWhole.cy;
     si.nPage  = sizeScrollBox.cy;
     scrollboxWindow.SetScrollInfo(SB_VERT, &si);
 
