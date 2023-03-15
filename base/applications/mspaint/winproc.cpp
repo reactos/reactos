@@ -12,6 +12,7 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include <assert.h>
 
 /* FUNCTIONS ********************************************************/
 
@@ -310,6 +311,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 #define MAX_RECENT_PATHNAME_DISPLAY 30
         CPath pathFile(strFile);
         pathFile.CompactPathEx(MAX_RECENT_PATHNAME_DISPLAY);
+        assert(_tcslen((LPCTSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
 
         TCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
         wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
