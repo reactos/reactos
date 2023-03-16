@@ -167,8 +167,6 @@ void RegistrySettings::Store()
         TCHAR szName[64];
         for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
         {
-            if (strFiles[iFile].IsEmpty())
-                break;
             wsprintf(szName, _T("File%u"), iFile + 1);
             files.SetStringValue(szName, strFiles[iFile]);
         }
