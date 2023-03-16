@@ -9,8 +9,6 @@
  *              Stanislav Motylkov
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 #include <assert.h>
 
