@@ -57,12 +57,6 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     return 0;
 }
 
-LRESULT CToolBox::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-    return 0;
-}
-
 LRESULT CToolBox::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     toolbar.SendMessage(WM_SYSCOLORCHANGE, 0, 0);
