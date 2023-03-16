@@ -29,10 +29,6 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
         GetSystemDirectoryW(szPath, _countof(szPath));
         wcscat(szPath, L"\\hhctrl.ocx");
         s_hHHCTRL_OCX = LoadLibraryW(szPath);
-    }
-
-    if (!s_pHtmlHelpW)
-    {
         s_pHtmlHelpW = (FN_HtmlHelpW)GetProcAddress(s_hHHCTRL_OCX, "HtmlHelpW");
         if (!s_pHtmlHelpW)
             return NULL;
