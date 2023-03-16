@@ -47,13 +47,6 @@ LRESULT CFullscreenWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     return 0;
 }
 
-LRESULT CFullscreenWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-    bHandled = FALSE;
-    return 0;
-}
-
 LRESULT CFullscreenWindow::OnGetText(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // return caption of the main window, instead
