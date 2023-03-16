@@ -189,7 +189,7 @@ void RegistrySettings::Store()
 
 void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
 {
-    // Register the file to the system 'Recent' folder
+    // Register the file to the user 'Recent' folder
     if (szPathName && szPathName[0])
         SHAddToRecentDocs(SHARD_PATHW, szPathName);
 
