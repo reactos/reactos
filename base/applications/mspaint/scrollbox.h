@@ -28,4 +28,4 @@ public:
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };
 
-void UpdateScrollbox();
+void UpdateScrollbox(HWND hwndFrom);
