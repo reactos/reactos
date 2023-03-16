@@ -88,8 +88,7 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
 }
 
 /* We don't assume that pch1 is UNICODE_NULL-terminated */
-static BOOL
-MatchString(LPCWCH pch1, size_t cch1, LPCWCH pch2, size_t cch2)
+static BOOL MatchString(LPCWCH pch1, size_t cch1, LPCWCH pch2, size_t cch2)
 {
     size_t i;
     DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? NORM_IGNORECASE : 0);
@@ -109,8 +108,7 @@ MatchString(LPCWCH pch1, size_t cch1, LPCWCH pch2, size_t cch2)
     return FALSE;
 }
 
-static BOOL
-MatchData(DWORD dwType, LPCVOID pv1, size_t cb1)
+static BOOL MatchData(DWORD dwType, LPCVOID pv1, size_t cb1)
 {
     if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
         return MatchString(pv1, cb1 / sizeof(WCHAR), s_szFindWhat, wcslen(s_szFindWhat));
