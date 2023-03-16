@@ -262,14 +262,16 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     GetWindowPlacement(&(registrySettings.WindowPlacement));
 
     if (s_pHtmlHelpW)
-        DoHtmlHelpW(NULL, NULL, HH_CLOSE_ALL, 0);
+    {
+        s_pHtmlHelpW(NULL, NULL, HH_CLOSE_ALL, 0);
+        s_pHtmlHelpW = NULL;
+    }
 
     if (s_hHHCTRL_OCX)
     {
         FreeLibrary(s_hHHCTRL_OCX);
         s_hHHCTRL_OCX = NULL;
     }
-    s_pHtmlHelpW = NULL;
 
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
     return 0;
