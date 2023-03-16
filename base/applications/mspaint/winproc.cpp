@@ -305,12 +305,13 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         if (strFile.IsEmpty())
             break;
 
-        // Shorten the long pathname by "..."
+        // Condense the lengthy pathname by using '...'
 #define MAX_RECENT_PATHNAME_DISPLAY 30
         CPath pathFile(strFile);
         pathFile.CompactPathEx(MAX_RECENT_PATHNAME_DISPLAY);
         assert(_tcslen((LPCTSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
 
+        // Add an accelerator (by '&') to the item number for quick access
         TCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
         wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
 
