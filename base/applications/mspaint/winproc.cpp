@@ -9,11 +9,35 @@
  *              Stanislav Motylkov
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
+typedef HWND (WINAPI *FN_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD_PTR);
+
+static HINSTANCE s_hHHCTRL_OCX = NULL; // HtmlHelpW needs "hhctrl.ocx"
+static FN_HtmlHelpW s_pHtmlHelpW = NULL;
+
 /* FUNCTIONS ********************************************************/
+
+// A wrapper function for HtmlHelpW
+static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_PTR dwData)
+{
+    WCHAR szPath[MAX_PATH];
+
+    if (!s_hHHCTRL_OCX && (uCommand != HH_CLOSE_ALL))
+    {
+        // The function loads the system library, not local
+        GetSystemDirectoryW(szPath, _countof(szPath));
+        wcscat(szPath, L"\\hhctrl.ocx");
+        s_hHHCTRL_OCX = LoadLibraryW(szPath);
+        if (s_hHHCTRL_OCX)
+            s_pHtmlHelpW = (FN_HtmlHelpW)GetProcAddress(s_hHHCTRL_OCX, "HtmlHelpW");
+    }
+
+    if (!s_pHtmlHelpW)
+        return NULL;
+
+    return s_pHtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+}
 
 BOOL
 zoomTo(int newZoom, int mouseX, int mouseY)
@@ -235,6 +259,16 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     GetWindowPlacement(&(registrySettings.WindowPlacement));
+
+    DoHtmlHelpW(NULL, NULL, HH_CLOSE_ALL, 0);
+
+    if (s_hHHCTRL_OCX)
+    {
+        FreeLibrary(s_hHHCTRL_OCX);
+        s_hHHCTRL_OCX = NULL;
+        s_pHtmlHelpW = NULL;
+    }
+
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
     return 0;
 }
@@ -445,7 +479,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_HELPHELPTOPICS:
-            HtmlHelp(m_hWnd, _T("help\\Paint.chm"), 0, 0);
+            DoHtmlHelpW(m_hWnd, L"%SystemRoot%\\Help\\mspaint.chm", HH_DISPLAY_TOPIC, 0);
             break;
         case IDM_FILEEXIT:
             SendMessage(WM_CLOSE, wParam, lParam);
