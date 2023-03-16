@@ -257,11 +257,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
     GetWindowPlacement(&(registrySettings.WindowPlacement));
 
-    if (s_pHtmlHelpW)
-    {
-        s_pHtmlHelpW(NULL, NULL, HH_CLOSE_ALL, 0);
-        s_pHtmlHelpW = NULL;
-    }
+    DoHtmlHelp(NULL, NULL, HH_CLOSE_ALL, 0);
 
     if (s_hHHCTRL_OCX)
     {
