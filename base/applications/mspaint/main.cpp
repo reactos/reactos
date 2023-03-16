@@ -137,7 +137,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /* entry point */
 
 int WINAPI
-_tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
+_tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, INT nCmdShow)
 {
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
@@ -176,12 +176,12 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
 
     /* load settings from registry */
-    registrySettings.Load();
+    registrySettings.Load(nCmdShow);
     showMiniature = registrySettings.ShowThumbnail;
     imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
 
     /* create main window */
-    RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
+    RECT mainWindowPos = registrySettings.WindowPlacement.rcNormalPosition;
     hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
 
     RECT fullscreenWindowPos = {0, 0, 100, 100};
@@ -323,11 +323,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* placing the size boxes around the image */
     imageArea.SendMessage(WM_SIZE, 0, 0);
 
-    /* by moving the window, the things in WM_SIZE are done */
-    mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
-
     /* Make the window visible on the screen */
-    ShowWindow (hwnd, nFunsterStil);
+    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
 
     /* inform the system, that the main window accepts dropped files */
     DragAcceptFiles(hwnd, TRUE);

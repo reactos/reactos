@@ -258,6 +258,7 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    registrySettings.WindowPlacement.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(&(registrySettings.WindowPlacement));
 
     DoHtmlHelpW(NULL, NULL, HH_CLOSE_ALL, 0);

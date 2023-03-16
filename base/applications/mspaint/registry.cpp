@@ -53,7 +53,7 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
     SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
-void RegistrySettings::LoadPresets()
+void RegistrySettings::LoadPresets(INT nCmdShow)
 {
     BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2;
     BMPWidth = GetSystemMetrics(SM_CXSCREEN) / 2;
@@ -81,11 +81,16 @@ void RegistrySettings::LoadPresets()
     strFontName = lf.lfFaceName;
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
+    RECT& rc = WindowPlacement.rcNormalPosition;
+    rc.left = rc.top = CW_USEDEFAULT;
+    rc.right = rc.left + 544;
+    rc.bottom = rc.top + 375;
+    WindowPlacement.showCmd = nCmdShow;
 }
 
-void RegistrySettings::Load()
+void RegistrySettings::Load(INT nCmdShow)
 {
-    LoadPresets();
+    LoadPresets(nCmdShow);
 
     CRegKey view;
     if (view.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"), KEY_READ) == ERROR_SUCCESS)
