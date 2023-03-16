@@ -234,6 +234,7 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    registrySettings.WindowPlacement.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(&(registrySettings.WindowPlacement));
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
     return 0;
