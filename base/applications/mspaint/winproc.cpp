@@ -13,7 +13,7 @@
 
 typedef HWND (WINAPI *FN_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD_PTR);
 
-static HINSTANCE s_hHHCTRL_OCX = NULL; // HtmlHelpW needs hhtctrl.ocx
+static HINSTANCE s_hHHCTRL_OCX = NULL; // HtmlHelpW needs "hhctrl.ocx"
 static FN_HtmlHelpW s_pHtmlHelpW = NULL;
 
 /* FUNCTIONS ********************************************************/
