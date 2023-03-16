@@ -87,29 +87,34 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
     }
 }
 
+/* We don't assume that pch1 is UNICODE_NULL-terminated */
 static BOOL
-CompareData(DWORD dwType, LPCVOID pv1, size_t cb1)
+MatchString(LPCWCH pch1, size_t cch1, LPCWCH pch2, size_t cch2)
 {
+    size_t i;
     DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? NORM_IGNORECASE : 0);
-    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
+
+    if (s_dwFlags & RSF_WHOLESTRING)
+        return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1, cch1, pch2, cch2);
+
+    if (cch1 < cch2)
+        return FALSE;
+
+    for (i = 0; i <= cch1 - cch2; i++)
     {
-        /* We don't assume that pv1 is UNICODE_NULL-terminated */
-        LPCWCH pch1 = pv1, pch2 = s_szFindWhat;
-        size_t cch1 = cb1 / sizeof(WCHAR), cch2 = wcslen(s_szFindWhat);
-        size_t i;
-
-        if (s_dwFlags & RSF_WHOLESTRING)
-            return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1, cch1, pch2, cch2);
-
-        if (cch1 < cch2)
-            return FALSE;
-
-        for (i = 0; i <= cch1 - cch2; i++)
-        {
-            if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1 + i, cch2, pch2, cch2))
-                return TRUE;
-        }
+        if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1 + i, cch2, pch2, cch2))
+            return TRUE;
     }
+
+    return FALSE;
+}
+
+static BOOL
+MatchData(DWORD dwType, LPCVOID pv1, size_t cb1)
+{
+    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
+        return MatchString(pv1, cb1 / sizeof(WCHAR), s_szFindWhat, wcslen(s_szFindWhat));
+
     return FALSE;
 }
 
@@ -218,7 +223,7 @@ BOOL RegFindRecurse(
         if (lResult != ERROR_SUCCESS)
             goto err;
 
-        if ((s_dwFlags & RSF_LOOKATDATA) && CompareData(type, pb, cb))
+        if ((s_dwFlags & RSF_LOOKATDATA) && MatchData(type, pb, cb))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
             *ppszFoundValueName = _wcsdup(ppszNames[i]);
