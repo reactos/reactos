@@ -33,7 +33,10 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
             s_pHtmlHelpW = (FN_HtmlHelpW)GetProcAddress(s_hHHCTRL_OCX, "HtmlHelpW");
     }
 
-    return s_pHtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+    if (s_pHtmlHelpW)
+        return s_pHtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+    else
+        return NULL;
 }
 
 BOOL
