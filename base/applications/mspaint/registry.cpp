@@ -189,11 +189,11 @@ void RegistrySettings::Store()
 
 void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
 {
-    // Register the file to the user 'Recent' folder
+    // Register the file to the user's 'Recent' folder
     if (szPathName && szPathName[0])
         SHAddToRecentDocs(SHARD_PATHW, szPathName);
 
-    // If szPathName was found in strFiles, then bring it to the top of strFiles
+    // If szPathName is present in strFiles, move it to the top of the list
     for (INT i = MAX_RECENT_FILES - 1, iFound = -1; i > 0; --i)
     {
         if (iFound < 0 && strFiles[i].CompareNoCase(szPathName) == 0)
@@ -207,7 +207,7 @@ void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
         }
     }
 
-    // If szPathName is not the top of strFiles, then insert szPathName at top of strFiles
+    // If szPathName is not the first item in strFiles, insert it at the top of the list
     if (strFiles[0].CompareNoCase(szPathName) != 0)
     {
         for (INT i = MAX_RECENT_FILES - 1; i > 0; --i)
