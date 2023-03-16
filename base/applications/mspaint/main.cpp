@@ -60,7 +60,7 @@ CMiniatureWindow miniature;
 CToolBox toolBoxContainer;
 CToolSettingsWindow toolSettingsWindow;
 CPaletteWindow paletteWindow;
-CScrollboxWindow scrollboxWindow;
+CCanvasWindow canvasWindow;
 CSelectionWindow selectionWindow;
 CImgAreaWindow imageArea;
 CSizeboxWindow sizeboxLeftTop;
@@ -223,9 +223,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
     paletteWindow.Create(hwnd, paletteWindowPos, NULL, WS_CHILD | WS_VISIBLE);
 
-    /* creating the scroll box */
-    RECT scrollboxWindowPos = {0, 0, 0 + 500, 0 + 500};
-    scrollboxWindow.Create(hwnd, scrollboxWindowPos, NULL,
+    // creating the canvas
+    RECT canvasWindowPos = {0, 0, 0 + 500, 0 + 500};
+    canvasWindow.Create(hwnd, canvasWindowPos, NULL,
                            WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, WS_EX_CLIENTEDGE);
 
     /* creating the status bar */
@@ -236,9 +236,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     if (registrySettings.ShowStatusBar)
         ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
 
-    // Creating the window inside the scroll box
+    // Creating the window inside the canvas
     RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
-    imageArea.Create(scrollboxWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
+    imageArea.Create(canvasWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
 
     /* create selection window (initially hidden) */
     RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
@@ -308,14 +308,14 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* creating the size boxes */
     RECT sizeboxPos = {0, 0, GRIP_SIZE, GRIP_SIZE};
-    sizeboxLeftTop.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxCenterTop.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightTop.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxLeftCenter.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightCenter.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxLeftBottom.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxCenterBottom.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightBottom.Create(scrollboxWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxLeftTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxCenterTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxRightTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxLeftCenter.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxRightCenter.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxLeftBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxCenterBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
+    sizeboxRightBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     /* placing the size boxes around the image */
     imageArea.SendMessage(WM_SIZE, 0, 0);
 

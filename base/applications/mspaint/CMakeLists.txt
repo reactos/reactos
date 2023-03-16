@@ -7,6 +7,7 @@ if(DBG)
 endif()
 
 list(APPEND SOURCE
+    canvas.cpp
     dialogs.cpp
     dib.cpp
     drawing.cpp
@@ -19,7 +20,6 @@ list(APPEND SOURCE
     palette.cpp
     palettemodel.cpp
     registry.cpp
-    scrollbox.cpp
     selection.cpp
     selectionmodel.cpp
     sizebox.cpp

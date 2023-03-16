@@ -1,19 +1,19 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/scrollbox.h
- * PURPOSE:     Functionality surrounding the scroll box window class
+ * FILE:        base/applications/mspaint/canvas.h
+ * PURPOSE:     Providing the canvas window class
  * PROGRAMMERS: Benedikt Freisen
  */
 
 #pragma once
 
-class CScrollboxWindow : public CWindowImpl<CScrollboxWindow>
+class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("Scrollbox"), 0, COLOR_APPWORKSPACE)
+    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), 0, COLOR_APPWORKSPACE)
 
-    BEGIN_MSG_MAP(CScrollboxWindow)
+    BEGIN_MSG_MAP(CCanvasWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
@@ -28,4 +28,4 @@ public:
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };
 
-void UpdateScrollbox(HWND hwndFrom);
+void UpdateCanvas(HWND hwndFrom);

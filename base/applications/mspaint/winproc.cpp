@@ -46,7 +46,7 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     RECT clientRectScrollbox;
     RECT clientRectImageArea;
     int x, y, w, h;
-    scrollboxWindow.GetClientRect(&clientRectScrollbox);
+    canvasWindow.GetClientRect(&clientRectScrollbox);
     imageArea.GetClientRect(&clientRectImageArea);
     w = clientRectImageArea.right * newZoom / toolsModel.GetZoom();
     h = clientRectImageArea.bottom * newZoom / toolsModel.GetZoom();
@@ -62,11 +62,11 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     toolsModel.SetZoom(newZoom);
 
     imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
-    scrollboxWindow.Invalidate(TRUE);
+    canvasWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
-    scrollboxWindow.SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, x), 0);
-    scrollboxWindow.SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, y), 0);
+    canvasWindow.SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, x), 0);
+    canvasWindow.SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, y), 0);
     return TRUE;
 }
 
@@ -102,9 +102,9 @@ void CMainWindow::alignChildrenToMainWindow()
         rcSpace.top += CY_PALETTE;
     }
 
-    if (scrollboxWindow.IsWindow())
+    if (canvasWindow.IsWindow())
     {
-        hDWP = ::DeferWindowPos(hDWP, scrollboxWindow, NULL,
+        hDWP = ::DeferWindowPos(hDWP, canvasWindow, NULL,
                                 rcSpace.left, rcSpace.top,
                                 rcSpace.right - rcSpace.left, rcSpace.bottom - rcSpace.top,
                                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
@@ -216,9 +216,9 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
             for (UINT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
-                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
                 else if (zDelta > 0)
-                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
             }
         }
         else
@@ -227,9 +227,9 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
             for (UINT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
-                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
                 else if (zDelta > 0)
-                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
             }
         }
     }

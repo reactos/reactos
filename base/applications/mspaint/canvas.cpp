@@ -1,8 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/scrollbox.cpp
- * PURPOSE:     Functionality surrounding the scroll box window class
+ * FILE:        base/applications/mspaint/canvas.cpp
+ * PURPOSE:     Providing the canvas window class
  * PROGRAMMERS: Benedikt Freisen
  */
 
@@ -14,22 +14,22 @@
 /* FUNCTIONS ********************************************************/
 
 void
-UpdateScrollbox(HWND hwndFrom)
+UpdateCanvas(HWND hwndFrom)
 {
     CRect tempRect;
-    scrollboxWindow.GetClientRect(&tempRect);
+    canvasWindow.GetClientRect(&tempRect);
     CSize sizeScrollBox(tempRect.Width(), tempRect.Height());
 
     CSize sizeZoomed = { Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()) };
     CSize sizeWhole = { sizeZoomed.cx + (GRIP_SIZE * 2), sizeZoomed.cy + (GRIP_SIZE * 2) };
 
     /* show/hide the scrollbars */
-    scrollboxWindow.ShowScrollBar(SB_HORZ, sizeScrollBox.cx < sizeWhole.cx);
-    scrollboxWindow.ShowScrollBar(SB_VERT, sizeScrollBox.cy < sizeWhole.cy);
+    canvasWindow.ShowScrollBar(SB_HORZ, sizeScrollBox.cx < sizeWhole.cx);
+    canvasWindow.ShowScrollBar(SB_VERT, sizeScrollBox.cy < sizeWhole.cy);
 
     if (sizeScrollBox.cx < sizeWhole.cx || sizeScrollBox.cy < sizeWhole.cy)
     {
-        scrollboxWindow.GetClientRect(&tempRect);
+        canvasWindow.GetClientRect(&tempRect);
         sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
     }
 
@@ -38,14 +38,14 @@ UpdateScrollbox(HWND hwndFrom)
 
     si.nMax   = sizeWhole.cx;
     si.nPage  = sizeScrollBox.cx;
-    scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
+    canvasWindow.SetScrollInfo(SB_HORZ, &si);
 
     si.nMax   = sizeWhole.cy;
     si.nPage  = sizeScrollBox.cy;
-    scrollboxWindow.SetScrollInfo(SB_VERT, &si);
+    canvasWindow.SetScrollInfo(SB_VERT, &si);
 
-    INT dx = -scrollboxWindow.GetScrollPos(SB_HORZ);
-    INT dy = -scrollboxWindow.GetScrollPos(SB_VERT);
+    INT dx = -canvasWindow.GetScrollPos(SB_HORZ);
+    INT dy = -canvasWindow.GetScrollPos(SB_VERT);
 
     if (sizeboxLeftTop.IsWindow())
     {
@@ -77,16 +77,16 @@ UpdateScrollbox(HWND hwndFrom)
         imageArea.MoveWindow(dx + GRIP_SIZE, dy + GRIP_SIZE, sizeZoomed.cx, sizeZoomed.cy, TRUE);
 }
 
-LRESULT CScrollboxWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_hWnd)
     {
-        UpdateScrollbox(m_hWnd);
+        UpdateCanvas(m_hWnd);
     }
     return 0;
 }
 
-LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SCROLLINFO si;
     si.cbSize = sizeof(SCROLLINFO);
@@ -112,11 +112,11 @@ LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             break;
     }
     SetScrollInfo(SB_HORZ, &si);
-    UpdateScrollbox(m_hWnd);
+    UpdateCanvas(m_hWnd);
     return 0;
 }
 
-LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SCROLLINFO si;
     si.cbSize = sizeof(SCROLLINFO);
@@ -142,11 +142,11 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             break;
     }
     SetScrollInfo(SB_VERT, &si);
-    UpdateScrollbox(m_hWnd);
+    UpdateCanvas(m_hWnd);
     return 0;
 }
 
-LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     switch (toolsModel.GetActiveTool())
     {
@@ -167,7 +167,7 @@ LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     return 0;
 }
 
-LRESULT CScrollboxWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }

@@ -22,10 +22,10 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
     LOGBRUSH logbrush;
     int rop;
 
-    RECT clientRectScrollbox;
+    RECT clientRectCanvas;
     RECT clientRectImageArea;
     int x, y, w, h;
-    scrollboxWindow.GetClientRect(&clientRectScrollbox);
+    canvasWindow.GetClientRect(&clientRectCanvas);
     GetClientRect(&clientRectImageArea);
     w = clientRectImageArea.right * 2;
     h = clientRectImageArea.bottom * 2;
@@ -33,8 +33,8 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
     {
         return;
     }
-    w = clientRectImageArea.right * clientRectScrollbox.right / w;
-    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / h;
+    w = clientRectImageArea.right * clientRectCanvas.right / w;
+    h = clientRectImageArea.bottom * clientRectCanvas.bottom / h;
     x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2));
     y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2));
 
@@ -54,7 +54,7 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
     if (!IsWindow())
         return 0;
-    UpdateScrollbox(NULL);
+    UpdateCanvas(NULL);
     return 0;
 }
 
@@ -346,7 +346,7 @@ LRESULT CImgAreaWindow::OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CImgAreaWindow::OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    UpdateScrollbox(NULL);
+    UpdateCanvas(NULL);
     return 0;
 }
 

@@ -39,6 +39,7 @@
 #define WM_SELECTIONMODELREFRESHNEEDED   (WM_APP + 7)
 
 #include "resource.h"
+#include "canvas.h"
 #include "drawing.h"
 #include "dib.h"
 #include "fullscreen.h"
@@ -49,7 +50,6 @@
 #include "palette.h"
 #include "palettemodel.h"
 #include "registry.h"
-#include "scrollbox.h"
 #include "selection.h"
 #include "selectionmodel.h"
 #include "sizebox.h"
