@@ -23,7 +23,7 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
 {
     WCHAR szPath[MAX_PATH];
 
-    if (!s_hHHCTRL_OCX)
+    if (!s_hHHCTRL_OCX && (uCommand != HH_CLOSE_ALL))
     {
         // The function loads the system library, not local
         GetSystemDirectoryW(szPath, _countof(szPath));
