@@ -115,10 +115,12 @@ void RegistrySettings::Load(INT nCmdShow)
     CRegKey files;
     if (files.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadString(files, _T("File1"), strFile1);
-        ReadString(files, _T("File2"), strFile2);
-        ReadString(files, _T("File3"), strFile3);
-        ReadString(files, _T("File4"), strFile4);
+        TCHAR szName[64];
+        for (INT i = 0; i < MAX_RECENT_FILES; ++i)
+        {
+            wsprintf(szName, _T("File%u"), i + 1);
+            ReadString(files, szName, strFiles[i]);
+        }
     }
 
     CRegKey text;
@@ -167,14 +169,12 @@ void RegistrySettings::Store()
     CRegKey files;
     if (files.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List")) == ERROR_SUCCESS)
     {
-        if (!strFile1.IsEmpty())
-            files.SetStringValue(_T("File1"), strFile1);
-        if (!strFile2.IsEmpty())
-            files.SetStringValue(_T("File2"), strFile2);
-        if (!strFile3.IsEmpty())
-            files.SetStringValue(_T("File3"), strFile3);
-        if (!strFile4.IsEmpty())
-            files.SetStringValue(_T("File4"), strFile4);
+        TCHAR szName[64];
+        for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
+        {
+            wsprintf(szName, _T("File%u"), iFile + 1);
+            files.SetStringValue(szName, strFiles[iFile]);
+        }
     }
 
     CRegKey text;
@@ -194,39 +194,30 @@ void RegistrySettings::Store()
 
 void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
 {
+    // Register the file to the user's 'Recent' folder
     if (szPathName && szPathName[0])
         SHAddToRecentDocs(SHARD_PATHW, szPathName);
 
-    if (strFile1 == szPathName)
+    // If szPathName is present in strFiles, move it to the top of the list
+    for (INT i = MAX_RECENT_FILES - 1, iFound = -1; i > 0; --i)
     {
-        // do nothing
+        if (iFound < 0 && strFiles[i].CompareNoCase(szPathName) == 0)
+            iFound = i;
+
+        if (iFound >= 0)
+        {
+            CString tmp = strFiles[i];
+            strFiles[i] = strFiles[i - 1];
+            strFiles[i - 1] = tmp;
+        }
     }
-    else if (strFile2 == szPathName)
+
+    // If szPathName is not the first item in strFiles, insert it at the top of the list
+    if (strFiles[0].CompareNoCase(szPathName) != 0)
     {
-        CString strTemp = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else if (strFile3 == szPathName)
-    {
-        CString strTemp = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else if (strFile4 == szPathName)
-    {
-        CString strTemp = strFile4;
-        strFile4 = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else
-    {
-        strFile4 = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = szPathName;
+        for (INT i = MAX_RECENT_FILES - 1; i > 0; --i)
+            strFiles[i] = strFiles[i - 1];
+
+        strFiles[0] = szPathName;
     }
 }
