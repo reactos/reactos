@@ -160,7 +160,7 @@ BOOL RegFindRecurse(
         goto err;
     ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
-    /* Get the value names of the current key */
+    /* Retrieve the value names associated with the current key */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -184,10 +184,10 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
-    /* If pszValueName is not specified, then search the values entirely in the key */
+    /* If pszValueName is NULL, the function will search for all values within the key */
     fPast = (pszValueName == NULL);
 
-    /* Search in the value entries */
+    /* Search within the values */
     for (i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -239,7 +239,7 @@ BOOL RegFindRecurse(
     }
     ppszNames = NULL;
 
-    /* Get the count of the sub-keys */
+    /* Retrieve the number of sub-keys */
     lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
@@ -249,7 +249,7 @@ BOOL RegFindRecurse(
         goto err;
     ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
-    /* Get the the sub-key names */
+    /* Retrieve the names of the sub-keys */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -273,7 +273,7 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
-    /* Search in the sub-keys */
+    /* Search within the sub-keys */
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -299,7 +299,7 @@ BOOL RegFindRecurse(
             goto success;
         }
 
-        /* Search in the value entries of the sub-key */
+        /* Search within the value entries of the sub-key */
         if (RegFindRecurse(hSubKey, ppszNames[i], NULL, ppszFoundSubKey,
                            ppszFoundValueName))
         {
