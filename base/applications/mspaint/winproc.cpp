@@ -267,6 +267,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         FreeLibrary(s_hHHCTRL_OCX);
         s_hHHCTRL_OCX = NULL;
+        s_pHtmlHelpW = NULL;
     }
 
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
