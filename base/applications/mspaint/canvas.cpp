@@ -13,23 +13,22 @@
 
 /* FUNCTIONS ********************************************************/
 
-void
-UpdateCanvas(HWND hwndFrom)
+VOID CCanvasWindow::Update(HWND hwndFrom)
 {
     CRect tempRect;
-    canvasWindow.GetClientRect(&tempRect);
+    GetClientRect(&tempRect);
     CSize sizeScrollBox(tempRect.Width(), tempRect.Height());
 
     CSize sizeZoomed = { Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()) };
     CSize sizeWhole = { sizeZoomed.cx + (GRIP_SIZE * 2), sizeZoomed.cy + (GRIP_SIZE * 2) };
 
     /* show/hide the scrollbars */
-    canvasWindow.ShowScrollBar(SB_HORZ, sizeScrollBox.cx < sizeWhole.cx);
-    canvasWindow.ShowScrollBar(SB_VERT, sizeScrollBox.cy < sizeWhole.cy);
+    ShowScrollBar(SB_HORZ, sizeScrollBox.cx < sizeWhole.cx);
+    ShowScrollBar(SB_VERT, sizeScrollBox.cy < sizeWhole.cy);
 
     if (sizeScrollBox.cx < sizeWhole.cx || sizeScrollBox.cy < sizeWhole.cy)
     {
-        canvasWindow.GetClientRect(&tempRect);
+        GetClientRect(&tempRect);
         sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
     }
 
@@ -38,14 +37,14 @@ UpdateCanvas(HWND hwndFrom)
 
     si.nMax   = sizeWhole.cx;
     si.nPage  = sizeScrollBox.cx;
-    canvasWindow.SetScrollInfo(SB_HORZ, &si);
+    SetScrollInfo(SB_HORZ, &si);
 
     si.nMax   = sizeWhole.cy;
     si.nPage  = sizeScrollBox.cy;
-    canvasWindow.SetScrollInfo(SB_VERT, &si);
+    SetScrollInfo(SB_VERT, &si);
 
-    INT dx = -canvasWindow.GetScrollPos(SB_HORZ);
-    INT dy = -canvasWindow.GetScrollPos(SB_VERT);
+    INT dx = -GetScrollPos(SB_HORZ);
+    INT dy = -GetScrollPos(SB_VERT);
 
     if (sizeboxLeftTop.IsWindow())
     {
@@ -81,7 +80,7 @@ LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
     if (m_hWnd)
     {
-        UpdateCanvas(m_hWnd);
+        Update(m_hWnd);
     }
     return 0;
 }
@@ -112,7 +111,7 @@ LRESULT CCanvasWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
             break;
     }
     SetScrollInfo(SB_HORZ, &si);
-    UpdateCanvas(m_hWnd);
+    Update(m_hWnd);
     return 0;
 }
 
@@ -142,7 +141,7 @@ LRESULT CCanvasWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
             break;
     }
     SetScrollInfo(SB_VERT, &si);
-    UpdateCanvas(m_hWnd);
+    Update(m_hWnd);
     return 0;
 }
 

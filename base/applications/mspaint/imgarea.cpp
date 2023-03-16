@@ -54,7 +54,7 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
     if (!IsWindow())
         return 0;
-    UpdateCanvas(NULL);
+    canvasWindow.Update(NULL);
     return 0;
 }
 
@@ -346,7 +346,7 @@ LRESULT CImgAreaWindow::OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CImgAreaWindow::OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    UpdateCanvas(NULL);
+    canvasWindow.Update(NULL);
     return 0;
 }
 
