@@ -17,7 +17,6 @@ public:
     BEGIN_MSG_MAP(CMiniatureWindow)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
     END_MSG_MAP()
 
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

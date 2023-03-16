@@ -31,10 +31,3 @@ LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     miniature.ReleaseDC(hdc);
     return 0;
 }
-
-LRESULT CMiniatureWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-    bHandled = FALSE;
-    return 0;
-}
