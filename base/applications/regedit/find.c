@@ -108,7 +108,7 @@ static BOOL MatchString(LPCWCH pch1, INT cch1, LPCWCH pch2, INT cch2)
     return FALSE;
 }
 
-static BOOL MatchData(DWORD dwType, LPCVOID pv1, size_t cb1)
+static BOOL MatchData(DWORD dwType, LPCVOID pv1, DWORD cb1)
 {
     if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
         return MatchString(pv1, (INT)(cb1 / sizeof(WCHAR)), s_szFindWhat, lstrlenW(s_szFindWhat));
