@@ -490,8 +490,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_HELPHELPTOPICS:
-            DoHtmlHelpW(m_hWnd, L"%WINDIR%\\Help\\mspaint.chm", HH_DISPLAY_TOPIC, 0);
+        {
+            // NOTE: Don't trust the environment variables
+            WCHAR szPath[MAX_PATH];
+            GetWindowsDirectoryW(szPath, _countof(szPath));
+            wcscat(szPath, L"\\Help\\mspaint.chm");
+            DoHtmlHelpW(m_hWnd, szPath, HH_DISPLAY_TOPIC, 0);
             break;
+        }
         case IDM_FILEEXIT:
             SendMessage(WM_CLOSE, wParam, lParam);
             break;
