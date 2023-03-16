@@ -18,7 +18,7 @@ static FN_HtmlHelpW s_pHtmlHelpW = NULL;
 
 /* FUNCTIONS ********************************************************/
 
-// A wrapper function of HtmlHelpW
+// A wrapper function for HtmlHelpW
 static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_PTR dwData)
 {
     WCHAR szPath[MAX_PATH];
