@@ -87,7 +87,7 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
     }
 }
 
-/* We don't assume that pch1 is UNICODE_NULL-terminated */
+/* Do not assume that pch1 is terminated with UNICODE_NULL */
 static BOOL MatchString(LPCWCH pch1, INT cch1, LPCWCH pch2, INT cch2)
 {
     INT i;
