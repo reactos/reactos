@@ -753,8 +753,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWCOLORPALETTE:
-            registrySettings.ShowColorBox = !paletteWindow.IsWindowVisible();
-            paletteWindow.ShowWindow(registrySettings.ShowColorBox ? SW_SHOWNOACTIVATE : SW_HIDE);
+            registrySettings.ShowPalette = !paletteWindow.IsWindowVisible();
+            paletteWindow.ShowWindow(registrySettings.ShowPalette ? SW_SHOWNOACTIVATE : SW_HIDE);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWSTATUSBAR:

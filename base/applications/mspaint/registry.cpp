@@ -72,7 +72,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     FontsPositionY = 0;
     ShowTextTool = TRUE;
     ShowStatusBar = TRUE;
-    ShowColorBox = TRUE;
+    ShowPalette = TRUE;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -142,7 +142,7 @@ void RegistrySettings::Load(INT nCmdShow)
     CRegKey bar4;
     if (bar4.Open(paint, _T("General-Bar4"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar4, _T("Visible"), ShowColorBox);
+        ReadDWORD(bar4, _T("Visible"), ShowPalette);
     }
 
     // Fix the bitmap size if too large
@@ -205,7 +205,7 @@ void RegistrySettings::Store()
     CRegKey bar4;
     if (bar4.Create(paint, _T("General-Bar4")) == ERROR_SUCCESS)
     {
-        bar4.SetDWORDValue(_T("Visible"), ShowColorBox);
+        bar4.SetDWORDValue(_T("Visible"), ShowPalette);
     }
 }
 

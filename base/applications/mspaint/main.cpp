@@ -219,7 +219,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* creating the palette child window */
     RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
     paletteWindow.Create(hwnd, paletteWindowPos, NULL, WS_CHILD, WS_EX_STATICEDGE);
-    if (registrySettings.ShowColorBox)
+    if (registrySettings.ShowPalette)
         paletteWindow.ShowWindow(SW_SHOWNOACTIVATE);
 
     // creating the canvas
