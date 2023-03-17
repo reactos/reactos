@@ -42,9 +42,17 @@ public:
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
     END_MSG_MAP()
 
 private:
+    HCURSOR m_hCurFill;
+    HCURSOR m_hCurColor;
+    HCURSOR m_hCurZoom;
+    HCURSOR m_hCurPen;
+    HCURSOR m_hCurAirbrush;
+
+    LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

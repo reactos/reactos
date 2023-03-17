@@ -8,11 +8,20 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
+
+LRESULT CImgAreaWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_hCurFill     = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_FILL));
+    m_hCurColor    = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_COLOR));
+    m_hCurZoom     = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_ZOOM));
+    m_hCurPen      = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_PEN));
+    m_hCurAirbrush = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
+
+    return 0;
+}
 
 void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 {
@@ -115,22 +124,22 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FILL:
-            SetCursor(hCurFill);
+            ::SetCursor(m_hCurFill);
             break;
         case TOOL_COLOR:
-            SetCursor(hCurColor);
+            ::SetCursor(m_hCurColor);
             break;
         case TOOL_ZOOM:
-            SetCursor(hCurZoom);
+            ::SetCursor(m_hCurZoom);
             break;
         case TOOL_PEN:
-            SetCursor(hCurPen);
+            ::SetCursor(m_hCurPen);
             break;
         case TOOL_AIRBRUSH:
-            SetCursor(hCurAirbrush);
+            ::SetCursor(m_hCurAirbrush);
             break;
         default:
-            SetCursor(LoadCursor(NULL, IDC_CROSS));
+            ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
     }
     return 0;
 }

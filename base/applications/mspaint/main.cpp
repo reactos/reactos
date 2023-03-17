@@ -35,12 +35,6 @@ OPENFILENAME sfn;
 HICON hNontranspIcon;
 HICON hTranspIcon;
 
-HCURSOR hCurFill;
-HCURSOR hCurColor;
-HCURSOR hCurZoom;
-HCURSOR hCurPen;
-HCURSOR hCurAirbrush;
-
 HINSTANCE hProgInstance;
 
 TCHAR filepathname[1000];
@@ -203,12 +197,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
     hTranspIcon =
         (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_TRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
-
-    hCurFill     = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_FILL));
-    hCurColor    = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_COLOR));
-    hCurZoom     = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_ZOOM));
-    hCurPen      = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_PEN));
-    hCurAirbrush = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
 
     RECT toolBoxContainerPos = {2, 2, 2 + 52, 2 + 350};
     toolBoxContainer.Create(hwnd, toolBoxContainerPos, NULL, WS_CHILD | WS_VISIBLE);

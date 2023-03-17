@@ -36,12 +36,6 @@ extern OPENFILENAME sfn;
 extern HICON hNontranspIcon;
 extern HICON hTranspIcon;
 
-extern HCURSOR hCurFill;
-extern HCURSOR hCurColor;
-extern HCURSOR hCurZoom;
-extern HCURSOR hCurPen;
-extern HCURSOR hCurAirbrush;
-
 extern HINSTANCE hProgInstance;
 
 extern TCHAR filepathname[1000];
