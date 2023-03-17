@@ -81,10 +81,7 @@ LRESULT CSelectionWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     ::GetCursorPos(&pt);
     ScreenToClient(&pt);
 
-    SIZEBOX_HITTEST sht = getSizeBoxHitTest(pt, &rcClient, TRUE);
-    if (sht == SIZEBOX_NONE)
-        bHandled = FALSE;
-    if (sht == SIZEBOX_CONTENTS)
+    if (!setCursorOnSizeBox(getSizeBoxHitTest(pt, &rcClient)))
         ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
 
     return 0;

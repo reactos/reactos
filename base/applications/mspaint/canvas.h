@@ -32,18 +32,15 @@ public:
     CCanvasWindow();
 
     VOID Update(HWND hwndFrom);
-    VOID ShowSizeBoxes(BOOL bShow);
 
 protected:
-    BOOL m_bDragging;
-    SIZEBOX_HITTEST m_whereDragging;
-    BOOL m_bShowSizeBoxes;
-    POINT m_ptOrig;
+    CANVAS_HITTEST m_whereHit;
+    POINT m_ptOrig; // The origin of drag start
 
-    BOOL GetHitTestRect(LPRECT prc, SIZEBOX_HITTEST sht, LPCRECT prcBase, BOOL bSetCursor = FALSE);
-    SIZEBOX_HITTEST HitTest(POINT pt, BOOL bSetCursor = FALSE);
+    CANVAS_HITTEST HitTest(POINT pt);
     RECT GetBaseRect();
-    VOID OnDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
+    VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
+    VOID OnHVScroll(WPARAM wParam, INT fnBar);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

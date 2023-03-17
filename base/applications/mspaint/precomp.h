@@ -39,6 +39,20 @@
 #define WM_IMAGEMODELIMAGECHANGED        (WM_APP + 6)
 #define WM_SELECTIONMODELREFRESHNEEDED   (WM_APP + 7)
 
+enum CANVAS_HITTEST // hit
+{
+    HIT_NONE = 0,
+    HIT_UPPER_LEFT,
+    HIT_UPPER_CENTER,
+    HIT_UPPER_RIGHT,
+    HIT_MIDDLE_LEFT,
+    HIT_MIDDLE_RIGHT,
+    HIT_LOWER_LEFT,
+    HIT_LOWER_CENTER,
+    HIT_LOWER_RIGHT,
+    HIT_CONTENTS,
+};
+
 #include "resource.h"
 #include "drawing.h"
 #include "dib.h"

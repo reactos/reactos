@@ -9,59 +9,60 @@
 
 #include "precomp.h"
 
+static LPCWSTR s_cursor_shapes[] =
+{
+    IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
+    IDC_SIZEWE,               IDC_SIZEWE,
+    IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE,
+};
+
 /* FUNCTIONS ********************************************************/
 
-BOOL getSizeBoxRect(LPRECT prc, SIZEBOX_HITTEST sht, LPCRECT prcBase, BOOL bSetCursor)
+BOOL setCursorOnSizeBox(CANVAS_HITTEST hit)
 {
-    switch (sht)
+    if (HIT_UPPER_LEFT <= hit && hit <= HIT_LOWER_RIGHT)
     {
-        case SIZEBOX_UPPER_LEFT:
+        ::SetCursor(::LoadCursor(NULL, s_cursor_shapes[hit - HIT_UPPER_LEFT]));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
+{
+    switch (hit)
+    {
+        case HIT_UPPER_LEFT:
             prc->left = prcBase->left;
             prc->top = prcBase->top;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENWSE));
             break;
-        case SIZEBOX_UPPER_CENTER:
+        case HIT_UPPER_CENTER:
             prc->left = (prcBase->left + prcBase->right - GRIP_SIZE) / 2;
             prc->top = prcBase->top;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENS));
             break;
-        case SIZEBOX_UPPER_RIGHT:
+        case HIT_UPPER_RIGHT:
             prc->left = prcBase->right - GRIP_SIZE;
             prc->top = prcBase->top;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENESW));
             break;
-        case SIZEBOX_MIDDLE_LEFT:
+        case HIT_MIDDLE_LEFT:
             prc->left = prcBase->left;
             prc->top = (prcBase->top + prcBase->bottom - GRIP_SIZE) / 2;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));
             break;
-        case SIZEBOX_MIDDLE_RIGHT:
+        case HIT_MIDDLE_RIGHT:
             prc->left = prcBase->right - GRIP_SIZE;
             prc->top = (prcBase->top + prcBase->bottom - GRIP_SIZE) / 2;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));
             break;
-        case SIZEBOX_LOWER_LEFT:
+        case HIT_LOWER_LEFT:
             prc->left = prcBase->left;
             prc->top = prcBase->bottom - GRIP_SIZE;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENESW));
             break;
-        case SIZEBOX_LOWER_CENTER:
+        case HIT_LOWER_CENTER:
             prc->left = (prcBase->left + prcBase->right - GRIP_SIZE) / 2;
             prc->top = prcBase->bottom - GRIP_SIZE;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENS));
             break;
-        case SIZEBOX_LOWER_RIGHT:
+        case HIT_LOWER_RIGHT:
             prc->left = prcBase->right - GRIP_SIZE;
             prc->top = prcBase->bottom - GRIP_SIZE;
-            if (bSetCursor)
-                ::SetCursor(::LoadCursor(NULL, IDC_SIZENWSE));
             break;
         default:
             ::SetRectEmpty(prc);
@@ -73,21 +74,21 @@ BOOL getSizeBoxRect(LPRECT prc, SIZEBOX_HITTEST sht, LPCRECT prcBase, BOOL bSetC
     return TRUE;
 }
 
-SIZEBOX_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase, BOOL bSetCursor)
+CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 {
     RECT rc;
-    for (INT i = SIZEBOX_UPPER_LEFT; i <= SIZEBOX_MAX; ++i)
+    for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
-        SIZEBOX_HITTEST sht = (SIZEBOX_HITTEST)i;
-        getSizeBoxRect(&rc, sht, prcBase, bSetCursor);
+        CANVAS_HITTEST hit = (CANVAS_HITTEST)i;
+        getSizeBoxRect(&rc, hit, prcBase);
         if (::PtInRect(&rc, pt))
-            return sht;
+            return hit;
     }
 
     if (::PtInRect(prcBase, pt))
-        return SIZEBOX_CONTENTS;
+        return HIT_CONTENTS;
 
-    return SIZEBOX_NONE;
+    return HIT_NONE;
 }
 
 VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)
@@ -99,23 +100,22 @@ VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)
 
     if (bDrawFrame)
     {
-        HGDIOBJ oldPen, oldBrush;
-        LOGBRUSH logBrush = { BS_HOLLOW, 0, 0 };
         rc = *prcBase;
         ::InflateRect(&rc, -GRIP_SIZE / 2, -GRIP_SIZE / 2);
 
-        oldPen = ::SelectObject(hdc, ::CreatePen(PS_DOT, 1, ::GetSysColor(COLOR_HIGHLIGHT)));
-        oldBrush = ::SelectObject(hdc, ::CreateBrushIndirect(&logBrush));
-        ::Rectangle(hdc, rc.left, rc.top, rc.Width(), rc.Height());
+        LOGBRUSH logBrush = { BS_HOLLOW, 0, 0 };
+        COLORREF rgbHighlight = ::GetSysColor(COLOR_HIGHLIGHT);
+        HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_DOT, 1, rgbHighlight));
+        HGDIOBJ oldBrush = ::SelectObject(hdc, ::CreateBrushIndirect(&logBrush));
+        ::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
         ::DeleteObject(::SelectObject(hdc, oldBrush));
         ::DeleteObject(::SelectObject(hdc, oldPen));
     }
 
-    for (INT i = SIZEBOX_UPPER_LEFT; i <= SIZEBOX_MAX; ++i)
+    for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
-        SIZEBOX_HITTEST sht = (SIZEBOX_HITTEST)i;
-        getSizeBoxRect(&rc, sht, prcBase, FALSE);
-        if (::IntersectRect(&rcIntersect, &rc, prcPaint))
+        getSizeBoxRect(&rc, (CANVAS_HITTEST)i, prcBase);
+        if (!prcPaint || ::IntersectRect(&rcIntersect, &rc, prcPaint))
             ::FillRect(hdc, &rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
     }
 }

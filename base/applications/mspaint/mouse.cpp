@@ -17,7 +17,7 @@ POINT ToolBase::pointStack[256] = { { 0 } };
 /* FUNCTIONS ********************************************************/
 
 void
-placeSelWin(void)
+placeSelWin()
 {
     CRect rc;
     rc.left = Zoomed(selectionModel.GetDestRectLeft());
@@ -716,11 +716,6 @@ struct ShapeTool : ToolBase
             imageModel.ResetToPrevious();
             --pointSP;
             draw(m_bLeftButton, -1, -1, TRUE);
-            pointSP = 0;
-        }
-        else
-        {
-            imageModel.Undo(TRUE);
         }
         ToolBase::OnFinishDraw();
     }
