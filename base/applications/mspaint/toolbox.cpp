@@ -23,7 +23,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
     RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};
     DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
-                  TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | CCS_NODIVIDER;
+                  TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
     toolbar.Create(TOOLBARCLASSNAME, m_hWnd, toolbarPos, NULL, style);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     toolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM) hImageList);
