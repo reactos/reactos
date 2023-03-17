@@ -15,14 +15,11 @@
 #include <shlobj.h>
 
 /* FUNCTIONS ********************************************************/
-static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheckForDef)
+static void ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue)
 {
-    DWORD dwPrev = dwValue;
-
-    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS || (bCheckForDef && dwValue == 0))
-        dwValue = dwPrev;
-
-    return dwPrev;
+    DWORD dwTemp;
+    if (key.QueryDWORDValue(lpName, dwTemp) == ERROR_SUCCESS)
+        dwValue = dwTemp;
 }
 
 static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR lpDefault = TEXT(""))
@@ -75,6 +72,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     FontsPositionY = 0;
     ShowTextTool = TRUE;
     ShowStatusBar = TRUE;
+    ShowColorBox = TRUE;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -92,28 +90,32 @@ void RegistrySettings::Load(INT nCmdShow)
 {
     LoadPresets(nCmdShow);
 
+    CRegKey paint;
+    if (paint.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint"), KEY_READ) != ERROR_SUCCESS)
+        return;
+
     CRegKey view;
-    if (view.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"), KEY_READ) == ERROR_SUCCESS)
+    if (view.Open(paint, _T("View"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(view, _T("BMPHeight"),     BMPHeight,     TRUE);
-        ReadDWORD(view, _T("BMPWidth"),      BMPWidth,      TRUE);
-        ReadDWORD(view, _T("GridExtent"),    GridExtent,    FALSE);
-        ReadDWORD(view, _T("NoStretching"),  NoStretching,  FALSE);
-        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail, FALSE);
-        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid,    FALSE);
-        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight,   TRUE);
-        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth,    TRUE);
-        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos,     TRUE);
-        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos,     TRUE);
-        ReadDWORD(view, _T("UnitSetting"),   UnitSetting,   FALSE);
-        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar, FALSE);
+        ReadDWORD(view, _T("BMPHeight"),     BMPHeight);
+        ReadDWORD(view, _T("BMPWidth"),      BMPWidth);
+        ReadDWORD(view, _T("GridExtent"),    GridExtent);
+        ReadDWORD(view, _T("NoStretching"),  NoStretching);
+        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail);
+        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid);
+        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight);
+        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth);
+        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos);
+        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos);
+        ReadDWORD(view, _T("UnitSetting"),   UnitSetting);
+        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar);
 
         ULONG pnBytes = sizeof(WINDOWPLACEMENT);
         view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
     }
 
     CRegKey files;
-    if (files.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
+    if (files.Open(paint, _T("Recent File List"), KEY_READ) == ERROR_SUCCESS)
     {
         TCHAR szName[64];
         for (INT i = 0; i < MAX_RECENT_FILES; ++i)
@@ -124,17 +126,23 @@ void RegistrySettings::Load(INT nCmdShow)
     }
 
     CRegKey text;
-    if (text.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text"), KEY_READ) == ERROR_SUCCESS)
+    if (text.Open(paint, _T("Text"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(text, _T("Bold"),         Bold,           FALSE);
-        ReadDWORD(text, _T("Italic"),       Italic,         FALSE);
-        ReadDWORD(text, _T("Underline"),    Underline,      FALSE);
-        ReadDWORD(text, _T("CharSet"),      CharSet,        FALSE);
-        ReadDWORD(text, _T("PointSize"),    PointSize,      FALSE);
-        ReadDWORD(text, _T("PositionX"),    FontsPositionX, FALSE);
-        ReadDWORD(text, _T("PositionY"),    FontsPositionY, FALSE);
-        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool,   FALSE);
+        ReadDWORD(text, _T("Bold"),         Bold);
+        ReadDWORD(text, _T("Italic"),       Italic);
+        ReadDWORD(text, _T("Underline"),    Underline);
+        ReadDWORD(text, _T("CharSet"),      CharSet);
+        ReadDWORD(text, _T("PointSize"),    PointSize);
+        ReadDWORD(text, _T("PositionX"),    FontsPositionX);
+        ReadDWORD(text, _T("PositionY"),    FontsPositionY);
+        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool);
         ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
+    }
+
+    CRegKey bar4;
+    if (bar4.Open(paint, _T("General-Bar4"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(bar4, _T("Visible"), ShowColorBox);
     }
 
     // Fix the bitmap size if too large
@@ -146,9 +154,12 @@ void RegistrySettings::Load(INT nCmdShow)
 
 void RegistrySettings::Store()
 {
+    CRegKey paint;
+    if (paint.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint")) != ERROR_SUCCESS)
+        return;
+
     CRegKey view;
-    if (view.Create(HKEY_CURRENT_USER,
-                     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View")) == ERROR_SUCCESS)
+    if (view.Create(paint, _T("View")) == ERROR_SUCCESS)
     {
         view.SetDWORDValue(_T("BMPHeight"),     BMPHeight);
         view.SetDWORDValue(_T("BMPWidth"),      BMPWidth);
@@ -167,7 +178,7 @@ void RegistrySettings::Store()
     }
 
     CRegKey files;
-    if (files.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List")) == ERROR_SUCCESS)
+    if (files.Create(paint, _T("Recent File List")) == ERROR_SUCCESS)
     {
         TCHAR szName[64];
         for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
@@ -178,7 +189,7 @@ void RegistrySettings::Store()
     }
 
     CRegKey text;
-    if (text.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text")) == ERROR_SUCCESS)
+    if (text.Create(paint, _T("Text")) == ERROR_SUCCESS)
     {
         text.SetDWORDValue(_T("Bold"),          Bold);
         text.SetDWORDValue(_T("Italic"),        Italic);
@@ -189,6 +200,12 @@ void RegistrySettings::Store()
         text.SetDWORDValue(_T("PositionY"),     FontsPositionY);
         text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
         text.SetStringValue(_T("TypeFaceName"), strFontName);
+    }
+
+    CRegKey bar4;
+    if (bar4.Create(paint, _T("General-Bar4")) == ERROR_SUCCESS)
+    {
+        bar4.SetDWORDValue(_T("Visible"), ShowColorBox);
     }
 }
 
