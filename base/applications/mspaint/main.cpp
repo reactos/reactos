@@ -192,12 +192,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     SetMenu(hwnd, menu);
     haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
 
-    /* preloading the draw transparent/nontransparent icons for later use */
-    hNontranspIcon =
-        (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
-    hTranspIcon =
-        (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_TRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
-
     RECT toolBoxContainerPos = {2, 2, 2 + 52, 2 + 350};
     toolBoxContainer.Create(hwnd, toolBoxContainerPos, NULL, WS_CHILD | WS_VISIBLE);
     /* creating the tool settings child window */

@@ -15,10 +15,23 @@
 
 LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
 {
+    /* preloading the draw transparent/nontransparent icons for later use */
+    m_hNontranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
+                                        IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+    m_hTranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_TRANSPARENT),
+                                     IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+
     RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
     trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(0, 6));
     trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ::DestroyIcon(m_hNontranspIcon);
+    ::DestroyIcon(m_hTranspIcon);
     return 0;
 }
 
@@ -50,8 +63,8 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
             Rectangle(hdc, 2, toolsModel.IsBackgroundTransparent() * 31 + 2, 41, toolsModel.IsBackgroundTransparent() * 31 + 33);
             DeleteObject(SelectObject(hdc, oldPen));
-            DrawIconEx(hdc, 1, 2, hNontranspIcon, 40, 30, 0, NULL, DI_NORMAL);
-            DrawIconEx(hdc, 1, 33, hTranspIcon, 40, 30, 0, NULL, DI_NORMAL);
+            DrawIconEx(hdc, 1, 2, m_hNontranspIcon, 40, 30, 0, NULL, DI_NORMAL);
+            DrawIconEx(hdc, 1, 33, m_hTranspIcon, 40, 30, 0, NULL, DI_NORMAL);
             break;
         }
         case TOOL_RUBBER:
