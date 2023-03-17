@@ -210,9 +210,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hCurPen      = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_PEN));
     hCurAirbrush = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
 
-    CreateWindowEx(0, _T("STATIC"), NULL, WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL,
-                   hThisInstance, NULL);
-
     RECT toolBoxContainerPos = {2, 2, 2 + 52, 2 + 350};
     toolBoxContainer.Create(hwnd, toolBoxContainerPos, NULL, WS_CHILD | WS_VISIBLE);
     /* creating the tool settings child window */
