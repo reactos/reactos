@@ -19,6 +19,7 @@
 #include <atlpath.h>
 #include <atlstr.h>
 #include <atlwin.h>
+#include <atltypes.h>
 #include <windowsx.h>
 #include <commdlg.h>
 #include <commctrl.h>
@@ -39,7 +40,6 @@
 #define WM_SELECTIONMODELREFRESHNEEDED   (WM_APP + 7)
 
 #include "resource.h"
-#include "canvas.h"
 #include "drawing.h"
 #include "dib.h"
 #include "fullscreen.h"
@@ -53,6 +53,7 @@
 #include "selection.h"
 #include "selectionmodel.h"
 #include "sizebox.h"
+#include "canvas.h"
 #include "textedit.h"
 #include "toolbox.h"
 #include "toolsettings.h"

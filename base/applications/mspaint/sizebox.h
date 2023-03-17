@@ -9,24 +9,21 @@
 
 #pragma once
 
-class CSizeboxWindow : public CWindowImpl<CSizeboxWindow>
+enum SIZEBOX_HITTEST
 {
-public:
-    DECLARE_WND_CLASS_EX(_T("Sizebox"), CS_DBLCLKS, COLOR_HIGHLIGHT)
-
-    BEGIN_MSG_MAP(CSizeboxWindow)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
-        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-        MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
-        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-    END_MSG_MAP()
-
-    LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    SIZEBOX_NONE = 0,
+    SIZEBOX_UPPER_LEFT,
+    SIZEBOX_UPPER_CENTER,
+    SIZEBOX_UPPER_RIGHT,
+    SIZEBOX_MIDDLE_LEFT,
+    SIZEBOX_MIDDLE_RIGHT,
+    SIZEBOX_LOWER_LEFT,
+    SIZEBOX_LOWER_CENTER,
+    SIZEBOX_LOWER_RIGHT,
+    SIZEBOX_MAX = SIZEBOX_LOWER_RIGHT,
+    SIZEBOX_CONTENTS
 };
+
+BOOL getSizeBoxRect(LPRECT prc, SIZEBOX_HITTEST sht, LPCRECT prcBase, BOOL bSetCursor);
+SIZEBOX_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase, BOOL bSetCursor);
+VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame = FALSE, LPCRECT prcPaint = NULL);
