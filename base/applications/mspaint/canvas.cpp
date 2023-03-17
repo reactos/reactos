@@ -129,6 +129,7 @@ LRESULT CCanvasWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     }
     SetScrollInfo(SB_HORZ, &si);
     Update(m_hWnd);
+    Invalidate(FALSE); // FIXME: Flicker
     return 0;
 }
 
@@ -159,6 +160,7 @@ LRESULT CCanvasWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     }
     SetScrollInfo(SB_VERT, &si);
     Update(m_hWnd);
+    Invalidate(FALSE); // FIXME: Flicker
     return 0;
 }
 
@@ -212,8 +214,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
 
     CString strSize;
-    INT imgXRes = imageModel.GetWidth();
-    INT imgYRes = imageModel.GetHeight();
+    INT imgXRes = imageModel.GetWidth(), imgYRes = imageModel.GetHeight();
     INT xRel = UnZoomed(GET_X_LPARAM(lParam) - m_ptOrig.x);
     INT yRel = UnZoomed(GET_Y_LPARAM(lParam) - m_ptOrig.y);
 
@@ -259,8 +260,7 @@ LRESULT CCanvasWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (!m_bDragging)
         return 0;
 
-    INT imgXRes = imageModel.GetWidth();
-    INT imgYRes = imageModel.GetHeight();
+    INT imgXRes = imageModel.GetWidth(), imgYRes = imageModel.GetHeight();
     INT xRel = (GET_X_LPARAM(lParam) - m_ptOrig.x) * 1000 / toolsModel.GetZoom();
     INT yRel = (GET_Y_LPARAM(lParam) - m_ptOrig.y) * 1000 / toolsModel.GetZoom();
     switch (m_whereDragging)
