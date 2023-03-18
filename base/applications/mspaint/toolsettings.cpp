@@ -20,7 +20,8 @@ static const INT s_AirRadius[4] = { 5, 8, 3, 12 };
 
 /* FUNCTIONS ********************************************************/
 
-static VOID getSplitRects(RECT *arc, INT cColumns, INT cRows, LPCRECT prc)
+static INT
+getSplitRects(RECT *arc, INT cColumns, INT cRows, LPCRECT prc, LPPOINT ppt)
 {
     INT cx = prc->right - prc->left, cy = prc->bottom - prc->top;
     for (INT i = 0, iRow = 0; iRow < cRows; ++iRow)
@@ -32,14 +33,17 @@ static VOID getSplitRects(RECT *arc, INT cColumns, INT cRows, LPCRECT prc)
             rc.top = prc->top + (iRow * cy / cRows);
             rc.right = prc->left + ((iColumn + 1) * cx / cColumns);
             rc.bottom = prc->top + ((iRow + 1) * cy / cRows);
+            if (ppt && ::PtInRect(&rc, pt))
+                return i;
             ++i;
         }
     }
+    return -1;
 }
 
-static inline VOID getTransRects(RECT arc[2], LPCRECT prc)
+static inline INT getTransRects(RECT arc[2], LPCRECT prc, LPPOINT ppt = NULL)
 {
-    getSplitRects(arc, 1, 2, prc);
+    return getSplitRects(arc, 1, 2, prc, ppt);
 }
 
 VOID CToolSettingsWindow::drawTrans(HDC hdc, LPCRECT prc)
@@ -54,9 +58,9 @@ VOID CToolSettingsWindow::drawTrans(HDC hdc, LPCRECT prc)
                  CX_TRANS_ICON, CY_TRANS_ICON, 0, NULL, DI_NORMAL);
 }
 
-static inline VOID getRubberRects(RECT arc[4], LPCRECT prc)
+static inline INT getRubberRects(RECT arc[4], LPCRECT prc, LPPOINT ppt = NULL)
 {
-    getSplitRects(arc, 1, 4, prc);
+    return getSplitRects(arc, 1, 4, prc, ppt);
 }
 
 VOID CToolSettingsWindow::drawRubber(HDC hdc, LPCRECT prc)
@@ -86,9 +90,9 @@ VOID CToolSettingsWindow::drawRubber(HDC hdc, LPCRECT prc)
     }
 }
 
-static inline VOID getBrushRects(RECT arc[12], LPCRECT prc)
+static inline INT getBrushRects(RECT arc[12], LPCRECT prc, LPPOINT ppt = NULL)
 {
-    getSplitRects(arc, 3, 4, prc);
+    return getSplitRects(arc, 3, 4, prc, ppt);
 }
 
 VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
@@ -111,9 +115,9 @@ VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
     }
 }
 
-static inline VOID getLineRects(RECT arc[5], LPCRECT prc)
+static inline INT getLineRects(RECT arc[5], LPCRECT prc, LPPOINT ppt = NULL)
 {
-    getSplitRects(arc, 1, 5, prc);
+    return getSplitRects(arc, 1, 5, prc, ppt);
 }
 
 VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
@@ -177,9 +181,9 @@ VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
     }
 }
 
-static inline VOID getBoxRects(RECT arc[3], LPCRECT prc)
+static inline INT getBoxRects(RECT arc[3], LPCRECT prc, LPPOINT ppt = NULL)
 {
-    getSplitRects(arc, 1, 3, prc);
+    return getSplitRects(arc, 1, 3, prc, ppt);
 }
 
 VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
@@ -325,85 +329,48 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
     ::InflateRect(&rect1, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
     ::InflateRect(&rect2, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
 
+    INT iItem;
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
         case TOOL_TEXT:
-            getTransRects(arc, &rect1);
-            if (::PtInRect(&arc[0], pt))
-                toolsModel.SetBackgroundTransparent(0);
-            if (::PtInRect(&arc[1], pt))
-                toolsModel.SetBackgroundTransparent(1);
+            iItem = getTransRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetBackgroundTransparent(iItem);
             break;
         case TOOL_RUBBER:
-            getRubberRects(arc, &rect1);
-            for (INT i = 0; i < 4; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetRubberRadius(i + 2);
-                    break;
-                }
-            }
+            iItem = getRubberRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetRubberRadius(iItem + 2);
             break;
         case TOOL_BRUSH:
-            getBrushRects(arc, &rect1);
-            for (INT i = 0; i < 12; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetBrushStyle(i);
-                    break;
-                }
-            }
+            iItem = getBrushRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetBrushStyle(iItem);
             break;
         case TOOL_AIRBRUSH:
-            getAirBrushRects(arc, &rect1);
-            for (INT i = 0; i < 12; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetAirBrushWidth(s_AirRadius[i]);
-                    break;
-                }
-            }
+            iItem = getAirBrushRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetAirBrushWidth(s_AirRadius[iItem]);
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:
-            getLineRects(arc, &rect1);
-            for (INT i = 0; i < 5; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetLineWidth(i + 1);
-                    break;
-                }
-            }
+            iItem = getLineRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetLineWidth(iItem + 1);
             break;
         case TOOL_RECT:
         case TOOL_SHAPE:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-            getBoxRects(arc, &rect1);
-            for (INT i = 0; i < 3; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetShapeStyle(i);
-                    break;
-                }
-            }
+            iItem = getBoxRects(arc, &rect1);
+            if (iItem != -1)
+                toolsModel.SetShapeStyle(iItem);
 
-            getLineRects(arc, &rect2);
-            for (INT i = 0; i < 5; ++i)
-            {
-                if (::PtInRect(&arc[i], pt))
-                {
-                    toolsModel.SetLineWidth(i + 1);
-                    break;
-                }
-            }
+            iItem = getLineRects(arc, &rect2);
+            if (iItem != -1)
+                toolsModel.SetLineWidth(i + 1);
             break;
         case TOOL_FILL:
         case TOOL_COLOR:
