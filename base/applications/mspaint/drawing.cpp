@@ -123,9 +123,11 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
     b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     for(a = 0; a <= b; a++)
-        Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - radius + 1,
-                  (y1 * (b - a) + y2 * a) / b - radius + 1, (x1 * (b - a) + x2 * a) / b + radius + 1,
-                  (y1 * (b - a) + y2 * a) / b + radius + 1);
+        Rectangle(hdc,
+                  (x1 * (b - a) + x2 * a) / b - radius,
+                  (y1 * (b - a) + y2 * a) / b - radius,
+                  (x1 * (b - a) + x2 * a) / b + radius,
+                  (y1 * (b - a) + y2 * a) / b + radius);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
 }
