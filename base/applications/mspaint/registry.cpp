@@ -73,6 +73,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     ShowTextTool = TRUE;
     ShowStatusBar = TRUE;
     ShowPalette = TRUE;
+    ShowToolBox = TRUE;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -139,6 +140,12 @@ void RegistrySettings::Load(INT nCmdShow)
         ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
     }
 
+    CRegKey bar3;
+    if (bar3.Open(paint, _T("General-Bar3"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(bar3, _T("Visible"), ShowToolBox);
+    }
+
     CRegKey bar4;
     if (bar4.Open(paint, _T("General-Bar4"), KEY_READ) == ERROR_SUCCESS)
     {
@@ -200,6 +207,12 @@ void RegistrySettings::Store()
         text.SetDWORDValue(_T("PositionY"),     FontsPositionY);
         text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
         text.SetStringValue(_T("TypeFaceName"), strFontName);
+    }
+
+    CRegKey bar3;
+    if (bar3.Create(paint, _T("General-Bar3")) == ERROR_SUCCESS)
+    {
+        bar3.SetDWORDValue(_T("Visible"), ShowToolBox);
     }
 
     CRegKey bar4;

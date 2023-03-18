@@ -749,7 +749,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case IDM_VIEWTOOLBOX:
-            toolBoxContainer.ShowWindow(::IsWindowVisible(toolBoxContainer) ? SW_HIDE : SW_SHOW);
+            registrySettings.ShowToolBox = !toolBoxContainer.IsWindowVisible();
+            toolBoxContainer.ShowWindow(registrySettings.ShowToolBox ? SW_SHOWNOACTIVATE : SW_HIDE);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWCOLORPALETTE:
