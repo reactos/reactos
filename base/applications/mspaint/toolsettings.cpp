@@ -124,7 +124,7 @@ VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
     for (INT i = 0; i < 5; i++)
     {
         INT penWidth = i + 1;
-        RECT& rcLine = arc[i];
+        RECT rcLine = arc[i];
         ::InflateRect(&rcLine, -2, 0);
         rcLine.top = (rcLine.top + rcLine.bottom - penWidth) / 2;
         rcLine.bottom = rcLine.top + penWidth;
