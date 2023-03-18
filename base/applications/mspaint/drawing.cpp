@@ -184,8 +184,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 3:
             for(a = 0; a <= b; a++)
-                Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - 4, (y1 * (b - a) + y2 * a) / b - 4,
-                          (x1 * (b - a) + x2 * a) / b + 4, (y1 * (b - a) + y2 * a) / b + 4);
+                Rectangle(hdc,
+                          (x1 * (b - a) + x2 * a) / b - 4,
+                          (y1 * (b - a) + y2 * a) / b - 4,
+                          (x1 * (b - a) + x2 * a) / b + 4,
+                          (y1 * (b - a) + y2 * a) / b + 4);
             break;
         case 4:
             for(a = 0; a <= b; a++)
