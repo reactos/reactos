@@ -33,7 +33,7 @@ getSplitRects(RECT *arc, INT cColumns, INT cRows, LPCRECT prc, LPPOINT ppt)
             rc.top = prc->top + (iRow * cy / cRows);
             rc.right = prc->left + ((iColumn + 1) * cx / cColumns);
             rc.bottom = prc->top + ((iRow + 1) * cy / cRows);
-            if (ppt && ::PtInRect(&rc, pt))
+            if (ppt && ::PtInRect(&rc, *ppt))
                 return i;
             ++i;
         }
@@ -144,7 +144,7 @@ VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
     }
 }
 
-static VOID getAirBrushRects(RECT arc[4], LPCRECT prc)
+static INT getAirBrushRects(RECT arc[4], LPCRECT prc, LPPOINT ppt = NULL)
 {
     INT cx = (prc->right - prc->left), cy = (prc->bottom - prc->top);
 
@@ -155,6 +155,16 @@ static VOID getAirBrushRects(RECT arc[4], LPCRECT prc)
 
     arc[2].top = arc[3].top = prc->top + cy / 2;
     arc[2].right = arc[3].left = prc->left + cx * 2 / 8;
+
+    if (ppt)
+    {
+        for (INT i = 0; i < 4; ++i)
+        {
+            if (::PtInRect(&arc[i], *ppt))
+                return i;
+        }
+    }
+    return -1;
 }
 
 VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
@@ -335,28 +345,28 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
         case TOOL_TEXT:
-            iItem = getTransRects(arc, &rect1);
+            iItem = getTransRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetBackgroundTransparent(iItem);
             break;
         case TOOL_RUBBER:
-            iItem = getRubberRects(arc, &rect1);
+            iItem = getRubberRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetRubberRadius(iItem + 2);
             break;
         case TOOL_BRUSH:
-            iItem = getBrushRects(arc, &rect1);
+            iItem = getBrushRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetBrushStyle(iItem);
             break;
         case TOOL_AIRBRUSH:
-            iItem = getAirBrushRects(arc, &rect1);
+            iItem = getAirBrushRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetAirBrushWidth(s_AirRadius[iItem]);
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:
-            iItem = getLineRects(arc, &rect1);
+            iItem = getLineRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetLineWidth(iItem + 1);
             break;
@@ -364,13 +374,13 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_SHAPE:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-            iItem = getBoxRects(arc, &rect1);
+            iItem = getBoxRects(arc, &rect1, &pt);
             if (iItem != -1)
                 toolsModel.SetShapeStyle(iItem);
 
-            iItem = getLineRects(arc, &rect2);
+            iItem = getLineRects(arc, &rect2, &pt);
             if (iItem != -1)
-                toolsModel.SetLineWidth(i + 1);
+                toolsModel.SetLineWidth(iItem + 1);
             break;
         case TOOL_FILL:
         case TOOL_COLOR:
