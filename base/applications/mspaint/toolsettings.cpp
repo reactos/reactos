@@ -226,8 +226,8 @@ VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
                 hOldBrush = ::SelectObject(hdc, ::GetSysColorBrush(COLOR_APPWORKSPACE));
             HGDIOBJ hOldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 1, rgbPen));
             ::Rectangle(hdc, rcItem.left, rcItem.top, rcItem.right, rcItem.bottom);
-            ::SelectObject(hdc, hOldBrush);
             ::DeleteObject(::SelectObject(hdc, hOldPen));
+            ::SelectObject(hdc, hOldBrush);
         }
         else
         {
