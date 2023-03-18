@@ -36,7 +36,6 @@ private:
     VOID drawBox(HDC hdc, LPCRECT prc);
     VOID drawAirBrush(HDC hdc, LPCRECT prc);
 
-
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
