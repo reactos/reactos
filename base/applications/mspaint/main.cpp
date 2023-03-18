@@ -185,7 +185,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     if (registrySettings.ShowToolBox)
         toolBoxContainer.ShowWindow(SW_SHOWNOACTIVATE);
     /* creating the tool settings child window */
-    RECT toolSettingsWindowPos = {5, 208, 5 + 42, 208 + 140};
+    RECT toolSettingsWindowPos = {3, CY_TOOLBAR + 3, CX_TOOLBAR - 3, 208 + 140};
     toolSettingsWindow.Create(toolBoxContainer.m_hWnd, toolSettingsWindowPos, NULL, WS_CHILD | WS_VISIBLE);
 
     /* creating the palette child window */

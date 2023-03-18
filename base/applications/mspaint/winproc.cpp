@@ -426,7 +426,7 @@ LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 {
     MINMAXINFO *mm = (LPMINMAXINFO) lParam;
     mm->ptMinTrackSize.x = 330;
-    mm->ptMinTrackSize.y = 430;
+    mm->ptMinTrackSize.y = 360;
     return 0;
 }
 

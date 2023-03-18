@@ -5,21 +5,231 @@
  * PURPOSE:     Window procedure of the tool settings window
  * PROGRAMMERS: Benedikt Freisen
  *              Stanislav Motylkov
+ *              Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
 
+#define CX_TRANS_ICON 40
+#define CY_TRANS_ICON 30
+#define BOX_MARGIN 2
+
+static const INT s_AirRadius[4] = { 5, 8, 3, 12 };
+
 /* FUNCTIONS ********************************************************/
+
+static VOID getSplitRects(RECT *arc, INT cColumns, INT cRows, LPCRECT prc)
+{
+    INT cx = prc->right - prc->left, cy = prc->bottom - prc->top;
+    for (INT i = 0, iRow = 0; iRow < cRows; ++iRow)
+    {
+        for (INT iColumn = 0; iColumn < cColumns; ++iColumn)
+        {
+            RECT& rc = arc[i];
+            rc.left = prc->left + (iColumn * cx / cColumns);
+            rc.top = prc->top + (iRow * cy / cRows);
+            rc.right = prc->left + ((iColumn + 1) * cx / cColumns);
+            rc.bottom = prc->top + ((iRow + 1) * cy / cRows);
+            ++i;
+        }
+    }
+}
+
+static inline VOID getTransRects(RECT arc[2], LPCRECT prc)
+{
+    getSplitRects(arc, 1, 2, prc);
+}
+
+VOID CToolSettingsWindow::drawTrans(HDC hdc, LPCRECT prc)
+{
+    RECT rc[2];
+    getTransRects(rc, prc);
+
+    ::FillRect(hdc, &rc[toolsModel.IsBackgroundTransparent()], ::GetSysColorBrush(COLOR_HIGHLIGHT));
+    ::DrawIconEx(hdc, rc[0].left, rc[0].top, m_hNontranspIcon,
+                 CX_TRANS_ICON, CY_TRANS_ICON, 0, NULL, DI_NORMAL);
+    ::DrawIconEx(hdc, rc[1].left, rc[1].top, m_hTranspIcon,
+                 CX_TRANS_ICON, CY_TRANS_ICON, 0, NULL, DI_NORMAL);
+}
+
+static inline VOID getRubberRects(RECT arc[4], LPCRECT prc)
+{
+    getSplitRects(arc, 1, 4, prc);
+}
+
+VOID CToolSettingsWindow::drawRubber(HDC hdc, LPCRECT prc)
+{
+    RECT arc[4], rcRubber;
+    getRubberRects(arc, prc);
+    INT xCenter = (prc->left + prc->right) / 2;
+    for (INT i = 0; i < 4; i++)
+    {
+        INT iColor, radius = i + 2;
+        if (toolsModel.GetRubberRadius() == radius)
+        {
+            ::FillRect(hdc, &arc[i], ::GetSysColorBrush(COLOR_HIGHLIGHT));
+            iColor = COLOR_HIGHLIGHTTEXT;
+        }
+        else
+        {
+            iColor = COLOR_WINDOWTEXT;
+        }
+
+        INT yCenter = (arc[i].top + arc[i].bottom) / 2;
+        rcRubber.left = xCenter - radius;
+        rcRubber.top = yCenter - radius;
+        rcRubber.right = rcRubber.left + radius * 2;
+        rcRubber.bottom = rcRubber.top + radius * 2;
+        ::FillRect(hdc, &rcRubber, GetSysColorBrush(iColor));
+    }
+}
+
+static inline VOID getBrushRects(RECT arc[12], LPCRECT prc)
+{
+    getSplitRects(arc, 3, 4, prc);
+}
+
+VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
+{
+    RECT arc[12];
+    getBrushRects(arc, prc);
+
+    ::FillRect(hdc, &arc[toolsModel.GetBrushStyle()], ::GetSysColorBrush(COLOR_HIGHLIGHT));
+
+    for (INT i = 0; i < 12; i++)
+    {
+        RECT rcItem = arc[i];
+        INT x = (rcItem.left + rcItem.right) / 2, y = (rcItem.top + rcItem.bottom) / 2;
+        INT iColor;
+        if (i == toolsModel.GetBrushStyle())
+            iColor = COLOR_HIGHLIGHTTEXT;
+        else
+            iColor = COLOR_WINDOWTEXT;
+        Brush(hdc, x, y, x, y, ::GetSysColor(iColor), i);
+    }
+}
+
+static inline VOID getLineRects(RECT arc[5], LPCRECT prc)
+{
+    getSplitRects(arc, 1, 5, prc);
+}
+
+VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
+{
+    RECT arc[5];
+    getLineRects(arc, prc);
+
+    for (INT i = 0; i < 5; i++)
+    {
+        INT penWidth = i + 1;
+        RECT& rcLine = arc[i];
+        ::InflateRect(&rcLine, -2, 0);
+        rcLine.top = (rcLine.top + rcLine.bottom - penWidth) / 2;
+        rcLine.bottom = rcLine.top + penWidth;
+        if (toolsModel.GetLineWidth() == penWidth)
+        {
+            ::FillRect(hdc, &arc[i], ::GetSysColorBrush(COLOR_HIGHLIGHT));
+            ::FillRect(hdc, &rcLine, ::GetSysColorBrush(COLOR_HIGHLIGHTTEXT));
+        }
+        else
+        {
+            ::FillRect(hdc, &rcLine, ::GetSysColorBrush(COLOR_WINDOWTEXT));
+        }
+    }
+}
+
+static VOID getAirBrushRects(RECT arc[4], LPCRECT prc)
+{
+    INT cx = (prc->right - prc->left), cy = (prc->bottom - prc->top);
+
+    arc[0] = arc[1] = arc[2] = arc[3] = *prc;
+
+    arc[0].right = arc[1].left = prc->left + cx * 3 / 8;
+    arc[0].bottom = arc[1].bottom = prc->top + cy / 2;
+
+    arc[2].top = arc[3].top = prc->top + cy / 2;
+    arc[2].right = arc[3].left = prc->left + cx * 2 / 8;
+}
+
+VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
+{
+    RECT arc[4];
+    getAirBrushRects(arc, prc);
+
+    srand(0);
+    for (INT i = 0; i < 4; ++i)
+    {
+        RECT& rc = arc[i];
+        INT x = (rc.left + rc.right) / 2;
+        INT y = (rc.top + rc.bottom) / 2;
+        BOOL bHigh = (s_AirRadius[i] == toolsModel.GetAirBrushWidth());
+        if (bHigh)
+        {
+            ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
+            Airbrush(hdc, x, y, ::GetSysColor(COLOR_HIGHLIGHTTEXT), s_AirRadius[i]);
+        }
+        else
+        {
+            Airbrush(hdc, x, y, ::GetSysColor(COLOR_WINDOWTEXT), s_AirRadius[i]);
+        }
+    }
+}
+
+static inline VOID getBoxRects(RECT arc[3], LPCRECT prc)
+{
+    getSplitRects(arc, 1, 3, prc);
+}
+
+VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
+{
+    RECT arc[3];
+    getBoxRects(arc, prc);
+
+    for (INT iItem = 0; iItem < 3; ++iItem)
+    {
+        RECT& rcItem = arc[iItem];
+
+        if (toolsModel.GetShapeStyle() == iItem)
+            ::FillRect(hdc, &rcItem, ::GetSysColorBrush(COLOR_HIGHLIGHT));
+
+        ::InflateRect(&rcItem, -5, -5);
+
+        if (iItem <= 1)
+        {
+            INT iPenColor;
+            if (toolsModel.GetShapeStyle() == iItem)
+                iPenColor = COLOR_HIGHLIGHTTEXT;
+            else
+                iPenColor = COLOR_WINDOWTEXT;
+            HGDIOBJ hOldBrush;
+            if (iItem == 0)
+                hOldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+            else
+                hOldBrush = ::SelectObject(hdc, ::GetSysColorBrush(COLOR_APPWORKSPACE));
+            HGDIOBJ hOldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 1, GetSysColor(iPenColor)));
+            ::Rectangle(hdc, rcItem.left, rcItem.top, rcItem.right, rcItem.bottom);
+            ::SelectObject(hdc, hOldBrush);
+            ::DeleteObject(::SelectObject(hdc, hOldPen));
+        }
+        else
+        {
+            if (toolsModel.GetShapeStyle() == iItem)
+                ::FillRect(hdc, &rcItem, ::GetSysColorBrush(COLOR_HIGHLIGHTTEXT));
+            else
+                ::FillRect(hdc, &rcItem, ::GetSysColorBrush(COLOR_WINDOWTEXT));
+        }
+    }
+}
 
 LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
 {
     /* preloading the draw transparent/nontransparent icons for later use */
     m_hNontranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
-                                        IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+                                        IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
     m_hTranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_TRANSPARENT),
-                                     IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
+                                     IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
     RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
@@ -46,147 +256,53 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    PAINTSTRUCT ps;
-    RECT rect1 = { 0, 0, 42, 66 };
-    RECT rect2 = { 0, 70, 42, 136 };
+    RECT rcClient;
+    GetClientRect(&rcClient);
+    RECT rect1 = { 0, 0, rcClient.right, rcClient.bottom / 2 };
+    RECT rect2 = { 0, rcClient.bottom / 2, rcClient.right, rcClient.bottom };
+    ::InflateRect(&rect1, -BOX_MARGIN, -BOX_MARGIN);
+    ::InflateRect(&rect2, -BOX_MARGIN, -BOX_MARGIN);
 
+    PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
-    DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (toolsModel.GetActiveTool() == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
-    DrawEdge(hdc, &rect2, (toolsModel.GetActiveTool() >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
+
+    if (toolsModel.GetActiveTool() == TOOL_ZOOM)
+        ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT);
+    else
+        ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+
+    if (toolsModel.GetActiveTool() >= TOOL_RECT)
+        ::DrawEdge(hdc, &rect2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+
+    ::InflateRect(&rect1, -BOX_MARGIN, -BOX_MARGIN);
+    ::InflateRect(&rect2, -BOX_MARGIN, -BOX_MARGIN);
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
         case TOOL_TEXT:
-        {
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            Rectangle(hdc, 2, toolsModel.IsBackgroundTransparent() * 31 + 2, 41, toolsModel.IsBackgroundTransparent() * 31 + 33);
-            DeleteObject(SelectObject(hdc, oldPen));
-            DrawIconEx(hdc, 1, 2, m_hNontranspIcon, 40, 30, 0, NULL, DI_NORMAL);
-            DrawIconEx(hdc, 1, 33, m_hTranspIcon, 40, 30, 0, NULL, DI_NORMAL);
+            drawTrans(hdc, &rect1);
             break;
-        }
         case TOOL_RUBBER:
-        {
-            int i;
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            for(i = 0; i < 4; i++)
-            {
-                if (toolsModel.GetRubberRadius() == i + 2)
-                {
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-                    Rectangle(hdc, 14, i * 15 + 2, 29, i * 15 + 17);
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHTTEXT));
-                }
-                else
-                    SelectObject(hdc, GetSysColorBrush(COLOR_WINDOWTEXT));
-                Rectangle(hdc, 19 - i, i * 14 + 7, 24 + i, i * 16 + 12);
-            }
-            DeleteObject(SelectObject(hdc, oldPen));
+            drawRubber(hdc, &rect1);
             break;
-        }
         case TOOL_BRUSH:
-        {
-            int i;
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            Rectangle(hdc, toolsModel.GetBrushStyle() % 3 * 13 + 2, toolsModel.GetBrushStyle() / 3 * 15 + 2, toolsModel.GetBrushStyle() % 3 * 13 + 15,
-                      toolsModel.GetBrushStyle() / 3 * 15 + 17);
-            DeleteObject(SelectObject(hdc, oldPen));
-            for(i = 0; i < 12; i++)
-                Brush(hdc, i % 3 * 13 + 7, i / 3 * 15 + 8, i % 3 * 13 + 7, i / 3 * 15 + 8,
-                      GetSysColor((i == toolsModel.GetBrushStyle()) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), i);
+            drawBrush(hdc, &rect1);
             break;
-        }
         case TOOL_AIRBRUSH:
-        {
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-            switch (toolsModel.GetAirBrushWidth())
-            {
-                case 5:
-                    Rectangle(hdc, 2, 2, 21, 31);
-                    break;
-                case 8:
-                    Rectangle(hdc, 20, 2, 41, 31);
-                    break;
-                case 3:
-                    Rectangle(hdc, 2, 30, 16, 61);
-                    break;
-                case 12:
-                    Rectangle(hdc, 15, 30, 41, 61);
-                    break;
-            }
-            Airbrush(hdc, 10, 15,
-                     GetSysColor((toolsModel.GetAirBrushWidth() == 5) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 5);
-            Airbrush(hdc, 30, 15,
-                     GetSysColor((toolsModel.GetAirBrushWidth() == 8) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 8);
-            Airbrush(hdc, 8, 45,
-                     GetSysColor((toolsModel.GetAirBrushWidth() == 3) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 3);
-            Airbrush(hdc, 27, 45,
-                     GetSysColor((toolsModel.GetAirBrushWidth() == 12) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), 12);
-            DeleteObject(SelectObject(hdc, oldPen));
+            drawAirBrush(hdc, &rect1);
             break;
-        }
         case TOOL_LINE:
         case TOOL_BEZIER:
-        {
-            int i;
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            for(i = 0; i < 5; i++)
-            {
-                if (toolsModel.GetLineWidth() == i + 1)
-                {
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-                    Rectangle(hdc, 2, i * 12 + 2, 41, i * 12 + 14);
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHTTEXT));
-                }
-                else
-                    SelectObject(hdc, GetSysColorBrush(COLOR_WINDOWTEXT));
-                Rectangle(hdc, 5, i * 12 + 6, 38, i * 12 + 8 + i);
-            }
-            DeleteObject(SelectObject(hdc, oldPen));
+            drawLine(hdc, &rect1);
             break;
-        }
         case TOOL_RECT:
         case TOOL_SHAPE:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-        {
-            int i;
-            HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-            for(i = 0; i < 3; i++)
-            {
-                if (toolsModel.GetShapeStyle() == i)
-                {
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-                    Rectangle(hdc, 2, i * 20 + 2, 41, i * 20 + 22);
-                }
-            }
-            Rect(hdc, 5, 6, 37, 16,
-                 GetSysColor((toolsModel.GetShapeStyle() == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
-                 GetSysColor(COLOR_APPWORKSPACE), 1, 0);
-            Rect(hdc, 5, 26, 37, 36,
-                 GetSysColor((toolsModel.GetShapeStyle() == 1) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT),
-                 GetSysColor(COLOR_APPWORKSPACE), 1, 1);
-            Rect(hdc, 5, 46, 37, 56, GetSysColor(COLOR_APPWORKSPACE), GetSysColor(COLOR_APPWORKSPACE),
-                 1, 1);
-            for(i = 0; i < 5; i++)
-            {
-                if (toolsModel.GetLineWidth() == i + 1)
-                {
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
-                    Rectangle(hdc, 2, i * 12 + 72, 41, i * 12 + 84);
-                    SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHTTEXT));
-                }
-                else
-                    SelectObject(hdc, GetSysColorBrush(COLOR_WINDOWTEXT));
-                Rectangle(hdc, 5, i * 12 + 76, 38, i * 12 + 78 + i);
-            }
-            DeleteObject(SelectObject(hdc, oldPen));
+            drawBox(hdc, &rect1);
+            drawLine(hdc, &rect2);
             break;
-        }
         case TOOL_FILL:
         case TOOL_COLOR:
         case TOOL_ZOOM:
@@ -199,56 +315,95 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    int x = GET_X_LPARAM(lParam);
-    int y = GET_Y_LPARAM(lParam);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+    RECT rcClient, arc[12];
+    GetClientRect(&rcClient);
+
+    RECT rect1 = { 0, 0, rcClient.right, rcClient.bottom / 2 };
+    RECT rect2 = { 0, rcClient.bottom / 2, rcClient.right, rcClient.bottom };
+    ::InflateRect(&rect1, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
+    ::InflateRect(&rect2, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
+
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
         case TOOL_TEXT:
-            if ((y > 1) && (y < 64))
-                toolsModel.SetBackgroundTransparent((y - 2) / 31);
+            getTransRects(arc, &rect1);
+            if (::PtInRect(&arc[0], pt))
+                toolsModel.SetBackgroundTransparent(0);
+            if (::PtInRect(&arc[1], pt))
+                toolsModel.SetBackgroundTransparent(1);
             break;
         case TOOL_RUBBER:
-            if ((y > 1) && (y < 62))
-                toolsModel.SetRubberRadius((y - 2) / 15 + 2);
+            getRubberRects(arc, &rect1);
+            for (INT i = 0; i < 4; ++i)
+            {
+                if (::PtInRect(&arc[i], pt))
+                {
+                    toolsModel.SetRubberRadius(i + 2);
+                    break;
+                }
+            }
             break;
         case TOOL_BRUSH:
-            if ((x > 1) && (x < 40) && (y > 1) && (y < 62))
-                toolsModel.SetBrushStyle((y - 2) / 15 * 3 + (x - 2) / 13);
+            getBrushRects(arc, &rect1);
+            for (INT i = 0; i < 12; ++i)
+            {
+                if (::PtInRect(&arc[i], pt))
+                {
+                    toolsModel.SetBrushStyle(i);
+                    break;
+                }
+            }
             break;
         case TOOL_AIRBRUSH:
-            if (y < 62)
+            getAirBrushRects(arc, &rect1);
+            for (INT i = 0; i < 12; ++i)
             {
-                if (y < 30)
+                if (::PtInRect(&arc[i], pt))
                 {
-                    if (x < 20)
-                        toolsModel.SetAirBrushWidth(5);
-                    else
-                        toolsModel.SetAirBrushWidth(8);
-                }
-                else
-                {
-                    if (x < 15)
-                        toolsModel.SetAirBrushWidth(3);
-                    else
-                        toolsModel.SetAirBrushWidth(12);
+                    toolsModel.SetAirBrushWidth(s_AirRadius[i]);
+                    break;
                 }
             }
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:
-            if (y <= 62)
-                toolsModel.SetLineWidth((y - 2) / 12 + 1);
+            getLineRects(arc, &rect1);
+            for (INT i = 0; i < 5; ++i)
+            {
+                if (::PtInRect(&arc[i], pt))
+                {
+                    toolsModel.SetLineWidth(i + 1);
+                    break;
+                }
+            }
             break;
         case TOOL_RECT:
         case TOOL_SHAPE:
         case TOOL_ELLIPSE:
         case TOOL_RRECT:
-            if (y <= 60)
-                toolsModel.SetShapeStyle((y - 2) / 20);
-            if ((y >= 70) && (y <= 132))
-                toolsModel.SetLineWidth((y - 72) / 12 + 1);
+            getBoxRects(arc, &rect1);
+            for (INT i = 0; i < 3; ++i)
+            {
+                if (::PtInRect(&arc[i], pt))
+                {
+                    toolsModel.SetShapeStyle(i);
+                    break;
+                }
+            }
+
+            getLineRects(arc, &rect2);
+            for (INT i = 0; i < 5; ++i)
+            {
+                if (::PtInRect(&arc[i], pt))
+                {
+                    toolsModel.SetLineWidth(i + 1);
+                    break;
+                }
+            }
             break;
         case TOOL_FILL:
         case TOOL_COLOR:

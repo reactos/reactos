@@ -24,9 +24,18 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     END_MSG_MAP()
 
+private:
     CWindow trackbarZoom;
     HICON m_hNontranspIcon;
     HICON m_hTranspIcon;
+
+    VOID drawTrans(HDC hdc, LPCRECT prc);
+    VOID drawRubber(HDC hdc, LPCRECT prc);
+    VOID drawBrush(HDC hdc, LPCRECT prc);
+    VOID drawLine(HDC hdc, LPCRECT prc);
+    VOID drawBox(HDC hdc, LPCRECT prc);
+    VOID drawAirBrush(HDC hdc, LPCRECT prc);
+
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
