@@ -880,7 +880,7 @@ BEGIN
     IDS_COMMON_PICTURES "Os Meus Documentos\\As Minhas Imagens"
     IDS_COMMON_VIDEO "Os Meus Documentos\\Os Meus Vídeos"
     IDS_CDBURN_AREA "Definições locais\\Dados de Programas\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE "Os Meus Locais da Rede"
+    IDS_NETWORKPLACE "Os Meus Locais na Rede"
 
     IDS_NEWFOLDER "Nova Pasta"
 
@@ -982,7 +982,7 @@ BEGIN
     IDS_OBJECTS_SELECTED "%d Objectos seleccionados"
 
     IDS_TITLE_MYCOMP "O Meu Computador"
-    IDS_TITLE_MYNET "Os meus locais na rede"
+    IDS_TITLE_MYNET "Os Meus Locais na Rede"
     IDS_TITLE_BIN_1 "Reciclagem (cheia)"
     IDS_TITLE_BIN_0 "Reciclagem (vazia)"
 
