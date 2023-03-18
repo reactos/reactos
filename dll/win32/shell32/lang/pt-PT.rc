@@ -981,7 +981,7 @@ BEGIN
     IDS_OBJECTS "%d Objetos"
     IDS_OBJECTS_SELECTED "%d Objectos seleccionados"
 
-    IDS_TITLE_MYCOMP "O meu computador"
+    IDS_TITLE_MYCOMP "O Meu Computador"
     IDS_TITLE_MYNET "Os meus locais na rede"
     IDS_TITLE_BIN_1 "Reciclagem (cheia)"
     IDS_TITLE_BIN_0 "Reciclagem (vazia)"
