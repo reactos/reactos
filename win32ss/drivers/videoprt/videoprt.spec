@@ -48,7 +48,7 @@
 @ stdcall VideoPortGetVersion(ptr ptr)
 @ stdcall VideoPortGetVgaStatus(ptr ptr)
 @ stdcall VideoPortInitialize(ptr ptr ptr ptr)
-@ stdcall VideoPortInt10(ptr ptr)
+@ stdcall -arch=i386,x86_64 VideoPortInt10(ptr ptr)
 ;;@ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
 ;;@ fastcall -arch=x86_64 VideoPortInterlockedDecrement(ptr)
 @ fastcall VideoPortInterlockedDecrement(ptr)

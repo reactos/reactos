@@ -27,7 +27,7 @@
 
 #define NDEBUG
 #include <debug.h>
-
+#if defined(_M_IX86) || defined(_M_AMD64)
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #define IsLowV86Mem(_Seg, _Off) ((((_Seg) << 4) + (_Off)) < (0xa0000))
@@ -80,7 +80,6 @@ UnprotectLowV86Mem(VOID)
     ASSERT(NT_SUCCESS(Status));
 }
 
-#if defined(_M_IX86) || defined(_M_AMD64)
 NTSTATUS
 NTAPI
 IntInitializeVideoAddressSpace(VOID)
@@ -194,16 +193,6 @@ IntInitializeVideoAddressSpace(VOID)
     /* Return success */
     return STATUS_SUCCESS;
 }
-#else
-NTSTATUS
-NTAPI
-IntInitializeVideoAddressSpace(VOID)
-{
-    UNIMPLEMENTED;
-    NT_ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-#endif
 
 VP_STATUS
 NTAPI
@@ -479,3 +468,13 @@ VideoPortInt10(
 
     return Status;
 }
+#else
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID)
+{
+    UNIMPLEMENTED;
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+#endif
