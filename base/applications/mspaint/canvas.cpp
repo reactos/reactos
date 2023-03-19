@@ -148,7 +148,7 @@ LRESULT CCanvasWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     CANVAS_HITTEST hit = HitTest(pt);
 
-    if (hit == HIT_NONE)
+    if (hit == HIT_NONE || hit == HIT_BORDER)
     {
         if (toolsModel.GetActiveTool() == TOOL_BEZIER ||
             toolsModel.GetActiveTool() == TOOL_SHAPE)
@@ -164,7 +164,7 @@ LRESULT CCanvasWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         return 0;
     }
 
-    if (hit == HIT_CONTENTS)
+    if (hit == HIT_INNER)
     {
         // TODO: In the future, we handle the events of the window-less image area.
         return 0;

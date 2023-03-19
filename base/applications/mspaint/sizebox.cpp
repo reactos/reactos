@@ -64,6 +64,10 @@ BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
             prc->left = prcBase->right - GRIP_SIZE;
             prc->top = prcBase->bottom - GRIP_SIZE;
             break;
+        case HIT_INNER:
+            *prc = *prcBase;
+            ::InflateRect(prc, -GRIP_SIZE, -GRIP_SIZE);
+            return TRUE;
         default:
             ::SetRectEmpty(prc);
             return FALSE;
@@ -77,6 +81,15 @@ BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
 CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 {
     RECT rc;
+
+    if (!::PtInRect(prcBase, pt))
+        return HIT_NONE;
+
+    rc = *prcBase;
+    ::InflateRect(&rc, -GRIP_SIZE, -GRIP_SIZE);
+    if (::PtInRect(&rc, pt))
+        return HIT_INNER;
+
     for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
         CANVAS_HITTEST hit = (CANVAS_HITTEST)i;
@@ -85,10 +98,7 @@ CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
             return hit;
     }
 
-    if (::PtInRect(prcBase, pt))
-        return HIT_CONTENTS;
-
-    return HIT_NONE;
+    return HIT_BORDER;
 }
 
 VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)

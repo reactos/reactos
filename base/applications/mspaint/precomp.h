@@ -41,7 +41,7 @@
 
 enum CANVAS_HITTEST // hit
 {
-    HIT_NONE = 0,
+    HIT_NONE = 0, // Nothing hit or outside
     HIT_UPPER_LEFT,
     HIT_UPPER_CENTER,
     HIT_UPPER_RIGHT,
@@ -50,7 +50,8 @@ enum CANVAS_HITTEST // hit
     HIT_LOWER_LEFT,
     HIT_LOWER_CENTER,
     HIT_LOWER_RIGHT,
-    HIT_CONTENTS,
+    HIT_BORDER,
+    HIT_INNER,
 };
 
 #include "resource.h"
