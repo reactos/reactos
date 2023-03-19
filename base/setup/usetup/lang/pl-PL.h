@@ -1,7 +1,7 @@
 /*
  *      translated by Caemyr (Jan-Feb, Apr, 2008)
  *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
+ *      https://reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
  *      Updated by Wojo664 (July, 2014)
  *      Updated by Saibamen (July, 2015)
@@ -114,7 +114,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {

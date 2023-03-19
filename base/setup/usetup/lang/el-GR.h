@@ -105,7 +105,7 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         5,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {

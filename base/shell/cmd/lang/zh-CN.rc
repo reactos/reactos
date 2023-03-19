@@ -427,7 +427,7 @@ listing of credits."
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
     STRING_VERSION_HELP5 "\nBug 报告发送到 <ros-dev@reactos.org>。\n\
-更新可在 http://www.reactos.org 查看。"
+更新可在 https://reactos.org 查看。"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
     STRING_VERSION_HELP7 "\nReactOS 版本作者：\n"
     STRING_VOL_HELP1 " 驱动器 %c 中的卷是 %s\n"
