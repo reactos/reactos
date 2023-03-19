@@ -128,10 +128,10 @@ list(APPEND FREELDR_BASE_SOURCE
     ntldr/ntldropts.c
     lib/rtl/libsupp.c)
 
-# if(ARCH STREQUAL "i386")
-#     # Must be included together with disk/scsiport.c
-#     list(APPEND FREELDR_BASE_SOURCE
-#         ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
-# endif()
+if(ARCH STREQUAL "i386")
+    # Must be included together with disk/scsiport.c
+    list(APPEND FREELDR_BASE_SOURCE
+        ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
+endif()
 
 include(pcat.cmake)

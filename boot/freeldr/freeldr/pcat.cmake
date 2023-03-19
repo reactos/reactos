@@ -185,12 +185,6 @@ list(APPEND PCATLDR_BASE_SOURCE
     ${freeldr_base_asm}
     ${FREELDR_BASE_SOURCE})
 
-if(ARCH STREQUAL "i386")
-    # Must be included together with disk/scsiport.c
-    list(APPEND FREELDR_BASE_SOURCE
-        ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
-endif()
-
 add_executable(freeldr_pe ${PCATLDR_BASE_SOURCE})
 
 set_target_properties(freeldr_pe
