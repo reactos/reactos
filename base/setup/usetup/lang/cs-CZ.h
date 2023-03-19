@@ -119,7 +119,7 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {

@@ -1,7 +1,7 @@
 /*
 	Compatibility <intrin.h> header for GCC -- GCC equivalents of intrinsic
 	Microsoft Visual C++ functions. Originally developed for the ReactOS
-	(<http://www.reactos.org/>) and TinyKrnl (<http://www.tinykrnl.org/>)
+	(<https://reactos.org/>) and TinyKrnl (<http://www.tinykrnl.org/>)
 	projects.
 
 	Copyright (c) 2006 KJK::Hyperion <hackbunny@reactos.com>
