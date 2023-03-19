@@ -446,7 +446,7 @@ listing of credits."
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
     STRING_VERSION_HELP5 "\nHlásenia o chybách zasielajte na <ros-dev@reactos.org>.\n\
-Aktualizácie sú dostupné na: http://www.reactos.org"
+Aktualizácie sú dostupné na: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS version written by:\n"
     STRING_VERSION_HELP7 "\nReactOS version written by:\n"
     STRING_VOL_HELP1 " Volume in drive %c is %s\n"

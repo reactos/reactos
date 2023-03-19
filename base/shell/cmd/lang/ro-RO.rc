@@ -473,7 +473,7 @@ pentru lista de autori."
  de Free Software Foundation; fie în termenii versiunii 2 a Licenței, sau (la\n\
  alegerea dumneavoastră) ai unei versiuni ulterioare.\n"
     STRING_VERSION_HELP5 "\nRaportați defectele la <ros-dev@reactos.org>.\n\
-Eventuale actualizări pot fi găsite la: http://www.reactos.org"
+Eventuale actualizări pot fi găsite la: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersiunea FreeDOS a fost scrisă de:\n"
     STRING_VERSION_HELP7 "\nVersiunea ReactOS a fost scrisă de:\n"
     STRING_VOL_HELP1 " Volumul unității %c este etichetat ca %s\n"
