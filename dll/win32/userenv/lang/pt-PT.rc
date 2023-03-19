@@ -7,7 +7,7 @@ BEGIN
     IDS_APPDATA "Dados de Programas"
     IDS_DESKTOP "Ambiente de trabalho"
     IDS_FAVORITES "Favoritos"
-    IDS_MYDOCUMENTS "Meus Documentos"
+    IDS_MYDOCUMENTS "Os Meus Documentos"
     IDS_NETHOOD "Ambiente de rede"
     IDS_PRINTHOOD "Ambiente de impressão"
     IDS_RECENT "Documentos recentes"
