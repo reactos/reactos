@@ -15,11 +15,9 @@ else()
     message(FATAL_ERROR "Unknown ARCH '" ${ARCH} "', cannot generate a valid UEFI boot filename.")
 endif()
 
-# FIXME: this command creates a dummy EFI partition, add EFI/BOOT/boot${EFI_PLATFORM_ID}.efi file
-# once ReactOS supports UEFI
 add_custom_target(efisys
-    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin -mkdir EFI -mkdir EFI/BOOT
-    DEPENDS native-fatten fat
+    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
+    DEPENDS native-fatten fat uefildr
     VERBATIM)
 
 
@@ -162,4 +160,12 @@ add_custom_target(hybridcd
     DEPENDS bootcd livecd
     VERBATIM)
 
+# For things like flashing USB drives, we also add the efi file into efi/boot.
 add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
+
+add_cd_file(
+    TARGET uefildr
+    DESTINATION efi/boot
+    NO_CAB
+    NAME_ON_CD boot${EFI_PLATFORM_ID}.efi
+    FOR livecd hybridcd)

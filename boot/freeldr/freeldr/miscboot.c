@@ -339,8 +339,10 @@ LoadAndBootDevice(
     UiUnInitialize("Booting...");
     IniCleanup();
 
+#ifndef UEFIBOOT
     /* Boot the loaded sector code */
     ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
+#endif
     /* Must not return! */
     return ESUCCESS;
 }
