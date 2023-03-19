@@ -450,7 +450,7 @@ yazısı dizelgesi için ""ver /c"" yazınız."
  Umûmî Kamu Ruhsatı'nın 2. sürümü ya da (seçiminizde) sonraki bir sürümü\n\
  şartları altında onu yeniden dağıtabilir veyâ değiştirebilirsiniz.\n"
     STRING_VERSION_HELP5 "\nYanlışlık bildirimlerini ros-dev@reactos.org adresine gönderiniz.\n\
-Şimdikileştirmeler http://www.reactos.org adresinde vardır."
+Şimdikileştirmeler https://reactos.org adresinde vardır."
     STRING_VERSION_HELP6 "\nFreeDOS sürümü şu kişilerle yazılmıştır:\n"
     STRING_VERSION_HELP7 "\nReactOS sürümü şu kişilerle yazılmıştır:\n"
     STRING_VOL_HELP1 " %c sürücüsünde birim %s\n"
