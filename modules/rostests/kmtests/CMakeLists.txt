@@ -88,6 +88,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_mm/ZwCreateSection.c
     ntos_mm/ZwMapViewOfSection.c
     ntos_ob/ObHandle.c
+    ntos_ob/ObQuery.c
     ntos_ob/ObReference.c
     ntos_ob/ObSecurity.c
     ntos_ob/ObSymbolicLink.c
