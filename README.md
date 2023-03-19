@@ -47,7 +47,7 @@ The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/r
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
 
 To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._ 
-Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: http://www.reactos.org/wiki/Build_Environment.
+Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: https://reactos.org/wiki/Build_Environment.
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC.
 
@@ -60,7 +60,7 @@ To build ReactOS you must run the `configure` script in the directory you want t
 To build a bootable CD image run `ninja bootcd` from the
 build directory. This will create a CD image with a filename `bootcd.iso`.
 
-See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
+See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) for more details.
 
 ## Installing
 

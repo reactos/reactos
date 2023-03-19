@@ -118,7 +118,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {
