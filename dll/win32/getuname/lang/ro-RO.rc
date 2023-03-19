@@ -7,7 +7,7 @@
  *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_neutră
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     0 "Nul"
