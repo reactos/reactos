@@ -70,14 +70,6 @@ extern CPaletteWindow paletteWindow;
 extern CCanvasWindow canvasWindow;
 extern CSelectionWindow selectionWindow;
 extern CImgAreaWindow imageArea;
-extern CSizeboxWindow sizeboxLeftTop;
-extern CSizeboxWindow sizeboxCenterTop;
-extern CSizeboxWindow sizeboxRightTop;
-extern CSizeboxWindow sizeboxLeftCenter;
-extern CSizeboxWindow sizeboxRightCenter;
-extern CSizeboxWindow sizeboxLeftBottom;
-extern CSizeboxWindow sizeboxCenterBottom;
-extern CSizeboxWindow sizeboxRightBottom;
 extern CTextEditWindow textEditWindow;
 
 /* VARIABLES declared in dialogs.cpp ********************************/

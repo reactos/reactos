@@ -33,24 +33,6 @@ void CSelectionWindow::ForceRefreshSelectionContents()
 
 int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight)
 {
-    POINT pt = { iXPos, iYPos };
-    HWND hwndChild = ChildWindowFromPointEx(pt, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
-    if (hwndChild == sizeboxLeftTop)
-        return ACTION_RESIZE_TOP_LEFT;
-    if (hwndChild == sizeboxCenterTop)
-        return ACTION_RESIZE_TOP;
-    if (hwndChild == sizeboxRightTop)
-        return ACTION_RESIZE_TOP_RIGHT;
-    if (hwndChild == sizeboxRightCenter)
-        return ACTION_RESIZE_RIGHT;
-    if (hwndChild == sizeboxLeftCenter)
-        return ACTION_RESIZE_LEFT;
-    if (hwndChild == sizeboxCenterBottom)
-        return ACTION_RESIZE_BOTTOM;
-    if (hwndChild == sizeboxRightBottom)
-        return ACTION_RESIZE_BOTTOM_RIGHT;
-    if (hwndChild == sizeboxLeftBottom)
-        return ACTION_RESIZE_BOTTOM_LEFT;
     return 0;
 }
 
@@ -60,10 +42,9 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     HDC hDC = BeginPaint(&ps);
     if (!m_bMoving)
     {
-        SelectionFrame(hDC, 1, 1,
-                       Zoomed(selectionModel.GetDestRectWidth()) + (GRIP_SIZE * 2) - 1,
-                       Zoomed(selectionModel.GetDestRectHeight()) + (GRIP_SIZE * 2) - 1,
-                       GetSysColor(COLOR_HIGHLIGHT));
+        RECT rcClient;
+        GetClientRect(&rcClient);
+        drawSizeBoxes(hDC, &rcClient, TRUE, &ps.rcPaint);
     }
     EndPaint(&ps);
     return 0;
@@ -93,7 +74,16 @@ LRESULT CSelectionWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CSelectionWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+    RECT rcClient;
+    GetClientRect(&rcClient);
+
+    POINT pt;
+    ::GetCursorPos(&pt);
+    ScreenToClient(&pt);
+
+    if (!setCursorOnSizeBox(getSizeBoxHitTest(pt, &rcClient)))
+        ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
+
     return 0;
 }
 

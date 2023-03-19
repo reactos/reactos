@@ -57,14 +57,6 @@ CPaletteWindow paletteWindow;
 CCanvasWindow canvasWindow;
 CSelectionWindow selectionWindow;
 CImgAreaWindow imageArea;
-CSizeboxWindow sizeboxLeftTop;
-CSizeboxWindow sizeboxCenterTop;
-CSizeboxWindow sizeboxRightTop;
-CSizeboxWindow sizeboxLeftCenter;
-CSizeboxWindow sizeboxRightCenter;
-CSizeboxWindow sizeboxLeftBottom;
-CSizeboxWindow sizeboxCenterBottom;
-CSizeboxWindow sizeboxRightBottom;
 CTextEditWindow textEditWindow;
 
 // get file name extension from filter string
@@ -289,16 +281,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         }
     }
 
-    /* creating the size boxes */
-    RECT sizeboxPos = {0, 0, GRIP_SIZE, GRIP_SIZE};
-    sizeboxLeftTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxCenterTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightTop.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxLeftCenter.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightCenter.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxLeftBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxCenterBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
-    sizeboxRightBottom.Create(canvasWindow, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     /* placing the size boxes around the image */
     imageArea.SendMessage(WM_SIZE, 0, 0);
 

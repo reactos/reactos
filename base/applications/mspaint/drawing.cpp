@@ -246,34 +246,6 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 }
 
 void
-SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF system_selection_color)
-{
-    HBRUSH oldBrush;
-    LOGBRUSH logbrush;
-    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, system_selection_color));
-
-    logbrush.lbStyle = BS_HOLLOW;
-    logbrush.lbColor = 0;
-    logbrush.lbHatch = 0;
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateBrushIndirect(&logbrush));
-    Rectangle(hdc, x1, y1, x2, y2); /* SEL BOX FRAME */
-    DeleteObject(SelectObject(hdc, oldBrush));
-    DeleteObject(SelectObject(hdc, oldPen));
-    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, system_selection_color));
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(system_selection_color));
-    Rectangle(hdc, x1 - 1, y1 - 1, x1 + 2, y1 + 2);
-    Rectangle(hdc, x2 - 2, y1 - 1, x2 + 2, y1 + 2);
-    Rectangle(hdc, x1 - 1, y2 - 2, x1 + 2, y2 + 1);
-    Rectangle(hdc, x2 - 2, y2 - 2, x2 + 2, y2 + 1);
-    Rectangle(hdc, (x1 + x2) / 2 - 1, y1 - 1, (x1 + x2) / 2 + 2, y1 + 2);
-    Rectangle(hdc, (x1 + x2) / 2 - 1, y2 - 2, (x1 + x2) / 2 + 2, y2 + 1);
-    Rectangle(hdc, x1 - 1, (y1 + y2) / 2 - 1, x1 + 2, (y1 + y2) / 2 + 2);
-    Rectangle(hdc, x2 - 2, (y1 + y2) / 2 - 1, x2 + 1, (y1 + y2) / 2 + 2);
-    DeleteObject(SelectObject(hdc, oldBrush));
-    DeleteObject(SelectObject(hdc, oldPen));
-}
-
-void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
     INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.

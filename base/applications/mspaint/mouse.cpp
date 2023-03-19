@@ -19,9 +19,13 @@ POINT ToolBase::pointStack[256] = { { 0 } };
 void
 placeSelWin()
 {
-    selectionWindow.MoveWindow(Zoomed(selectionModel.GetDestRectLeft()), Zoomed(selectionModel.GetDestRectTop()),
-        Zoomed(selectionModel.GetDestRectWidth()) + 2 * GRIP_SIZE,
-        Zoomed(selectionModel.GetDestRectHeight()) + 2 * GRIP_SIZE, TRUE);
+    CRect rc;
+    rc.left = Zoomed(selectionModel.GetDestRectLeft());
+    rc.top = Zoomed(selectionModel.GetDestRectTop());
+    rc.right = rc.left + Zoomed(selectionModel.GetDestRectWidth());
+    rc.bottom = rc.top + Zoomed(selectionModel.GetDestRectHeight());
+    ::InflateRect(&rc, GRIP_SIZE, GRIP_SIZE);
+    selectionWindow.MoveWindow(rc.left, rc.top, rc.Width(), rc.Height(), TRUE);
     selectionWindow.BringWindowToTop();
     imageArea.InvalidateRect(NULL, FALSE);
 }
@@ -712,11 +716,6 @@ struct ShapeTool : ToolBase
             imageModel.ResetToPrevious();
             --pointSP;
             draw(m_bLeftButton, -1, -1, TRUE);
-            pointSP = 0;
-        }
-        else
-        {
-            imageModel.Undo(TRUE);
         }
         ToolBase::OnFinishDraw();
     }

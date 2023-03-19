@@ -437,17 +437,10 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         HWND hwndCapture = GetCapture();
         if (hwndCapture)
         {
-            if (selectionWindow.m_hWnd == hwndCapture ||
+            if (canvasWindow.m_hWnd == hwndCapture ||
+                selectionWindow.m_hWnd == hwndCapture ||
                 imageArea.m_hWnd == hwndCapture ||
-                fullscreenWindow.m_hWnd == hwndCapture ||
-                sizeboxLeftTop.m_hWnd == hwndCapture ||
-                sizeboxCenterTop.m_hWnd == hwndCapture ||
-                sizeboxRightTop.m_hWnd == hwndCapture ||
-                sizeboxLeftCenter.m_hWnd == hwndCapture ||
-                sizeboxRightCenter.m_hWnd == hwndCapture ||
-                sizeboxLeftBottom.m_hWnd == hwndCapture ||
-                sizeboxCenterBottom.m_hWnd == hwndCapture ||
-                sizeboxRightBottom.m_hWnd == hwndCapture)
+                fullscreenWindow.m_hWnd == hwndCapture)
             {
                 SendMessage(hwndCapture, nMsg, wParam, lParam);
             }

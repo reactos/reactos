@@ -19,6 +19,7 @@
 #include <atlpath.h>
 #include <atlstr.h>
 #include <atlwin.h>
+#include <atltypes.h>
 #include <windowsx.h>
 #include <commdlg.h>
 #include <commctrl.h>
@@ -38,8 +39,22 @@
 #define WM_IMAGEMODELIMAGECHANGED        (WM_APP + 6)
 #define WM_SELECTIONMODELREFRESHNEEDED   (WM_APP + 7)
 
+enum CANVAS_HITTEST // hit
+{
+    HIT_NONE = 0, // Nothing hit or outside
+    HIT_UPPER_LEFT,
+    HIT_UPPER_CENTER,
+    HIT_UPPER_RIGHT,
+    HIT_MIDDLE_LEFT,
+    HIT_MIDDLE_RIGHT,
+    HIT_LOWER_LEFT,
+    HIT_LOWER_CENTER,
+    HIT_LOWER_RIGHT,
+    HIT_BORDER,
+    HIT_INNER,
+};
+
 #include "resource.h"
-#include "canvas.h"
 #include "drawing.h"
 #include "dib.h"
 #include "fullscreen.h"
@@ -53,6 +68,7 @@
 #include "selection.h"
 #include "selectionmodel.h"
 #include "sizebox.h"
+#include "canvas.h"
 #include "textedit.h"
 #include "toolbox.h"
 #include "toolsettings.h"
