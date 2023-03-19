@@ -438,7 +438,7 @@ liste av anerkjennelser."
   Lisens som utgivelses av Free Software Foundation; enten version 2 av\n\
   Lisens, eller (ved din mulighet) andre nyere version.\n"
     STRING_VERSION_HELP5 "\nSend bug rapporter till <ros-dev@reactos.org>.\n\
-oppdateringer är tilgjengelig her: http://www.reactos.org"
+oppdateringer är tilgjengelig her: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS version skruvet av:\n"
     STRING_VERSION_HELP7 "\nReactOS version skrivet av:\n"
     STRING_VOL_HELP1 " Volymen i enhet %c är %s\n"

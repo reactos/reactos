@@ -444,7 +444,7 @@ por PA ASNJË GARANCI; madje edhe pa garancinë e shprehur të\n\
  Free Software Foundation; ose version 2 të Liçenses, ose\n\
  (në opsionin tuaj) çfarëdo versioni të mëvonshëm.\n"
     STRING_VERSION_HELP5 "\nDërgo raportime të metash në<ros-dev@reactos.org>.\n\
-Updates janë në dispozicion në: http://www.reactos.org"
+Updates janë në dispozicion në: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersion FreeDOS shkruar nga:\n"
     STRING_VERSION_HELP7 "\nVersion FreeDOS shkruar nga:\n"
     STRING_VOL_HELP1 " Volumi është drive %c është %s\n"

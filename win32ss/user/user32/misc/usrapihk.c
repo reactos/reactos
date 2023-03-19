@@ -8,7 +8,7 @@
  *
  *
  * Information:
- *   http://www.reactos.org/wiki/RegisterUserApiHook
+ *   https://reactos.org/wiki/RegisterUserApiHook
  *
  */
 

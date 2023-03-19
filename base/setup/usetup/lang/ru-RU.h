@@ -161,7 +161,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.ru",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },

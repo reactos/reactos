@@ -2,7 +2,7 @@
  *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
  *    Updated by niski - Maciej Bialas (Mar, 2010)
  *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
+ *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
@@ -445,7 +445,7 @@ parametrem: `ver /c'."
 o ile nie naruszasz warunków GNU General Public License, w formie opublikowanej\n\
 przez Free Software Foundation; wersja 2 albo dowolna późniejsza.\n"
     STRING_VERSION_HELP5 "\nRaporty o błędach prosimy przesyłać pod adres: <ros-dev@reactos.org>.\n\
-Uaktualnienia dostępne na stronie: http://www.reactos.org"
+Uaktualnienia dostępne na stronie: https://reactos.org"
     STRING_VERSION_HELP6 "\nwersja FreeDOS, napisana przez:\n"
     STRING_VERSION_HELP7 "\nwersja ReactOS, napisana przez:\n"
     STRING_VOL_HELP1 " Wolumin w napędzie %c ma etykietę: %s"
