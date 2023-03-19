@@ -3,7 +3,7 @@
 // To revert conversion, please execute "code7bit -r <file>".
 /*
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
- *      http://www.reactos.org/uk/
+ *      https://reactos.org
  */
 
 #pragma once
@@ -147,7 +147,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org/uk/",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {

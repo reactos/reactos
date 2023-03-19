@@ -149,7 +149,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         6,
         27,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {

@@ -153,7 +153,7 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         6,
         25,
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {
