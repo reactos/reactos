@@ -112,7 +112,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         6, 
         24, 
-        "http://www.reactos.org",
+        "https://reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {
