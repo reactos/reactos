@@ -49,24 +49,6 @@ HalReportResourceUsage(VOID)
 }
 
 KIRQL
-NTAPI
-KeRaiseIrqlToDpcLevel(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
-}
-
-KIRQL
-NTAPI
-KeRaiseIrqlToSynchLevel(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
-}
-
-KIRQL
 FASTCALL
 KfRaiseIrql(IN KIRQL NewIrql)
 {

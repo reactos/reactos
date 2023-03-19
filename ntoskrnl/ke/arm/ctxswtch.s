@@ -9,7 +9,7 @@
 
 #include <ksarm.h>
 
-    IMPORT KeLowerIrql
+    IMPORT KfLowerIrql /* KeLowerIrql */
 
     TEXTAREA
 

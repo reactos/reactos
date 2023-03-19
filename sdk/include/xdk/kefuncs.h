@@ -170,7 +170,7 @@ KeQuerySystemTime(
   _Out_ PLARGE_INTEGER CurrentTime);
 #endif /* !_M_AMD64 */
 
-#if !defined(_X86_) && !defined(_M_ARM)
+#if !defined(_X86_)
 _Requires_lock_not_held_(*SpinLock)
 _Acquires_lock_(*SpinLock)
 _IRQL_requires_max_(DISPATCH_LEVEL)

@@ -12,7 +12,6 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/display.c
     generic/dma.c
     generic/drive.c
-    generic/fmutex.c
     generic/halinit.c
     generic/misc.c
     generic/portio.c
@@ -20,7 +19,6 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/profil.c
     generic/reboot.c
     generic/rtc.c
-    generic/spinlock.c
     generic/sysinfo.c
     generic/timer.c)
 

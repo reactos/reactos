@@ -1902,14 +1902,3 @@
 @ cdecl wcstol(wstr ptr long)
 @ cdecl wcstombs(ptr ptr long)
 @ cdecl wcstoul(wstr ptr long)
-
-# FIXME: check if this is correct
-@ stdcall -arch=arm __dtoi64()
-@ stdcall -arch=arm __dtou64()
-@ stdcall -arch=arm __i64tod()
-@ stdcall -arch=arm __u64tod()
-@ stdcall -arch=arm __rt_sdiv()
-@ stdcall -arch=arm __rt_sdiv64()
-@ stdcall -arch=arm __rt_udiv()
-@ stdcall -arch=arm __rt_udiv64()
-@ stdcall -arch=arm __rt_srsh()
