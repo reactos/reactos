@@ -78,6 +78,7 @@ UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("!!!\n");
         lcid = MAKELCID(LANGID_NEUTRAL, SORT_DEFAULT);
     }
     _SEH2_END;
@@ -2019,7 +2020,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            NOTHING;
+            ERR("!!!\n");
         }
         _SEH2_END;
     }
@@ -2050,7 +2051,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        NOTHING;
+        ERR("!!!\n");
     }
     _SEH2_END;
 
@@ -2095,7 +2096,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        NOTHING;
+        ERR("!!!\n");
     }
     _SEH2_END;
 
@@ -2204,6 +2205,7 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            ERR("!!!\n");
             pwndIMC = NULL;
         }
         _SEH2_END;
