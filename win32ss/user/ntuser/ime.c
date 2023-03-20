@@ -1157,7 +1157,8 @@ NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        goto Quit;
+        ERR("!!!\n");
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
