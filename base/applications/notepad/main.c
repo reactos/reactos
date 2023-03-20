@@ -14,10 +14,6 @@
 #include <shlobj.h>
 #include <strsafe.h>
 
-#ifdef _DEBUG
-#include <crtdbg.h>
-#endif
-
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
 
