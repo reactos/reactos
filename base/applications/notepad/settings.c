@@ -159,8 +159,8 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryDword(hKey, _T("iWindowPosDX"), &cx);
         QueryDword(hKey, _T("iWindowPosDY"), &cy);
 
-        QueryString(hKey, _T("searchString"), Globals.szFindText, ARRAY_SIZE(Globals.szFindText));
-        QueryString(hKey, _T("replaceString"), Globals.szReplaceText, ARRAY_SIZE(Globals.szReplaceText));
+        QueryString(hKey, _T("searchString"), Globals.szFindText, _countof(Globals.szFindText));
+        QueryString(hKey, _T("replaceString"), Globals.szReplaceText, _countof(Globals.szReplaceText));
     }
 
     Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
@@ -168,22 +168,22 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     Globals.main_rect.bottom = Globals.main_rect.top + cy;
 
     if (!hKey || !QueryString(hKey, _T("lfFaceName"),
-                              Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName)))
+                              Globals.lfFont.lfFaceName, _countof(Globals.lfFont.lfFaceName)))
     {
         LoadString(Globals.hInstance, STRING_DEFAULTFONT, Globals.lfFont.lfFaceName,
-                   ARRAY_SIZE(Globals.lfFont.lfFaceName));
+                   _countof(Globals.lfFont.lfFaceName));
     }
 
-    if (!hKey || !QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader)))
+    if (!hKey || !QueryString(hKey, _T("szHeader"), Globals.szHeader, _countof(Globals.szHeader)))
     {
         LoadString(Globals.hInstance, STRING_PAGESETUP_HEADERVALUE, Globals.szHeader,
-                   ARRAY_SIZE(Globals.szHeader));
+                   _countof(Globals.szHeader));
     }
 
-    if (!hKey || !QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter)))
+    if (!hKey || !QueryString(hKey, _T("szTrailer"), Globals.szFooter, _countof(Globals.szFooter)))
     {
         LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
-                   ARRAY_SIZE(Globals.szFooter));
+                   _countof(Globals.szFooter));
     }
 
     if (hKey)

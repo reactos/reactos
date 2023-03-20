@@ -33,9 +33,9 @@ VOID NOTEPAD_EnableSearchMenu()
  */
 VOID SetFileName(LPCTSTR szFileName)
 {
-    StringCchCopy(Globals.szFileName, ARRAY_SIZE(Globals.szFileName), szFileName);
+    StringCchCopy(Globals.szFileName, _countof(Globals.szFileName), szFileName);
     Globals.szFileTitle[0] = 0;
-    GetFileTitle(szFileName, Globals.szFileTitle, ARRAY_SIZE(Globals.szFileTitle));
+    GetFileTitle(szFileName, Globals.szFileTitle, _countof(Globals.szFileTitle));
 
     if (szFileName && szFileName[0])
         SHAddToRecentDocs(SHARD_PATHW, szFileName);
@@ -201,9 +201,9 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
         /* Can't find target */
         if (bShowAlert)
         {
-            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, ARRAY_SIZE(szResource));
-            _sntprintf(szText, ARRAY_SIZE(szText), szResource, pFindReplace->lpstrFindWhat);
-            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, ARRAY_SIZE(szResource));
+            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, _countof(szResource));
+            _sntprintf(szText, _countof(szText), szResource, pFindReplace->lpstrFindWhat);
+            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, _countof(szResource));
             MessageBox(Globals.hFindReplaceDlg, szText, szResource, MB_OK);
         }
         bSuccess = FALSE;
@@ -253,11 +253,11 @@ static VOID NOTEPAD_InitData(HINSTANCE hInstance)
     p = Globals.szFilter;
     p += LoadString(Globals.hInstance, STRING_TEXT_FILES_TXT, p, MAX_STRING_LEN) + 1;
     _tcscpy(p, txt_files);
-    p += ARRAY_SIZE(txt_files);
+    p += _countof(txt_files);
 
     p += LoadString(Globals.hInstance, STRING_ALL_FILES, p, MAX_STRING_LEN) + 1;
     _tcscpy(p, all_files);
-    p += ARRAY_SIZE(all_files);
+    p += _countof(all_files);
     *p = '\0';
     Globals.find.lpstrFindWhat = NULL;
 
@@ -416,7 +416,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         TCHAR szFileName[MAX_PATH];
         HDROP hDrop = (HDROP) wParam;
 
-        DragQueryFile(hDrop, 0, szFileName, ARRAY_SIZE(szFileName));
+        DragQueryFile(hDrop, 0, szFileName, _countof(szFileName));
         DragFinish(hDrop);
         DoOpenFile(szFileName);
         break;
@@ -515,7 +515,7 @@ static BOOL HandleCommandLine(LPTSTR cmdline)
             }
         }
 
-        GetFullPathName(file_name, ARRAY_SIZE(szPath), szPath, NULL);
+        GetFullPathName(file_name, _countof(szPath), szPath, NULL);
 
         if (file_exists)
         {

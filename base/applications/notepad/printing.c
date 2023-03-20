@@ -17,7 +17,7 @@ static VOID AlertPrintError(VOID)
 {
     TCHAR szUntitled[MAX_STRING_LEN];
 
-    LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, ARRAY_SIZE(szUntitled));
+    LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, _countof(szUntitled));
 
     DIALOG_StringMsgBox(Globals.hMainWnd, STRING_PRINTERROR,
                         Globals.szFileName[0] ? Globals.szFileName : szUntitled,
@@ -143,7 +143,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
     {
         if (*pchFormat != _T('&'))
         {
-            StringCchCatN(szText, ARRAY_SIZE(szText), pchFormat, 1);
+            StringCchCatN(szText, _countof(szText), pchFormat, 1);
             continue;
         }
 
@@ -154,7 +154,7 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
         switch (_totupper(*pchFormat)) /* Make it uppercase */
         {
             case _T('&'): /* Found double ampersand */
-                StringCchCat(szText, ARRAY_SIZE(szText), TEXT("&"));
+                StringCchCat(szText, _countof(szText), TEXT("&"));
                 break;
 
             case _T('L'): /* Left */
@@ -177,30 +177,30 @@ DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const 
 
             case _T('D'): /* Date */
                 GetDateFormat(LOCALE_USER_DEFAULT, 0, pstNow, NULL,
-                              szField, (INT)ARRAY_SIZE(szField));
-                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                              szField, (INT)_countof(szField));
+                StringCchCat(szText, _countof(szText), szField);
                 break;
 
             case _T('T'): /* Time */
                 GetTimeFormat(LOCALE_USER_DEFAULT, 0, pstNow, NULL,
-                              szField, (INT)ARRAY_SIZE(szField));
-                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                              szField, (INT)_countof(szField));
+                StringCchCat(szText, _countof(szText), szField);
                 break;
 
             case _T('F'): /* Filename */
-                StringCchCat(szText, ARRAY_SIZE(szText), Globals.szFileTitle);
+                StringCchCat(szText, _countof(szText), Globals.szFileTitle);
                 break;
 
             case _T('P'): /* Page number */
-                StringCchPrintf(szField, ARRAY_SIZE(szField), TEXT("%u"), nPageNo);
-                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                StringCchPrintf(szField, _countof(szField), TEXT("%u"), nPageNo);
+                StringCchCat(szText, _countof(szText), szField);
                 break;
 
             default: /* Otherwise */
                 szField[0] = _T('&');
                 szField[1] = *pchFormat;
                 szField[2] = 0;
-                StringCchCat(szText, ARRAY_SIZE(szText), szField);
+                StringCchCat(szText, _countof(szText), szField);
                 break;
         }
     }
@@ -503,7 +503,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             s_pData = (PPRINT_DATA)lParam;
             s_pData->hwndDlg = hwnd;
             SetDlgItemText(hwnd, IDC_PRINTING_FILENAME, Globals.szFileTitle);
-            GetDlgItemText(hwnd, IDC_PRINTING_PAGE, s_szPage, ARRAY_SIZE(s_szPage));
+            GetDlgItemText(hwnd, IDC_PRINTING_PAGE, s_szPage, _countof(s_szPage));
             SetDlgItemText(hwnd, IDC_PRINTING_PAGE, NULL);
 
             s_hThread = CreateThread(NULL, 0, PrintThreadFunc, s_pData, 0, NULL);
@@ -519,17 +519,17 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case STRING_NOWPRINTING:
                 case STRING_PRINTCANCELING:
-                    StringCchPrintf(szText, ARRAY_SIZE(szText), s_szPage, s_pData->currentPage);
+                    StringCchPrintf(szText, _countof(szText), s_szPage, s_pData->currentPage);
                     SetDlgItemText(hwnd, IDC_PRINTING_PAGE, szText);
 
-                    LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
+                    LoadString(Globals.hInstance, s_pData->status, szText, _countof(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
                     break;
 
                 case STRING_PRINTCOMPLETE:
                 case STRING_PRINTCANCELED:
                 case STRING_PRINTFAILED:
-                    LoadString(Globals.hInstance, s_pData->status, szText, ARRAY_SIZE(szText));
+                    LoadString(Globals.hInstance, s_pData->status, szText, _countof(szText));
                     SetDlgItemText(hwnd, IDC_PRINTING_STATUS, szText);
 
                     if (s_pData->status == STRING_PRINTCOMPLETE)
@@ -636,8 +636,8 @@ static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT uMsg, WPARAM wPar
                 {
                 case IDOK:
                     /* save user input and close dialog */
-                    GetDlgItemText(hDlg, 0x141, Globals.szHeader, ARRAY_SIZE(Globals.szHeader));
-                    GetDlgItemText(hDlg, 0x143, Globals.szFooter, ARRAY_SIZE(Globals.szFooter));
+                    GetDlgItemText(hDlg, 0x141, Globals.szHeader, _countof(Globals.szHeader));
+                    GetDlgItemText(hDlg, 0x143, Globals.szFooter, _countof(Globals.szFooter));
                     return FALSE;
 
                 case IDCANCEL:
