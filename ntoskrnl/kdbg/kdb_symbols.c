@@ -344,6 +344,10 @@ BOOLEAN
 KdbSymInit(
     _In_ ULONG BootPhase)
 {
+#if 1 // FIXME: This is a workaround HACK!!
+    static BOOLEAN OrigLoadSymbols = FALSE;
+#endif
+
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
     if (BootPhase == 0)
@@ -398,6 +402,13 @@ KdbSymInit(
             while (*CommandLine && !isspace(*CommandLine))
                 ++CommandLine;
         }
+
+#if 1 // FIXME: This is a workaround HACK!!
+// Save the actual value of LoadSymbols but disable it for BootPhase 0.
+        OrigLoadSymbols = LoadSymbols;
+        LoadSymbols = FALSE;
+        return OrigLoadSymbols;
+#endif
     }
     else if (BootPhase == 1)
     {
@@ -405,6 +416,11 @@ KdbSymInit(
         NTSTATUS Status;
         KIRQL OldIrql;
         PLIST_ENTRY ListEntry;
+
+#if 1 // FIXME: This is a workaround HACK!!
+// Now, restore the actual value of LoadSymbols.
+        LoadSymbols = OrigLoadSymbols;
+#endif
 
         /* Do not continue loading symbols if we have less than 96MB of RAM */
         if (MmNumberOfPhysicalPages < (96 * 1024 * 1024 / PAGE_SIZE))
