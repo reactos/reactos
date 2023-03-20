@@ -50,7 +50,7 @@ VOID ShowLastError(VOID)
         LPTSTR lpMsgBuf = NULL;
         TCHAR szTitle[MAX_STRING_LEN];
 
-        LoadString(Globals.hInstance, STRING_ERROR, szTitle, ARRAY_SIZE(szTitle));
+        LoadString(Globals.hInstance, STRING_ERROR, szTitle, _countof(szTitle));
 
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                       NULL,
@@ -96,13 +96,13 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     Globals.bWasModified = isModified;
 
     /* Load the name of the application */
-    LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
+    LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, _countof(szNotepad));
 
     /* Determine if the file has been saved or if this is a new file */
     if (Globals.szFileTitle[0] != 0)
-        StringCchCopy(szFilename, ARRAY_SIZE(szFilename), Globals.szFileTitle);
+        StringCchCopy(szFilename, _countof(szFilename), Globals.szFileTitle);
     else
-        LoadString(Globals.hInstance, STRING_UNTITLED, szFilename, ARRAY_SIZE(szFilename));
+        LoadString(Globals.hInstance, STRING_UNTITLED, szFilename, _countof(szFilename));
 
     /* Update the window caption based upon whether the user has modified the file or not */
     StringCbPrintf(szCaption, sizeof(szCaption), _T("%s%s - %s"),
@@ -126,14 +126,14 @@ VOID DIALOG_StatusBarAlignParts(VOID)
     parts[0] = max(parts[0], defaultWidths[0]);
     parts[1] = max(parts[1], defaultWidths[0] + defaultWidths[1]);
 
-    SendMessageW(Globals.hStatusBar, SB_SETPARTS, ARRAY_SIZE(parts), (LPARAM)parts);
+    SendMessageW(Globals.hStatusBar, SB_SETPARTS, _countof(parts), (LPARAM)parts);
 }
 
 static VOID DIALOG_StatusBarUpdateLineEndings(VOID)
 {
     WCHAR szText[128];
 
-    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, ARRAY_SIZE(szText));
+    LoadStringW(Globals.hInstance, EolnToStrId[Globals.iEoln], szText, _countof(szText));
 
     SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_EOLN, (LPARAM)szText);
 }
@@ -144,7 +144,7 @@ static VOID DIALOG_StatusBarUpdateEncoding(VOID)
 
     if (Globals.encFile != ENCODING_AUTO)
     {
-        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, ARRAY_SIZE(szText));
+        LoadStringW(Globals.hInstance, EncToStrId[Globals.encFile], szText, _countof(szText));
     }
 
     SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_ENCODING, (LPARAM)szText);
@@ -163,14 +163,14 @@ int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFl
     TCHAR szResource[MAX_STRING_LEN];
 
     /* Load and format szMessage */
-    LoadString(Globals.hInstance, formatId, szResource, ARRAY_SIZE(szResource));
-    _sntprintf(szMessage, ARRAY_SIZE(szMessage), szResource, szString);
+    LoadString(Globals.hInstance, formatId, szResource, _countof(szResource));
+    _sntprintf(szMessage, _countof(szMessage), szResource, szString);
 
     /* Load szCaption */
     if ((dwFlags & MB_ICONMASK) == MB_ICONEXCLAMATION)
-        LoadString(Globals.hInstance, STRING_ERROR, szResource, ARRAY_SIZE(szResource));
+        LoadString(Globals.hInstance, STRING_ERROR, szResource, _countof(szResource));
     else
-        LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, ARRAY_SIZE(szResource));
+        LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, _countof(szResource));
 
     /* Display Modal Dialog */
     // if (hParent == NULL)
@@ -187,7 +187,7 @@ static int AlertFileNotSaved(LPCTSTR szFileName)
 {
     TCHAR szUntitled[MAX_STRING_LEN];
 
-    LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, ARRAY_SIZE(szUntitled));
+    LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, _countof(szUntitled));
 
     return DIALOG_StringMsgBox(Globals.hMainWnd, STRING_NOTSAVED,
                                szFileName[0] ? szFileName : szUntitled,
@@ -330,7 +330,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
      *  See http://web.archive.org/web/20090627165105/http://support.microsoft.com/kb/260563
      */
-    if (GetWindowText(Globals.hEdit, log, ARRAY_SIZE(log)) && !_tcscmp(log, _T(".LOG")))
+    if (GetWindowText(Globals.hEdit, log, _countof(log)) && !_tcscmp(log, _T(".LOG")))
     {
         static const TCHAR lf[] = _T("\r\n");
         SendMessage(Globals.hEdit, EM_SETSEL, GetWindowTextLength(Globals.hEdit), -1);
@@ -367,7 +367,7 @@ VOID DIALOG_FileNew(VOID)
 VOID DIALOG_FileNewWindow(VOID)
 {
     TCHAR pszNotepadExe[MAX_PATH];
-    GetModuleFileName(NULL, pszNotepadExe, ARRAYSIZE(pszNotepadExe));
+    GetModuleFileName(NULL, pszNotepadExe, _countof(pszNotepadExe));
     ShellExecute(NULL, NULL, pszNotepadExe, NULL, NULL, SW_SHOWNORMAL);
 }
 
@@ -388,7 +388,7 @@ VOID DIALOG_FileOpen(VOID)
     openfilename.hInstance = Globals.hInstance;
     openfilename.lpstrFilter = Globals.szFilter;
     openfilename.lpstrFile = szPath;
-    openfilename.nMaxFile = ARRAY_SIZE(szPath);
+    openfilename.nMaxFile = _countof(szPath);
     openfilename.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     openfilename.lpstrDefExt = szDefaultExt;
 
@@ -428,32 +428,32 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
             hCombo = GetDlgItem(hDlg, ID_ENCODING);
 
-            LoadString(Globals.hInstance, STRING_ANSI, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_ANSI, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_UNICODE, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_UNICODE, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_UNICODE_BE, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_UNICODE_BE, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_UTF8, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_UTF8, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_UTF8_BOM, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_UTF8_BOM, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
             SendMessage(hCombo, CB_SETCURSEL, Globals.encFile, 0);
 
             hCombo = GetDlgItem(hDlg, ID_EOLN);
 
-            LoadString(Globals.hInstance, STRING_CRLF, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_CRLF, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_LF, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_LF, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
-            LoadString(Globals.hInstance, STRING_CR, szText, ARRAY_SIZE(szText));
+            LoadString(Globals.hInstance, STRING_CR, szText, _countof(szText));
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
             SendMessage(hCombo, CB_SETCURSEL, Globals.iEoln, 0);
@@ -492,7 +492,7 @@ BOOL DIALOG_FileSaveAs(VOID)
     saveas.hInstance = Globals.hInstance;
     saveas.lpstrFilter = Globals.szFilter;
     saveas.lpstrFile = szPath;
-    saveas.nMaxFile = ARRAY_SIZE(szPath);
+    saveas.nMaxFile = _countof(szPath);
     saveas.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY |
                    OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     saveas.lpstrDefExt = szDefaultExt;
@@ -748,9 +748,9 @@ static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
         Globals.find.lStructSize = sizeof(Globals.find);
         Globals.find.hwndOwner = Globals.hMainWnd;
         Globals.find.lpstrFindWhat = Globals.szFindText;
-        Globals.find.wFindWhatLen = ARRAY_SIZE(Globals.szFindText);
+        Globals.find.wFindWhatLen = _countof(Globals.szFindText);
         Globals.find.lpstrReplaceWith = Globals.szReplaceText;
-        Globals.find.wReplaceWithLen = ARRAY_SIZE(Globals.szReplaceText);
+        Globals.find.wReplaceWithLen = _countof(Globals.szReplaceText);
         Globals.find.Flags = FR_DOWN;
     }
 
@@ -812,8 +812,8 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     /* Show error message */
                     WCHAR title[128], text[256];
-                    LoadStringW(Globals.hInstance, STRING_NOTEPAD, title, ARRAY_SIZE(title));
-                    LoadStringW(Globals.hInstance, STRING_LINE_NUMBER_OUT_OF_RANGE, text, ARRAY_SIZE(text));
+                    LoadStringW(Globals.hInstance, STRING_NOTEPAD, title, _countof(title));
+                    LoadStringW(Globals.hInstance, STRING_LINE_NUMBER_OUT_OF_RANGE, text, _countof(text));
                     MessageBoxW(hwndDialog, text, title, MB_OK);
 
                     SendDlgItemMessageW(hwndDialog, ID_LINENUMBER, EM_SETSEL, 0, -1);
@@ -900,8 +900,8 @@ VOID DIALOG_HelpAboutNotepad(VOID)
     TCHAR szNotepad[MAX_STRING_LEN];
     TCHAR szNotepadAuthors[MAX_STRING_LEN];
 
-    LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
-    LoadString(Globals.hInstance, STRING_NOTEPAD_AUTHORS, szNotepadAuthors, ARRAY_SIZE(szNotepadAuthors));
+    LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, _countof(szNotepad));
+    LoadString(Globals.hInstance, STRING_NOTEPAD_AUTHORS, szNotepadAuthors, _countof(szNotepadAuthors));
 
     ShellAbout(Globals.hMainWnd, szNotepad, szNotepadAuthors,
                LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON)));
