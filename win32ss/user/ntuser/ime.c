@@ -2327,7 +2327,6 @@ IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen
 }
 
 // Update the IME status and send a notification.
-// Win: xxxNotifyImeShowStatus
 VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
 {
     PIMEUI pimeui;
@@ -2367,9 +2366,12 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("!!!\n");
+
         if (pti != ptiIME)
             KeDetachProcess();
-        return;
+
+        _SEH2_YIELD(return);
     }
     _SEH2_END;
 
