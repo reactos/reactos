@@ -1696,6 +1696,18 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Call the debugger DLL */
     KdDebuggerInitialize1(LoaderBlock);
 
+
+    DbgPrint("******* TEST ********\n");
+    for (;;)
+    {
+        CHAR Action[20];
+        DbgPrompt("R (Retry) or C (Continue)? ", Action, sizeof(Action));
+        DbgPrint("Response: '%s'\n", Action);
+        if ((Action[0] == 'C' || Action[0] == 'c') && (Action[1] == 0))
+            break;
+    }
+
+
     /* Setup PnP Manager in phase 1 */
     if (!PpInitSystem()) KeBugCheck(PP1_INITIALIZATION_FAILED);
 
