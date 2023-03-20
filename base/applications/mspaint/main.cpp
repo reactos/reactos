@@ -8,10 +8,6 @@
 
 #include "precomp.h"
 
-#ifdef _DEBUG
-#include <crtdbg.h>
-#endif
-
 /* FUNCTIONS ********************************************************/
 
 POINT start;
