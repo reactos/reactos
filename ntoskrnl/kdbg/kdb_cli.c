@@ -3964,6 +3964,9 @@ KdbInitialize(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
     _In_ ULONG BootPhase)
 {
+    /* Saves the different symbol-loading status across boot phases */
+    static ULONG LoadSymbols = 0;
+
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
@@ -3993,12 +3996,26 @@ KdbInitialize(
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
     }
 
+    /* Initialize symbols support in BootPhase 0 and 1 */
     if (BootPhase <= 1)
     {
-        /* Initialize symbols support */
-        KdbSymInit(BootPhase);
+        LoadSymbols <<= 1;
+        LoadSymbols |= KdbSymInit(BootPhase);
     }
-    else if (BootPhase >= 2)
+
+    if (BootPhase == 1)
+    {
+        /* Announce ourselves */
+        CHAR buffer[60];
+        RtlStringCbPrintfA(buffer, sizeof(buffer),
+                           "   KDBG debugger enabled - %s\r\n",
+                           !(LoadSymbols & 0x2) ? "No symbols loaded" :
+                           !(LoadSymbols & 0x1) ? "Kernel symbols loaded"
+                                                : "Loading symbols");
+        HalDisplayString(buffer);
+    }
+
+    if (BootPhase >= 2)
     {
         /* I/O is now set up for disk access: Read KDB Data */
         NTSTATUS Status = KdbpCliInit();

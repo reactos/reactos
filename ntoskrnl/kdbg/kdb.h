@@ -171,7 +171,7 @@ KdbSymProcessSymbols(
     _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
     _In_ BOOLEAN Load);
 
-VOID
+BOOLEAN
 KdbSymInit(
     _In_ ULONG BootPhase);
 

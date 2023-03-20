@@ -337,9 +337,10 @@ KdbSymProcessSymbols(
  * @param[in]   BootPhase
  * Phase of initialization.
  *
- * @return  None.
+ * @return
+ * TRUE if symbols are to be loaded at this given BootPhase; FALSE if not.
  **/
-VOID
+BOOLEAN
 KdbSymInit(
     _In_ ULONG BootPhase)
 {
@@ -347,61 +348,55 @@ KdbSymInit(
 
     if (BootPhase == 0)
     {
-        PCHAR p1, p2;
+        PSTR CommandLine;
         SHORT Found = FALSE;
         CHAR YesNo;
 
-        /*
-         * Default symbols loading strategy:
-         * In DBG builds, load symbols only if we have 96MB of RAM or more.
-         * In REL builds, do not load them by default.
-         */
+        /* By default, load symbols in DBG builds, but not in REL builds */
 #if DBG
-        LoadSymbols = (MmNumberOfPhysicalPages >= 0x6000);
+        LoadSymbols = TRUE;
 #else
         LoadSymbols = FALSE;
 #endif
 
-        /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
-         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
+        /* Check the command line for LOADSYMBOLS, NOLOADSYMBOLS,
+         * LOADSYMBOLS={YES|NO}, NOLOADSYMBOLS={YES|NO} */
         ASSERT(KeLoaderBlock);
-        p1 = KeLoaderBlock->LoadOptions;
-        while ('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
+        CommandLine = KeLoaderBlock->LoadOptions;
+        while (*CommandLine)
         {
-            p2++;
+            /* Skip any whitespace */
+            while (isspace(*CommandLine))
+                ++CommandLine;
+
             Found = 0;
-            if (0 == _strnicmp(p2, "LOADSYMBOLS", 11))
+            if (_strnicmp(CommandLine, "LOADSYMBOLS", 11) == 0)
             {
                 Found = +1;
-                p2 += 11;
+                CommandLine += 11;
             }
-            else if (0 == _strnicmp(p2, "NOLOADSYMBOLS", 13))
+            else if (_strnicmp(CommandLine, "NOLOADSYMBOLS", 13) == 0)
             {
                 Found = -1;
-                p2 += 13;
+                CommandLine += 13;
             }
-            if (0 != Found)
+            if (Found != 0)
             {
-                while (isspace(*p2))
+                if (*CommandLine == '=')
                 {
-                    p2++;
-                }
-                if ('=' == *p2)
-                {
-                    p2++;
-                    while (isspace(*p2))
-                    {
-                        p2++;
-                    }
-                    YesNo = toupper(*p2);
-                    if ('N' == YesNo || 'F' == YesNo || '0' == YesNo)
+                    ++CommandLine;
+                    YesNo = toupper(*CommandLine);
+                    if (YesNo == 'N' || YesNo == '0')
                     {
                         Found = -1 * Found;
                     }
                 }
                 LoadSymbols = (0 < Found);
             }
-            p1 = p2;
+
+            /* Move on to the next option */
+            while (*CommandLine && !isspace(*CommandLine))
+                ++CommandLine;
         }
     }
     else if (BootPhase == 1)
@@ -411,13 +406,13 @@ KdbSymInit(
         KIRQL OldIrql;
         PLIST_ENTRY ListEntry;
 
-        /* Do not load symbols if we have less than 96MB of RAM */
-        if (MmNumberOfPhysicalPages < 0x6000)
+        /* Do not continue loading symbols if we have less than 96MB of RAM */
+        if (MmNumberOfPhysicalPages < (96 * 1024 * 1024 / PAGE_SIZE))
             LoadSymbols = FALSE;
 
         /* Continue this phase only if we need to load symbols */
         if (!LoadSymbols)
-            return;
+            return LoadSymbols;
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);
@@ -433,7 +428,7 @@ KdbSymInit(
         {
             DPRINT1("Failed starting symbols loader thread: 0x%08x\n", Status);
             LoadSymbols = FALSE;
-            return;
+            return LoadSymbols;
         }
 
         RosSymInitKernelMode();
@@ -450,6 +445,8 @@ KdbSymInit(
 
         KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
     }
+
+    return LoadSymbols;
 }
 
 /* EOF */
