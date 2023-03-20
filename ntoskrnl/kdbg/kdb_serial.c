@@ -12,8 +12,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
 
 CHAR
 KdbpTryGetCharSerial(ULONG Retry)

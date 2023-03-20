@@ -11,9 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
-
 
 #define KBD_STATUS_REG          0x64
 #define KBD_CNTL_REG            0x64
