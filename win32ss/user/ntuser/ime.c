@@ -1042,7 +1042,8 @@ NtUserGetImeInfoEx(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        goto Quit;
+        ERR("!!!\n");
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
@@ -1057,6 +1058,7 @@ NtUserGetImeInfoEx(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("!!!\n");
         ret = FALSE;
     }
     _SEH2_END;
