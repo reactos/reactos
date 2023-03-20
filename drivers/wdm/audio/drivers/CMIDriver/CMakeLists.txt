@@ -1,6 +1,6 @@
 
-add_subdirectory(cmicontrol)
-add_subdirectory(cpl)
+#add_subdirectory(cmicontrol)
+#add_subdirectory(cpl)
 
 
 # For (NT6+) WaveRT support.
