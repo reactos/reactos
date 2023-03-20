@@ -85,14 +85,21 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
 
 PWND FASTCALL VerifyWnd(PWND pWnd)
 {
+    ULONG Error;
+
     if (!pWnd ||
-        UserObjectInDestroy(UserHMGetHandle(pWnd)) ||
         (pWnd->state & WNDS_DESTROYED) ||
         (pWnd->state2 & WNDS2_INDESTROY))
     {
         return NULL;
     }
 
+    Error = EngGetLastError();
+
+    if (UserObjectInDestroy(UserHMGetHandle(pWnd)))
+        pWnd = NULL;
+
+    EngSetLastError(Error);
     return pWnd;
 }
 
