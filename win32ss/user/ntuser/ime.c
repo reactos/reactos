@@ -432,7 +432,8 @@ NtUserGetImeHotKey(DWORD dwHotKeyId, LPUINT lpuModifiers, LPUINT lpuVirtualKey, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        goto Quit;
+        ERR("!!!\n");
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
@@ -449,6 +450,7 @@ NtUserGetImeHotKey(DWORD dwHotKeyId, LPUINT lpuModifiers, LPUINT lpuVirtualKey, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("!!!\n");
         pNode = NULL;
     }
     _SEH2_END;
