@@ -182,7 +182,8 @@ EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     MD_msgdump(hwnd, uMsg, wParam, lParam);
 
     /* Add message */
-    s_Msgs[s_cMsgs++] = msg;
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
 
     /* Do inner task */
     ret = CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
@@ -207,7 +208,8 @@ ImeWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     MD_msgdump(hwnd, uMsg, wParam, lParam);
 
     /* Add message */
-    s_Msgs[s_cMsgs++] = msg;
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
 
     /* Do inner task */
     ret = CallWindowProc(s_fnOldImeWndProc, hwnd, uMsg, wParam, lParam);
@@ -287,7 +289,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     MD_msgdump(hwnd, uMsg, wParam, lParam);
 
     /* Add message */
-    s_Msgs[s_cMsgs++] = msg;
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
 
     /* Do inner task */
     ret = InnerWindowProc(hwnd, uMsg, wParam, lParam);
