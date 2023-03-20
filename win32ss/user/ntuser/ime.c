@@ -2227,7 +2227,6 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
 }
 
 // Send a UI message.
-// Win: xxxSendMessageToUI
 LRESULT FASTCALL
 IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -2253,6 +2252,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("!!!\n");
         pwndUI = NULL;
     }
     _SEH2_END;
@@ -2269,7 +2269,8 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        goto Quit;
+        ERR("!!!\n");
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
@@ -2293,7 +2294,8 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        goto Quit;
+        ERR("!!!\n");
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
