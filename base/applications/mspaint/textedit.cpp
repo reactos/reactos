@@ -32,7 +32,7 @@ INT CTextEditWindow::DoHitTest(RECT& rc, POINT pt)
         case HIT_LOWER_LEFT:    return HTBOTTOMLEFT;
         case HIT_LOWER_CENTER:  return HTBOTTOM;
         case HIT_LOWER_RIGHT:   return HTBOTTOMRIGHT;
-        case HIT_BORDER:        return HTCAPTION;
+        case HIT_BORDER:        return HTCAPTION; // Enable drag move
         case HIT_INNER:         return HTCLIENT;
     }
     return HTNOWHERE;
@@ -191,7 +191,7 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     UINT nHitTest = LOWORD(lParam);
     if (nHitTest == HTCAPTION)
     {
-        SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+        ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL)); // Enable drag move
         return FALSE;
     }
     return DefWindowProc(nMsg, wParam, lParam);
