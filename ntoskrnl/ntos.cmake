@@ -413,6 +413,7 @@ if(NOT _WINKD_)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdprompt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdps2kbd.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdserial.c)
 

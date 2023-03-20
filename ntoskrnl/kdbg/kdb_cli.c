@@ -29,25 +29,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "../kd/kdterminal.h"
 
 #define NDEBUG
 #include <debug.h>
 
 /* DEFINES *******************************************************************/
-
-#define KEY_BS          8
-#define KEY_ESC         27
-#define KEY_DEL         127
-
-#define KEY_SCAN_UP     72
-#define KEY_SCAN_DOWN   80
-
-/* Scan codes of keyboard keys: */
-#define KEYSC_END       0x004f
-#define KEYSC_PAGEUP    0x0049
-#define KEYSC_PAGEDOWN  0x0051
-#define KEYSC_HOME      0x0047
-#define KEYSC_ARROWUP   0x0048
 
 #define KDB_ENTER_CONDITION_TO_STRING(cond)                               \
                    ((cond) == KdbDoNotEnter ? "never" :                   \
@@ -3253,172 +3240,6 @@ KdbpPrintUnicodeString(
 }
 
 
-/**
- * @brief   Reads a line of user input from the terminal.
- *
- * @param[out]  Buffer
- * Buffer where to store the input. Trailing newlines are removed.
- *
- * @param[in]   Size
- * Size of \a Buffer.
- *
- * @return
- * Returns the number of characters stored, not counting the NULL terminator.
- *
- * @note Accepts only \n newlines, \r is ignored.
- **/
-SIZE_T
-KdbpReadCommand(
-    _Out_ PCHAR Buffer,
-    _In_ SIZE_T Size)
-{
-    PCHAR Orig = Buffer;
-    ULONG ScanCode = 0;
-    CHAR Key;
-    BOOLEAN EchoOn;
-    static CHAR LastCommand[1024];
-    static CHAR NextKey = '\0';
-    LONG CmdHistIndex = -1; // Start at end of history.
-
-    /* Bail out if the buffer is zero-sized */
-    if (Size == 0)
-        return 0;
-
-    EchoOn = ((KdbDebugState & KD_DEBUG_KDNOECHO) == 0);
-
-    for (;;)
-    {
-        if (KdbDebugState & KD_DEBUG_KDSERIAL)
-        {
-            Key = (NextKey == '\0') ? KdbpGetCharSerial() : NextKey;
-            NextKey = '\0';
-            ScanCode = 0;
-            if (Key == KEY_ESC) /* ESC */
-            {
-                Key = KdbpGetCharSerial();
-                if (Key == '[')
-                {
-                    Key = KdbpGetCharSerial();
-
-                    switch (Key)
-                    {
-                        case 'A':
-                            ScanCode = KEY_SCAN_UP;
-                            break;
-                        case 'B':
-                            ScanCode = KEY_SCAN_DOWN;
-                            break;
-                        case 'C':
-                            break;
-                        case 'D':
-                            break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            ScanCode = 0;
-            Key = (NextKey == '\0') ? KdbpGetCharKeyboard(&ScanCode) : NextKey;
-            NextKey = '\0';
-        }
-
-        /* Check for return or newline */
-        if ((Key == '\r') || (Key == '\n'))
-        {
-            if (Key == '\r')
-            {
-                /*
-                 * We might need to discard the next '\n' which most clients
-                 * should send after \r. Wait a bit to make sure we receive it.
-                 */
-                KeStallExecutionProcessor(100000);
-
-                if (KdbDebugState & KD_DEBUG_KDSERIAL)
-                    NextKey = KdbpTryGetCharSerial(5);
-                else
-                    NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
-
-                if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
-                    NextKey = '\0';
-            }
-
-            KdpDprintf("\n");
-
-            /*
-             * Repeat the last command if the user presses enter. Reduces the
-             * risk of RSI when single-stepping.
-             */
-            if (Buffer != Orig)
-            {
-                KdbRepeatLastCommand = TRUE;
-                *Buffer = '\0';
-                RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
-            }
-            else if (KdbRepeatLastCommand)
-                RtlStringCbCopyA(Buffer, Size, LastCommand);
-            else
-                *Buffer = '\0';
-
-            return (SIZE_T)(Buffer - Orig);
-        }
-        else if (Key == KEY_BS || Key == KEY_DEL)
-        {
-            /* Erase the last character */
-            if (Buffer > Orig)
-            {
-                Buffer--;
-                *Buffer = '\0';
-
-                if (EchoOn)
-                    KdpDprintf("%c %c", KEY_BS, KEY_BS);
-                else
-                    KdpDprintf(" %c", KEY_BS);
-            }
-        }
-        else if (ScanCode == KEY_SCAN_UP || ScanCode == KEY_SCAN_DOWN)
-        {
-            PCSTR CmdHistory = KdbGetHistoryEntry(&CmdHistIndex,
-                                                  (ScanCode == KEY_SCAN_DOWN));
-            if (CmdHistory)
-            {
-                SIZE_T i;
-
-                /* Erase the whole line */
-                while (Buffer > Orig)
-                {
-                    Buffer--;
-                    *Buffer = '\0';
-
-                    if (EchoOn)
-                        KdpDprintf("%c %c", KEY_BS, KEY_BS);
-                    else
-                        KdpDprintf(" %c", KEY_BS);
-                }
-
-                i = min(strlen(CmdHistory), Size - 1);
-                memcpy(Orig, CmdHistory, i);
-                Orig[i] = '\0';
-                Buffer = Orig + i;
-                KdpDprintf("%s", Orig);
-            }
-        }
-        else
-        {
-            /* Don't accept any key if the buffer is full */
-            if ((SIZE_T)(Buffer - Orig) >= (Size - 1))
-                continue;
-
-            if (EchoOn)
-                KdpDprintf("%c", Key);
-
-            *Buffer = Key;
-            Buffer++;
-        }
-    }
-}
-
-
 BOOLEAN
 NTAPI
 KdbRegisterCliCallback(
@@ -3567,8 +3388,10 @@ VOID
 KdbpCliMainLoop(
     IN BOOLEAN EnteredOnSingleStep)
 {
-    static CHAR Command[1024];
     BOOLEAN Continue;
+    SIZE_T CmdLen;
+    static CHAR Command[1024];
+    static CHAR LastCommand[1024] = "";
 
     if (EnteredOnSingleStep)
     {
@@ -3603,11 +3426,27 @@ KdbpCliMainLoop(
         KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
 
         /* Print the prompt */
-        KdbpPrint(KdbPromptString.Buffer);
+        KdpDprintf(KdbPromptString.Buffer);
 
-        /* Read a command and remember it */
-        KdbpReadCommand(Command, sizeof(Command));
-        KdbpCommandHistoryAppend(Command);
+        /*
+         * Read a command. Repeat the last one if the user pressed Enter.
+         * This reduces the risk of RSI when single-stepping!
+         */
+        CmdLen = KdIoReadLine(Command, sizeof(Command));
+        if (CmdLen > 0) // i.e. (*Command != ANSI_NULL)
+        {
+            /* Save this new last command */
+            KdbRepeatLastCommand = TRUE;
+            RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Command);
+
+            /* Remember it */
+            KdbpCommandHistoryAppend(Command);
+        }
+        else if (KdbRepeatLastCommand)
+        {
+            /* The user directly pressed Enter */
+            RtlStringCbCopyA(Command, sizeof(Command), LastCommand);
+        }
 
         /* Reset the number of rows/cols printed and output aborted state */
         KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;

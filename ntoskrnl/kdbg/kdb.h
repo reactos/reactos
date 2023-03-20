@@ -113,11 +113,6 @@ KdbGetHistoryEntry(
     _Inout_ PLONG NextIndex,
     _In_ BOOLEAN Next);
 
-SIZE_T
-KdbpReadCommand(
-    _Out_ PCHAR Buffer,
-    _In_ SIZE_T Size);
-
 VOID
 KdbpPager(
     _In_ PCHAR Buffer,

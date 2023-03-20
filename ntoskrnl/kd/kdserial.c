@@ -34,3 +34,5 @@ KdbpTryGetCharSerial(
 
     return Result;
 }
+
+/* EOF */

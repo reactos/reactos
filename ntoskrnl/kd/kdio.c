@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #include <reactos/buildno.h>
 #include "kd.h"
+#include "kdterminal.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -779,8 +780,8 @@ KdReceivePacket(
      * in which case the string is simply truncated without NULL-termination.
      */
     ResponseString.Length =
-        (USHORT)KdbpReadCommand(ResponseString.Buffer,
-                                ResponseString.MaximumLength);
+        (USHORT)KdIoReadLine(ResponseString.Buffer,
+                             ResponseString.MaximumLength);
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
