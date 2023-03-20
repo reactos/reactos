@@ -78,7 +78,7 @@ UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", NtCurrentTeb());
         lcid = MAKELCID(LANGID_NEUTRAL, SORT_DEFAULT);
     }
     _SEH2_END;
@@ -433,7 +433,7 @@ NtUserGetImeHotKey(DWORD dwHotKeyId, LPUINT lpuModifiers, LPUINT lpuVirtualKey, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p, %p, %p\n", lpuModifiers, lpuVirtualKey, lphKL);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -451,7 +451,7 @@ NtUserGetImeHotKey(DWORD dwHotKeyId, LPUINT lpuModifiers, LPUINT lpuVirtualKey, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p, %p, %p, %p\n", pNode, lpuModifiers, lpuVirtualKey, lphKL);
         pNode = NULL;
     }
     _SEH2_END;
@@ -740,7 +740,7 @@ NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCo
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p, %p\n", phList, pdwCount);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -1038,12 +1038,12 @@ NtUserGetImeInfoEx(
 
     _SEH2_TRY
     {
-        ProbeForWrite(pImeInfoEx, sizeof(*pImeInfoEx), 1);
+        ProbeForRead(pImeInfoEx, sizeof(*pImeInfoEx), 1);
         ImeInfoEx = *pImeInfoEx;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pImeInfoEx);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -1055,11 +1055,12 @@ NtUserGetImeInfoEx(
 
     _SEH2_TRY
     {
+        ProbeForWrite(pImeInfoEx, sizeof(*pImeInfoEx), 1);
         *pImeInfoEx = ImeInfoEx;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pImeInfoEx);
         ret = FALSE;
     }
     _SEH2_END;
@@ -1158,7 +1159,7 @@ NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pImeInfoEx);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -2020,7 +2021,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ERR("!!!\n");
+            ERR("%p\n", pimeui);
         }
         _SEH2_END;
     }
@@ -2051,7 +2052,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pimeui);
     }
     _SEH2_END;
 
@@ -2096,7 +2097,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pimeui);
     }
     _SEH2_END;
 
@@ -2205,7 +2206,7 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ERR("!!!\n");
+            ERR("%p\n", pimeui);
             pwndIMC = NULL;
         }
         _SEH2_END;
@@ -2260,7 +2261,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pimeui);
         pwndUI = NULL;
     }
     _SEH2_END;
@@ -2277,7 +2278,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pimeui);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -2302,7 +2303,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p\n", pimeui);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -2376,7 +2377,7 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("!!!\n");
+        ERR("%p, %p\n", pImeWnd, pimeui);
 
         if (pti != ptiIME)
             KeDetachProcess();
