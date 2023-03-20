@@ -20,10 +20,6 @@
 
 #include "regedit.h"
 
-#ifdef _DEBUG
-#include <crtdbg.h>
-#endif
-
 BOOL ProcessCmdLine(WCHAR *cmdline);
 
 const WCHAR *reg_class_namesW[] = {L"HKEY_LOCAL_MACHINE", L"HKEY_USERS",

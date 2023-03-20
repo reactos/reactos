@@ -10,6 +10,11 @@
 #include <aclapi.h>
 #include <shellapi.h>
 #include <strsafe.h>
+#include <stdlib.h>
+#ifdef _DEBUG
+    #define _CRTDBG_MAP_ALLOC
+    #include <crtdbg.h>
+#endif
 
 #include "main.h"
 #include "hexedit.h"
