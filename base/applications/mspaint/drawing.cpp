@@ -123,9 +123,11 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
     b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     for(a = 0; a <= b; a++)
-        Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - radius + 1,
-                  (y1 * (b - a) + y2 * a) / b - radius + 1, (x1 * (b - a) + x2 * a) / b + radius + 1,
-                  (y1 * (b - a) + y2 * a) / b + radius + 1);
+        Rectangle(hdc,
+                  (x1 * (b - a) + x2 * a) / b - radius,
+                  (y1 * (b - a) + y2 * a) / b - radius,
+                  (x1 * (b - a) + x2 * a) / b + radius,
+                  (y1 * (b - a) + y2 * a) / b + radius);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
 }
@@ -172,8 +174,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 1:
             for(a = 0; a <= b; a++)
-                Ellipse(hdc, (x1 * (b - a) + x2 * a) / b - 1, (y1 * (b - a) + y2 * a) / b - 1,
-                        (x1 * (b - a) + x2 * a) / b + 3, (y1 * (b - a) + y2 * a) / b + 3);
+                Ellipse(hdc,
+                        (x1 * (b - a) + x2 * a) / b - 2,
+                        (y1 * (b - a) + y2 * a) / b - 2,
+                        (x1 * (b - a) + x2 * a) / b + 2,
+                        (y1 * (b - a) + y2 * a) / b + 2);
             break;
         case 2:
             MoveToEx(hdc, x1, y1, NULL);
@@ -182,8 +187,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 3:
             for(a = 0; a <= b; a++)
-                Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - 3, (y1 * (b - a) + y2 * a) / b - 3,
-                          (x1 * (b - a) + x2 * a) / b + 5, (y1 * (b - a) + y2 * a) / b + 5);
+                Rectangle(hdc,
+                          (x1 * (b - a) + x2 * a) / b - 4,
+                          (y1 * (b - a) + y2 * a) / b - 4,
+                          (x1 * (b - a) + x2 * a) / b + 4,
+                          (y1 * (b - a) + y2 * a) / b + 4);
             break;
         case 4:
             for(a = 0; a <= b; a++)
@@ -202,10 +210,10 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 10:
         case 11:
         {
-            POINT offsTop[] = {{4, -3}, {2, -2}, {0, 0},
-                               {-3, -3}, {-2, -2}, {-1, 0}};
-            POINT offsBtm[] = {{-3, 4}, {-2, 2}, {-1, 1},
-                               {4, 4}, {2, 2}, {0, 1}};
+            POINT offsTop[] = {{3, -3}, {2, -2}, {0, 0},
+                               {-4, -4}, {-2, -2}, {-1, 0}};
+            POINT offsBtm[] = {{-3, 3}, {-2, 2}, {-1, 1},
+                               {3, 3}, {2, 2}, {0, 1}};
             LONG idx = style - 6;
             POINT pts[4];
             pts[0].x = x1 + offsTop[idx].x;

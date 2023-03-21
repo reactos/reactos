@@ -13,12 +13,21 @@
 
 /* FUNCTIONS ********************************************************/
 
+BOOL CToolBox::DoCreate(HWND hwndParent)
+{
+    RECT toolBoxContainerPos = { 0, 0, 0, 0 };
+    DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
+    return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
+}
+
 LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HIMAGELIST hImageList;
     HBITMAP tempBm;
     int i;
     TCHAR tooltips[NUM_TOOLS][30];
+
+    toolSettingsWindow.DoCreate(m_hWnd);
 
     /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
     RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};

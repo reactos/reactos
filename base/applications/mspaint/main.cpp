@@ -180,13 +180,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     SetMenu(hwnd, menu);
     haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
 
-    RECT toolBoxContainerPos = {2, 2, 2 + 52, 2 + 350};
-    toolBoxContainer.Create(hwnd, toolBoxContainerPos, NULL, WS_CHILD);
-    if (registrySettings.ShowToolBox)
-        toolBoxContainer.ShowWindow(SW_SHOWNOACTIVATE);
-    /* creating the tool settings child window */
-    RECT toolSettingsWindowPos = {5, 208, 5 + 42, 208 + 140};
-    toolSettingsWindow.Create(toolBoxContainer.m_hWnd, toolSettingsWindowPos, NULL, WS_CHILD | WS_VISIBLE);
+    /* Create ToolBox */
+    toolBoxContainer.DoCreate(hwnd);
 
     /* creating the palette child window */
     RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
