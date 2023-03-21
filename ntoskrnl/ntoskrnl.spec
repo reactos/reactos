@@ -561,7 +561,7 @@
 @ cdecl -arch=x86_64 KeAcquireQueuedSpinLockRaiseToSynch(long)
 @ stdcall KeAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KeAcquireSpinLockForDpc(ptr)
-@ stdcall -arch=x86_64 KeAcquireSpinLockRaiseToDpc(ptr)
+@ stdcall -arch=x86_64,arm KeAcquireSpinLockRaiseToDpc(ptr) ; Win10?
 @ stdcall -arch=x86_64,arm KeAcquireSpinLockRaiseToSynch(ptr)
 @ stdcall KeAddSystemServiceTable(ptr ptr long ptr long)
 @ stdcall KeAreAllApcsDisabled()
