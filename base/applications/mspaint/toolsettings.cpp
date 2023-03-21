@@ -14,11 +14,23 @@
 
 #define CX_TRANS_ICON 40
 #define CY_TRANS_ICON 30
-#define BOX_MARGIN 2
+#define MARGIN1 3
+#define MARGIN2 2
 
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
 
 /* FUNCTIONS ********************************************************/
+
+BOOL CToolSettingsWindow::DoCreate(HWND hwndParent)
+{
+    /* creating the tool settings child window */
+    RECT toolSettingsWindowPos =
+    {
+        X_TOOLSETTINGS, Y_TOOLSETTINGS,
+        X_TOOLSETTINGS + CX_TOOLSETTINGS, Y_TOOLSETTINGS + CY_TOOLSETTINGS
+    };
+    return !!Create(toolBoxContainer, toolSettingsWindowPos, NULL, WS_CHILD | WS_VISIBLE);
+}
 
 static INT
 getSplitRects(RECT *rects, INT cColumns, INT cRows, LPCRECT prc, LPPOINT ppt)
@@ -274,10 +286,11 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 {
     RECT rcClient;
     GetClientRect(&rcClient);
-    RECT rect1 = { 0, 0, rcClient.right, rcClient.bottom / 2 };
-    RECT rect2 = { 0, rcClient.bottom / 2, rcClient.right, rcClient.bottom };
-    ::InflateRect(&rect1, -BOX_MARGIN, -BOX_MARGIN);
-    ::InflateRect(&rect2, -BOX_MARGIN, -BOX_MARGIN);
+    ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
+
+    INT yCenter = (rcClient.top + rcClient.bottom) / 2;
+    RECT rect1 = { rcClient.left, rcClient.top, rcClient.right, yCenter };
+    RECT rect2 = { rcClient.left, yCenter, rcClient.right, rcClient.bottom };
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
@@ -290,8 +303,8 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     if (toolsModel.GetActiveTool() >= TOOL_RECT)
         ::DrawEdge(hdc, &rect2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
-    ::InflateRect(&rect1, -BOX_MARGIN, -BOX_MARGIN);
-    ::InflateRect(&rect2, -BOX_MARGIN, -BOX_MARGIN);
+    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
+    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
@@ -335,11 +348,13 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 
     RECT rcClient, rects[12];
     GetClientRect(&rcClient);
+    ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
 
-    RECT rect1 = { 0, 0, rcClient.right, rcClient.bottom / 2 };
-    RECT rect2 = { 0, rcClient.bottom / 2, rcClient.right, rcClient.bottom };
-    ::InflateRect(&rect1, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
-    ::InflateRect(&rect2, -BOX_MARGIN * 2, -BOX_MARGIN * 2);
+    INT yCenter = (rcClient.top + rcClient.bottom) / 2;
+    RECT rect1 = { rcClient.left, rcClient.top, rcClient.right, yCenter };
+    RECT rect2 = { rcClient.left, yCenter, rcClient.right, rcClient.bottom };
+    ::InflateRect(&rect1, -MARGIN2 * 2, -MARGIN2 * 2);
+    ::InflateRect(&rect2, -MARGIN2 * 2, -MARGIN2 * 2);
 
     INT iItem;
     switch (toolsModel.GetActiveTool())

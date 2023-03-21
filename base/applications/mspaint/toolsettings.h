@@ -8,6 +8,11 @@
 
 #pragma once
 
+#define X_TOOLSETTINGS  0
+#define Y_TOOLSETTINGS  (CY_TOOLBAR + 3)
+#define CX_TOOLSETTINGS CX_TOOLBAR
+#define CY_TOOLSETTINGS 140
+
 class CToolSettingsWindow : public CWindowImpl<CToolSettingsWindow>
 {
 public:
@@ -23,6 +28,8 @@ public:
         MESSAGE_HANDLER(WM_TOOLSMODELZOOMCHANGED, OnToolsModelZoomChanged)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     END_MSG_MAP()
+
+    BOOL DoCreate(HWND hwndParent);
 
 private:
     CWindow trackbarZoom;
