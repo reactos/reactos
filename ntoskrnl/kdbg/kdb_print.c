@@ -13,6 +13,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static KD_CONTEXT KdbgKdContext;
+
+#undef KdSendPacket
+#define pKdSendPacket KdSendPacket
+
+#undef KdReceivePacket
+#define pKdReceivePacket KdReceivePacket
+
 static VOID
 KdbPrintStringWorker(
     _In_ const CSTRING* Output,
@@ -48,7 +56,8 @@ KdbPrintStringWorker(
     Data->Buffer = (PCHAR)Output->Buffer;
 
     /* Send the packet */
-    KdSendPacket(PACKET_TYPE_KD_DEBUG_IO, Header, Data, &KdpContext);
+    /* IO packet: call KdTerm */
+    pKdSendPacket(PACKET_TYPE_KD_DEBUG_IO, Header, Data, &KdbgKdContext);
 }
 
 VOID
@@ -88,11 +97,12 @@ KdbPromptStringWorker(
     do
     {
         /* Get our reply */
-        Status = KdReceivePacket(PACKET_TYPE_KD_DEBUG_IO,
-                                 &Header,
-                                 &Data,
-                                 &Length,
-                                 &KdpContext);
+        /* IO packet: call KdTerm */
+        Status = pKdReceivePacket(PACKET_TYPE_KD_DEBUG_IO,
+                                  &Header,
+                                  &Data,
+                                  &Length,
+                                  &KdbgKdContext);
 
         /* Return TRUE if we need to resend */
         if (Status == KdPacketNeedsResend)

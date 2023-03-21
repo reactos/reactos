@@ -404,6 +404,7 @@ if(NOT _WINKD_)
 
     if(KDBG)
         list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdbg.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_cli.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_cmdhist.c

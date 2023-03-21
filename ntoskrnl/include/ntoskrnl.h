@@ -88,13 +88,15 @@
 #define NOEXTAPI
 #include <windbgkd.h>
 #include <wdbgexts.h>
-#ifdef KDBG
-#define KdDebuggerInitialize0 KdpDebuggerInitialize0
-#define KdDebuggerInitialize1 KdpDebuggerInitialize1
-#define KdSendPacket KdpSendPacket
-#define KdReceivePacket KdpReceivePacket
-#endif
 #include <kddll.h>
+#ifdef KDBG
+    /* Define new names for these exports also present in KDBG */
+    #define KdSendPacket            KdbgSendPacket
+    #define KdReceivePacket         KdbgReceivePacket
+    /* And reload the definitions with these new names */
+    #undef _KDDLL_
+    #include <kddll.h>
+#endif
 #ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>
 #endif

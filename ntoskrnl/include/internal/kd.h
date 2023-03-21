@@ -30,13 +30,6 @@ KdPortPutByteEx(
 
 /* KD GLOBALS ****************************************************************/
 
-typedef enum _KD_CONTINUE_TYPE
-{
-    kdContinue = 0,
-    kdDoNotHandleException,
-    kdHandleException
-} KD_CONTINUE_TYPE;
-
 /* KD Internal Debug Services */
 typedef enum _KDP_DEBUG_SERVICE
 {

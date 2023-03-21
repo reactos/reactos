@@ -51,6 +51,25 @@ typedef enum _KDB_ENTER_CONDITION
    KdbEnterFromUmode
 } KDB_ENTER_CONDITION;
 
+typedef enum _KD_CONTINUE_TYPE
+{
+    kdContinue = 0,
+    kdDoNotHandleException,
+    kdHandleException
+} KD_CONTINUE_TYPE;
+
+
+/* GLOBALS *******************************************************************/
+
+extern PCHAR KdbInitFileBuffer;
+
+extern PEPROCESS KdbCurrentProcess;
+extern PETHREAD KdbCurrentThread;
+extern LONG KdbLastBreakPointNr;
+extern ULONG KdbNumSingleSteps;
+extern BOOLEAN KdbSingleStepOver;
+extern PKDB_KTRAP_FRAME KdbCurrentTrapFrame;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -73,8 +92,6 @@ KdbpStackSwitchAndCall(
    IN VOID (*Function)(VOID));
 
 /* from kdb_cli.c */
-
-extern PCHAR KdbInitFileBuffer;
 
 NTSTATUS
 NTAPI
@@ -174,13 +191,6 @@ KdbSymInit(
     _In_ ULONG BootPhase);
 
 /* from kdb.c */
-
-extern PEPROCESS KdbCurrentProcess;
-extern PETHREAD KdbCurrentThread;
-extern LONG KdbLastBreakPointNr;
-extern ULONG KdbNumSingleSteps;
-extern BOOLEAN KdbSingleStepOver;
-extern PKDB_KTRAP_FRAME KdbCurrentTrapFrame;
 
 LONG
 KdbpGetNextBreakPointNr(
