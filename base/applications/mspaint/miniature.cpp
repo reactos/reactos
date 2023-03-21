@@ -22,12 +22,14 @@ LRESULT CMiniatureWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    DefWindowProc(WM_PAINT, wParam, lParam);
-    RECT mclient;
-    HDC hdc;
-    miniature.GetClientRect(&mclient);
-    hdc = miniature.GetDC();
-    StretchBlt(hdc, 0, 0, mclient.right, mclient.bottom, imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), SRCCOPY);
-    miniature.ReleaseDC(hdc);
+    RECT rc;
+    GetClientRect(&rc);
+
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
+    StretchBlt(hDC, 0, 0, rc.right, rc.bottom,
+               imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(),
+               SRCCOPY);
+    EndPaint(&ps);
     return 0;
 }
