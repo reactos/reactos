@@ -22,6 +22,48 @@ static NTSTATUS KdbgContinueStatus = STATUS_SUCCESS;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+KdD0Transition(VOID)
+#undef KdD0Transition
+#define pKdD0Transition KdD0Transition
+{
+    /* Call KdTerm */
+    return pKdD0Transition();
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+#undef KdD3Transition
+#define pKdD3Transition KdD3Transition
+{
+    /* Call KdTerm */
+    return pKdD3Transition();
+}
+
+NTSTATUS
+NTAPI
+KdSave(
+    _In_ BOOLEAN SleepTransition)
+#undef KdSave
+#define pKdSave KdSave
+{
+    /* Call KdTerm */
+    return pKdSave(SleepTransition);
+}
+
+NTSTATUS
+NTAPI
+KdRestore(
+    _In_ BOOLEAN SleepTransition)
+#undef KdRestore
+#define pKdRestore KdRestore
+{
+    /* Call KdTerm */
+    return pKdRestore(SleepTransition);
+}
+
 VOID
 NTAPI
 KdSendPacket(

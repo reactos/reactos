@@ -91,6 +91,10 @@
 #include <kddll.h>
 #ifdef KDBG
     /* Define new names for these exports also present in KDBG */
+    #define KdD0Transition          KdbgD0Transition
+    #define KdD3Transition          KdbgD3Transition
+    #define KdSave                  KdbgSave
+    #define KdRestore               KdbgRestore
     #define KdSendPacket            KdbgSendPacket
     #define KdReceivePacket         KdbgReceivePacket
     /* And reload the definitions with these new names */

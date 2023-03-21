@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef KdD0Transition
+#undef KdD3Transition
+#undef KdSave
+#undef KdRestore
+
 /* PUBLIC FUNCTIONS *********************************************************/
 
 static VOID
@@ -443,6 +448,40 @@ KdDebuggerInitialize1(
      **/
     orgHalInitPnpDriver =
         InterlockedExchangePointer((PVOID*)&HalInitPnpDriver, KdpInitDriver);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD0Transition(VOID)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdSave(
+    _In_ BOOLEAN SleepTransition)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdRestore(
+    _In_ BOOLEAN SleepTransition)
+{
+    /* Nothing to do */
     return STATUS_SUCCESS;
 }
 
