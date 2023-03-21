@@ -70,6 +70,18 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     return TRUE;
 }
 
+HWND CMainWindow::DoCreate()
+{
+    CPath pathFileName(filepathname);
+    pathFileName.StripPath();
+
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+
+    RECT rc = registrySettings.WindowPlacement.rcNormalPosition;
+    return Create(HWND_DESKTOP, rc, strTitle, WS_OVERLAPPEDWINDOW);
+}
+
 void CMainWindow::alignChildrenToMainWindow()
 {
     RECT clientRect, rc;
@@ -252,6 +264,40 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
 LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // Accept Drag & Drop
+    DragAcceptFiles(TRUE);
+
+    // Create the status bar
+    DWORD style = SBARS_SIZEGRIP | WS_CHILD | (registrySettings.ShowStatusBar ? WS_VISIBLE : 0);
+    hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
+                                  NULL, hProgInstance, NULL);
+    SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
+
+    // Create the tool box
+    toolBoxContainer.DoCreate(m_hWnd);
+
+    // Create the palette window
+    RECT rcEmpty = { 0, 0, 0, 0 }; // Rely on WM_SIZE
+    style = WS_CHILD | (registrySettings.ShowPalette ? WS_VISIBLE : 0);
+    paletteWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_STATICEDGE);
+
+    // Create the canvas
+    style = WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE;
+    canvasWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_CLIENTEDGE);
+
+    // Creating the window inside the canvas
+    imageArea.DoCreate(canvasWindow);
+
+    // Create selection window (initially hidden)
+    selectionWindow.Create(imageArea, rcEmpty, NULL, WS_CHILD | BS_OWNERDRAW);
+
+    // Initialize imageModel
+    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
+    if (__argc >= 2)
+        DoLoadImageFile(m_hWnd, __targv[1], TRUE);
+    imageModel.ClearHistory();
+
+    // Set icon
     SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
     SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
     return 0;
@@ -774,6 +820,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_VIEWSHOWMINIATURE:
             showMiniature = !showMiniature;
+            miniature.DoCreate(m_hWnd);
             miniature.ShowWindow(showMiniature ? SW_SHOW : SW_HIDE);
             break;
 
@@ -800,7 +847,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case IDM_VIEWFULLSCREEN:
-            fullscreenWindow.ShowWindow(SW_SHOW);
+            // Create the fullscreen window
+            fullscreenWindow.DoCreate();
+            fullscreenWindow.ShowWindow(SW_SHOWMAXIMIZED);
             ShowWindow(SW_HIDE);
             break;
     }

@@ -17,6 +17,8 @@ public:
     {
     }
 
+    HWND DoCreate(HWND hwndParent);
+
     BOOL drawing;
     void cancelDrawing();
     void finishDrawing();

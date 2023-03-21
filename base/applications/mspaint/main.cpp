@@ -120,7 +120,6 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 int WINAPI
 _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, INT nCmdShow)
 {
-    HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
 
     HMENU menu;
@@ -130,7 +129,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     TCHAR sfnFiletitle[256];
     TCHAR ofnFilename[1000];
     TCHAR ofnFiletitle[256];
-    TCHAR miniaturetitle[100];
     static COLORREF custColors[16] = {
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
@@ -149,78 +147,25 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES | ICC_BAR_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
-    CPath pathFileName(filepathname);
-    pathFileName.StripPath();
-    CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-    LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
-
     /* load settings from registry */
     registrySettings.Load(nCmdShow);
     showMiniature = registrySettings.ShowThumbnail;
-    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
+    ::LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
 
-    /* create main window */
-    RECT mainWindowPos = registrySettings.WindowPlacement.rcNormalPosition;
-    hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
-
-    RECT fullscreenWindowPos = {0, 0, 100, 100};
-    fullscreenWindow.Create(HWND_DESKTOP, fullscreenWindowPos, NULL, WS_POPUPWINDOW | WS_MAXIMIZE);
-
-    RECT miniaturePos = {(LONG) registrySettings.ThumbXPos, (LONG) registrySettings.ThumbYPos,
-                         (LONG) registrySettings.ThumbXPos + (LONG) registrySettings.ThumbWidth,
-                         (LONG) registrySettings.ThumbYPos + (LONG) registrySettings.ThumbHeight};
-    miniature.Create(hwnd, miniaturePos, miniaturetitle,
-                     WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, WS_EX_PALETTEWINDOW);
-    miniature.ShowWindow(showMiniature ? SW_SHOW : SW_HIDE);
+    // Create the main window
+    mainWindow.DoCreate();
 
     /* loading and setting the window menu from resource */
     menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
-    SetMenu(hwnd, menu);
-    haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
+    mainWindow.SetMenu(menu);
 
-    /* Create ToolBox */
-    toolBoxContainer.DoCreate(hwnd);
-
-    /* creating the palette child window */
-    RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
-    paletteWindow.Create(hwnd, paletteWindowPos, NULL, WS_CHILD, WS_EX_STATICEDGE);
-    if (registrySettings.ShowPalette)
-        paletteWindow.ShowWindow(SW_SHOWNOACTIVATE);
-
-    // creating the canvas
-    RECT canvasWindowPos = {0, 0, 0 + 500, 0 + 500};
-    canvasWindow.Create(hwnd, canvasWindowPos, NULL,
-                           WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, WS_EX_CLIENTEDGE);
-
-    /* creating the status bar */
-    hStatusBar =
-        CreateWindowEx(0, STATUSCLASSNAME, NULL, SBARS_SIZEGRIP | WS_CHILD, 0, 0, 0, 0, hwnd,
-                       NULL, hThisInstance, NULL);
-    SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
-    if (registrySettings.ShowStatusBar)
-        ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
-
-    // Creating the window inside the canvas
-    RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
-    imageArea.Create(canvasWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
-
-    /* create selection window (initially hidden) */
-    RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
-    selectionWindow.Create(imageArea.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
-
-    if (__argc >= 2)
-    {
-        DoLoadImageFile(mainWindow, __targv[1], TRUE);
-    }
-
-    imageModel.ClearHistory();
+    // Load the access keys
+    haccel = ::LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
     ZeroMemory(&choosecolor, sizeof(choosecolor));
     choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
-    choosecolor.hwndOwner      = hwnd;
+    choosecolor.hwndOwner      = mainWindow;
     choosecolor.rgbResult      = 0x00ffffff;
     choosecolor.lpCustColors   = custColors;
 
@@ -236,7 +181,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 //     strImporters = strAllFiles + CAtlStringW(_T("|*.*|")).Replace('|', '\0') + strImporters;
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize    = sizeof(OPENFILENAME);
-    ofn.hwndOwner      = hwnd;
+    ofn.hwndOwner      = mainWindow;
     ofn.hInstance      = hThisInstance;
     ofn.lpstrFilter    = strImporters;
     ofn.lpstrFile      = ofnFilename;
@@ -252,7 +197,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     CImage::GetExporterFilterString(strExporters, aguidFileTypesE, NULL, CImage::excludeDefaultSave, _T('\0'));
     ZeroMemory(&sfn, sizeof(OPENFILENAME));
     sfn.lStructSize    = sizeof(OPENFILENAME);
-    sfn.hwndOwner      = hwnd;
+    sfn.hwndOwner      = mainWindow;
     sfn.hInstance      = hThisInstance;
     sfn.lpstrFilter    = strExporters;
     sfn.lpstrFile      = sfnFilename;
@@ -276,10 +221,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     imageArea.SendMessage(WM_SIZE, 0, 0);
 
     /* Make the window visible on the screen */
-    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
-
-    /* inform the system, that the main window accepts dropped files */
-    DragAcceptFiles(hwnd, TRUE);
+    mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
@@ -287,7 +229,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         if (fontsDialog.IsWindow() && IsDialogMessage(fontsDialog, &messages))
             continue;
 
-        if (TranslateAccelerator(hwnd, haccel, &messages))
+        if (TranslateAccelerator(mainWindow, haccel, &messages))
             continue;
 
         /* Translate virtual-key messages into character messages */
@@ -296,12 +238,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         DispatchMessage(&messages);
     }
 
-    /* write back settings to registry */
-    registrySettings.ShowThumbnail = showMiniature;
-    registrySettings.BMPWidth = imageModel.GetWidth();
-    registrySettings.BMPHeight = imageModel.GetHeight();
+    ::DestroyAcceleratorTable(haccel);
+
+    // Write back settings to registry
     registrySettings.Store();
 
-    /* The program return-value is 0 - The value that PostQuitMessage() gave */
-    return messages.wParam;
+    // The value that PostQuitMessage() gave
+    return (INT)messages.wParam;
 }

@@ -12,6 +12,17 @@
 
 /* FUNCTIONS ********************************************************/
 
+HWND CImgAreaWindow::DoCreate(HWND hwndParent)
+{
+    RECT rc =
+    {
+        GRIP_SIZE, GRIP_SIZE,
+        GRIP_SIZE + imageModel.GetWidth(),
+        GRIP_SIZE + imageModel.GetHeight()
+    };
+    return imageArea.Create(hwndParent, rc, NULL, WS_CHILD | WS_VISIBLE);
+}
+
 LRESULT CImgAreaWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     m_hCurFill     = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_FILL));

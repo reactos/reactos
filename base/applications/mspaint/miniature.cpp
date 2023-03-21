@@ -13,6 +13,24 @@
 
 /* FUNCTIONS ********************************************************/
 
+HWND CMiniatureWindow::DoCreate(HWND hwndParent)
+{
+    if (m_hWnd)
+        return m_hWnd;
+
+    RECT rc =
+    {
+        (LONG)registrySettings.ThumbXPos,
+        (LONG)registrySettings.ThumbYPos,
+        (LONG)(registrySettings.ThumbXPos + registrySettings.ThumbWidth),
+        (LONG)(registrySettings.ThumbYPos + registrySettings.ThumbHeight)
+    };
+    TCHAR miniaturetitle[100];
+    LoadString(hProgInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
+    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+    return Create(hwndParent, rc, miniaturetitle, style, WS_EX_PALETTEWINDOW);
+}
+
 LRESULT CMiniatureWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     miniature.ShowWindow(SW_HIDE);

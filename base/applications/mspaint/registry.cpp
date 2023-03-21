@@ -161,6 +161,10 @@ void RegistrySettings::Load(INT nCmdShow)
 
 void RegistrySettings::Store()
 {
+    ShowThumbnail = showMiniature;
+    BMPWidth = imageModel.GetWidth();
+    BMPHeight = imageModel.GetHeight();
+
     CRegKey paint;
     if (paint.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint")) != ERROR_SUCCESS)
         return;

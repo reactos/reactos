@@ -12,6 +12,15 @@
 
 /* FUNCTIONS ********************************************************/
 
+HWND CFullscreenWindow::DoCreate()
+{
+    if (m_hWnd)
+        return m_hWnd;
+
+    RECT rc = {0, 0, 0, 0}; // Rely on SW_SHOWMAXIMIZED
+    return fullscreenWindow.Create(HWND_DESKTOP, rc, NULL, WS_POPUPWINDOW);
+}
+
 LRESULT CFullscreenWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));

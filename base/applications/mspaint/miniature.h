@@ -19,6 +19,9 @@ public:
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
 
+    HWND DoCreate(HWND hwndParent);
+
+private:
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
