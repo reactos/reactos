@@ -120,3 +120,15 @@ public:
     void NotifyToolSettingsChanged();
     void NotifyZoomChanged();
 };
+
+extern ToolsModel toolsModel;
+
+static inline int Zoomed(int xy)
+{
+    return xy * toolsModel.GetZoom() / 1000;
+}
+
+static inline int UnZoomed(int xy)
+{
+    return xy * 1000 / toolsModel.GetZoom();
+}

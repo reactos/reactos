@@ -7,9 +7,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+CToolBox toolBoxContainer;
 
 /* FUNCTIONS ********************************************************/
 

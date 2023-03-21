@@ -6,9 +6,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+ImageModel imageModel;
 
 /* FUNCTIONS ********************************************************/
 

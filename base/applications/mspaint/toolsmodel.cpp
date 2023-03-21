@@ -6,9 +6,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+ToolsModel toolsModel;
 
 /* FUNCTIONS ********************************************************/
 

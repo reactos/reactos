@@ -6,10 +6,13 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 #include <math.h>
+
+INT fileSize = 0;
+INT fileHPPM = 2834; // horizontal pixels per millimeter (PPM)
+INT fileVPPM = 2834; // vertical pixels per millimeter (PPM)
+SYSTEMTIME fileTime;
 
 /* FUNCTIONS ********************************************************/
 

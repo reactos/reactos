@@ -24,11 +24,12 @@
 
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
 
+CToolSettingsWindow toolSettingsWindow;
+
 /* FUNCTIONS ********************************************************/
 
 BOOL CToolSettingsWindow::DoCreate(HWND hwndParent)
 {
-    /* creating the tool settings child window */
     RECT toolSettingsWindowPos =
     {
         X_TOOLSETTINGS, Y_TOOLSETTINGS,

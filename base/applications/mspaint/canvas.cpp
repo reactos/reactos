@@ -6,9 +6,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+CCanvasWindow canvasWindow;
 
 /* FUNCTIONS ********************************************************/
 

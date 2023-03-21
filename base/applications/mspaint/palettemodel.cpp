@@ -7,9 +7,9 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+PaletteModel paletteModel;
 
 /* FUNCTIONS ********************************************************/
 

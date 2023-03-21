@@ -13,11 +13,7 @@
 class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE)
-    {
-    }
-
-    HWND DoCreate(HWND hwndParent);
+    CImgAreaWindow() : drawing(FALSE) { }
 
     BOOL drawing;
     void cancelDrawing();
