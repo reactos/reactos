@@ -8,11 +8,6 @@
 
 #pragma once
 
-#define X_TOOLSETTINGS  0
-#define Y_TOOLSETTINGS  (CY_TOOLBAR + 3)
-#define CX_TOOLSETTINGS CX_TOOLBAR
-#define CY_TOOLSETTINGS 140
-
 class CToolSettingsWindow : public CWindowImpl<CToolSettingsWindow>
 {
 public:

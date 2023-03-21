@@ -12,6 +12,11 @@
 
 #include "precomp.h"
 
+#define X_TOOLSETTINGS  0
+#define Y_TOOLSETTINGS  (CY_TOOLBAR + 3)
+#define CX_TOOLSETTINGS CX_TOOLBAR
+#define CY_TOOLSETTINGS 140
+
 #define CX_TRANS_ICON 40
 #define CY_TRANS_ICON 30
 #define MARGIN1 3
