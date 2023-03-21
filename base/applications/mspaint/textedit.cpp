@@ -19,94 +19,28 @@ CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nAppI
     SetRectEmpty(&m_rc);
 }
 
-#define X0 rc.left
-#define X1 ((rc.left + rc.right - CXY_GRIP) / 2)
-#define X2 (rc.right - CXY_GRIP)
-#define Y0 rc.top
-#define Y1 ((rc.top + rc.bottom - CXY_GRIP) / 2)
-#define Y2 (rc.bottom - CXY_GRIP)
-#define RECT0 X0, Y0, X0 + CXY_GRIP, Y0 + CXY_GRIP // Upper Left
-#define RECT1 X1, Y0, X1 + CXY_GRIP, Y0 + CXY_GRIP // Top
-#define RECT2 X2, Y0, X2 + CXY_GRIP, Y0 + CXY_GRIP // Upper Right
-#define RECT3 X0, Y1, X0 + CXY_GRIP, Y1 + CXY_GRIP // Left
-#define RECT4 X2, Y1, X2 + CXY_GRIP, Y1 + CXY_GRIP // Right
-#define RECT5 X0, Y2, X0 + CXY_GRIP, Y2 + CXY_GRIP // Lower Left
-#define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP // Bottom
-#define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP // Lower Right
-
 INT CTextEditWindow::DoHitTest(RECT& rc, POINT pt)
 {
-    RECT rcGrip;
-
-    SetRect(&rcGrip, RECT0);
-    if (PtInRect(&rcGrip, pt))
-        return HTTOPLEFT;
-    SetRect(&rcGrip, RECT1);
-    if (PtInRect(&rcGrip, pt))
-        return HTTOP;
-    SetRect(&rcGrip, RECT2);
-    if (PtInRect(&rcGrip, pt))
-        return HTTOPRIGHT;
-
-    SetRect(&rcGrip, RECT3);
-    if (PtInRect(&rcGrip, pt))
-        return HTLEFT;
-    SetRect(&rcGrip, RECT4);
-    if (PtInRect(&rcGrip, pt))
-        return HTRIGHT;
-
-    SetRect(&rcGrip, RECT5);
-    if (PtInRect(&rcGrip, pt))
-        return HTBOTTOMLEFT;
-    SetRect(&rcGrip, RECT6);
-    if (PtInRect(&rcGrip, pt))
-        return HTBOTTOM;
-    SetRect(&rcGrip, RECT7);
-    if (PtInRect(&rcGrip, pt))
-        return HTBOTTOMRIGHT;
-
-    // On border line?
-    RECT rcInner = rc;
-    InflateRect(&rcInner, -3, -3);
-    if (!PtInRect(&rcInner, pt) && PtInRect(&rc, pt))
-        return HTCAPTION;
-
-    return HTCLIENT;
+    switch (getSizeBoxHitTest(pt, &rc))
+    {
+        case HIT_NONE:          return HTNOWHERE;
+        case HIT_UPPER_LEFT:    return HTTOPLEFT;
+        case HIT_UPPER_CENTER:  return HTTOP;
+        case HIT_UPPER_RIGHT:   return HTTOPRIGHT;
+        case HIT_MIDDLE_LEFT:   return HTLEFT;
+        case HIT_MIDDLE_RIGHT:  return HTRIGHT;
+        case HIT_LOWER_LEFT:    return HTBOTTOMLEFT;
+        case HIT_LOWER_CENTER:  return HTBOTTOM;
+        case HIT_LOWER_RIGHT:   return HTBOTTOMRIGHT;
+        case HIT_BORDER:        return HTCAPTION; // Enable drag move
+        case HIT_INNER:         return HTCLIENT;
+    }
+    return HTNOWHERE;
 }
 
 void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
 {
-    HGDIOBJ hbrOld = SelectObject(hDC, GetStockObject(NULL_BRUSH));
-    HPEN hPen = CreatePen(PS_DOT, 1, GetSysColor(COLOR_HIGHLIGHT));
-    HGDIOBJ hPenOld = SelectObject(hDC, hPen);
-    InflateRect(&rc, -1, -1);
-    Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
-    InflateRect(&rc, 1, 1);
-    SelectObject(hDC, hPenOld);
-    SelectObject(hDC, hbrOld);
-    DeleteObject(hPen);
-
-    RECT rcGrip;
-    HBRUSH hbrHighlight = GetSysColorBrush(COLOR_HIGHLIGHT);
-
-    SetRect(&rcGrip, RECT0);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-    SetRect(&rcGrip, RECT1);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-    SetRect(&rcGrip, RECT2);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-
-    SetRect(&rcGrip, RECT3);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-    SetRect(&rcGrip, RECT4);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-
-    SetRect(&rcGrip, RECT5);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-    SetRect(&rcGrip, RECT6);
-    FillRect(hDC, &rcGrip, hbrHighlight);
-    SetRect(&rcGrip, RECT7);
-    FillRect(hDC, &rcGrip, hbrHighlight);
+    drawSizeBoxes(hDC, &rc, TRUE, NULL);
 }
 
 void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
@@ -257,7 +191,7 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     UINT nHitTest = LOWORD(lParam);
     if (nHitTest == HTCAPTION)
     {
-        SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+        ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL)); // Enable drag move
         return FALSE;
     }
     return DefWindowProc(nMsg, wParam, lParam);
@@ -477,28 +411,16 @@ void CTextEditWindow::Reposition()
     imageArea.GetClientRect(&rcImage);
 
     if (rc.bottom > rcImage.bottom)
-    {
-        rc.top = rcImage.bottom - (rc.bottom - rc.top);
-        rc.bottom = rcImage.bottom;
-    }
+        ::OffsetRect(&rc, 0, rcImage.bottom - rc.bottom);
 
     if (rc.right > rcImage.right)
-    {
-        rc.left = rcImage.right - (rc.right - rc.left);
-        rc.right = rcImage.right;
-    }
+        ::OffsetRect(&rc, rcImage.right - rc.right, 0);
 
     if (rc.left < 0)
-    {
-        rc.right += -rc.left;
-        rc.left = 0;
-    }
+        ::OffsetRect(&rc, -rc.left, 0);
 
     if (rc.top < 0)
-    {
-        rc.bottom += -rc.top;
-        rc.top = 0;
-    }
+        ::OffsetRect(&rc, 0, -rc.top);
 
     ++m_nAppIsMovingOrSizing;
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
