@@ -16,7 +16,8 @@
 BOOL CToolBox::DoCreate(HWND hwndParent)
 {
     RECT toolBoxContainerPos = { 0, 0, 0, 0 };
-    return !!Create(hwndParent, toolBoxContainerPos, NULL, WS_CHILD | WS_VISIBLE);
+    DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
+    return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
 }
 
 LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
