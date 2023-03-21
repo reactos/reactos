@@ -88,10 +88,6 @@ KdpDebugLogInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
     _In_ ULONG BootPhase);
 
-#ifdef KDBG
-#define KdpKdbgInit KdbInitialize
-#endif
-
 
 /* KD ROUTINES ***************************************************************/
 

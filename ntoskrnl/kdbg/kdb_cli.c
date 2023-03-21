@@ -3532,7 +3532,6 @@ KdbDebugPrint(
  * Phase of initialization.
  *
  * @return  A status value.
- * @note    Also known as "KdpKdbgInit".
  **/
 NTSTATUS
 NTAPI

@@ -8,10 +8,20 @@
  */
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
 
-/* VARIABLES ***************************************************************/
+#undef KdDebuggerInitialize0
+#undef KdDebuggerInitialize1
+#undef KdD0Transition
+#undef KdD3Transition
+#undef KdSave
+#undef KdRestore
+#undef KdSendPacket
+#undef KdReceivePacket
+
+/* VARIABLES ****************************************************************/
 
 extern ANSI_STRING KdpLogFileName;
 
@@ -96,11 +106,6 @@ KdDebuggerInitialize0(
         {
             /* Upcase it */
             _strupr(CommandLine);
-
-#ifdef KDBG
-            /* Get the KDBG Settings */
-            KdbpGetCommandLineSettings(CommandLine);
-#endif
 
             /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");
@@ -274,7 +279,7 @@ KdpInitDriver(VOID)
 {
     static BOOLEAN InitCalled = FALSE;
     NTSTATUS Status;
-    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\KdDriver");
+    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\KdTerm");
 
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -334,8 +339,6 @@ KdDebuggerInitialize1(
 
     /* Make space for the displayed providers' signons */
     HalDisplayString("\r\n");
-
-    NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
 
     /* If we don't need to reinitialize providers for Phase 2, we are done */
     if (!ReinitForPhase2)
@@ -419,6 +422,40 @@ KdDebuggerInitialize1(
      **/
     orgHalInitPnpDriver =
         InterlockedExchangePointer((PVOID*)&HalInitPnpDriver, KdpInitDriver);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD0Transition(VOID)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdSave(
+    _In_ BOOLEAN SleepTransition)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdRestore(
+    _In_ BOOLEAN SleepTransition)
+{
+    /* Nothing to do */
     return STATUS_SUCCESS;
 }
 

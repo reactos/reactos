@@ -89,10 +89,14 @@
 #include <windbgkd.h>
 #include <wdbgexts.h>
 #ifdef KDBG
-#define KdDebuggerInitialize0 KdpDebuggerInitialize0
-#define KdDebuggerInitialize1 KdpDebuggerInitialize1
-#define KdSendPacket KdpSendPacket
-#define KdReceivePacket KdpReceivePacket
+#define KdDebuggerInitialize0   KdbgDebuggerInitialize0
+#define KdDebuggerInitialize1   KdbgDebuggerInitialize1
+#define KdD0Transition          KdbgD0Transition
+#define KdD3Transition          KdbgD3Transition
+#define KdSave                  KdbgSave
+#define KdRestore               KdbgRestore
+#define KdSendPacket            KdbgSendPacket
+#define KdReceivePacket         KdbgReceivePacket
 #endif
 #include <kddll.h>
 #ifdef __ROS_ROSSYM__
