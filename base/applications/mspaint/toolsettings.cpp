@@ -282,15 +282,24 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
     return 0;
 }
 
-LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+VOID CToolSettingsWindow::calculateTwoBoxes(RECT& rect1, RECT& rect2)
 {
     RECT rcClient;
     GetClientRect(&rcClient);
     ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
 
     INT yCenter = (rcClient.top + rcClient.bottom) / 2;
-    RECT rect1 = { rcClient.left, rcClient.top, rcClient.right, yCenter };
-    RECT rect2 = { rcClient.left, yCenter, rcClient.right, rcClient.bottom };
+    ::SetRect(&rect1, rcClient.left, rcClient.top, rcClient.right, yCenter);
+    ::SetRect(&rect2, rcClient.left, yCenter, rcClient.right, rcClient.bottom);
+
+    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
+    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
+}
+
+LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    RECT rect1, rect2;
+    calculateTwoBoxes(rect1, rect2);
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
@@ -346,15 +355,9 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-    RECT rcClient, rects[12];
-    GetClientRect(&rcClient);
-    ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
-
-    INT yCenter = (rcClient.top + rcClient.bottom) / 2;
-    RECT rect1 = { rcClient.left, rcClient.top, rcClient.right, yCenter };
-    RECT rect2 = { rcClient.left, yCenter, rcClient.right, rcClient.bottom };
-    ::InflateRect(&rect1, -MARGIN2 * 2, -MARGIN2 * 2);
-    ::InflateRect(&rect2, -MARGIN2 * 2, -MARGIN2 * 2);
+    RECT rect1, rect2;
+    calculateTwoBoxes(rect1, rect2);
+    RECT rects[12];
 
     INT iItem;
     switch (toolsModel.GetActiveTool())
