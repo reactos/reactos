@@ -326,7 +326,7 @@ BEGIN
     PUSHBUTTON "Nettoyage de &disque", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Compresser le lecteur pour gagner de l'espace disque", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Autoriser le service d'indexation à indexer ce disque pour une recherche rapide de fichiers", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "Autoriser l'indexation de ce disque pour la recherche rapide", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -609,17 +609,17 @@ BEGIN
     AUTOCHECKBOX "Activer la compression", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
+IDD_CHECK_DISK DIALOGEX 50, 50, 244, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Vérifier le disque"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Démarrer", IDOK, 63, 95, 60, 14
-    GROUPBOX "Options de vérification", -1, 7, 6, 179, 40
-    PUSHBUTTON "Annuler", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Scanner pour rechercher et réparer les secteurs défectueux", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
+    DEFPUSHBUTTON "Démarrer", IDOK, 113, 95, 60, 14
+    GROUPBOX "Options de vérification du disque", -1, 7, 6, 229, 40
+    PUSHBUTTON "Annuler", IDCANCEL, 178, 95, 60, 14
+    AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 12, 20, 215, 10
+    AUTOCHECKBOX "Rechercher et tenter une récupération des secteurs défectueux", 14001, 12, 30, 215, 10
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 229, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
