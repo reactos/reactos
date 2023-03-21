@@ -75,7 +75,7 @@ public:
     virtual ~CTrayClockWnd();
 
 private:
-    LRESULT OnThemeChanged();
+    VOID DoUpdateAppearance();
     LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     BOOL MeasureLines();
@@ -98,6 +98,7 @@ private:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
 
@@ -137,6 +138,7 @@ public:
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClick)
+        MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
     END_MSG_MAP()
 
     HRESULT Initialize(IN HWND hWndParent);
@@ -150,11 +152,11 @@ public:
 
 CTrayClockWnd::CTrayClockWnd() :
         hFont(NULL),
+        textColor(0),
         dwFlags(0),
         LineSpacing(0),
         VisibleLines(0)
 {
-    ZeroMemory(&textColor, sizeof(textColor));
     ZeroMemory(&rcText, sizeof(rcText));
     ZeroMemory(&LocalTime, sizeof(LocalTime));
     ZeroMemory(&CurrentSize, sizeof(CurrentSize));
@@ -163,7 +165,7 @@ CTrayClockWnd::CTrayClockWnd() :
 }
 CTrayClockWnd::~CTrayClockWnd() { }
 
-LRESULT CTrayClockWnd::OnThemeChanged()
+VOID CTrayClockWnd::DoUpdateAppearance()
 {
     LOGFONTW clockFont;
     HTHEME clockTheme;
@@ -182,11 +184,7 @@ LRESULT CTrayClockWnd::OnThemeChanged()
 
         hFont = CreateFontIndirectW(&clockFont);
 
-        GetThemeColor(clockTheme,
-            CLP_TIME,
-            0,
-            TMT_TEXTCOLOR,
-            &textColor);
+        GetThemeColor(clockTheme, CLP_TIME, 0, TMT_TEXTCOLOR, &textColor);
 
         if (this->hFont != NULL)
             DeleteObject(this->hFont);
@@ -197,17 +195,18 @@ LRESULT CTrayClockWnd::OnThemeChanged()
     {
         /* We don't need to set a font here, our parent will use
             * WM_SETFONT to set the right one when themes are not enabled. */
-        textColor = RGB(0, 0, 0);
+        textColor = ::GetSysColor(COLOR_BTNTEXT);
     }
 
     CloseThemeData(clockTheme);
 
-    return TRUE;
+    Invalidate(TRUE);
 }
 
 LRESULT CTrayClockWnd::OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return OnThemeChanged();
+    DoUpdateAppearance();
+    return 0;
 }
 
 BOOL CTrayClockWnd::MeasureLines()
@@ -659,6 +658,9 @@ LRESULT CTrayClockWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         ResetTime();
     }
 
+    /* Update hFont and textColor */
+    DoUpdateAppearance();
+
     /* Update the time */
     Update();
 
@@ -728,6 +730,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
         Update();
     }
+    return 0;
+}
+
+LRESULT CTrayClockWnd::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    DoUpdateAppearance();
     return 0;
 }
 

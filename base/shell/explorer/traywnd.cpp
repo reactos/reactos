@@ -2616,6 +2616,15 @@ ChangePos:
         return TRUE;
     }
 
+    LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        m_StartButton.PostMessageW(WM_SYSCOLORCHANGE, 0, 0);
+        ::PostMessageW(m_Rebar, WM_SYSCOLORCHANGE, 0, 0);
+        ::PostMessageW(m_TaskSwitch, WM_SYSCOLORCHANGE, 0, 0);
+        ::PostMessageW(m_TrayNotify, WM_SYSCOLORCHANGE, 0, 0);
+        return 0;
+    }
+
     LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (wParam == SPI_SETNONCLIENTMETRICS)
@@ -3474,6 +3483,7 @@ HandleTrayContextMenu:
             lParam = Msg.lParam;
         }
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
+        MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         NOTIFY_CODE_HANDLER(RBN_AUTOSIZE, OnRebarAutoSize) // Doesn't quite work ;P
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
