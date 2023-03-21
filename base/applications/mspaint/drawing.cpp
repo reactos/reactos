@@ -174,8 +174,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 1:
             for(a = 0; a <= b; a++)
-                Ellipse(hdc, (x1 * (b - a) + x2 * a) / b - 1, (y1 * (b - a) + y2 * a) / b - 1,
-                        (x1 * (b - a) + x2 * a) / b + 3, (y1 * (b - a) + y2 * a) / b + 3);
+                Ellipse(hdc,
+                        (x1 * (b - a) + x2 * a) / b - 2,
+                        (y1 * (b - a) + y2 * a) / b - 2,
+                        (x1 * (b - a) + x2 * a) / b + 2,
+                        (y1 * (b - a) + y2 * a) / b + 2);
             break;
         case 2:
             MoveToEx(hdc, x1, y1, NULL);
