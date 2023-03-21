@@ -101,13 +101,6 @@ public:
         return OnThemeChanged();
     }
 
-    LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        ::PostMessageW(m_hwndClock, WM_SYSCOLORCHANGE, 0, 0);
-        ::PostMessageW(m_hwndPager, WM_SYSCOLORCHANGE, 0, 0);
-        return 0;
-    }
-
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HRESULT hr;
@@ -353,7 +346,6 @@ public:
     BEGIN_MSG_MAP(CTrayNotifyWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
-        MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
