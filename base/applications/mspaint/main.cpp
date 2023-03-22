@@ -12,13 +12,10 @@ POINT start;
 POINT last;
 
 BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
-
-HINSTANCE hProgInstance;
-
-TCHAR filepathname[MAX_LONG_PATH];
+HINSTANCE hProgInstance = NULL;
+TCHAR filepathname[MAX_LONG_PATH] = { 0 };
 BOOL isAFile = FALSE;
 BOOL imageSaved = FALSE;
-
 BOOL showGrid = FALSE;
 
 CMainWindow mainWindow;
