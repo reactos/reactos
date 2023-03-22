@@ -1073,6 +1073,9 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
+                CHAR attr = Buf->wAttribute;
+                PUCHAR pch;
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
 
@@ -1080,9 +1083,11 @@ ScrIoControl(
                                  (DeviceExtension->Rows - Buf->dwCoord.Y)
                                     * DeviceExtension->Columns - Buf->dwCoord.X);
 
+                pch = vidmem + offset;
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->wAttribute;
+                    *pch = attr;
+                    pch += 2;
                 }
                 Buf->dwTransfered = dwCount;
             }
@@ -1203,6 +1208,8 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
+                PUCHAR pch;
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (dwCoord.X + dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
 
@@ -1210,10 +1217,13 @@ ScrIoControl(
                                  (DeviceExtension->Rows - dwCoord.Y)
                                     * DeviceExtension->Columns - dwCoord.X);
 
+                pch = vidmem + offset;
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++, pAttr++)
                 {
-                    vidmem[offset + (dwCount * 2)] = *((PCHAR)pAttr);
+                    *pch = *((PCHAR)pAttr);
+                    pch += 2;
                 }
+
                 Irp->IoStatus.Information = dwCount * sizeof(USHORT);
             }
 
@@ -1271,6 +1281,9 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
+                CHAR ch = Buf->cCharacter;
+                PUCHAR pch;
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2;
 
@@ -1278,9 +1291,11 @@ ScrIoControl(
                                  (DeviceExtension->Rows - Buf->dwCoord.Y)
                                     * DeviceExtension->Columns - Buf->dwCoord.X);
 
+                pch = vidmem + offset;
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->cCharacter;
+                    *pch = ch;
+                    pch += 2;
                 }
                 Buf->dwTransfered = dwCount;
             }
