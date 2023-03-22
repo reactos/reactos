@@ -5310,9 +5310,15 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 
 	case WM_IME_SELECT:
+#ifdef __REACTOS__
+		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_CONTROL:
+#ifdef __REACTOS__
+		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_REQUEST:
