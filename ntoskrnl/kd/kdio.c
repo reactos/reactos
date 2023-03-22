@@ -726,17 +726,24 @@ KdReceivePacket(
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdDisableMouse();
 
-    /* Read a line of user input and retrieve the length.
-     * The output string is NULL-terminated -- documentation states
-     * that DbgPrompt() does not NULL-terminate, but it does. */
-    *DataLength = KdbpReadCommand(ResponseString.Buffer,
-                                  ResponseString.MaximumLength);
+    /*
+     * Read a NULL-terminated line of user input and retrieve its length.
+     * Official documentation states that DbgPrompt() includes a terminating
+     * newline character but does not NULL-terminate. However, experiments
+     * show that this behaviour is left at the discretion of WinDbg itself.
+     * WinDbg NULL-terminates the string unless its buffer is too short,
+     * in which case the string is simply truncated without NULL-termination.
+     */
+    ResponseString.Length =
+        (USHORT)KdbpReadCommand(ResponseString.Buffer,
+                                ResponseString.MaximumLength);
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
 
-    /* Return the length */
-    *DataLength = min(*DataLength, DebugIo->u.GetString.LengthOfStringRead);
+    /* Adjust and return the string length */
+    *DataLength = min(ResponseString.Length + sizeof(ANSI_NULL),
+                      DebugIo->u.GetString.LengthOfStringRead);
     MessageData->Length = DebugIo->u.GetString.LengthOfStringRead = *DataLength;
 
     /* Only now we can copy back the data into MessageData->Buffer */
