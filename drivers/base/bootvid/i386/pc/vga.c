@@ -464,13 +464,27 @@ VidSolidColorFill(
     if (Top <= Bottom)
     {
         /* Start looping each line */
-        for (i = (Bottom - Top) + 1; i > 0; --i)
+        if (Color == BV_COLOR_BLACK) /* Optimized for black */
         {
-            /* Read the previous value and add our color */
-            WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+            for (i = (Bottom - Top) + 1; i > 0; --i)
+            {
+                /* Write our color without reading */
+                WRITE_REGISTER_UCHAR(Offset, 0);
 
-            /* Move to the next line */
-            Offset += (SCREEN_WIDTH / 8);
+                /* Move to the next line */
+                Offset += (SCREEN_WIDTH / 8);
+            }
+        }
+        else
+        {
+            for (i = (Bottom - Top) + 1; i > 0; --i)
+            {
+                /* Read the previous value and add our color */
+                WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+
+                /* Move to the next line */
+                Offset += (SCREEN_WIDTH / 8);
+            }
         }
     }
 
@@ -488,13 +502,27 @@ VidSolidColorFill(
         if (Top <= Bottom)
         {
             /* Start looping each line */
-            for (i = (Bottom - Top) + 1; i > 0; --i)
+            if (Color == BV_COLOR_BLACK) /* Optimized for black */
             {
-                /* Read the previous value and add our color */
-                WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+                for (i = (Bottom - Top) + 1; i > 0; --i)
+                {
+                    /* Write our color without reading */
+                    WRITE_REGISTER_UCHAR(Offset, 0);
 
-                /* Move to the next line */
-                Offset += (SCREEN_WIDTH / 8);
+                    /* Move to the next line */
+                    Offset += (SCREEN_WIDTH / 8);
+                }
+            }
+            else
+            {
+                for (i = (Bottom - Top) + 1; i > 0; --i)
+                {
+                    /* Read the previous value and add our color */
+                    WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+
+                    /* Move to the next line */
+                    Offset += (SCREEN_WIDTH / 8);
+                }
             }
         }
 
