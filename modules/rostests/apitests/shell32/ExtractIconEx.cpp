@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for ExtractIconEx routine
  * COPYRIGHT:   Copyright 2019 George Bișoc (george.bisoc@reactos.org)
+ *              Copyright 2023 Doug Lyons (douglyons@douglyons.com)
  */
 
 #include "shelltest.h"
@@ -20,29 +21,29 @@ BOOL ResourceToFile(INT i, CHAR *FileName)
     FILE *fout;
     HGLOBAL hData;
     HRSRC hRes;
-    LPCSTR sData;
     LPVOID lpResLock;
     UINT iSize;
 
 //    trace("i is '%d' and Filename is '%s'.\n", i, FileName);
     if (access(FileName, F_OK) == 0)
     {
-        skip("'%s' already exists so exiting now.\n", FileName);
+        skip("'%s' already exists. Exiting now\n", FileName);
         return FALSE;
     }
 
     hRes = FindResourceW(NULL, MAKEINTRESOURCEW(i), MAKEINTRESOURCEW(RT_RCDATA));
     if (hRes == NULL)
     {
-        skip("Could not locate resource (%d).\n", i);
+        skip("Could not locate resource (%d). Exiting now\n", i);
         return FALSE;
     }
+
     iSize = SizeofResource(NULL, hRes);
 
     hData = LoadResource(NULL, hRes);
     if (hData == NULL)
     {
-        skip("Could not load resource (%d).", i);
+        skip("Could not load resource (%d). Exiting now\n", i);
         return FALSE;
     }
 
@@ -50,18 +51,16 @@ BOOL ResourceToFile(INT i, CHAR *FileName)
     lpResLock = LockResource(hData);
     if (lpResLock == NULL)
     {
-        skip("Could not lock resource (%d).", i);
+        skip("Could not lock resource (%d). Exiting now\n", i);
         return FALSE;
     }
 
-    // Get location of resource in memory
-    sData = (LPSTR)lpResLock;
-
-    fout = fopen(FileName,"wb");
-    fwrite(sData, iSize, 1, fout);
+    fout = fopen(FileName, "wb");
+    fwrite(lpResLock, iSize, 1, fout);
     fclose(fout);
     return TRUE;
 }
+
 EXTRACTICONTESTS IconTests[] =
 {
     /* Executable file with icon */
@@ -108,7 +107,6 @@ START_TEST(ExtractIconEx)
         ok(nExtractedIcons == IconTests[i].nIcons, "ExtractIconExW(%u): Expects %u icons, got %u\n", i, IconTests[i].nIcons, nExtractedIcons);
     }
 
-    remove(FileName[0]);
-    remove(FileName[1]);
-
+    DeleteFileA(FileName[0]);
+    DeleteFileA(FileName[1]);
 }
