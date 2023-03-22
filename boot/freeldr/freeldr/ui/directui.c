@@ -6,8 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#ifdef _M_ARM
-
+#if 0
 #include <freeldr.h>
 
 /* GLOBALS ********************************************************************/

@@ -22,8 +22,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
 
-#ifndef _M_ARM
-
 UCHAR UiStatusBarFgColor;       // Status bar foreground color
 UCHAR UiStatusBarBgColor;       // Status bar background color
 UCHAR UiBackdropFgColor;        // Backdrop foreground color
@@ -56,16 +54,12 @@ const PCSTR UiMonthNames[12] = { "January", "February", "March", "April", "May",
 ULONG UiScreenWidth;    // Screen Width
 ULONG UiScreenHeight;   // Screen Height
 
-#endif // _M_ARM
-
 /*
  * Loading progress bar, based on the NTOS Inbv one.
  * Supports progress within sub-ranges, used when loading
  * with an unknown number of steps.
  */
 UI_PROGRESS_BAR UiProgressBar = {{0}};
-
-#ifndef _M_ARM
 
 UIVTBL UiVtbl =
 {
@@ -386,8 +380,6 @@ UCHAR UiTextToFillStyle(PCSTR FillStyleText)
     return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
-#endif // _M_ARM
-
 VOID
 UiInitProgressBar(
     _In_ ULONG Left,
@@ -413,13 +405,8 @@ UiInitProgressBar(
     UiProgressBar.Show = TRUE;
 
     /* Initial drawing: set the "Loading..." text and the original position */
-#ifndef _M_ARM
     UiVtbl.SetProgressBarText(ProgressText);
     UiVtbl.TickProgressBar(0);
-#else
-    MiniTuiSetProgressBarText(ProgressText);
-    MiniTuiTickProgressBar(0);
-#endif
 }
 
 VOID
@@ -477,11 +464,7 @@ UiUpdateProgressBar(
     TotalProgress = UiProgressBar.State.Floor + (Percentage * UiProgressBar.State.Bias);
     // TotalProgress /= (100 * 100);
 
-#ifndef _M_ARM
     UiVtbl.TickProgressBar(TotalProgress);
-#else
-    MiniTuiTickProgressBar(TotalProgress);
-#endif
 }
 
 VOID
@@ -492,22 +475,14 @@ UiSetProgressBarText(
     if (!UiProgressBar.Show)
         return;
 
-#ifndef _M_ARM
     UiVtbl.SetProgressBarText(ProgressText);
-#else
-    MiniTuiSetProgressBarText(ProgressText);
-#endif
 }
 
 VOID
 UiDrawProgressBarCenter(
     _In_ PCSTR ProgressText)
 {
-#ifndef _M_ARM
     UiVtbl.DrawProgressBarCenter(ProgressText);
-#else
-    MiniTuiDrawProgressBarCenter(ProgressText);
-#endif
 }
 
 VOID
@@ -518,14 +493,8 @@ UiDrawProgressBar(
     _In_ ULONG Bottom,
     _In_ PCSTR ProgressText)
 {
-#ifndef _M_ARM
     UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, ProgressText);
-#else
-    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, ProgressText);
-#endif
 }
-
-#ifndef _M_ARM
 
 static VOID
 UiEscapeString(PCHAR String)
@@ -662,9 +631,3 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
 
-#else
-BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
-{
-    return FALSE;
-}
-#endif
