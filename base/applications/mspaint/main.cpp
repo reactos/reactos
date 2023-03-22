@@ -57,7 +57,7 @@ CTextEditWindow textEditWindow;
 
 // get file name extension from filter string
 static BOOL
-FileExtFromFilter(LPTSTR pExt, LPCTSTR pTitle, OPENFILENAME *pOFN)
+FileExtFromFilter(LPTSTR pExt, OPENFILENAME *pOFN)
 {
     LPTSTR pchExt = pExt;
     *pchExt = 0;
@@ -96,19 +96,9 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hParent = GetParent(hwnd);
             TCHAR Path[MAX_PATH];
             SendMessage(hParent, CDM_GETFILEPATH, _countof(Path), (LPARAM)Path);
-            LPTSTR pchTitle = _tcsrchr(Path, _T('\\'));
-            if (pchTitle == NULL)
-                pchTitle = _tcsrchr(Path, _T('/'));
-
-            LPTSTR pch = _tcsrchr((pchTitle ? pchTitle : Path), _T('.'));
-            if (pch && pchTitle)
-            {
-                pchTitle++;
-                *pch = 0;
-                FileExtFromFilter(pch, pchTitle, pon->lpOFN);
-                SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)pchTitle);
-                lstrcpyn(pon->lpOFN->lpstrFile, Path, pon->lpOFN->nMaxFile);
-            }
+            FileExtFromFilter(PathFindExtension(Path), pon->lpOFN);
+            SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)PathFindFileName(Path));
+            lstrcpyn(pon->lpOFN->lpstrFile, Path, pon->lpOFN->nMaxFile);
         }
         break;
     }
