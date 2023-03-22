@@ -4452,7 +4452,26 @@ FlushPage(PINPUT_RECORD Ir)
     return REBOOT_PAGE;
 }
 
+#define MEASURING // TODO: To be deleted
+#ifdef MEASURING
+static VOID StopWatch(LPCSTR Name OPTIONAL)
+{
+    static FILETIME s_ft0;
+    FILETIME ft1;
+    DWORD diff;
 
+    if (!Name)
+    {
+        GetSystemTimeAsFileTime(&s_ft0);
+    }
+    else
+    {
+        GetSystemTimeAsFileTime(&ft1);
+        diff = ft1.dwLowDateTime - s_ft0.dwLowDateTime;
+        DPRINT1("%s: %lu\n", Name, diff);
+    }
+}
+#endif  /* def MEASURING */
 /*
  * The start routine and page management
  */
@@ -4498,6 +4517,17 @@ RunUSetup(VOID)
     CONSOLE_ClearScreen();
     CONSOLE_Flush();
 
+#ifdef MEASURING
+    {
+        INT i;
+        StopWatch(NULL);
+        for (i = 0; i < 1000; ++i)
+        {
+            CONSOLE_ClearScreen();
+        }
+        StopWatch("CONSOLE_ClearScreen x 1000");
+    }
+#endif
     /* Global Initialization page */
     Page = SetupStartPage(&Ir);
 
