@@ -172,7 +172,8 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             /* consecutive quotes, see comment in copying code below */
             while (*s=='"')
             {
-                qcount++;
+                if (++qcount==3)
+                    qcount=1;
                 s++;
             }
             qcount=qcount % 3;
@@ -290,7 +291,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
                 if (++qcount==3)
                 {
                     *d++='"';
-                    qcount=0;
+                    qcount=1;
                 }
                 s++;
             }
