@@ -1941,8 +1941,8 @@ UniataClaimLegacyPCIIDE(
     )
 {
     NTSTATUS status;
-    UNICODE_STRING devname;
     PCM_RESOURCE_LIST resourceList = NULL;
+    UNICODE_STRING devname;
 #ifdef __REACTOS__
     PCM_RESOURCE_LIST oldResList = NULL;
 #endif
