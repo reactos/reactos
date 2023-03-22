@@ -4978,6 +4978,11 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     case WM_IME_STARTCOMPOSITION:
         es->composition_start = es->selection_end;
         es->composition_len = 0;
+#ifdef __REACTOS__
+        if (FALSE) /* FIXME: Condition */
+            return TRUE;
+        result = DefWindowProcW(hwnd, WM_IME_STARTCOMPOSITION, wParam, lParam);
+#endif
         break;
 
     case WM_IME_COMPOSITION:
