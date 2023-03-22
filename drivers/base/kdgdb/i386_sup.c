@@ -20,7 +20,7 @@ enum reg_name
 };
 
 static
-void*
+const void*
 ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
 {
     /* For general registers: 32bits */
@@ -76,11 +76,11 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
         return &ctx->ExtendedRegisters[160 + (name - XMM0)*16];
     case MXCSR: return &ctx->ExtendedRegisters[24];
     }
-    return 0;
+    return NULL;
 }
 
 static
-void*
+const void*
 thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
 {
     static const void* NullValue = NULL;
@@ -152,8 +152,8 @@ KDSTATUS
 gdb_send_registers(void)
 {
     CHAR RegisterStr[9];
-    UCHAR* RegisterPtr;
-    unsigned i;
+    const UCHAR* RegisterPtr;
+    unsigned short i;
     unsigned short size;
 
     RegisterStr[8] = '\0';
@@ -223,7 +223,7 @@ KDSTATUS
 gdb_send_register(void)
 {
     enum reg_name reg_name;
-    void *ptr;
+    const void* ptr;
     unsigned short size;
 
     /* Get the GDB register name (gdb_input = "pXX") */

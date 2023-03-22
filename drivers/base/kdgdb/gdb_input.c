@@ -187,10 +187,10 @@ handle_gdb_query(void)
     {
         char gdb_out[64];
 #if MONOPROCESS
-        sprintf(gdb_out, "QC:%"PRIxPTR";",
+        sprintf(gdb_out, "QC:%" PRIxPTR ";",
             handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
 #else
-        sprintf(gdb_out, "QC:p%"PRIxPTR".%"PRIxPTR";",
+        sprintf(gdb_out, "QC:p%" PRIxPTR ".%" PRIxPTR ";",
             handle_to_gdb_pid(PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)),
             handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
 #endif
@@ -240,9 +240,9 @@ handle_gdb_query(void)
                 PETHREAD Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
 
 #if MONOPROCESS
-                _snprintf(gdb_out, 40, ",%p", handle_to_gdb_tid(Thread->Cid.UniqueThread));
+                _snprintf(gdb_out, 40, ",%" PRIxPTR, handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #else
-                _snprintf(gdb_out, 40, ",p%p.%p",
+                _snprintf(gdb_out, 40, ",p%" PRIxPTR ".%" PRIxPTR,
                     handle_to_gdb_pid(Process->UniqueProcessId),
                     handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #endif
