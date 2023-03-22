@@ -1335,6 +1335,26 @@ VOID
 NTAPI
 MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+#define MEASURING // TODO: To be deleted
+#ifdef MEASURING
+static VOID StopWatch(LPCSTR Name OPTIONAL)
+{
+    static LARGE_INTEGER s_li0;
+    LARGE_INTEGER li1;
+    DWORD diff;
+
+    if (!Name)
+    {
+        NtQuerySystemTime(&s_li0);
+    }
+    else
+    {
+        NtQuerySystemTime(&li1);
+        diff = li1.LowPart - s_li0.LowPart;
+        DPRINT1("%s: %lu\n", Name, diff);
+    }
+}
+#endif  /* def MEASURING */
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -1612,6 +1632,17 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Display RAM and CPU count */
     InbvDisplayString(StringBuffer);
 
+#ifdef MEASURING
+    {
+        INT i;
+        StopWatch(NULL);
+        for (i = 0; i < 1000; ++i)
+        {
+            VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_BLACK);
+        }
+        StopWatch("VidSolidColorFill x 1000");
+    }
+#endif
     /* Update the progress bar */
     InbvUpdateProgressBar(5);
 

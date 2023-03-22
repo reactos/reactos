@@ -428,6 +428,8 @@ VidScreenToBufferBlt(
 /*
  * @implemented
  */
+#define OPTIMIZED /* TODO: To be deleted */
+#ifdef OPTIMIZED
 VOID
 NTAPI
 VidSolidColorFill(
@@ -555,3 +557,104 @@ VidSolidColorFill(
         }
     }
 }
+#else   /* ndef OPTIMIZED */
+VOID
+NTAPI
+VidSolidColorFill(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR Color)
+{
+    ULONG rMask, lMask;
+    ULONG LeftOffset, RightOffset, Distance;
+    PUCHAR Offset;
+    ULONG i, j;
+
+    /* Get the left and right masks, shifts, and delta */
+    LeftOffset = Left >> 3;
+    lMask = (lMaskTable[Left & 0x7] << 8) | IND_BIT_MASK;
+    RightOffset = Right >> 3;
+    rMask = (rMaskTable[Right & 0x7] << 8) | IND_BIT_MASK;
+    Distance = RightOffset - LeftOffset;
+
+    /* If there is no distance, then combine the right and left masks */
+    if (!Distance) lMask &= rMask;
+
+    PrepareForSetPixel();
+
+    /* Calculate pixel position for the read */
+    Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset);
+
+    /* Select the bitmask register and write the mask */
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)lMask);
+
+    /* Check if the top coord is below the bottom one */
+    if (Top <= Bottom)
+    {
+        /* Start looping each line */
+        for (i = (Bottom - Top) + 1; i > 0; --i)
+        {
+            /* Read the previous value and add our color */
+            WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+
+            /* Move to the next line */
+            Offset += (SCREEN_WIDTH / 8);
+        }
+    }
+
+    /* Check if we have a delta */
+    if (Distance > 0)
+    {
+        /* Calculate new pixel position */
+        Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + RightOffset);
+        Distance--;
+
+        /* Select the bitmask register and write the mask */
+        __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)rMask);
+
+        /* Check if the top coord is below the bottom one */
+        if (Top <= Bottom)
+        {
+            /* Start looping each line */
+            for (i = (Bottom - Top) + 1; i > 0; --i)
+            {
+                /* Read the previous value and add our color */
+                WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
+
+                /* Move to the next line */
+                Offset += (SCREEN_WIDTH / 8);
+            }
+        }
+
+        /* Check if we still have a delta */
+        if (Distance > 0)
+        {
+            /* Calculate new pixel position */
+            Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset + 1);
+
+            /* Set the bitmask to 0xFF for all 4 planes */
+            __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
+
+            /* Check if the top coord is below the bottom one */
+            if (Top <= Bottom)
+            {
+                /* Start looping each line */
+                for (i = (Bottom - Top) + 1; i > 0; --i)
+                {
+                    /* Loop the shift delta */
+                    for (j = Distance; j > 0; Offset++, --j)
+                    {
+                        /* Write the color */
+                        WRITE_REGISTER_UCHAR(Offset, Color);
+                    }
+
+                    /* Update position in memory */
+                    Offset += ((SCREEN_WIDTH / 8) - Distance);
+                }
+            }
+        }
+    }
+}
+#endif  /* ndef OPTIMIZED */
