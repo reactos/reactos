@@ -46,9 +46,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <usp10.h>
 #ifdef __REACTOS__
+#include <immdev.h>
 #define ImmGetContext               IMM_FN(ImmGetContext)
 #define ImmGetCompositionStringW    IMM_FN(ImmGetCompositionStringW)
 #define ImmReleaseContext           IMM_FN(ImmReleaseContext)
+#define ImmLockIMC                  IMM_FN(ImmLockIMC)
+#define ImmUnlockIMC                IMM_FN(ImmUnlockIMC)
+#define ImmNotifyIME                IMM_FN(ImmNotifyIME)
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(edit);
@@ -5286,6 +5290,26 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
+#ifdef __REACTOS__
+        if (FALSE) /* FIXME: Condition */
+            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+        if (wParam)
+        {
+            HIMC hIMC = ImmGetContext(hwnd);
+            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+            if (pIC)
+            {
+                pIC->dwUIFlags &= ~0x40000;
+                ImmUnlockIMC(hIMC);
+            }
+            if (GetWin32ClientInfo()->CI_flags & CI_WOW)
+                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+            ImmReleaseContext(hwnd, hIMC);
+        }
+
+        result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_STARTCOMPOSITION:
