@@ -1636,11 +1636,11 @@ Phase1InitializationDiscard(IN PVOID Context)
     {
         INT i;
         StopWatch(NULL);
-        for (i = 0; i < 1000; ++i)
+        for (i = 0; i < 80; ++i)
         {
             VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_BLACK);
         }
-        StopWatch("VidSolidColorFill x 1000");
+        StopWatch("VidSolidColorFill x 80");
     }
 #endif
     /* Update the progress bar */
