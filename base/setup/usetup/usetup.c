@@ -4521,11 +4521,11 @@ RunUSetup(VOID)
     {
         INT i;
         StopWatch(NULL);
-        for (i = 0; i < 1000; ++i)
+        for (i = 0; i < 100; ++i)
         {
             CONSOLE_ClearScreen();
         }
-        StopWatch("CONSOLE_ClearScreen x 1000");
+        StopWatch("CONSOLE_ClearScreen x 100");
     }
 #endif
     /* Global Initialization page */
