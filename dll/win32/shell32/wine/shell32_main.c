@@ -176,7 +176,6 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
                     qcount=1;
                 s++;
             }
-            qcount=qcount % 3;
             if (qcount==2)
                 qcount=0;
         }
