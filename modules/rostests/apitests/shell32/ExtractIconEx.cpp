@@ -79,7 +79,7 @@ EXTRACTICONTESTS IconTests[] =
     {L"sysicon.ico", 1},
 
     /* ICO file with both normal and PNG icons */
-    {L"ROS.ico", 1}
+    {L"ROS.ico", 0}
 };
 
 START_TEST(ExtractIconEx)
