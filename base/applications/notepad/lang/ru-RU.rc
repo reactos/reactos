@@ -175,7 +175,7 @@ BEGIN
     STRING_LINE_COLUMN "Строка %d, столбец %d"
     STRING_PRINTERROR "Невозможно распечатать файл '%s'.\n\nПроверьте, включен ли принтер, и настроен ли он правильно."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "Указанный номер строки находится вне допустимого диапазона."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Указанный номер строки превышает число строк в файле."
     STRING_NOWPRINTING "Идёт печать страницы..."
     STRING_PRINTCANCELING "Печать отменяется..."
     STRING_PRINTCOMPLETE "Печать завершена успешно."
