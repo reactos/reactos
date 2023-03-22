@@ -16,7 +16,7 @@ typedef struct
     UINT nIcons;
 } EXTRACTICONTESTS;
 
-BOOL ResourceToFile(INT i, CHAR *FileName)
+BOOL ResourceToFile(INT i, LPCSTR FileName)
 {
     FILE *fout;
     HGLOBAL hData;
@@ -24,7 +24,6 @@ BOOL ResourceToFile(INT i, CHAR *FileName)
     LPVOID lpResLock;
     UINT iSize;
 
-//    trace("i is '%d' and Filename is '%s'.\n", i, FileName);
     if (access(FileName, F_OK) == 0)
     {
         skip("'%s' already exists. Exiting now\n", FileName);
