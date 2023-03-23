@@ -1076,7 +1076,7 @@ ScrIoControl(
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
 #ifdef OPTIMIZED
-                CHAR attr = Buf->wAttribute;
+                UCHAR attr = Buf->wAttribute;
                 PUCHAR pch;
 #endif
                 vidmem = DeviceExtension->VideoMemory;
