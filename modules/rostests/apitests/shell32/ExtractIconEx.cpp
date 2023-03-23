@@ -8,13 +8,26 @@
 
 #include "shelltest.h"
 #include <stdio.h>
-#include <io.h>
 
 typedef struct
 {
     PCWSTR pszFilePath;
     UINT nIcons;
 } EXTRACTICONTESTS;
+
+BOOL FileExists(LPCSTR FileName)
+{
+    FILE *fp = NULL;
+    bool exists = FALSE;
+
+    fp = fopen(FileName, "r");
+    if (fp != NULL)
+    {
+        exists = TRUE;
+        fclose(fp);
+    }
+    return exists;
+}
 
 BOOL ResourceToFile(INT i, LPCSTR FileName)
 {
@@ -24,7 +37,7 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
     LPVOID lpResLock;
     UINT iSize;
 
-    if (access(FileName, F_OK) == 0)
+    if (FileExists(FileName))
     {
         skip("'%s' already exists. Exiting now\n", FileName);
         return FALSE;
