@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <bl.h>
-#include <cdfs_new/cd.h>
+#include <cdfs/cd.h>
 typedef struct _RAW_ET_VD
 {
     UCHAR BootIndicator;

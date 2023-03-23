@@ -1,297 +1,605 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/cdfs/volume.c
- * PURPOSE:          CDROM (ISO 9660) filesystem driver
- * PROGRAMMER:       Art Yerkes
- *                   Eric Kohl
- */
+/*++
 
-/* INCLUDES *****************************************************************/
+Copyright (c) 1989-2000 Microsoft Corporation
 
-#include "cdfs.h"
+Module Name:
 
-#define NDEBUG
-#include <debug.h>
+    VolInfo.c
 
-/* FUNCTIONS ****************************************************************/
+Abstract:
 
-static
+    This module implements the volume information routines for Cdfs called by
+    the dispatch driver.
+
+
+--*/
+
+#include "cdprocs.h"
+
+//
+//  The Bug check file id for this module
+//
+
+#define BugCheckFileId                   (CDFS_BUG_CHECK_VOLINFO)
+
+//
+//  Local support routines
+//
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
-CdfsGetFsVolumeInformation(
-    PDEVICE_OBJECT DeviceObject,
-    PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
-    PULONG BufferLength)
-{
-    DPRINT("CdfsGetFsVolumeInformation() called\n");
-    DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
-    DPRINT("BufferLength %lu\n", *BufferLength);
-
-    DPRINT("Vpb %p\n", DeviceObject->Vpb);
-
-    DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
-    DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %.*S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
-
-    if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
-        return STATUS_INFO_LENGTH_MISMATCH;
-
-    if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
-        return STATUS_BUFFER_OVERFLOW;
-
-    /* valid entries */
-    FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
-    FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
-    memcpy(FsVolumeInfo->VolumeLabel,
-           DeviceObject->Vpb->VolumeLabel,
-           DeviceObject->Vpb->VolumeLabelLength);
-
-    /* dummy entries */
-    FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
-    FsVolumeInfo->SupportsObjects = FALSE;
-
-    DPRINT("Finished FsdGetFsVolumeInformation()\n");
-
-    *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
-
-    DPRINT("BufferLength %lu\n", *BufferLength);
-
-    return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
-CdfsGetFsAttributeInformation(
-    PDEVICE_EXTENSION DeviceExt,
-    PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
-    PULONG BufferLength)
-{
-    DPRINT("CdfsGetFsAttributeInformation()\n");
-    DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
-    DPRINT("BufferLength %lu\n", *BufferLength);
-    DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8));
-
-    UNREFERENCED_PARAMETER(DeviceExt);
-
-    if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
-        return STATUS_INFO_LENGTH_MISMATCH;
-
-    if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8))
-        return STATUS_BUFFER_OVERFLOW;
-
-    FsAttributeInfo->FileSystemAttributes =
-        FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK | FILE_READ_ONLY_VOLUME;
-    FsAttributeInfo->MaximumComponentNameLength = 255;
-    FsAttributeInfo->FileSystemNameLength = 8;
-
-    memcpy(FsAttributeInfo->FileSystemName, L"CDFS", 8);
-
-    DPRINT("Finished FsdGetFsAttributeInformation()\n");
-
-    *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
-    DPRINT("BufferLength %lu\n", *BufferLength);
-
-    return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS
-CdfsGetFsSizeInformation(
-    PDEVICE_OBJECT DeviceObject,
-    PFILE_FS_SIZE_INFORMATION FsSizeInfo,
-    PULONG BufferLength)
-{
-    PDEVICE_EXTENSION DeviceExt;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("CdfsGetFsSizeInformation()\n");
-    DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
-
-    if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
-
-    DeviceExt = DeviceObject->DeviceExtension;
-
-    FsSizeInfo->AvailableAllocationUnits.QuadPart = 0;
-    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize;
-    FsSizeInfo->SectorsPerAllocationUnit = 1;
-    FsSizeInfo->BytesPerSector = BLOCKSIZE;
-
-    DPRINT("Finished FsdGetFsSizeInformation()\n");
-    if (NT_SUCCESS(Status))
-        *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
-
-    return Status;
-}
-
-
-static
-NTSTATUS
-CdfsGetFsDeviceInformation(
-    PDEVICE_OBJECT DeviceObject,
-    PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-    PULONG BufferLength)
-{
-    DPRINT("CdfsGetFsDeviceInformation()\n");
-    DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
-    DPRINT("BufferLength %lu\n", *BufferLength);
-    DPRINT("Required length %lu\n", sizeof(FILE_FS_DEVICE_INFORMATION));
-
-    if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
-
-    if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
-        FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
-    else
-        FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
-
-    FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
-
-    DPRINT("FsdGetFsDeviceInformation() finished.\n");
-
-    *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
-    DPRINT("BufferLength %lu\n", *BufferLength);
-
-    return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
-CdfsGetFsFullSizeInformation(
-    PDEVICE_OBJECT DeviceObject,
-    PFILE_FS_FULL_SIZE_INFORMATION FsSizeInfo,
-    PULONG BufferLength)
-{
-    PDEVICE_EXTENSION DeviceExt;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("CdfsGetFsFullSizeInformation()\n");
-    DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
-
-    if (*BufferLength < sizeof(FILE_FS_FULL_SIZE_INFORMATION))
-        return STATUS_BUFFER_OVERFLOW;
-
-    DeviceExt = DeviceObject->DeviceExtension;
-
-    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize;
-    FsSizeInfo->CallerAvailableAllocationUnits.QuadPart = 0;
-    FsSizeInfo->ActualAvailableAllocationUnits.QuadPart = 0;
-    FsSizeInfo->SectorsPerAllocationUnit = 1;
-    FsSizeInfo->BytesPerSector = BLOCKSIZE;
-
-    DPRINT("Finished CdfsGetFsFullSizeInformation()\n");
-    if (NT_SUCCESS(Status))
-        *BufferLength -= sizeof(FILE_FS_FULL_SIZE_INFORMATION);
-
-    return Status;
-}
-
+CdQueryFsVolumeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_VOLUME_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
 
 NTSTATUS
-NTAPI
-CdfsQueryVolumeInformation(
-    PCDFS_IRP_CONTEXT IrpContext)
+CdQueryFsSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
+
+NTSTATUS
+CdQueryFsDeviceInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_DEVICE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
+
+NTSTATUS
+CdQueryFsAttributeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
+
+#ifdef __REACTOS__
+#define PFILE_FS_SECTOR_SIZE_INFORMATION PVOID
+#endif
+
+NTSTATUS
+CdQueryFsSectorSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_writes_bytes_(*Length) PFILE_FS_SECTOR_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
+
+#ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, CdCommonQueryVolInfo)
+#pragma alloc_text(PAGE, CdQueryFsAttributeInfo)
+#pragma alloc_text(PAGE, CdQueryFsDeviceInfo)
+#pragma alloc_text(PAGE, CdQueryFsSizeInfo)
+#pragma alloc_text(PAGE, CdQueryFsVolumeInfo)
+#pragma alloc_text(PAGE, CdQueryFsSectorSizeInfo)
+#endif
+
+
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdCommonQueryVolInfo (
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This is the common routine for querying volume information called by both
+    the fsd and fsp threads.
+
+Arguments:
+
+    Irp - Supplies the Irp being processed
+
+Return Value:
+
+    NTSTATUS - The return status for the operation
+
+--*/
+
 {
-    PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
-    FS_INFORMATION_CLASS FsInformationClass;
-    PIO_STACK_LOCATION Stack;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID SystemBuffer;
-    ULONG BufferLength;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
 
-    DPRINT("CdfsQueryVolumeInformation() called\n");
+    ULONG Length;
 
-    ASSERT(IrpContext);
+    TYPE_OF_OPEN TypeOfOpen;
+    PFCB Fcb;
+    PCCB Ccb;
 
-    Irp = IrpContext->Irp;
-    DeviceObject = IrpContext->DeviceObject;
-    Stack = IrpContext->Stack;
-    FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
-    BufferLength = Stack->Parameters.QueryVolume.Length;
-    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    PAGED_CODE();
 
-    DPRINT("FsInformationClass %d\n", FsInformationClass);
-    DPRINT("SystemBuffer %p\n", SystemBuffer);
+    //
+    //  Reference our input parameters to make things easier
+    //
 
-    switch (FsInformationClass)
-    {
-        case FileFsVolumeInformation:
-            Status = CdfsGetFsVolumeInformation(DeviceObject,
-                                                SystemBuffer,
-                                                &BufferLength);
-            break;
+    Length = IrpSp->Parameters.QueryVolume.Length;
 
-        case FileFsAttributeInformation:
-            Status = CdfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
-                                                   SystemBuffer,
-                                                   &BufferLength);
-            break;
+    //
+    //  Decode the file object and fail if this an unopened file object.
+    //
+
+    TypeOfOpen = CdDecodeFileObject( IrpContext, IrpSp->FileObject, &Fcb, &Ccb );
+
+    if (TypeOfOpen == UnopenedFileObject) {
+
+        CdCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    //
+    //  Acquire the Vcb for this volume.
+    //
+
+    CdAcquireVcbShared( IrpContext, Fcb->Vcb, FALSE );
+
+    //
+    //  Use a try-finally to facilitate cleanup.
+    //
+
+    _SEH2_TRY {
+
+        //
+        //  Verify the Vcb.
+        //
+
+        CdVerifyVcb( IrpContext, Fcb->Vcb );
+
+        //
+        //  Based on the information class we'll do different actions.  Each
+        //  of the procedures that we're calling fills up the output buffer
+        //  if possible and returns true if it successfully filled the buffer
+        //  and false if it couldn't wait for any I/O to complete.
+        //
+
+        switch (IrpSp->Parameters.QueryVolume.FsInformationClass) {
 
         case FileFsSizeInformation:
-            Status = CdfsGetFsSizeInformation(DeviceObject,
-                                              SystemBuffer,
-                                              &BufferLength);
+
+            Status = CdQueryFsSizeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
+            break;
+
+        case FileFsVolumeInformation:
+
+            Status = CdQueryFsVolumeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
 
         case FileFsDeviceInformation:
-            Status = CdfsGetFsDeviceInformation(DeviceObject,
-                                                SystemBuffer,
-                                                &BufferLength);
+
+            Status = CdQueryFsDeviceInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
 
-        case FileFsFullSizeInformation:
-            Status = CdfsGetFsFullSizeInformation(DeviceObject,
-                                                  SystemBuffer,
-                                                  &BufferLength);
+        case FileFsAttributeInformation:
+
+            Status = CdQueryFsAttributeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
 
-        default:
-            Status = STATUS_NOT_SUPPORTED;
-    }
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+        case FileFsSectorSizeInformation:
 
-    if (NT_SUCCESS(Status))
-        Irp->IoStatus.Information =
-        Stack->Parameters.QueryVolume.Length - BufferLength;
-    else
-        Irp->IoStatus.Information = 0;
+            Status = CdQueryFsSectorSizeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
+            break;
+#endif
+
+        /* ReactOS Change: GCC "enumeration value not handled in switch" */
+        default: break;
+        }
+
+        //
+        //  Set the information field to the number of bytes actually filled in
+        //
+
+        Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
+
+    } _SEH2_FINALLY {
+
+        //
+        //  Release the Vcb.
+        //
+
+        CdReleaseVcb( IrpContext, Fcb->Vcb );
+    } _SEH2_END;
+
+    //
+    //  Complete the request if we didn't raise.
+    //
+
+    CdCompleteRequest( IrpContext, Irp, Status );
 
     return Status;
 }
 
+
+//
+//  Local support routine
+//
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
-NTAPI
-CdfsSetVolumeInformation(
-    PCDFS_IRP_CONTEXT IrpContext)
+CdQueryFsVolumeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_VOLUME_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query volume info call
+
+Arguments:
+
+    Vcb - Vcb for this volume.
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return recieves the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
 {
-    DPRINT("CdfsSetVolumeInformation() called\n");
+    ULONG BytesToCopy;
 
-    ASSERT(IrpContext);
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    IrpContext->Irp->IoStatus.Information = 0;
+    PAGED_CODE();
 
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Fill in the data from the Vcb.
+    //
+
+    Buffer->VolumeCreationTime = *((PLARGE_INTEGER) &Vcb->VolumeDasdFcb->CreationTime);
+    Buffer->VolumeSerialNumber = Vcb->Vpb->SerialNumber;
+
+    Buffer->SupportsObjects = FALSE;
+
+    *Length -= FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel[0] );
+
+    //
+    //  Check if the buffer we're given is long enough
+    //
+
+    if (*Length >= (ULONG) Vcb->Vpb->VolumeLabelLength) {
+
+        BytesToCopy = Vcb->Vpb->VolumeLabelLength;
+
+    } else {
+
+        BytesToCopy = *Length;
+
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+
+    //
+    //  Copy over what we can of the volume label, and adjust *Length
+    //
+
+    Buffer->VolumeLabelLength = BytesToCopy;
+
+    if (BytesToCopy) {
+
+        RtlCopyMemory( &Buffer->VolumeLabel[0],
+                       &Vcb->Vpb->VolumeLabel[0],
+                       BytesToCopy );
+    }
+
+    *Length -= BytesToCopy;
+
+    //
+    //  Set our status and return to our caller
+    //
+
+    return Status;
 }
 
-/* EOF */
+
+//
+//  Local support routine
+//
+
+NTSTATUS
+CdQueryFsSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query volume size call.
+
+Arguments:
+
+    Vcb - Vcb for this volume.
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return recieves the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
+{
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Fill in the output buffer.
+    //
+
+    Buffer->TotalAllocationUnits.QuadPart = LlSectorsFromBytes( Vcb->VolumeDasdFcb->AllocationSize.QuadPart );
+
+    Buffer->AvailableAllocationUnits.QuadPart = 0;
+    Buffer->SectorsPerAllocationUnit = 1;
+    Buffer->BytesPerSector = SECTOR_SIZE;
+
+    //
+    //  Adjust the length variable
+    //
+
+    *Length -= sizeof( FILE_FS_SIZE_INFORMATION );
+
+    //
+    //  And return success to our caller
+    //
+
+    return STATUS_SUCCESS;
+}
+
+
+//
+//  Local support routine
+//
+
+NTSTATUS
+CdQueryFsDeviceInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_DEVICE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query volume device call.
+
+Arguments:
+
+    Vcb - Vcb for this volume.
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return recieves the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
+{
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Update the output buffer.
+    //
+
+    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+    Buffer->DeviceType = FILE_DEVICE_CD_ROM;
+
+    //
+    //  Adjust the length variable
+    //
+
+    *Length -= sizeof( FILE_FS_DEVICE_INFORMATION );
+
+    //
+    //  And return success to our caller
+    //
+
+    return STATUS_SUCCESS;
+}
+
+
+//
+//  Local support routine
+//
+
+NTSTATUS
+CdQueryFsAttributeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query volume attribute call.
+
+Arguments:
+
+    Vcb - Vcb for this volume.
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return recieves the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
+{
+    ULONG BytesToCopy;
+
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( Vcb );
+
+    //
+    //  Fill out the fixed portion of the buffer.
+    //
+
+    Buffer->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH |
+                                   FILE_READ_ONLY_VOLUME |
+                                   FILE_SUPPORTS_OPEN_BY_FILE_ID;
+
+    if (FlagOn( IrpContext->Vcb->VcbState, VCB_STATE_JOLIET )) {
+
+        SetFlag( Buffer->FileSystemAttributes, FILE_UNICODE_ON_DISK );
+
+        Buffer->MaximumComponentNameLength = 110;
+
+    } else {
+
+        Buffer->MaximumComponentNameLength = 221;
+    }
+
+    *Length -= FIELD_OFFSET( FILE_FS_ATTRIBUTE_INFORMATION, FileSystemName );
+
+    //
+    //  Make sure we can copy full unicode characters.
+    //
+
+    ClearFlag( *Length, 1 );
+
+    //
+    //  Determine how much of the file system name will fit.
+    //
+
+    if (*Length >= 8) {
+
+        BytesToCopy = 8;
+
+    } else {
+
+        BytesToCopy = *Length;
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+
+    *Length -= BytesToCopy;
+
+    //
+    //  Do the file system name.
+    //
+
+    Buffer->FileSystemNameLength = BytesToCopy;
+
+    RtlCopyMemory( &Buffer->FileSystemName[0], L"CDFS", BytesToCopy );
+
+    //
+    //  And return to our caller
+    //
+
+    return Status;
+}
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+NTSTATUS
+CdQueryFsSectorSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_writes_bytes_(*Length) PFILE_FS_SECTOR_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query sector size information call
+    This operation will work on any handle and requires no privilege.
+
+Arguments:
+
+    Vcb - Supplies the Vcb being queried
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return receives the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Sufficient buffer size is guaranteed by the I/O manager or the
+    //  originating kernel mode driver.
+    //
+
+    ASSERT( *Length >= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION ));
+    _Analysis_assume_( *Length >= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION ));
+
+    //
+    //  Retrieve the sector size information
+    //
+
+    Status = FsRtlGetSectorSizeInformation( Vcb->Vpb->RealDevice,
+                                            Buffer );
+
+    //
+    //  Adjust the length variable
+    //
+
+    if (NT_SUCCESS( Status )) {
+
+        *Length -= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION );
+    }
+
+    return Status;
+}
+
+#endif
+
