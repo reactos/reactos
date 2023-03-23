@@ -5291,6 +5291,11 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_IME_STARTCOMPOSITION:
 		es->composition_start = es->selection_end;
 		es->composition_len = 0;
+#ifdef __REACTOS__
+        if (FALSE) /* FIXME: Condition */
+            return TRUE;
+        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_COMPOSITION:
