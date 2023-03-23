@@ -3671,6 +3671,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         }
 
         /* FIXME: We should likely flush only when last mapping is deleted */
+        ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
         while (ViewSize > 0)
         {
             ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
