@@ -8,17 +8,17 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Bağlantıda Kullanılıyor:", -1, 9, 9, 217, 8
+    LTEXT "Şunu Kullanarak Bağlan:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Yapılandır", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Bu Bağlantıyla Kullanılan Seçilmiş Bileşenler:", -1, 9, 59, 217, 8
+    LTEXT "Bu bağlantıyla kullanılan seçili bileşenler:", -1, 9, 59, 217, 8
     PUSHBUTTON "&Kur", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Tanım", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Bileşen tanımı buraya gelecek.", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Bağlandığında Görev Çubuğunda Simge Göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "B&u Bağlantının, Kısıtlı Bağlanabilirliği Varsa ya da Bağlanabilirliği Yoksa Beni Uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX "&Bağlandığında görev çubuğunda simge göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "B&u bağlantı kısıtlıysa veya bağlanamıyorsa beni uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -85,9 +85,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Tipik ya da husûsî ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Özel Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "ReactOS Ağları için, Kütük ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
+    AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Özel Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
+    LTEXT "ReactOS Ağları için İstemci'yi, Dosya ve Yazdırma Paylaşımı'nı ve otomatik adreslemeli TCP/IP protokolünü kullanarak ağ bağlantıları oluşturur.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -98,7 +98,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Aygıt için:", IDC_STATIC, 33, 2, 100, 20
     LTEXT "Yok", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Denetlenen ve bu bağlantı eliyle kullanan bileşenler:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "Bu bağlantının kullandığı seçili bileşenler:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Kur...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
@@ -143,8 +143,8 @@ BEGIN
     IDS_TYPE_ETHERNET "LAN ya da Yüksek Hızlı İnternet"
     IDS_STATUS_NON_OPERATIONAL "Etkisiz"
     IDS_STATUS_UNREACHABLE "Bağlı Değil"
-    IDS_STATUS_DISCONNECTED "Ağ kablosu takılmamış."
-    IDS_STATUS_CONNECTING "Elde Edilen Ağ Adresi"
+    IDS_STATUS_DISCONNECTED "Ağ kablosu takılmamış"
+    IDS_STATUS_CONNECTING "Ağ adresi alınıyor"
     IDS_STATUS_CONNECTED "Bağlı"
     IDS_STATUS_OPERATIONAL "Bağlı"
     IDS_NET_ACTIVATE "Etkinleştir"

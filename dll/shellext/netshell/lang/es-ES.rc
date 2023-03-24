@@ -91,8 +91,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Elija entre usar una configuración típica o personalizada:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Configuración típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Configuración personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Configuración típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Configuración personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Crea conexiones de red usando el Cliente para Redes de ReactOS, Archivos e Impresoras Compartidas para Redes de ReactOS, y el protocolo TCP/IP con direccionamiento automático.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Le permite configurar manualmente componentes de red.", IDC_STATIC, 65, 90, 243, 20
 END

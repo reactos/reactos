@@ -1,7 +1,6 @@
 /*
  * PROJECT:    ReactOS Netshell
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       dll/shellext/netshell/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  */
@@ -24,7 +23,7 @@ BEGIN
     GROUPBOX "描述", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "元件描述在此處...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     AUTOCHECKBOX "連接後在通知區域顯示圖示", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "在連接通知我時此連接受限制或無連接(&N)", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX "在此連線受限制或無連線時通知我(&N)", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -91,8 +90,8 @@ FONT 9, "新細明體"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Choose whether to use typical or custom settings:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Creates network connections using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
 END
