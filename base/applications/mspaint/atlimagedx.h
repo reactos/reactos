@@ -10,7 +10,7 @@ public:
         BitmapSetResolution = NULL;
     }
 
-    BOOL GetResolution(Gdiplus::GpBitmap *pBitmap, float *pxDpi, float *pyDpi)
+    BOOL GetResolution(Gdiplus::GpImage *pImage, float *pxDpi, float *pyDpi)
     {
         *pxDpi = 96;
         *pyDpi = 96;
@@ -24,8 +24,8 @@ public:
         if (GetImageHorizontalResolution == NULL || GetImageVerticalResolution == NULL)
             return FALSE;
 
-        GetImageHorizontalResolution((Gdiplus::GpImage*)pBitmap, pxDpi);
-        GetImageVerticalResolution((Gdiplus::GpImage*)pBitmap, pyDpi);
+        GetImageHorizontalResolution(pImage, pxDpi);
+        GetImageVerticalResolution(pImage, pyDpi);
         return TRUE;
     }
 
@@ -66,7 +66,7 @@ public:
         status = GetCommon().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // get the resolution
-        GetResolution(pBitmap, pxDpi, pyDpi);
+        GetResolution((Gdiplus::GpImage*)pBitmap, pxDpi, pyDpi);
 
         // delete GpBitmap
         GetCommon().DisposeImage(pBitmap);
