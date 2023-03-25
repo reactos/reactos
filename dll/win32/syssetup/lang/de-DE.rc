@@ -182,7 +182,7 @@ BEGIN
     IDS_LAYOUTTEXT "Die Standard-Texteingabesprache und -methode ist: Tastaturlayout %s"
     IDS_DATETIMETITLE "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
-    IDS_PROCESSTITLE "Abschliessen der Installation"
+    IDS_PROCESSTITLE "Abschließen der Installation"
     IDS_PROCESSSUBTITLE "Bitte warten Sie, während die letzten Installationsschritte ausgeführt werden."
     IDS_THEMESELECTIONTITLE "Erscheinungsbild"
     IDS_THEMESELECTIONSUBTITLE "Wählen Sie Ihr bevorzugtes Theme"
