@@ -1,0 +1,144 @@
+#pragma once
+
+class CImageDx : public CImage
+{
+public:
+    CImageDx()
+    {
+        GetImageHorizontalResolution = NULL;
+        GetImageVerticalResolution = NULL;
+        BitmapSetResolution = NULL;
+    }
+
+    BOOL GetResolution(Gdiplus::GpBitmap *pBitmap, float *pxDpi, float *pyDpi)
+    {
+        *pxDpi = 96;
+        *pyDpi = 96;
+
+        if (GetImageHorizontalResolution == NULL || GetImageVerticalResolution == NULL)
+        {
+            GetImageHorizontalResolution = AddrOf<GETIMAGEHORIZONTALRESOLUTION>("GdipGetImageHorizontalResolution");
+            GetImageVerticalResolution = AddrOf<GETIMAGEVERTICALRESOLUTION>("GdipGetImageVerticalResolution");
+        }
+
+        if (GetImageHorizontalResolution == NULL || GetImageVerticalResolution == NULL)
+            return FALSE;
+
+        GetImageHorizontalResolution((Gdiplus::GpImage*)pBitmap, pxDpi);
+        GetImageVerticalResolution((Gdiplus::GpImage*)pBitmap, pyDpi);
+        return TRUE;
+    }
+
+    BOOL SetResolution(Gdiplus::GpBitmap *pBitmap, float xDpi, float yDpi)
+    {
+        if (xDpi <= 0)
+            xDpi = 96;
+        if (yDpi <= 0)
+            yDpi = 96;
+
+        if (BitmapSetResolution == NULL)
+            BitmapSetResolution = AddrOf<BITMAPSETRESOLUTION>("GdipBitmapSetResolution");
+
+        if (BitmapSetResolution == NULL)
+            return FALSE;
+
+        BitmapSetResolution(pBitmap, xDpi, yDpi);
+        return TRUE;
+    }
+
+    HRESULT LoadDx(LPCTSTR pszFileName, float *pxDpi, float *pyDpi) throw()
+    {
+        // convert the file name string into Unicode
+        CStringW pszNameW(pszFileName);
+
+        // create a GpBitmap object from file
+        using namespace Gdiplus;
+        GpBitmap *pBitmap = NULL;
+        if (GetCommon().CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
+        {
+            return E_FAIL;
+        }
+
+        // get bitmap handle
+        HBITMAP hbm = NULL;
+        Color color(0xFF, 0xFF, 0xFF);
+        Gdiplus::Status status;
+        status = GetCommon().CreateHBITMAPFromBitmap(
+            pBitmap, &hbm, color.GetValue());
+
+        // get the resolution
+        GetResolution(pBitmap, pxDpi, pyDpi);
+
+        // delete GpBitmap
+        GetCommon().DisposeImage(pBitmap);
+
+        // attach it
+        if (status == Ok)
+            Attach(hbm);
+        return (status == Ok ? S_OK : E_FAIL);
+    }
+
+    HRESULT SaveDx(LPCTSTR pszFileName, REFGUID guidFileType = GUID_NULL,
+                   float xDpi = 0, float yDpi = 0) const throw()
+    {
+        using namespace Gdiplus;
+        ATLASSERT(m_hbm);
+
+        // TODO & FIXME: set parameters (m_rgbTransColor etc.)
+
+        // convert the file name string into Unicode
+        CStringW pszNameW(pszFileName);
+
+        // if the file type is null, get the file type from extension
+        const GUID *FileType = &guidFileType;
+        if (IsGuidEqual(guidFileType, GUID_NULL))
+        {
+            LPCWSTR pszExt = GetFileExtension(pszNameW);
+            FileType = FileTypeFromExtension(pszExt);
+        }
+
+        // get CLSID from file type
+        CLSID clsid;
+        if (!GetClsidFromFileType(&clsid, FileType))
+            return E_FAIL;
+
+        // create a GpBitmap from HBITMAP
+        GpBitmap *pBitmap = NULL;
+        GetCommon().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+
+        // set the resolution
+        BitmapSetResolution(pBitmap, xDpi, yDpi);
+
+        // save to file
+        Status status;
+        status = GetCommon().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
+
+        // destroy GpBitmap
+        GetCommon().DisposeImage(pBitmap);
+
+        return (status == Ok ? S_OK : E_FAIL);
+    }
+
+protected:
+    // get procedure address of the DLL
+    template <typename TYPE>
+    TYPE AddrOf(const char *name)
+    {
+        FARPROC proc = ::GetProcAddress(GetCommon().hinstGdiPlus, name);
+        return reinterpret_cast<TYPE>(proc);
+    }
+
+#undef API
+#undef CST
+#define API WINGDIPAPI
+#define CST GDIPCONST
+    typedef St (API *GETIMAGEHORIZONTALRESOLUTION)(Im *, float*);
+    typedef St (API *GETIMAGEVERTICALRESOLUTION)(Im *, float*);
+    typedef St (API *BITMAPSETRESOLUTION)(Bm *, float, float);
+#undef API
+#undef CST
+
+    GETIMAGEHORIZONTALRESOLUTION    GetImageHorizontalResolution;
+    GETIMAGEVERTICALRESOLUTION      GetImageVerticalResolution;
+    BITMAPSETRESOLUTION             BitmapSetResolution;
+};

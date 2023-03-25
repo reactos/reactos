@@ -87,9 +87,9 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 {
     FixDpi();
 
-    CImage img;
+    CImageDx img;
     img.Attach(hBitmap);
-    img.Save(FileName, GUID_NULL, &g_xDpi, &g_yDpi);  // TODO: error handling
+    img.SaveDx(FileName, GUID_NULL, g_xDpi, g_yDpi); // TODO: error handling
     img.Detach();
 
     WIN32_FIND_DATA find;
@@ -200,8 +200,8 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     }
 
     // load the image
-    CImage img;
-    img.Load(name, &g_xDpi, &g_yDpi);
+    CImageDx img;
+    img.LoadDx(name, &g_xDpi, &g_yDpi);
     HBITMAP hBitmap = img.Detach();
 
     if (hBitmap == NULL)

@@ -6,8 +6,6 @@
     #undef _DEBUG
 #endif
 
-#define MSPAINT /* This macro extends ATL CImage (ReactOS-specific hack) */
-
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -26,6 +24,7 @@
 #include <stdlib.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
+#include "atlimagedx.h"
 #ifdef _DEBUG
     #define _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
