@@ -8,7 +8,7 @@
 #include <kmt_test.h>
 
 #define OBJ_WINSTA_DIRECTORY_NAME_INFO_SIZE (sizeof(UNICODE_STRING) + sizeof(L"\\Windows"))
-#define OBJ_DIRECTORY_TYPE_INFO_SIZE (sizeof(OBJECT_TYPE_INFORMATION) + (wcslen(L"\\Directory") * sizeof(WCHAR)))
+#define OBJ_DIRECTORY_TYPE_INFO_SIZE (sizeof(OBJECT_TYPE_INFORMATION) + sizeof(L"Directory"))
 
 static
 VOID
