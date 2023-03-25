@@ -150,11 +150,11 @@ public:
 
 CTrayClockWnd::CTrayClockWnd() :
         hFont(NULL),
+        textColor(0),
         dwFlags(0),
         LineSpacing(0),
         VisibleLines(0)
 {
-    ZeroMemory(&textColor, sizeof(textColor));
     ZeroMemory(&rcText, sizeof(rcText));
     ZeroMemory(&LocalTime, sizeof(LocalTime));
     ZeroMemory(&CurrentSize, sizeof(CurrentSize));
@@ -173,34 +173,19 @@ LRESULT CTrayClockWnd::OnThemeChanged()
 
     if (clockTheme)
     {
-        GetThemeFont(clockTheme,
-            NULL,
-            CLP_TIME,
-            0,
-            TMT_FONT,
-            &clockFont);
+        GetThemeFont(clockTheme, NULL, CLP_TIME, 0, TMT_FONT, &clockFont);
 
         hFont = CreateFontIndirectW(&clockFont);
 
-        GetThemeColor(clockTheme,
-            CLP_TIME,
-            0,
-            TMT_TEXTCOLOR,
-            &textColor);
+        GetThemeColor(clockTheme, CLP_TIME, 0, TMT_TEXTCOLOR, &textColor);
 
         if (this->hFont != NULL)
             DeleteObject(this->hFont);
 
         SetFont(hFont, FALSE);
-    }
-    else
-    {
-        /* We don't need to set a font here, our parent will use
-            * WM_SETFONT to set the right one when themes are not enabled. */
-        textColor = RGB(0, 0, 0);
-    }
 
-    CloseThemeData(clockTheme);
+        CloseThemeData(clockTheme);
+    }
 
     return TRUE;
 }
@@ -520,14 +505,11 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     HFONT hPrevFont;
     INT iPrevBkMode;
     UINT i, line;
-
     PAINTSTRUCT ps;
     HDC hDC = (HDC) wParam;
 
     if (wParam == 0)
-    {
         hDC = BeginPaint(&ps);
-    }
 
     if (hDC == NULL)
         return FALSE;
@@ -537,7 +519,10 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         iPrevBkMode = SetBkMode(hDC, TRANSPARENT);
 
-        SetTextColor(hDC, textColor);
+        if (!IsAppThemed())
+            textColor = ::GetSysColor(COLOR_BTNTEXT);
+
+        ::SetTextColor(hDC, textColor);
 
         hPrevFont = (HFONT) SelectObject(hDC, hFont);
 
@@ -567,9 +552,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     }
 
     if (wParam == 0)
-    {
         EndPaint(&ps);
-    }
 
     return TRUE;
 }
