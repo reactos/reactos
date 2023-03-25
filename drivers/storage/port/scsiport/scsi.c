@@ -653,14 +653,10 @@ SpiProcessCompletedRequest(
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     LONG Result;
     PIRP Irp;
-    ULONG transferLen = 0;
-    PSCSI_SG_ADDRESS pListIter = SrbInfo->ScatterGather;
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    BOOLEAN isWrite = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
 
     /* Get Lun extension */
     LunExtension = IoStack->DeviceObject->DeviceExtension;
@@ -686,21 +682,23 @@ SpiProcessCompletedRequest(
     /* Flush adapter if needed */
     if (SrbInfo->BaseOfMapRegister)
     {
-        for(int i = 0;
-            i < SrbInfo->NumberOfMapRegisters     &&   /* Prevent Buffer overrun */
-            transferLen < Srb->DataTransferLength &&   /* Stop if request is complete */
-            pListIter;                                 /* Valid Pointer Check */
-            pListIter++, i++)
+        if (SrbInfo->ScatterGather)
         {
-            transferLen += pListIter->Length;
-        }
+            ULONG transferLen = 0;
+            BOOLEAN isWrite = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
 
-        IoFlushAdapterBuffers(DeviceExtension->AdapterObject,
-                              Irp->MdlAddress,
-                              SrbInfo->BaseOfMapRegister,
-                              Srb->DataBuffer,
-                              transferLen,
-                              isWrite);
+            for(int i = 0; i < SrbInfo->NumberOfMapRegisters; i++)
+            {
+                transferLen += SrbInfo->ScatterGather[i].Length;
+            }
+
+            IoFlushAdapterBuffers(DeviceExtension->AdapterObject,
+                                  Irp->MdlAddress,
+                                  SrbInfo->BaseOfMapRegister,
+                                  Srb->DataBuffer,
+                                  transferLen,
+                                  isWrite);
+        }
     }
 
     /* Clear the request */
