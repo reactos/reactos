@@ -289,12 +289,6 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
         miniature.ShowWindow(SW_SHOWNOACTIVATE);
     }
 
-    // Initialize imageModel
-    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
-    if (__argc >= 2)
-        DoLoadImageFile(m_hWnd, __targv[1], TRUE);
-    imageModel.ClearHistory();
-
     // Set icon
     SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
     SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));

@@ -215,6 +215,12 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
         return 1;
     }
 
+    // Initialize imageModel
+    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
+    if (__argc >= 2)
+        DoLoadImageFile(mainWindow, __targv[1], TRUE);
+    imageModel.ClearHistory();
+
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
