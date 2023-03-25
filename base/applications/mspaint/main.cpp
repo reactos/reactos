@@ -99,8 +99,8 @@ BOOL CMainWindow::DoGetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
                                         CImage::excludeDefaultLoad, _T('\0'));
 
         // Initializing the OPENFILENAME structure for GetOpenFileName
-        ZeroMemory(&ofn, sizeof(OPENFILENAME));
-        ofn.lStructSize    = sizeof(OPENFILENAME);
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize    = sizeof(ofn);
         ofn.hwndOwner      = m_hWnd;
         ofn.hInstance      = hProgInstance;
         ofn.lpstrFilter    = strFilter;
@@ -126,8 +126,8 @@ BOOL CMainWindow::DoGetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
                                         CImage::excludeDefaultSave, _T('\0'));
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
-        ZeroMemory(&sfn, sizeof(OPENFILENAME));
-        sfn.lStructSize    = sizeof(OPENFILENAME);
+        ZeroMemory(&sfn, sizeof(sfn));
+        sfn.lStructSize    = sizeof(sfn);
         sfn.hwndOwner      = m_hWnd;
         sfn.hInstance      = hProgInstance;
         sfn.lpstrFilter    = strFilter;
@@ -164,7 +164,7 @@ BOOL CMainWindow::DoChooseColor(IN OUT COLORREF *prgbColor)
     {
         // Initializing the CHOOSECOLOR structure for ChooseColor
         ZeroMemory(&choosecolor, sizeof(choosecolor));
-        choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
+        choosecolor.lStructSize    = sizeof(choosecolor);
         choosecolor.hwndOwner      = m_hWnd;
         choosecolor.lpCustColors   = custColors;
     }
