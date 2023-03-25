@@ -24,8 +24,10 @@ public:
 
         if (GetImageHorizontalResolution == NULL || GetImageVerticalResolution == NULL)
         {
-            GetImageHorizontalResolution = AddrOf<GETIMAGEHORIZONTALRESOLUTION>("GdipGetImageHorizontalResolution");
-            GetImageVerticalResolution = AddrOf<GETIMAGEVERTICALRESOLUTION>("GdipGetImageVerticalResolution");
+            GetImageHorizontalResolution =
+                AddrOf<GETIMAGEHORIZONTALRESOLUTION>("GdipGetImageHorizontalResolution");
+            GetImageVerticalResolution =
+                AddrOf<GETIMAGEVERTICALRESOLUTION>("GdipGetImageVerticalResolution");
         }
 
         if (GetImageHorizontalResolution == NULL || GetImageVerticalResolution == NULL)
