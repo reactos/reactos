@@ -41,8 +41,8 @@ extern SelectionModel selectionModel;
 extern PaletteModel paletteModel;
 
 extern HWND hStatusBar;
-extern INT fileHPPM;
-extern INT fileVPPM;
+extern float g_xDpi;
+extern float g_yDpi;
 extern INT fileSize;
 extern SYSTEMTIME fileTime;
 

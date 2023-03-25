@@ -6,7 +6,7 @@
     #undef _DEBUG
 #endif
 
-#include <stdarg.h>
+#define MSPAINT /* This macro extends ATL CImage (ReactOS-specific hack) */
 
 #include <windef.h>
 #include <winbase.h>
