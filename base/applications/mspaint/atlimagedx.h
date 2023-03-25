@@ -3,7 +3,7 @@
 class CImageDx : public CImage
 {
 public:
-    CImageDx()
+    CImageDx() : CImage()
     {
         GetImageHorizontalResolution = NULL;
         GetImageVerticalResolution = NULL;
@@ -29,7 +29,7 @@ public:
         return TRUE;
     }
 
-    BOOL SetResolution(Gdiplus::GpBitmap *pBitmap, float xDpi, float yDpi)
+    BOOL SetResolution(Gdiplus::GpBitmap *pBitmap, float xDpi, float yDpi) const
     {
         if (xDpi <= 0)
             xDpi = 96;
@@ -63,8 +63,7 @@ public:
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
         Gdiplus::Status status;
-        status = GetCommon().CreateHBITMAPFromBitmap(
-            pBitmap, &hbm, color.GetValue());
+        status = GetCommon().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // get the resolution
         GetResolution(pBitmap, pxDpi, pyDpi);
@@ -107,7 +106,7 @@ public:
         GetCommon().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // set the resolution
-        BitmapSetResolution(pBitmap, xDpi, yDpi);
+        SetResolution(pBitmap, xDpi, yDpi);
 
         // save to file
         Status status;
@@ -122,7 +121,7 @@ public:
 protected:
     // get procedure address of the DLL
     template <typename TYPE>
-    TYPE AddrOf(const char *name)
+    TYPE AddrOf(const char *name) const
     {
         FARPROC proc = ::GetProcAddress(GetCommon().hinstGdiPlus, name);
         return reinterpret_cast<TYPE>(proc);
@@ -140,5 +139,5 @@ protected:
 
     GETIMAGEHORIZONTALRESOLUTION    GetImageHorizontalResolution;
     GETIMAGEVERTICALRESOLUTION      GetImageVerticalResolution;
-    BITMAPSETRESOLUTION             BitmapSetResolution;
+    mutable BITMAPSETRESOLUTION     BitmapSetResolution;
 };
