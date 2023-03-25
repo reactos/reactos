@@ -374,7 +374,11 @@ public:
         return m_hbm == NULL;
     }
 
+#ifdef MSPAINT
+    HRESULT Load(LPCTSTR pszFileName, float *pxDpi = NULL, float *pyDpi = NULL) throw()
+#else
     HRESULT Load(LPCTSTR pszFileName) throw()
+#endif
     {
         // convert the file name string into Unicode
         CStringW pszNameW(pszFileName);
@@ -388,6 +392,18 @@ public:
         }
 
         // TODO & FIXME: get parameters (m_rgbTransColor etc.)
+#ifdef MSPAINT
+        if (pxDpi)
+        {
+            *pxDpi = 96;
+            GetCommon().GetImageHorizontalResolution((GpImage*)pBitmap, pxDpi);
+        }
+        if (pyDpi)
+        {
+            *pyDpi = 96;
+            GetCommon().GetImageVerticalResolution((GpImage*)pBitmap, pyDpi);
+        }
+#endif
 
         // get bitmap handle
         HBITMAP hbm = NULL;
@@ -543,8 +559,14 @@ public:
 
         return (status == Ok ? S_OK : E_FAIL);
     }
+
+#ifdef MSPAINT
+    HRESULT Save(LPCTSTR pszFileName, REFGUID guidFileType = GUID_NULL,
+                 const float *pxDpi = NULL, const float *pyDpi = NULL) const throw()
+#else
     HRESULT Save(LPCTSTR pszFileName,
                  REFGUID guidFileType = GUID_NULL) const throw()
+#endif
     {
         using namespace Gdiplus;
         ATLASSERT(m_hbm);
@@ -570,6 +592,11 @@ public:
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
         GetCommon().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+
+#ifdef MSPAINT
+        if (pxDpi && pyDpi)
+            GetCommon().BitmapSetResolution(pBitmap, *pxDpi, *pyDpi);
+#endif
 
         // save to file
         Status status;
@@ -860,6 +887,11 @@ protected:
         typedef St (API *SAVEIMAGETOFILE)(Im *, CST WCHAR *, CST CLSID *,
                                           CST EncParams *);
         typedef St (API *DISPOSEIMAGE)(Im*);
+#ifdef MSPAINT
+        typedef St (API *GETIMAGEHORIZONTALRESOLUTION)(Im *, float*);
+        typedef St (API *GETIMAGEVERTICALRESOLUTION)(Im *, float*);
+        typedef St (API *BITMAPSETRESOLUTION)(Bm *, float, float);
+#endif
 #undef API
 #undef CST
 
@@ -880,6 +912,11 @@ protected:
         SAVEIMAGETOSTREAM       SaveImageToStream;
         SAVEIMAGETOFILE         SaveImageToFile;
         DISPOSEIMAGE            DisposeImage;
+#ifdef MSPAINT
+        GETIMAGEHORIZONTALRESOLUTION    GetImageHorizontalResolution;
+        GETIMAGEVERTICALRESOLUTION      GetImageVerticalResolution;
+        BITMAPSETRESOLUTION             BitmapSetResolution;
+#endif
 
         COMMON()
         {
@@ -896,6 +933,11 @@ protected:
             SaveImageToStream = NULL;
             SaveImageToFile = NULL;
             DisposeImage = NULL;
+#ifdef MSPAINT
+            GetImageHorizontalResolution = NULL;
+            GetImageVerticalResolution = NULL;
+            BitmapSetResolution = NULL;
+#endif
         }
         ~COMMON()
         {
@@ -944,6 +986,11 @@ protected:
                 AddrOf<SAVEIMAGETOSTREAM>("GdipSaveImageToStream");
             SaveImageToFile = AddrOf<SAVEIMAGETOFILE>("GdipSaveImageToFile");
             DisposeImage = AddrOf<DISPOSEIMAGE>("GdipDisposeImage");
+#ifdef MSPAINT
+            GetImageHorizontalResolution = AddrOf<GETIMAGEHORIZONTALRESOLUTION>("GdipGetImageHorizontalResolution");
+            GetImageVerticalResolution = AddrOf<GETIMAGEVERTICALRESOLUTION>("GdipGetImageVerticalResolution");
+            BitmapSetResolution = AddrOf<BITMAPSETRESOLUTION>("GdipBitmapSetResolution");
+#endif
 
             if (hinstGdiPlus && Startup)
             {
@@ -970,6 +1017,11 @@ protected:
                 SaveImageToStream = NULL;
                 SaveImageToFile = NULL;
                 DisposeImage = NULL;
+#ifdef MSPAINT
+                GetImageHorizontalResolution = NULL;
+                GetImageVerticalResolution = NULL;
+                BitmapSetResolution = NULL;
+#endif
                 ::FreeLibrary(hinstGdiPlus);
                 hinstGdiPlus = NULL;
             }
