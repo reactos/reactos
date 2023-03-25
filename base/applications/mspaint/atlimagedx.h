@@ -1,3 +1,10 @@
+/*
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:    Loading/Saving an image file with getting/setting resolution
+ * COPYRIGHT:  Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 #pragma once
 
 class CImageDx : public CImage
