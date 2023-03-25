@@ -127,15 +127,9 @@ protected:
         return reinterpret_cast<TYPE>(proc);
     }
 
-#undef API
-#undef CST
-#define API WINGDIPAPI
-#define CST GDIPCONST
-    typedef St (API *GETIMAGEHORIZONTALRESOLUTION)(Im *, float*);
-    typedef St (API *GETIMAGEVERTICALRESOLUTION)(Im *, float*);
-    typedef St (API *BITMAPSETRESOLUTION)(Bm *, float, float);
-#undef API
-#undef CST
+    typedef St (WINGDIPAPI *GETIMAGEHORIZONTALRESOLUTION)(Im *, float*);
+    typedef St (WINGDIPAPI *GETIMAGEVERTICALRESOLUTION)(Im *, float*);
+    typedef St (WINGDIPAPI *BITMAPSETRESOLUTION)(Bm *, float, float);
 
     GETIMAGEHORIZONTALRESOLUTION    GetImageHorizontalResolution;
     GETIMAGEVERTICALRESOLUTION      GetImageVerticalResolution;
