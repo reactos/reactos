@@ -30,12 +30,6 @@ float PpmFromDpi(float dpi)
     return dpi / 0.0254; // 1 DPI is 0.0254 meter.
 }
 
-// Convert PPM (pixels per meter) into DPI (dots per inch)
-float DpiFromPpm(float ppm)
-{
-    return ppm * 0.0254; // 1 DPI is 0.0254 meter.
-}
-
 HBITMAP
 CreateDIBWithProperties(int width, int height)
 {
