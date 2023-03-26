@@ -3907,6 +3907,8 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Give the drivers something to understand */
         CapturedByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
         CapturedByteOffset.u.HighPart = -1;
+        FileObject->CurrentByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
+        FileObject->CurrentByteOffset.u.HighPart = -1;
     }
 
     /* Check for event */
