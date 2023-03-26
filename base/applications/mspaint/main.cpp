@@ -100,12 +100,12 @@ BOOL CMainWindow::DoGetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 
         // Initializing the OPENFILENAME structure for GetOpenFileName
         ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize    = sizeof(ofn);
-        ofn.hwndOwner      = m_hWnd;
-        ofn.hInstance      = hProgInstance;
-        ofn.lpstrFilter    = strFilter;
-        ofn.Flags          = OFN_EXPLORER | OFN_HIDEREADONLY;
-        ofn.lpstrDefExt    = L"png";
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner   = m_hWnd;
+        ofn.hInstance   = hProgInstance;
+        ofn.lpstrFilter = strFilter;
+        ofn.Flags       = OFN_EXPLORER | OFN_HIDEREADONLY;
+        ofn.lpstrDefExt = L"png";
     }
 
     ofn.lpstrFile = pszFile;
@@ -127,13 +127,13 @@ BOOL CMainWindow::DoGetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
         ZeroMemory(&sfn, sizeof(sfn));
-        sfn.lStructSize    = sizeof(sfn);
-        sfn.hwndOwner      = m_hWnd;
-        sfn.hInstance      = hProgInstance;
-        sfn.lpstrFilter    = strFilter;
-        sfn.Flags          = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
-        sfn.lpfnHook       = OFNHookProc;
-        sfn.lpstrDefExt    = L"png";
+        sfn.lStructSize = sizeof(sfn);
+        sfn.hwndOwner   = m_hWnd;
+        sfn.hInstance   = hProgInstance;
+        sfn.lpstrFilter = strFilter;
+        sfn.Flags       = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
+        sfn.lpfnHook    = OFNHookProc;
+        sfn.lpstrDefExt = L"png";
 
         // Choose PNG
         for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
@@ -164,9 +164,9 @@ BOOL CMainWindow::DoChooseColor(IN OUT COLORREF *prgbColor)
     {
         // Initializing the CHOOSECOLOR structure for ChooseColor
         ZeroMemory(&choosecolor, sizeof(choosecolor));
-        choosecolor.lStructSize    = sizeof(choosecolor);
-        choosecolor.hwndOwner      = m_hWnd;
-        choosecolor.lpCustColors   = custColors;
+        choosecolor.lStructSize  = sizeof(choosecolor);
+        choosecolor.hwndOwner    = m_hWnd;
+        choosecolor.lpCustColors = custColors;
     }
 
     choosecolor.rgbResult = *prgbColor;
