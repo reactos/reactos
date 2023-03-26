@@ -680,25 +680,24 @@ SpiProcessCompletedRequest(
     }
 
     /* Flush adapter if needed */
-    if (SrbInfo->BaseOfMapRegister)
+    if (SrbInfo->BaseOfMapRegister && SrbInfo->ScatterGather)
     {
-        if (SrbInfo->ScatterGather)
+        ULONG transferLen = 0;
+        BOOLEAN isWrite = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
+
+        for(int i = 0;
+            i < SrbInfo->NumberOfMapRegisters && transferLen < Srb->DataTransferLength;
+            i++)
         {
-            ULONG transferLen = 0;
-            BOOLEAN isWrite = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
-
-            for(int i = 0; i < SrbInfo->NumberOfMapRegisters; i++)
-            {
-                transferLen += SrbInfo->ScatterGather[i].Length;
-            }
-
-            IoFlushAdapterBuffers(DeviceExtension->AdapterObject,
-                                  Irp->MdlAddress,
-                                  SrbInfo->BaseOfMapRegister,
-                                  Srb->DataBuffer,
-                                  transferLen,
-                                  isWrite);
+            transferLen += SrbInfo->ScatterGather[i].Length;
         }
+
+        IoFlushAdapterBuffers(DeviceExtension->AdapterObject,
+                              Irp->MdlAddress,
+                              SrbInfo->BaseOfMapRegister,
+                              Srb->DataBuffer,
+                              transferLen,
+                              isWrite);
     }
 
     /* Clear the request */
