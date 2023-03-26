@@ -5004,7 +5004,7 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 #ifdef __REACTOS__
         if (FALSE) /* FIXME: Condition */
             return TRUE;
-        result = DefWindowProcW(hwnd, WM_IME_STARTCOMPOSITION, wParam, lParam);
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
 #endif
         break;
 
