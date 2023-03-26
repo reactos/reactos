@@ -691,8 +691,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
         {
-            TCHAR szFileName[MAX_LONG_PATH];
-            szFileName[0] = 0;
+            TCHAR szFileName[MAX_LONG_PATH] = _T("");
             if (DoGetSaveFileName(szFileName, _countof(szFileName)))
                 SaveDIBToFile(selectionModel.GetBitmap(), szFileName, imageModel.GetDC());
             break;
