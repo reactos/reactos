@@ -831,18 +831,20 @@ protected:
 
     // abbreviations of GDI+ basic types
     typedef Gdiplus::GpStatus St;
-    typedef Gdiplus::ImageCodecInfo ICI;
     typedef Gdiplus::GpBitmap Bm;
-    typedef Gdiplus::EncoderParameters EncParams;
     typedef Gdiplus::GpImage Im;
-    typedef Gdiplus::ARGB ARGB;
-    typedef HBITMAP HBM;
-    typedef Gdiplus::GdiplusStartupInput GSI;
-    typedef Gdiplus::GdiplusStartupOutput GSO;
 
     // The common data of atlimage
     struct COMMON
     {
+        // abbreviations of GDI+ basic types
+        typedef Gdiplus::ImageCodecInfo ICI;
+        typedef Gdiplus::EncoderParameters EncParams;
+        typedef Gdiplus::ARGB ARGB;
+        typedef HBITMAP HBM;
+        typedef Gdiplus::GdiplusStartupInput GSI;
+        typedef Gdiplus::GdiplusStartupOutput GSO;
+
         // GDI+ function types
 #undef API
 #undef CST
