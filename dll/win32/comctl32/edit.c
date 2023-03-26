@@ -5010,6 +5010,9 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
     case WM_IME_COMPOSITION:
         EDIT_ImeComposition(hwnd, lParam, es);
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_ENDCOMPOSITION:
@@ -5019,6 +5022,9 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
             es->selection_end = es->selection_start;
             es->composition_len= 0;
         }
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_COMPOSITIONFULL:

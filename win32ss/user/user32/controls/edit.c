@@ -5308,7 +5308,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             ImmReleaseContext(hwnd, hIMC);
         }
 
-        result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 #endif
 		break;
 
@@ -5324,6 +5324,9 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_IME_COMPOSITION:
                 EDIT_ImeComposition(hwnd, lParam, es);
+#ifdef __REACTOS__
+        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_ENDCOMPOSITION:
@@ -5333,6 +5336,9 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
                         es->selection_end = es->selection_start;
                         es->composition_len= 0;
                 }
+#ifdef __REACTOS__
+        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+#endif
 		break;
 
 	case WM_IME_COMPOSITIONFULL:
