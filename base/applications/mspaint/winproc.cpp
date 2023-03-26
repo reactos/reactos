@@ -698,8 +698,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITPASTEFROM:
         {
-            TCHAR szFileName[MAX_LONG_PATH];
-            szFileName[0] = 0;
+            TCHAR szFileName[MAX_LONG_PATH] = _T("");
             if (DoGetOpenFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
