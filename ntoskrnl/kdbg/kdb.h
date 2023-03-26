@@ -269,14 +269,6 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
                     IN PVOID Src,
                     IN ULONG Bytes);
 
-#define KdbpGetCharKeyboard(ScanCode) KdbpTryGetCharKeyboard(ScanCode, 0)
-CHAR
-KdbpTryGetCharKeyboard(PULONG ScanCode, ULONG Retry);
-
-#define KdbpGetCharSerial()  KdbpTryGetCharSerial(0)
-CHAR
-KdbpTryGetCharSerial(ULONG Retry);
-
 VOID
 KbdDisableMouse(VOID);
 
