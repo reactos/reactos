@@ -123,7 +123,7 @@ void CMainWindow::saveImage(BOOL overwrite)
     {
         imageModel.SaveImage(filepathname);
     }
-    else if (DoGetSaveFileName(filepathname, _countof(filepathname)))
+    else if (GetSaveFileName(filepathname, _countof(filepathname)))
     {
         imageModel.SaveImage(filepathname);
 
@@ -544,7 +544,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILEOPEN:
             {
                 TCHAR szFileName[MAX_LONG_PATH] = _T("");
-                if (ConfirmSave() && DoGetOpenFileName(szFileName, _countof(szFileName)))
+                if (ConfirmSave() && GetOpenFileName(szFileName, _countof(szFileName)))
                 {
                     DoLoadImageFile(m_hWnd, szFileName, TRUE);
                 }
@@ -691,14 +691,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITCOPYTO:
         {
             TCHAR szFileName[MAX_LONG_PATH] = _T("");
-            if (DoGetSaveFileName(szFileName, _countof(szFileName)))
+            if (GetSaveFileName(szFileName, _countof(szFileName)))
                 SaveDIBToFile(selectionModel.GetBitmap(), szFileName, imageModel.GetDC());
             break;
         }
         case IDM_EDITPASTEFROM:
         {
             TCHAR szFileName[MAX_LONG_PATH] = _T("");
-            if (DoGetOpenFileName(szFileName, _countof(szFileName)))
+            if (GetOpenFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
                 if (hbmNew)
@@ -712,7 +712,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_COLORSEDITPALETTE:
         {
             COLORREF rgbColor = paletteModel.GetFgColor();
-            if (DoChooseColor(&rgbColor))
+            if (ChooseColor(&rgbColor))
                 paletteModel.SetFgColor(rgbColor);
             break;
         }

@@ -31,9 +31,9 @@ public:
     CMainWindow() : m_hMenu(NULL) { }
 
     HWND DoCreate();
-    BOOL DoGetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
-    BOOL DoGetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
-    BOOL DoChooseColor(IN OUT COLORREF *prgbColor);
+    BOOL GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL ChooseColor(IN OUT COLORREF *prgbColor);
 
 private:
     HMENU m_hMenu;

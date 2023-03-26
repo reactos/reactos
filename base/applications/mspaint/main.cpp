@@ -82,7 +82,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-BOOL CMainWindow::DoGetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 {
     static OPENFILENAME ofn = { 0 };
     static CString strFilter;
@@ -113,7 +113,7 @@ BOOL CMainWindow::DoGetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
     return ::GetOpenFileName(&ofn);
 }
 
-BOOL CMainWindow::DoGetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 {
     static OPENFILENAME sfn = { 0 };
     static CString strFilter;
@@ -151,7 +151,7 @@ BOOL CMainWindow::DoGetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
     return ::GetSaveFileName(&sfn);
 }
 
-BOOL CMainWindow::DoChooseColor(IN OUT COLORREF *prgbColor)
+BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
 {
     static CHOOSECOLOR choosecolor = { 0 };
     static COLORREF custColors[16] =
