@@ -1,19 +1,19 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kdbg/kdb_keyboard.c
- * PURPOSE:         Keyboard driver
+ * PROJECT:     ReactOS KDBG Kernel Debugger Terminal Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     PS/2 Keyboard driver
+ * COPYRIGHT:   Copyright 2001 David Welch <welch@cwcom.net>
+ *              Copyright 2004 Art Yerkes <ayerkes@speakeasy.net>
+ *              Copyright 2005 Gregor Anich <blight@blight.eu.org>
+ *              Copyright 2009-2011 Dmitry Gorbachev <gorbachev@reactos.org>
  *
- * PROGRAMMERS:     Victor Kirhenshtein (sauros@iname.com)
- *                  Jason Filby (jasonfilby@yahoo.com)
+ * NOTE: Adapted from historic PS/2 keyboard driver authored by
+ * Victor Kirhenshtein <sauros@iname.com> and Jason Filby <jasonfilby@yahoo.com>
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
-
 
 #define KBD_STATUS_REG          0x64
 #define KBD_CNTL_REG            0x64
