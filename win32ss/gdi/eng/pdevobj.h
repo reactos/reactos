@@ -136,6 +136,7 @@ typedef struct _PDEVOBJ
     {
       DRIVER_FUNCTIONS        DriverFunctions;
       DRIVER_FUNCTIONS        pfn;
+      DRIVER_FUNCTIONS        drvfn;
       PVOID                   apfn[INDEX_LAST];         // B8C 0x0598
     };
 

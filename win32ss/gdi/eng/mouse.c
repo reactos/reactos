@@ -627,11 +627,9 @@ IntEngSetPointerShape(
     ULONG ulResult = SPS_DECLINE;
     PFN_DrvSetPointerShape pfnSetPointerShape;
     PPDEVOBJ ppdev = GDIDEV(pso);
-    BOOL bHardwarePointer = FALSE;
-    BOOL bSoftwarePointer = TRUE;
 
-    pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
-
+    /* Try the driver function */
+    pfnSetPointerShape = ppdev->pfn.SetPointerShape;
     if (pfnSetPointerShape)
     {
         /* Drivers expect to get an XLATEOBJ */
@@ -652,48 +650,66 @@ IntEngSetPointerShape(
 
         /* Check if the driver accepted it */
         if (ulResult == SPS_ACCEPT_NOEXCLUDE)
-            bHardwarePointer = TRUE;
+        {
+            /* Check of we need to enable the hardware pointer */
+            if (!(ppdev->flFlags & PDEV_HARDWARE_POINTER))
+            {
+                /* Save current software pointer position */
+                POINTL ptlPointer = ppdev->ptlPointer;
 
-        bSoftwarePointer = !bHardwarePointer;
+                /* Disable software pointer */
+                EngMovePointer(pso, -1, -1, NULL);
+                ppdev->flFlags &= ~PDEV_SOFTWARE_POINTER;
+
+                /* Set MovePointer to the driver function */
+                ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
+                ppdev->flFlags |= PDEV_HARDWARE_POINTER;
+
+                /* Enable the hardware pointer */
+                ppdev->pfnMovePointer(pso,
+                                      ptlPointer.x,
+                                      ptlPointer.x,
+                                      &ppdev->Pointer.Exclude);
+            }
+
+            return ulResult;
+        }
     }
 
-    if (bSoftwarePointer)
+    /* Set software pointer */
+    ulResult = EngSetPointerShape(pso,
+                                  psoMask,
+                                  psoColor,
+                                  pxlo,
+                                  xHot,
+                                  yHot,
+                                  x,
+                                  y,
+                                  prcl,
+                                  fl);
+
+    /* Check if GDI accepted it */
+    if (ulResult == SPS_ACCEPT_NOEXCLUDE)
     {
-        /* Set software pointer */
-        ulResult = EngSetPointerShape(pso,
-                                      psoMask,
-                                      psoColor,
-                                      pxlo,
-                                      xHot,
-                                      yHot,
-                                      x,
-                                      y,
-                                      prcl,
-                                      fl);
+        /* Check of we need to enable the software pointer */
+        if (!(ppdev->flFlags & PDEV_SOFTWARE_POINTER))
+        {
+            /* Disable hardware pointer */
+            if (ppdev->pfn.MovePointer)
+                ppdev->pfn.MovePointer(pso, -1, -1, NULL);
+            ppdev->flFlags &= ~PDEV_HARDWARE_POINTER;
+
+            /* Set MovePointer to the eng function */
+            ppdev->pfnMovePointer = EngMovePointer;
+            ppdev->flFlags |= PDEV_SOFTWARE_POINTER;
+
+            /* Enable software pointer */
+            EngMovePointer(pso,
+                           ppdev->ptlPointer.x,
+                           ppdev->ptlPointer.x,
+                           &ppdev->Pointer.Exclude);
+        }
     }
-
-    if (!bSoftwarePointer && ppdev->flFlags & PDEV_SOFTWARE_POINTER)
-    {
-        /* Disable software pointer */
-        EngMovePointer(pso, -1, -1, NULL);
-    }
-
-    if (!bHardwarePointer && ppdev->flFlags & PDEV_HARDWARE_POINTER)
-    {
-        /* Disable hardware pointer */
-        ppdev->pfnMovePointer(pso, -1, -1, NULL);
-    }
-
-    /* Update flags */
-    if (bSoftwarePointer)
-        ppdev->flFlags |= PDEV_SOFTWARE_POINTER;
-    else
-        ppdev->flFlags &= ~PDEV_SOFTWARE_POINTER;
-
-    if (bHardwarePointer)
-        ppdev->flFlags |= PDEV_HARDWARE_POINTER;
-    else
-        ppdev->flFlags &= ~PDEV_HARDWARE_POINTER;
 
     return ulResult;
 }
@@ -824,11 +840,8 @@ GreMovePointer(
         /* Store the cursor exclude position in the PDEV */
         prcl = &pdc->ppdev->Pointer.Exclude;
 
-        /* Send new position of the hot spot of the pointer (will likely redraw cursor) */
-        if (pdc->ppdev->flFlags & PDEV_HARDWARE_POINTER)
-            pdc->ppdev->pfnMovePointer(pso, x, y, prcl);
-        else if (pdc->ppdev->flFlags & PDEV_SOFTWARE_POINTER)
-            EngMovePointer(pso, x, y, prcl);
+        /* Call Eng/Drv function */
+        pdc->ppdev->pfnMovePointer(pso, x, y, prcl);
 
         /* If panning device, and we're not hiding the cursor, notify cursor's current position.
          * (driver may already have been called if it also supports hardware pointers) */
