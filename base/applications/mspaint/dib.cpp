@@ -16,14 +16,6 @@ SYSTEMTIME fileTime;
 
 /* FUNCTIONS ********************************************************/
 
-VOID FixDpi(VOID)
-{
-    if (g_xDpi <= 0)
-        g_xDpi = 96;
-    if (g_yDpi <= 0)
-        g_yDpi = 96;
-}
-
 // Convert DPI (dots per inch) into PPM (pixels per meter)
 float PpmFromDpi(float dpi)
 {
@@ -85,8 +77,6 @@ GetDIBHeight(HBITMAP hBitmap)
 
 BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 {
-    FixDpi();
-
     CImageDx img;
     img.Attach(hBitmap);
     img.SaveDx(FileName, GUID_NULL, g_xDpi, g_yDpi); // TODO: error handling
@@ -202,6 +192,12 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     // load the image
     CImageDx img;
     img.LoadDx(name, &g_xDpi, &g_yDpi);
+
+    if (g_xDpi <= 0)
+        g_xDpi = 96;
+    if (g_yDpi <= 0)
+        g_yDpi = 96;
+
     HBITMAP hBitmap = img.Detach();
 
     if (hBitmap == NULL)

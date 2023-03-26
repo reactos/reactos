@@ -135,7 +135,6 @@ LRESULT CAttributesDialog::OnDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    FixDpi();
     CString strNum;
     strNum.Format(_T("%.3lf"), newWidth / g_xDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
@@ -146,11 +145,10 @@ LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    FixDpi();
     CString strNum;
-    strNum.Format(_T("%.3lf"), newWidth / (PpmFromDpi(g_xDpi) / 100));
+    strNum.Format(_T("%.3lf"), newWidth * 100 / PpmFromDpi(g_xDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
-    strNum.Format(_T("%.3lf"), newHeight / (PpmFromDpi(g_yDpi) / 100));
+    strNum.Format(_T("%.3lf"), newHeight * 100 / PpmFromDpi(g_yDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT2, strNum);
     return 0;
 }
@@ -164,7 +162,6 @@ LRESULT CAttributesDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    FixDpi();
     if (Edit_GetModify(hWndCtl))
     {
         TCHAR tempS[100];
@@ -176,7 +173,7 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (_tcstod(tempS, NULL) * (PpmFromDpi(g_xDpi) / 100)));
+            newWidth = max(1, (int) (_tcstod(tempS, NULL) * PpmFromDpi(g_xDpi) / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
@@ -190,7 +187,6 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    FixDpi();
     if (Edit_GetModify(hWndCtl))
     {
         TCHAR tempS[100];
@@ -202,7 +198,7 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (_tcstod(tempS, NULL) * (PpmFromDpi(g_yDpi) / 100)));
+            newHeight = max(1, (int) (_tcstod(tempS, NULL) * PpmFromDpi(g_yDpi) / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
