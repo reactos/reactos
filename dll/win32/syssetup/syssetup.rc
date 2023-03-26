@@ -101,9 +101,6 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/lt-LT.rc"
-#endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
