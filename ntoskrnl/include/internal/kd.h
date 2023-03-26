@@ -93,25 +93,6 @@ KdpDebugLogInit(
 #endif
 
 
-/* KD ROUTINES ***************************************************************/
-
-BOOLEAN
-NTAPI
-KdpSafeReadMemory(
-    IN ULONG_PTR Addr,
-    IN LONG Len,
-    OUT PVOID Value
-);
-
-BOOLEAN
-NTAPI
-KdpSafeWriteMemory(
-    IN ULONG_PTR Addr,
-    IN LONG Len,
-    IN ULONGLONG Value
-);
-
-
 /* KD GLOBALS  ***************************************************************/
 
 /* Serial debug connection */

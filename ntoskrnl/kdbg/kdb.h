@@ -259,6 +259,22 @@ KdbEnterDebuggerException(IN PEXCEPTION_RECORD64 ExceptionRecord,
 
 /* other functions */
 
+BOOLEAN
+NTAPI
+KdpSafeReadMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    OUT PVOID Value
+);
+
+BOOLEAN
+NTAPI
+KdpSafeWriteMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    IN ULONGLONG Value
+);
+
 NTSTATUS
 KdbpSafeReadMemory(OUT PVOID Dest,
                    IN PVOID Src,

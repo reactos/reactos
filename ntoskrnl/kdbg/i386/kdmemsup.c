@@ -9,15 +9,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/kd/i386/kdmemsup.c
  * PURPOSE:         Kernel Debugger Safe Memory Support
  *
  * PROGRAMMERS:     arty
  */
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
 
 #define HIGH_PHYS_MASK 0x80000000
 #define PAGE_TABLE_MASK 0x3ff
