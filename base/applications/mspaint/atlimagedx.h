@@ -40,11 +40,6 @@ public:
 
     BOOL SetResolution(Gdiplus::GpBitmap *pBitmap, float xDpi, float yDpi) const
     {
-        if (xDpi <= 0)
-            xDpi = 96;
-        if (yDpi <= 0)
-            yDpi = 96;
-
         if (BitmapSetResolution == NULL)
             BitmapSetResolution = AddrOf<BITMAPSETRESOLUTION>("GdipBitmapSetResolution");
 
