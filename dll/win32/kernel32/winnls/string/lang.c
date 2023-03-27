@@ -1991,6 +1991,36 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
             dstlen--;
         }
     }
+#ifdef __REACTOS__
+    else if (flags & LCMAP_KATAKANA)
+    {
+        for (dst_ptr = dst; srclen && dstlen; src++, srclen--)
+        {
+            WCHAR wch = *src;
+            if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
+                continue;
+            if (0x3041 <= wch && wch <= 0x3093) /* U+3041 ... U+3093: Hiragana */
+                *dst_ptr++ = wch + 0x60;
+            else
+                *dst_ptr++ = wch;
+            dstlen--;
+        }
+    }
+    else if (flags & LCMAP_HIRAGANA)
+    {
+        for (dst_ptr = dst; srclen && dstlen; src++, srclen--)
+        {
+            WCHAR wch = *src;
+            if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
+                continue;
+            if (0x30A1 <= wch && wch <= 0x30F3) /* U+30A1 ... U+30F3: Katakana */
+                *dst_ptr++ = wch - 0x60;
+            else
+                *dst_ptr++ = wch;
+            dstlen--;
+        }
+    }
+#endif
     else
     {
         if (src == dst)
