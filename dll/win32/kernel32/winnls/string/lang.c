@@ -2012,33 +2012,29 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
     if (flags & LCMAP_KATAKANA)
     {
         INT convlen = dst_ptr - dst;
-        for (dst_ptr = dst; convlen; convlen--)
+        for (dst_ptr = dst; convlen; --convlen, ++dst_ptr)
         {
             WCHAR wch = *dst_ptr;
             if (0x3041 <= wch && wch <= 0x3093) /* U+3041 ... U+3093: Hiragana */
-                *dst_ptr++ = wch + 0x60; /* Hiragana to Katanaka */
+                *dst_ptr = wch + 0x60; /* Hiragana to Katanaka */
             else if (wch == 0x3095) /* U+3095: HIRAGANA LETTER SMALL KA */
-                *dst_ptr++ = 0x30F5; /* U+30F5: KATAKANA LETTER SMALL KA */
+                *dst_ptr = 0x30F5; /* U+30F5: KATAKANA LETTER SMALL KA */
             else if (wch == 0x309D) /* U+309D: Hiragana Iteration Mark */
-                *dst_ptr++ = 0x30FD; /* U+30FD: Katakana Iteration Mark */
-            else
-                *dst_ptr++;
+                *dst_ptr = 0x30FD; /* U+30FD: Katakana Iteration Mark */
         }
     }
     else if (flags & LCMAP_HIRAGANA)
     {
         INT convlen = dst_ptr - dst;
-        for (dst_ptr = dst; convlen; convlen--)
+        for (dst_ptr = dst; convlen; --convlen, ++dst_ptr)
         {
             WCHAR wch = *dst_ptr;
             if (0x30A1 <= wch && wch <= 0x30F3) /* U+30A1 ... U+30F3: Katakana */
-                *dst_ptr++ = wch - 0x60; /* Katanaka to Hiragana */
+                *dst_ptr = wch - 0x60; /* Katanaka to Hiragana */
             else if (wch == 0x30F5) /* U+30F5: KATAKANA LETTER SMALL KA */
-                *dst_ptr++ = 0x3095; /* U+3095: HIRAGANA LETTER SMALL KA */
+                *dst_ptr = 0x3095; /* U+3095: HIRAGANA LETTER SMALL KA */
             else if (wch == 0x30FD) /* U+30FD: Katakana Iteration Mark */
-                *dst_ptr++ = 0x309D; /* U+309D: Hiragana Iteration Mark */
-            else
-                *dst_ptr++;
+                *dst_ptr = 0x309D; /* U+309D: Hiragana Iteration Mark */
         }
     }
 #endif
