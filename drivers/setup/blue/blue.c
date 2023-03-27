@@ -1221,10 +1221,6 @@ ScrIoControl(
 
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++, pAttr++)
                 {
-#ifdef OPTIMIZED
-                    *pch = *((PCHAR)pAttr);
-                    pch += 2;
-#else
                     vidmem[offset + (dwCount * 2)] = *((PCHAR)pAttr);
 #endif
                 }
