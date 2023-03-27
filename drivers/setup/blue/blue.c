@@ -1077,7 +1077,6 @@ ScrIoControl(
             {
 #ifdef OPTIMIZED
                 UCHAR attr = Buf->wAttribute;
-                PUCHAR pch;
 #endif
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
