@@ -1222,7 +1222,6 @@ ScrIoControl(
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++, pAttr++)
                 {
                     vidmem[offset + (dwCount * 2)] = *((PCHAR)pAttr);
-#endif
                 }
                 Irp->IoStatus.Information = dwCount * sizeof(USHORT);
             }
