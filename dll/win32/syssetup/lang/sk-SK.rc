@@ -62,16 +62,16 @@ CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Názov počítača:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potvrdiť heslo:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

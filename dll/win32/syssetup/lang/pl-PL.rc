@@ -55,16 +55,16 @@ CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Nazwa komputera:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Instalator utworzy konto o nazwie Administrator. Używaj tego konta, jeżeli potrzebujesz pełnego dostępu do komputera.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Wprowadź hasło administratora. Hasło nie może być dłuższe niż 127 znaków.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Instalator utworzy konto o nazwie Administrator. Używaj tego konta, jeżeli potrzebujesz pełnego dostępu do komputera.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Wprowadź hasło administratora. Hasło nie może być dłuższe niż 127 znaków.", IDC_STATIC, 54, 87, 245, 8
     LTEXT "&Hasło administratora:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potwierdź hasło:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

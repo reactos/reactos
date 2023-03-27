@@ -55,16 +55,16 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben Sie einen Computernamen maximal 15 Zeichen ein. Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Bitte geben Sie einen Computernamen maximal 15 Zeichen ein. Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Das Installationsprogramm wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 127 Zeichen ein.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Das Installationsprogramm wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Geben Sie ein Passwort für das Administratorkonto ein. (max. 127 Zeichen)", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Administratorpasswort:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Passwort bestätigen:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

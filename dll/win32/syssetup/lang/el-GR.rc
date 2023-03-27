@@ -55,16 +55,16 @@ CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Εισάγετε το όνομα του υπολογιστή σας, το οποίο δεν πρέπει να ξεπερνά τους 15 χαρακτήρες. Άν ο υπολογιστής ανήκει σε κάποιο δίκτυο, το όνομά του πρέπει να είναι μοναδικό.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Εισάγετε το όνομα του υπολογιστή σας, το οποίο δεν πρέπει να ξεπερνά τους 15 χαρακτήρες. Άν ο υπολογιστής ανήκει σε κάποιο δίκτυο, το όνομά του πρέπει να είναι μοναδικό.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Όνομα υπολογιστή:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Η εγκατάσταση θα δημιουργήσει ένα λογαριαρισμό διαχειριστή στον υπολογιστή σας με το όνομα Administrator. Με το λογιαριασμό διαχειριστή μπορείτε να αποκτήσετε τον πλήρη έλεγχο του υπολογιστή.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Εισάγετε παρακάτω τον κωδικό πρόσβασης διαχειριστή ο οποίος δεν πρέπει να ξεπερνά τους 127 χαρακτήρες.", IDC_STATIC, 54, 83, 250, 16
+    LTEXT "Η εγκατάσταση θα δημιουργήσει ένα λογαριαρισμό διαχειριστή στον υπολογιστή σας με το όνομα Administrator.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Εισάγετε παρακάτω τον κωδικό πρόσβασης διαχειριστή ο οποίος δεν πρέπει να ξεπερνά τους 127 χαρακτήρες.", IDC_STATIC, 54, 83, 241, 16
     LTEXT "&Κωδικός πρόσβασης:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Επιβεβαίωση κωδικού:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
