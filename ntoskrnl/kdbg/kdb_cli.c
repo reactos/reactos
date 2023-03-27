@@ -3781,7 +3781,7 @@ KdbpCliInit(VOID)
 static VOID
 NTAPI
 KdbDebugPrint(
-    _In_ PCHAR String,
+    _In_ PCCH String,
     _In_ ULONG Length)
 {
     KIRQL OldIrql;

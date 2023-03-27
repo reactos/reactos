@@ -13,9 +13,19 @@ NTSTATUS
 typedef
 VOID
 (NTAPI *PKDP_PRINT_ROUTINE)(
-    PCHAR String,
-    ULONG Length
-);
+    _In_ PCCH String,
+    _In_ ULONG Length);
+
+VOID
+KdIoPuts(
+    _In_ PCSTR String);
+
+VOID
+__cdecl
+KdIoPrintf(
+    _In_ PCSTR Format,
+    ...);
+
 
 /* INIT ROUTINES *************************************************************/
 
