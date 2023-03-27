@@ -4452,6 +4452,7 @@ FlushPage(PINPUT_RECORD Ir)
     return REBOOT_PAGE;
 }
 
+
 /*
  * The start routine and page management
  */
