@@ -1293,8 +1293,7 @@ ScrIoControl(
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
 #ifdef OPTIMIZED
-                    *pch = ch;
-                    pch += 2;
+                    vidmem[offset + (dwCount * 2)] = ch;
 #else
                     vidmem[offset + (dwCount * 2)] = (char)Buf->cCharacter;
 #endif
