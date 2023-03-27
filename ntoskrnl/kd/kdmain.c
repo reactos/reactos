@@ -11,10 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* VARIABLES ***************************************************************/
-
-extern ANSI_STRING KdpLogFileName;
-
 /* PUBLIC FUNCTIONS *********************************************************/
 
 static PCHAR

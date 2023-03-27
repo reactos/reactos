@@ -1,5 +1,5 @@
 #pragma once
-#include "internal/kd.h"
+#include "../kd/kd.h"
 
 /* TYPES *********************************************************************/
 
