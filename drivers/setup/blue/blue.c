@@ -1088,8 +1088,7 @@ ScrIoControl(
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
 #ifdef OPTIMIZED
-                    *pch = attr;
-                    pch += 2;
+                    vidmem[offset + (dwCount * 2)] = attr;
 #else
                     vidmem[offset + (dwCount * 2)] = (char)Buf->wAttribute;
 #endif
