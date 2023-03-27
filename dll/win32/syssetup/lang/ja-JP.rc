@@ -55,7 +55,7 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "コンピュータ名を半角 63 文字以内で入力して下さい。コンピュータがネットワーク上にある場合は、名前が重複しないようにして下さい。", IDC_STATIC, 54, 7, 241, 24
+    LTEXT "コンピュータ名を半角 15 文字以内で入力して下さい。コンピュータがネットワーク上にある場合は、名前が重複しないようにして下さい。", IDC_STATIC, 54, 7, 241, 24
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
