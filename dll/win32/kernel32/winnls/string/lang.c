@@ -2016,7 +2016,7 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
         {
             /*
              * U+3041 ... U+3093: Hiragana
-             * U+3095: HIRAGANA LETTER SMALL KA
+             * U+3095: Hiragana Letter Small KA
              * U+309D: Hiragana Iteration Mark
              */
             WCHAR wch = *dst_ptr;
@@ -2031,7 +2031,7 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
         {
             /*
              * U+30A1 ... U+30F3: Katakana
-             * U+30F5: KATAKANA LETTER SMALL KA
+             * U+30F5: Katakana Letter Small KA
              * U+30FD: Katakana Iteration Mark
              */
             WCHAR wch = *dst_ptr;
