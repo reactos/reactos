@@ -104,6 +104,15 @@ KdbpCliMainLoop(
 VOID
 KdbpCliInterpretInitFile(VOID);
 
+VOID
+KdbpCommandHistoryAppend(
+    _In_ PCSTR Command);
+
+PCSTR
+KdbGetHistoryEntry(
+    _Inout_ PLONG NextIndex,
+    _In_ BOOLEAN Next);
+
 SIZE_T
 KdbpReadCommand(
     _Out_ PCHAR Buffer,
