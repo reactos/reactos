@@ -5063,6 +5063,11 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 
         case WM_IME_CHAR:
+#ifdef __REACTOS__
+	        /* Rely on DefWindowProc */
+            result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+            break;
+#else
             if (!unicode)
             {
                 WCHAR charW;
@@ -5076,6 +5081,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
             }
             /* fall through */
+#endif
 	case WM_CHAR:
 	{
 		WCHAR charW;

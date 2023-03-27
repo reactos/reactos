@@ -4781,6 +4781,10 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_IME_CHAR:
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        break;
+#endif
     case WM_CHAR:
     {
         WCHAR charW = wParam;
