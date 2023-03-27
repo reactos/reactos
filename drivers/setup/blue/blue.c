@@ -1212,9 +1212,6 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
-#ifdef OPTIMIZED
-                PUCHAR pch;
-#endif
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (dwCoord.X + dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
 
