@@ -1085,9 +1085,6 @@ ScrIoControl(
                                  (DeviceExtension->Rows - Buf->dwCoord.Y)
                                     * DeviceExtension->Columns - Buf->dwCoord.X);
 
-#ifdef OPTIMIZED
-                pch = vidmem + offset;
-#endif
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
 #ifdef OPTIMIZED
