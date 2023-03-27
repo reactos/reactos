@@ -842,8 +842,6 @@ ScrWrite(
     return Status;
 }
 
-#define OPTIMIZED /* TODO: To be deleted */
-
 static DRIVER_DISPATCH ScrIoControl;
 static NTSTATUS
 NTAPI
@@ -1075,9 +1073,8 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
-#ifdef OPTIMIZED
                 UCHAR attr = Buf->wAttribute;
-#endif
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
 
@@ -1087,11 +1084,7 @@ ScrIoControl(
 
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-#ifdef OPTIMIZED
                     vidmem[offset + (dwCount * 2)] = attr;
-#else
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->wAttribute;
-#endif
                 }
                 Buf->dwTransfered = dwCount;
             }
@@ -1280,9 +1273,8 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
-#ifdef OPTIMIZED
                 UCHAR ch = Buf->cCharacter;
-#endif
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2;
 
@@ -1292,11 +1284,7 @@ ScrIoControl(
 
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-#ifdef OPTIMIZED
                     vidmem[offset + (dwCount * 2)] = ch;
-#else
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->cCharacter;
-#endif
                 }
                 Buf->dwTransfered = dwCount;
             }
