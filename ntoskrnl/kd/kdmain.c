@@ -8,6 +8,7 @@
  */
 
 #include <ntoskrnl.h>
+#include "kd.h"
 #define NDEBUG
 #include <debug.h>
 

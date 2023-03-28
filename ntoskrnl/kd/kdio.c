@@ -11,6 +11,7 @@
 
 #include <ntoskrnl.h>
 #include <reactos/buildno.h>
+#include "kd.h"
 
 #define NDEBUG
 #include <debug.h>
