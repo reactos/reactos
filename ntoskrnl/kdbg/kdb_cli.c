@@ -2919,7 +2919,7 @@ KdbpPagerInternal(
         TerminalInitialized = TRUE;
 
         /* Enable line-wrap */
-        KdpDprintf("\x1b[?7h");
+        KdbpSendCommandSerial("\x1b[?7h");
 
         /*
          * Query terminal type.
@@ -2928,7 +2928,7 @@ KdbpPagerInternal(
          * string. Instead, use the VT52-compatible 'ESC Z' sequence or the
          * VT100-compatible 'ESC[c' one.
          */
-        KdpDprintf("\x1b[c");
+        KdbpSendCommandSerial("\x1b[c");
         KeStallExecutionProcessor(100000);
 
         Length = 0;
@@ -2967,7 +2967,7 @@ KdbpPagerInternal(
         {
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
-            KdpDprintf("\x1b[18t");
+            KdbpSendCommandSerial("\x1b[18t");
             KeStallExecutionProcessor(100000);
 
             c = KdbpTryGetCharSerial(5000);
@@ -3122,7 +3122,8 @@ KdbpPagerInternal(
                     p = CountOnePageUp(Buffer, BufLength, pBufEnd);
                     i = strcspn(p, "\n");
                 }
-                else if (ScanCode == KEYSC_PAGEUP || c == 'u')
+                else if (ScanCode == KEYSC_PAGEUP  ||
+                         ScanCode == KEYSC_ARROWUP || c == 'u')
                 {
                     p = CountOnePageUp(Buffer, BufLength, p);
                     i = strcspn(p, "\n");
@@ -3130,11 +3131,6 @@ KdbpPagerInternal(
                 else if (ScanCode == KEYSC_HOME || c == 'h')
                 {
                     p = Buffer;
-                    i = strcspn(p, "\n");
-                }
-                else if (ScanCode == KEYSC_ARROWUP)
-                {
-                    p = CountOnePageUp(Buffer, BufLength, p);
                     i = strcspn(p, "\n");
                 }
             }

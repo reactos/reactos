@@ -13,8 +13,17 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+KdbpSendCommandSerial(
+    _In_ PCSTR Command)
+{
+    while (*Command)
+        KdPortPutByteEx(&SerialPortInfo, *Command++);
+}
+
 CHAR
-KdbpTryGetCharSerial(ULONG Retry)
+KdbpTryGetCharSerial(
+    _In_ ULONG Retry)
 {
     CHAR Result = -1;
 
