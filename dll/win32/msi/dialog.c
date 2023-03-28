@@ -3167,10 +3167,10 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
 #endif
         if ( !wcsncmp( num, L"-", 1 ) || !str_is_number( num ) ) {
 #ifdef __REACTOS__
-            if (count == 0 && (!wcsncmp( num, L"\\", 1 ) || !wcsncmp(num, L"&", 1)))
+            if (count == 0 && (!wcsncmp(num, L"\\", 1) || !wcsncmp(num, L"&", 1)))
             {
                 FIXME("Style prefix not supported\n");
-                msi_free( num );
+                msi_free(num);
                 continue;
             }
 #endif
