@@ -1872,7 +1872,7 @@ BOOL WINAPI GetStringTypeExA( LCID locale, DWORD type, LPCSTR src, INT count, LP
  * Map characters in a locale sensitive string.
  *
  * PARAMS
- *  name     [I] Locale name for the conversion.
+ *  locale   [I] Locale name for the conversion.
  *  flags    [I] Flags controlling the mapping (LCMAP_ constants from "winnls.h")
  *  src      [I] String to map
  *  srclen   [I] Length of src in chars, or -1 if src is NUL terminated
@@ -1886,22 +1886,35 @@ BOOL WINAPI GetStringTypeExA( LCID locale, DWORD type, LPCSTR src, INT count, LP
  *  Success: The length of the mapped string in dst, including the NUL terminator.
  *  Failure: 0. Use GetLastError() to determine the cause.
  */
-INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen,
-                         LPNLSVERSIONINFO version, LPVOID reserved, LPARAM lparam)
+INT WINAPI LCMapStringEx(LPCWSTR locale, DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen,
+                         LPNLSVERSIONINFO version, LPVOID reserved, LPARAM handle)
 {
     LPWSTR dst_ptr;
 
     if (version) FIXME("unsupported version structure %p\n", version);
     if (reserved) FIXME("unsupported reserved pointer %p\n", reserved);
-    if (lparam)
+    if (handle)
     {
         static int once;
-        if (!once++) FIXME("unsupported lparam %lx\n", lparam);
+        if (!once++) FIXME("unsupported lparam %Ix\n", handle);
     }
 
     if (!src || !srclen || dstlen < 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (srclen < 0) srclen = lstrlenW(src) + 1;
+
+    TRACE( "(%s,0x%08lx,%s,%d,%p,%d)\n",
+           debugstr_w(locale), flags, debugstr_wn(src, srclen), srclen, dst, dstlen );
+
+    flags &= ~LOCALE_USE_CP_ACP;
+
+    if (src == dst && (flags & ~(LCMAP_LOWERCASE | LCMAP_UPPERCASE)))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
         return 0;
     }
 
@@ -1928,9 +1941,6 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
 
         if (srclen < 0) srclen = strlenW(src);
 
-        TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
-              debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
-
         ret = wine_get_sortkey(flags, src, srclen, (char *)dst, dstlen);
         if (ret == 0)
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -1945,11 +1955,6 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
     }
-
-    if (srclen < 0) srclen = strlenW(src) + 1;
-
-    TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
-          debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
 
     if (!dst) /* return required string length */
     {
@@ -1993,11 +1998,6 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
     }
     else
     {
-        if (src == dst)
-        {
-            SetLastError(ERROR_INVALID_FLAGS);
-            return 0;
-        }
         for (dst_ptr = dst; srclen && dstlen; src++, srclen--)
         {
             WCHAR wch = *src;
