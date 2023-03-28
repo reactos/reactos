@@ -2018,9 +2018,10 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
              * U+3041 ... U+3093: Hiragana
              * U+3095: Hiragana Letter Small KA
              * U+309D: Hiragana Iteration Mark
+             * U+309E: Hiragana Voiced Iteration Mark
              */
             WCHAR wch = *dst_ptr;
-            if ((0x3041 <= wch && wch <= 0x3093) || wch == 0x3095 || wch == 0x309D)
+            if ((0x3041 <= wch && wch <= 0x3093) || wch == 0x3095 || wch == 0x309D || wch == 0x309E)
                 *dst_ptr = wch + 0x60; /* Hiragana to Katanaka */
         }
     }
@@ -2033,9 +2034,10 @@ INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPW
              * U+30A1 ... U+30F3: Katakana
              * U+30F5: Katakana Letter Small KA
              * U+30FD: Katakana Iteration Mark
+             * U+30FE: Katakana Voiced Iteration Mark
              */
             WCHAR wch = *dst_ptr;
-            if ((0x30A1 <= wch && wch <= 0x30F3) || wch == 0x30F5 || wch == 0x30FD)
+            if ((0x30A1 <= wch && wch <= 0x30F3) || wch == 0x30F5 || wch == 0x30FD || wch == 0x30FE)
                 *dst_ptr = wch - 0x60; /* Katanaka to Hiragana */
         }
     }
