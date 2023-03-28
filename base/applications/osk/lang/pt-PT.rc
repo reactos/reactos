@@ -1,10 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/lang/en-US.rc
- * PURPOSE:         On screen keyboard (Portuguese resource).
- * PROGRAMMERS:     Copyright Denis ROBERT
- * TRANSLATION:     Valmor Flores (valmorflores@gmail.com)
+ * PROJECT:      ReactOS On-Screen-Keyboard
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Portuguese (Portugal) resource file
+ * TRANSLATOR:   Copyright 2023 Valmor Flores <valmorflores@gmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
