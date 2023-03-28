@@ -10,58 +10,42 @@
 
 /* VARIABLES declared in main.cpp ***********************************/
 
-class RegistrySettings;
-extern RegistrySettings registrySettings;
-
-class ImageModel;
-extern ImageModel imageModel;
 extern BOOL askBeforeEnlarging;
 
 extern POINT start;
 extern POINT last;
 
-class ToolsModel;
+extern HINSTANCE hProgInstance;
+
+extern TCHAR filepathname[MAX_LONG_PATH];
+extern BOOL isAFile;
+extern BOOL imageSaved;
+
+extern BOOL showGrid;
+
+extern CMainWindow mainWindow;
+
+/* VARIABLES declared in dialogs.cpp ********************************/
+
+extern CMirrorRotateDialog mirrorRotateDialog;
+extern CAttributesDialog attributesDialog;
+extern CStretchSkewDialog stretchSkewDialog;
+extern CFontsDialog fontsDialog;
+
+/* VARIABLES declared in the other places ***************************/
+
+extern RegistrySettings registrySettings;
+extern ImageModel imageModel;
 extern ToolsModel toolsModel;
-
-class SelectionModel;
 extern SelectionModel selectionModel;
-
-class PaletteModel;
 extern PaletteModel paletteModel;
 
 extern HWND hStatusBar;
-extern CHOOSECOLOR choosecolor;
-extern OPENFILENAME ofn;
-extern OPENFILENAME sfn;
-extern HICON hNontranspIcon;
-extern HICON hTranspIcon;
-
-extern HINSTANCE hProgInstance;
-
-extern TCHAR filepathname[1000];
-extern BOOL isAFile;
-extern BOOL imageSaved;
-extern int fileSize;
-extern int fileHPPM;
-extern int fileVPPM;
+extern float g_xDpi;
+extern float g_yDpi;
+extern INT fileSize;
 extern SYSTEMTIME fileTime;
 
-extern BOOL showGrid;
-extern BOOL showMiniature;
-
-class CMainWindow;
-class CFullscreenWindow;
-class CMiniatureWindow;
-class CToolBox;
-class CToolSettingsWindow;
-class CPaletteWindow;
-class CCanvasWindow;
-class CSelectionWindow;
-class CImgAreaWindow;
-class CSizeboxWindow;
-class CTextEditWindow;
-
-extern CMainWindow mainWindow;
 extern CFullscreenWindow fullscreenWindow;
 extern CMiniatureWindow miniature;
 extern CToolBox toolBoxContainer;
@@ -71,15 +55,3 @@ extern CCanvasWindow canvasWindow;
 extern CSelectionWindow selectionWindow;
 extern CImgAreaWindow imageArea;
 extern CTextEditWindow textEditWindow;
-
-/* VARIABLES declared in dialogs.cpp ********************************/
-
-class CMirrorRotateDialog;
-class CAttributesDialog;
-class CStretchSkewDialog;
-class CFontsDialog;
-
-extern CMirrorRotateDialog mirrorRotateDialog;
-extern CAttributesDialog attributesDialog;
-extern CStretchSkewDialog stretchSkewDialog;
-extern CFontsDialog fontsDialog;

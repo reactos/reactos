@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+CImgAreaWindow imageArea;
+
 /* FUNCTIONS ********************************************************/
 
 LRESULT CImgAreaWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

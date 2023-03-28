@@ -13,9 +13,7 @@
 class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE)
-    {
-    }
+    CImgAreaWindow() : drawing(FALSE) { }
 
     BOOL drawing;
     void cancelDrawing();

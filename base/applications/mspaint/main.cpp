@@ -8,52 +8,19 @@
 
 #include "precomp.h"
 
-/* FUNCTIONS ********************************************************/
-
 POINT start;
 POINT last;
 
-ToolsModel toolsModel;
-
-SelectionModel selectionModel;
-
-PaletteModel paletteModel;
-
-RegistrySettings registrySettings;
-
-ImageModel imageModel;
 BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
-
-HWND hStatusBar;
-CHOOSECOLOR choosecolor;
-OPENFILENAME ofn;
-OPENFILENAME sfn;
-HICON hNontranspIcon;
-HICON hTranspIcon;
-
-HINSTANCE hProgInstance;
-
-TCHAR filepathname[1000];
+HINSTANCE hProgInstance = NULL;
+TCHAR filepathname[MAX_LONG_PATH] = { 0 };
 BOOL isAFile = FALSE;
 BOOL imageSaved = FALSE;
-int fileSize;
-int fileHPPM = 2834;
-int fileVPPM = 2834;
-SYSTEMTIME fileTime;
-
 BOOL showGrid = FALSE;
-BOOL showMiniature = FALSE;
 
 CMainWindow mainWindow;
-CFullscreenWindow fullscreenWindow;
-CMiniatureWindow miniature;
-CToolBox toolBoxContainer;
-CToolSettingsWindow toolSettingsWindow;
-CPaletteWindow paletteWindow;
-CCanvasWindow canvasWindow;
-CSelectionWindow selectionWindow;
-CImgAreaWindow imageArea;
-CTextEditWindow textEditWindow;
+
+/* FUNCTIONS ********************************************************/
 
 // get file name extension from filter string
 static BOOL
@@ -105,193 +72,171 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-/* entry point */
-
-int WINAPI
-_tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, INT nCmdShow)
+BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 {
-    HWND hwnd;               /* This is the handle for our window */
-    MSG messages;            /* Here messages to the application are saved */
+    static OPENFILENAME ofn = { 0 };
+    static CString strFilter;
 
-    HMENU menu;
-    HACCEL haccel;
+    if (ofn.lStructSize == 0)
+    {
+        // The "All Files" item text
+        CString strAllPictureFiles;
+        strAllPictureFiles.LoadString(hProgInstance, IDS_ALLPICTUREFILES);
 
-    TCHAR sfnFilename[1000];
-    TCHAR sfnFiletitle[256];
-    TCHAR ofnFilename[1000];
-    TCHAR ofnFiletitle[256];
-    TCHAR miniaturetitle[100];
-    static COLORREF custColors[16] = {
+        // Get the import filter
+        CSimpleArray<GUID> aguidFileTypesI;
+        CImage::GetImporterFilterString(strFilter, aguidFileTypesI, strAllPictureFiles,
+                                        CImage::excludeDefaultLoad, _T('\0'));
+
+        // Initializing the OPENFILENAME structure for GetOpenFileName
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner   = m_hWnd;
+        ofn.hInstance   = hProgInstance;
+        ofn.lpstrFilter = strFilter;
+        ofn.Flags       = OFN_EXPLORER | OFN_HIDEREADONLY;
+        ofn.lpstrDefExt = L"png";
+    }
+
+    ofn.lpstrFile = pszFile;
+    ofn.nMaxFile  = cchMaxFile;
+    return ::GetOpenFileName(&ofn);
+}
+
+BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
+{
+    static OPENFILENAME sfn = { 0 };
+    static CString strFilter;
+
+    if (sfn.lStructSize == 0)
+    {
+        // Get the export filter
+        CSimpleArray<GUID> aguidFileTypesE;
+        CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL,
+                                        CImage::excludeDefaultSave, _T('\0'));
+
+        // Initializing the OPENFILENAME structure for GetSaveFileName
+        ZeroMemory(&sfn, sizeof(sfn));
+        sfn.lStructSize = sizeof(sfn);
+        sfn.hwndOwner   = m_hWnd;
+        sfn.hInstance   = hProgInstance;
+        sfn.lpstrFilter = strFilter;
+        sfn.Flags       = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
+        sfn.lpfnHook    = OFNHookProc;
+        sfn.lpstrDefExt = L"png";
+
+        // Choose PNG
+        for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
+        {
+            if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
+            {
+                sfn.nFilterIndex = i + 1;
+                break;
+            }
+        }
+    }
+
+    sfn.lpstrFile = pszFile;
+    sfn.nMaxFile  = cchMaxFile;
+    return ::GetSaveFileName(&sfn);
+}
+
+BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
+{
+    static CHOOSECOLOR choosecolor = { 0 };
+    static COLORREF custColors[16] =
+    {
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
 
+    if (choosecolor.lStructSize == 0)
+    {
+        // Initializing the CHOOSECOLOR structure for ChooseColor
+        ZeroMemory(&choosecolor, sizeof(choosecolor));
+        choosecolor.lStructSize  = sizeof(choosecolor);
+        choosecolor.hwndOwner    = m_hWnd;
+        choosecolor.lpCustColors = custColors;
+    }
+
+    choosecolor.rgbResult = *prgbColor;
+    if (!::ChooseColor(&choosecolor))
+        return FALSE;
+
+    *prgbColor = choosecolor.rgbResult;
+    return TRUE;
+}
+
+HWND CMainWindow::DoCreate()
+{
+    ::LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
+
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+
+    RECT& rc = registrySettings.WindowPlacement.rcNormalPosition;
+    return Create(HWND_DESKTOP, rc, strTitle, WS_OVERLAPPEDWINDOW, WS_EX_ACCEPTFILES);
+}
+
+// entry point
+INT WINAPI
+_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nCmdShow)
+{
 #ifdef _DEBUG
-    /* Report any memory leaks on exit */
+    // Report any memory leaks on exit
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    hProgInstance = hThisInstance;
+    hProgInstance = hInstance;
 
-    /* initialize common controls library */
+    // Initialize common controls library
     INITCOMMONCONTROLSEX iccx;
     iccx.dwSize = sizeof(iccx);
     iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES | ICC_BAR_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
-    CPath pathFileName(filepathname);
-    pathFileName.StripPath();
-    CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-    LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
-
-    /* load settings from registry */
+    // Load settings from registry
     registrySettings.Load(nCmdShow);
-    showMiniature = registrySettings.ShowThumbnail;
-    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
 
-    /* create main window */
-    RECT mainWindowPos = registrySettings.WindowPlacement.rcNormalPosition;
-    hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
-
-    RECT fullscreenWindowPos = {0, 0, 100, 100};
-    fullscreenWindow.Create(HWND_DESKTOP, fullscreenWindowPos, NULL, WS_POPUPWINDOW | WS_MAXIMIZE);
-
-    RECT miniaturePos = {(LONG) registrySettings.ThumbXPos, (LONG) registrySettings.ThumbYPos,
-                         (LONG) registrySettings.ThumbXPos + (LONG) registrySettings.ThumbWidth,
-                         (LONG) registrySettings.ThumbYPos + (LONG) registrySettings.ThumbHeight};
-    miniature.Create(hwnd, miniaturePos, miniaturetitle,
-                     WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, WS_EX_PALETTEWINDOW);
-    miniature.ShowWindow(showMiniature ? SW_SHOW : SW_HIDE);
-
-    /* loading and setting the window menu from resource */
-    menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
-    SetMenu(hwnd, menu);
-    haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
-
-    /* Create ToolBox */
-    toolBoxContainer.DoCreate(hwnd);
-
-    /* creating the palette child window */
-    RECT paletteWindowPos = {56, 9, 56 + 255, 9 + 32};
-    paletteWindow.Create(hwnd, paletteWindowPos, NULL, WS_CHILD, WS_EX_STATICEDGE);
-    if (registrySettings.ShowPalette)
-        paletteWindow.ShowWindow(SW_SHOWNOACTIVATE);
-
-    // creating the canvas
-    RECT canvasWindowPos = {0, 0, 0 + 500, 0 + 500};
-    canvasWindow.Create(hwnd, canvasWindowPos, NULL,
-                           WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, WS_EX_CLIENTEDGE);
-
-    /* creating the status bar */
-    hStatusBar =
-        CreateWindowEx(0, STATUSCLASSNAME, NULL, SBARS_SIZEGRIP | WS_CHILD, 0, 0, 0, 0, hwnd,
-                       NULL, hThisInstance, NULL);
-    SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
-    if (registrySettings.ShowStatusBar)
-        ShowWindow(hStatusBar, SW_SHOWNOACTIVATE);
-
-    // Creating the window inside the canvas
-    RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
-    imageArea.Create(canvasWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
-
-    /* create selection window (initially hidden) */
-    RECT selectionWindowPos = {350, 0, 350 + 100, 0 + 100};
-    selectionWindow.Create(imageArea.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
-
-    if (__argc >= 2)
+    // Create the main window
+    if (!mainWindow.DoCreate())
     {
-        DoLoadImageFile(mainWindow, __targv[1], TRUE);
+        MessageBox(NULL, TEXT("Failed to create main window."), NULL, MB_ICONERROR);
+        return 1;
     }
 
+    // Initialize imageModel
+    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
+    if (__argc >= 2)
+        DoLoadImageFile(mainWindow, __targv[1], TRUE);
     imageModel.ClearHistory();
 
-    /* initializing the CHOOSECOLOR structure for use with ChooseColor */
-    ZeroMemory(&choosecolor, sizeof(choosecolor));
-    choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
-    choosecolor.hwndOwner      = hwnd;
-    choosecolor.rgbResult      = 0x00ffffff;
-    choosecolor.lpCustColors   = custColors;
+    // Make the window visible on the screen
+    mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
-    /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
-    ofnFilename[0] = 0;
-    CString strImporters;
-    CSimpleArray<GUID> aguidFileTypesI;
-    CString strAllPictureFiles;
-    strAllPictureFiles.LoadString(hThisInstance, IDS_ALLPICTUREFILES);
-    CImage::GetImporterFilterString(strImporters, aguidFileTypesI, strAllPictureFiles, CImage::excludeDefaultLoad, _T('\0'));
-//     CAtlStringW strAllFiles;
-//     strAllFiles.LoadString(hThisInstance, IDS_ALLFILES);
-//     strImporters = strAllFiles + CAtlStringW(_T("|*.*|")).Replace('|', '\0') + strImporters;
-    ZeroMemory(&ofn, sizeof(OPENFILENAME));
-    ofn.lStructSize    = sizeof(OPENFILENAME);
-    ofn.hwndOwner      = hwnd;
-    ofn.hInstance      = hThisInstance;
-    ofn.lpstrFilter    = strImporters;
-    ofn.lpstrFile      = ofnFilename;
-    ofn.nMaxFile       = _countof(ofnFilename);
-    ofn.lpstrFileTitle = ofnFiletitle;
-    ofn.nMaxFileTitle  = _countof(ofnFiletitle);
-    ofn.Flags          = OFN_EXPLORER | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt    = L"png";
+    // Load the access keys
+    HACCEL hAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(800));
 
-    CopyMemory(sfnFilename, filepathname, sizeof(filepathname));
-    CString strExporters;
-    CSimpleArray<GUID> aguidFileTypesE;
-    CImage::GetExporterFilterString(strExporters, aguidFileTypesE, NULL, CImage::excludeDefaultSave, _T('\0'));
-    ZeroMemory(&sfn, sizeof(OPENFILENAME));
-    sfn.lStructSize    = sizeof(OPENFILENAME);
-    sfn.hwndOwner      = hwnd;
-    sfn.hInstance      = hThisInstance;
-    sfn.lpstrFilter    = strExporters;
-    sfn.lpstrFile      = sfnFilename;
-    sfn.nMaxFile       = _countof(sfnFilename);
-    sfn.lpstrFileTitle = sfnFiletitle;
-    sfn.nMaxFileTitle  = _countof(sfnFiletitle);
-    sfn.Flags          = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
-    sfn.lpfnHook       = OFNHookProc;
-    sfn.lpstrDefExt    = L"png";
-    // Choose PNG
-    for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
+    // The message loop
+    MSG msg;
+    while (::GetMessage(&msg, NULL, 0, 0))
     {
-        if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
-        {
-            sfn.nFilterIndex = i + 1;
-            break;
-        }
-    }
-
-    /* placing the size boxes around the image */
-    imageArea.SendMessage(WM_SIZE, 0, 0);
-
-    /* Make the window visible on the screen */
-    ShowWindow(hwnd, registrySettings.WindowPlacement.showCmd);
-
-    /* inform the system, that the main window accepts dropped files */
-    DragAcceptFiles(hwnd, TRUE);
-
-    /* Run the message loop. It will run until GetMessage() returns 0 */
-    while (GetMessage(&messages, NULL, 0, 0))
-    {
-        if (fontsDialog.IsWindow() && IsDialogMessage(fontsDialog, &messages))
+        if (fontsDialog.IsWindow() && fontsDialog.IsDialogMessage(&msg))
             continue;
 
-        if (TranslateAccelerator(hwnd, haccel, &messages))
+        if (::TranslateAccelerator(mainWindow, hAccel, &msg))
             continue;
 
-        /* Translate virtual-key messages into character messages */
-        TranslateMessage(&messages);
-        /* Send message to WindowProcedure */
-        DispatchMessage(&messages);
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
     }
 
-    /* write back settings to registry */
-    registrySettings.ShowThumbnail = showMiniature;
-    registrySettings.BMPWidth = imageModel.GetWidth();
-    registrySettings.BMPHeight = imageModel.GetHeight();
+    // Unload the access keys
+    ::DestroyAcceleratorTable(hAccel);
+
+    // Write back settings to registry
     registrySettings.Store();
 
-    /* The program return-value is 0 - The value that PostQuitMessage() gave */
-    return messages.wParam;
+    // Return the value that PostQuitMessage() gave
+    return (INT)msg.wParam;
 }

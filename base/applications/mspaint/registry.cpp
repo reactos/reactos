@@ -7,14 +7,15 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 #include <winreg.h>
 #include <wincon.h>
 #include <shlobj.h>
 
+RegistrySettings registrySettings;
+
 /* FUNCTIONS ********************************************************/
+
 static void ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue)
 {
     DWORD dwTemp;
@@ -161,6 +162,9 @@ void RegistrySettings::Load(INT nCmdShow)
 
 void RegistrySettings::Store()
 {
+    BMPWidth = imageModel.GetWidth();
+    BMPHeight = imageModel.GetHeight();
+
     CRegKey paint;
     if (paint.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint")) != ERROR_SUCCESS)
         return;

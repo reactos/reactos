@@ -6,11 +6,11 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 #define CXY_GRIP 3
+
+CTextEditWindow textEditWindow;
 
 /* FUNCTIONS ********************************************************/
 

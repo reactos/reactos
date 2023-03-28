@@ -6,11 +6,20 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
+CFullscreenWindow fullscreenWindow;
+
 /* FUNCTIONS ********************************************************/
+
+HWND CFullscreenWindow::DoCreate()
+{
+    if (m_hWnd)
+        return m_hWnd;
+
+    RECT rc = {0, 0, 0, 0}; // Rely on SW_SHOWMAXIMIZED
+    return Create(HWND_DESKTOP, rc, NULL, WS_POPUPWINDOW, WS_EX_TOPMOST);
+}
 
 LRESULT CFullscreenWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {

@@ -17,6 +17,8 @@ typedef HWND (WINAPI *FN_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD_PTR);
 static HINSTANCE s_hHHCTRL_OCX = NULL; // HtmlHelpW needs "hhctrl.ocx"
 static FN_HtmlHelpW s_pHtmlHelpW = NULL;
 
+HWND hStatusBar = NULL;
+
 /* FUNCTIONS ********************************************************/
 
 // A wrapper function for HtmlHelpW
@@ -121,12 +123,12 @@ void CMainWindow::saveImage(BOOL overwrite)
     {
         imageModel.SaveImage(filepathname);
     }
-    else if (GetSaveFileName(&sfn) != 0)
+    else if (GetSaveFileName(filepathname, _countof(filepathname)))
     {
-        imageModel.SaveImage(sfn.lpstrFile);
-        _tcsncpy(filepathname, sfn.lpstrFile, _countof(filepathname));
+        imageModel.SaveImage(filepathname);
+
         CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
+        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
         SetWindowText(strTitle);
         isAFile = TRUE;
     }
@@ -252,8 +254,45 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
 LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // Loading and setting the window menu from resource
+    m_hMenu = ::LoadMenu(hProgInstance, MAKEINTRESOURCE(ID_MENU));
+    SetMenu(m_hMenu);
+
+    // Create the status bar
+    DWORD style = SBARS_SIZEGRIP | WS_CHILD | (registrySettings.ShowStatusBar ? WS_VISIBLE : 0);
+    hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
+                                  NULL, hProgInstance, NULL);
+    ::SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
+
+    // Create the tool box
+    toolBoxContainer.DoCreate(m_hWnd);
+
+    // Create the palette window
+    RECT rcEmpty = { 0, 0, 0, 0 }; // Rely on WM_SIZE
+    style = WS_CHILD | (registrySettings.ShowPalette ? WS_VISIBLE : 0);
+    paletteWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_STATICEDGE);
+
+    // Create the canvas
+    style = WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE;
+    canvasWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_CLIENTEDGE);
+
+    // Creating the window inside the canvas
+    imageArea.Create(canvasWindow, rcEmpty, NULL, WS_CHILD | WS_VISIBLE);
+
+    // Create selection window (initially hidden)
+    selectionWindow.Create(imageArea, rcEmpty, NULL, WS_CHILD | BS_OWNERDRAW);
+
+    // Create and show the miniature if necessary
+    if (registrySettings.ShowThumbnail)
+    {
+        miniature.DoCreate(m_hWnd);
+        miniature.ShowWindow(SW_SHOWNOACTIVATE);
+    }
+
+    // Set icon
     SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
     SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
+
     return 0;
 }
 
@@ -269,6 +308,13 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         FreeLibrary(s_hHHCTRL_OCX);
         s_hHHCTRL_OCX = NULL;
         s_pHtmlHelpW = NULL;
+    }
+
+    SetMenu(NULL);
+    if (m_hMenu)
+    {
+        ::DestroyMenu(m_hMenu);
+        m_hMenu = NULL;
     }
 
     PostQuitMessage(0); /* send a WM_QUIT to the message queue */
@@ -359,7 +405,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HMENU menu = GetMenu();
+    HMENU menu = (HMENU)wParam;
     BOOL trueSelection =
         (::IsWindowVisible(selectionWindow) &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
@@ -389,7 +435,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
             CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
-            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
+            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(registrySettings.ShowThumbnail));
             break;
         case 3: /* Image menu */
             EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(::IsWindowVisible(selectionWindow)));
@@ -496,11 +542,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             break;
         case IDM_FILEOPEN:
-            if (ConfirmSave() && GetOpenFileName(&ofn))
             {
-                DoLoadImageFile(m_hWnd, ofn.lpstrFile, TRUE);
+                TCHAR szFileName[MAX_LONG_PATH] = _T("");
+                if (ConfirmSave() && GetOpenFileName(szFileName, _countof(szFileName)))
+                {
+                    DoLoadImageFile(m_hWnd, szFileName, TRUE);
+                }
+                break;
             }
-            break;
         case IDM_FILESAVE:
             saveImage(TRUE);
             break;
@@ -640,13 +689,18 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITCOPYTO:
-            if (GetSaveFileName(&ofn))
-                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC());
+        {
+            TCHAR szFileName[MAX_LONG_PATH] = _T("");
+            if (GetSaveFileName(szFileName, _countof(szFileName)))
+                SaveDIBToFile(selectionModel.GetBitmap(), szFileName, imageModel.GetDC());
             break;
+        }
         case IDM_EDITPASTEFROM:
-            if (GetOpenFileName(&ofn))
+        {
+            TCHAR szFileName[MAX_LONG_PATH] = _T("");
+            if (GetOpenFileName(szFileName, _countof(szFileName)))
             {
-                HBITMAP hbmNew = DoLoadImageFile(m_hWnd, ofn.lpstrFile, FALSE);
+                HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
                 if (hbmNew)
                 {
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
@@ -654,10 +708,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 }
             }
             break;
+        }
         case IDM_COLORSEDITPALETTE:
-            if (ChooseColor(&choosecolor))
-                paletteModel.SetFgColor(choosecolor.rgbResult);
+        {
+            COLORREF rgbColor = paletteModel.GetFgColor();
+            if (ChooseColor(&rgbColor))
+                paletteModel.SetFgColor(rgbColor);
             break;
+        }
         case IDM_COLORSMODERNPALETTE:
             paletteModel.SelectPalette(PAL_MODERN);
             break;
@@ -773,8 +831,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageArea.Invalidate(FALSE);
             break;
         case IDM_VIEWSHOWMINIATURE:
-            showMiniature = !showMiniature;
-            miniature.ShowWindow(showMiniature ? SW_SHOW : SW_HIDE);
+            registrySettings.ShowThumbnail = !::IsWindowVisible(miniature);
+            miniature.DoCreate(m_hWnd);
+            miniature.ShowWindow(registrySettings.ShowThumbnail ? SW_SHOWNOACTIVATE : SW_HIDE);
             break;
 
         case IDM_VIEWZOOM125:
@@ -800,7 +859,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case IDM_VIEWFULLSCREEN:
-            fullscreenWindow.ShowWindow(SW_SHOW);
+            // Create and show the fullscreen window
+            fullscreenWindow.DoCreate();
+            fullscreenWindow.ShowWindow(SW_SHOWMAXIMIZED);
             ShowWindow(SW_HIDE);
             break;
     }

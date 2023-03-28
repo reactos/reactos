@@ -543,6 +543,7 @@ public:
 
         return (status == Ok ? S_OK : E_FAIL);
     }
+
     HRESULT Save(LPCTSTR pszFileName,
                  REFGUID guidFileType = GUID_NULL) const throw()
     {
@@ -828,15 +829,17 @@ protected:
         }
     };
 
+    // abbreviations of GDI+ basic types
+    typedef Gdiplus::GpStatus St;
+    typedef Gdiplus::GpBitmap Bm;
+    typedef Gdiplus::GpImage Im;
+
     // The common data of atlimage
     struct COMMON
     {
         // abbreviations of GDI+ basic types
-        typedef Gdiplus::GpStatus St;
         typedef Gdiplus::ImageCodecInfo ICI;
-        typedef Gdiplus::GpBitmap Bm;
         typedef Gdiplus::EncoderParameters EncParams;
-        typedef Gdiplus::GpImage Im;
         typedef Gdiplus::ARGB ARGB;
         typedef HBITMAP HBM;
         typedef Gdiplus::GdiplusStartupInput GSI;

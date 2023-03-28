@@ -28,7 +28,16 @@ public:
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
     END_MSG_MAP()
 
+    CMainWindow() : m_hMenu(NULL) { }
+
+    HWND DoCreate();
+    BOOL GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL ChooseColor(IN OUT COLORREF *prgbColor);
+
 private:
+    HMENU m_hMenu;
+
     LRESULT OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

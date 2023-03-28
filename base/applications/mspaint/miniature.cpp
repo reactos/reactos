@@ -7,16 +7,35 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+CMiniatureWindow miniature;
 
 /* FUNCTIONS ********************************************************/
 
+HWND CMiniatureWindow::DoCreate(HWND hwndParent)
+{
+    if (m_hWnd)
+        return m_hWnd;
+
+    RECT rc =
+    {
+        (LONG)registrySettings.ThumbXPos, (LONG)registrySettings.ThumbYPos,
+        (LONG)(registrySettings.ThumbXPos + registrySettings.ThumbWidth),
+        (LONG)(registrySettings.ThumbYPos + registrySettings.ThumbHeight)
+    };
+
+    TCHAR strTitle[100];
+    ::LoadString(hProgInstance, IDS_MINIATURETITLE, strTitle, _countof(strTitle));
+
+    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+    return Create(hwndParent, rc, strTitle, style, WS_EX_PALETTEWINDOW);
+}
+
 LRESULT CMiniatureWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    miniature.ShowWindow(SW_HIDE);
-    showMiniature = FALSE;
+    ShowWindow(SW_HIDE);
+    registrySettings.ShowThumbnail = FALSE;
     return 0;
 }
 
