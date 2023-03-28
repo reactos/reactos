@@ -55,16 +55,16 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "コンピュータ名を半角 63 文字以内で入力して下さい。コンピュータがネットワーク上にある場合は、名前が重複しないようにして下さい。", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "コンピュータ名を半角 15 文字以内で入力して下さい。コンピュータがネットワーク上にある場合は、名前が重複しないようにして下さい。", IDC_STATIC, 54, 7, 241, 24
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Administrator と呼ばれるユーザー アカウントを作成します。コンピュータにフルアクセスが必要なとき、このアカウントを使用します。", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Administrator のパスワードを半角 127 文字以内で入力して下さい。", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Administrator のパスワード(&A):", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "パスワードの確認入力(&O):", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Administrator と呼ばれるユーザー アカウントを作成します。コンピュータにフルアクセスが必要なとき、このアカウントを使用します。", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Administrator のパスワードを半角 127 文字以内で入力して下さい。", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Administrator のパスワード(&A):", IDC_STATIC, 54, 104, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 156, 101, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "パスワードの確認入力(&O):", IDC_STATIC, 54, 123, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 156, 120, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

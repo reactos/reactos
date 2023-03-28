@@ -55,16 +55,16 @@ CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Ketikkan nama komputer anda maksimal 15 karakter. Jika anda berada dalam jaringan, nama komputer anda haruslah unik.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Ketikkan nama komputer anda maksimal 15 karakter. Jika anda berada dalam jaringan, nama komputer anda haruslah unik.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "Nama &Komputer:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Penyetel ini akan membuat akun pengguna yang dinamai dengan Administrator. Jadi anda bisa menggunakan akun ini ketika membutuhkan akses penuh pada komputer anda.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Ketikkan Kata Sandi Administrator maksimal 127.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Kata Sandi &Administrator:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "Konfir&masi Kata Sandi:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Penyetel ini akan membuat akun pengguna yang dinamai dengan Administrator. Jadi anda bisa menggunakan akun ini ketika membutuhkan akses penuh pada komputer anda.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Ketikkan Kata Sandi Administrator maksimal 127.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Kata Sandi &Administrator:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Konfir&masi Kata Sandi:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

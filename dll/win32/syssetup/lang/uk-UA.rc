@@ -64,16 +64,16 @@ CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введіть ім'я Вашого комп'ютера довжиною до 15 символів. Якщо Ви працюєте в мережі, ім'я Вашого комп'ютера має бути унікальним.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Введіть ім'я Вашого комп'ютера довжиною до 15 символів. Якщо Ви працюєте в мережі, ім'я Вашого комп'ютера має бути унікальним.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Ім'я комп'ютера:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Програма встановлення створить обліковий запис користувача 'Адміністратор', який дає повні права доступу до Вашого комп'ютера.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Введіть пароль адміністратора довжиною до 127 символів.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Програма встановлення створить обліковий запис користувача 'Адміністратор', який дає повні права доступу до Вашого комп'ютера.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Введіть пароль адміністратора довжиною до 127 символів.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 156, 101, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 156, 120, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
