@@ -173,21 +173,9 @@ static inline BOOL navigation_visible(HHInfo *info)
 /* Loads a string from the resource file */
 #ifdef __REACTOS__
 LPWSTR HH_LoadString(DWORD dwID)
-{
-    LPWSTR string = NULL;
-    LPCWSTR stringresource;
-    int iSize;
-
-    iSize = LoadStringW(hhctrl_hinstance, dwID, (LPWSTR)&stringresource, 0);
-
-    string = heap_alloc((iSize + 2) * sizeof(WCHAR)); /* some strings (tab text) needs double-null termination */
-    memcpy(string, stringresource, iSize * sizeof(WCHAR));
-    string[iSize] = UNICODE_NULL;
-
-    return string;
-}
 #else
 static LPWSTR HH_LoadString(DWORD dwID)
+#endif
 {
     LPWSTR string = NULL;
     LPCWSTR stringresource;
@@ -201,7 +189,6 @@ static LPWSTR HH_LoadString(DWORD dwID)
 
     return string;
 }
-#endif
 
 static HRESULT navigate_url(HHInfo *info, LPCWSTR surl)
 {
