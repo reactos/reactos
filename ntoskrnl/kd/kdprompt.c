@@ -13,6 +13,24 @@
 #include "kd.h"
 #include "kdterminal.h"
 
+/* In kdb.h only when KDBG defined */
+#ifdef KDBG
+extern PCSTR
+KdbGetHistoryEntry(
+    _Inout_ PLONG NextIndex,
+    _In_ BOOLEAN Next);
+#else
+PCSTR
+KdbGetHistoryEntry(
+    _Inout_ PLONG NextIndex,
+    _In_ BOOLEAN Next)
+{
+    /* Dummy function */
+    return NULL;
+}
+#endif
+
+
 /* FUNCTIONS *****************************************************************/
 
 /**
