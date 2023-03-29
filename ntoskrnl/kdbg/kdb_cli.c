@@ -145,7 +145,7 @@ static volatile ULONG KdbDmesgTotalWritten = 0;
 static volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 static KSPIN_LOCK KdpDmesgLogSpinLock;
 
-STRING KdbPromptString = RTL_CONSTANT_STRING("kdb:> ");
+const CSTRING KdbPromptStr = RTL_CONSTANT_STRING("kdb:> ");
 
 //
 // Debug Filter Component Table
@@ -491,7 +491,7 @@ KdbpCmdEvalExpression(
     }
 
     /* Evaluate the expression */
-    Ok = KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result);
+    Ok = KdbpEvaluateExpression(Argv[1], KdbPromptStr.Length + (Argv[1]-Argv[0]), &Result);
     if (Ok)
     {
         if (Result > 0x00000000ffffffffLL)
@@ -849,7 +849,7 @@ KdbpCmdDisassembleX(
     /* Evaluate the expression */
     if (Argc > 1)
     {
-        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptStr.Length + (Argv[1]-Argv[0]), &Result))
             return TRUE;
 
         if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
@@ -1271,7 +1271,7 @@ KdbpCmdBackTrace(
             Argv[1]++;
 
             /* Evaluate the expression */
-            if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
+            if (!KdbpEvaluateExpression(Argv[1], KdbPromptStr.Length + (Argv[1]-Argv[0]), &Result))
                 return TRUE;
 
             if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
@@ -1680,7 +1680,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 
     /* Evaluate the address expression */
     if (!KdbpEvaluateExpression(Argv[AddressArgIndex],
-                                KdbPromptString.Length + (Argv[AddressArgIndex]-Argv[0]),
+                                KdbPromptStr.Length + (Argv[AddressArgIndex]-Argv[0]),
                                 &Result))
     {
         return TRUE;
@@ -2046,7 +2046,7 @@ KdbpCmdMod(
             Argv[Argc][strlen(Argv[Argc])] = ' ';
 
         /* Evaluate the expression */
-        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptStr.Length + (Argv[1]-Argv[0]), &Result))
         {
             return TRUE;
         }
@@ -2880,7 +2880,7 @@ KdpFilterEscapes(
  * \note Doesn't correctly handle \\t and terminal escape sequences when calculating the
  *       number of lines required to print a single line from the Buffer in the terminal.
  *       Maximum length of buffer is limited only by memory size.
- *       Uses KdpDprintf internally (NOT DbgPrint!). Callers must already hold the debugger lock.
+ *       Uses KdbPrintf internally.
  *
  * Note: BufLength should be greater than (KdTermSize.cx * KdTermSize.cy).
  */
@@ -2925,7 +2925,7 @@ KdbpPagerInternal(
         {
             if (p > Buffer + BufLength)
             {
-                KdpDprintf("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer + BufLength));
+                KdbPrintf("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer + BufLength));
                 return;
             }
         }
@@ -2948,39 +2948,33 @@ KdbpPagerInternal(
         if (p[i] == '\n')
             RowsPrintedByTerminal++;
 
-        //KdpDprintf("!%d!%d!%d!%d!", KdbNumberOfRowsPrinted, KdbNumberOfColsPrinted, i, RowsPrintedByTerminal);
+        //KdbPrintf("!%d!%d!%d!%d!", KdbNumberOfRowsPrinted, KdbNumberOfColsPrinted, i, RowsPrintedByTerminal);
 
         /* Display a prompt if we printed one screen full of text */
         if (KdTermSize.cy > 0 &&
             (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdTermSize.cy)
         {
+            PCSTR Prompt;
+
             /* Disable the repetition of previous command with long many-page output */
             KdbRepeatLastCommand = FALSE;
 
             if (KdbNumberOfColsPrinted > 0)
-                KdpDprintf("\n");
+                KdbPuts("\n");
 
             if (DoPage)
-            {
-                KdpDprintf("--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---");
-            }
+                Prompt = "--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---";
             else
-            {
-                KdpDprintf("--- Press q to abort, any other key to continue ---");
-            }
-            RowsPrintedByTerminal++;
+                Prompt = "--- Press q to abort, any other key to continue ---";
 
+            KdbPuts(Prompt);
             c = KdpReadTermKey(&ScanCode);
-
-            if (DoPage)
-            {
-                //KdpDprintf("\n"); // Concise version: don't show pressed key
-                KdpDprintf(" '%c'/scan=%04x\n", c, ScanCode); // Shows pressed key
-            }
+            if (DoPage) // Show pressed key
+                KdbPrintf(" '%c'/scan=%04x\n", c, ScanCode);
             else
-            {
-                KdpDprintf("\n");
-            }
+                KdbPuts("\n");
+
+            RowsPrintedByTerminal++;
 
             if (c == 'q')
             {
@@ -3030,7 +3024,7 @@ KdbpPagerInternal(
             KdpFilterEscapes(p);
 
         /* Print the current line */
-        KdpDprintf("%s", p);
+        KdbPuts(p);
 
         /* Restore not null char with saved */
         if (c != '\0')
@@ -3062,7 +3056,7 @@ KdbpPagerInternal(
  * \note Doesn't correctly handle \\t and terminal escape sequences when calculating the
  *       number of lines required to print a single line from the Buffer in the terminal.
  *       Maximum length of buffer is limited only by memory size.
- *       Uses KdpDprintf internally (NOT DbgPrint!). Callers must already hold the debugger lock.
+ *       Uses KdbPrintf internally.
  *
  * Note: BufLength should be greater than (KdTermSize.cx * KdTermSize.cy).
  */
@@ -3300,15 +3294,18 @@ KdbpCliMainLoop(
         /* Reset the number of rows/cols printed */
         KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
 
-        /* Print the prompt */
-        KdpDprintf(KdbPromptString.Buffer);
-
         /*
-         * Read a command. Repeat the last one if the user pressed Enter.
+         * Print the prompt and read a command.
+         * Repeat the last one if the user pressed Enter.
          * This reduces the risk of RSI when single-stepping!
          */
-        CmdLen = KdIoReadLine(Command, sizeof(Command));
-        if (CmdLen > 0) // i.e. (*Command != ANSI_NULL)
+        CmdLen = KdbPrompt(KdbPromptStr.Buffer, Command, sizeof(Command));
+        if (CmdLen == 0)
+        {
+            /* Nothing received but the user didn't press Enter, retry */
+            continue;
+        }
+        else if (CmdLen > 1) // i.e. (*Command != ANSI_NULL)
         {
             /* Save this new last command */
             KdbRepeatLastCommand = TRUE;

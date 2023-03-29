@@ -597,7 +597,7 @@ KdIoPrintf(
 }
 
 
-extern STRING KdbPromptString;
+extern const CSTRING KdbPromptStr;
 
 VOID
 NTAPI
@@ -706,7 +706,6 @@ KdReceivePacket(
     _Inout_ PKD_CONTEXT Context)
 {
 #ifdef KDBG
-    STRING NewLine = RTL_CONSTANT_STRING("\n");
     STRING ResponseString;
     PDBGKD_DEBUG_IO DebugIo;
     CHAR MessageBuffer[512];
@@ -768,8 +767,8 @@ KdReceivePacket(
 
     /* The prompt string has been printed by KdSendPacket; go to
      * new line and print the kdb prompt -- for SYSREG2 support. */
-    KdpPrintString(&NewLine);
-    KdpPrintString(&KdbPromptString); // Alternatively, use "Input> "
+    KdIoPrintString("\n", 1);
+    KdIoPuts(KdbPromptStr.Buffer); // Alternatively, use "Input> "
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdDisableMouse();
