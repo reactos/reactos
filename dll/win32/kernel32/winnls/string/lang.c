@@ -1972,7 +1972,8 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
         entry = bsearch(&key, full2half_table, count, sizeof(key), full2half_entry_compare);
         if (!entry) /* Not found */
         {
-            dst[pos] = ch;
+            if (pos < dstlen && dstlen)
+                dst[pos] = ch;
             continue;
         }
 
