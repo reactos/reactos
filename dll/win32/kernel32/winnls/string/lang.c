@@ -1980,7 +1980,7 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
         if (ENTRY_HALF2(*entry) == 0)
         {
             if (pos < dstlen && dstlen)
-                dst[pos] = (*entry)[1];
+                dst[pos] = ENTRY_HALF1(*entry);
         }
         else if (!dstlen)
         {
