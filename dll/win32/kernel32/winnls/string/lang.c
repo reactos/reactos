@@ -1875,7 +1875,7 @@ static inline void map_byterev(const WCHAR *src, int len, WCHAR *dst)
 static int map_to_hiragana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
         /*
          * U+30A1 ... U+30F3: Katakana
@@ -1885,8 +1885,9 @@ static int map_to_hiragana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
          */
         WCHAR wch = *src;
         if ((0x30A1 <= wch && wch <= 0x30F3) || wch == 0x30F5 || wch == 0x30FD || wch == 0x30FE)
-            wch -= 0x60; /* Katanaka to Hiragana */
-        dst[pos++] = wch;
+            wch -= 0x60; /* Katakana to Hiragana */
+        if (dstlen)
+            dst[pos] = wch;
     }
     return pos;
 }
@@ -1894,7 +1895,7 @@ static int map_to_hiragana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 static int map_to_katakana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
         /*
          * U+3041 ... U+3093: Hiragana
@@ -1904,29 +1905,32 @@ static int map_to_katakana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
          */
         WCHAR wch = *src;
         if ((0x3041 <= wch && wch <= 0x3093) || wch == 0x3095 || wch == 0x309D || wch == 0x309E)
-            wch += 0x60; /* Hiragana to Katanaka */
-        dst[pos++] = wch;
+            wch += 0x60; /* Hiragana to Katakana */
+        if (dstlen)
+            dst[pos] = wch;
     }
     return pos;
 }
 
 /* The table that contains fullwidth characters and halfwidth characters */
-static const WCHAR full2half_table[][3] =
+typedef WCHAR FULL2HALF_ENTRY[3];
+static const FULL2HALF_ENTRY full2half_table[] =
 {
 #define DEFINE_FULL2HALF(full, half1, half2) { full, half1, half2 },
 #include "full2half.h"
 #undef DEFINE_FULL2HALF
 };
-#define GET_FULL(index) full2half_table[index][0]
-#define GET_HALF1(index) full2half_table[index][1]
-#define GET_HALF2(index) full2half_table[index][2]
+#define GET_FULL(table, index)  (table)[index][0]
+#define GET_HALF1(table, index) (table)[index][1]
+#define GET_HALF2(table, index) (table)[index][2]
 
 static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int i, pos;
+    const FULL2HALF_ENTRY *table = full2half_table;
     const int count = (int)ARRAY_SIZE(full2half_table);
 
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
         WCHAR ch = *src;
 
@@ -1937,114 +1941,124 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 
         if (ch < 0x3000) /* Quick judgment */
         {
-            if (pos < dstlen)
-                dst[pos++] = ch;
+            if (pos < dstlen && dstlen)
+                dst[pos] = ch;
             continue;
         }
 
         if (0xFF01 <= ch && ch <= 0xFF5E) /* U+FF01 ... U+FF5E */
         {
-            if (pos < dstlen)
-                dst[pos++] = ch - 0xFEE0; /* Fullwidth ASCII to halfwidth ASCII */
+            if (pos < dstlen && dstlen)
+                dst[pos] = ch - 0xFEE0; /* Fullwidth ASCII to halfwidth ASCII */
             continue;
         }
 
         for (i = 0; i < count; ++i)
         {
-            if (GET_FULL(i) != ch)
+            if (GET_FULL(table, i) != ch)
                 continue; /* Mismatched */
 
-            if (GET_HALF2(i) == 0)
+            if (GET_HALF2(table, i) == 0)
             {
-                if (pos < dstlen)
-                    dst[pos++] = GET_HALF1(i);
+                if (pos < dstlen && dstlen)
+                    dst[pos] = GET_HALF1(table, i);
+            }
+            else if (!dstlen)
+            {
+                pos++;
+            }
+            else if (pos + 1 < dstlen)
+            {
+                dst[pos++] = GET_HALF1(table, i);
+                dst[pos] = GET_HALF2(table, i);
             }
             else
             {
-                if (pos + 1 < dstlen)
-                {
-                    dst[pos++] = GET_HALF1(i);
-                    dst[pos++] = GET_HALF2(i);
-                }
+                i = count;
             }
             break;
         }
 
-        if (i == count && pos < dstlen)
-            dst[pos++] = ch;
+        if (i == count && pos < dstlen && dstlen)
+            dst[pos] = ch;
     }
+
     return pos;
 }
 
 static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int i, pos;
+    const FULL2HALF_ENTRY *table = full2half_table;
     const int count = (int)ARRAY_SIZE(full2half_table);
 
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
         WCHAR ch = *src;
 
         if (ch == 0x20) /* U+0020: Space */
         {
-            if (pos < dstlen)
-                dst[pos++] = 0x3000; /* U+3000: Ideographic Space */
+            if (pos < dstlen && dstlen)
+                dst[pos] = 0x3000; /* U+3000: Ideographic Space */
             continue;
         }
 
         if (0x21 <= ch && ch <= 0x7E) /* Mappable halfwidth ASCII */
         {
-            if (pos < dstlen)
-                dst[pos++] = ch + 0xFEE0; /* U+FF01 ... U+FF5E */
+            if (pos < dstlen && dstlen)
+                dst[pos] = ch + 0xFEE0; /* U+FF01 ... U+FF5E */
             continue;
         }
 
         if (ch < 0xFF00) /* Quick judgment */
         {
-            if (pos < dstlen)
-                dst[pos++] = ch;
+            if (pos < dstlen && dstlen)
+                dst[pos] = ch;
             continue;
         }
 
         for (i = 0; i < count; ++i)
         {
-            if (GET_HALF1(i) != ch)
+            if (GET_HALF1(table, i) != ch)
                 continue; /* Mismatched */
 
-            if (GET_HALF2(i) == 0)
+            if (GET_HALF2(table, i) == 0)
             {
-                if (pos < dstlen)
-                    dst[pos++] = GET_FULL(i);
+                if (pos < dstlen && dstlen)
+                    dst[pos] = GET_FULL(table, i);
                 break;
             }
 
-            if (srclen <= 1 || GET_HALF2(i) != src[1])
+            if (srclen <= 1 || GET_HALF2(table, i) != src[1])
                 continue; /* Mismatched */
 
             --srclen;
             ++src;
 
-            if (pos < dstlen)
-                dst[pos++] = GET_FULL(i);
+            if (pos < dstlen && dstlen)
+                dst[pos] = GET_FULL(table, i);
 
             break;
         }
 
-        if (i < count && pos < dstlen)
-            dst[pos++] = ch;
+        if (i == count && pos < dstlen && dstlen)
+            dst[pos] = ch;
     }
+
     return pos;
 }
 
 static int map_to_lowercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
     {
         WCHAR wch = *src;
         if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
             continue;
-        dst[pos++] = tolowerW(wch);
+        if (dstlen)
+            dst[pos] = tolowerW(wch);
+        pos++;
     }
     return pos;
 }
@@ -2052,12 +2066,14 @@ static int map_to_lowercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 static int map_to_uppercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
     {
         WCHAR wch = *src;
         if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
             continue;
-        dst[pos++] = toupperW(wch);
+        if (dstlen)
+            dst[pos] = toupperW(wch);
+        pos++;
     }
     return pos;
 }
@@ -2065,12 +2081,14 @@ static int map_to_uppercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 static int map_remove_ignores(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; pos < dstlen && srclen; src++, srclen--)
+    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
     {
         WCHAR wch = *src;
         if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
             continue;
-        dst[pos++] = wch;
+        if (dstlen)
+            dst[pos] = wch;
+        pos++;
     }
     return pos;
 }
@@ -2078,6 +2096,12 @@ static int map_remove_ignores(DWORD flags, const WCHAR *src, int srclen, WCHAR *
 static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int ret = 0;
+
+    if ((flags & (LCMAP_LOWERCASE | LCMAP_UPPERCASE)) == (LCMAP_LOWERCASE | LCMAP_UPPERCASE))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
 
     switch (flags & ~(LCMAP_BYTEREV | LCMAP_LOWERCASE | LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING))
     {
@@ -2101,11 +2125,13 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         break;
     case LCMAP_HIRAGANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
-        map_to_hiragana(dst, ret, dst, ret);
+        if (dstlen)
+            map_to_hiragana(dst, ret, dst, ret);
         break;
     case LCMAP_KATAKANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
-        map_to_katakana(dst, ret, dst, ret);
+        if (dstlen)
+            map_to_katakana(dst, ret, dst, ret);
         break;
     case LCMAP_SIMPLIFIED_CHINESE:
         FIXME("LCMAP_SIMPLIFIED_CHINESE\n");
@@ -2136,8 +2162,15 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         }
         if (flags & LCMAP_BYTEREV)
         {
-            ret = min(srclen, dstlen);
-            memcpy(dst, src, ret * sizeof(WCHAR));
+            if (dstlen == 0)
+            {
+                ret = srclen;
+            }
+            else
+            {
+                ret = min(srclen, dstlen);
+                RtlCopyMemory(dst, src, ret * sizeof(WCHAR));
+            }
             break;
         }
         /* fall through */
@@ -2208,15 +2241,14 @@ INT WINAPI LCMapStringEx(LPCWSTR locale, DWORD flags, LPCWSTR src, INT srclen, L
         return 0;
     }
 
+    if (!dstlen) dst = NULL;
+
     if (flags & LCMAP_SORTKEY)
     {
         INT ret;
 
         if (srclen < 0)
             srclen = strlenW(src);
-
-        if (!dstlen)
-            dst = NULL;
 
         ret = wine_get_sortkey(flags, src, srclen, (char *)dst, dstlen);
         if (ret == 0)
