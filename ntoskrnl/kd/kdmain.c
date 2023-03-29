@@ -9,14 +9,42 @@
 
 #include <ntoskrnl.h>
 #include "kd.h"
+#include "kdterminal.h"
 
 #define NDEBUG
 #include <debug.h>
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
+static VOID
+KdpGetTerminalSettings(
+    _In_ PCSTR p1)
+{
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
+    while (p1 && *p1)
+    {
+        /* Skip leading whitespace */
+        while (*p1 == ' ') ++p1;
+
+        if (!_strnicmp(p1, "KDSERIAL", CONST_STR_LEN("KDSERIAL")))
+        {
+            p1 += CONST_STR_LEN("KDSERIAL");
+            KdbDebugState |= KD_DEBUG_KDSERIAL;
+            KdpDebugMode.Serial = TRUE;
+        }
+        else if (!_strnicmp(p1, "KDNOECHO", CONST_STR_LEN("KDNOECHO")))
+        {
+            p1 += CONST_STR_LEN("KDNOECHO");
+            KdbDebugState |= KD_DEBUG_KDNOECHO;
+        }
+
+        /* Move on to the next option */
+        p1 = strchr(p1, ' ');
+    }
+}
+
 static PCHAR
-NTAPI
 KdpGetDebugMode(
     _In_ PCHAR Currentp2)
 {
@@ -95,10 +123,8 @@ KdDebuggerInitialize0(
             /* Upcase it */
             _strupr(CommandLine);
 
-#ifdef KDBG
-            /* Get the KDBG Settings */
-            KdbpGetCommandLineSettings(CommandLine);
-#endif
+            /* Get terminal settings */
+            KdpGetTerminalSettings(CommandLine);
 
             /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");

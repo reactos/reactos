@@ -49,7 +49,6 @@ static BOOLEAN KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleSte
 LONG KdbLastBreakPointNr = -1;  /* Index of the breakpoint which cause KDB to be entered */
 ULONG KdbNumSingleSteps = 0; /* How many single steps to do */
 BOOLEAN KdbSingleStepOver = FALSE; /* Whether to step over calls/reps. */
-ULONG KdbDebugState = 0; /* KDBG Settings (NOECHO, KDSERIAL) */
 static BOOLEAN KdbEnteredOnSingleStep = FALSE; /* Set to true when KDB was entered because of single step */
 PEPROCESS KdbCurrentProcess = NULL;  /* The current process context in which KDB runs */
 PEPROCESS KdbOriginalProcess = NULL; /* The process in whichs context KDB was intered */
@@ -1624,33 +1623,24 @@ continue_execution:
 }
 
 VOID
-NTAPI
 KdbpGetCommandLineSettings(
-    PCHAR p1)
+    _In_ PCSTR p1)
 {
 #define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
 
-    while (p1 && (p1 = strchr(p1, ' ')))
+    while (p1 && *p1)
     {
-        /* Skip other spaces */
+        /* Skip leading whitespace */
         while (*p1 == ' ') ++p1;
 
-        if (!_strnicmp(p1, "KDSERIAL", CONST_STR_LEN("KDSERIAL")))
-        {
-            p1 += CONST_STR_LEN("KDSERIAL");
-            KdbDebugState |= KD_DEBUG_KDSERIAL;
-            KdpDebugMode.Serial = TRUE;
-        }
-        else if (!_strnicmp(p1, "KDNOECHO", CONST_STR_LEN("KDNOECHO")))
-        {
-            p1 += CONST_STR_LEN("KDNOECHO");
-            KdbDebugState |= KD_DEBUG_KDNOECHO;
-        }
-        else if (!_strnicmp(p1, "FIRSTCHANCE", CONST_STR_LEN("FIRSTCHANCE")))
+        if (!_strnicmp(p1, "FIRSTCHANCE", CONST_STR_LEN("FIRSTCHANCE")))
         {
             p1 += CONST_STR_LEN("FIRSTCHANCE");
             KdbpSetEnterCondition(-1, TRUE, KdbEnterAlways);
         }
+
+        /* Move on to the next option */
+        p1 = strchr(p1, ' ');
     }
 }
 

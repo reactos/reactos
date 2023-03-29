@@ -21,9 +21,40 @@
 #define KEYSC_HOME      0x0047
 #define KEYSC_ARROWUP   0x0048  // == KEY_SCAN_UP
 
-SIZE_T
-KdIoReadLine(
-    _Out_ PCHAR Buffer,
-    _In_ SIZE_T Size);
+
+typedef struct _SIZE
+{
+    LONG cx;
+    LONG cy;
+} SIZE, *PSIZE;
+
+/* KD Controlling Terminal */
+
+/* These values MUST be nonzero, they're used as bit masks */
+typedef enum _KDB_OUTPUT_SETTINGS
+{
+    KD_DEBUG_KDSERIAL = 1,
+    KD_DEBUG_KDNOECHO = 2
+} KDB_OUTPUT_SETTINGS;
+
+extern ULONG KdbDebugState;
+extern SIZE KdTermSize;
+extern BOOLEAN KdTermConnected;
+extern BOOLEAN KdTermSerial;
+extern BOOLEAN KdTermReportsSize;
+
+BOOLEAN
+KdpInitTerminal(VOID);
+
+BOOLEAN
+KdpUpdateTerminalSize(
+    _Out_ PSIZE TermSize);
+
+VOID
+KdpFlushTerminalInput(VOID);
+
+CHAR
+KdpReadTermKey(
+    _Out_ PULONG ScanCode);
 
 /* EOF */

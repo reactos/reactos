@@ -415,7 +415,8 @@ if(NOT _WINKD_)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdprompt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdps2kbd.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdserial.c)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdserial.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdterminal.c)
 
 else()
     add_definitions(-D_WINKD_)

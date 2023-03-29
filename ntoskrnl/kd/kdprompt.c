@@ -36,72 +36,23 @@ KdIoReadLine(
     PCHAR Orig = Buffer;
     ULONG ScanCode = 0;
     CHAR Key;
-    static CHAR NextKey = ANSI_NULL;
-    BOOLEAN EchoOn;
+    BOOLEAN EchoOn = !(KdbDebugState & KD_DEBUG_KDNOECHO);
     LONG CmdHistIndex = -1; // Start at end of history.
+
+    /* Flush the input buffer */
+    KdpFlushTerminalInput();
 
     /* Bail out if the buffer is zero-sized */
     if (Size == 0)
         return 0;
 
-    EchoOn = ((KdbDebugState & KD_DEBUG_KDNOECHO) == 0);
-
     for (;;)
     {
-        ScanCode = 0;
-        if (KdbDebugState & KD_DEBUG_KDSERIAL)
-        {
-            Key = (!NextKey ? KdbpGetCharSerial() : NextKey);
-            NextKey = ANSI_NULL;
-            if (Key == KEY_ESC) /* ESC */
-            {
-                Key = KdbpGetCharSerial();
-                if (Key == '[')
-                {
-                    Key = KdbpGetCharSerial();
-
-                    switch (Key)
-                    {
-                        case 'A':
-                            ScanCode = KEY_SCAN_UP;
-                            break;
-                        case 'B':
-                            ScanCode = KEY_SCAN_DOWN;
-                            break;
-                        case 'C':
-                            break;
-                        case 'D':
-                            break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            Key = (!NextKey ? KdbpGetCharKeyboard(&ScanCode) : NextKey);
-            NextKey = ANSI_NULL;
-        }
+        Key = KdpReadTermKey(&ScanCode);
 
         /* Check for return or newline */
         if ((Key == '\r') || (Key == '\n'))
         {
-            if (Key == '\r')
-            {
-                /*
-                 * We might need to discard the next '\n' which most clients
-                 * should send after \r. Wait a bit to make sure we receive it.
-                 */
-                KeStallExecutionProcessor(100000);
-
-                if (KdbDebugState & KD_DEBUG_KDSERIAL)
-                    NextKey = KdbpTryGetCharSerial(5);
-                else
-                    NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
-
-                if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
-                    NextKey = ANSI_NULL;
-            }
-
             *Buffer = ANSI_NULL;
             KdIoPuts("\n");
             return (SIZE_T)(Buffer - Orig);

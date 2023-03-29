@@ -26,6 +26,11 @@ KdIoPrintf(
     _In_ PCSTR Format,
     ...);
 
+SIZE_T
+KdIoReadLine(
+    _Out_ PCHAR Buffer,
+    _In_ SIZE_T Size);
+
 
 /* INIT ROUTINES *************************************************************/
 

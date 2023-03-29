@@ -51,12 +51,6 @@ typedef enum _KDB_ENTER_CONDITION
    KdbEnterFromUmode
 } KDB_ENTER_CONDITION;
 
-/* These values MUST be nonzero.  They're used as bit masks. */
-typedef enum _KDB_OUTPUT_SETTINGS
-{
-   KD_DEBUG_KDSERIAL = 1,
-   KD_DEBUG_KDNOECHO = 2
-} KDB_OUTPUT_SETTINGS;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -187,7 +181,6 @@ extern LONG KdbLastBreakPointNr;
 extern ULONG KdbNumSingleSteps;
 extern BOOLEAN KdbSingleStepOver;
 extern PKDB_KTRAP_FRAME KdbCurrentTrapFrame;
-extern ULONG KdbDebugState;
 
 LONG
 KdbpGetNextBreakPointNr(
@@ -252,8 +245,8 @@ KdbpAttachToProcess(
    PVOID ProcessId);
 
 VOID
-NTAPI
-KdbpGetCommandLineSettings(PCHAR p1);
+KdbpGetCommandLineSettings(
+    _In_ PCSTR p1);
 
 KD_CONTINUE_TYPE
 KdbEnterDebuggerException(IN PEXCEPTION_RECORD64 ExceptionRecord,
@@ -288,19 +281,6 @@ NTSTATUS
 KdbpSafeWriteMemory(OUT PVOID Dest,
                     IN PVOID Src,
                     IN ULONG Bytes);
-
-#define KdbpGetCharKeyboard(ScanCode) KdbpTryGetCharKeyboard((ScanCode), 0)
-CHAR
-KdbpTryGetCharKeyboard(PULONG ScanCode, ULONG Retry);
-
-#define KdbpGetCharSerial()  KdbpTryGetCharSerial(0)
-CHAR
-KdbpTryGetCharSerial(
-    _In_ ULONG Retry);
-
-VOID
-KdbpSendCommandSerial(
-    _In_ PCSTR Command);
 
 VOID
 KbdDisableMouse(VOID);
