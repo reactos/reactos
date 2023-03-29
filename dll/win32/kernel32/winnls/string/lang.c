@@ -1950,7 +1950,7 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
     const int count1 = (int)ARRAY_SIZE(full2half_table);
     const FULL2HALF_ENTRY *table1 = full2half_table;
 
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
+    for (pos = 0; srclen; src++, srclen--, pos++)
     {
         WCHAR ch = *src;
 
