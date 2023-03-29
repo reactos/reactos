@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "kd.h"
 #include "kdterminal.h"
 
 #define KdbpGetCharKeyboard(ScanCode) KdbpTryGetCharKeyboard((ScanCode), 0)
