@@ -1920,15 +1920,29 @@ static const FULL2HALF_ENTRY full2half_table[] =
 #include "full2half.h"
 #undef DEFINE_FULL2HALF
 };
-#define GET_FULL(table, index)  (table)[index][0]
-#define GET_HALF1(table, index) (table)[index][1]
-#define GET_HALF2(table, index) (table)[index][2]
+#define ENTRY_FULL(entry)  (entry)[0]
+#define ENTRY_HALF1(entry) (entry)[1]
+#define ENTRY_HALF2(entry) (entry)[2]
+#define GET_FULL(table, index)  ENTRY_FULL(table[index])
+#define GET_HALF1(table, index) ENTRY_HALF1(table[index])
+#define GET_HALF2(table, index) ENTRY_HALF2(table[index])
+
+static int full2half_entry_compare(const void *x, const void *y)
+{
+    const FULL2HALF_ENTRY *a = x;
+    const FULL2HALF_ENTRY *b = y;
+    if (a[0] > b[0])
+        return 1;
+    if (a[0] < b[0])
+        return -1;
+    return 0;
+}
 
 static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
-    int i, pos;
-    const FULL2HALF_ENTRY *table = full2half_table;
+    int pos;
     const int count = (int)ARRAY_SIZE(full2half_table);
+    FULL2HALF_ENTRY key, *entry;
 
     for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
@@ -1953,34 +1967,33 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
             continue;
         }
 
-        for (i = 0; i < count; ++i)
+        /* Binary search */
+        key[0] = ch;
+        entry = bsearch(&key, full2half_table, count, sizeof(key), full2half_entry_compare);
+        if (!entry) /* Not found */
         {
-            if (GET_FULL(table, i) != ch)
-                continue; /* Mismatched */
-
-            if (GET_HALF2(table, i) == 0)
-            {
-                if (pos < dstlen && dstlen)
-                    dst[pos] = GET_HALF1(table, i);
-            }
-            else if (!dstlen)
-            {
-                pos++;
-            }
-            else if (pos + 1 < dstlen)
-            {
-                dst[pos++] = GET_HALF1(table, i);
-                dst[pos] = GET_HALF2(table, i);
-            }
-            else
-            {
-                i = count;
-            }
-            break;
+            dst[pos] = ch;
+            continue;
         }
 
-        if (i == count && pos < dstlen && dstlen)
+        if (ENTRY_HALF2(*entry) == 0)
+        {
+            if (pos < dstlen && dstlen)
+                dst[pos] = (*entry)[1];
+        }
+        else if (!dstlen)
+        {
+            pos++;
+        }
+        else if (pos + 1 < dstlen)
+        {
+            dst[pos++] = ENTRY_HALF1(*entry);
+            dst[pos  ] = ENTRY_HALF2(*entry);
+        }
+        else
+        {
             dst[pos] = ch;
+        }
     }
 
     return pos;
