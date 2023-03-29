@@ -1,5 +1,5 @@
 /* DEFINE_FULL2HALF(full, half1, half2) */
-/* NOTE: This list must be sorted for binary search. */
+/* NOTE: This list must be sorted. */
 DEFINE_FULL2HALF(0x3000, 0x0020, 0)         /* 　 -->   */
 DEFINE_FULL2HALF(0x3001, 0xFF64, 0)         /* 、 --> ､ */
 DEFINE_FULL2HALF(0x3002, 0xFF61, 0)         /* 。 --> ｡ */
@@ -55,9 +55,11 @@ DEFINE_FULL2HALF(0x30CD, 0xFF88, 0)         /* ネ --> ﾈ */
 DEFINE_FULL2HALF(0x30CE, 0xFF89, 0)         /* ノ --> ﾉ */
 DEFINE_FULL2HALF(0x30CF, 0xFF8A, 0)         /* ハ --> ﾊ */
 DEFINE_FULL2HALF(0x30D0, 0xFF8A, 0xFF9E)    /* バ --> ﾊﾞ */
+DEFINE_FULL2HALF(0x30D1, 0xFF8A, 0x309C)    /* パ <-- ハ゜ */
 DEFINE_FULL2HALF(0x30D1, 0xFF8A, 0xFF9F)    /* パ --> ﾊﾟ */
 DEFINE_FULL2HALF(0x30D2, 0xFF8B, 0)         /* ヒ --> ﾋ */
 DEFINE_FULL2HALF(0x30D3, 0xFF8B, 0xFF9E)    /* ビ --> ﾋﾞ */
+DEFINE_FULL2HALF(0x30D4, 0xFF8B, 0x309C)    /* ピ <-- ヒ゜ */
 DEFINE_FULL2HALF(0x30D4, 0xFF8B, 0xFF9F)    /* ピ --> ﾋﾟ */
 DEFINE_FULL2HALF(0x30D5, 0xFF8C, 0)         /* フ --> ﾌ */
 DEFINE_FULL2HALF(0x30D6, 0xFF8C, 0xFF9E)    /* ブ --> ﾌﾞ */

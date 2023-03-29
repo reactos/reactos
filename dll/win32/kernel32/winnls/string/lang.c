@@ -1875,18 +1875,22 @@ static inline void map_byterev(const WCHAR *src, int len, WCHAR *dst)
 static int map_to_hiragana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
+    for (pos = 0; srclen; src++, srclen--, pos++)
     {
         /*
          * U+30A1 ... U+30F3: Katakana
+         * U+30F4: Katakana Letter VU
          * U+30F5: Katakana Letter Small KA
          * U+30FD: Katakana Iteration Mark
          * U+30FE: Katakana Voiced Iteration Mark
          */
         WCHAR wch = *src;
-        if ((0x30A1 <= wch && wch <= 0x30F3) || wch == 0x30F5 || wch == 0x30FD || wch == 0x30FE)
+        if ((0x30A1 <= wch && wch <= 0x30F3) ||
+            wch == 0x30F4 || wch == 0x30F5 || wch == 0x30FD || wch == 0x30FE)
+        {
             wch -= 0x60; /* Katakana to Hiragana */
-        if (dstlen)
+        }
+        if (pos < dstlen)
             dst[pos] = wch;
     }
     return pos;
@@ -1895,18 +1899,22 @@ static int map_to_hiragana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 static int map_to_katakana(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
+    for (pos = 0; srclen; src++, srclen--, pos++)
     {
         /*
          * U+3041 ... U+3093: Hiragana
+         * U+3094: Hiragana Letter VU
          * U+3095: Hiragana Letter Small KA
          * U+309D: Hiragana Iteration Mark
          * U+309E: Hiragana Voiced Iteration Mark
          */
         WCHAR wch = *src;
-        if ((0x3041 <= wch && wch <= 0x3093) || wch == 0x3095 || wch == 0x309D || wch == 0x309E)
+        if ((0x3041 <= wch && wch <= 0x3093) ||
+            wch == 3094 || wch == 0x3095 || wch == 0x309D || wch == 0x309E)
+        {
             wch += 0x60; /* Hiragana to Katakana */
-        if (dstlen)
+        }
+        if (pos < dstlen)
             dst[pos] = wch;
     }
     return pos;
@@ -1920,29 +1928,27 @@ static const FULL2HALF_ENTRY full2half_table[] =
 #include "full2half.h"
 #undef DEFINE_FULL2HALF
 };
-#define ENTRY_FULL(entry)  (entry)[0]
-#define ENTRY_HALF1(entry) (entry)[1]
-#define ENTRY_HALF2(entry) (entry)[2]
-#define GET_FULL(table, index)  ENTRY_FULL(table[index])
-#define GET_HALF1(table, index) ENTRY_HALF1(table[index])
-#define GET_HALF2(table, index) ENTRY_HALF2(table[index])
+#define GET_FULL(table, index)  ((table)[index][0])
+#define GET_HALF1(table, index) ((table)[index][1])
+#define GET_HALF2(table, index) ((table)[index][2])
 
-static int full2half_entry_compare(const void *x, const void *y)
+/* The table that contains dakuten entries */
+typedef WCHAR DAKUTEN_ENTRY[3];
+static const DAKUTEN_ENTRY dakuten_table[] =
 {
-    const FULL2HALF_ENTRY *a = x;
-    const FULL2HALF_ENTRY *b = y;
-    if (a[0] > b[0])
-        return 1;
-    if (a[0] < b[0])
-        return -1;
-    return 0;
-}
+#define DEFINE_DAKUTEN(voiced, single1, single2, half1, half2) { voiced, single1, single2 },
+#include "dakuten.h"
+#undef DEFINE_DAKUTEN
+};
+#define GET_VOICED(table, index) ((table)[index][0])
+#define GET_SINGLE1(table, index) ((table)[index][1])
+#define GET_SINGLE2(table, index) ((table)[index][2])
 
 static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
-    int pos;
-    const int count = (int)ARRAY_SIZE(full2half_table);
-    FULL2HALF_ENTRY key, *entry;
+    int pos, i;
+    const int count1 = (int)ARRAY_SIZE(full2half_table);
+    const FULL2HALF_ENTRY *table1 = full2half_table;
 
     for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
     {
@@ -1955,46 +1961,50 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 
         if (ch < 0x3000) /* Quick judgment */
         {
-            if (pos < dstlen && dstlen)
+            if (pos < dstlen)
                 dst[pos] = ch;
             continue;
         }
 
         if (0xFF01 <= ch && ch <= 0xFF5E) /* U+FF01 ... U+FF5E */
         {
-            if (pos < dstlen && dstlen)
+            if (pos < dstlen)
                 dst[pos] = ch - 0xFEE0; /* Fullwidth ASCII to halfwidth ASCII */
             continue;
         }
 
-        /* Binary search */
-        key[0] = ch;
-        entry = bsearch(&key, full2half_table, count, sizeof(key), full2half_entry_compare);
-        if (!entry) /* Not found */
+        /* Search in table1 (full/half) */
+        for (i = count1 - 1; i >= 0; --i) /* In reverse order */
         {
-            if (pos < dstlen && dstlen)
+            if (GET_FULL(table1, i) != ch)
+                continue;
+
+            if (GET_HALF2(table1, i) == 0)
+            {
+                if (pos < dstlen)
+                    dst[pos] = GET_HALF1(table1, i);
+            }
+            else if (!dstlen)
+            {
+                pos++;
+            }
+            else if (pos + 1 < dstlen)
+            {
+                dst[pos++] = GET_HALF1(table1, i);
+                dst[pos  ] = GET_HALF2(table1, i);
+            }
+            else
+            {
                 dst[pos] = ch;
-            continue;
+            }
+            break;
         }
 
-        if (ENTRY_HALF2(*entry) == 0)
-        {
-            if (pos < dstlen && dstlen)
-                dst[pos] = ENTRY_HALF1(*entry);
-        }
-        else if (!dstlen)
-        {
-            pos++;
-        }
-        else if (pos + 1 < dstlen)
-        {
-            dst[pos++] = ENTRY_HALF1(*entry);
-            dst[pos  ] = ENTRY_HALF2(*entry);
-        }
-        else
-        {
+        if (i >= 0)
+            continue;
+
+        if (pos < dstlen)
             dst[pos] = ch;
-        }
     }
 
     return pos;
@@ -2002,60 +2012,92 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 
 static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
-    int i, pos;
-    const FULL2HALF_ENTRY *table = full2half_table;
-    const int count = (int)ARRAY_SIZE(full2half_table);
+    int pos, i;
+    const FULL2HALF_ENTRY *table1 = full2half_table;
+    const DAKUTEN_ENTRY *table2 = dakuten_table;
+    const int count1 = (int)ARRAY_SIZE(full2half_table);
+    const int count2 = (int)ARRAY_SIZE(dakuten_table);
 
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--, pos++)
+    for (pos = 0; srclen; src++, srclen--, pos++)
     {
         WCHAR ch = *src;
 
         if (ch == 0x20) /* U+0020: Space */
         {
-            if (pos < dstlen && dstlen)
+            if (pos < dstlen)
                 dst[pos] = 0x3000; /* U+3000: Ideographic Space */
             continue;
         }
 
         if (0x21 <= ch && ch <= 0x7E) /* Mappable halfwidth ASCII */
         {
-            if (pos < dstlen && dstlen)
+            if (pos < dstlen)
                 dst[pos] = ch + 0xFEE0; /* U+FF01 ... U+FF5E */
             continue;
         }
 
         if (ch < 0xFF00) /* Quick judgment */
         {
-            if (pos < dstlen && dstlen)
+            if (pos < dstlen)
                 dst[pos] = ch;
             continue;
         }
 
-        for (i = 0; i < count; ++i)
+        /* Search in table1 (full/half) */
+        for (i = count1 - 1; i >= 0; --i) /* In reverse order */
         {
-            if (GET_HALF1(table, i) != ch)
+            if (GET_HALF1(table1, i) != ch)
                 continue; /* Mismatched */
 
-            if (GET_HALF2(table, i) == 0)
+            if (GET_HALF2(table1, i) == 0)
             {
-                if (pos < dstlen && dstlen)
-                    dst[pos] = GET_FULL(table, i);
+                if (pos < dstlen)
+                    dst[pos] = GET_FULL(table1, i);
                 break;
             }
 
-            if (srclen <= 1 || GET_HALF2(table, i) != src[1])
+            if (srclen <= 1 || GET_HALF2(table1, i) != src[1])
                 continue; /* Mismatched */
 
             --srclen;
             ++src;
 
-            if (pos < dstlen && dstlen)
-                dst[pos] = GET_FULL(table, i);
-
+            if (pos < dstlen)
+                dst[pos] = GET_FULL(table1, i);
             break;
         }
 
-        if (i == count && pos < dstlen && dstlen)
+        if (i >= 0)
+            continue;
+
+        /* Search in table2 (dakuten) */
+        for (i = count2 - 1; i >= 0; --i) /* In reverse order */
+        {
+            if (GET_SINGLE1(table2, i) != ch)
+                continue; /* Mismatched */
+
+            if (GET_SINGLE2(table2, i) == 0)
+            {
+                if (pos < dstlen)
+                    dst[pos] = GET_VOICED(table1, i);
+                break;
+            }
+
+            if (srclen <= 1 || GET_SINGLE2(table2, i) != src[1])
+                continue; /* Mismatched */
+
+            --srclen;
+            ++src;
+
+            if (pos < dstlen)
+                dst[pos] = GET_VOICED(table2, i);
+            break;
+        }
+
+        if (i >= 0)
+            continue;
+
+        if (pos < dstlen
             dst[pos] = ch;
     }
 
@@ -2065,12 +2107,12 @@ static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen
 static int map_to_lowercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
+    for (pos = 0; srclen; src++, srclen--)
     {
         WCHAR wch = *src;
         if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
             continue;
-        if (dstlen)
+        if (pos < dstlen)
             dst[pos] = tolowerW(wch);
         pos++;
     }
@@ -2080,12 +2122,12 @@ static int map_to_lowercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
 static int map_to_uppercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
+    for (pos = 0; srclen; src++, srclen--)
     {
         WCHAR wch = *src;
         if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
             continue;
-        if (dstlen)
+        if (pos < dstlen)
             dst[pos] = toupperW(wch);
         pos++;
     }
@@ -2096,7 +2138,7 @@ static int map_remove_ignored(DWORD flags, const WCHAR *src, int srclen, WCHAR *
 {
     int pos;
     WORD wC1, wC2, wC3;
-    for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
+    for (pos = 0; srclen; src++, srclen--)
     {
         WCHAR wch = *src;
         GetStringTypeW(CT_CTYPE1, &wch, 1, &wC1);
@@ -2112,7 +2154,7 @@ static int map_remove_ignored(DWORD flags, const WCHAR *src, int srclen, WCHAR *
             if ((wC2 & C2_OTHERNEUTRAL) && (wC3 & (C3_NONSPACING | C3_DIACRITIC)))
                 continue;
         }
-        if (dstlen)
+        if (pos < dstlen)
             dst[pos] = wch;
         pos++;
     }
@@ -2138,13 +2180,13 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         ret = map_to_katakana(src, srclen, dst, dstlen);
         break;
     case LCMAP_HALFWIDTH:
-        ret = map_to_halfwidth(0, src, srclen, dst, dstlen);
+        ret = map_to_halfwidth(flags, src, srclen, dst, dstlen);
         break;
     case LCMAP_HIRAGANA | LCMAP_HALFWIDTH:
-        ret = map_to_halfwidth(LCMAP_HIRAGANA, src, srclen, dst, dstlen);
+        ret = map_to_halfwidth(flags, src, srclen, dst, dstlen);
         break;
     case LCMAP_KATAKANA | LCMAP_HALFWIDTH:
-        ret = map_to_halfwidth(LCMAP_KATAKANA, src, srclen, dst, dstlen);
+        ret = map_to_halfwidth(flags, src, srclen, dst, dstlen);
         break;
     case LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
@@ -2152,12 +2194,12 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
     case LCMAP_HIRAGANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
         if (dstlen && ret)
-            map_to_hiragana(dst, ret, dst, ret);
+            map_to_hiragana(dst, ret, dst, dstlen);
         break;
     case LCMAP_KATAKANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
         if (dstlen && ret)
-            map_to_katakana(dst, ret, dst, ret);
+            map_to_katakana(dst, ret, dst, dstlen);
         break;
     case LCMAP_SIMPLIFIED_CHINESE:
         FIXME("LCMAP_SIMPLIFIED_CHINESE\n");
@@ -2179,11 +2221,13 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         if (flags & LCMAP_LOWERCASE)
         {
             ret = map_to_lowercase(flags, src, srclen, dst, dstlen);
+            flags &= ~LCMAP_LOWERCASE;
             break;
         }
         if (flags & LCMAP_UPPERCASE)
         {
             ret = map_to_uppercase(flags, src, srclen, dst, dstlen);
+            flags &= ~LCMAP_UPPERCASE;
             break;
         }
         if (flags & LCMAP_BYTEREV)
@@ -2191,12 +2235,10 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
             if (dstlen == 0)
             {
                 ret = srclen;
+                break;
             }
-            else
-            {
-                ret = min(srclen, dstlen);
-                RtlCopyMemory(dst, src, ret * sizeof(WCHAR));
-            }
+            ret = min(srclen, dstlen);
+            RtlCopyMemory(dst, src, ret * sizeof(WCHAR));
             break;
         }
         /* fall through */
@@ -2205,13 +2247,20 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         return 0;
     }
 
-    if (flags & LCMAP_BYTEREV)
-        map_byterev(dst, min(dstlen, ret), dst);
-
-    if (dstlen && dstlen < ret)
+    if (dstlen)
     {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
+        if (flags & LCMAP_LOWERCASE)
+            map_to_lowercase(flags, dst, ret, dst, dstlen);
+        if (flags & LCMAP_UPPERCASE)
+            map_to_uppercase(flags, dst, ret, dst, dstlen);
+        if (flags & LCMAP_BYTEREV)
+            map_byterev(dst, min(ret, dstlen), dst);
+
+        if (dstlen < ret)
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
     }
 
     return ret;
