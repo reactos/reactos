@@ -1935,7 +1935,7 @@ static int map_to_halfwidth(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
         else if (flags & LCMAP_HIRAGANA)
             map_to_hiragana(&ch, 1, &ch, 1);
 
-        if (ch < 0x3000)
+        if (ch < 0x3000) /* Quick judgment */
         {
             if (pos < dstlen)
                 dst[pos++] = ch;
@@ -1999,7 +1999,7 @@ static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen
             continue;
         }
 
-        if (ch < 0xFF00) /* Quick judgement */
+        if (ch < 0xFF00) /* Quick judgment */
         {
             if (pos < dstlen)
                 dst[pos++] = ch;
