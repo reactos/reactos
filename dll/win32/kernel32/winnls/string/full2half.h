@@ -1,3 +1,6 @@
+/*
+ * The fullwidth/halfwidth character table.
+ */
 /* DEFINE_FULL2HALF(full, half1, half2) */
 /* NOTE: This list must be sorted. */
 DEFINE_FULL2HALF(0x3000, 0x0020, 0)         /* 　 -->   */
