@@ -2091,14 +2091,26 @@ static int map_to_uppercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
     return pos;
 }
 
-static int map_remove_ignores(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
+static int map_remove_ignored(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
+    WORD wC1, wC2, wC3;
     for (pos = 0; srclen && (!dstlen || pos < dstlen); src++, srclen--)
     {
         WCHAR wch = *src;
-        if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
-            continue;
+        GetStringTypeW(CT_CTYPE1, &wch, 1, &wC1);
+        GetStringTypeW(CT_CTYPE2, &wch, 1, &wC2);
+        GetStringTypeW(CT_CTYPE3, &wch, 1, &wC3);
+        if (flags & NORM_IGNORESYMBOLS)
+        {
+            if ((wC1 & C1_PUNCT) || (wC3 & C3_SYMBOL))
+                continue;
+        }
+        if (flags & NORM_IGNORENONSPACE)
+        {
+            if ((wC2 & C2_OTHERNEUTRAL) && (wC3 & (C3_NONSPACING | C3_DIACRITIC)))
+                continue;
+        }
         if (dstlen)
             dst[pos] = wch;
         pos++;
@@ -2138,12 +2150,12 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         break;
     case LCMAP_HIRAGANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
-        if (dstlen)
+        if (dstlen && ret)
             map_to_hiragana(dst, ret, dst, ret);
         break;
     case LCMAP_KATAKANA | LCMAP_FULLWIDTH:
         ret = map_to_fullwidth(src, srclen, dst, dstlen);
-        if (dstlen)
+        if (dstlen && ret)
             map_to_katakana(dst, ret, dst, ret);
         break;
     case LCMAP_SIMPLIFIED_CHINESE:
@@ -2160,7 +2172,7 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
             SetLastError(ERROR_INVALID_FLAGS);
             return 0;
         }
-        ret = map_remove_ignores(flags, src, srclen, dst, dstlen);
+        ret = map_remove_ignored(flags, src, srclen, dst, dstlen);
         break;
     case 0:
         if (flags & LCMAP_LOWERCASE)
