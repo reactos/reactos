@@ -2097,7 +2097,7 @@ static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen
         if (i >= 0)
             continue;
 
-        if (pos < dstlen
+        if (pos < dstlen)
             dst[pos] = ch;
     }
 
