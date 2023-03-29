@@ -2076,13 +2076,6 @@ static int map_to_fullwidth(const WCHAR *src, int srclen, WCHAR *dst, int dstlen
             if (GET_SINGLE1(table2, i) != ch)
                 continue; /* Mismatched */
 
-            if (GET_SINGLE2(table2, i) == 0)
-            {
-                if (pos < dstlen)
-                    dst[pos] = GET_VOICED(table1, i);
-                break;
-            }
-
             if (srclen <= 1 || GET_SINGLE2(table2, i) != src[1])
                 continue; /* Mismatched */
 
