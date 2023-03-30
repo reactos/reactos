@@ -307,7 +307,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                 ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
 
-                INT ret = ExtractIconExW(wTemp, -1, NULL, NULL, 0);
+                INT ret = PrivateExtractIconsW(wTemp, 0, 0, 0, NULL, NULL, 0, 0);
                 if (ret <= 0)
                 {
                     StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);

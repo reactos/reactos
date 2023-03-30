@@ -71,6 +71,7 @@ typedef struct
     DWORD resloader;
 } NE_TYPEINFO;
 
+#ifdef __REACTOS__
 //  From: James Houghtaling
 //  https://www.moon-soft.com/program/FORMAT/windows/ani.htm
 typedef struct taganiheader
@@ -85,6 +86,7 @@ typedef struct taganiheader
     DWORD jifrate;   // default jiffies (1/60th sec) if rate chunk not present.
     DWORD flags;     // animation flag
 } aniheader;
+#endif
 
 #define NE_RSCTYPE_ICON        0x8003
 #define NE_RSCTYPE_GROUP_ICON  0x800e
@@ -283,7 +285,19 @@ static UINT ICO_ExtractIconExW(
 	UINT cxDesired,
 	UINT cyDesired,
 	UINT *pIconId,
+#ifdef __REACTOS__
+    UINT flags,
+    /* This function is called from two different code paths.
+     * One is from Shell32 using the ExtractIconEx function.
+     * The other is from User32 using PrivateExtractIcons.
+     * Based on W2K3SP2 testing, the count of icons returned
+     * is zero (0) for PNG ones using ExtractIconEx and
+     * one (1) for PNG icons using PrivateExtractIcons. 
+     * We can handle the difference using the fUser32 flag.*/
+    BOOL fUser32)
+#else
 	UINT flags)
+#endif
 {
 	UINT		ret = 0;
 	UINT		cx1, cx2, cy1, cy2;
@@ -300,7 +314,11 @@ static UINT ICO_ExtractIconExW(
         WCHAR		szExePath[MAX_PATH];
         DWORD		dwSearchReturn;
 
+#ifdef __REACTOS__
+    TRACE("%s, %d, %d, %p, 0x%08x, %d\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags, fUser32);
+#else
 	TRACE("%s, %d, %d %p 0x%08x\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags);
+#endif
 
 #ifdef __REACTOS__
     if (RetPtr)
@@ -313,8 +331,17 @@ static UINT ICO_ExtractIconExW(
         dwSearchReturn = SearchPathW(NULL, lpszExeFileName, NULL, ARRAY_SIZE(szExePath), szExePath, NULL);
         if ((dwSearchReturn == 0) || (dwSearchReturn > ARRAY_SIZE(szExePath)))
         {
+#ifdef __REACTOS__
+            WARN("File %s not found or path too long and fUser32 is '%d'\n",
+                 debugstr_w(lpszExeFileName), fUser32);
+            if (fUser32 && !RetPtr && !pIconId)
+                return 0;
+            else
+                return -1;
+#else
             WARN("File %s not found or path too long\n", debugstr_w(lpszExeFileName));
             return -1;
+#endif
         }
 
 	hFile = CreateFileW(szExePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
@@ -576,6 +603,8 @@ static UINT ICO_ExtractIconExW(
 
 #ifdef __REACTOS__
                     icon = CreateIconFromResourceEx(imageData, cbTotal, sig == 1, 0x00030000, cx[index], cy[index], flags);
+                    if (fUser32 && sig == 1)
+                        iconCount = 1;
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #endif
@@ -615,6 +644,15 @@ static UINT ICO_ExtractIconExW(
             WARN("haven't found section for resource directory.\n");
             goto end;
         }
+
+#ifdef __REACTOS__
+        /* Check for boundary limit (and overflow) */
+        if (((ULONG_PTR)(rootresdir + 1) < (ULONG_PTR)rootresdir) ||
+            ((ULONG_PTR)(rootresdir + 1) > (ULONG_PTR)peimage + fsizel))
+        {
+            goto end;
+        }
+#endif
 
 	  /* search for the group icon directory */
 	  if (!(icongroupresdir = find_entry_by_id(rootresdir, LOWORD(RT_GROUP_ICON), rootresdir)))
@@ -764,7 +802,12 @@ UINT WINAPI PrivateExtractIconsW (
 	{
 	  WARN("Uneven number %d of icons requested for small and large icons!\n", nIcons);
 	}
+#ifdef __REACTOS__
+    return ICO_ExtractIconExW(lpwstrFile, phicon, nIndex, nIcons, sizeX, sizeY,
+                              pIconId, flags, TRUE);
+#else
 	return ICO_ExtractIconExW(lpwstrFile, phicon, nIndex, nIcons, sizeX, sizeY, pIconId, flags);
+#endif
 }
 
 /***********************************************************************
@@ -814,9 +857,16 @@ UINT WINAPI PrivateExtractIconExW (
 	TRACE("%s %d %p %p %d\n",
 	debugstr_w(lpwstrFile),nIndex,phIconLarge, phIconSmall, nIcons);
 
+#ifdef __REACTOS__
+    if (nIndex == -1 || (!phIconSmall && !phIconLarge))
+      /* get the number of icons */
+      return ICO_ExtractIconExW(lpwstrFile, NULL, 0, 0, 0, 0, NULL,
+                                LR_DEFAULTCOLOR, FALSE);
+#else
 	if (nIndex == -1)
 	  /* get the number of icons */
 	  return ICO_ExtractIconExW(lpwstrFile, NULL, 0, 0, 0, 0, NULL, LR_DEFAULTCOLOR);
+#endif
 
 	if (nIcons == 1 && phIconSmall && phIconLarge)
 	{
@@ -826,8 +876,15 @@ UINT WINAPI PrivateExtractIconExW (
 	  cxsmicon = GetSystemMetrics(SM_CXSMICON);
 	  cysmicon = GetSystemMetrics(SM_CYSMICON);
 
+#ifdef __REACTOS__
+      ret = ICO_ExtractIconExW(lpwstrFile, hIcon, nIndex, 2,
+                               cxicon | (cxsmicon<<16),
+                               cyicon | (cysmicon<<16), NULL,
+                               LR_DEFAULTCOLOR, FALSE);
+#else
           ret = ICO_ExtractIconExW(lpwstrFile, hIcon, nIndex, 2, cxicon | (cxsmicon<<16),
 	                           cyicon | (cysmicon<<16), NULL, LR_DEFAULTCOLOR);
+#endif
 	  *phIconLarge = hIcon[0];
 	  *phIconSmall = hIcon[1];
  	  return ret;
@@ -838,16 +895,26 @@ UINT WINAPI PrivateExtractIconExW (
 	  /* extract n small icons */
 	  cxsmicon = GetSystemMetrics(SM_CXSMICON);
 	  cysmicon = GetSystemMetrics(SM_CYSMICON);
+#ifdef __REACTOS__
+      ret = ICO_ExtractIconExW(lpwstrFile, phIconSmall, nIndex, nIcons, cxsmicon,
+                               cysmicon, NULL, LR_DEFAULTCOLOR, FALSE);
+#else
 	  ret = ICO_ExtractIconExW(lpwstrFile, phIconSmall, nIndex, nIcons, cxsmicon,
 	                           cysmicon, NULL, LR_DEFAULTCOLOR);
+#endif
 	}
        if (phIconLarge)
 	{
 	  /* extract n large icons */
 	  cxicon = GetSystemMetrics(SM_CXICON);
 	  cyicon = GetSystemMetrics(SM_CYICON);
+#ifdef __REACTOS__
+       ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
+                                  cyicon, NULL, LR_DEFAULTCOLOR, FALSE);
+#else
          ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
 	                           cyicon, NULL, LR_DEFAULTCOLOR);
+#endif
 	}
 	return ret;
 }
