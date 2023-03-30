@@ -154,8 +154,8 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     drawing = TRUE;
     SetCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), FALSE);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    toolsModel.OnButtonDown(TRUE, UnZoomed(pt.x), UnZoomed(pt.y), FALSE);
     Invalidate(FALSE);
     return 0;
 }
@@ -164,8 +164,8 @@ LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 {
     drawing = FALSE;
     ReleaseCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    toolsModel.OnButtonDown(TRUE, UnZoomed(pt.x), UnZoomed(pt.y), TRUE);
     toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
@@ -175,8 +175,8 @@ LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     drawing = TRUE;
     SetCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    toolsModel.OnButtonDown(FALSE, UnZoomed(pt.x), UnZoomed(pt.y), FALSE);
     Invalidate(FALSE);
     return 0;
 }
@@ -185,8 +185,8 @@ LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 {
     drawing = FALSE;
     ReleaseCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    toolsModel.OnButtonDown(FALSE, UnZoomed(pt.x), UnZoomed(pt.y), TRUE);
     toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
@@ -197,8 +197,8 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (drawing)
     {
         drawing = FALSE;
-        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-        toolsModel.OnButtonUp(TRUE, UnZoomed(x), UnZoomed(y));
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        toolsModel.OnButtonUp(TRUE, UnZoomed(pt.x), UnZoomed(pt.y));
         Invalidate(FALSE);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
@@ -242,8 +242,8 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (drawing)
     {
         drawing = FALSE;
-        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-        toolsModel.OnButtonUp(FALSE, UnZoomed(x), UnZoomed(y));
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        toolsModel.OnButtonUp(FALSE, UnZoomed(pt.x), UnZoomed(pt.y));
         Invalidate(FALSE);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
