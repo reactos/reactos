@@ -25,7 +25,7 @@ BEGIN
     POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", CMD_NEW
-        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nova &Janela\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "A&brir\tCtrl+O", CMD_OPEN
         MENUITEM "&Salvar\tCtrl+S", CMD_SAVE
         MENUITEM "Salvar &como...", CMD_SAVE_AS
@@ -46,7 +46,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...", CMD_SEARCH
         MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Substituir...\tCtrl+H", CMD_REPLACE
         MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Selecionar &tudo", CMD_SELECT_ALL
@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "&Conteúdo", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Sobre o Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
