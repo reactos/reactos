@@ -61,7 +61,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_OSK "Teclado Virtual"
-    IDS_AUTHORS "Copyright Denis Robert, Valmor Flores"
+    IDS_AUTHORS "Copyright Denis Robert"
     IDS_NUMLOCK "Num"
     IDS_CAPSLOCK "Caps"
     IDS_SCROLLLOCK "Scroll"
