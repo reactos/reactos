@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>, 2016, 2020 Erdem Ersoy <erdemersoy@erdemersoy.net> */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -19,7 +19,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "ReactOS geliştiricileri, (parçaları) ReactOS'u oluşturmak için kullanılmış aşağıdaki Açık Kaynak projelerine teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS, GPL altında lisanslanmıştır, bu yüzden onu (onun parçalarını) yeniden kullanmak veya yeniden dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
+    LTEXT "ReactOS, GPL altında lisanslanmıştır, bu yüzden onu (ve bileşenlerini) yeniden kullanmak veya dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
     PUSHBUTTON "&GPL'yi Görüntüle...", IDC_VIEWGPL, 236, 110, 65, 19
     LTEXT "Kur'la devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
 END
@@ -32,7 +32,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Lütfen bir ürün seçeneği seçiniz:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Ü&rün seçenekleri:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Ürün Bilgisi", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Tanım:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -76,11 +76,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Sistem yerel ayarı, kullanmak istediğiniz uygulamaların diliyle eşleşmelidir. Kullanıcı yerel ayarı; sayıların, para birimlerinin ve zamanların nasıl görüneceğini denetler.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Ö&zelleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "Klavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Öz&elleştir...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -168,10 +166,10 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Teşekkürler"
     IDS_ACKSUBTITLE "ReactOS'u ayakta tutanlar ve lisans bilgisi:"
-    IDS_OWNERTITLE "Yazılım'ınızı Kişiselleştirin"
+    IDS_OWNERTITLE "Yazılımınızı Kişiselleştirin"
     IDS_OWNERSUBTITLE "Kur, ReactOS'u kişiselleştirmek için kendiniz üzerine bu bilgiyi kullanır."
-    IDS_COMPUTERTITLE "Bilgisayar Adı ve Yönetici Parolası"
-    IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Parolası sağlamalısınız."
+    IDS_COMPUTERTITLE "Bilgisayar Adı ve Yönetici Şifresi"
+    IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Şifresi sağlamalısınız."
     IDS_LOCALETITLE "Yerel Ayarlar"
     IDS_LOCALESUBTITLE "Ayrı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
     IDS_DATETIMETITLE "Tarih ve Saat"
