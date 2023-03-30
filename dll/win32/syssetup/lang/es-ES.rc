@@ -11,7 +11,7 @@ BEGIN
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -30,9 +30,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "No&mbre:", IDC_STATIC, 83, 37, 44, 8, SS_RIGHT
+    LTEXT "No&mbre:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organización:", IDC_STATIC, 83, 57, 44, 8,  SS_RIGHT
+    LTEXT "&Organización:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -42,16 +42,16 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre tiene que ser único.", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "Nombre del &equipo:", IDC_STATIC, 53, 38, 75, 8, SS_RIGHT
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre tiene que ser único.", IDC_STATIC, 54, 7, 241, 24
+    LTEXT "Nombre del &equipo:", IDC_STATIC, 54, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrador. Puede utilizar este perfil si necesita acceso completo a su equipo.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Escriba una contraseña para este perfil de 127 caracteres o menos.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Contraseña de &Administrador:", IDC_STATIC, 25, 104, 104, 8, SS_RIGHT
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Repita la contraseña:", IDC_STATIC, 54, 123, 75, 8, SS_RIGHT
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrador. Puede utilizar este perfil si necesita acceso completo a su equipo.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Escriba una contraseña para este perfil de 127 caracteres o menos.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Contraseña de &Administrador:", IDC_STATIC, 54, 104, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 156, 101, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Repita la contraseña:", IDC_STATIC, 54, 123, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 156, 120, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -61,11 +61,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
-    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -142,7 +140,7 @@ BEGIN
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Wheel Detection:", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Input buffer length:", -1, 27, 75, 90, 8
+    RTEXT "&Buffer de entrada:", -1, 27, 75, 90, 8
     LTEXT "packets", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14

@@ -12,7 +12,7 @@ BEGIN
     LTEXT "Нажмите ""Далее"" для продолжения установки.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -43,16 +43,16 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введите имя вашего компьютера (не более 15 символов). Если ваш компьютер подключен к сети, то его имя должно быть уникально.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Введите имя вашего компьютера (не более 15 символов). Если ваш компьютер подключен к сети, то его имя должно быть уникально.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "При установке будет создан профиль пользователя с именем Administrator. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Введите пароль администратора (не более 127 символов).", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "П&овторите пароль:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "При установке будет создан профиль пользователя с именем Administrator. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Введите пароль администратора (не более 127 символов).", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "П&овторите пароль:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -62,11 +62,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Язык системы устанавливается и действует во всех приложениях. Можно выбрать систему исчисления, формат чисел и даты.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Для изменения языка системы нажмите ""Настроить"".", IDC_STATIC, 53, 60, 197, 8
     PUSHBUTTON "&Настроить...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
     LTEXT "Выбрав раскладку вы сможете вводить символы на вашем языке.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Для изменения раскладки нажмите ""Настроить"".", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Н&астроить...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
