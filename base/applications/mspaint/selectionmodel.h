@@ -28,7 +28,6 @@ class SelectionModel
 private:
     HDC m_hDC;
     RECT m_rcSrc;
-    RECT m_rcDest;
     HBITMAP m_hBm;
     HBITMAP m_hMask;
     POINT *m_ptStack;
@@ -39,6 +38,10 @@ private:
     void NotifyRefreshNeeded();
 
 public:
+    BOOL m_bShow;
+    BOOL m_bMoved;
+    RECT m_rcDest;
+
     SelectionModel();
     ~SelectionModel();
     void ResetPtStack();

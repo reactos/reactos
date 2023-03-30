@@ -43,7 +43,6 @@
 #include "palette.h"
 #include "palettemodel.h"
 #include "registry.h"
-#include "selection.h"
 #include "selectionmodel.h"
 #include "sizebox.h"
 #include "canvas.h"

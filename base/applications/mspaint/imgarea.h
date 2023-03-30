@@ -13,11 +13,13 @@
 class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE) { }
+    CImgAreaWindow() : drawing(FALSE), m_rgbBack(RGB(255, 255, 255)) { }
 
     BOOL drawing;
+    COLORREF m_rgbBack;
     void cancelDrawing();
     void finishDrawing();
+    void ForceRefreshSelectionContents();
 
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 

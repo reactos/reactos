@@ -20,7 +20,6 @@ list(APPEND SOURCE
     palette.cpp
     palettemodel.cpp
     registry.cpp
-    selection.cpp
     selectionmodel.cpp
     sizebox.cpp
     textedit.cpp

@@ -64,7 +64,7 @@ void ImageModel::Undo(BOOL bClearRedo)
     {
         int oldWidth = GetWidth();
         int oldHeight = GetHeight();
-        selectionWindow.ShowWindow(SW_HIDE);
+        selectionModel.m_bShow = FALSE;
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
@@ -85,7 +85,7 @@ void ImageModel::Redo()
     {
         int oldWidth = GetWidth();
         int oldHeight = GetHeight();
-        selectionWindow.ShowWindow(SW_HIDE);
+        selectionModel.m_bShow = FALSE;
         currInd = (currInd + 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
@@ -292,13 +292,13 @@ void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
 
 void ImageModel::DeleteSelection()
 {
-    if (selectionWindow.IsWindowVisible())
+    if (selectionModel.m_bShow)
         ResetToPrevious();
     CopyPrevious();
-    if (selectionWindow.IsWindowVisible())
+    if (selectionModel.m_bShow)
         Undo(TRUE);
     DrawSelectionBackground(paletteModel.GetBgColor());
-    selectionWindow.ShowWindow(SW_HIDE);
+    selectionModel.m_bShow = FALSE;
     NotifyImageChanged();
 }
 

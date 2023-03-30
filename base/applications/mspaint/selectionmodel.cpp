@@ -19,6 +19,8 @@ SelectionModel::SelectionModel()
     , m_hMask(NULL)
     , m_ptStack(NULL)
     , m_iPtSP(0)
+    , m_bShow(FALSE)
+    , m_bMoved(FALSE)
 {
     SetRectEmpty(&m_rcSrc);
     SetRectEmpty(&m_rcDest);
@@ -220,8 +222,8 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
         hbm = Rotate90DegreeBlt(m_hDC, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), iN == 1);
         InsertFromHBITMAP(hbm, m_rcDest.left, m_rcDest.top);
         DeleteObject(hbm);
-        selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
-        selectionWindow.ForceRefreshSelectionContents();
+        selectionModel.m_bShow = TRUE;
+        imageArea.ForceRefreshSelectionContents();
         placeSelWin();
         break;
     case 2:
@@ -273,8 +275,8 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
         DeleteObject(hbm2);
     }
 
-    selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
-    selectionWindow.ForceRefreshSelectionContents();
+    selectionModel.m_bShow = TRUE;
+    imageArea.ForceRefreshSelectionContents();
     placeSelWin();
     NotifyRefreshNeeded();
 }
@@ -395,7 +397,7 @@ LONG SelectionModel::GetDestRectTop() const
 
 void SelectionModel::NotifyRefreshNeeded()
 {
-    selectionWindow.SendMessage(WM_SELECTIONMODELREFRESHNEEDED);
+    imageArea.SendMessage(WM_SELECTIONMODELREFRESHNEEDED);
 }
 
 void SelectionModel::GetRect(LPRECT prc) const

@@ -111,9 +111,13 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         }
         DeleteObject(SelectObject(hdc, oldPen));
     }
+    if (selectionModel.m_bShow)
+    {
+        RECT rc = selectionModel.m_rcDest;
+        drawSizeBoxes(hdc, &rc, TRUE, &ps.rcPaint);
+        selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+    }
     EndPaint(&ps);
-    if (selectionWindow.IsWindow())
-        selectionWindow.Invalidate(FALSE);
     if (miniature.IsWindow())
         miniature.Invalidate(FALSE);
     if (textEditWindow.IsWindow())
@@ -226,7 +230,7 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
+            if (drawing || ToolBase::pointSP != 0 || selectionModel.m_bShow)
                 cancelDrawing();
         }
     }
@@ -384,4 +388,14 @@ void CImgAreaWindow::finishDrawing()
     toolsModel.OnFinishDraw();
     drawing = FALSE;
     Invalidate(FALSE);
+}
+
+void CImgAreaWindow::ForceRefreshSelectionContents()
+{
+    if (!selectionModel.m_bShow)
+        return;
+
+    imageModel.ResetToPrevious();
+    imageModel.DrawSelectionBackground(m_rgbBack);
+    selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
 }

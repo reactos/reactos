@@ -25,8 +25,7 @@ placeSelWin()
     rc.right = rc.left + Zoomed(selectionModel.GetDestRectWidth());
     rc.bottom = rc.top + Zoomed(selectionModel.GetDestRectHeight());
     ::InflateRect(&rc, GRIP_SIZE, GRIP_SIZE);
-    selectionWindow.MoveWindow(rc.left, rc.top, rc.Width(), rc.Height(), TRUE);
-    selectionWindow.BringWindowToTop();
+    selectionModel.m_rcDest = rc;
     imageArea.InvalidateRect(NULL, FALSE);
 }
 
@@ -82,8 +81,7 @@ void ToolBase::reset()
     pointSP = 0;
     start.x = start.y = last.x = last.y = -1;
     selectionModel.ResetPtStack();
-    if (selectionWindow.IsWindow())
-        selectionWindow.ShowWindow(SW_HIDE);
+    selectionModel.m_bShow = FALSE;
 }
 
 void ToolBase::OnCancelDraw()
@@ -124,7 +122,7 @@ struct FreeSelTool : ToolBase
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
-            selectionWindow.ShowWindow(SW_HIDE);
+            selectionModel.m_bShow = FALSE;
             selectionModel.ResetPtStack();
             selectionModel.PushToPtStack(x, y);
         }
@@ -152,15 +150,15 @@ struct FreeSelTool : ToolBase
             {
                 selectionModel.CalculateBoundingBoxAndContents(m_hdc);
                 placeSelWin();
-                selectionWindow.IsMoved(FALSE);
-                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+                selectionModel.m_bMoved = FALSE;
+                selectionModel.m_bShow = TRUE;
             }
             else
             {
                 imageModel.Undo(TRUE);
-                selectionWindow.IsMoved(FALSE);
+                selectionModel.m_bMoved = FALSE;
                 selectionModel.ResetPtStack();
-                selectionWindow.ShowWindow(SW_HIDE);
+                selectionModel.m_bShow = FALSE;
             }
         }
     }
@@ -169,8 +167,8 @@ struct FreeSelTool : ToolBase
     {
         if (m_bLeftButton)
         {
-            selectionWindow.IsMoved(FALSE);
-            selectionWindow.ForceRefreshSelectionContents();
+            selectionModel.m_bMoved = FALSE;
+            imageArea.ForceRefreshSelectionContents();
         }
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
@@ -181,7 +179,7 @@ struct FreeSelTool : ToolBase
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
         m_bLeftButton = FALSE;
-        selectionWindow.IsMoved(FALSE);
+        selectionModel.m_bMoved = FALSE;
         ToolBase::OnCancelDraw();
     }
 };
@@ -200,7 +198,7 @@ struct RectSelTool : ToolBase
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
-            selectionWindow.ShowWindow(SW_HIDE);
+            selectionModel.m_bShow = FALSE;
             selectionModel.SetSrcRectSizeToZero();
         }
         m_bLeftButton = bLeftButton;
@@ -227,11 +225,11 @@ struct RectSelTool : ToolBase
                 imageModel.Undo(TRUE);
             selectionModel.CalculateContents(m_hdc);
             placeSelWin();
-            selectionWindow.IsMoved(FALSE);
+            selectionModel.m_bMoved = FALSE;
             if (selectionModel.IsSrcRectSizeNonzero())
-                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+                selectionModel.m_bShow = TRUE;
             else
-                selectionWindow.ShowWindow(SW_HIDE);
+                selectionModel.m_bShow = FALSE;
         }
     }
 
@@ -239,8 +237,8 @@ struct RectSelTool : ToolBase
     {
         if (m_bLeftButton)
         {
-            selectionWindow.IsMoved(FALSE);
-            selectionWindow.ForceRefreshSelectionContents();
+            selectionModel.m_bMoved = FALSE;
+            imageArea.ForceRefreshSelectionContents();
         }
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
@@ -251,7 +249,7 @@ struct RectSelTool : ToolBase
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
         m_bLeftButton = FALSE;
-        selectionWindow.IsMoved(FALSE);
+        selectionModel.m_bMoved = FALSE;
         ToolBase::OnCancelDraw();
     }
 };
@@ -514,7 +512,7 @@ struct TextTool : ToolBase
     {
         toolsModel.OnButtonDown(TRUE, -1, -1, TRUE);
         toolsModel.OnButtonUp(TRUE, -1, -1);
-        selectionWindow.IsMoved(FALSE);
+        selectionModel.m_bMoved = FALSE;
         ToolBase::OnFinishDraw();
     }
 };
