@@ -264,7 +264,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     case 1:
     case 3:
         DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1);
+        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
         currInd = (currInd + 1) % HISTORYSIZE;
         if (undoSteps < HISTORYSIZE - 1)
             undoSteps++;
@@ -279,26 +279,6 @@ void ImageModel::RotateNTimes90Degrees(int iN)
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
         break;
     }
-    NotifyImageChanged();
-}
-
-void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
-{
-    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-        selectionModel.DrawBackgroundPoly(hDrawingDC, rgbBG);
-    else
-        selectionModel.DrawBackgroundRect(hDrawingDC, rgbBG);
-}
-
-void ImageModel::DeleteSelection()
-{
-    if (selectionModel.m_bShow)
-        ResetToPrevious();
-    CopyPrevious();
-    if (selectionModel.m_bShow)
-        Undo(TRUE);
-    DrawSelectionBackground(paletteModel.GetBgColor());
-    selectionModel.m_bShow = FALSE;
     NotifyImageChanged();
 }
 

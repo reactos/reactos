@@ -142,7 +142,7 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
     m_transpBg = bTransparent;
     NotifyToolSettingsChanged();
     if (imageArea.IsWindow())
-        imageArea.ForceRefreshSelectionContents();
+        imageArea.Invalidate(FALSE);
 }
 
 int ToolsModel::GetZoom() const
@@ -172,8 +172,6 @@ void ToolsModel::NotifyToolSettingsChanged()
 {
     if (toolSettingsWindow.IsWindow())
         toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
-    if (imageArea.IsWindow())
-        imageArea.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }

@@ -182,11 +182,9 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
     imageModel.CopyPrevious();
-    selectionModel.InsertFromHBITMAP(bitmap);
-
-    placeSelWin();
+    selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
-    imageArea.ForceRefreshSelectionContents();
+    imageArea.Invalidate(FALSE);
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -660,7 +658,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    imageModel.DeleteSelection();
+                    selectionModel.CancelSelection();
                     break;
 
                 case TOOL_TEXT:

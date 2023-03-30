@@ -34,7 +34,7 @@ void RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);
 
 void Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style);
 
-extern BOOL
-ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
-                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
-                  DWORD dwRop, COLORREF keyColor);
+BOOL
+ColorKeyedMaskBlt(HDC hdcDest, INT nXDest, INT nYDest, INT nWidth, INT nHeight,
+                  HDC hdcSrc, INT nXSrc, INT nYSrc, INT nSrcWidth, INT nSrcHeight,
+                  HBITMAP hbmMask, COLORREF keyColor);

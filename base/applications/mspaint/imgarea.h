@@ -13,13 +13,21 @@
 class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE), m_rgbBack(RGB(255, 255, 255)) { }
+    CImgAreaWindow()
+        : drawing(FALSE)
+        , m_hitSelection(HIT_NONE)
+    {
+    }
 
     BOOL drawing;
-    COLORREF m_rgbBack;
+    CANVAS_HITTEST m_hitSelection;
+
     void cancelDrawing();
     void finishDrawing();
-    void ForceRefreshSelectionContents();
+    void Zoomed(POINT& pt);
+    void Zoomed(RECT& rc);
+    void UnZoomed(POINT& pt);
+    void UnZoomed(RECT& rc);
 
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
@@ -73,4 +81,8 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
+    CANVAS_HITTEST SelectionHitTest(POINT pt);
+    void StartSelectionDrag(CANVAS_HITTEST hit, POINT pt);
+    void SelectionDragging(POINT pt);
+    void EndSelectionDrag(POINT pt);
 };
