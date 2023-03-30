@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * TRANSLATORS: Copyright 2004 Filip Navara
+ *              Copyright 2004 Eric Kohl
  */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
@@ -29,7 +16,7 @@ BEGIN
     LTEXT "Klikoni Tjetër për të vazhduar me Ndërtimin.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ndërto ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -60,16 +47,16 @@ CAPTION "Ndërto ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Shkruani një emër për kompjuterin tuaj që është 15 karaktere ose më pak. Nëse ju jeni në një rrjet, emri kompjuterit tuaj duhet të jetë unik.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Shkruani një emër për kompjuterin tuaj që është 15 karaktere ose më pak. Nëse ju jeni në një rrjet, emri kompjuterit tuaj duhet të jetë unik.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "Emri &Kompjuterit:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Ndërtuesi do të krijojë një llogari përdoruesi në kompjuterin tuaj të quajtur Administrator. Ju mund të përdorni këtë llogari në qoftë se keni nevojë për akses të plotë në kompjuterin tuaj.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Shkruani një fjalëkalim Administratori që është 127 karaktere ose më pak.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Fjalëkalimi &Administratorit:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "K&onfirmo Fjalëkalimin:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Ndërtuesi do të krijojë një llogari përdoruesi në kompjuterin tuaj të quajtur Administrator. Ju mund të përdorni këtë llogari në qoftë se keni nevojë për akses të plotë në kompjuterin tuaj.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Shkruani një fjalëkalim Administratori që është 127 karaktere ose më pak.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Fjalëkalimi &Administratorit:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "K&onfirmo Fjalëkalimin:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -79,11 +66,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Sistemi vendorë duhet të përputhet me gjuhën e aplikacioneve që dëshironi të përdorni. Përdoruesi vendorë kontrollon se si duket numrat, monedhat, dhe datat.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Për të ndryshuar parametrat e sistemit ose përdoruesit vendorë, kliko Ndrysho.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Ndrysho...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "Paraqitja Tastierës kontrollon karakteret që shfaqen kur ju shkruani.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Për të ndryshuar paraqitje tastieres, kliko Ndrysho.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Ndrysho...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -107,8 +92,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -193,7 +178,7 @@ BEGIN
     IDS_WZD_NAME "Ndërtimi nuk mund të vazhdojë deri sa të shkruani emrin tuaj."
     IDS_WZD_SETCOMPUTERNAME "Ndërtuesi dështoj për të vendosur emrin e kompjuterit."
     IDS_WZD_COMPUTERNAME "Ndërtuesi nuk mund të vazhdojë deri sa të shkruani emrin e kompjuterit tuaj."
-    IDS_WZD_PASSWORDEMPTY "Ju duhet të fusni një fjalëkalim !"
+    IDS_WZD_PASSWORDEMPTY "Ju duhet të fusni një fjalëkalim!"
     IDS_WZD_PASSWORDMATCH "Fjalëkalimet që shkruat nuk përputhet. Ju lutem shkruani fjalëkalimin e dëshiruar përsëri."
     IDS_WZD_PASSWORDCHAR "Fjalëkalimi që dhatë përmban shenja të pavlefshme. Ju lutemi shkruani një fjalëkalim të qartë."
     IDS_WZD_LOCALTIME "Ndërtuesi nuk ishte në gjendje për të vendosur kohën lokale."

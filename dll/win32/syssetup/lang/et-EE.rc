@@ -7,10 +7,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tere tulemast ReactOSi paigaldusprogrammi.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Selle programmi abil paigaldatakse ReactOS arvutisse. Selleks peab esmalt koguma natuke andmeid sinu ja su arvuti kohta.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Vajuta Järgmine, et jätkata paigaldamist.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -41,16 +41,16 @@ CAPTION "ReactOSi paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Anna oma arvutile nimi. See ei tohi olla pikem kui 15 tähemärki. Võrgus peab arvuti nimi olema unikaalne.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Anna oma arvutile nimi. See ei tohi olla pikem kui 15 tähemärki. Võrgus peab arvuti nimi olema unikaalne.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Arvuti nimi:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Arvuti täielikuks haldamiseks luuakse administraatori konto (Administrator). ", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Sisesta administraatori parool, mille pikkus on maksimaalselt 127 tähemärki.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "A&dministraatori parool:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Kinnita parool:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Arvuti täielikuks haldamiseks luuakse administraatori konto (Administrator).", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Sisestage administraatori parool, mis on kuni 127 tähemärki.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "A&dministraatori parool:", IDC_STATIC, 54, 104, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Kinnita parool:", IDC_STATIC, 54, 123, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -60,11 +60,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Süsteemi lokaat peaks olema ühtiv nende programmide keelega, mida soovid kasutada. Kasutaja lokaat määrab, kuidas näidatakse numbreid, valuutat ja kuupäeva.", IDC_STATIC, 53, 7, 253, 22
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Süsteemi või kasutaja lokaadi muutmiseks vajuta Täpsusta.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Tä&psusta...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "Klaviatuuriasetus määrab tähemärgid, mis klaviatuuril kirjutades ilmuvad.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klaviatuuriasetuse muutmiseks vajuta Täp&susta.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Täp&susta...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -88,8 +86,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -144,7 +142,7 @@ BEGIN
     IDS_DATETIMESUBTITLE "Sisesta õige kellaaeg ja kuupäev."
     IDS_PROCESSTITLE "Komponentide registreerimine"
     IDS_PROCESSSUBTITLE "Palun oota..."
-    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_THEMESELECTIONTITLE "Välimus"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 

@@ -1,7 +1,6 @@
 /*
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-04-21
- * THANKS TO:  Filip Navara and Kamil Hornicek, who translated major part of this file
+ * TRANSLATORS: Copyright 2008-2014 Radek Liska aka Black_Fox <radekliska@gmail.com>
+ *              Copyright 2014-2017 Kamil Hornicek <kamil.hornicek@reactos.org>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -16,7 +15,7 @@ BEGIN
     LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 115, 160, 189, 31
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -24,7 +23,7 @@ BEGIN
     LTEXT "Vývojáři systému ReactOS by rádi zmínili následující Open Source projekty. Tyto projekty (nebo jejich části) byly použity při vývoji systému ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS je licencován pod GPL. Pokud chcete systém (nebo jeho části) použít nebo redistribuovat, musíte respektovat GPL.", IDC_STATIC, 15, 110, 227, 19
-    PUSHBUTTON "&Zobrazit GPL...", IDC_VIEWGPL, 251, 110, 50, 19
+    PUSHBUTTON "&Zobrazit GPL...", IDC_VIEWGPL, 246, 110, 55, 19
     LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 15, 136, 195, 17
 END
 
@@ -47,16 +46,16 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napište jméno Vašeho počítače o délce 15 znaků nebo méně. Pokud je počítač připojen k síti, musí být jeho jméno unikátní.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Napište jméno Vašeho počítače o délce 15 znaků nebo méně. Pokud je počítač připojen k síti, musí být jeho jméno unikátní.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Jméno počítače:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Instalátor vytvoří uživatelský účet nazvaný Administrator. Můžete tento účet použít, pokud budete potřebovat úplný přístup k Vašemu počítači.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadejte heslo účtu Administrator o délce 127 znaků nebo méně.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Instalátor vytvoří uživatelský účet nazvaný Administrator. Můžete tento účet použít, pokud budete potřebovat úplný přístup k Vašemu počítači.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Zadejte heslo účtu Administrator o délce 127 znaků nebo méně.", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potvrdit heslo:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -66,11 +65,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí, jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Rozložení kláves určí znaky, které se zobrazí, když píšete.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pro změnu rozložení kláves, klikněte na Změnit.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&měnit...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -94,8 +91,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
