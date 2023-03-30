@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Type your full name and the name of your company or organization.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&me:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organization:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&Organisasi:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -41,37 +41,35 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Type a name for your computer that is 15 characters or less. If you are on a network, your computer name must be unique.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Ketikkan nama komputer anda maksimal 15 karakter. Jika anda berada dalam jaringan, nama komputer anda haruslah unik.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Type an Administrator Password that is 127 characters or less.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Ketikkan Kata Sandi Administrator maksimal 127.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Setup ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokal sistem harus sama bahasa dari aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol bagaimana angka, kurs, dan tampilan tanggal.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Untuk mengubah sistem atau setelan lokal pengguna, klik Kustomisasi.", IDC_STATIC, 53, 60, 184, 8
-    PUSHBUTTON "&Kustomisasi...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "Bahasa sistem lokal harus sama dengan aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol tampilan angka, kurs, dan tanggal.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Untuk mengubah setelan lokal sistem atau pengguna, klik Sesuaikan.", IDC_STATIC, 53, 60, 184, 8
+    PUSHBUTTON "&Sesuaikan...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Tata letak keyboard mengontrol karakter yang muncul ketika anda ketik.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Untuk mengubah tata letak keyboard, klik Kustomisasi.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "K&ustomisasi...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    LTEXT "Untuk mengubah tata letak keyboard, klik Sesuaikan.", IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "S&esuaikan...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Setup ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -88,13 +86,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Setup ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -108,7 +106,7 @@ CAPTION "Menyelesaikan Setup ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Menyelesaikan Bimbingan Setup ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda telah sukses menyelesaikan Setup ReactOS.\n\nSaat anda mengklik Selesai, komputer anda akan dimulai lagi.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Anda telah menyelesaikan Penyetelan ReactOS.\n\nSaat anda mengklik Selesai, komputer anda akan dimulai ulang.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Jika ada CD di dalam drive, keluarkan. Lalu, untuk memulai lagi komputer anda, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -139,19 +137,19 @@ BEGIN
     IDS_OWNERSUBTITLE "Setup menggunakan informasi ini mengenai diri anda untuk mempersonalisasi ReactOS."
     IDS_COMPUTERTITLE "Nama Komputer dan Kata sandi Administrator"
     IDS_COMPUTERSUBTITLE "Anda harus menyediakan nama dan Kata sandi Administrator untuk komputer anda."
-    IDS_LOCALETITLE "Setelan Regional"
-    IDS_LOCALESUBTITLE "Anda bisa mengkustomisasi ReactOS untuk regional dan bahasa berbeda."
+    IDS_LOCALETITLE "Setelan Daerah"
+    IDS_LOCALESUBTITLE "Anda bisa menyesuaikan ReactOS untuk daerah dan bahasa berbeda."
     IDS_DATETIMETITLE "Tanggal dan Jam"
     IDS_DATETIMESUBTITLE "Setel tanggal dan jam yang benar untuk komputer anda."
     IDS_PROCESSTITLE "Judul halaman proses"
     IDS_PROCESSSUBTITLE "Subjudul halaman proses"
-    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_THEMESELECTIONTITLE "Tampilan"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Setup ReactOS"
+    IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_UNKNOWN_ERROR "Kesalahan tidak dikenal"
     IDS_REGISTERING_COMPONENTS "Meregister komponen..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary gagal: "
@@ -175,8 +173,8 @@ BEGIN
     IDS_WZD_NAME "Setup cannot continue until you enter your name."
     IDS_WZD_SETCOMPUTERNAME "Setup failed to set the computer name."
     IDS_WZD_COMPUTERNAME "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY "You must enter a password !"
-    IDS_WZD_PASSWORDMATCH "The passwords you entered do not match. Please enter the desired password again."
+    IDS_WZD_PASSWORDEMPTY "Masukkan kata sandi!"
+    IDS_WZD_PASSWORDMATCH "Kata sandi yang anda masukkan tidak sama. Masukkan lagi kata sandi yang sesuai."
     IDS_WZD_PASSWORDCHAR "The password you entered contains invalid characters. Please enter a cleaned password."
     IDS_WZD_LOCALTIME "Setup was unable to set the local time."
 END

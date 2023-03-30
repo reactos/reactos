@@ -1,7 +1,5 @@
-/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.: 09-02-2008
- * LAST CHANGE: 15-12-2009
- * THANKS TO  : Filip Navara and Kamil Hornicek and all good people ;-)
+/*
+ * TRANSLATORS: Copyright 2008-2009 Mário Kačmár aka Kario <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -16,7 +14,7 @@ BEGIN
     LTEXT "Kliknutím na Ďalej pokračujte v inštalácii.", IDC_STATIC, 115, 160, 189, 31
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -47,16 +45,16 @@ CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Názov počítača:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potvrdiť heslo:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -66,11 +64,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizácia systému by mala súhlasiť s jazykom aplikácií, ktoré chcete používať. Lokalizácia určí ako budú zobrazené čísla, meny a údaje kalendára.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<text lokality>", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokalizácie systému kliknite na Zmeniť.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeniť...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Rozloženie kláves určí znaky, ktoré sa zobrazia, keď píšete.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<text rozloženia>", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pre zmenu rozloženia kláves, kliknite na Zmeniť.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&meniť...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -94,8 +90,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
