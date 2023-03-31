@@ -15,13 +15,10 @@
 #define CX_TOOLBAR          (TOOLBAR_COLUMNS * CXY_TB_BUTTON)
 #define CY_TOOLBAR          (TOOLBAR_ROWS * CXY_TB_BUTTON)
 
-class CPaintToolBar : public CWindowImpl<CPaintToolBar>
+class CPaintToolBar : public CWindow
 {
 public:
     BOOL DoCreate(HWND hwndParent);
-
-    BEGIN_MSG_MAP(CPaintToolBar)
-    END_MSG_MAP()
 };
 
 class CToolBox : public CWindowImpl<CToolBox>

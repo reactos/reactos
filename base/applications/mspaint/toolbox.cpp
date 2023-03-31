@@ -16,38 +16,32 @@ CToolBox toolBoxContainer;
 BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 {
     /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
-    RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};
+    RECT toolbarPos = { 0, 0, CX_TOOLBAR, CY_TOOLBAR };
     DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
                   TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
     if (!CWindow::Create(TOOLBARCLASSNAME, hwndParent, toolbarPos, NULL, style))
-        return 0;
-
-#undef SubclassWindow // Don't use this macro
-    HWND hWnd = m_hWnd;
-    m_hWnd = NULL;
-    SubclassWindow(hWnd);
+        return FALSE;
 
     HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM) hImageList);
-    HBITMAP tempBm = (HBITMAP) LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
-    ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
-    DeleteObject(tempBm);
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)hImageList);
+
+    HBITMAP hbmIcons = (HBITMAP)::LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS),
+                                            IMAGE_BITMAP, 256, 16, 0);
+    ImageList_AddMasked(hImageList, hbmIcons, RGB(255, 0, 255));
+    ::DeleteObject(hbmIcons);
+
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    TCHAR tooltips[NUM_TOOLS][30];
+    TCHAR szToolTip[30];
+    TBBUTTON tbbutton;
     for (INT i = 0; i < NUM_TOOLS; i++)
     {
-        TBBUTTON tbbutton;
-        int wrapnow = 0;
+        LoadString(hProgInstance, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
 
-        if (i % 2 == 1)
-            wrapnow = TBSTATE_WRAP;
-
-        LoadString(hProgInstance, IDS_TOOLTIP1 + i, tooltips[i], 30);
         ZeroMemory(&tbbutton, sizeof(TBBUTTON));
-        tbbutton.iString   = (INT_PTR) tooltips[i];
+        tbbutton.iString   = (INT_PTR)szToolTip;
         tbbutton.fsStyle   = TBSTYLE_CHECKGROUP;
-        tbbutton.fsState   = TBSTATE_ENABLED | wrapnow;
+        tbbutton.fsState   = TBSTATE_ENABLED | ((i % 2 == 1) ? TBSTATE_WRAP : 0);
         tbbutton.idCommand = ID_FREESEL + i;
         tbbutton.iBitmap   = i;
         SendMessage(TB_ADDBUTTONS, 1, (LPARAM) &tbbutton);
@@ -61,7 +55,7 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
 BOOL CToolBox::DoCreate(HWND hwndParent)
 {
-    RECT toolBoxContainerPos = { 0, 0, 0, 0 };
+    RECT toolBoxContainerPos = { 0, 0, 0, 0 }; // Rely on mainWindow's WM_SIZE
     DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
     return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
 }
@@ -70,7 +64,6 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 {
     toolbar.DoCreate(m_hWnd);
     toolSettingsWindow.DoCreate(m_hWnd);
-
     return 0;
 }
 
