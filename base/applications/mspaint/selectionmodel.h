@@ -46,7 +46,7 @@ public:
     // operation
     void FlipHorizontally();
     void FlipVertically();
-    void RotateNTimes90Degrees(INT n);
+    void RotateNTimes90Degrees(int iN);
     void StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT nSkewDegX, INT nSkewDegY);
 
     void CancelSelection();

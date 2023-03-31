@@ -304,13 +304,13 @@ void SelectionModel::FlipVertically()
     NotifyRefreshNeeded();
 }
 
-void SelectionModel::RotateNTimes90Degrees(INT n)
+void SelectionModel::RotateNTimes90Degrees(int iN)
 {
     HBITMAP hbm;
     HGDIOBJ hbmOld;
     HDC hdcMem = ::CreateCompatibleDC(NULL);
 
-    switch (n)
+    switch (iN)
     {
         case 1:
         case 3:
@@ -318,7 +318,7 @@ void SelectionModel::RotateNTimes90Degrees(INT n)
             if (m_hbmColor)
             {
                 hbmOld = ::SelectObject(hdcMem, m_hbmColor);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), n == 1, FALSE);
+                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, FALSE);
                 ::SelectObject(hdcMem, hbmOld);
                 ::DeleteObject(m_hbmColor);
                 m_hbmColor = hbm;
@@ -326,7 +326,7 @@ void SelectionModel::RotateNTimes90Degrees(INT n)
             if (m_hbmMask)
             {
                 hbmOld = ::SelectObject(hdcMem, m_hbmMask);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), n == 1, TRUE);
+                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, TRUE);
                 ::SelectObject(hdcMem, hbmOld);
                 ::DeleteObject(m_hbmMask);
                 m_hbmMask = hbm;
