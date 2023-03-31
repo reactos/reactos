@@ -171,12 +171,12 @@ BOOL SelectionModel::TakeOff()
 
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
     {
-        selectionModel.DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
+        DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
     }
     else
     {
         ClearMask();
-        selectionModel.DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
+        DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
     }
 
     imageArea.Invalidate(FALSE);
@@ -345,7 +345,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
 
     ::DeleteDC(hDC);
 
-    selectionModel.m_bShow = TRUE;
+    m_bShow = TRUE;
     NotifyRefreshNeeded();
 }
 
@@ -447,6 +447,6 @@ void SelectionModel::CancelSelection()
     if (m_bShow)
         imageModel.Undo(TRUE);
 
-    selectionModel.m_bShow = FALSE;
+    m_bShow = FALSE;
     imageArea.Invalidate(FALSE);
 }
