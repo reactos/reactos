@@ -34,13 +34,12 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
     TCHAR szToolTip[30];
     TBBUTTON tbbutton;
+    ZeroMemory(&tbbutton, sizeof(TBBUTTON));
+    tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
     for (INT i = 0; i < NUM_TOOLS; i++)
     {
-        LoadString(hProgInstance, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
-
-        ZeroMemory(&tbbutton, sizeof(TBBUTTON));
+        ::LoadString(hProgInstance, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
         tbbutton.iString   = (INT_PTR)szToolTip;
-        tbbutton.fsStyle   = TBSTYLE_CHECKGROUP;
         tbbutton.fsState   = TBSTATE_ENABLED | ((i % 2 == 1) ? TBSTATE_WRAP : 0);
         tbbutton.idCommand = ID_FREESEL + i;
         tbbutton.iBitmap   = i;
