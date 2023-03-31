@@ -3,7 +3,7 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for PrivateExtractIcons
  * PROGRAMMER:      Hermes Belusca-Maito
- *                  Doug Lyons (douglyons@douglyons.com)
+ *                  Doug Lyons <douglyons@douglyons.com>
  */
 
 #include "precomp.h"
