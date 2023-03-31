@@ -172,25 +172,25 @@ CANVAS_HITTEST CImgAreaWindow::SelectionHitTest(POINT ptZoomed)
     return getSizeBoxHitTest(ptZoomed, &rcSelection);
 }
 
-void CImgAreaWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT pt)
+void CImgAreaWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed)
 {
     m_hitSelection = hit;
-    selectionModel.m_ptHit = pt;
+    selectionModel.m_ptHit = ptUnZoomed;
     selectionModel.TakeOff();
 
     SetCapture();
     Invalidate(FALSE);
 }
 
-void CImgAreaWindow::SelectionDragging(POINT pt)
+void CImgAreaWindow::SelectionDragging(POINT ptUnZoomed)
 {
-    selectionModel.Dragging(m_hitSelection, pt);
+    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
     Invalidate(FALSE);
 }
 
-void CImgAreaWindow::EndSelectionDrag(POINT pt)
+void CImgAreaWindow::EndSelectionDrag(POINT ptUnZoomed)
 {
-    selectionModel.Dragging(m_hitSelection, pt);
+    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
     m_hitSelection = HIT_NONE;
     Invalidate(FALSE);
 }

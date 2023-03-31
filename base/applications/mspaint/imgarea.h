@@ -82,7 +82,7 @@ private:
 
     void drawZoomFrame(int mouseX, int mouseY);
     CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
-    void StartSelectionDrag(CANVAS_HITTEST hit, POINT ptZoomed);
-    void SelectionDragging(POINT pt);
-    void EndSelectionDrag(POINT pt);
+    void StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
+    void SelectionDragging(POINT ptUnZoomed);
+    void EndSelectionDrag(POINT ptUnZoomed);
 };
