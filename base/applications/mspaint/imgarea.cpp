@@ -24,34 +24,6 @@ LRESULT CImgAreaWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     return 0;
 }
 
-void CImgAreaWindow::Zoomed(POINT& pt)
-{
-    pt.x = ::Zoomed(pt.x);
-    pt.y = ::Zoomed(pt.y);
-}
-
-void CImgAreaWindow::Zoomed(RECT& rc)
-{
-    rc.left = ::Zoomed(rc.left);
-    rc.top = ::Zoomed(rc.top);
-    rc.right = ::Zoomed(rc.right);
-    rc.bottom = ::Zoomed(rc.bottom);
-}
-
-void CImgAreaWindow::UnZoomed(POINT& pt)
-{
-    pt.x = ::UnZoomed(pt.x);
-    pt.y = ::UnZoomed(pt.y);
-}
-
-void CImgAreaWindow::UnZoomed(RECT& rc)
-{
-    rc.left = ::UnZoomed(rc.left);
-    rc.top = ::UnZoomed(rc.top);
-    rc.right = ::UnZoomed(rc.right);
-    rc.bottom = ::UnZoomed(rc.bottom);
-}
-
 void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 {
     HDC hdc;

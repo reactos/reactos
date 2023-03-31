@@ -24,10 +24,6 @@ public:
 
     void cancelDrawing();
     void finishDrawing();
-    void Zoomed(POINT& pt);
-    void Zoomed(RECT& rc);
-    void UnZoomed(POINT& pt);
-    void UnZoomed(RECT& rc);
 
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
