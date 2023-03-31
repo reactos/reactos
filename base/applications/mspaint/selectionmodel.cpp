@@ -444,4 +444,5 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
             OffsetRect(&m_rc, pt.x - m_ptHit.x, pt.y - m_ptHit.y);
             break;
     }
+    m_ptHit = pt;
 }

@@ -183,14 +183,12 @@ void CImgAreaWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT pt)
 void CImgAreaWindow::SelectionDragging(POINT pt)
 {
     selectionModel.Dragging(m_hitSelection, pt);
-    selectionModel.m_ptHit = pt;
     Invalidate(FALSE);
 }
 
 void CImgAreaWindow::EndSelectionDrag(POINT pt)
 {
     selectionModel.Dragging(m_hitSelection, pt);
-    selectionModel.m_ptHit = pt;
     m_hitSelection = HIT_NONE;
     Invalidate(FALSE);
 }
