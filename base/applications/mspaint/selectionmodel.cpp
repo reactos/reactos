@@ -135,6 +135,25 @@ void SelectionModel::ClearColor()
     }
 }
 
+void SelectionModel::DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg, BOOL bBgTransparent)
+{
+    CRect rc = *prc;
+    if (::IsRectEmpty(&rc))
+        return;
+
+    BITMAP bm;
+    GetObject(m_hbmColor, sizeof(BITMAP), &bm);
+
+    COLORREF keyColor = (bBgTransparent ? crBg : CLR_INVALID);
+
+    HDC hMemDC = CreateCompatibleDC(hDCImage);
+    HGDIOBJ hbmOld = SelectObject(hMemDC, m_hbmColor);
+    ColorKeyedMaskBlt(hDCImage, rc.left, rc.top, rc.Width(), rc.Height(),
+                      hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, m_hbmMask, keyColor);
+    SelectObject(hMemDC, hbmOld);
+    DeleteDC(hMemDC);
+}
+
 void SelectionModel::GetSelectionContents(HDC hDCImage)
 {
     ClearColor();
@@ -226,25 +245,6 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hbm, INT x, INT y)
 void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
 {
     Rect(hDCImage, m_rc.left, m_rc.top, m_rc.right, m_rc.bottom, crBg, crBg, 0, 1);
-}
-
-void SelectionModel::DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg, BOOL bBgTransparent)
-{
-    CRect rc = *prc;
-    if (::IsRectEmpty(&rc))
-        return;
-
-    BITMAP bm;
-    GetObject(m_hbmColor, sizeof(BITMAP), &bm);
-
-    COLORREF keyColor = (bBgTransparent ? crBg : CLR_INVALID);
-
-    HDC hMemDC = CreateCompatibleDC(hDCImage);
-    HGDIOBJ hbmOld = SelectObject(hMemDC, m_hbmColor);
-    ColorKeyedMaskBlt(hDCImage, rc.left, rc.top, rc.Width(), rc.Height(),
-                      hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, m_hbmMask, keyColor);
-    SelectObject(hMemDC, hbmOld);
-    DeleteDC(hMemDC);
 }
 
 void SelectionModel::CancelSelection()
