@@ -43,7 +43,6 @@ public:
 
 private:
     CPaintToolBar toolbar;
-    POINT m_ptScreen;
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

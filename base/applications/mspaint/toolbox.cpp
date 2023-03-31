@@ -141,7 +141,6 @@ LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lPara
 
 LRESULT CToolBox::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ::GetCursorPos(&m_ptScreen);
     SetCapture();
     return 0;
 }
@@ -168,7 +167,6 @@ LRESULT CToolBox::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     {
         registrySettings.Bar1Flags = dwExpected;
         mainWindow.PostMessage(WM_SIZE, 0, 0);
-        m_ptScreen.x = m_ptScreen.y = MAXSHORT;
     }
 
     return 0;
@@ -180,23 +178,5 @@ LRESULT CToolBox::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
         return 0;
 
     ::ReleaseCapture();
-
-    POINT pt;
-    ::GetCursorPos(&pt);
-    if (labs(pt.x - m_ptScreen.x) <= ::GetSystemMetrics(SM_CXDRAG) &&
-        labs(pt.y - m_ptScreen.y) <= ::GetSystemMetrics(SM_CYDRAG))
-    {
-        ScreenToClient(&pt);
-        HWND hwndChild = ::ChildWindowFromPoint(m_hWnd, pt);
-        if (hwndChild == toolbar)
-        {
-            toolbar.SetFocus();
-            ClientToScreen(&pt);
-            toolbar.ScreenToClient(&pt);
-            INT iItem = (INT)toolbar.SendMessage(TB_HITTEST, 0, MAKELPARAM(pt.x, pt.y));
-            toolbar.SendMessage(TB_PRESSBUTTON, iItem, TRUE);
-        }
-    }
-
     return 0;
 }
