@@ -289,33 +289,13 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
 }
 
 BOOL
-ColorKeyedMaskBlt(HDC hdcDest, INT nXDest, INT nYDest, INT nWidth, INT nHeight,
-                  HDC hdcSrc, INT nXSrc, INT nYSrc, INT nSrcWidth, INT nSrcHeight,
+ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
+                  HDC hdcSrc, int nXSrc, int nYSrc, int nSrcWidth, int nSrcHeight,
                   HBITMAP hbmMask, COLORREF keyColor)
 {
     HDC hTempDC1, hTempDC2;
     HBITMAP hbmTempColor, hbmTempMask, hbmTemp;
     HGDIOBJ hbmOld1, hbmOld2;
-
-    if (hbmMask == NULL)
-    {
-        if (keyColor == CLR_INVALID)
-        {
-            return StretchBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
-                              hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
-        }
-        else
-        {
-            return GdiTransparentBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
-                                     hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
-        }
-    }
-
-    if (nWidth == nSrcWidth && nHeight == nSrcHeight && keyColor == CLR_INVALID)
-    {
-        return MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
-                       hdcSrc, nXSrc, nYSrc, hbmMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
-    }
 
     hTempDC1 = CreateCompatibleDC(hdcDest);
     hTempDC2 = CreateCompatibleDC(hdcDest);

@@ -109,17 +109,17 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
 
-    /* We use a memory bitmap to reduce flickering */
+    // We use a memory bitmap to reduce flickering
     HDC hdcMem = ::CreateCompatibleDC(hdc);
     HBITMAP hbm = ::CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
     HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbm);
 
-    /* Draw the image */
+    // Draw the image
     SIZE size = { imageModel.GetWidth(), imageModel.GetHeight() };
     StretchBlt(hdcMem, 0, 0, ::Zoomed(size.cx), ::Zoomed(size.cy),
                imageModel.GetDC(), 0, 0, size.cx, size.cy, SRCCOPY);
 
-    /* Draw the grid */
+    // Draw the grid
     if (showGrid && (toolsModel.GetZoom() >= 4000))
     {
         HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
@@ -136,7 +136,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         ::DeleteObject(::SelectObject(hdcMem, oldPen));
     }
 
-    /* Draw selection */
+    // Draw selection
     if (selectionModel.m_bShow)
     {
         RECT rc = selectionModel.m_rc;
@@ -148,7 +148,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
                                      toolsModel.IsBackgroundTransparent());
     }
 
-    /* Transfer bits */
+    // Transfer bits
     ::BitBlt(hdc, 0, 0, rcClient.right, rcClient.bottom, hdcMem, 0, 0, SRCCOPY);
     ::SelectObject(hdcMem, hbmOld);
     EndPaint(&ps);
