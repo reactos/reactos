@@ -19,8 +19,8 @@ private:
 
 public:
     BOOL m_bShow;
-    CRect m_rc; // in image pixel coordinates
-    POINT m_ptHit;
+    CRect m_rc;    // in image pixel coordinates
+    POINT m_ptHit; // in image pixel coordinates
 
     SelectionModel();
     ~SelectionModel();

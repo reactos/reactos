@@ -81,8 +81,8 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
-    CANVAS_HITTEST SelectionHitTest(POINT pt);
-    void StartSelectionDrag(CANVAS_HITTEST hit, POINT pt);
+    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
+    void StartSelectionDrag(CANVAS_HITTEST hit, POINT ptZoomed);
     void SelectionDragging(POINT pt);
     void EndSelectionDrag(POINT pt);
 };

@@ -160,14 +160,16 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return 0;
 }
 
-CANVAS_HITTEST CImgAreaWindow::SelectionHitTest(POINT pt)
+CANVAS_HITTEST CImgAreaWindow::SelectionHitTest(POINT ptZoomed)
 {
     if (!selectionModel.m_bShow)
         return HIT_NONE;
 
     RECT rcSelection = selectionModel.m_rc;
-    ::InflateRect(&rcSelection, ::UnZoomed(GRIP_SIZE), ::UnZoomed(GRIP_SIZE));
-    return getSizeBoxHitTest(pt, &rcSelection);
+    Zoomed(rcSelection);
+    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
+
+    return getSizeBoxHitTest(ptZoomed, &rcSelection);
 }
 
 void CImgAreaWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT pt)
@@ -198,7 +200,6 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     POINT pt;
     ::GetCursorPos(&pt);
     ScreenToClient(&pt);
-    UnZoomed(pt);
 
     CANVAS_HITTEST hit = SelectionHitTest(pt);
     if (hit != HIT_NONE)
@@ -207,6 +208,8 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
         return 0;
     }
+
+    UnZoomed(pt);
 
     switch (toolsModel.GetActiveTool())
     {
@@ -234,15 +237,16 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    UnZoomed(pt);
 
     CANVAS_HITTEST hit = SelectionHitTest(pt);
     if (hit != HIT_NONE)
     {
+        UnZoomed(pt);
         StartSelectionDrag(hit, pt);
         return 0;
     }
 
+    UnZoomed(pt);
     drawing = TRUE;
     SetCapture();
     toolsModel.OnButtonDown(TRUE, pt.x, pt.y, FALSE);
