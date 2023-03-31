@@ -112,24 +112,6 @@ void SelectionModel::BuildMaskFromPtStack()
     ::DeleteDC(hdcMem);
 }
 
-void SelectionModel::ClearMask()
-{
-    if (m_hbmMask)
-    {
-        ::DeleteObject(m_hbmMask);
-        m_hbmMask = NULL;
-    }
-}
-
-void SelectionModel::ClearColor()
-{
-    if (m_hbmColor)
-    {
-        ::DeleteObject(m_hbmColor);
-        m_hbmColor = NULL;
-    }
-}
-
 void SelectionModel::DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg, BOOL bBgTransparent)
 {
     CRect rc = *prc;
@@ -449,4 +431,22 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
 void SelectionModel::NotifyRefreshNeeded()
 {
     imageArea.Invalidate(FALSE);
+}
+
+void SelectionModel::ClearMask()
+{
+    if (m_hbmMask)
+    {
+        ::DeleteObject(m_hbmMask);
+        m_hbmMask = NULL;
+    }
+}
+
+void SelectionModel::ClearColor()
+{
+    if (m_hbmColor)
+    {
+        ::DeleteObject(m_hbmColor);
+        m_hbmColor = NULL;
+    }
 }
