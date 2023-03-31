@@ -34,7 +34,7 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
     TCHAR szToolTip[30];
     TBBUTTON tbbutton;
-    ZeroMemory(&tbbutton, sizeof(TBBUTTON));
+    ZeroMemory(&tbbutton, sizeof(tbbutton));
     tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
     for (INT i = 0; i < NUM_TOOLS; i++)
     {
