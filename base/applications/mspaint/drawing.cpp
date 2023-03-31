@@ -294,7 +294,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
                   HBITMAP hbmMask, COLORREF keyColor)
 {
     HDC hTempDC1, hTempDC2;
-    HBITMAP hbmTempColor, hbmTempMask, hbmTemp;
+    HBITMAP hbmTempColor, hbmTempMask;
     HGDIOBJ hbmOld1, hbmOld2;
 
     if (hbmMask == NULL)
@@ -322,7 +322,6 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     hTempDC2 = ::CreateCompatibleDC(hdcDest);
     hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
     hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
-    hbmTemp = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
 
     // hbmTempMask <-- hbmMask (stretched)
     hbmOld1 = ::SelectObject(hTempDC1, hbmMask);
@@ -344,26 +343,21 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     }
     else
     {
-        hbmOld2 = ::SelectObject(hTempDC2, hbmTemp);
+        // hbmTempColor <-- hdcDest
+        ::BitBlt(hTempDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
 
-        // hbmTemp <-- hdcDest
-        ::BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
-
-        // hbmTemp <-- hdcSrc (color key)
-        ::GdiTransparentBlt(hTempDC2, 0, 0, nWidth, nHeight,
+        // hbmTempColor <-- hdcSrc (color key)
+        ::GdiTransparentBlt(hTempDC1, 0, 0, nWidth, nHeight,
                             hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
 
-        // hdcDest <-- hbmTemp (masked)
-        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC2, 0, 0,
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
                   hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
-
-        ::SelectObject(hTempDC2, hbmOld2);
     }
     ::SelectObject(hTempDC1, hbmOld1);
 
     ::DeleteObject(hbmTempColor);
     ::DeleteObject(hbmTempMask);
-    ::DeleteObject(hbmTemp);
     ::DeleteDC(hTempDC2);
     ::DeleteDC(hTempDC1);
 
