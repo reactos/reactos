@@ -159,6 +159,15 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     ::BitBlt(hMemDC, 0, 0, m_rc.Width(), m_rc.Height(), hDCImage, m_rc.left, m_rc.top, SRCCOPY);
     ::SelectObject(hMemDC, hbmOld);
     ::DeleteDC(hMemDC);
+}
+
+BOOL SelectionModel::TakeOff()
+{
+    if (m_hbmColor || ::IsRectEmpty(&m_rc))
+        return FALSE;
+
+    HDC hDCImage = imageModel.GetDC();
+    GetSelectionContents(hDCImage);
 
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
     {
@@ -171,15 +180,6 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     }
 
     imageArea.Invalidate(FALSE);
-}
-
-BOOL SelectionModel::TakeOff()
-{
-    if (m_hbmColor || ::IsRectEmpty(&m_rc))
-        return FALSE;
-
-    GetSelectionContents(imageModel.GetDC());
-
     return TRUE;
 }
 
