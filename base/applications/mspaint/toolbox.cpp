@@ -54,9 +54,9 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
 BOOL CToolBox::DoCreate(HWND hwndParent)
 {
-    RECT toolBoxContainerPos = { 0, 0, 0, 0 }; // Rely on mainWindow's WM_SIZE
+    RECT rcToolBox = { 0, 0, 0, 0 }; // Rely on mainWindow's WM_SIZE
     DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
-    return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
+    return !!Create(hwndParent, rcToolBox, NULL, style);
 }
 
 LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
