@@ -1129,55 +1129,66 @@ InitImageList(UINT StartResource,
  * Returns 0 in case of failure.
  **/
 static
-ULONG
+DWORD
 GetSoundDuration(LPCWSTR pFileName)
 {
-    DWORD dwSize, dwError;
-    LPWSTR pszCmd;
-    WCHAR Buffer[32];
+    MCI_OPEN_PARMSW openParms;
+    MCI_GENERIC_PARMS closeParms;
+    MCI_SET_PARMS setParms;
+    MCI_STATUS_PARMS statusParms;
+    MCIERROR mciError;
 
-    dwSize = (wcslen(pFileName) + 38 + 1) * sizeof(WCHAR);
-    pszCmd = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (!pszCmd)
+    ZeroMemory(&openParms, sizeof(openParms));
+    openParms.lpstrDeviceType = L"waveaudio";
+    openParms.lpstrElementName = pFileName;
+
+    mciError = mciSendCommandW(0,
+                               MCI_OPEN,
+                               MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT,
+                               (DWORD_PTR)&openParms);
+    if (mciError != 0)
         return 0;
 
-    StringCbPrintfW(pszCmd, dwSize, L"open \"%s\" type waveaudio alias SoundFile", pFileName);
+    ZeroMemory(&setParms, sizeof(setParms));
+    setParms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
 
-    dwError = mciSendStringW(pszCmd, NULL, 0, NULL);
-    if (dwError != 0)
+    mciError = mciSendCommandW(openParms.wDeviceID,
+                               MCI_SET,
+                               MCI_SET_TIME_FORMAT | MCI_WAIT,
+                               (DWORD_PTR)&setParms);
+    if (mciError == 0)
     {
-        HeapFree(GetProcessHeap(), 0, pszCmd);
-        return 0;
+        ZeroMemory(&statusParms, sizeof(statusParms));
+        statusParms.dwItem = MCI_STATUS_LENGTH;
+
+        mciError = mciSendCommandW(openParms.wDeviceID,
+                                   MCI_STATUS,
+                                   MCI_STATUS_ITEM | MCI_WAIT,
+                                   (DWORD_PTR)&statusParms);
     }
 
-    dwError = mciSendStringW(L"set SoundFile time format milliseconds", NULL, 0, NULL);
-    if (dwError == 0)
-    {
-        dwError = mciSendStringW(L"status SoundFile length", Buffer, _countof(Buffer), NULL);
-    }
+    closeParms.dwCallback = 0;
+    mciSendCommandW(openParms.wDeviceID, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&closeParms);
 
-    mciSendStringW(L"close SoundFile", NULL, 0, NULL);
-    HeapFree(GetProcessHeap(), 0, pszCmd);
-
-    if (dwError != 0)
+    if (mciError != 0)
         return 0;
 
-    return wcstoul(Buffer, NULL, 10);
+    return statusParms.dwReturn;
 }
 
 static
 BOOL
 StartSoundTest(HWND hwndDlg, LPCWSTR pszSound)
 {
-    ULONG uDuration;
+    DWORD dwDuration;
 
-    uDuration = GetSoundDuration(pszSound);
-    if (uDuration == 0)
+    dwDuration = GetSoundDuration(pszSound);
+    if (dwDuration == 0)
         return FALSE;
 
     if (PlaySoundW(pszSound, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT))
     {
-        SetTimer(hwndDlg, ID_SOUND_TEST_TIMER, uDuration, NULL);
+        SetTimer(hwndDlg, ID_SOUND_TEST_TIMER, dwDuration, NULL);
         return TRUE;
     }
 
