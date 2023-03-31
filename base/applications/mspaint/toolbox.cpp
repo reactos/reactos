@@ -15,7 +15,7 @@ CToolBox toolBoxContainer;
 
 BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 {
-    /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
+    // NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style.
     RECT toolbarPos = { 0, 0, CX_TOOLBAR, CY_TOOLBAR };
     DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
                   TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
