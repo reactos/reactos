@@ -414,6 +414,8 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_PEN:
             break;
     }
+
+    ::SetCapture(::GetParent(m_hWnd));
     return 0;
 }
 

@@ -43,6 +43,7 @@ public:
     DWORD ShowStatusBar;
     DWORD ShowPalette;
     DWORD ShowToolBox;
+    DWORD Bar1Flags;
 
     enum WallpaperStyle {
         TILED,

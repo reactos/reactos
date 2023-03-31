@@ -88,11 +88,22 @@ void CMainWindow::alignChildrenToMainWindow()
 
     if (::IsWindowVisible(toolBoxContainer))
     {
-        hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
-                                rcSpace.left, rcSpace.top,
-                                CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
-                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
-        rcSpace.left += CX_TOOLBAR;
+        if (registrySettings.Bar1Flags & 0x10000)
+        {
+            hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
+                                    rcSpace.right - CX_TOOLBAR, rcSpace.top,
+                                    CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
+                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+            rcSpace.right -= CX_TOOLBAR;
+        }
+        else
+        {
+            hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
+                                    rcSpace.left, rcSpace.top,
+                                    CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
+                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+            rcSpace.left += CX_TOOLBAR;
+        }
     }
 
     if (::IsWindowVisible(paletteWindow))
