@@ -297,56 +297,75 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     HBITMAP hbmTempColor, hbmTempMask, hbmTemp;
     HGDIOBJ hbmOld1, hbmOld2;
 
-    hTempDC1 = CreateCompatibleDC(hdcDest);
-    hTempDC2 = CreateCompatibleDC(hdcDest);
+    if (hbmMask == NULL)
+    {
+        if (keyColor == CLR_INVALID)
+        {
+            ::StretchBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                         hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+        }
+        else
+        {
+            ::GdiTransparentBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                                hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+        }
+        return TRUE;
+    }
+    else if (nWidth == nSrcWidth && nHeight == nSrcHeight && keyColor == CLR_INVALID)
+    {
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                  hdcSrc, nXSrc, nYSrc, hbmMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+        return TRUE;
+    }
+
+    hTempDC1 = ::CreateCompatibleDC(hdcDest);
+    hTempDC2 = ::CreateCompatibleDC(hdcDest);
+    hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
     hbmTemp = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
 
     // hbmTempMask <-- hbmMask (stretched)
-    hbmTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
-    hbmOld1 = SelectObject(hTempDC1, hbmMask);
-    hbmOld2 = SelectObject(hTempDC2, hbmTempMask);
-    StretchBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC1, 0, 0, nSrcWidth, nSrcHeight, SRCCOPY);
-    SelectObject(hTempDC2, hbmOld2);
-    SelectObject(hTempDC1, hbmOld1);
+    hbmOld1 = ::SelectObject(hTempDC1, hbmMask);
+    hbmOld2 = ::SelectObject(hTempDC2, hbmTempMask);
+    ::StretchBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC1, 0, 0, nSrcWidth, nSrcHeight, SRCCOPY);
+    ::SelectObject(hTempDC2, hbmOld2);
+    ::SelectObject(hTempDC1, hbmOld1);
 
-    // hbmTempColor <-- hdcSrc (stretched)
-    hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
     hbmOld1 = SelectObject(hTempDC1, hbmTempColor);
-    StretchBlt(hTempDC1, 0, 0, nWidth, nHeight, hdcSrc, 0, 0, nSrcWidth, nSrcHeight, SRCCOPY);
-    SelectObject(hTempDC1, hbmOld1);
-
-    // hbmTemp <-- hdcDest
-    hbmOld1 = SelectObject(hTempDC1, hbmTemp);
-    BitBlt(hTempDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
-    SelectObject(hTempDC1, hbmOld1);
-
-    // hbmTemp <-- hbmTempColor (masked)
-    hbmOld1 = SelectObject(hTempDC1, hbmTemp);
-    hbmOld2 = SelectObject(hTempDC2, hbmTempColor);
-    MaskBlt(hTempDC1, 0, 0, nWidth, nHeight, hTempDC2, 0, 0,
-            hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
-    SelectObject(hTempDC2, hbmOld2);
-    SelectObject(hTempDC1, hbmOld1);
-
-    // hdcDest <-- hbmTemp (color key)
-    hbmOld1 = SelectObject(hTempDC1, hbmTemp);
     if (keyColor == CLR_INVALID)
     {
-        StretchBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
-                   hTempDC1, 0, 0, nWidth, nHeight, SRCCOPY);
+        // hbmTempColor <-- hdcSrc (stretched)
+        ::StretchBlt(hTempDC1, 0, 0, nWidth, nHeight,
+                     hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
     }
     else
     {
-        GdiTransparentBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
-                          hTempDC1, 0, 0, nWidth, nHeight, keyColor);
-    }
-    SelectObject(hTempDC1, hbmOld1);
+        hbmOld2 = ::SelectObject(hTempDC2, hbmTemp);
 
-    ::DeleteObject(hbmTempMask);
+        // hbmTemp <-- hdcDest
+        ::BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
+
+        // hbmTemp <-- hdcSrc (color key)
+        ::GdiTransparentBlt(hTempDC2, 0, 0, nWidth, nHeight,
+                            hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+
+        // hdcDest <-- hbmTemp (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC2, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+
+        ::SelectObject(hTempDC2, hbmOld2);
+    }
+    ::SelectObject(hTempDC1, hbmOld1);
+
     ::DeleteObject(hbmTempColor);
+    ::DeleteObject(hbmTempMask);
+    ::DeleteObject(hbmTemp);
     ::DeleteDC(hTempDC2);
     ::DeleteDC(hTempDC1);
-    ::DeleteObject(hbmTemp);
 
     return TRUE;
 }

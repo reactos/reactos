@@ -160,15 +160,14 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     ::SelectObject(hMemDC, hbmOld);
     ::DeleteDC(hMemDC);
 
-    COLORREF rgbBG = paletteModel.GetBgColor();
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
     {
-        selectionModel.DrawBackgroundPoly(hDCImage, rgbBG);
+        selectionModel.DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
     }
     else
     {
         ClearMask();
-        selectionModel.DrawBackgroundRect(hDCImage, rgbBG);
+        selectionModel.DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
     }
 
     imageArea.Invalidate(FALSE);
@@ -191,21 +190,22 @@ void SelectionModel::Landing()
 
     DrawSelection(imageModel.GetDC(), &m_rc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
 
-    ClearColor();
     ::SetRectEmpty(&m_rc);
+    ClearMask();
+    ClearColor();
 
     imageModel.CopyPrevious();
 }
 
-void SelectionModel::InsertFromHBITMAP(HBITMAP hbm, INT x, INT y)
+void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
 {
-    m_hbmColor = CopyDIBImage(hbm);
+    m_hbmColor = CopyDIBImage(hBm);
     ::DeleteObject(m_hbmColor);
 
     m_rc.left = x;
     m_rc.top = y;
-    m_rc.right = m_rc.left + GetDIBWidth(hbm);
-    m_rc.bottom = m_rc.top + GetDIBHeight(hbm);
+    m_rc.right = m_rc.left + GetDIBWidth(hBm);
+    m_rc.bottom = m_rc.top + GetDIBHeight(hBm);
 
     ClearMask();
 }
