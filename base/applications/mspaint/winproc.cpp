@@ -658,7 +658,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    selectionModel.CancelSelection();
+                    imageModel.DeleteSelection();
                     break;
 
                 case TOOL_TEXT:

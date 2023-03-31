@@ -331,7 +331,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     ::SelectObject(hTempDC2, hbmOld2);
     ::SelectObject(hTempDC1, hbmOld1);
 
-    hbmOld1 = SelectObject(hTempDC1, hbmTempColor);
+    hbmOld1 = ::SelectObject(hTempDC1, hbmTempColor);
     if (keyColor == CLR_INVALID)
     {
         // hbmTempColor <-- hdcSrc (stretched)

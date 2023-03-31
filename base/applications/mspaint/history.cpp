@@ -282,6 +282,18 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     NotifyImageChanged();
 }
 
+void ImageModel::DeleteSelection()
+{
+    if (!selectionModel.m_bShow)
+        return;
+
+    selectionModel.TakeOff();
+    selectionModel.m_bShow = FALSE;
+    selectionModel.ClearColor();
+    selectionModel.ClearMask();
+    NotifyImageChanged();
+}
+
 void ImageModel::Bound(POINT& pt)
 {
     pt.x = max(0, min(pt.x, GetWidth()));
