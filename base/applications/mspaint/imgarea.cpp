@@ -306,6 +306,9 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 void CImgAreaWindow::cancelDrawing()
 {
+    selectionModel.ClearColor();
+    selectionModel.ClearMask();
+    m_hitSelection = HIT_NONE;
     drawing = FALSE;
     toolsModel.OnCancelDraw();
     Invalidate(FALSE);

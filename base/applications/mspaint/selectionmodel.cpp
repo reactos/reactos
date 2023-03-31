@@ -26,10 +26,8 @@ SelectionModel::SelectionModel()
 
 SelectionModel::~SelectionModel()
 {
-    if (m_hbmColor)
-        ::DeleteObject(m_hbmColor);
-    if (m_hbmMask)
-        ::DeleteObject(m_hbmMask);
+    ClearColor();
+    ClearMask();
     ResetPtStack();
 }
 
@@ -128,13 +126,18 @@ void SelectionModel::ClearMask()
     }
 }
 
-void SelectionModel::GetSelectionContents(HDC hDCImage)
+void SelectionModel::ClearColor()
 {
     if (m_hbmColor)
     {
         ::DeleteObject(m_hbmColor);
         m_hbmColor = NULL;
     }
+}
+
+void SelectionModel::GetSelectionContents(HDC hDCImage)
+{
+    ClearColor();
 
     HDC hMemDC = ::CreateCompatibleDC(NULL);
     m_hbmColor = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
@@ -196,19 +199,13 @@ BOOL SelectionModel::TakeOff()
 
 void SelectionModel::Landing()
 {
-    if (!m_hbmColor || ::IsRectEmpty(&m_rc))
+    if (!m_hbmColor)
         return;
 
-    BITMAP bm;
-    GetObject(m_hbmColor, sizeof(BITMAP), &bm);
+    DrawSelection(imageModel.GetDC(), &m_rc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
 
-    CRect rc = m_rc;
-
-    DrawSelection(imageModel.GetDC(), &rc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-
-    DeleteObject(m_hbmColor);
-    m_hbmColor = NULL;
-    SetRectEmpty(&m_rc);
+    ClearColor();
+    ::SetRectEmpty(&m_rc);
 
     imageModel.CopyPrevious();
 }
@@ -234,6 +231,8 @@ void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
 void SelectionModel::DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg, BOOL bBgTransparent)
 {
     CRect rc = *prc;
+    if (::IsRectEmpty(&rc))
+        return;
 
     BITMAP bm;
     GetObject(m_hbmColor, sizeof(BITMAP), &bm);
@@ -373,7 +372,7 @@ void SelectionModel::StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT
     {
         HBITMAP hbm0 = CopyDIBImage(m_hbmColor, newWidth, newHeight);
         InsertFromHBITMAP(hbm0, m_rc.left, m_rc.top);
-        DeleteObject(hbm0);
+        ::DeleteObject(hbm0);
     }
 
     HDC hDC = ::CreateCompatibleDC(NULL);
@@ -383,7 +382,7 @@ void SelectionModel::StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT
         ::SelectObject(hDC, m_hbmColor);
         HBITMAP hbm1 = SkewDIB(hDC, m_hbmColor, nSkewDegX, FALSE);
         InsertFromHBITMAP(hbm1, m_rc.left, m_rc.top);
-        DeleteObject(hbm1);
+        ::DeleteObject(hbm1);
     }
 
     if (nSkewDegY)
@@ -391,7 +390,7 @@ void SelectionModel::StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT
         ::SelectObject(hDC, m_hbmColor);
         HBITMAP hbm2 = SkewDIB(hDC, m_hbmColor, nSkewDegY, TRUE);
         InsertFromHBITMAP(hbm2, m_rc.left, m_rc.top);
-        DeleteObject(hbm2);
+        ::DeleteObject(hbm2);
     }
 
     ::DeleteDC(hDC);

@@ -53,6 +53,7 @@ public:
     void NotifyRefreshNeeded();
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
+    void ClearColor();
 
 private:
     SelectionModel(const SelectionModel&);
