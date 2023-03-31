@@ -112,6 +112,24 @@ void SelectionModel::BuildMaskFromPtStack()
     ::DeleteDC(hdcMem);
 }
 
+void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
+{
+    ShiftPtStack(TRUE);
+
+    HGDIOBJ hPenOld = ::SelectObject(hDCImage, ::GetStockObject(NULL_PEN));
+    HGDIOBJ hbrOld = ::SelectObject(hDCImage, ::CreateSolidBrush(crBg));
+    ::Polygon(hDCImage, m_ptStack, m_iPtSP);
+    ::DeleteObject(::SelectObject(hDCImage, hbrOld));
+    ::SelectObject(hDCImage, hPenOld);
+
+    ShiftPtStack(FALSE);
+}
+
+void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
+{
+    Rect(hDCImage, m_rc.left, m_rc.top, m_rc.right, m_rc.bottom, crBg, crBg, 0, 1);
+}
+
 void SelectionModel::DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg, BOOL bBgTransparent)
 {
     CRect rc = *prc;
@@ -156,19 +174,6 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     imageArea.Invalidate(FALSE);
 }
 
-void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
-{
-    ShiftPtStack(TRUE);
-
-    HGDIOBJ hPenOld = ::SelectObject(hDCImage, ::GetStockObject(NULL_PEN));
-    HGDIOBJ hbrOld = ::SelectObject(hDCImage, ::CreateSolidBrush(crBg));
-    ::Polygon(hDCImage, m_ptStack, m_iPtSP);
-    ::DeleteObject(::SelectObject(hDCImage, hbrOld));
-    ::SelectObject(hDCImage, hPenOld);
-
-    ShiftPtStack(FALSE);
-}
-
 BOOL SelectionModel::TakeOff()
 {
     if (m_hbmColor || ::IsRectEmpty(&m_rc))
@@ -190,11 +195,6 @@ void SelectionModel::Landing()
     ::SetRectEmpty(&m_rc);
 
     imageModel.CopyPrevious();
-}
-
-void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
-{
-    Rect(hDCImage, m_rc.left, m_rc.top, m_rc.right, m_rc.bottom, crBg, crBg, 0, 1);
 }
 
 void SelectionModel::InsertFromHBITMAP(HBITMAP hbm, INT x, INT y)
