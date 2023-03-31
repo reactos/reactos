@@ -149,15 +149,15 @@ LRESULT CToolBox::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
     POINT ptCenter = { (rc.left + rc.right) / 2, (rc.bottom - rc.top) / 2 };
 
-    DWORD dwExpected;
+    DWORD dwExpectedBar2ID;
     if (pt.x < ptCenter.x)
-        dwExpected = 0x0000e817;
+        dwExpectedBar2ID = BAR2ID_LEFT;
     else
-        dwExpected = 0x0001e817;
+        dwExpectedBar2ID = BAR2ID_RIGHT;
 
-    if (registrySettings.Bar1Flags != dwExpected)
+    if (registrySettings.Bar2ID != dwExpectedBar2ID)
     {
-        registrySettings.Bar1Flags = dwExpected;
+        registrySettings.Bar2ID = dwExpectedBar2ID;
         mainWindow.PostMessage(WM_SIZE, 0, 0);
     }
 

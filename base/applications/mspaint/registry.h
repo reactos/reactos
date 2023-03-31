@@ -43,7 +43,9 @@ public:
     DWORD ShowStatusBar;
     DWORD ShowPalette;
     DWORD ShowToolBox;
-    DWORD Bar1Flags;
+    DWORD Bar2ID;
+#define BAR2ID_LEFT   0x0000e81c
+#define BAR2ID_RIGHT  0x0000e81d
 
     enum WallpaperStyle {
         TILED,

@@ -75,7 +75,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     ShowStatusBar = TRUE;
     ShowPalette = TRUE;
     ShowToolBox = TRUE;
-    Bar1Flags = 0x0000e817;
+    Bar2ID = BAR2ID_LEFT;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -145,7 +145,7 @@ void RegistrySettings::Load(INT nCmdShow)
     CRegKey bar2;
     if (bar2.Open(paint, _T("General-Bar2"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar2, _T("Bar#1"), Bar1Flags);
+        ReadDWORD(bar2, _T("BarID"), Bar2ID);
     }
 
     CRegKey bar3;
@@ -223,7 +223,7 @@ void RegistrySettings::Store()
     CRegKey bar2;
     if (bar2.Create(paint, _T("General-Bar2")) == ERROR_SUCCESS)
     {
-        bar2.SetDWORDValue(_T("Bar#1"), Bar1Flags);
+        bar2.SetDWORDValue(_T("BarID"), Bar2ID);
     }
 
     CRegKey bar3;

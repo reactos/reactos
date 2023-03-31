@@ -88,7 +88,7 @@ void CMainWindow::alignChildrenToMainWindow()
 
     if (::IsWindowVisible(toolBoxContainer))
     {
-        if (registrySettings.Bar1Flags & 0x10000)
+        if (registrySettings.Bar2ID == BAR2ID_RIGHT)
         {
             hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
                                     rcSpace.right - CX_TOOLBAR, rcSpace.top,
