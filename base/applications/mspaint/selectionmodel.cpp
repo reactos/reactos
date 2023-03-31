@@ -57,11 +57,6 @@ void SelectionModel::PushToPtStack(POINT pt)
 #undef GROW_COUNT
 }
 
-INT SelectionModel::PtStackSize() const
-{
-    return m_iPtSP;
-}
-
 void SelectionModel::ShiftPtStack(BOOL bPlus)
 {
     if (bPlus)
@@ -179,12 +174,6 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     imageArea.Invalidate(FALSE);
 }
 
-void SelectionModel::DrawFramePoly(HDC hDCImage)
-{
-    /* draw the freehand selection inverted/xored */
-    Poly(hDCImage, m_ptStack, m_iPtSP, 0, 0, 2, 0, FALSE, TRUE);
-}
-
 void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
 {
     ShiftPtStack(TRUE);
@@ -196,14 +185,6 @@ void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
     ::SelectObject(hDCImage, hPenOld);
 
     ShiftPtStack(FALSE);
-}
-
-void SelectionModel::SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
-{
-    m_rc.left = min(ptFrom.x, ptTo.x);
-    m_rc.top = min(ptFrom.y, ptTo.y);
-    m_rc.right = max(ptFrom.x, ptTo.x);
-    m_rc.bottom = max(ptFrom.y, ptTo.y);
 }
 
 BOOL SelectionModel::TakeOff()
@@ -356,7 +337,7 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     NotifyRefreshNeeded();
 }
 
-void SelectionModel::StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT nSkewDegX, INT nSkewDegY)
+void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
 {
     if (nStretchPercentX == 100 && nStretchPercentY == 100 && nSkewDegX == 0 && nSkewDegY == 0)
         return;
@@ -399,9 +380,28 @@ void SelectionModel::StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT
     NotifyRefreshNeeded();
 }
 
-void SelectionModel::NotifyRefreshNeeded()
+HBITMAP SelectionModel::GetBitmap() const
 {
-    imageArea.Invalidate(FALSE);
+    return m_hbmColor;
+}
+
+INT SelectionModel::PtStackSize() const
+{
+    return m_iPtSP;
+}
+
+void SelectionModel::DrawFramePoly(HDC hDCImage)
+{
+    /* draw the freehand selection inverted/xored */
+    Poly(hDCImage, m_ptStack, m_iPtSP, 0, 0, 2, 0, FALSE, TRUE);
+}
+
+void SelectionModel::SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
+{
+    m_rc.left = min(ptFrom.x, ptTo.x);
+    m_rc.top = min(ptFrom.y, ptTo.y);
+    m_rc.right = max(ptFrom.x, ptTo.x);
+    m_rc.bottom = max(ptFrom.y, ptTo.y);
 }
 
 void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
@@ -444,4 +444,9 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
             break;
     }
     m_ptHit = pt;
+}
+
+void SelectionModel::NotifyRefreshNeeded()
+{
+    imageArea.Invalidate(FALSE);
 }

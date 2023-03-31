@@ -34,7 +34,7 @@ public:
     BOOL TakeOff();
     void Landing();
 
-    HBITMAP GetBitmap() { return m_hbmColor; }
+    HBITMAP GetBitmap() const;
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
@@ -47,7 +47,7 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void StretchSkew(INT nStretchPercentX, INT nStretchPercentY, INT nSkewDegX, INT nSkewDegY);
+    void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
 
     void CancelSelection();
     void NotifyRefreshNeeded();
