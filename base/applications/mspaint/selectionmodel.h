@@ -27,7 +27,7 @@ public:
 
     void ResetPtStack();
     void PushToPtStack(POINT pt);
-    INT PtStackSize() const;
+    int PtStackSize() const;
     void SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
     void BuildMaskFromPtStack();
 

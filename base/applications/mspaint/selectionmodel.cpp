@@ -192,6 +192,11 @@ void SelectionModel::Landing()
     imageModel.CopyPrevious();
 }
 
+void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
+{
+    Rect(hDCImage, m_rc.left, m_rc.top, m_rc.right, m_rc.bottom, crBg, crBg, 0, 1);
+}
+
 void SelectionModel::InsertFromHBITMAP(HBITMAP hbm, INT x, INT y)
 {
     m_hbmColor = CopyDIBImage(hbm);
@@ -203,24 +208,6 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hbm, INT x, INT y)
     m_rc.bottom = m_rc.top + GetDIBHeight(hbm);
 
     ClearMask();
-}
-
-void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
-{
-    Rect(hDCImage, m_rc.left, m_rc.top, m_rc.right, m_rc.bottom, crBg, crBg, 0, 1);
-}
-
-void SelectionModel::CancelSelection()
-{
-    if (!m_bShow)
-        return;
-
-    imageModel.CopyPrevious();
-    if (m_bShow)
-        imageModel.Undo(TRUE);
-
-    selectionModel.m_bShow = FALSE;
-    imageArea.Invalidate(FALSE);
 }
 
 void SelectionModel::FlipHorizontally()
@@ -367,7 +354,7 @@ HBITMAP SelectionModel::GetBitmap() const
     return m_hbmColor;
 }
 
-INT SelectionModel::PtStackSize() const
+int SelectionModel::PtStackSize() const
 {
     return m_iPtSP;
 }
@@ -449,4 +436,17 @@ void SelectionModel::ClearColor()
         ::DeleteObject(m_hbmColor);
         m_hbmColor = NULL;
     }
+}
+
+void SelectionModel::CancelSelection()
+{
+    if (!m_bShow)
+        return;
+
+    imageModel.CopyPrevious();
+    if (m_bShow)
+        imageModel.Undo(TRUE);
+
+    selectionModel.m_bShow = FALSE;
+    imageArea.Invalidate(FALSE);
 }
