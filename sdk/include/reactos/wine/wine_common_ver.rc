@@ -46,8 +46,8 @@
 
 /* Credit the Wine team */
 #define REACTOS_STR_COMPANY_NAME "ReactOS Project/Wine Team\0"
-#define REACTOS_STR_LEGAL_COPYRIGHT "(c) 1996-" COPYRIGHT_YEAR " ReactOS Project, 1993-" COPYRIGHT_YEAR " the Wine project authors\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT "(c) 1993-" COPYRIGHT_YEAR " the Wine project authors"
+#define REACTOS_STR_LEGAL_COPYRIGHT "(C) 1996-" COPYRIGHT_YEAR " ReactOS Project, 1993-" COPYRIGHT_YEAR " the Wine project authors\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT "(C) 1993-" COPYRIGHT_YEAR " the Wine project authors"
 
 #define REACTOS_VERSION_DLL
 
