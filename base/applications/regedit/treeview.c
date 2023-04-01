@@ -643,7 +643,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             /* Get the parent of the current item */
             HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
 
-            UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
+            UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL, TRUE);
 
             /* Disable the Permissions menu item for 'My Computer' */
             EnableMenuItem(hMenuFrame, ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
@@ -722,7 +722,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                         lResult = FALSE;
                     }
                     else
-                        UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
+                        UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer, FALSE);
                 }
                 *Result = lResult;
             }
