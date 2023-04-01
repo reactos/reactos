@@ -3670,17 +3670,23 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
             return STATUS_SUCCESS;
         }
 
-        /* FIXME: We should likely flush only when last mapping is deleted */
-        ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
-        while (ViewSize > 0)
+        /*
+         * Flush only when last mapping is deleted.
+         * FIXME: Why Vad->ControlArea == NULL?
+         */
+        if (Vad->ControlArea == NULL || Vad->ControlArea->NumberOfMappedViews == 1)
         {
-            ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
-            MmFlushSegment(FileObject->SectionObjectPointer,
-                           &ViewOffset,
-                           FlushSize,
-                           NULL);
-            ViewSize -= FlushSize;
-            ViewOffset.QuadPart += FlushSize;
+            ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
+            while (ViewSize > 0)
+            {
+                ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
+                MmFlushSegment(FileObject->SectionObjectPointer,
+                               &ViewOffset,
+                               FlushSize,
+                               NULL);
+                ViewSize -= FlushSize;
+                ViewOffset.QuadPart += FlushSize;
+            }
         }
 
         FsRtlReleaseFile(FileObject);
