@@ -1110,7 +1110,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
                                     0,
                                     NULL,
                                     &ViewSize,
-                                    0,
+                                    ViewUnmap,
                                     MEM_COMMIT,
                                     PAGE_READWRITE);
 
