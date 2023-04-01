@@ -13,3 +13,6 @@ freeldr:
 
 ROSTESTS:
   - modules/rostests/**
+
+Win32SS:
+  - win32ss/**

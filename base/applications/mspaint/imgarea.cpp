@@ -8,26 +8,20 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+CImgAreaWindow imageArea;
 
 /* FUNCTIONS ********************************************************/
 
-void
-updateCanvasAndScrollbars()
+LRESULT CImgAreaWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    selectionWindow.ShowWindow(SW_HIDE);
-
-    int zoomedWidth = Zoomed(imageModel.GetWidth());
-    int zoomedHeight = Zoomed(imageModel.GetHeight());
-    imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, zoomedWidth, zoomedHeight, FALSE);
-
-    scrollboxWindow.Invalidate(TRUE);
-    imageArea.Invalidate(FALSE);
-
-    scrollboxWindow.SetScrollPos(SB_HORZ, 0, TRUE);
-    scrollboxWindow.SetScrollPos(SB_VERT, 0, TRUE);
+    m_hCurFill     = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_FILL));
+    m_hCurColor    = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_COLOR));
+    m_hCurZoom     = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_ZOOM));
+    m_hCurPen      = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_PEN));
+    m_hCurAirbrush = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
+    return 0;
 }
 
 void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
@@ -38,10 +32,10 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
     LOGBRUSH logbrush;
     int rop;
 
-    RECT clientRectScrollbox;
+    RECT clientRectCanvas;
     RECT clientRectImageArea;
     int x, y, w, h;
-    scrollboxWindow.GetClientRect(&clientRectScrollbox);
+    canvasWindow.GetClientRect(&clientRectCanvas);
     GetClientRect(&clientRectImageArea);
     w = clientRectImageArea.right * 2;
     h = clientRectImageArea.bottom * 2;
@@ -49,8 +43,8 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
     {
         return;
     }
-    w = clientRectImageArea.right * clientRectScrollbox.right / w;
-    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / h;
+    w = clientRectImageArea.right * clientRectCanvas.right / w;
+    h = clientRectImageArea.bottom * clientRectCanvas.bottom / h;
     x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2));
     y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2));
 
@@ -68,85 +62,69 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 
 LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!IsWindow() || !sizeboxLeftTop.IsWindow())
+    if (!IsWindow())
         return 0;
-    int imgXRes = imageModel.GetWidth();
-    int imgYRes = imageModel.GetHeight();
-    sizeboxLeftTop.MoveWindow(
-               0,
-               0, GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxCenterTop.MoveWindow(
-               GRIP_SIZE + (Zoomed(imgXRes) - GRIP_SIZE) / 2,
-               0, GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxRightTop.MoveWindow(
-               GRIP_SIZE + Zoomed(imgXRes),
-               0, GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxLeftCenter.MoveWindow(
-               0,
-               GRIP_SIZE + (Zoomed(imgYRes) - GRIP_SIZE) / 2,
-               GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxRightCenter.MoveWindow(
-               GRIP_SIZE + Zoomed(imgXRes),
-               GRIP_SIZE + (Zoomed(imgYRes) - GRIP_SIZE) / 2,
-               GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxLeftBottom.MoveWindow(
-               0,
-               GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxCenterBottom.MoveWindow(
-               GRIP_SIZE + (Zoomed(imgXRes) - GRIP_SIZE) / 2,
-               GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
-    sizeboxRightBottom.MoveWindow(
-               GRIP_SIZE + Zoomed(imgXRes),
-               GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
-    UpdateScrollbox();
+    canvasWindow.Update(NULL);
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HDC hdc = (HDC)wParam;
-
-    if (toolsModel.GetActiveTool() == TOOL_TEXT && !toolsModel.IsBackgroundTransparent() &&
-        ::IsWindowVisible(textEditWindow))
-    {
-        // Do clipping
-        HWND hChild = textEditWindow;
-        RECT rcChild;
-        ::GetWindowRect(hChild, &rcChild);
-        ::MapWindowPoints(NULL, m_hWnd, (LPPOINT)&rcChild, 2);
-        ExcludeClipRect(hdc, rcChild.left, rcChild.top, rcChild.right, rcChild.bottom);
-    }
-
-    return DefWindowProc(nMsg, wParam, lParam);
+    return TRUE; // Don't fill background
 }
 
 LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    RECT rcClient;
+    GetClientRect(&rcClient);
+
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
-    int imgXRes = imageModel.GetWidth();
-    int imgYRes = imageModel.GetHeight();
-    StretchBlt(hdc, 0, 0, Zoomed(imgXRes), Zoomed(imgYRes), imageModel.GetDC(), 0, 0, imgXRes,
-               imgYRes, SRCCOPY);
+
+    // We use a memory bitmap to reduce flickering
+    HDC hdcMem = ::CreateCompatibleDC(hdc);
+    HBITMAP hbm = ::CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbm);
+
+    // Draw the image
+    SIZE size = { imageModel.GetWidth(), imageModel.GetHeight() };
+    StretchBlt(hdcMem, 0, 0, ::Zoomed(size.cx), ::Zoomed(size.cy),
+               imageModel.GetDC(), 0, 0, size.cx, size.cy, SRCCOPY);
+
+    // Draw the grid
     if (showGrid && (toolsModel.GetZoom() >= 4000))
     {
-        HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
-        int counter;
-        for(counter = 0; counter <= imgYRes; counter++)
+        HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
+        for (int counter = 0; counter <= size.cy; counter++)
         {
-            MoveToEx(hdc, 0, Zoomed(counter), NULL);
-            LineTo(hdc, Zoomed(imgXRes), Zoomed(counter));
+            ::MoveToEx(hdcMem, 0, ::Zoomed(counter), NULL);
+            ::LineTo(hdcMem, ::Zoomed(size.cx), ::Zoomed(counter));
         }
-        for(counter = 0; counter <= imgXRes; counter++)
+        for (int counter = 0; counter <= size.cx; counter++)
         {
-            MoveToEx(hdc, Zoomed(counter), 0, NULL);
-            LineTo(hdc, Zoomed(counter), Zoomed(imgYRes));
+            ::MoveToEx(hdcMem, ::Zoomed(counter), 0, NULL);
+            ::LineTo(hdcMem, ::Zoomed(counter), ::Zoomed(size.cy));
         }
-        DeleteObject(SelectObject(hdc, oldPen));
+        ::DeleteObject(::SelectObject(hdcMem, oldPen));
     }
+
+    // Draw selection
+    if (selectionModel.m_bShow)
+    {
+        RECT rc = selectionModel.m_rc;
+        Zoomed(rc);
+        ::InflateRect(&rc, GRIP_SIZE, GRIP_SIZE);
+        drawSizeBoxes(hdcMem, &rc, TRUE, &ps.rcPaint);
+        ::InflateRect(&rc, -GRIP_SIZE, -GRIP_SIZE);
+        selectionModel.DrawSelection(hdcMem, &rc, paletteModel.GetBgColor(),
+                                     toolsModel.IsBackgroundTransparent());
+    }
+
+    // Transfer bits
+    ::BitBlt(hdc, 0, 0, rcClient.right, rcClient.bottom, hdcMem, 0, 0, SRCCOPY);
+    ::SelectObject(hdcMem, hbmOld);
     EndPaint(&ps);
-    if (selectionWindow.IsWindow())
-        selectionWindow.Invalidate(FALSE);
+
     if (miniature.IsWindow())
         miniature.Invalidate(FALSE);
     if (textEditWindow.IsWindow())
@@ -154,47 +132,107 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return 0;
 }
 
+CANVAS_HITTEST CImgAreaWindow::SelectionHitTest(POINT ptZoomed)
+{
+    if (!selectionModel.m_bShow)
+        return HIT_NONE;
+
+    RECT rcSelection = selectionModel.m_rc;
+    Zoomed(rcSelection);
+    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
+
+    return getSizeBoxHitTest(ptZoomed, &rcSelection);
+}
+
+void CImgAreaWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed)
+{
+    m_hitSelection = hit;
+    selectionModel.m_ptHit = ptUnZoomed;
+    selectionModel.TakeOff();
+
+    SetCapture();
+    Invalidate(FALSE);
+}
+
+void CImgAreaWindow::SelectionDragging(POINT ptUnZoomed)
+{
+    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
+    Invalidate(FALSE);
+}
+
+void CImgAreaWindow::EndSelectionDrag(POINT ptUnZoomed)
+{
+    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
+    m_hitSelection = HIT_NONE;
+    Invalidate(FALSE);
+}
+
 LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt;
+    ::GetCursorPos(&pt);
+    ScreenToClient(&pt);
+
+    CANVAS_HITTEST hit = SelectionHitTest(pt);
+    if (hit != HIT_NONE)
+    {
+        if (!setCursorOnSizeBox(hit))
+            ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
+        return 0;
+    }
+
+    UnZoomed(pt);
+
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FILL:
-            SetCursor(hCurFill);
+            ::SetCursor(m_hCurFill);
             break;
         case TOOL_COLOR:
-            SetCursor(hCurColor);
+            ::SetCursor(m_hCurColor);
             break;
         case TOOL_ZOOM:
-            SetCursor(hCurZoom);
+            ::SetCursor(m_hCurZoom);
             break;
         case TOOL_PEN:
-            SetCursor(hCurPen);
+            ::SetCursor(m_hCurPen);
             break;
         case TOOL_AIRBRUSH:
-            SetCursor(hCurAirbrush);
+            ::SetCursor(m_hCurAirbrush);
             break;
         default:
-            SetCursor(LoadCursor(NULL, IDC_CROSS));
+            ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
     }
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+    CANVAS_HITTEST hit = SelectionHitTest(pt);
+    if (hit != HIT_NONE)
+    {
+        UnZoomed(pt);
+        StartSelectionDrag(hit, pt);
+        return 0;
+    }
+
+    UnZoomed(pt);
     drawing = TRUE;
     SetCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), FALSE);
+    toolsModel.OnButtonDown(TRUE, pt.x, pt.y, FALSE);
     Invalidate(FALSE);
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
     drawing = FALSE;
     ReleaseCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.OnButtonDown(TRUE, pt.x, pt.y, TRUE);
     toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
@@ -202,20 +240,22 @@ LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
     drawing = TRUE;
     SetCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
+    toolsModel.OnButtonDown(FALSE, pt.x, pt.y, FALSE);
     Invalidate(FALSE);
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
     drawing = FALSE;
     ReleaseCapture();
-    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.OnButtonDown(FALSE, pt.x, pt.y, TRUE);
     toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
@@ -223,13 +263,18 @@ LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
     if (drawing)
     {
         drawing = FALSE;
-        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-        toolsModel.OnButtonUp(TRUE, UnZoomed(x), UnZoomed(y));
+        toolsModel.OnButtonUp(TRUE, pt.x, pt.y);
         Invalidate(FALSE);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
+    }
+    else if (m_hitSelection != HIT_NONE)
+    {
+        EndSelectionDrag(pt);
     }
     ReleaseCapture();
     return 0;
@@ -237,6 +282,9 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 void CImgAreaWindow::cancelDrawing()
 {
+    selectionModel.ClearColor();
+    selectionModel.ClearMask();
+    m_hitSelection = HIT_NONE;
     drawing = FALSE;
     toolsModel.OnCancelDraw();
     Invalidate(FALSE);
@@ -259,7 +307,7 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
+            if (drawing || ToolBase::pointSP != 0 || selectionModel.m_bShow)
                 cancelDrawing();
         }
     }
@@ -268,13 +316,18 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
     if (drawing)
     {
         drawing = FALSE;
-        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-        toolsModel.OnButtonUp(FALSE, UnZoomed(x), UnZoomed(y));
+        toolsModel.OnButtonUp(FALSE, pt.x, pt.y);
         Invalidate(FALSE);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
+    }
+    else if (m_hitSelection != HIT_NONE)
+    {
+        EndSelectionDrag(pt);
     }
     ReleaseCapture();
     return 0;
@@ -282,8 +335,15 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    LONG xNow = UnZoomed(GET_X_LPARAM(lParam));
-    LONG yNow = UnZoomed(GET_Y_LPARAM(lParam));
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    UnZoomed(pt);
+
+    if (m_hitSelection != HIT_NONE)
+    {
+        SelectionDragging(pt);
+        return 0;
+    }
+
     if ((!drawing) || (toolsModel.GetActiveTool() <= TOOL_AIRBRUSH))
     {
         TRACKMOUSEEVENT tme;
@@ -304,26 +364,26 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         if (!drawing)
         {
             CString strCoord;
-            strCoord.Format(_T("%ld, %ld"), xNow, yNow);
+            strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
             SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
         }
     }
     if (drawing)
     {
         /* values displayed in statusbar */
-        LONG xRel = xNow - start.x;
-        LONG yRel = yNow - start.y;
+        LONG xRel = pt.x - start.x;
+        LONG yRel = pt.y - start.y;
         /* freesel, rectsel and text tools always show numbers limited to fit into image area */
         if ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_TEXT))
         {
             if (xRel < 0)
-                xRel = (xNow < 0) ? -start.x : xRel;
-            else if (xNow > imageModel.GetWidth())
+                xRel = (pt.x < 0) ? -start.x : xRel;
+            else if (pt.x > imageModel.GetWidth())
                 xRel = imageModel.GetWidth() - start.x;
             if (yRel < 0)
-                yRel = (yNow < 0) ? -start.y : yRel;
-            else if (yNow > imageModel.GetHeight())
-                 yRel = imageModel.GetHeight() - start.y;
+                yRel = (pt.y < 0) ? -start.y : yRel;
+            else if (pt.y > imageModel.GetHeight())
+                yRel = imageModel.GetHeight() - start.y;
         }
         /* rectsel and shape tools always show non-negative numbers when drawing */
         if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_SHAPE))
@@ -343,7 +403,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             case TOOL_SHAPE:
             {
                 CString strCoord;
-                strCoord.Format(_T("%ld, %ld"), xNow, yNow);
+                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
                 SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
@@ -352,7 +412,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if (wParam & MK_LBUTTON)
         {
-            toolsModel.OnMouseMove(TRUE, xNow, yNow);
+            toolsModel.OnMouseMove(TRUE, pt.x, pt.y);
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
@@ -365,7 +425,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if (wParam & MK_RBUTTON)
         {
-            toolsModel.OnMouseMove(FALSE, xNow, yNow);
+            toolsModel.OnMouseMove(FALSE, pt.x, pt.y);
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {
@@ -390,7 +450,7 @@ LRESULT CImgAreaWindow::OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CImgAreaWindow::OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    updateCanvasAndScrollbars();
+    canvasWindow.Update(NULL);
     return 0;
 }
 

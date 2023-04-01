@@ -1,22 +1,9 @@
 /*
- *  Constants, used in resources.
- *
- *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Copyright 2002 Andriy Palamarchuk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:    ReactOS Notepad
+ * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:    Providing a Windows-compatible simple text editor for ReactOS
+ * COPYRIGHT:  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *             Copyright 2002 Andriy Palamarchuk
  */
 
 #pragma once
@@ -31,6 +18,10 @@
 #define ID_LINENUMBER    0x208
 #define IDI_NPICON       0x209
 #define IDC_LICENSE      0x20A
+#define DIALOG_PRINTING  0x20B
+#define IDC_PRINTING_STATUS     0x20C
+#define IDC_PRINTING_FILENAME   0x20D
+#define IDC_PRINTING_PAGE       0x20E
 
 /* Commands */
 #define CMD_NEW        0x100
@@ -99,6 +90,11 @@
 #define STRING_PRINTERROR  0x189
 #define STRING_DEFAULTFONT 0x18A
 #define STRING_LINE_NUMBER_OUT_OF_RANGE 0x18B
+#define STRING_NOWPRINTING 0x18C
+#define STRING_PRINTCANCELING 0x18D
+#define STRING_PRINTCOMPLETE 0x18E
+#define STRING_PRINTCANCELED 0x18F
+#define STRING_PRINTFAILED 0x190
 
 #define STRING_TEXT_DOCUMENT  0x200
 

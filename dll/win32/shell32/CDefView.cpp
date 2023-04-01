@@ -990,7 +990,6 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
-        m_ListView.EditLabel(nItem);
         return TRUE;
     }
 

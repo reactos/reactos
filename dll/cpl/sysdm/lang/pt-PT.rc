@@ -61,14 +61,14 @@ BEGIN
     GROUPBOX "Arranque e Recuperação", IDC_STATIC, 6, 141, 244, 52
     LTEXT "Informação de arranque do sistema, falha do sistema e depuração.", IDC_STATIC, 16, 154, 228, 19
     PUSHBUTTON "De&finições", IDC_STAREC, 194, 172, 50, 15
-    PUSHBUTTON "Definições de &sistema", IDC_SYSSETTINGS, 6, 202, 80, 15
+    PUSHBUTTON "Definições do &sistema", IDC_SYSSETTINGS, 6, 202, 80, 15
     PUSHBUTTON "&Variáveis de ambiente", IDC_ENVVAR, 88, 202, 80, 15
     PUSHBUTTON "&Relatar erros", IDC_ERRORREPORT, 170, 202, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Definições de sistema"
+CAPTION "Definições do sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informações de versão", IDC_STATIC, 6, 3, 210, 73
@@ -90,8 +90,8 @@ BEGIN
     PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON "&Propriedades", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Copiar", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Renomear", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Apagar", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Mudar o nome", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Eliminar", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT "Quando o ReactOS inicia:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Aguardar que eu seleccione um perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
@@ -161,7 +161,7 @@ BEGIN
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON "Alterar &tipo", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
-    PUSHBUTTON "&Apagar", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
+    PUSHBUTTON "&Eliminar", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
     PUSHBUTTON "Copiar &para...", IDC_USERPROFILE_COPY, 200, 155, 50, 15
     CONTROL "Para criar novas contas de utilizador, abra <A>Contas de Utilizador</A> no Painel de Control.",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
@@ -214,7 +214,7 @@ BEGIN
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "seg.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "Para editar o arquivo de opções de inicialização manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "Para editar o ficheiro de opções de iniciação manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Editar...", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Falha do sistema", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "&Escrever um evento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 190, 10
@@ -352,7 +352,7 @@ BEGIN
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
     IDS_USERPROFILE_MANDATORY "Obrigatório"
-    IDS_USERPROFILE_CONFIRM_DELETE "Tem a certeza que deseja excluir o perfil de %s?"
+    IDS_USERPROFILE_CONFIRM_DELETE "Pretende excluir o perfil de %s?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirmar a exclusão"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Conta desconhecida"
     IDS_USERPROFILE_ACCOUNT_DELETED "Conta excluida"
@@ -364,10 +364,10 @@ BEGIN
     IDS_WARNMAXIMUMRANGE "O tamanho máximo do ficheiro de paginação deve ser maior ou igual ao seu tamanho inicial e menor que %lu MB na unidade seleccionada."
     IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "Nenhum"
-    IDS_PAGEFILE_SYSTEM "Gerênciado pelo sistema"
+    IDS_PAGEFILE_SYSTEM "Gestão efectuada pelo sistema"
     IDS_INFOREBOOT "Precisa reiniciar o computador para aplicar as alterações."
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar exclusão do perfil"
-    IDS_HWPROFILE_CONFIRM_DELETE "Tem certeza de que deseja excluir o perfil de hardware ""%s""?"
+    IDS_HWPROFILE_CONFIRM_DELETE "Pretende excluir o perfil de hardware ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "O nome do perfil já está em uso."
     IDS_HWPROFILE_PROFILE "Perfil"
     IDS_HWPROFILE_WARNING "Aviso"

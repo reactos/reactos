@@ -77,9 +77,6 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_EU_ES
     #include "lang/eu-ES.rc"
 #endif
-#ifdef LANGUAGE_FI_FI
-    #include "lang/fi-FI.rc"
-#endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
@@ -103,9 +100,6 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/lt-LT.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"

@@ -45,6 +45,9 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "imm.h"
+#ifdef __REACTOS__
+    #include <immdev.h>
+#endif
 #include "usp10.h"
 #include "commctrl.h"
 #include "uxtheme.h"
@@ -4778,6 +4781,10 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_IME_CHAR:
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        break;
+#endif
     case WM_CHAR:
     {
         WCHAR charW = wParam;
@@ -4973,11 +4980,36 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
     /* IME messages to make the edit control IME aware */
     case WM_IME_SETCONTEXT:
+#ifdef __REACTOS__
+        if (FALSE) /* FIXME: Condition */
+            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+        if (wParam)
+        {
+            HIMC hIMC = ImmGetContext(hwnd);
+            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+            if (pIC)
+            {
+                pIC->dwUIFlags &= ~0x40000;
+                ImmUnlockIMC(hIMC);
+            }
+            if (FALSE) /* FIXME: Condition */
+                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+            ImmReleaseContext(hwnd, hIMC);
+        }
+
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_STARTCOMPOSITION:
         es->composition_start = es->selection_end;
         es->composition_len = 0;
+#ifdef __REACTOS__
+        if (FALSE) /* FIXME: Condition */
+            return TRUE;
+        result = DefWindowProcW(hwnd, WM_IME_STARTCOMPOSITION, wParam, lParam);
+#endif
         break;
 
     case WM_IME_COMPOSITION:
@@ -4997,9 +5029,15 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_IME_SELECT:
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_CONTROL:
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_REQUEST:

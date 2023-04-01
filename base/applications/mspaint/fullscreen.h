@@ -20,14 +20,15 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnCloseOrKeyDownOrLButtonDown)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         MESSAGE_HANDLER(WM_GETTEXT, OnGetText)
     END_MSG_MAP()
 
+    HWND DoCreate();
+
+private:
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCloseOrKeyDownOrLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetText(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

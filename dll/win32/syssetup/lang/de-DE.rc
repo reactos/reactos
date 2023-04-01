@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Willkommen beim ReactOS Installationsassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
@@ -12,11 +12,11 @@ END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Die Entwicklung von ReactOS wurde teilweise durch folgende Open-Source-Projekte ermöglicht:", IDC_STATIC, 15, 7, 286, 19
-    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LISTBOX IDC_PROJECTS, 15, 30, 291, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS ist unter der GNU General Public License (GPL) veröffentlicht. Wenn Sie ReactOS oder Teile davon weiterverwenden wollen, müssen Sie die Bestimmungen der GPL anerkennen.", IDC_STATIC, 15, 110, 227, 24
     PUSHBUTTON "GPL &ansehen...", IDC_VIEWGPL, 251, 110, 55, 19
     LTEXT "Klicken Sie auf Weiter, um mit der Einrichtung fortzufahren.", IDC_STATIC, 15, 136, 195, 17
@@ -30,7 +30,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Bitte wählen Sie eines der folgenden Produkte:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Produktauswahl:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Produktinformation", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Beschreibung:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,25 +51,25 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben Sie einen Computernamen maximal 15 Zeichen ein. Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Bitte geben Sie einen Computernamen maximal 15 Zeichen ein. Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Das Installationsprogramm wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 127 Zeichen ein.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Das Installationsprogramm wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Geben Sie ein Passwort für das Administratorkonto ein. (max. 127 Zeichen)", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Administratorpasswort:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Passwort bestätigen:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -108,14 +108,13 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registrieren der Komponenten", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Installieren der Elemente des Startmenüs", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Speichern der Einstellungen", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "Löschen der temporären Dateien", IDC_TASKTEXT4, 65, 63, 232, 8
-
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -183,7 +182,7 @@ BEGIN
     IDS_LAYOUTTEXT "Die Standard-Texteingabesprache und -methode ist: Tastaturlayout %s"
     IDS_DATETIMETITLE "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
-    IDS_PROCESSTITLE "Abschliessen der Installation"
+    IDS_PROCESSTITLE "Abschließen der Installation"
     IDS_PROCESSSUBTITLE "Bitte warten Sie, während die letzten Installationsschritte ausgeführt werden."
     IDS_THEMESELECTIONTITLE "Erscheinungsbild"
     IDS_THEMESELECTIONSUBTITLE "Wählen Sie Ihr bevorzugtes Theme"
@@ -191,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS-Installation"
+    IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_UNKNOWN_ERROR "Unbekannter Fehler"
     IDS_LOADLIBRARY_FAILED "LoadLibrary fehlgeschlagen: "
     IDS_GETPROCADDR_FAILED "GetProcAddr fehlgeschlagen: "

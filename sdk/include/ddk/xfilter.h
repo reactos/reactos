@@ -30,7 +30,9 @@ extern "C" {
 #define ETH_LENGTH_OF_ADDRESS             6
 
 #define ETH_IS_BROADCAST(Address) \
-  ((((PUCHAR)(Address))[0] == ((UCHAR)0xff)) && (((PUCHAR)(Address))[1] == ((UCHAR)0xff)))
+  ((((PUCHAR)(Address))[0] == ((UCHAR)0xff)) && (((PUCHAR)(Address))[1] == ((UCHAR)0xff)) && \
+   (((PUCHAR)(Address))[2] == ((UCHAR)0xff)) && (((PUCHAR)(Address))[3] == ((UCHAR)0xff)) && \
+   (((PUCHAR)(Address))[4] == ((UCHAR)0xff)) && (((PUCHAR)(Address))[5] == ((UCHAR)0xff)))
 
 #define ETH_IS_MULTICAST(Address) \
   (BOOLEAN)(((PUCHAR)(Address))[0] & ((UCHAR)0x01))

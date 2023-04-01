@@ -88,8 +88,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Alegeți o configurație tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Configurație tipică", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Configurație particularizată", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Configurație tipică", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Configurație particularizată", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Crează conexiuni de rețea utilizând Clientela de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
 END

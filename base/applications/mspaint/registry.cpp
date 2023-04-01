@@ -7,22 +7,20 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 #include <winreg.h>
 #include <wincon.h>
 #include <shlobj.h>
 
+RegistrySettings registrySettings;
+
 /* FUNCTIONS ********************************************************/
-static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheckForDef)
+
+static void ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue)
 {
-    DWORD dwPrev = dwValue;
-
-    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS || (bCheckForDef && dwValue == 0))
-        dwValue = dwPrev;
-
-    return dwPrev;
+    DWORD dwTemp;
+    if (key.QueryDWORDValue(lpName, dwTemp) == ERROR_SUCCESS)
+        dwValue = dwTemp;
 }
 
 static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR lpDefault = TEXT(""))
@@ -53,7 +51,7 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
     SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
-void RegistrySettings::LoadPresets()
+void RegistrySettings::LoadPresets(INT nCmdShow)
 {
     BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2;
     BMPWidth = GetSystemMetrics(SM_CXSCREEN) / 2;
@@ -74,58 +72,85 @@ void RegistrySettings::LoadPresets()
     FontsPositionX = 0;
     FontsPositionY = 0;
     ShowTextTool = TRUE;
+    ShowStatusBar = TRUE;
+    ShowPalette = TRUE;
+    ShowToolBox = TRUE;
 
     LOGFONT lf;
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     strFontName = lf.lfFaceName;
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
+    RECT& rc = WindowPlacement.rcNormalPosition;
+    rc.left = rc.top = CW_USEDEFAULT;
+    rc.right = rc.left + 544;
+    rc.bottom = rc.top + 375;
+    WindowPlacement.showCmd = nCmdShow;
 }
 
-void RegistrySettings::Load()
+void RegistrySettings::Load(INT nCmdShow)
 {
-    LoadPresets();
+    LoadPresets(nCmdShow);
+
+    CRegKey paint;
+    if (paint.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint"), KEY_READ) != ERROR_SUCCESS)
+        return;
 
     CRegKey view;
-    if (view.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"), KEY_READ) == ERROR_SUCCESS)
+    if (view.Open(paint, _T("View"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(view, _T("BMPHeight"),     BMPHeight,     TRUE);
-        ReadDWORD(view, _T("BMPWidth"),      BMPWidth,      TRUE);
-        ReadDWORD(view, _T("GridExtent"),    GridExtent,    FALSE);
-        ReadDWORD(view, _T("NoStretching"),  NoStretching,  FALSE);
-        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail, FALSE);
-        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid,    FALSE);
-        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight,   TRUE);
-        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth,    TRUE);
-        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos,     TRUE);
-        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos,     TRUE);
-        ReadDWORD(view, _T("UnitSetting"),   UnitSetting,   FALSE);
+        ReadDWORD(view, _T("BMPHeight"),     BMPHeight);
+        ReadDWORD(view, _T("BMPWidth"),      BMPWidth);
+        ReadDWORD(view, _T("GridExtent"),    GridExtent);
+        ReadDWORD(view, _T("NoStretching"),  NoStretching);
+        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail);
+        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid);
+        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight);
+        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth);
+        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos);
+        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos);
+        ReadDWORD(view, _T("UnitSetting"),   UnitSetting);
+        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar);
 
         ULONG pnBytes = sizeof(WINDOWPLACEMENT);
         view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
     }
 
     CRegKey files;
-    if (files.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
+    if (files.Open(paint, _T("Recent File List"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadString(files, _T("File1"), strFile1);
-        ReadString(files, _T("File2"), strFile2);
-        ReadString(files, _T("File3"), strFile3);
-        ReadString(files, _T("File4"), strFile4);
+        TCHAR szName[64];
+        for (INT i = 0; i < MAX_RECENT_FILES; ++i)
+        {
+            wsprintf(szName, _T("File%u"), i + 1);
+            ReadString(files, szName, strFiles[i]);
+        }
     }
 
     CRegKey text;
-    if (text.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text"), KEY_READ) == ERROR_SUCCESS)
+    if (text.Open(paint, _T("Text"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(text, _T("Bold"),         Bold,           FALSE);
-        ReadDWORD(text, _T("Italic"),       Italic,         FALSE);
-        ReadDWORD(text, _T("Underline"),    Underline,      FALSE);
-        ReadDWORD(text, _T("CharSet"),      CharSet,        FALSE);
-        ReadDWORD(text, _T("PointSize"),    PointSize,      FALSE);
-        ReadDWORD(text, _T("PositionX"),    FontsPositionX, FALSE);
-        ReadDWORD(text, _T("PositionY"),    FontsPositionY, FALSE);
-        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool,   FALSE);
+        ReadDWORD(text, _T("Bold"),         Bold);
+        ReadDWORD(text, _T("Italic"),       Italic);
+        ReadDWORD(text, _T("Underline"),    Underline);
+        ReadDWORD(text, _T("CharSet"),      CharSet);
+        ReadDWORD(text, _T("PointSize"),    PointSize);
+        ReadDWORD(text, _T("PositionX"),    FontsPositionX);
+        ReadDWORD(text, _T("PositionY"),    FontsPositionY);
+        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool);
         ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
+    }
+
+    CRegKey bar3;
+    if (bar3.Open(paint, _T("General-Bar3"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(bar3, _T("Visible"), ShowToolBox);
+    }
+
+    CRegKey bar4;
+    if (bar4.Open(paint, _T("General-Bar4"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(bar4, _T("Visible"), ShowPalette);
     }
 
     // Fix the bitmap size if too large
@@ -137,9 +162,15 @@ void RegistrySettings::Load()
 
 void RegistrySettings::Store()
 {
+    BMPWidth = imageModel.GetWidth();
+    BMPHeight = imageModel.GetHeight();
+
+    CRegKey paint;
+    if (paint.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint")) != ERROR_SUCCESS)
+        return;
+
     CRegKey view;
-    if (view.Create(HKEY_CURRENT_USER,
-                     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View")) == ERROR_SUCCESS)
+    if (view.Create(paint, _T("View")) == ERROR_SUCCESS)
     {
         view.SetDWORDValue(_T("BMPHeight"),     BMPHeight);
         view.SetDWORDValue(_T("BMPWidth"),      BMPWidth);
@@ -152,25 +183,24 @@ void RegistrySettings::Store()
         view.SetDWORDValue(_T("ThumbXPos"),     ThumbXPos);
         view.SetDWORDValue(_T("ThumbYPos"),     ThumbYPos);
         view.SetDWORDValue(_T("UnitSetting"),   UnitSetting);
+        view.SetDWORDValue(_T("ShowStatusBar"), ShowStatusBar);
 
         view.SetBinaryValue(_T("WindowPlacement"), &WindowPlacement, sizeof(WINDOWPLACEMENT));
     }
 
     CRegKey files;
-    if (files.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List")) == ERROR_SUCCESS)
+    if (files.Create(paint, _T("Recent File List")) == ERROR_SUCCESS)
     {
-        if (!strFile1.IsEmpty())
-            files.SetStringValue(_T("File1"), strFile1);
-        if (!strFile2.IsEmpty())
-            files.SetStringValue(_T("File2"), strFile2);
-        if (!strFile3.IsEmpty())
-            files.SetStringValue(_T("File3"), strFile3);
-        if (!strFile4.IsEmpty())
-            files.SetStringValue(_T("File4"), strFile4);
+        TCHAR szName[64];
+        for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
+        {
+            wsprintf(szName, _T("File%u"), iFile + 1);
+            files.SetStringValue(szName, strFiles[iFile]);
+        }
     }
 
     CRegKey text;
-    if (text.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text")) == ERROR_SUCCESS)
+    if (text.Create(paint, _T("Text")) == ERROR_SUCCESS)
     {
         text.SetDWORDValue(_T("Bold"),          Bold);
         text.SetDWORDValue(_T("Italic"),        Italic);
@@ -182,43 +212,46 @@ void RegistrySettings::Store()
         text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
         text.SetStringValue(_T("TypeFaceName"), strFontName);
     }
+
+    CRegKey bar3;
+    if (bar3.Create(paint, _T("General-Bar3")) == ERROR_SUCCESS)
+    {
+        bar3.SetDWORDValue(_T("Visible"), ShowToolBox);
+    }
+
+    CRegKey bar4;
+    if (bar4.Create(paint, _T("General-Bar4")) == ERROR_SUCCESS)
+    {
+        bar4.SetDWORDValue(_T("Visible"), ShowPalette);
+    }
 }
 
 void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
 {
+    // Register the file to the user's 'Recent' folder
     if (szPathName && szPathName[0])
         SHAddToRecentDocs(SHARD_PATHW, szPathName);
 
-    if (strFile1 == szPathName)
+    // If szPathName is present in strFiles, move it to the top of the list
+    for (INT i = MAX_RECENT_FILES - 1, iFound = -1; i > 0; --i)
     {
-        // do nothing
+        if (iFound < 0 && strFiles[i].CompareNoCase(szPathName) == 0)
+            iFound = i;
+
+        if (iFound >= 0)
+        {
+            CString tmp = strFiles[i];
+            strFiles[i] = strFiles[i - 1];
+            strFiles[i - 1] = tmp;
+        }
     }
-    else if (strFile2 == szPathName)
+
+    // If szPathName is not the first item in strFiles, insert it at the top of the list
+    if (strFiles[0].CompareNoCase(szPathName) != 0)
     {
-        CString strTemp = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else if (strFile3 == szPathName)
-    {
-        CString strTemp = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else if (strFile4 == szPathName)
-    {
-        CString strTemp = strFile4;
-        strFile4 = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = strTemp;
-    }
-    else
-    {
-        strFile4 = strFile3;
-        strFile3 = strFile2;
-        strFile2 = strFile1;
-        strFile1 = szPathName;
+        for (INT i = MAX_RECENT_FILES - 1; i > 0; --i)
+            strFiles[i] = strFiles[i - 1];
+
+        strFiles[0] = szPathName;
     }
 }

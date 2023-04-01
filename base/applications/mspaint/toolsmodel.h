@@ -120,3 +120,43 @@ public:
     void NotifyToolSettingsChanged();
     void NotifyZoomChanged();
 };
+
+extern ToolsModel toolsModel;
+
+static inline int Zoomed(int xy)
+{
+    return xy * toolsModel.GetZoom() / 1000;
+}
+
+static inline int UnZoomed(int xy)
+{
+    return xy * 1000 / toolsModel.GetZoom();
+}
+
+static inline void Zoomed(POINT& pt)
+{
+    pt.x = Zoomed(pt.x);
+    pt.y = Zoomed(pt.y);
+}
+
+static inline void Zoomed(RECT& rc)
+{
+    rc.left = Zoomed(rc.left);
+    rc.top = Zoomed(rc.top);
+    rc.right = Zoomed(rc.right);
+    rc.bottom = Zoomed(rc.bottom);
+}
+
+static inline void UnZoomed(POINT& pt)
+{
+    pt.x = UnZoomed(pt.x);
+    pt.y = UnZoomed(pt.y);
+}
+
+static inline void UnZoomed(RECT& rc)
+{
+    rc.left = UnZoomed(rc.left);
+    rc.top = UnZoomed(rc.top);
+    rc.right = UnZoomed(rc.right);
+    rc.bottom = UnZoomed(rc.bottom);
+}

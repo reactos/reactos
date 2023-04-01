@@ -422,7 +422,7 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Clique simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 225, 10
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &navegador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
     PUSHBUTTON "&Restaurar predefinições", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
 END
@@ -487,7 +487,7 @@ CAPTION "Terminar sessão ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Tem a certeza que deseja terminar a sessão?", -1, 43, 15, 170, 8
+    LTEXT "Pretende terminar a sessão?", -1, 43, 15, 170, 8
     DEFPUSHBUTTON "&Terminar a sessão", IDOK, 30, 38, 64, 14
     PUSHBUTTON "&Cancelar", IDCANCEL, 99, 38, 43, 14
 END
@@ -512,7 +512,7 @@ CAPTION "Encerrar ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Tem a certeza que deseja encerrar?", -1, 49, 15, 131, 8
+    LTEXT "Pretende encerrar o computador?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Encerrar", IDOK, 47, 38, 47, 14
     PUSHBUTTON "&Cancelar", IDCANCEL, 99, 38, 47, 14
 END
@@ -656,7 +656,7 @@ CAPTION "Criar nova extensão"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Extensão de arquivo:", -1, 10, 10, 85, 14
+    LTEXT "Extensão de ficheiro:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
     PUSHBUTTON "<< &Avançado", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
     LTEXT "Tipo de ficheiro associado:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
@@ -687,7 +687,7 @@ BEGIN
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "Nova Acção"
+CAPTION "Nova acção"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -719,7 +719,7 @@ BEGIN
     GROUPBOX "Icones", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
     LTEXT "Para todas as vistas, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Alterar &Icone.", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "Alterar &icone.", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -728,7 +728,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho deixará de funcionar correctamente.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "O item '%s' a que este atalho se refere foi alterado ou movido. Assim, este atalho deixará de funcionar correctamente.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Correspondência mais próxima com base no nome, tipo, tamanho e data:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "Pretende corrigir este atalho para apontar para este destino ou apenas eliminá-lo?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Corrigir", IDOK, 55, 120, 60, 15, WS_DISABLED
@@ -771,7 +771,7 @@ BEGIN
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Definir configurações administrativas para o seu computador."
     IDS_FOLDER_OPTIONS_DESCRIPTION "Personalize a exibição de ficheiros, pastas e altere a associação de ficheiros."
-    IDS_FONTS_DESCRIPTION "Adicionar, alterar e gerenciar fontes no seu computador."
+    IDS_FONTS_DESCRIPTION "Adicionar e alterar tipos de letra no seu computador."
     IDS_PRINTERS_DESCRIPTION "Lista as impressoras e fax instalados e ajuda-o a adicionar novos equipamentos."
 
     /* About shell dialog version string */
@@ -784,7 +784,7 @@ BEGIN
     IDS_VIEW_DETAILS "&Detalhes"
     IDS_SELECT "Seleccionar"
     IDS_OPEN "Abrir"
-    IDS_CREATELINK "Criar &Atalho"
+    IDS_CREATELINK "Criar &atalho"
     IDS_COPY "Copiar"
     IDS_DELETE "Eliminar"
     IDS_PROPERTIES "Propriedades"
@@ -854,7 +854,7 @@ BEGIN
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Iniciar\\Programas"
-    IDS_PERSONAL "OS Meus Documentos"
+    IDS_PERSONAL "Os Meus Documentos"
     IDS_FAVORITES "Favoritos"
     IDS_STARTUP "Menu Iniciar\\Programas\\Iniciar"
     IDS_RECENT "Recentes"
@@ -880,7 +880,7 @@ BEGIN
     IDS_COMMON_PICTURES "Os Meus Documentos\\As Minhas Imagens"
     IDS_COMMON_VIDEO "Os Meus Documentos\\Os Meus Vídeos"
     IDS_CDBURN_AREA "Definições locais\\Dados de Programas\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE "Os Meus Locais da Rede"
+    IDS_NETWORKPLACE "Os Meus Locais na Rede"
 
     IDS_NEWFOLDER "Nova Pasta"
 
@@ -956,7 +956,7 @@ BEGIN
 
     IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
     IDS_PRINTERS "Impressoras"
-    IDS_FONTS "Tipos de Letras"
+    IDS_FONTS "Tipos de letra"
     IDS_INSTALLNEWFONT "Instalar novo tipo de letra..."
 
     IDS_DEFAULT_CLUSTER_SIZE "Tamanho da unidade de atribuição"
@@ -964,7 +964,7 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "Não existe um programa ReactOS configurado para abrir este tipo de ficheiro."
 
-    IDS_FILE_DETAILS "Detalhes para extensão '%s'"
+    IDS_FILE_DETAILS "Detalhes para a extensão '%s'"
     IDS_FILE_DETAILSADV "Ficheiros com extensão '%s' são do tipo '%s'. Para alterar as definições que afectam todos os ficheiros '%s', clique em Avançado."
     IDS_FILE_TYPES "Tipos de ficheiro"
     IDS_COLUMN_EXTENSION "Extensões"
@@ -979,16 +979,16 @@ BEGIN
 
     IDS_MENU_EMPTY "(Vazio)"
     IDS_OBJECTS "%d Objetos"
-    IDS_OBJECTS_SELECTED "%d Objectos Seleccionados"
+    IDS_OBJECTS_SELECTED "%d Objectos seleccionados"
 
     IDS_TITLE_MYCOMP "O Meu Computador"
-    IDS_TITLE_MYNET "Os Meus Locais da Rede"
+    IDS_TITLE_MYNET "Os Meus Locais na Rede"
     IDS_TITLE_BIN_1 "Reciclagem (cheia)"
     IDS_TITLE_BIN_0 "Reciclagem (vazia)"
 
     IDS_ADVANCED_FOLDER "Pastas e ficheiros"
     IDS_ADVANCED_NET_CRAWLER "Pesquisar automaticamente pastas e impressoras de rede"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Mostrar informações de tamanho de arquivo nas informações de pastas"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Mostrar informação do tamanho do ficheiro nas informações da pasta"
     IDS_ADVANCED_FRIENDLY_TREE "Mostrar visualização simples na lista de pastas do Explorador"
     IDS_ADVANCED_WEB_VIEW_BARRICADE "Mostrar o conteúdo das pastas do sistema"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Mostrar o caminho completo na barra de endereço"
@@ -998,31 +998,31 @@ BEGIN
     IDS_ADVANCED_DONT_SHOW_HIDDEN "Não mostrar ficheiros e pastas ocultos"
     IDS_ADVANCED_SHOW_HIDDEN "Mostrar ficheiros e pastas ocultos"
     IDS_ADVANCED_HIDE_FILE_EXT "Ocultar extensões de ficheiros conhecidos"
-    IDS_ADVANCED_SUPER_HIDDEN "Ocultar ficheiros protegidos do sistema operacional (recomendado)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Iniciar janelas de pastas num processo separado"
+    IDS_ADVANCED_SUPER_HIDDEN "Ocultar ficheiros protegidos do sistema operativo (recomendado)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Iniciar janelas das pastas num processo separado"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Lembre-se das configurações de exibição de cada pasta"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restaurar janelas de pastas anteriores no início de sessão"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restaurar janelas das pastas anteriores no início de sessão"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Mostrar painel de controle no meu computador"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar ficheiros NTFS criptografados ou compactados em cores"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar ficheiros NTFS criptografados ou compactados a cores"
     IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descrição pop-up para itens de pastas e área de trabalho"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"
     IDS_NEWEXT_NEW "<Novo>"
     IDS_NEWEXT_SPECIFY_EXT "Deve especificar uma extensão."
-    IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de ficheiros %s. Deseja desassociar %s com %s e criar um novo tipo de ficheiros?"
+    IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de ficheiro %s. Deseja desassociar %s com %s e criar um novo tipo de ficheiros?"
     IDS_NEWEXT_EXT_IN_USE "A extensão está em uso"
 
-    IDS_REMOVE_EXT "Se remover uma extensão de nome de ficheiros registrado, não poderá abrir ficheiros com esta extensão clicando duas vezes nos ícones.\n\nTem a certeza de que deseja remover esta extensão?"
+    IDS_REMOVE_EXT "Se remover uma extensão de nome de ficheiro registrado, não mais poderá abrir ficheiros com esta extensão clicando duas vezes no ícone.\n\nPretende remover esta extensão?"
     IDS_SPECIFY_ACTION "Deve especificar uma acção."
-    IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do ficheiros estão correctos."
+    IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do ficheiro está correcto."
     IDS_REMOVE_ACTION "Tem a certeza que deseja remover esta acção?"
-    IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de ficheiros. Digite um nome diferente e tente novamente."
+    IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de ficheiro. Digite um nome diferente e tente novamente."
     IDS_EXE_FILTER "Programas\0*.exe\0Todos os tipos\0*.*\0"
     IDS_EDITING_ACTION "Editar acção para o tipo: "
-    IDS_NO_ICONS "O ficheiros '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um ficheiros diferente."
-    IDS_FILE_NOT_FOUND "O ficheiros '%s' não foi encontrado."
-    IDS_LINK_INVALID "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho não mais funcionará correctamente."
+    IDS_NO_ICONS "O ficheiro '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um ficheiro diferente."
+    IDS_FILE_NOT_FOUND "O ficheiro '%s' não foi encontrado."
+    IDS_LINK_INVALID "O item '%s' a que este atalho se refere foi alterado ou movido. Assim, este atalho não mais funcionará correctamente."
     IDS_COPYTOMENU "Copiar para &pasta..."
     IDS_COPYTOTITLE "Seleccione o local para onde deseja copiar '%s'. De seguida, clique no botão ""Copiar""."
     IDS_COPYITEMS "Copiar Items"

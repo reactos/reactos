@@ -17,9 +17,11 @@ public:
     BEGIN_MSG_MAP(CMiniatureWindow)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
     END_MSG_MAP()
 
+    HWND DoCreate(HWND hwndParent);
+
+private:
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

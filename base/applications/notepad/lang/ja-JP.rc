@@ -130,6 +130,17 @@ BEGIN
     PUSHBUTTON "キャンセル", IDCANCEL, 120, 30, 40, 15
 END
 
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "印刷中"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS UI Gothic"
+BEGIN
+    CTEXT "印刷ジョブを開始中...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(ファイル名)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "ページ %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "キャンセル", IDCANCEL, 50, 75, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&f"
@@ -166,7 +177,12 @@ BEGIN
     STRING_PRINTERROR "ファイル '%s'を印刷できません。\n\nプリンタがオンになっていて、正しく設定されているか確認して下さい。"
     STRING_DEFAULTFONT "ＭＳ ゴシック" /* MS Gothic */
     STRING_LINE_NUMBER_OUT_OF_RANGE "指定された行番号は範囲外です。"
+    STRING_NOWPRINTING "印刷中..."
+    STRING_PRINTCANCELING "印刷ジョブをキャンセル中..."
+    STRING_PRINTCOMPLETE "印刷が完了しました。"
+    STRING_PRINTCANCELED "印刷がキャンセルされました。"
+    STRING_PRINTFAILED "印刷が失敗しました。"
 
     STRING_TEXT_DOCUMENT "テキスト文書"
-    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
+    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk, 2020-23 katahiromz\r\n"
 END

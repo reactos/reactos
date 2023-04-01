@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Witamy w Kreatorze instalacji systemu ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
@@ -12,25 +12,25 @@ END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Twórcy systemu ReactOS chcieliby podziękować następującym projektom Open Source, których to fragmenty zostały wykorzystane do stworzenia systemu ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Twórcy ReactOS chcieliby podziękować następującym projektom Open Source, których to fragmenty zostały wykorzystane do stworzenia ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "System ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła systemu ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 230, 28
+    LTEXT "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "Pokaż &GPL..", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 15, 135, 195, 17
+    LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Wybierz opcję produktu:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "&Opcje produktu:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Informacje o produkcie", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Opis:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,25 +51,25 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Nazwa komputera:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Instalator utworzy konto o nazwie Administrator. Używaj tego konta, jeżeli potrzebujesz pełnego dostępu do komputera.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Wprowadź hasło administratora. Hasło nie może być dłuższe niż 127 znaków.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Instalator utworzy konto o nazwie Administrator. Używaj tego konta, jeżeli potrzebujesz pełnego dostępu do komputera.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Podaj hasło administratora, nie dłuższe niż 127 znaków.", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Hasło administratora:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potwierdź hasło:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Rejestracja składników", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,7 +121,7 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kończenie instalacji systemu ReactOS"
+CAPTION "Kończenie instalacji ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kończenie pracy Kreatora instalacji systemu ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Instalator systemu ReactOS"
+    IDS_REACTOS_SETUP "Instalator ReactOS"
     IDS_UNKNOWN_ERROR "Nieznany błąd"
     IDS_LOADLIBRARY_FAILED "Funkcja LoadLibrary napotkała problem: "
     IDS_GETPROCADDR_FAILED "Funkcja GetProcAddr napotkała problem: "

@@ -526,7 +526,7 @@ KdpPrint(
 VOID
 __cdecl
 KdpDprintf(
-    _In_ PCHAR Format,
+    _In_ PCSTR Format,
     ...)
 {
     STRING String;

@@ -1943,6 +1943,9 @@ UniataClaimLegacyPCIIDE(
     NTSTATUS status;
     PCM_RESOURCE_LIST resourceList = NULL;
     UNICODE_STRING devname;
+#ifdef __REACTOS__
+    PCM_RESOURCE_LIST oldResList = NULL;
+#endif
 
     KdPrint2((PRINT_PREFIX "UniataClaimLegacyPCIIDE:\n"));
 
@@ -1970,12 +1973,20 @@ UniataClaimLegacyPCIIDE(
 del_do:
         IoDeleteDevice(BMList[i].PciIdeDevObj);
         BMList[i].PciIdeDevObj          = NULL;
+#ifdef __REACTOS__
+        if (oldResList)
+            ExFreePool(oldResList);
+#endif
         return status;
     }
 
     RtlZeroMemory(
         resourceList,
         sizeof(CM_RESOURCE_LIST));
+
+#ifdef __REACTOS__
+    oldResList = resourceList;
+#endif
 
     // IoReportDetectedDevice() should be used for WDM OSes
 
@@ -2005,6 +2016,11 @@ del_do:
         //ExFreePool(resourceList);
         goto del_do;
     }
+
+#ifdef __REACTOS__
+    ExFreePool(resourceList);
+    ExFreePool(oldResList);
+#endif
 
     KdPrint2((PRINT_PREFIX "ok %#x\n", status));
     BMList[i].ChanInitOk |= 0x80;

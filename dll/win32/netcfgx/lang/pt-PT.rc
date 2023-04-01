@@ -16,7 +16,7 @@ BEGIN
     CONTROL "&Usar o endereço IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Endereço IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
-    LTEXT "Mascara Sub-rede:", -1, 14, 90, 135, 8
+    LTEXT "Máscara Sub-rede:", -1, 14, 90, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Gateway padrão:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
@@ -41,7 +41,7 @@ BEGIN
     CONTROL "&Config. do utilizador", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "Endereço &IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "Mascara S&ubnet:", -1, 14, 95, 135, 8
+    LTEXT "Máscara S&ubnet:", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
     LTEXT "&Gateway padrão:", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
@@ -119,7 +119,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
     LTEXT "Endereço IP:", -1, 5, 15, 70, 12
-    LTEXT "Mascara Sub-rede:", -1, 5, 30, 70, 12
+    LTEXT "Máscara Sub-rede:", -1, 5, 30, 70, 12
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 96, 30, 85, 12
     DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -174,7 +174,7 @@ BEGIN
     PUSHBUTTON "Adicionar", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Remover", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Permiirt todosl", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Permitir todos", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
     CONTROL "Permitir só", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
     PUSHBUTTON "Adicionar", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
@@ -218,13 +218,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NET_CONNECT "Ligação de rede"
+    IDS_NET_CONNECT "Ligações de rede"
     IDS_NO_IPADDR_SET "O adaptador requer pelo menos um endereço IP. Por favor, insira um."
     IDS_NO_SUBMASK_SET "Inseriu um endereço sem máscara de sub-rede. Por favor, adicione uma máscara de sub-rede."
     IDS_TCPFILTERDESC "A filtragem TCP / IP permite controlar o tipo de tráfego de rede TCP / IP que chega ao seu computador."
     IDS_TCPFILTER "Filtros TCP/IP"
     IDS_IPADDR "Endereço IP"
-    IDS_SUBMASK "Mascara de Sub-rede"
+    IDS_SUBMASK "Máscara de Sub-rede"
     IDS_GATEWAY "Gateway"
     IDS_METRIC "Métrica"
     IDS_DHCPACTIVE "DHCP habilitado"

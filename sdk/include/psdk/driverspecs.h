@@ -235,6 +235,7 @@ __PRIMOP(int, _Is_driver_(void);)
 #define _IRQL_saves_
 #define _IRQL_saves_global_(kind,param)
 #define _IRQL_uses_cancel_
+#define _IRQL_limited_to_(level)
 #define _Kernel_clear_do_init_(yesNo)
 #define _Kernel_float_restored_
 #define _Kernel_float_saved_

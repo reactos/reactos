@@ -8,12 +8,17 @@
 
 #pragma once
 
+#define CXY_COLORBOX   16 /* width / height of a normal color box */
+#define CXY_BIGBOX     (CXY_COLORBOX * 2) /* width / height of the big box */
+#define CY_PALETTE     (8 + CXY_BIGBOX + 8)
+
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
 public:
     DECLARE_WND_CLASS_EX(_T("Palette"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CPaletteWindow)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
@@ -23,6 +28,7 @@ public:
         MESSAGE_HANDLER(WM_PALETTEMODELPALETTECHANGED, OnPaletteModelPaletteChanged)
     END_MSG_MAP()
 
+    LRESULT OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -30,4 +36,7 @@ public:
     LRESULT OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+protected:
+    INT DoHitTest(INT xPos, INT yPos) const;
 };

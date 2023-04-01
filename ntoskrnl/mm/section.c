@@ -3578,7 +3578,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     ASSERT(Process);
 
-    AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
+    AddressSpace = &Process->Vm;
 
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                  BaseAddress);
@@ -3645,6 +3645,15 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     }
     else
     {
+        PMM_SECTION_SEGMENT Segment = MemoryArea->SectionData.Segment;
+        PMMVAD Vad = &MemoryArea->VadNode;
+        PFILE_OBJECT FileObject;
+        SIZE_T ViewSize;
+        LARGE_INTEGER ViewOffset;
+        ViewOffset.QuadPart = MemoryArea->SectionData.ViewOffset;
+        
+        InterlockedIncrement64(Segment->ReferenceCount);
+
         Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
         if (!NT_SUCCESS(Status))
         {
@@ -3652,6 +3661,47 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                     BaseAddress, Process, Status);
             ASSERT(NT_SUCCESS(Status));
         }
+
+        if (FlagOn(*Segment->Flags, MM_PHYSICALMEMORY_SEGMENT))
+        {
+            /* Don't bother */
+            MmDereferenceSegment(Segment);
+            return STATUS_SUCCESS;
+        }
+        ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT));
+
+        FileObject = Segment->FileObject;
+        FsRtlAcquireFileExclusive(FileObject);
+
+        /* Don't bother for auto-delete closed file. */
+        if (FlagOn(FileObject->Flags, FO_DELETE_ON_CLOSE) && FlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE))
+        {
+            FsRtlReleaseFile(FileObject);
+            MmDereferenceSegment(Segment);
+            return STATUS_SUCCESS;
+        }
+
+        /*
+         * Flush only when last mapping is deleted.
+         * FIXME: Why Vad->ControlArea == NULL?
+         */
+        if (Vad->ControlArea == NULL || Vad->ControlArea->NumberOfMappedViews == 1)
+        {
+            ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
+            while (ViewSize > 0)
+            {
+                ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
+                MmFlushSegment(FileObject->SectionObjectPointer,
+                               &ViewOffset,
+                               FlushSize,
+                               NULL);
+                ViewSize -= FlushSize;
+                ViewOffset.QuadPart += FlushSize;
+            }
+        }
+
+        FsRtlReleaseFile(FileObject);
+        MmDereferenceSegment(Segment);
     }
 
     /* Notify debugger */

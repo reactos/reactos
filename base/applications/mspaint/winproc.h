@@ -12,7 +12,7 @@
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("MainWindow"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(_T("MSPaintApp"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CMainWindow)
         MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
@@ -22,12 +22,21 @@ public:
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
     END_MSG_MAP()
+
+    CMainWindow() : m_hMenu(NULL) { }
+
+    HWND DoCreate();
+    BOOL GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL ChooseColor(IN OUT COLORREF *prgbColor);
+
+private:
+    HMENU m_hMenu;
 
     LRESULT OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -36,7 +45,6 @@ public:
     LRESULT OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -46,4 +54,5 @@ public:
     void saveImage(BOOL overwrite);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
+    void ProcessFileMenu(HMENU hPopupMenu);
 };

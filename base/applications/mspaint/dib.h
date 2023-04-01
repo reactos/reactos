@@ -28,6 +28,8 @@ void ShowFileLoadError(LPCTSTR name);
 
 HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);
 
-HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight);
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono);
 
 HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
+
+float PpmFromDpi(float dpi);

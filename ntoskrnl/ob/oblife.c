@@ -869,6 +869,79 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Queries the name info size of a given resource object.
+ * The function loops through all the parent directories
+ * of the object and computes the name size.
+ *
+ * @param[in] ObjectHeader
+ * A pointer to an object header, of which name and
+ * directory info are to be retrieved.
+ *
+ * @return
+ * Returns the name info size that is pointed by the
+ * given object by the caller of this function. If
+ * an object does not have a name or no directories,
+ * it returns 0.
+ */
+static
+ULONG
+ObpQueryNameInfoSize(
+    _In_ POBJECT_HEADER ObjectHeader)
+{
+    ULONG NameSize = 0;
+    POBJECT_DIRECTORY ParentDirectory;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    PAGED_CODE();
+
+    /* Get the name info */
+    NameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    if (!NameInfo)
+    {
+        return 0;
+    }
+
+    /* Get the parent directory from the object name too */
+    ParentDirectory = NameInfo->Directory;
+    if (!ParentDirectory)
+    {
+        return 0;
+    }
+
+    /* Take into account the name size of this object and loop for all parent directories */
+    NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + NameInfo->Name.Length;
+    for (;;)
+    {
+        /* Get the name info from the parent directory */
+        NameInfo = OBJECT_HEADER_TO_NAME_INFO(
+            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+        if (!NameInfo)
+        {
+            /* Stop looking if this is the last one */
+            break;
+        }
+
+        /* Get the parent directory */
+        ParentDirectory = NameInfo->Directory;
+        if (!ParentDirectory)
+        {
+            /* This is the last directory, stop looking */
+            break;
+        }
+
+        /*
+         * Take into account the size of this name info,
+         * keep looking for other parent directories.
+         */
+        NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) + NameInfo->Name.Length;
+    }
+
+    /* Include the size of the object name information as well as the NULL terminator */
+    NameSize += sizeof(OBJECT_NAME_INFORMATION) + sizeof(UNICODE_NULL);
+    return NameSize;
+}
+
 NTSTATUS
 NTAPI
 ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
@@ -1584,8 +1657,9 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 }
 
                 /* Copy name information */
-                BasicInfo->NameInfoSize = 0; /* FIXME*/
-                BasicInfo->TypeInfoSize = 0; /* FIXME*/
+                BasicInfo->NameInfoSize = ObpQueryNameInfoSize(ObjectHeader);
+                BasicInfo->TypeInfoSize = sizeof(OBJECT_TYPE_INFORMATION) + ObjectType->Name.Length +
+                                          sizeof(UNICODE_NULL);
 
                 /* Check if this is a symlink */
                 if (ObjectHeader->Type == ObpSymbolicLinkObjectType)

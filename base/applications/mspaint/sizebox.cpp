@@ -7,117 +7,125 @@
  *              Katayama Hirofumi MZ
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+static LPCWSTR s_cursor_shapes[] =
+{
+    IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
+    IDC_SIZEWE,               IDC_SIZEWE,
+    IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE,
+};
 
 /* FUNCTIONS ********************************************************/
 
-static BOOL resizing = FALSE;
-static short xOrig;
-static short yOrig;
-
-LRESULT CSizeboxWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+BOOL setCursorOnSizeBox(CANVAS_HITTEST hit)
 {
-    if ((m_hWnd == sizeboxLeftTop.m_hWnd) || (m_hWnd == sizeboxRightBottom.m_hWnd))
-        SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
-    if ((m_hWnd == sizeboxLeftBottom.m_hWnd) || (m_hWnd == sizeboxRightTop.m_hWnd))
-        SetCursor(LoadCursor(NULL, IDC_SIZENESW));
-    if ((m_hWnd == sizeboxLeftCenter.m_hWnd) || (m_hWnd == sizeboxRightCenter.m_hWnd))
-        SetCursor(LoadCursor(NULL, IDC_SIZEWE));
-    if ((m_hWnd == sizeboxCenterTop.m_hWnd) || (m_hWnd == sizeboxCenterBottom.m_hWnd))
-        SetCursor(LoadCursor(NULL, IDC_SIZENS));
-    return 0;
-}
-
-LRESULT CSizeboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    resizing = TRUE;
-    xOrig = GET_X_LPARAM(lParam);
-    yOrig = GET_Y_LPARAM(lParam);
-    SetCapture();
-    return 0;
-}
-
-LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    if (resizing)
+    if (HIT_UPPER_LEFT <= hit && hit <= HIT_LOWER_RIGHT)
     {
-        CString strSize;
-        short xRel;
-        short yRel;
-        int imgXRes = imageModel.GetWidth();
-        int imgYRes = imageModel.GetHeight();
-        xRel = UnZoomed(GET_X_LPARAM(lParam) - xOrig);
-        yRel = UnZoomed(GET_Y_LPARAM(lParam) - yOrig);
-        if (m_hWnd == sizeboxLeftTop.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
-        if (m_hWnd == sizeboxCenterTop.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes, imgYRes - yRel);
-        if (m_hWnd == sizeboxRightTop.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes - yRel);
-        if (m_hWnd == sizeboxLeftCenter.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes);
-        if (m_hWnd == sizeboxRightCenter.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes);
-        if (m_hWnd == sizeboxLeftBottom.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes + yRel);
-        if (m_hWnd == sizeboxCenterBottom.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes, imgYRes + yRel);
-        if (m_hWnd == sizeboxRightBottom.m_hWnd)
-            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes + yRel);
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+        ::SetCursor(::LoadCursor(NULL, s_cursor_shapes[hit - HIT_UPPER_LEFT]));
+        return TRUE;
     }
-    return 0;
+    return FALSE;
 }
 
-LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
 {
-    if (resizing)
+    switch (hit)
     {
-        short xRel;
-        short yRel;
-        int imgXRes = imageModel.GetWidth();
-        int imgYRes = imageModel.GetHeight();
-        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
-        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
-        if (m_hWnd == sizeboxLeftTop)
-            imageModel.Crop(imgXRes - xRel, imgYRes - yRel, xRel, yRel);
-        if (m_hWnd == sizeboxCenterTop.m_hWnd)
-            imageModel.Crop(imgXRes, imgYRes - yRel, 0, yRel);
-        if (m_hWnd == sizeboxRightTop.m_hWnd)
-            imageModel.Crop(imgXRes + xRel, imgYRes - yRel, 0, yRel);
-        if (m_hWnd == sizeboxLeftCenter.m_hWnd)
-            imageModel.Crop(imgXRes - xRel, imgYRes, xRel, 0);
-        if (m_hWnd == sizeboxRightCenter.m_hWnd)
-            imageModel.Crop(imgXRes + xRel, imgYRes, 0, 0);
-        if (m_hWnd == sizeboxLeftBottom.m_hWnd)
-            imageModel.Crop(imgXRes - xRel, imgYRes + yRel, xRel, 0);
-        if (m_hWnd == sizeboxCenterBottom.m_hWnd)
-            imageModel.Crop(imgXRes, imgYRes + yRel, 0, 0);
-        if (m_hWnd == sizeboxRightBottom.m_hWnd)
-            imageModel.Crop(imgXRes + xRel, imgYRes + yRel, 0, 0);
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) _T(""));
+        case HIT_UPPER_LEFT:
+            prc->left = prcBase->left;
+            prc->top = prcBase->top;
+            break;
+        case HIT_UPPER_CENTER:
+            prc->left = (prcBase->left + prcBase->right - GRIP_SIZE) / 2;
+            prc->top = prcBase->top;
+            break;
+        case HIT_UPPER_RIGHT:
+            prc->left = prcBase->right - GRIP_SIZE;
+            prc->top = prcBase->top;
+            break;
+        case HIT_MIDDLE_LEFT:
+            prc->left = prcBase->left;
+            prc->top = (prcBase->top + prcBase->bottom - GRIP_SIZE) / 2;
+            break;
+        case HIT_MIDDLE_RIGHT:
+            prc->left = prcBase->right - GRIP_SIZE;
+            prc->top = (prcBase->top + prcBase->bottom - GRIP_SIZE) / 2;
+            break;
+        case HIT_LOWER_LEFT:
+            prc->left = prcBase->left;
+            prc->top = prcBase->bottom - GRIP_SIZE;
+            break;
+        case HIT_LOWER_CENTER:
+            prc->left = (prcBase->left + prcBase->right - GRIP_SIZE) / 2;
+            prc->top = prcBase->bottom - GRIP_SIZE;
+            break;
+        case HIT_LOWER_RIGHT:
+            prc->left = prcBase->right - GRIP_SIZE;
+            prc->top = prcBase->bottom - GRIP_SIZE;
+            break;
+        case HIT_INNER:
+            *prc = *prcBase;
+            ::InflateRect(prc, -GRIP_SIZE, -GRIP_SIZE);
+            return TRUE;
+        default:
+            ::SetRectEmpty(prc);
+            return FALSE;
     }
-    resizing = FALSE;
-    ReleaseCapture();
-    return 0;
+
+    prc->right = prc->left + GRIP_SIZE;
+    prc->bottom = prc->top + GRIP_SIZE;
+    return TRUE;
 }
 
-LRESULT CSizeboxWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 {
-    resizing = FALSE;
-    return 0;
-}
+    RECT rc;
 
-LRESULT CSizeboxWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    if (wParam == VK_ESCAPE)
+    if (!::PtInRect(prcBase, pt))
+        return HIT_NONE;
+
+    rc = *prcBase;
+    ::InflateRect(&rc, -GRIP_SIZE, -GRIP_SIZE);
+    if (::PtInRect(&rc, pt))
+        return HIT_INNER;
+
+    for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
-        if (GetCapture() == m_hWnd)
-        {
-            ReleaseCapture();
-        }
+        CANVAS_HITTEST hit = (CANVAS_HITTEST)i;
+        getSizeBoxRect(&rc, hit, prcBase);
+        if (::PtInRect(&rc, pt))
+            return hit;
     }
-    return 0;
+
+    return HIT_BORDER;
+}
+
+VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)
+{
+    CRect rc, rcIntersect;
+
+    if (prcPaint && !::IntersectRect(&rcIntersect, prcPaint, prcBase))
+        return;
+
+    if (bDrawFrame)
+    {
+        rc = *prcBase;
+        ::InflateRect(&rc, -GRIP_SIZE / 2, -GRIP_SIZE / 2);
+
+        LOGBRUSH logBrush = { BS_HOLLOW, 0, 0 };
+        COLORREF rgbHighlight = ::GetSysColor(COLOR_HIGHLIGHT);
+        HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_DOT, 1, rgbHighlight));
+        HGDIOBJ oldBrush = ::SelectObject(hdc, ::CreateBrushIndirect(&logBrush));
+        ::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
+        ::DeleteObject(::SelectObject(hdc, oldBrush));
+        ::DeleteObject(::SelectObject(hdc, oldPen));
+    }
+
+    for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
+    {
+        getSizeBoxRect(&rc, (CANVAS_HITTEST)i, prcBase);
+        if (!prcPaint || ::IntersectRect(&rcIntersect, &rc, prcPaint))
+            ::FillRect(hdc, &rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+    }
 }

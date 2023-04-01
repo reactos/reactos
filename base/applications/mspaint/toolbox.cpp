@@ -7,26 +7,33 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
+CToolBox toolBoxContainer;
+
 /* FUNCTIONS ********************************************************/
+
+BOOL CToolBox::DoCreate(HWND hwndParent)
+{
+    RECT toolBoxContainerPos = { 0, 0, 0, 0 };
+    DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
+    return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
+}
 
 LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HIMAGELIST hImageList;
     HBITMAP tempBm;
     int i;
-    TCHAR tooltips[16][30];
+    TCHAR tooltips[NUM_TOOLS][30];
 
-    /*
-     * FIXME: Unintentionally there is a line above the tool bar (hidden by y-offset).
-     * To prevent cropping of the buttons height has been increased from 200 to 205
-     */
-    RECT toolbarPos = {1, -2, 1 + 50, -2 + 205};
-    toolbar.Create(TOOLBARCLASSNAME, m_hWnd, toolbarPos, NULL,
-                   WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS);
+    toolSettingsWindow.DoCreate(m_hWnd);
+
+    /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
+    RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};
+    DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
+                  TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
+    toolbar.Create(TOOLBARCLASSNAME, m_hWnd, toolbarPos, NULL, style);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     toolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM) hImageList);
     tempBm = (HBITMAP) LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
@@ -34,7 +41,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     DeleteObject(tempBm);
     toolbar.SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    for(i = 0; i < 16; i++)
+    for (i = 0; i < NUM_TOOLS; i++)
     {
         TBBUTTON tbbutton;
         int wrapnow = 0;
@@ -54,14 +61,8 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
     toolbar.SendMessage(TB_CHECKBUTTON, ID_PEN, MAKELPARAM(TRUE, 0));
     toolbar.SendMessage(TB_SETMAXTEXTROWS, 0, 0);
-    toolbar.SendMessage(TB_SETBUTTONSIZE, 0, MAKELPARAM(25, 25));
+    toolbar.SendMessage(TB_SETBUTTONSIZE, 0, MAKELPARAM(CXY_TB_BUTTON, CXY_TB_BUTTON));
 
-    return 0;
-}
-
-LRESULT CToolBox::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
     return 0;
 }
 
@@ -113,7 +114,7 @@ LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    selectionWindow.ShowWindow(SW_HIDE);
+    selectionModel.m_bShow = FALSE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
 
     // Check the toolbar button

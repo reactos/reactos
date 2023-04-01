@@ -229,7 +229,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 VOID
-UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
+UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
 {
     LPCWSTR keyPath, rootName;
     LPWSTR fullPath;
@@ -251,7 +251,7 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
 
     if (keyPath)
     {
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath, bSelectNone);
         rootName = get_root_key_name(hRootKey);
         cbFullPath = (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR);
         fullPath = malloc(cbFullPath);
@@ -384,7 +384,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
         DestroyIcon(g_pChildWnd->hArrowIcon);
-        free(g_pChildWnd);
+        HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;

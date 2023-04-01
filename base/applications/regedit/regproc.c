@@ -1370,7 +1370,7 @@ static void export_key_name(FILE *fp, WCHAR *name, BOOL unicode)
 
 #define MAX_SUBKEY_LEN   257
 
-static int export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
+static void export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -1440,7 +1440,6 @@ static int export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
     }
 
     free(subkey_name);
-    return 0;
 }
 
 static FILE *REGPROC_open_export_file(WCHAR *file_name, BOOL unicode)
@@ -1492,7 +1491,6 @@ static BOOL export_key(WCHAR *file_name, WCHAR *path, BOOL unicode)
     HKEY key_class, key;
     WCHAR *subkey;
     FILE *fp;
-    BOOL ret;
 
     if (!(key_class = parse_key_name(path, &subkey)))
     {
@@ -1505,15 +1503,12 @@ static BOOL export_key(WCHAR *file_name, WCHAR *path, BOOL unicode)
         return FALSE;
 
     fp = REGPROC_open_export_file(file_name, unicode);
-    ret = export_registry_data(fp, key, path, unicode);
+    export_registry_data(fp, key, path, unicode);
     export_newline(fp, unicode);
     fclose(fp);
 
     RegCloseKey(key);
-#ifdef __REACTOS__      /* Fixes CORE-18603: Remove this when Wine Bug 54491 is fixed and synched back */
-    ret = TRUE;
-#endif
-    return ret;
+    return TRUE;
 }
 
 static BOOL export_all(WCHAR *file_name, WCHAR *path, BOOL unicode)

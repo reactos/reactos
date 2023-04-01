@@ -2,13 +2,25 @@
  * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     debugging and analysis of message states
- * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2019-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 #include "undocuser.h"
 #include "winxx.h"
+#include <imm.h>
 #include <strsafe.h>
+
+#define MAX_MSGS 512
+
+static MSG s_Msgs[MAX_MSGS];
+static UINT s_cMsgs = 0;
+static CHAR s_prefix[16] = "";
+static HWND s_hMainWnd = NULL;
+static HWND s_hwndEdit = NULL;
+static HWND s_hImeWnd = NULL;
+static WNDPROC s_fnOldEditWndProc = NULL;
+static WNDPROC s_fnOldImeWndProc = NULL;
 
 static void MsgDumpPrintf(LPCSTR fmt, ...)
 {
@@ -20,262 +32,10 @@ static void MsgDumpPrintf(LPCSTR fmt, ...)
     va_end(va);
 }
 #define MSGDUMP_TPRINTF MsgDumpPrintf
-static char s_prefix[16] = "";
 #define MSGDUMP_PREFIX s_prefix
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
-typedef enum STAGE_TYPE
-{
-    STAGE_TYPE_SEQUENCE,
-    STAGE_TYPE_COUNTING
-} STAGE_TYPE;
-
-typedef struct STAGE
-{
-    INT nLine;
-    UINT uParentMsg;
-    INT nLevel;
-    STAGE_TYPE nType;
-    INT iFirstAction;
-    INT nCount;
-    UINT uMessages[10];
-    INT iActions[10];
-    INT nCounters[10];
-} STAGE;
-
-/* variables */
-static INT s_iStage;
-static INT s_iStep;
-static INT s_nLevel;
-static BOOL s_bNextStage;
-static INT s_nCounters[10];
-static UINT s_msgStack[32];
-static const STAGE *s_pStages;
-static INT s_cStages;
-
-/* macros */
-#define TIMEOUT_TIMER   999
-#define TOTAL_TIMEOUT   (5 * 1000)
-#define WIDTH           300
-#define HEIGHT          200
-#define PARENT_MSG      s_msgStack[s_nLevel - 1]
-
-static void DoInitialize(const STAGE *pStages, INT cStages)
-{
-    s_iStage = s_iStep = s_nLevel = 0;
-    s_bNextStage = FALSE;
-    ZeroMemory(s_nCounters, sizeof(s_nCounters));
-    ZeroMemory(s_msgStack, sizeof(s_msgStack));
-    s_pStages = pStages;
-    s_cStages = cStages;
-}
-
-static void DoFinish(void)
-{
-    ok_int(s_iStage, s_cStages);
-    if (s_iStage != s_cStages)
-    {
-        skip("Some stage(s) skipped (Step: %d)\n", s_iStep);
-    }
-}
-
-typedef enum ACTION
-{
-    ACTION_ZERO = 0,
-    ACTION_FIRSTMINMAX,
-    ACTION_NCCREATE,
-    ACTION_SHOW,
-    ACTION_IME_SETCONTEXT_OPEN,
-    ACTION_IME_NOTIFY_OPEN,
-    ACTION_DESTROY,
-    ACTION_IME_SETCONTEXT_CLOSE,
-    ACTION_IME_NOTIFY_CLOSE,
-    ACTION_HIDE,
-    ACTION_DEACTIVATE,
-    ACTION_ACTIVATE
-} ACTION;
-
-static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
-{
-    RECT rc;
-    switch (iAction)
-    {
-        case ACTION_ZERO:
-            /* does nothing */
-            break;
-        case ACTION_FIRSTMINMAX:
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, 0);
-            ok_long(rc.bottom - rc.top, 0);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case ACTION_NCCREATE:
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, WIDTH);
-            ok_long(rc.bottom - rc.top, HEIGHT);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case ACTION_SHOW:
-            ShowWindow(hwnd, SW_SHOWNORMAL);
-            break;
-        case ACTION_IME_SETCONTEXT_OPEN:
-            ok(wParam == 1, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
-            ok(lParam == 0xC000000F, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
-            break;
-        case ACTION_IME_NOTIFY_OPEN:
-            ok(wParam == 2, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
-            ok(lParam == 0, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
-            break;
-        case ACTION_DESTROY:
-            DestroyWindow(hwnd);
-            break;
-        case ACTION_IME_SETCONTEXT_CLOSE:
-            ok(wParam == 0, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
-            ok(lParam == 0xC000000F, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
-            break;
-        case ACTION_IME_NOTIFY_CLOSE:
-            ok(wParam == 1, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
-            ok(lParam == 0, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
-            break;
-        case ACTION_HIDE:
-            ShowWindow(hwnd, SW_HIDE);
-            break;
-        case ACTION_DEACTIVATE:
-            SetForegroundWindow(GetDesktopWindow());
-            break;
-        case ACTION_ACTIVATE:
-            SetForegroundWindow(hwnd);
-            break;
-    }
-}
-
-static void NextStage(HWND hwnd)
-{
-    INT i, iAction;
-    const STAGE *pStage = &s_pStages[s_iStage];
-
-    if (pStage->nType == STAGE_TYPE_COUNTING)
-    {
-        /* check counters */
-        for (i = 0; i < pStage->nCount; ++i)
-        {
-            if (pStage->nCounters[i] > 0)
-            {
-                ok(pStage->nCounters[i] == s_nCounters[i],
-                   "Line %d: s_nCounters[%d] expected %d but %d.\n",
-                   pStage->nLine, i, pStage->nCounters[i], s_nCounters[i]);
-            }
-        }
-    }
-
-    /* go to next stage */
-    ++s_iStage;
-    if (s_iStage >= s_cStages)
-    {
-        DestroyWindow(hwnd);
-        return;
-    }
-    trace("Stage %d (Line %d)\n", s_iStage, s_pStages[s_iStage].nLine);
-
-    s_iStep = 0;
-    ZeroMemory(s_nCounters, sizeof(s_nCounters));
-
-    iAction = s_pStages[s_iStage].iFirstAction;
-    if (iAction)
-        PostMessage(hwnd, WM_COMMAND, iAction, 0);
-}
-
-static void DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    INT i, iAction;
-    const STAGE *pStage;
-    s_bNextStage = FALSE;
-
-    if (s_iStage >= s_cStages)
-        return;
-
-    pStage = &s_pStages[s_iStage];
-    switch (pStage->nType)
-    {
-        case STAGE_TYPE_SEQUENCE:
-            if (pStage->uMessages[s_iStep] == uMsg)
-            {
-                ok_int(1, 1);
-                ok(s_nLevel == pStage->nLevel,
-                   "Line %d, Step %d: Level expected %d but %d.\n",
-                   pStage->nLine, s_iStep, pStage->nLevel, s_nLevel);
-                ok(PARENT_MSG == pStage->uParentMsg,
-                   "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
-                   pStage->nLine, s_iStep, pStage->uParentMsg, PARENT_MSG);
-
-                iAction = pStage->iActions[s_iStep];
-                if (iAction)
-                    DoAction(hwnd, iAction, wParam, lParam);
-
-                ++s_iStep;
-                if (s_iStep >= pStage->nCount)
-                    s_bNextStage = TRUE;
-            }
-            break;
-        case STAGE_TYPE_COUNTING:
-            for (i = 0; i < pStage->nCount; ++i)
-            {
-                if (pStage->uMessages[i] == uMsg)
-                {
-                    ok_int(1, 1);
-                    ok(s_nLevel == pStage->nLevel,
-                       "Line %d: Level expected %d but %d.\n",
-                       pStage->nLine, pStage->nLevel, s_nLevel);
-                    ok(PARENT_MSG == pStage->uParentMsg,
-                       "Line %d: PARENT_MSG expected %u but %u.\n",
-                       pStage->nLine, pStage->uParentMsg, PARENT_MSG);
-
-                    iAction = pStage->iActions[i];
-                    if (iAction)
-                        DoAction(hwnd, iAction, wParam, lParam);
-
-                    ++s_nCounters[i];
-
-                    if (i == pStage->nCount - 1)
-                        s_bNextStage = TRUE;
-                    break;
-                }
-            }
-            break;
-    }
-
-    if (s_bNextStage)
-    {
-        NextStage(hwnd);
-    }
-}
-
-static LRESULT CALLBACK
-InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_COMMAND:
-            DoAction(hwnd, LOWORD(wParam), 0, 0);
-            break;
-        case WM_TIMER:
-            KillTimer(hwnd, (UINT)wParam);
-            if (wParam == TIMEOUT_TIMER)
-                DestroyWindow(hwnd);
-            break;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        case WM_NCCREATE:
-            SetTimer(hwnd, TIMEOUT_TIMER, TOTAL_TIMEOUT, NULL);
-            /* FALL THROUGH */
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-    return 0;
-}
-
-static void DoBuildPrefix(void)
+static void MD_build_prefix(void)
 {
     DWORD Flags = InSendMessageEx(NULL);
     INT i = 0;
@@ -296,279 +56,290 @@ static void DoBuildPrefix(void)
     s_prefix[i] = 0;
 }
 
-static const STAGE s_GeneralStages[] =
+#define STAGE_1  1
+#define STAGE_2  2
+#define STAGE_3  3
+#define STAGE_4  4
+#define STAGE_5  5
+
+static INT findMessage(INT iMsg, HWND hwnd, UINT uMsg)
 {
-    /* Stage 0 */
+    if (iMsg == -1)
+        iMsg = 0;
+    for (; iMsg < s_cMsgs; ++iMsg)
     {
-        __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
-        4,
-        { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
-        { ACTION_FIRSTMINMAX, ACTION_NCCREATE, 0, 0 },
-    },
-    /* Stage 1 */
+        if (s_Msgs[iMsg].message == uMsg && s_Msgs[iMsg].hwnd == hwnd)
+            return iMsg;
+    }
+    return -1;
+}
+
+typedef struct TEST_ENTRY
+{
+    INT line;
+    LPCSTR name;
+    UINT iFound;
+} TEST_ENTRY, *PTEST_ENTRY;
+
+static VOID DoAnalyzeEntries(size_t nCount, PTEST_ENTRY pEntries)
+{
+    size_t i;
+    for (i = 0; i < nCount - 1; ++i)
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_SHOW,
-        6,
-        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
-          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
-    },
+        PTEST_ENTRY entry1 = &pEntries[i];
+        PTEST_ENTRY entry2 = &pEntries[i + 1];
+        ok(entry1->iFound < entry2->iFound,
+           "Line %d: message wrong order (%d >= %d): %s vs %s\n",
+           entry1->line, entry1->iFound, entry2->iFound,
+           entry1->name, entry2->name);
+    }
+}
+
+static VOID DoAnalyzeAllMessages(VOID)
+{
+    size_t i;
+    TEST_ENTRY entries1[] =
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DESTROY,
-        6,
-        { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
-          WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
-    },
+        { __LINE__, "WM_NCCREATE", findMessage(0, s_hMainWnd, WM_NCCREATE) },
+        { __LINE__, "WM_NCCALCSIZE", findMessage(0, s_hMainWnd, WM_NCCALCSIZE) },
+        { __LINE__, "WM_CREATE", findMessage(0, s_hMainWnd, WM_CREATE) },
+        { __LINE__, "WM_PARENTNOTIFY", findMessage(0, s_hMainWnd, WM_PARENTNOTIFY) },
+        { __LINE__, "WM_WINDOWPOSCHANGING", findMessage(0, s_hMainWnd, WM_WINDOWPOSCHANGING) },
+        { __LINE__, "WM_ACTIVATEAPP", findMessage(0, s_hMainWnd, WM_ACTIVATEAPP) },
+        { __LINE__, "WM_NCACTIVATE", findMessage(0, s_hMainWnd, WM_NCACTIVATE) },
+        { __LINE__, "WM_ACTIVATE", findMessage(0, s_hMainWnd, WM_ACTIVATE) },
+        { __LINE__, "WM_IME_SETCONTEXT", findMessage(0, s_hMainWnd, WM_IME_SETCONTEXT) },
+        { __LINE__, "WM_IME_NOTIFY", findMessage(0, s_hMainWnd, WM_IME_NOTIFY) },
+        { __LINE__, "WM_SETFOCUS", findMessage(0, s_hMainWnd, WM_SETFOCUS) },
+        { __LINE__, "WM_KILLFOCUS", findMessage(0, s_hMainWnd, WM_KILLFOCUS) },
+    };
+    INT iFound1 = entries1[_countof(entries1) - 1].iFound;
+    TEST_ENTRY entries2[] =
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
-        2,
-        { WM_DESTROY, WM_NCDESTROY },
-    },
-};
+        { __LINE__, "WM_IME_SETCONTEXT", findMessage(iFound1, s_hMainWnd, WM_IME_SETCONTEXT) },
+        { __LINE__, "WM_IME_SETCONTEXT", findMessage(iFound1, s_hwndEdit, WM_IME_SETCONTEXT) },
+        { __LINE__, "WM_SETFOCUS", findMessage(iFound1, s_hwndEdit, WM_SETFOCUS) },
+        { __LINE__, "WM_SHOWWINDOW", findMessage(iFound1, s_hMainWnd, WM_SHOWWINDOW) },
+        { __LINE__, "WM_WINDOWPOSCHANGING", findMessage(iFound1, s_hMainWnd, WM_WINDOWPOSCHANGING) },
+        { __LINE__, "WM_NCPAINT", findMessage(iFound1, s_hMainWnd, WM_NCPAINT) },
+        { __LINE__, "WM_ERASEBKGND", findMessage(iFound1, s_hMainWnd, WM_ERASEBKGND) },
+        { __LINE__, "WM_WINDOWPOSCHANGED", findMessage(iFound1, s_hMainWnd, WM_WINDOWPOSCHANGED) },
+        { __LINE__, "WM_SIZE", findMessage(iFound1, s_hMainWnd, WM_SIZE) },
+        { __LINE__, "WM_MOVE", findMessage(iFound1, s_hMainWnd, WM_MOVE) },
+    };
+    INT iFound2 = entries2[_countof(entries2) - 1].iFound;
+    TEST_ENTRY entries3[] =
+    {
+        { __LINE__, "WM_IME_KEYDOWN", findMessage(iFound2, s_hwndEdit, WM_IME_KEYDOWN) },
+        { __LINE__, "WM_KEYDOWN", findMessage(iFound2, s_hwndEdit, WM_KEYDOWN) },
+        { __LINE__, "WM_IME_KEYUP", findMessage(iFound2, s_hwndEdit, WM_IME_KEYUP) },
+        { __LINE__, "WM_CHAR", findMessage(iFound2, s_hwndEdit, WM_CHAR) },
+        { __LINE__, "WM_IME_CHAR", findMessage(iFound2, s_hwndEdit, WM_IME_CHAR) },
+    };
+    INT iFound3 = entries3[_countof(entries3) - 1].iFound;
+    TEST_ENTRY entries4[] =
+    {
+        { __LINE__, "WM_IME_NOTIFY", findMessage(iFound3, s_hwndEdit, WM_IME_NOTIFY) },
+        { __LINE__, "WM_IME_NOTIFY", findMessage(iFound3, s_hImeWnd, WM_IME_NOTIFY) },
+        { __LINE__, "WM_IME_SETCONTEXT", findMessage(iFound3, s_hwndEdit, WM_IME_SETCONTEXT) },
+        { __LINE__, "WM_IME_SETCONTEXT", findMessage(iFound3, s_hImeWnd, WM_IME_SETCONTEXT) },
+    };
+    INT iFound4 = entries4[_countof(entries4) - 1].iFound;
+    TEST_ENTRY entries5[] =
+    {
+        { __LINE__, "WM_DESTROY", findMessage(iFound4, s_hMainWnd, WM_DESTROY) },
+        { __LINE__, "WM_DESTROY", findMessage(iFound4, s_hwndEdit, WM_DESTROY) },
+        { __LINE__, "WM_NCDESTROY", findMessage(iFound4, s_hwndEdit, WM_NCDESTROY) },
+        { __LINE__, "WM_NCDESTROY", findMessage(iFound4, s_hMainWnd, WM_NCDESTROY) },
+    };
+    DoAnalyzeEntries(_countof(entries1), entries1);
+    DoAnalyzeEntries(_countof(entries2), entries2);
+    DoAnalyzeEntries(_countof(entries3), entries3);
+    //DoAnalyzeEntries(_countof(entries4), entries4); // No order
+    DoAnalyzeEntries(_countof(entries5), entries5);
+
+    ok(iFound1 < entries2[0].iFound, "%d vs %d\n", iFound1, entries2[0].iFound);
+    ok(iFound2 < entries3[0].iFound, "%d vs %d\n", iFound2, entries3[0].iFound);
+    ok(iFound3 < entries4[0].iFound, "%d vs %d\n", iFound3, entries4[0].iFound);
+    ok(iFound4 < entries5[0].iFound, "%d vs %d\n", iFound4, entries5[0].iFound);
+
+    for (i = 0; i < _countof(entries4); ++i)
+    {
+        ok(entries4[i].iFound != -1, "entries4[%d].iFound was -1\n", i);
+    }
+}
 
 static LRESULT CALLBACK
-WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+EditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    LRESULT lResult;
+    LRESULT ret;
+    MSG msg = { hwnd, uMsg, wParam, lParam };
 
-    /* Skip asynchronous WM_TIMER messages */
-    if (uMsg == WM_TIMER) return InnerWindowProc(hwnd, uMsg, wParam, lParam);
-
-    /* build s_prefix */
-    DoBuildPrefix();
+    /* Build s_prefix */
+    MD_build_prefix();
 
     /* message dump */
     MD_msgdump(hwnd, uMsg, wParam, lParam);
 
-    ++s_nLevel;
-    s_msgStack[s_nLevel] = uMsg;
-    {
-        /* do inner task */
-        DoStage(hwnd, uMsg, wParam, lParam);
-        lResult = InnerWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-    --s_nLevel;
+    /* Add message */
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
+
+    /* Do inner task */
+    ret = CallWindowProc(s_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
 
     /* message return */
     StringCbCopyA(s_prefix, sizeof(s_prefix), "R: ");
-    MD_msgresult(hwnd, uMsg, wParam, lParam, lResult);
-    return lResult;
+    MD_msgresult(hwnd, uMsg, wParam, lParam, ret);
+
+    return ret;
 }
 
-static void General_DoTest(void)
+static LRESULT CALLBACK
+ImeWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    WNDCLASSA wc;
-    HWND hwnd;
-    MSG msg;
-    static const char s_szName[] = "MessageStateAnalyzerGeneral";
+    LRESULT ret;
+    MSG msg = { hwnd, uMsg, wParam, lParam };
 
-    trace("General_DoTest\n");
-    DoInitialize(s_GeneralStages, ARRAYSIZE(s_GeneralStages));
+    /* Build s_prefix */
+    MD_build_prefix();
 
-    /* register window class */
-    ZeroMemory(&wc, sizeof(wc));
-    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandleA(NULL);
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wc.lpszClassName = s_szName;
-    if (!RegisterClassA(&wc))
-    {
-        skip("RegisterClassW failed.\n");
-        return;
-    }
+    /* message dump */
+    MD_msgdump(hwnd, uMsg, wParam, lParam);
 
-    /* create a window */
-    hwnd = CreateWindowA(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
-                         0, 0, WIDTH, HEIGHT, NULL, NULL,
-                         GetModuleHandleW(NULL), NULL);
-    if (!hwnd)
-    {
-        skip("CreateWindowW failed.\n");
-        return;
-    }
+    /* Add message */
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
 
-    /* message loop */
-    while (GetMessageA(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-    }
+    /* Do inner task */
+    ret = CallWindowProc(s_fnOldImeWndProc, hwnd, uMsg, wParam, lParam);
 
-    ok_int(UnregisterClassA(s_szName, GetModuleHandleA(NULL)), TRUE);
+    /* message return */
+    StringCbCopyA(s_prefix, sizeof(s_prefix), "R: ");
+    MD_msgresult(hwnd, uMsg, wParam, lParam, ret);
 
-    DoFinish();
+    return ret;
 }
 
-static const STAGE s_IMEStages[] =
+static LRESULT CALLBACK
+InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    /* Stage 0 */
+    switch (uMsg)
     {
-        __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
-        4,
-        { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
-        { ACTION_FIRSTMINMAX, ACTION_NCCREATE, 0, 0 },
-    },
-    /* Stage 1 */
-    // show
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_SHOW,
-        6,
-        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
-          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
-    },
-    {
-        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_SETCONTEXT },
-        { ACTION_IME_SETCONTEXT_OPEN },
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_OPEN },
-    },
-    // hide
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_HIDE,
-        8,
-        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED,
-          WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS,
-          WM_IME_SETCONTEXT },
-        { 0, 0, 0, 0, 0, 0, 0, ACTION_IME_SETCONTEXT_CLOSE }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_CLOSE }
-    },
-    // show again
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
-        6,
-        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
-          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
-    },
-    {
-        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_SETCONTEXT },
-        { ACTION_IME_SETCONTEXT_OPEN },
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_OPEN },
-    },
-    // deactivate
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DEACTIVATE,
-        4,
-        { WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
-    },
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_SETCONTEXT },
-        { ACTION_IME_SETCONTEXT_CLOSE }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_CLOSE }
-    },
-    // activate
-    {
-        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, ACTION_ACTIVATE,
-        1,
-        { WM_IME_SETCONTEXT },
-        { ACTION_IME_SETCONTEXT_OPEN }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_OPEN },
-    },
-    // destroy
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DESTROY,
-        2,
-        { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED },
-    },
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_SETCONTEXT },
-        { ACTION_IME_SETCONTEXT_CLOSE }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { ACTION_IME_NOTIFY_CLOSE }
-    },
-    {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
-        2,
-        { WM_DESTROY, WM_NCDESTROY },
-    },
-};
+        case WM_NCCREATE:
+            s_hMainWnd = hwnd;
+            trace("s_hMainWnd: %p\n", s_hMainWnd);
+            break;
+        case WM_CREATE:
+            s_hwndEdit = CreateWindowW(L"EDIT", NULL, WS_CHILD | WS_VISIBLE,
+                                       0, 0, 100, 20, hwnd, NULL, GetModuleHandleW(NULL), NULL);
+            ok(s_hwndEdit != NULL, "s_hwndEdit was NULL\n");
+            trace("s_hwndEdit: %p\n", s_hwndEdit);
+            s_fnOldEditWndProc =
+                (WNDPROC)SetWindowLongPtrW(s_hwndEdit, GWLP_WNDPROC, (LONG_PTR)EditWindowProc);
+            SetFocus(s_hwndEdit);
+            PostMessageW(hwnd, WM_COMMAND, STAGE_1, 0);
+            break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case STAGE_1:
+                    s_hImeWnd = ImmGetDefaultIMEWnd(hwnd);
+                    ok(s_hImeWnd != NULL, "s_hImeWnd was NULL\n");
+                    trace("s_hImeWnd: %p\n", s_hImeWnd );
+                    s_fnOldImeWndProc = (WNDPROC)SetWindowLongPtrW(s_hImeWnd, GWLP_WNDPROC,
+                                                                   (LONG_PTR)ImeWindowProc);
+                    PostMessageW(hwnd, WM_COMMAND, STAGE_2, 0);
+                    break;
+                case STAGE_2:
+                    PostMessageW(s_hwndEdit, WM_IME_KEYDOWN, 'A', 0);
+                    PostMessageW(hwnd, WM_COMMAND, STAGE_3, 0);
+                    break;
+                case STAGE_3:
+                    PostMessageW(s_hwndEdit, WM_IME_KEYUP, 'A', 0);
+                    PostMessageW(hwnd, WM_COMMAND, STAGE_4, 0);
+                    break;
+                case STAGE_4:
+                    PostMessageW(s_hwndEdit, WM_IME_CHAR, 'A', 0);
+                    PostMessageW(hwnd, WM_COMMAND, STAGE_5, 0);
+                    break;
+                case STAGE_5:
+                    PostMessageW(hwnd, WM_CLOSE, 0, 0);
+                    break;
+            }
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+    }
 
-static void IME_DoTest(void)
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+static LRESULT CALLBACK
+WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    WNDCLASSA wc;
-    HWND hwnd;
-    MSG msg;
-    static const char s_szName[] = "MessageStateAnalyzerIME";
+    LRESULT ret;
+    MSG msg = { hwnd, uMsg, wParam, lParam };
 
-    trace("IME_DoTest\n");
-    DoInitialize(s_IMEStages, ARRAYSIZE(s_IMEStages));
+    /* Build s_prefix */
+    MD_build_prefix();
 
-    /* register window class */
-    ZeroMemory(&wc, sizeof(wc));
-    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandleA(NULL);
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wc.lpszClassName = s_szName;
-    if (!RegisterClassA(&wc))
-    {
-        skip("RegisterClassW failed.\n");
-        return;
-    }
+    /* message dump */
+    MD_msgdump(hwnd, uMsg, wParam, lParam);
 
-    /* create a window */
-    hwnd = CreateWindowA(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
-                         0, 0, WIDTH, HEIGHT, NULL, NULL,
-                         GetModuleHandleW(NULL), NULL);
-    if (!hwnd)
-    {
-        skip("CreateWindowW failed.\n");
-        return;
-    }
+    /* Add message */
+    if (s_cMsgs < MAX_MSGS)
+        s_Msgs[s_cMsgs++] = msg;
 
-    /* message loop */
-    while (GetMessageA(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-    }
+    /* Do inner task */
+    ret = InnerWindowProc(hwnd, uMsg, wParam, lParam);
 
-    ok_int(UnregisterClassA(s_szName, GetModuleHandleA(NULL)), TRUE);
+    /* message return */
+    StringCbCopyA(s_prefix, sizeof(s_prefix), "R: ");
+    MD_msgresult(hwnd, uMsg, wParam, lParam, ret);
 
-    DoFinish();
+    return ret;
 }
 
 START_TEST(MessageStateAnalyzer)
 {
-    General_DoTest();
-    IME_DoTest();
+    WNDCLASSW wc;
+    HWND hwnd;
+    MSG msg;
+    static const WCHAR s_szName[] = L"MessageStateAnalyzer";
+
+    /* register window class */
+    ZeroMemory(&wc, sizeof(wc));
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandleW(NULL);
+    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wc.lpszClassName = s_szName;
+    if (!RegisterClassW(&wc))
+    {
+        skip("RegisterClassW failed.\n");
+        return;
+    }
+
+    /* create a window */
+    hwnd = CreateWindowW(s_szName, s_szName, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                         CW_USEDEFAULT, CW_USEDEFAULT, 300, 200, NULL, NULL,
+                         GetModuleHandleW(NULL), NULL);
+    if (!hwnd)
+    {
+        skip("CreateWindowW failed.\n");
+        return;
+    }
+
+    /* message loop */
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    DoAnalyzeAllMessages();
 }
