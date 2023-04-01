@@ -290,33 +290,76 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
 
 BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
-                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
-                  DWORD dwRop, COLORREF keyColor)
+                  HDC hdcSrc, int nXSrc, int nYSrc, int nSrcWidth, int nSrcHeight,
+                  HBITMAP hbmMask, COLORREF keyColor)
 {
-    HDC hTempDC;
-    HDC hTempDC2;
-    HBITMAP hTempBm;
-    HBRUSH hTempBrush;
-    HBITMAP hTempMask;
+    HDC hTempDC1, hTempDC2;
+    HBITMAP hbmTempColor, hbmTempMask;
+    HGDIOBJ hbmOld1, hbmOld2;
 
-    hTempDC = CreateCompatibleDC(hdcSrc);
-    hTempDC2 = CreateCompatibleDC(hdcSrc);
-    hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
-    SelectObject(hTempDC, hTempBm);
-    hTempBrush = CreateSolidBrush(keyColor);
-    SelectObject(hTempDC, hTempBrush);
-    BitBlt(hTempDC, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
-    PatBlt(hTempDC, 0, 0, nWidth, nHeight, PATINVERT);
-    hTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
-    SelectObject(hTempDC2, hTempMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, 0, 0, SRCCOPY);
-    SelectObject(hTempDC, hbmMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, xMask, yMask, SRCAND);
-    MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, hTempMask, xMask, yMask, dwRop);
-    DeleteDC(hTempDC);
-    DeleteDC(hTempDC2);
-    DeleteObject(hTempBm);
-    DeleteObject(hTempBrush);
-    DeleteObject(hTempMask);
+    if (hbmMask == NULL)
+    {
+        if (keyColor == CLR_INVALID)
+        {
+            ::StretchBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                         hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+        }
+        else
+        {
+            ::GdiTransparentBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                                hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+        }
+        return TRUE;
+    }
+    else if (nWidth == nSrcWidth && nHeight == nSrcHeight && keyColor == CLR_INVALID)
+    {
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                  hdcSrc, nXSrc, nYSrc, hbmMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+        return TRUE;
+    }
+
+    hTempDC1 = ::CreateCompatibleDC(hdcDest);
+    hTempDC2 = ::CreateCompatibleDC(hdcDest);
+    hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+
+    // hbmTempMask <-- hbmMask (stretched)
+    hbmOld1 = ::SelectObject(hTempDC1, hbmMask);
+    hbmOld2 = ::SelectObject(hTempDC2, hbmTempMask);
+    ::StretchBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC1, 0, 0, nSrcWidth, nSrcHeight, SRCCOPY);
+    ::SelectObject(hTempDC2, hbmOld2);
+    ::SelectObject(hTempDC1, hbmOld1);
+
+    hbmOld1 = ::SelectObject(hTempDC1, hbmTempColor);
+    if (keyColor == CLR_INVALID)
+    {
+        // hbmTempColor <-- hdcSrc (stretched)
+        ::StretchBlt(hTempDC1, 0, 0, nWidth, nHeight,
+                     hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+    }
+    else
+    {
+        // hbmTempColor <-- hdcDest
+        ::BitBlt(hTempDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
+
+        // hbmTempColor <-- hdcSrc (color key)
+        ::GdiTransparentBlt(hTempDC1, 0, 0, nWidth, nHeight,
+                            hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+    }
+    ::SelectObject(hTempDC1, hbmOld1);
+
+    ::DeleteObject(hbmTempColor);
+    ::DeleteObject(hbmTempMask);
+    ::DeleteDC(hTempDC2);
+    ::DeleteDC(hTempDC1);
+
     return TRUE;
 }

@@ -220,9 +220,13 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     return hBitmap;
 }
 
-HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight)
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono)
 {
-    HBITMAP hbm2 = CreateDIBWithProperties(cy, cx);
+    HBITMAP hbm2;
+    if (bMono)
+        hbm2 = ::CreateBitmap(cy, cx, 1, 1, NULL);
+    else
+        hbm2 = CreateDIBWithProperties(cy, cx);
     if (!hbm2)
         return NULL;
 

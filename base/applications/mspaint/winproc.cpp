@@ -182,11 +182,9 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
     imageModel.CopyPrevious();
-    selectionModel.InsertFromHBITMAP(bitmap);
-
-    placeSelWin();
-    selectionWindow.ShowWindow(SW_SHOW);
-    selectionWindow.ForceRefreshSelectionContents();
+    selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
+    selectionModel.m_bShow = TRUE;
+    imageArea.Invalidate(FALSE);
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -278,9 +276,6 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
     // Creating the window inside the canvas
     imageArea.Create(canvasWindow, rcEmpty, NULL, WS_CHILD | WS_VISIBLE);
-
-    // Create selection window (initially hidden)
-    selectionWindow.Create(imageArea, rcEmpty, NULL, WS_CHILD | BS_OWNERDRAW);
 
     // Create and show the miniature if necessary
     if (registrySettings.ShowThumbnail)
@@ -407,7 +402,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 {
     HMENU menu = (HMENU)wParam;
     BOOL trueSelection =
-        (::IsWindowVisible(selectionWindow) &&
+        (selectionModel.m_bShow &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
 
     switch (lParam)
@@ -438,7 +433,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(registrySettings.ShowThumbnail));
             break;
         case 3: /* Image menu */
-            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(::IsWindowVisible(selectionWindow)));
+            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionModel.m_bShow));
             CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
             break;
     }
@@ -484,7 +479,6 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         if (hwndCapture)
         {
             if (canvasWindow.m_hWnd == hwndCapture ||
-                selectionWindow.m_hWnd == hwndCapture ||
                 imageArea.m_hWnd == hwndCapture ||
                 fullscreenWindow.m_hWnd == hwndCapture)
             {
@@ -610,7 +604,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
-            if (selectionWindow.IsWindowVisible())
+            if (selectionModel.m_bShow)
             {
                 if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
                     toolsModel.GetActiveTool() == TOOL_FREESEL)
@@ -736,31 +730,31 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
-                    if (::IsWindowVisible(selectionWindow))
+                    if (selectionModel.m_bShow)
                         selectionModel.FlipHorizontally();
                     else
                         imageModel.FlipHorizontally();
                     break;
                 case 2: /* flip vertically */
-                    if (::IsWindowVisible(selectionWindow))
+                    if (selectionModel.m_bShow)
                         selectionModel.FlipVertically();
                     else
                         imageModel.FlipVertically();
                     break;
                 case 3: /* rotate 90 degrees */
-                    if (::IsWindowVisible(selectionWindow))
+                    if (selectionModel.m_bShow)
                         selectionModel.RotateNTimes90Degrees(1);
                     else
                         imageModel.RotateNTimes90Degrees(1);
                     break;
                 case 4: /* rotate 180 degrees */
-                    if (::IsWindowVisible(selectionWindow))
+                    if (selectionModel.m_bShow)
                         selectionModel.RotateNTimes90Degrees(2);
                     else
                         imageModel.RotateNTimes90Degrees(2);
                     break;
                 case 5: /* rotate 270 degrees */
-                    if (::IsWindowVisible(selectionWindow))
+                    if (selectionModel.m_bShow)
                         selectionModel.RotateNTimes90Degrees(3);
                     else
                         imageModel.RotateNTimes90Degrees(3);
@@ -779,7 +773,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
-                if (::IsWindowVisible(selectionWindow))
+                if (selectionModel.m_bShow)
                 {
                     selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
                                                stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);

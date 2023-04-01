@@ -150,14 +150,25 @@ LRESULT CCanvasWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
     if (hit == HIT_NONE || hit == HIT_BORDER)
     {
-        if (toolsModel.GetActiveTool() == TOOL_BEZIER ||
-            toolsModel.GetActiveTool() == TOOL_SHAPE)
+        switch (toolsModel.GetActiveTool())
         {
-            if (ToolBase::pointSP != 0)
-            {
-                toolsModel.OnCancelDraw();
+            case TOOL_BEZIER:
+            case TOOL_SHAPE:
+                if (ToolBase::pointSP != 0)
+                {
+                    toolsModel.OnCancelDraw();
+                    imageArea.Invalidate();
+                }
+                break;
+
+            case TOOL_FREESEL:
+            case TOOL_RECTSEL:
+                toolsModel.OnFinishDraw();
                 imageArea.Invalidate();
-            }
+                break;
+
+            default:
+                break;
         }
 
         toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions

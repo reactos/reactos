@@ -17,20 +17,6 @@ POINT ToolBase::pointStack[256] = { { 0 } };
 /* FUNCTIONS ********************************************************/
 
 void
-placeSelWin()
-{
-    CRect rc;
-    rc.left = Zoomed(selectionModel.GetDestRectLeft());
-    rc.top = Zoomed(selectionModel.GetDestRectTop());
-    rc.right = rc.left + Zoomed(selectionModel.GetDestRectWidth());
-    rc.bottom = rc.top + Zoomed(selectionModel.GetDestRectHeight());
-    ::InflateRect(&rc, GRIP_SIZE, GRIP_SIZE);
-    selectionWindow.MoveWindow(rc.left, rc.top, rc.Width(), rc.Height(), TRUE);
-    selectionWindow.BringWindowToTop();
-    imageArea.InvalidateRect(NULL, FALSE);
-}
-
-void
 regularize(LONG x0, LONG y0, LONG& x1, LONG& y1)
 {
     if (abs(x1 - x0) >= abs(y1 - y0))
@@ -82,8 +68,11 @@ void ToolBase::reset()
     pointSP = 0;
     start.x = start.y = last.x = last.y = -1;
     selectionModel.ResetPtStack();
-    if (selectionWindow.IsWindow())
-        selectionWindow.ShowWindow(SW_HIDE);
+    if (selectionModel.m_bShow)
+    {
+        selectionModel.Landing();
+        selectionModel.m_bShow = FALSE;
+    }
 }
 
 void ToolBase::OnCancelDraw()
@@ -121,12 +110,14 @@ struct FreeSelTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
+        selectionModel.Landing();
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
-            selectionWindow.ShowWindow(SW_HIDE);
+            selectionModel.m_bShow = FALSE;
             selectionModel.ResetPtStack();
-            selectionModel.PushToPtStack(x, y);
+            POINT pt = { x, y };
+            selectionModel.PushToPtStack(pt);
         }
         m_bLeftButton = bLeftButton;
     }
@@ -137,7 +128,7 @@ struct FreeSelTool : ToolBase
         {
             POINT pt = { x, y };
             imageModel.Bound(pt);
-            selectionModel.PushToPtStack(pt.x, pt.y);
+            selectionModel.PushToPtStack(pt);
             imageModel.ResetToPrevious();
             selectionModel.DrawFramePoly(m_hdc);
         }
@@ -150,28 +141,25 @@ struct FreeSelTool : ToolBase
             imageModel.ResetToPrevious();
             if (selectionModel.PtStackSize() > 2)
             {
-                selectionModel.CalculateBoundingBoxAndContents(m_hdc);
-                placeSelWin();
-                selectionWindow.IsMoved(FALSE);
-                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+                selectionModel.BuildMaskFromPtStack();
+                selectionModel.TakeOff();
+                selectionModel.m_bShow = TRUE;
             }
             else
             {
                 imageModel.Undo(TRUE);
-                selectionWindow.IsMoved(FALSE);
                 selectionModel.ResetPtStack();
-                selectionWindow.ShowWindow(SW_HIDE);
+                selectionModel.m_bShow = FALSE;
             }
+            imageArea.Invalidate(FALSE);
         }
     }
 
     void OnFinishDraw()
     {
         if (m_bLeftButton)
-        {
-            selectionWindow.IsMoved(FALSE);
-            selectionWindow.ForceRefreshSelectionContents();
-        }
+            imageArea.Invalidate(FALSE);
+
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
     }
@@ -181,7 +169,6 @@ struct FreeSelTool : ToolBase
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
         m_bLeftButton = FALSE;
-        selectionWindow.IsMoved(FALSE);
         ToolBase::OnCancelDraw();
     }
 };
@@ -197,11 +184,12 @@ struct RectSelTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
+        selectionModel.Landing();
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
-            selectionWindow.ShowWindow(SW_HIDE);
-            selectionModel.SetSrcRectSizeToZero();
+            selectionModel.m_bShow = FALSE;
+            ::SetRectEmpty(&selectionModel.m_rc);
         }
         m_bLeftButton = bLeftButton;
     }
@@ -213,7 +201,7 @@ struct RectSelTool : ToolBase
             imageModel.ResetToPrevious();
             POINT pt = { x, y };
             imageModel.Bound(pt);
-            selectionModel.SetSrcAndDestRectFromPoints(start, pt);
+            selectionModel.SetRectFromPoints(start, pt);
             RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
         }
     }
@@ -225,23 +213,16 @@ struct RectSelTool : ToolBase
             imageModel.ResetToPrevious();
             if (start.x == x && start.y == y)
                 imageModel.Undo(TRUE);
-            selectionModel.CalculateContents(m_hdc);
-            placeSelWin();
-            selectionWindow.IsMoved(FALSE);
-            if (selectionModel.IsSrcRectSizeNonzero())
-                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
-            else
-                selectionWindow.ShowWindow(SW_HIDE);
+            selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
+            imageArea.Invalidate(FALSE);
         }
     }
 
     void OnFinishDraw()
     {
         if (m_bLeftButton)
-        {
-            selectionWindow.IsMoved(FALSE);
-            selectionWindow.ForceRefreshSelectionContents();
-        }
+            imageArea.Invalidate(FALSE);
+
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
     }
@@ -251,7 +232,6 @@ struct RectSelTool : ToolBase
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
         m_bLeftButton = FALSE;
-        selectionWindow.IsMoved(FALSE);
         ToolBase::OnCancelDraw();
     }
 };
@@ -430,7 +410,7 @@ struct TextTool : ToolBase
         imageModel.ResetToPrevious();
         POINT pt = { x, y };
         imageModel.Bound(pt);
-        selectionModel.SetSrcAndDestRectFromPoints(start, pt);
+        selectionModel.SetRectFromPoints(start, pt);
         RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
     }
 
@@ -452,6 +432,10 @@ struct TextTool : ToolBase
     {
         imageModel.Undo(TRUE);
 
+        POINT pt = { x, y };
+        imageModel.Bound(pt);
+        selectionModel.SetRectFromPoints(start, pt);
+
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
         {
@@ -466,6 +450,13 @@ struct TextTool : ToolBase
             imageModel.CopyPrevious();
             Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
                  textEditWindow.GetFont(), style);
+
+            if (selectionModel.m_rc.IsRectEmpty())
+            {
+                textEditWindow.ShowWindow(SW_HIDE);
+                textEditWindow.SetWindowText(NULL);
+                return;
+            }
         }
 
         if (registrySettings.ShowTextTool)
@@ -476,45 +467,35 @@ struct TextTool : ToolBase
             fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
         }
 
-        if (!bTextBoxShown || selectionModel.IsSrcRectSizeNonzero())
+        RECT rc = selectionModel.m_rc;
+
+        // Enlarge if tool small
+        INT cxMin = CX_MINTEXTEDIT, cyMin = CY_MINTEXTEDIT;
+        if (selectionModel.m_rc.IsRectEmpty())
         {
-            RECT rc;
-            selectionModel.GetRect(&rc);
-
-            // Enlarge if tool small
-            INT cxMin = CX_MINTEXTEDIT, cyMin = CY_MINTEXTEDIT;
-            if (selectionModel.IsSrcRectSizeNonzero())
-            {
-                if (rc.right - rc.left < cxMin)
-                    rc.right = rc.left + cxMin;
-                if (rc.bottom - rc.top < cyMin)
-                    rc.bottom = rc.top + cyMin;
-            }
-            else
-            {
-                SetRect(&rc, x, y, x + cxMin, y + cyMin);
-            }
-
-            if (!textEditWindow.IsWindow())
-                textEditWindow.Create(imageArea);
-
-            textEditWindow.SetWindowText(NULL);
-            textEditWindow.ValidateEditRect(&rc);
-            textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
-            textEditWindow.SetFocus();
+            SetRect(&rc, x, y, x + cxMin, y + cyMin);
         }
         else
         {
-            textEditWindow.ShowWindow(SW_HIDE);
-            textEditWindow.SetWindowText(NULL);
+            if (rc.right - rc.left < cxMin)
+                rc.right = rc.left + cxMin;
+            if (rc.bottom - rc.top < cyMin)
+                rc.bottom = rc.top + cyMin;
         }
+
+        if (!textEditWindow.IsWindow())
+            textEditWindow.Create(imageArea);
+
+        textEditWindow.SetWindowText(NULL);
+        textEditWindow.ValidateEditRect(&rc);
+        textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
+        textEditWindow.SetFocus();
     }
 
     void OnFinishDraw()
     {
         toolsModel.OnButtonDown(TRUE, -1, -1, TRUE);
         toolsModel.OnButtonUp(TRUE, -1, -1);
-        selectionWindow.IsMoved(FALSE);
         ToolBase::OnFinishDraw();
     }
 };

@@ -13,9 +13,15 @@
 class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE) { }
+    CImgAreaWindow()
+        : drawing(FALSE)
+        , m_hitSelection(HIT_NONE)
+    {
+    }
 
     BOOL drawing;
+    CANVAS_HITTEST m_hitSelection;
+
     void cancelDrawing();
     void finishDrawing();
 
@@ -71,4 +77,8 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
+    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
+    void StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
+    void SelectionDragging(POINT ptUnZoomed);
+    void EndSelectionDrag(POINT ptUnZoomed);
 };
