@@ -618,7 +618,7 @@ BEGIN
     GROUPBOX "Options de vérification du disque", -1, 7, 6, 229, 40
     PUSHBUTTON "Annuler", IDCANCEL, 178, 95, 60, 14
     AUTOCHECKBOX "&Réparer automatiquement les erreurs du système de fichiers", 14000, 12, 20, 215, 10
-    AUTOCHECKBOX "Re&chercher et tenter une récupération des secteurs défectueux", 14001, 12, 30, 215, 10
+    AUTOCHECKBOX "Re&chercher et tenter une récupération des secteurs défectueux", 14001, 16, 30, 215, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 229, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
