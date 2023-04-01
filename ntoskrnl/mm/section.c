@@ -1477,7 +1477,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                     break;
                 MmUnlockSectionSegment(Segment);
                 MmUnlockAddressSpace(AddressSpace);
-                YieldProcessor();
+                KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
                 MmLockAddressSpace(AddressSpace);
                 MmLockSectionSegment(Segment);
             }
@@ -1608,7 +1608,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         if (SwapEntry == MM_WAIT_ENTRY)
         {
             MmUnlockAddressSpace(AddressSpace);
-            YieldProcessor();
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
             MmLockAddressSpace(AddressSpace);
             return STATUS_MM_RESTART_OPERATION;
         }
@@ -1789,7 +1789,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         {
             MmUnlockSectionSegment(Segment);
             MmUnlockAddressSpace(AddressSpace);
-            YieldProcessor();
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
             MmLockAddressSpace(AddressSpace);
             return STATUS_MM_RESTART_OPERATION;
         }
@@ -3442,7 +3442,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         MmUnlockSectionSegment(Segment);
         MmUnlockAddressSpace(AddressSpace);
 
-        YieldProcessor();
+        KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
 
         MmLockAddressSpace(AddressSpace);
         MmLockSectionSegment(Segment);
@@ -5202,7 +5202,7 @@ MmMakePagesDirty(
         {
             MmUnlockSectionSegment(Segment);
             MmUnlockAddressSpace(AddressSpace);
-            YieldProcessor();
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
             MmLockAddressSpace(AddressSpace);
             MmLockSectionSegment(Segment);
             Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
