@@ -418,7 +418,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
         dwSelectFlags |= SVSI_EDIT;
 
     /* Notify the view object about the new item */
-    SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
+    SHChangeNotify(wEventId, uFlags | SHCNF_FLUSH, (LPCVOID)pszName, NULL);
 
     if (!m_pSite)
         return S_OK;

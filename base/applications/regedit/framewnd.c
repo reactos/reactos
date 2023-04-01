@@ -383,7 +383,7 @@ static BOOL LoadHive(HWND hWnd)
                 /* refresh tree and list views */
                 RefreshTreeView(g_pChildWnd->hTreeWnd);
                 pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-                RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+                RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
             }
             else
             {
@@ -421,7 +421,7 @@ static BOOL UnloadHive(HWND hWnd)
         /* refresh tree and list views */
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
     }
     else
     {
@@ -518,7 +518,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /* refresh tree and list views */
     RefreshTreeView(g_pChildWnd->hTreeWnd);
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath);
+    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath, TRUE);
 
     return bRet;
 }
@@ -877,7 +877,7 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
         return FALSE;
     }
 
-    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
 
     /* locate the newly added value, and get ready to rename it */
     memset(&lvfi, 0, sizeof(lvfi));
@@ -885,7 +885,12 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
     lvfi.psz = szNewValue;
     iIndex = ListView_FindItem(g_pChildWnd->hListWnd, -1, &lvfi);
     if (iIndex >= 0)
+    {
+        ListView_SetItemState(g_pChildWnd->hListWnd, iIndex,
+                              LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+        ListView_EnsureVisible(g_pChildWnd->hListWnd, iIndex, FALSE);
         (void)ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
+    }
 
     return TRUE;
 }
@@ -1128,11 +1133,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case ID_EDIT_MODIFY:
         if (valueName && ModifyValue(hWnd, hKey, valueName, FALSE))
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
         break;
     case ID_EDIT_MODIFY_BIN:
         if (valueName && ModifyValue(hWnd, hKey, valueName, TRUE))
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
         break;
     case ID_EDIT_RENAME:
         if (GetFocus() == g_pChildWnd->hListWnd)
@@ -1180,7 +1185,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         item = ni;
                     }
 
-                    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+                    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
                     if(errs > 0)
                     {
                         LoadStringW(hInst, IDS_ERR_DELVAL_CAPTION, caption, ARRAY_SIZE(caption));
@@ -1243,7 +1248,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
         /*case ID_OPTIONS_TOOLBAR:*/
         /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/

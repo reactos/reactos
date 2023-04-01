@@ -10,14 +10,18 @@
 
 #pragma once
 
-class CImgAreaWindow : public CWindowImpl<CMainWindow>
+class CImgAreaWindow : public CWindowImpl<CImgAreaWindow>
 {
 public:
-    CImgAreaWindow() : drawing(FALSE)
+    CImgAreaWindow()
+        : drawing(FALSE)
+        , m_hitSelection(HIT_NONE)
     {
     }
 
     BOOL drawing;
+    CANVAS_HITTEST m_hitSelection;
+
     void cancelDrawing();
     void finishDrawing();
 
@@ -42,9 +46,17 @@ public:
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
     END_MSG_MAP()
 
 private:
+    HCURSOR m_hCurFill;
+    HCURSOR m_hCurColor;
+    HCURSOR m_hCurZoom;
+    HCURSOR m_hCurPen;
+    HCURSOR m_hCurAirbrush;
+
+    LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -65,4 +77,8 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
+    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
+    void StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
+    void SelectionDragging(POINT ptUnZoomed);
+    void EndSelectionDrag(POINT ptUnZoomed);
 };

@@ -6,12 +6,21 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 #include <math.h>
 
+INT fileSize = 0;
+float g_xDpi = 96;
+float g_yDpi = 96;
+SYSTEMTIME fileTime;
+
 /* FUNCTIONS ********************************************************/
+
+// Convert DPI (dots per inch) into PPM (pixels per meter)
+float PpmFromDpi(float dpi)
+{
+    return dpi / 0.0254; // 1 DPI is 0.0254 meter.
+}
 
 HBITMAP
 CreateDIBWithProperties(int width, int height)
@@ -68,9 +77,9 @@ GetDIBHeight(HBITMAP hBitmap)
 
 BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 {
-    CImage img;
+    CImageDx img;
     img.Attach(hBitmap);
-    img.Save(FileName);  // TODO: error handling
+    img.SaveDx(FileName, GUID_NULL, g_xDpi, g_yDpi); // TODO: error handling
     img.Detach();
 
     WIN32_FIND_DATA find;
@@ -116,16 +125,12 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
         if (hBitmap == NULL)
             return FALSE;
 
-        fileHPPM = fileVPPM = 2834;
-        ZeroMemory(&fileTime, sizeof(fileTime));
-    }
-    else
-    {
-        // update PPMs
         HDC hScreenDC = GetDC(NULL);
-        fileHPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
-        fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
+        g_xDpi = GetDeviceCaps(hScreenDC, LOGPIXELSX);
+        g_yDpi = GetDeviceCaps(hScreenDC, LOGPIXELSY);
         ReleaseDC(NULL, hScreenDC);
+
+        ZeroMemory(&fileTime, sizeof(fileTime));
     }
 
     // update image
@@ -185,8 +190,14 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     }
 
     // load the image
-    CImage img;
-    img.Load(name);
+    CImageDx img;
+    img.LoadDx(name, &g_xDpi, &g_yDpi);
+
+    if (g_xDpi <= 0)
+        g_xDpi = 96;
+    if (g_yDpi <= 0)
+        g_yDpi = 96;
+
     HBITMAP hBitmap = img.Detach();
 
     if (hBitmap == NULL)
@@ -209,9 +220,13 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     return hBitmap;
 }
 
-HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight)
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono)
 {
-    HBITMAP hbm2 = CreateDIBWithProperties(cy, cx);
+    HBITMAP hbm2;
+    if (bMono)
+        hbm2 = ::CreateBitmap(cy, cx, 1, 1, NULL);
+    else
+        hbm2 = CreateDIBWithProperties(cy, cx);
     if (!hbm2)
         return NULL;
 

@@ -30,7 +30,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -43,9 +43,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 26, 39, 90, 8
+    LTEXT "No&me:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 26, 59, 90, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 54, 57, 70, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -55,16 +55,16 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\nSe si è in rete, il nome del computer deve essere univoco.", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "Nome del &computer:", IDC_STATIC, 29, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\nSe si è in rete, il nome del computer deve essere univoco.", IDC_STATIC, 54, 7, 241, 24
+    LTEXT "Nome del &computer:", IDC_STATIC, 54, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. Si potrà usare questo account se si necessita l'accesso completo al computer.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Scrivere una password per Administrator che sia lunga al massimo 127 caratteri.", IDC_STATIC, 26, 87, 280, 8
-    LTEXT "Password per &Administrator:", IDC_STATIC, 29, 105, 95, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 140, 100, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfermare la password:", IDC_STATIC, 29, 125, 95, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 140, 120, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. Si potrà usare questo account se si necessita l'accesso completo al computer.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Scrivere una password per Administrator di massimo 127 caratteri.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Password per &Administrator:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfermare la password:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

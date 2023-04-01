@@ -30,7 +30,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -55,16 +55,16 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Digite um nome para o seu computador com 15 caracteres ou menos. Se você está em uma rede, o nome do computador deve ser exclusivo.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Digite um nome para o seu computador com 15 caracteres ou menos. Se você está em uma rede, o nome do computador deve ser exclusivo.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "Nome do &Computador:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A instalação vai criar uma conta no seu computador chamada Administrator. Você pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Digite uma senha para o administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Senha do &Administrador:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirma Senha:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "A instalação vai criar uma conta no seu computador chamada Administrator. Você pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Digite uma senha para o administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Senha do &Administrador:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirma Senha:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143

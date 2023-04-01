@@ -119,6 +119,7 @@
 #define ID_SHAPE    613
 #define ID_ELLIPSE  614
 #define ID_RRECT    615
+#define NUM_TOOLS (ID_RRECT - ID_FREESEL + 1)
 
 #define ID_ACCELERATORS 800
 

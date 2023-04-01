@@ -185,7 +185,7 @@ BEGIN
     LTEXT "Vous ne trouvez pas les informations que vous cherchez ? Voici ce que vous pouvez faire :", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "Informations système", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "Affiche des informations système complémentaires", IDC_STATIC, 90, 23, 300, 10
-    PUSHBUTTON "Remplacer la freq. de rafraichissement", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
+    PUSHBUTTON "Remplacer...", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
     LTEXT "Remplacer la freq. de rafraichissement pour DirectDraw", IDC_STATIC, 90, 43, 300, 10
 END
 

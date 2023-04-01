@@ -6,9 +6,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+ImageModel imageModel;
 
 /* FUNCTIONS ********************************************************/
 
@@ -64,7 +64,7 @@ void ImageModel::Undo(BOOL bClearRedo)
     {
         int oldWidth = GetWidth();
         int oldHeight = GetHeight();
-        selectionWindow.ShowWindow(SW_HIDE);
+        selectionModel.m_bShow = FALSE;
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
@@ -85,7 +85,7 @@ void ImageModel::Redo()
     {
         int oldWidth = GetWidth();
         int oldHeight = GetHeight();
-        selectionWindow.ShowWindow(SW_HIDE);
+        selectionModel.m_bShow = FALSE;
         currInd = (currInd + 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
@@ -264,7 +264,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     case 1:
     case 3:
         DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1);
+        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
         currInd = (currInd + 1) % HISTORYSIZE;
         if (undoSteps < HISTORYSIZE - 1)
             undoSteps++;
@@ -282,23 +282,15 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     NotifyImageChanged();
 }
 
-void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
-{
-    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-        selectionModel.DrawBackgroundPoly(hDrawingDC, rgbBG);
-    else
-        selectionModel.DrawBackgroundRect(hDrawingDC, rgbBG);
-}
-
 void ImageModel::DeleteSelection()
 {
-    if (selectionWindow.IsWindowVisible())
-        ResetToPrevious();
-    CopyPrevious();
-    if (selectionWindow.IsWindowVisible())
-        Undo(TRUE);
-    DrawSelectionBackground(paletteModel.GetBgColor());
-    selectionWindow.ShowWindow(SW_HIDE);
+    if (!selectionModel.m_bShow)
+        return;
+
+    selectionModel.TakeOff();
+    selectionModel.m_bShow = FALSE;
+    selectionModel.ClearColor();
+    selectionModel.ClearMask();
     NotifyImageChanged();
 }
 

@@ -99,7 +99,7 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
         SetDlgItemText(IDD_ATTRIBUTESTEXT7, strSize);
     }
     CString strRes;
-    strRes.Format(IDS_PRINTRES, fileHPPM, fileVPPM);
+    strRes.Format(IDS_PRINTRES, (INT)PpmFromDpi(g_xDpi), (INT)PpmFromDpi(g_yDpi));
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
     return 0;
 }
@@ -136,9 +136,9 @@ LRESULT CAttributesDialog::OnDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CString strNum;
-    strNum.Format(_T("%.3lf"), newWidth / (0.0254 * fileHPPM));
+    strNum.Format(_T("%.3lf"), newWidth / g_xDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
-    strNum.Format(_T("%.3lf"), newHeight / (0.0254 * fileVPPM));
+    strNum.Format(_T("%.3lf"), newHeight / g_yDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT2, strNum);
     return 0;
 }
@@ -146,9 +146,9 @@ LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndC
 LRESULT CAttributesDialog::OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CString strNum;
-    strNum.Format(_T("%.3lf"), newWidth * 100.0 / fileHPPM);
+    strNum.Format(_T("%.3lf"), newWidth * 100 / PpmFromDpi(g_xDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
-    strNum.Format(_T("%.3lf"), newHeight * 100.0 / fileVPPM);
+    strNum.Format(_T("%.3lf"), newHeight * 100 / PpmFromDpi(g_yDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT2, strNum);
     return 0;
 }
@@ -168,12 +168,12 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM * 0.0254));
+            newWidth = max(1, (int) (_tcstod(tempS, NULL) * g_xDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM / 100));
+            newWidth = max(1, (int) (_tcstod(tempS, NULL) * PpmFromDpi(g_xDpi) / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
@@ -193,12 +193,12 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM * 0.0254));
+            newHeight = max(1, (int) (_tcstod(tempS, NULL) * g_yDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM / 100));
+            newHeight = max(1, (int) (_tcstod(tempS, NULL) * PpmFromDpi(g_yDpi) / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {

@@ -9,66 +9,54 @@
 
 #pragma once
 
-/* DEFINES **********************************************************/
-
-#define ACTION_MOVE                 0
-#define ACTION_RESIZE_TOP_LEFT      1
-#define ACTION_RESIZE_TOP           2
-#define ACTION_RESIZE_TOP_RIGHT     3
-#define ACTION_RESIZE_LEFT          4
-#define ACTION_RESIZE_RIGHT         5
-#define ACTION_RESIZE_BOTTOM_LEFT   6
-#define ACTION_RESIZE_BOTTOM        7
-#define ACTION_RESIZE_BOTTOM_RIGHT  8
-
-/* CLASSES **********************************************************/
-
 class SelectionModel
 {
 private:
-    HDC m_hDC;
-    RECT m_rcSrc;
-    RECT m_rcDest;
-    HBITMAP m_hBm;
-    HBITMAP m_hMask;
+    HBITMAP m_hbmColor;
+    HBITMAP m_hbmMask;
     POINT *m_ptStack;
     int m_iPtSP;
 
-//     void NotifySelectionChanging();
-//     void NotifySelectionChanged();
-    void NotifyRefreshNeeded();
-
 public:
+    BOOL m_bShow;
+    CRect m_rc;    // in image pixel coordinates
+    POINT m_ptHit; // in image pixel coordinates
+
     SelectionModel();
     ~SelectionModel();
+
     void ResetPtStack();
-    void PushToPtStack(LONG x, LONG y);
-    void CalculateBoundingBoxAndContents(HDC hDCImage);
-    void CalculateContents(HDC hDCImage);
+    void PushToPtStack(POINT pt);
+    int PtStackSize() const;
+    void SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
+    void BuildMaskFromPtStack();
+
+    BOOL TakeOff();
+    void Landing();
+
+    HBITMAP GetBitmap() const;
+    void GetSelectionContents(HDC hDCImage);
+    void DrawFramePoly(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
-    void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
-    void DrawSelectionStretched(HDC hDCImage);
-    void ScaleContentsToFit();
+    void DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
     void InsertFromHBITMAP(HBITMAP hBm, INT x = 0, INT y = 0);
+
+    // operation
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
-    HBITMAP GetBitmap() const;
-    int PtStackSize() const;
-    void DrawFramePoly(HDC hDCImage);
-    void SetSrcAndDestRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
-    void SetSrcRectSizeToZero();
-    BOOL IsSrcRectSizeNonzero() const;
-    void ModifyDestRect(POINT& ptDelta, int iAction);
-    LONG GetDestRectWidth() const;
-    LONG GetDestRectHeight() const;
-    LONG GetDestRectLeft() const;
-    LONG GetDestRectTop() const;
-    void GetRect(LPRECT prc) const;
+    void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
+
+    void CancelSelection();
+    void NotifyRefreshNeeded();
+    void Dragging(CANVAS_HITTEST hit, POINT pt);
+    void ClearMask();
+    void ClearColor();
 
 private:
     SelectionModel(const SelectionModel&);
     SelectionModel& operator=(const SelectionModel&);
+
+    void ShiftPtStack(BOOL bPlus);
 };

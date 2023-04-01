@@ -83,8 +83,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Seleccione  configuração típica ou personalizada:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
     LTEXT "Cria ligações de rede utilizando Cliente para Redes ReactOS. Ficheiros e Impresoras partilhadas para Redes ReactOS, e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurar manualmente componentes de rede.", IDC_STATIC, 65, 90, 243, 20
 END
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalador do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Deseja que este computador seja membro de um domínio?\n\
+    LTEXT "Pretende que este computador seja membro de um domínio?\n\
 (Pode obter esta informação do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Não, este computador fará parte de um grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sim, este computador fará parte de um &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
@@ -150,8 +150,8 @@ BEGIN
     IDS_NET_STATUS "Estado"
     IDS_NET_REPAIR "Reparar"
     IDS_NET_CREATELINK "Criar acesso directo"
-    IDS_NET_DELETE "Apagar"
-    IDS_NET_RENAME "Renomear"
+    IDS_NET_DELETE "Eliminar"
+    IDS_NET_RENAME "Mudar o nome"
     IDS_NET_PROPERTIES "Propriedades"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
@@ -165,10 +165,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKSETTINGSTITLE "Configuração de rede"
+    IDS_NETWORKSETTINGSTITLE "Definições de rede"
     IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à Internet."
     IDS_NETWORKCOMPONENTTITLE "Componetes de rede"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar no seu equipamento. Para adicionar novos componentes, clique em Instalar."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em Instalar."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
     IDS_NETWORKDOMAINSUBTITLE "Um domínio é um grupo de computadores gerido por um administrador de rede. Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome."
     IDS_REACTOS_SETUP "Instalador do ReactOS"

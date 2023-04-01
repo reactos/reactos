@@ -23,12 +23,15 @@
 #include <shellapi.h>
 #include <commdlg.h>
 #include <tchar.h>
+#include <stdlib.h>
 #include <malloc.h>
+#ifdef _DEBUG
+    #define _CRTDBG_MAP_ALLOC
+    #include <crtdbg.h>
+#endif
 
 #include "dialog.h"
 #include "notepad_res.h"
-
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 #define EDIT_STYLE_WRAP (WS_CHILD | WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL)
 #define EDIT_STYLE      (EDIT_STYLE_WRAP | WS_HSCROLL | ES_AUTOHSCROLL)

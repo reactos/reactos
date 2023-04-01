@@ -6,9 +6,9 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
+
+ToolsModel toolsModel;
 
 /* FUNCTIONS ********************************************************/
 
@@ -141,8 +141,8 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
 {
     m_transpBg = bTransparent;
     NotifyToolSettingsChanged();
-    if (selectionWindow.IsWindow())
-        selectionWindow.ForceRefreshSelectionContents();
+    if (imageArea.IsWindow())
+        imageArea.Invalidate(FALSE);
 }
 
 int ToolsModel::GetZoom() const
@@ -172,8 +172,6 @@ void ToolsModel::NotifyToolSettingsChanged()
 {
     if (toolSettingsWindow.IsWindow())
         toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
-    if (selectionWindow.IsWindow())
-        selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
@@ -184,8 +182,8 @@ void ToolsModel::NotifyZoomChanged()
         toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
-    if (selectionWindow.IsWindow())
-        selectionWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (imageArea.IsWindow())
+        imageArea.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)

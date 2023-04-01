@@ -123,9 +123,11 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
     b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     for(a = 0; a <= b; a++)
-        Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - radius + 1,
-                  (y1 * (b - a) + y2 * a) / b - radius + 1, (x1 * (b - a) + x2 * a) / b + radius + 1,
-                  (y1 * (b - a) + y2 * a) / b + radius + 1);
+        Rectangle(hdc,
+                  (x1 * (b - a) + x2 * a) / b - radius,
+                  (y1 * (b - a) + y2 * a) / b - radius,
+                  (x1 * (b - a) + x2 * a) / b + radius,
+                  (y1 * (b - a) + y2 * a) / b + radius);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
 }
@@ -172,8 +174,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 1:
             for(a = 0; a <= b; a++)
-                Ellipse(hdc, (x1 * (b - a) + x2 * a) / b - 1, (y1 * (b - a) + y2 * a) / b - 1,
-                        (x1 * (b - a) + x2 * a) / b + 3, (y1 * (b - a) + y2 * a) / b + 3);
+                Ellipse(hdc,
+                        (x1 * (b - a) + x2 * a) / b - 2,
+                        (y1 * (b - a) + y2 * a) / b - 2,
+                        (x1 * (b - a) + x2 * a) / b + 2,
+                        (y1 * (b - a) + y2 * a) / b + 2);
             break;
         case 2:
             MoveToEx(hdc, x1, y1, NULL);
@@ -182,8 +187,11 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
             break;
         case 3:
             for(a = 0; a <= b; a++)
-                Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - 3, (y1 * (b - a) + y2 * a) / b - 3,
-                          (x1 * (b - a) + x2 * a) / b + 5, (y1 * (b - a) + y2 * a) / b + 5);
+                Rectangle(hdc,
+                          (x1 * (b - a) + x2 * a) / b - 4,
+                          (y1 * (b - a) + y2 * a) / b - 4,
+                          (x1 * (b - a) + x2 * a) / b + 4,
+                          (y1 * (b - a) + y2 * a) / b + 4);
             break;
         case 4:
             for(a = 0; a <= b; a++)
@@ -202,10 +210,10 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 10:
         case 11:
         {
-            POINT offsTop[] = {{4, -3}, {2, -2}, {0, 0},
-                               {-3, -3}, {-2, -2}, {-1, 0}};
-            POINT offsBtm[] = {{-3, 4}, {-2, 2}, {-1, 1},
-                               {4, 4}, {2, 2}, {0, 1}};
+            POINT offsTop[] = {{3, -3}, {2, -2}, {0, 0},
+                               {-4, -4}, {-2, -2}, {-1, 0}};
+            POINT offsBtm[] = {{-3, 3}, {-2, 2}, {-1, 1},
+                               {3, 3}, {2, 2}, {0, 1}};
             LONG idx = style - 6;
             POINT pts[4];
             pts[0].x = x1 + offsTop[idx].x;
@@ -246,34 +254,6 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 }
 
 void
-SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF system_selection_color)
-{
-    HBRUSH oldBrush;
-    LOGBRUSH logbrush;
-    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, system_selection_color));
-
-    logbrush.lbStyle = BS_HOLLOW;
-    logbrush.lbColor = 0;
-    logbrush.lbHatch = 0;
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateBrushIndirect(&logbrush));
-    Rectangle(hdc, x1, y1, x2, y2); /* SEL BOX FRAME */
-    DeleteObject(SelectObject(hdc, oldBrush));
-    DeleteObject(SelectObject(hdc, oldPen));
-    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, system_selection_color));
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(system_selection_color));
-    Rectangle(hdc, x1 - 1, y1 - 1, x1 + 2, y1 + 2);
-    Rectangle(hdc, x2 - 2, y1 - 1, x2 + 2, y1 + 2);
-    Rectangle(hdc, x1 - 1, y2 - 2, x1 + 2, y2 + 1);
-    Rectangle(hdc, x2 - 2, y2 - 2, x2 + 2, y2 + 1);
-    Rectangle(hdc, (x1 + x2) / 2 - 1, y1 - 1, (x1 + x2) / 2 + 2, y1 + 2);
-    Rectangle(hdc, (x1 + x2) / 2 - 1, y2 - 2, (x1 + x2) / 2 + 2, y2 + 1);
-    Rectangle(hdc, x1 - 1, (y1 + y2) / 2 - 1, x1 + 2, (y1 + y2) / 2 + 2);
-    Rectangle(hdc, x2 - 2, (y1 + y2) / 2 - 1, x2 + 1, (y1 + y2) / 2 + 2);
-    DeleteObject(SelectObject(hdc, oldBrush));
-    DeleteObject(SelectObject(hdc, oldPen));
-}
-
-void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
     INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.
@@ -310,33 +290,76 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
 
 BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
-                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
-                  DWORD dwRop, COLORREF keyColor)
+                  HDC hdcSrc, int nXSrc, int nYSrc, int nSrcWidth, int nSrcHeight,
+                  HBITMAP hbmMask, COLORREF keyColor)
 {
-    HDC hTempDC;
-    HDC hTempDC2;
-    HBITMAP hTempBm;
-    HBRUSH hTempBrush;
-    HBITMAP hTempMask;
+    HDC hTempDC1, hTempDC2;
+    HBITMAP hbmTempColor, hbmTempMask;
+    HGDIOBJ hbmOld1, hbmOld2;
 
-    hTempDC = CreateCompatibleDC(hdcSrc);
-    hTempDC2 = CreateCompatibleDC(hdcSrc);
-    hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
-    SelectObject(hTempDC, hTempBm);
-    hTempBrush = CreateSolidBrush(keyColor);
-    SelectObject(hTempDC, hTempBrush);
-    BitBlt(hTempDC, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
-    PatBlt(hTempDC, 0, 0, nWidth, nHeight, PATINVERT);
-    hTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
-    SelectObject(hTempDC2, hTempMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, 0, 0, SRCCOPY);
-    SelectObject(hTempDC, hbmMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, xMask, yMask, SRCAND);
-    MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, hTempMask, xMask, yMask, dwRop);
-    DeleteDC(hTempDC);
-    DeleteDC(hTempDC2);
-    DeleteObject(hTempBm);
-    DeleteObject(hTempBrush);
-    DeleteObject(hTempMask);
+    if (hbmMask == NULL)
+    {
+        if (keyColor == CLR_INVALID)
+        {
+            ::StretchBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                         hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+        }
+        else
+        {
+            ::GdiTransparentBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                                hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+        }
+        return TRUE;
+    }
+    else if (nWidth == nSrcWidth && nHeight == nSrcHeight && keyColor == CLR_INVALID)
+    {
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight,
+                  hdcSrc, nXSrc, nYSrc, hbmMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+        return TRUE;
+    }
+
+    hTempDC1 = ::CreateCompatibleDC(hdcDest);
+    hTempDC2 = ::CreateCompatibleDC(hdcDest);
+    hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+
+    // hbmTempMask <-- hbmMask (stretched)
+    hbmOld1 = ::SelectObject(hTempDC1, hbmMask);
+    hbmOld2 = ::SelectObject(hTempDC2, hbmTempMask);
+    ::StretchBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC1, 0, 0, nSrcWidth, nSrcHeight, SRCCOPY);
+    ::SelectObject(hTempDC2, hbmOld2);
+    ::SelectObject(hTempDC1, hbmOld1);
+
+    hbmOld1 = ::SelectObject(hTempDC1, hbmTempColor);
+    if (keyColor == CLR_INVALID)
+    {
+        // hbmTempColor <-- hdcSrc (stretched)
+        ::StretchBlt(hTempDC1, 0, 0, nWidth, nHeight,
+                     hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, SRCCOPY);
+
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+    }
+    else
+    {
+        // hbmTempColor <-- hdcDest
+        ::BitBlt(hTempDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
+
+        // hbmTempColor <-- hdcSrc (color key)
+        ::GdiTransparentBlt(hTempDC1, 0, 0, nWidth, nHeight,
+                            hdcSrc, nXSrc, nYSrc, nSrcWidth, nSrcHeight, keyColor);
+
+        // hdcDest <-- hbmTempColor (masked)
+        ::MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hTempDC1, 0, 0,
+                  hbmTempMask, 0, 0, MAKEROP4(SRCCOPY, 0xAA0029));
+    }
+    ::SelectObject(hTempDC1, hbmOld1);
+
+    ::DeleteObject(hbmTempColor);
+    ::DeleteObject(hbmTempMask);
+    ::DeleteDC(hTempDC2);
+    ::DeleteDC(hTempDC1);
+
     return TRUE;
 }
