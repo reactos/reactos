@@ -303,19 +303,20 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 {
     PFN_NUMBER Page;
 
-    /* Update the target */
-    InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    UpdateTotalCommittedPages(1);
-
     /*
      * Actually allocate the page.
      */
     Page = MmAllocPage(Consumer);
     if (Page == 0)
     {
-        KeBugCheck(NO_PAGES_AVAILABLE);
+        *AllocatedPage = 0;
+        return STATUS_NO_MEMORY;
     }
     *AllocatedPage = Page;
+
+    /* Update the target */
+    InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+    UpdateTotalCommittedPages(1);
 
     return(STATUS_SUCCESS);
 }
