@@ -13,23 +13,6 @@
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
-// ***Extras***
-/*++
-* @name _ILIsDesktop
-*
-* Checks whether the given PIDL is of Desktop folder or not.
-*
-* @param pidl
-*        PIDL to be checked.
-*
-* @return True if PIDL is of Desktop, otherwise false.
-*
-*--*/
-static BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
-{
-    return (pidl == NULL || pidl->mkid.cb == 0);
-}
-
 //*****************************************************************************************
 // *** CISFBand *** 
 
