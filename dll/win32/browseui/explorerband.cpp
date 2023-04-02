@@ -82,7 +82,7 @@ HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cch
 }
 
 /*
- This is a Windows hack, because shell event messages in Windows gives an 
+ This is a Windows hack, because shell event messages in Windows gives an
  ill-formed PIDL stripped from useful data that parses incorrectly with SHGetFileInfo.
  So we need to re-enumerate subfolders until we find one with the same name.
  */
@@ -149,6 +149,7 @@ CExplorerBand::CExplorerBand()
     , m_fVisible(FALSE)
     , m_bNavigating(FALSE)
     , m_dwBandID(0)
+    , m_isEditing(FALSE)
     , m_pidlCurrent(NULL)
 {
 }
@@ -348,7 +349,7 @@ BOOL CExplorerBand::OnTreeItemDeleted(LPNMTREEVIEW pnmtv)
     /* Destroy memory associated to our node */
     NodeInfo* ptr = GetNodeInfo(pnmtv->itemNew.hItem);
     if (ptr)
-    {    
+    {
         ILFree(ptr->relativePidl);
         ILFree(ptr->absolutePidl);
         delete ptr;
@@ -726,7 +727,6 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
     HTREEITEM                           current;
     HTREEITEM                           tmp;
     HTREEITEM                           parent;
-    BOOL                                found;
     NodeInfo                            *nodeData;
     LPITEMIDLIST                        relativeChild;
     TVITEM                              tvItem;
@@ -734,10 +734,9 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
     if (!item)
         return FALSE;
 
-    found = FALSE;
     current = m_hRoot;
     parent = NULL;
-    while(!found)
+    while (TRUE)
     {
         nodeData = GetNodeInfo(current);
         if (!nodeData)
@@ -776,7 +775,7 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
             // Try to get a child
             tmp = TreeView_GetChild(m_hWnd, current);
             if (tmp)
-            { 
+            {
                 // We have a child, let's continue with it
                 parent = current;
                 current = tmp;
@@ -811,7 +810,6 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
         *item = NULL;
         return FALSE;
     }
-    return FALSE;
 }
 
 BOOL CExplorerBand::NavigateToCurrentFolder()
@@ -820,7 +818,7 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     CComPtr<IBrowserService>            pBrowserService;
     HRESULT                             hr;
     HTREEITEM                           dummy;
-    BOOL                                result; 
+    BOOL                                result;
     explorerPidl = NULL;
 
     hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
@@ -1219,7 +1217,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (lpMsg->hwnd == m_hWnd)
+    if (lpMsg->hwnd == m_hWnd ||
+        (m_isEditing && IsChild(lpMsg->hwnd)))
     {
         TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
@@ -1296,6 +1295,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
             case TVN_BEGINDRAG:
             case TVN_BEGINRDRAG:
                 OnTreeItemDragging((LPNMTREEVIEW)lParam, pNotifyHeader->code == TVN_BEGINRDRAG);
+                break;
             case TVN_BEGINLABELEDITW:
             {
                 // TODO: put this in a function ? (mostly copypasta from CDefView)
@@ -1315,8 +1315,12 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                     return E_FAIL;
 
                 hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
-                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME) && theResult)
-                    *theResult = 0;
+                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME))
+                {
+                    if (theResult)
+                        *theResult = 0;
+                    m_isEditing = TRUE;
+                }
                 return S_OK;
             }
             case TVN_ENDLABELEDITW:
@@ -1325,6 +1329,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                 NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
                 HRESULT hr;
 
+                m_isEditing = FALSE;
                 if (theResult)
                     *theResult = 0;
                 if (dispInfo->item.pszText)
