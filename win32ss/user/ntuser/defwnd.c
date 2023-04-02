@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
- * PURPOSE:          Miscellaneous User functions
- * FILE:             win32ss/user/ntuser/defwnd.c
- * PROGRAMER:
+ * PROJECT:     ReactOS Win32k subsystem
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Miscellaneous User functions
+ * COPYRIGHT:   2008-2020 James Tabor <james.tabor@reactos.org>
  */
 
 #include <win32k.h>
@@ -797,6 +796,10 @@ IntDefWindowProc(
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
 
+            // MS Doc: foreground window can be NULL, e.g. when window is losing activation
+            if (!topWnd)
+               return 0;
+
             // We want to forbid snapping operations on the TaskBar
             // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
             ExStyleTB = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
@@ -805,7 +808,7 @@ IntDefWindowProc(
                         && (ExStyleTB == WS_EX_TOOLWINDOW);
             TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", ExStyleTB, StyleTB, IsTaskBar);
 
-            if (topWnd && !IsTaskBar)
+            if (!IsTaskBar)
             {
                if ((topWnd->style & WS_THICKFRAME) == 0)
                   return 0;
