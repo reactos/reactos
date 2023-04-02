@@ -3979,6 +3979,8 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
     {
         LOGFONTW lf;
         HIMC hIMC = ImmGetContext(es->hwndSelf);
+        if (font == NULL)
+            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
         GetObjectW(font, sizeof(lf), &lf);
         ImmSetCompositionFontW(hIMC, &lf);
         ImmReleaseContext(es->hwndSelf, hIMC);
