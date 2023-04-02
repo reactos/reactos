@@ -3159,6 +3159,15 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
          * if a width is invalid, all remaining columns are hidden
          */
         if ( !wcsncmp( num, L"-", 1 ) || !str_is_number( num ) ) {
+#ifdef __REACTOS__
+       	    // Skip in case of prefix the string of displayed characters with {\style} or {&style}.
+            if (count == 0 && (!wcsncmp(num, L"\\", 1) || !wcsncmp(num, L"&", 1)))
+            {
+                FIXME("Style prefix not supported\n");
+                msi_free(num);
+                continue;
+            }
+#endif
             msi_free( num );
             return;
         }
