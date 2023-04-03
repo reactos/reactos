@@ -182,9 +182,11 @@ typedef union _ULPTR64
     ULONG_PTR ptr;
     ULONG64 ptr64;
 } ULPTR64;
+#define ULPTR64_TO_ULONG64(x) (x).ptr64
 #else
 // #define ULPTR64 PVOID64
 #define ULPTR64 ULONG64
+#define ULPTR64_TO_ULONG64(x) (x)
 #endif
 
 typedef struct _KDDEBUGGER_DATA64
