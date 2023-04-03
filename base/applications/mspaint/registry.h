@@ -43,6 +43,12 @@ public:
     DWORD ShowStatusBar;
     DWORD ShowPalette;
     DWORD ShowToolBox;
+    DWORD Bar2ID;
+
+// Values for Bar2ID.
+// I think these values are Win2k3 mspaint compatible but sometimes not working...
+#define BAR2ID_LEFT   0x0000e81c
+#define BAR2ID_RIGHT  0x0000e81d
 
     enum WallpaperStyle {
         TILED,

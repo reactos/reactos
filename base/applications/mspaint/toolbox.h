@@ -15,6 +15,12 @@
 #define CX_TOOLBAR          (TOOLBAR_COLUMNS * CXY_TB_BUTTON)
 #define CY_TOOLBAR          (TOOLBAR_ROWS * CXY_TB_BUTTON)
 
+class CPaintToolBar : public CWindow
+{
+public:
+    BOOL DoCreate(HWND hwndParent);
+};
+
 class CToolBox : public CWindowImpl<CToolBox>
 {
 public:
@@ -24,16 +30,22 @@ public:
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
     END_MSG_MAP()
 
     BOOL DoCreate(HWND hwndParent);
 
 private:
-    CWindow toolbar;
+    CPaintToolBar toolbar;
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };
