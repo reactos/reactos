@@ -252,6 +252,16 @@
 /modules/rostests/kmtests/ntos_se/   @GeoB99
 /ntoskrnl/se/                        @GeoB99
 
+# Shell
+#   M:
+#   R: learn-more, learn_more, Mark Jansen
+#   R: yagoulas, Giannis Adamopoulos
+#   S: Maintained
+/base/shell/explorer/   @learn-more @yagoulas
+/base/shell/rshell/     @learn-more @yagoulas
+/dll/win32/browseui/    @learn-more @yagoulas
+/dll/win32/shell32/     @learn-more @yagoulas
+
 # Shell Extensions
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
