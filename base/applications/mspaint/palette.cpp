@@ -191,7 +191,7 @@ LRESULT CPaletteWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     RECT rc;
     mainWindow.GetWindowRect(&rc);
 
-    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.bottom - rc.top) / 2 };
+    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2 };
 
     DWORD dwExpectedBar1ID = ((pt.y < ptCenter.y) ? BAR1ID_TOP : BAR1ID_BOTTOM);
 

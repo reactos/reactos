@@ -147,7 +147,7 @@ LRESULT CToolBox::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     RECT rc;
     mainWindow.GetWindowRect(&rc);
 
-    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.bottom - rc.top) / 2 };
+    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2 };
 
     DWORD dwExpectedBar2ID = ((pt.x < ptCenter.x) ? BAR2ID_LEFT : BAR2ID_RIGHT);
 
