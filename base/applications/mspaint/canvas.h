@@ -47,7 +47,6 @@ public:
     VOID CanvasToImage(POINT& pt, BOOL bZoomed = FALSE);
     VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
     VOID GetImageRect(RECT& rc);
-    BOOL PtInImage(POINT pt);
 
 protected:
     CANVAS_HITTEST m_whereHit;

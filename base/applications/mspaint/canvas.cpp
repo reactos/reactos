@@ -92,13 +92,6 @@ VOID CCanvasWindow::GetImageRect(RECT& rc)
     ::SetRect(&rc, 0, 0, imageModel.GetWidth(), imageModel.GetHeight());
 }
 
-BOOL CCanvasWindow::PtInImage(POINT pt)
-{
-    RECT rcImage;
-    GetImageRect(rcImage);
-    return ::PtInRect(&rcImage, pt);
-}
-
 CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 {
     RECT rcBase = GetBaseRect();
