@@ -36,7 +36,6 @@ public:
     CCanvasWindow();
 
     BOOL m_drawing;
-    CANVAS_HITTEST m_hitSelection;
 
     VOID cancelDrawing();
     VOID finishDrawing();
@@ -49,6 +48,7 @@ public:
     VOID GetImageRect(RECT& rc);
 
 protected:
+    CANVAS_HITTEST m_hitSelection;
     CANVAS_HITTEST m_whereHit;
     POINT m_ptOrig; // The origin of drag start
     CRect m_rcNew;

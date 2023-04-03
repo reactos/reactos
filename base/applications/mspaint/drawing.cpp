@@ -363,3 +363,14 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
 
     return TRUE;
 }
+
+void DrawXorRect(HDC hdc, const RECT *prc)
+{
+    HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 0, RGB(255, 255, 255)));
+    HGDIOBJ oldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+    INT oldRop2 = SetROP2(hdc, R2_XORPEN);
+    ::Rectangle(hdc, prc->left, prc->top, prc->right, prc->bottom);
+    ::SetROP2(hdc, oldRop2);
+    ::SelectObject(hdc, oldBrush);
+    ::DeleteObject(::SelectObject(hdc, oldPen));
+}

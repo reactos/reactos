@@ -38,3 +38,5 @@ BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
                   HDC hdcSrc, int nXSrc, int nYSrc, int nSrcWidth, int nSrcHeight,
                   HBITMAP hbmMask, COLORREF keyColor);
+
+void DrawXorRect(HDC hdc, const RECT *prc);

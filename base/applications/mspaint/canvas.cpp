@@ -18,7 +18,7 @@ CCanvasWindow::CCanvasWindow()
     , m_whereHit(HIT_NONE)
     , m_ptOrig { -1, -1 }
 {
-    SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcNew);
 }
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
@@ -29,13 +29,7 @@ VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
     ImageToCanvas(rc);
 
     HDC hdc = GetDC();
-    HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 0, 0));
-    HGDIOBJ oldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
-    INT oldRop2 = SetROP2(hdc, R2_NOT);
-    ::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
-    ::SetROP2(hdc, oldRop2);
-    ::SelectObject(hdc, oldBrush);
-    ::DeleteObject(::SelectObject(hdc, oldPen));
+    DrawXorRect(hdc, &rc);
     ReleaseDC(hdc);
 }
 
@@ -69,11 +63,10 @@ VOID CCanvasWindow::CanvasToImage(POINT& pt, BOOL bZoomed)
 {
     pt.x -= GRIP_SIZE - GetScrollPos(SB_HORZ);
     pt.y -= GRIP_SIZE - GetScrollPos(SB_VERT);
-    if (!bZoomed)
-    {
-        pt.x = UnZoomed(pt.x);
-        pt.y = UnZoomed(pt.y);
-    }
+    if (bZoomed)
+        return;
+    pt.x = UnZoomed(pt.x);
+    pt.y = UnZoomed(pt.y);
 }
 
 VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bZoomed)
@@ -108,23 +101,24 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Fill the background
     ::FillRect(hdcMem, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
-    // Draw the sizeboxes
+    // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow)
         drawSizeBoxes(hdcMem, &rcBase, FALSE, &rcPaint);
 
     // Draw the image
-    CRect rc = { 0, 0, imageModel.GetWidth(), imageModel.GetHeight() };
+    CRect rcImage;
+    GetImageRect(rcImage);
+    ImageToCanvas(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
-    ImageToCanvas(rc);
-    StretchBlt(hdcMem, rc.left, rc.top, rc.Width(), rc.Height(),
+    StretchBlt(hdcMem, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
                imageModel.GetDC(), 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
 
     // Draw the grid
     if (showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
-        for (int counter = 0; counter < sizeImage.cy; counter++)
+        HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };
             ImageToCanvas(pt0);
@@ -132,7 +126,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
             ::MoveToEx(hdcMem, pt0.x, pt0.y, NULL);
             ::LineTo(hdcMem, pt1.x, pt1.y);
         }
-        for (int counter = 0; counter < sizeImage.cx; counter++)
+        for (INT counter = 0; counter < sizeImage.cx; counter++)
         {
             POINT pt0 = { counter, 0 }, pt1 = { counter, sizeImage.cy };
             ImageToCanvas(pt0);
@@ -146,35 +140,23 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Draw selection
     if (selectionModel.m_bShow)
     {
-        RECT rc = selectionModel.m_rc;
-        ImageToCanvas(rc);
+        RECT rcSelection = selectionModel.m_rc;
+        ImageToCanvas(rcSelection);
 
-        ::InflateRect(&rc, GRIP_SIZE, GRIP_SIZE);
-        drawSizeBoxes(hdcMem, &rc, TRUE, &rcPaint);
-        ::InflateRect(&rc, -GRIP_SIZE, -GRIP_SIZE);
-
-        RECT rcImage;
-        GetImageRect(rcImage);
-        ImageToCanvas(rcImage);
+        ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
+        drawSizeBoxes(hdcMem, &rcSelection, TRUE, &rcPaint);
+        ::InflateRect(&rcSelection, -GRIP_SIZE, -GRIP_SIZE);
 
         INT iSaveDC = ::SaveDC(hdcMem);
         ::IntersectClipRect(hdcMem, rcImage.left, rcImage.top, rcImage.right, rcImage.bottom);
-        selectionModel.DrawSelection(hdcMem, &rc, paletteModel.GetBgColor(),
+        selectionModel.DrawSelection(hdcMem, &rcSelection, paletteModel.GetBgColor(),
                                      toolsModel.IsBackgroundTransparent());
         ::RestoreDC(hdcMem, iSaveDC);
     }
 
+    // Draw new frame if any
     if (!::IsRectEmpty(&m_rcNew))
-    {
-        // Draw new frame
-        HGDIOBJ oldPen = ::SelectObject(hdcMem, ::CreatePen(PS_DOT, 0, RGB(255, 255, 255)));
-        HGDIOBJ oldBrush = ::SelectObject(hdcMem, ::GetStockObject(NULL_BRUSH));
-        INT oldRop2 = SetROP2(hdcMem, R2_XORPEN);
-        ::Rectangle(hdcMem, m_rcNew.left, m_rcNew.top, m_rcNew.right, m_rcNew.bottom);
-        ::SetROP2(hdcMem, oldRop2);
-        ::SelectObject(hdcMem, oldBrush);
-        ::DeleteObject(::SelectObject(hdcMem, oldPen));
-    }
+        DrawXorRect(hdcMem, &m_rcNew);
 
     // Transfer the bits
     ::BitBlt(hDC,
@@ -376,8 +358,6 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (!m_drawing || toolsModel.GetActiveTool() <= TOOL_AIRBRUSH)
     {
-        TRACKMOUSEEVENT tme;
-
         if (toolsModel.GetActiveTool() == TOOL_ZOOM)
         {
             Invalidate(FALSE);
@@ -386,11 +366,11 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             drawZoomFrame(pt.x, pt.y);
         }
 
-        tme.cbSize = sizeof(TRACKMOUSEEVENT);
+        TRACKMOUSEEVENT tme = { sizeof(tme) };
         tme.dwFlags = TME_LEAVE;
         tme.hwndTrack = m_hWnd;
         tme.dwHoverTime = 0;
-        TrackMouseEvent(&tme);
+        ::TrackMouseEvent(&tme);
 
         if (!m_drawing)
         {
@@ -543,14 +523,8 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         case HIT_MIDDLE_LEFT:
             ::OffsetRect(&rc, cxDelta, 0);
             break;
-        case HIT_MIDDLE_RIGHT:
-            break;
         case HIT_LOWER_LEFT:
             ::OffsetRect(&rc, cxDelta, 0);
-            break;
-        case HIT_LOWER_CENTER:
-            break;
-        case HIT_LOWER_RIGHT:
             break;
         default:
             break;
@@ -680,9 +654,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    if (selectionModel.m_bShow)
-        ::SetCursor(::LoadCursor(NULL, IDC_ARROW));
-    else if (!setCursorOnSizeBox(CanvasHitTest(pt)))
+    if (selectionModel.m_bShow || !setCursorOnSizeBox(CanvasHitTest(pt)))
         ::SetCursor(::LoadCursor(NULL, IDC_ARROW));
 
     return 0;
@@ -759,10 +731,6 @@ CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptZoomed)
         return HIT_NONE;
 
     RECT rcSelection = selectionModel.m_rc;
-    CString str;
-    str.Format(_T("%d, %d, %d, %d"), rcSelection.left, rcSelection.top, rcSelection.right, rcSelection.bottom);
-    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)(LPCTSTR)str);
-
     Zoomed(rcSelection);
     ::OffsetRect(&rcSelection, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
     ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
