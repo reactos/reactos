@@ -23,7 +23,7 @@ CCanvasWindow::CCanvasWindow()
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
 {
-    // FIXME
+    // FIXME: Draw the border of the area that is to be zoomed in
     CRect rc;
     GetImageRect(rc);
     ImageToCanvas(rc);
@@ -177,7 +177,7 @@ VOID CCanvasWindow::Update(HWND hwndFrom)
     CSize sizeZoomed = { Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()) };
     CSize sizeWhole = { sizeZoomed.cx + (GRIP_SIZE * 2), sizeZoomed.cy + (GRIP_SIZE * 2) };
 
-    /* show/hide the scrollbars */
+    // show/hide the scrollbars
     ShowScrollBar(SB_HORZ, sizePage.cx < sizeWhole.cx);
     ShowScrollBar(SB_VERT, sizePage.cy < sizeWhole.cy);
 
@@ -382,13 +382,13 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (m_drawing)
     {
-        /* values displayed in statusbar */
+        // values displayed in statusbar
         LONG xRel = pt.x - start.x;
         LONG yRel = pt.y - start.y;
 
         switch (toolsModel.GetActiveTool())
         {
-            /* freesel, rectsel and text tools always show numbers limited to fit into image area */
+            // freesel, rectsel and text tools always show numbers limited to fit into image area
             case TOOL_FREESEL:
             case TOOL_RECTSEL:
             case TOOL_TEXT:
@@ -401,7 +401,8 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 else if (pt.y > imageModel.GetHeight())
                     yRel = imageModel.GetHeight() - start.y;
                 break;
-            /* while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14 */
+
+            // while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14
             case TOOL_RUBBER:
             case TOOL_PEN:
             case TOOL_BRUSH:
@@ -417,7 +418,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 break;
         }
 
-        /* rectsel and shape tools always show non-negative numbers when drawing */
+        // rectsel and shape tools always show non-negative numbers when drawing
         if (toolsModel.GetActiveTool() == TOOL_RECTSEL || toolsModel.GetActiveTool() == TOOL_SHAPE)
         {
             if (xRel < 0)
