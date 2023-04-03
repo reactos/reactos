@@ -75,6 +75,7 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     ShowStatusBar = TRUE;
     ShowPalette = TRUE;
     ShowToolBox = TRUE;
+    Bar1ID = BAR1ID_TOP;
     Bar2ID = BAR2ID_LEFT;
 
     LOGFONT lf;
@@ -140,6 +141,12 @@ void RegistrySettings::Load(INT nCmdShow)
         ReadDWORD(text, _T("PositionY"),    FontsPositionY);
         ReadDWORD(text, _T("ShowTextTool"), ShowTextTool);
         ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
+    }
+
+    CRegKey bar1;
+    if (bar1.Open(paint, _T("General-Bar1"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(bar1, _T("BarID"), Bar1ID);
     }
 
     CRegKey bar2;
@@ -218,6 +225,12 @@ void RegistrySettings::Store()
         text.SetDWORDValue(_T("PositionY"),     FontsPositionY);
         text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
         text.SetStringValue(_T("TypeFaceName"), strFontName);
+    }
+
+    CRegKey bar1;
+    if (bar1.Create(paint, _T("General-Bar1")) == ERROR_SUCCESS)
+    {
+        bar1.SetDWORDValue(_T("BarID"), Bar1ID);
     }
 
     CRegKey bar2;

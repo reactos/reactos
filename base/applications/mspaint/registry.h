@@ -43,7 +43,13 @@ public:
     DWORD ShowStatusBar;
     DWORD ShowPalette;
     DWORD ShowToolBox;
+    DWORD Bar1ID;
     DWORD Bar2ID;
+
+// Values for Bar1ID.
+// I think these values are Win2k3 mspaint compatible but sometimes not working...
+#define BAR1ID_TOP    0x0000e81b
+#define BAR1ID_BOTTOM 0x0000e81e
 
 // Values for Bar2ID.
 // I think these values are Win2k3 mspaint compatible but sometimes not working...

@@ -108,11 +108,22 @@ void CMainWindow::alignChildrenToMainWindow()
 
     if (::IsWindowVisible(paletteWindow))
     {
-        hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
-                                rcSpace.left, rcSpace.top,
-                                rcSpace.right - rcSpace.left, CY_PALETTE,
-                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
-        rcSpace.top += CY_PALETTE;
+        if (registrySettings.Bar1ID == BAR1ID_BOTTOM)
+        {
+            hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
+                                    rcSpace.left, rcSpace.bottom - CY_PALETTE,
+                                    rcSpace.right - rcSpace.left, CY_PALETTE,
+                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+            rcSpace.bottom -= CY_PALETTE;
+        }
+        else
+        {
+            hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
+                                    rcSpace.left, rcSpace.top,
+                                    rcSpace.right - rcSpace.left, CY_PALETTE,
+                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+            rcSpace.top += CY_PALETTE;
+        }
     }
 
     if (canvasWindow.IsWindow())
