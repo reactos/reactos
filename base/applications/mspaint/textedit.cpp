@@ -293,11 +293,8 @@ void CTextEditWindow::InvalidateEditRect()
     ::InvalidateRect(m_hwndParent, &rc, TRUE);
 
     GetClientRect(&rc);
-    MapWindowPoints(imageArea, (LPPOINT)&rc, 2);
-    rc.left = UnZoomed(rc.left);
-    rc.top = UnZoomed(rc.top);
-    rc.right = UnZoomed(rc.right);
-    rc.bottom = UnZoomed(rc.bottom);
+    MapWindowPoints(canvasWindow, (LPPOINT)&rc, 2);
+    canvasWindow.CanvasToImage(rc);
     m_rc = rc;
 }
 
@@ -407,8 +404,12 @@ void CTextEditWindow::Reposition()
     RECT rc, rcImage;
     GetWindowRect(&rc);
 
-    ::MapWindowPoints(NULL, imageArea, (LPPOINT)&rc, 2);
-    imageArea.GetClientRect(&rcImage);
+    ::MapWindowPoints(NULL, canvasWindow, (LPPOINT)&rc, 2);
+    canvasWindow.CanvasToImage(rc);
+    Zoomed(rc);
+
+    ::SetRect(&rcImage, 0, 0, imageModel.GetWidth(), imageModel.GetHeight());
+    Zoomed(rcImage);
 
     if (rc.bottom > rcImage.bottom)
         ::OffsetRect(&rc, 0, rcImage.bottom - rc.bottom);

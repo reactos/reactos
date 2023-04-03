@@ -45,11 +45,14 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
 BOOL
 zoomTo(int newZoom, int mouseX, int mouseY)
 {
-    RECT clientRectScrollbox;
-    RECT clientRectImageArea;
     int x, y, w, h;
+    RECT clientRectScrollbox;
     canvasWindow.GetClientRect(&clientRectScrollbox);
-    imageArea.GetClientRect(&clientRectImageArea);
+
+    RECT clientRectImageArea;
+    ::SetRect(&clientRectImageArea, 0, 0, imageModel.GetWidth(), imageModel.GetHeight());
+    Zoomed(clientRectImageArea);
+
     w = clientRectImageArea.right * newZoom / toolsModel.GetZoom();
     h = clientRectImageArea.bottom * newZoom / toolsModel.GetZoom();
     if (!w || !h)
@@ -63,9 +66,7 @@ zoomTo(int newZoom, int mouseX, int mouseY)
 
     toolsModel.SetZoom(newZoom);
 
-    imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
     canvasWindow.Invalidate(TRUE);
-    imageArea.Invalidate(FALSE);
 
     canvasWindow.SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, x), 0);
     canvasWindow.SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, y), 0);
@@ -117,7 +118,7 @@ void CMainWindow::alignChildrenToMainWindow()
 
 void CMainWindow::saveImage(BOOL overwrite)
 {
-    imageArea.finishDrawing();
+    canvasWindow.finishDrawing();
 
     if (isAFile && overwrite)
     {
@@ -184,7 +185,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     imageModel.CopyPrevious();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -274,9 +275,6 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     style = WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE;
     canvasWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_CLIENTEDGE);
 
-    // Creating the window inside the canvas
-    imageArea.Create(canvasWindow, rcEmpty, NULL, WS_CHILD | WS_VISIBLE);
-
     // Create and show the miniature if necessary
     if (registrySettings.ShowThumbnail)
     {
@@ -318,7 +316,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 BOOL CMainWindow::ConfirmSave()
 {
-    imageArea.finishDrawing();
+    canvasWindow.finishDrawing();
 
     if (imageModel.IsImageSaved())
         return TRUE;
@@ -479,15 +477,10 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         if (hwndCapture)
         {
             if (canvasWindow.m_hWnd == hwndCapture ||
-                imageArea.m_hWnd == hwndCapture ||
                 fullscreenWindow.m_hWnd == hwndCapture)
             {
                 SendMessage(hwndCapture, nMsg, wParam, lParam);
             }
-        }
-        else
-        {
-            imageArea.SendMessage(nMsg, wParam, lParam);
         }
     }
     return 0;
@@ -504,7 +497,7 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Disable commands while dragging mouse
-    if (imageArea.drawing && ::GetCapture())
+    if (canvasWindow.m_drawing && ::GetCapture())
     {
         ATLTRACE("locking!\n");
         return 0;
@@ -609,28 +602,28 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
                     toolsModel.GetActiveTool() == TOOL_FREESEL)
                 {
-                    imageArea.cancelDrawing();
+                    canvasWindow.cancelDrawing();
                     break;
                 }
             }
             if (ToolBase::pointSP != 0) // drawing something?
             {
-                imageArea.cancelDrawing();
+                canvasWindow.cancelDrawing();
                 break;
             }
             imageModel.Undo();
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
             if (ToolBase::pointSP != 0) // drawing something?
             {
-                imageArea.finishDrawing();
+                canvasWindow.finishDrawing();
                 break;
             }
             imageModel.Redo();
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
             OpenClipboard();
@@ -662,7 +655,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
 
                 case TOOL_TEXT:
-                    imageArea.cancelDrawing();
+                    canvasWindow.cancelDrawing();
                     break;
                 default:
                     break;
@@ -679,7 +672,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolsModel.selectAll();
-            imageArea.Invalidate(TRUE);
+            canvasWindow.Invalidate(TRUE);
             break;
         }
         case IDM_EDITCOPYTO:
@@ -724,7 +717,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_IMAGEDELETEIMAGE:
             imageModel.CopyPrevious();
             Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_IMAGEROTATEMIRROR:
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
@@ -822,7 +815,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_VIEWSHOWMINIATURE:
             registrySettings.ShowThumbnail = !::IsWindowVisible(miniature);

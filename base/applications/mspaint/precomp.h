@@ -38,7 +38,6 @@
 #include "dib.h"
 #include "fullscreen.h"
 #include "history.h"
-#include "imgarea.h"
 #include "miniature.h"
 #include "palette.h"
 #include "palettemodel.h"
