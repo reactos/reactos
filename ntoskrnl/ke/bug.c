@@ -29,7 +29,7 @@ ULONG_PTR KiBugCheckData[5];
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
 
-/* Bugzilla Reporting */
+/* Jira Reporting */
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
 UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
 

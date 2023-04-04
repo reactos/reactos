@@ -514,7 +514,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                                Data.Buffer,
                                                Data.Length + sizeof(UNICODE_NULL));
 
-                        /* ROS: Save a copy for bugzilla reporting */
+                        /* ROS: Save a copy for Jira reporting */
                         if (!RtlCreateUnicodeString(&KeRosProcessorName, Data.Buffer))
                         {
                             /* Do not fail for this */
@@ -709,7 +709,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                            Data.Buffer,
                                            Data.Length + sizeof(UNICODE_NULL));
 
-                    /* ROS: Save a copy for bugzilla reporting */
+                    /* ROS: Save a copy for Jira reporting */
                     if (!RtlCreateUnicodeString(&KeRosBiosDate, Data.Buffer))
                         KeRosBiosDate.Length = 0;
 
@@ -772,7 +772,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                        BiosVersion,
                                        TotalLength);
 
-                /* ROS: Save a copy for bugzilla reporting */
+                /* ROS: Save a copy for Jira reporting */
                 if (!RtlCreateUnicodeString(&KeRosBiosVersion, (PWCH)BiosVersion))
                     KeRosBiosVersion.Length = 0;
             }
@@ -816,7 +816,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                        Data.Buffer,
                                        Data.Length + sizeof(UNICODE_NULL));
 
-                /* ROS: Save a copy for bugzilla reporting */
+                /* ROS: Save a copy for Jira reporting */
                 if (!RtlCreateUnicodeString(&KeRosVideoBiosDate, Data.Buffer))
                     KeRosVideoBiosDate.Length = 0;
 
@@ -874,7 +874,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                        BiosVersion,
                                        TotalLength);
 
-                /* ROS: Save a copy for bugzilla reporting */
+                /* ROS: Save a copy for Jira reporting */
                 if (!RtlCreateUnicodeString(&KeRosVideoBiosVersion, (PWCH)BiosVersion))
                     KeRosVideoBiosVersion.Length = 0;
             }
