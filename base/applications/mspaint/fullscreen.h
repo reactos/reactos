@@ -11,7 +11,7 @@
 class CFullscreenWindow : public CWindowImpl<CFullscreenWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("FullscreenWindow"), CS_DBLCLKS, COLOR_BACKGROUND)
+    DECLARE_WND_CLASS_EX(_T("ReactOSPaintFullscreenWindow"), CS_DBLCLKS, COLOR_BACKGROUND)
 
     BEGIN_MSG_MAP(CFullscreenWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
