@@ -53,6 +53,8 @@
 #define ImmLockIMC                  IMM_FN(ImmLockIMC)
 #define ImmUnlockIMC                IMM_FN(ImmUnlockIMC)
 #define ImmNotifyIME                IMM_FN(ImmNotifyIME)
+#define ImmIsIME                    IMM_FN(ImmIsIME)
+#define ImmSetCompositionFontW      IMM_FN(ImmSetCompositionFontW)
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(edit);
@@ -3972,6 +3974,18 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 				 es->flags & EF_AFTER_WRAP);
 		ShowCaret(es->hwndSelf);
 	}
+#ifdef __REACTOS__
+    if (ImmIsIME(GetKeyboardLayout(0)))
+    {
+        LOGFONTW lf;
+        HIMC hIMC = ImmGetContext(es->hwndSelf);
+        if (font == NULL)
+            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+        GetObjectW(font, sizeof(lf), &lf);
+        ImmSetCompositionFontW(hIMC, &lf);
+        ImmReleaseContext(es->hwndSelf, hIMC);
+    }
+#endif
 }
 
 
