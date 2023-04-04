@@ -10,6 +10,10 @@
 
 #include <ntoskrnl.h>
 
+#ifdef KDBG
+#include <kdbg/kdb.h>
+#endif
+
 #define NDEBUG
 #include <debug.h>
 

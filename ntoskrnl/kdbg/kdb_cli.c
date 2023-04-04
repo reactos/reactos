@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "kdb.h"
 #include "../kd/kdterminal.h"
 
 #define NDEBUG

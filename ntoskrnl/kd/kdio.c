@@ -13,6 +13,9 @@
 #include <reactos/buildno.h>
 #include "kd.h"
 #include "kdterminal.h"
+#ifdef KDBG
+#include "../kdbg/kdb.h"
+#endif
 
 #define NDEBUG
 #include <debug.h>

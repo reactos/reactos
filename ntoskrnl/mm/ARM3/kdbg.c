@@ -44,6 +44,8 @@ VOID MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Fla
 
 #if DBG && defined(KDBG)
 
+#include <kdbg/kdb.h>
+
 BOOLEAN
 ExpKdbgExtPool(
     ULONG Argc,
@@ -620,6 +622,6 @@ ExpKdbgExtIrpFind(
     return TRUE;
 }
 
-#endif // DBG && KDBG
+#endif // DBG && defined(KDBG)
 
 /* EOF */

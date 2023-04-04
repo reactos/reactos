@@ -34,6 +34,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "kdb.h"
+
 #define NDEBUG
 #include <debug.h>
 
