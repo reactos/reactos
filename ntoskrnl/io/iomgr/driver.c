@@ -11,6 +11,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <mm/ARM3/miarm.h>
+
 #define NDEBUG
 #include <debug.h>
 
