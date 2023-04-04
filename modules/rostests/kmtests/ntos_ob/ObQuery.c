@@ -10,6 +10,8 @@
 #define OBJ_WINSTA_DIRECTORY_NAME_INFO_SIZE (sizeof(UNICODE_STRING) + sizeof(L"\\Windows"))
 #define OBJ_DIRECTORY_TYPE_INFO_SIZE (sizeof(OBJECT_TYPE_INFORMATION) + sizeof(L"Directory"))
 
+#define OBJ_TYPES_TAG 'yTbO'
+
 static
 VOID
 ObjectBasicInformationTests(VOID)
@@ -65,7 +67,66 @@ ObjectBasicInformationTests(VOID)
     ZwClose(WinStaDirHandle);
 }
 
+static
+VOID
+ObjectTypesInformationTests(VOID)
+{
+    NTSTATUS Status;
+    ULONG ReturnLength;
+    POBJECT_TYPES_INFORMATION TypesInfo;
+
+    TypesInfo = ExAllocatePoolWithTag(PagedPool,
+                                      sizeof(OBJECT_TYPES_INFORMATION),
+                                      OBJ_TYPES_TAG);
+    if (!TypesInfo)
+    {
+        ok(FALSE, "Failed to allocate pool\n");
+        return;
+    }
+
+    /* No given length */
+    Status = ZwQueryObject(NULL,
+                           ObjectTypesInformation,
+                           TypesInfo,
+                           0,
+                           &ReturnLength);
+    ok_eq_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* This must fail -- query the needed length to hold all the object types */
+    Status = ZwQueryObject(NULL,
+                           ObjectTypesInformation,
+                           TypesInfo,
+                           sizeof(OBJECT_TYPES_INFORMATION),
+                           &ReturnLength);
+    ok_eq_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* Allocate memory based on the needed returned length */
+    ExFreePoolWithTag(TypesInfo, OBJ_TYPES_TAG);
+    TypesInfo = ExAllocatePoolWithTag(PagedPool,
+                                      ReturnLength,
+                                      OBJ_TYPES_TAG);
+    if (!TypesInfo)
+    {
+        ok(FALSE, "Failed to allocate pool\n");
+        return;
+    }
+
+    /* Do a successful query */
+    Status = ZwQueryObject(NULL,
+                           ObjectTypesInformation,
+                           TypesInfo,
+                           ReturnLength,
+                           &ReturnLength);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    trace("TypesInfo->NumberOfTypes = %lu\n", TypesInfo->NumberOfTypes);
+    trace("ReturnLength = %lu\n", ReturnLength);
+
+    ExFreePoolWithTag(TypesInfo, OBJ_TYPES_TAG);
+}
+
 START_TEST(ObQuery)
 {
     ObjectBasicInformationTests();
+    ObjectTypesInformationTests();
 }
