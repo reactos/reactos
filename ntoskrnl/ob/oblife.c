@@ -1571,6 +1571,9 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_HEADER ObjectHeader = NULL;
     POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
     POBJECT_BASIC_INFORMATION BasicInfo;
+    POBJECT_TYPES_INFORMATION AllTypesInfo;
+    POBJECT_TYPE_INFORMATION ObjectTypeInfo;
+    ULONG ObjectTypeIndex;
     ULONG InfoLength = 0;
     PVOID Object = NULL;
     NTSTATUS Status;
@@ -1735,9 +1738,60 @@ NtQueryObject(IN HANDLE ObjectHandle,
 
             /* Information about all types */
             case ObjectTypesInformation:
-                DPRINT1("NOT IMPLEMENTED!\n");
-                InfoLength = Length;
-                Status = STATUS_NOT_IMPLEMENTED;
+
+                /* Start filling out the number of types to caller */
+                AllTypesInfo = (POBJECT_TYPES_INFORMATION)ObjectInformation;
+                AllTypesInfo->NumberOfTypes = 0;
+
+                /*
+                 * If the caller did not supply enough length space to accommodate
+                 * every object type info then do not include the number of types.
+                 * The necessary info length will be calculated below.
+                 */
+                InfoLength = sizeof(OBJECT_TYPES_INFORMATION);
+                if (Length > sizeof(OBJECT_TYPES_INFORMATION))
+                {
+                    /* Loop for every existing defined object type and count it */
+                    for (ObjectTypeIndex = 0;
+                         ObjectTypeIndex < RTL_NUMBER_OF(ObpObjectTypes);
+                         ObjectTypeIndex++)
+                    {
+                        /* Count that object type */
+                        if (ObpObjectTypes[ObjectTypeIndex] != NULL)
+                        {
+                            AllTypesInfo->NumberOfTypes++;
+                        }
+                    }
+                }
+
+                /*
+                 * Loop over all existing object types but this time we must
+                 * query the type info for each object type. If we do not have
+                 * enough buffer space then do not fail aggressively but instead
+                 * keep querying for type info. The calculated info length is the
+                 * sum of all type name's lengths.
+                 */
+                ObjectTypeInfo = (POBJECT_TYPE_INFORMATION)((ULONG_PTR)AllTypesInfo +
+                                 ALIGN_UP(sizeof(*AllTypesInfo), ULONG_PTR));
+                for (ObjectTypeIndex = 0;
+                     ObjectTypeIndex < RTL_NUMBER_OF(ObpObjectTypes);
+                     ObjectTypeIndex++)
+                {
+                    if (ObpObjectTypes[ObjectTypeIndex] != NULL)
+                    {
+                        Status = ObQueryTypeInfo(ObpObjectTypes[ObjectTypeIndex],
+                                                 ObjectTypeInfo,
+                                                 Length,
+                                                 &InfoLength);
+                        if (NT_SUCCESS(Status))
+                        {
+                            /* We have enough space to hold this type, move the pointer to the next spot */
+                            ObjectTypeInfo = (POBJECT_TYPE_INFORMATION)((ULONG_PTR)(ObjectTypeInfo + 1) +
+                                             ALIGN_UP(ObjectTypeInfo->TypeName.MaximumLength, ULONG_PTR));
+                        }
+                    }
+                }
+
                 break;
 
             /* Information about the handle flags */
