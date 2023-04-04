@@ -106,15 +106,22 @@ KdPortInitializeEx(
     else
     {
 #ifndef NDEBUG
-        CHAR buffer[80];
+        int Length;
+        CHAR Buffer[82];
 
         /* Print message to blue screen */
-        sprintf(buffer,
-                "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%p) BaudRate %ld\r\n\r\n",
-                ComPortNumber,
-                PortInformation->Address,
-                PortInformation->BaudRate);
-        HalDisplayString(buffer);
+        Length = snprintf(Buffer, sizeof(Buffer),
+                          "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%p) BaudRate %ld\r\n\r\n",
+                          ComPortNumber,
+                          PortInformation->Address,
+                          PortInformation->BaudRate);
+        if (Length == -1)
+        {
+            /* Terminate it if we went over-board */
+            Buffer[sizeof(Buffer) - 1] = ANSI_NULL;
+        }
+
+        HalDisplayString(Buffer);
 #endif /* NDEBUG */
 
 #if 0
