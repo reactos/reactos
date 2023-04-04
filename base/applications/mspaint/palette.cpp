@@ -132,6 +132,7 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iColor != -1)
         paletteModel.SetFgColor(paletteModel.GetColor(iColor));
+    SetCapture();
     return 0;
 }
 
@@ -176,5 +177,38 @@ LRESULT CPaletteWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPA
 LRESULT CPaletteWindow::OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     InvalidateRect(NULL, FALSE);
+    return 0;
+}
+
+LRESULT CPaletteWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (::GetCapture() != m_hWnd)
+        return 0;
+
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    ClientToScreen(&pt);
+
+    RECT rc;
+    mainWindow.GetWindowRect(&rc);
+
+    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2 };
+
+    DWORD dwExpectedBar1ID = ((pt.y < ptCenter.y) ? BAR1ID_TOP : BAR1ID_BOTTOM);
+
+    if (registrySettings.Bar1ID != dwExpectedBar1ID)
+    {
+        registrySettings.Bar1ID = dwExpectedBar1ID;
+        mainWindow.PostMessage(WM_SIZE, 0, 0);
+    }
+
+    return 0;
+}
+
+LRESULT CPaletteWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (::GetCapture() != m_hWnd)
+        return 0;
+
+    ::ReleaseCapture();
     return 0;
 }

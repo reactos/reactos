@@ -24,6 +24,8 @@ public:
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClk)
         MESSAGE_HANDLER(WM_RBUTTONDBLCLK, OnRButtonDblClk)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_PALETTEMODELPALETTECHANGED, OnPaletteModelPaletteChanged)
     END_MSG_MAP()
@@ -34,6 +36,8 @@ public:
     LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
