@@ -11,7 +11,7 @@
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), 0, COLOR_APPWORKSPACE)
+    DECLARE_WND_CLASS_EX(_T("PaintCanvas"), 0, COLOR_APPWORKSPACE)
 
     BEGIN_MSG_MAP(CCanvasWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)

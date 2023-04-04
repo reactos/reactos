@@ -24,7 +24,7 @@ public:
 class CToolBox : public CWindowImpl<CToolBox>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ReactOSPaintToolBox"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(_T("PaintToolBox"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CToolBox)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
