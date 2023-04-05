@@ -244,7 +244,7 @@ GetVersionSendHandler(
     _In_ PSTRING MessageData)
 {
     DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
-    LIST_ENTRY* DebuggerDataList;
+    PLIST_ENTRY DebuggerDataList;
 
     /* Confirm that all went well */
     if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
@@ -257,10 +257,10 @@ GetVersionSendHandler(
 
     /* Copy the relevant data */
     RtlCopyMemory(&KdVersion, &State->u.GetVersion64, sizeof(KdVersion));
-    DebuggerDataList = (LIST_ENTRY*)(ULONG_PTR)KdVersion.DebuggerDataList;
+    DebuggerDataList = *(PLIST_ENTRY*)&KdVersion.DebuggerDataList;
     KdDebuggerDataBlock = CONTAINING_RECORD(DebuggerDataList->Flink, KDDEBUGGER_DATA64, Header.List);
-    ProcessListHead = (LIST_ENTRY*)(ULONG_PTR)KdDebuggerDataBlock->PsActiveProcessHead;
-    ModuleListHead = (LIST_ENTRY*)(ULONG_PTR)KdDebuggerDataBlock->PsLoadedModuleList;
+    ProcessListHead = *(PLIST_ENTRY*)&KdDebuggerDataBlock->PsActiveProcessHead;
+    ModuleListHead = *(PLIST_ENTRY*)&KdDebuggerDataBlock->PsLoadedModuleList;
 
     /* Now we can get the context for the current state */
     KdpSendPacketHandler = NULL;
