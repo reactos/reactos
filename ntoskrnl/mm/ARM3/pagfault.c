@@ -15,6 +15,10 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
+VOID
+NTAPI
+MmRebalanceMemoryConsumersAndWait(VOID);
+
 /* GLOBALS ********************************************************************/
 
 #define HYDRA_PROCESS (PEPROCESS)1
@@ -1940,7 +1944,7 @@ _WARN("Session space stuff is not implemented yet!")
                 return STATUS_IN_PAGE_ERROR | 0x10000000;
             }
         }
-
+RetryKernel:
         /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
@@ -2106,6 +2110,12 @@ _WARN("Session space stuff is not implemented yet!")
         ASSERT(KeAreAllApcsDisabled() == TRUE);
         MiUnlockWorkingSet(CurrentThread, WorkingSet);
         KeLowerIrql(LockIrql);
+
+        if (Status == STATUS_NO_MEMORY)
+        {
+            MmRebalanceMemoryConsumersAndWait();
+            goto RetryKernel;
+        }
 
         /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
@@ -2616,6 +2626,13 @@ ExitUser:
     /* Return the status */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+
+    if (Status == STATUS_NO_MEMORY)
+    {
+        MmRebalanceMemoryConsumersAndWait();
+        goto UserFault;
+    }
+
     return Status;
 }
 

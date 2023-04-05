@@ -200,6 +200,10 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 
 extern BOOLEAN Mmi386MakeKernelPageTableGlobal(PVOID Address);
 
+VOID
+NTAPI
+MmRebalanceMemoryConsumersAndWait(VOID);
+
 NTSTATUS
 NTAPI
 MmAccessFault(IN ULONG FaultCode,
@@ -208,6 +212,7 @@ MmAccessFault(IN ULONG FaultCode,
               IN PVOID TrapInformation)
 {
     PMEMORY_AREA MemoryArea = NULL;
+    NTSTATUS Status;
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
@@ -252,16 +257,25 @@ MmAccessFault(IN ULONG FaultCode,
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
+Retry:
     /* Keep same old ReactOS Behaviour */
     if (!MI_IS_NOT_PRESENT_FAULT(FaultCode))
     {
         /* Call access fault */
-        return MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
+        Status = MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
     }
     else
     {
         /* Call not present */
-        return MmNotPresentFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
+        Status = MmNotPresentFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
     }
+
+    if (Status == STATUS_NO_MEMORY)
+    {
+        MmRebalanceMemoryConsumersAndWait();
+        goto Retry;
+    }
+
+    return Status;
 }
 
