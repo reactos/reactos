@@ -1357,6 +1357,12 @@ MsqPostMessage(PTHREADINFO pti,
 
    MessageQueue = pti->MessageQueue;
 
+   if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
+   Message->dwQEvent = dwQEvent;
+   Message->ExtraInfo = ExtraInfo;
+   Message->QS_Flags = MessageBits;
+   Message->pti = pti;
+
    if (!HardwareMessage)
    {
        InsertTailList(&pti->PostedMessagesListHead, &Message->ListEntry);
@@ -1366,11 +1372,6 @@ MsqPostMessage(PTHREADINFO pti,
        InsertTailList(&MessageQueue->HardwareMessagesListHead, &Message->ListEntry);
    }
 
-   if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
-   Message->dwQEvent = dwQEvent;
-   Message->ExtraInfo = ExtraInfo;
-   Message->QS_Flags = MessageBits;
-   Message->pti = pti;
    MsqWakeQueue(pti, MessageBits, TRUE);
    TRACE("Post Message %d\n",PostMsgCount);
 }
