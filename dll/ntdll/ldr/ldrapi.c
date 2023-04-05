@@ -307,7 +307,7 @@ LdrLockLoaderLock(IN ULONG Flags,
 NTSTATUS
 NTAPI
 DECLSPEC_HOTPATCH
-LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
+LdrLoadDll(IN PWSTR DllSearchPath OPTIONAL,
            IN PULONG DllCharacteristics OPTIONAL,
            IN PUNICODE_STRING DllName,
            OUT PVOID *BaseAddress)
@@ -396,7 +396,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
 
         /* Load the DLL */
         Status = LdrpLoadDll(RedirectedDll,
-                             SearchPath,
+                             DllSearchPath,
                              DllCharacteristics,
                              DllName,
                              BaseAddress,

@@ -157,7 +157,7 @@ LdrInitializeThunk(
 NTSTATUS
 NTAPI
 LdrLoadDll(
-    _In_opt_ PWSTR SearchPath,
+    _In_opt_ PWSTR DllSearchPath,
     _In_opt_ PULONG LoadFlags,
     _In_ PUNICODE_STRING Name,
     _Out_opt_ PVOID *BaseAddress

@@ -1020,7 +1020,7 @@ LdrpSetProtection(PVOID ViewBase,
 /* NOTE: Not yet reviewed */
 NTSTATUS
 NTAPI
-LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
+LdrpMapDll(IN PWSTR DllSearchPath OPTIONAL,
            IN PWSTR DllPath2,
            IN PWSTR DllName OPTIONAL,
            IN PULONG DllCharacteristics,
@@ -1061,7 +1061,7 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
     {
         DPRINT1("LDR: LdrpMapDll: Image Name %ws, Search Path %ws\n",
                 DllName,
-                SearchPath ? SearchPath : L"");
+                DllSearchPath ? DllSearchPath : L"");
     }
 
     /* Check if we have a known dll directory */
@@ -1104,7 +1104,7 @@ SkipCheck:
     if (!SectionHandle)
     {
         /* It didn't, so try to resolve the name now */
-        if (LdrpResolveDllName(SearchPath,
+        if (LdrpResolveDllName(DllSearchPath,
                                DllName,
                                &FullDllName,
                                &BaseDllName))
@@ -1780,14 +1780,14 @@ Quickie:
 
 NTSTATUS
 NTAPI
-LdrpSearchPath(IN PWCHAR *SearchPath,
+LdrpSearchPath(IN PWCHAR *DllSearchPath,
                IN PWCHAR DllName,
                IN PUNICODE_STRING PathName,
                IN PUNICODE_STRING FullPathName,
                IN PUNICODE_STRING *ExpandedName)
 {
     BOOLEAN TryAgain = FALSE;
-    PWCHAR ActualSearchPath = *SearchPath;
+    PWCHAR ActualSearchPath = *DllSearchPath;
     UNICODE_STRING TestName;
     NTSTATUS Status;
     PWCHAR Buffer, BufEnd = NULL;
@@ -1796,7 +1796,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     //PWCHAR pp;
 
     /* Check if we don't have a search path */
-    if (!ActualSearchPath) *SearchPath = LdrpDefaultPath.Buffer;
+    if (!ActualSearchPath) *DllSearchPath = LdrpDefaultPath.Buffer;
 
     /* Display debug output if snaps are on */
     if (ShowSnaps)
@@ -1806,7 +1806,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
                    "LDR: %s - Looking for %ws in %ws\n",
                    __FUNCTION__,
                    DllName,
-                   *SearchPath);
+                   *DllSearchPath);
     }
 
     /* Check if we're dealing with a relative path */
@@ -1909,7 +1909,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
                 ASSERT(TestName.Buffer);
 
                 /* Resolve the name */
-                *SearchPath = ActualSearchPath++;
+                *DllSearchPath = ActualSearchPath++;
                 Status = LdrpResolveFullName(&TestName,
                                              PathName,
                                              FullPathName,
