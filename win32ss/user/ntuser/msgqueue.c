@@ -1344,7 +1344,9 @@ MsqPostMessage(PTHREADINFO pti,
    PUSER_MESSAGE Message;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   if ( pti->TIF_flags & TIF_INCLEANUP || pti->MessageQueue->QF_flags & QF_INDESTROY )
+   MessageQueue = pti->MessageQueue;
+
+   if ( pti->TIF_flags & TIF_INCLEANUP || MessageQueue->QF_flags & QF_INDESTROY )
    {
       ERR("Post Msg; Thread or Q is Dead!\n");
       return;
@@ -1354,8 +1356,6 @@ MsqPostMessage(PTHREADINFO pti,
    {
       return;
    }
-
-   MessageQueue = pti->MessageQueue;
 
    if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
    Message->dwQEvent = dwQEvent;
