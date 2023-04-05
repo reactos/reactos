@@ -1335,9 +1335,16 @@ MmMakeSegmentResident(
             RtlZeroMemory(Pages, BYTES_TO_PAGES(ReadLength) * sizeof(PFN_NUMBER));
             for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
             {
-                /* MmRequestPageMemoryConsumer succeeds or bugchecks */
-                (void)MmRequestPageMemoryConsumer(MC_USER, FALSE, &Pages[i]);
+                Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Pages[i]);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Damn. Roll-back. */
+                    for (UINT j = 0; j < i; j++)
+                        MmReleasePageMemoryConsumer(MC_USER, Pages[j]);
+                    goto Failed;
+                }
             }
+
             Mdl->MdlFlags |= MDL_PAGES_LOCKED | MDL_IO_PAGE_READ;
 
             LARGE_INTEGER FileOffset;
@@ -1389,6 +1396,7 @@ MmMakeSegmentResident(
                 for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
                     MmReleasePageMemoryConsumer(MC_USER, Pages[i]);
 
+Failed:
                 MmLockSectionSegment(Segment);
                 while (ChunkOffset < ChunkEnd)
                 {
@@ -1613,6 +1621,15 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             return STATUS_MM_RESTART_OPERATION;
         }
 
+        MI_SET_USAGE(MI_USAGE_SECTION);
+        if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+        if (!Process) MI_SET_PROCESS2("Kernel Section");
+        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+        if (!NT_SUCCESS(Status))
+        {
+            return STATUS_NO_MEMORY;
+        }
+
         /*
          * Must be private page we have swapped out.
          */
@@ -1627,14 +1644,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 
         MmUnlockAddressSpace(AddressSpace);
-        MI_SET_USAGE(MI_USAGE_SECTION);
-        if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-        if (!Process) MI_SET_PROCESS2("Kernel Section");
-        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-        if (!NT_SUCCESS(Status))
-        {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
 
         Status = MmReadFromSwapPage(SwapEntry, Page);
         if (!NT_SUCCESS(Status))
@@ -1736,7 +1745,12 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             MI_SET_USAGE(MI_USAGE_SECTION);
             if (Process) MI_SET_PROCESS2(Process->ImageFileName);
             if (!Process) MI_SET_PROCESS2("Kernel Section");
-            MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+            Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+            if (!NT_SUCCESS(Status))
+            {
+                MmUnlockSectionSegment(Segment);
+                return STATUS_NO_MEMORY;
+            }
             MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SSE(Page << PAGE_SHIFT, 1));
             MmUnlockSectionSegment(Segment);
 
@@ -1770,6 +1784,10 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmLockAddressSpace(AddressSpace);
         if (!NT_SUCCESS(Status))
         {
+            if (Status == STATUS_NO_MEMORY)
+            {
+                return Status;
+            }
             /* Damn */
             DPRINT1("Failed to page data in!\n");
             return STATUS_IN_PAGE_ERROR;
@@ -1794,6 +1812,13 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             return STATUS_MM_RESTART_OPERATION;
         }
 
+        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+        if (!NT_SUCCESS(Status))
+        {
+            MmUnlockSectionSegment(Segment);
+            return STATUS_NO_MEMORY;
+        }
+
         /*
         * Release all our locks and read in the page from disk
         */
@@ -1801,11 +1826,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmUnlockSectionSegment(Segment);
 
         MmUnlockAddressSpace(AddressSpace);
-        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-        if (!NT_SUCCESS(Status))
-        {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
 
         Status = MmReadFromSwapPage(SwapEntry, Page);
         if (!NT_SUCCESS(Status))
@@ -1905,6 +1925,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     BOOLEAN Cow = FALSE;
     ULONG NewProtect;
     BOOLEAN Unmapped;
+    NTSTATUS Status;
 
     DPRINT("MmAccessFaultSectionView(%p, %p, %p)\n", AddressSpace, MemoryArea, Address);
 
@@ -1990,9 +2011,11 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Allocate a page
      */
-    if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage)))
+    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage);
+    if (!NT_SUCCESS(Status))
     {
-        KeBugCheck(MEMORY_MANAGEMENT);
+        MmUnlockSectionSegment(Segment);
+        return STATUS_NO_MEMORY;
     }
 
     /*
