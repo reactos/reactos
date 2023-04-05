@@ -1346,18 +1346,19 @@ MsqPostMessage(PTHREADINFO pti,
 
    MessageQueue = pti->MessageQueue;
 
-   if ( pti->TIF_flags & TIF_INCLEANUP || MessageQueue->QF_flags & QF_INDESTROY )
+   if ((pti->TIF_flags & TIF_INCLEANUP) || (MessageQueue->QF_flags & QF_INDESTROY))
    {
       ERR("Post Msg; Thread or Q is Dead!\n");
       return;
    }
 
-   if(!(Message = MsqCreateMessage(Msg)))
-   {
+   Message = MsqCreateMessage(Msg);
+   if (!Message)
       return;
-   }
 
-   if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
+   if (Msg->message == WM_HOTKEY)
+      MessageBits |= QS_HOTKEY;
+
    Message->dwQEvent = dwQEvent;
    Message->ExtraInfo = ExtraInfo;
    Message->QS_Flags = MessageBits;
@@ -1373,7 +1374,7 @@ MsqPostMessage(PTHREADINFO pti,
    }
 
    MsqWakeQueue(pti, MessageBits, TRUE);
-   TRACE("Post Message %d\n",PostMsgCount);
+   TRACE("Post Message %d\n", PostMsgCount);
 }
 
 VOID FASTCALL
