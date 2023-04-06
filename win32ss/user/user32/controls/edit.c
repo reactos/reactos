@@ -4595,9 +4595,7 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 
 #ifdef __REACTOS__
     if (es->selection_start != es->selection_end)
-    {
         EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
-    }
 #else
     if (es->composition_len == 0 && es->selection_start != es->selection_end)
     {
