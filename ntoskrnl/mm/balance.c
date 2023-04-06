@@ -33,6 +33,7 @@ static ULONG MiMinimumPagesPerRun;
 static CLIENT_ID MiBalancerThreadId;
 static HANDLE MiBalancerThreadHandle = NULL;
 static KEVENT MiBalancerEvent;
+static KEVENT MiBalancerDoneEvent;
 static KTIMER MiBalancerTimer;
 
 static LONG PageOutThreadActive;
@@ -296,6 +297,19 @@ MmRebalanceMemoryConsumers(VOID)
     }
 }
 
+VOID
+NTAPI
+MmRebalanceMemoryConsumersAndWait(VOID)
+{
+    ASSERT(PsGetCurrentProcess()->AddressCreationLock.Owner != KeGetCurrentThread());
+    ASSERT(!MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+    KeResetEvent(&MiBalancerDoneEvent);
+    MmRebalanceMemoryConsumers();
+    KeWaitForSingleObject(&MiBalancerDoneEvent, Executive, KernelMode, FALSE, NULL);
+}
+
 NTSTATUS
 NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
@@ -334,6 +348,7 @@ MiBalancerThread(PVOID Unused)
 
     while (1)
     {
+        KeSetEvent(&MiBalancerDoneEvent, IO_NO_INCREMENT, FALSE);
         Status = KeWaitForMultipleObjects(2,
                                           WaitObjects,
                                           WaitAny,
@@ -388,6 +403,7 @@ MiInitBalancerThread(VOID)
     LARGE_INTEGER Timeout;
 
     KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&MiBalancerDoneEvent, SynchronizationEvent, FALSE);
     KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
 
     Timeout.QuadPart = -20000000; /* 2 sec */
