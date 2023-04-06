@@ -202,7 +202,7 @@ KdbpOverwriteInstruction(
             /* Detach from process */
             if (CurrentProcess != Process)
             {
-                KeDetachProcess();
+                KeUnstackDetachProcess(&ApcState);
             }
 
             return Status;
