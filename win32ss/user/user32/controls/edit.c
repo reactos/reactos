@@ -1910,10 +1910,7 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
     SetCaretPos(pt.x, pt.y);
 
     if (!ImmIsIME(hKL))
-    {
-        ERR("!ImmIsIME(%p)\n", hKL);
         return;
-    }
 
     EDIT_ImmSetCompositionWindow(es, pt);
 #else
@@ -4028,22 +4025,15 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		ShowCaret(es->hwndSelf);
 	}
 #ifdef __REACTOS__
+    if (ImmIsIME(GetKeyboardLayout(0)))
     {
-        HKL hKL = GetKeyboardLayout(0);
-        if (ImmIsIME(hKL))
-        {
-            LOGFONTW lf;
-            HIMC hIMC = ImmGetContext(es->hwndSelf);
-            if (font == NULL)
-                font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            GetObjectW(font, sizeof(lf), &lf);
-            ImmSetCompositionFontW(hIMC, &lf);
-            ImmReleaseContext(es->hwndSelf, hIMC);
-        }
-        else
-        {
-            ERR("!ImmIsIME(%p)\n", hKL);
-        }
+        LOGFONTW lf;
+        HIMC hIMC = ImmGetContext(es->hwndSelf);
+        if (font == NULL)
+            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+        GetObjectW(font, sizeof(lf), &lf);
+        ImmSetCompositionFontW(hIMC, &lf);
+        ImmReleaseContext(es->hwndSelf, hIMC);
     }
 #endif
 }
