@@ -1,9 +1,7 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
- * PURPOSE:          Miscellaneous User functions
- * FILE:             win32ss/user/ntuser/defwnd.c
- * PROGRAMER:
+ * PROJECT:     ReactOS Win32k subsystem
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Miscellaneous User functions
  */
 
 #include <win32k.h>
@@ -786,6 +784,8 @@ IntDefWindowProc(
             DWORD ExStyleTB;
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
+            if (!topWnd)
+               return 0;
 
             // We want to forbid snapping operations on the TaskBar
             // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
@@ -795,7 +795,7 @@ IntDefWindowProc(
                         && (ExStyleTB == WS_EX_TOOLWINDOW);
             TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", ExStyleTB, StyleTB, IsTaskBar);
 
-            if (topWnd && !IsTaskBar)
+            if (!IsTaskBar)
             {
                if ((topWnd->style & WS_THICKFRAME) == 0)
                   return 0;

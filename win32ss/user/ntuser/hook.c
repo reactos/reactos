@@ -2,10 +2,9 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window hooks
- * FILE:             win32ss/user/ntuser/hook.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                   James Tabor (james.tabor@rectos.org)
- *                   Rafal Harabien (rafalh@reactos.org)
+ * PROGRAMER:        Casper S. Hornstrup <chorns@users.sourceforge.net>
+ *                   James Tabor <james.tabor@reactos.org>
+ *                   Rafal Harabien <rafalh@reactos.org>
   * NOTE:            Most of this code was adapted from Wine,
  *                   Copyright (C) 2002 Alexandre Julliard
  */
@@ -1047,9 +1046,9 @@ IntRemoveHook(PVOID Object)
     {
        pti = Hook->ptiHooked;
 
-       IntFreeHook( Hook);
+       IntFreeHook(Hook);
 
-       if ( IsListEmpty(&pti->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       if (IsListEmpty(&pti->aphkStart[HOOKID_TO_INDEX(HookId)]))
        {
           pti->fsHooks &= ~HOOKID_TO_FLAG(HookId);
           _SEH2_TRY
@@ -1066,13 +1065,13 @@ IntRemoveHook(PVOID Object)
     }
     else // Global
     {
-       IntFreeHook( Hook);
+       IntFreeHook(Hook);
 
        pdo = IntGetActiveDesktop();
 
-       if ( pdo &&
-            pdo->pDeskInfo &&
-            IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       if (pdo &&
+           pdo->pDeskInfo &&
+           IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]))
        {
           pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
        }
