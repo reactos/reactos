@@ -50,7 +50,7 @@ LPCTSTR DllNotLoaded = _T("LoadLibrary failed to load \"%s\"");
 LPCTSTR MissingEntry = _T("Missing entry point:%s\nIn %s");
 */
 LPCTSTR rundll32_wtitle = _T("rundll32");
-LPCTSTR rundll32_wclass = _T("rundll32_window");
+LPCTSTR rundll32_wclass = _T("RunDLL");
 
 TCHAR ModuleFileName[MAX_PATH+1];
 LPTSTR ModuleTitle;
