@@ -3350,6 +3350,7 @@ HandleTrayContextMenu:
         }
         else if (wParam == TIMER_ID_IGNOREPULSERESET)
         {
+            KillTimer(TIMER_ID_IGNOREPULSERESET);
             IgnorePulse = FALSE;
         }
         return 0;
