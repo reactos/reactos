@@ -834,6 +834,9 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
         }
     }
 
+    /* Add button to the taskbar */
+    ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
+
     /* Activate the corresponding button in the taskbar */
     CoInitialize(NULL);
     if (CoCreateInstance(&CLSID_TaskbarList,

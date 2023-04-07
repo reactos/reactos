@@ -169,7 +169,13 @@ IsThereAnyEffectiveWindow(BOOL bMustBeInMonitor)
     return ei.hwndFound != NULL;
 }
 
-CSimpleArray<HWND>  g_MinimizedAll;
+/* Minimized window position info */
+struct MINWNDPOS
+{
+    HWND hwnd;
+    WINDOWPLACEMENT wndpl;
+};
+CSimpleArray<MINWNDPOS>  g_MinimizedAll;
 
 /*
  * ITrayWindow
@@ -559,7 +565,7 @@ public:
             DWORD InSizeMove : 1;
             DWORD IsDragging : 1;
             DWORD NewPosSize : 1;
-            DWORD IgnorePulse : 3;
+            DWORD IgnorePulse : 1;
         };
     };
 
@@ -2462,6 +2468,23 @@ ChangePos:
         return bPrevLock;
     }
 
+    /* The task window is visible and non-WS_EX_TOOLWINDOW and
+       (has WS_EX_APPWINDOW style or has no owner) and is none of explorer's
+       special windows (such as the desktop or the tray window) */
+    BOOL STDMETHODCALLTYPE IsTaskWnd(HWND hWnd)
+    {
+        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
+        {
+            DWORD exStyle = (DWORD)::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+            /* Don't list popup windows and also no tool windows */
+            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+                !(exStyle & WS_EX_TOOLWINDOW))
+            {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
 
     /*
      *  IContextMenu
@@ -3171,45 +3194,30 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
-    BOOL IsTaskWnd(HWND hWnd)
-    {
-        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
-        {
-            DWORD exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
-                !(exStyle & WS_EX_TOOLWINDOW))
-            {
-                return TRUE;
-            }
-        }
-        return FALSE;
-    }
-
     void RestoreMinimizedNonTaskWnds(BOOL bDestroy, HWND hwndActive)
     {
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
-            HWND hwnd = g_MinimizedAll[i];
+            HWND hwnd = g_MinimizedAll[i].hwnd;
             if (hwndActive == hwnd)
                 continue;
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) && !IsTaskWnd(hwnd))
-                ::ShowWindow(hwnd, SW_RESTORE);
+                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl);
         }
         g_MinimizedAll.RemoveAll();
         if (!bDestroy)
             ::SetForegroundWindow(hwndActive);
     }
 
-    LRESULT OnSendPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (!IgnorePulse)
-        {
-            KillTimer(TIMER_ID_IGNOREPULSERESET);
-            IgnorePulse = TRUE;
-            RestoreMinimizedNonTaskWnds((BOOL)wParam, (HWND)lParam);
-            SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
-        }
+        if (IgnorePulse)
+            return 0;
+
+        KillTimer(TIMER_ID_IGNOREPULSERESET);
+        IgnorePulse = TRUE;
+        RestoreMinimizedNonTaskWnds((BOOL)wParam, (HWND)lParam);
+        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
         return 0;
     }
 
@@ -3224,7 +3232,7 @@ HandleTrayContextMenu:
         HWND hTrayWnd;
         HWND hwndProgman;
         BOOL bRet;
-        CSimpleArray<HWND> *pMinimizedAll;
+        CSimpleArray<MINWNDPOS> *pMinimizedAll;
         BOOL bShowDesktop;
     };
 
@@ -3238,11 +3246,9 @@ HandleTrayContextMenu:
     static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
     {
         MINIMIZE_INFO *info = (MINIMIZE_INFO *)lParam;
-        if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd ||
-            hwnd == info->hwndProgman)
-        {
-            return TRUE;
-        }
+        if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd || hwnd == info->hwndProgman)
+            return TRUE; // Ignore special windows
+
         if (!info->bShowDesktop)
         {
             if (!::IsWindowEnabled(hwnd) || IsDialog(hwnd))
@@ -3251,12 +3257,18 @@ HandleTrayContextMenu:
             if (hwndOwner && !::IsWindowEnabled(hwndOwner))
                 return TRUE;
         }
+
         if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
         {
-            ::ShowWindow(hwnd, SW_MINIMIZE);
+            MINWNDPOS mwp = { hwnd };
+            mwp.wndpl.length = sizeof(mwp.wndpl);
+            ::GetWindowPlacement(hwnd, &mwp.wndpl);
+            info->pMinimizedAll->Add(mwp);
+
+            ::ShowWindowAsync(hwnd, SW_MINIMIZE);
             info->bRet = TRUE;
-            info->pMinimizedAll->Add(hwnd);
         }
+
         return TRUE;
     }
 
@@ -3277,8 +3289,8 @@ HandleTrayContextMenu:
         // invalid handles should be cleared to avoid mismatch of handles
         for (INT i = 0; i < g_MinimizedAll.GetSize(); ++i)
         {
-            if (!::IsWindow(g_MinimizedAll[i]))
-                g_MinimizedAll[i] = NULL;
+            if (!::IsWindow(g_MinimizedAll[i].hwnd))
+                g_MinimizedAll[i].hwnd = NULL;
         }
 
         ::SetForegroundWindow(m_DesktopWnd);
@@ -3298,9 +3310,11 @@ HandleTrayContextMenu:
 
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
-            HWND hwnd = g_MinimizedAll[i];
+            HWND hwnd = g_MinimizedAll[i].hwnd;
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
-                ::ShowWindow(hwnd, SW_RESTORE);
+            {
+                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl);
+            }
         }
 
         g_MinimizedAll.RemoveAll();
@@ -3575,7 +3589,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
-        MESSAGE_HANDLER(TWM_SENDPULSE, OnSendPulse)
+        MESSAGE_HANDLER(TWM_PULSE, OnPulse)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 

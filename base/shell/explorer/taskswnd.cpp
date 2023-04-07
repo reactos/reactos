@@ -1381,27 +1381,9 @@ public:
         m_TaskBar.EndUpdate();
     }
 
-    BOOL IsTaskWnd(HWND hWnd) const
-    {
-        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
-            !m_Tray->IsSpecialHWND(hWnd))
-        {
-            DWORD exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
-                !(exStyle & WS_EX_TOOLWINDOW))
-            {
-                return TRUE;
-            }
-        }
-        return FALSE;
-    }
-
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
-        /* Only show windows that still exist and are visible and none of explorer's
-        special windows (such as the desktop or the tray window) */
-        if (IsTaskWnd(hWnd))
+        if (m_Tray->IsTaskWnd(hWnd))
         {
             TRACE("Adding task for %p...\n", hWnd);
             AddTask(hWnd);
@@ -1484,7 +1466,7 @@ public:
     VOID SendPulseToTray(BOOL bDelete, HWND hwndActive)
     {
         HWND hwndTray = m_Tray->GetHWND();
-        ::SendMessage(hwndTray, TWM_SENDPULSE, bDelete, (LPARAM)hwndActive);
+        ::SendMessage(hwndTray, TWM_PULSE, bDelete, (LPARAM)hwndActive);
     }
 
     BOOL HandleAppCommand(IN WPARAM wParam, IN LPARAM lParam)
@@ -1612,7 +1594,7 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                ::ShowWindow(TaskItem->hWnd, SW_MINIMIZE);
+                ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
@@ -1638,7 +1620,6 @@ public:
             TaskGroup = FindTaskGroupByIndex((INT) wIndex);
             if (TaskGroup != NULL && TaskGroup->IsCollapsed)
             {
-                SendPulseToTray(FALSE, TaskItem->hWnd);
                 HandleTaskGroupClick(TaskGroup);
                 return TRUE;
             }
