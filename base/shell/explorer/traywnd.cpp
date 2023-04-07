@@ -559,6 +559,7 @@ public:
             DWORD InSizeMove : 1;
             DWORD IsDragging : 1;
             DWORD NewPosSize : 1;
+            DWORD IgnorePulse : 3;
         };
     };
 
@@ -587,6 +588,7 @@ public:
         ZeroMemory(&m_TraySize, sizeof(m_TraySize));
         ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
         ZeroMemory(&m_MouseTrackingInfo, sizeof(m_MouseTrackingInfo));
+        IgnorePulse = TRUE;
     }
 
     virtual ~CTrayWindow()
@@ -2596,6 +2598,15 @@ ChangePos:
         return TRUE;
     }
 
+#define TIMER_ID_IGNOREPULSERESET 888
+#define TIMER_IGNOREPULSERESET_TIMEOUT 200
+
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        KillTimer(TIMER_ID_IGNOREPULSERESET);
+        return 0;
+    }
+
     LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (m_Theme)
@@ -3160,6 +3171,48 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
+    BOOL IsTaskWnd(HWND hWnd)
+    {
+        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
+        {
+            DWORD exStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+            /* Don't list popup windows and also no tool windows */
+            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+                !(exStyle & WS_EX_TOOLWINDOW))
+            {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
+    void RestoreMinimizedNonTaskWnds(BOOL bDestroy, HWND hwndActive)
+    {
+        for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
+        {
+            HWND hwnd = g_MinimizedAll[i];
+            if (hwndActive == hwnd)
+                continue;
+            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) && !IsTaskWnd(hwnd))
+                ::ShowWindow(hwnd, SW_RESTORE);
+        }
+        g_MinimizedAll.RemoveAll();
+        if (!bDestroy)
+            ::SetForegroundWindow(hwndActive);
+    }
+
+    LRESULT OnSendPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (!IgnorePulse)
+        {
+            KillTimer(TIMER_ID_IGNOREPULSERESET);
+            IgnorePulse = TRUE;
+            RestoreMinimizedNonTaskWnds((BOOL)wParam, (HWND)lParam);
+            SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
+        }
+        return 0;
+    }
+
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);
@@ -3200,7 +3253,7 @@ HandleTrayContextMenu:
         }
         if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
         {
-            ::ShowWindowAsync(hwnd, SW_MINIMIZE);
+            ::ShowWindow(hwnd, SW_MINIMIZE);
             info->bRet = TRUE;
             info->pMinimizedAll->Add(hwnd);
         }
@@ -3209,6 +3262,9 @@ HandleTrayContextMenu:
 
     VOID MinimizeAll(BOOL bShowDesktop = FALSE)
     {
+        IgnorePulse = TRUE;
+        KillTimer(TIMER_ID_IGNOREPULSERESET);
+
         MINIMIZE_INFO info;
         info.hwndDesktop = GetDesktopWindow();;
         info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
@@ -3227,6 +3283,7 @@ HandleTrayContextMenu:
 
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
+        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     VOID ShowDesktop()
@@ -3236,15 +3293,18 @@ HandleTrayContextMenu:
 
     VOID RestoreAll()
     {
+        IgnorePulse = TRUE;
+        KillTimer(TIMER_ID_IGNOREPULSERESET);
+
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = g_MinimizedAll[i];
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
-            {
-                ::ShowWindowAsync(hwnd, SW_RESTORE);
-            }
+                ::ShowWindow(hwnd, SW_RESTORE);
         }
+
         g_MinimizedAll.RemoveAll();
+        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3288,9 +3348,11 @@ HandleTrayContextMenu:
         {
             ProcessAutoHide();
         }
-
-        bHandled = FALSE;
-        return TRUE;
+        else if (wParam == TIMER_ID_IGNOREPULSERESET)
+        {
+            IgnorePulse = FALSE;
+        }
+        return 0;
     }
 
     LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3479,7 +3541,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        /*MESSAGE_HANDLER(WM_DESTROY, OnDestroy)*/
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
@@ -3512,6 +3574,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
+        MESSAGE_HANDLER(TWM_SENDPULSE, OnSendPulse)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
