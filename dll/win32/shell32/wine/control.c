@@ -771,14 +771,11 @@ Control_EnumWinProc(
     WCHAR szAppFile[MAX_PATH];
 
     if (pData->hRunDLL == hwnd)
-    {
-        // Skip self instance
-        return TRUE;
-    }
+        return TRUE; /* Skip self instance */
 
     sAppletNo = (UINT_PTR)GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLFlags));
     if (sAppletNo != pData->sAppletNo)
-        return TRUE; // Continue enumeration
+        return TRUE; /* Continue enumeration */
 
     hRes = GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLName));
     GlobalGetAtomNameW((ATOM)HandleToUlong(hRes), szAppFile, _countof(szAppFile));
@@ -788,11 +785,11 @@ Control_EnumWinProc(
         if (IsWindow(hDialog))
         {
             pData->hDlgResult = hDialog;
-            return FALSE; // stop enumeration
+            return FALSE; /* Stop enumeration */
         }
     }
 
-    return TRUE; // continue enumeration
+    return TRUE; /* Continue enumeration */
 }
 
 /**
