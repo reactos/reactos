@@ -266,7 +266,7 @@ class CDowloadingAppsListView : public CListView
     {
         RECT r;
         ::GetClientRect(hwndParent, &r);
-        r.top = (2 * r.top + 1 * r.bottom) / 3; /* in 1:2 ratio */
+        r.top = (2 * r.top + 1 * r.bottom) / 3; /* The vertical position at ratio 1 : 2 */
 #define MARGIN 10
         ::InflateRect(&r, -MARGIN, -MARGIN);
 
