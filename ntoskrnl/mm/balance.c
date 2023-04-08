@@ -138,14 +138,15 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
-    PFN_NUMBER CurrentPage;
+    PFN_NUMBER FirstPage, CurrentPage;
     NTSTATUS Status;
 
     (*NrFreedPages) = 0;
 
     DPRINT1("MM BALANCER: %s\n", Priority ? "Paging out!" : "Removing access bit!");
 
-    CurrentPage = MmGetLRUFirstUserPage();
+    FirstPage = MmGetLRUFirstUserPage();
+    CurrentPage = FirstPage;
     while (CurrentPage != 0 && Target > 0)
     {
         if (Priority)
@@ -156,6 +157,10 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
                 DPRINT("Succeeded\n");
                 Target--;
                 (*NrFreedPages)++;
+                if (CurrentPage == FirstPage)
+                {
+                    FirstPage = 0;
+                }
             }
         }
         else
@@ -245,8 +250,14 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
                 /* Nobody accessed this page since the last time we check. Time to clean up */
 
                 Status = MmPageOutPhysicalAddress(CurrentPage);
+                if (NT_SUCCESS(Status))
+                {
+                    if (CurrentPage == FirstPage)
+                    {
+                        FirstPage = 0;
+                    }
+                }
                 // DPRINT1("Paged-out one page: %s\n", NT_SUCCESS(Status) ? "Yes" : "No");
-                (void)Status;
             }
 
             /* Done for this page. */
@@ -254,6 +265,15 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
         }
 
         CurrentPage = MmGetLRUNextUserPage(CurrentPage, TRUE);
+        if (FirstPage == 0)
+        {
+            FirstPage = CurrentPage;
+        }
+        else if (CurrentPage == FirstPage)
+        {
+            DPRINT1("We are back at the start, abort!\n");
+            return STATUS_SUCCESS;
+        }
     }
 
     if (CurrentPage)
