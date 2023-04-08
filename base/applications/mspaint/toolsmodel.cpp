@@ -141,8 +141,8 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
 {
     m_transpBg = bTransparent;
     NotifyToolSettingsChanged();
-    if (imageArea.IsWindow())
-        imageArea.Invalidate(FALSE);
+    if (canvasWindow.IsWindow())
+        canvasWindow.Invalidate(FALSE);
 }
 
 int ToolsModel::GetZoom() const
@@ -182,8 +182,8 @@ void ToolsModel::NotifyZoomChanged()
         toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
-    if (imageArea.IsWindow())
-        imageArea.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (canvasWindow.IsWindow())
+        canvasWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)

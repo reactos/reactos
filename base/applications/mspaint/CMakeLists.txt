@@ -13,7 +13,6 @@ list(APPEND SOURCE
     drawing.cpp
     fullscreen.cpp
     history.cpp
-    imgarea.cpp
     main.cpp
     miniature.cpp
     mouse.cpp

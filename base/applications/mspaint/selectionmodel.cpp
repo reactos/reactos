@@ -179,7 +179,7 @@ BOOL SelectionModel::TakeOff()
         DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
     }
 
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
     return TRUE;
 }
 
@@ -417,7 +417,7 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
 
 void SelectionModel::NotifyRefreshNeeded()
 {
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
 }
 
 void SelectionModel::ClearMask()
@@ -448,5 +448,5 @@ void SelectionModel::CancelSelection()
         imageModel.Undo(TRUE);
 
     m_bShow = FALSE;
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
 }

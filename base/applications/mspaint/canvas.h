@@ -11,7 +11,7 @@
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), 0, COLOR_APPWORKSPACE)
+    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), CS_DBLCLKS, COLOR_APPWORKSPACE)
 
     BEGIN_MSG_MAP(CCanvasWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -21,8 +21,12 @@ public:
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClk)
+        MESSAGE_HANDLER(WM_RBUTTONDBLCLK, OnRButtonDblClk)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
@@ -31,16 +35,34 @@ public:
 
     CCanvasWindow();
 
+    BOOL m_drawing;
+
+    VOID cancelDrawing();
+    VOID finishDrawing();
     VOID Update(HWND hwndFrom);
 
+    VOID ImageToCanvas(POINT& pt);
+    VOID ImageToCanvas(RECT& rc);
+    VOID CanvasToImage(POINT& pt, BOOL bZoomed = FALSE);
+    VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
+    VOID GetImageRect(RECT& rc);
+
 protected:
+    CANVAS_HITTEST m_hitSelection;
     CANVAS_HITTEST m_whereHit;
     POINT m_ptOrig; // The origin of drag start
+    CRect m_rcNew;
 
-    CANVAS_HITTEST HitTest(POINT pt);
+    CANVAS_HITTEST CanvasHitTest(POINT pt);
     RECT GetBaseRect();
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
+    VOID drawZoomFrame(INT mouseX, INT mouseY);
+
+    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
+    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
+    VOID SelectionDragging(POINT ptUnZoomed);
+    VOID EndSelectionDrag(POINT ptUnZoomed);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -48,11 +70,19 @@ protected:
     LRESULT OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    LRESULT OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLRButtonDblClk(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

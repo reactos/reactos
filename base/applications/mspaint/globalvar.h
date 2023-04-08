@@ -52,5 +52,4 @@ extern CToolBox toolBoxContainer;
 extern CToolSettingsWindow toolSettingsWindow;
 extern CPaletteWindow paletteWindow;
 extern CCanvasWindow canvasWindow;
-extern CImgAreaWindow imageArea;
 extern CTextEditWindow textEditWindow;
