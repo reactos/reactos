@@ -155,7 +155,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     }
 
     // Draw new frame if any
-    if (!::IsRectEmpty(&m_rcNew))
+    if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
         DrawXorRect(hdcMem, &m_rcNew);
 
     // Transfer the bits
@@ -668,8 +668,9 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     if (wParam == VK_ESCAPE && ::GetCapture() == m_hWnd)
     {
         // Cancel dragging
-        m_whereHit = HIT_NONE;
         ::ReleaseCapture();
+        m_whereHit = HIT_NONE;
+        ::SetRectEmpty(&m_rcNew);
         Invalidate(TRUE);
     }
 
@@ -680,6 +681,7 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     // Cancel dragging
     m_whereHit = HIT_NONE;
+    ::SetRectEmpty(&m_rcNew);
     Invalidate(TRUE);
     return 0;
 }
