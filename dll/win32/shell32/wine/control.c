@@ -766,45 +766,30 @@ Control_EnumWinProc(
     _In_ LPARAM lParam)
 {
     AppDlgFindData* pData = (AppDlgFindData*)lParam;
-    WCHAR szClassName[256] = L"";
+    UINT_PTR sAppletNo;
+    HANDLE hRes;
+    WCHAR szAppFile[MAX_PATH];
 
     if (pData->hRunDLL == hwnd)
-    {
-        // Skip self instance
-        return TRUE;
-    }
+        return TRUE; /* Skip self instance */
 
-    if (GetClassNameW(hwnd, szClassName, _countof(szClassName)))
+    sAppletNo = (UINT_PTR)GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLFlags));
+    if (sAppletNo != pData->sAppletNo)
+        return TRUE; /* Continue enumeration */
+
+    hRes = GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLName));
+    GlobalGetAtomNameW((ATOM)HandleToUlong(hRes), szAppFile, _countof(szAppFile));
+    if (wcscmp(szAppFile, pData->szAppFile) == 0)
     {
-        // Note: A comparison on identical is not possible, the class names are different.
-        // ReactOS: 'rundll32_window'
-        // WinXP: 'RunDLL'
-        // other OS: not checked
-        if (StrStrIW(szClassName, L"rundll32") != NULL)
+        HWND hDialog = GetLastActivePopup(hwnd);
+        if (IsWindow(hDialog))
         {
-            UINT_PTR sAppletNo;
-
-            sAppletNo = (UINT_PTR)GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLFlags));
-            if (sAppletNo == pData->sAppletNo)
-            {
-                HANDLE hRes;
-                WCHAR szAppFile[MAX_PATH];
-
-                hRes = GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLName));
-                GlobalGetAtomNameW((ATOM)HandleToUlong(hRes), szAppFile, _countof(szAppFile));
-                if (wcscmp(szAppFile, pData->szAppFile) == 0)
-                {
-                    HWND hDialog = GetLastActivePopup(hwnd);
-                    if (IsWindow(hDialog))
-                    {
-                        pData->hDlgResult = hDialog;
-                        return FALSE; // stop enumeration
-                    }
-                }
-            }
+            pData->hDlgResult = hDialog;
+            return FALSE; /* Stop enumeration */
         }
     }
-    return TRUE; // continue enumeration
+
+    return TRUE; /* Continue enumeration */
 }
 
 /**
