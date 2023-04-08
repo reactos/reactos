@@ -596,6 +596,8 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
     }
     ::SetRectEmpty(&m_rcNew);
 
+    imageSaved = FALSE;
+
     m_whereHit = HIT_NONE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
     Update(NULL);
@@ -668,6 +670,7 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         // Cancel dragging
         m_whereHit = HIT_NONE;
         ::ReleaseCapture();
+        Invalidate(TRUE);
     }
 
     return 0;
