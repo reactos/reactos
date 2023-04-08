@@ -652,6 +652,7 @@ IntImmActivateLayout(
     }
     else if (pti->spDefaultImc)
     {
+        /* IME Activation is needed */
         pti->pClientInfo->CI_flags |= CI_IMMACTIVATE;
     }
 
