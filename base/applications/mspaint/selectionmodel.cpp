@@ -199,8 +199,8 @@ void SelectionModel::Landing()
 
 void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
 {
-    m_hbmColor = CopyDIBImage(hBm);
     ::DeleteObject(m_hbmColor);
+    m_hbmColor = CopyDIBImage(hBm);
 
     m_rc.left = x;
     m_rc.top = y;
