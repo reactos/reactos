@@ -7,6 +7,7 @@ list(APPEND SOURCE
     IsTextUnicode.c
     LockServiceDatabase.c
     QueryServiceConfig2.c
+    RegCreateKeyEx.c
     RegEnumKey.c
     RegEnumValueW.c
     RegOpenKeyExW.c
