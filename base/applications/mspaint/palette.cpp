@@ -121,7 +121,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     /* Transfer bits (hDC <-- hMemDC) */
     ::BitBlt(hDC, 0, 0, rcClient.right, rcClient.bottom, hMemDC, 0, 0, SRCCOPY);
 
-    ::SelectObject(hMemDC, hbmOld);
+    ::DeleteObject(::SelectObject(hMemDC, hbmOld));
     ::DeleteDC(hMemDC);
     EndPaint(&ps);
     return 0;

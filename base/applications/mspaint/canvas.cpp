@@ -164,7 +164,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
              hdcMem, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::SelectObject(hdcMem, hbmOld);
+    ::DeleteObject(::SelectObject(hdcMem, hbmOld));
     ::DeleteDC(hdcMem);
 }
 
