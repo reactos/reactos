@@ -349,8 +349,10 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     NotifyRefreshNeeded();
 }
 
-HBITMAP SelectionModel::GetBitmap() const
+HBITMAP SelectionModel::GetBitmap()
 {
+    if (m_hbmColor == NULL)
+        GetSelectionContents(imageModel.GetDC());
     return m_hbmColor;
 }
 

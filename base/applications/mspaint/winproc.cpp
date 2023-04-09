@@ -648,10 +648,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             canvasWindow.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
-            OpenClipboard();
-            EmptyClipboard();
-            SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
-            CloseClipboard();
+            if (OpenClipboard())
+            {
+                EmptyClipboard();
+                SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
+                CloseClipboard();
+            }
             break;
         case IDM_EDITCUT:
             /* Copy */
