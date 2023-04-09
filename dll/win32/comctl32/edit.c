@@ -4392,7 +4392,11 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
     {
         if (CompFlag & GCS_COMPSTR)
             EDIT_GetCompositionStr(hIMC, CompFlag, es);
+#ifdef __REACTOS__
+        cursor = 0;
+#else
         cursor = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, 0, 0);
+#endif
     }
     ImmReleaseContext(hwnd, hIMC);
     EDIT_SetCaretPos(es, es->selection_start + cursor, es->flags & EF_AFTER_WRAP);
