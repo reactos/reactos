@@ -12,15 +12,14 @@
 BOOL FileExists(LPCSTR FileName)
 {
     FILE *fp = NULL;
-    BOOL exists = FALSE;
 
     fp = fopen(FileName, "r");
     if (fp != NULL)
     {
-        exists = TRUE;
         fclose(fp);
+        return TRUE;
     }
-    return exists;
+    return FALSE;
 }
 
 BOOL ResourceToFile(INT i, LPCSTR FileName)
@@ -119,10 +118,11 @@ START_TEST(PrivateExtractIcons)
          * the two NULL's for the Icon Handle and Count to be set. */
         cTotIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, NULL, NULL, 0, 0);
         if (i != 3) // not shell32.dll
-        ok(cTotIcons == IconTests[i].cTotIcons, "PrivateExtractIconsW(%u): got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
-        else
-        /* ROS is 233, W2K2SP2 is 239 */
-        ok(cTotIcons > 232 && cTotIcons < 240, "PrivateExtractIconsW(%u): got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
+            ok(cTotIcons == IconTests[i].cTotIcons, "PrivateExtractIconsW(%u): "
+               "got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
+        else /* ROS is 233, W2K2SP2 is 239 */
+            ok(cTotIcons > 232 && cTotIcons < 240, "PrivateExtractIconsW(%u): "
+               "got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
 
         /* Get count of icons requested  which is 1, unless error. */
         cIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, &ahIcon, &aIconId, 1, 0);
@@ -134,7 +134,7 @@ START_TEST(PrivateExtractIcons)
         if (cIcons == 0xFFFFFFFF)
         {
             ok(aIconId == 0xdeadbeef,
-               "PrivateExtractIconsW(%u): id should not be set to '0x%x'\n",
+               "PrivateExtractIconsW(%u): id should not be set to 0x%x\n",
                i, aIconId);
         }
         else
