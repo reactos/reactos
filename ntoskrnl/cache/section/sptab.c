@@ -364,6 +364,8 @@ MmGetSectionAssociation(PFN_NUMBER Page,
     PMM_SECTION_SEGMENT Segment = NULL;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
+    KIRQL OldIrql = MiAcquirePfnLock();
+
     PageTable = MmGetSegmentRmap(Page, &RawOffset);
     if (PageTable)
     {
@@ -373,6 +375,8 @@ MmGetSectionAssociation(PFN_NUMBER Page,
         ASSERT(PFN_FROM_SSE(PageTable->PageEntries[RawOffset]) == Page);
         InterlockedIncrement64(Segment->ReferenceCount);
     }
+
+    MiReleasePfnLock(OldIrql);
 
     return Segment;
 }
