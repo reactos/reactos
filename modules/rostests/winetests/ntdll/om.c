@@ -1581,7 +1581,11 @@ static void test_query_object_types(void)
     ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
     ok( buffer->NumberOfTypes, "NumberOfTypes is zero\n" );
 
+#ifdef __REACTOS__
+    type = (OBJECT_TYPE_INFORMATION *)ROUND_UP( (DWORD_PTR)(buffer + 1), sizeof(DWORD_PTR) );
+#else
     type = (OBJECT_TYPE_INFORMATION *)(buffer + 1);
+#endif
     for (i = 0; i < buffer->NumberOfTypes; i++)
     {
         USHORT length = type->TypeName.MaximumLength;
