@@ -650,6 +650,11 @@ IntImmActivateLayout(
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)pKL->hkl);
         UserDerefObjectCo(pImeWnd);
     }
+    else if (pti->spDefaultImc)
+    {
+        /* IME Activation is needed */
+        pti->pClientInfo->CI_flags |= CI_IMMACTIVATE;
+    }
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
     pti->pClientInfo->hKL = pKL->hkl;
