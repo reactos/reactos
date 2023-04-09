@@ -1221,11 +1221,22 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
 
 VOID
 NTAPI
+MmDereferencePage(PFN_NUMBER Pfn);
+
+VOID
+NTAPI
 MiDecrementReferenceCount(IN PMMPFN Pfn1,
                           IN PFN_NUMBER PageFrameIndex)
 {
     /* PFN lock must be held */
     MI_ASSERT_PFN_LOCK_HELD();
+
+    /* Handle RosMm PFNs here, too (in case they got locked/unlocked by ARM3) */
+    if (MI_IS_ROS_PFN(Pfn1))
+    {
+        MmDereferencePage(PageFrameIndex);
+        return;
+    }
 
     /* Sanity checks on the page */
     if (PageFrameIndex > MmHighestPhysicalPage ||
