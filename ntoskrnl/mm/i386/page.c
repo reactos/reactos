@@ -325,7 +325,18 @@ MmDeleteVirtualMappingEx(
 
         if (!IsPhysical && OldPte.u.Hard.Valid)
         {
-            // TODO: Handle PFN ShareCount
+            PMMPFN Pfn1;
+            KIRQL OldIrql;
+
+            OldIrql = MiAcquirePfnLock();
+            Pfn1 = &MmPfnDatabase[OldPte.u.Hard.PageFrameNumber];
+            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+            ASSERT(Pfn1->u2.ShareCount > 0);
+            if (--Pfn1->u2.ShareCount == 0)
+            {
+                Pfn1->u3.e1.PageLocation = TransitionPage;
+            }
+            MiReleasePfnLock(OldIrql);
         }
 
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
@@ -685,7 +696,14 @@ MmCreateVirtualMappingUnsafeEx(
 
     if (!IsPhysical)
     {
-        // TODO: Handle PFN ShareCount
+        PMMPFN Pfn1;
+        KIRQL OldIrql;
+
+        OldIrql = MiAcquirePfnLock();
+        Pfn1 = &MmPfnDatabase[TempPte.u.Hard.PageFrameNumber];
+        Pfn1->u2.ShareCount++;
+        Pfn1->u3.e1.PageLocation = ActiveAndValid;
+        MiReleasePfnLock(OldIrql);
     }
 
     /* We don't need to flush the TLB here because it only caches valid translations
