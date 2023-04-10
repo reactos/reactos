@@ -322,6 +322,10 @@ MmFreeMemoryArea(
                 /* We'll have to do some cleanup when we're on the page file */
                 DoFree = TRUE;
             }
+            else if (FreePage == NULL)
+            {
+                DoFree = MmDeletePhysicalMapping(Process, (PVOID)Address, &Dirty, &Page);
+            }
             else
             {
                 DoFree = MmDeleteVirtualMapping(Process, (PVOID)Address, &Dirty, &Page);
