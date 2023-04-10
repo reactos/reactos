@@ -1689,10 +1689,10 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          * Just map the desired physical page
          */
         Page = (PFN_NUMBER)(Offset.QuadPart >> PAGE_SHIFT);
-        Status = MmCreateVirtualMappingUnsafe(Process,
-                                              PAddress,
-                                              Region->Protect,
-                                              Page);
+        Status = MmCreatePhysicalMapping(Process,
+                                         PAddress,
+                                         Region->Protect,
+                                         Page);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");

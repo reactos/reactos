@@ -234,11 +234,12 @@ MmGetPfnForProcess(PEPROCESS Process,
  */
 _Success_(return)
 BOOLEAN
-MmDeleteVirtualMapping(
-    _In_opt_ PEPROCESS Process,
+MmDeleteVirtualMappingEx(
+    _Inout_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _Out_opt_ BOOLEAN* WasDirty,
-    _Out_opt_ PPFN_NUMBER Page)
+    _Out_opt_ PPFN_NUMBER Page,
+    _In_ BOOLEAN IsPhysical)
 {
     PMMPTE PointerPte;
     MMPTE OldPte;
@@ -322,12 +323,38 @@ MmDeleteVirtualMapping(
             }
         }
 
+        if (!IsPhysical && OldPte.u.Hard.Valid)
+        {
+            // TODO: Handle PFN ShareCount
+        }
+
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
     }
 
     return OldPte.u.Long != 0;
 }
 
+_Success_(return)
+BOOLEAN
+MmDeleteVirtualMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _Out_opt_ BOOLEAN * WasDirty,
+    _Out_opt_ PPFN_NUMBER Page)
+{
+    return MmDeleteVirtualMappingEx(Process, Address, WasDirty, Page, FALSE);
+}
+
+_Success_(return)
+BOOLEAN
+MmDeletePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _Out_opt_ BOOLEAN * WasDirty,
+    _Out_opt_ PPFN_NUMBER Page)
+{
+    return MmDeleteVirtualMappingEx(Process, Address, WasDirty, Page, TRUE);
+}
 
 VOID
 NTAPI
@@ -588,10 +615,12 @@ MmCreatePageFileMapping(PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingUnsafe(PEPROCESS Process,
-                             PVOID Address,
-                             ULONG flProtect,
-                             PFN_NUMBER Page)
+MmCreateVirtualMappingUnsafeEx(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG flProtect,
+    _In_ PFN_NUMBER Page,
+    _In_ BOOLEAN IsPhysical)
 {
     ULONG ProtectionMask;
     PMMPTE PointerPte;
@@ -654,6 +683,11 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
+    if (!IsPhysical)
+    {
+        // TODO: Handle PFN ShareCount
+    }
+
     /* We don't need to flush the TLB here because it only caches valid translations
      * and we're moving this PTE from invalid to valid so it can't be cached right now */
 
@@ -665,6 +699,28 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     }
 
     return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+NTAPI
+MmCreateVirtualMappingUnsafe(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG flProtect,
+    _In_ PFN_NUMBER Page)
+{
+    return MmCreateVirtualMappingUnsafeEx(Process, Address, flProtect, Page, FALSE);
+}
+
+NTSTATUS
+NTAPI
+MmCreatePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG flProtect,
+    _In_ PFN_NUMBER Page)
+{
+    return MmCreateVirtualMappingUnsafeEx(Process, Address, flProtect, Page, TRUE);
 }
 
 NTSTATUS
