@@ -85,7 +85,6 @@ RegImportBinaryHive(
     /* Save the root key node */
     RootKeyNode = (PCM_KEY_NODE)HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
 
-    TRACE("RegImportBinaryHive done\n");
     return TRUE;
 }
 
@@ -108,7 +107,7 @@ RegInitCurrentControlSet(
                        &SelectKey);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey() failed (Error %u)\n", (int)Error);
+        ERR("RegOpenKey() failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -120,7 +119,7 @@ RegInitCurrentControlSet(
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('Default') failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -132,7 +131,7 @@ RegInitCurrentControlSet(
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegQueryValue('LastKnownGood') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('LastKnownGood') failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -162,7 +161,7 @@ RegInitCurrentControlSet(
                        &SystemKey);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey(SystemKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey('SYSTEM') failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -175,7 +174,6 @@ RegInitCurrentControlSet(
         return Error;
     }
 
-    TRACE("RegInitCurrentControlSet done\n");
     return ERROR_SUCCESS;
 }
 
@@ -378,7 +376,7 @@ RegOpenKey(
         CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
         if (CellIndex == HCELL_NIL)
         {
-            ERR("Did not find sub key '%wZ' (full %S)\n", &SubKeyName, KeyName);
+            WARN("Did not find sub key '%wZ' (full %S)\n", &SubKeyName, KeyName);
             return ERROR_PATH_NOT_FOUND;
         }
 
@@ -389,7 +387,6 @@ RegOpenKey(
 
     *Key = (HKEY)KeyNode;
 
-    TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
 }
 
@@ -470,7 +467,6 @@ RegQueryValue(
 
     HvReleaseCell(Hive, CellIndex);
 
-    TRACE("RegQueryValue success\n");
     return ERROR_SUCCESS;
 }
 
