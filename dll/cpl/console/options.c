@@ -81,7 +81,6 @@ BuildCodePageList(
     UINT CodePage;
     WCHAR szValueName[MAX_VALUE_NAME];
 
-    // #define REGSTR_PATH_CODEPAGE    TEXT("System\\CurrentControlSet\\Control\\Nls\\CodePage")
     /* Open the Nls\CodePage key */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"System\\CurrentControlSet\\Control\\Nls\\CodePage",
@@ -106,7 +105,7 @@ BuildCodePageList(
         dwSize = ARRAYSIZE(szValueName);
         ++dwIndex;
 
-        /* Check the value type validity */
+        /* Validate the value type */
         if (dwType != REG_SZ)
             continue;
 
@@ -352,9 +351,8 @@ OptionsProc(HWND hDlg,
                 /* If the user validated a different code page... */
                 if ((HIWORD(wParam) == CBN_SELENDOK) && (CodePage != ConInfo->CodePage))
                 {
-                    /* ... update the code page, notify the siblings and change the property sheet state */
+                    /* ... update the code page and change the property sheet state */
                     ConInfo->CodePage = CodePage;
-                    // PropSheet_QuerySiblings(GetParent(hDlg), IDL_CODEPAGE, 0);
                     ResetFontPreview(&FontPreview);
                     PropSheet_Changed(GetParent(hDlg), hDlg);
                 }

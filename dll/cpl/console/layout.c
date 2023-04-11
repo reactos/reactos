@@ -458,7 +458,7 @@ WinPrevProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /* CONSOLE TEXT PREVIEW *******************************************************/
 
 const WCHAR szPreviewText[] =
-    L"C:\\ReactOS> dir                       \n" \
+    L"C:\\ReactOS>dir\n"                         \
     L"SYSTEM       <DIR>      13-04-15  5:00a\n" \
     L"SYSTEM32     <DIR>      13-04-15  5:00a\n" \
     L"readme   txt       1739 13-04-15  5:00a\n" \
