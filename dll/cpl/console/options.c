@@ -80,7 +80,6 @@ BuildCodePageList(
     UINT CodePage;
     WCHAR szValueName[MAX_VALUE_NAME];
 
-    // #define REGSTR_PATH_CODEPAGE    TEXT("System\\CurrentControlSet\\Control\\Nls\\CodePage")
     /* Open the Nls\CodePage key */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"System\\CurrentControlSet\\Control\\Nls\\CodePage",
@@ -105,7 +104,7 @@ BuildCodePageList(
         dwSize = ARRAYSIZE(szValueName);
         ++dwIndex;
 
-        /* Check the value type validity */
+        /* Validate the value type */
         if (dwType != REG_SZ)
             continue;
 
