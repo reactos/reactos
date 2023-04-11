@@ -518,7 +518,7 @@ FontTypeChange(
     FaceName[Length] = L'\0';
 
     StringCchCopyW(pConInfo->FaceName, ARRAYSIZE(pConInfo->FaceName), FaceName);
-    DPRINT1("pConInfo->FaceName = '%S'\n", pConInfo->FaceName);
+    DPRINT("pConInfo->FaceName = '%S'\n", pConInfo->FaceName);
 
     ZeroMemory(&lf, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET; // CodePageToCharSet(pConInfo->CodePage);
@@ -632,8 +632,8 @@ FontSizeChange(
     pConInfo->FontSize.X = (SHORT)(SizeList->UseRasterOrTTList ? CharWidth : 0);
     pConInfo->FontSize.Y = (SHORT)CharHeight;
 
-    DPRINT1("pConInfo->FontSize = (%d x %d) ; (CharWidth x CharHeight) = (%d x %d)\n",
-            pConInfo->FontSize.X, pConInfo->FontSize.Y, CharWidth, CharHeight);
+    DPRINT("pConInfo->FontSize = (%d x %d) ; (CharWidth x CharHeight) = (%d x %d)\n",
+           pConInfo->FontSize.X, pConInfo->FontSize.Y, CharWidth, CharHeight);
 
     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
