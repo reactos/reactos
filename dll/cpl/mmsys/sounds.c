@@ -16,6 +16,8 @@
 
 #include <debug.h>
 
+#define ID_SOUND_TEST_TIMER 1
+
 typedef struct _LABEL_MAP
 {
     PWCHAR szName;
@@ -57,6 +59,8 @@ typedef struct _GLOBAL_DATA
     PLABEL_MAP pLabelMap;
     PAPP_MAP pAppMap;
     UINT NumWavOut;
+    HICON hPlayIcon;
+    HICON hStopIcon;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -1140,6 +1144,99 @@ InitImageList(UINT StartResource,
 }
 
 
+/**
+ * @brief
+ * Get the duration of a waveform audio file.
+ *
+ * @param[in]  pFileName
+ * The file name or full path of the file.
+ *
+ * @return
+ * The duration of the sound, in milliseconds.
+ * Returns 0 in case of failure.
+ **/
+static
+DWORD
+GetSoundDuration(LPCWSTR pFileName)
+{
+    MCI_OPEN_PARMSW openParms;
+    MCI_GENERIC_PARMS closeParms;
+    MCI_SET_PARMS setParms;
+    MCI_STATUS_PARMS statusParms;
+    MCIERROR mciError;
+
+    ZeroMemory(&openParms, sizeof(openParms));
+    openParms.lpstrDeviceType = L"waveaudio";
+    openParms.lpstrElementName = pFileName;
+
+    mciError = mciSendCommandW(0,
+                               MCI_OPEN,
+                               MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT,
+                               (DWORD_PTR)&openParms);
+    if (mciError != 0)
+        return 0;
+
+    ZeroMemory(&setParms, sizeof(setParms));
+    setParms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
+
+    mciError = mciSendCommandW(openParms.wDeviceID,
+                               MCI_SET,
+                               MCI_SET_TIME_FORMAT | MCI_WAIT,
+                               (DWORD_PTR)&setParms);
+    if (mciError == 0)
+    {
+        ZeroMemory(&statusParms, sizeof(statusParms));
+        statusParms.dwItem = MCI_STATUS_LENGTH;
+
+        mciError = mciSendCommandW(openParms.wDeviceID,
+                                   MCI_STATUS,
+                                   MCI_STATUS_ITEM | MCI_WAIT,
+                                   (DWORD_PTR)&statusParms);
+    }
+
+    closeParms.dwCallback = 0;
+    mciSendCommandW(openParms.wDeviceID, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&closeParms);
+
+    if (mciError != 0)
+        return 0;
+
+    return statusParms.dwReturn;
+}
+
+static
+BOOL
+StartSoundTest(HWND hwndDlg, LPCWSTR pszSound)
+{
+    DWORD dwDuration;
+
+    dwDuration = GetSoundDuration(pszSound);
+    if (dwDuration == 0)
+        return FALSE;
+
+    if (PlaySoundW(pszSound, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT))
+    {
+        SetTimer(hwndDlg, ID_SOUND_TEST_TIMER, dwDuration, NULL);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static
+BOOL
+StopSoundTest(HWND hwndDlg)
+{
+    /* Check if the sound is playing */
+    if (KillTimer(hwndDlg, ID_SOUND_TEST_TIMER))
+    {
+        /* Stop the sound */
+        PlaySoundW(NULL, NULL, SND_ASYNC);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* Sounds property page dialog callback */
 INT_PTR
 CALLBACK
@@ -1167,9 +1264,20 @@ SoundsDlgProc(HWND hwndDlg,
 
             pGlobalData->NumWavOut = waveOutGetNumDevs();
 
-            SendMessageW(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
-                         BM_SETIMAGE, (WPARAM)IMAGE_ICON,
-                         (LPARAM)(HANDLE)LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_PLAY_ICON)));
+            pGlobalData->hPlayIcon = LoadImageW(hApplet,
+                                                MAKEINTRESOURCEW(IDI_PLAY_ICON),
+                                                IMAGE_ICON,
+                                                32,
+                                                32,
+                                                LR_DEFAULTCOLOR);
+            pGlobalData->hStopIcon = LoadImageW(hApplet,
+                                                MAKEINTRESOURCEW(IDI_STOP_ICON),
+                                                IMAGE_ICON,
+                                                32,
+                                                32,
+                                                LR_DEFAULTCOLOR);
+            SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
 
             pGlobalData->hSoundsImageList = InitImageList(IDI_SOUND_SECTION,
                                                           IDI_SOUND_ASSIGNED,
@@ -1236,6 +1344,14 @@ SoundsDlgProc(HWND hwndDlg,
                 case IDC_PLAY_SOUND:
                 {
                     LRESULT lIndex;
+
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                        break;
+                    }
+
                     lIndex = ComboBox_GetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
                     if (lIndex == CB_ERR)
                     {
@@ -1245,7 +1361,11 @@ SoundsDlgProc(HWND hwndDlg,
                     lIndex = ComboBox_GetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                     if (lIndex != CB_ERR)
                     {
-                        PlaySoundW((PWCHAR)lIndex, NULL, SND_FILENAME);
+                        if (StartSoundTest(hwndDlg, (LPWSTR)lIndex))
+                        {
+                            SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                                IMAGE_ICON, (LPARAM)pGlobalData->hStopIcon);
+                        }
                     }
                     break;
                 }
@@ -1346,12 +1466,20 @@ SoundsDlgProc(HWND hwndDlg,
         }
         case WM_DESTROY:
         {
+            StopSoundTest(hwndDlg);
             FreeSoundFiles(hwndDlg);
             FreeSoundProfiles(hwndDlg);
             FreeAppMap(pGlobalData);
             FreeLabelMap(pGlobalData);
             if (pGlobalData->hSoundsImageList)
                 ImageList_Destroy(pGlobalData->hSoundsImageList);
+
+            if (pGlobalData->hStopIcon)
+                DestroyIcon(pGlobalData->hStopIcon);
+
+            if (pGlobalData->hPlayIcon)
+                DestroyIcon(pGlobalData->hPlayIcon);
+
             HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
         }
@@ -1369,10 +1497,26 @@ SoundsDlgProc(HWND hwndDlg,
                     ApplyChanges(hwndDlg);
                     break;
                 }
+                case PSN_KILLACTIVE:
+                {
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                    }
+
+                    break;
+                }
                 case TVN_SELCHANGED:
                 {
                     LPNMTREEVIEWW nm = (LPNMTREEVIEWW)lParam;
                     LRESULT lCount, lIndex, lResult;
+
+                    if (StopSoundTest(hwndDlg))
+                    {
+                        SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                            IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+                    }
 
                     pLabelContext = (PLABEL_CONTEXT)nm->itemNew.lParam;
                     if (pLabelContext == NULL)
@@ -1431,8 +1575,19 @@ SoundsDlgProc(HWND hwndDlg,
                     break;
                 }
             }
+            break;
         }
-        break;
+        case WM_TIMER:
+        {
+            if (wParam == ID_SOUND_TEST_TIMER)
+            {
+                KillTimer(hwndDlg, ID_SOUND_TEST_TIMER);
+                SendDlgItemMessageW(hwndDlg, IDC_PLAY_SOUND, BM_SETIMAGE,
+                                    IMAGE_ICON, (LPARAM)pGlobalData->hPlayIcon);
+            }
+
+            break;
+        }
     }
 
     return FALSE;
