@@ -47,6 +47,7 @@ list(APPEND SOURCE
     drmexternals.idl
     dxgiformat.idl
 #   dyngraph.idl
+    emptyvc.idl
     endpointvolume.idl
     exdisp.idl
     fusion.idl
