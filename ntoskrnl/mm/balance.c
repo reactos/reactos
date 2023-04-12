@@ -293,7 +293,8 @@ MmRebalanceMemoryConsumers(VOID)
 {
     // if (InterlockedCompareExchange(&PageOutThreadActive, 0, 1) == 0)
     {
-        KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+        /* Reset the event and boost balancer priority */
+        KeSetEvent(&MiBalancerEvent, EVENT_INCREMENT, FALSE);
     }
 }
 
