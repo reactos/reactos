@@ -494,6 +494,8 @@ public:
         _In_opt_ POSITION posStartAfter = NULL) const;
     POSITION FindIndex(_In_ size_t iElement) const;
 
+    void SwapElements(POSITION pos1, POSITION pos2);
+
 private:
     CNode* CreateNode(
         INARGTYPE element,
@@ -807,6 +809,45 @@ POSITION CAtlList< E, ETraits >::FindIndex(_In_ size_t iElement) const
     }
 
     return (POSITION)Node;
+}
+
+template<typename E, class ETraits>
+void CAtlList< E, ETraits >::SwapElements(POSITION pos1, POSITION pos2)
+{
+    if (pos1 == pos2)
+        return;
+
+
+    CNode *node1 = (CNode *)pos1;
+    CNode *node2 = (CNode *)pos2;
+
+    CNode *tmp = node1->m_Prev;
+    node1->m_Prev = node2->m_Prev;
+    node2->m_Prev = tmp;
+
+    if (node1->m_Prev)
+        node1->m_Prev->m_Next = node1;
+    else
+        m_HeadNode = node1;
+
+    if (node2->m_Prev)
+        node2->m_Prev->m_Next = node2;
+    else
+        m_HeadNode = node2;
+
+    tmp = node1->m_Next;
+    node1->m_Next = node2->m_Next;
+    node2->m_Next = tmp;
+
+    if (node1->m_Next)
+        node1->m_Next->m_Prev = node1;
+    else
+        m_TailNode = node1;
+
+    if (node2->m_Next)
+        node2->m_Next->m_Prev = node2;
+    else
+        m_TailNode = node2;
 }
 
 
