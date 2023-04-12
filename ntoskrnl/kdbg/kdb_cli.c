@@ -33,7 +33,7 @@
 #include "../kd/kdterminal.h"
 
 #define NDEBUG
-#include <debug.h>
+#include "debug.h"
 
 /* DEFINES *******************************************************************/
 
@@ -655,7 +655,7 @@ KdbpCmdPrintStruct(
             DPRINT1("BaseAddress: %p\n", BaseAddress);
         }
     }
-    DPRINT1("BaseAddress %p\n", BaseAddress);
+    DPRINT1("BaseAddress: %p\n", BaseAddress);
     KdbpPrintStructInternal(Info, Indent, !!BaseAddress, BaseAddress, &Aggregate);
 end:
     RosSymFreeAggregate(&Aggregate);

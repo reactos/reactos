@@ -14,7 +14,7 @@
 #include "kdb.h"
 
 #define NDEBUG
-#include <debug.h>
+#include "debug.h"
 
 /* GLOBALS ******************************************************************/
 
@@ -170,17 +170,15 @@ KdbSymPrintAddress(
         CHAR FileName[256];
         CHAR FunctionName[256];
 
-        if (RosSymGetAddressInformation(LdrEntry->PatchInformation, RelativeAddress, &LineNumber, FileName, FunctionName))
+        if (RosSymGetAddressInformation(LdrEntry->PatchInformation,
+                                        RelativeAddress,
+                                        &LineNumber,
+                                        FileName,
+                                        FunctionName))
         {
-            STRING str;
-            /* Use KdpPrintString because KdpDprintf is limited wrt string size */
-            KdpDprintf("<%s:%x (", ModuleNameAnsi, RelativeAddress);
-            str.Buffer = FileName;
-            str.Length = (USHORT)strnlen(FileName, sizeof(FileName));
-            str.MaximumLength = sizeof(FileName);
-            KdpPrintString(&str);
-            KdpDprintf(":%d (%s))>", LineNumber, FunctionName);
-
+            KdbPrintf("<%s:%x (%s:%d (%s))>",
+                      ModuleNameAnsi, RelativeAddress,
+                      FileName, LineNumber, FunctionName);
             Printed = TRUE;
         }
     }
@@ -188,7 +186,7 @@ KdbSymPrintAddress(
     if (!Printed)
     {
         /* Just print module & address */
-        KdpDprintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
+        KdbPrintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
     }
 
     return TRUE;
