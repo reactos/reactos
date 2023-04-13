@@ -63,7 +63,7 @@ enum _ARCH
 typedef int (*PFNOUTLINE)(FILE *, EXPORT *);
 int gbMSComp = 0;
 int gbImportLib = 0;
-int gbNotPrivateNoWarn = 0;
+int gbNotPrivateNoWarn = 1; //FIXME: set to 0 when CORE-16380 got proper fix
 int gbTracing = 0;
 int giArch = ARCH_X86;
 char *pszArchString = "i386";
@@ -421,7 +421,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
 void
 OutputHeader_asmstub(FILE *file, char *libname)
 {
-    fprintf(file, "; File generated automatically, do not edit! \n\n");
+    fprintf(file, "; File generated automatically, do not edit!\n\n");
 
     if (giArch == ARCH_X86)
     {
@@ -471,7 +471,7 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         /* Does the string already have stdcall decoration? */
         const char *pcAt = ScanToken(pexp->strName.buf, '@');
-        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) &&
             (pexp->strName.buf[0] == '_'))
         {
             /* Skip leading underscore and remove trailing decoration */
@@ -704,7 +704,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco && 
+            if (pcDeco &&
                 (pexp->strName.len > 1) &&
                 (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
@@ -1465,7 +1465,7 @@ int main(int argc, char *argv[])
     pexports = ParseFile(pszSource, file, &cExports);
     if (pexports == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory for export data!\n");
+        fprintf(stderr, "error: could not parse file!\n");
         return -1;
     }
 
