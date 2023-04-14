@@ -238,6 +238,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
 
             MoveToEx(pDrawItem->hDC, x, y, NULL);
             LineTo(pDrawItem->hDC, x, y + 10);
+            SetPixel(pDrawItem->hDC, x, y + 10, RGB(0, 0, 0));
         }
 
         SelectObject(pDrawItem->hDC, hOldPen);
