@@ -355,8 +355,10 @@ KdbSymInit(
         SHORT Found = FALSE;
         CHAR YesNo;
 
-        /* By default, load symbols in DBG builds, but not in REL builds */
-#if DBG
+        /* By default, load symbols in DBG builds, but not in REL builds
+           or anything other than x86, because they only work on x86
+           and can cause the system to hang on x64. */
+#if DBG && defined(_M_IX86)
         LoadSymbols = TRUE;
 #else
         LoadSymbols = FALSE;
