@@ -1,5 +1,9 @@
 #include "ext2fs.h"
+#ifdef __REACTOS__
 #include "linux/ext4.h"
+#else
+#include "linux\ext4.h"
+#endif
 
 static handle_t no_journal;
 

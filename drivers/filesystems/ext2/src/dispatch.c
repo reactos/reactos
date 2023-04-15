@@ -37,7 +37,11 @@ extern PEXT2_GLOBAL Ext2Global;
  *    N/A
  */
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2OplockComplete (
     IN PVOID Context,
     IN PIRP Irp
@@ -82,7 +86,11 @@ Ext2OplockComplete (
  *    N/A
  */
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2LockIrp (
     IN PVOID Context,
     IN PIRP Irp
@@ -174,7 +182,11 @@ Ext2QueueRequest (IN PEXT2_IRP_CONTEXT IrpContext)
 }
 
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2DeQueueRequest (IN PVOID Context)
 {
     PEXT2_IRP_CONTEXT IrpContext;
@@ -288,7 +300,11 @@ Ext2DispatchRequest (IN PEXT2_IRP_CONTEXT IrpContext)
 }
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
 {
     BOOLEAN             AtIrqlPassiveLevel = FALSE;

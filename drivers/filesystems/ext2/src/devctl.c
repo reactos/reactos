@@ -17,7 +17,11 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2DeviceControlCompletion (
     IN PDEVICE_OBJECT   DeviceObject,
     IN PIRP             Irp,
@@ -38,7 +42,11 @@ Ext2DeviceControlCompletion (
 #endif
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2DeviceControlCompletion (
     IN PDEVICE_OBJECT   DeviceObject,
     IN PIRP             Irp,
@@ -426,14 +434,22 @@ Ext2ProcessVolumeProperty(
         case APP_CMD_SET_PROPERTY2:
 
             RtlZeroMemory(Vcb->sHidingPrefix, HIDINGPAT_LEN);
+#ifdef __REACTOS__
             if (Vcb->bHidingPrefix == Property2->bHidingPrefix) {
+#else
+            if (Vcb->bHidingPrefix = Property2->bHidingPrefix) {
+#endif
                 RtlCopyMemory( Vcb->sHidingPrefix,
                                Property2->sHidingPrefix,
                                HIDINGPAT_LEN - 1);
             }
 
             RtlZeroMemory(Vcb->sHidingSuffix, HIDINGPAT_LEN);
+#ifdef __REACTOS__
             if (Vcb->bHidingSuffix == Property2->bHidingSuffix) {
+#else
+            if (Vcb->bHidingSuffix = Property2->bHidingSuffix) {
+#endif
                 RtlCopyMemory( Vcb->sHidingSuffix,
                                Property2->sHidingSuffix,
                                HIDINGPAT_LEN - 1);
@@ -511,7 +527,11 @@ Ext2ProcessVolumeProperty(
             RtlCopyMemory(Property2->UUID, Vcb->SuperBlock->s_uuid, 16);
             Property2->DrvLetter = Vcb->DrvLetter;
 
+#ifdef __REACTOS__
             if (Property2->bHidingPrefix == Vcb->bHidingPrefix) {
+#else
+            if (Property2->bHidingPrefix = Vcb->bHidingPrefix) {
+#endif
                 RtlCopyMemory( Property2->sHidingPrefix,
                                Vcb->sHidingPrefix,
                                HIDINGPAT_LEN);
@@ -520,7 +540,11 @@ Ext2ProcessVolumeProperty(
                                HIDINGPAT_LEN);
             }
 
+#ifdef __REACTOS__
             if (Property2->bHidingSuffix == Vcb->bHidingSuffix) {
+#else
+            if (Property2->bHidingSuffix = Vcb->bHidingSuffix) {
+#endif
                 RtlCopyMemory( Property2->sHidingSuffix,
                                Vcb->sHidingSuffix,
                                HIDINGPAT_LEN);

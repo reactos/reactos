@@ -27,14 +27,18 @@ typedef	signed   __int64	__s64;
 typedef	unsigned __int64	__u64;
 
 
+#ifdef __REACTOS__
 typedef __s8         s8;
 typedef __u8         u8;
+#endif
+#if defined(_MSC_VER) || defined(__REACTOS__)
 typedef __s16       s16;
 typedef __u16       u16;
 typedef __s32       s32;
 typedef __u32       u32;
 typedef __s64       s64;
 typedef __u64       u64;
+#endif
 
 #define __le16      u16
 #define __le32      u32
