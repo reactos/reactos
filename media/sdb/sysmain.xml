@@ -270,6 +270,10 @@
             <FLAG NAME="GetDiskFreeSpace2GB">
                 <FLAG_MASK_KERNEL>8</FLAG_MASK_KERNEL>
             </FLAG>
+            <SHIM NAME="DefaultTimerResolution1ms">
+                <DLLFILE>acgenral.dll</DLLFILE>
+                <DESCRIPTION>Windows 95/98/ME timeGetTime has a default resolution of 1 ms and on Windows NT/2000/XP this same function has a resolution of 10 ms</DESCRIPTION>
+            </SHIM>
 
         </LIBRARY>
 
@@ -283,12 +287,14 @@
             <SHIM_REF NAME="Win95VersionLie" />
             <SHIM_REF NAME="ForceDXSetupSuccess" />
             <SHIM_REF NAME="IgnoreLoadLibrary" />
+            <SHIM_REF NAME="DefaultTimerResolution1ms" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN98">
             <SHIM_REF NAME="Win98VersionLie" />
             <SHIM_REF NAME="ForceDXSetupSuccess" />
             <SHIM_REF NAME="IgnoreLoadLibrary" />
+            <SHIM_REF NAME="DefaultTimerResolution1ms" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="NT4SP5">
@@ -441,6 +447,9 @@
         </LAYER>
         <LAYER NAME="GetDiskFreeSpace2GB">
             <FLAG_REF NAME="GetDiskFreeSpace2GB" />
+        </LAYER>
+        <LAYER NAME="DefaultTimerResolution1ms">
+            <SHIM_REF NAME="DefaultTimerResolution1ms" />
         </LAYER>
 
         <!-- Applications -->

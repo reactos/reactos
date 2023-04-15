@@ -9,6 +9,7 @@ list(APPEND SOURCE
     main.c
     shimtest.c
     themes.c
+    timeapi.c
     genral.spec)
 
 add_library(acgenral MODULE
