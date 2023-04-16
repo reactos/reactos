@@ -572,7 +572,7 @@ BEGIN
     DEFPUSHBUTTON "&Localizar seguinte", IDOK, 177, 7, 70, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 177, 24, 70, 14
     GROUPBOX "Observar", IDC_STATIC, 7, 25, 63, 51
-    LTEXT "&Localizar:", IDC_STATIC, 7, 8, 37, 10
+    LTEXT "&Procurar:", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 122, 13, ES_AUTOHSCROLL
     CONTROL "&Chaves", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
