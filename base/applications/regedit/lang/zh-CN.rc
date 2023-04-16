@@ -460,7 +460,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "展开"
     IDS_COLLAPSE "折叠"
-    IDS_GOTO_SUGGESTED_KEY "转到(&G)“%s”"
     IDS_FINISHEDFIND "注册表搜索完毕。"
 END
 

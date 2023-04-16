@@ -450,7 +450,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expandieren"
     IDS_COLLAPSE "&Schließen"
-    IDS_GOTO_SUGGESTED_KEY "&Gehe zu '%s'"
     IDS_FINISHEDFIND "Durchsuchen der Registry beendet."
 END
 

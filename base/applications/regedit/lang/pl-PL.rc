@@ -460,7 +460,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Rozwiń"
     IDS_COLLAPSE "&Zwiń"
-    IDS_GOTO_SUGGESTED_KEY "&Idź do '%s'"
     IDS_FINISHEDFIND "Przeszukiwanie rejestru zakończone."
 END
 

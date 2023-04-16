@@ -454,7 +454,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "Zgjat"
     IDS_COLLAPSE "Zgjero"
-    IDS_GOTO_SUGGESTED_KEY "Shko tek '%s'"
     IDS_FINISHEDFIND "Përfunduar kërkimin përmes regjistrit."
 END
 

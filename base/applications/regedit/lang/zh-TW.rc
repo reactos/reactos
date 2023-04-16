@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Registry Editor
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
  *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
  *              Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -459,7 +458,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "展開"
     IDS_COLLAPSE "摺疊"
-    IDS_GOTO_SUGGESTED_KEY "轉到「%s」(&G)"
     IDS_FINISHEDFIND "登錄搜尋完畢。"
 END
 

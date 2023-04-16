@@ -452,7 +452,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Extinde"
     IDS_COLLAPSE "&Restrânge"
-    IDS_GOTO_SUGGESTED_KEY "S&alt la „%s”"
     IDS_FINISHEDFIND "Căutarea în registru a fost finalizată."
 END
 

@@ -24,7 +24,6 @@ ChildWnd* g_pChildWnd;
 static int last_split;
 HBITMAP SizingPattern = 0;
 HBRUSH  SizingBrush = 0;
-WCHAR Suggestions[256];
 
 extern LPCWSTR get_root_key_name(HKEY hRootKey)
 {
@@ -128,84 +127,6 @@ static void finish_splitbar(HWND hWnd, int x)
     ResizeWnd(rt.right, rt.bottom);
     ReleaseCapture();
 }
-
-/*******************************************************************************
- *
- *  Key suggestion
- */
-
-#define MIN(a,b)    ((a < b) ? (a) : (b))
-
-static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions,
-                        size_t iSuggestionsLength)
-{
-    WCHAR szBuffer[256];
-    WCHAR szLastFound[256];
-    size_t i;
-    HKEY hOtherKey, hSubKey;
-    BOOL bFound;
-
-    memset(pszSuggestions, 0, iSuggestionsLength * sizeof(*pszSuggestions));
-    iSuggestionsLength--;
-
-    /* Are we a root key in HKEY_CLASSES_ROOT? */
-    if ((hRootKey == HKEY_CLASSES_ROOT) && pszKeyPath[0] && !wcschr(pszKeyPath, L'\\'))
-    {
-        do
-        {
-            bFound = FALSE;
-
-            /* Check default key */
-            if (QueryStringValue(hRootKey, pszKeyPath, NULL,
-                                 szBuffer, ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
-            {
-                /* Sanity check this key; it cannot be empty, nor can it be a
-                 * loop back */
-                if ((szBuffer[0] != L'\0') && _wcsicmp(szBuffer, pszKeyPath))
-                {
-                    if (RegOpenKeyW(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
-                    {
-                        lstrcpynW(pszSuggestions, L"HKCR\\", (int) iSuggestionsLength);
-                        i = wcslen(pszSuggestions);
-                        pszSuggestions += i;
-                        iSuggestionsLength -= i;
-
-                        lstrcpynW(pszSuggestions, szBuffer, (int) iSuggestionsLength);
-                        i = MIN(wcslen(pszSuggestions) + 1, iSuggestionsLength);
-                        pszSuggestions += i;
-                        iSuggestionsLength -= i;
-                        RegCloseKey(hOtherKey);
-
-                        bFound = TRUE;
-                        wcscpy(szLastFound, szBuffer);
-                        pszKeyPath = szLastFound;
-                    }
-                }
-            }
-        }
-        while(bFound && (iSuggestionsLength > 0));
-
-        /* Check CLSID key */
-        if (RegOpenKeyW(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
-        {
-            if (QueryStringValue(hSubKey, L"CLSID", NULL, szBuffer,
-                                 ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
-            {
-                lstrcpynW(pszSuggestions, L"HKCR\\CLSID\\", (int)iSuggestionsLength);
-                i = wcslen(pszSuggestions);
-                pszSuggestions += i;
-                iSuggestionsLength -= i;
-
-                lstrcpynW(pszSuggestions, szBuffer, (int)iSuggestionsLength);
-                i = MIN(wcslen(pszSuggestions) + 1, iSuggestionsLength);
-                pszSuggestions += i;
-                iSuggestionsLength -= i;
-            }
-            RegCloseKey(hSubKey);
-        }
-    }
-}
-
 
 LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -555,13 +476,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             HMENU hContextMenu;
             TVITEMW item;
             MENUITEMINFOW mii;
-            WCHAR resource[256];
             WCHAR buffer[256];
-            LPWSTR s;
-            LPCWSTR keyPath;
-            HKEY hRootKey;
-            int iLastPos;
-            WORD wID;
             BOOL isRoot;
 
             pt.x = (short) LOWORD(lParam);
@@ -595,7 +510,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 TreeView_SelectItem(g_pChildWnd->hTreeWnd, hti.hItem);
 
                 isRoot = (TreeView_GetParent(g_pChildWnd->hTreeWnd, hti.hItem) == NULL);
-                hContextMenu = GetSubMenu(hPopupMenus, isRoot ?  PM_ROOTITEM : PM_TREECONTEXT);
+                hContextMenu = GetSubMenu(hPopupMenus, isRoot ? PM_ROOTITEM : PM_TREECONTEXT);
 
                 memset(&item, 0, sizeof(item));
                 item.mask = TVIF_STATE | TVIF_CHILDREN;
@@ -611,52 +526,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 mii.wID = (item.state & TVIS_EXPANDED) ? ID_TREE_COLLAPSEBRANCH : ID_TREE_EXPANDBRANCH;
                 mii.dwTypeData = (LPWSTR) buffer;
                 SetMenuItemInfo(hContextMenu, 0, TRUE, &mii);
-
-                if (isRoot == FALSE)
-                {
-                    /* Remove any existing suggestions */
-                    memset(&mii, 0, sizeof(mii));
-                    mii.cbSize = sizeof(mii);
-                    mii.fMask = MIIM_ID;
-                    GetMenuItemInfo(hContextMenu, GetMenuItemCount(hContextMenu) - 1, TRUE, &mii);
-                    if ((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX))
-                    {
-                        do
-                        {
-                            iLastPos = GetMenuItemCount(hContextMenu) - 1;
-                            GetMenuItemInfo(hContextMenu, iLastPos, TRUE, &mii);
-                            RemoveMenu(hContextMenu, iLastPos, MF_BYPOSITION);
-                        }
-                        while((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX));
-                    }
-
-                    /* Come up with suggestions */
-                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
-                    SuggestKeys(hRootKey, keyPath, Suggestions, ARRAY_SIZE(Suggestions));
-                    if (Suggestions[0])
-                    {
-                        AppendMenu(hContextMenu, MF_SEPARATOR, 0, NULL);
-
-                        LoadStringW(hInst, IDS_GOTO_SUGGESTED_KEY, resource, ARRAY_SIZE(resource));
-
-                        s = Suggestions;
-                        wID = ID_TREE_SUGGESTION_MIN;
-                        while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
-                        {
-                            _snwprintf(buffer, ARRAY_SIZE(buffer), resource, s);
-
-                            memset(&mii, 0, sizeof(mii));
-                            mii.cbSize = sizeof(mii);
-                            mii.fMask = MIIM_STRING | MIIM_ID;
-                            mii.wID = wID++;
-                            mii.dwTypeData = buffer;
-                            InsertMenuItem(hContextMenu, GetMenuItemCount(hContextMenu), TRUE, &mii);
-
-                            s += wcslen(s) + 1;
-                        }
-                    }
-                }
-                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd/*g_pChildWnd->hWnd*/, NULL);
+                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
             }
         }
         break;

@@ -452,7 +452,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Genişlet"
     IDS_COLLAPSE "&Daralt"
-    IDS_GOTO_SUGGESTED_KEY "G&it: %s"
     IDS_FINISHEDFIND "Kayıt Defteri içerisinde arama bitti."
 END
 

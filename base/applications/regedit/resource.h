@@ -153,8 +153,6 @@
 #define IDS_QUERY_DELETE_KEY_ONE     32875
 #define IDS_QUERY_DELETE_KEY_MORE    32876
 #define IDS_QUERY_DELETE_KEY_CONFIRM 32877
-#define ID_TREE_SUGGESTION_MIN       32878
-#define ID_TREE_SUGGESTION_MAX       32887
 #define ID_TREE_EXPORT               32888
 #define ID_TREE_PERMISSIONS          32889
 #define ID_ADDRESS_FOCUS             32890
@@ -189,7 +187,6 @@
 #define IDS_COLLAPSE                  31204
 #define IDS_NEW_KEY                   31205
 #define IDS_NEW_VALUE                 31206
-#define IDS_GOTO_SUGGESTED_KEY        31207
 
 #define IDS_IMPORT_PROMPT 31300
 #define IDS_IMPORT_OK     31301

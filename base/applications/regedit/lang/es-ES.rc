@@ -453,7 +453,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expandir"
     IDS_COLLAPSE "&Contraer"
-    IDS_GOTO_SUGGESTED_KEY "&Ir a '%s'"
     IDS_FINISHEDFIND "Ha terminado la búsqueda en el Registro."
 END
 

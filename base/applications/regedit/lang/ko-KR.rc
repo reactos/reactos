@@ -452,7 +452,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "확장(&E)"
     IDS_COLLAPSE "축소(&C)"
-    IDS_GOTO_SUGGESTED_KEY "'%s'로 가기(&G)"
     IDS_FINISHEDFIND "레지스트리 검색을 완료했습니다."
 END
 

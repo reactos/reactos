@@ -452,7 +452,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Розгорнути"
     IDS_COLLAPSE "&Згорнути"
-    IDS_GOTO_SUGGESTED_KEY "&Перейти до '%s'"
     IDS_FINISHEDFIND "Пошук у реєстрі завершений."
 END
 

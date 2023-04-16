@@ -33,8 +33,6 @@
 static WCHAR s_szFavoritesRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites";
 
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
-
-extern WCHAR Suggestions[256];
 /*******************************************************************************
  * Local module support methods
  */
@@ -1318,18 +1316,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 ChooseFavorite(szFavorite);
             }
-        }
-        else if ((LOWORD(wParam) >= ID_TREE_SUGGESTION_MIN) && (LOWORD(wParam) <= ID_TREE_SUGGESTION_MAX))
-        {
-            WORD wID = LOWORD(wParam);
-            LPCWSTR s = Suggestions;
-            while(wID > ID_TREE_SUGGESTION_MIN)
-            {
-                if (*s)
-                    s += wcslen(s) + 1;
-                wID--;
-            }
-            SelectNode(g_pChildWnd->hTreeWnd, s);
         }
         else
         {

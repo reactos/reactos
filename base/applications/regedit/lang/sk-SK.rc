@@ -455,7 +455,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

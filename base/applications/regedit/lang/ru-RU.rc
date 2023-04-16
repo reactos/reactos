@@ -450,7 +450,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Развернуть"
     IDS_COLLAPSE "&Свернуть"
-    IDS_GOTO_SUGGESTED_KEY "&Перейти к '%s'"
     IDS_FINISHEDFIND "Поиск в реестре завершен."
 END
 

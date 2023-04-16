@@ -450,7 +450,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Μετάβαση σε '%s'"
     IDS_FINISHEDFIND "Τέλος αναζήτησης στη registry."
 END
 

@@ -450,7 +450,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "展開(&E)"
     IDS_COLLAPSE "閉じる(&C)"
-    IDS_GOTO_SUGGESTED_KEY "'%s' へ移動する(&G)"
     IDS_FINISHEDFIND "レジストリをすべて検索しました。"
 END
 

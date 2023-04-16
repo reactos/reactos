@@ -450,7 +450,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "Pe&rluas"
     IDS_COLLAPSE "Per&sempit"
-    IDS_GOTO_SUGGESTED_KEY "&Pergi ke '%s'"
     IDS_FINISHEDFIND "Selesai mencari di seluruh registri."
 END
 
