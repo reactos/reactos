@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ARM Uniprocessor vIC Hardware Abstraction Layer"
+#define REACTOS_STR_INTERNAL_NAME     "halavic"
+#define REACTOS_STR_ORIGINAL_FILENAME "halavic.dll"
+#include <reactos/version.rc>

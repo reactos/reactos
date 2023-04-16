@@ -1,0 +1,2 @@
+
+#define RTC_DATA   (PVOID)0x101E8000

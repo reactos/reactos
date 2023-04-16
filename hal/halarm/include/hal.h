@@ -18,6 +18,8 @@
 #undef NTSYSAPI
 #define NTSYSAPI __declspec(dllimport)
 
+#define CLOCK2_LEVEL CLOCK_LEVEL
+
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>
 #include <ioaccess.h>
@@ -33,7 +35,13 @@
 #include <ldrtypes.h>
 #include <obfuncs.h>
 
+/* Internal shared PCI and ACPI header */
+//#include <drivers/pci/pci.h>
+//#include <drivers/acpi/acpi.h>
+
 /* Internal HAL Headers */
 #include "halp.h"
+#include "gic.h"
+#include "halacpi.h"
 
 /* EOF */

@@ -12,9 +12,13 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef KeGetCurrentIrql
-
 /* GLOBALS ********************************************************************/
+
+
+PUCHAR KdComPortInUse;
+
+IDTUsageFlags HalpIDTUsageFlags[256];
+IDTUsage HalpIDTUsage[256];
 
 ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
 {
@@ -99,6 +103,21 @@ HalpInitializeInterrupts(VOID)
     RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
 }
 
+/*
+ * @unimplemented
+ */
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalReportResourceUsage(VOID)
+{
+    UNICODE_STRING HalString;
+
+    /* Build HAL usage */
+    RtlInitUnicodeString(&HalString, L"ARM Versatile HAL");
+    HalpReportResourceUsage(&HalString, Internal);
+}
+
 /* IRQL MANAGEMENT ************************************************************/
 
 /*
@@ -112,6 +131,35 @@ HalGetInterruptSource(VOID)
     /* Get the interrupt status, and return the highest bit set */
     InterruptStatus = READ_REGISTER_ULONG(VIC_INT_STATUS);
     return 31 - _clz(InterruptStatus);
+}
+
+
+VOID
+NTAPI
+HalpRegisterVector(IN UCHAR Flags,
+                   IN ULONG BusVector,
+                   IN ULONG SystemVector,
+                   IN KIRQL Irql)
+{
+    /* Save the vector flags */
+    HalpIDTUsageFlags[SystemVector].Flags = Flags;
+
+    /* Save the vector data */
+    HalpIDTUsage[SystemVector].Irql  = Irql;
+    HalpIDTUsage[SystemVector].BusReleativeVector = BusVector;
+}
+
+VOID
+NTAPI
+HalpEnableInterruptHandler(IN UCHAR Flags,
+                           IN ULONG BusVector,
+                           IN ULONG SystemVector,
+                           IN KIRQL Irql,
+                           IN PVOID Handler,
+                           IN KINTERRUPT_MODE Mode)
+{
+    /* Register the routine */
+    KeGetPcr()->InterruptRoutine[Irql] = Handler;
 }
 
 /*
