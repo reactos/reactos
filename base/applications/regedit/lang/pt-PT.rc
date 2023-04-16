@@ -180,7 +180,7 @@ BEGIN
         MENUITEM "&Localizar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Eliminar", ID_TREE_DELETE
-        MENUITEM "&Mudar o nome", ID_TREE_RENAME
+        MENUITEM "&Renomear", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
         MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
