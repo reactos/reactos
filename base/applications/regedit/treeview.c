@@ -781,7 +781,7 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
 
     /* Load "My Computer" string... */
     LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, ARRAY_SIZE(szBuffer));
-    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
+    wcscat(szBuffer, L"\\");
 
     /* ... and remove it from the key path */
     if (!_wcsnicmp(keyPath, szBuffer, wcslen(szBuffer)))
@@ -798,30 +798,26 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
         size_t copyLength;
         s = wcschr(keyPath, L'\\');
         if (s != NULL)
-        {
             copyLength = (s - keyPath) * sizeof(WCHAR);
-        }
         else
-        {
             copyLength = sizeof(szPathPart);
-        }
         StringCbCopyNW(szPathPart, sizeof(szPathPart), keyPath, copyLength);
 
         /* Special case for root to expand root key abbreviations */
         if (hItem == hRoot)
         {
             if (!_wcsicmp(szPathPart, L"HKCR"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CLASSES_ROOT");
+                wcscpy(szPathPart, L"HKEY_CLASSES_ROOT");
             else if (!_wcsicmp(szPathPart, L"HKCU"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CURRENT_USER");
+                wcscpy(szPathPart, L"HKEY_CURRENT_USER");
             else if (!_wcsicmp(szPathPart, L"HKLM"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_LOCAL_MACHINE");
+                wcscpy(szPathPart, L"HKEY_LOCAL_MACHINE");
             else if (!_wcsicmp(szPathPart, L"HKU"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_USERS");
+                wcscpy(szPathPart, L"HKEY_USERS");
             else if (!_wcsicmp(szPathPart, L"HKCC"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_CURRENT_CONFIG");
+                wcscpy(szPathPart, L"HKEY_CURRENT_CONFIG");
             else if (!_wcsicmp(szPathPart, L"HKDD"))
-                StringCbCopyW(szPathPart, sizeof(szPathPart), L"HKEY_DYN_DATA");
+                wcscpy(szPathPart, L"HKEY_DYN_DATA");
         }
 
         for (hChildItem = TreeView_GetChild(hwndTV, hItem); hChildItem;
