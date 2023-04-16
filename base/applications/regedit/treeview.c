@@ -798,9 +798,13 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
         size_t copyLength;
         s = wcschr(keyPath, L'\\');
         if (s != NULL)
+        {
             copyLength = (s - keyPath) * sizeof(WCHAR);
+        }
         else
+        {
             copyLength = sizeof(szPathPart);
+        }
         StringCbCopyNW(szPathPart, sizeof(szPathPart), keyPath, copyLength);
 
         /* Special case for root to expand root key abbreviations */
