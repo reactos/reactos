@@ -200,7 +200,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Kes", ID_HEXEDIT_CUT
-        MENUITEM "&Kopyala", ID_HEXEDIT_COPY
+        MENUITEM "K&opyala", ID_HEXEDIT_COPY
         MENUITEM "&Yapıştır", ID_HEXEDIT_PASTE
         MENUITEM "&Sil", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
