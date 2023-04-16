@@ -199,7 +199,7 @@ BEGIN
     BEGIN
         MENUITEM "C&ortar", ID_HEXEDIT_CUT
         MENUITEM "&Copiar", ID_HEXEDIT_COPY
-        MENUITEM "&Colar", ID_HEXEDIT_PASTE
+        MENUITEM "Co&lar", ID_HEXEDIT_PASTE
         MENUITEM "&Excluir", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
