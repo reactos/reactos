@@ -794,6 +794,10 @@ PDEVOBJ_lChangeDisplaySettings(
         RequestedMode ? RequestedMode->dmDisplayFrequency : 0,
         pmdevOld, ppmdevNew);
 
+    /* Update device list (some devices may have been added/removed,
+       or gbBaseVideo variable may have been changed) */
+    EngpUpdateGraphicsDeviceList();
+
     if (pustrDeviceName)
     {
         pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0);

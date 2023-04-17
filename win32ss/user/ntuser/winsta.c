@@ -264,8 +264,16 @@ co_IntInitializeDesktopGraphics(VOID)
     TEXTMETRICW tmw;
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
+    LONG lRet;
 
-    if (PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE) != DISP_CHANGE_SUCCESSFUL)
+    lRet = PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE);
+    if (lRet != DISP_CHANGE_SUCCESSFUL && !gbBaseVideo)
+    {
+        ERR("PDEVOBJ_lChangeDisplaySettings() failed. Trying with base video\n");
+        gbBaseVideo = TRUE;
+        lRet = PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE);
+    }
+    if (lRet != DISP_CHANGE_SUCCESSFUL)
     {
         ERR("PDEVOBJ_lChangeDisplaySettings() failed.\n");
         return FALSE;

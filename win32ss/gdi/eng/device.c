@@ -179,7 +179,6 @@ EngpUpdateGraphicsDeviceList(VOID)
     WCHAR awcBuffer[256];
     NTSTATUS Status;
     PGRAPHICS_DEVICE pGraphicsDevice;
-    BOOLEAN bFoundNewDevice = FALSE;
     ULONG cbValue;
     HKEY hkey;
 
@@ -248,7 +247,6 @@ EngpUpdateGraphicsDeviceList(VOID)
                 TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
             }
         }
-        bFoundNewDevice = TRUE;
 
         /* Set the first one as primary device */
         if (!gpPrimaryGraphicsDevice || EngpHasVgaDriver(gpPrimaryGraphicsDevice))
@@ -273,7 +271,7 @@ EngpUpdateGraphicsDeviceList(VOID)
         gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
     }
 
-    if (bFoundNewDevice && gbBaseVideo)
+    if (gbBaseVideo)
     {
         PGRAPHICS_DEVICE pToDelete;
 
