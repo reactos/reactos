@@ -83,9 +83,7 @@ QueryFullProcessImageNameW(
     }
 
     if (!NT_SUCCESS(Status))
-    {
         goto Cleanup;
-    }
 
     /* Verify that the given buffer size can count a NULL terminator */
     if (Result->Length / sizeof(WCHAR) + 1 > *pdwSize)
@@ -103,9 +101,7 @@ Cleanup:
     RtlFreeHeap(RtlGetProcessHeap(), 0, DynamicBuffer);
 
     if (!NT_SUCCESS(Status))
-    {
         BaseSetLastNTError(Status);
-    }
 
     return !Status;
 }
