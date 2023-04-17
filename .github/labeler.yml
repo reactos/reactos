@@ -1,4 +1,8 @@
 # Labelling by the files touched
+
+ATL:
+  - sdk/lib/atl/**
+
 drivers:
   - drivers/**
   - sdk/lib/drivers/**
