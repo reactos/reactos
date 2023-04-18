@@ -101,9 +101,12 @@ Cleanup:
     RtlFreeHeap(RtlGetProcessHeap(), 0, DynamicBuffer);
 
     if (!NT_SUCCESS(Status))
+    {
         BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-    return !Status;
+    return TRUE;
 }
 
 
