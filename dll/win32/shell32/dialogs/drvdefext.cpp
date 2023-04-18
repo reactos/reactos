@@ -253,7 +253,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
                 SelectObject(pDrawItem->hDC, hCenterPen);
         }
 
-        SelectObject(pDrawItem->hDC, hOldPen);
+        SelectObject(pDrawItem->hDC, hBlackPen);
 
         if (m_FreeSpacePerc > 50)
         {
@@ -286,6 +286,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
             }
         }
 
+        SelectObject(pDrawItem->hDC, hOldPen);
         SelectObject(pDrawItem->hDC, hbrOld);
 
         DeleteObject(hBlueBrush);
