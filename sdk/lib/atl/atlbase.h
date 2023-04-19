@@ -849,7 +849,12 @@ public:
 
     static HRESULT InitializeCom()
     {
-        return ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+#if defined(_ATL_FREE_THREADED)
+        constexpr COINIT coInit = COINIT_MULTITHREADED;
+#else
+        constexpr COINIT coInit = COINIT_APARTMENTTHREADED;
+#endif
+        return ::CoInitializeEx(NULL, coInit);
     }
 
     static void UninitializeCom()
