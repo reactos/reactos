@@ -377,18 +377,6 @@ cleanup:
 }
 
 BOOL WINAPI
-GetRecycleBinDetails(
-    IN LPCWSTR pszVolume OPTIONAL,
-    OUT ULARGE_INTEGER *pulTotalItems,
-    OUT ULARGE_INTEGER *pulTotalSize)
-{
-    pulTotalItems->QuadPart = 0;
-    pulTotalSize->QuadPart = 0;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-BOOL WINAPI
 RestoreFile(
     IN HANDLE hDeletedFile)
 {
