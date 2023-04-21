@@ -683,7 +683,8 @@ NICGetPermanentMacAddress(
                               Adapter->PermanentMacAddress[2],
                               Adapter->PermanentMacAddress[3],
                               Adapter->PermanentMacAddress[4],
-                              Adapter->PermanentMacAddress[5]));*/
+                              Adapter->PermanentMacAddress[5]));
+#endif
     return NDIS_STATUS_SUCCESS;
 }
 
