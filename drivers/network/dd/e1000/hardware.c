@@ -676,7 +676,8 @@ NICGetPermanentMacAddress(
         Adapter->PermanentMacAddress[n * 2 + 1] = (AddrWord >> 8) & 0xff;
     }
 
-    /*NDIS_DbgPrint(MIN_TRACE, ("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+#if 0
+    NDIS_DbgPrint(MIN_TRACE, ("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
                               Adapter->PermanentMacAddress[0],
                               Adapter->PermanentMacAddress[1],
                               Adapter->PermanentMacAddress[2],
