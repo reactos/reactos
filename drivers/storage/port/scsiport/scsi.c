@@ -683,7 +683,8 @@ SpiProcessCompletedRequest(
     if (SrbInfo->BaseOfMapRegister && SrbInfo->ScatterGather)
     {
         ULONG transferLen = 0;
-        BOOLEAN isWrite = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
+        BOOLEAN isWrite = !!(Srb->SrbFlags & SRB_FLAGS_DATA_OUT);
+        ULONG i;
 
         for(int i = 0;
             i < SrbInfo->NumberOfMapRegisters && transferLen < Srb->DataTransferLength;
