@@ -686,9 +686,9 @@ SpiProcessCompletedRequest(
         BOOLEAN isWrite = !!(Srb->SrbFlags & SRB_FLAGS_DATA_OUT);
         ULONG i;
 
-        for(int i = 0;
-            i < SrbInfo->NumberOfMapRegisters && transferLen < Srb->DataTransferLength;
-            i++)
+        for (i = 0;
+             i < SrbInfo->NumberOfMapRegisters && transferLen < Srb->DataTransferLength;
+             i++)
         {
             transferLen += SrbInfo->ScatterGather[i].Length;
         }
