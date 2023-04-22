@@ -1010,6 +1010,10 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "浏览..."
 
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+
     IDS_TITLE_MYCOMP "我的电脑"
     IDS_TITLE_MYNET "网上邻居"
     IDS_TITLE_BIN_1 "回收站(满)"
