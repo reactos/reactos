@@ -946,7 +946,8 @@ NTSTATUS
 NTAPI
 ObQueryTypeInfo(
     _In_ POBJECT_TYPE ObjectType,
-    _Out_writes_bytes_(Length) POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+    _Out_writes_bytes_to_(Length, *ReturnLength)
+        POBJECT_TYPE_INFORMATION ObjectTypeInfo,
     _In_ ULONG Length,
     _Out_ PULONG ReturnLength)
 {
