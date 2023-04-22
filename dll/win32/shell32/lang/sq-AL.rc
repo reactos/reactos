@@ -1007,6 +1007,10 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "Shfleto..."
 
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+
     IDS_TITLE_MYCOMP "Kompjuteri Im"
     IDS_TITLE_MYNET "Vendi Rrjetit Tim"
     IDS_TITLE_BIN_1 "Plehra (plot)"

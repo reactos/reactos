@@ -997,6 +997,10 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "参照..."
 
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+
     IDS_TITLE_MYCOMP "マイ コンピュータ"
     IDS_TITLE_MYNET "マイ ネットワーク"
     IDS_TITLE_BIN_1 "ごみ箱 (いっぱい)"
