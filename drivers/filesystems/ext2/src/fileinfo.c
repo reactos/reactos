@@ -11,7 +11,7 @@
 
 #include "ext2fs.h"
 #ifdef __REACTOS__
-#include <linux/ext4.h>
+#include "linux/ext4.h"
 #include "linux/ext4_xattr.h"
 #else
 #include "linux\ext4.h"

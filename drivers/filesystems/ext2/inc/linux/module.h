@@ -79,8 +79,8 @@ FASTCALL
 RtlUlonglongByteSwap(
     IN ULONGLONG Source
 );
-#endif
 #endif //#ifndef __REACTOS__
+#endif
 
 #define __swab16(x) RtlUshortByteSwap(x)
 #define __swab32(x) RtlUlongByteSwap(x)
