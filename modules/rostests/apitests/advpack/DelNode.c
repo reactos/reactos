@@ -59,7 +59,8 @@ typedef enum
 } ENTRY_ACTION_TYPE;
 
 typedef struct {
-    int node;
+    INT lineno;
+    INT node;
     ENTRY_ACTION_TYPE action_type;
     DWORD flags;
     HRESULT ret;
@@ -78,289 +79,277 @@ typedef struct {
 
 static const ENTRY s_entries[] =
 {
-    /* #0 */ { 0, EAT_CREATE },
-    /* #1 */ { 1, EAT_CREATE },
-    /* #2 */ { 1, EAT_DELETE },
-    /* #3 */ { 0, EAT_DELETE },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_DELETE },
+    { __LINE__, 0, EAT_DELETE },
 
-    /* ------------------------------- */
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS0, S_OK },
+    { __LINE__, 0, EAT_CHECK_NON_EXIST },
 
-    /* #4 */ { 0, EAT_CREATE },
-    /* #5 */ { 1, EAT_CREATE },
-    /* #6 */ { 0, EAT_CALL, FLAGS0, S_OK },
-    /* #7 */ { 0, EAT_CHECK_NON_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS1, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #8 */ { 0, EAT_CREATE },
-    /* #9 */ { 1, EAT_CREATE },
-    /* #10 */ { 0, EAT_CALL, FLAGS1, E_FAIL },
-    /* #11 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS2, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #12 */ { 0, EAT_CREATE },
-    /* #13 */ { 1, EAT_CREATE },
-    /* #14 */ { 0, EAT_CALL, FLAGS2, S_OK },
-    /* #15 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS3, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #16 */ { 0, EAT_CREATE },
-    /* #17 */ { 1, EAT_CREATE },
-    /* #18 */ { 0, EAT_CALL, FLAGS3, S_OK },
-    /* #19 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS4, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #20 */ { 0, EAT_CREATE },
-    /* #21 */ { 1, EAT_CREATE },
-    /* #22 */ { 0, EAT_CALL, FLAGS4, S_OK },
-    /* #23 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS5, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #24 */ { 0, EAT_CREATE },
-    /* #25 */ { 1, EAT_CREATE },
-    /* #26 */ { 0, EAT_CALL, FLAGS5, E_FAIL },
-    /* #27 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS6, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #28 */ { 0, EAT_CREATE },
-    /* #29 */ { 1, EAT_CREATE },
-    /* #30 */ { 0, EAT_CALL, FLAGS6, E_FAIL },
-    /* #31 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS7, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #32 */ { 0, EAT_CREATE },
-    /* #33 */ { 1, EAT_CREATE },
-    /* #34 */ { 0, EAT_CALL, FLAGS7, E_FAIL },
-    /* #35 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS8, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
 
-    /* #36 */ { 0, EAT_CREATE },
-    /* #37 */ { 1, EAT_CREATE },
-    /* #38 */ { 0, EAT_CALL, FLAGS8, E_FAIL },
-    /* #39 */ { 0, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS0, S_OK },
+    { __LINE__, 0, EAT_CHECK_NON_EXIST },
 
-    /* ------------------------------- */
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS1, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #40 */ { 0, EAT_CREATE },
-    /* #41 */ { 1, EAT_CREATE },
-    /* #42 */ { 2, EAT_CREATE },
-    /* #43 */ { 0, EAT_CALL, FLAGS0, S_OK },
-    /* #44 */ { 0, EAT_CHECK_NON_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS2, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #45 */ { 0, EAT_CREATE },
-    /* #46 */ { 1, EAT_CREATE },
-    /* #47 */ { 2, EAT_CREATE },
-    /* #48 */ { 0, EAT_CALL, FLAGS1, E_FAIL },
-    /* #49 */ { 0, EAT_CHECK_EXIST },
-    /* #50 */ { 1, EAT_CHECK_EXIST },
-    /* #51 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS3, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #52 */ { 0, EAT_CREATE },
-    /* #53 */ { 1, EAT_CREATE },
-    /* #54 */ { 2, EAT_CREATE },
-    /* #55 */ { 0, EAT_CALL, FLAGS2, S_OK },
-    /* #56 */ { 0, EAT_CHECK_EXIST },
-    /* #57 */ { 1, EAT_CHECK_NON_EXIST },
-    /* #58 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS4, S_OK },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #59 */ { 0, EAT_CREATE },
-    /* #60 */ { 1, EAT_CREATE },
-    /* #61 */ { 2, EAT_CREATE },
-    /* #62 */ { 0, EAT_CALL, FLAGS3, S_OK },
-    /* #63 */ { 0, EAT_CHECK_EXIST },
-    /* #64 */ { 1, EAT_CHECK_EXIST },
-    /* #65 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS5, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #66 */ { 0, EAT_CREATE },
-    /* #67 */ { 1, EAT_CREATE },
-    /* #68 */ { 2, EAT_CREATE },
-    /* #69 */ { 0, EAT_CALL, FLAGS4, S_OK },
-    /* #70 */ { 0, EAT_CHECK_EXIST },
-    /* #71 */ { 1, EAT_CHECK_EXIST },
-    /* #72 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS6, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #73 */ { 0, EAT_CREATE },
-    /* #74 */ { 1, EAT_CREATE },
-    /* #75 */ { 2, EAT_CREATE },
-    /* #76 */ { 0, EAT_CALL, FLAGS5, E_FAIL },
-    /* #77 */ { 0, EAT_CHECK_EXIST },
-    /* #78 */ { 1, EAT_CHECK_EXIST },
-    /* #79 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS7, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #80 */ { 0, EAT_CREATE },
-    /* #81 */ { 1, EAT_CREATE },
-    /* #82 */ { 2, EAT_CREATE },
-    /* #83 */ { 0, EAT_CALL, FLAGS6, E_FAIL },
-    /* #84 */ { 0, EAT_CHECK_EXIST },
-    /* #85 */ { 1, EAT_CHECK_EXIST },
-    /* #86 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 0, EAT_CREATE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 0, EAT_CALL, FLAGS8, E_FAIL },
+    { __LINE__, 0, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #87 */ { 0, EAT_CREATE },
-    /* #88 */ { 1, EAT_CREATE },
-    /* #89 */ { 2, EAT_CREATE },
-    /* #90 */ { 0, EAT_CALL, FLAGS7, E_FAIL },
-    /* #91 */ { 0, EAT_CHECK_EXIST },
-    /* #92 */ { 1, EAT_CHECK_EXIST },
-    /* #93 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS0, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #94 */ { 0, EAT_CREATE },
-    /* #95 */ { 1, EAT_CREATE },
-    /* #96 */ { 2, EAT_CREATE },
-    /* #97 */ { 0, EAT_CALL, FLAGS8, E_FAIL },
-    /* #98 */ { 0, EAT_CHECK_EXIST },
-    /* #99 */ { 1, EAT_CHECK_EXIST },
-    /* #100 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS1, E_FAIL },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* ------------------------------- */
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS2, S_OK },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #101 */ { 1, EAT_CREATE },
-    /* #102 */ { 2, EAT_CREATE },
-    /* #103 */ { 1, EAT_CALL, FLAGS0, S_OK },
-    /* #104 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS3, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #105 */ { 1, EAT_CREATE },
-    /* #106 */ { 2, EAT_CREATE },
-    /* #107 */ { 1, EAT_CALL, FLAGS1, E_FAIL },
-    /* #108 */ { 1, EAT_CHECK_EXIST },
-    /* #109 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS4, S_OK },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #110 */ { 1, EAT_CREATE },
-    /* #111 */ { 2, EAT_CREATE },
-    /* #112 */ { 1, EAT_CALL, FLAGS2, S_OK },
-    /* #113 */ { 1, EAT_CHECK_EXIST },
-    /* #114 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS5, E_FAIL },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #115 */ { 1, EAT_CREATE },
-    /* #116 */ { 2, EAT_CREATE },
-    /* #117 */ { 1, EAT_CALL, FLAGS3, S_OK },
-    /* #118 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS6, E_FAIL },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #119 */ { 1, EAT_CREATE },
-    /* #120 */ { 2, EAT_CREATE },
-    /* #121 */ { 1, EAT_CALL, FLAGS4, S_OK },
-    /* #122 */ { 1, EAT_CHECK_EXIST },
-    /* #123 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS7, E_FAIL },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #124 */ { 1, EAT_CREATE },
-    /* #125 */ { 2, EAT_CREATE },
-    /* #126 */ { 1, EAT_CALL, FLAGS5, E_FAIL },
-    /* #127 */ { 1, EAT_CHECK_EXIST },
-    /* #128 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS8, E_FAIL },
+    { __LINE__, 1, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_CHECK_EXIST },
 
-    /* #129 */ { 1, EAT_CREATE },
-    /* #130 */ { 2, EAT_CREATE },
-    /* #131 */ { 1, EAT_CALL, FLAGS6, E_FAIL },
-    /* #132 */ { 1, EAT_CHECK_EXIST },
-    /* #133 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 2, EAT_DELETE },
 
-    /* #134 */ { 1, EAT_CREATE },
-    /* #135 */ { 2, EAT_CREATE },
-    /* #136 */ { 1, EAT_CALL, FLAGS7, E_FAIL },
-    /* #137 */ { 1, EAT_CHECK_EXIST },
-    /* #138 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS0, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #139 */ { 1, EAT_CREATE },
-    /* #140 */ { 2, EAT_CREATE },
-    /* #141 */ { 1, EAT_CALL, FLAGS8, E_FAIL },
-    /* #142 */ { 1, EAT_CHECK_EXIST },
-    /* #143 */ { 2, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS1, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* ------------------------------- */
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS2, S_OK },
+    { __LINE__, 1, EAT_CHECK_EXIST },
 
-    /* #144 */ { 2, EAT_DELETE },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS3, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #145 */ { 1, EAT_CREATE },
-    /* #146 */ { 1, EAT_CALL, FLAGS0, S_OK },
-    /* #147 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS4, S_OK },
+    { __LINE__, 1, EAT_CHECK_EXIST },
 
-    /* #148 */ { 1, EAT_CREATE },
-    /* #149 */ { 1, EAT_CALL, FLAGS1, S_OK },
-    /* #150 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS5, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #151 */ { 1, EAT_CREATE },
-    /* #152 */ { 1, EAT_CALL, FLAGS2, S_OK },
-    /* #153 */ { 1, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS6, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #154 */ { 1, EAT_CREATE },
-    /* #155 */ { 1, EAT_CALL, FLAGS3, S_OK },
-    /* #156 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS7, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #157 */ { 1, EAT_CREATE },
-    /* #158 */ { 1, EAT_CALL, FLAGS4, S_OK },
-    /* #159 */ { 1, EAT_CHECK_EXIST },
+    { __LINE__, 1, EAT_CREATE },
+    { __LINE__, 1, EAT_CALL, FLAGS8, S_OK },
+    { __LINE__, 1, EAT_CHECK_NON_EXIST },
 
-    /* #160 */ { 1, EAT_CREATE },
-    /* #161 */ { 1, EAT_CALL, FLAGS5, S_OK },
-    /* #162 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 1, EAT_CREATE },
 
-    /* #163 */ { 1, EAT_CREATE },
-    /* #164 */ { 1, EAT_CALL, FLAGS6, S_OK },
-    /* #165 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS0, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #166 */ { 1, EAT_CREATE },
-    /* #167 */ { 1, EAT_CALL, FLAGS7, S_OK },
-    /* #168 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS1, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #169 */ { 1, EAT_CREATE },
-    /* #170 */ { 1, EAT_CALL, FLAGS8, S_OK },
-    /* #171 */ { 1, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS2, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* ------------------------------- */
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS3, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #172 */ { 1, EAT_CREATE },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS4, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #173 */ { 2, EAT_CREATE },
-    /* #174 */ { 2, EAT_CALL, FLAGS0, S_OK },
-    /* #175 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS5, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #176 */ { 2, EAT_CREATE },
-    /* #177 */ { 2, EAT_CALL, FLAGS1, S_OK },
-    /* #178 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS6, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #179 */ { 2, EAT_CREATE },
-    /* #180 */ { 2, EAT_CALL, FLAGS2, S_OK },
-    /* #181 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS7, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #182 */ { 2, EAT_CREATE },
-    /* #183 */ { 2, EAT_CALL, FLAGS3, S_OK },
-    /* #184 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CREATE },
+    { __LINE__, 2, EAT_CALL, FLAGS8, S_OK },
+    { __LINE__, 2, EAT_CHECK_NON_EXIST },
 
-    /* #185 */ { 2, EAT_CREATE },
-    /* #186 */ { 2, EAT_CALL, FLAGS4, S_OK },
-    /* #187 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_DELETE },
+    { __LINE__, 1, EAT_DELETE },
+    { __LINE__, 0, EAT_DELETE },
 
-    /* #188 */ { 2, EAT_CREATE },
-    /* #189 */ { 2, EAT_CALL, FLAGS5, S_OK },
-    /* #190 */ { 2, EAT_CHECK_NON_EXIST },
+    { __LINE__, 2, EAT_CALL, FLAGS0, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS1, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS2, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS3, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS4, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS5, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS6, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS7, E_FAIL },
+    { __LINE__, 2, EAT_CALL, FLAGS8, E_FAIL },
 
-    /* #191 */ { 2, EAT_CREATE },
-    /* #192 */ { 2, EAT_CALL, FLAGS6, S_OK },
-    /* #193 */ { 2, EAT_CHECK_NON_EXIST },
-
-    /* #194 */ { 2, EAT_CREATE },
-    /* #195 */ { 2, EAT_CALL, FLAGS7, S_OK },
-    /* #196 */ { 2, EAT_CHECK_NON_EXIST },
-
-    /* #197 */ { 2, EAT_CREATE },
-    /* #198 */ { 2, EAT_CALL, FLAGS8, S_OK },
-    /* #199 */ { 2, EAT_CHECK_NON_EXIST },
-
-    /* ------------------------------- */
-
-    /* #200 */ { 2, EAT_DELETE },
-    /* #201 */ { 1, EAT_DELETE },
-    /* #202 */ { 0, EAT_DELETE },
-
-    /* #203 */ { 2, EAT_CALL, FLAGS0, E_FAIL },
-    /* #204 */ { 2, EAT_CALL, FLAGS1, E_FAIL },
-    /* #205 */ { 2, EAT_CALL, FLAGS2, E_FAIL },
-    /* #206 */ { 2, EAT_CALL, FLAGS3, E_FAIL },
-    /* #207 */ { 2, EAT_CALL, FLAGS4, E_FAIL },
-    /* #208 */ { 2, EAT_CALL, FLAGS5, E_FAIL },
-    /* #209 */ { 2, EAT_CALL, FLAGS6, E_FAIL },
-    /* #210 */ { 2, EAT_CALL, FLAGS7, E_FAIL },
-    /* #211 */ { 2, EAT_CALL, FLAGS8, E_FAIL },
-
-    /* #212 */ { 1, EAT_CALL, FLAGS0, E_FAIL },
-    /* #213 */ { 1, EAT_CALL, FLAGS1, E_FAIL },
-    /* #214 */ { 1, EAT_CALL, FLAGS2, E_FAIL },
-    /* #215 */ { 1, EAT_CALL, FLAGS3, E_FAIL },
-    /* #216 */ { 1, EAT_CALL, FLAGS4, E_FAIL },
-    /* #217 */ { 1, EAT_CALL, FLAGS5, E_FAIL },
-    /* #218 */ { 1, EAT_CALL, FLAGS6, E_FAIL },
-    /* #219 */ { 1, EAT_CALL, FLAGS7, E_FAIL },
-    /* #220 */ { 1, EAT_CALL, FLAGS8, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS0, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS1, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS2, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS3, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS4, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS5, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS6, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS7, E_FAIL },
+    { __LINE__, 1, EAT_CALL, FLAGS8, E_FAIL },
 };
 
 char  s_cur_dir_A[MAX_PATH] = "";
@@ -416,9 +405,10 @@ static void Test_DelNodeA(void)
     for (i = 0; i < _countof(s_entries); ++i)
     {
         const ENTRY *entry = &s_entries[i];
+        INT lineno = entry->lineno;
         const NODEA *node = &s_nodesA[entry->node];
         char *path = GetPathA(node->item);
-        int ret;
+        INT ret;
 
         switch (entry->action_type)
         {
@@ -428,16 +418,16 @@ static void Test_DelNodeA(void)
                 CreateDirectoryA(path, NULL);
 
                 attr = GetFileAttributesA(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: path:%s, attr:0x%08lX\n", i, path, attr);
-                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Entry #%d: path:%s, attr:0x%08lX\n", i, path, attr);
+                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
+                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
             }
             else
             {
                 fclose(fopen(path, "w"));
 
                 attr = GetFileAttributesA(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
-                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Entry #%d: attr was 0x%08lX\n", i, attr);
+                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
             }
             break;
         case EAT_DELETE:
@@ -450,20 +440,20 @@ static void Test_DelNodeA(void)
                 DeleteFileA(path);
             }
             attr = GetFileAttributesA(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Entry #%d: cannot delete\n", i);
+            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
             break;
         case EAT_CHECK_EXIST:
             attr = GetFileAttributesA(path);
-            ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
+            ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
             break;
         case EAT_CHECK_NON_EXIST:
             attr = GetFileAttributesA(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
+            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
             break;
         case EAT_CALL:
             ret = (*s_pDelNodeA)(path, entry->flags);
-            ok(ret == entry->ret, "Entry #%d: ret:%d, path:%s, flags:0x%08lX\n",
-               i, ret, path, entry->flags);
+            ok(ret == entry->ret, "Line %d: ret:%d, path:%s, flags:0x%08lX\n",
+               lineno, ret, path, entry->flags);
             break;
         }
     }
@@ -503,9 +493,10 @@ static void Test_DelNodeW(void)
     for (i = 0; i < _countof(s_entries); ++i)
     {
         const ENTRY *entry = &s_entries[i];
+        INT lineno = entry->lineno;
         const NODEW *node = &s_nodesW[entry->node];
         WCHAR *path = GetPathW(node->item);
-        int ret;
+        INT ret;
 
         switch (entry->action_type)
         {
@@ -515,16 +506,16 @@ static void Test_DelNodeW(void)
                 CreateDirectoryW(path, NULL);
 
                 attr = GetFileAttributesW(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: path:%S, attr:0x%08lX\n", i, path, attr);
-                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Entry #%d: path:%S, attr:0x%08lX\n", i, path, attr);
+                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
+                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
             }
             else
             {
                 fclose(_wfopen(path, L"w"));
 
                 attr = GetFileAttributesW(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
-                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Entry #%d: attr was 0x%08lX\n", i, attr);
+                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
             }
             break;
         case EAT_DELETE:
@@ -537,20 +528,20 @@ static void Test_DelNodeW(void)
                 DeleteFileW(path);
             }
             attr = GetFileAttributesW(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Entry #%d: cannot delete\n", i);
+            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
             break;
         case EAT_CHECK_EXIST:
             attr = GetFileAttributesW(path);
-            ok(attr != INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
+            ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
             break;
         case EAT_CHECK_NON_EXIST:
             attr = GetFileAttributesW(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Entry #%d: attr was 0x%08lX\n", i, attr);
+            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
             break;
         case EAT_CALL:
             ret = (*s_pDelNodeW)(path, entry->flags);
-            ok(ret == entry->ret, "Entry #%d: ret:%d, path:%S, flags:0x%08lX\n",
-               i, ret, path, entry->flags);
+            ok(ret == entry->ret, "Line %d: ret:%d, path:%S, flags:0x%08lX\n",
+               lineno, ret, path, entry->flags);
             break;
         }
     }
