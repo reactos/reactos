@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for advpack.dll DelNode function
- * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for advpack.dll DelNode function
+ * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 #include <apitest.h>
 
