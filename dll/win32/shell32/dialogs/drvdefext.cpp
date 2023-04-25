@@ -286,8 +286,8 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
             }
         }
 
-        SelectObject(pDrawItem->hDC, hOldPen);
         SelectObject(pDrawItem->hDC, hbrOld);
+        SelectObject(pDrawItem->hDC, hOldPen);
 
         DeleteObject(hBlueBrush);
         DeleteObject(hMagBrush);
