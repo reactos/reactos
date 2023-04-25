@@ -6,9 +6,7 @@
  */
 #include <apitest.h>
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
 #include <stdio.h>
 
 /* Flags for DelNode */
@@ -25,27 +23,29 @@ static HINSTANCE s_hAdvPack = NULL;
 static DELNODEA s_pDelNodeA = NULL;
 static DELNODEW s_pDelNodeW = NULL;
 
-typedef struct {
+typedef struct
+{
     const char *item;
     BOOL is_dir;
 } NODEA;
 
 static const NODEA s_nodesA[] =
 {
-    { "dir1", TRUE },   /* 0 */
-    { "dir1\\dir2", TRUE }, /* 1 */
+    { "dir1", TRUE },               /* 0 */
+    { "dir1\\dir2", TRUE },         /* 1 */
     { "dir1\\dir2\\file1", FALSE }, /* 2 */
 };
 
-typedef struct {
+typedef struct
+{
     const WCHAR *item;
     BOOL is_dir;
 } NODEW;
 
 static const NODEW s_nodesW[] =
 {
-    { L"dir1", TRUE },   /* 0 */
-    { L"dir1\\dir2", TRUE }, /* 1 */
+    { L"dir1", TRUE },               /* 0 */
+    { L"dir1\\dir2", TRUE },         /* 1 */
     { L"dir1\\dir2\\file1", FALSE }, /* 2 */
 };
 
@@ -58,7 +58,8 @@ typedef enum
     EAT_CALL
 } ENTRY_ACTION_TYPE;
 
-typedef struct {
+typedef struct
+{
     INT lineno;
     INT node;
     ENTRY_ACTION_TYPE action_type;
@@ -77,6 +78,7 @@ typedef struct {
 #define FLAGS7  (ADN_DEL_IF_EMPTY | ADN_DONT_DEL_DIR | ADN_DONT_DEL_SUBDIRS)
 #define FLAGS8  0xFFFFFFFF
 
+/* The test entries */
 static const ENTRY s_entries[] =
 {
     { __LINE__, 0, EAT_CREATE },
@@ -352,8 +354,8 @@ static const ENTRY s_entries[] =
     { __LINE__, 1, EAT_CALL, FLAGS8, E_FAIL },
 };
 
-char  s_cur_dir_A[MAX_PATH] = "";
-WCHAR s_cur_dir_W[MAX_PATH] = L"";
+static char  s_cur_dir_A[MAX_PATH] = "";
+static WCHAR s_cur_dir_W[MAX_PATH] = L"";
 
 static char *GetPathA(const char *item)
 {
@@ -412,49 +414,49 @@ static void Test_DelNodeA(void)
 
         switch (entry->action_type)
         {
-        case EAT_CREATE:
-            if (node->is_dir)
-            {
-                CreateDirectoryA(path, NULL);
+            case EAT_CREATE:
+                if (node->is_dir)
+                {
+                    CreateDirectoryA(path, NULL);
 
+                    attr = GetFileAttributesA(path);
+                    ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
+                    ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
+                }
+                else
+                {
+                    fclose(fopen(path, "w"));
+
+                    attr = GetFileAttributesA(path);
+                    ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                    ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
+                }
+                break;
+            case EAT_DELETE:
+                if (node->is_dir)
+                {
+                    RemoveDirectoryA(path);
+                }
+                else
+                {
+                    DeleteFileA(path);
+                }
                 attr = GetFileAttributesA(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
-                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%s, attr:0x%08lX\n", lineno, path, attr);
-            }
-            else
-            {
-                fclose(fopen(path, "w"));
-
+                ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
+                break;
+            case EAT_CHECK_EXIST:
                 attr = GetFileAttributesA(path);
                 ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
-            }
-            break;
-        case EAT_DELETE:
-            if (node->is_dir)
-            {
-                RemoveDirectoryA(path);
-            }
-            else
-            {
-                DeleteFileA(path);
-            }
-            attr = GetFileAttributesA(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
-            break;
-        case EAT_CHECK_EXIST:
-            attr = GetFileAttributesA(path);
-            ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-            break;
-        case EAT_CHECK_NON_EXIST:
-            attr = GetFileAttributesA(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-            break;
-        case EAT_CALL:
-            ret = (*s_pDelNodeA)(path, entry->flags);
-            ok(ret == entry->ret, "Line %d: ret:%d, path:%s, flags:0x%08lX\n",
-               lineno, ret, path, entry->flags);
-            break;
+                break;
+            case EAT_CHECK_NON_EXIST:
+                attr = GetFileAttributesA(path);
+                ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                break;
+            case EAT_CALL:
+                ret = (*s_pDelNodeA)(path, entry->flags);
+                ok(ret == entry->ret, "Line %d: ret:%d, path:%s, flags:0x%08lX\n",
+                   lineno, ret, path, entry->flags);
+                break;
         }
     }
 
@@ -500,49 +502,49 @@ static void Test_DelNodeW(void)
 
         switch (entry->action_type)
         {
-        case EAT_CREATE:
-            if (node->is_dir)
-            {
-                CreateDirectoryW(path, NULL);
+            case EAT_CREATE:
+                if (node->is_dir)
+                {
+                    CreateDirectoryW(path, NULL);
 
+                    attr = GetFileAttributesW(path);
+                    ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
+                    ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
+                }
+                else
+                {
+                    fclose(_wfopen(path, L"w"));
+
+                    attr = GetFileAttributesW(path);
+                    ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                    ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
+                }
+                break;
+            case EAT_DELETE:
+                if (node->is_dir)
+                {
+                    RemoveDirectoryW(path);
+                }
+                else
+                {
+                    DeleteFileW(path);
+                }
                 attr = GetFileAttributesW(path);
-                ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
-                ok((attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: path:%S, attr:0x%08lX\n", lineno, path, attr);
-            }
-            else
-            {
-                fclose(_wfopen(path, L"w"));
-
+                ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
+                break;
+            case EAT_CHECK_EXIST:
                 attr = GetFileAttributesW(path);
                 ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-                ok(!(attr & FILE_ATTRIBUTE_DIRECTORY), "Line %d: attr was 0x%08lX\n", lineno, attr);
-            }
-            break;
-        case EAT_DELETE:
-            if (node->is_dir)
-            {
-                RemoveDirectoryW(path);
-            }
-            else
-            {
-                DeleteFileW(path);
-            }
-            attr = GetFileAttributesW(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: cannot delete\n", lineno);
-            break;
-        case EAT_CHECK_EXIST:
-            attr = GetFileAttributesW(path);
-            ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-            break;
-        case EAT_CHECK_NON_EXIST:
-            attr = GetFileAttributesW(path);
-            ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
-            break;
-        case EAT_CALL:
-            ret = (*s_pDelNodeW)(path, entry->flags);
-            ok(ret == entry->ret, "Line %d: ret:%d, path:%S, flags:0x%08lX\n",
-               lineno, ret, path, entry->flags);
-            break;
+                break;
+            case EAT_CHECK_NON_EXIST:
+                attr = GetFileAttributesW(path);
+                ok(attr == INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);
+                break;
+            case EAT_CALL:
+                ret = (*s_pDelNodeW)(path, entry->flags);
+                ok(ret == entry->ret, "Line %d: ret:%d, path:%S, flags:0x%08lX\n",
+                   lineno, ret, path, entry->flags);
+                break;
         }
     }
 
