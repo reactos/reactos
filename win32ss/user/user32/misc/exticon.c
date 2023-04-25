@@ -293,8 +293,8 @@ static UINT ICO_ExtractIconExW(
      * Based on W2K3SP2 testing, the count of icons returned
      * is zero (0) for PNG ones using ExtractIconEx and
      * one (1) for PNG icons using PrivateExtractIcons. 
-     * We can handle the difference using the fUser32 flag.*/
-    BOOL fUser32)
+     * We can handle the difference using the fIconEx flag.*/
+    BOOL fIconEx)
 #else
 	UINT flags)
 #endif
@@ -315,7 +315,7 @@ static UINT ICO_ExtractIconExW(
         DWORD		dwSearchReturn;
 
 #ifdef __REACTOS__
-    TRACE("%s, %d, %d, %p, 0x%08x, %d\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags, fUser32);
+    TRACE("%s, %d, %d, %p, 0x%08x, %d\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags, fIconEx);
 #else
 	TRACE("%s, %d, %d %p 0x%08x\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags);
 #endif
@@ -332,9 +332,9 @@ static UINT ICO_ExtractIconExW(
         if ((dwSearchReturn == 0) || (dwSearchReturn > ARRAY_SIZE(szExePath)))
         {
 #ifdef __REACTOS__
-            WARN("File %s not found or path too long and fUser32 is '%d'\n",
-                 debugstr_w(lpszExeFileName), fUser32);
-            if (fUser32 && !RetPtr && !pIconId)
+            WARN("File %s not found or path too long and fIconEx is '%d'\n",
+                 debugstr_w(lpszExeFileName), fIconEx);
+            if (fIconEx && !RetPtr && !pIconId)
                 return 0;
             else
                 return -1;
@@ -603,7 +603,7 @@ static UINT ICO_ExtractIconExW(
 
 #ifdef __REACTOS__
                     icon = CreateIconFromResourceEx(imageData, cbTotal, sig == 1, 0x00030000, cx[index], cy[index], flags);
-                    if (fUser32 && sig == 1)
+                    if (fIconEx && sig == 1)
                         iconCount = 1;
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
