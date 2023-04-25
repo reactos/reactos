@@ -567,7 +567,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
             {
                 GetWindowTextW(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
             }
-            else
+            else if (pszSelectedKey)
             {
                 pszSelectedKey[0] = L'\0';
             }
