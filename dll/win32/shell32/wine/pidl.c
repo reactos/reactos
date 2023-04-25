@@ -522,11 +522,8 @@ BOOL _ILHACKCompareSimpleIds(LPCITEMIDLIST pidltemp1, LPCITEMIDLIST pidltemp2)
     }
     else
     {
-        if (pidltemp1->mkid.cb != pidltemp2->mkid.cb)
-        {
-            return FALSE;
-        }
-        else if (!RtlEqualMemory((BYTE*)&pidltemp1->mkid, (BYTE*)&pidltemp2->mkid, pidltemp1->mkid.cb))
+        if ((pidltemp1->mkid.cb != pidltemp2->mkid.cb) ||
+            !RtlEqualMemory((BYTE*)&pidltemp1->mkid, (BYTE*)&pidltemp2->mkid, pidltemp1->mkid.cb))
         {
             return FALSE;
         }
