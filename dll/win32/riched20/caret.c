@@ -342,7 +342,7 @@ void update_caret(ME_TextEditor *editor)
       if (fmt.dwMask & CFM_SIZE)
       {
         HDC hdc = CreateCompatibleDC(NULL);
-        lf.lfHeight = MulDiv(fmt.yHeight, GetDeviceCaps(hdc, LOGPIXELSY), 1440);
+        lf.lfHeight = -MulDiv(fmt.yHeight, GetDeviceCaps(hdc, LOGPIXELSY), 1440);
         DeleteDC(hdc);
       }
       if (fmt.dwMask & CFM_CHARSET)
