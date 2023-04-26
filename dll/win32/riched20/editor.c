@@ -4790,10 +4790,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_RewrapRepaint(editor);
     goto do_default;
   }
-#ifdef __REACTOS__
-  case WM_IME_CHAR:
-    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
-#else
+#ifndef __REACTOS__
   /* IME messages to make richedit controls IME aware */
 #endif
   case WM_IME_SETCONTEXT:
