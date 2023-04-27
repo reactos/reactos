@@ -1053,6 +1053,12 @@ typedef struct _TOKEN_ELEVATION {
   $ULONG TokenIsElevated;
 } TOKEN_ELEVATION, *PTOKEN_ELEVATION;
 
+typedef enum _TOKEN_ELEVATION_TYPE {
+  TokenElevationTypeDefault = 1,
+  TokenElevationTypeFull,
+  TokenElevationTypeLimited,
+} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
+
 typedef struct _TOKEN_MANDATORY_LABEL {
   SID_AND_ATTRIBUTES Label;
 } TOKEN_MANDATORY_LABEL, *PTOKEN_MANDATORY_LABEL;

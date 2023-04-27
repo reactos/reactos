@@ -2504,12 +2504,6 @@ typedef struct _SYSTEM_ALARM_CALLBACK_OBJECT_ACE {
   DWORD SidStart;
 } SYSTEM_ALARM_CALLBACK_OBJECT_ACE, *PSYSTEM_ALARM_CALLBACK_OBJECT_ACE;
 
-typedef enum _TOKEN_ELEVATION_TYPE {
-    TokenElevationTypeDefault = 1,
-    TokenElevationTypeFull,
-    TokenElevationTypeLimited,
-} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
-
 typedef struct _QUOTA_LIMITS {
   SIZE_T PagedPoolLimit;
   SIZE_T NonPagedPoolLimit;
