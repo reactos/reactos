@@ -21,11 +21,6 @@
 #ifndef __SHLWAPI_UNDOC_H
 #define __SHLWAPI_UNDOC_H
 
-#include <unknwn.h>
-#include <docobj.h>
-#include <shlobj.h>
-#include <shobjidl.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
