@@ -16,6 +16,13 @@
 
 /* INFORMATION CLASSES ********************************************************/
 
+/* FIXME: Delete this */
+typedef enum _TOKEN_ELEVATION_TYPE {
+    TokenElevationTypeDefault = 1,
+    TokenElevationTypeFull,
+    TokenElevationTypeLimited,
+} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
+
 static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
 
     /* Class 0 not used, blame MS! */
@@ -55,6 +62,12 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     IQS_SAME(TOKEN_AUDIT_POLICY_INFORMATION, ULONG, ICIF_SET | ICIF_SET_SIZE_VARIABLE),
     /* TokenOrigin */
     IQS_SAME(TOKEN_ORIGIN, ULONG, ICIF_QUERY | ICIF_SET),
+    /* TokenElevationType */
+    IQS_SAME(TOKEN_ELEVATION_TYPE, ULONG, ICIF_QUERY | ICIF_SET),
+    /* TokenLinkedToken */
+    IQS_NONE, /* FIXME */
+    /* TokenElevation */
+    IQS_SAME(TOKEN_ELEVATION, ULONG, ICIF_QUERY | ICIF_SET),
 };
 
 /* PUBLIC FUNCTIONS *****************************************************************/
@@ -1068,6 +1081,64 @@ NtQueryInformationToken(
                     }
                     _SEH2_END;
                 }
+
+                break;
+            }
+
+            case TokenElevationType:
+            {
+                DPRINT("NtQueryInformationToken(TokenElevationType)\n");
+
+                RequiredLength = sizeof(TOKEN_ELEVATION_TYPE);
+
+                _SEH2_TRY
+                {
+                    if (TokenInformationLength >= RequiredLength)
+                    {
+                        /* FIXME: HACK */
+                        *((PTOKEN_ELEVATION_TYPE)TokenInformation) = TokenElevationTypeFull;
+                    }
+                    else
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+
+                    *ReturnLength = RequiredLength;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                break;
+            }
+
+            case TokenElevation:
+            {
+                DPRINT("NtQueryInformationToken(TokenElevation)\n");
+
+                RequiredLength = sizeof(TOKEN_ELEVATION);
+
+                _SEH2_TRY
+                {
+                    if (TokenInformationLength >= RequiredLength)
+                    {
+                        /* FIXME: HACK */
+                        ((PTOKEN_ELEVATION)TokenInformation)->TokenIsElevated = TRUE;
+                    }
+                    else
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+
+                    *ReturnLength = RequiredLength;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
 
                 break;
             }
