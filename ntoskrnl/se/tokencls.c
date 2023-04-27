@@ -1762,6 +1762,20 @@ NtSetInformationToken(
                 break;
             }
 
+            case TokenElevationType:
+            {
+                /* FIXME: HACK */
+                Status = STATUS_SUCCESS;
+                break;
+            }
+
+            case TokenElevation:
+            {
+                /* FIXME: HACK */
+                Status = STATUS_SUCCESS;
+                break;
+            }
+
             default:
             {
                 DPRINT1("Invalid TokenInformationClass: 0x%lx\n",
