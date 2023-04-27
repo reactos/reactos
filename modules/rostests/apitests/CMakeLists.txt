@@ -5,6 +5,7 @@ include_directories(include)
 
 add_subdirectory(acpi)
 add_subdirectory(advapi32)
+add_subdirectory(advpack)
 add_subdirectory(afd)
 add_subdirectory(apphelp)
 add_subdirectory(appshim)
