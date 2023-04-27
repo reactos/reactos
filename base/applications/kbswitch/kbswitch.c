@@ -92,15 +92,17 @@ GetSystemLibraryPath(LPTSTR szPath, SIZE_T cchPath, LPCTSTR FileName)
     return TRUE;
 }
 
+/* FIXME: Use <shlwapi_undoc.h> and delete this */
+HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size);
+
 static BOOL
 GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
 {
     HKEY hKey;
     DWORD dwBufLen;
-    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
+    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    HANDLE hLib;
-    UINT i, j, k;
+    HRESULT hr;
 
     if (!GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID)))
         return FALSE;
@@ -114,45 +116,11 @@ GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
     }
 
     /* Use "Layout Display Name" value as an entry name if possible */
-    dwBufLen = sizeof(szDispName);
-    if (RegQueryValueEx(hKey, _T("Layout Display Name"), NULL, NULL,
-                        (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+    hr = SHLoadRegUIStringW(hKey, L"Layout Display Name", szDispName, ARRAYSIZE(szDispName));
+    if (SUCCEEDED(hr))
     {
-        /* FIXME: Use shlwapi!SHLoadRegUIStringW instead if it was implemented */
-        if (szDispName[0] == '@')
-        {
-            size_t len = _tcslen(szDispName);
-
-            for (i = 0; i < len; i++)
-            {
-                if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
-                {
-                    for (j = i + 2, k = 0; j < _tcslen(szDispName)+1; j++, k++)
-                    {
-                        szIndex[k] = szDispName[j];
-                    }
-                    szDispName[i - 1] = '\0';
-                    break;
-                }
-                else szDispName[i] = szDispName[i + 1];
-            }
-
-            if (ExpandEnvironmentStrings(szDispName, szPath, ARRAYSIZE(szPath)))
-            {
-                hLib = LoadLibrary(szPath);
-                if (hLib)
-                {
-                    if (LoadString(hLib, _ttoi(szIndex), szPath, ARRAYSIZE(szPath)))
-                    {
-                        StringCchCopy(szName, NameLength, szPath);
-                        RegCloseKey(hKey);
-                        FreeLibrary(hLib);
-                        return TRUE;
-                    }
-                    FreeLibrary(hLib);
-                }
-            }
-        }
+        RegCloseKey(hKey);
+        return TRUE;
     }
 
     /* Otherwise, use "Layout Text" value as an entry name */
