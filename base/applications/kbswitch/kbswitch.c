@@ -9,6 +9,7 @@
 
 #include "kbswitch.h"
 #include <imm.h>
+#include <shlwapi_undoc.h>
 
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
@@ -91,9 +92,6 @@ GetSystemLibraryPath(LPTSTR szPath, SIZE_T cchPath, LPCTSTR FileName)
     StringCchCat(szPath, cchPath, FileName);
     return TRUE;
 }
-
-/* FIXME: Use <shlwapi_undoc.h> and delete this */
-HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size);
 
 static BOOL
 GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
