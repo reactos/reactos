@@ -99,7 +99,8 @@ GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
     HKEY hKey;
     HRESULT hr;
     DWORD dwBufLen;
-    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH];
+    TCHAR szBuf[MAX_PATH];
+    WCHAR szDispName[MAX_PATH];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
 
     if (!GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID)))
