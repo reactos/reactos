@@ -310,6 +310,51 @@ void update_caret(ME_TextEditor *editor)
   }
   else
     hide_caret(editor);
+#ifdef __REACTOS__
+  if (ImmIsIME(GetKeyboardLayout(0)))
+  {
+    HIMC hIMC = ImmGetContext(editor->hWnd);
+    if (hIMC)
+    {
+      CHARFORMAT2W fmt;
+      LOGFONTW lf;
+      COMPOSITIONFORM CompForm;
+      POINT pt = { x, y };
+
+      CompForm.ptCurrentPos = pt;
+      if (editor->styleFlags & ES_MULTILINE)
+      {
+        CompForm.dwStyle = CFS_RECT;
+        CompForm.rcArea = editor->rcFormat;
+      }
+      else
+      {
+        CompForm.dwStyle = CFS_POINT;
+        SetRectEmpty(&CompForm.rcArea);
+      }
+      ImmSetCompositionWindow(hIMC, &CompForm);
+
+      fmt.cbSize = sizeof(fmt);
+      ME_GetSelectionCharFormat(editor, &fmt);
+
+      ZeroMemory(&lf, sizeof(lf));
+      lf.lfCharSet = DEFAULT_CHARSET;
+      if (fmt.dwMask & CFM_SIZE)
+      {
+        HDC hdc = CreateCompatibleDC(NULL);
+        lf.lfHeight = -MulDiv(fmt.yHeight, GetDeviceCaps(hdc, LOGPIXELSY), 1440);
+        DeleteDC(hdc);
+      }
+      if (fmt.dwMask & CFM_CHARSET)
+        lf.lfCharSet = fmt.bCharSet;
+      if (fmt.dwMask & CFM_FACE)
+        lstrcpynW(lf.lfFaceName, fmt.szFaceName, ARRAY_SIZE(lf.lfFaceName));
+      ImmSetCompositionFontW(hIMC, &lf);
+
+      ImmReleaseContext(editor->hWnd, hIMC);
+    }
+  }
+#endif
 }
 
 BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
