@@ -100,7 +100,6 @@ GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
     HRESULT hr;
     DWORD dwBufLen;
     TCHAR szBuf[MAX_PATH];
-    WCHAR szDispName[MAX_PATH];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
 
     if (!GetLayoutID(szLayoutNum, szLCID, ARRAYSIZE(szLCID)))
@@ -110,12 +109,10 @@ GetLayoutName(LPCTSTR szLayoutNum, LPTSTR szName, SIZE_T NameLength)
                     _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-    {
         return FALSE;
-    }
 
     /* Use "Layout Display Name" value as an entry name if possible */
-    hr = SHLoadRegUIStringW(hKey, L"Layout Display Name", szDispName, ARRAYSIZE(szDispName));
+    hr = SHLoadRegUIString(hKey, _T("Layout Display Name"), szName, NameLength);
     if (SUCCEEDED(hr))
     {
         RegCloseKey(hKey);
