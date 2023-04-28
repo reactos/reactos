@@ -3205,7 +3205,7 @@ HandleTrayContextMenu:
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) &&
                 (!IsTaskWnd(hwnd) || !::IsWindowEnabled(hwnd)))
             {
-                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl);
+                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl); // Restore
             }
         }
 
@@ -3266,9 +3266,11 @@ HandleTrayContextMenu:
 
         if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
         {
-            MINWNDPOS mwp = { hwnd };
+            MINWNDPOS mwp;
+            mwp.hwnd = hwnd;
             mwp.wndpl.length = sizeof(mwp.wndpl);
-            ::GetWindowPlacement(hwnd, &mwp.wndpl);
+            ::GetWindowPlacement(hwnd, &mwp.wndpl); // Save the position and status
+
             info->pMinimizedAll->Add(mwp);
 
             ::ShowWindowAsync(hwnd, SW_MINIMIZE);
