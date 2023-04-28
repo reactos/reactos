@@ -1519,7 +1519,7 @@ public:
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
-            SendPulseToTray(FALSE, (HWND)lParam);
+            SendPulseToTray(TRUE, (HWND)lParam);
             DeleteTask((HWND)lParam);
             break;
 
