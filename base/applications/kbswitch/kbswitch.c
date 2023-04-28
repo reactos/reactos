@@ -8,10 +8,7 @@
  */
 
 #include "kbswitch.h"
-#include <unknwn.h>
-#include <docobj.h>
 #include <shlobj.h>
-#include <shobjidl.h>
 #include <shlwapi_undoc.h>
 #include <imm.h>
 
