@@ -2477,7 +2477,7 @@ ChangePos:
         {
             DWORD exStyle = (DWORD)::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
             /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+            if ((::GetWindow(hWnd, GW_OWNER) == NULL || (exStyle & WS_EX_APPWINDOW)) &&
                 !(exStyle & WS_EX_TOOLWINDOW))
             {
                 return TRUE;
@@ -3194,18 +3194,24 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
-    void RestoreMinimizedNonTaskWnds(BOOL bDestroy, HWND hwndActive)
+    void RestoreMinimizedNonTaskWnds(BOOL bDestroyed, HWND hwndActive)
     {
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = g_MinimizedAll[i].hwnd;
-            if (hwndActive == hwnd)
+            if (!hwnd || hwndActive == hwnd)
                 continue;
-            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) && !IsTaskWnd(hwnd))
+
+            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) &&
+                (!IsTaskWnd(hwnd) || !::IsWindowEnabled(hwnd)))
+            {
                 ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl);
+            }
         }
+
         g_MinimizedAll.RemoveAll();
-        if (!bDestroy)
+
+        if (!bDestroyed)
             ::SetForegroundWindow(hwndActive);
     }
 
