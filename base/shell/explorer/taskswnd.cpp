@@ -1606,8 +1606,7 @@ public:
             else
             {
                 ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
-                if (TaskItem->wndpl.length == sizeof(TaskItem->wndpl))
-                    ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
+                ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
 
                 TRACE("Valid button clicked. App window Restored.\n");
             }
