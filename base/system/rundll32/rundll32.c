@@ -339,7 +339,7 @@ LRESULT CALLBACK EmptyWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             EnumWindows(EnumWindowsProc, (LPARAM)&FindOwned);
             if (FindOwned.hwndTarget)
             {
-                if (LOWORD(wParam) != WA_INACTIVE) /* To be active */
+                if (LOWORD(wParam) != WA_INACTIVE) /* To be activated */
                 {
                     SetActiveWindow(FindOwned.hwndTarget);
                     return 0;
