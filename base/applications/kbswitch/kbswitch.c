@@ -691,8 +691,7 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
         return FALSE; /* Special window */
     }
 
-    /* FIXME: CONWND is multithreaded but KLF_SETFORPROCESS and
-              DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
+    /* FIXME: CONWND needs special handling */
     if (_tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
     {
         HKL hKL = GetKeyboardLayout(0);
@@ -810,8 +809,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     if (hwndTarget == NULL)
                         hwndTarget = g_hwndLastActive;
 
-                    /* FIXME: CONWND is multithreaded but KLF_SETFORPROCESS and
-                              DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
+                    /* FIXME: CONWND needs special handling */
                     if (hwndTarget &&
                         GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass)) &&
                         _tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
@@ -832,8 +830,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     ActivateLayout(hwnd, GetNextLayout(), hwndTarget, TRUE);
 
-                    /* FIXME: CONWND is multithreaded but KLF_SETFORPROCESS and
-                              DefWindowProc.WM_INPUTLANGCHANGEREQUEST won't work yet */
+                    /* FIXME: CONWND needs special handling */
                     if (bCONWND)
                     {
                         ActivateLayout(hwnd, g_nCurrentLayoutNum, hwndTargetSave, TRUE);
