@@ -73,7 +73,7 @@ static VOID LoadSpecialIds(VOID)
         return;
     }
 
-    for (dwIndex = 0; ; ++dwIndex)
+    for (dwIndex = 0; dwIndex < 0x100; ++dwIndex)
     {
         dwSize = ARRAYSIZE(szKLID);
         if (RegEnumKeyEx(hKey, dwIndex, szKLID, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
