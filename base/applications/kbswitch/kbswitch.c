@@ -60,14 +60,15 @@ INT g_cSpecialIds = 0;
 
 static VOID LoadSpecialIds(VOID)
 {
-    WCHAR szKLID[KL_NAMELENGTH], szBuffer[16];
+    TCHAR szKLID[KL_NAMELENGTH], szBuffer[16];
     DWORD dwSize, dwIndex;
     HKEY hKey, hLayoutKey;
 
     g_cSpecialIds = 0;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
-                      0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     TEXT("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts"),
+                     0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         return;
     }
@@ -75,21 +76,20 @@ static VOID LoadSpecialIds(VOID)
     for (dwIndex = 0; ; ++dwIndex)
     {
         dwSize = ARRAYSIZE(szKLID);
-        if (RegEnumKeyExW(hKey, dwIndex, szKLID, &dwSize, NULL, NULL,
-                          NULL, NULL) != ERROR_SUCCESS)
+        if (RegEnumKeyEx(hKey, dwIndex, szKLID, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
         {
             break;
         }
 
-        if (RegOpenKeyExW(hKey, szKLID, 0, KEY_READ, &hLayoutKey) == ERROR_SUCCESS)
+        if (RegOpenKeyEx(hKey, szKLID, 0, KEY_READ, &hLayoutKey) == ERROR_SUCCESS)
         {
             dwSize = sizeof(szBuffer);
-            if (RegQueryValueExW(hLayoutKey, L"Layout Id", NULL, NULL,
-                                 (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
+            if (RegQueryValueEx(hLayoutKey, TEXT("Layout Id"), NULL, NULL,
+                                (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
             {
-                DWORD dwKLID = wcstoul(szKLID, NULL, 16);
+                DWORD dwKLID = _tcstoul(szKLID, NULL, 16);
                 WORD wLangId = LOWORD(dwKLID);
-                WORD wLayoutId = LOWORD(wcstoul(szBuffer, NULL, 16));
+                WORD wLayoutId = LOWORD(_tcstoul(szBuffer, NULL, 16));
                 HKL hKL = (HKL)(LONG_PTR)(SPECIAL_MASK | MAKELONG(wLangId, wLayoutId));
 
                 /* Add a special ID */
