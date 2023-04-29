@@ -101,7 +101,10 @@ static VOID LoadSpecialIds(VOID)
         RegCloseKey(hLayoutKey);
 
         if (g_cSpecialIds >= ARRAYSIZE(g_SpecialIds))
+        {
+            OutputDebugStringA("g_SpecialIds is full!");
             break;
+        }
     }
 
     RegCloseKey(hKey);
