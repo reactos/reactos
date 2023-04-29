@@ -77,9 +77,7 @@ static VOID LoadSpecialIds(VOID)
     {
         dwSize = ARRAYSIZE(szKLID);
         if (RegEnumKeyEx(hKey, dwIndex, szKLID, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-        {
             break;
-        }
 
         if (RegOpenKeyEx(hKey, szKLID, 0, KEY_READ, &hLayoutKey) == ERROR_SUCCESS)
         {
@@ -607,7 +605,7 @@ ULONG
 GetNextLayout(VOID)
 {
     UINT uMaxNum = GetMaxLayoutNum();
-    return (ulCurrentLayoutNum + 1) % uMaxNum;
+    return (ulCurrentLayoutNum % uMaxNum) + 1;
 }
 
 UINT
