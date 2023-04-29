@@ -83,7 +83,7 @@ BEGIN
     POPUP "&Register"
     BEGIN
         MENUITEM "&Uvozi registrsko datoteko...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Izvozi registrsko datoteko ...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Izvozi registrsko datoteko...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
