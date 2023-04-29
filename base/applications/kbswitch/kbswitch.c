@@ -46,7 +46,7 @@ INT       g_nCurrentLayoutNum = 1;
 HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
-HKL       g_ahKLs[256];
+HKL       g_ahKLs[64];
 
 typedef struct
 {
@@ -55,7 +55,7 @@ typedef struct
     TCHAR szKLID[CCH_LAYOUT_ID + 1];
 } SPECIAL_ID, *PSPECIAL_ID;
 
-SPECIAL_ID g_SpecialIds[128];
+SPECIAL_ID g_SpecialIds[80];
 INT g_cSpecialIds = 0;
 
 static VOID LoadSpecialIds(VOID)
