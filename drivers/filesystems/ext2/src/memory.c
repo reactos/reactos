@@ -1819,7 +1819,11 @@ Ext2CleanupAllMcbs(PEXT2_VCB Vcb)
             TRUE );
         LockAcquired = TRUE;
 
+#ifdef __REACTOS__
         while ((Mcb = Ext2FirstUnusedMcb(Vcb, TRUE, Vcb->NumOfMcb)) != 0) {
+#else
+        while (Mcb = Ext2FirstUnusedMcb(Vcb, TRUE, Vcb->NumOfMcb)) {
+#endif
             while (Mcb) {
                 PEXT2_MCB Next = Mcb->Next;
                 if (IsMcbSymLink(Mcb)) {
@@ -2209,7 +2213,11 @@ Ext2PerformRegistryVolumeParams(IN PEXT2_VCB Vcb)
         memcpy(Vcb->Codepage.AnsiName, Ext2Global->Codepage.AnsiName, CODEPAGE_MAXLEN);
         Vcb->Codepage.PageTable = Ext2Global->Codepage.PageTable;
 
+#ifdef __REACTOS__
         if (Vcb->bHidingPrefix == Ext2Global->bHidingPrefix) {
+#else
+        if (Vcb->bHidingPrefix = Ext2Global->bHidingPrefix) {
+#endif
             RtlCopyMemory( Vcb->sHidingPrefix,
                            Ext2Global->sHidingPrefix,
                            HIDINGPAT_LEN);
@@ -2218,7 +2226,11 @@ Ext2PerformRegistryVolumeParams(IN PEXT2_VCB Vcb)
                            HIDINGPAT_LEN);
         }
 
+#ifdef __REACTOS__
         if (Vcb->bHidingSuffix == Ext2Global->bHidingSuffix) {
+#else
+        if (Vcb->bHidingSuffix = Ext2Global->bHidingSuffix) {
+#endif
             RtlCopyMemory( Vcb->sHidingSuffix,
                            Ext2Global->sHidingSuffix,
                            HIDINGPAT_LEN);
@@ -3035,7 +3047,11 @@ Ext2FirstUnusedMcb(PEXT2_VCB Vcb, BOOLEAN Wait, ULONG Number)
 
 
 /* Reaper thread to release unused Mcb blocks */
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2McbReaperThread(
     PVOID   Context
 )
@@ -3215,7 +3231,11 @@ Ext2QueryUnusedBH(PEXT2_VCB Vcb, PLIST_ENTRY head)
 
 
 /* Reaper thread to release unused buffer heads */
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2bhReaperThread(
     PVOID   Context
 )
@@ -3363,7 +3383,11 @@ again:
 }
 
 /* Reaper thread to release Fcb */
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2FcbReaperThread(
     PVOID   Context
 )
@@ -3514,7 +3538,11 @@ Ext2StartReaper(PEXT2_REAPER Reaper, EXT2_REAPER_RELEASE Free)
 }
 
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2StopReaper(PEXT2_REAPER Reaper)
 {
     LARGE_INTEGER timeout;

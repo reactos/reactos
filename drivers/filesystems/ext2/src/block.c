@@ -17,20 +17,32 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReadWriteBlockSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Context    );
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReadWriteBlockAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Context    );
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2MediaEjectControlCompletion (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -148,7 +160,11 @@ Ext2GetUserBuffer (IN PIRP Irp )
     }
 }
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReadWriteBlockSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -181,7 +197,11 @@ Ext2ReadWriteBlockSyncCompletionRoutine (
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReadWriteBlockAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -641,7 +661,11 @@ Ext2DiskIoControl (
 }
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2MediaEjectControlCompletion (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

@@ -33,10 +33,18 @@ typedef struct _EXT2_FLPFLUSH_CONTEXT {
 
 } EXT2_FLPFLUSH_CONTEXT, *PEXT2_FLPFLUSH_CONTEXT;
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2FloppyFlush(IN PVOID Parameter);
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2FloppyFlushDpc (
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
@@ -59,7 +67,11 @@ Ext2DeferWrite(IN PEXT2_IRP_CONTEXT, PIRP Irp);
 
 /* FUNCTIONS *************************************************************/
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2FloppyFlush(IN PVOID Parameter)
 {
     PEXT2_FLPFLUSH_CONTEXT Context;
@@ -102,7 +114,11 @@ Ext2FloppyFlush(IN PVOID Parameter)
     Ext2FreePool(Parameter, EXT2_FLPFLUSH_MAGIC);
 }
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2FloppyFlushDpc (
     IN PKDPC Dpc,
     IN PVOID DeferredContext,

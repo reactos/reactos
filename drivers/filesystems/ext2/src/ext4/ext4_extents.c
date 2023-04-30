@@ -14,9 +14,13 @@
  */
 
 #include "ext2fs.h"
-#include <linux/ext4.h>
+#ifdef __REACTOS__
+#include "linux/ext4.h"
+#else
+#include "linux\ext4.h"
+#endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(__REACTOS__)
 #pragma warning(push)
 #pragma warning(disable: 4018)
 #pragma warning(disable: 4242)
@@ -83,9 +87,15 @@ static inline void ext_debug(char *str, ...)
 {
 }
 #if TRUE
+#ifdef __REACTOS__
 #define EXT4_ERROR_INODE(inode, str, ...) do {                      \
             DbgPrint("inode[%p]: " str "\n", inode, ##__VA_ARGS__); \
         } while(0)
+#else
+#define EXT4_ERROR_INODE(inode, str, ...) do {                      \
+            DbgPrint("inode[%p]: "##str "\n", inode, __VA_ARGS__);  \
+        } while(0)
+#endif
 #else
 #define EXT4_ERROR_INODE
 #endif
@@ -395,6 +405,7 @@ static int __ext4_ext_check(const char *function, unsigned int line,
 #ifndef __REACTOS__
 	int max = 0;
 #endif
+
 	if (eh->eh_magic != EXT4_EXT_MAGIC) {
 		error_msg = "invalid magic";
 		goto corrupted;
@@ -2175,10 +2186,10 @@ fix_extent_len:
 /*
  * returns 1 if current index have to be freed (even partial)
  */
-#ifndef __REACTOS__
-static int inline
-#else
+#ifdef __REACTOS__
 inline int
+#else
+static int inline
 #endif
 ext4_ext_more_to_rm(struct ext4_ext_path *path)
 {
@@ -2517,7 +2528,7 @@ int ext4_ext_truncate(void *icb, struct inode *inode, unsigned long start)
 	return ret;
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(__REACTOS__)
 #pragma warning(pop)
 #endif
 
