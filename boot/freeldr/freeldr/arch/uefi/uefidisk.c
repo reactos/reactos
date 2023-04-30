@@ -417,7 +417,7 @@ UefiSetupBlockDevices(VOID)
             bio->Media->BlockSize == 0 ||
             bio->Media->BlockSize > 2048)
         {
-            TRACE("UefiSetupBlockDevices: UEFI Has found a block device thats failed, skipping\n");
+            TRACE("UefiSetupBlockDevices: UEFI has found a block device that failed, skipping\n");
             continue;
         }
         if (bio->Media->LogicalPartition == FALSE)
