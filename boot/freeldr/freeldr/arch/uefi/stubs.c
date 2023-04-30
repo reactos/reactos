@@ -48,40 +48,6 @@ UefiGetExtendedBIOSData(PULONG ExtendedBIOSDataArea,
 
 }
 
-UCHAR
-UefiGetFloppyCount(VOID)
-{
-    return 0;
-}
-
-BOOLEAN
-UefiDiskReadLogicalSectors(IN UCHAR DriveNumber,
-                           IN ULONGLONG SectorNumber,
-                           IN ULONG SectorCount,
-                           OUT PVOID Buffer)
-{
-    return 0;
-}
-
-BOOLEAN
-UefiDiskGetDriveGeometry(UCHAR DriveNumber,
-                         PGEOMETRY Geometry)
-{
-    return 0;
-}
-
-ULONG
-UefiDiskGetCacheableBlockCount(UCHAR DriveNumber)
-{
-    return 0;
-}
-
-BOOLEAN
-UefiInitializeBootDevices(VOID)
-{
-    return 0;
-}
-
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(VOID)
 {
