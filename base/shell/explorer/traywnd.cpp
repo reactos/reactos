@@ -3236,7 +3236,6 @@ HandleTrayContextMenu:
         HWND hwndDesktop;
         HWND hTrayWnd;
         HWND hwndProgman;
-        BOOL bRet;
         CSimpleArray<MINWNDPOS> *pMinimizedAll;
         BOOL bShowDesktop;
     };
@@ -3273,7 +3272,6 @@ HandleTrayContextMenu:
             info->pMinimizedAll->Add(mwp);
 
             ::ShowWindowAsync(hwnd, SW_MINIMIZE);
-            info->bRet = TRUE;
         }
 
         return TRUE;
@@ -3288,7 +3286,6 @@ HandleTrayContextMenu:
         info.hwndDesktop = GetDesktopWindow();;
         info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
         info.hwndProgman = FindWindowW(L"Progman", NULL);
-        info.bRet = FALSE;
         info.pMinimizedAll = &g_MinimizedAll;
         info.bShowDesktop = bShowDesktop;
         EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
