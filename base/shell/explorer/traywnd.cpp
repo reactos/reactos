@@ -2476,7 +2476,7 @@ ChangePos:
         if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
         {
             DWORD exStyle = (DWORD)::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-            if ((exStyle & WS_EX_APPWINDOW) || (::GetWindow(hWnd, GW_OWNER) == NULL) &&
+            if (((exStyle & WS_EX_APPWINDOW) || ::GetWindow(hWnd, GW_OWNER) == NULL) &&
                 !(exStyle & WS_EX_TOOLWINDOW))
             {
                 return TRUE;
