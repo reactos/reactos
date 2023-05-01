@@ -2476,7 +2476,6 @@ ChangePos:
         if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
         {
             DWORD exStyle = (DWORD)::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
             if ((::GetWindow(hWnd, GW_OWNER) == NULL || (exStyle & WS_EX_APPWINDOW)) &&
                 !(exStyle & WS_EX_TOOLWINDOW))
             {
