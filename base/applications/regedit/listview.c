@@ -49,7 +49,7 @@ typedef struct tagSORT_INFO
 static INT g_iSortedColumn = 0;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static const int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
+static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };
 static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
 LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
@@ -91,7 +91,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
-    if (pszValueName == NULL)
+    if (pszValueName == NULL || pszValueName[0] == 0)
         i = 0;
     else
     {
@@ -101,6 +101,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     }
     ListView_SetItemState(hwndLV, i, LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);
+    ListView_EnsureVisible(hwndLV, i, FALSE);
     iListViewSelect = i;
 }
 
@@ -255,7 +256,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
     }
 }
 
-static BOOL CreateListColumns(HWND hWndListView)
+static BOOL CreateListColumns(HWND hWndListView, INT cxTotal)
 {
     WCHAR szText[50];
     int index;
@@ -269,7 +270,7 @@ static BOOL CreateListColumns(HWND hWndListView)
     for (index = 0; index < MAX_LIST_COLUMNS; index++)
     {
         lvC.iSubItem = index;
-        lvC.cx = default_column_widths[index];
+        lvC.cx = (cxTotal * default_column_widths[index]) / 100;
         lvC.fmt = column_alignment[index];
         LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
@@ -563,7 +564,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     }
     return TRUE;
     case NM_SETFOCUS:
-        g_pChildWnd->nFocusPanel = 0;
+        g_pChildWnd->nFocusPanel = 1;
         break;
     case LVN_BEGINLABELEDIT:
         Info = (NMLVDISPINFO*)lParam;
@@ -627,7 +628,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     return FALSE;
 }
 
-HWND CreateListView(HWND hwndParent, HMENU id)
+HWND CreateListView(HWND hwndParent, HMENU id, INT cx)
 {
     RECT rcClient;
     HWND hwndLV;
@@ -641,7 +642,7 @@ HWND CreateListView(HWND hwndParent, HMENU id)
     if (!hwndLV) return NULL;
 
     /* Initialize the image list, and add items to the control. */
-    if (!CreateListColumns(hwndLV)) goto fail;
+    if (!CreateListColumns(hwndLV, cx)) goto fail;
     if (!InitListViewImageLists(hwndLV)) goto fail;
 
     return hwndLV;
@@ -667,7 +668,7 @@ void DestroyListView(HWND hwndLV)
 
 }
 
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
 {
     DWORD max_sub_key_len;
     DWORD max_val_name_len;
@@ -737,6 +738,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
+
+    if (bSelectNone)
+        iListViewSelect = -1;
     ListView_SetItemState(hwndLV, iListViewSelect,
                           LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);

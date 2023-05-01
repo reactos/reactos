@@ -1,7 +1,7 @@
 /* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.: 07-07-2008
- * LAST CHANGE: 29-07-2010 
- */ 
+ * LAST CHANGE: 29-07-2010
+ */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
@@ -134,7 +134,7 @@ BEGIN
         MENUITEM "&Premenovať", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export", ID_TREE_EXPORT
-        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name", ID_EDIT_COPYKEYNAME
     END
@@ -393,7 +393,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

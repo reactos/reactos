@@ -8,6 +8,7 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <aclapi.h>
+#include <strsafe.h>
 
 #include "main.h"
 #include "regproc.h"

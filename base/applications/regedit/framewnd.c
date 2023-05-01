@@ -33,27 +33,19 @@
 static WCHAR s_szFavoritesRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites";
 
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
-
 /*******************************************************************************
  * Local module support methods
  */
 
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
-    RECT rt;
-    /*
-    	if (IsWindowVisible(hToolBar)) {
-    		SendMessageW(hToolBar, WM_SIZE, 0, 0);
-    		GetClientRect(hToolBar, &rt);
-    		prect->top = rt.bottom+3;
-    		prect->bottom -= rt.bottom+3;
-    	}
-     */
     if (IsWindowVisible(hStatusBar))
     {
+        RECT rt;
+
         SetupStatusBar(hWnd, TRUE);
-        GetClientRect(hStatusBar, &rt);
-        prect->bottom -= rt.bottom;
+        GetWindowRect(hStatusBar, &rt);
+        prect->bottom -= rt.bottom - rt.top;
     }
     MoveWindow(g_pChildWnd->hWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }
@@ -287,7 +279,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     pofn->nMaxFile = _MAX_PATH;
     pofn->lpstrFileTitle = FileTitleBuffer;
     pofn->nMaxFileTitle = _MAX_PATH;
-    pofn->Flags = OFN_HIDEREADONLY;
+    pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
     return TRUE;
 }
@@ -389,7 +381,7 @@ static BOOL LoadHive(HWND hWnd)
                 /* refresh tree and list views */
                 RefreshTreeView(g_pChildWnd->hTreeWnd);
                 pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-                RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+                RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
             }
             else
             {
@@ -427,7 +419,7 @@ static BOOL UnloadHive(HWND hWnd)
         /* refresh tree and list views */
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
     }
     else
     {
@@ -524,7 +516,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /* refresh tree and list views */
     RefreshTreeView(g_pChildWnd->hTreeWnd);
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath);
+    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath, TRUE);
 
     return bRet;
 }
@@ -573,7 +565,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
             {
                 GetWindowTextW(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
             }
-            else
+            else if (pszSelectedKey)
             {
                 pszSelectedKey[0] = L'\0';
             }
@@ -883,7 +875,7 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
         return FALSE;
     }
 
-    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath, TRUE);
 
     /* locate the newly added value, and get ready to rename it */
     memset(&lvfi, 0, sizeof(lvfi));
@@ -891,7 +883,12 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
     lvfi.psz = szNewValue;
     iIndex = ListView_FindItem(g_pChildWnd->hListWnd, -1, &lvfi);
     if (iIndex >= 0)
+    {
+        ListView_SetItemState(g_pChildWnd->hListWnd, iIndex,
+                              LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+        ListView_EnsureVisible(g_pChildWnd->hListWnd, iIndex, FALSE);
         (void)ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
+    }
 
     return TRUE;
 }
@@ -1134,11 +1131,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case ID_EDIT_MODIFY:
         if (valueName && ModifyValue(hWnd, hKey, valueName, FALSE))
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
         break;
     case ID_EDIT_MODIFY_BIN:
         if (valueName && ModifyValue(hWnd, hKey, valueName, TRUE))
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
         break;
     case ID_EDIT_RENAME:
         if (GetFocus() == g_pChildWnd->hListWnd)
@@ -1186,7 +1183,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         item = ni;
                     }
 
-                    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+                    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, FALSE);
                     if(errs > 0)
                     {
                         LoadStringW(hInst, IDS_ERR_DELVAL_CAPTION, caption, COUNT_OF(caption));
@@ -1229,7 +1226,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         FindDialog(hWnd);
         break;
     case ID_EDIT_FINDNEXT:
-        FindNext(hWnd);
+        FindNextMessageBox(hWnd);
         break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);
@@ -1249,13 +1246,41 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
         /*case ID_OPTIONS_TOOLBAR:*/
         /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
         /*    break;*/
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        break;
+    case ID_TREE_EXPANDBRANCH:
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
+        break;
+    case ID_TREE_COLLAPSEBRANCH:
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        break;
+    case ID_TREE_RENAME:
+        SetFocus(g_pChildWnd->hTreeWnd);
+        TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        break;
+    case ID_TREE_DELETE:
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
+        if (keyPath == 0 || *keyPath == 0)
+            MessageBeep(MB_ICONHAND);
+        else if (DeleteKey(hWnd, hKeyRoot, keyPath))
+            DeleteNode(g_pChildWnd->hTreeWnd, 0);
+        break;
+    case ID_TREE_EXPORT:
+        ExportRegistryFile(g_pChildWnd->hTreeWnd);
+        break;
+    case ID_TREE_PERMISSIONS:
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
+        RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
+        break;
+    case ID_SWITCH_PANELS:
+        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
+        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
         break;
     default:
         if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
@@ -1303,14 +1328,16 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    RECT rc;
     switch (message)
     {
     case WM_CREATE:
         // For now, the Help dialog item is disabled because of lacking of HTML Help support
         EnableMenuItem(GetMenu(hWnd), ID_HELP_HELPTOPICS, MF_BYCOMMAND | MF_GRAYED);
+        GetClientRect(hWnd, &rc);
         CreateWindowExW(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
-                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                       hWnd, (HMENU)0, hInst, 0);
+                        rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+                        hWnd, (HMENU)0, hInst, 0);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam))
