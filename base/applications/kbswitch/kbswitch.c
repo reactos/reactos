@@ -170,38 +170,10 @@ static VOID UpdateLayoutList(VOID)
 
 static HKL GetHKLFromLayoutNum(INT nLayoutNum)
 {
-    HKL hKL;
     if (0 <= (nLayoutNum - 1) && (nLayoutNum - 1) < g_cKLs)
-    {
-        hKL = g_ahKLs[nLayoutNum - 1];
-    }
+        return g_ahKLs[nLayoutNum - 1];
     else
-    {
-        HWND hwnd = GetForegroundWindow();
-        DWORD dwTID = GetWindowThreadProcessId(hwnd, NULL);
-        hKL = GetKeyboardLayout(dwTID);
-    }
-
-    if (IS_IME_HKL(hKL))
-        return hKL;
-
-    if (IS_SPECIAL_HKL(hKL))
-    {
-        INT i;
-        DWORD dwSpecialId = SPECIALIDFROMHKL(hKL);
-        for (i = 0; i < g_cSpecialIds; ++i)
-        {
-            if (g_SpecialIds[i].dwLayoutId == dwSpecialId)
-                return g_SpecialIds[i].hKL;
-        }
-    }
-    else
-    {
-        WORD wLang = LOWORD(hKL);
-        return (HKL)(LONG_PTR)MAKELONG(wLang, wLang);
-    }
-
-    return hKL;
+        return GetKeyboardLayout(0);
 }
 
 static VOID
