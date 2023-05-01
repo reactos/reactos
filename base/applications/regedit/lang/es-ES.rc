@@ -29,7 +29,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registro"
+    POPUP "&Archivo"
     BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -132,7 +132,7 @@ BEGIN
         MENUITEM "&Renombrar", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
-        MENUITEM "&Permisos...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permisos...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
     END
@@ -391,7 +391,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expandir"
     IDS_COLLAPSE "&Contraer"
-    IDS_GOTO_SUGGESTED_KEY "&Ir a '%s'"
     IDS_FINISHEDFIND "Ha terminado la búsqueda en el Registro."
 END
 

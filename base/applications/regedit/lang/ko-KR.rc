@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "이름 바꾸기(&R)", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "내보내기(&E)", ID_TREE_EXPORT
-        MENUITEM "권한 설정(&P)", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "권한 설정(&P)", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "키 이름 복사(&C)", ID_EDIT_COPYKEYNAME
     END
@@ -390,7 +390,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "확장(&E)"
     IDS_COLLAPSE "축소(&C)"
-    IDS_GOTO_SUGGESTED_KEY "'%s'로 가기(&G)"
     IDS_FINISHEDFIND "레지스트리 검색을 완료했습니다."
 END
 
