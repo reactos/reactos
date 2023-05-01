@@ -138,6 +138,5 @@ UefiConsGetCh(VOID)
     /* UEFI will stack input requests, we have to clear it */
     Key.UnicodeChar = 0;
     Key.ScanCode = 0;
-    GlobalSystemTable->ConIn->Reset(GlobalSystemTable->ConIn, FALSE);
     return KeyOutput;
 }

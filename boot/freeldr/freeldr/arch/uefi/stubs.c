@@ -43,12 +43,6 @@ UefiGetExtendedBIOSData(PULONG ExtendedBIOSDataArea,
 
 }
 
-PCONFIGURATION_COMPONENT_DATA
-UefiHwDetect(VOID)
-{
-    return 0;
-}
-
 VOID
 UefiPcBeep(VOID)
 {
