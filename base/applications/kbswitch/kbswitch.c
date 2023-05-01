@@ -42,7 +42,7 @@ UINT ShellHookMessage = 0;
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
 HMODULE   g_hHookDLL = NULL;
-INT       g_nCurrentLayoutNum = -1;
+INT       g_nCurrentLayoutNum = 1;
 HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
@@ -139,12 +139,12 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
     }
 }
 
-static VOID UpdateLayoutList(VOID)
+static VOID UpdateLayoutList(BOOL bResetNum)
 {
     INT iKL;
     HKL hKL;
 
-    if (0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
+    if (!bResetNum && 0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
     {
         hKL = g_ahKLs[g_nCurrentLayoutNum - 1];
     }
@@ -598,7 +598,7 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     TCHAR szKLID[MAX_PATH], szLangName[MAX_PATH];
     LANGID LangID;
 
-    UpdateLayoutList();
+    UpdateLayoutList(FALSE);
 
     GetKLIDFromHKL(hKL, szKLID, ARRAYSIZE(szKLID));
     LangID = (LANGID)_tcstoul(szKLID, NULL, 16);
@@ -694,7 +694,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             LoadSpecialIds();
 
-            UpdateLayoutList();
+            UpdateLayoutList(TRUE);
             AddTrayIcon(hwnd);
 
             ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
@@ -847,7 +847,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (Message == s_uTaskbarRestart)
             {
-                UpdateLayoutList();
+                UpdateLayoutList(TRUE);
                 AddTrayIcon(hwnd);
                 break;
             }
