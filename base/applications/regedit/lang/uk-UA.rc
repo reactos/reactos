@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "Перей&менувати", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Експорт", ID_TREE_EXPORT
-        MENUITEM "&Дозволи...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Дозволи...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Копіювати ім'я розділу", ID_EDIT_COPYKEYNAME
     END
@@ -390,7 +390,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Розгорнути"
     IDS_COLLAPSE "&Згорнути"
-    IDS_GOTO_SUGGESTED_KEY "&Перейти до '%s'"
     IDS_FINISHEDFIND "Пошук у реєстрі завершений."
 END
 

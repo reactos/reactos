@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "&Redenumește", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "E&xportă", ID_TREE_EXPORT
-        MENUITEM "Permisiuni…", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Permisiuni…", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiază numele cheii", ID_EDIT_COPYKEYNAME
     END
@@ -390,7 +390,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Extinde"
     IDS_COLLAPSE "&Restrânge"
-    IDS_GOTO_SUGGESTED_KEY "S&alt la „%s”"
     IDS_FINISHEDFIND "Căutarea în registru a fost finalizată."
 END
 
