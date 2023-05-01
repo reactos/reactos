@@ -134,7 +134,7 @@ BEGIN
         MENUITEM "&Преименуване", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Износ", ID_TREE_EXPORT
-        MENUITEM "&Права...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Права...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Запомняне стойността на ключа", ID_EDIT_COPYKEYNAME
     END
@@ -393,7 +393,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Разгръщане"
     IDS_COLLAPSE "&Свиване"
-    IDS_GOTO_SUGGESTED_KEY "&Отиване на '%s'"
     IDS_FINISHEDFIND "Търсенето в регистъра приключи."
 END
 

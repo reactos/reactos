@@ -28,14 +28,14 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Register"
     BEGIN
-        MENUITEM "&Uvozi registrsko datoteko ...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Izvozi registrsko datoteko ...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Uvozi registrsko datoteko...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Izvozi registrsko datoteko...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "P&oveži se z omrežnim registrom ...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "P&rekini povezavo z omrežnim registrom ...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "P&oveži se z omrežnim registrom...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "P&rekini povezavo z omrežnim registrom...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Na&tisni...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Rename", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export", ID_TREE_EXPORT
-        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name", ID_EDIT_COPYKEYNAME
     END
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

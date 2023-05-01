@@ -28,7 +28,7 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Αρχείο"
     BEGIN
-        MENUITEM "&Εισαγωγή ...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Εισαγωγή...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Εξαγωγή...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Φόρτωση Hive...", ID_REGISTRY_LOADHIVE, GRAYED
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Μετονομασία", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Εξαγωγή", ID_TREE_EXPORT
-        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
     END
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Μετάβαση σε '%s'"
     IDS_FINISHEDFIND "Τέλος αναζήτησης στη registry."
 END
 
