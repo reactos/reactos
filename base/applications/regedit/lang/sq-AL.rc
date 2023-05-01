@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -32,7 +32,7 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Importo ...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Importo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksporto...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED
@@ -133,7 +133,7 @@ BEGIN
         MENUITEM "Emero", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exporto", ID_TREE_EXPORT
-        MENUITEM "T'drejta...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "T'drejta...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "Kopjo emrin çelesit", ID_EDIT_COPYKEYNAME
     END
@@ -392,7 +392,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "Zgjat"
     IDS_COLLAPSE "Zgjero"
-    IDS_GOTO_SUGGESTED_KEY "Shko tek '%s'"
     IDS_FINISHEDFIND "Përfunduar kërkimin përmes regjistrit."
 END
 

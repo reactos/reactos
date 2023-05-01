@@ -28,7 +28,7 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fil"
     BEGIN
-        MENUITEM "&Import ...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Import...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksport...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Last inn struktur...", ID_REGISTRY_LOADHIVE, GRAYED
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Gi nytt navn", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Eksport", ID_TREE_EXPORT
-        MENUITEM "&Rettigheter...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Rettigheter...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Kopier nøkkelnavn", ID_EDIT_COPYKEYNAME
     END
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Utvid"
     IDS_COLLAPSE "&Minimer"
-    IDS_GOTO_SUGGESTED_KEY "&Gå til '%s'"
     IDS_FINISHEDFIND "Søket i registret er fullført."
 END
 
