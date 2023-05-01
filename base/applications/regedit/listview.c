@@ -91,7 +91,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
-    if (pszValueName == NULL)
+    if (pszValueName == NULL || pszValueName[0] == 0)
         i = 0;
     else
     {
@@ -101,6 +101,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     }
     ListView_SetItemState(hwndLV, i, LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);
+    ListView_EnsureVisible(hwndLV, i, FALSE);
     iListViewSelect = i;
 }
 
@@ -563,7 +564,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     }
     return TRUE;
     case NM_SETFOCUS:
-        g_pChildWnd->nFocusPanel = 0;
+        g_pChildWnd->nFocusPanel = 1;
         break;
     case LVN_BEGINLABELEDIT:
         Info = (NMLVDISPINFO*)lParam;
@@ -667,7 +668,7 @@ void DestroyListView(HWND hwndLV)
 
 }
 
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
 {
     DWORD max_sub_key_len;
     DWORD max_val_name_len;
@@ -737,6 +738,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
+
+    if (bSelectNone)
+        iListViewSelect = -1;
     ListView_SetItemState(hwndLV, iListViewSelect,
                           LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);

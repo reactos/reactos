@@ -40,9 +40,6 @@
 #define IDC_REGEDIT_FRAME             110
 #define IDR_REGEDIT_MENU              130
 #define IDD_EXPORTRANGE               131
-#define IDI_OPEN_FILE                 132
-#define IDI_CLOSED_FILE               133
-#define IDI_ROOT                      134
 #define IDI_STRING                    135
 #define IDI_BIN                       136
 #define IDR_POPUP_MENUS               137

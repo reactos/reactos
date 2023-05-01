@@ -66,7 +66,7 @@ BEGIN
         MENUITEM "&Localizar...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "L&ocalizar próxima\tF3", ID_EDIT_FINDNEXT
     END
-    POPUP "E&xibir"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "&Barra de status", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -178,7 +178,7 @@ BEGIN
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "Cancearl", IDCANCEL, 196, 154, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
@@ -278,7 +278,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro."
     ID_EDIT_MENU "Contém comandos para edição de valores ou chaves."
-    ID_VIEW_MENU "Contém comandos para personalização da janela do Registro."
+    ID_VIEW_MENU "Contém comandos para personalização da janela do Registo."
     ID_FAVOURITES_MENU "Contém comandos para acessar chaves frequentemente usadas."
     ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo."
     ID_EDIT_NEW_MENU "Contém comandos para criação de novas chaves ou valores"
@@ -291,10 +291,10 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
     ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário."
     ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registro."
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registo."
     ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um arquivo texto."
     ID_REGISTRY_LOADHIVE "Carrega um arquivo de secção no registo"
-    ID_REGISTRY_UNLOADHIVE "Descarrega um arquivo de seção no registro"
+    ID_REGISTRY_UNLOADHIVE "Descarrega um arquivo de seção no registo"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
     ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
@@ -330,7 +330,7 @@ BEGIN
     IDS_QUERY_DELETE_KEY_MORE "Tem certeza que deseja excluir estas chaves?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirme exclusão da chave"
     IDS_QUERY_DELETE_ONE "Tem certeza que deseja excluir este valor?"
-    IDS_QUERY_DELETE_MORE "Tem certeza que deseja excluir estes valores??"
+    IDS_QUERY_DELETE_MORE "Tem certeza que deseja excluir estes valores?"
     IDS_QUERY_DELETE_CONFIRM "Confirme a exclusão do Valor"
     IDS_ERR_DELVAL_CAPTION "Erro ao apagar Valor"
     IDS_ERR_DELETEVALUE "Não foi possível apagar todos os valores especificados!"

@@ -32,7 +32,7 @@ static BOOL s_bAbort;
 
 static DWORD s_dwFlags;
 static WCHAR s_szName[MAX_PATH];
-static DWORD s_cbName;
+static DWORD s_cchName;
 static const WCHAR s_empty[] = L"";
 static const WCHAR s_backslash[] = L"\\";
 
@@ -87,41 +87,31 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
     }
 }
 
-static BOOL
-CompareData(
-    DWORD   dwType,
-    LPCWSTR psz1,
-    LPCWSTR psz2)
+static BOOL MatchString(LPCWCH pch1, INT cch1, LPCWCH pch2, INT cch2)
 {
-    INT i, cch1 = wcslen(psz1), cch2 = wcslen(psz2);
-    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ)
-    {
-        if (s_dwFlags & RSF_WHOLESTRING)
-        {
-            if (s_dwFlags & RSF_MATCHCASE)
-                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
-                                          psz1, cch1, psz2, cch2);
-            else
-                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
-                                          NORM_IGNORECASE, psz1, cch1, psz2, cch2);
-        }
+    INT i;
+    DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? NORM_IGNORECASE : 0);
 
-        for(i = 0; i <= cch1 - cch2; i++)
-        {
-            if (s_dwFlags & RSF_MATCHCASE)
-            {
-                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
-                                       psz1 + i, cch2, psz2, cch2))
-                    return TRUE;
-            }
-            else
-            {
-                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
-                                       NORM_IGNORECASE, psz1 + i, cch2, psz2, cch2))
-                    return TRUE;
-            }
-        }
+    if (s_dwFlags & RSF_WHOLESTRING)
+        return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1, cch1, pch2, cch2);
+
+    if (cch1 < cch2)
+        return FALSE;
+
+    for (i = 0; i <= cch1 - cch2; i++)
+    {
+        if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1 + i, cch2, pch2, cch2))
+            return TRUE;
     }
+
+    return FALSE;
+}
+
+static BOOL MatchData(DWORD dwType, LPCVOID pv1, DWORD cb1)
+{
+    if (dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
+        return MatchString(pv1, (INT)(cb1 / sizeof(WCHAR)), s_szFindWhat, lstrlenW(s_szFindWhat));
+
     return FALSE;
 }
 
@@ -143,7 +133,7 @@ BOOL RegFindRecurse(
     LONG lResult;
     WCHAR szSubKey[MAX_PATH];
     DWORD i, c, cb, type;
-    BOOL fPast = FALSE;
+    BOOL fPast;
     LPWSTR *ppszNames = NULL;
     LPBYTE pb = NULL;
 
@@ -160,9 +150,6 @@ BOOL RegFindRecurse(
     if (lResult != ERROR_SUCCESS)
         return FALSE;
 
-    if (pszValueName == NULL)
-        pszValueName = s_empty;
-
     lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL,
                               &c, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
@@ -177,8 +164,8 @@ BOOL RegFindRecurse(
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(WCHAR);
-        lResult = RegEnumValueW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cchName = _countof(s_szName);
+        lResult = RegEnumValueW(hSubKey, i, s_szName, &s_cchName, NULL, NULL,
                                NULL, &cb);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -187,7 +174,7 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
+        if (s_cchName >= _countof(s_szName))
             continue;
 
         ppszNames[i] = _wcsdup(s_szName);
@@ -195,6 +182,7 @@ BOOL RegFindRecurse(
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
+    fPast = (pszValueName == NULL);
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
@@ -212,10 +200,7 @@ BOOL RegFindRecurse(
                 CompareName(ppszNames[i], s_szFindWhat))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
-            if (ppszNames[i][0] == 0)
-                *ppszFoundValueName = NULL;
-            else
-                *ppszFoundValueName = _wcsdup(ppszNames[i]);
+            *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
 
@@ -231,14 +216,10 @@ BOOL RegFindRecurse(
         if (lResult != ERROR_SUCCESS)
             goto err;
 
-        if ((s_dwFlags & RSF_LOOKATDATA) &&
-                CompareData(type, (LPWSTR) pb, s_szFindWhat))
+        if ((s_dwFlags & RSF_LOOKATDATA) && MatchData(type, pb, cb))
         {
             *ppszFoundSubKey = _wcsdup(szSubKey);
-            if (ppszNames[i][0] == 0)
-                *ppszFoundValueName = NULL;
-            else
-                *ppszFoundValueName = _wcsdup(ppszNames[i]);
+            *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
         free(pb);
@@ -267,8 +248,8 @@ BOOL RegFindRecurse(
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(WCHAR);
-        lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cchName = _countof(s_szName);
+        lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cchName, NULL, NULL,
                                NULL, NULL);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -277,7 +258,7 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
+        if (s_cchName >= _countof(s_szName))
             continue;
 
         ppszNames[i] = _wcsdup(s_szName);
@@ -366,16 +347,17 @@ BOOL RegFindWalk(
     WCHAR szKeyName[MAX_PATH];
     WCHAR szSubKey[MAX_PATH];
     LPWSTR pch;
-    BOOL fPast;
+    BOOL fPast, fKeyMatched;
     LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
+
+    if (wcslen(pszSubKey) >= _countof(szSubKey))
+        return FALSE;
+
     if (RegFindRecurse(hBaseKey, pszSubKey, pszValueName, ppszFoundSubKey,
                        ppszFoundValueName))
         return TRUE;
-
-    if (wcslen(pszSubKey) >= MAX_PATH)
-        return FALSE;
 
     wcscpy(szSubKey, pszSubKey);
     while(szSubKey[0] != 0)
@@ -415,8 +397,8 @@ BOOL RegFindWalk(
             if (DoEvents())
                 goto err;
 
-            s_cbName = MAX_PATH * sizeof(WCHAR);
-            lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName,
+            s_cchName = _countof(s_szName);
+            lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cchName,
                                     NULL, NULL, NULL, NULL);
             if (lResult == ERROR_NO_MORE_ITEMS)
             {
@@ -464,7 +446,8 @@ BOOL RegFindWalk(
                 goto success;
             }
 
-            if (RegFindRecurse(hSubKey, ppszNames[i], NULL,
+            fKeyMatched = (_wcsicmp(ppszNames[i], szKeyName) == 0);
+            if (RegFindRecurse(hSubKey, ppszNames[i], (fKeyMatched ? pszValueName : NULL),
                                ppszFoundSubKey, ppszFoundValueName))
             {
                 LPWSTR psz = *ppszFoundSubKey;
@@ -687,10 +670,16 @@ BOOL FindNext(HWND hWnd)
     {
         GetKeyName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
         SelectNode(g_pChildWnd->hTreeWnd, szFullKey);
-        SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
         free(pszFoundSubKey);
-        free(pszFoundValueName);
-        SetFocus(g_pChildWnd->hListWnd);
+
+        if (pszFoundValueName != NULL)
+        {
+            SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
+            free(pszFoundValueName);
+            SetFocus(g_pChildWnd->hListWnd);
+        }
+        else
+            SetFocus(g_pChildWnd->hTreeWnd);
     }
     return fSuccess || s_bAbort;
 }
@@ -810,18 +799,23 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
     return iResult;
 }
 
+void FindNextMessageBox(HWND hWnd)
+{
+    if (!FindNext(hWnd))
+    {
+        WCHAR msg[128], caption[128];
+
+        LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
+        LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
+        MessageBoxW(hWnd, msg, caption, MB_ICONINFORMATION);
+    }
+}
+
 void FindDialog(HWND hWnd)
 {
     if (DialogBoxParamW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_FIND),
                        hWnd, FindDialogProc, 0) != 0)
     {
-        if (!FindNext(hWnd))
-        {
-            WCHAR msg[128], caption[128];
-
-            LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
-            LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
-            MessageBoxW(0, msg, caption, MB_ICONINFORMATION);
-        }
+        FindNextMessageBox(hWnd);
     }
 }
