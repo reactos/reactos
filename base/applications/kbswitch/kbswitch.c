@@ -600,6 +600,19 @@ DeleteHooks(VOID)
     }
 }
 
+static UINT GetLayoutNum(HKL hKL)
+{
+    INT iKL;
+
+    for (iKL = 0; iKL < g_cKLs; ++iKL)
+    {
+        if (g_ahKLs[iKL] == hKL)
+            return iKL + 1;
+    }
+
+    return 0;
+}
+
 ULONG
 GetNextLayout(VOID)
 {
@@ -616,6 +629,7 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     LangID = (LANGID)_tcstoul(szKLID, NULL, 16);
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
     UpdateTrayIcon(hwnd, szKLID, szLangName);
+    g_nCurrentLayoutNum = GetLayoutNum(hKL);
 
     return 0;
 }
@@ -643,19 +657,6 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
     DWORD dwThreadID = GetWindowThreadProcessId(GetTargetWindow(hwndFore), NULL);
     HKL hKL = GetKeyboardLayout(dwThreadID);
     UpdateLanguageDisplay(hwnd, hKL);
-
-    return 0;
-}
-
-static UINT GetLayoutNum(HKL hKL)
-{
-    INT iKL;
-
-    for (iKL = 0; iKL < g_cKLs; ++iKL)
-    {
-        if (g_ahKLs[iKL] == hKL)
-            return iKL + 1;
-    }
 
     return 0;
 }
