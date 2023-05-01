@@ -26,10 +26,10 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Реестр"
+    POPUP "&Файл"
     BEGIN
-        MENUITEM "&Импортировать файл реестра...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Экспортировать файл реестра...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Импортировать из файла...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Экспортировать в файл...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
@@ -56,7 +56,7 @@ BEGIN
             MENUITEM "Рас&ширяемый строковый параметр", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Права доступа...", ID_EDIT_PERMISSIONS
+        MENUITEM "Разре&шения...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Удалить\tDel", ID_EDIT_DELETE
         MENUITEM "&Переименовать", ID_EDIT_RENAME
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Переименовать", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Экспорт", ID_TREE_EXPORT
-        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Копировать имя ключа", ID_EDIT_COPYKEYNAME
     END
@@ -367,8 +367,8 @@ BEGIN
     IDS_ACCESS_READ "Чтение"
     IDS_ACCESS_QUERYVALUE "Запрос значений"
     IDS_ACCESS_SETVALUE "Установка значений"
-    IDS_ACCESS_CREATESUBKEY "Создание подключей"
-    IDS_ACCESS_ENUMERATESUBKEYS "Перечисление подключей"
+    IDS_ACCESS_CREATESUBKEY "Создание разделов"
+    IDS_ACCESS_ENUMERATESUBKEYS "Перечисление разделов"
     IDS_ACCESS_NOTIFY "Уведомление"
     IDS_ACCESS_CREATELINK "Создание связи"
     IDS_ACCESS_DELETE "Удаление"
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Развернуть"
     IDS_COLLAPSE "&Свернуть"
-    IDS_GOTO_SUGGESTED_KEY "&Перейти к '%s'"
     IDS_FINISHEDFIND "Поиск в реестре завершен."
 END
 

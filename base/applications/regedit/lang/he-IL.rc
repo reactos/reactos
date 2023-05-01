@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "שנה שם", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "יצא", ID_TREE_EXPORT
-        MENUITEM "הרשאות...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "הרשאות...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "העתק שם מפתח", ID_EDIT_COPYKEYNAME
     END
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "הרחב"
     IDS_COLLAPSE "כווץ"
-    IDS_GOTO_SUGGESTED_KEY "עבור אל '%s'"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

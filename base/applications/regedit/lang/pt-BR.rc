@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Renomear", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
-        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nome da chave", ID_EDIT_COPYKEYNAME
     END
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expandir"
     IDS_COLLAPSE "&Reduzir"
-    IDS_GOTO_SUGGESTED_KEY "&Ir para '%s'"
     IDS_FINISHEDFIND "Pesquisa do Registro concluída."
 END
 
