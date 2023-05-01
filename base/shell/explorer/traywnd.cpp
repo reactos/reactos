@@ -2469,14 +2469,14 @@ ChangePos:
     }
 
     /* The task window is visible and non-WS_EX_TOOLWINDOW and
-       (has WS_EX_APPWINDOW style or has no owner) and is none of explorer's
+       { has WS_EX_APPWINDOW style or has no owner } and is none of explorer's
        special windows (such as the desktop or the tray window) */
     BOOL STDMETHODCALLTYPE IsTaskWnd(HWND hWnd)
     {
         if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && !IsSpecialHWND(hWnd))
         {
             DWORD exStyle = (DWORD)::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || (exStyle & WS_EX_APPWINDOW)) &&
+            if ((exStyle & WS_EX_APPWINDOW) || (::GetWindow(hWnd, GW_OWNER) == NULL) &&
                 !(exStyle & WS_EX_TOOLWINDOW))
             {
                 return TRUE;
