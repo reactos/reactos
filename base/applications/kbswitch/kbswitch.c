@@ -550,8 +550,6 @@ BuildLeftPopupMenu(VOID)
     MENUITEMINFO mii = { sizeof(mii) };
     INT iKL;
 
-    g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
-
     for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
         GetKLIDFromHKL(g_ahKLs[iKL], szKLID, ARRAYSIZE(szKLID));
@@ -579,13 +577,6 @@ BuildLeftPopupMenu(VOID)
     CheckMenuItem(hMenu, g_nCurrentLayoutNum, MF_CHECKED);
 
     return hMenu;
-}
-
-static ULONG
-GetMaxLayoutNum(VOID)
-{
-    g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
-    return g_cKLs;
 }
 
 BOOL
@@ -672,16 +663,14 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
     return 0;
 }
 
-static UINT GetCurLayoutNum(HKL hKL)
+static UINT GetLayoutNum(HKL hKL)
 {
-    UINT i, nCount;
-    HKL ahKL[256];
+    INT iKL;
 
-    nCount = GetKeyboardLayoutList(ARRAYSIZE(ahKL), ahKL);
-    for (i = 0; i < nCount; ++i)
+    for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
-        if (ahKL[i] == hKL)
-            return i + 1;
+        if (g_ahKLs[iKL] == hKL)
+            return iKL + 1;
     }
 
     return 0;
@@ -834,7 +823,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     {
                         dwThreadID = GetWindowThreadProcessId(hwndTarget, NULL);
                         hKL = GetKeyboardLayout(dwThreadID);
-                        uNum = GetCurLayoutNum(hKL);
+                        uNum = GetLayoutNum(hKL);
                         if (uNum != 0)
                             g_nCurrentLayoutNum = uNum;
                     }
@@ -843,9 +832,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     /* FIXME: CONWND needs special handling */
                     if (bCONWND)
-                    {
                         ActivateLayout(hwnd, g_nCurrentLayoutNum, hwndTargetSave, TRUE);
-                    }
+
                     break;
                 }
 
