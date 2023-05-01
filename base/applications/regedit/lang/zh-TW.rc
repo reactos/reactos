@@ -1,4 +1,4 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -36,7 +36,7 @@ BEGIN
         MENUITEM "載入配置單元...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "解除安裝配置單元...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "連線網路註冊表(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "連線網路登錄(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "斷開網路註冊表(&C)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "列印(&P)...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
@@ -52,8 +52,8 @@ BEGIN
             MENUITEM "項(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字元串值(&S)", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "二進位制值(&B)", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD ??&D)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "二進制值(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "多字元串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "可擴充字元串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -106,7 +106,7 @@ BEGIN
             MENUITEM "項(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字元串值(&S)", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "二進位制值(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "二進制值(&B)", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 值(&D)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "多字元串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "可擴充字元串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -120,7 +120,7 @@ BEGIN
             MENUITEM "項(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字元串值(&S)", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "二進位制值(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "二進制值(&B)", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 值(&D)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "多字元串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "可擴充字元串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "重新命名(&R)", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "匯出(&E)", ID_TREE_EXPORT
-        MENUITEM "許可權(&P)...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "許可權(&P)...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "複製項名稱(&C)", ID_EDIT_COPYKEYNAME
     END
@@ -177,7 +177,7 @@ END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "編輯二進位制數值"
+CAPTION "編輯二進制數值"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "數值名稱(&N):", IDC_STATIC, 6, 6, 134, 8
@@ -198,8 +198,8 @@ BEGIN
     LTEXT "數值資料(&V):", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "基數", IDC_STATIC, 130, 35, 116, 39
-    AUTORADIOBUTTON "十六進位制(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
-    AUTORADIOBUTTON "十進位制(&D)", IDC_FORMAT_DEC, 141, 59, 60, 10
+    AUTORADIOBUTTON "十六進制(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "十進制(&D)", IDC_FORMAT_DEC, 141, 59, 60, 10
     DEFPUSHBUTTON "確定", IDOK, 142, 82, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 196, 82, 50, 14
 END
@@ -270,9 +270,9 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含與整個註冊表工作相關的命令。"
+    ID_REGISTRY_MENU "包含與整個登錄工作相關的命令。"
     ID_EDIT_MENU "包含編輯值或項的命令。"
-    ID_VIEW_MENU "包含自定義註冊表視窗的命令。"
+    ID_VIEW_MENU "包含自訂登錄視窗的命令。"
     ID_FAVOURITES_MENU "包含訪問常用項時所用的命令。"
     ID_HELP_MENU "包含顯示幫助以及註冊表編輯器有關資訊的命令。"
     ID_EDIT_NEW_MENU "包含創建新項或值的命令。"
@@ -285,13 +285,13 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "添加新字元串值。"
     ID_EDIT_NEW_BINARYVALUE "添加新二進位制值。"
     ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到註冊表中。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "將註冊表全部或部分匯出到檔案中。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中。"
+    ID_REGISTRY_EXPORTREGISTRYFILE "將登錄全部或部分匯出到檔案中。"
     ID_REGISTRY_LOADHIVE "載入配置單元到註冊表中。"
     ID_REGISTRY_UNLOADHIVE "從註冊表中解除安裝配置單元。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端計算機的註冊表。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端計算機註冊表的連線。"
-    ID_REGISTRY_PRINT "列印所有或部分註冊表。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線。"
+    ID_REGISTRY_PRINT "列印所有或部分登錄。"
 /*    ID_HELP_HELPTOPICS "開啟註冊表編輯器幫助。" */
     ID_HELP_ABOUT "顯示程式資訊、版本號和版權。"
 END
@@ -319,7 +319,7 @@ BEGIN
     IDS_BAD_VALUE "不能查詢值 '%s'"
     IDS_UNSUPPORTED_TYPE "不能編輯這類型的項 (%ld)"
     IDS_TOO_BIG_VALUE "數值過大 (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包含空字元串。\r\n註冊表編輯器將刪除找到得空字元串。"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包含空字元串。\n註冊表編輯器將刪除找到得空字元串。"
     IDS_QUERY_DELETE_KEY_ONE "確實要刪除這個項嗎?"
     IDS_QUERY_DELETE_KEY_MORE "確實要刪除這些項嗎?"
     IDS_QUERY_DELETE_KEY_CONFIRM "確認項刪除"
@@ -342,7 +342,7 @@ BEGIN
     IDS_DEFAULT_VALUE_NAME "(默認)"
     IDS_VALUE_NOT_SET "(數值未設定)"
     IDS_UNKNOWN_TYPE "未知類型: (0x%lx)"
-    IDS_MY_COMPUTER "我的計算機"
+    IDS_MY_COMPUTER "我的電腦"
     IDS_IMPORT_REG_FILE "匯入註冊表檔案"
     IDS_EXPORT_REG_FILE "匯出註冊表檔案"
     IDS_LOAD_HIVE "載入配置單元"
@@ -355,7 +355,7 @@ BEGIN
     IDS_FLT_REGFILE "註冊檔案"
     IDS_FLT_REGFILES "註冊檔案 (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "註冊表配置單元檔案 (*.*)"
+    IDS_FLT_HIVFILES "登錄 Hive 檔案 (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Win9x/NT4 註冊檔案 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
@@ -390,14 +390,13 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "展開"
     IDS_COLLAPSE "摺疊"
-    IDS_GOTO_SUGGESTED_KEY "轉到(&G)'%s'"
-    IDS_FINISHEDFIND "註冊表搜索完畢。"
+    IDS_FINISHEDFIND "登錄搜索完畢。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此 '%s' 中的資訊的來源，並不將其添加到註冊表。\n\n是否確實要繼續?"
-    IDS_IMPORT_OK "'%s' 中包含的值和項已成功添加到註冊表。"
+    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此 '%s' 中的資訊的來源，並不將其添加到登錄。\n\n是否確實要繼續?"
+    IDS_IMPORT_OK "'%s' 中包含的值和項已成功添加到登錄。"
     IDS_IMPORT_ERROR "無法將 '%s' 匯入： 開啟該檔案時出錯。可能有磁碟或檔案系統錯誤或檔案可能不存在。"
     IDS_EXPORT_ERROR "無法匯出 '%s' ： 創建或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
 END
@@ -453,7 +452,7 @@ BEGIN
     IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "未知的介面類型"
+    IDS_BUS_UNKNOWNTYPE "不明介面類型"
 END
 
 /*****************************************************************/
@@ -533,7 +532,7 @@ FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
     DEFPUSHBUTTON "取消(&C)", IDCANCEL, 93, 29, 45, 14
-    LTEXT "正在搜索註冊表...", IDC_STATIC, 33, 12, 83, 8
+    LTEXT "正在搜索登錄...", IDC_STATIC, 33, 12, 83, 8
 END
 
 /* String Table */

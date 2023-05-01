@@ -26,16 +26,16 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registro"
+    POPUP "&Registo"
     BEGIN
-        MENUITEM "&Importar arquivo do Registro...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Exportar arquivo do Registro...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Importar arquivo do Registo...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exportar arquivo do Registo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
         MENUITEM "Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Conectar Registro da rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&Desconectar Registro da rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Ligar Registo da rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Desligar Registo da rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Im&primir...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM "&Localizar...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "L&ocalizar próxima\tF3", ID_EDIT_FINDNEXT
     END
-    POPUP "E&xibir"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "&Barra de status", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -83,7 +83,7 @@ BEGIN
     BEGIN
         MENUITEM "&Topics da Ajuda", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Sobre o Editor do Registro", ID_HELP_ABOUT
+        MENUITEM "&Sobre o Editor do Registo", ID_HELP_ABOUT
     END
 END
 
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Rename", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export", ID_TREE_EXPORT
-        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name", ID_EDIT_COPYKEYNAME
     END
@@ -261,18 +261,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Editor do Registro"
+    IDS_APP_TITLE "Editor do Registo"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registro inteiro."
+    ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro."
     ID_EDIT_MENU "Contém comandos para edição de valores ou chaves."
-    ID_VIEW_MENU "Contém comandos para personalização da janela do Registro."
+    ID_VIEW_MENU "Contém comandos para personalização da janela do Registo."
     ID_FAVOURITES_MENU "Contém comandos para acessar chaves frequentemente usadas."
-    ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registro."
+    ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo."
     ID_EDIT_NEW_MENU "Contém comandos para criação de novas chaves ou valores"
 END
 
@@ -283,20 +283,20 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
     ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário."
     ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registro."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registro para um arquivo texto."
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registo."
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um arquivo texto."
     ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"
     ID_REGISTRY_UNLOADHIVE "Unloads a hive from the registry"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Conecta a um registro em um computador remoto."
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desconecta de um registro um computador remoto."
-    ID_REGISTRY_PRINT "Imprime todo ou parte do registro."
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
+    ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
 /*    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registro." */
     ID_HELP_ABOUT "Exibe informações do programa, número da versão e copyright."
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "Encerra o Editor do Registro."
+    ID_REGISTRY_EXIT "Encerra o Editor do Registo."
     ID_FAVOURITES_ADDTOFAVOURITES "Adiciona chaves a lista de favoritos."
     ID_FAVOURITES_REMOVEFAVOURITE "Remove chaves da lista de favoritos."
     ID_VIEW_STATUSBAR "Mostra ou oculta a barra de status."
@@ -388,7 +388,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Expand"
     IDS_COLLAPSE "&Collapse"
-    IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

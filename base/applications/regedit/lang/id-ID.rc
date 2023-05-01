@@ -28,10 +28,10 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Impor ...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Impor...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ekspor...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ambil Hive...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Muat Hive...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Buang Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Sambung Registri Jaringan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -43,7 +43,7 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Modifikasi", ID_EDIT_MODIFY
+        MENUITEM "&Ubah", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Baru"
         BEGIN
@@ -91,8 +91,8 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Modifikasi", ID_EDIT_MODIFY
-        MENUITEM "Modifikasi Data Biner", ID_EDIT_MODIFY_BIN
+        MENUITEM "&Ubah", ID_EDIT_MODIFY
+        MENUITEM "Ubah Data Biner", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Hapus\tDel", ID_EDIT_DELETE
         MENUITEM "&Ganti nama", ID_EDIT_RENAME
@@ -129,9 +129,9 @@ BEGIN
         MENUITEM "&Ganti nama", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Ekspor", ID_TREE_EXPORT
-        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Copy Nama Kunci", ID_EDIT_COPYKEYNAME
+        MENUITEM "Copy Nama Kunci", ID_EDIT_COPYKEYNAME
     END
     POPUP ""
     BEGIN
@@ -270,7 +270,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Berisi perintah untuk bekerja dengan registri keseluruhan"
     ID_EDIT_MENU "Berisi perintah untuk mengedit nilai atau kunci"
-    ID_VIEW_MENU "Berisi perintah untuk mengkustomisasi jendela registri"
+    ID_VIEW_MENU "Berisi perintah untuk mengatur jendela registri"
     ID_FAVOURITES_MENU "Berisi perintah untuk mengakses kunci yang sering digunakan"
     ID_HELP_MENU "Berisi perintah untuk menampilkan bantuan dan informasi mengenai editor registri"
     ID_EDIT_NEW_MENU "Berisi perintah untuk membuat kunci atau nilai baru"
@@ -278,7 +278,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "Memodifikasi data nilail"
+    ID_EDIT_MODIFY "Mengubah data nilai"
     ID_EDIT_NEW_KEY "Menambah kunci baru"
     ID_EDIT_NEW_STRINGVALUE "Menambah nilai string baru"
     ID_EDIT_NEW_BINARYVALUE "Menambah nilai biner baru"
@@ -386,9 +386,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EXPAND "&Lebarkan"
+    IDS_EXPAND "Pe&rluas"
     IDS_COLLAPSE "&Sempitkan"
-    IDS_GOTO_SUGGESTED_KEY "&Pergi ke '%s'"
     IDS_FINISHEDFIND "Selesai mencari seluruh registri."
 END
 

@@ -2,10 +2,10 @@
  *    Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
  *    Use ReactOS forum PM or IRC to contact me
  *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl; 
+ *    IRC: irc.freenode.net #reactos-pl;
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011) 
- *    Update by wojo664 (04.08.2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Update by wojo664 (04.08.2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -139,7 +139,7 @@ BEGIN
         MENUITEM "Z&mień nazwę", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Eksportuj", ID_TREE_EXPORT
-        MENUITEM "&Uprawnienia..", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Uprawnienia..", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Kopiuj nazwę klucza", ID_EDIT_COPYKEYNAME
     END
@@ -398,7 +398,6 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&Rozwiń"
     IDS_COLLAPSE "&Zwiń"
-    IDS_GOTO_SUGGESTED_KEY "&Idź do '%s'"
     IDS_FINISHEDFIND "Przeszukiwanie rejestru zakończone."
 END
 

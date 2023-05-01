@@ -851,8 +851,14 @@ static void processRegLinesW(FILE *in)
                 if(*s_eol == '\r' && *(s_eol+1) == '\n')
                     NextLine++;
 
-                while(*(NextLine+1) == ' ' || *(NextLine+1) == '\t')
+                while(isspaceW(*NextLine))
                     NextLine++;
+
+                if (!*NextLine)
+                {
+                    s = NextLine;
+                    break;
+                }
 
                 MoveMemory(s_eol - 1, NextLine, (CharsInBuf - (NextLine - s) + 1)*sizeof(WCHAR));
                 CharsInBuf -= NextLine - s_eol + 1;
@@ -1386,7 +1392,7 @@ BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
     if (file) {
         fclose(file);
     }
-    HeapFree(GetProcessHeap(), 0, reg_key_name);
+    HeapFree(GetProcessHeap(), 0, reg_key_name_buf);
     HeapFree(GetProcessHeap(), 0, val_name_buf);
     HeapFree(GetProcessHeap(), 0, val_buf);
     HeapFree(GetProcessHeap(), 0, line_buf);
