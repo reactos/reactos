@@ -20,7 +20,6 @@
  */
 
 #include "regedit.h"
-#include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
 DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCCH Format,...);

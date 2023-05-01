@@ -674,7 +674,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             break;
         case TVN_BEGINLABELEDIT:
         {
-            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO) lParam;
+            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lParam;
             /* cancel label edit for rootkeys */
             if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
                 !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
@@ -692,7 +692,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             LPCWSTR keyPath;
             HKEY hRootKey;
             HKEY hKey = NULL;
-            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO) lParam;
+            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lParam;
             LONG nRenResult;
             LONG lResult = TRUE;
             WCHAR szBuffer[MAX_PATH];
