@@ -139,25 +139,27 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
     }
 }
 
-static VOID UpdateLayoutList(BOOL bResetNum)
+static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 {
     INT iKL;
-    HKL hKL;
 
-    if (!bResetNum && 0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
+    if (!hKL)
     {
-        hKL = g_ahKLs[g_nCurrentLayoutNum - 1];
-    }
-    else
-    {
-        HWND hwnd = GetForegroundWindow();
-        DWORD dwTID = GetWindowThreadProcessId(hwnd, NULL);
-        hKL = GetKeyboardLayout(dwTID);
+        if (0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
+        {
+            hKL = g_ahKLs[g_nCurrentLayoutNum - 1];
+        }
+        else
+        {
+            HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
+            DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+            hKL = GetKeyboardLayout(dwTID);
+        }
     }
 
     g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
 
-    g_nCurrentLayoutNum = 1;
+    g_nCurrentLayoutNum = -1;
     for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
         if (g_ahKLs[iKL] == hKL)
@@ -166,14 +168,26 @@ static VOID UpdateLayoutList(BOOL bResetNum)
             break;
         }
     }
+
+    if (g_nCurrentLayoutNum == -1 && g_cKLs < ARRAYSIZE(g_ahKLs))
+    {
+        g_nCurrentLayoutNum = g_cKLs;
+        g_ahKLs[g_cKLs++] = hKL;
+    }
 }
 
 static HKL GetHKLFromLayoutNum(INT nLayoutNum)
 {
     if (0 <= (nLayoutNum - 1) && (nLayoutNum - 1) < g_cKLs)
+    {
         return g_ahKLs[nLayoutNum - 1];
+    }
     else
-        return GetKeyboardLayout(0);
+    {
+        HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
+        DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+        return GetKeyboardLayout(dwTID);
+    }
 }
 
 static VOID
@@ -598,8 +612,6 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     TCHAR szKLID[MAX_PATH], szLangName[MAX_PATH];
     LANGID LangID;
 
-    UpdateLayoutList(FALSE);
-
     GetKLIDFromHKL(hKL, szKLID, ARRAYSIZE(szKLID));
     LangID = (LANGID)_tcstoul(szKLID, NULL, 16);
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
@@ -694,7 +706,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             LoadSpecialIds();
 
-            UpdateLayoutList(TRUE);
+            UpdateLayoutList(NULL);
             AddTrayIcon(hwnd);
 
             ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
@@ -704,6 +716,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
+            UpdateLayoutList((HKL)lParam);
             UpdateLanguageDisplay(hwnd, (HKL)lParam);
             break;
         }
@@ -847,7 +860,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (Message == s_uTaskbarRestart)
             {
-                UpdateLayoutList(TRUE);
+                UpdateLayoutList(NULL);
                 AddTrayIcon(hwnd);
                 break;
             }
