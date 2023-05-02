@@ -82,6 +82,7 @@ typedef struct _TASK_ITEM
     PTASK_GROUP Group;
     INT Index;
     INT IconIndex;
+    WINDOWPLACEMENT wndpl;
 
     union
     {
@@ -1112,6 +1113,8 @@ public:
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
+                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
+                ::GetWindowPlacement(hWnd, &TaskItem->wndpl);
 
                 if (!m_IsDestroying)
                 {
@@ -1131,7 +1134,6 @@ public:
         }
 
         CheckActivateTaskItem(TaskItem);
-
         return FALSE;
     }
 
@@ -1384,22 +1386,11 @@ public:
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
-        /* Only show windows that still exist and are visible and none of explorer's
-        special windows (such as the desktop or the tray window) */
-        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
-            !m_Tray->IsSpecialHWND(hWnd))
+        if (m_Tray->IsTaskWnd(hWnd))
         {
-            DWORD exStyle = ::GetWindowLong(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
-                !(exStyle & WS_EX_TOOLWINDOW))
-            {
-                TRACE("Adding task for %p...\n", hWnd);
-                AddTask(hWnd);
-            }
-
+            TRACE("Adding task for %p...\n", hWnd);
+            AddTask(hWnd);
         }
-
         return TRUE;
     }
 
@@ -1475,6 +1466,12 @@ public:
         return TRUE;
     }
 
+    VOID SendPulseToTray(BOOL bDelete, HWND hwndActive)
+    {
+        HWND hwndTray = m_Tray->GetHWND();
+        ::SendMessage(hwndTray, TWM_PULSE, bDelete, (LPARAM)hwndActive);
+    }
+
     BOOL HandleAppCommand(IN WPARAM wParam, IN LPARAM lParam)
     {
         BOOL Ret = FALSE;
@@ -1516,17 +1513,20 @@ public:
             break;
 
         case HSHELL_WINDOWCREATED:
+            SendPulseToTray(FALSE, (HWND)lParam);
             AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
-            DeleteTask((HWND) lParam);
+            SendPulseToTray(TRUE, (HWND)lParam);
+            DeleteTask((HWND)lParam);
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            ActivateTask((HWND) lParam);
+            SendPulseToTray(FALSE, (HWND)lParam);
+            ActivateTask((HWND)lParam);
             break;
 
         case HSHELL_FLASH:
@@ -1597,12 +1597,17 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
+                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
+                ::GetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
+
                 ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
             {
                 ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
+                ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
+
                 TRACE("Valid button clicked. App window Restored.\n");
             }
         }
@@ -1631,6 +1636,7 @@ public:
         TaskItem = FindTaskItemByIndex((INT) wIndex);
         if (TaskItem != NULL)
         {
+            SendPulseToTray(FALSE, TaskItem->hWnd);
             HandleTaskItemClick(TaskItem);
             return TRUE;
         }
