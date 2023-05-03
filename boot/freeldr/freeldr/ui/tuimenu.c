@@ -91,11 +91,7 @@ TuiDisplayMenu(
     TuiCalcMenuBoxSize(&MenuInformation);
 
     /* Draw the menu */
-#ifdef _M_ARM
-    UiDrawMenu(&MenuInformation);
-#else
     UiVtbl.DrawMenu(&MenuInformation);
-#endif
 
     /* Get the current second of time */
     LastClockSecond = ArcGetTime()->Second;
@@ -117,10 +113,9 @@ TuiDisplayMenu(
             /* Update the time information */
             LastClockSecond = CurrentClockSecond;
 
-#ifndef _M_ARM // FIXME: Theme-specific
+            // FIXME: Theme-specific
             /* Update the date & time */
             TuiUpdateDateTime();
-#endif
 
             /* If there is a countdown, update it */
             if (MenuInformation.MenuTimeRemaining > 0)
@@ -131,19 +126,13 @@ TuiDisplayMenu(
             else if (MenuInformation.MenuTimeRemaining == 0)
             {
                 /* A timeout occurred, exit this loop and return selection */
-#ifndef _M_ARM
                 VideoCopyOffScreenBufferToVRAM();
-#endif
                 break;
             }
-#ifndef _M_ARM
             VideoCopyOffScreenBufferToVRAM();
-#endif
         }
 
-#ifndef _M_ARM
         MachHwIdle();
-#endif
     }
 
     /* Return the selected item */
@@ -178,7 +167,6 @@ TuiCalcMenuBoxSize(
     /* Allow room for left & right borders, plus 8 spaces on each side */
     Width += 18;
 
-#ifndef _M_ARM
     /* Check if we're drawing a centered menu */
     if (UiCenterMenu)
     {
@@ -188,7 +176,6 @@ TuiCalcMenuBoxSize(
                           Height) / 2) + TUI_TITLE_BOX_CHAR_HEIGHT;
     }
     else
-#endif
     {
         /* Put the menu in the default left-corner position */
         MenuInfo->Left = -1;
@@ -206,21 +193,9 @@ TuiDrawMenu(
 {
     ULONG i;
 
-#ifndef _M_ARM // FIXME: Theme-specific
+    // FIXME: Theme-specific
     /* Draw the backdrop */
     UiDrawBackdrop();
-#else
-
-    /* No GUI status bar text, just minimal text. Show the menu header. */
-    if (MenuInfo->MenuHeader)
-    {
-        UiDrawText(0,
-                   MenuInfo->Top - 2,
-                   MenuInfo->MenuHeader,
-                   ATTR(UiMenuFgColor, UiMenuBgColor));
-    }
-
-#endif
 
     /* Draw the menu box */
     TuiDrawMenuBox(MenuInfo);
@@ -231,33 +206,9 @@ TuiDrawMenu(
         TuiDrawMenuItem(MenuInfo, i);
     }
 
-#ifndef _M_ARM // FIXME: Theme-specific
-
+    // FIXME: Theme-specific
     /* Update the status bar */
     UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
-
-#else
-
-    /* Now tell the user how to choose */
-    UiDrawText(0,
-               MenuInfo->Bottom + 1,
-               "Use \x18 and \x19 to move the highlight to your choice.",
-               ATTR(UiMenuFgColor, UiMenuBgColor));
-    UiDrawText(0,
-               MenuInfo->Bottom + 2,
-               "Press ENTER to choose.",
-               ATTR(UiMenuFgColor, UiMenuBgColor));
-
-    /* And show the menu footer */
-    if (MenuInfo->MenuFooter)
-    {
-        UiDrawText(0,
-                   UiScreenHeight - 4,
-                   MenuInfo->MenuFooter,
-                   ATTR(UiMenuFgColor, UiMenuBgColor));
-    }
-
-#endif
 
     /* Display the boot options if needed */
     if (MenuInfo->ShowBootOptions)
@@ -265,9 +216,7 @@ TuiDrawMenu(
         DisplayBootTimeOptions();
     }
 
-#ifndef _M_ARM
     VideoCopyOffScreenBufferToVRAM();
-#endif
 }
 
 static VOID
@@ -330,7 +279,6 @@ TuiDrawMenuTimeout(
      *  1       1       Pad on the left with blanks + box bottom border.
      **/
 
-#ifndef _M_ARM
     if (UiCenterMenu)
     {
         /* In boxed menu mode, pad on the left with blanks and box border,
@@ -368,7 +316,6 @@ TuiDrawMenuTimeout(
         }
     }
     else
-#endif
     {
         if (Length > 0)
         {
@@ -385,13 +332,8 @@ TuiDrawMenuTimeout(
                     MenuInfo->Bottom + 4,
                     Length ? (Length + 1) : (UiScreenWidth - 1),
                     MenuInfo->Bottom + 4,
-#ifndef _M_ARM
                     UiBackdropFillStyle,
                     ATTR(UiBackdropFgColor, UiBackdropBgColor)
-#else
-                    0, // ' '
-                    ATTR(UiTextColor, COLOR_BLACK) // UiMenuBgColor
-#endif
                     );
     }
 }
@@ -400,7 +342,7 @@ VOID
 TuiDrawMenuBox(
     _In_ PUI_MENU_INFO MenuInfo)
 {
-#ifndef _M_ARM // FIXME: Theme-specific
+    // FIXME: Theme-specific
     /* Draw the menu box if requested */
     if (UiMenuBox)
     {
@@ -417,8 +359,6 @@ TuiDrawMenuBox(
 
     /* Update the date & time */
     TuiUpdateDateTime();
-#endif
-
     TuiDrawMenuTimeout(MenuInfo);
 }
 
@@ -435,7 +375,7 @@ TuiDrawMenuItem(
     /* If this is a separator */
     if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
-#ifndef _M_ARM // FIXME: Theme-specific
+        // FIXME: Theme-specific
         /* Draw its left box corner */
         if (UiMenuBox)
         {
@@ -444,7 +384,6 @@ TuiDrawMenuItem(
                        "\xC7",
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
-#endif
 
         /* Make it a separator line and use menu colors */
         RtlZeroMemory(MenuLineText, sizeof(MenuLineText));
@@ -458,7 +397,7 @@ TuiDrawMenuItem(
                    MenuLineText,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
 
-#ifndef _M_ARM // FIXME: Theme-specific
+        // FIXME: Theme-specific
         /* Draw its right box corner */
         if (UiMenuBox)
         {
@@ -467,7 +406,6 @@ TuiDrawMenuItem(
                        "\xB6",
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
-#endif
 
         /* We are done */
         return;
@@ -476,7 +414,6 @@ TuiDrawMenuItem(
     /* This is not a separator */
     ASSERT(MenuInfo->MenuItemList[MenuItemNumber]);
 
-#ifndef _M_ARM
     /* Check if using centered menu */
     if (UiCenterMenu)
     {
@@ -491,7 +428,6 @@ TuiDrawMenuItem(
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
     }
     else
-#endif
     {
         /* Simply left-align it */
         SpaceLeft  = 4;
@@ -556,11 +492,7 @@ TuiProcessMenuKeyboardEvent(
         KeyPressFilter(KeyEvent, MenuInfo->SelectedMenuItem, MenuInfo->Context))
     {
         /* It processed the key character, so redraw and exit */
-#ifdef _M_ARM
-        UiDrawMenu(MenuInfo);
-#else
         UiVtbl.DrawMenu(MenuInfo);
-#endif
         return 0;
     }
 
@@ -618,9 +550,7 @@ TuiProcessMenuKeyboardEvent(
 
         /* Select new item and update video buffer */
         TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);
-#ifndef _M_ARM
         VideoCopyOffScreenBufferToVRAM();
-#endif
     }
 
     /* Return the pressed key */

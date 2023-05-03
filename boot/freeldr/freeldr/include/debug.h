@@ -38,7 +38,7 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-#if DBG && !defined(_M_ARM)
+#if DBG
 
     VOID    DebugInit(IN ULONG_PTR FrLdrSectionId);
     ULONG   DbgPrint(const char *Format, ...);

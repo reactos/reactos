@@ -31,7 +31,9 @@ EfiEntry(
     return 0;
 }
 
+#ifndef _M_ARM
 VOID __cdecl Reboot(VOID)
 {
 
 }
+#endif

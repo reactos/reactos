@@ -6,7 +6,6 @@
  * PROGRAMMERS:     Hervé Poussineau
  */
 
-#ifndef _M_ARM
 #include <freeldr.h>
 
 BOOLEAN NoUiInitialize(VOID)
@@ -183,5 +182,3 @@ NoUiDrawMenu(
     _In_ PUI_MENU_INFO MenuInfo)
 {
 }
-
-#endif // _M_ARM
