@@ -17,7 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _M_ARM
 #include <freeldr.h>
 
 #include <debug.h>
@@ -586,4 +585,3 @@ IoReadPartitionTable(
     return STATUS_SUCCESS;
 }
 #endif // _M_AMD64
-#endif
