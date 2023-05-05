@@ -212,7 +212,6 @@ static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
         err = RegOpenKeyW(hUserKey,
                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap",
                           &hKey);
-
         RegCloseKey(hUserKey);
     }
 

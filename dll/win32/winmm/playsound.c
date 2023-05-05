@@ -93,7 +93,6 @@ Next:
     if (err == ERROR_SUCCESS)
     {
         err = RegOpenKeyW(hUserKey, L"AppEvents\\Schemes\\Apps", &hRegSnd);
-
         RegCloseKey(hUserKey);
     }
 
@@ -216,18 +215,12 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
             hRes = FindResourceW(hMod, pszSound, L"WAVE");
             hGlob = LoadResource(hMod, hRes);
             if (!hRes || !hGlob)
-            {
                 goto Quit;
-            }
 
             data = LockResource(hGlob);
-            if (!data)
-            {
-                FreeResource(hGlob);
-                goto Quit;
-            }
-
             FreeResource(hGlob);
+            if (!data)
+                goto Quit;
         }
         else
         {
@@ -285,9 +278,7 @@ static HMMIO PlaySound_GetMMIO(LPCWSTR pszSound, HMODULE hMod, DWORD fdwSound)
     {
         hmmio = get_mmioFromProfile(fdwSound, pszSound);
         if (!hmmio)
-        {
             hmmio = get_mmioFromFile(pszSound);
-        }
     }
 
 Quit:
@@ -306,12 +297,9 @@ Quit:
             /* Find system default sound */
             hmmio = get_mmioFromProfile(fdwSound & ~SND_APPLICATION, L"SystemDefault");
         }
-        else
+        else if (!bIsDefault)
         {
-            if (!bIsDefault)
-            {
-                hmmio = get_mmioFromProfile(fdwSound, L"SystemDefault");
-            }
+            hmmio = get_mmioFromProfile(fdwSound, L"SystemDefault");
         }
     }
 
