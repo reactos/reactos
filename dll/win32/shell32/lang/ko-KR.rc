@@ -328,12 +328,12 @@ BEGIN
     LTEXT "Capacity:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "Drive %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "&Disk Cleanup", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "Compress drive to save disk space", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "Drive %c", 14009, 95, 162, 50, 10
+    PUSHBUTTON "&Disk Cleanup", 14010, 160, 159, 70, 15, WS_TABSTOP
+    LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CHECKBOX "Compress drive to save disk space", 14011, 8, 200, 222, 10, WS_DISABLED
+    CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 8, 214, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
