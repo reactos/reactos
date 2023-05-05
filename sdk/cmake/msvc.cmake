@@ -286,6 +286,10 @@ function(set_module_type_toolchain MODULE TYPE)
         endif()
     endif()
 
+    if(ARCH STREQUAL "arm")
+        target_link_libraries(${MODULE} armrt)     
+    endif()
+
     if(RUNTIME_CHECKS)
         target_link_libraries(${MODULE} runtmchk)
     endif()

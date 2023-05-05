@@ -140,15 +140,7 @@ elseif(ARCH STREQUAL "amd64")
         math/libm_sse2/sinf.asm
     )
 elseif(ARCH STREQUAL "arm")
-    list(APPEND LIBCNTPR_MATH_SOURCE
-        math/cos.c
-        math/ceilf.c
-        math/fabs.c
-        math/fabsf.c
-        math/floorf.c
-        math/sin.c
-        math/sqrt.c
-        math/sqrtf.c
+    list(APPEND ARMRT_MATH_SOURCE
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
@@ -164,6 +156,16 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__i64tos.c
         math/arm/__u64tos.c
         math/arm/__64tof.h
+    )
+    list(APPEND LIBCNTPR_MATH_SOURCE
+        math/cos.c
+        math/ceilf.c
+        math/fabs.c
+        math/fabsf.c
+        math/floorf.c
+        math/sin.c
+        math/sqrt.c
+        math/sqrtf.c
     )
     list(APPEND CRT_MATH_SOURCE
         math/_hypotf.c
@@ -181,6 +183,11 @@ elseif(ARCH STREQUAL "arm")
         math/tanf.c
         math/tanhf.c
     )
+    list(APPEND ARMRT_MATH_ASM_SOURCE
+        math/arm/__rt_sdiv64.s
+        math/arm/__rt_srsh.s
+        math/arm/__rt_udiv64.s
+    )
     list(APPEND LIBCNTPR_MATH_ASM_SOURCE
         math/arm/atan.s
         math/arm/atan2.s
@@ -193,9 +200,6 @@ elseif(ARCH STREQUAL "arm")
         math/arm/log10.s
         math/arm/pow.s
         math/arm/tan.s
-        math/arm/__rt_sdiv64.s
-        math/arm/__rt_srsh.s
-        math/arm/__rt_udiv64.s
     )
     list(APPEND CRT_MATH_ASM_SOURCE
         math/arm/_logb.s
