@@ -650,14 +650,21 @@ IntImmActivateLayout(
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_ACTIVATELAYOUT, (LPARAM)pKL->hkl);
         UserDerefObjectCo(pImeWnd);
     }
-    else if (pti->spDefaultImc)
+    else
     {
-        /* IME Activation is needed */
-        pti->pClientInfo->CI_flags |= CI_IMMACTIVATE;
+        /* Remember old keyboard layout to switch back for Chinese IMEs */
+        pti->hklPrev = pti->KeyboardLayout->hkl;
+
+        if (pti->spDefaultImc)
+        {
+            /* IME Activation is needed */
+            pti->pClientInfo->CI_flags |= CI_IMMACTIVATE;
+        }
     }
 
     UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKL);
     pti->pClientInfo->hKL = pKL->hkl;
+    pti->pClientInfo->CodePage = pKL->CodePage;
 }
 
 static VOID co_IntSetKeyboardLayoutForProcess(PPROCESSINFO ppi, PKL pKL)
