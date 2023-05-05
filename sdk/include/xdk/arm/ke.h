@@ -61,12 +61,13 @@ KeGetCurrentIrql(
     VOID);
 
 _IRQL_requires_max_(HIGH_LEVEL)
-NTHALAPI
+FORCEINLINE
 VOID
-FASTCALL
-KfLowerIrql(
-    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql);
-#define KeLowerIrql(a) KfLowerIrql(a)
+KeLowerIrql(
+    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql)
+{
+    UNREFERENCED_PARAMETER(NewIrql); //TODO FIXME:
+}
 
 _IRQL_requires_max_(HIGH_LEVEL)
 _IRQL_raises_(NewIrql)

@@ -70,7 +70,7 @@
 @ stdcall -arch=i386 KeAcquireSpinLock(ptr ptr)
 @ fastcall -arch=i386 KeAcquireSpinLockRaiseToSynch(ptr)
 @ stdcall KeFlushWriteBuffer()
-@ stdcall -stub -arch=i386,arm KeGetCurrentIrql()
+@ stdcall -arch=i386,arm KeGetCurrentIrql()
 @ stdcall -arch=i386 KeLowerIrql(long)
 @ stdcall KeQueryPerformanceCounter(ptr)
 @ stdcall -arch=i386 KeRaiseIrql(long ptr)

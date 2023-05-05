@@ -418,7 +418,7 @@ AppCpuInit:
 
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     _enable();
-    KfLowerIrql(DISPATCH_LEVEL);
+    KeLowerIrql(DISPATCH_LEVEL);
 
     /* Set the right wait IRQL */
     Thread->WaitIrql = DISPATCH_LEVEL;

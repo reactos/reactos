@@ -150,7 +150,7 @@
 @ stdcall ExSizeOfRundownProtectionCacheAware()
 @ stdcall ExSystemExceptionFilter()
 @ stdcall ExSystemTimeToLocalTime(ptr ptr)
-@ stdcall -arch=x86_64 ExTryToAcquireFastMutex(ptr)
+@ stdcall -arch=x86_64,arm ExTryToAcquireFastMutex(ptr) ; CHECKME ARM
 @ stdcall ExUnregisterCallback(ptr)
 @ stdcall ExUuidCreate(ptr)
 @ stdcall ExVerifySuite(long)
@@ -561,7 +561,7 @@
 @ cdecl -arch=x86_64 KeAcquireQueuedSpinLockRaiseToSynch(long)
 @ stdcall KeAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KeAcquireSpinLockForDpc(ptr)
-@ stdcall -arch=x86_64,arm KeAcquireSpinLockRaiseToDpc(ptr) ; Win10?
+@ stdcall -arch=x86_64,arm KeAcquireSpinLockRaiseToDpc(ptr) ; CHECKME ARM
 @ stdcall -arch=x86_64,arm KeAcquireSpinLockRaiseToSynch(ptr)
 @ stdcall KeAddSystemServiceTable(ptr ptr long ptr long)
 @ stdcall KeAreAllApcsDisabled()
