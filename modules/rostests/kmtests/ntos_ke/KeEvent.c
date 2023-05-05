@@ -320,7 +320,7 @@ TestEventScheduling(
                "[%lu] Counter 0 = %lu\n",
                PriorityIncrement, ThreadData->CounterValues[0]);
         }
-        else if (PriorityIncrement >= 3)
+        else if (PriorityIncrement >= 1)
         {
             ok(ThreadData->CounterValues[0] == 1,
                "[%lu] Counter 0 = %lu\n",

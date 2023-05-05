@@ -282,15 +282,21 @@ VOID KmtFreeGuarded(PVOID Pointer);
     _SEH2_TRY                                       \
     {
 
-#define KmtEndSeh(ExpectedStatus)                   \
+#define KmtEndSeh_(Line, ExpectedStatus)            \
     }                                               \
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)         \
     {                                               \
         ExceptionStatus = _SEH2_GetExceptionCode(); \
     }                                               \
     _SEH2_END;                                      \
-    ok_eq_hex(ExceptionStatus, (ExpectedStatus));   \
+    KmtOk((ExceptionStatus) == (ExpectedStatus),    \
+        __FILE__ ":" #Line ":",                     \
+        "ExceptionStatus = 0x%08lx, expected "      \
+        #ExpectedStatus " (0x%08lx)\n",             \
+        ExceptionStatus, ExpectedStatus);           \
 }
+
+#define KmtEndSeh(ExpectedStatus) KmtEndSeh_(__LINE__, ExpectedStatus)
 
 #define KmtGetSystemOrEmbeddedRoutineAddress(RoutineName)           \
     p##RoutineName = KmtGetSystemRoutineAddress(L ## #RoutineName); \
