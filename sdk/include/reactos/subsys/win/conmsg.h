@@ -723,6 +723,8 @@ typedef struct _CONSOLE_SETICON
     HICON  IconHandle;
 } CONSOLE_SETICON, *PCONSOLE_SETICON;
 
+
+
 typedef struct _CONSOLE_ADDGETALIAS
 {
     HANDLE  ConsoleHandle;
@@ -899,7 +901,7 @@ typedef struct _CONSOLE_REGISTERCONSOLEIME
     DWORD dwThreadId;
     DWORD cbDesktop;
     LPWSTR pDesktop;
-    DWORD dwAttachTo;
+    DWORD dwAttachToThreadId;
 } CONSOLE_REGISTERCONSOLEIME, *PCONSOLE_REGISTERCONSOLEIME;
 
 typedef struct _CONSOLE_UNREGISTERCONSOLEIME
