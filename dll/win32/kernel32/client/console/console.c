@@ -3098,7 +3098,7 @@ static BOOL IntUnregisterConsoleIME(DWORD dwThreadId)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepUnregisterConsoleIME),
-                        sizeof(*pUnregisterConsoleIME));
+                        sizeof(*UnregisterConsoleIME));
     if (!NT_SUCCESS(ApiMessage.Status))
     {
         BaseSetLastNTError(ApiMessage.Status);
