@@ -3030,13 +3030,115 @@ SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknow
     return FALSE;
 }
 
+static BOOL
+IntRegisterConsoleIME(
+    HWND hWnd,
+    DWORD dwThreadId,
+    DWORD cbDesktop,
+    LPWSTR lpDesktop,
+    LPDWORD pdwAttachTo)
+{
+    BOOL ret;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_REGISTERCONSOLEIME RegisterConsoleIME = &ApiMessage.Data.RegisterConsoleIME;
+    PCSR_CAPTURE_BUFFER pCaptureBuffer;
+    DWORD dwError;
+
+    RegisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    RegisterConsoleIME->hWnd = hWnd;
+    RegisterConsoleIME->dwThreadId = dwThreadId;
+    RegisterConsoleIME->cbDesktop = cbDesktop;
+
+    pCaptureBuffer = CsrAllocateCaptureBuffer(1, cbDesktop);
+    if (!pCaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    CsrCaptureMessageBuffer(pCaptureBuffer,
+                            lpDesktop,
+                            cbDesktop,
+                            (PVOID*)&RegisterConsoleIME->pDesktop);
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        pCaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepRegisterConsoleIME),
+                        sizeof(*RegisterConsoleIME));
+    CsrFreeCaptureBuffer(pCaptureBuffer);
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        dwError = RtlNtStatusToDosError(ApiMessage.Status);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    ret = TRUE;
+    if (pdwAttachTo)
+    {
+        __TRY
+        {
+            *pdwAttachTo = RegisterConsoleIME->dwAttachTo;
+        }
+        __EXCEPT_PAGE_FAULT
+        {
+            ret = FALSE;
+            ApiMessage.Status = STATUS_ACCESS_VIOLATION;
+        }
+        __ENDTRY
+    }
+
+    if (!ret)
+    {
+        dwError = RtlNtStatusToDosError(ApiMessage.Status);
+        SetLastError(dwError);
+    }
+
+    return ret;
+}
+
+static BOOL IntUnregisterConsoleIME(DWORD dwThreadId)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_UNREGISTERCONSOLEIME UnregisterConsoleIME = &ApiMessage.Data.UnregisterConsoleIME;
+    DWORD dwError;
+
+    UnregisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    UnregisterConsoleIME->dwThreadId = dwThreadId;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepUnregisterConsoleIME),
+                        sizeof(*UnregisterConsoleIME));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        dwError = RtlNtStatusToDosError(ApiMessage.Status);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* This function will be called from CONIME.EXE */
 BOOL
 WINAPI
-DECLSPEC_HOTPATCH
-RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
+RegisterConsoleIME(HWND hWnd, LPDWORD pdwAttachTo)
 {
-    STUB;
-    return FALSE;
+    size_t cbDesktop;
+    STARTUPINFOW si;
+
+    GetStartupInfoW(&si);
+
+    cbDesktop = 0;
+    if (si.lpDesktop && *si.lpDesktop)
+        RtlStringCbLengthW(si.lpDesktop, 522, &cbDesktop);
+
+    return IntRegisterConsoleIME(hWnd,
+                                 GetCurrentThreadId(),
+                                 (DWORD)cbDesktop,
+                                 si.lpDesktop,
+                                 pdwAttachTo);
 }
 
 BOOL
@@ -3057,13 +3159,12 @@ SetConsoleOS2OemFormat(BOOL bUnknown)
     return FALSE;
 }
 
+/* This function will be called from CONIME.EXE */
 BOOL
 WINAPI
-DECLSPEC_HOTPATCH
 UnregisterConsoleIME(VOID)
 {
-    STUB;
-    return FALSE;
+    return IntUnregisterConsoleIME(GetCurrentThreadId());
 }
 
 /**

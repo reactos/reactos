@@ -723,8 +723,6 @@ typedef struct _CONSOLE_SETICON
     HICON  IconHandle;
 } CONSOLE_SETICON, *PCONSOLE_SETICON;
 
-
-
 typedef struct _CONSOLE_ADDGETALIAS
 {
     HANDLE  ConsoleHandle;
@@ -894,6 +892,22 @@ typedef struct _CONSOLE_REGISTERVDM
     PVOID  VDMBuffer;
 } CONSOLE_REGISTERVDM, *PCONSOLE_REGISTERVDM;
 
+typedef struct _CONSOLE_REGISTERCONSOLEIME
+{
+    HANDLE ConsoleHandle;
+    HWND hWnd;
+    DWORD dwThreadId;
+    DWORD cbDesktop;
+    LPWSTR pDesktop;
+    DWORD dwAttachTo;
+} CONSOLE_REGISTERCONSOLEIME, *PCONSOLE_REGISTERCONSOLEIME;
+
+typedef struct _CONSOLE_UNREGISTERCONSOLEIME
+{
+    HANDLE ConsoleHandle;
+    DWORD dwThreadId;
+} CONSOLE_UNREGISTERCONSOLEIME, *PCONSOLE_UNREGISTERCONSOLEIME;
+
 typedef struct _CONSOLE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -1002,6 +1016,10 @@ typedef struct _CONSOLE_API_MESSAGE
 
         /* Virtual DOS Machine */
         CONSOLE_REGISTERVDM RegisterVDMRequest;
+
+        /* Console IME */
+        CONSOLE_REGISTERCONSOLEIME RegisterConsoleIME;
+        CONSOLE_UNREGISTERCONSOLEIME UnregisterConsoleIME;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 
