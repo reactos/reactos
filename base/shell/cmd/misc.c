@@ -117,9 +117,11 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
                 _tcscpy(OutPath, Path);
                 return;
             }
-            _tcscat(TempPath, _T("\\"));
             _tcscat(OutPath, FindFileData.cFileName);
             _tcscat(OutPath, _T("\\"));
+            /* Use the the expanded path as the base for the next
+             * FindFirstFile */
+            _tcscpy(TempPath, OutPath);
             FindClose(hFind);
         }
     }
