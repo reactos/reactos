@@ -16,7 +16,7 @@ wine-patches@winehq.com and ros-dev@reactos.org
 The following build tools are shared with Wine.
 
 sdk/tools/unicode               # Synced to WineStaging-4.18
-sdk/tools/widl                  # Synced to WineStaging-4.0
+sdk/tools/widl                  # Synced to WineStaging-4.0 (+ commit 4766a018184d2ffa95657dbc926dd0cfe81158c3 from wine-6.9)
 sdk/tools/wpp                   # Synced to WineStaging-2.9
 
 The following libraries are shared with Wine.
