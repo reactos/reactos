@@ -3034,13 +3034,22 @@ static BOOL
 IntRegisterConsoleIME(
     _In_ HWND hWnd,
     _In_ DWORD dwThreadId,
-    _In_ SIZE_T cbDesktop,
-    _In_ PWSTR pDesktop,
+    _In_opt_ SIZE_T cbDesktop,
+    _In_opt_ PWSTR pDesktop,
     _Out_opt_ PDWORD pdwAttachToThreadId)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_REGISTERCONSOLEIME RegisterConsoleIME = &ApiMessage.Data.RegisterConsoleIME;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    if (!cbDesktop || !pDesktop)
+    {
+        pDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
+        cbDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Length;
+    }
+
+    if (cbDesktop > (MAX_PATH + 1) * sizeof(WCHAR))
+        cbDesktop = (MAX_PATH + 1) * sizeof(WCHAR);
 
     RegisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     RegisterConsoleIME->hWnd = hWnd;
@@ -3055,7 +3064,7 @@ IntRegisterConsoleIME(
     }
 
     CsrCaptureMessageBuffer(CaptureBuffer,
-                            lpDesktop,
+                            pDesktop,
                             cbDesktop,
                             (PVOID*)&RegisterConsoleIME->pDesktop);
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -3114,19 +3123,10 @@ WINAPI
 DECLSPEC_HOTPATCH
 RegisterConsoleIME(HWND hWnd, LPDWORD pdwAttachToThreadId)
 {
-    size_t cbDesktop;
-    STARTUPINFOW si;
-
-    GetStartupInfoW(&si);
-
-    cbDesktop = 0;
-    if (si.lpDesktop && *si.lpDesktop)
-        RtlStringCbLengthW(si.lpDesktop, (MAX_PATH + 1) * sizeof(WCHAR), &cbDesktop);
-
     return IntRegisterConsoleIME(hWnd,
                                  GetCurrentThreadId(),
-                                 cbDesktop,
-                                 si.lpDesktop,
+                                 0,
+                                 NULL,
                                  pdwAttachToThreadId);
 }
 
