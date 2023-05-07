@@ -3066,6 +3066,7 @@ IntRegisterConsoleIME(
                             pDesktop,
                             cbDesktop,
                             (PVOID*)&RegisterConsoleIME->pDesktop);
+
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepRegisterConsoleIME),
