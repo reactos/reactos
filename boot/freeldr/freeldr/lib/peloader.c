@@ -725,18 +725,22 @@ PeLdrFreeDataTableEntry(
     FrLdrHeapFree(Entry, TAG_WLDR_DTE);
 }
 
-/*
- * PeLdrLoadImage loads the specified image from the file (it doesn't
- * perform any additional operations on the filename, just directly
- * calls the file I/O routines), and relocates it so that it's ready
- * to be used when paging is enabled.
- * Addressing mode: physical
- */
+/**
+ * @brief
+ * Loads the specified image from the file.
+ *
+ * PeLdrLoadImage doesn't perform any additional operations on the file path,
+ * it just directly calls the file I/O routines. It then relocates the image
+ * so that it's ready to be used when paging is enabled.
+ *
+ * @note
+ * Addressing mode: physical.
+ **/
 BOOLEAN
 PeLdrLoadImage(
-    IN PCHAR FileName,
-    IN TYPE_OF_MEMORY MemoryType,
-    OUT PVOID *ImageBasePA)
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA)
 {
     ULONG FileId;
     PVOID PhysicalBase;
@@ -749,13 +753,13 @@ PeLdrLoadImage(
     LARGE_INTEGER Position;
     ULONG i, BytesRead;
 
-    TRACE("PeLdrLoadImage('%s', %ld)\n", FileName, MemoryType);
+    TRACE("PeLdrLoadImage('%s', %ld)\n", FilePath, MemoryType);
 
     /* Open the image file */
-    Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);
+    Status = ArcOpen((PSTR)FilePath, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        WARN("ArcOpen('%s') failed. Status: %u\n", FileName, Status);
+        WARN("ArcOpen('%s') failed. Status: %u\n", FilePath, Status);
         return FALSE;
     }
 
@@ -763,7 +767,7 @@ PeLdrLoadImage(
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
-        ERR("ArcRead('%s') failed. Status: %u\n", FileName, Status);
+        ERR("ArcRead('%s') failed. Status: %u\n", FilePath, Status);
         ArcClose(FileId);
         return FALSE;
     }
@@ -772,7 +776,7 @@ PeLdrLoadImage(
     NtHeaders = RtlImageNtHeader(HeadersBuffer);
     if (!NtHeaders)
     {
-        ERR("No NT header found in \"%s\"\n", FileName);
+        ERR("No NT header found in \"%s\"\n", FilePath);
         ArcClose(FileId);
         return FALSE;
     }
@@ -780,7 +784,7 @@ PeLdrLoadImage(
     /* Ensure this is executable image */
     if (((NtHeaders->FileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == 0))
     {
-        ERR("Not an executable image \"%s\"\n", FileName);
+        ERR("Not an executable image \"%s\"\n", FilePath);
         ArcClose(FileId);
         return FALSE;
     }
@@ -801,7 +805,7 @@ PeLdrLoadImage(
 
         if (PhysicalBase == NULL)
         {
-            ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FileName);
+            ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FilePath);
             ArcClose(FileId);
             return FALSE;
         }
@@ -820,7 +824,7 @@ PeLdrLoadImage(
         Status = ArcRead(FileId, (PUCHAR)PhysicalBase + sizeof(HeadersBuffer), NtHeaders->OptionalHeader.SizeOfHeaders - sizeof(HeadersBuffer), &BytesRead);
         if (Status != ESUCCESS)
         {
-            ERR("ArcRead('%s') failed. Status: %u\n", FileName, Status);
+            ERR("ArcRead('%s') failed. Status: %u\n", FilePath, Status);
             // UiMessageBox("Error reading headers.");
             ArcClose(FileId);
             goto Failure;
