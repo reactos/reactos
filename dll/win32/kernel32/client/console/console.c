@@ -3124,7 +3124,9 @@ IntUnregisterConsoleIME(
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-RegisterConsoleIME(HWND hWnd, LPDWORD pdwAttachToThreadId)
+RegisterConsoleIME(
+    _In_ HWND hWnd,
+    _Out_opt_ LPDWORD pdwAttachToThreadId)
 {
     return IntRegisterConsoleIME(hWnd,
                                  GetCurrentThreadId(),
