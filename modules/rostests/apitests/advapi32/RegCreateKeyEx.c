@@ -64,7 +64,7 @@ START_TEST(RegCreateKeyEx)
            0, 0, 0, 0, 0, 0, 0,
            &pEveryoneSID);
     ok(bRes == TRUE, "AllocateAndInitializeSid Error %ld\n", GetLastError());
-    if (bRes != TRUE) 
+    if (bRes != TRUE)
         goto Cleanup;
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
@@ -99,28 +99,28 @@ START_TEST(RegCreateKeyEx)
     // Create a new ACL that contains the new ACEs.
     dwRes = SetEntriesInAclW(_countof(ea), ea, NULL, &pACL);
     ok(dwRes == ERROR_SUCCESS, "SetEntriesInAcl Error %ld\n", GetLastError());
-    if (dwRes != ERROR_SUCCESS) 
+    if (dwRes != ERROR_SUCCESS)
         goto Cleanup;
 
-    // Initialize a security descriptor.  
-    pSD = LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH); 
+    // Initialize a security descriptor.
+    pSD = LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
     ok(pSD != NULL, "LocalAlloc Error %ld\n", GetLastError());
     if (pSD == NULL)
         goto Cleanup;
  
-    bRes = InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION); 
+    bRes = InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
     ok(bRes == TRUE, "InitializeSecurityDescriptor Error %ld\n", GetLastError());
     if (!bRes)
-        goto Cleanup; 
+        goto Cleanup;
 
-    // Add the ACL to the security descriptor. 
-    bRes = SetSecurityDescriptorDacl(pSD, 
-        TRUE,     // bDaclPresent flag   
-        pACL, 
-        FALSE);   // not a default DACL 
+    // Add the ACL to the security descriptor.
+    bRes = SetSecurityDescriptorDacl(pSD,
+        TRUE,     // bDaclPresent flag
+        pACL,
+        FALSE);   // not a default DACL
     ok(bRes == TRUE, "SetSecurityDescriptorDacl Error %ld\n", GetLastError());
     if (!bRes)
-        goto Cleanup; 
+        goto Cleanup;
 
     // Initialize a security attributes structure.
     sa.lpSecurityDescriptor = pSD;
@@ -129,44 +129,44 @@ START_TEST(RegCreateKeyEx)
     // Use the security attributes to set the security descriptor
     // when you create a key using sa.nLength of 0.
     sa.nLength = 0;
-    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey", 0, L"", 0, 
+    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
 
     // Test the -A function
-    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey", 0, "", 0, 
+    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
 
     // Use the security attributes to set the security descriptor
     // when you create a key using sa.nLength of sa.nLength too short, but not 0.
     sa.nLength = sizeof(SECURITY_ATTRIBUTES) / 2;
-    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey1", 0, L"", 0, 
+    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey1", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
 
     // Test the -A function
-    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey1", 0, "", 0, 
+    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey1", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
 
     // Use the security attributes to set the security descriptor
     // when you create a key using sa.nLength of sa.nLength too long.
     sa.nLength = sizeof(SECURITY_ATTRIBUTES) + 10;
-    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey2", 0, L"", 0, 
+    lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey2", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
 
     // Test the -A function
-    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey2", 0, "", 0, 
+    lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey2", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
 
 Cleanup:
 
-    if (pEveryoneSID) 
+    if (pEveryoneSID)
         FreeSid(pEveryoneSID);
-    if (pAdminSID) 
+    if (pAdminSID)
         FreeSid(pAdminSID);
     if (pACL)
         LocalFree(pACL);
