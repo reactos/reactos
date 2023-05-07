@@ -3048,8 +3048,7 @@ IntRegisterConsoleIME(
         cbDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Length;
     }
 
-    if (cbDesktop > (MAX_PATH + 1) * sizeof(WCHAR))
-        cbDesktop = (MAX_PATH + 1) * sizeof(WCHAR);
+    cbDesktop = min(cbDesktop, (MAX_PATH + 1) * sizeof(WCHAR));
 
     RegisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     RegisterConsoleIME->hWnd = hWnd;
