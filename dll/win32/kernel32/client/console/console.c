@@ -3119,7 +3119,7 @@ IntUnregisterConsoleIME(
     return TRUE;
 }
 
-/* This function will be called from CONIME.EXE */
+/* This function is called by CONIME.EXE */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
