@@ -3071,6 +3071,7 @@ IntRegisterConsoleIME(
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepRegisterConsoleIME),
                         sizeof(*RegisterConsoleIME));
+
     CsrFreeCaptureBuffer(CaptureBuffer);
 
     if (!NT_SUCCESS(ApiMessage.Status))
