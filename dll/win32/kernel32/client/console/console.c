@@ -3096,7 +3096,9 @@ IntRegisterConsoleIME(
     return TRUE;
 }
 
-static BOOL IntUnregisterConsoleIME(DWORD dwThreadId)
+static BOOL
+IntUnregisterConsoleIME(
+    _In_ DWORD dwThreadId)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_UNREGISTERCONSOLEIME UnregisterConsoleIME = &ApiMessage.Data.UnregisterConsoleIME;
