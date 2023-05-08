@@ -336,7 +336,7 @@ NtUserGetThreadState(
          ret = (gpidLogon == PsGetCurrentProcessId());
          break;
       case THREADSTATE_CHECKCONIME:
-         /* FIXME */
+         ret = (IntTID2PTI(UlongToHandle(pti->rpdesk->dwConsoleThreadId)) == pti);
          break;
    }
 
