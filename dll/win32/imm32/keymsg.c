@@ -1245,7 +1245,7 @@ ImmCallImeConsoleIME(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPUINT 
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return 0;
 
-    if (lParam < 0 && (pImeDpi->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
+    if ((lParam & MAKELPARAM(0, KF_UP)) && (pImeDpi->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
         goto Quit;
 
     switch (uVK)
