@@ -1270,7 +1270,7 @@ ImmCallImeConsoleIME(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPUINT 
 
             if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
             {
-                if (uVK == VK_MENU || (lParam & 0x20000000))
+                if (uVK == VK_MENU || (lParam & MAKELPARAM(0, KF_ALTDOWN)))
                     goto Quit;
             }
         }
