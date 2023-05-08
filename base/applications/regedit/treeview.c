@@ -90,14 +90,25 @@ LPCWSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     int pathLen = 0, maxLen;
 
     *phRootKey = NULL;
-    if (!pathBuffer) pathBuffer = HeapAlloc(GetProcessHeap(), 0, 1024);
-    if (!pathBuffer) return NULL;
-    *pathBuffer = 0;
+
+    if (!pathBuffer)
+    {
+        pathBuffer = HeapAlloc(GetProcessHeap(), 0, 1024);
+    }
+    if (!pathBuffer)
+    {
+        return NULL;
+    }
+
+    *pathBuffer = UNICODE_NULL;
+
     maxLen = (int) HeapSize(GetProcessHeap(), 0, pathBuffer);
-    if (maxLen == -1) return NULL;
-    if (!hItem) hItem = TreeView_GetSelection(hwndTV);
-    if (!hItem) return NULL;
-    if (!get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen))
+
+    if (!hItem)
+    {
+        hItem = TreeView_GetSelection(hwndTV);
+    }
+    if (maxLen == -1 || !hItem || !get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen))
     {
         return NULL;
     }
