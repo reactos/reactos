@@ -1,0 +1,80 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ${{matrix.os}}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        toolset: ['14.2']
+        arch: [i386, amd64]
+        config: [Release]
+        language: ['cpp']
+    steps:
+    - name: configure Pagefile
+      uses: al-cheb/configure-pagefile-action@v1.2
+      with:
+          minimum-size: 4GB
+          maximum-size: 16GB
+          disk-root: "D:"
+
+    - name: Install ninja
+      run: choco install -y ninja
+    
+    - name: Install Flex & Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    
+    - name: Activate VS cmd (x86)
+      if: ${{ matrix.arch == 'i386' }}
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+        toolset: ${{matrix.toolset}}
+        
+    - name: Activate VS cmd (amd64)
+      if: ${{ matrix.arch == 'amd64' }}
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+        toolset: ${{matrix.toolset}}
+        
+    - name: Source checkout
+      uses: actions/checkout@v2
+      with:
+        path: src
+        
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended
+    
+    - name: Configure
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=0 -DENABLE_ROSAPPS=0
+    
+    - name: Build
+      run: cmake --build build -- -k0
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
