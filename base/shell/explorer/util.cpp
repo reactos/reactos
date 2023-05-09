@@ -7,8 +7,7 @@ typedef struct _LANGCODEPAGE
     WORD wCodePage;
 } LANGCODEPAGE, *PLANGCODEPAGE;
 
-HRESULT
-IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
+HRESULT IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
 {
     HRESULT hRet;
 
@@ -29,8 +28,7 @@ IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
     return (punk1 == punk2) ? S_OK : S_FALSE;
 }
 
-HMENU
-LoadPopupMenu(IN HINSTANCE hInstance,
+HMENU LoadPopupMenu(IN HINSTANCE hInstance,
               IN LPCWSTR lpMenuName)
 {
     HMENU hMenu, hSubMenu = NULL;
@@ -51,10 +49,7 @@ LoadPopupMenu(IN HINSTANCE hInstance,
     return hSubMenu;
 }
 
-HMENU
-FindSubMenu(IN HMENU hMenu,
-            IN UINT uItem,
-            IN BOOL fByPosition)
+HMENU FindSubMenu(IN HMENU hMenu, IN UINT uItem, IN BOOL fByPosition)
 {
     MENUITEMINFOW mii;
 
@@ -69,23 +64,14 @@ FindSubMenu(IN HMENU hMenu,
     return NULL;
 }
 
-BOOL
-GetCurrentLoggedOnUserName(OUT LPWSTR szBuffer,
-                           IN DWORD dwBufferSize)
+BOOL GetCurrentLoggedOnUserName(OUT LPWSTR szBuffer, IN DWORD dwBufferSize)
 {
     DWORD dwType;
     DWORD dwSize;
 
     /* Query the user name from the registry */
     dwSize = (dwBufferSize * sizeof(WCHAR)) - 1;
-    if (RegQueryValueExW(hkExplorer,
-                         L"Logon User Name",
-                         0,
-                         &dwType,
-                         (LPBYTE)szBuffer,
-                         &dwSize) == ERROR_SUCCESS &&
-        (dwSize / sizeof(WCHAR)) > 1 &&
-        szBuffer[0] != L'\0')
+    if (RegQueryValueExW(hkExplorer, L"Logon User Name", 0, &dwType, (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS && (dwSize / sizeof(WCHAR)) > 1 && szBuffer[0] != L'\0')
     {
         szBuffer[dwSize / sizeof(WCHAR)] = L'\0';
         return TRUE;
@@ -102,11 +88,7 @@ GetCurrentLoggedOnUserName(OUT LPWSTR szBuffer,
     return TRUE;
 }
 
-BOOL
-FormatMenuString(IN HMENU hMenu,
-                 IN UINT uPosition,
-                 IN UINT uFlags,
-                 ...)
+BOOL FormatMenuString(IN HMENU hMenu, IN UINT uPosition, IN UINT uFlags, ...)
 {
     va_list vl;
     MENUITEMINFOW mii;
@@ -122,10 +104,7 @@ FormatMenuString(IN HMENU hMenu,
     {
         /* Format the string */
         va_start(vl, uFlags);
-        _vsntprintf(szBuf,
-                    _countof(szBuf) - 1,
-                    szBufFmt,
-                    vl);
+        _vsntprintf(szBuf, _countof(szBuf) - 1, szBufFmt, vl);
         va_end(vl);
         szBuf[_countof(szBuf) - 1] = L'\0';
 
@@ -140,29 +119,21 @@ FormatMenuString(IN HMENU hMenu,
     return FALSE;
 }
 
-BOOL
-GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue)
+BOOL GetExplorerRegValueSet(IN HKEY hKey, IN LPCWSTR lpSubKey, IN LPCWSTR lpValue)
 {
     WCHAR szBuffer[MAX_PATH];
     HKEY hkSubKey;
     DWORD dwType, dwSize;
     BOOL Ret = FALSE;
 
-    StringCbCopyW(szBuffer, sizeof(szBuffer),
-                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
+    StringCbCopyW(szBuffer, sizeof(szBuffer), L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
     if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
         return FALSE;
     if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
         return FALSE;
 
     dwSize = sizeof(szBuffer);
-    if (RegOpenKeyExW(hKey,
-                      szBuffer,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hkSubKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(hKey, szBuffer, 0, KEY_QUERY_VALUE, &hkSubKey) == ERROR_SUCCESS)
     {
         ZeroMemory(szBuffer, sizeof(szBuffer));
 
@@ -184,11 +155,7 @@ GetExplorerRegValueSet(IN HKEY hKey,
     return Ret;
 }
 
-BOOL
-GetVersionInfoString(IN LPCWSTR szFileName,
-                     IN LPCWSTR szVersionInfo,
-                     OUT LPWSTR szBuffer,
-                     IN UINT cbBufLen)
+BOOL GetVersionInfoString(IN LPCWSTR szFileName, IN LPCWSTR szVersionInfo, OUT LPWSTR szBuffer, IN UINT cbBufLen)
 {
     LPVOID lpData = NULL;
     WCHAR szSubBlock[128];

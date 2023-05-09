@@ -82,7 +82,6 @@ typedef struct _TASK_ITEM
     PTASK_GROUP Group;
     INT Index;
     INT IconIndex;
-    WINDOWPLACEMENT wndpl;
 
     union
     {
@@ -198,7 +197,7 @@ public:
 };
 
 class CTaskToolbar :
-    public CWindowImplBaseT< CToolbar<TASK_ITEM>, CControlWinTraits >
+    public CWindowImplBaseT<CToolbar<TASK_ITEM>, CControlWinTraits >
 {
 public:
     INT UpdateTbButtonSpacing(IN BOOL bHorizontal, IN BOOL bThemed, IN UINT uiRows = 0, IN UINT uiBtnsPerLine = 0)
@@ -229,7 +228,7 @@ public:
         }
 
         SetMetrics(&tbm);
-
+       
         return tbm.cxButtonSpacing;
     }
 
@@ -279,17 +278,19 @@ public:
     BEGIN_MSG_MAP(CNotifyToolbar)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTestToolbar)
     END_MSG_MAP()
-
+      
     BOOL Initialize(HWND hWndParent)
     {
         DWORD styles = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
             TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
-            CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER;
+            CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER | TBSTYLE_FLAT;
 
         // HACK & FIXME: CORE-18016
         HWND toolbar = CToolbar::Create(hWndParent, styles);
+       
         SetDrawTextFlags(DT_NOPREFIX, DT_NOPREFIX);
         m_hWnd = NULL;
+
         return SubclassWindow(toolbar);
     }
 };
@@ -1113,8 +1114,6 @@ public:
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(hWnd, &TaskItem->wndpl);
 
                 if (!m_IsDestroying)
                 {
@@ -1134,6 +1133,7 @@ public:
         }
 
         CheckActivateTaskItem(TaskItem);
+
         return FALSE;
     }
 
@@ -1386,11 +1386,22 @@ public:
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
-        if (m_Tray->IsTaskWnd(hWnd))
+        /* Only show windows that still exist and are visible and none of explorer's
+        special windows (such as the desktop or the tray window) */
+        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
+            !m_Tray->IsSpecialHWND(hWnd))
         {
-            TRACE("Adding task for %p...\n", hWnd);
-            AddTask(hWnd);
+            DWORD exStyle = ::GetWindowLong(hWnd, GWL_EXSTYLE);
+            /* Don't list popup windows and also no tool windows */
+            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+                !(exStyle & WS_EX_TOOLWINDOW))
+            {
+                TRACE("Adding task for %p...\n", hWnd);
+                AddTask(hWnd);
+            }
+
         }
+
         return TRUE;
     }
 
@@ -1422,20 +1433,31 @@ public:
 
         return TRUE;
     }
-
+    
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (!m_TaskBar.Initialize(m_hWnd))
             return FALSE;
 
         SetWindowTheme(m_TaskBar.m_hWnd, L"TaskBand", NULL);
+        SetBkMode((HDC)m_TaskBar.m_hWnd, TRANSPARENT);
+       
+       // COLORREF bkcolor = RGB(rand() % 256, rand() % 256, rand() % 256);
+       /* COLORREF bkcolor = RGB(0, 0, 0);
+        HBRUSH bkbrush = NULL;
+        if (bkbrush)
+            DeleteObject(bkbrush);
+        bkbrush = CreateSolidBrush(bkcolor);
+        SetClassLongPtr(m_TaskBar.m_hWnd, GCL_HBRBACKGROUND, (LONG)bkbrush);*/
+       // InvalidateRect(m_TaskBar.m_hWnd, NULL, TRUE);
+
 
         m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
         /* Set proper spacing between buttons */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
-
+       
         /* Register the shell hook */
         m_ShellHookMsg = RegisterWindowMessageW(L"SHELLHOOK");
 
@@ -1447,7 +1469,8 @@ public:
 
         /* Recalculate the button size */
         UpdateButtonsSize(FALSE);
-
+        SetBkMode((HDC)m_TaskBar.m_hWnd, TRANSPARENT);
+        
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
@@ -1464,12 +1487,6 @@ public:
         CloseThemeData(m_Theme);
         DeleteAllTasks();
         return TRUE;
-    }
-
-    VOID SendPulseToTray(BOOL bDelete, HWND hwndActive)
-    {
-        HWND hwndTray = m_Tray->GetHWND();
-        ::SendMessage(hwndTray, TWM_PULSE, bDelete, (LPARAM)hwndActive);
     }
 
     BOOL HandleAppCommand(IN WPARAM wParam, IN LPARAM lParam)
@@ -1513,20 +1530,17 @@ public:
             break;
 
         case HSHELL_WINDOWCREATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
             AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
-            SendPulseToTray(TRUE, (HWND)lParam);
-            DeleteTask((HWND)lParam);
+            DeleteTask((HWND) lParam);
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
-            ActivateTask((HWND)lParam);
+            ActivateTask((HWND) lParam);
             break;
 
         case HSHELL_FLASH:
@@ -1597,17 +1611,12 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
-
                 ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
             {
                 ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
-                ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
-
                 TRACE("Valid button clicked. App window Restored.\n");
             }
         }
@@ -1636,7 +1645,6 @@ public:
         TaskItem = FindTaskItemByIndex((INT) wIndex);
         if (TaskItem != NULL)
         {
-            SendPulseToTray(FALSE, TaskItem->hWnd);
             HandleTaskItemClick(TaskItem);
             return TRUE;
         }

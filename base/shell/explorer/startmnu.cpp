@@ -31,10 +31,10 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     hRet = pMenuPopup->QueryInterface(IID_PPV_ARG(IBanneredBar, &pbb));
     if (SUCCEEDED(hRet))
     {
-        hRet = pbb->SetBitmap(hbmBanner);
+       // hRet = pbb->SetBitmap(hbmBanner);
 
         /* Update the icon size */
-        hRet = pbb->SetIconSize(bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
+       // hRet = pbb->SetIconSize(bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
     }
 
     return hRet;

@@ -50,8 +50,7 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 }
 
 #if !WIN7_DEBUG_MODE
-static BOOL
-SetShellReadyEvent(IN LPCWSTR lpEventName)
+static BOOL SetShellReadyEvent(IN LPCWSTR lpEventName)
 {
     HANDLE hEvent;
 
@@ -67,8 +66,7 @@ SetShellReadyEvent(IN LPCWSTR lpEventName)
     return FALSE;
 }
 
-static VOID
-HideMinimizedWindows(IN BOOL bHide)
+static VOID HideMinimizedWindows(IN BOOL bHide)
 {
     MINIMIZEDMETRICS mm;
 
@@ -88,8 +86,7 @@ HideMinimizedWindows(IN BOOL bHide)
 #endif
 
 #if !WIN7_COMPAT_MODE
-static INT
-StartWithCommandLine(IN HINSTANCE hInstance)
+static INT StartWithCommandLine(IN HINSTANCE hInstance)
 {
     BOOL b = FALSE;
     EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
@@ -110,14 +107,11 @@ StartWithCommandLine(IN HINSTANCE hInstance)
 }
 #endif
 
-static INT
-StartWithDesktop(IN HINSTANCE hInstance)
+static INT StartWithDesktop(IN HINSTANCE hInstance)
 {
     InitializeAtlModule(hInstance, TRUE);
 
-    if (RegOpenKeyW(HKEY_CURRENT_USER,
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-        &hkExplorer) != ERROR_SUCCESS)
+    if (RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", &hkExplorer) != ERROR_SUCCESS)
     {
         WCHAR Message[256];
         LoadStringW(hInstance, IDS_STARTUP_ERROR, Message, _countof(Message));
@@ -192,11 +186,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
     return 0;
 }
 
-INT WINAPI
-_tWinMain(IN HINSTANCE hInstance,
-          IN HINSTANCE hPrevInstance,
-          IN LPTSTR lpCmdLine,
-          IN INT nCmdShow)
+INT WINAPI _tWinMain(IN HINSTANCE hInstance, IN HINSTANCE hPrevInstance, IN LPTSTR lpCmdLine, IN INT nCmdShow)
 {
     /*
     * Set our shutdown parameters: we want to shutdown the very last,

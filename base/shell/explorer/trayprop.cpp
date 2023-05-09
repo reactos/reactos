@@ -270,8 +270,7 @@ public:
     }
 };
 
-static int CALLBACK
-PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+static int CALLBACK PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
     // NOTE: This callback is needed to set large icon correctly.
     HICON hIcon;
@@ -287,8 +286,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     return 0;
 }
 
-VOID
-DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
+VOID DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 {
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE hpsp[2];
