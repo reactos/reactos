@@ -1201,7 +1201,12 @@ ImmSendMessageToActiveDefImeWndW(UINT uMsg, WPARAM wParam, LPARAM lParam)
  *              ImmCallImeConsoleIME (IMM32.@)
  */
 DWORD WINAPI
-ImmCallImeConsoleIME(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPUINT puVK)
+ImmCallImeConsoleIME(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _Out_ LPUINT puVK)
 {
     DWORD dwThreadId, ret = 0;
     HKL hKL;
@@ -1214,8 +1219,8 @@ ImmCallImeConsoleIME(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPUINT 
     switch (uMsg)
     {
         case WM_KEYDOWN:
-        case WM_SYSKEYDOWN:
         case WM_KEYUP:
+        case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
             break;
 
