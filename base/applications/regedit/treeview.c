@@ -364,7 +364,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name)
     if (!TreeView_GetItem(hwndTV, &item))
         return FALSE;
 
-    if ((item.state & TVIS_EXPANDEDONCE) && (item.cChildren > 0))
+    if (item.state & TVIS_EXPANDEDONCE)
     {
         hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
         SendMessageW(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
