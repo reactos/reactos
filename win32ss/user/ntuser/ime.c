@@ -8,6 +8,8 @@
  */
 
 #include <win32k.h>
+#include <jpnvkeys.h>
+
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
@@ -20,23 +22,6 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define LANGID_KOREAN               MAKELANGID(LANG_KOREAN,   SUBLANG_KOREAN)
 #define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
-
-// The special virtual keys for Japanese: Used for key states.
-// https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
-#define VK_DBE_ALPHANUMERIC 0xF0
-#define VK_DBE_KATAKANA 0xF1
-#define VK_DBE_HIRAGANA 0xF2
-#define VK_DBE_SBCSCHAR 0xF3
-#define VK_DBE_DBCSCHAR 0xF4
-#define VK_DBE_ROMAN 0xF5
-#define VK_DBE_NOROMAN 0xF6
-#define VK_DBE_ENTERWORDREGISTERMODE 0xF7
-#define VK_DBE_ENTERCONFIGMODE 0xF8
-#define VK_DBE_FLUSHSTRING 0xF9
-#define VK_DBE_CODEINPUT 0xFA
-#define VK_DBE_NOCODEINPUT 0xFB
-#define VK_DBE_DETERINESTRING 0xFC
-#define VK_DBE_ENTERDLGCONVERSIONMODE 0xFD
 
 HIMC ghIMC = NULL;
 BOOL gfImeOpen = (BOOL)-1;

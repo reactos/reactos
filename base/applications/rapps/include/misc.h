@@ -1,6 +1,5 @@
 #pragma once
 
-#include <windef.h>
 #include <atlstr.h>
 
 #ifdef _M_IX86

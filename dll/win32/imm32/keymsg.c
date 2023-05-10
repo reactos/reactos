@@ -10,6 +10,7 @@
  */
 
 #include "precomp.h"
+#include <jpnvkeys.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -1194,4 +1195,95 @@ ImmSendMessageToActiveDefImeWndW(UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     return SendMessageW(hwndIME, uMsg, wParam, lParam);
+}
+
+/***********************************************************************
+ *              ImmCallImeConsoleIME (IMM32.@)
+ */
+DWORD WINAPI
+ImmCallImeConsoleIME(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _Out_ LPUINT puVK)
+{
+    DWORD dwThreadId, ret = 0;
+    HKL hKL;
+    PWND pWnd = NULL;
+    HIMC hIMC;
+    PIMEDPI pImeDpi;
+    UINT uVK;
+    PIMC pIMC;
+
+    switch (uMsg)
+    {
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+            break;
+
+        default:
+            return 0;
+    }
+
+    dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
+    hKL = GetKeyboardLayout(dwThreadId);
+
+    if (hWnd && gpsi)
+        pWnd = ValidateHwndNoErr(hWnd);
+    if (IS_NULL_UNEXPECTEDLY(pWnd))
+        return 0;
+
+    hIMC = ImmGetContext(hWnd);
+    if (IS_NULL_UNEXPECTEDLY(hIMC))
+        return 0;
+
+    uVK = *puVK = (wParam & 0xFF);
+
+    pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    if (IS_NULL_UNEXPECTEDLY(pIMC))
+        return 0;
+
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+        return 0;
+
+    if ((lParam & MAKELPARAM(0, KF_UP)) && (pImeDpi->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
+        goto Quit;
+
+    switch (uVK)
+    {
+        case VK_DBE_ROMAN:
+        case VK_DBE_NOROMAN:
+        case VK_DBE_HIRAGANA:
+        case VK_DBE_KATAKANA:
+        case VK_DBE_CODEINPUT:
+        case VK_DBE_NOCODEINPUT:
+        case VK_DBE_ENTERWORDREGISTERMODE:
+        case VK_DBE_ENTERCONFIGMODE:
+            break;
+
+        default:
+        {
+            if (uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
+            {
+                if (uVK != VK_MENU && uVK != VK_F10)
+                    goto Quit;
+            }
+
+            if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
+            {
+                if (uVK == VK_MENU || (lParam & MAKELPARAM(0, KF_ALTDOWN)))
+                    goto Quit;
+            }
+        }
+    }
+
+    ret = ImmProcessKey(hWnd, hKL, uVK, lParam, INVALID_HOTKEY_ID);
+
+Quit:
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }

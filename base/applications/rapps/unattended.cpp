@@ -8,7 +8,6 @@
 
 #include "rapps.h"
 #include "unattended.h"
-#include "winmain.h"
 #include <setupapi.h>
 #include <conutils.h>
 

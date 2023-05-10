@@ -9,6 +9,7 @@
 @ stdcall ImmActivateLayout(ptr)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)
+@ stdcall ImmCallImeConsoleIME(ptr long ptr ptr ptr)
 @ stdcall ImmConfigureIMEA(ptr ptr long ptr)
 @ stdcall ImmConfigureIMEW(ptr ptr long ptr)
 @ stdcall ImmCreateContext()
