@@ -1041,6 +1041,11 @@ FUNC KiConvertToGuiThread
     .allocstack 40
     .endprolog
 
+    /* Check if we already have a large stack */
+    mov rax, gs:[PcCurrentThread]
+    cmp byte ptr [rax + KTHREAD_LargeStack], 0
+    jnz AlreadyLargeStack
+
     // NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0);
     mov cl, 1
     xor rdx, rdx
@@ -1050,10 +1055,10 @@ FUNC KiConvertToGuiThread
     test rax, rax
     jz KiConvertToGuiThreadFailed
 
-    /* OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_STACK_SIZE)); */
+    /* OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_LARGE_STACK_COMMIT )); */
     mov rcx, rax
     mov rdx, rax
-    sub rdx, KERNEL_STACK_SIZE
+    sub rdx, KERNEL_LARGE_STACK_COMMIT
     call KeSwitchKernelStack
 
     // MmDeleteKernelStack(OldStack, FALSE);
@@ -1061,11 +1066,13 @@ FUNC KiConvertToGuiThread
     xor rdx, rdx
     call MmDeleteKernelStack
 
+AlreadyLargeStack:
+
     /* Call the worker function */
     call PsConvertToGuiThread
 
     /* Check for failure */
-    test rax, rax
+    test eax, eax
     js KiConvertToGuiThreadFailed
 
     /* Disable interrupts for return */

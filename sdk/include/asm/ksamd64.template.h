@@ -1047,6 +1047,7 @@ OFFSET(KTHREAD_TrapFrame, KTHREAD, TrapFrame),
 OFFSET(KTHREAD_PreviousMode, KTHREAD, PreviousMode),
 OFFSET(KTHREAD_KernelStack, KTHREAD, KernelStack),
 OFFSET(KTHREAD_UserApcPending, KTHREAD, ApcState.UserApcPending),
+OFFSET(KTHREAD_LargeStack, KTHREAD, LargeStack),
 
 HEADER("KINTERRUPT"),
 OFFSET(KINTERRUPT_Type, KINTERRUPT, Type),
