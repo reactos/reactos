@@ -45,9 +45,6 @@ jobs:
         chmod +x build_rosbe_ci.sh
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
     
-    - name: Install ccache
-      run: sudo apt install ccache
-    
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
@@ -63,7 +60,10 @@ jobs:
         root-reserve-mb: 512
         swap-size-mb: 1024
         remove-dotnet: 'true'
-
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-docker-images: 'true'
+        
     - name: Source checkout
       uses: actions/checkout@v2
       with:
@@ -75,27 +75,8 @@ jobs:
         languages: ${{ matrix.language }}
         queries: security-extended
 
-    - name: Set up cache for ccache
-      uses: actions/cache@v2
-      with:
-        path: ccache
-        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
-        restore-keys: |
-          ccache-${{matrix.compiler}}-${{matrix.arch}}-
-
-    - name: Set ccache settings
-      run: |
-        echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
-        echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
-        echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
-        echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
-
-    - name: Ease ccache compiler check (GCC)
-      if: ${{ matrix.compiler == 'gcc' }}
-      run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
-    
     - name: Configure
-      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_CCACHE=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     
     - name: Build
       run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
