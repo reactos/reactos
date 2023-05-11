@@ -254,7 +254,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ucraineană"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ucraineană (student)"
     IDS_UNITED_KINGDOM_LAYOUT "Britanică"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "Statele Unite-Dvorak"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "Statele Unite-Dvorak"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna stângă"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna dreaptă"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Statele Unite-Internațională"

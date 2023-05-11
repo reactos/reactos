@@ -251,7 +251,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ukrajinština"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ukrajinština (Student)"
     IDS_UNITED_KINGDOM_LAYOUT "Spojené království"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "Spojené státy-Dvorak"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "Spojené státy-Dvorak"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Spojené státy-Dvorak pro levou ruku"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Spojené státy-Dvorak pro pravou ruku"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Spojené státy-Mezinárodní"
