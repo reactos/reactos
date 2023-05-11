@@ -246,7 +246,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Украинская"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Украинская (студенческая)"
     IDS_UNITED_KINGDOM_LAYOUT "Британская"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "США - по Двораку"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "США - по Двораку"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "США - по Двораку для левой руки"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "США - по Двораку для правой руки"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "США - международная"
