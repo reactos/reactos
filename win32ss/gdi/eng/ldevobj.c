@@ -442,8 +442,10 @@ LDEVOBJ_pLoadDriver(
             ERR("LDEVOBJ_bEnableDriver failed\n");
 
             /* Unload the image. */
-            LDEVOBJ_bUnloadImage(pldev);
-            LDEVOBJ_vFreeLDEV(pldev);
+            if (LDEVOBJ_bUnloadImage(pldev))
+                LDEVOBJ_vFreeLDEV(pldev);
+            else
+                ERR("Could not unload driver. Leaking memory\n");
             pldev = NULL;
             goto leave;
         }

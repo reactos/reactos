@@ -537,6 +537,9 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
     }
 
     EnableToolBarButtons(image != NULL);
+
+    /* Redraw the display window */
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 static SHIMGVW_FILENODE*

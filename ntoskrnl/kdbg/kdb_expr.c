@@ -34,8 +34,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "kdb.h"
+
 #define NDEBUG
-#include <debug.h>
+#include "debug.h"
 
 /* TYPES *********************************************************************/
 typedef enum _RPN_OP_TYPE
@@ -242,6 +244,7 @@ RpnBinaryOperatorGreaterThanOrEquals(
     return (a >= b);
 }
 
+#ifdef DEBUG_RPN
 /*!\brief Dumps the given RPN stack content
  *
  * \param Stack  Pointer to a RPN_STACK structure.
@@ -253,7 +256,7 @@ RpnpDumpStack(
     ULONG ul;
 
     ASSERT(Stack);
-    KdpDprintf("\nStack size: %ld\n", Stack->Sp);
+    KdbPrintf("\nStack size: %ld\n", Stack->Sp);
 
     for (ul = 0; ul < Stack->Sp; ul++)
     {
@@ -261,61 +264,62 @@ RpnpDumpStack(
         switch (Op->Type)
         {
             case RpnOpNop:
-                KdpDprintf("NOP,");
+                KdbPuts("NOP,");
                 break;
 
             case RpnOpImmediate:
-                KdpDprintf("0x%I64x,", Op->Data.Immediate);
+                KdbPrintf("0x%I64x,", Op->Data.Immediate);
                 break;
 
             case RpnOpBinaryOperator:
                 if (Op->Data.BinaryOperator == RpnBinaryOperatorAdd)
-                    KdpDprintf("+,");
+                    KdbPuts("+,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorSub)
-                    KdpDprintf("-,");
+                    KdbPuts("-,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorMul)
-                    KdpDprintf("*,");
+                    KdbPuts("*,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorDiv)
-                    KdpDprintf("/,");
+                    KdbPuts("/,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorMod)
-                    KdpDprintf("%%,");
+                    KdbPuts("%%,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorEquals)
-                    KdpDprintf("==,");
+                    KdbPuts("==,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorNotEquals)
-                    KdpDprintf("!=,");
+                    KdbPuts("!=,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorLessThan)
-                    KdpDprintf("<,");
+                    KdbPuts("<,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorLessThanOrEquals)
-                    KdpDprintf("<=,");
+                    KdbPuts("<=,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorGreaterThan)
-                    KdpDprintf(">,");
+                    KdbPuts(">,");
                 else if (Op->Data.BinaryOperator == RpnBinaryOperatorGreaterThanOrEquals)
-                    KdpDprintf(">=,");
+                    KdbPuts(">=,");
                 else
-                    KdpDprintf("UNKNOWN OP,");
+                    KdbPuts("UNKNOWN OP,");
 
                 break;
 
             case RpnOpRegister:
-                KdpDprintf("%s,", RegisterToTrapFrame[Op->Data.Register].Name);
+                KdbPrintf("%s,", RegisterToTrapFrame[Op->Data.Register].Name);
                 break;
 
             case RpnOpDereference:
-                KdpDprintf("[%s],",
+                KdbPrintf("[%s],",
                     (Op->Data.DerefMemorySize == 1) ? ("byte") :
                     ((Op->Data.DerefMemorySize == 2) ? ("word") :
                     ((Op->Data.DerefMemorySize == 4) ? ("dword") : ("qword"))));
                 break;
 
             default:
-                KdpDprintf("\nUnsupported Type: %d\n", Op->Type);
+                KdbPrintf("\nUnsupported Type: %d\n", Op->Type);
                 ul = Stack->Sp;
                 break;
         }
     }
 
-    KdpDprintf("\n");
+    KdbPuts("\n");
 }
+#endif // DEBUG_RPN
 
 /*!\brief Clears the given RPN stack.
  *

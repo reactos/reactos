@@ -305,7 +305,7 @@ KdDebuggerInitialize0(
             PortString++;
 
             /* Do we have a serial port? */
-            if (strncmp(PortString, "VBOX", 3) != 0)
+            if (strncmp(PortString, "VBOX", 4) != 0)
             {
                 KDDBGPRINT("Invalid debugport: '%s'\n", CommandLine);
                 return STATUS_INVALID_PARAMETER;

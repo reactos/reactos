@@ -264,7 +264,12 @@ class CDowloadingAppsListView : public CListView
     HWND
     Create(HWND hwndParent)
     {
-        RECT r = {10, 150, 320, 350};
+        RECT r;
+        ::GetClientRect(hwndParent, &r);
+        r.top = (2 * r.top + 1 * r.bottom) / 3; /* The vertical position at ratio 1 : 2 */
+#define MARGIN 10
+        ::InflateRect(&r, -MARGIN, -MARGIN);
+
         const DWORD style = WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
                             LVS_NOCOLUMNHEADER;
 

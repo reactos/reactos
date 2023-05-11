@@ -196,8 +196,13 @@ typedef struct _EXT2_VOLUME_PROPERTY2 {
 
 } EXT2_VOLUME_PROPERTY2, *PEXT2_VOLUME_PROPERTY2;
 
+#ifdef __REACTOS__
 #define EXT2_VPROP3_AUTOMOUNT (1ULL << 0)
 #define EXT2_VPROP3_USERIDS   (1ULL << 1)
+#else
+#define EXT2_VPROP3_AUTOMOUNT (1ui64 << 0)
+#define EXT2_VPROP3_USERIDS   (1ui64 << 1)
+#endif
 
 #ifdef __cplusplus
 typedef struct _EXT2_VOLUME_PROPERTY3:EXT2_VOLUME_PROPERTY2 {

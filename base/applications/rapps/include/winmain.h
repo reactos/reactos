@@ -1,6 +1,5 @@
 #pragma once
-#include <windef.h>
-#include <wininet.h>
+
 #include "settings.h"
 
 extern LPCWSTR szWindowClass;

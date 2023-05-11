@@ -246,7 +246,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ukrainian"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ukraina (Murid)"
     IDS_UNITED_KINGDOM_LAYOUT "Britania Raya"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "Amerika Serikat-Dvorak"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "Amerika Serikat-Dvorak"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Amerika Serikat-Dvorak untuk Tangan Kiri"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Amerika Serikat-Dvorak untuk Tangan Kanan"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Amerika Serikat-Internasional"

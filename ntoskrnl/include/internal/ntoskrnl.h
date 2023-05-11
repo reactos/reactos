@@ -68,9 +68,6 @@
 #include "fsrtl.h"
 #include "lpc.h"
 #include "rtl.h"
-#ifdef KDBG
-#include <kdbg/kdb.h>
-#endif
 #include "dbgk.h"
 #include "spinlock.h"
 #include "test.h"

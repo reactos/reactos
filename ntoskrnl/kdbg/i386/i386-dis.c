@@ -8,8 +8,7 @@
  */
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
+#include "../kdb.h"
 
 /* ReactOS compatibility stuff. */
 #define PARAMS(X) X
@@ -51,7 +50,7 @@ KdbpPrintDisasm(void* Ignored, const char* fmt, ...)
 
   va_start(ap, fmt);
   ret = vsprintf(buffer, fmt, ap);
-  KdpDprintf("%s", buffer);
+  KdbPuts(buffer);
   va_end(ap);
   return(ret);
 }
@@ -80,7 +79,7 @@ KdbpPrintAddressInCode(uintptr_t Addr, struct disassemble_info * Ignored)
 {
     if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
-      KdpDprintf("<%08x>", Addr);
+      KdbPrintf("<%08x>", Addr);
     }
 }
 

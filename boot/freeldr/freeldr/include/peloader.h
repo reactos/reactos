@@ -28,9 +28,9 @@ extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
 
 BOOLEAN
 PeLdrLoadImage(
-    IN PCHAR FileName,
-    IN TYPE_OF_MEMORY MemoryType,
-    OUT PVOID *ImageBasePA);
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA);
 
 BOOLEAN
 PeLdrAllocateDataTableEntry(

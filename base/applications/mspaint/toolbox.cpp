@@ -13,56 +13,56 @@ CToolBox toolBoxContainer;
 
 /* FUNCTIONS ********************************************************/
 
+BOOL CPaintToolBar::DoCreate(HWND hwndParent)
+{
+    // NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style.
+    RECT toolbarPos = { 0, 0, CX_TOOLBAR, CY_TOOLBAR };
+    DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
+                  TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
+    if (!CWindow::Create(TOOLBARCLASSNAME, hwndParent, toolbarPos, NULL, style))
+        return FALSE;
+
+    HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)hImageList);
+
+    HBITMAP hbmIcons = (HBITMAP)::LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS),
+                                            IMAGE_BITMAP, 256, 16, 0);
+    ImageList_AddMasked(hImageList, hbmIcons, RGB(255, 0, 255));
+    ::DeleteObject(hbmIcons);
+
+    SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+    TCHAR szToolTip[30];
+    TBBUTTON tbbutton;
+    ZeroMemory(&tbbutton, sizeof(tbbutton));
+    tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
+    for (INT i = 0; i < NUM_TOOLS; i++)
+    {
+        ::LoadString(hProgInstance, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
+        tbbutton.iString   = (INT_PTR)szToolTip;
+        tbbutton.fsState   = TBSTATE_ENABLED | ((i % 2 == 1) ? TBSTATE_WRAP : 0);
+        tbbutton.idCommand = ID_FREESEL + i;
+        tbbutton.iBitmap   = i;
+        SendMessage(TB_ADDBUTTONS, 1, (LPARAM) &tbbutton);
+    }
+
+    SendMessage(TB_CHECKBUTTON, ID_PEN, MAKELPARAM(TRUE, 0));
+    SendMessage(TB_SETMAXTEXTROWS, 0, 0);
+    SendMessage(TB_SETBUTTONSIZE, 0, MAKELPARAM(CXY_TB_BUTTON, CXY_TB_BUTTON));
+    return TRUE;
+}
+
 BOOL CToolBox::DoCreate(HWND hwndParent)
 {
-    RECT toolBoxContainerPos = { 0, 0, 0, 0 };
+    RECT rcToolBox = { 0, 0, 0, 0 }; // Rely on mainWindow's WM_SIZE
     DWORD style = WS_CHILD | (registrySettings.ShowToolBox ? WS_VISIBLE : 0);
-    return !!Create(hwndParent, toolBoxContainerPos, NULL, style);
+    return !!Create(hwndParent, rcToolBox, NULL, style);
 }
 
 LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HIMAGELIST hImageList;
-    HBITMAP tempBm;
-    int i;
-    TCHAR tooltips[NUM_TOOLS][30];
-
+    toolbar.DoCreate(m_hWnd);
     toolSettingsWindow.DoCreate(m_hWnd);
-
-    /* NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style. */
-    RECT toolbarPos = {0, 0, CX_TOOLBAR, CY_TOOLBAR};
-    DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
-                  TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
-    toolbar.Create(TOOLBARCLASSNAME, m_hWnd, toolbarPos, NULL, style);
-    hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
-    toolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM) hImageList);
-    tempBm = (HBITMAP) LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
-    ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
-    DeleteObject(tempBm);
-    toolbar.SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-
-    for (i = 0; i < NUM_TOOLS; i++)
-    {
-        TBBUTTON tbbutton;
-        int wrapnow = 0;
-
-        if (i % 2 == 1)
-            wrapnow = TBSTATE_WRAP;
-
-        LoadString(hProgInstance, IDS_TOOLTIP1 + i, tooltips[i], 30);
-        ZeroMemory(&tbbutton, sizeof(TBBUTTON));
-        tbbutton.iString   = (INT_PTR) tooltips[i];
-        tbbutton.fsStyle   = TBSTYLE_CHECKGROUP;
-        tbbutton.fsState   = TBSTATE_ENABLED | wrapnow;
-        tbbutton.idCommand = ID_FREESEL + i;
-        tbbutton.iBitmap   = i;
-        toolbar.SendMessage(TB_ADDBUTTONS, 1, (LPARAM) &tbbutton);
-    }
-
-    toolbar.SendMessage(TB_CHECKBUTTON, ID_PEN, MAKELPARAM(TRUE, 0));
-    toolbar.SendMessage(TB_SETMAXTEXTROWS, 0, 0);
-    toolbar.SendMessage(TB_SETBUTTONSIZE, 0, MAKELPARAM(CXY_TB_BUTTON, CXY_TB_BUTTON));
-
     return 0;
 }
 
@@ -128,5 +128,43 @@ LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lPara
         }
     }
 
+    return 0;
+}
+
+LRESULT CToolBox::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    SetCapture();
+    return 0;
+}
+
+LRESULT CToolBox::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (::GetCapture() != m_hWnd)
+        return 0;
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    ClientToScreen(&pt);
+
+    RECT rc;
+    mainWindow.GetWindowRect(&rc);
+
+    POINT ptCenter = { (rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2 };
+
+    DWORD dwExpectedBar2ID = ((pt.x < ptCenter.x) ? BAR2ID_LEFT : BAR2ID_RIGHT);
+
+    if (registrySettings.Bar2ID != dwExpectedBar2ID)
+    {
+        registrySettings.Bar2ID = dwExpectedBar2ID;
+        mainWindow.PostMessage(WM_SIZE, 0, 0);
+    }
+
+    return 0;
+}
+
+LRESULT CToolBox::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (::GetCapture() != m_hWnd)
+        return 0;
+
+    ::ReleaseCapture();
     return 0;
 }

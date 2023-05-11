@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubclassWindow", "SubclassW
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPath", "CPath.vcxproj", "{7119D446-43C1-425A-91D0-CDFA49B8B59A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AtlObjMap", "AtlObjMap.vcxproj", "{B628C42A-A38E-488E-8512-2B997B75E95C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -141,6 +143,14 @@ Global
 		{7119D446-43C1-425A-91D0-CDFA49B8B59A}.Release|x64.Build.0 = Release|x64
 		{7119D446-43C1-425A-91D0-CDFA49B8B59A}.Release|x86.ActiveCfg = Release|Win32
 		{7119D446-43C1-425A-91D0-CDFA49B8B59A}.Release|x86.Build.0 = Release|Win32
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Debug|x64.ActiveCfg = Debug|x64
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Debug|x64.Build.0 = Debug|x64
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Debug|x86.ActiveCfg = Debug|Win32
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Debug|x86.Build.0 = Debug|Win32
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Release|x64.ActiveCfg = Release|x64
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Release|x64.Build.0 = Release|x64
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Release|x86.ActiveCfg = Release|Win32
+		{B628C42A-A38E-488E-8512-2B997B75E95C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

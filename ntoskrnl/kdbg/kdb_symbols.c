@@ -11,9 +11,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include "kdb.h"
 
 #define NDEBUG
-#include <debug.h>
+#include "debug.h"
 
 /* GLOBALS ******************************************************************/
 
@@ -169,17 +170,15 @@ KdbSymPrintAddress(
         CHAR FileName[256];
         CHAR FunctionName[256];
 
-        if (RosSymGetAddressInformation(LdrEntry->PatchInformation, RelativeAddress, &LineNumber, FileName, FunctionName))
+        if (RosSymGetAddressInformation(LdrEntry->PatchInformation,
+                                        RelativeAddress,
+                                        &LineNumber,
+                                        FileName,
+                                        FunctionName))
         {
-            STRING str;
-            /* Use KdpPrintString because KdpDprintf is limited wrt string size */
-            KdpDprintf("<%s:%x (", ModuleNameAnsi, RelativeAddress);
-            str.Buffer = FileName;
-            str.Length = (USHORT)strnlen(FileName, sizeof(FileName));
-            str.MaximumLength = sizeof(FileName);
-            KdpPrintString(&str);
-            KdpDprintf(":%d (%s))>", LineNumber, FunctionName);
-
+            KdbPrintf("<%s:%x (%s:%d (%s))>",
+                      ModuleNameAnsi, RelativeAddress,
+                      FileName, LineNumber, FunctionName);
             Printed = TRUE;
         }
     }
@@ -187,7 +186,7 @@ KdbSymPrintAddress(
     if (!Printed)
     {
         /* Just print module & address */
-        KdpDprintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
+        KdbPrintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
     }
 
     return TRUE;
@@ -356,8 +355,10 @@ KdbSymInit(
         SHORT Found = FALSE;
         CHAR YesNo;
 
-        /* By default, load symbols in DBG builds, but not in REL builds */
-#if DBG
+        /* By default, load symbols in DBG builds, but not in REL builds
+           or anything other than x86, because they only work on x86
+           and can cause the system to hang on x64. */
+#if DBG && defined(_M_IX86)
         LoadSymbols = TRUE;
 #else
         LoadSymbols = FALSE;

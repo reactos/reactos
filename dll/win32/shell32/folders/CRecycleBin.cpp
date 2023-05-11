@@ -415,7 +415,7 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         BOOL ret = TRUE;
 
         /* restore file */
-        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1)) 
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
             ret = RestoreFile(Context.hDeletedFile);
         /* delete file */
         else
@@ -1244,16 +1244,44 @@ HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRB
 
 HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
 {
-    FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
+    TRACE("%s, %p\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
 
-    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
-        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    if (!pszRootPath || (pszRootPath[0] == 0) ||
+        !pSHQueryRBInfo || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
     {
         return E_INVALIDARG;
     }
 
     pSHQueryRBInfo->i64Size = 0;
     pSHQueryRBInfo->i64NumItems = 0;
+
+    CComPtr<IRecycleBin> spRecycleBin;
+    HRESULT hr;
+    if (FAILED_UNEXPECTEDLY((hr = GetDefaultRecycleBin(pszRootPath, &spRecycleBin))))
+        return hr;
+
+    CComPtr<IRecycleBinEnumList> spEnumList;
+    hr = spRecycleBin->EnumObjects(&spEnumList);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    while (TRUE)
+    {
+        CComPtr<IRecycleBinFile> spFile;
+        hr = spEnumList->Next(1, &spFile, NULL);
+        if (hr == S_FALSE)
+            return S_OK;
+
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        ULARGE_INTEGER Size = {};
+        if (FAILED_UNEXPECTEDLY((hr = spFile->GetFileSize(&Size))))
+            return hr;
+
+        pSHQueryRBInfo->i64Size += Size.QuadPart;
+        pSHQueryRBInfo->i64NumItems++;
+    }
 
     return S_OK;
 }

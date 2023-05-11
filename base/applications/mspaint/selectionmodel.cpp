@@ -179,7 +179,7 @@ BOOL SelectionModel::TakeOff()
         DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
     }
 
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
     return TRUE;
 }
 
@@ -199,8 +199,8 @@ void SelectionModel::Landing()
 
 void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
 {
-    m_hbmColor = CopyDIBImage(hBm);
     ::DeleteObject(m_hbmColor);
+    m_hbmColor = CopyDIBImage(hBm);
 
     m_rc.left = x;
     m_rc.top = y;
@@ -349,8 +349,10 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     NotifyRefreshNeeded();
 }
 
-HBITMAP SelectionModel::GetBitmap() const
+HBITMAP SelectionModel::GetBitmap()
 {
+    if (m_hbmColor == NULL)
+        GetSelectionContents(imageModel.GetDC());
     return m_hbmColor;
 }
 
@@ -417,7 +419,7 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
 
 void SelectionModel::NotifyRefreshNeeded()
 {
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
 }
 
 void SelectionModel::ClearMask()
@@ -448,5 +450,5 @@ void SelectionModel::CancelSelection()
         imageModel.Undo(TRUE);
 
     m_bShow = FALSE;
-    imageArea.Invalidate(FALSE);
+    canvasWindow.Invalidate(FALSE);
 }

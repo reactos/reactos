@@ -426,8 +426,10 @@ typedef struct tagME_TextEditor
   WCHAR cPasswordMask;
   BOOL bHaveFocus;
   BOOL bDialogMode; /* Indicates that we are inside a dialog window */
+#ifndef __REACTOS__
   /*for IME */
   int imeStartIndex;
+#endif
   DWORD selofs; /* The size of the selection bar on the left side of control */
   ME_SelectionType nSelectionType;
   ME_DisplayItem *first_marked_para;

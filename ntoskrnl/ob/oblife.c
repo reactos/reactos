@@ -944,22 +944,37 @@ ObpQueryNameInfoSize(
 
 NTSTATUS
 NTAPI
-ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
-                OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
-                IN ULONG Length,
-                OUT PULONG ReturnLength)
+ObQueryTypeInfo(
+    _In_ POBJECT_TYPE ObjectType,
+    _Out_writes_bytes_to_(Length, *ReturnLength)
+        POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PWSTR InfoBuffer;
 
+    /* The string of the object type name has to be NULL-terminated */
+    ASSERT(ObjectType->Name.MaximumLength >= ObjectType->Name.Length + sizeof(UNICODE_NULL));
+
     /* Enter SEH */
     _SEH2_TRY
     {
-        /* Set return length aligned to 4-byte boundary */
+        /*
+         * Set return length aligned to 4-byte or 8-byte boundary. Windows has a bug
+         * where the returned length pointer is always aligned to a 4-byte boundary.
+         * If one were to allocate a pool of memory in kernel mode to retrieve all
+         * the object types info with this return length, Windows will bugcheck with
+         * BAD_POOL_HEADER in 64-bit upon you free the said allocated memory.
+         *
+         * More than that, Windows uses MaximumLength for the calculation of the returned
+         * length and MaximumLength does not always guarantee the name type is NULL-terminated
+         * leading the ObQueryTypeInfo function to overrun the buffer.
+         */
         *ReturnLength += sizeof(*ObjectTypeInfo) +
-                         ALIGN_UP(ObjectType->Name.MaximumLength, ULONG);
+                         ALIGN_UP(ObjectType->Name.Length + sizeof(UNICODE_NULL), ULONG_PTR);
 
-        /* Check if thats too much though. */
+        /* Check if that is too much */
         if (Length < *ReturnLength)
         {
             _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);

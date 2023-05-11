@@ -4,7 +4,7 @@
  * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Arnav Bhatt (arnavbhatt288@gmail.com)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
@@ -290,87 +290,10 @@ WINAPI
 PlayLogonSoundThread(
     IN LPVOID lpParameter)
 {
-    BYTE TokenUserBuffer[256];
-    PTOKEN_USER pTokenUser = (TOKEN_USER*)TokenUserBuffer;
-    ULONG Length;
-    HKEY hKey;
-    WCHAR wszBuffer[MAX_PATH] = {0};
-    WCHAR wszDest[MAX_PATH];
-    DWORD dwSize = sizeof(wszBuffer), dwType;
     SERVICE_STATUS_PROCESS Info;
-    UNICODE_STRING SidString;
-    NTSTATUS Status;
+    DWORD dwSize;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
-
-    //
-    // FIXME: Isn't it possible to *JUST* impersonate the current user
-    // *AND* open its HKCU??
-    //
-
-    /* Get SID of current user */
-    Status = NtQueryInformationToken((HANDLE)lpParameter,
-                                     TokenUser,
-                                     TokenUserBuffer,
-                                     sizeof(TokenUserBuffer),
-                                     &Length);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("NtQueryInformationToken failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Convert SID to string */
-    RtlInitEmptyUnicodeString(&SidString, wszBuffer, sizeof(wszBuffer));
-    Status = RtlConvertSidToUnicodeString(&SidString, pTokenUser->User.Sid, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("RtlConvertSidToUnicodeString failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Build path to logon sound registry key.
-       Note: We can't use HKCU here, because Winlogon is owned by SYSTEM user */
-    if (FAILED(StringCbCopyW(wszBuffer + SidString.Length/sizeof(WCHAR),
-                             sizeof(wszBuffer) - SidString.Length,
-                             L"\\AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current")))
-    {
-        /* SID is too long. Should not happen. */
-        ERR("StringCbCopyW failed!\n");
-        return 0;
-    }
-
-    /* Open registry key and query sound path */
-    if (RegOpenKeyExW(HKEY_USERS, wszBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKeyExW(%ls) failed!\n", wszBuffer);
-        return 0;
-    }
-
-    if (RegQueryValueExW(hKey, NULL, NULL, &dwType,
-                      (LPBYTE)wszBuffer, &dwSize) != ERROR_SUCCESS ||
-        (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-    {
-        ERR("RegQueryValueExW failed!\n");
-        RegCloseKey(hKey);
-        return 0;
-    }
-
-    RegCloseKey(hKey);
-
-    if (!wszBuffer[0])
-    {
-        /* No sound has been set */
-        ERR("No sound has been set\n");
-        return 0;
-    }
-
-    /* Expand environment variables */
-    if (!ExpandEnvironmentStringsW(wszBuffer, wszDest, MAX_PATH))
-    {
-        ERR("ExpandEnvironmentStringsW failed!\n");
-        return 0;
-    }
 
     /* Open the service manager */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -417,8 +340,16 @@ PlayLogonSoundThread(
     }
 
     /* Sound subsystem is running. Play logon sound. */
-    TRACE("Playing logon sound: %ls\n", wszDest);
-    PlaySoundRoutine(wszDest, TRUE, SND_FILENAME);
+    TRACE("Playing logon sound\n");
+    if (!ImpersonateLoggedOnUser((HANDLE)lpParameter))
+    {
+        ERR("ImpersonateLoggedOnUser failed (%x)\n", GetLastError());
+    }
+    else
+    {
+        PlaySoundRoutine(L"WindowsLogon", TRUE, SND_ALIAS | SND_NODEFAULT);
+        RevertToSelf();
+    }
     return 0;
 }
 
@@ -432,6 +363,37 @@ PlayLogonSound(
     hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
     if (hThread)
         CloseHandle(hThread);
+}
+
+static
+VOID
+PlayLogoffSound(
+    _In_ PWLSESSION Session)
+{
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+        return;
+
+    PlaySoundRoutine(L"WindowsLogoff", FALSE, SND_ALIAS | SND_NODEFAULT);
+
+    RevertToSelf();
+}
+
+static
+BOOL
+PlayEventSound(
+    _In_ PWLSESSION Session,
+    _In_ LPCWSTR EventName)
+{
+    BOOL bRet;
+
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+        return FALSE;
+
+    bRet = PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_ASYNC | SND_NODEFAULT);
+
+    RevertToSelf();
+
+    return bRet;
 }
 
 static
@@ -880,7 +842,7 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    // TODO: Play logoff sound!
+    PlayLogoffSound(Session);
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1274,38 +1236,40 @@ UnregisterHotKeys(
     return TRUE;
 }
 
+static
 BOOL
-WINAPI
-HandleMessageBeep(UINT uType)
+HandleMessageBeep(
+    _In_ PWLSESSION Session,
+    _In_ UINT uType)
 {
     LPWSTR EventName;
 
-    switch(uType)
+    switch (uType)
     {
-    case 0xFFFFFFFF:
-        EventName = NULL;
-        break;
-    case MB_OK:
-        EventName = L"SystemDefault";
-        break;
-    case MB_ICONASTERISK:
-        EventName = L"SystemAsterisk";
-        break;
-    case MB_ICONEXCLAMATION:
-        EventName = L"SystemExclamation";
-        break;
-    case MB_ICONHAND:
-        EventName = L"SystemHand";
-        break;
-    case MB_ICONQUESTION:
-        EventName = L"SystemQuestion";
-        break;
-    default:
-        WARN("Unhandled type %d\n", uType);
-        EventName = L"SystemDefault";
+        case 0xFFFFFFFF:
+            EventName = NULL;
+            break;
+        case MB_OK:
+            EventName = L"SystemDefault";
+            break;
+        case MB_ICONASTERISK:
+            EventName = L"SystemAsterisk";
+            break;
+        case MB_ICONEXCLAMATION:
+            EventName = L"SystemExclamation";
+            break;
+        case MB_ICONHAND:
+            EventName = L"SystemHand";
+            break;
+        case MB_ICONQUESTION:
+            EventName = L"SystemQuestion";
+            break;
+        default:
+            WARN("Unhandled type %d\n", uType);
+            EventName = L"SystemDefault";
     }
 
-    return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+    return PlayEventSound(Session, EventName);
 }
 
 static
@@ -1376,7 +1340,7 @@ SASWindowProc(
             {
                 case LN_MESSAGE_BEEP:
                 {
-                    return HandleMessageBeep(lParam);
+                    return HandleMessageBeep(Session, lParam);
                 }
                 case LN_SHELL_EXITED:
                 {

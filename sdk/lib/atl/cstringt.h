@@ -749,6 +749,23 @@ public:
         return CStringT(CThisSimpleString::GetString() + nLength - nCount, nCount);
     }
 
+    void __cdecl AppendFormat(UINT nFormatID, ...)
+    {
+        va_list args;
+        va_start(args, nFormatID);
+        CStringT formatString;
+        if (formatString.LoadString(nFormatID))
+            AppendFormatV(formatString, args);
+        va_end(args);
+    }
+
+    void __cdecl AppendFormat(PCXSTR pszFormat, ...)
+    {
+        va_list args;
+        va_start(args, pszFormat);
+        AppendFormatV(pszFormat, args);
+        va_end(args);
+    }
 
     void __cdecl Format(UINT nFormatID, ...)
     {
@@ -766,6 +783,16 @@ public:
         va_start(args, pszFormat);
         FormatV(pszFormat, args);
         va_end(args);
+    }
+
+    void AppendFormatV(PCXSTR pszFormat, va_list args)
+    {
+        int nLength = StringTraits::FormatV(NULL, pszFormat, args);
+        int nCurrent = CThisSimpleString::GetLength();
+
+        PXSTR pszBuffer = CThisSimpleString::GetBuffer(nLength + nCurrent);
+        StringTraits::FormatV(pszBuffer + nCurrent, pszFormat, args);
+        CThisSimpleString::ReleaseBufferSetLength(nLength + nCurrent);
     }
 
     void FormatV(PCXSTR pszFormat, va_list args)

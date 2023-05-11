@@ -664,7 +664,11 @@ again:
                             FALSE,
                             PIN_WAIT,
                             &bh->b_bcb,
+#ifdef __REACTOS__
                             (PVOID *)&bh->b_data)) {
+#else
+                            &bh->b_data)) {
+#endif
             Ext2Sleep(100);
             goto again;
         }
@@ -674,7 +678,11 @@ again:
                         bh->b_size,
                         PIN_WAIT,
                         &bh->b_bcb,
+#ifdef __REACTOS__
                         (PVOID *)&bh->b_data)) {
+#else
+                        &bh->b_data)) {
+#endif
             Ext2Sleep(100);
             goto again;
         }

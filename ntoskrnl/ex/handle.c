@@ -1320,6 +1320,9 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
 }
 
 #if DBG && defined(KDBG)
+
+#include <kdbg/kdb.h>
+
 BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
 {
     USHORT i;
@@ -1495,4 +1498,5 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
 
     return TRUE;
 }
-#endif
+
+#endif // DBG && defined(KDBG)

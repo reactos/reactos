@@ -130,6 +130,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_GETTASKSWITCH (WM_USER + 236)
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
+#define TWM_PULSE (WM_USER + 400)
 
 extern const GUID IID_IShellDesktopTray;
 
@@ -149,6 +150,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
     STDMETHOD_(HWND, DisplayProperties) (THIS) PURE;
     STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
     STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
+    STDMETHOD_(BOOL, IsTaskWnd) (THIS_ HWND hWnd) PURE;
 };
 #undef INTERFACE
 
@@ -166,6 +168,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_DisplayProperties(p)    (p)->lpVtbl->DisplayProperties(p)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
+#define ITrayWindow_IsTaskWnd(p,a)          (p)->lpVtbl->IsTaskWnd(p,a)
 #endif
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);

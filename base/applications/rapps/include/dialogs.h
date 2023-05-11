@@ -2,7 +2,6 @@
 
 #include "appinfo.h"
 
-#include <windef.h>
 #include <atlsimpcoll.h>
 
 // Settings dialog (settingsdlg.cpp)

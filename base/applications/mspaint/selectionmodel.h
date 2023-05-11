@@ -34,7 +34,7 @@ public:
     BOOL TakeOff();
     void Landing();
 
-    HBITMAP GetBitmap() const;
+    HBITMAP GetBitmap();
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);

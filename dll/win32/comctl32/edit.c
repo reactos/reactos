@@ -150,8 +150,10 @@ typedef struct
 	/*
 	 * IME Data
 	 */
+#ifndef __REACTOS__ /* Rely on the composition window */
 	UINT composition_len;   /* length of composition, 0 == no composition */
 	int composition_start;  /* the character position for the composition */
+#endif
 	/*
 	 * Uniscribe Data
 	 */
@@ -1711,6 +1713,33 @@ static LRESULT EDIT_EM_Scroll(EDITSTATE *es, INT action)
 }
 
 
+#ifdef __REACTOS__
+static void EDIT_ImmSetCompositionWindow(EDITSTATE *es, POINT pt)
+{
+    COMPOSITIONFORM CompForm;
+    HIMC hIMC = ImmGetContext(es->hwndSelf);
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
+        return;
+    }
+
+    CompForm.ptCurrentPos = pt;
+    if (es->style & ES_MULTILINE)
+    {
+        CompForm.dwStyle = CFS_RECT;
+        CompForm.rcArea = es->format_rect;
+    }
+    else
+    {
+        CompForm.dwStyle = CFS_POINT;
+        SetRectEmpty(&CompForm.rcArea);
+    }
+
+    ImmSetCompositionWindow(hIMC, &CompForm);
+    ImmReleaseContext(es->hwndSelf, hIMC);
+}
+#endif
 /*********************************************************************
  *
  *	EDIT_SetCaretPos
@@ -1720,8 +1749,19 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 			     BOOL after_wrap)
 {
 	LRESULT res = EDIT_EM_PosFromChar(es, pos, after_wrap);
+#ifdef __REACTOS__
+    HKL hKL = GetKeyboardLayout(0);
+    POINT pt = { (short)LOWORD(res), (short)HIWORD(res) };
+    SetCaretPos(pt.x, pt.y);
+
+    if (!ImmIsIME(hKL))
+        return;
+
+    EDIT_ImmSetCompositionWindow(es, pt);
+#else
 	TRACE("%d - %dx%d\n", pos, (short)LOWORD(res), (short)HIWORD(res));
 	SetCaretPos((short)LOWORD(res), (short)HIWORD(res));
+#endif
 }
 
 
@@ -2076,7 +2116,11 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 	BkColor = GetBkColor(dc);
 	TextColor = GetTextColor(dc);
 	if (rev) {
+#ifdef __REACTOS__
+            if (TRUE)
+#else
 	        if (es->composition_len == 0)
+#endif
 	        {
 			SetBkColor(dc, GetSysColor(COLOR_HIGHLIGHT));
 			SetTextColor(dc, GetSysColor(COLOR_HIGHLIGHTTEXT));
@@ -2101,7 +2145,11 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 		ret = size.cx;
 	}
 	if (rev) {
+#ifdef __REACTOS__
+        if (TRUE)
+#else
 		if (es->composition_len == 0)
+#endif
 		{
 			SetBkColor(dc, BkColor);
 			SetTextColor(dc, TextColor);
@@ -3766,6 +3814,18 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 				 es->flags & EF_AFTER_WRAP);
 		ShowCaret(es->hwndSelf);
 	}
+#ifdef __REACTOS__
+    if (ImmIsIME(GetKeyboardLayout(0)))
+    {
+        LOGFONTW lf;
+        HIMC hIMC = ImmGetContext(es->hwndSelf);
+        if (font == NULL)
+            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+        GetObjectW(font, sizeof(lf), &lf);
+        ImmSetCompositionFontW(hIMC, &lf);
+        ImmReleaseContext(es->hwndSelf, hIMC);
+    }
+#endif
 }
 
 
@@ -4244,6 +4304,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
         }
     }
 
+#ifndef __REACTOS__ /* We don't use internal composition string. Rely on the composition window */
     /* check for change in composition start */
     if (es->selection_end < es->composition_start)
         es->composition_start = es->selection_end;
@@ -4261,6 +4322,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
 
     es->selection_start = es->composition_start;
     es->selection_end = es->selection_start + es->composition_len;
+#endif
 
     heap_free(lpCompStrAttr);
     heap_free(lpCompStr);
@@ -4286,6 +4348,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
 
     ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, lpResultStr, buflen);
 
+#ifndef __REACTOS__
     /* check for change in composition start */
     if (es->selection_end < es->composition_start)
         es->composition_start = es->selection_end;
@@ -4295,6 +4358,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
     EDIT_EM_ReplaceSel(es, TRUE, lpResultStr, buflen / sizeof(WCHAR), TRUE, TRUE);
     es->composition_start = es->selection_end;
     es->composition_len = 0;
+#endif
 
     heap_free(lpResultStr);
 }
@@ -4304,11 +4368,16 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
     HIMC hIMC;
     int cursor;
 
+#ifdef __REACTOS__
+    if (es->selection_start != es->selection_end)
+        EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
+#else
     if (es->composition_len == 0 && es->selection_start != es->selection_end)
     {
         EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
         es->composition_start = es->selection_end;
     }
+#endif
 
     hIMC = ImmGetContext(hwnd);
     if (!hIMC)
@@ -4323,7 +4392,11 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
     {
         if (CompFlag & GCS_COMPSTR)
             EDIT_GetCompositionStr(hIMC, CompFlag, es);
+#ifdef __REACTOS__
+        cursor = 0;
+#else
         cursor = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, 0, 0);
+#endif
     }
     ImmReleaseContext(hwnd, hIMC);
     EDIT_SetCaretPos(es, es->selection_start + cursor, es->flags & EF_AFTER_WRAP);
@@ -5003,26 +5076,34 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_IME_STARTCOMPOSITION:
-        es->composition_start = es->selection_end;
-        es->composition_len = 0;
 #ifdef __REACTOS__
         if (FALSE) /* FIXME: Condition */
             return TRUE;
-        result = DefWindowProcW(hwnd, WM_IME_STARTCOMPOSITION, wParam, lParam);
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#else
+        es->composition_start = es->selection_end;
+        es->composition_len = 0;
 #endif
         break;
 
     case WM_IME_COMPOSITION:
         EDIT_ImeComposition(hwnd, lParam, es);
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#endif
         break;
 
     case WM_IME_ENDCOMPOSITION:
+#ifdef __REACTOS__
+        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+#else
         if (es->composition_len > 0)
         {
             EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
             es->selection_end = es->selection_start;
             es->composition_len= 0;
         }
+#endif
         break;
 
     case WM_IME_COMPOSITIONFULL:

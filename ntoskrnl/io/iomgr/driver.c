@@ -13,6 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -710,7 +711,7 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
 {
     NTSTATUS Status;
     UNICODE_STRING BaseName, BaseDirectory;
-    PLOAD_IMPORTS LoadedImports = (PVOID)-2;
+    PLOAD_IMPORTS LoadedImports = MM_SYSLDR_NO_IMPORTS;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
     PVOID DriverBase = LdrEntry->DllBase;

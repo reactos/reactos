@@ -10,12 +10,8 @@
 #include "rapps.h"
 #include "rosui.h"
 #include "crichedit.h"
-#include "appview.h"
 #include "asyncinet.h"
-#include "misc.h"
 #include "gui.h"
-#include "appview.h"
-#include "winmain.h"
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 

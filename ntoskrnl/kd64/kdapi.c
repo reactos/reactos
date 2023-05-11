@@ -10,6 +10,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
+#ifdef KDBG
+#include <kdbg/kdb.h>
+#endif
+
 #define NDEBUG
 #include <debug.h>
 
@@ -2209,13 +2214,13 @@ KdSystemDebugControl(
             KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
             break;
         }
-#if defined(KDBG)
+#ifdef KDBG
         /* Register KDBG CLI callback */
         case 'RbdK':
         {
             return KdbRegisterCliCallback(InputBuffer, InputBufferLength);
         }
-#endif /* KDBG */
+#endif // KDBG
 #endif
         default:
             break;

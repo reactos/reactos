@@ -14,9 +14,10 @@
 
 #include <atlbase.h>
 #include <atlcoll.h>
+#include <atlstr.h>
 
-
-START_TEST(CAtlList)
+static void
+test_BasicCases()
 {
     CAtlList<int> list1;
 
@@ -29,18 +30,18 @@ START_TEST(CAtlList)
     ok_size_t(list1.GetCount(), 3);
 
     list1.InsertBefore(head, -123);
-    list1.InsertAfter(head, 34);    // no longer head, but the POSITION should still be valid..
+    list1.InsertAfter(head, 34); // no longer head, but the POSITION should still be valid..
 
     list1.InsertBefore(tail, 78);
     list1.InsertAfter(tail, -44);
 
-    int expected[] = {-123, 12, 34, 56, 78, 90, -44 };
+    int expected[] = {-123, 12, 34, 56, 78, 90, -44};
     int expected_size = sizeof(expected) / sizeof(expected[0]);
     int index = 0;
     POSITION it = list1.GetHeadPosition();
     while (it != NULL)
     {
-        ok(index < expected_size, "Too many items, expected %d, got %d!\n", expected_size, (index+1));
+        ok(index < expected_size, "Too many items, expected %d, got %d!\n", expected_size, (index + 1));
         int value = list1.GetNext(it);
         if (index < expected_size)
         {
@@ -53,4 +54,68 @@ START_TEST(CAtlList)
         index++;
     }
     ok(it == NULL, "it does still point to something!\n");
+}
+
+static CStringW
+to_str(const CAtlList<int>& lst)
+{
+    CStringW tmp;
+    POSITION it = lst.GetHeadPosition();
+    while (it != NULL)
+    {
+        int value = lst.GetNext(it);
+        tmp.AppendFormat(L"%d,", value);
+    }
+    return tmp;
+}
+
+#define ok_list(lst, expected)                                                                                         \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        CStringW _value = to_str(lst);                                                                                 \
+        ok(_value == (expected), "Wrong value for '%s', expected: " #expected " got: \"%S\"\n", #lst,                  \
+           _value.GetString());                                                                                        \
+    } while (0)
+
+
+static void
+test_SwapElements()
+{
+    CAtlList<int> list;
+    list.AddTail(1);
+    list.AddTail(2);
+    list.AddTail(3);
+
+    ok_list(list, "1,2,3,");
+
+    POSITION p1 = list.FindIndex(0);
+    POSITION p2 = list.FindIndex(2);
+
+    list.SwapElements(p1, p1);
+    ok_list(list, "1,2,3,");
+
+    list.SwapElements(p1, p2);
+    ok_list(list, "3,2,1,");
+
+    p1 = list.FindIndex(0);
+    p2 = list.FindIndex(1);
+    list.SwapElements(p1, p2);
+    ok_list(list, "2,3,1,");
+
+    p1 = list.FindIndex(1);
+    p2 = list.FindIndex(2);
+    list.SwapElements(p1, p2);
+    ok_list(list, "2,1,3,");
+
+    p1 = list.FindIndex(0);
+    p2 = list.FindIndex(2);
+    list.SwapElements(p2, p1);
+    ok_list(list, "3,1,2,");
+}
+
+
+START_TEST(CAtlList)
+{
+    test_BasicCases();
+    test_SwapElements();
 }

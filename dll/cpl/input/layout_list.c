@@ -87,51 +87,8 @@ LayoutList_Destroy(VOID)
 
 typedef HRESULT (WINAPI *FN_SHLoadRegUIStringW)(HKEY, LPCWSTR, LPWSTR, DWORD);
 
-/* FIXME: Use shlwapi!SHLoadRegUIStringW instead when it is fully implemented */
 HRESULT FakeSHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
 {
-#if 1
-    PWCHAR pBuffer, pIndex;
-    WCHAR szDllPath[MAX_PATH];
-    DWORD dwSize;
-    HINSTANCE hDllInst;
-    INT iIndex, iLength;
-
-    dwSize = size * sizeof(WCHAR);
-    if (RegQueryValueExW(hkey, value, NULL, NULL, (LPBYTE)buf, &dwSize) != ERROR_SUCCESS)
-        return E_FAIL;
-
-    if (buf[0] != L'@')
-        return S_OK;
-
-    /* Move to the position after the character "@" */
-    pBuffer = buf + 1;
-
-    /* Get a pointer to the beginning ",-" */
-    pIndex = wcsstr(pBuffer, L",-");
-    if (!pIndex)
-        return E_FAIL;
-
-    /* Convert the number in the string after the ",-" */
-    iIndex = _wtoi(pIndex + 2);
-
-    *pIndex = 0; /* Cut the string */
-
-    if (ExpandEnvironmentStringsW(pBuffer, szDllPath, ARRAYSIZE(szDllPath)) == 0)
-        return E_FAIL;
-
-    hDllInst = LoadLibraryW(szDllPath);
-    if (!hDllInst)
-        return E_FAIL;
-
-    iLength = LoadStringW(hDllInst, iIndex, buf, size);
-    FreeLibrary(hDllInst);
-
-    if (iLength <= 0)
-        return E_FAIL;
-
-    return S_OK;
-#else
     HRESULT hr = E_FAIL;
     HINSTANCE hSHLWAPI = LoadLibraryW(L"shlwapi");
     FN_SHLoadRegUIStringW fn;
@@ -140,7 +97,6 @@ HRESULT FakeSHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
         hr = fn(hkey, value, buf, size);
     FreeLibrary(hSHLWAPI);
     return hr;
-#endif
 }
 
 static BOOL

@@ -233,6 +233,9 @@
 #include "shlwapi.h"
 #include "rtf.h"
 #include "imm.h"
+#ifdef __REACTOS__
+  #include "immdev.h"
+#endif
 #include "res.h"
 
 #ifdef __REACTOS__
@@ -4103,6 +4106,14 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_UpdateScrollBar(editor);
     if (bRepaint)
       ME_Repaint(editor);
+#ifdef __REACTOS__
+    if (ImmIsIME(GetKeyboardLayout(0)))
+    {
+      HIMC hIMC = ImmGetContext(editor->hWnd);
+      ImmSetCompositionFontW(hIMC, &lf);
+      ImmReleaseContext(editor->hWnd, hIMC);
+    }
+#endif
     return 0;
   }
   case WM_SETTEXT:
@@ -4779,18 +4790,52 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_RewrapRepaint(editor);
     goto do_default;
   }
+#ifndef __REACTOS__
   /* IME messages to make richedit controls IME aware */
+#endif
   case WM_IME_SETCONTEXT:
+#ifdef __REACTOS__
+  {
+    if (FALSE) /* FIXME: Condition */
+      lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+    if (wParam)
+    {
+      HIMC hIMC = ImmGetContext(editor->hWnd);
+      LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+      if (pIC)
+      {
+        pIC->dwUIFlags &= ~0x40000;
+        ImmUnlockIMC(hIMC);
+      }
+      if (FALSE) /* FIXME: Condition */
+        ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+      ImmReleaseContext(editor->hWnd, hIMC);
+    }
+
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+  }
+#endif
   case WM_IME_CONTROL:
+#ifdef __REACTOS__
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+#endif
   case WM_IME_SELECT:
+#ifdef __REACTOS__
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+#endif
   case WM_IME_COMPOSITIONFULL:
     return 0;
   case WM_IME_STARTCOMPOSITION:
   {
+#ifdef __REACTOS__
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+#else
     editor->imeStartIndex=ME_GetCursorOfs(&editor->pCursors[0]);
     ME_DeleteSelection(editor);
     ME_CommitUndo(editor);
     ME_UpdateRepaint(editor, FALSE);
+#endif
     return 0;
   }
   case WM_IME_COMPOSITION:
@@ -4813,23 +4858,35 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
         lpCompStr = HeapAlloc(GetProcessHeap(),0,dwBufLen + sizeof(WCHAR));
         ImmGetCompositionStringW(hIMC, dwIndex, lpCompStr, dwBufLen);
         lpCompStr[dwBufLen/sizeof(WCHAR)] = 0;
+#ifndef __REACTOS__
         ME_InsertTextFromCursor(editor,0,lpCompStr,dwBufLen/sizeof(WCHAR),style);
+#endif
         HeapFree(GetProcessHeap(), 0, lpCompStr);
 
+#ifndef __REACTOS__
         if (dwIndex == GCS_COMPSTR)
           set_selection_cursors(editor,editor->imeStartIndex,
                           editor->imeStartIndex + dwBufLen/sizeof(WCHAR));
+#endif
     }
     ME_ReleaseStyle(style);
     ME_CommitUndo(editor);
     ME_UpdateRepaint(editor, FALSE);
+#ifdef __REACTOS__
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+#else
     return 0;
+#endif
   }
   case WM_IME_ENDCOMPOSITION:
   {
+#ifdef __REACTOS__
+    return DefWindowProcW(editor->hWnd, msg, wParam, lParam);
+#else
     ME_DeleteSelection(editor);
     editor->imeStartIndex=-1;
     return 0;
+#endif
   }
   case EM_GETOLEINTERFACE:
   {

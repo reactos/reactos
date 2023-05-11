@@ -1,4 +1,8 @@
 # Labelling by the files touched
+
+ATL:
+  - sdk/lib/atl/**
+
 drivers:
   - drivers/**
   - sdk/lib/drivers/**
@@ -13,6 +17,13 @@ freeldr:
 
 ROSTESTS:
   - modules/rostests/**
+
+shell:
+  - base/shell/explorer/**
+  - base/shell/rshell/**
+  - dll/shellext/**
+  - dll/win32/browseui/**
+  - dll/win32/shell32/**
 
 Win32SS:
   - win32ss/**

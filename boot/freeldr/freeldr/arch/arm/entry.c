@@ -18,14 +18,3 @@ RealEntryPoint(VOID)
 {
     BootMain("");
 }
-
-VOID
-FrLdrBugCheckWithMessage(
-    ULONG BugCode,
-    PCHAR File,
-    ULONG Line,
-    PSTR Format,
-    ...)
-{
-
-}

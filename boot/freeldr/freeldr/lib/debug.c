@@ -20,7 +20,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#if DBG && !defined(_M_ARM)
+#if DBG
 
 // #define DEBUG_ALL
 // #define DEBUG_WARN
@@ -53,6 +53,11 @@ ULONG ComPort  = 0; // The COM port initializer chooses the first available port
 ULONG PortIrq  = 0; // Not used at the moment.
 
 BOOLEAN DebugStartOfLine = TRUE;
+
+#ifdef UEFIBOOT
+VOID
+ARMWriteToUART(UCHAR Data);
+#endif
 
 VOID DebugInit(IN ULONG_PTR FrLdrSectionId)
 {
@@ -518,6 +523,9 @@ char *BugCodeStrings[] =
     "MISSING_HARDWARE_REQUIREMENTS",
     "FREELDR_IMAGE_CORRUPTION",
     "MEMORY_INIT_FAILURE",
+#ifdef UEFIBOOT
+    "EXIT_BOOTSERVICES_FAILURE",
+#endif
 };
 
 ULONG_PTR BugCheckInfo[5];

@@ -17,7 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _M_ARM
 #include <freeldr.h>
 
 VOID GuiDrawBackdrop(VOID)
@@ -113,4 +112,3 @@ const UIVTBL GuiVtbl =
     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL
 };
-#endif

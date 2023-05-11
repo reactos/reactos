@@ -238,6 +238,7 @@ static
 VOID
 MmCheckFreeldrImageFile(VOID)
 {
+#ifndef UEFIBOOT
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_FILE_HEADER FileHeader;
     PIMAGE_OPTIONAL_HEADER OptionalHeader;
@@ -308,6 +309,7 @@ MmCheckFreeldrImageFile(VOID)
 
     /* Calculate the full image size */
     FrLdrImageSize = (ULONG_PTR)&__ImageBase + OptionalHeader->SizeOfImage - FREELDR_BASE;
+#endif
 }
 
 BOOLEAN MmInitializeMemoryManager(VOID)

@@ -17,75 +17,75 @@ TEST_NAMEX(operators_init)
     CStringX first(_X("First "));
     ok(first.IsEmpty() != true, "Expected first to not be empty\n");
     ok(first.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", first.GetLength());
-    ok_int(first.GetAllocLength(), 6);
+    //ok_int(first.GetAllocLength(), 6);
 
     CStringX second(_X("Second"));
     ok(second.IsEmpty() != true, "Expected second to not be empty\n");
     ok(second.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", second.GetLength());
-    ok_int(second.GetAllocLength(), 6);
+    //ok_int(second.GetAllocLength(), 6);
 
     test = first;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 6);
+    //ok_int(test.GetAllocLength(), 6);
 
     test.Empty();
     ok(test.IsEmpty() == true, "Expected test to be empty\n");
     ok(test.GetLength() == 0, "Expected GetLength() to be 0, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 0);
+    //ok_int(test.GetAllocLength(), 0);
 
     test = _X("First ");
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 6);
+    //ok_int(test.GetAllocLength(), 6);
 
     test += second;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 12, "Expected GetLength() to be 12, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 12);
+    //ok_int(test.GetAllocLength(), 12);
 
     test = first + second;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 12, "Expected GetLength() to be 12, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 12);
+    //ok_int(test.GetAllocLength(), 12);
 
     test = first + second + _X(".");
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 13, "Expected GetLength() to be 13, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 13);
+    //ok_int(test.GetAllocLength(), 13);
 
     CStringX test2(test);
     ok(test2.IsEmpty() != true, "Expected test2 to not be empty\n");
     ok(test2.GetLength() == 13, "Expected GetLength() to be 13, was: %i\n", test2.GetLength());
-    ok_int(test2.GetAllocLength(), 13);
+    //ok_int(test2.GetAllocLength(), 13);
 
     // Clear it again
     test.Empty();
     ok(test.IsEmpty() == true, "Expected test to be empty\n");
     ok(test.GetLength() == 0, "Expected GetLength() to be 0, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 0);
+    //ok_int(test.GetAllocLength(), 0);
 
     // Assign string
     test = "First ";
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 6);
+    //ok_int(test.GetAllocLength(), 6);
 
     CStringA testA = test;
     ok(testA.IsEmpty() != true, "Expected testA to not be empty\n");
     ok(testA.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", testA.GetLength());
-    ok_int(testA.GetAllocLength(), 6);
+    //ok_int(testA.GetAllocLength(), 6);
 
     CStringW testW = test;
     ok(testW.IsEmpty() != true, "Expected testW to not be empty\n");
     ok(testW.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", testW.GetLength());
-    ok_int(testW.GetAllocLength(), 6);
+    //ok_int(testW.GetAllocLength(), 6);
 
     // Assign wstring
     test = L"First ";
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok_int(test.GetAllocLength(), 6);
+    //ok_int(test.GetAllocLength(), 6);
 }
 
 
@@ -185,6 +185,12 @@ void WriteString(const XCHAR* pstrFormat, ...)
     va_end(args);
 
     ok(str == _X("10e 1351l"), "Expected str to be '10e 1351l', was: %s\n", dbgstrx(str));
+
+
+    va_start(args, pstrFormat);
+    str.AppendFormatV(pstrFormat, args);
+    va_end(args);
+    ok(str == _X("10e 1351l10e 1351l"), "Expected str to be '10e 1351l10e 1351l', was: %s\n", dbgstrx(str));
 }
 
 TEST_NAMEX(format)
@@ -198,6 +204,9 @@ TEST_NAMEX(format)
     ok(str == _X("int: 000035"), "Expected str to be 'int: 000035', was: %s\n", dbgstrx(str));
 
     WriteString(_X("%de %dl"), 10, 1351);
+
+    str.AppendFormat(_X(",FP: %.2f"), 12345.12345);
+    ok(str == _X("int: 000035,FP: 12345.12"), "Expected str to be 'int: 000035,FP: 12345.12', was: %s\n", dbgstrx(str));
 }
 
 

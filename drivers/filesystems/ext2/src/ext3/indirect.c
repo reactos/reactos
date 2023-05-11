@@ -219,7 +219,11 @@ Ext2GetBlock(
                          BLOCK_SIZE,
                          PIN_WAIT,
                          &Bcb,
+#ifdef __REACTOS__
                          (void **)&pData )) {
+#else
+                         &pData )) {
+#endif
 
             DEBUG(DL_ERR, ( "Ext2GetBlock: Failed to PinLock block: %xh ...\n",
                             BlockArray[0] ));
@@ -521,7 +525,11 @@ Ext2ExpandBlock(
                             BLOCK_SIZE,
                             PIN_WAIT,
                             &Bcb,
+#ifdef __REACTOS__
                             (void **)&pData )) {
+#else
+                            &pData )) {
+#endif
 
                     DEBUG(DL_ERR, ( "Ext2ExpandInode: failed to PinLock offset :%I64xh...\n",
                                     Offset.QuadPart));
@@ -726,7 +734,11 @@ Ext2TruncateBlock(
                                 BLOCK_SIZE,
                                 PIN_WAIT,
                                 &Bcb,
+#ifdef __REACTOS__
                                 (void **)&pData )) {
+#else
+                                &pData )) {
+#endif
 
                     DEBUG(DL_ERR, ( "Ext2TruncateBlock: PinLock failed on block %xh ...\n",
                                     BlockArray[SizeArray - i - 1]));
@@ -906,7 +918,11 @@ Ext2MapIndirect(
                          Layer,
                          Index,
                          dwArray,
+#ifdef __REACTOS__
                         (PULONG)&Mcb->Inode.i_block[Slot],
+#else
+                        &Mcb->Inode.i_block[Slot],
+#endif
                          bAlloc,
                          &dwHint,
                          &dwRet,
@@ -987,7 +1003,11 @@ Ext2ExpandIndirect(
                          Layer,
                          Start,
                          (Layer == 0) ? (Vcb->max_blocks_per_layer[Layer] - Start) : 1,
+#ifdef __REACTOS__
                          (PULONG)&Mcb->Inode.i_block[Slot],
+#else
+                         &Mcb->Inode.i_block[Slot],
+#endif
                          &Hint,
                          &Extra
                      );
@@ -1118,11 +1138,19 @@ Ext2TruncateIndirect(
         Base -= Vcb->max_blocks_per_layer[Layer - 1];
 
         if (Layer - 1 == 0) {
+#ifdef __REACTOS__
             BlockArray = (PULONG)&Mcb->Inode.i_block[0];
+#else
+            BlockArray = &Mcb->Inode.i_block[0];
+#endif
             SizeArray = End;
             ASSERT(End == EXT2_NDIR_BLOCKS && Base == 0);
         } else {
+#ifdef __REACTOS__
             BlockArray = (PULONG)&Mcb->Inode.i_block[EXT2_NDIR_BLOCKS - 1 + Layer - 1];
+#else
+            BlockArray = &Mcb->Inode.i_block[EXT2_NDIR_BLOCKS - 1 + Layer - 1];
+#endif
             SizeArray = 1;
         }
 

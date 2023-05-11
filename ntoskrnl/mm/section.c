@@ -4209,9 +4209,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 /*
  * @unimplemented
  */
-BOOLEAN NTAPI
-MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-                      IN PLARGE_INTEGER   NewFileSize)
+BOOLEAN
+NTAPI
+MmCanFileBeTruncated(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_opt_ PLARGE_INTEGER NewFileSize)
 {
     BOOLEAN Ret;
     PMM_SECTION_SEGMENT Segment;
@@ -4237,7 +4239,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
         /* If the cache is the only one holding a reference to the segment, then it's fine to resize */
         Ret = TRUE;
     }
-    else
+    else if (NewFileSize != NULL)
     {
         /* We can't shrink, but we can extend */
         Ret = NewFileSize->QuadPart >= Segment->RawLength.QuadPart;
@@ -4248,6 +4250,12 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
         }
 #endif
     }
+    else
+    {
+        DPRINT1("ERROR: File can't be truncated because it has references held to its data section\n");
+        Ret = FALSE;
+    }
+
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
 

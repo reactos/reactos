@@ -1553,7 +1553,7 @@ static struct _RAW_SIZE_IMAGE_FILE
             4, /* MajorSubsystemVersion */
             0, /* MinorSubsystemVersion */
             0, /* Win32VersionValue */
-            0x5000, /* SizeOfImage */
+            0x6000, /* SizeOfImage */
             0x400, /* SizeOfHeaders */
             0x0, /* CheckSum */
             IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
@@ -1818,8 +1818,8 @@ Test_RawSize(ULONG TestNumber)
             ok_hex(ImageFile->zdata_header.SizeOfRawData, RawSizeImageFile.zdata_header.SizeOfRawData);
             ok_hex(ImageFile->zdata_header.PointerToRawData, 0);
 
-            /* PointerToRawData = 0 resets SizeOfRawData to 0, CORE-18797 */
-            ok_hex(ImageFile->bss_header.SizeOfRawData, 0);
+            /* .bss section is unmodified */
+            ok_hex(ImageFile->bss_header.SizeOfRawData, 0x600);
             ok_hex(ImageFile->bss_header.PointerToRawData, 0);
 
 #define TEST_BYTE(n, v) \

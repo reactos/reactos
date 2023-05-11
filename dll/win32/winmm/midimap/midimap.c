@@ -202,11 +202,20 @@ static BOOL	MIDIMAP_LoadSettingsScheme(MIDIMAPDATA* mom, const WCHAR* scheme)
 
 static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
 {
-    HKEY 	hKey;
+    HKEY 	hUserKey, hKey;
+    DWORD   err;
     BOOL	ret;
 
-    if (RegOpenKeyA(HKEY_CURRENT_USER,
-		    "Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap", &hKey))
+    err = RegOpenCurrentUser(KEY_READ, &hUserKey);
+    if (err == ERROR_SUCCESS)
+    {
+        err = RegOpenKeyW(hUserKey,
+                          L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap",
+                          &hKey);
+        RegCloseKey(hUserKey);
+    }
+
+    if (err != ERROR_SUCCESS)
     {
 	ret = MIDIMAP_LoadSettingsDefault(mom, NULL);
     }

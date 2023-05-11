@@ -29,6 +29,7 @@
 #include <winnls.h>
 #include <winuser.h>
 #include <tchar.h>
+#include <undocuser.h> // For WM_POPUPSYSTEMMENU
 
 #include "resource.h"
 
@@ -50,7 +51,7 @@ LPCTSTR DllNotLoaded = _T("LoadLibrary failed to load \"%s\"");
 LPCTSTR MissingEntry = _T("Missing entry point:%s\nIn %s");
 */
 LPCTSTR rundll32_wtitle = _T("rundll32");
-LPCTSTR rundll32_wclass = _T("rundll32_window");
+LPCTSTR rundll32_wclass = _T("RunDLL");
 
 TCHAR ModuleFileName[MAX_PATH+1];
 LPTSTR ModuleTitle;
@@ -299,9 +300,57 @@ LPSTR DuplicateToMultiByte(LPCTSTR lptString, size_t nBufferSize)
     return lpString;
 }
 
+typedef struct
+{
+    HWND hwndOwner;
+    HWND hwndTarget;
+} FIND_OWNED, *PFIND_OWNED;
+
+static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    PFIND_OWNED pFindOwned = (PFIND_OWNED)lParam;
+    if (pFindOwned->hwndOwner == GetWindow(hwnd, GW_OWNER))
+    {
+        pFindOwned->hwndTarget = hwnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
 LRESULT CALLBACK EmptyWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    switch (uMsg)
+    {
+        case WM_POPUPSYSTEMMENU:
+        case WM_SYSCOMMAND:
+        {
+            /* Find the owned window */
+            FIND_OWNED FindOwned = { hWnd, NULL };
+            EnumWindows(EnumWindowsProc, (LPARAM)&FindOwned);
+            /* Forward message */
+            if (FindOwned.hwndTarget)
+                PostMessageW(FindOwned.hwndTarget, uMsg, wParam, lParam);
+            break;
+        }
+        case WM_ACTIVATE:
+        {
+            /* Find the owned window */
+            FIND_OWNED FindOwned = { hWnd, NULL };
+            EnumWindows(EnumWindowsProc, (LPARAM)&FindOwned);
+            if (FindOwned.hwndTarget)
+            {
+                if (LOWORD(wParam) != WA_INACTIVE) /* To be activated */
+                {
+                    SetActiveWindow(FindOwned.hwndTarget);
+                    return 0;
+                }
+            }
+            /* Fall through */
+        }
+        default:
+            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+    return 0;
 }
 
 // Registers a minimal window class for passing to the dll function

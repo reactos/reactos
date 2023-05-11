@@ -19,7 +19,7 @@
 #define REACTOS_DEFAULT_STR_COMPANY_NAME    "ReactOS Project"
 #define REACTOS_DEFAULT_STR_DESCRIPTION     "ReactOS Core Component"
 #define REACTOS_DEFAULT_STR_INTERNAL_NAME   ""
-#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "Copyright 1996-" COPYRIGHT_YEAR " ReactOS Project"
+#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "(C) 1996-" COPYRIGHT_YEAR " ReactOS Project"
 #define REACTOS_DEFAULT_STR_PRODUCT_NAME    "ReactOS Operating System"
 
 /* Set defaults for everything, unless overridden */

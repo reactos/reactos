@@ -151,14 +151,14 @@ struct FreeSelTool : ToolBase
                 selectionModel.ResetPtStack();
                 selectionModel.m_bShow = FALSE;
             }
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
         }
     }
 
     void OnFinishDraw()
     {
         if (m_bLeftButton)
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
 
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
@@ -214,14 +214,14 @@ struct RectSelTool : ToolBase
             if (start.x == x && start.y == y)
                 imageModel.Undo(TRUE);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
         }
     }
 
     void OnFinishDraw()
     {
         if (m_bLeftButton)
-            imageArea.Invalidate(FALSE);
+            canvasWindow.Invalidate(FALSE);
 
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
@@ -417,7 +417,7 @@ struct TextTool : ToolBase
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         if (!textEditWindow.IsWindow())
-            textEditWindow.Create(imageArea);
+            textEditWindow.Create(canvasWindow);
 
         imageModel.CopyPrevious();
         UpdatePoint(x, y);
@@ -484,7 +484,7 @@ struct TextTool : ToolBase
         }
 
         if (!textEditWindow.IsWindow())
-            textEditWindow.Create(imageArea);
+            textEditWindow.Create(canvasWindow);
 
         textEditWindow.SetWindowText(NULL);
         textEditWindow.ValidateEditRect(&rc);

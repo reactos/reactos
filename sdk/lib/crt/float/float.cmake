@@ -40,7 +40,14 @@ elseif(ARCH STREQUAL "arm")
         float/arm/_fpreset.c
         float/arm/_statusfp.c
     )
+    list(APPEND LIBCNTPR_FLOAT_SOURCE
+        float/arm/_controlfp.c
+    )
     list(APPEND CRT_FLOAT_ASM_SOURCE
+        float/arm/__getfp.s
+        float/arm/__setfp.s
+    )
+    list(APPEND LIBCNTPR_FLOAT_ASM_SOURCE
         float/arm/__getfp.s
         float/arm/__setfp.s
     )

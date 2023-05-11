@@ -38,7 +38,7 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-#if DBG && !defined(_M_ARM)
+#if DBG
 
     VOID    DebugInit(IN ULONG_PTR FrLdrSectionId);
     ULONG   DbgPrint(const char *Format, ...);
@@ -141,6 +141,9 @@ enum _FRLDR_BUGCHECK_CODES
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
     MEMORY_INIT_FAILURE,
+#ifdef UEFIBOOT
+    EXIT_BOOTSERVICES_FAILURE,
+#endif
 };
 
 extern char *BugCodeStrings[];

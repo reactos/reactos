@@ -10,7 +10,11 @@
 /* INCLUDES *****************************************************************/
 
 #include "ext2fs.h"
+#ifdef __REACTOS__
 #include "linux/ext4.h"
+#else
+#include "linux\ext4.h"
+#endif
 
 /* GLOBALS ***************************************************************/
 
@@ -858,6 +862,7 @@ Ext2ZeroBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
 }
 
 
+#ifdef __REACTOS__
 #define SIZE_256K 0x40000
 
 BOOLEAN
@@ -917,6 +922,75 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
 
     return rc;
 }
+#else
+
+BOOLEAN
+Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
+                IN PEXT2_VCB            Vcb,
+                IN LONGLONG             offset,
+                IN ULONG                size,
+                IN PVOID                buf )
+{
+    struct buffer_head *bh = NULL;
+    BOOLEAN             rc = 0;
+
+    __try {
+
+        while (size) {
+
+            sector_t    block;
+            ULONG       len = 0, delta = 0;
+
+            block = (sector_t) (offset >> BLOCK_BITS);
+            delta = (ULONG)offset & (BLOCK_SIZE - 1);
+            len = BLOCK_SIZE - delta;
+            if (size < len)
+                len = size;
+
+            if (delta == 0 && len >= BLOCK_SIZE) {
+                bh = sb_getblk_zero(&Vcb->sb, block);
+            } else {
+                bh = sb_getblk(&Vcb->sb, block);
+            }
+
+            if (!bh) {
+                DEBUG(DL_ERR, ("Ext2SaveBuffer: can't load block %I64u\n", block));
+                DbgBreak();
+                __leave;
+            }
+
+            if (!buffer_uptodate(bh)) {
+	            int err = bh_submit_read(bh);
+	            if (err < 0) {
+		            DEBUG(DL_ERR, ("Ext2SaveBuffer: bh_submit_read failed: %d\n", err));
+		            __leave;
+	            }
+            }
+
+            __try {
+                RtlCopyMemory(bh->b_data + delta, buf, len);
+                mark_buffer_dirty(bh);
+            } __finally {
+                fini_bh(&bh);
+            }
+
+            buf = (PUCHAR)buf + len;
+            offset = offset + len;
+            size = size - len;
+        }
+
+        rc = TRUE;
+
+    } __finally {
+
+        if (bh)
+            fini_bh(&bh);
+
+    }
+
+    return rc;
+}
+#endif
 
 
 VOID

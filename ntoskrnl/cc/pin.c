@@ -221,7 +221,7 @@ CcpPinData(
     KIRQL OldIrql;
     ULONG VacbOffset;
     NTSTATUS Status;
-    BOOLEAN Result;
+    _SEH2_VOLATILE BOOLEAN Result;
 
     VacbOffset = (ULONG)(FileOffset->QuadPart % VACB_MAPPING_GRANULARITY);
 
@@ -302,15 +302,19 @@ CcpPinData(
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                             SharedCacheMap->FileObject, FileOffset, Length, Flags);
             CcUnpinData(&NewBcb->PFCB);
-            return FALSE;
+            *Bcb = NULL;
+            *Buffer = NULL;
         }
     }
     _SEH2_END;
 
-    *Bcb = &NewBcb->PFCB;
-    *Buffer = (PVOID)((ULONG_PTR)NewBcb->Vacb->BaseAddress + VacbOffset);
+    if (Result)
+    {
+        *Bcb = &NewBcb->PFCB;
+        *Buffer = (PVOID)((ULONG_PTR)NewBcb->Vacb->BaseAddress + VacbOffset);
+    }
 
-    return TRUE;
+    return Result;
 }
 
 /*
@@ -332,7 +336,7 @@ CcMapData (
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     ULONG VacbOffset;
     NTSTATUS Status;
-    BOOLEAN Result;
+    _SEH2_VOLATILE BOOLEAN Result;
 
     CCTRACE(CC_API_DEBUG, "CcMapData(FileObject 0x%p, FileOffset 0x%I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
@@ -406,13 +410,17 @@ CcMapData (
         if (!Result)
         {
             CcpDereferenceBcb(SharedCacheMap, iBcb);
-            return FALSE;
+            *pBcb = NULL;
+            *pBuffer = NULL;
         }
     }
     _SEH2_END;
 
-    *pBcb = &iBcb->PFCB;
-    *pBuffer = (PVOID)((ULONG_PTR)iBcb->Vacb->BaseAddress + VacbOffset);
+    if (Result)
+    {
+        *pBcb = &iBcb->PFCB;
+        *pBuffer = (PVOID)((ULONG_PTR)iBcb->Vacb->BaseAddress + VacbOffset);
+    }
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p, Buffer %p\n",
         FileObject, FileOffset, Length, Flags, *pBcb, *pBuffer);

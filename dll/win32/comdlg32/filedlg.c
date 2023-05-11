@@ -3099,6 +3099,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
         /* Attach the file extension with file name*/
         ext = PathFindExtensionW(lpstrPathAndFile);
 #ifdef __REACTOS__
+        if (*ext == UNICODE_NULL && fodInfos->defext)
         {
             LPWSTR filterExt = NULL, lpstrFilter = NULL, pch, pchNext;
             LPCWSTR the_ext = NULL;

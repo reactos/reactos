@@ -164,17 +164,6 @@ GetDeletedFileDetailsW(
 #define GetDeletedFileDetails GetDeletedFileDetailsA
 #endif
 
-/* Get details about a whole recycle bin
- * pszVolume:
- * pulTotalItems:
- * pulTotalSize
- */
-BOOL WINAPI
-GetRecycleBinDetails(
-    IN LPCWSTR pszVolume OPTIONAL,
-    OUT ULARGE_INTEGER *pulTotalItems,
-    OUT ULARGE_INTEGER *pulTotalSize);
-
 /* Restores a deleted file
  * hDeletedFile: handle of the deleted file to restore
  * Returns TRUE if operation succeeded, FALSE otherwise.

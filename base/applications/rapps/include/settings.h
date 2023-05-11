@@ -1,5 +1,5 @@
 #pragma once
-#include <windef.h>
+
 #include <wininet.h>
 
 struct SETTINGS_INFO

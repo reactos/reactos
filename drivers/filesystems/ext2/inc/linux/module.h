@@ -59,7 +59,8 @@ extern "C" {
 #define RtlUlongByteSwap(_x)     _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
-#elif !defined(__REACTOS__)
+#else
+#ifndef __REACTOS__
 
 USHORT
 FASTCALL
@@ -78,6 +79,7 @@ FASTCALL
 RtlUlonglongByteSwap(
     IN ULONGLONG Source
 );
+#endif //#ifndef __REACTOS__
 #endif
 
 #define __swab16(x) RtlUshortByteSwap(x)
@@ -429,10 +431,18 @@ extern struct task_struct *current;
 //
 
 
+#ifdef __REACTOS__
 static inline int cond_resched() {
+#else
+static inline cond_resched() {
+#endif
     return FALSE;
 }
+#ifdef __REACTOS__
 static inline int need_resched() {
+#else
+static inline need_resched() {
+#endif
     return FALSE;
 }
 

@@ -287,3 +287,36 @@ KbdDisableMouse(VOID);
 
 VOID
 KbdEnableMouse(VOID);
+
+
+/* From kdb_print.c */
+
+VOID
+KdbPrintString(
+    _In_ const CSTRING* Output);
+
+USHORT
+KdbPromptString(
+    _In_ const CSTRING* PromptString,
+    _Inout_ PSTRING ResponseString);
+
+VOID
+KdbPutsN(
+    _In_ PCCH String,
+    _In_ USHORT Length);
+
+VOID
+KdbPuts(
+    _In_ PCSTR String);
+
+VOID
+__cdecl
+KdbPrintf(
+    _In_ PCSTR Format,
+    ...);
+
+SIZE_T
+KdbPrompt(
+    _In_ PCSTR Prompt,
+    _Out_ PCHAR Buffer,
+    _In_ SIZE_T Size);

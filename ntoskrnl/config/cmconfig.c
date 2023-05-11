@@ -333,6 +333,11 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG Disposition;
     UNICODE_STRING KeyName;
 
+    /* Set the alternative system architecture information */
+#if defined(SARCH_PC98)
+    SharedUserData->AlternativeArchitecture = NEC98x86;
+#endif
+
     /* Setup the key name */
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\Hardware\\DeviceMap");
