@@ -910,7 +910,7 @@ UINT WINAPI PrivateExtractIconExW (
 	  cyicon = GetSystemMetrics(SM_CYICON);
 #ifdef __REACTOS__
        ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
-                                  cyicon, NULL, LR_DEFAULTCOLOR, FALSE);
+                                cyicon, NULL, LR_DEFAULTCOLOR, FALSE);
 #else
          ret = ICO_ExtractIconExW(lpwstrFile, phIconLarge, nIndex, nIcons, cxicon,
 	                           cyicon, NULL, LR_DEFAULTCOLOR);
