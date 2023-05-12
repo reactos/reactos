@@ -125,7 +125,7 @@ BEGIN
         MENUITEM "End Process &Tree", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Debug", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Set &Priority"
+        POPUP "Set P&riority"
         BEGIN
             MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&High", ID_PROCESS_PAGE_SETPRIORITY_HIGH
