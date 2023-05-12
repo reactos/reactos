@@ -15,6 +15,7 @@ list(APPEND SOURCE
     desktop.c
     EmptyClipboard.c
     EnumDisplaySettings.c
+    GetClassInfo.c
     GetDCEx.c
     GetIconInfo.c
     GetKeyState.c
