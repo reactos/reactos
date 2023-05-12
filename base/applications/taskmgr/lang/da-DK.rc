@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sæt proces til Normal Priotet Klasse"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sæt proces til Under Normal Priotet Klasse"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sæt proces til Lav Priotet Klasse"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

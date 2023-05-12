@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Přiřadí procesu normální prioritu"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Přiřadí procesu podprůměrnou prioritu"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Přiřadí procesu nízkou prioritu"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

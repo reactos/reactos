@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Установить для процесса Средний приоритет"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Установить для процесса приоритет Ниже среднего"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Установить для процесса Низкий приоритет"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

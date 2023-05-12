@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Zaradí proces do triedy priorít NORMÁLNA."
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Zaradí proces do triedy priorít ZNÍŽENÁ."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Zaradí proces do triedy priorít NÍZKA."
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

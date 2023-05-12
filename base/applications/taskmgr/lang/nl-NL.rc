@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Het proces wordt ingesteld met de prioriteitsklasse NORMAAL"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Proces instellen op prioriteitsklasse LAGER DAN NORMAAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Het proces wordt ingesteld met de prioriteitsklasse LAAG"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

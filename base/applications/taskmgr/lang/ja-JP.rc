@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "プロセスを通常優先度クラスに設定します"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "プロセスを通常以下の優先度クラスに設定します"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "プロセスを低優先度クラスに設定します"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE
