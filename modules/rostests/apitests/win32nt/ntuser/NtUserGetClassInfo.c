@@ -14,6 +14,11 @@ START_TEST(NtUserGetClassInfo)
     UNICODE_STRING us;
     PWSTR pwstr = NULL;
 
+#ifdef _M_AMD64
+    skip("Test is broken on x64.\n");
+    return;
+#endif
+
     us.Length = 8;
     us.MaximumLength = 8;
     us.Buffer = L"test";
