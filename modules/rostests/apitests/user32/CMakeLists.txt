@@ -20,6 +20,7 @@ list(APPEND SOURCE
     GetKeyState.c
     GetMessageTime.c
     GetPeekMessage.c
+    GetSetWindowInt.c
     GetSystemMetrics.c
     GetUserObjectInformation.c
     GetWindowPlacement.c
