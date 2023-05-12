@@ -1666,7 +1666,8 @@ SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
         }
         break;
     }
-    return (WORD)NtUserSetWindowLongPtr(hWnd, nIndex, wNewWord, FALSE);
+    /* DO NOT USE NtUserSetWindowLong(Ptr)! */
+    return NtUserSetWindowWord(hWnd, nIndex, wNewWord);
 }
 
 /*
@@ -1680,7 +1681,8 @@ SetWindowLongA(
   int nIndex,
   LONG dwNewLong)
 {
-    return (LONG)NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, TRUE);
+    /* DO NOT USE NtUserSetWindowLongPtr! */
+    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, TRUE);
 }
 
 /*
@@ -1693,7 +1695,8 @@ SetWindowLongW(
   int nIndex,
   LONG dwNewLong)
 {
-    return (LONG)NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, FALSE);
+    /* DO NOT USE NtUserSetWindowLongPtr! */
+    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
 }
 
 #ifdef _WIN64
