@@ -4148,7 +4148,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 
    if ((ULONG)Index > (Window->cbwndExtra - sizeof(WORD)))
    {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_INDEX);
       RETURN( 0);
    }
 
