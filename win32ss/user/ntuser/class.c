@@ -34,7 +34,7 @@ static NTSTATUS IntDeregisterClassAtom(IN RTL_ATOM Atom);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
+  { ((PWSTR)WC_DESKTOP),
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL, // Use User32 procs
     sizeof(ULONG)*2,
@@ -43,19 +43,19 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     FNID_DESKTOP,
     ICLS_DESKTOP
   },
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8003))),
+  { ((PWSTR)WC_SWITCH),
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
-    sizeof(LONG),
+    sizeof(LONG_PTR), // See user32_apitest GetClassInfo, 0: Pointer to ALTTABINFO
     (HICON)OCR_NORMAL,
     NULL,
     FNID_SWITCH,
     ICLS_SWITCH
   },
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8000))),
+  { ((PWSTR)WC_MENU),
     CS_DBLCLKS|CS_SAVEBITS|CS_DROPSHADOW,
     NULL, // Use User32 procs
-    sizeof(LONG),
+    16, // See user32_apitest GetClassInfo, PopupMenuWndProcW
     (HICON)OCR_NORMAL,
     (HBRUSH)(COLOR_MENU + 1),
     FNID_MENU,
@@ -81,7 +81,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     ICLS_TOOLTIPS
   },
 #endif
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8004))), // IconTitle is here for now...
+  { ((PWSTR)WC_ICONTITLE), // IconTitle is here for now...
     0,
     NULL, // Use User32 procs
     0,
