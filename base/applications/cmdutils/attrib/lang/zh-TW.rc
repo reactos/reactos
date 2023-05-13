@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Attribute Command
+ * PROJECT:     ReactOS Attrib Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -11,7 +11,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "找不到檔案 - '%s'\n"
     STRING_ATTRIB_HELP "顯示或更改檔案屬性。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
        [/S [/D]]\n\n\
@@ -25,5 +24,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
   /D  同時處理目錄\n\n\
 執行不帶參數的 ATTRIB 將會顯示所有檔案的屬性。\n"
     STRING_CONSOLE_ERROR "未知的錯誤：%d\n"
+    STRING_FILE_NOT_FOUND "找不到檔案 - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "無效的參數格式 - %s\n"
 END
