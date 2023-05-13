@@ -493,7 +493,7 @@ WinLdrDetectVersion(VOID)
     RegCloseKey(hKey);
 
     /* We may here want to read the value of ProductVersion */
-    return _WIN32_WINNT_WS03;
+    return _WIN32_WINNT_WIN7;
 }
 
 static
@@ -987,7 +987,7 @@ LoadAndBootWindows(
     if (_stricmp(ArgValue, "Windows") == 0 ||
         _stricmp(ArgValue, "Windows2003") == 0)
     {
-        OperatingSystemVersion = _WIN32_WINNT_WS03;
+        OperatingSystemVersion = _WIN32_WINNT_WIN7;
     }
     else if (_stricmp(ArgValue, "WindowsNT40") == 0)
     {
