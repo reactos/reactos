@@ -656,8 +656,9 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 
             UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL, TRUE);
 
-            /* Disable the Permissions menu item for 'My Computer' */
+            /* Disable the Permissions and new key menu items for 'My Computer' */
             EnableMenuItem(hMenuFrame, ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
+            EnableMenuItem(hMenuFrame, ID_EDIT_NEW_KEY, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
 
             /*
              * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
