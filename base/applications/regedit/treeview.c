@@ -594,10 +594,6 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     HTREEITEM hNewItem;
 
     pszKeyPath = GetItemPath(hwndTV, hItem, &hRootKey);
-
-    if (!pszKeyPath)
-        return bSuccess;
-
     if (pszKeyPath[0] == L'\0')
         hKey = hRootKey;
     else if (RegOpenKeyW(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
