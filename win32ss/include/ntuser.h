@@ -3208,6 +3208,11 @@ NtUserFindExistingCursorIcon(
     _In_ PUNICODE_STRING pustrRsrc,
     _In_ FINDEXISTINGCURICONPARAM *param);
 
+LONG_PTR
+APIENTRY
+NtUserSetClassLongPtr(
+    VOID);
+
 DWORD
 NTAPI
 NtUserSetDbgTag(
