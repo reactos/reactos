@@ -20,8 +20,8 @@
 
 #pragma once
 
-#define WINE_FILEVERSION_MAJOR         5
-#define WINE_FILEVERSION_MINOR         0
+#define WINE_FILEVERSION_MAJOR         6
+#define WINE_FILEVERSION_MINOR         1
 #define WINE_FILEVERSION_BUILD      3900
 #define WINE_FILEVERSION_PLATFORMID 6975
 

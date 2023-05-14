@@ -109,7 +109,7 @@ class StartButton : public CWindowImpl<StartButton>
          m_ImageList = imgList;
          hBmp = hBmp2;
          DWORD dwStyle =
-             WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_CENTER | BS_BITMAP | BS_VCENTER | BS_FLAT;
+             WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_CENTER | BS_BITMAP | BS_VCENTER;
 
         // HACK & FIXME: CORE-18016
         m_hWnd = CreateWindowEx(
