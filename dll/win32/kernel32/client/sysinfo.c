@@ -418,7 +418,8 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
  */
 BOOL
 WINAPI
-GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes)
+GetPhysicallyInstalledSystemMemory(
+    _Out_ PULONGLONG TotalMemoryInKilobytes)
 {
     MEMORYSTATUSEX status;
 
