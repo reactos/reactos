@@ -429,9 +429,7 @@ GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes)
     MEMORYSTATUSEX status;
     status.dwLength = sizeof(status);
 
-    if (!GlobalMemoryStatusEx( &status )) {
-        return FALSE;
-    }
+    if (!GlobalMemoryStatusEx(&status)) return FALSE;
 
     *TotalMemoryInKilobytes = status.ullTotalPhys / 1024;
     return TRUE;
