@@ -579,7 +579,6 @@ GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
                                    SystemFirmwareTable_Get);
 }
 
-
 /*
  * @unimplemented
  */
