@@ -420,6 +420,8 @@ BOOL
 WINAPI
 GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes)
 {
+    MEMORYSTATUSEX status;
+
     if (TotalMemoryInKilobytes == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
