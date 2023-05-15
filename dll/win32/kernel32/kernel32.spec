@@ -543,7 +543,7 @@
 @ stdcall GetNumberOfConsoleMouseButtons(ptr)
 @ stdcall GetOEMCP()
 @ stdcall GetOverlappedResult(long ptr ptr long)
-@ stdcall GetPhysicallyInstalledSystemMemory(long ptr)
+@ stdcall -version=0x600+ GetPhysicallyInstalledSystemMemory(long ptr)
 @ stdcall GetPriorityClass(long)
 @ stdcall GetPrivateProfileIntA(str str long str)
 @ stdcall GetPrivateProfileIntW(wstr wstr long wstr)
