@@ -487,6 +487,8 @@ IopEnumerateDetectedDevices(
                                    CmResourceList,
                                    BootResourcesLength + sizeof(ULONG));
 
+            ExFreePool(CmResourceList);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
