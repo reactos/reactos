@@ -414,6 +414,30 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
 }
 
 /*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes)
+{
+    if (TotalMemoryInKilobytes == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+
+    if (!GlobalMemoryStatusEx( &status )) {
+        return FALSE;
+    }
+
+    *TotalMemoryInKilobytes = status.ullTotalPhys / 1024;
+    return TRUE;
+}
+
+/*
  * @unimplemented
  */
 DWORD
@@ -557,6 +581,7 @@ GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
                                    SystemFirmwareTable_Get);
 }
 
+
 /*
  * @unimplemented
  */
@@ -594,3 +619,4 @@ GetCurrentPackageId(UINT32 *BufferLength,
     STUB;
     return APPMODEL_ERROR_NO_PACKAGE;
 }
+
