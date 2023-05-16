@@ -191,7 +191,7 @@ HRESULT CMoveToMenu::DoRealMove(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 
 CStringW CMoveToMenu::DoGetFileTitle()
 {
-    CStringW ret;
+    CStringW ret = L"(file)";
 
     CDataObjectHIDA pCIDA(m_pDataObject);
     if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
@@ -239,9 +239,6 @@ HRESULT CMoveToMenu::DoMoveToFolder(LPCMINVOKECOMMANDINFO lpici)
     }
 
     CStringW strFileTitle = DoGetFileTitle();
-    if (strFileTitle.IsEmpty())
-        return hr;
-
     CStringW strTitle;
     strTitle.Format(IDS_MOVETOTITLE, static_cast<LPCWSTR>(strFileTitle));
 
