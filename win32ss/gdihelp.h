@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS win32 kernel mode subsystem
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdihelp.h
- * PURPOSE:         Dib object helper functions
- * PROGRAMMER:
+ * PROJECT:     ReactOS Win32 Kernel Mode Subsystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     DIB Object Helpers
+ * PROGRAMERS:  Jason Filby
+ *              Timo Kreuzer
  */
 
 ULONG
