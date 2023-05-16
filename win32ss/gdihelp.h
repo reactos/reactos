@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Win32 Kernel Mode Subsystem
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     DIB Object Helpers
- * PROGRAMERS:  Jason Filby
- *              Timo Kreuzer
+ * PROGRAMERS:  Copyright 1999-2001 Jason Filby <jason.filby@gmail.com>
+ *              Copyright 2008-2012 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 ULONG
