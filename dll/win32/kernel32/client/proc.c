@@ -2353,6 +2353,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SectionHandle = NULL;
     ProcessHandle = NULL;
     ThreadHandle = NULL;
+    ClientId.UniqueProcess = ClientId.UniqueThread = 0;
     BaseAddress = (PVOID)1;
 
     /* Zero out initial SxS and Application Compatibility state */
