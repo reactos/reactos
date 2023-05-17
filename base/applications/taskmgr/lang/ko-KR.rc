@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "프로세스 우선 순위를 보통으로 설정합니다"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "프로세스 우선 순위를 보통 미만으로 설정합니다"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "프로세스 우선 순위를 낮음으로 설정합니다"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

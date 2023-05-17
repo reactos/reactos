@@ -387,6 +387,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "設定處理程序優先順序為中等"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "設定處理程序優先順序為中等以下"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "設定處理程序優先順序為低"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Дава на действието ОБИКНОВЕНО първенство"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Дава на действието ПОНИЖЕНО първенство"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Дава на действието НИСКО първенство"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

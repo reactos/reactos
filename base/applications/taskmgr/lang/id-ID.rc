@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Menyetel proses ke kelas prioritas NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Menyetel proses ke kelas prioritas DI BAWAH NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Menyetel proses ke kelas prioritas RENDAH"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

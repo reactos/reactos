@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "İşlemi NORMAL öncelik sınıfına getirir."
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "İşlemi NORMAL ALTI öncelik sınıfına getirir."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "İşlemi DÜŞÜK öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE
