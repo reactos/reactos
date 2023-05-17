@@ -2222,8 +2222,8 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
 }
 
 
-#define AddToHandle(x,y)  (x) = (HANDLE)((ULONG_PTR)(x) | (y));
-#define RemoveFromHandle(x,y)  (x) = (HANDLE)((ULONG_PTR)(x) & ~(y));
+#define AddToHandle(x,y)       ((x) = (HANDLE)((ULONG_PTR)(x) | (y)))
+#define RemoveFromHandle(x,y)  ((x) = (HANDLE)((ULONG_PTR)(x) & ~(y)))
 C_ASSERT(PROCESS_PRIORITY_CLASS_REALTIME == (PROCESS_PRIORITY_CLASS_HIGH + 1));
 
 /*
@@ -4279,13 +4279,12 @@ StartScan:
         }
     }
 
-    /* For all apps, if this flag is on, the hourglass mouse cursor is shown */
+    /* For all apps, if this flag is on, the hourglass mouse cursor is shown.
+     * Likewise, the opposite holds as well, and no-feedback has precedence. */
     if (StartupInfo.dwFlags & STARTF_FORCEONFEEDBACK)
     {
         AddToHandle(CreateProcessMsg->ProcessHandle, 1);
     }
-
-    /* Likewise, the opposite holds as well */
     if (StartupInfo.dwFlags & STARTF_FORCEOFFFEEDBACK)
     {
         RemoveFromHandle(CreateProcessMsg->ProcessHandle, 1);
@@ -4297,8 +4296,8 @@ StartScan:
     /* And if it really is a VDM app... */
     if (VdmBinaryType)
     {
-        /* Store the task ID and VDM console handle */
-        CreateProcessMsg->hVDM = VdmTask ? 0 : Peb->ProcessParameters->ConsoleHandle;
+        /* Store the VDM console handle (none if inherited or WOW app) and the task ID */
+        CreateProcessMsg->hVDM = VdmTask ? NULL : Peb->ProcessParameters->ConsoleHandle;
         CreateProcessMsg->VdmTask = VdmTask;
     }
     else if (VdmReserve)
@@ -4410,10 +4409,9 @@ VdmShortCircuit:
         }
         else
         {
-            /* OR-in the special flag to indicate this is not a separate VDM */
+            /* OR-in the special flag to indicate this is not a separate VDM,
+             * and return the handle to the caller */
             AddToHandle(VdmWaitObject, 1);
-
-            /* Return handle to the caller */
             lpProcessInformation->hProcess = VdmWaitObject;
         }
 
@@ -4524,7 +4522,7 @@ Quickie:
     if (ThreadHandle)
     {
         /* So kill the process and close the thread handle */
-        NtTerminateProcess(ProcessHandle, 0);
+        NtTerminateProcess(ProcessHandle, STATUS_SUCCESS);
         NtClose(ThreadHandle);
     }
 
