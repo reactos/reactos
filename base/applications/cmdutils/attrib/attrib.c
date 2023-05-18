@@ -49,41 +49,32 @@ CON_SCREEN StdOutScreen = INIT_CON_SCREEN(StdOut);
 static
 VOID
 ErrorMessage(
-    DWORD dwErrorCode,
-    LPWSTR szFormat,
+    _In_ DWORD dwErrorCode,
+    _In_opt_ PCWSTR pszMsg,
     ...)
 {
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
-    WCHAR  szMessage[1024];
-    LPWSTR szError;
+    INT Len;
     va_list arg_ptr;
 
     if (dwErrorCode == ERROR_SUCCESS)
         return;
 
-    if (szFormat)
-    {
-        va_start(arg_ptr, szFormat);
-        vswprintf(szMessage, szFormat, arg_ptr);
-        va_end(arg_ptr);
-    }
-
-    if (FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                       NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                       (LPWSTR)&szError, 0, NULL))
-    {
-        ConPrintf(StdOut, L"%s %s\n", szError, szMessage);
-        if (szError)
-            LocalFree(szError);
-        return;
-    }
+    va_start(arg_ptr, pszMsg);
+    Len = ConMsgPrintfV(StdErr,
+                        FORMAT_MESSAGE_FROM_SYSTEM,
+                        NULL,
+                        dwErrorCode,
+                        LANG_USER_DEFAULT,
+                        &arg_ptr);
+    va_end(arg_ptr);
 
     /* Fall back just in case the error is not defined */
-    LoadStringW(GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
-    if (szFormat)
-        ConPrintf(StdOut, L"%s -- %s\n", szMsg, szMessage);
-    else
-        ConPrintf(StdOut, L"%s\n", szMsg);
+    if (Len <= 0)
+        ConResPrintf(StdErr, STRING_CONSOLE_ERROR, dwErrorCode);
+
+    /* Display the extra optional message if necessary */
+    if (pszMsg)
+        ConPrintf(StdErr, L"  %s\n", pszMsg);
 }
 
 /* Returns TRUE if anything is printed, FALSE otherwise */
