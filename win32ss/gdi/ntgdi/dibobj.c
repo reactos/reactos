@@ -501,16 +501,6 @@ NtGdiSetDIBitsToDeviceInternal(
 
     if (!Bits) return 0;
 
-    DPRINT("StartScan %d ScanLines %d Bits %p bmi %p ColorUse %d\n"
-           "    Height %d Width %d SizeImage %d\n"
-           "    biHeight %d biWidth %d biBitCount %d\n"
-           "    XSrc %d YSrc %d xDext %d yDest %d\n",
-           StartScan, ScanLines, Bits, bmi, ColorUse,
-           Height, Width, bmi->bmiHeader.biSizeImage,
-           bmi->bmiHeader.biHeight, bmi->bmiHeader.biWidth,
-           bmi->bmiHeader.biBitCount,
-           XSrc, YSrc, XDest, YDest);
-
     pbmiSafe = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'pmTG');
     if (!pbmiSafe) return 0;
 
@@ -527,6 +517,16 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
     _SEH2_END;
+
+    DPRINT("StartScan %d ScanLines %d Bits %p bmi %p ColorUse %d\n"
+           "    Height %d Width %d SizeImage %d\n"
+           "    biHeight %d biWidth %d biBitCount %d\n"
+           "    XSrc %d YSrc %d xDext %d yDest %d\n",
+           StartScan, ScanLines, Bits, bmi, ColorUse,
+           Height, Width, bmi->bmiHeader.biSizeImage,
+           bmi->bmiHeader.biHeight, bmi->bmiHeader.biWidth,
+           bmi->bmiHeader.biBitCount,
+           XSrc, YSrc, XDest, YDest);
 
     if (YDest >= 0)
     {
