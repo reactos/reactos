@@ -283,162 +283,149 @@ ChangeAttribute(
 
 int wmain(int argc, WCHAR *argv[])
 {
-    INT    i;
-    WCHAR  szPath[MAX_PATH] = L""; // For case we only use 'attrib +h /s' there is no szPath
-    WCHAR  szFileName [MAX_PATH];
-    BOOL   bRecurse = FALSE;
-    BOOL   bDirectories = FALSE;
-    DWORD  dwAttrib = 0;
-    DWORD  dwMask = 0;
-    LPWSTR p;
+    INT i;
+    BOOL bRecurse = FALSE;
+    BOOL bDirectories = FALSE;
+    DWORD dwAttrib = 0;
+    DWORD dwMask = 0;
+    BOOL bFound = FALSE;
+    PWSTR pszFileName;
+    WCHAR szFilePath[MAX_PATH + 2] = L""; // + 2 to reserve an extra path separator and a NULL-terminator.
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
-    /* Print help */
-    if (argc > 1 && wcscmp(argv[1], L"/?") == 0)
-    {
-        ConResPuts(StdOut, STRING_ATTRIB_HELP);
-        return 0;
-    }
-
-    /* check for options */
+    /* Check for options and file specifications */
     for (i = 1; i < argc; i++)
     {
-        if (wcsicmp(argv[i], L"/s") == 0)
-            bRecurse = TRUE;
-        else if (wcsicmp(argv[i], L"/d") == 0)
-            bDirectories = TRUE;
-    }
-
-    /* create attributes and mask */
-    for (i = 1; i < argc; i++)
-    {
-        if (*argv[i] == L'+')
+        if (*argv[i] == L'/')
         {
+            /* Print help and bail out if needed */
+            if (wcscmp(argv[i], L"/?") == 0)
+            {
+                ConResPuts(StdOut, STRING_ATTRIB_HELP);
+                return 0;
+            }
+            else
+            /* Retrieve the enumeration modes */
+            if (wcsicmp(argv[i], L"/s") == 0)
+                bRecurse = TRUE;
+            else if (wcsicmp(argv[i], L"/d") == 0)
+                bDirectories = TRUE;
+            else
+            {
+                /* Unknown option */
+                ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                return -1;
+            }
+        }
+        else
+        /* Build attributes and mask */
+        if ((*argv[i] == L'+') || (*argv[i] == L'-'))
+        {
+            BOOL bAdd = (*argv[i] == L'+');
+
             if (wcslen(argv[i]) != 2)
             {
-                ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                 return -1;
             }
 
             switch (towupper(argv[i][1]))
             {
                 case L'A':
-                    dwMask   |= FILE_ATTRIBUTE_ARCHIVE;
-                    dwAttrib |= FILE_ATTRIBUTE_ARCHIVE;
-                    break;
-
-                case L'H':
-                    dwMask   |= FILE_ATTRIBUTE_HIDDEN;
-                    dwAttrib |= FILE_ATTRIBUTE_HIDDEN;
-                    break;
-
-                case L'R':
-                    dwMask   |= FILE_ATTRIBUTE_READONLY;
-                    dwAttrib |= FILE_ATTRIBUTE_READONLY;
+                    dwMask |= FILE_ATTRIBUTE_ARCHIVE;
+                    if (bAdd)
+                        dwAttrib |= FILE_ATTRIBUTE_ARCHIVE;
+                    else
+                        dwAttrib &= ~FILE_ATTRIBUTE_ARCHIVE;
                     break;
 
                 case L'S':
-                    dwMask   |= FILE_ATTRIBUTE_SYSTEM;
-                    dwAttrib |= FILE_ATTRIBUTE_SYSTEM;
-                    break;
-
-                default:
-                    ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
-                    return -1;
-            }
-        }
-        else if (*argv[i] == L'-')
-        {
-            if (wcslen(argv[i]) != 2)
-            {
-                ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
-                return -1;
-            }
-
-            switch (towupper(argv[i][1]))
-            {
-                case L'A':
-                    dwMask   |= FILE_ATTRIBUTE_ARCHIVE;
-                    dwAttrib &= ~FILE_ATTRIBUTE_ARCHIVE;
+                    dwMask |= FILE_ATTRIBUTE_SYSTEM;
+                    if (bAdd)
+                        dwAttrib |= FILE_ATTRIBUTE_SYSTEM;
+                    else
+                        dwAttrib &= ~FILE_ATTRIBUTE_SYSTEM;
                     break;
 
                 case L'H':
-                    dwMask   |= FILE_ATTRIBUTE_HIDDEN;
-                    dwAttrib &= ~FILE_ATTRIBUTE_HIDDEN;
+                    dwMask |= FILE_ATTRIBUTE_HIDDEN;
+                    if (bAdd)
+                        dwAttrib |= FILE_ATTRIBUTE_HIDDEN;
+                    else
+                        dwAttrib &= ~FILE_ATTRIBUTE_HIDDEN;
                     break;
 
                 case L'R':
-                    dwMask   |= FILE_ATTRIBUTE_READONLY;
-                    dwAttrib &= ~FILE_ATTRIBUTE_READONLY;
-                    break;
-
-                case L'S':
-                    dwMask   |= FILE_ATTRIBUTE_SYSTEM;
-                    dwAttrib &= ~FILE_ATTRIBUTE_SYSTEM;
+                    dwMask |= FILE_ATTRIBUTE_READONLY;
+                    if (bAdd)
+                        dwAttrib |= FILE_ATTRIBUTE_READONLY;
+                    else
+                        dwAttrib &= ~FILE_ATTRIBUTE_READONLY;
                     break;
 
                 default:
-                    ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                    ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                     return -1;
             }
         }
-    }
-
-    if (argc == 1)
-    {
-        DWORD len;
-
-        len = GetCurrentDirectory(MAX_PATH, szPath);
-        if (szPath[len-1] != L'\\')
+        else
         {
-            szPath[len] = L'\\';
-            szPath[len + 1] = UNICODE_NULL;
+            /* At least one file specification found */
+            bFound = TRUE;
         }
-        wcscpy(szFileName, L"*.*");
-        PrintAttribute(szPath, szFileName, bRecurse, bDirectories);
-        return 0;
     }
 
-    /* get full file name */
-    for (i = 1; i < argc; i++)
+    /* If no file specification was found, operate on all files of the current directory */
+    if (!bFound)
     {
-        if (*argv[i] == L'+' || *argv[i] == L'-' || *argv[i] == L'/')
-            continue;
-
-        GetFullPathNameW(argv[i], MAX_PATH, szPath, &p);
-        wcscpy(szFileName, p);
-        *p = 0;
+        DWORD len = GetCurrentDirectoryW(_countof(szFilePath) - 2, szFilePath);
+        if (szFilePath[len - 1] != L'\\')
+        {
+            szFilePath[len] = L'\\';
+            szFilePath[len + 1] = UNICODE_NULL;
+        }
+        pszFileName = L"*.*";
 
         if (dwMask == 0)
-        {
-            if (!PrintAttribute(szPath, szFileName, bRecurse, bDirectories))
-            {
-                ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
-            }
-        }
-        else if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
-        {
-            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
-        }
+            bFound = PrintAttribute(szFilePath, pszFileName, bRecurse, bDirectories);
+        else
+            bFound = ChangeAttribute(szFilePath, pszFileName, bRecurse, bDirectories, dwMask, dwAttrib);
+
+        if (!bFound)
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, pszFileName);
+
+        return 0;
     }
 
-// Code below handles the special case of 'attrib +h /s' and similar
-
-    if (bRecurse && dwMask && (wcscmp(szPath, L"") == 0))
+    /* Operate on each file specification */
+    for (i = 1; i < argc; i++)
     {
-        DWORD len;
+        /* Skip options */
+        if (*argv[i] == L'/' || *argv[i] == L'+' || *argv[i] == L'-')
+            continue;
 
-        len = GetCurrentDirectory(MAX_PATH, szPath);
-        if (szPath[len-1] != L'\\')
+        GetFullPathNameW(argv[i], _countof(szFilePath) - 2, szFilePath, &pszFileName);
+        if (pszFileName)
         {
-            szPath[len] = L'\\';
-            szPath[len + 1] = UNICODE_NULL;
+            /* Move the file part so as to separate and NULL-terminate the directory */
+            MoveMemory(pszFileName + 1, pszFileName,
+                       sizeof(szFilePath) - (pszFileName -szFilePath + 1) * sizeof(*szFilePath));
+            *pszFileName++ = UNICODE_NULL;
         }
-        wcscpy(szFileName, L"*.*");
-        if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
-            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, szFileName);
+        else
+        {
+            pszFileName = L"";
+        }
+
+        if (dwMask == 0)
+            bFound = PrintAttribute(szFilePath, pszFileName, bRecurse, bDirectories);
+        else
+            bFound = ChangeAttribute(szFilePath, pszFileName, bRecurse, bDirectories, dwMask, dwAttrib);
+
+        if (!bFound)
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
     }
 
     return 0;
