@@ -97,7 +97,7 @@ ClassNameToVersion(
     WCHAR SectionNameBuf[MAX_PATH] = {0};
     ACTCTX_SECTION_KEYED_DATA KeyedData = { sizeof(KeyedData) };
 
-    if(!lpszClass)
+    if (!lpszClass)
     {
         ERR("Null class given !\n");
         return NULL;
@@ -236,7 +236,7 @@ VersionRegisterClass(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-       ERR("Got exception while trying to call RegisterClassNameW!\n");
+        ERR("Got exception while trying to call RegisterClassNameW!\n");
     }
     _SEH2_END
 
@@ -725,7 +725,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
 }
 
 static ULONG_PTR FASTCALL
-IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
+IntGetClassLongW(PWND Wnd, PCLS Class, int nIndex)
 {
     ULONG_PTR Ret = 0;
 
@@ -858,7 +858,7 @@ GetClassLongA(HWND hWnd, int nIndex)
  * @implemented
  */
 DWORD WINAPI
-GetClassLongW ( HWND hWnd, int nIndex )
+GetClassLongW(HWND hWnd, int nIndex)
 {
     PWND Wnd;
     PCLS Class;
@@ -1258,157 +1258,6 @@ RealGetWindowClassA(
     return len;
 }
 
-/*
- * Create a small icon based on a standard icon
- */
-#if 0 // Keep vintage code from revision 18764 by GvG!
-static HICON
-CreateSmallIcon(HICON StdIcon)
-{
-    HICON SmallIcon = NULL;
-    ICONINFO StdInfo;
-    int SmallIconWidth;
-    int SmallIconHeight;
-    BITMAP StdBitmapInfo;
-    HDC hSourceDc = NULL;
-    HDC hDestDc = NULL;
-    ICONINFO SmallInfo;
-    HBITMAP OldSourceBitmap = NULL;
-    HBITMAP OldDestBitmap = NULL;
-
-    SmallInfo.hbmColor = NULL;
-    SmallInfo.hbmMask = NULL;
-
-    /* We need something to work with... */
-    if (NULL == StdIcon)
-    {
-        goto cleanup;
-    }
-
-    SmallIconWidth = GetSystemMetrics(SM_CXSMICON);
-    SmallIconHeight = GetSystemMetrics(SM_CYSMICON);
-    if (! GetIconInfo(StdIcon, &StdInfo))
-    {
-        ERR("Failed to get icon info for icon 0x%x\n", StdIcon);
-        goto cleanup;
-    }
-   if (! GetObjectW(StdInfo.hbmMask, sizeof(BITMAP), &StdBitmapInfo))
-    {
-        ERR("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
-                StdIcon, StdInfo.hbmColor);
-        goto cleanup;
-    }
-    if (StdBitmapInfo.bmWidth == SmallIconWidth &&
-        StdBitmapInfo.bmHeight == SmallIconHeight)
-    {
-        /* Icon already has the correct dimensions */
-        return StdIcon;
-    }
-
-    hSourceDc = CreateCompatibleDC(NULL);
-    if (NULL == hSourceDc)
-    {
-        ERR("Failed to create source DC\n");
-        goto cleanup;
-    }
-    hDestDc = CreateCompatibleDC(NULL);
-    if (NULL == hDestDc)
-    {
-        ERR("Failed to create dest DC\n");
-        goto cleanup;
-    }
-
-    OldSourceBitmap = SelectObject(hSourceDc, StdInfo.hbmColor);
-    if (NULL == OldSourceBitmap)
-    {
-        ERR("Failed to select source color bitmap\n");
-        goto cleanup;
-    }
-    SmallInfo.hbmColor = CreateCompatibleBitmap(hSourceDc, SmallIconWidth,
-                                                SmallIconHeight);
-    if (NULL == SmallInfo.hbmColor)
-    {
-        ERR("Failed to create color bitmap\n");
-        goto cleanup;
-    }
-    OldDestBitmap = SelectObject(hDestDc, SmallInfo.hbmColor);
-    if (NULL == OldDestBitmap)
-    {
-        ERR("Failed to select dest color bitmap\n");
-        goto cleanup;
-    }
-    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
-                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
-                     StdBitmapInfo.bmHeight, SRCCOPY))
-    {
-        ERR("Failed to stretch color bitmap\n");
-        goto cleanup;
-    }
-
-    if (NULL == SelectObject(hSourceDc, StdInfo.hbmMask))
-    {
-        ERR("Failed to select source mask bitmap\n");
-        goto cleanup;
-    }
-    SmallInfo.hbmMask = CreateCompatibleBitmap(hSourceDc, SmallIconWidth, SmallIconHeight);
-    if (NULL == SmallInfo.hbmMask)
-    {
-        ERR("Failed to create mask bitmap\n");
-        goto cleanup;
-    }
-    if (NULL == SelectObject(hDestDc, SmallInfo.hbmMask))
-    {
-        ERR("Failed to select dest mask bitmap\n");
-        goto cleanup;
-    }
-    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
-                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
-                     StdBitmapInfo.bmHeight, SRCCOPY))
-    {
-        ERR("Failed to stretch mask bitmap\n");
-        goto cleanup;
-    }
-
-    SmallInfo.fIcon = TRUE;
-    SmallInfo.xHotspot = SmallIconWidth / 2;
-    SmallInfo.yHotspot = SmallIconHeight / 2;
-    SmallIcon = CreateIconIndirect(&SmallInfo);
-    if (NULL == SmallIcon)
-    {
-        ERR("Failed to create icon\n");
-        goto cleanup;
-    }
-
-cleanup:
-    if (NULL != SmallInfo.hbmMask)
-    {
-        DeleteObject(SmallInfo.hbmMask);
-    }
-    if (NULL != OldDestBitmap)
-    {
-        SelectObject(hDestDc, OldDestBitmap);
-    }
-    if (NULL != SmallInfo.hbmColor)
-    {
-        DeleteObject(SmallInfo.hbmColor);
-    }
-    if (NULL != hDestDc)
-    {
-        DeleteDC(hDestDc);
-    }
-    if (NULL != OldSourceBitmap)
-    {
-        SelectObject(hSourceDc, OldSourceBitmap);
-    }
-    if (NULL != hSourceDc)
-    {
-        DeleteDC(hSourceDc);
-    }
-
-    return SmallIcon;
-}
-#endif
-
 ATOM WINAPI
 RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
                     LPDWORD pdwWowData,
@@ -1425,7 +1274,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
     ANSI_STRING AnsiMenuName;
     LPCWSTR lpszClsVersion;
 
-    if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
+    if (lpwcx == NULL || lpwcx->cbSize != sizeof(*lpwcx) ||
         lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
         lpwcx->lpszClassName == NULL)
     {
@@ -1458,13 +1307,8 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
     if (lpwcx->hInstance == NULL)
        ((WNDCLASSEXW*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
-    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
-/*
-    if (NULL == WndClass.hIconSm)
-    {
-        WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
-    }
-*/
+    RtlCopyMemory(&WndClass, lpwcx, sizeof(*lpwcx));
+
     RtlInitEmptyAnsiString(&AnsiMenuName, NULL, 0);
     if (WndClass.lpszMenuName != NULL)
     {
@@ -1508,13 +1352,13 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
     clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
     clsMenuName.pusMenuName = &MenuName;
 
-    Atom = NtUserRegisterClassExWOW( &WndClass,
-                                     &ClassName,
-                                     &ClassVersion,
-                                     &clsMenuName,
-                                     fnID,
-                                     dwFlags,
-                                     pdwWowData);
+    Atom = NtUserRegisterClassExWOW(&WndClass,
+                                    &ClassName,
+                                    &ClassVersion,
+                                    &clsMenuName,
+                                    fnID,
+                                    dwFlags,
+                                    pdwWowData);
 
     TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
            Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
@@ -1534,7 +1378,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
     WCHAR mname[MAX_BUFFER_LEN];
     WCHAR cname[MAX_BUFFER_LEN];
 
-    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXA));
+    RtlCopyMemory(&WndClass, lpwcx, sizeof(*lpwcx));
 
     if (WndClass.lpszMenuName != NULL)
     {
@@ -1556,11 +1400,11 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
         WndClass.lpszClassName = cname;
     }
 
-    Atom = RegisterClassExWOWW( &WndClass,
-                                0,
-                                0,
-                                CSF_ANSIPROC,
-                                TRUE);
+    Atom = RegisterClassExWOWW(&WndClass,
+                               0,
+                               0,
+                               CSF_ANSIPROC,
+                               TRUE);
 
     TRACE("A atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
            Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
@@ -1577,7 +1421,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
     ATOM Atom;
 
-    Atom = RegisterClassExWOWW( (WNDCLASSEXW *)lpwcx, 0, 0, 0, TRUE);
+    Atom = RegisterClassExWOWW((WNDCLASSEXW *)lpwcx, 0, 0, 0, TRUE);
 
     TRACE("W atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d\n",
           Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
@@ -1610,7 +1454,7 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
     Class.lpszMenuName = lpWndClass->lpszMenuName;
     Class.lpszClassName = lpWndClass->lpszClassName;
 
-    Class.cbSize = sizeof(WNDCLASSEXA);
+    Class.cbSize = sizeof(Class);
     Class.hIconSm = NULL;
 
     return RegisterClassExA(&Class);
@@ -1640,7 +1484,7 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
     Class.lpszMenuName = lpWndClass->lpszMenuName;
     Class.lpszClassName = lpWndClass->lpszClassName;
 
-    Class.cbSize = sizeof(WNDCLASSEXW);
+    Class.cbSize = sizeof(Class);
     Class.hIconSm = NULL;
 
     return RegisterClassExW(&Class);
@@ -1651,9 +1495,9 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
  */
 DWORD
 WINAPI
-SetClassLongA (HWND hWnd,
-               int nIndex,
-               LONG dwNewLong)
+SetClassLongA(HWND hWnd,
+              int nIndex,
+              LONG dwNewLong)
 {
     PSTR lpStr = (PSTR)(ULONG_PTR)dwNewLong;
     UNICODE_STRING Value = {0};
@@ -1666,8 +1510,7 @@ SetClassLongA (HWND hWnd,
     {
         if (!IS_INTRESOURCE(lpStr))
         {
-            if (!RtlCreateUnicodeStringFromAsciiz(&Value,
-                                                  lpStr))
+            if (!RtlCreateUnicodeStringFromAsciiz(&Value, lpStr))
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return 0;
@@ -1676,7 +1519,9 @@ SetClassLongA (HWND hWnd,
             Allocated = TRUE;
         }
         else
+        {
             Value.Buffer = (PWSTR)lpStr;
+        }
 
         dwNewLong = (LONG_PTR)&Value;
     }
@@ -1684,8 +1529,7 @@ SetClassLongA (HWND hWnd,
     {
         if (!IS_ATOM(lpStr))
         {
-            if (!RtlCreateUnicodeStringFromAsciiz(&Value,
-                                                  lpStr))
+            if (!RtlCreateUnicodeStringFromAsciiz(&Value, lpStr))
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return 0;
@@ -1694,7 +1538,9 @@ SetClassLongA (HWND hWnd,
             Allocated = TRUE;
         }
         else
+        {
             Value.Buffer = (PWSTR)lpStr;
+        }
 
         dwNewLong = (LONG_PTR)&Value;
     }
@@ -1732,10 +1578,7 @@ SetClassLongW(HWND hWnd,
     if (nIndex == GCL_MENUNAME && lpStr != NULL)
     {
         if (!IS_INTRESOURCE(lpStr))
-        {
-            RtlInitUnicodeString(&Value,
-                                 lpStr);
-        }
+            RtlInitUnicodeString(&Value, lpStr);
         else
             Value.Buffer = lpStr;
 
@@ -1744,10 +1587,7 @@ SetClassLongW(HWND hWnd,
     else if (nIndex == GCW_ATOM && lpStr != NULL)
     {
         if (!IS_ATOM(lpStr))
-        {
-            RtlInitUnicodeString(&Value,
-                                 lpStr);
-        }
+            RtlInitUnicodeString(&Value, lpStr);
         else
             Value.Buffer = lpStr;
 
@@ -1930,7 +1770,6 @@ UnregisterClassA(
 
     return Ret;
 }
-
 
 /*
  * @implemented
