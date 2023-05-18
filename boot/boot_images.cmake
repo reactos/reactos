@@ -27,7 +27,7 @@ if(DEFINED EFI_PLATFORM_ID)
 endif()
 
 # ISO image EFI boot parameters
-set(ISO_EFI_BOOT_PARAMS "")
+set(ISO_EFI_BOOT_PARAMS)
 
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
@@ -39,7 +39,7 @@ set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # ge
 set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
 if(DEFINED EFI_PLATFORM_ID)
     set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
-    string(APPEND ISO_EFI_BOOT_PARAMS "-eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot")
+    list(APPEND ISO_EFI_BOOT_PARAMS -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot)
 endif()
 
 # Create a mkisofs sort file to specify an explicit ordering for the boot files
@@ -65,9 +65,7 @@ ${_isobtrt_file} 2
 if(DEFINED EFI_PLATFORM_ID)
     string(APPEND ISO_SORT_FILE_DATA "${_efisys_file} 1\n")
 endif()
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "${ISO_SORT_FILE_DATA}")
-
-separate_arguments(ISO_EFI_BOOT_PARAMS WINDOWS_COMMAND "${ISO_EFI_BOOT_PARAMS}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort ${ISO_SORT_FILE_DATA})
 
 # ISO image identifier names
 set(ISO_MANUFACTURER "ReactOS Project") # For both the publisher and the preparer
