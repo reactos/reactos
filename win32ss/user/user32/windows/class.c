@@ -1310,32 +1310,28 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
     RtlCopyMemory(&WndClass, lpwcx, sizeof(*lpwcx));
 
     RtlInitEmptyAnsiString(&AnsiMenuName, NULL, 0);
-    if (WndClass.lpszMenuName != NULL)
+    if (!IS_INTRESOURCE(WndClass.lpszMenuName))
     {
-        if (!IS_INTRESOURCE(WndClass.lpszMenuName))
+        if (WndClass.lpszMenuName[0])
         {
-            if (WndClass.lpszMenuName[0])
-            {
-               RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
-               RtlUnicodeStringToAnsiString( &AnsiMenuName, &MenuName, TRUE);
-            }
+            RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
+            RtlUnicodeStringToAnsiString(&AnsiMenuName, &MenuName, TRUE);
         }
-        else
-        {
-            MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
-             AnsiMenuName.Buffer = (PCHAR)WndClass.lpszMenuName;
-        }
-    }
-
-    if (IS_ATOM(WndClass.lpszClassName))
-    {
-        ClassName.Length =
-        ClassName.MaximumLength = 0;
-        ClassName.Buffer = (LPWSTR)WndClass.lpszClassName;
     }
     else
     {
+        MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
+        AnsiMenuName.Buffer = (PCHAR)WndClass.lpszMenuName;
+    }
+
+    if (WndClass.lpszClassName && !IS_ATOM(WndClass.lpszClassName))
+    {
         RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
+    }
+    else
+    {
+        ClassName.Length = ClassName.MaximumLength = 0;
+        ClassName.Buffer = (LPWSTR)WndClass.lpszClassName;
     }
 
     ClassVersion = ClassName;
@@ -1373,35 +1369,36 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
 ATOM WINAPI
 RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
-    RTL_ATOM Atom;
+    ATOM Atom;
     WNDCLASSEXW WndClass;
     WCHAR mname[MAX_BUFFER_LEN];
     WCHAR cname[MAX_BUFFER_LEN];
 
+    C_ASSERT(sizeof(WndClass) == sizeof(*lpwcx));
+
     RtlCopyMemory(&WndClass, lpwcx, sizeof(*lpwcx));
 
-    if (WndClass.lpszMenuName != NULL)
+    if (WndClass.lpszMenuName && !IS_INTRESOURCE(WndClass.lpszMenuName))
     {
-        if (!IS_INTRESOURCE(WndClass.lpszMenuName))
+        if (WndClass.lpszMenuName[0])
         {
-            if (WndClass.lpszMenuName[0])
-            {
-                if (!MultiByteToWideChar( CP_ACP, 0, lpwcx->lpszMenuName, -1, mname, MAX_ATOM_LEN + 1 )) return 0;
+            if (!MultiByteToWideChar(CP_ACP, 0, lpwcx->lpszMenuName, -1, mname, MAX_ATOM_LEN + 1 ))
+                return 0;
 
-                WndClass.lpszMenuName = mname;
-            }
+            WndClass.lpszMenuName = mname;
         }
     }
 
-    if (!IS_ATOM(WndClass.lpszClassName))
+    if (WndClass.lpszClassName && !IS_ATOM(WndClass.lpszClassName))
     {
-        if (!MultiByteToWideChar( CP_ACP, 0, lpwcx->lpszClassName, -1, cname, MAX_ATOM_LEN + 1 )) return 0;
+        if (!MultiByteToWideChar(CP_ACP, 0, lpwcx->lpszClassName, -1, cname, MAX_ATOM_LEN + 1 ))
+            return 0;
 
         WndClass.lpszClassName = cname;
     }
 
     Atom = RegisterClassExWOWW(&WndClass,
-                               0,
+                               NULL,
                                0,
                                CSF_ANSIPROC,
                                TRUE);
@@ -1410,7 +1407,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
            Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
            lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
 
-    return (ATOM)Atom;
+    return Atom;
 }
 
 /*
@@ -1421,7 +1418,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
     ATOM Atom;
 
-    Atom = RegisterClassExWOWW((WNDCLASSEXW *)lpwcx, 0, 0, 0, TRUE);
+    Atom = RegisterClassExWOWW((WNDCLASSEXW *)lpwcx, NULL, 0, 0, TRUE);
 
     TRACE("W atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d\n",
           Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
