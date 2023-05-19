@@ -334,7 +334,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Aller vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Home|Map Drive|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
+    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Déplacer vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Accueil|Connecter|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
 END
 
 STRINGTABLE
