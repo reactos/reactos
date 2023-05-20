@@ -26,8 +26,8 @@ Reporting NT %s (Build %u%s)
 .
 Language=Romanian
 Versiunea ReactOS %s
-Construcția %s
-Reportarea NT %s (Construcția %u%s)
+Construc\376ia %s
+Reportarea NT %s (Construc\376ia %u%s)
 .
 
 MessageId=0x87
@@ -71,7 +71,7 @@ Language=English
 A kernel thread terminated while holding a mutex
 .
 Language=Romanian
-Un fir de execuție al nucleului s-a terminat în timp ce a fost ținut un obiect de execuție comun
+Un fir de execu\376ie al nucleului s-a terminat \356n timp ce a fost \376inut un obiect de execu\376ie comun
 .
 
 MessageId=0x9D
@@ -95,9 +95,9 @@ Language=English
  certain\n conditions. There is absolutely no warranty for ReactOS.\n
 .
 Language=Romanian
-\n\nReactOS este un element de logică computațională gratuit, acoperit de GNU General Public License,
- și sunteți\n binevenit să îl schimbați și/sau să redistribuiți copii ale lui cu
- anumite\n condiții. Nu este absolut nicio garanție pentru ReactOS.\n
+\n\nReactOS este un element de logic\343 computa\376ional\343 gratuit, acoperit de GNU General Public License,
+ \376i sunte\376i\n binevenit s\343 \356l schimba\376i \376i/sau s\343 redistribui\376i copii ale lui cu
+ anumite\n condi\376ii. Nu este absolut nicio garan\376ie pentru ReactOS.\n
 .
 
 MessageId=0x7F
@@ -109,8 +109,8 @@ A problem has been detected and ReactOS has been shut down to prevent damage
 to your computer.
 .
 Language=Romanian
-O problemă a fost detectată și ReactOS a fost oprit pentru a preveni stricarea
-calculatorului dumneavoastră.
+O problem\343 a fost detectat\343 \376i ReactOS a fost oprit pentru a preveni stricarea
+calculatorului dumneavoastr\343.
 .
 
 MessageId=0x80
@@ -122,7 +122,7 @@ The problem seems to be caused by the following file:
 
 .
 Language=Romanian
-Problema pare să fie cauzată de următorul fișier:
+Problema pare s\343 fie cauzat\343 de urm\343torul fi\376ier:
 
 .
 
@@ -137,9 +137,9 @@ these steps:
 
 .
 Language=Romanian
-Dacă este pentru prima dată când ați văzut acest Ecran de eroare de oprire,
-reporniți-vă calculatorul. Dacă acest ecran apare din nou, urmați
-acești pași:
+Dac\343 este pentru prima dat\343 c\342nd a\376i v\343zut acest Ecran de eroare de oprire,
+reporni\376i-v\343 calculatorul. Dac\343 acest ecran apare din nou, urma\376i
+ace\376ti pa\376i:
 
 .
 
@@ -159,15 +159,15 @@ your computer, press F8 to select Advanced Startup Options, and then
 select Safe Mode.
 .
 Language=Romanian
-Verificați pentru a vă asigura că orice dispozitiv sau element de logică computațională nou este instalat corect.
-Dacă aceasta este o instalare nouă, întrebați producătorul de dispozitiv sau de element de logică computațională
-pentru orice actualizări ReactOS de care ați putea avea nevoie.
+Verifica\376i pentru a v\343 asigura c\343 orice dispozitiv sau element de logic\343 computa\376ional\343 nou este instalat corect.
+Dac\343 aceasta este o instalare nou\343, \356ntreba\376i produc\343torul de dispozitiv sau de element de logic\343 computa\376ional\343
+pentru orice actualiz\343ri ReactOS de care a\376i putea avea nevoie.
 
-Dacă problemele continuă, dezactivați sau eliminați orice dispozitiv nou instalat
-sau element de logică computațională. Dezactivați opțiunile de memorie BIOS, cum ar fi stocarea în depozitul de 
-memorie sau umbrirea. Dacă trebuie să utilizați Modul sigur pentru a elimina sau a dezactiva componente, reporniți
-computerul dumneavoastră, apăsați F8 pentru a selecta Opțiuni avansate de pornire, apoi
-selectați Modul sigur.
+Dac\343 problemele continu\343, dezactiva\376i sau elimina\376i orice dispozitiv nou instalat
+sau element de logic\343 computa\376ional\343. Dezactiva\376i op\376iunile de memorie BIOS, cum ar fi stocarea \356n depozitul de 
+memorie sau umbrirea. Dac\343 trebuie s\343 utiliza\376i Modul sigur pentru a elimina sau a dezactiva componente, reporni\376i
+computerul dumneavoastr\343, ap\343sa\376i F8 pentru a selecta Op\376iuni avansate de pornire, apoi
+selecta\376i Modul sigur.
 .
 
 MessageId=0x83
@@ -178,7 +178,7 @@ Language=English
 Technical information:
 .
 Language=Romanian
-Informații tehnice:
+Informa\376ii tehnice:
 .
 
 MessageId=0x0
@@ -189,7 +189,7 @@ Language=English
 The bug code is undefined. Please use an existing code instead.
 .
 Language=Romanian
-Codul de eroare este neidentificat. În locul lui folosiți un cod existent.
+Codul de eroare este neidentificat. In locul lui folosi\376i un cod existent.
 .
 
 MessageId=0x01
@@ -409,7 +409,7 @@ Language=English
 The thread reaper was handed a thread to reap, but the thread's process'
 .
 Language=Romanian
-Cosașului firului de execuție i s-a dat un fir de execuție pentru a cosi, în afară de procesul firului de execuție'
+Culeg\343torului firului de execu\376ie i s-a dat un fir de execu\376ie pentru a cosi, \356n afar\343 de procesul firului de execu\376ie'
 .
 
 MessageId=0x15
@@ -528,16 +528,16 @@ computer, press F8 to select Advanced Startup Options, and then
 select Safe Mode.
 .
 Language=Romanian
-Verificați pentru a fi sigur(ă) că aveți suficient spațiu pe disc. Dacă modulul-pilot este
-identificat în mesajul de Oprire, dezactivați modulul-pilot sau consultați
-producătorul dacă nu există actualizări ale modulului-pilot.
-schimbați adaptoarele video. 
+Verifica\376i pentru a fi sigur(\343) c\343 ave\376i suficient spa\376iu pe disc. Dac\343 modulul-pilot este
+identificat \356n mesajul de Oprire, dezactiva\376i modulul-pilot sau consulta\376i
+produc\343torul dac\343 nu exist\343 actualiz\343ri ale modulului-pilot.
+schimba\376i adaptoarele video. 
 
-Consultați furnizorul dispozitivului dumneavoastră dacă există vreo actualizare la BIOS. Dezactivați
-opțiunile memorie BIOS-ului, cum ar fi înmagazinarea sau umbrirea. Dacă aveți nevoie
-să folosiți Modul sigur pentru a elimina sau a dezactiva componente, reporniți-vă
-calculatorul, apăsați F8 pentru a selecta Opțiuni avansate de pornire și apoi
-selectați Modul sigur.
+Consulta\376i furnizorul dispozitivului dumneavoastr\343 dac\343 exist\343 vreo actualizare la BIOS. Dezactiva\376i
+op\376iunile memorie BIOS-ului, cum ar fi \356nmagazinarea sau umbrirea. Dac\343 ave\376i nevoie
+s\343 folosi\376i Modul sigur pentru a elimina sau a dezactiva componente, reporni\376i-v\343
+calculatorul, ap\343sa\376i F8 pentru a selecta Op\376iuni avansate de pornire \376i apoi
+selecta\376i Modul sigur.
 .
 
 MessageId=0x1F
@@ -595,10 +595,10 @@ and check for any updated drivers. Run CHKDSK /F to check
 for hard drive corruption, and then restart your computer.
 .
 Language=Romanian
-Dezactivați sau dezinstalați orice antivirus, utilitar pentru fragmentarea
-discului sau pentru copii de siguranță. Verificați configurația discului dumneavoastră dur
-și verificați dacă există vreun modul-pilot actualizat. Rulați CHKDSK /F pentru a verifica
-o corupere a discului dur, iar apoi reporniți-vă calculatorul.
+Dezactiva\376i sau dezinstala\376i orice antivirus, utilitar pentru fragmentarea
+discului sau pentru copii de siguran\376\343. Verifica\376i configura\376ia discului dumneavoastr\343 dur
+\376i verifica\376i dac\343 exist\343 vreun modul-pilot actualizat. Rula\376i CHKDSK /F pentru a verifica
+o corupere a discului dur, iar apoi reporni\376i-v\343 calculatorul.
 .
 
 MessageId=0x24
@@ -727,15 +727,15 @@ computer, press F8 to select Advanced Startup Options, and then
 select Safe Mode.
 .
 Language=Romanian
-Rulați utilitarul de diagnosticare a sistemului furnizată de producătorul dumneavoastră de dispozitive.
-În special, executați o verificare a memoriei și verificați dacă există vreo memorie defectă sau
-nepotrivită. Încercați să schimbați adaptoarele video.
+Rula\376i utilitarul de diagnosticare a sistemului furnizat\343 de produc\343torul dumneavoastr\343 de dispozitive.
+In special, executa\376i o verificare a memoriei \376i verifica\376i dac\343 exist\343 vreo memorie defect\343 sau
+nepotrivit\343. Incerca\376i s\343 schimba\376i adaptoarele video.
 
-Verificați dacă producătorul dumneavoastră de dispozitive oferă actualizări la BIOS. Dezactivați
-opțiunile memoriei BIOS-ului, cum ar fi înmagazinarea sau umbrirea. Dacă aveți nevoie să folosiți
-Modul sigur pentru a elimina sau dezactiva componente, reporniți-vă calculatorul, 
-apăsați pe F8 pentru a selecta Opțiuni avansate de pornire, iar apoi
-selectați Modul sigur.
+Verifica\376i dac\343 produc\343torul dumneavoastr\343 de dispozitive ofer\343 actualiz\343ri la BIOS. Dezactiva\376i
+op\376iunile memoriei BIOS-ului, cum ar fi \356nmagazinarea sau umbrirea. Dac\343 ave\376i nevoie s\343 folosi\376i
+Modul sigur pentru a elimina sau dezactiva componente, reporni\376i-v\343 calculatorul, 
+ap\343sa\376i pe F8 pentru a selecta Op\376iuni avansate de pornire, iar apoi
+selecta\376i Modul sigur.
 .
 
 MessageId=0x2F
@@ -883,12 +883,12 @@ restart your computer, press F8 to select Advanced Startup
 Options, and then select Safe Mode.
 .
 Language=Romanian
-Eliminați orice element de logică computațională instalat recent, incluzând utilitare de
-copii de siguranță sau aplicații care folosesc discul intens.
+Elimina\376i orice element de logic\343 computa\376ional\343 instalat recent, incluz\342nd utilitare de
+copii de siguran\376\343 sau aplica\376ii care folosesc discul intens.
 
-Dacă aveți nevoie să folosiți Modul sigur pentru a elimina sau a dezactiva componente,
-reporniți-vă calculatorul, apăsați F8 pentru a selecta Opțiuni avansate de pornire,
-iar apoi alegeți modul sigur.
+Dac\343 ave\376i nevoie s\343 folosi\376i Modul sigur pentru a elimina sau a dezactiva componente,
+reporni\376i-v\343 calculatorul, ap\343sa\376i F8 pentru a selecta Op\376iuni avansate de pornire,
+iar apoi alege\376i modul sigur.
 .
 
 MessageId=0x40
@@ -1493,7 +1493,7 @@ Language=English
 Mismatched Kernel and HAL image
 .
 Language=Romanian
-Nucleul și imaginea HAL nu sunt potrivite
+Nucleul \376i imaginea HAL nu sunt potrivite
 .
 
 MessageId=0x7A
@@ -1519,11 +1519,11 @@ Run CHKDSK /F to check for hard drive corruption, and then
 restart your computer.
 .
 Language=Romanian
-Verificați dacă există viruși pe calculatorul dumneavoastră. Eliminați orice disc dur sau
-dispozitiv de control pentru discurile dure nou instalat. Verificați-vă discul dur
-pentru a fi sigur că este configurat și terminat corespunzător.
-Rulați CHKDSK /F pentru a verifica dacă discul dur este deteriorat și apoi
-reporniți-vă calculatorul.
+Verifica\376i dac\343 exist\343 viru\376i pe calculatorul dumneavoastr\343. Elimina\376i orice disc dur sau
+dispozitiv de control pentru discurile dure nou instalat. Verifica\376i-v\343 discul dur
+pentru a fi sigur c\343 este configurat \376i terminat corespunz\343tor.
+Rula\376i CHKDSK /F pentru a verifica dac\343 discul dur este deteriorat \376i apoi
+reporni\376i-v\343 calculatorul.
 .
 
 MessageId=0x7C
@@ -1574,14 +1574,14 @@ remove or disable components, restart your computer, press F8 to select
 Advanced Startup Options, and then select Safe Mode.
 .
 Language=Romanian
-Rulați un utilitar de diagnosticare a sistemului oferit de producătorul dumneavoastră de dispozitive.
-În special, executați o verificare a memoriei și verificați dacă există memorie defectuoasă sau
-nepotrivită. Încercați să schimbați adaptoarele video.
+Rula\376i un utilitar de diagnosticare a sistemului oferit de produc\343torul dumneavoastr\343 de dispozitive.
+In special, executa\376i o verificare a memoriei \376i verifica\376i dac\343 exist\343 memorie defectuoas\343 sau
+nepotrivit\343. Incerca\376i s\343 schimba\376i adaptoarele video.
 
-Dezactivați sau eliminați orice dispozitiv sau modul-pilot nou instalat. Dezativați sau
-eliminați orice element de logică computațională nou instalat. Dacă aveți nevoie să folosiți Modul sigur
-pentru a elimina sau dezactiva componente, reporniți-vă calculatorul, apăsați F8 și selectați
-Opțiuni de pornire avansate, iar apoi selectați Modul sigur.
+Dezactiva\376i sau elimina\376i orice dispozitiv sau modul-pilot nou instalat. Dezativa\376i sau
+elimina\376i orice element de logic\343 computa\376ional\343 nou instalat. Dac\343 ave\376i nevoie s\343 folosi\376i Modul sigur
+pentru a elimina sau dezactiva componente, reporni\376i-v\343 calculatorul, ap\343sa\376i F8 \376i selecta\376i
+Op\376iuni de pornire avansate, iar apoi selecta\376i Modul sigur.
 .
 
 MessageId=0x80
@@ -1592,7 +1592,7 @@ Language=English
 Hardware malfunction
 .
 Language=Romanian
-Defecțiune a dispozitivului
+Defec\376iune a dispozitivului
 .
 
 MessageId=0x81
@@ -1698,13 +1698,13 @@ If this is the first time you have seen this error screen, read
 If problems continue, remove all nonfree software from your computer.
 .
 Language=Romanian
-A fost făcută o încercare de a executa o instrucțiune proprietară de cod de mașină.
-Sistemul a fost oprit pentru a preveni deteriorarea conștiinței tale.
+A fost f\343cut\343 o \356ncercare de a executa o instruc\376iune proprietar\343 de cod de ma\376in\343.
+Sistemul a fost oprit pentru a preveni deteriorarea con\376tiin\376ei tale.
 
-Dacă este pentru prima dată când vedeți acest ecran de eroare, citiți
+Dac\343 este pentru prima dat\343 c\342nd vede\376i acest ecran de eroare, citi\376i
 <http://www.gnu.org/philosophy/free-sw.html>.
 
-Dacă problemele continuă, eliminați toate programele care nu sunt gratuite din calculatorul dumneavoastră.
+Dac\343 problemele continu\343, elimina\376i toate programele care nu sunt gratuite din calculatorul dumneavoastr\343.
 .
 
 MessageId=0xA0
@@ -1726,7 +1726,7 @@ Language=English
 Inconsistency detected in the PCI Bus driver's internal structures.
 .
 Language=Romanian
-Incoerență detectată în structurile interne ale modulului-pilot PCI Bus.
+Incoeren\376\343 detectat\343 \356n structurile interne ale modulului-pilot PCI Bus.
 .
 
 MessageId=0xA5
@@ -1738,8 +1738,8 @@ The BIOS in this system is not fully ACPI compliant.  Please contact your
 system vendor for an updated BIOS.
 .
 Language=Romanian
-BIOS-ul acestui sistem nu este pe deplin compatibil cu ACPI. Contactați
-furnizorul dumneavoastră de sistem pentru un BIOS actualizat.
+BIOS-ul acestui sistem nu este pe deplin compatibil cu ACPI. Contacta\376i
+furnizorul dumneavoastr\343 de sistem pentru un BIOS actualizat.
 .
 
 MessageId=0xA8
@@ -1750,7 +1750,7 @@ Language=English
 The system is booting in safemode - Minimal Services
 .
 Language=Romanian
-Sistemul pornește în modul sigur - Servicii minimale
+Sistemul porne\376te \356n modul sigur - Servicii minimale
 .
 
 MessageId=0xA9
@@ -1761,7 +1761,7 @@ Language=English
 The system is booting in safemode - Minimal Services with Network
 .
 Language=Romanian
-Sistemul pornește în modul sigur - Servicii minimale cu rețea
+Sistemul porne\376te \356n modul sigur - Servicii minimale cu re\376ea
 .
 
 MessageId=0xAA
@@ -1772,7 +1772,7 @@ Language=English
 The system is booting in safemode - Directory Services Repair
 .
 Language=Romanian
-Sistemul pornește în modul sigur - Reparațiile serviciilor de director
+Sistemul porne\376te \356n modul sigur - Repara\376iile serviciilor de director
 .
 
 MessageId=0xAC
@@ -1783,7 +1783,7 @@ Language=English
 Allocate from NonPaged Pool failed for a HAL critical allocation.
 .
 Language=Romanian
-Alocarea din grupul non-paginat nu a reușit pentru o alocare critică HAL.
+Alocarea din grupul non-paginat nu a reu\376it pentru o alocare critic\343 HAL.
 .
 
 MessageId=0xB4
@@ -1794,7 +1794,7 @@ Language=English
 The video driver failed to initialize.
 .
 Language=Romanian
-Modulul-pilot video a eșuat să fie inițializat.
+Modulul-pilot video a e\376uat s\343 fie ini\376ializat.
 .
 
 MessageId=0xB7
@@ -1805,7 +1805,7 @@ Language=English
 Boot Logging Enabled
 .
 Language=Romanian
-Logarea de pornire activată
+Logarea de pornire activat\343
 .
 
 MessageId=0xB8
@@ -1816,7 +1816,7 @@ Language=English
 A wait operation, attach process, or yield was attempted from a DPC routine.
 .
 Language=Romanian
-O operațiune de așteptare, un proces de atașare sau un randament a fost încercat(ă) dintr-o rutină DPC.
+O opera\376iune de a\376teptare, un proces de ata\376are sau un randament a fost \356ncercat(\343) dintr-o rutin\343 DPC.
 .
 
 MessageId=0xBE
@@ -1827,7 +1827,7 @@ Language=English
 An attempt was made to write to read-only memory.
 .
 Language=Romanian
-A fost făcută o încercare de a scrie în memoria destinată numai pentru citire.
+A fost f\343cut\343 o \356ncercare de a scrie \356n memoria destinat\343 numai pentru citire.
 .
 
 MessageId=0xC1
@@ -1864,11 +1864,11 @@ the file signature is not valid and put the original, correct file back
 so that your operating system will continue to function properly.
 .
 Language=Romanian
-Un fișier de sistem ce este deținut de ReactOS a fost înlocuit de o aplicație
-ce rulează în sistemul dumneavoastră. Sistemul de operare a detectat asta și a încercat să
-verifice validitatea semnăturii fișierului. Sistemul de operare a descoperit că
-semnătura fișierului nu este validă și a pus fișierul corect și original la loc,
-astfel încât sistemul dumneavoastră de operare va continua să funcționeze corect.
+Un fi\376ier de sistem ce este de\376inut de ReactOS a fost \356nlocuit de o aplica\376ie
+ce ruleaz\343 \356n sistemul dumneavoastr\343. Sistemul de operare a detectat asta \376i a \356ncercat s\343
+verifice validitatea semn\343turii fi\376ierului. Sistemul de operare a descoperit c\343
+semn\343tura fi\376ierului nu este valid\343 \376i a pus fi\376ierul corect \376i original la loc,
+astfel \356nc\342t sistemul dumneavoastr\343 de operare va continua s\343 func\376ioneze corect.
 .
 
 MessageId=0xC4
@@ -1879,7 +1879,7 @@ Language=English
 Driver Verifier has detected a fatal error condition.
 .
 Language=Romanian
-Verificatorul de module-pilot a detectat o condiție de eroare fatală.
+Verificatorul de module-pilot a detectat o condi\376ie de eroare fatal\343.
 .
 
 MessageId=0xC5
@@ -1905,18 +1905,18 @@ and then select Safe Mode.
 Language=Romanian
 Un modul-pilot pentru dispozitiv are un fond comun.
 
-Verificați dacă orice dispozitiv sau element de logică computațională nou este instalat corect.
-Dacă asta este o instalare nouă, consultați-vă producătorul de dispozitive sau de elemente de logică computațională
-pentru orice actualizări de ReactOS de care ați putea avea nevoie.
+Verifica\376i dac\343 orice dispozitiv sau element de logic\343 computa\376ional\343 nou este instalat corect.
+Dac\343 asta este o instalare nou\343, consulta\376i-v\343 produc\343torul de dispozitive sau de elemente de logic\343 computa\376ional\343
+pentru orice actualiz\343ri de ReactOS de care a\376i putea avea nevoie.
 
-Rulați verificatorul de module-pilot în cazul unor module-pilot noi (sau suspecte).
-Dacă asta nu dezvăluie modulul-pilot corupt, încercați să activați fondul comun special.
-Ambele caracteristici sunt menite să surprindă deteriorarea într-un moment anterior, 
-în care modulul-pilot ofensator poate fi identificat.
+Rula\376i verificatorul de module-pilot \356n cazul unor module-pilot noi (sau suspecte).
+Dac\343 asta nu dezv\343luie modulul-pilot corupt, \356ncerca\376i s\343 activa\376i fondul comun special.
+Ambele caracteristici sunt menite s\343 surprind\343 deteriorarea \356ntr-un moment anterior, 
+\356n care modulul-pilot ofensator poate fi identificat.
 
-Dacă aveți nevoie să folosiți Modul sigur pentru a elimina sau a dezactiva componente,
-reporniți-vă calculatorul, apăsați F8 pentru a selecta Opțiuni avansate de pornire,
-iar apoi selectați Modul sigur.
+Dac\343 ave\376i nevoie s\343 folosi\376i Modul sigur pentru a elimina sau a dezactiva componente,
+reporni\376i-v\343 calculatorul, ap\343sa\376i F8 pentru a selecta Op\376iuni avansate de pornire,
+iar apoi selecta\376i Modul sigur.
 .
 
 MessageId=0xC6
@@ -1929,9 +1929,9 @@ The faulty driver currently on the kernel stack must be replaced
 with a working version.
 .
 Language=Romanian
-A fost găsit un modul-pilot al dispozitivului care încearcă să corupă sistemul.
-Modulul-pilot defect aflat în prezent, în stiva de nucleu trebuie înlocuit
-cu o versiune funcțională.
+A fost g\343sit un modul-pilot al dispozitivului care \356ncearc\343 s\343 corup\343 sistemul.
+Modulul-pilot defect aflat \356n prezent, \356n stiva de nucleu trebuie \356nlocuit
+cu o versiune func\376ional\343.
 .
 
 MessageId=0xC8
@@ -1945,10 +1945,10 @@ driver changing IRQL and not restoring it to its previous value when
 it has finished its task.
 .
 Language=Romanian
-IRQL-ul procesorului nu este valabil pentru contextul care se execută în prezent.
-Aceasta este o condiție de eroare element de logică computațională și este de obicei
-cauzată de un modul-pilot de dispozitiv care modifică IRQL-ul și nu îl restabilește la
-valoarea anterioară atunci când și-a încheiat sarcina.
+IRQL-ul procesorului nu este valabil pentru contextul care se execut\343 \356n prezent.
+Aceasta este o condi\376ie de eroare element de logic\343 computa\376ional\343 \376i este de obicei
+cauzat\343 de un modul-pilot de dispozitiv care modific\343 IRQL-ul \376i nu \356l restabile\376te la
+valoarea anterioar\343 atunci c\342nd \376i-a \356ncheiat sarcina.
 .
 
 MessageId=0xCA
@@ -1959,7 +1959,7 @@ Language=English
 Plug and Play detected an error most likely caused by a faulty driver.
 .
 Language=Romanian
-Conectează și folosește a detectat o eroare cauzată cel mai probabil de un modul-pilot defect.
+Conecteaz\343 \376i folose\376te a detectat o eroare cauzat\343 cel mai probabil de un modul-pilot defect.
 .
 
 MessageId=0xCB
@@ -2036,7 +2036,7 @@ Language=English
 The driver mistakenly marked a part of its image pageable instead of non-pageable.
 .
 Language=Romanian
-Modulul-pilot a marcat din greșeală o parte a imaginii sale paginabilă în loc de nepaginabilă.
+Modulul-pilot a marcat din gre\376eal\343 o parte a imaginii sale paginabil\343 \356n loc de nepaginabil\343.
 .
 
 MessageId=0xD4
@@ -2047,7 +2047,7 @@ Language=English
 The driver unloaded without cancelling pending operations.
 .
 Language=Romanian
-Modulul-pilot a descărcat fără a anula operațiunile în așteptare.
+Modulul-pilot a desc\343rcat f\343r\343 a anula opera\376iunile \356n a\376teptare.
 .
 
 MessageId=0xD5
@@ -2080,7 +2080,7 @@ Language=English
 The driver is attempting to unmap an invalid memory address.
 .
 Language=Romanian
-Modulul-pilot încearcă să anuleze maparea unei adrese de memorie nevalidă.
+Modulul-pilot \356ncearc\343 s\343 anuleze maparea unei adrese de memorie nevalid\343.
 .
 
 MessageId=0xD8
@@ -2091,7 +2091,7 @@ Language=English
 The driver has used an excessive number of system PTEs.
 .
 Language=Romanian
-Modulul-pilot a folosit un număr excesiv de PTE-uri de sistem.
+Modulul-pilot a folosit un num\343r excesiv de PTE-uri de sistem.
 .
 
 MessageId=0xD9
@@ -2102,7 +2102,7 @@ Language=English
 The system's structures tracking locked pages have been corrupted.
 .
 Language=Romanian
-Structurile sistemului care urmăresc paginile blocate au fost corupte.
+Structurile sistemului care urm\343resc paginile blocate au fost corupte.
 .
 
 MessageId=0xDA
@@ -2113,7 +2113,7 @@ Language=English
 The driver has called a system PTE routine in an improper way.
 .
 Language=Romanian
-Modulul-pilot a apelat o rutină PTE de sistem într-un mod necorespunzător.
+Modulul-pilot a apelat o rutin\343 PTE de sistem \356ntr-un mod necorespunz\343tor.
 .
 
 MessageId=0xDB
@@ -2135,7 +2135,7 @@ Language=English
 The driver has accessed an invalid stack address.
 .
 Language=Romanian
-Modulul-pilot a accesat o stivă de adresă invalidă.
+Modulul-pilot a accesat o stiv\343 de adres\343 invalid\343.
 .
 
 MessageId=0xDE
@@ -2146,7 +2146,7 @@ Language=English
 Kernel pool corruption has been detected in an area marked to be written to disk.
 .
 Language=Romanian
-Fondul comun al nucleului a fost detectat în zona marcată să fie scrisă pe disc.
+Fondul comun al nucleului a fost detectat \356n zona marcat\343 s\343 fie scris\343 pe disc.
 .
 
 MessageId=0xDF
@@ -2158,8 +2158,8 @@ A worker thread is impersonating another process. The work item forgot to
 disable impersonation before it returned.
 .
 Language=Romanian
-Un fir de execuție imporsonează alt proces. Elementul de lucru a uitat să
-dezactiveze impersonarea înainte de a reveni.
+Un fir de execu\376ie imporsoneaz\343 alt proces. Elementul de lucru a uitat s\343
+dezactiveze impersonarea \356nainte de a reveni.
 .
 
 MessageId=0xE0
@@ -2178,13 +2178,13 @@ hardware problem thereby allowing ReactOS to operate.
 .
 Language=Romanian
 
-Calculatorul dumneavoastră (BIOS-ul) a raportat că o componentă din sistemul dumneavoastră
-este defectă și a prevenit ReactOS să mai opereze.  Puteți determina care componentă este
-defectă rulând discul de diagnostic sau unealta care a venit cu calculatorul dumneavoastră.
+Calculatorul dumneavoastr\343 (BIOS-ul) a raportat c\343 o component\343 din sistemul dumneavoastr\343
+este defect\343 \376i a prevenit ReactOS s\343 mai opereze.  Pute\376i determina care component\343 este
+defect\343 rul\342nd discul de diagnostic sau unealta care a venit cu calculatorul dumneavoastr\343.
 
-Dacă nu aveți această unealtă, trebuie să vă contactați vânzătorul de sistem și să-i raportați
-acest mesaj de eroare.  Ei vor putea să vă asiste în corectarea acestei probleme de dispozitiv
-permițând astfel ReactOS să opereze.
+Dac\343 nu ave\376i aceast\343 unealt\343, trebuie s\343 v\343 contacta\376i v\342nz\343torul de sistem \376i s\343-i raporta\376i
+acest mesaj de eroare.  Ei vor putea s\343 v\343 asiste \356n corectarea acestei probleme de dispozitiv
+permi\376\342nd astfel ReactOS s\343 opereze.
 .
 
 MessageId=0xE1
@@ -2206,7 +2206,7 @@ Language=English
 The user manually generated the crash dump.
 .
 Language=Romanian
-Utilizatorul a generat manual groapa de prăbușire.
+Utilizatorul a generat manual groapa de pr\343bu\376ire.
 .
 
 MessageId=0xE3
@@ -2234,13 +2234,13 @@ If Parameter1 == 1, an attempt was made to queue an executive worker item
 with a usermode execution routine.
 .
 Language=Romanian
-Dacă Parametrul1 == 0, a fost găsit în memorie un element de lucrător executiv
-care nu trebuie să conțină astfel de articole.  De obicei, aceasta este memoria eliberată.  
-Acest lucru este cauzat de obicei de un modul-pilot de dispozitiv care nu a fost curățat
-corespunzător înainte de a elibera memoria.
+Dac\343 Parametrul1 == 0, a fost g\343sit \356n memorie un element de lucr\343tor executiv
+care nu trebuie s\343 con\376in\343 astfel de articole.  De obicei, aceasta este memoria eliberat\343.  
+Acest lucru este cauzat de obicei de un modul-pilot de dispozitiv care nu a fost cur\343\376at
+corespunz\343tor \356nainte de a elibera memoria.
 
-Dacă Parametrul1 == 1, a fost făcută o încercare de a pune în coadă un element de
-lucrător executiv cu o rutină de execuție în modul utilizator.
+Dac\343 Parametrul1 == 1, a fost f\343cut\343 o \356ncercare de a pune \356n coad\343 un element de
+lucr\343tor executiv cu o rutin\343 de execu\376ie \356n modul utilizator.
 .
 
 MessageId=0xE5
@@ -2273,7 +2273,7 @@ Language=English
 Invalid cancel of a open file. It already has handle.
 .
 Language=Romanian
-Anularea nevalidă a unui fișier deschis. Are deja mâner.
+Anularea nevalid\343 a unui fi\376ier deschis. Are deja m\342ner.
 .
 
 MessageId=0xE9
@@ -2286,9 +2286,9 @@ Work items queued to the Ex worker queue must not terminate their threads.
 A stack trace should indicate the culprit.
 .
 Language=Romanian
-Un fir de lucru executiv este terminat fără a fi trecut prin codul derulat al firului de lucru.
-Elementele de lucru aflate în coada fostului lucrător nu trebuie să-și termine firele de execuție.
-O urmă de stivă ar trebui să indice vinovatul.
+Un fir de lucru executiv este terminat f\343r\343 a fi trecut prin codul derulat al firului de lucru.
+Elementele de lucru aflate \356n coada fostului lucr\343tor nu trebuie s\343-\376i termine firele de execu\376ie.
+O urm\343 de stiv\343 ar trebui s\343 indice vinovatul.
 .
 
 MessageId=0xEA
@@ -2305,11 +2305,11 @@ Please check with your hardware device vendor for any driver updates.
 .
 Language=Romanian
 
-Modulul-pilot dispozitivului a rămas blocat într-o buclă infinită. Acest lucru 
-indică de obicei o problemă cu dispozitivul în sine sau cu modulul-pilot de
-dispozitiv care programează incorect dispozitivul.
+Modulul-pilot dispozitivului a r\343mas blocat \356ntr-o bucl\343 infinit\343. Acest lucru 
+indic\343 de obicei o problem\343 cu dispozitivul \356n sine sau cu modulul-pilot de
+dispozitiv care programeaz\343 incorect dispozitivul.
 
-Consultați furnizorul de dispozitive fizice pentru eventuale actualizări ale modulelor-pilot.
+Consulta\376i furnizorul de dispozitive fizice pentru eventuale actualiz\343ri ale modulelor-pilot.
 .
 
 MessageId=0xEF
@@ -2320,7 +2320,7 @@ Language=English
 The kernel attempted to ready a thread that was in an incorrect state such as terminated.
 .
 Language=Romanian
-Nucleul a încercat să pregătească un fir care era într-o stare incorectă, cum ar fi terminat.
+Nucleul a \356ncercat s\343 preg\343teasc\343 un fir care era \356ntr-o stare incorect\343, cum ar fi terminat.
 .
 
 MessageId=0xF4
@@ -2331,7 +2331,7 @@ Language=English
 A process or thread crucial to system operation has unexpectedly exited or been terminated.
 .
 Language=Romanian
-Un proces sau un fir crucial pentru funcționarea sistemului a ieșit în mod neașteptat sau a fost încheiat.
+Un proces sau un fir crucial pentru func\376ionarea sistemului a ie\376it \356n mod nea\376teptat sau a fost \356ncheiat.
 .
 
 MessageId=0xF6
@@ -2342,7 +2342,7 @@ Language=English
 The PCI driver has detected an error in a PCI device or BIOS being verified.
 .
 Language=Romanian
-Modulul-pilot PCI a detectat o eroare într-un dispozitiv PCI sau BIOS, fiind în curs de verificare.
+Modulul-pilot PCI a detectat o eroare \356ntr-un dispozitiv PCI sau BIOS, fiind \356n curs de verificare.
 .
 
 MessageId=0xF7
@@ -2354,8 +2354,8 @@ A driver has overrun a stack-based buffer.  This overrun could potentially
 allow a malicious user to gain control of this machine.
 .
 Language=Romanian
-Un modul-pilot a depășit un tampon bazat pe stivă. Această depășire ar putea
-permite unui utilizator rău intenționat să obțină controlul asupra acestei mașini.
+Un modul-pilot a dep\343\376it un tampon bazat pe stiv\343. Aceast\343 dep\343\376ire ar putea
+permite unui utilizator r\343u inten\376ionat s\343 ob\376in\343 controlul asupra acestei ma\376ini.
 .
 
 MessageId=0xF8
@@ -2366,7 +2366,7 @@ Language=English
 An initialization failure occurred while attempting to boot from the RAM disk.
 .
 Language=Romanian
-A apărut o eroare de inițializare în timpul încercării de pornire de pe discul RAM.
+A ap\343rut o eroare de ini\376ializare \356n timpul \356ncerc\343rii de pornire de pe discul RAM.
 .
 
 MessageId=0xF9
@@ -2377,7 +2377,7 @@ Language=English
 STATUS_REPARSE was returned from a FSD when trying to open a volume.
 .
 Language=Romanian
-STATUS_REPARSE a fost returnat de la un FSD la încercarea de a deschide un volum.
+STATUS_REPARSE a fost returnat de la un FSD la \356ncercarea de a deschide un volum.
 .
 
 MessageId=0xFA
@@ -2388,7 +2388,7 @@ Language=English
 Corruption was detected in the HTTP kernel driver.
 .
 Language=Romanian
-A fost detectată o deteriorare în modulul-pilot al nucleului HTTP.
+A fost detectat\343 o deteriorare \356n modulul-pilot al nucleului HTTP.
 .
 
 MessageId=0xFC
@@ -2399,7 +2399,7 @@ Language=English
 An attempt was made to execute to non-executable memory.
 .
 Language=Romanian
-A fost făcută o încercare de a se executa în memoria neexecutabilă.
+A fost f\343cut\343 o \356ncercare de a se executa \356n memoria neexecutabil\343.
 .
 
 MessageId=0xFD
@@ -2421,7 +2421,7 @@ Language=English
 A fatal error occurred in the USB driver stack.
 .
 Language=Romanian
-A apărut o eroare fatală în stiva de module-pilot USB.
+A ap\343rut o eroare fatal\343 \356n stiva de module-pilot USB.
 .
 
 MessageId=0x139
@@ -2432,5 +2432,5 @@ Language=English
 A critical kernel security check failed.
 .
 Language=Romanian
-O verificare critică de securitate a nucleului a eșuat.
+O verificare critic\343 de securitate a nucleului a e\376uat.
 .
