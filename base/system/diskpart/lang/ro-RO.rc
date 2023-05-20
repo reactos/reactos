@@ -52,12 +52,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "ID-ul discului: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "Disc ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tip"
     IDS_DETAIL_INFO_STATUS "Stare"
     IDS_DETAIL_INFO_PATH   "Cale   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Țintă  : %hu\n"
-    IDS_DETAIL_INFO_LUN_ID "ID-ul LUN-ului : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "LUN ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Localizat în"
     IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă"
     IDS_DETAIL_INFO_RO "Nemodificabil"
