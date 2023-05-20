@@ -26,6 +26,16 @@ list(APPEND COMMON_SOURCE
     rtl/RtlStrSafe.c
     rtl/RtlUnicodeString.c)
 
+if(ARCH STREQUAL "i386")
+
+elseif(ARCH STREQUAL "amd64")
+    add_asm_files(kmtest_common_asm ../apitests/rtl/amd64/RtlCaptureContext-asm.s)
+    list(APPEND COMMON_SOURCE
+        ../apitests/rtl/amd64/RtlCaptureContext.c
+        ${kmtest_common_asm}
+    )
+endif()
+
 #
 # kmtest_drv.sys driver
 #
