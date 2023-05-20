@@ -1,7 +1,7 @@
 
 
 list(APPEND SOURCE
-    # To be filled
+    RtlIntSafe.c
 )
 
 if(ARCH STREQUAL "i386")
