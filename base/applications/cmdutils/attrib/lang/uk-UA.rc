@@ -1,16 +1,15 @@
 /*
- * PROJECT:     Command-line interface
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/shell/cmd/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Command-line interface
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2006 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Відображення або зміна атрибутів файлу.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
        [/S [/D]]\n\n\
@@ -25,5 +24,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
   /D  Обробка також i тек\n\n\
 Введiть ATTRIB без параметра, щоб вивести атрибути всiх файлiв.\n"
     STRING_CONSOLE_ERROR "Невiдома помилка: %d\n"
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Невiрний формат параметра - %s\n"
 END

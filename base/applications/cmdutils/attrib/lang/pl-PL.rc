@@ -1,18 +1,16 @@
 /*
- *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
- *    Updated by niski - Maciej Bialas (Mar, 2010)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2010 Maciej Bialas <bjauy@o2.pl>
+ *              Copyright 2020 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "Nie można odnaleźć pliku - '%s'\n"
     STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
        [/S [/D]]\n\n\
@@ -27,5 +25,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
   /D  Przetwarza również katalogi\n\n\
 Wpisz ATTRIB bez żadnego parametru, by wyświetlić atrybuty wszystkich plików.\n"
     STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
+    STRING_FILE_NOT_FOUND "Nie można odnaleźć pliku - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Niewłaściwy format parametru - %s\n"
 END

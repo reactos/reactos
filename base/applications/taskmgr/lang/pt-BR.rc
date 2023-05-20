@@ -379,6 +379,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Define o processo como tendo classe de prioridade NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Define o processo com a classe de prioridade ABAIXO DO NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Define o processo como tendo classe de prioridade BAIXA"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

@@ -85,16 +85,18 @@ and synced every time RAPPS is launched for the first time.
 
 NOTE: You can find the most current URL in rapps.h, defined as APPLICATION_DATABASE_URL.
 
-To generate a RAPPS database (usually a rappmgr.cab archive), use the included scripts:
+To generate a RAPPS database (usually a rappmgr.cab/rappmgr2.cab archive), use
+the included scripts:
 
 For Windows & other NT-derived: CreateCabFile.bat
 For Linux & other UNIX flavors: CreateCabFile.sh
 
 
-Once the rappmgr.cab is downloaded to %appdata%\rapps, RAPPS extracts it using cabinet.dll
-inside %appdata%\rapps\rapps, after that, it will parse all the *.txt files contained therein.
+Once the rappmgr.cab is downloaded to the user's local %AppData%\RApps, RAPPS extracts it
+using cabinet.dll inside %AppData%\RApps\appdb. After that, it will parse all the *.txt
+files contained therein.
 
-Every subsequent time the program tries to access the local .txt files
+Every subsequent time, the program tries to access the local .txt files
 until a database update is manually triggered by the user.
 
 If the rappmgr.cab file is moved or just missing, RAPPS will download it again.

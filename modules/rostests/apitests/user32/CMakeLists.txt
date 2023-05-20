@@ -15,11 +15,13 @@ list(APPEND SOURCE
     desktop.c
     EmptyClipboard.c
     EnumDisplaySettings.c
+    GetClassInfo.c
     GetDCEx.c
     GetIconInfo.c
     GetKeyState.c
     GetMessageTime.c
     GetPeekMessage.c
+    GetSetWindowInt.c
     GetSystemMetrics.c
     GetUserObjectInformation.c
     GetWindowPlacement.c

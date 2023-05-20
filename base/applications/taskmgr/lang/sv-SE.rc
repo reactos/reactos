@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Ändrar processens prioritet till normal"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Ändrar processens prioritet till under normal"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Ändrar processens prioritet till låg"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

@@ -90,14 +90,25 @@ LPCWSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     int pathLen = 0, maxLen;
 
     *phRootKey = NULL;
-    if (!pathBuffer) pathBuffer = HeapAlloc(GetProcessHeap(), 0, 1024);
-    if (!pathBuffer) return NULL;
-    *pathBuffer = 0;
+
+    if (!pathBuffer)
+    {
+        pathBuffer = HeapAlloc(GetProcessHeap(), 0, 1024);
+    }
+    if (!pathBuffer)
+    {
+        return NULL;
+    }
+
+    *pathBuffer = UNICODE_NULL;
+
     maxLen = (int) HeapSize(GetProcessHeap(), 0, pathBuffer);
-    if (maxLen == -1) return NULL;
-    if (!hItem) hItem = TreeView_GetSelection(hwndTV);
-    if (!hItem) return NULL;
-    if (!get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen))
+
+    if (!hItem)
+    {
+        hItem = TreeView_GetSelection(hwndTV);
+    }
+    if (maxLen == -1 || !hItem || !get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen))
     {
         return NULL;
     }
@@ -353,7 +364,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name)
     if (!TreeView_GetItem(hwndTV, &item))
         return FALSE;
 
-    if ((item.state & TVIS_EXPANDEDONCE) && (item.cChildren > 0))
+    if (item.state & TVIS_EXPANDEDONCE)
     {
         hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
         SendMessageW(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
@@ -645,8 +656,9 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 
             UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL, TRUE);
 
-            /* Disable the Permissions menu item for 'My Computer' */
+            /* Disable the Permissions and new key menu items for 'My Computer' */
             EnableMenuItem(hMenuFrame, ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
+            EnableMenuItem(hMenuFrame, ID_EDIT_NEW_KEY, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
 
             /*
              * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)

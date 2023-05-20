@@ -1,10 +1,14 @@
-/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+/*
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "找不到文件 - “%s”\n"
     STRING_ATTRIB_HELP "显示或更改文件属性。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 文件 ...\n\
        [/S [/D]]\n\n\
@@ -18,5 +22,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 文件 ...\n\
   /D  同时处理目录\n\n\
 执行不带参数的 ATTRIB 将会显示所有文件的属性。\n"
     STRING_CONSOLE_ERROR "未知错误：%d\n"
+    STRING_FILE_NOT_FOUND "找不到文件 - “%s”\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "无效的参数格式 - %s\n"
 END

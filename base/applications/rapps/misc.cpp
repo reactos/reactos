@@ -153,7 +153,7 @@ GetStorageDirectory(CStringW &Directory)
         BOOL bHasPath = SHGetSpecialFolderPathW(NULL, DirectoryStr, CSIDL_LOCAL_APPDATA, TRUE);
         if (bHasPath)
         {
-            PathAppendW(DirectoryStr, L"rapps");
+            PathAppendW(DirectoryStr, RAPPS_NAME);
         }
         CachedDirectory.ReleaseBuffer();
 

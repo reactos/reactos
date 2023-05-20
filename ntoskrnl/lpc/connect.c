@@ -90,6 +90,9 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD Thread = PsGetCurrentThread();
+#if DBG
+    UNICODE_STRING CapturedPortName;
+#endif
     SECURITY_QUALITY_OF_SERVICE CapturedQos;
     PORT_VIEW CapturedClientView;
     PSID CapturedServerSid;
@@ -105,13 +108,6 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     PTOKEN_USER TokenUserInfo;
 
     PAGED_CODE();
-    LPCTRACE(LPC_CONNECT_DEBUG,
-             "Name: %wZ. SecurityQos: %p. Views: %p/%p. Sid: %p\n",
-             PortName,
-             SecurityQos,
-             ClientView,
-             ServerView,
-             ServerSid);
 
     /* Check if the call comes from user mode */
     if (PreviousMode != KernelMode)
@@ -141,7 +137,6 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                     /* Invalid size */
                     _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
                 }
-
             }
 
             /* Capture the server view */
@@ -172,7 +167,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 ProbeForWrite(ConnectionInformation, ConnectionInfoLength, sizeof(ULONG));
 
             CapturedServerSid = ServerSid;
-            if (ServerSid != NULL)
+            if (ServerSid)
             {
                 /* Capture it */
                 Status = SepCaptureSid(ServerSid,
@@ -231,6 +226,21 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         CapturedServerSid = ServerSid;
     }
 
+#if DBG
+    /* Capture the port name for DPRINT only - ObReferenceObjectByName does
+     * its own capture. As it is used only for debugging, ignore any failure;
+     * the string is zeroed out in such case. */
+    ProbeAndCaptureUnicodeString(&CapturedPortName, PreviousMode, PortName);
+
+    LPCTRACE(LPC_CONNECT_DEBUG,
+             "Name: %wZ. SecurityQos: %p. Views: %p/%p. Sid: %p\n",
+             &CapturedPortName,
+             SecurityQos,
+             ClientView,
+             ServerView,
+             ServerSid);
+#endif
+
     /* Get the port */
     Status = ObReferenceObjectByName(PortName,
                                      0,
@@ -242,7 +252,10 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                      (PVOID*)&Port);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to reference port '%wZ': 0x%lx\n", PortName, Status);
+#if DBG
+        DPRINT1("Failed to reference port '%wZ': 0x%lx\n", &CapturedPortName, Status);
+        ReleaseCapturedUnicodeString(&CapturedPortName, PreviousMode);
+#endif
 
         if (CapturedServerSid != ServerSid)
             SepReleaseSid(CapturedServerSid, PreviousMode, TRUE);
@@ -253,7 +266,10 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     /* This has to be a connection port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
     {
-        DPRINT1("Port '%wZ' is not a connection port (Flags: 0x%lx)\n", PortName, Port->Flags);
+#if DBG
+        DPRINT1("Port '%wZ' is not a connection port (Flags: 0x%lx)\n", &CapturedPortName, Port->Flags);
+        ReleaseCapturedUnicodeString(&CapturedPortName, PreviousMode);
+#endif
 
         /* It isn't, so fail */
         ObDereferenceObject(Port);
@@ -282,7 +298,9 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 if (!RtlEqualSid(CapturedServerSid, TokenUserInfo->User.Sid))
                 {
                     /* Fail */
-                    DPRINT1("Port '%wZ': server SID mismatch\n", PortName);
+#if DBG
+                    DPRINT1("Port '%wZ': server SID mismatch\n", &CapturedPortName);
+#endif
                     Status = STATUS_SERVER_SID_MISMATCH;
                 }
 
@@ -293,21 +311,27 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         else
         {
             /* Invalid SID */
-            DPRINT1("Port '%wZ': server SID mismatch\n", PortName);
+#if DBG
+            DPRINT1("Port '%wZ': server SID mismatch\n", &CapturedPortName);
+#endif
             Status = STATUS_SERVER_SID_MISMATCH;
         }
 
         /* Finally release the captured SID, we don't need it anymore */
         if (CapturedServerSid != ServerSid)
             SepReleaseSid(CapturedServerSid, PreviousMode, TRUE);
+    }
 
-        /* Check if SID failed */
-        if (!NT_SUCCESS(Status))
-        {
-            /* Quit */
-            ObDereferenceObject(Port);
-            return Status;
-        }
+#if DBG
+    ReleaseCapturedUnicodeString(&CapturedPortName, PreviousMode);
+#endif
+
+    /* Check if SID failed */
+    if (ServerSid && !NT_SUCCESS(Status))
+    {
+        /* Quit */
+        ObDereferenceObject(Port);
+        return Status;
     }
 
     /* Create the client port */

@@ -218,7 +218,7 @@ BOOL
 LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
     ATL::CRegKey RegKey;
-    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) != ERROR_SUCCESS)
+    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, KEY_READ) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -245,9 +245,8 @@ SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
             (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
-    if (RegKey.Create(
-            HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) !=
-        ERROR_SUCCESS)
+    if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, NULL,
+                      REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
     {
         return FALSE;
     }

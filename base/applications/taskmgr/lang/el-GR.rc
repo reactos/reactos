@@ -127,7 +127,7 @@ BEGIN
         MENUITEM "End Process &Tree", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Debug", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Set &Priority"
+        POPUP "Set P&riority"
         BEGIN
             MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&High", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -381,6 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sets process to the NORMAL priority class"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sets process to the BELOW NORMAL priority class"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sets process to the LOW priority class"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

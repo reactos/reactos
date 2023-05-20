@@ -74,7 +74,7 @@ CAppDB::EnumerateFiles()
     ClearList(m_Available);
 
     CPathW AppsPath = m_BasePath;
-    AppsPath += L"rapps";
+    AppsPath += RAPPS_DATABASE_SUBDIR;
     CPathW WildcardPath = AppsPath;
     WildcardPath += L"*.txt";
 
@@ -95,7 +95,7 @@ CAppDB::EnumerateFiles()
         ATLASSERT(Info == NULL);
         if (!Info)
         {
-            CConfigParser *Parser = new CConfigParser(FindFileData.cFileName);
+            CConfigParser *Parser = new CConfigParser(CPathW(AppsPath) += FindFileData.cFileName);
             int Cat;
             if (!Parser->GetInt(L"Category", Cat))
                 Cat = ENUM_INVALID;
@@ -130,7 +130,7 @@ CAppDB::UpdateAvailable()
         SettingsInfo.bUseSource ? SettingsInfo.szSourceURL : APPLICATION_DATABASE_URL, !SettingsInfo.bUseSource);
 
     CPathW AppsPath = m_BasePath;
-    AppsPath += L"rapps";
+    AppsPath += RAPPS_DATABASE_SUBDIR;
     if (!ExtractFilesFromCab(APPLICATION_DATABASE_NAME, m_BasePath, AppsPath))
         return;
 
@@ -243,7 +243,7 @@ CAppDB::RemoveCached()
 {
     // Delete icons
     CPathW AppsPath = m_BasePath;
-    AppsPath += L"rapps";
+    AppsPath += RAPPS_DATABASE_SUBDIR;
     CPathW IconPath = AppsPath;
     IconPath += L"icons";
     DeleteWithWildcard(IconPath, L"*.ico");

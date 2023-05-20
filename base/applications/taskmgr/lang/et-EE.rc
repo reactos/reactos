@@ -384,6 +384,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sätib protsessi keskmisele prioriteedile"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "SSätib protsessi alla keskmise prioriteedile"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sätib protsessi madalals prioriteedile"
+    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
 END
 
 STRINGTABLE

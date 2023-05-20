@@ -29,6 +29,15 @@
 #include "resource.h"
 #include "winmain.h"
 
-#define APPLICATION_DATABASE_URL L"https://rapps.reactos.org/rappmgr2.cab"
-#define APPLICATION_DATABASE_NAME L"rappmgr2.cab"
+/* Name of the registry sub-key where RAPPS settings are stored, and
+ * of the local AppData sub-directory where the RAPPS files are stored. */
+#define RAPPS_NAME                  L"RApps"
+
+/* Name of the RAPPS sub-directory where the offline RAPPS database is stored */
+#define RAPPS_DATABASE_SUBDIR       L"appdb"
+
+/* URL and filename of the online RAPPS database */
+#define APPLICATION_DATABASE_URL    L"https://rapps.reactos.org/rappmgr2.cab"
+#define APPLICATION_DATABASE_NAME   L"rappmgr2.cab"
+
 #define MAX_STR_LEN 256

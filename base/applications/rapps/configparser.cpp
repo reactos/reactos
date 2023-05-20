@@ -7,6 +7,7 @@
  *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  *              Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
  */
+
 #include "rapps.h"
 #include <debug.h>
 
@@ -24,19 +25,7 @@ struct CSectionNames
 };
 static CSectionNames g_Names;
 
-static CStringW
-GetINIFullPath(const CStringW &FileName)
-{
-    CStringW szDir;
-    CStringW szBuffer;
-
-    GetStorageDirectory(szDir);
-    szBuffer.Format(L"%ls\\rapps\\%ls", szDir.GetString(), FileName.GetString());
-
-    return szBuffer;
-}
-
-CConfigParser::CConfigParser(const CStringW &FileName) : szConfigPath(GetINIFullPath(FileName))
+CConfigParser::CConfigParser(const CStringW &FilePath) : szConfigPath(FilePath)
 {
     CacheINI();
 }
