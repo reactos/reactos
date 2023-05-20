@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Ukrainian (Ukraine) translation resource
- * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATOR:  Copyright 2019 Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE

@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Romanian (Romania) translation resource
- * COPYRIGHT:       Copyright 2019 George Bișoc (george.bisoc@reactos.org)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATOR:  Copyright 2019 George Bișoc <george.bisoc@reactos.org>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL

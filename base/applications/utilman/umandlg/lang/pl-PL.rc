@@ -1,7 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Polish translation resource
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Polish resource file
+ * TRANSLATOR:  Copyright 2019 Adam Słaboń <asaillen456esx@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

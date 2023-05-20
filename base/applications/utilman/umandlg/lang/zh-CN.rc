@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Simplified Chinese translation resource
- * COPYRIGHT:       Copyright 2020 Zheng Jianping (robsean@126.com)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATOR:  Copyright 2020 Zheng Jianping <robsean@126.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

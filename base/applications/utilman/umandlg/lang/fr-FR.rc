@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         French (France) translation resource
- * COPYRIGHT:       Copyright 2019 Pierre Schweitzer (pierre@reactos.org)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     French translation resource
+ * TRANSLATOR:  Copyright 2019 Pierre Schweitzer <pierre@reactos.org>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
