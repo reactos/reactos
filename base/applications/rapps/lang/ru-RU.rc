@@ -66,10 +66,10 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "В&ыбрать", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Удалять инсталляторы программ после установки", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
-    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Источник ПО", -1, 4, 118, 240, 46
+    CONTROL "По умолчанию", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 81, 10
+    CONTROL "Указанный источник", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 81, 10
+    EDITTEXT IDC_SOURCE_URL, 103, 147, 134, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Прокси", -1, 4, 166, 240, 76
     CONTROL "Системные настройки прокси", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
     CONTROL "Без прокси", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
@@ -141,7 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
     IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
     IDS_INFO_INSTALLDATE "\nДата установки: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nНазвание пакета: "
 END
 
 STRINGTABLE
@@ -194,14 +194,14 @@ BEGIN
     IDS_APPLICATIONS "Приложения"
     IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
     IDS_CHOOSE_FOLDER_ERROR "Указанная вами папка не существует. Создать?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "Указанный вами URL недействителен или не поддерживается. Пожалуйста, исправьте его!"
     IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"
     IDS_UNABLE_TO_DOWNLOAD2 "Не удалось скачать приложение! Проверьте подключение к сети Интернет!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
     IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_QUERY_CERT "Не удалось получить информацию о сертификате.\n\nВы хотите продолжить в любом случае?"
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения…"
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
@@ -210,11 +210,11 @@ BEGIN
     IDS_INSTALL_SELECTED "Установить выбранное"
     IDS_SELECTEDFORINST "Выбрано для установки"
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
-    IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "Details"
-    IDS_APP_DISPLAY_LIST "List"
-    IDS_APP_DISPLAY_TILE "Tile"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_UNABLE_PATH "Неправильный формат пути."
+    IDS_APP_DISPLAY_DETAILS "Таблица"
+    IDS_APP_DISPLAY_LIST "Список"
+    IDS_APP_DISPLAY_TILE "Плитка"
+    IDS_NO_SEARCH_RESULTS "Ничего не найдено"
 END
 
 STRINGTABLE
@@ -250,17 +250,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "База данных приложений"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Обновление базы данных… (Неофициальный источник)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Использование: "
+    IDS_CMD_NEED_PACKAGE_NAME "Ошибка: для опции %1 нужно одно или несколько имён пакетов.\n"
+    IDS_CMD_NEED_FILE_NAME "Ошибка: для опции %1 нужно имя файла.\n"
+    IDS_CMD_NEED_PARAMS "Ошибка: для опции %1 нужен один или более параметров.\n"
+    IDS_CMD_INVALID_OPTION "Ошибка: Указан неизвестный или недопустимый параметр командной строки.\n"
+    IDS_CMD_FIND_RESULT_FOR "Результаты поиска для %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Не удалось найти пакет %1.\n"
+    IDS_CMD_PACKAGE_INFO "Информация о пакете %1:\n"
 END
