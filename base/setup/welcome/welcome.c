@@ -44,8 +44,10 @@
 
 #include "resource.h"
 
-#define LIGHT_BLUE RGB(214, 239, 247)
-#define DARK_BLUE  RGB(107, 123, 140)
+//#define LIGHT_BLUE RGB(214, 239, 247)
+//#define DARK_BLUE  RGB(107, 123, 140)
+#define LIGHT_BLUE RGB(0, 0, 0)
+#define DARK_BLUE RGB(0, 0, 0)
 
 #define TITLE_WIDTH  480
 #define TITLE_HEIGHT  93

@@ -504,8 +504,8 @@ RtlRosGetAppcompatVersion(VOID)
     if (Peb == NULL)
     {
         /* Default to Server 2003 */
-       // return _WIN32_WINNT_WS03;
-        return _WIN32_WINNT_WIN7;
+        return _WIN32_WINNT_WS03;
+       // return _WIN32_WINNT_WIN7;
     }
 
     /* Calculate OS version from PEB fields */

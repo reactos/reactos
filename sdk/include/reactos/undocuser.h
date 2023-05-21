@@ -380,7 +380,7 @@ typedef struct _USERAPIHOOKINFO
 
 #if (WINVER == _WIN32_WINNT_WINXP)
 BOOL WINAPI RegisterUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC CallbackFunc);
-#elif (WINVER >= _WIN32_WINNT_WS03)
+#elif (WINVER == _WIN32_WINNT_WS03)
 BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 #endif
 
