@@ -1,41 +1,48 @@
+/*
+ * PROJECT:     ReactOS FC Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them.\n\
+    IDS_USAGE "Compară două fișiere sau seturi de fișiere și afișează diferențele dintre\n\
+ele.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [discul1:][calea1]numele fișierului1 [discul2:][calea2]numele fișierului2\n\
+FC /B [discul1:][calea1]numele fișierului1 [drive2:][path2]numele fișierului2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+  /A         Afișează numai prima și ultima linie pentru fiecare set de diferențe.\n\
+  /B         Efectuează o comparație binară.\n\
+  /C         Ignoră cazul literelor.\n\
+  /L         Compară fișierele ca text ASCII.\n\
+  /LBn       Setează numărul maxim consecutiv de nepotriviri la numărul\n\
+             de linii specificat (implicit: 100).\n\
+  /N         Afișează numerele de linii într-o comparație ASCII.\n\
+  /OFF[LINE] Nu ignoră fișierele cu atribute deconectate setate.\n\
+  /T         Nu extinde taburile la spații (implicit: extinde).\n\
+  /U         Compară fișierele ca fișierele text UNICODE.\n\
+  /W         Comprimă spațiul alb (taburi și spații) pentru comparație.\n\
+  /nnnn      Specifică un număr de linii consecutive ce trebuie să se potrivească\n\
+             după o nepotrivire (implicit: 2).\n\
+  [disc1:][cale1]numele fișierului1\n\
+             Specifică primul fișier sau set de fișiere de comparat.\n\
+  [disc2:][cale2]numele fișierului2\n\
+             Specifică al doilea fișier sau set de fișiere de comparat.\n"
+    IDS_NO_DIFFERENCE "FC: nu a fost întâlnită nicio diferență\n"
+    IDS_LONGER_THAN "FC: %ls e mai mare decât %ls\n"
+    IDS_COMPARING "Compararea fișierelor %ls și %ls\n"
+    IDS_OUT_OF_MEMORY "FC: Fără memorie\n"
+    IDS_CANNOT_READ "FC: nu poate fi citit din %ls\n"
+    IDS_INVALID_SWITCH "FC: Comutator nevalidh\n"
+    IDS_CANNOT_OPEN "FC: nu poate fi deschis %ls - Nu există un astfel de fișier sau dosar\n"
+    IDS_NEEDS_FILES "FC: Număr insuficient de specificații pentru fișiere\n"
+    IDS_CANT_USE_WILDCARD "Semnele speciale ('*' și '?') nu sunt acceptate deocamdată\n"
+    IDS_DIFFERENT "FC: Fișierele %ls și %ls sunt diferite\n"
+    IDS_TOO_LARGE "FC: Fișierul %ls este prea mare\n"
+    IDS_RESYNC_FAILED "Resincronizare eșuată.  Fișierele sunt prea diferite.\n"
 END
