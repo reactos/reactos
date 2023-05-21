@@ -259,6 +259,8 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             /* Activate window */
             ShowWindow(hWindow, SW_SHOWNORMAL);
             SetForegroundWindow(hWindow);
+            if (bAppwizMode)
+                PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
             return FALSE;
         }
 

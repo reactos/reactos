@@ -58,6 +58,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 
     BOOL bUpdating = FALSE;
     BOOL bAppwizMode;
+    HTREEITEM hRootItemInstalled;
 
     CStringW szSearchPattern;
     AppsCategories SelectedEnumType;

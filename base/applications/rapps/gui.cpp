@@ -94,7 +94,7 @@ CMainWindow::~CMainWindow()
 VOID
 CMainWindow::InitCategoriesList()
 {
-    HTREEITEM hRootItemInstalled, hRootItemAvailable;
+    HTREEITEM hRootItemAvailable;
 
     hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
@@ -556,6 +556,11 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 
             case ID_CHECK_ALL:
                 m_ApplicationView->CheckAll();
+                break;
+
+            case ID_ACTIVATE_APPWIZ:
+                if (hRootItemInstalled)
+                    m_TreeView->SelectItem(hRootItemInstalled);
                 break;
         }
     }
