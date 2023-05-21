@@ -1,0 +1,49 @@
+C:\OS\reactos-master\base\shell\explorer\ меню пуска, рабочий стол
+
+C:\OS\reactos-master\base\system\userinit\res
+C:\OS\reactos-master\base\setup\reactos - Установщик ОС(настройщиик)
+
+C:\OS\reactos\base\shell\explorer - рабочий стол
+traywnd.cpp основной класс
+startmnu.cpp меню которое открывается при нажатие на Старт
+traypop - настройка вида таска бара
+CStartMenuSettingsPage - меню настроки вида таск бара
+
+Как работать с гитхаб
+https://windows-school.ru/blog/github_v_windows/2022-01-03-838
+Копируем репозиторий с Гитхаб
+git clone https://github.com/YurinKonstantin/Zarya.git  копируем репозиторий
+Отправляем изменения на гитхаб
+git add .
+git commit -m "new commit"
+git push https://github.com/YurinKonstantin/Zarya.git
+
+Получаем изменения из гитхаб
+(Вначале надо зафиксировать изменения и сделать push)
+git pull https://github.com/YurinKonstantin/Zarya.git
+
+
+Меняем версию 
+здесь меняем минор и мажор версию
+C:\OS\Zarya\sdk\include\psdk\ntverp.h здесь меняем минор и мажор версию
+C:\OS\Zarya\dll\win32\shell32\shell32_version.h
+C:\OS\Zarya\output-MinGW-i386\dll\win32\ole32\dcom_p.h
+C:\OS\Zarya\output-MinGW-i386\dll\win32\msxml3\xslpattern.yy.c
+В C:\OS\Zarya\boot\freeldr\freeldr\ntldr заменить _WIN32_WINNT_WS03 на _WIN32_WINNT_WIN7
+
+добавление новых методов
+При попытки установить Яндекс браузер, ругается на AcquireSRWLockExclusive не найден в kernel32.dll
+Этот метод уже есть, но скрыт условие. Так же он есть в C:\OS\Zarya\dll\win32\kernel32\kernel32_vista\sync.c
+Закоментим его в C:\OS\Zarya\dll\win32\kernel32\kernel32_vista\kernel32_vista.spec
+В C:\OS\Zarya\dll\win32\kernel32\kernel32.spec заменим -stub -version=0x600+ AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive на @ stdcall AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive
+Далее в C:\OS\Zarya\sdk\include\psdk\winbase.h уберем условие #if (_WIN32_WINNT >= 0x0600) для typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
+Затем в C:\OS\Zarya\sdk\include\ndk\rtlfuncs.h уберем условие #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (defined(__REACTOS__) && defined(_NTDLLBUILD_)) для VOID NTAPI RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+
+Убираем надпись с рабочего стола о версии (нижней правый угол)
+C:\OS\reactos\win32ss\user\ntuser\desktop.c
+В методе BOOL FASTCALL IntPaintDesktop(HDC hDC) закоментить то что внутри if (InSafeMode || g_AlwaysDisplayVersion || g_PaintDesktopVersion)
+Тамже и фон рабочего стола можно сделать
+
+В папку App добавляем стороние приложения
+В ОС они по умолчанию в system32
+Что бы приложения отобразилось в меню приложения 
