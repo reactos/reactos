@@ -82,7 +82,7 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CAppDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -123,7 +123,7 @@ CMainWindow::InitCategoriesList()
     m_TreeView->SetImageList();
     m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
     m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
-    m_TreeView->SelectItem(hRootItemAvailable);
+    m_TreeView->SelectItem(bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
 }
 
 BOOL

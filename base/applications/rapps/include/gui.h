@@ -57,12 +57,13 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     CAtlList<CAppInfo *> m_Selected;
 
     BOOL bUpdating = FALSE;
+    BOOL bAppwizMode;
 
     CStringW szSearchPattern;
     AppsCategories SelectedEnumType;
 
   public:
-    CMainWindow(CAppDB *db);
+    explicit CMainWindow(CAppDB *db, BOOL bAppwiz = FALSE);
 
     ~CMainWindow();
 
