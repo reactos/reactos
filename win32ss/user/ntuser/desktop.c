@@ -2068,7 +2068,8 @@ IntPaintDesktop(HDC hDC)
     /*
      * Display the system version on the desktop background
      */
-    if (InSafeMode || g_AlwaysDisplayVersion || g_PaintDesktopVersion)
+   // if (InSafeMode || g_AlwaysDisplayVersion || g_PaintDesktopVersion)
+    if (0)
     {
         NTSTATUS Status;
         static WCHAR wszzVersion[1024] = L"\0";
@@ -2180,7 +2181,7 @@ IntPaintDesktop(HDC hDC)
                     if (!VerStrs[i].lpstr || !*VerStrs[i].lpstr || (VerStrs[i].n == 0))
                         break;
 
-                    GreGetTextExtentW(hDC, VerStrs[i].lpstr, VerStrs[i].n, &Size, 1);
+                /*    GreGetTextExtentW(hDC, VerStrs[i].lpstr, VerStrs[i].n, &Size, 1);*/
                     VerStrs[i].y = Size.cy; // Store the string height
                     TotalHeight += Size.cy;
 
@@ -2198,13 +2199,13 @@ IntPaintDesktop(HDC hDC)
                         break;
 
                     TotalHeight -= VerStrs[i].y;
-                    GreExtTextOutW(hDC,
+                    /*GreExtTextOutW(hDC,
                                    Rect.right - 5,
                                    Rect.bottom - TotalHeight - 5,
                                    0, NULL,
                                    VerStrs[i].lpstr,
                                    VerStrs[i].n,
-                                   NULL, 0);
+                                   NULL, 0);*/
 
                     /* While the first string was using hFont1, all the others use hFont2 */
                     if (hFont2) NtGdiSelectFont(hDC, hFont2);
@@ -2218,7 +2219,7 @@ IntPaintDesktop(HDC hDC)
                 len = wcslen(wszzVersion);
 
                 IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
-                GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, wszzVersion, len, NULL, 0);
+          /*      GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, wszzVersion, len, NULL, 0);*/
             }
         }
 
