@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Russian (Russia) translation resource
- * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Russian resource file
+ * TRANSLATOR:  Copyright 2019 Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
@@ -13,7 +13,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Диспетчер служебных программ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_STANDARD | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
+    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_NOTIFY | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_GROUPBOX, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 3, 62, 275, 92
     CONTROL "Запустить", IDC_START, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 14, 76, 45, 16
     CONTROL "Остановить", IDC_STOP, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 69, 76, 45, 16

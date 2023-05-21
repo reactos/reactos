@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Spanish (Neutral) translation resource
- * COPYRIGHT:       Copyright 2019 George Bișoc (george.bisoc@reactos.org)
- * TRANSLATION:     Julen Urizar Compains (julenuri at hotmail dot com)
+ * PROJECT:     ReactOS Utility Manager Resources DLL (UManDlg.dll)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish translation resource
+ * TRANSLATOR:  Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -14,7 +13,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Herramientas de Accesibilidad"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_STANDARD | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
+    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_NOTIFY | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_GROUPBOX, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 3, 62, 275, 92
     CONTROL "Empezar", IDC_START, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 14, 76, 45, 16
     CONTROL "Parar", IDC_STOP, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 69, 76, 45, 16
