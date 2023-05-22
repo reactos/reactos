@@ -224,7 +224,7 @@ BEGIN
     IDS_ALLFILES "Fitxategi gustiak"
     IDS_ALLPICTUREFILES "Argazki fitxategi guztiak"
     IDS_FILESIZE "%d byte-k"
-    IDS_PRINTRES "%d x %d pixel-ak metro"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Mezedez sartu zembaki oso bakarrik!"
     IDS_PERCENTAGE "Ehuneko  1 eta 500 tartean izan behar da."
     IDS_ANGLE "Angelu -89 eta 89 tartean izan behar da."

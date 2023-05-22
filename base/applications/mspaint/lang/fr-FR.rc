@@ -224,7 +224,7 @@ BEGIN
     IDS_ALLFILES "Tous les fichiers"
     IDS_ALLPICTUREFILES "Toutes les images"
     IDS_FILESIZE "%d octets"
-    IDS_PRINTRES "%d x %d pixels par mètre"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Veuillez entrer des nombres entiers uniquement !"
     IDS_PERCENTAGE "Le pourcentage doit être entre 1 et 500."
     IDS_ANGLE "L'angle doit être entre -89 et 89."

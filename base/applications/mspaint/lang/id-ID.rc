@@ -232,7 +232,7 @@ BEGIN
     IDS_ALLFILES "Semua Berkas"
     IDS_ALLPICTUREFILES "Semua Berkas Gambar"
     IDS_FILESIZE "%d byte"
-    IDS_PRINTRES "%d x %d piksel per meter"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Mohon hanya masukkan angka!"
     IDS_PERCENTAGE "Persentasi harus antara 1 and 500."
     IDS_ANGLE "Sudut hanya tersedia antara -89 and 89."

@@ -233,7 +233,7 @@ BEGIN
     IDS_ALLFILES "Wszystkie pliki"
     IDS_ALLPICTUREFILES "Wszystkie pliki graficzne"
     IDS_FILESIZE "%d bajtów"
-    IDS_PRINTRES "%d x %d pikseli na metr"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Wprowadź liczbę całkowitą."
     IDS_PERCENTAGE "Wprowadź liczbę całkowitą z zakresu od 1 do 500."
     IDS_ANGLE "Wprowadź liczbę całkowitą z zakresu od -89 do 89."

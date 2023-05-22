@@ -234,7 +234,7 @@ BEGIN
     IDS_ALLFILES "所有文件"
     IDS_ALLPICTUREFILES "所有图片文件"
     IDS_FILESIZE "%d 字节"
-    IDS_PRINTRES "%d x %d 像素每米"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "请只输入整数！"
     IDS_PERCENTAGE "百分比必须在 1 至 500 之间。"
     IDS_ANGLE "角度必须在 -89 与 89 之间。"

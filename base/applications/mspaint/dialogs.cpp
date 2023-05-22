@@ -73,8 +73,6 @@ LRESULT CMirrorRotateDialog::OnRadioButton12(WORD wNotifyCode, WORD wID, HWND hW
     return 0;
 }
 
-
-
 LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     newWidth = imageModel.GetWidth();
@@ -99,7 +97,7 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
         SetDlgItemText(IDD_ATTRIBUTESTEXT7, strSize);
     }
     CString strRes;
-    strRes.Format(IDS_PRINTRES, (INT)PpmFromDpi(g_xDpi), (INT)PpmFromDpi(g_yDpi));
+    strRes.Format(IDS_PRINTRES, (INT)(g_xDpi + 0.5), (INT)(g_yDpi + 0.5));
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
     return 0;
 }

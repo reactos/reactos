@@ -232,7 +232,7 @@ BEGIN
     IDS_ALLFILES "Tất cả tập tin"
     IDS_ALLPICTUREFILES "Tất cả tập tin hình ảnh"
     IDS_FILESIZE "%d byte"
-    IDS_PRINTRES "%d x %d điểm ảnh trong một mét"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Xin vui lòng chỉ nhập số tự nhiên khác không (0)!"
     IDS_PERCENTAGE "Giá trị phần trăm phải ở giữa 1 và 500."
     IDS_ANGLE "Giá trị của góc phải ở giữa -89 và 89."

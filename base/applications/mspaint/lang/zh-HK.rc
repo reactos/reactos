@@ -232,7 +232,7 @@ BEGIN
     IDS_ALLFILES "所有檔案"
     IDS_ALLPICTUREFILES "所有圖像檔案"
     IDS_FILESIZE "%d 位元組"
-    IDS_PRINTRES "%d x %d 像素每米"
+    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "請輸入整數！"
     IDS_PERCENTAGE "所佔百分比必須介乎 1 至 500 之間。"
     IDS_ANGLE "角度必須介乎 -89 至 89 之間。"
