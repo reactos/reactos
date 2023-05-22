@@ -96,8 +96,18 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
         SetDlgItemText(IDD_ATTRIBUTESTEXT6, date);
         SetDlgItemText(IDD_ATTRIBUTESTEXT7, strSize);
     }
+
+    CString strUnit;
+    strUnit.LoadString(hProgInstance, IDS_LEGALUNITS);
+
     CString strRes;
-    strRes.Format(IDS_PRINTRES, (INT)(g_xDpi + 0.5), (INT)(g_yDpi + 0.5));
+    if (strUnit == L"dot/inch")
+        strRes.Format(IDS_PRINTRES, ROUND(g_xDpi), ROUND(g_yDpi));
+    else if (strUnit == L"pixel/cm")
+        strRes.Format(IDS_PRINTRES, ROUND(PpcmFromDpi(g_xDpi)), ROUND(PpcmFromDpi(g_yDpi)));
+    else
+        ATLASSERT(0);
+
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
     return 0;
 }

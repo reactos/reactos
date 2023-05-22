@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Kõik failid"
     IDS_ALLPICTUREFILES "Kõik Pildifailid"
     IDS_FILESIZE "%d baiti"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Palun sisesta ainult terviklike numbreid!"
     IDS_PERCENTAGE "Protsent peab 1 ja 500 vahemikus olema."
     IDS_ANGLE "Nurk peab -89 ja 89 vahemikus olema."
@@ -242,4 +241,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

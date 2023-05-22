@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Tous les fichiers"
     IDS_ALLPICTUREFILES "Toutes les images"
     IDS_FILESIZE "%d octets"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Veuillez entrer des nombres entiers uniquement !"
     IDS_PERCENTAGE "Le pourcentage doit être entre 1 et 500."
     IDS_ANGLE "L'angle doit être entre -89 et 89."
@@ -234,4 +233,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

@@ -233,7 +233,6 @@ BEGIN
     IDS_ALLFILES "Orice fișier"
     IDS_ALLPICTUREFILES "Toate fișierele imagine"
     IDS_FILESIZE "%d octeți"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Introduceți doar numere întregi!"
     IDS_PERCENTAGE "Procentajul trebuie să fie între 1 și 500."
     IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
@@ -243,4 +242,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

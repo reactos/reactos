@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Tüm Dosyalar"
     IDS_ALLPICTUREFILES "Tüm Resim Dosyaları"
     IDS_FILESIZE "%d bayt"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Lütfen yalnızca tamsayı giriniz!"
     IDS_PERCENTAGE "Yüzde 1 ile 500 arasında olmalıdır."
     IDS_ANGLE "Açı -89 ile 89 arasında olmalıdır."
@@ -242,4 +241,6 @@ BEGIN
     IDS_ITALIC "İtalik"
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

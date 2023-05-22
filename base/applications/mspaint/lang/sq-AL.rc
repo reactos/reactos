@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "All Files"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Ju lutem shkruani numra integrale vetëm!"
     IDS_PERCENTAGE "Përqindja duhet të jetë në mes 1 dhe 500."
     IDS_ANGLE "Këndi duhet të jetë në mes -89 dhe 89."
@@ -242,4 +241,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

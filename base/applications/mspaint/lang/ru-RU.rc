@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Все файлы"
     IDS_ALLPICTUREFILES "Все файлы изображений"
     IDS_FILESIZE "%d байт"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS, "Необходимо вводить только целые числа!"
     IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
     IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
@@ -234,4 +233,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

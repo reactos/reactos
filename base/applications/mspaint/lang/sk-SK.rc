@@ -233,7 +233,6 @@ BEGIN
     IDS_ALLFILES "Všetky súbory"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bajtov"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Please enter integral numbers only!"
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
@@ -243,4 +242,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

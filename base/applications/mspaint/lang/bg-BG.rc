@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Всички файлове"
     IDS_ALLPICTUREFILES "Снимки"
     IDS_FILESIZE "%d разряда"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Моля въведете само числа!"
     IDS_PERCENTAGE "Процента може да бъде между 1 и 500."
     IDS_ANGLE "Ъгълът трябва да бъде между -89 и 89."
@@ -242,4 +241,6 @@ BEGIN
     IDS_ITALIC "Наклонен"
     IDS_UNDERLINE "Подчертан"
     IDS_VERTICAL "Вертикален"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

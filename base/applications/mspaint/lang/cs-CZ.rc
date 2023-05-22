@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Všechny soubory"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bajtů"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Zadávejte pouze celá čísla!"
     IDS_PERCENTAGE "Měřítko musí být mezi 1 a 500."
     IDS_ANGLE "Úhel musí být -89 a 89."
@@ -242,4 +241,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

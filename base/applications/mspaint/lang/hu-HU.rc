@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Minden fájl"
     IDS_ALLPICTUREFILES "Minden képfájl"
     IDS_FILESIZE "%d bájt"
-    IDS_PRINTRES "%d x %d dots/inch"
     IDS_INTNUMBERS "Kérem csak egész számokat írjon be!"
     IDS_PERCENTAGE "A százaléknak 1 és 500 között kell lennie."
     IDS_ANGLE "A szögnek -89 és 89 között kell lennie."
@@ -234,4 +233,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_PRINTRES "%d x %d pixel/cm"
 END
