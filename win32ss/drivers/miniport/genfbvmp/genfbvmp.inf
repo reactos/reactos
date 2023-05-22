@@ -1,0 +1,69 @@
+; GenericFramebuffer.inf
+;
+; Installation file for the Intel HD 4000 display adapter
+;
+[Version]
+Signature  = "$Windows NT$"
+LayoutFile = layout.inf
+Class      = Display
+ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 2/1/2023,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+GenericFramebuffer.Display_CopyFiles = 11
+
+[Manufacturer]
+%GenericFramebuffer% = GenericFramebuffer
+
+
+; Allow the driver to be loaded on VGA and XGA exposed by PCI bus and ACPI
+[GenericFramebuffer]
+; You need to replace this with your GPU you are targeting
+;; %GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\VEN_80EE&DEV_BEEF
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0300
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0301
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0000
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0001
+
+;---------------------------- GenericFramebuffer DRIVER ----------------------------
+
+[GenericFramebuffer]
+CopyFiles = GenericFramebuffer.Miniport_CopyFiles, GenericFramebuffer.Display_CopyFiles
+
+[GenericFramebuffer.Miniport_CopyFiles]
+genfbvmp.sys
+
+[GenericFramebuffer.Display_CopyFiles]
+framebuf.dll
+
+[GenericFramebuffer.SoftwareSettings]
+AddReg = GenericFramebuffer_SoftwareSettings
+
+[GenericFramebuffer_SoftwareSettings]
+HKR,, InstalledDisplayDrivers, %REG_MULTI_SZ%, framebuf
+HKR,, VgaCompatible,           %REG_DWORD%,    0
+
+[GenericFramebuffer.Services]
+AddService = GenericFramebuffer, 0x00000002, GenericFramebuffer_Service
+
+[GenericFramebuffer_Service]
+ServiceType   = 1 ; %SERVICE_KERNEL_DRIVER%
+StartType     = 3 ; %SERVICE_DEMAND_START%
+ErrorControl  = 0 ; %SERVICE_ERROR_IGNORE%
+LoadOrderGroup = Video
+ServiceBinary = %12%\genfbvmp.sys
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+; Non-localizable
+ReactOS = "ReactOS Project"
+GenericFramebuffer = "Generic Framebuffer"
+
+REG_MULTI_SZ   = 0x00010000
+REG_DWORD      = 0x00010001
+
+; Localizable
+GenericFramebuffer.DeviceDesc = "Generic Framebuffer Miniport Adapter"
