@@ -16,16 +16,11 @@ SYSTEMTIME fileTime;
 
 /* FUNCTIONS ********************************************************/
 
-// Convert DPI (dots per inch) into PPM (pixels per meter)
-float PpmFromDpi(float dpi)
-{
-    return dpi / 0.0254f; // 1 DPI is 0.0254 meter.
-}
-
 // Convert DPI (dots per inch) into PPCM (pixels per centimeter)
 float PpcmFromDpi(float dpi)
 {
-    return PpmFromDpi(dpi) / 100.0f;
+    // 1 DPI is 0.0254 meter. 1 centimeter is 1/100 meter.
+    return dpi / (0.0254f * 100.0f);
 }
 
 HBITMAP
