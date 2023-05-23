@@ -103,10 +103,8 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     CString strRes;
     if (strUnit == L"dot/inch")
         strRes.Format(IDS_PRINTRES, ROUND(g_xDpi), ROUND(g_yDpi));
-    else if (strUnit == L"pixel/cm")
-        strRes.Format(IDS_PRINTRES, ROUND(PpcmFromDpi(g_xDpi)), ROUND(PpcmFromDpi(g_yDpi)));
     else
-        ATLASSERT(0);
+        strRes.Format(IDS_PRINTRES, ROUND(PpcmFromDpi(g_xDpi)), ROUND(PpcmFromDpi(g_yDpi)));
 
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
     return 0;
