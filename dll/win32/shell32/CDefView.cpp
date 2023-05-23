@@ -1357,7 +1357,7 @@ HRESULT CDefView::FillFileMenu()
         m_pFileMenu.Release();
     }
     /* Store the context menu in m_pFileMenu and keep it in order to invoke the selected command later on */
-    HRESULT hr = GetItemObject((m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND), IID_PPV_ARG(IContextMenu, &m_pFileMenu));
+    HRESULT hr = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pFileMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
