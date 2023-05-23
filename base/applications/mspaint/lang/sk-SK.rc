@@ -242,6 +242,6 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
-    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_LEGALRESUNITS "pixel/cm" /* Don't translate this line */
     IDS_PRINTRES "%d x %d pixel/cm"
 END

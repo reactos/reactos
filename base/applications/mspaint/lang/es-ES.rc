@@ -243,6 +243,6 @@ BEGIN
     IDS_ITALIC "Cursiva"
     IDS_UNDERLINE "Subrayado"
     IDS_VERTICAL "Vertical"
-    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_LEGALRESUNITS "pixel/cm" /* Don't translate this line */
     IDS_PRINTRES "%d x %d pixel/cm"
 END

@@ -218,5 +218,5 @@
 #define IDS_ITALIC      936
 #define IDS_UNDERLINE   937
 #define IDS_VERTICAL    938
-#define IDS_LEGALUNITS  939
+#define IDS_LEGALRESUNITS 939
 #define IDS_PRINTRES    940

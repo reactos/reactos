@@ -98,7 +98,7 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     }
 
     CString strUnit;
-    strUnit.LoadString(hProgInstance, IDS_LEGALUNITS);
+    strUnit.LoadString(hProgInstance, IDS_LEGALRESUNITS);
 
     CString strRes;
     if (strUnit == L"dot/inch")

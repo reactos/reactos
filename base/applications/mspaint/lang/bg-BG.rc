@@ -241,6 +241,6 @@ BEGIN
     IDS_ITALIC "Наклонен"
     IDS_UNDERLINE "Подчертан"
     IDS_VERTICAL "Вертикален"
-    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_LEGALRESUNITS "pixel/cm" /* Don't translate this line */
     IDS_PRINTRES "%d x %d pixel/cm"
 END

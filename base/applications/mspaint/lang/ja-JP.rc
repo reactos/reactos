@@ -241,6 +241,6 @@ BEGIN
     IDS_ITALIC "斜体"
     IDS_UNDERLINE "下線"
     IDS_VERTICAL "縦書き"
-    IDS_LEGALUNITS "pixel/cm" /* Don't translate this line */
+    IDS_LEGALRESUNITS "pixel/cm" /* Don't translate this line */
     IDS_PRINTRES "%d x %d ピクセル/cm"
 END
