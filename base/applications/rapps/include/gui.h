@@ -131,3 +131,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     void
     HandleTabOrder(int direction);
 };
+
+// Main window
+VOID
+MainWindowLoop(CMainWindow *wnd, INT nShowCmd);

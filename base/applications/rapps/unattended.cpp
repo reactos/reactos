@@ -6,7 +6,7 @@
  *              Copyright 2020 He Yang (1160386205@qq.com)
  */
 
-#include "rapps.h"
+#include "gui.h"
 #include "unattended.h"
 #include <setupapi.h>
 #include <conutils.h>
@@ -256,7 +256,8 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             return FALSE;
         }
 
-        MainWindowLoop(&db, nCmdShow);
+        CMainWindow wnd(&db);
+        MainWindowLoop(&wnd, nCmdShow);
 
         if (hMutex)
             CloseHandle(hMutex);

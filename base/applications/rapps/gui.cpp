@@ -781,14 +781,10 @@ CMainWindow::HandleTabOrder(int direction)
 // **** CMainWindow ****
 
 VOID
-MainWindowLoop(CAppDB *db, INT nShowCmd)
+MainWindowLoop(CMainWindow *wnd, INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;
-
-    CMainWindow *wnd = new CMainWindow(db);
-    if (!wnd)
-        return;
 
     hMainWnd = wnd->Create();
     if (!hMainWnd)
@@ -819,6 +815,4 @@ MainWindowLoop(CAppDB *db, INT nShowCmd)
             DispatchMessageW(&Msg);
         }
     }
-
-    delete wnd;
 }
