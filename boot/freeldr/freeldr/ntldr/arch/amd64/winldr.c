@@ -24,7 +24,7 @@ PHARDWARE_PTE PxeBase;
 //PHARDWARE_PTE HalPageTable;
 
 PVOID GdtIdt;
-ULONG_PTR PcrBasePage;
+PFN_NUMBER SharedUserDataPfn;
 ULONG_PTR TssBasePage;
 
 /* FUNCTIONS **************************************************************/
@@ -246,15 +246,8 @@ WinLdrMapSpecialPages(VOID)
 {
     PHARDWARE_PTE PpeBase, PdeBase;
 
-    /* Map the PCR page */
-    if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
-    {
-        ERR("Could not map PCR @ %lx\n", PcrBasePage);
-        return FALSE;
-    }
-
     /* Map KI_USER_SHARED_DATA */
-    if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
+    if (!MempMapSinglePage(KI_USER_SHARED_DATA, SharedUserDataPfn * PAGE_SIZE))
     {
         ERR("Could not map KI_USER_SHARED_DATA\n");
         return FALSE;
@@ -380,22 +373,22 @@ WinLdrSetProcessorContext(
 
 void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG_PTR Pcr = 0;
+    PVOID SharedUserDataAddress = NULL;
     ULONG_PTR Tss = 0;
     ULONG BlockSize, NumPages;
 
     LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
     LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
 
-    /* Allocate 2 pages for PCR */
-    Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
-    PcrBasePage = Pcr >> MM_PAGE_SHIFT;
-    if (Pcr == 0)
+    /* Allocate 1 page for SharedUserData */
+    SharedUserDataAddress = MmAllocateMemoryWithType(MM_PAGE_SIZE, LoaderStartupPcrPage);
+    SharedUserDataPfn = (ULONG_PTR)SharedUserDataAddress >> MM_PAGE_SHIFT;
+    if (SharedUserDataAddress == NULL)
     {
-        UiMessageBox("Can't allocate PCR.");
+        UiMessageBox("Can't allocate SharedUserData page.");
         return;
     }
-    RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
+    RtlZeroMemory(SharedUserDataAddress, MM_PAGE_SIZE);
 
     /* Allocate TSS */
     BlockSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
@@ -422,7 +415,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
         // FIXME: bugcheck
     }
 
-    /* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
+    /* Map KI_USER_SHARED_DATA, Apic and HAL space */
     WinLdrMapSpecialPages();
 }
 
