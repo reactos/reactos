@@ -2124,21 +2124,12 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             *end = L'\0';
             lpFile = wfileName;
         }
-        else if (!PathIsDirectoryW(wszApplicationName) &&
-                 !PathIsExeW(wszApplicationName) &&
-                 (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST &&
-                 (sei_tmp.fMask & SEE_MASK_HASLINKNAME) != SEE_MASK_HASLINKNAME &&
-                 (sei_tmp.fMask & SEE_MASK_FLAG_NO_UI) != SEE_MASK_FLAG_NO_UI)
+        /* We have to test sei instead of sei_tmp because sei_tmp had its
+         * input fMask modifed above in SHELL_translate_idlist.
+         * This code is needed to handle the case where we only have an
+         * lpIDList with multiple CLSID/PIDL's (not 'My Computer' only) */
+        else if ((sei->fMask & SEE_MASK_IDLIST) == SEE_MASK_IDLIST)
         {
-            /* This handles the case where wszApplicationName contains a
-             * non-double-quoted executable followed by one or more spaces
-             * and then followed by a double-quoted parameter.
-             * Example: (single quotes used to enclose strings)
-             * (In)  wszApplicationName = 'explorer.exe "C:\Program Files"'
-             * (In)  wszParameters      = ''
-             * (out) wszApplicationName = 'explorer.exe'
-             * (Out) wszParameters      = '"C:\Program Files"'
-             */
             WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH];
             LPWSTR space, s;
 
