@@ -52,7 +52,7 @@ QueryFullProcessImageNameW(
     }
     else
     {
-        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER_2);
         return FALSE;
     }
 
