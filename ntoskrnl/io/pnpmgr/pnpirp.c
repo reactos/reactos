@@ -306,3 +306,29 @@ PiIrpQueryPnPDeviceState(
 
     return status;
 }
+
+// IRP_MN_QUERY_CAPABILITIES (0x09)
+NTSTATUS
+PiIrpQueryPnPDeviceCapabilities(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PDEVICE_CAPABILITIES DeviceCaps)
+{
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
+
+    IO_STACK_LOCATION stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_CAPABILITIES
+    };
+
+    RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
+    DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);
+    DeviceCaps->Version = 1;
+    DeviceCaps->Address = -1;
+    DeviceCaps->UINumber = -1;
+    stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
+
+    PVOID Dummy;
+    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, &Dummy);
+}

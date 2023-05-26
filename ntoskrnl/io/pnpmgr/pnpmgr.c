@@ -1457,7 +1457,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         case DevicePropertyAddress:
 
             /* Query the device caps */
-            Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
+            Status = PiIrpQueryPnPDeviceCapabilities(DeviceNode, &DeviceCaps);
             if (!NT_SUCCESS(Status) || (DeviceCaps.Address == MAXULONG))
                 return STATUS_OBJECT_NAME_NOT_FOUND;
 
