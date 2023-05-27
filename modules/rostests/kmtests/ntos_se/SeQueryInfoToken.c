@@ -13,6 +13,19 @@
 #define NDEBUG
 #include <debug.h>
 
+// Copied from PspProcessMapping -- although the values don't matter much for
+// the most part.
+static GENERIC_MAPPING ProcessGenericMapping =
+{
+    STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+    STANDARD_RIGHTS_WRITE   | PROCESS_CREATE_PROCESS    | PROCESS_CREATE_THREAD   |
+    PROCESS_VM_OPERATION    | PROCESS_VM_WRITE          | PROCESS_DUP_HANDLE      |
+    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION |
+    PROCESS_SUSPEND_RESUME,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+    PROCESS_ALL_ACCESS
+};
+
 //------------------------------------------------------------------------------//
 //      Testing Functions                                                       //
 //------------------------------------------------------------------------------//
@@ -222,8 +235,6 @@ START_TEST(SeQueryInfoToken)
     PACCESS_TOKEN Token = NULL;
     PTOKEN_PRIVILEGES TPrivileges;
     PVOID Buffer;
-    POBJECT_TYPE PsProcessType = NULL;
-    PGENERIC_MAPPING GenericMapping;
     ULONG i;
 
     SubjectContext = ExAllocatePool(PagedPool, sizeof(SECURITY_SUBJECT_CONTEXT));
@@ -240,14 +251,14 @@ START_TEST(SeQueryInfoToken)
     //----------------------------------------------------------------//
 
     AccessState = ExAllocatePool(PagedPool, sizeof(ACCESS_STATE));
-    PsProcessType = ExAllocatePool(PagedPool, sizeof(OBJECT_TYPE));
-    AuxData = ExAllocatePool(PagedPool, 0xC8);
-    GenericMapping = ExAllocatePool(PagedPool, sizeof(GENERIC_MAPPING));
+    // AUX_ACCESS_DATA gets larger in newer Windows version.
+    // This is the largest known size, found in Windows 10/11.
+    AuxData = ExAllocatePoolZero(PagedPool, 0xE0, 'QSmK');
 
     Status = SeCreateAccessState(AccessState,
-                                 (PVOID)AuxData,
+                                 AuxData,
                                  DesiredAccess,
-                                 GenericMapping
+                                 &ProcessGenericMapping
                                 );
 
     ok((Status == STATUS_SUCCESS), "SeCreateAccessState failed with Status 0x%08X\n", Status);
@@ -319,7 +330,7 @@ START_TEST(SeQueryInfoToken)
         AccessState->OriginalDesiredAccess,
         AccessState->PreviouslyGrantedAccess,
         &Privileges,
-        (PGENERIC_MAPPING)((PCHAR*)PsProcessType + 52),
+        &ProcessGenericMapping,
         KernelMode,
         &AccessMask,
         &Status
@@ -379,7 +390,7 @@ START_TEST(SeQueryInfoToken)
         AccessState->OriginalDesiredAccess,
         AccessState->PreviouslyGrantedAccess,
         &Privileges,
-        (PGENERIC_MAPPING)((PCHAR*)PsProcessType + 52),
+        &ProcessGenericMapping,
         KernelMode,
         &AccessMask,
         &Status
@@ -402,9 +413,7 @@ START_TEST(SeQueryInfoToken)
 
     SeDeleteAccessState(AccessState);
 
-    if (GenericMapping) ExFreePool(GenericMapping);
-    if (PsProcessType) ExFreePool(PsProcessType);
     if (SubjectContext) ExFreePool(SubjectContext);
-    if (AuxData) ExFreePool(AuxData);
+    if (AuxData) ExFreePoolWithTag(AuxData, 'QSmK');
     if (AccessState) ExFreePool(AccessState);
 }
