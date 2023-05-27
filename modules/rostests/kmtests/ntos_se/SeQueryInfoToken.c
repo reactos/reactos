@@ -229,6 +229,7 @@ START_TEST(SeQueryInfoToken)
     NTSTATUS Status = STATUS_SUCCESS;
     PAUX_ACCESS_DATA AuxData = NULL;
     PPRIVILEGE_SET NewPrivilegeSet;
+    ULONG InitialPrivilegeCount;
     BOOLEAN Checker;
     PPRIVILEGE_SET Privileges = NULL;
     PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
@@ -278,7 +279,8 @@ START_TEST(SeQueryInfoToken)
     //      Testing SeAppendPrivileges                                //
     //----------------------------------------------------------------//
 
-    AuxData->PrivilegeSet->PrivilegeCount = 1;
+    InitialPrivilegeCount = AuxData->PrivilegeSet->PrivilegeCount;
+    trace("Initial privilege count = %lu\n", InitialPrivilegeCount);
 
     //  Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
 
@@ -289,7 +291,7 @@ START_TEST(SeQueryInfoToken)
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok((AuxData->PrivilegeSet->PrivilegeCount == 2),"PrivelegeCount must be 2, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
+    ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 1);
     ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
@@ -303,7 +305,7 @@ START_TEST(SeQueryInfoToken)
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok((AuxData->PrivilegeSet->PrivilegeCount == 6),"PrivelegeCount must be 6, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
+    ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 5);
     ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
@@ -373,7 +375,7 @@ START_TEST(SeQueryInfoToken)
             NewPrivilegeSet->PrivilegeCount = 14;
 
             ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-            ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
+            ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 19);
             ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
             for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
             {
