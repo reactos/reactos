@@ -279,7 +279,7 @@ START_TEST(SeQueryInfoToken)
     //      Testing SeAppendPrivileges                                //
     //----------------------------------------------------------------//
 
-    InitialPrivilegeCount = AuxData->PrivilegeSet->PrivilegeCount;
+    InitialPrivilegeCount = AuxData->PrivilegesUsed->PrivilegeCount;
     trace("Initial privilege count = %lu\n", InitialPrivilegeCount);
 
     //  Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
@@ -291,7 +291,7 @@ START_TEST(SeQueryInfoToken)
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 1);
+    ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 1);
     ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
@@ -305,7 +305,7 @@ START_TEST(SeQueryInfoToken)
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 5);
+    ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 5);
     ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
@@ -313,14 +313,14 @@ START_TEST(SeQueryInfoToken)
     //----------------------------------------------------------------//
 
     // KPROCESSOR_MODE is set to KernelMode ===> Always return TRUE
-    ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
+    ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
     // and call it again
-    ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
+    ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
 
     //----------------------------------------------------------------//
 
     // KPROCESSOR_MODE is set to UserMode. Expect false
-    ok(!SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck unexpected success with UserMode arg\n");
+    ok(!SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck unexpected success with UserMode arg\n");
 
     //----------------------------------------------------------------//
 
@@ -345,8 +345,8 @@ START_TEST(SeQueryInfoToken)
     ok((Privileges != NULL), "Privileges is NULL\n");
     if (Privileges)
     {
-        trace("AuxData->PrivilegeSet->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
-              AuxData->PrivilegeSet->PrivilegeCount, Privileges->PrivilegeCount);
+        trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
+              AuxData->PrivilegesUsed->PrivilegeCount, Privileges->PrivilegeCount);
     }
     if (Privileges) SeFreePrivileges(Privileges);
 
@@ -375,16 +375,16 @@ START_TEST(SeQueryInfoToken)
             NewPrivilegeSet->PrivilegeCount = 14;
 
             ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-            ok_eq_ulong(AuxData->PrivilegeSet->PrivilegeCount, InitialPrivilegeCount + 19);
+            ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 19);
             ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
-            for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
+            for (i = 0; i < AuxData->PrivilegesUsed->PrivilegeCount; i++)
             {
-                AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
-                AuxData->PrivilegeSet->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
+                AuxData->PrivilegesUsed->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
+                AuxData->PrivilegesUsed->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
             }
-            //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegeSet->PrivilegeCount);
+            //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegesUsed->PrivilegeCount);
 
-            ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
+            ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
         }
     }
 
@@ -407,8 +407,8 @@ START_TEST(SeQueryInfoToken)
     ok((Privileges != NULL), "Privileges is NULL\n");
     if (Privileges)
     {
-        trace("AuxData->PrivilegeSet->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
-              AuxData->PrivilegeSet->PrivilegeCount, Privileges->PrivilegeCount);
+        trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
+              AuxData->PrivilegesUsed->PrivilegeCount, Privileges->PrivilegeCount);
     }
     if (Privileges) SeFreePrivileges(Privileges);
 

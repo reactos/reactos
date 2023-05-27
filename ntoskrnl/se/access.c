@@ -88,7 +88,7 @@ SeCreateAccessStateEx(
     }
 
     /* Set the Auxiliary Data */
-    AuxData->PrivilegeSet = (PPRIVILEGE_SET)((ULONG_PTR)AccessState +
+    AuxData->PrivilegesUsed = (PPRIVILEGE_SET)((ULONG_PTR)AccessState +
                                              FIELD_OFFSET(ACCESS_STATE,
                                                           Privileges));
     if (GenericMapping) AuxData->GenericMapping = *GenericMapping;
@@ -158,7 +158,7 @@ SeDeleteAccessState(
 
     /* Deallocate Privileges */
     if (AccessState->PrivilegesAllocated)
-        ExFreePoolWithTag(AuxData->PrivilegeSet, TAG_PRIVILEGE_SET);
+        ExFreePoolWithTag(AuxData->PrivilegesUsed, TAG_PRIVILEGE_SET);
 
     /* Deallocate Name and Type Name */
     if (AccessState->ObjectName.Buffer)
