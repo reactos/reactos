@@ -931,25 +931,20 @@ NTSTATUS
 IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                     HANDLE InstanceKey)
 {
-    IO_STACK_LOCATION Stack;
-    IO_STATUS_BLOCK IoStatusBlock;
+    PWCHAR HwId;
     PWSTR Ptr;
     UNICODE_STRING ValueName;
     NTSTATUS Status;
     ULONG Length, TotalLength;
     BOOLEAN IsValidID;
 
-    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
+    DPRINT("IopQueryHardwareIds() query BusQueryHardwareIDs from device stack\n");
 
-    RtlZeroMemory(&Stack, sizeof(Stack));
-    Stack.Parameters.QueryId.IdType = BusQueryHardwareIDs;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_ID,
-                               &Stack);
+     ;
+    Status = PiIrpQueryPnPDeviceId(DeviceNode, BusQueryHardwareIDs, &HwId);
     if (NT_SUCCESS(Status))
     {
-        IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
+        IsValidID = IopValidateID(HwId, BusQueryHardwareIDs);
 
         if (!IsValidID)
         {
@@ -958,7 +953,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
 
         TotalLength = 0;
 
-        Ptr = (PWSTR)IoStatusBlock.Information;
+        Ptr = (PWSTR)HwId;
         DPRINT("Hardware IDs:\n");
         while (*Ptr)
         {
@@ -976,16 +971,19 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                                &ValueName,
                                0,
                                REG_MULTI_SZ,
-                               (PVOID)IoStatusBlock.Information,
+                               (PVOID)HwId,
                                (TotalLength + 1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
         }
+
+        if (HwId)
+            ExFreePool(HwId);
     }
     else
     {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        DPRINT1("PiIrpQueryPnPDeviceId() failed (Status %x)\n", Status);
     }
 
     return Status;
@@ -996,25 +994,19 @@ NTSTATUS
 IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
                       HANDLE InstanceKey)
 {
-    IO_STACK_LOCATION Stack;
-    IO_STATUS_BLOCK IoStatusBlock;
+    PWCHAR CompIds;
     PWSTR Ptr;
     UNICODE_STRING ValueName;
     NTSTATUS Status;
     ULONG Length, TotalLength;
     BOOLEAN IsValidID;
 
-    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
+    DPRINT("IopQueryCompatibleIds() query BusQueryCompatibleIDs from device stack\n");
 
-    RtlZeroMemory(&Stack, sizeof(Stack));
-    Stack.Parameters.QueryId.IdType = BusQueryCompatibleIDs;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_ID,
-                               &Stack);
-    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+    Status = PiIrpQueryPnPDeviceId(DeviceNode, BusQueryCompatibleIDs, &CompIds);
+    if (NT_SUCCESS(Status))
     {
-        IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
+        IsValidID = IopValidateID(CompIds, BusQueryCompatibleIDs);
 
         if (!IsValidID)
         {
@@ -1023,7 +1015,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
 
         TotalLength = 0;
 
-        Ptr = (PWSTR)IoStatusBlock.Information;
+        Ptr = (PWSTR)CompIds;
         DPRINT("Compatible IDs:\n");
         while (*Ptr)
         {
@@ -1041,16 +1033,19 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
                                &ValueName,
                                0,
                                REG_MULTI_SZ,
-                               (PVOID)IoStatusBlock.Information,
+                               (PVOID)CompIds,
                                (TotalLength + 1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwSetValueKey() failed (Status %lx) or no Compatible ID returned\n", Status);
         }
+
+        if (CompIds)
+            ExFreePool(CompIds);
     }
     else
     {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        DPRINT1("PiIrpQueryPnPDeviceId() failed (Status %x)\n", Status);
     }
 
     return Status;

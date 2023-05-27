@@ -332,3 +332,35 @@ PiIrpQueryPnPDeviceCapabilities(
     PVOID Dummy;
     return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, &Dummy);
 }
+
+// IRP_MN_QUERY_ID (0x13)
+NTSTATUS
+PiIrpQueryPnPDeviceId(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ BUS_QUERY_ID_TYPE IdType,
+    _Out_ PWCHAR *Id)
+{
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
+    ASSERT(IdType == BusQueryDeviceID || IdType == BusQueryHardwareIDs ||
+           IdType == BusQueryCompatibleIDs || IdType == BusQueryInstanceID ||
+           IdType == BusQueryDeviceSerialNumber || IdType == BusQueryContainerID);
+
+    IO_STACK_LOCATION stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_ID
+    };
+    stack.Parameters.QueryId.IdType = IdType;
+    *Id = NULL;
+
+    ULONG_PTR longId;
+    NTSTATUS status;
+    status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, (PVOID)&longId);
+    if (NT_SUCCESS(status))
+    {
+        *Id = (PVOID)longId;
+    }
+
+    return status;
+}

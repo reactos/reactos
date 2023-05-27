@@ -1432,6 +1432,12 @@ PiIrpQueryPnPDeviceCapabilities(
     _In_ PDEVICE_NODE DeviceNode,
     _Out_ PDEVICE_CAPABILITIES DeviceCaps);
 
+NTSTATUS
+PiIrpQueryPnPDeviceId(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ BUS_QUERY_ID_TYPE IdType,
+    _Out_ PWCHAR *Id);
+
 //
 // Global I/O Data
 //
