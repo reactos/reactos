@@ -282,25 +282,29 @@ START_TEST(SeQueryInfoToken)
 
     //  Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
 
-    NewPrivilegeSet = ExAllocatePool(PagedPool, sizeof(PRIVILEGE_SET));
+    NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                         FIELD_OFFSET(PRIVILEGE_SET, Privilege[1]),
+                                         'QSmK');
     NewPrivilegeSet->PrivilegeCount = 1;
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
     ok((AuxData->PrivilegeSet->PrivilegeCount == 2),"PrivelegeCount must be 2, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-    ExFreePool(NewPrivilegeSet);
+    ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
 
     // Testing SeAppendPrivileges. Must change PrivilegeCount to 6 (2 + 4)
 
-    NewPrivilegeSet = ExAllocatePool(PagedPool, 4*sizeof(PRIVILEGE_SET));
+    NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                         FIELD_OFFSET(PRIVILEGE_SET, Privilege[4]),
+                                         'QSmK');
     NewPrivilegeSet->PrivilegeCount = 4;
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
     ok((AuxData->PrivilegeSet->PrivilegeCount == 6),"PrivelegeCount must be 6, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-    ExFreePool(NewPrivilegeSet);
+    ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
     //      Testing SePrivilegeCheck                                  //
@@ -363,12 +367,14 @@ START_TEST(SeQueryInfoToken)
             TPrivileges = (PTOKEN_PRIVILEGES)(Buffer);
             //trace("TPCount = %u\n\n", TPrivileges->PrivilegeCount);
 
-            NewPrivilegeSet = ExAllocatePool(PagedPool, 14*sizeof(PRIVILEGE_SET));
+            NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                                 FIELD_OFFSET(PRIVILEGE_SET, Privilege[14]),
+                                                 'QSmK');
             NewPrivilegeSet->PrivilegeCount = 14;
 
             ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
             ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-            ExFreePool(NewPrivilegeSet);
+            ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
             for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
             {
                 AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
