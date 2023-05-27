@@ -170,18 +170,16 @@ IopQueryDeviceDescription(
                 Bus);
 
     /* Temporary string */
-    TempString.MaximumLength = sizeof(TempBuffer);
-    TempString.Length = 0;
-    TempString.Buffer = TempBuffer;
+    RtlInitEmptyUnicodeString(&TempString, TempBuffer, sizeof(TempBuffer));
 
     /* Append controller name to string */
     RtlAppendUnicodeToString(&ControllerRootRegName, L"\\");
     RtlAppendUnicodeToString(&ControllerRootRegName, ArcTypes[*Query->ControllerType]);
 
     /* Set the controller number if specified */
-    if (Query->ControllerNumber && *(Query->ControllerNumber))
+    if (Query->ControllerNumber)
     {
-        ControllerNumber = *Query->ControllerNumber;
+        ControllerNumber = *(Query->ControllerNumber);
         MaximumControllerNumber = ControllerNumber + 1;
         IORSRCTRACE("    Getting controller #%lu\n", ControllerNumber);
     }
@@ -208,6 +206,11 @@ IopQueryDeviceDescription(
 
             /* Allocate it */
             ControllerFullInformation = ExAllocatePoolWithTag(PagedPool, LenFullInformation, TAG_IO_RESOURCE);
+            if (!ControllerFullInformation)
+            {
+                ZwClose(ControllerKeyHandle);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
             /* Get the information */
             Status = ZwQueryKey(ControllerKeyHandle,
@@ -222,7 +225,7 @@ IopQueryDeviceDescription(
         /* No controller was found, bail out */
         if (!NT_SUCCESS(Status))
         {
-            if (ControllerFullInformation != NULL)
+            if (ControllerFullInformation)
                 ExFreePoolWithTag(ControllerFullInformation, TAG_IO_RESOURCE);
             return Status;
         }
@@ -286,11 +289,17 @@ IopQueryDeviceDescription(
                     (Status != STATUS_BUFFER_TOO_SMALL) &&
                     (Status != STATUS_BUFFER_OVERFLOW))
                 {
+                    ControllerInformation[ControllerLoop] = NULL;
                     continue;
                 }
 
                 /* Allocate it */
                 ControllerInformation[ControllerLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
+                if (!ControllerInformation[ControllerLoop])
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
 
                 /* Get the information */
                 Status = ZwQueryValueKey(ControllerKeyHandle,
@@ -339,9 +348,9 @@ IopQueryDeviceDescription(
             goto EndLoop;
 
         /* Set the peripheral number if specified */
-        if (Query->PeripheralNumber && *Query->PeripheralNumber)
+        if (Query->PeripheralNumber)
         {
-            PeripheralNumber = *Query->PeripheralNumber;
+            PeripheralNumber = *(Query->PeripheralNumber);
             MaximumPeripheralNumber = PeripheralNumber + 1;
             IORSRCTRACE("    Getting peripheral #%lu\n", PeripheralNumber);
         }
@@ -368,6 +377,12 @@ IopQueryDeviceDescription(
 
                 /* Allocate it */
                 PeripheralFullInformation = ExAllocatePoolWithTag(PagedPool, LenFullInformation, TAG_IO_RESOURCE);
+                if (!PeripheralFullInformation)
+                {
+                    ZwClose(PeripheralKeyHandle);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto EndLoop;
+                }
 
                 /* Get the information */
                 Status = ZwQueryKey(PeripheralKeyHandle,
@@ -450,6 +465,11 @@ IopQueryDeviceDescription(
 
                     /* Allocate it */
                     PeripheralInformation[PeripheralLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
+                    if (!PeripheralInformation[PeripheralLoop])
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        break;
+                    }
 
                     /* Get the information */
                     Status = ZwQueryValueKey(PeripheralKeyHandle,
@@ -591,9 +611,8 @@ IopQueryBusDescription(
 
     /* Allocate it */
     FullInformation = ExAllocatePoolWithTag(PagedPool, LenFullInformation, TAG_IO_RESOURCE);
-
     if (!FullInformation)
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the information */
     Status = ZwQueryKey(RootKeyHandle,
@@ -608,6 +627,11 @@ IopQueryBusDescription(
 
         /* Allocate it */
         BasicInformation = ExAllocatePoolWithTag(PagedPool, LenBasicInformation, TAG_IO_RESOURCE);
+        if (!BasicInformation)
+        {
+            ExFreePoolWithTag(FullInformation, TAG_IO_RESOURCE);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
     /* Deallocate the old buffer */
@@ -691,6 +715,11 @@ IopQueryBusDescription(
 
                 /* Allocate it */
                 BusInformation[SubBusLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
+                if (!BusInformation[SubBusLoop])
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
 
                 /* Get the information */
                 Status = ZwQueryValueKey(SubRootKeyHandle,
@@ -774,7 +803,8 @@ IopQueryBusDescription(
         Status = IopQueryBusDescription(Query, SubRootRegName, SubRootKeyHandle, Bus, !KeyIsRoot);
 
         /* Everything enumerated */
-        if (Status == STATUS_NO_MORE_ENTRIES) Status = STATUS_SUCCESS;
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            Status = STATUS_SUCCESS;
 
         ZwClose(SubRootKeyHandle);
         SubRootKeyHandle = NULL;
@@ -860,11 +890,10 @@ IopStoreSystemPartitionInformation(
         return;
     }
 
-    /* Prepare the string that will receive where symbolic link points to */
-    LinkTarget.Length = 0;
-    /* We will zero the end of the string after having received it */
-    LinkTarget.MaximumLength = sizeof(LinkTargetBuffer) - sizeof(UNICODE_NULL);
-    LinkTarget.Buffer = LinkTargetBuffer;
+    /* Prepare the string that will receive where symbolic link points to.
+     * We will zero the end of the string after having received it */
+    RtlInitEmptyUnicodeString(&LinkTarget, LinkTargetBuffer,
+                              sizeof(LinkTargetBuffer) - sizeof(UNICODE_NULL));
 
     /* Query target */
     Status = ZwQuerySymbolicLinkObject(LinkHandle, &LinkTarget, NULL);
@@ -1124,10 +1153,10 @@ IoAssignResources(
         {
             /* New drivers should not call this API */
             KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
-                         0,
-                         0,
+                         0x2,
                          (ULONG_PTR)DeviceObject,
-                         (ULONG_PTR)DriverObject);
+                         (ULONG_PTR)DriverObject,
+                         0);
         }
     }
 
@@ -1217,10 +1246,16 @@ IoQueryDeviceDescription(
                 CalloutRoutine, Context,
                 &Query);
 
+    if (!BusType)
+        return STATUS_NOT_IMPLEMENTED;
+
     /* Set up the string */
     RootRegKey.Length = 0;
     RootRegKey.MaximumLength = 2048;
     RootRegKey.Buffer = ExAllocatePoolWithTag(PagedPool, RootRegKey.MaximumLength, TAG_IO_RESOURCE);
+    if (!RootRegKey.Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
     RtlAppendUnicodeToString(&RootRegKey, L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
     /* Open a handle to the Root Registry Key */
