@@ -1492,7 +1492,7 @@ IoQueryDeviceDescription(
   _In_opt_ PCONFIGURATION_TYPE PeripheralType,
   _In_opt_ PULONG PeripheralNumber,
   _In_ PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
-  _Inout_opt_ PVOID Context);
+  _In_opt_ PVOID Context);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI

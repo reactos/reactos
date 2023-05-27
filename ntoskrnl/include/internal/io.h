@@ -1330,17 +1330,17 @@ IopStartRamdisk(
 // Configuration Routines
 //
 NTSTATUS
-NTAPI
-IopFetchConfigurationInformation(OUT PWSTR * SymbolicLinkList,
-                                 IN GUID Guid,
-                                 IN ULONG ExpectedInterfaces,
-                                 IN PULONG Interfaces
+IopFetchConfigurationInformation(
+    _Out_ PWSTR* SymbolicLinkList,
+    _In_ GUID Guid,
+    _In_ ULONG ExpectedInterfaces,
+    _Out_ PULONG Interfaces
 );
 
 VOID
-NTAPI
-IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
-                                   IN PUNICODE_STRING OsLoaderPathName
+IopStoreSystemPartitionInformation(
+    _In_ PUNICODE_STRING NtSystemPartitionDeviceName,
+    _In_ PUNICODE_STRING OsLoaderPathName
 );
 
 //
