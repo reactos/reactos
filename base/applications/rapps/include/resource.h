@@ -85,6 +85,9 @@
 #define ID_CHECK_ALL             562
 #define ID_SEARCH                563
 
+/* Messages */
+#define ID_ACTIVATE_APPWIZ       600
+
 /* Strings */
 #define IDS_APPTITLE             100
 #define IDS_SEARCH_TEXT          101

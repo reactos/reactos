@@ -6,7 +6,7 @@
  *              Copyright 2020 He Yang (1160386205@qq.com)
  */
 
-#include "rapps.h"
+#include "gui.h"
 #include "unattended.h"
 #include <setupapi.h>
 #include <conutils.h>
@@ -222,6 +222,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
+    BOOL bAppwizMode = FALSE;
 
     if (!argv)
     {
@@ -232,6 +233,11 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     GetStorageDirectory(Directory);
     CAppDB db(Directory);
 
+    if (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ))
+    {
+        bAppwizMode = TRUE;
+    }
+
     if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
     {
         db.RemoveCached();
@@ -239,7 +245,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     db.UpdateAvailable();
     db.UpdateInstalled();
 
-    if (argc == 1) // RAPPS is launched without options
+    if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
     {
         // Check whether the RAPPS MainWindow is already launched in another process
         HANDLE hMutex;
@@ -253,10 +259,13 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             /* Activate window */
             ShowWindow(hWindow, SW_SHOWNORMAL);
             SetForegroundWindow(hWindow);
+            if (bAppwizMode)
+                PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
             return FALSE;
         }
 
-        MainWindowLoop(&db, nCmdShow);
+        CMainWindow wnd(&db, bAppwizMode);
+        MainWindowLoop(&wnd, nCmdShow);
 
         if (hMutex)
             CloseHandle(hMutex);

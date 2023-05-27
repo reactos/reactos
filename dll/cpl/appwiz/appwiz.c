@@ -64,9 +64,9 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             ShellExecuteW(NULL,
                           NULL,
                           L"rapps.exe",
+                          L"/appwiz",
                           NULL,
-                          NULL,
-                          1);
+                          SW_SHOWNORMAL);
             break;
     }
 

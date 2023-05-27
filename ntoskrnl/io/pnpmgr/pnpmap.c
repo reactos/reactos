@@ -12,7 +12,71 @@
 #define NDEBUG
 #include <debug.h>
 
+/* TYPES *********************************************************************/
+
+typedef struct _PNP_DETECT_IDENTIFIER_MAP
+{
+    PWSTR DetectId;
+    PWSTR PnPId;
+    ULONG Counter;
+} PNP_DETECT_IDENTIFIER_MAP;
+
+/* DATA **********************************************************************/
+
+static UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
+static UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
+static UNICODE_STRING ConfigurationDataU = RTL_CONSTANT_STRING(L"Configuration Data");
+static UNICODE_STRING BootConfigU = RTL_CONSTANT_STRING(L"BootConfig");
+static UNICODE_STRING LogConfU = RTL_CONSTANT_STRING(L"LogConf");
+
+/* FIXME: There should be two sets of hardcoded PnP identifiers
+ * for the keyboard and pointer peripherals (see CORE-18963).
+ * They also can be parsed from a LegacyXlate sections of driver INF files.
+ */
+
+static
+PNP_DETECT_IDENTIFIER_MAP PnPMap[] =
+{
+    { L"SerialController", L"*PNP0501\0", 0 },
+    { L"KeyboardController", L"*PNP0303\0", 0 },
+#if defined(SARCH_PC98)
+    { L"PointerController", L"*nEC1F00\0", 0 },
+#else
+    { L"PointerController", L"*PNP0F13\0", 0 },
+#endif
+    { L"ParallelController", L"*PNP0400\0", 0 },
+    { L"FloppyDiskPeripheral", L"*PNP0700\0", 0 },
+    { NULL, NULL, 0 }
+};
+
 /* FUNCTIONS *****************************************************************/
+
+static
+CODE_SEG("INIT")
+PWSTR
+IopMapDetectedDeviceId(
+    _In_ PUNICODE_STRING DetectId,
+    _Out_ PULONG DeviceIndex)
+{
+    ULONG i;
+    UNICODE_STRING CmpId;
+
+    if (!DetectId)
+        return NULL;
+
+    for (i = 0; PnPMap[i].DetectId; i++)
+    {
+        RtlInitUnicodeString(&CmpId, PnPMap[i].DetectId);
+
+        if (RtlCompareUnicodeString(DetectId, &CmpId, FALSE) == 0)
+        {
+            *DeviceIndex = PnPMap[i].Counter++;
+            break;
+        }
+    }
+
+    return PnPMap[i].PnPId;
+}
 
 static
 CODE_SEG("INIT")
@@ -22,62 +86,18 @@ IopEnumerateDetectedDevices(
     _In_opt_ PUNICODE_STRING RelativePath,
     _In_ HANDLE hRootKey,
     _In_ BOOLEAN EnumerateSubKeys,
+    _In_opt_ PCM_FULL_RESOURCE_DESCRIPTOR BootResources,
+    _In_opt_ ULONG BootResourcesLength,
     _In_ PCM_FULL_RESOURCE_DESCRIPTOR ParentBootResources,
     _In_ ULONG ParentBootResourcesLength)
 {
-    UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
-    UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
-    UNICODE_STRING ConfigurationDataU = RTL_CONSTANT_STRING(L"Configuration Data");
-    UNICODE_STRING BootConfigU = RTL_CONSTANT_STRING(L"BootConfig");
-    UNICODE_STRING LogConfU = RTL_CONSTANT_STRING(L"LogConf");
-    OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hDevicesKey = NULL;
-    HANDLE hDeviceKey = NULL;
-    HANDLE hLevel1Key, hLevel2Key = NULL, hLogConf;
-    UNICODE_STRING Level2NameU;
-    WCHAR Level2Name[5];
-    ULONG IndexDevice = 0;
-    ULONG IndexSubKey;
+    ULONG KeyIndex = 0;
     PKEY_BASIC_INFORMATION pDeviceInformation = NULL;
     ULONG DeviceInfoLength = sizeof(KEY_BASIC_INFORMATION) + 50 * sizeof(WCHAR);
-    PKEY_VALUE_PARTIAL_INFORMATION pValueInformation = NULL;
-    ULONG ValueInfoLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 50 * sizeof(WCHAR);
-    UNICODE_STRING DeviceName, ValueName;
-    ULONG RequiredSize;
-    PCM_FULL_RESOURCE_DESCRIPTOR BootResources = NULL;
-    ULONG BootResourcesLength;
     NTSTATUS Status;
 
-    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
-    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
-    static ULONG DeviceIndexSerial = 0;
-    const UNICODE_STRING IdentifierKeyboard = RTL_CONSTANT_STRING(L"KeyboardController");
-    UNICODE_STRING HardwareIdKeyboard = RTL_CONSTANT_STRING(L"*PNP0303\0");
-    static ULONG DeviceIndexKeyboard = 0;
-    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
-    /* FIXME: IopEnumerateDetectedDevices() should be rewritten.
-     * The PnP identifiers can either be hardcoded or parsed from a LegacyXlate
-     * sections of driver INF files.
-     */
-#if defined(SARCH_PC98)
-    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*nEC1F00\0");
-#else
-    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
-#endif
-    static ULONG DeviceIndexMouse = 0;
-    const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"ParallelController");
-    UNICODE_STRING HardwareIdParallel = RTL_CONSTANT_STRING(L"*PNP0400\0");
-    static ULONG DeviceIndexParallel = 0;
-    const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FloppyDiskPeripheral");
-    UNICODE_STRING HardwareIdFloppy = RTL_CONSTANT_STRING(L"*PNP0700\0");
-    static ULONG DeviceIndexFloppy = 0;
-    UNICODE_STRING HardwareIdKey;
-    PUNICODE_STRING pHardwareId;
-    ULONG DeviceIndex = 0;
-    PUCHAR CmResourceList;
-    ULONG ListCount;
-
-    if (RelativePath)
+    if (!BootResources && RelativePath)
     {
         Status = IopOpenRegistryKeyEx(&hDevicesKey, hBaseKey, RelativePath, KEY_ENUMERATE_SUB_KEYS);
 
@@ -98,18 +118,24 @@ IopEnumerateDetectedDevices(
         goto cleanup;
     }
 
-    pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
-    if (!pValueInformation)
-    {
-        DPRINT("ExAllocatePool() failed\n");
-        Status = STATUS_NO_MEMORY;
-        goto cleanup;
-    }
-
     while (TRUE)
     {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        HANDLE hDeviceKey = NULL;
+        HANDLE hLevel1Key, hLevel2Key = NULL, hLogConf;
+        UNICODE_STRING Level2NameU;
+        WCHAR Level2Name[5];
+        PKEY_VALUE_PARTIAL_INFORMATION pValueInformation = NULL;
+        ULONG ValueInfoLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 50 * sizeof(WCHAR);
+        UNICODE_STRING DeviceName, ValueName;
+        ULONG RequiredSize;
+
+        UNICODE_STRING HardwareIdKey;
+        PWSTR pHardwareId;
+        ULONG DeviceIndex = 0;
+
         Status = ZwEnumerateKey(hDevicesKey,
-                                IndexDevice,
+                                KeyIndex,
                                 KeyBasicInformation,
                                 pDeviceInformation,
                                 DeviceInfoLength,
@@ -130,7 +156,12 @@ IopEnumerateDetectedDevices(
                 goto cleanup;
             }
 
-            Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+            Status = ZwEnumerateKey(hDevicesKey,
+                                    KeyIndex,
+                                    KeyBasicInformation,
+                                    pDeviceInformation,
+                                    DeviceInfoLength,
+                                    &RequiredSize);
         }
 
         if (!NT_SUCCESS(Status))
@@ -138,11 +169,37 @@ IopEnumerateDetectedDevices(
             DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);
             goto cleanup;
         }
-        IndexDevice++;
+        KeyIndex++;
 
         /* Open device key */
         DeviceName.Length = DeviceName.MaximumLength = (USHORT)pDeviceInformation->NameLength;
         DeviceName.Buffer = pDeviceInformation->Name;
+
+        if (BootResources)
+        {
+            Status = IopEnumerateDetectedDevices(
+                hDevicesKey,
+                &DeviceName,
+                hRootKey,
+                TRUE,
+                NULL,
+                0,
+                BootResources,
+                BootResourcesLength);
+
+            if (!NT_SUCCESS(Status))
+                goto cleanup;
+
+            continue;
+        }
+
+        pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
+        if (!pValueInformation)
+        {
+            DPRINT("ExAllocatePool() failed\n");
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
 
         Status = IopOpenRegistryKeyEx(&hDeviceKey, hDevicesKey, &DeviceName,
             KEY_QUERY_VALUE + (EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0));
@@ -247,60 +304,18 @@ IopEnumerateDetectedDevices(
 
         if (EnumerateSubKeys)
         {
-            IndexSubKey = 0;
+            Status = IopEnumerateDetectedDevices(
+                hDeviceKey,
+                RelativePath,
+                hRootKey,
+                TRUE,
+                BootResources,
+                BootResourcesLength,
+                ParentBootResources,
+                ParentBootResourcesLength);
 
-            while (TRUE)
-            {
-                Status = ZwEnumerateKey(hDeviceKey,
-                                        IndexSubKey,
-                                        KeyBasicInformation,
-                                        pDeviceInformation,
-                                        DeviceInfoLength,
-                                        &RequiredSize);
-
-                if (Status == STATUS_NO_MORE_ENTRIES)
-                    break;
-                else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-                {
-                    ExFreePool(pDeviceInformation);
-                    DeviceInfoLength = RequiredSize;
-                    pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
-
-                    if (!pDeviceInformation)
-                    {
-                        DPRINT("ExAllocatePool() failed\n");
-                        Status = STATUS_NO_MEMORY;
-                        goto cleanup;
-                    }
-
-                    Status = ZwEnumerateKey(hDeviceKey,
-                                            IndexSubKey,
-                                            KeyBasicInformation,
-                                            pDeviceInformation,
-                                            DeviceInfoLength,
-                                            &RequiredSize);
-                }
-
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);
-                    goto cleanup;
-                }
-                IndexSubKey++;
-                DeviceName.Length = DeviceName.MaximumLength = (USHORT)pDeviceInformation->NameLength;
-                DeviceName.Buffer = pDeviceInformation->Name;
-
-                Status = IopEnumerateDetectedDevices(
-                    hDeviceKey,
-                    &DeviceName,
-                    hRootKey,
-                    TRUE,
-                    BootResources,
-                    BootResourcesLength);
-
-                if (!NT_SUCCESS(Status))
-                    goto cleanup;
-            }
+            if (!NT_SUCCESS(Status))
+                goto cleanup;
         }
 
         /* Read identifier */
@@ -355,32 +370,8 @@ IopEnumerateDetectedDevices(
                 ValueName.Length -= sizeof(WCHAR);
         }
 
-        if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierSerial, FALSE) == 0)
-        {
-            pHardwareId = &HardwareIdSerial;
-            DeviceIndex = DeviceIndexSerial++;
-        }
-        else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierKeyboard, FALSE) == 0)
-        {
-            pHardwareId = &HardwareIdKeyboard;
-            DeviceIndex = DeviceIndexKeyboard++;
-        }
-        else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierMouse, FALSE) == 0)
-        {
-            pHardwareId = &HardwareIdMouse;
-            DeviceIndex = DeviceIndexMouse++;
-        }
-        else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierParallel, FALSE) == 0)
-        {
-            pHardwareId = &HardwareIdParallel;
-            DeviceIndex = DeviceIndexParallel++;
-        }
-        else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierFloppy, FALSE) == 0)
-        {
-            pHardwareId = &HardwareIdFloppy;
-            DeviceIndex = DeviceIndexFloppy++;
-        }
-        else
+        pHardwareId = IopMapDetectedDeviceId(RelativePath, &DeviceIndex);
+        if (!pHardwareId)
         {
             /* Unknown key path */
             DPRINT("Unknown key path '%wZ'\n", RelativePath);
@@ -388,8 +379,9 @@ IopEnumerateDetectedDevices(
         }
 
         /* Prepare hardware id key (hardware id value without final \0) */
-        HardwareIdKey = *pHardwareId;
-        HardwareIdKey.Length -= sizeof(UNICODE_NULL);
+        HardwareIdKey.Length = wcslen(pHardwareId) * sizeof(WCHAR);
+        HardwareIdKey.MaximumLength = HardwareIdKey.Length + sizeof(UNICODE_NULL) * 2;
+        HardwareIdKey.Buffer = pHardwareId;
 
         /* Add the detected device to Root key */
         InitializeObjectAttributes(&ObjectAttributes, &HardwareIdKey, OBJ_KERNEL_HANDLE, hRootKey, NULL);
@@ -430,7 +422,7 @@ IopEnumerateDetectedDevices(
         }
 
         DPRINT("Found %wZ #%lu (%wZ)\n", &ValueName, DeviceIndex, &HardwareIdKey);
-        Status = ZwSetValueKey(hLevel2Key, &HardwareIDU, 0, REG_MULTI_SZ, pHardwareId->Buffer, pHardwareId->MaximumLength);
+        Status = ZwSetValueKey(hLevel2Key, &HardwareIDU, 0, REG_MULTI_SZ, HardwareIdKey.Buffer, HardwareIdKey.MaximumLength);
 
         if (!NT_SUCCESS(Status))
         {
@@ -460,6 +452,9 @@ IopEnumerateDetectedDevices(
 
         if (BootResourcesLength >= sizeof(CM_FULL_RESOURCE_DESCRIPTOR))
         {
+            PUCHAR CmResourceList;
+            ULONG ListCount;
+
             CmResourceList = ExAllocatePool(PagedPool, BootResourcesLength + sizeof(ULONG));
             if (!CmResourceList)
             {
@@ -515,6 +510,8 @@ nextdevice:
             ZwClose(hDeviceKey);
             hDeviceKey = NULL;
         }
+        if (pValueInformation)
+            ExFreePool(pValueInformation);
     }
 
     Status = STATUS_SUCCESS;
@@ -522,12 +519,8 @@ nextdevice:
 cleanup:
     if (hDevicesKey && hDevicesKey != hBaseKey)
         ZwClose(hDevicesKey);
-    if (hDeviceKey)
-        ZwClose(hDeviceKey);
     if (pDeviceInformation)
         ExFreePool(pDeviceInformation);
-    if (pValueInformation)
-        ExFreePool(pValueInformation);
 
     return Status;
 }
@@ -646,6 +639,8 @@ IopUpdateRootKey(VOID)
             NULL,
             hRoot,
             TRUE,
+            NULL,
+            0,
             NULL,
             0);
         ZwClose(hEnum);

@@ -82,7 +82,7 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CAppDB *db) : m_ClientPanel(NULL), m_Db(db), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -94,7 +94,7 @@ CMainWindow::~CMainWindow()
 VOID
 CMainWindow::InitCategoriesList()
 {
-    HTREEITEM hRootItemInstalled, hRootItemAvailable;
+    HTREEITEM hRootItemAvailable;
 
     hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
@@ -123,7 +123,7 @@ CMainWindow::InitCategoriesList()
     m_TreeView->SetImageList();
     m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
     m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
-    m_TreeView->SelectItem(hRootItemAvailable);
+    m_TreeView->SelectItem(bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
 }
 
 BOOL
@@ -557,6 +557,11 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
             case ID_CHECK_ALL:
                 m_ApplicationView->CheckAll();
                 break;
+
+            case ID_ACTIVATE_APPWIZ:
+                if (hRootItemInstalled)
+                    m_TreeView->SelectItem(hRootItemInstalled);
+                break;
         }
     }
 }
@@ -781,14 +786,10 @@ CMainWindow::HandleTabOrder(int direction)
 // **** CMainWindow ****
 
 VOID
-MainWindowLoop(CAppDB *db, INT nShowCmd)
+MainWindowLoop(CMainWindow *wnd, INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;
-
-    CMainWindow *wnd = new CMainWindow(db);
-    if (!wnd)
-        return;
 
     hMainWnd = wnd->Create();
     if (!hMainWnd)
@@ -819,6 +820,4 @@ MainWindowLoop(CAppDB *db, INT nShowCmd)
             DispatchMessageW(&Msg);
         }
     }
-
-    delete wnd;
 }

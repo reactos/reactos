@@ -8,10 +8,6 @@
 VOID
 CreateSettingsDlg(HWND hwnd);
 
-// Main window
-VOID
-MainWindowLoop(class CAppDB *db, INT nShowCmd);
-
 // Download dialogs
 VOID
 DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);
