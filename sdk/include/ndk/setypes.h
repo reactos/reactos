@@ -255,9 +255,24 @@ typedef struct _TOKEN
 
 typedef struct _AUX_ACCESS_DATA
 {
-    PPRIVILEGE_SET PrivilegeSet;
+    PPRIVILEGE_SET PrivilegesUsed;
     GENERIC_MAPPING GenericMapping;
-    ULONG Reserved;
+    ACCESS_MASK AccessesToAudit;
+    ACCESS_MASK MaximumAuditMask;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    GUID TransactionId;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    PVOID NewSecurityDescriptor;
+    PVOID ExistingSecurityDescriptor;
+    PVOID ParentSecurityDescriptor;
+    VOID (NTAPI *DerefSecurityDescriptor)(PVOID, PVOID);
+    PVOID SDLock;
+    ACCESS_REASONS AccessReasons;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    BOOLEAN GenerateStagingEvents;
+#endif
 } AUX_ACCESS_DATA, *PAUX_ACCESS_DATA;
 
 //
