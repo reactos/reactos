@@ -72,46 +72,37 @@ FormatString(
 	return 0;
 }
 
-static void
-ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
+static void FormatMsgBox(HWND hParent, DWORD dwMessageId, DWORD dwCaptionId, UINT uType, va_list args)
 {
 	HLOCAL hMemCaption = NULL;
 	HLOCAL hMemText = NULL;
-	va_list args;
 
-	va_start(args, dwMessageId);
 	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
 	              NULL, dwMessageId, 0, (LPWSTR)&hMemText, 0, &args);
-	va_end(args);
-
 	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
-	              NULL, IDS_ERROR, 0, (LPWSTR)&hMemCaption, 0, NULL);
+	              NULL, dwCaptionId, 0, (LPWSTR)&hMemCaption, 0, NULL);
 
-	MessageBoxW(hParent, hMemText, hMemCaption, MB_ICONERROR);
-
+	MessageBoxW(hParent, hMemText, hMemCaption, uType);
 	LocalFree(hMemCaption);
 	LocalFree(hMemText);
 }
 
 static void
+ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
+{
+	va_list args;
+	va_start(args, dwMessageId);
+	FormatMsgBox(hParent, dwMessageId, IDS_ERROR, MB_ICONERROR, args);
+	va_end(args);
+}
+
+static void
 SuccessMsgBox(HWND hParent, DWORD dwMessageId, ...)
 {
-	HLOCAL hMemCaption = NULL;
-	HLOCAL hMemText = NULL;
 	va_list args;
-
 	va_start(args, dwMessageId);
-	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
-	              NULL, dwMessageId, 0, (LPWSTR)&hMemText, 0, &args);
+	FormatMsgBox(hParent, dwMessageId, IDS_SUCCESS, MB_ICONINFORMATION, args);
 	va_end(args);
-
-	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
-	              NULL, IDS_SUCCESS, 0, (LPWSTR)&hMemCaption, 0, NULL);
-
-	MessageBoxW(hParent, hMemText, hMemCaption, MB_ICONINFORMATION);
-
-	LocalFree(hMemCaption);
-	LocalFree(hMemText);
 }
 
 int WINAPI
