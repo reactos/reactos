@@ -18,6 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "Brakuje pamięci do ukończenia tej operacji."
     IDS_ERROR_NOFONT "Plik %1 nie jest poprawnym plikiem czcionki."
     IDS_ERROR_NOCLASS "Nie udało się zainicjować klasy window."
+    IDS_ERROR_ISINSTALLED "Ta czcionka jest już zainstalowana!"
+    IDS_ERROR_FONTCPY "Nie udało się skopiować pliku czcionki!"
+    IDS_ERROR_OPENKEY "Nie udało się otworzyć klucza czcionek!"
+    IDS_ERROR_REGISTER "Nie udało się zarejestrować nowej czcionki!"
+    IDS_SUCCESS "Sukces"
+    IDS_COMPLETED "Zakończono instalację czcionki."
     IDS_FILTER_LIST "Wszystkie obsługiwane czcionki (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Plik czcionki (*.fon;*.fnt)\0*.fon;*.fnt\0\
 Czcionka TrueType (*.ttf)\0*.ttf\0\

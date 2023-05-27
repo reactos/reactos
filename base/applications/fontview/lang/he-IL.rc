@@ -12,6 +12,12 @@ BEGIN
     IDS_ERROR_NOMEM "אין מספיק זיכרון כדי להשלים את הפעולה."
     IDS_ERROR_NOFONT "הקובץ %1 אינו קובץ גופנים חוקי."
     IDS_ERROR_NOCLASS "Could not initialize window class."
+    IDS_ERROR_ISINSTALLED "הגופן הזה כבר מותקן!"
+    IDS_ERROR_FONTCPY "העתקת קובץ הגופן נכשלה!"
+    IDS_ERROR_OPENKEY "פתיחת מפתח הגופנים נכשלה!"
+    IDS_ERROR_REGISTER "רישום הגופן החדש נכשל!"
+    IDS_SUCCESS "הצלחה"
+    IDS_COMPLETED "התקנת הגופן הושלמה."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

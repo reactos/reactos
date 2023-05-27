@@ -20,6 +20,12 @@ BEGIN
     IDS_ERROR_NOMEM "没有足够的内存来完成操作。"
     IDS_ERROR_NOFONT "%1不是一个有效的字体文件。"
     IDS_ERROR_NOCLASS "无法初始化窗口。"
+    IDS_ERROR_ISINSTALLED "此字体已安装！"
+    IDS_ERROR_FONTCPY "无法复制字体文件！"
+    IDS_ERROR_OPENKEY "无法打开字体注册表键！"
+    IDS_ERROR_REGISTER "无法注册新字体！"
+    IDS_SUCCESS "成功"
+    IDS_COMPLETED "字体安装完成。"
     IDS_FILTER_LIST "所有支持的字体 (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 字体文件 (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType 字体 (*.ttf)\0*.ttf\0\

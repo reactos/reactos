@@ -12,6 +12,12 @@ BEGIN
     IDS_ERROR_NOMEM "Não há memória suficiente para completar a operação."
     IDS_ERROR_NOFONT "O arquivo %1 não é um arquivo de fonte válida."
     IDS_ERROR_NOCLASS "Não foi possível inicializar a janela."
+    IDS_ERROR_ISINSTALLED "Esta fonte já está instalada!"
+    IDS_ERROR_FONTCPY "Falha ao copiar o arquivo da fonte!"
+    IDS_ERROR_OPENKEY "Falha ao abrir a chave de fontes!"
+    IDS_ERROR_REGISTER "Falha ao registrar a nova fonte!"
+    IDS_SUCCESS "Sucesso"
+    IDS_COMPLETED "Instalação da fonte concluída."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

@@ -10,6 +10,12 @@ BEGIN
     IDS_ERROR_NOMEM "Es steht nicht genügend Speicher zur Verfügung."
     IDS_ERROR_NOFONT "Die angegebene Datei %1 ist keine gültige Schriftartendatei."
     IDS_ERROR_NOCLASS "Fehler beim Initialisieren der Fensterklasse."
+    IDS_ERROR_ISINSTALLED "Diese Schriftart ist bereits installiert!"
+    IDS_ERROR_FONTCPY "Fehler beim Kopieren der Schriftdatei!"
+    IDS_ERROR_OPENKEY "Fehler beim Öffnen des Schriftschlüssels!"
+    IDS_ERROR_REGISTER "Fehler beim Registrieren der neuen Schriftart!"
+    IDS_SUCCESS "Erfolgreich"
+    IDS_COMPLETED "Installation der Schriftart abgeschlossen."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

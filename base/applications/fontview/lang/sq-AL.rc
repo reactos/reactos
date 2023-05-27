@@ -14,6 +14,12 @@ BEGIN
     IDS_ERROR_NOMEM "Nuk ka memorie të mjaftueshme për të përfunduar operacionin."
     IDS_ERROR_NOFONT "Dokumenti %1 nuk është një font i vlefshem."
     IDS_ERROR_NOCLASS "Nuk mund të fillojë dritaren e klases."
+    IDS_ERROR_ISINSTALLED "Ky font është tashmë i instaluar!"
+    IDS_ERROR_FONTCPY "Dështoi kopjimi i skedarit të fontit!"
+    IDS_ERROR_OPENKEY "Dështoi hapja e çelësit të fonteve!"
+    IDS_ERROR_REGISTER "Dështoi regjistrimi i fontit të ri!"
+    IDS_SUCCESS "Sukses"
+    IDS_COMPLETED "Instalimi i fontit është përfunduar."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

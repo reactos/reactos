@@ -15,6 +15,12 @@ BEGIN
     IDS_ERROR_NOMEM "Na vykonanie tejto operácie nie je dostatok voľnej pamäte."
     IDS_ERROR_NOFONT "Požadovaný súbor %1 nie je platným súborom písiem."
     IDS_ERROR_NOCLASS "Nepodarilo sa inicializovať triedu window."
+    IDS_ERROR_ISINSTALLED "Tento písmo je už nainštalované!"
+    IDS_ERROR_FONTCPY "Nepodarilo sa skopírovať súbor písma!"
+    IDS_ERROR_OPENKEY "Nepodarilo sa otvoriť kľúč pre písma!"
+    IDS_ERROR_REGISTER "Nepodarilo sa zaregistrovať nové písmo!"
+    IDS_SUCCESS "Úspech"
+    IDS_COMPLETED "Inštalácia písma dokončená."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

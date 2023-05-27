@@ -12,6 +12,12 @@ BEGIN
     IDS_ERROR_NOMEM "Terdapat tidak cukup ingatan untuk melengkapkan operasi ini."
     IDS_ERROR_NOFONT "Fail %1 bukanlah fail fon yang sah."
     IDS_ERROR_NOCLASS "Tidak dapat mengawalkan kelas tetingkap."
+    IDS_ERROR_ISINSTALLED "Font ini sudah dipasang!"
+    IDS_ERROR_FONTCPY "Gagal menyalin fail font!"
+    IDS_ERROR_OPENKEY "Gagal membuka kunci font!"
+    IDS_ERROR_REGISTER "Gagal mendaftarkan font baru!"
+    IDS_SUCCESS "Berjaya"
+    IDS_COMPLETED "Pemasangan Font Selesai."
     IDS_FILTER_LIST "Semuanya disokong fon (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

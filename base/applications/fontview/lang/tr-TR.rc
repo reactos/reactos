@@ -18,6 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "Bu işlemi bitirmek için yeterli bellek yok."
     IDS_ERROR_NOFONT "%1 dosyası, geçerli bir yazı tipi dosyası değil."
     IDS_ERROR_NOCLASS "Pencere sınıfı başlatılamadı."
+    IDS_ERROR_ISINSTALLED "Bu yazı tipi zaten yüklü!"
+    IDS_ERROR_FONTCPY "Yazı tipi dosyası kopyalanamadı!"
+    IDS_ERROR_OPENKEY "Yazı tipleri anahtarını açma başarısız!"
+    IDS_ERROR_REGISTER "Yeni yazı tipi kaydedilemedi!"
+    IDS_SUCCESS "Başarılı"
+    IDS_COMPLETED "Yazı Tipi Yüklemesi Tamamlandı."
     IDS_FILTER_LIST "Tüm Desteklenen Yazı Tipleri (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Yazı Tipi Dosyası (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Yazı Tipi (*.ttf)\0*.ttf\0\

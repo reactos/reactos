@@ -93,6 +93,27 @@ ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
 	LocalFree(hMemText);
 }
 
+static void
+SuccessMsgBox(HWND hParent, DWORD dwMessageId, ...)
+{
+	HLOCAL hMemCaption = NULL;
+	HLOCAL hMemText = NULL;
+	va_list args;
+
+	va_start(args, dwMessageId);
+	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
+	              NULL, dwMessageId, 0, (LPWSTR)&hMemText, 0, &args);
+	va_end(args);
+
+	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
+	              NULL, IDS_SUCCESS, 0, (LPWSTR)&hMemCaption, 0, NULL);
+
+	MessageBoxW(hParent, hMemText, hMemCaption, MB_ICONINFORMATION);
+
+	LocalFree(hMemCaption);
+	LocalFree(hMemText);
+}
+
 int WINAPI
 wWinMain(HINSTANCE hThisInstance,
          HINSTANCE hPrevInstance,
@@ -466,7 +487,6 @@ MainWnd_OnInstall(HWND hwnd)
     HKEY hKey;
 
     SendDlgItemMessage(hwnd, IDC_DISPLAY, FVM_GETFULLNAME, 64, (LPARAM)szFullName);
-//    MessageBoxW(hwnd, szFullName, L"Debug", MB_OK);
 
     /* First, we have to find out if the font still exists */
     if (GetFileAttributes(g_fileName) == INVALID_FILE_ATTRIBUTES)
@@ -483,21 +503,17 @@ MainWnd_OnInstall(HWND hwnd)
     wcscat(szDestPath, L"\\Fonts\\");
     wcscat(szDestPath, pszFileName);
 
-    /* Debug Message */
-//    MessageBoxW(hwnd, szDestPath, L"szDestPath", MB_OK);
-//    MessageBoxW(hwnd, pszFileName, L"pszFileExt", MB_OK);
-
     /* Check if the file already exists */
     if (GetFileAttributesW(szDestPath) != INVALID_FILE_ATTRIBUTES)
     {
-        MessageBoxW(hwnd, L"This font is already installed!", L"Already Installed", MB_OK);
+		ErrorMsgBox(hwnd, IDS_ERROR_ISINSTALLED);
         return 0;
     }
 
     /* Copy the font file */
     if (!CopyFileW(g_fileName, szDestPath, TRUE))
     {
-        MessageBoxW(hwnd,L"Failed to copy the font file!", L"File Error", MB_OK);
+		ErrorMsgBox(hwnd, IDS_ERROR_FONTCPY);
         return -1;
     }
 
@@ -509,7 +525,7 @@ MainWnd_OnInstall(HWND hwnd)
                         &hKey);
     if (res != ERROR_SUCCESS)
     {
-        MessageBoxW(hwnd, L"Failed top open the fonts key!", L"Debug1", MB_OK);
+		ErrorMsgBox(hwnd, IDS_ERROR_OPENKEY);
         return -1;
     }
 
@@ -519,10 +535,10 @@ MainWnd_OnInstall(HWND hwnd)
                          0,
                          REG_SZ,
                          (LPBYTE)pszFileName,
-                         (wcslen(pszFileName) + 1) * sizeof(WCHAR));
+                         (DWORD)(wcslen(pszFileName) + 1) * sizeof(WCHAR));
     if (res != ERROR_SUCCESS)
     {
-        MessageBoxW(hwnd, L"Failed to register the new font!", L"Debug2", MB_OK);
+		ErrorMsgBox(hwnd, IDS_ERROR_REGISTER);
         RegCloseKey(hKey);
         return -1;
     }
@@ -534,7 +550,7 @@ MainWnd_OnInstall(HWND hwnd)
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
     /* if all of this goes correctly, message the user about success */
-    MessageBoxW(hwnd, L"Font Installation Completed.", L"Success", MB_OK);
+	SuccessMsgBox(hwnd, IDS_COMPLETED);
 
     return 0;
 }

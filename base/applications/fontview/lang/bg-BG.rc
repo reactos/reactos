@@ -10,6 +10,12 @@ BEGIN
     IDS_ERROR_NOMEM "Няма достатъчно място за завършване на действието."
     IDS_ERROR_NOFONT "%1 не е редовен шрифтов файл."
     IDS_ERROR_NOCLASS "Неуспешно изпълнение на класа на прозореца."
+    IDS_ERROR_ISINSTALLED "Тази шрифтова гарнитура вече е инсталирана!"
+    IDS_ERROR_FONTCPY "Неуспешно копиране на файлът с шрифта!"
+    IDS_ERROR_OPENKEY "Неуспешно отваряне на регистъра с шрифтовете!"
+    IDS_ERROR_REGISTER "Неуспешна регистрация на новия шрифт!"
+    IDS_SUCCESS "Успешно"
+    IDS_COMPLETED "Завършена инсталация на шрифта."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

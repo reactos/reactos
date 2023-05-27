@@ -18,6 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "Недостатньо пам'яті для завершення операції."
     IDS_ERROR_NOFONT "Файл %1 не є коректним файлом шрифту."
     IDS_ERROR_NOCLASS "Неможливо ініціалізувати віконний клас."
+    IDS_ERROR_ISINSTALLED "Цей шрифт вже встановлено!"
+    IDS_ERROR_FONTCPY "Не вдалося скопіювати файл шрифту!"
+    IDS_ERROR_OPENKEY "Не вдалося відкрити ключ шрифтів!"
+    IDS_ERROR_REGISTER "Не вдалося зареєструвати новий шрифт!"
+    IDS_SUCCESS "Успішно"
+    IDS_COMPLETED "Встановлення шрифту завершено."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\
