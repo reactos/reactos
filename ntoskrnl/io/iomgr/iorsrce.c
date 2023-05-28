@@ -12,7 +12,18 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
+
+#ifndef NDEBUG
+    #define IORSRCTRACE(...)    DbgPrint(__VA_ARGS__)
+#else
+    #if defined(_MSC_VER)
+    #define IORSRCTRACE     __noop
+    #else
+    #define IORSRCTRACE(...)    do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #endif
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -150,6 +161,14 @@ IopQueryDeviceDescription(
     UNICODE_STRING TempString;
     WCHAR TempBuffer[14];
 
+    IORSRCTRACE("\nIopQueryDeviceDescription(Query: 0x%p)\n"
+                "    RootKey: '%wZ'\n"
+                "    RootKeyHandle: 0x%p\n"
+                "    Bus: %lu\n",
+                Query,
+                &RootKey, RootKeyHandle,
+                Bus);
+
     /* Temporary string */
     TempString.MaximumLength = sizeof(TempBuffer);
     TempString.Length = 0;
@@ -164,9 +183,12 @@ IopQueryDeviceDescription(
     {
         ControllerNumber = *Query->ControllerNumber;
         MaximumControllerNumber = ControllerNumber + 1;
+        IORSRCTRACE("    Getting controller #%lu\n", ControllerNumber);
     }
     else
     {
+        IORSRCTRACE("    Enumerating controllers in '%wZ'...\n", &ControllerRootRegName);
+
         /* Find out how many controllers there are */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &ControllerRootRegName,
@@ -234,6 +256,8 @@ IopQueryDeviceDescription(
         if (!NT_SUCCESS(Status))
             break;
 
+        IORSRCTRACE("    Retrieving controller '%wZ'\n", &ControllerRootRegName);
+
         /* Open the registry key */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &ControllerRootRegName,
@@ -289,6 +313,9 @@ IopQueryDeviceDescription(
         /* We now have bus *AND* controller information, is it enough? */
         if (!Query->PeripheralType || !(*Query->PeripheralType))
         {
+            IORSRCTRACE("    --> Bus #%lu Controller #%lu Callout: '%wZ'\n",
+                        Bus, ControllerNumber, &ControllerRootRegName);
+
             Status = Query->CalloutRoutine(Query->Context,
                                            &ControllerRootRegName,
                                            *Query->BusType,
@@ -316,9 +343,12 @@ IopQueryDeviceDescription(
         {
             PeripheralNumber = *Query->PeripheralNumber;
             MaximumPeripheralNumber = PeripheralNumber + 1;
+            IORSRCTRACE("    Getting peripheral #%lu\n", PeripheralNumber);
         }
         else
         {
+            IORSRCTRACE("    Enumerating peripherals in '%wZ'...\n", &ControllerRootRegName);
+
             /* Find out how many peripherals there are */
             InitializeObjectAttributes(&ObjectAttributes,
                                        &ControllerRootRegName,
@@ -385,6 +415,8 @@ IopQueryDeviceDescription(
             if (!NT_SUCCESS(Status))
                 break;
 
+            IORSRCTRACE("    Retrieving peripheral '%wZ'\n", &ControllerRootRegName);
+
             /* Open the registry key */
             InitializeObjectAttributes(&ObjectAttributes,
                                        &ControllerRootRegName,
@@ -435,6 +467,9 @@ IopQueryDeviceDescription(
                 /* We now have everything the caller could possibly want */
                 if (NT_SUCCESS(Status))
                 {
+                    IORSRCTRACE("    --> Bus #%lu Controller #%lu Peripheral #%lu Callout: '%wZ'\n",
+                                Bus, ControllerNumber, PeripheralNumber, &ControllerRootRegName);
+
                     Status = Query->CalloutRoutine(Query->Context,
                                                    &ControllerRootRegName,
                                                    *Query->BusType,
@@ -531,6 +566,16 @@ IopQueryBusDescription(
     PKEY_VALUE_FULL_INFORMATION BusInformation[IoQueryDeviceMaxData] =
         {NULL, NULL, NULL};
 
+    IORSRCTRACE("\nIopQueryBusDescription(Query: 0x%p)\n"
+                "    RootKey: '%wZ'\n"
+                "    RootKeyHandle: 0x%p\n"
+                "    KeyIsRoot: %s\n"
+                "    Bus: 0x%p (%lu)\n",
+                Query,
+                &RootKey, RootKeyHandle,
+                KeyIsRoot ? "TRUE" : "FALSE",
+                Bus, Bus ? *Bus : -1);
+
     /* Retrieve the necessary buffer space */
     Status = ZwQueryKey(RootKeyHandle,
                         KeyFullInformation,
@@ -587,6 +632,8 @@ IopQueryBusDescription(
         if (!NT_SUCCESS(Status))
             break;
 
+        IORSRCTRACE("    Seen: '%.*ws'\n", BasicInformation->NameLength/sizeof(WCHAR), BasicInformation->Name);
+
         /* What bus are we going to go down? (only check if this is a root key) */
         if (KeyIsRoot)
         {
@@ -622,6 +669,8 @@ IopQueryBusDescription(
         RtlAppendUnicodeToString(&SubRootRegName, L"\\");
         RtlAppendUnicodeStringToString(&SubRootRegName, &BusString);
 
+        IORSRCTRACE("    SubRootRegName: '%wZ'\n", &SubRootRegName);
+
         if (!KeyIsRoot)
         {
             /* Parsing a sub-bus key */
@@ -630,6 +679,8 @@ IopQueryBusDescription(
             {
                 /* Identifier string first */
                 RtlInitUnicodeString(&SubBusString, IoDeviceInfoNames[SubBusLoop]);
+
+                IORSRCTRACE("    Getting bus value: '%wZ'\n", &SubBusString);
 
                 /* Retrieve the necessary buffer space */
                 ZwQueryValueKey(SubRootKeyHandle,
@@ -670,6 +721,8 @@ IopQueryBusDescription(
                     {
                         if (Query->ControllerType == NULL)
                         {
+                            IORSRCTRACE("    --> Bus #%lu Callout: '%wZ'\n", *Bus, &SubRootRegName);
+
                             /* We don't want controller information: call the callback */
                             Status = Query->CalloutRoutine(Query->Context,
                                                            &SubRootRegName,
@@ -685,6 +738,8 @@ IopQueryBusDescription(
                         }
                         else
                         {
+                            IORSRCTRACE("    --> Getting device on Bus #%lu : '%wZ'\n", *Bus, &SubRootRegName);
+
                             /* We want controller information: get it */
                             Status = IopQueryDeviceDescription(Query,
                                                                SubRootRegName,
@@ -1142,6 +1197,25 @@ IoQueryDeviceDescription(
     UNICODE_STRING RootRegKey;
     HANDLE RootRegHandle;
     IO_QUERY Query;
+
+    IORSRCTRACE("\nIoQueryDeviceDescription()\n"
+                "    BusType:          0x%p (%lu)\n"
+                "    BusNumber:        0x%p (%lu)\n"
+                "    ControllerType:   0x%p (%lu)\n"
+                "    ControllerNumber: 0x%p (%lu)\n"
+                "    PeripheralType:   0x%p (%lu)\n"
+                "    PeripheralNumber: 0x%p (%lu)\n"
+                "    CalloutRoutine:   0x%p\n"
+                "    Context:          0x%p\n"
+                "--> Query: 0x%p\n",
+                BusType, BusType ? *BusType : -1,
+                BusNumber, BusNumber ? *BusNumber : -1,
+                ControllerType, ControllerType ? *ControllerType : -1,
+                ControllerNumber, ControllerNumber ? *ControllerNumber : -1,
+                PeripheralType, PeripheralType ? *PeripheralType : -1,
+                PeripheralNumber, PeripheralNumber ? *PeripheralNumber : -1,
+                CalloutRoutine, Context,
+                &Query);
 
     /* Set up the string */
     RootRegKey.Length = 0;
