@@ -23,10 +23,10 @@
  * @param[in] Process
  * Valid process object where subject context is to be captured.
  *
- * @param[in,out] AccessState
+ * @param[out] AccessState
  * An initialized returned parameter to an access state.
  *
- * @param[in] AuxData
+ * @param[out] AuxData
  * Auxiliary security data for access state.
  *
  * @param[in] Access
@@ -43,8 +43,8 @@ NTAPI
 SeCreateAccessStateEx(
     _In_ PETHREAD Thread,
     _In_ PEPROCESS Process,
-    _Inout_ PACCESS_STATE AccessState,
-    _In_ PAUX_ACCESS_DATA AuxData,
+    _Out_ PACCESS_STATE AccessState,
+    _Out_ __drv_aliasesMem PAUX_ACCESS_DATA AuxData,
     _In_ ACCESS_MASK Access,
     _In_ PGENERIC_MAPPING GenericMapping)
 {
@@ -101,10 +101,10 @@ SeCreateAccessStateEx(
  * @brief
  * Creates an access state.
  *
- * @param[in,out] AccessState
+ * @param[out] AccessState
  * An initialized returned parameter to an access state.
  *
- * @param[in] AuxData
+ * @param[out] AuxData
  * Auxiliary security data for access state.
  *
  * @param[in] Access
@@ -119,8 +119,8 @@ SeCreateAccessStateEx(
 NTSTATUS
 NTAPI
 SeCreateAccessState(
-    _Inout_ PACCESS_STATE AccessState,
-    _In_ PAUX_ACCESS_DATA AuxData,
+    _Out_ PACCESS_STATE AccessState,
+    _Out_ __drv_aliasesMem PAUX_ACCESS_DATA AuxData,
     _In_ ACCESS_MASK Access,
     _In_ PGENERIC_MAPPING GenericMapping)
 {
