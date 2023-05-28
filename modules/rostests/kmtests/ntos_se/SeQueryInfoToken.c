@@ -328,6 +328,10 @@ START_TEST(SeQueryInfoToken)
     //      Testing SeFreePrivileges                                  //
     //----------------------------------------------------------------//
 
+    // FIXME: KernelMode will automatically get all access granted without
+    // getting Privileges filled in. For UserMode, Privileges will only get
+    // filled if either WRITE_OWNER or ACCESS_SYSTEM_SECURITY is requested
+    // and granted. So this doesn't really test SeFreePrivileges.
     Privileges = NULL;
     Checker = SeAccessCheck(
         AccessState->SecurityDescriptor,
@@ -342,7 +346,7 @@ START_TEST(SeQueryInfoToken)
         &Status
         );
     ok(Checker, "Checker is NULL\n");
-    ok((Privileges != NULL), "Privileges is NULL\n");
+    ok(Privileges == NULL, "Privileges is not NULL\n");
     if (Privileges)
     {
         trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
@@ -390,6 +394,8 @@ START_TEST(SeQueryInfoToken)
 
     // Call SeFreePrivileges again
 
+    // FIXME: See other SeAccessCheck call above, we're not really testing
+    // SeFreePrivileges here.
     Privileges = NULL;
     Checker = SeAccessCheck(
         AccessState->SecurityDescriptor,
@@ -404,7 +410,7 @@ START_TEST(SeQueryInfoToken)
         &Status
         );
     ok(Checker, "Checker is NULL\n");
-    ok((Privileges != NULL), "Privileges is NULL\n");
+    ok(Privileges == NULL, "Privileges is not NULL\n");
     if (Privileges)
     {
         trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
