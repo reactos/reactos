@@ -7,13 +7,21 @@
 
 #define SVC_(name, argcount) (ULONG_PTR)Nt##name,
 ULONG_PTR Win32kSSDT[] = {
-#include "w32ksvc.h"
+#ifdef _WIN64
+#include "w32ksvc64.h"
+#else
+#include "w32ksvc32.h"
+#endif
 };
 #undef SVC_
 
 #define SVC_(name, argcount) argcount * sizeof(void *),
 UCHAR Win32kSSPT[] = {
-#include "w32ksvc.h"
+#ifdef _WIN64
+#include "w32ksvc64.h"
+#else
+#include "w32ksvc32.h"
+#endif
 };
 
 #define MIN_SYSCALL_NUMBER    0x1000
