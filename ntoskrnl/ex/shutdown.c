@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/shutdown.c
- * PURPOSE:         Power managment
+ * PURPOSE:         Power management
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */

@@ -111,7 +111,7 @@
 #define GDI_OBJECT_GET_TYPE_INDEX(t) \
     ((t & GDI_HANDLE_BASETYPE_MASK) >> GDI_HANDLE_BASETYPE_SHIFT)
 
-/* Gdi Object Handle Managment Pid lock masking sets. */
+/* Gdi Object Handle Management Pid lock masking sets. */
 /* Ref: used with DxEngSetDCOwner */
 #define GDI_OBJ_HMGR_PUBLIC     0          /* Public owner, Open access? */
 #define GDI_OBJ_HMGR_POWNED     0x80000002 /* Set to current owner. */
