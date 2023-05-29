@@ -659,10 +659,12 @@ PNP_GetGlobalState(
     DWORD ulFlags)
 {
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetGlobalState(%p %p 0x%08lx)\n",
            hBinding, pulState, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
 
