@@ -549,6 +549,56 @@ GetConfigurationData(
 }
 
 
+static
+BOOL
+IsCallerInteractive(
+    _In_ handle_t hBinding)
+{
+    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    HANDLE hToken;
+    PSID pInteractiveSid = NULL;
+    BOOL bInteractive = FALSE;
+    RPC_STATUS RpcStatus;
+
+    DPRINT("IsCallerInteractive(%p)\n", hBinding);
+
+    /* Allocate an interactive user sid */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_INTERACTIVE_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &pInteractiveSid))
+    {
+        DPRINT1("AllocateAndInitializeSid failed\n");
+        return FALSE;
+    }
+
+    /* Impersonate the client */
+    RpcStatus = RpcImpersonateClient(hBinding);
+    if (RpcStatus != RPC_S_OK)
+    {
+        DPRINT1("RpcImpersonateClient failed (Status 0x%08lx)\n", RpcStatus);
+        goto done;
+    }
+
+    /* Open the thread token and check for interactive user membership */
+    if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken))
+    {
+        CheckTokenMembership(hToken, pInteractiveSid, &bInteractive);
+        CloseHandle(hToken);
+    }
+
+    /* Revert the impersonation */
+    RpcRevertToSelf();
+
+done:
+    if (pInteractiveSid)
+        FreeSid(pInteractiveSid);
+
+    return bInteractive;
+}
+
+
 VOID
 __RPC_USER
 PNP_NOTIFY_HANDLE_rundown(
@@ -594,7 +644,7 @@ PNP_GetVersion(
     DPRINT("PNP_GetVersion(%p %p)\n",
            hBinding, pVersion);
 
-    *pVersion = 0x0400;
+    *pVersion = CONFIGMG_VERSION;
 
     return CR_SUCCESS;
 }
@@ -609,10 +659,12 @@ PNP_GetGlobalState(
     DWORD ulFlags)
 {
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetGlobalState(%p %p 0x%08lx)\n",
            hBinding, pulState, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
 
@@ -646,11 +698,14 @@ PNP_ReportLogOn(
     DWORD ReturnValue = CR_FAILURE;
     HANDLE hProcess;
 
-    UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(Admin);
 
     DPRINT("PNP_ReportLogOn(%p %u, %u)\n",
            hBinding, Admin, ProcessId);
+
+    /* Fail, if the caller is not an interactive user */
+    if (!IsCallerInteractive(hBinding))
+        goto cleanup;
 
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
@@ -4824,7 +4879,7 @@ PNP_GetVersionInternal(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
-    *pwVersion = 0x501;
+    *pwVersion = WINVER;
     return CR_SUCCESS;
 }
 
