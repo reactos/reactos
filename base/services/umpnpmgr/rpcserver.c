@@ -644,7 +644,7 @@ PNP_GetVersion(
     DPRINT("PNP_GetVersion(%p %p)\n",
            hBinding, pVersion);
 
-    *pVersion = 0x0400;
+    *pVersion = CONFIGMG_VERSION;
 
     return CR_SUCCESS;
 }
@@ -4879,7 +4879,7 @@ PNP_GetVersionInternal(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
-    *pwVersion = 0x501;
+    *pwVersion = WINVER;
     return CR_SUCCESS;
 }
 
