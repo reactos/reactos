@@ -154,7 +154,7 @@ BEGIN
     LTEXT "Rozdzielczość:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Brak danych", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Brak danych", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Brak danych", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Jednostki", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "Centy&metry", IDD_ATTRIBUTESRB2, 52, 69, 55, 10
@@ -242,6 +242,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
-    IDS_LEGALRESUNITS "pixel/cm" /* Don't translate this line */
     IDS_PRINTRES "%d x %d pixel/cm"
 END

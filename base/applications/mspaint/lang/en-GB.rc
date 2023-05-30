@@ -153,7 +153,7 @@ BEGIN
     LTEXT "&Resolution:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "dpi", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Units", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Inches", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -241,6 +241,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
-    IDS_LEGALRESUNITS "dot/inch" /* Don't translate this line */
     IDS_PRINTRES "%d x %d dots per inch"
 END
