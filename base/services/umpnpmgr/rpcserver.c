@@ -696,7 +696,7 @@ PNP_ReportLogOn(
     DWORD ProcessId)
 {
     DWORD ReturnValue = CR_FAILURE;
-    HANDLE hProcess;
+    HANDLE hProcess = NULL;
 
     UNREFERENCED_PARAMETER(Admin);
 
