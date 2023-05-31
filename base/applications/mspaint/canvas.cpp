@@ -766,3 +766,10 @@ VOID CCanvasWindow::EndSelectionDrag(POINT ptUnZoomed)
     m_hitSelection = HIT_NONE;
     Invalidate(FALSE);
 }
+
+LRESULT CCanvasWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    SetTextColor((HDC)wParam, paletteModel.GetFgColor());
+    SetBkMode((HDC)wParam, TRANSPARENT);
+    return (LRESULT)GetStockObject(NULL_BRUSH);
+}
