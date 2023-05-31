@@ -421,6 +421,7 @@ WINAPI
 GetPhysicallyInstalledSystemMemory(
     _Out_ PULONGLONG TotalMemoryInKilobytes)
 {
+    DPRINT1("GetPhysicallyInstalledSystemMemory() does not work correctly > 4 GB RAM");
     MEMORYSTATUSEX status;
 
     if (TotalMemoryInKilobytes == NULL)
