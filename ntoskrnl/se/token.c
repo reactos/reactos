@@ -1103,6 +1103,252 @@ SepFindPrimaryGroupAndDefaultOwner(
 
 /**
  * @brief
+ * Internal private function that returns an opened handle
+ * of an access token associated with a thread.
+ *
+ * @param[in] Thread
+ * A pointer to a Executive thread. This parameter is used to
+ * validate that the newly obtained thread in this function
+ * hasn't diverged. This could potentially lead to a scenario
+ * that we might get an access token from a different token
+ * which is not what we want. The validation is performed
+ * if the token has to copied and can't be opened directly.
+ *
+ * @param[in] ThreadHandle
+ * A handle to a thread, of which an access token is to be opened
+ * and given from that thread.
+ *
+ * @param[in] ThreadToken
+ * A pointer to an access token associated with the specific thread.
+ * The function assumes that the token is an impersonation one
+ * prior the calling of this function.
+ *
+ * @param[in] DesiredAccess
+ * The desired access rights for the access token.
+ *
+ * @param[in] HandleAttributes
+ * Handle attributes of which they are used for the newly creation
+ * of the opened thread token. The function assumes that they have
+ * been validated prior the calling of this function.
+ *
+ * @param[in] EffectiveOnly
+ * If set to TRUE, the function will copy a new access token with
+ * privileges and groups that are effectively enabled. Any disabled
+ * privilege or group is removed from the copied token. Otherwise
+ * if set to FALSE, the function retains all the enabled and disabled
+ * privielges and groups.
+ *
+ * @param[in] CopyOnOpen
+ * If set to TRUE, it tells the function that the access token cannot
+ * be directly opened due to the security impersonation info of the
+ * associated thread being enforced. In this case the function will
+ * make a copy of the said token by duplicating it. Otherwise if set
+ * to FALSE, the function will just open the access token directly.
+ *
+ * @param[in] ImpersonationLevel
+ * The security impersonation level, at which it is allowed to
+ * access the token.
+ *
+ * @param[in] PreviousMode
+ * The processor request level mode.
+ *
+ * @param[out] OpenedTokenHandle
+ * A pointer to an opened access token handle associated with the
+ * specific thread, returned to the caller. Initially this parameter
+ * is set to NULL and if the function fails to open the thread's token,
+ * it will stay NULL.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully opened the thread's
+ * token. STATUS_OBJECT_TYPE_MISMATCH is returned if the obtained thread object
+ * no longer matches with the other thread that has been obtained previously.
+ * STATUS_NO_TOKEN is returned if the associated thread's process has no
+ * primary access token. A failure NTSTATUS code is returned otherwise.
+ */
+static
+NTSTATUS
+SepOpenThreadToken(
+    _In_ PETHREAD Thread,
+    _In_ HANDLE ThreadHandle,
+    _In_ PTOKEN ThreadToken,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_ BOOLEAN EffectiveOnly,
+    _In_ BOOLEAN CopyOnOpen,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PHANDLE OpenedTokenHandle)
+{
+    NTSTATUS Status;
+    HANDLE TokenHandle;
+    PETHREAD Thread2;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PTOKEN NewToken, PrimaryToken;
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+    PACL Dacl;
+
+    PAGED_CODE();
+
+    /* Assume no opened token handle at first */
+    *OpenedTokenHandle = NULL;
+
+    /* Check if we have to do a copy of the token on open or not */
+    if (!CopyOnOpen)
+    {
+        /* Just open the thread's token directly */
+        Status = ObOpenObjectByPointer(ThreadToken,
+                                       HandleAttributes,
+                                       NULL,
+                                       DesiredAccess,
+                                       SeTokenObjectType,
+                                       PreviousMode,
+                                       &TokenHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open the thread's token object (Status 0x%lx)\n", Status);
+            return Status;
+        }
+
+        /* Give it to caller */
+        *OpenedTokenHandle = TokenHandle;
+        return STATUS_SUCCESS;
+    }
+
+    /*
+     * The caller asks to do a copy of that token whilst it's opened.
+     * Obtain a thread object again but this time we have to obtain
+     * it in our side, kernel mode, and request all the access needed
+     * to do a copy of the token because the original thread only has
+     * query access needed for access token validation.
+     */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_ALL_ACCESS,
+                                       PsThreadType,
+                                       KernelMode,
+                                       (PVOID*)&Thread2,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference the object thread (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Check that one of the threads hasn't diverged */
+    if (Thread != Thread2)
+    {
+        DPRINT1("One of the threads aren't the same (original thread 0x%p, thread 0x%p)\n", Thread, Thread2);
+        ObDereferenceObject(Thread2);
+        return STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+    /* Reference the primary token of the process' thread */
+    PrimaryToken = PsReferencePrimaryToken(Thread2->ThreadsProcess);
+    if (!PrimaryToken)
+    {
+        DPRINT1("Failed to reference the primary token of thread\n");
+        ObDereferenceObject(Thread2);
+        return STATUS_NO_TOKEN;
+    }
+
+    /* Create an impersonation DACL from the tokens we got */
+    Status = SepCreateImpersonationTokenDacl(ThreadToken, PrimaryToken, &Dacl);
+    ObFastDereferenceObject(&Thread2->ThreadsProcess->Token, PrimaryToken);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create an impersonation token DACL (Status 0x%lx)\n", Status);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /* Create a security descriptor with the DACL we got */
+    Status = RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create a security descriptor (Status 0x%lx)\n", Status);
+        ExFreePoolWithTag(Dacl, TAG_ACL);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /* Attach the DACL to that security descriptor */
+    Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to set the DACL to the security descriptor (Status 0x%lx)\n", Status);
+        ExFreePoolWithTag(Dacl, TAG_ACL);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /*
+     * Initialize the object attributes for the token we
+     * are going to duplicate.
+     */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               HandleAttributes,
+                               NULL,
+                               &SecurityDescriptor);
+
+    /* Duplicate (copy) it now */
+    Status = SepDuplicateToken(ThreadToken,
+                               &ObjectAttributes,
+                               EffectiveOnly,
+                               TokenImpersonation,
+                               ImpersonationLevel,
+                               KernelMode,
+                               &NewToken);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to duplicate the token (Status 0x%lx)\n", Status);
+        ExFreePoolWithTag(Dacl, TAG_ACL);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /* Insert that copied token into the handle now */
+    ObReferenceObject(NewToken);
+    Status = ObInsertObject(NewToken,
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &TokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the token object (Status 0x%lx)\n", Status);
+        ExFreePoolWithTag(Dacl, TAG_ACL);
+        ObDereferenceObject(NewToken);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /* We're almost done, free the DACL if we got one */
+    ExFreePoolWithTag(Dacl, TAG_ACL);
+
+    /* Impersonate the client finally */
+    Status = PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to impersonate the client (Status 0x%lx)\n", Status);
+        ObDereferenceObject(NewToken);
+        ObDereferenceObject(Thread2);
+        return Status;
+    }
+
+    /* Give the newly opened token handle to caller */
+    *OpenedTokenHandle = TokenHandle;
+    ObDereferenceObject(NewToken);
+    ObDereferenceObject(Thread2);
+    return Status;
+}
+
+/**
+ * @brief
  * Subtracts a token in exchange of duplicating a new one.
  *
  * @param[in] ParentToken
@@ -2085,13 +2331,10 @@ NtOpenThreadTokenEx(
 {
     PETHREAD Thread;
     HANDLE hToken;
-    PTOKEN Token, NewToken = NULL, PrimaryToken;
+    PTOKEN Token;
     BOOLEAN CopyOnOpen, EffectiveOnly;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     SE_IMPERSONATION_STATE ImpersonationState;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    SECURITY_DESCRIPTOR SecurityDescriptor;
-    PACL Dacl = NULL;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
     BOOLEAN RestoreImpersonation = FALSE;
@@ -2100,6 +2343,7 @@ NtOpenThreadTokenEx(
 
     PreviousMode = ExGetPreviousMode();
 
+    /* Ensure that we can give the handle to the caller */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -2119,138 +2363,81 @@ NtOpenThreadTokenEx(
 
     /*
      * At first open the thread token for information access and verify
-     * that the token associated with thread is valid.
+     * that the token associated with the thread is valid.
      */
-
     Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
                                        PsThreadType, PreviousMode, (PVOID*)&Thread,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Failed to reference the object thread (Status 0x%lx)\n", Status);
         return Status;
     }
 
+    /* Reference the token from the thread */
     Token = PsReferenceImpersonationToken(Thread, &CopyOnOpen, &EffectiveOnly,
                                           &ImpersonationLevel);
     if (Token == NULL)
     {
+        DPRINT("Failed to reference the thread's impersonation token, thread has no token\n");
         ObDereferenceObject(Thread);
         return STATUS_NO_TOKEN;
     }
 
+    /* Ensure the token has no anonymous security */
     if (ImpersonationLevel == SecurityAnonymous)
     {
+        DPRINT1("The thread token has anonymous security, can't open it\n");
         PsDereferenceImpersonationToken(Token);
         ObDereferenceObject(Thread);
         return STATUS_CANT_OPEN_ANONYMOUS;
     }
 
-    /*
-     * Revert to self if OpenAsSelf is specified.
-     */
-
+    /* Revert to self if OpenAsSelf is specified */
     if (OpenAsSelf)
     {
         RestoreImpersonation = PsDisableImpersonation(PsGetCurrentThread(),
                                                       &ImpersonationState);
     }
 
-    if (CopyOnOpen)
-    {
-        PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+    /* Call the private function to do the job */
+    Status = SepOpenThreadToken(Thread,
+                                ThreadHandle,
+                                Token,
+                                DesiredAccess,
+                                HandleAttributes,
+                                EffectiveOnly,
+                                CopyOnOpen,
+                                ImpersonationLevel,
+                                PreviousMode,
+                                &hToken);
 
-        Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
-
-        ObFastDereferenceObject(&Thread->ThreadsProcess->Token, PrimaryToken);
-
-        if (NT_SUCCESS(Status))
-        {
-            if (Dacl)
-            {
-                Status = RtlCreateSecurityDescriptor(&SecurityDescriptor,
-                                                     SECURITY_DESCRIPTOR_REVISION);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("NtOpenThreadTokenEx(): Failed to create a security descriptor (Status 0x%lx)\n", Status);
-                }
-
-                Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
-                                                      FALSE);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("NtOpenThreadTokenEx(): Failed to set a DACL to the security descriptor (Status 0x%lx)\n", Status);
-                }
-            }
-
-            InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
-                                       NULL, Dacl ? &SecurityDescriptor : NULL);
-
-            Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
-                                       TokenImpersonation, ImpersonationLevel,
-                                       KernelMode, &NewToken);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("NtOpenThreadTokenEx(): Failed to duplicate the token (Status 0x%lx)\n", Status);
-            }
-
-            ObReferenceObject(NewToken);
-            Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
-                                    &hToken);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("NtOpenThreadTokenEx(): Failed to insert the token object (Status 0x%lx)\n", Status);
-            }
-        }
-        else
-        {
-            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate token from DACL (Status 0x%lx)\n", Status);
-        }
-    }
-    else
-    {
-        Status = ObOpenObjectByPointer(Token, HandleAttributes,
-                                       NULL, DesiredAccess, SeTokenObjectType,
-                                       PreviousMode, &hToken);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtOpenThreadTokenEx(): Failed to open the object (Status 0x%lx)\n", Status);
-        }
-    }
-
-    if (Dacl) ExFreePoolWithTag(Dacl, TAG_ACL);
-
+    /* Restore the impersonation back if needed */
     if (RestoreImpersonation)
     {
         PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
     }
 
+    /* Dereference the access token and the associated thread */
     ObDereferenceObject(Token);
-
-    if (NT_SUCCESS(Status) && CopyOnOpen)
-    {
-        Status = PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate the client (Status 0x%lx)\n", Status);
-        }
-    }
-
-    if (NewToken) ObDereferenceObject(NewToken);
-
     ObDereferenceObject(Thread);
 
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        _SEH2_TRY
-        {
-            *TokenHandle = hToken;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
+        DPRINT1("Failed to open the thread's token (Status 0x%lx)\n", Status);
+        return Status;
     }
+
+    /* Give the opened token handle to the caller */
+    _SEH2_TRY
+    {
+        *TokenHandle = hToken;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     return Status;
 }
