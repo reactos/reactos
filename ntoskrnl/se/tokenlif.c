@@ -665,6 +665,44 @@ SepDuplicateToken(
         }
     }
 
+    /* Now allocate the token's dynamic information area and set the data */
+    AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                                     DynamicPartSize,
+                                                     TAG_TOKEN_DYNAMIC);
+    if (AccessToken->DynamicPart == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Unused memory in the dynamic area */
+    AccessToken->DynamicAvailable = 0;
+
+    /*
+     * Assign the primary group to the token
+     * and put it in the dynamic part as well.
+     */
+    EndMem = (PVOID)AccessToken->DynamicPart;
+    AccessToken->PrimaryGroup = EndMem;
+    RtlCopySid(RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid),
+                            EndMem,
+                            AccessToken->UserAndGroups[PrimaryGroupIndex].Sid);
+    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
+    EndMem = (PVOID)((ULONG_PTR)EndMem + RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid));
+
+    /*
+     * The existing token has a default DACL only
+     * if it has an allocated dynamic part.
+     */
+    if (Token->DynamicPart && Token->DefaultDacl)
+    {
+        AccessToken->DefaultDacl = EndMem;
+
+        RtlCopyMemory(EndMem,
+                      Token->DefaultDacl,
+                      Token->DefaultDacl->AclSize);
+    }
+
     /*
      * Filter the token by removing the disabled privileges
      * and groups if the caller wants to duplicate an access
@@ -672,11 +710,15 @@ SepDuplicateToken(
      */
     if (EffectiveOnly)
     {
-        /* Begin querying the groups and search for disabled ones */
-        for (GroupsIndex = 0; GroupsIndex < AccessToken->UserAndGroupCount; GroupsIndex++)
+        /*
+         * Begin querying the groups and search for disabled ones. Do not touch the
+         * user which is at the first position because it cannot be disabled, no
+         * matter what attributes it has.
+         */
+        for (GroupsIndex = 1; GroupsIndex < AccessToken->UserAndGroupCount; GroupsIndex++)
         {
             /*
-             * A group or user is considered disabled if its attributes is either
+             * A group is considered disabled if its attributes is either
              * 0 or SE_GROUP_ENABLED is not included in the attributes flags list.
              * That is because a certain user and/or group can have several attributes
              * that bear no influence on whether a user/group is enabled or not
@@ -736,44 +778,6 @@ SepDuplicateToken(
                 PrivilegesIndex--;
             }
         }
-    }
-
-    /* Now allocate the token's dynamic information area and set the data */
-    AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
-                                                     DynamicPartSize,
-                                                     TAG_TOKEN_DYNAMIC);
-    if (AccessToken->DynamicPart == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Quit;
-    }
-
-    /* Unused memory in the dynamic area */
-    AccessToken->DynamicAvailable = 0;
-
-    /*
-     * Assign the primary group to the token
-     * and put it in the dynamic part as well.
-     */
-    EndMem = (PVOID)AccessToken->DynamicPart;
-    AccessToken->PrimaryGroup = EndMem;
-    RtlCopySid(RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid),
-                            EndMem,
-                            AccessToken->UserAndGroups[PrimaryGroupIndex].Sid);
-    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
-    EndMem = (PVOID)((ULONG_PTR)EndMem + RtlLengthSid(AccessToken->UserAndGroups[PrimaryGroupIndex].Sid));
-
-    /*
-     * The existing token has a default DACL only
-     * if it has an allocated dynamic part.
-     */
-    if (Token->DynamicPart && Token->DefaultDacl)
-    {
-        AccessToken->DefaultDacl = EndMem;
-
-        RtlCopyMemory(EndMem,
-                      Token->DefaultDacl,
-                      Token->DefaultDacl->AclSize);
     }
 
     /* Return the token to the caller */
