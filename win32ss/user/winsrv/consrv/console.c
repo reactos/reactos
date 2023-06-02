@@ -808,10 +808,6 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 #endif
     Status = InsertConsole(&ConsoleHandle, Console);
 
-    // FIXME! We do not support at all asynchronous console creation!
-    NtSetEvent(Console->InitEvents[INIT_SUCCESS], NULL);
-    // NtSetEvent(Console->InitEvents[INIT_FAILURE], NULL);
-
     /* Return the newly created console to the caller and a success code too */
     *NewConsoleHandle = ConsoleHandle;
     *NewConsole       = Console;
@@ -1001,6 +997,10 @@ ConSrvAllocateConsole(
 
     /* Assign the new console handle */
     ProcessData->ConsoleHandle = ConsoleHandle;
+
+    // FIXME! We do not support at all asynchronous console creation!
+    NtSetEvent(Console->InitEvents[INIT_SUCCESS], NULL);
+    // NtSetEvent(Console->InitEvents[INIT_FAILURE], NULL);
 
     /* Initialize the process handles */
     Status = ConSrvInitProcessHandles(ProcessData,

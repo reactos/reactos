@@ -1,0 +1,35 @@
+#include <windef.h>
+#include <winuser.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Console IME"
+#define REACTOS_STR_INTERNAL_NAME     "conime"
+#define REACTOS_STR_ORIGINAL_FILENAME "conime.exe"
+#include <reactos/version.rc>
+
+IDI_MAINICON ICON "res/conime.ico"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+DEBUGMENU MENU
+BEGIN
+    POPUP "&Debug"
+    BEGIN
+        MENUITEM "E&xit Console IME", ID_EXIT_APP
+        MENUITEM "Access &Violation on Console IME", ID_ACCESS_VIOLATION
+        MENUITEM SEPARATOR
+        MENUITEM "&About Console IME...", ID_ABOUT_APP
+    END
+END
+
+STRINGTABLE
+BEGIN
+    0, "Console IME control"
+    12, "DebugMenu"
+    13, "ConIme"
+    14, "ConsoleIMEClass"
+    15, "Console IME"
+END

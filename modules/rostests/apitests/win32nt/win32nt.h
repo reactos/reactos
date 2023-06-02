@@ -14,6 +14,7 @@
 #include <wingdi.h>
 #include <objbase.h>
 #include <imm.h>
+#include <imm32_undoc.h>
 
 #include <winddi.h>
 #include <prntfont.h>

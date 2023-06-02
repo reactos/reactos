@@ -28,6 +28,8 @@
 
 #include <imm.h>
 #include <ddk/immdev.h>
+#include <imm32_undoc.h>
+#include <undocuser.h>
 
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>
@@ -37,10 +39,6 @@
 /* Public Win32K Headers */
 #include "ntuser.h"
 #include "ntwin32.h"
-
-/* Undocumented user definitions */
-#include <undocuser.h>
-#include <imm32_undoc.h>
 
 #include <strsafe.h>
 

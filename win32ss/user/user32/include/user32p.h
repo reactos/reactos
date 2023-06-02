@@ -24,7 +24,7 @@
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     typedef type (WINAPI *FN_##name)params;
-#include "immtable.h"
+#include <immtable.h>
 
 /* define Imm32ApiTable */
 typedef struct
@@ -32,7 +32,7 @@ typedef struct
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     FN_##name p##name;
-#include "immtable.h"
+#include <immtable.h>
 } Imm32ApiTable;
 
 /* global variables */

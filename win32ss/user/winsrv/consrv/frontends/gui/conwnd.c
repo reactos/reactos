@@ -22,6 +22,7 @@
 
 #include "concfg/font.h"
 #include "guiterm.h"
+#include "conimebase.h"
 #include "resource.h"
 
 /* GLOBALS ********************************************************************/
@@ -127,7 +128,12 @@ const COLORREF s_Colors[16] =
     RGB(255, 255, 255)  // BLUE  | GREEN | RED | INTENSITY
 };
 
+extern DWORD g_dwTlsIndex;
+extern BOOL g_bCJK;
+
 /* FUNCTIONS ******************************************************************/
+
+static PGUI_CONSOLE_DATA GuiGetGuiData(HWND hWnd);
 
 static LRESULT CALLBACK
 ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -631,6 +637,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
     PCONSRV_CONSOLE Console;
+    PCONSOLE_PROCESS_DATA ProcessData;
 
     if (GuiData == NULL)
     {
@@ -715,6 +722,10 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     /* We accept dropped files */
     DragAcceptFiles(GuiData->hWindow, TRUE);
 
+    /* Get console handle */
+    ProcessData = ConSrvGetConsoleLeaderProcess(GuiData->Console);
+    GuiData->ConsoleHandle = ProcessData->ConsoleHandle;
+
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
 
@@ -755,6 +766,9 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
         GuiData->IgnoreNextMouseSignal = TRUE;
 }
 
+NTSTATUS
+IntSendMsgToConIme0(PGUI_CONSOLE_DATA pGuiData, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 static VOID
 OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
 {
@@ -780,9 +794,34 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     LeaveCriticalSection(&Console->Lock);
 
     if (SetFocus)
+    {
         DPRINT("TODO: Create console caret\n");
+
+        if (!GuiData->hKL)
+            SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, &GuiData->hKL, 0);
+
+        ActivateKeyboardLayout(GuiData->hKL, 0);
+
+        if (g_bCJK)
+        {
+            if (NT_SUCCESS(IntSendMsgToConIme0(GuiData, CONIMEM_SET_FOCUS,
+                                               (WPARAM)GuiData->ConsoleHandle,
+                                               (LPARAM)GuiData->hKL)) &&
+                GuiData->hwndConIme)
+            {
+                HWND hwndPopup = GetLastActivePopup(GuiData->hwndConIme);
+                if (hwndPopup)
+                    SetForegroundWindow(hwndPopup);
+            }
+        }
+    }
     else
+    {
         DPRINT("TODO: Destroy console caret\n");
+
+        if (g_bCJK)
+            IntSendMsgToConIme0(GuiData, CONIMEM_KILL_FOCUS, (WPARAM)GuiData->ConsoleHandle, 0);
+    }
 }
 
 VOID
@@ -1263,7 +1302,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             else if (!IsSystemKey(VirtualKeyCode))
             {
                 /* Emit an error beep sound */
-                SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
+                SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0x47474747);
             }
 
             goto Quit;
@@ -2246,6 +2285,99 @@ CreateFrameBufferBitmap(HDC hDC, int width, int height)
     return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 }
 
+static VOID
+IntSetCompStr(PGUI_CONSOLE_DATA GuiData, PVOID pCompStr)
+{
+    // FIXME
+}
+
+static VOID
+IntSetImeInfo(PGUI_CONSOLE_DATA GuiData, PCHAR_INFO pCharInfo, UINT cch, DWORD unknown0)
+{
+    // FIXME
+}
+
+static BOOL
+OnCopyData(PGUI_CONSOLE_DATA GuiData, HWND hwndSender, PCOPYDATASTRUCT pCopyData)
+{
+    switch (pCopyData->dwData)
+    {
+        case CONIME_COPYDATA_SEND_COMPSTR:
+            if (GuiData->pCompStr)
+                ConsoleFreeHeap(GuiData->pCompStr);
+            GuiData->pCompStr = ConsoleAllocHeap(HEAP_ZERO_MEMORY, pCopyData->cbData);
+            if (GuiData->pCompStr)
+            {
+                RtlCopyMemory(GuiData->pCompStr, pCopyData->lpData, pCopyData->cbData);
+                IntSetCompStr(GuiData, GuiData->pCompStr);
+            }
+            break;
+
+        case CONIME_COPYDATA_SEND_IME_STATUS:
+            if (pCopyData->cbData == sizeof(IME_STATUS) && pCopyData->lpData)
+            {
+                DWORD ich;
+                PIME_STATUS pImeStatus = pCopyData->lpData;
+                for (ich = 0; ich < pImeStatus->cch; ++ich)
+                {
+                    pImeStatus->CharInfo[ich].Attributes = DEFAULT_SCREEN_ATTRIB; // FIXME
+                }
+                IntSetImeInfo(GuiData, pImeStatus->CharInfo, pImeStatus->cch, pImeStatus->unknown0);
+            }
+            return 0;
+
+        case CONIME_COPYDATA_SEND_GUIDELINE:
+            if (pCopyData->cbData && pCopyData->lpData)
+            {
+                size_t i, cch = (pCopyData->cbData / sizeof(WCHAR)) - 1;
+                LPCWSTR pch = pCopyData->lpData;
+                PCHAR_INFO pCharInfo = ConsoleAllocHeap(0, sizeof(CHAR_INFO) * cch);
+                if (!pCharInfo)
+                    return 0;
+                for (i = 0; i < cch; ++i)
+                {
+                    pCharInfo[i].Char.UnicodeChar = *pch++;
+                    pCharInfo[i].Attributes = DEFAULT_SCREEN_ATTRIB; // FIXME
+                }
+                IntSetImeInfo(GuiData, pCharInfo, cch, 0);
+                ConsoleFreeHeap(pCharInfo);
+            }
+            break;
+
+        case CONIME_COPYDATA_SEND_CLOSE_CAND:
+            if (pCopyData->cbData && pCopyData->lpData)
+            {
+                // FIXME
+            }
+            else
+            {
+                // FIXME
+            }
+            break;
+
+        case CONIME_COPYDATA_SEND_IME_SYSTEM:
+            if (pCopyData->cbData == sizeof(WPARAM) && pCopyData->lpData)
+            {
+                WPARAM wParam = *(WPARAM*)pCopyData->lpData;
+                if (wParam == 0x1A)
+                {
+                    GuiData->hwndConIme = NULL;
+                    SetFocus(GuiData->hWindow);
+                }
+                else if (wParam == 0x1B)
+                {
+                    GuiData->hwndConIme = hwndSender;
+                }
+            }
+            return 0;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 static LRESULT CALLBACK
 ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2521,6 +2653,19 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             OnFocus(GuiData, (msg == WM_SETFOCUS));
             break;
 
+        case WM_INPUTLANGCHANGE:
+            GuiData->hKL = (HKL)lParam;
+            if (g_bCJK)
+            {
+                IntSendMsgToConIme0(GuiData, CONIMEM_LANGUAGE_CHANGE,
+                                    (WPARAM)GuiData->ConsoleHandle,
+                                    (LPARAM)GuiData->hKL);
+            }
+            return DefWindowProcW(hWnd, msg, wParam, lParam);
+
+        case WM_INPUTLANGCHANGEREQUEST:
+            return DefWindowProcW(hWnd, msg, wParam, lParam);
+
         case WM_GETMINMAXINFO:
             OnGetMinMaxInfo(GuiData, (PMINMAXINFO)lParam);
             break;
@@ -2622,11 +2767,24 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case PM_CONSOLE_BEEP:
             DPRINT1("Beep\n");
-            Beep(800, 200);
+            if (lParam == 0x47474747)
+                Beep(800, 200);
             break;
 
-         case PM_CONSOLE_SET_TITLE:
+        case PM_CONSOLE_SET_TITLE:
             SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
+            break;
+
+        case PM_MINIMIZE:
+            ShowWindowAsync(GuiData->hWindow, SW_MINIMIZE);
+            break;
+
+        case PM_SET_HKL:
+            ActivateKeyboardLayout((HKL)wParam, KLF_SETFORPROCESS);
+            break;
+
+        case WM_COPYDATA:
+            Result = OnCopyData(GuiData, (HWND)wParam, (PCOPYDATASTRUCT)lParam);
             break;
 
         default: Default:

@@ -41,7 +41,7 @@ HWND FASTCALL IntGetTopLevelWindow(HWND hWnd)
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     static type WINAPI IMMSTUB_##name params { IMM_RETURN_##retkind((type)retval); }
-#include "immtable.h"
+#include <immtable.h>
 
 // Win: gImmApiEntries
 Imm32ApiTable gImmApiEntries = {
@@ -49,7 +49,7 @@ Imm32ApiTable gImmApiEntries = {
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     IMMSTUB_##name,
-#include "immtable.h"
+#include <immtable.h>
 };
 
 // Win: GetImmFileName
@@ -110,7 +110,7 @@ static BOOL IntInitializeImmEntryTable(VOID)
         } \
         IMM_FN(name) = proc; \
     } while (0);
-#include "immtable.h"
+#include <immtable.h>
 
     return TRUE;
 }

@@ -4,6 +4,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <imm.h>
+#include <imm32_undoc.h>
 #include <ddk/immdev.h>
 #include <pseh/pseh2.h>
 #include <ndk/umtypes.h>

@@ -14,12 +14,8 @@
 /* GUI Console Window Class name */
 #define GUI_CONWND_CLASS L"ConsoleWindowClass"
 
-#ifndef WM_APP
-    #define WM_APP 0x8000
-#endif
-#define PM_RESIZE_TERMINAL      (WM_APP + 3)
-#define PM_CONSOLE_BEEP         (WM_APP + 4)
-#define PM_CONSOLE_SET_TITLE    (WM_APP + 5)
+/* Console messages */
+#include "conmsgs.h"
 
 /* Flags for GetKeyState */
 #define KEY_TOGGLED 0x0001
@@ -94,4 +90,9 @@ typedef struct _GUI_CONSOLE_DATA
     BOOL  LineSelection;                    /* TRUE if line-oriented selection (a la *nix terminals), FALSE if block-oriented selection (default on Windows) */
 
     GUI_CONSOLE_INFO GuiInfo;   /* GUI terminal settings */
+
+    HWND hwndConIme;
+    PVOID pCompStr;
+    HKL hKL;
+    HANDLE ConsoleHandle;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;

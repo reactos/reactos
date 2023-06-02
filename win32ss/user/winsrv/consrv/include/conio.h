@@ -11,6 +11,7 @@
 #pragma once
 
 #include "rect.h"
+#include "cjklangs.h"
 
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)

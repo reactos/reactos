@@ -18,6 +18,7 @@
 
 #include "concfg/font.h"
 #include "guiterm.h"
+#include "conimebase.h"
 #include "resource.h"
 
 // HACK!! Remove it when the hack in GuiWriteStream is fixed
@@ -47,6 +48,9 @@ static BOOL ConsInitialized = FALSE;
 extern HICON   ghDefaultIcon;
 extern HICON   ghDefaultIconSm;
 extern HCURSOR ghDefaultCursor;
+
+extern DWORD g_dwTlsIndex;
+extern BOOL g_bCJK;
 
 VOID
 SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData);
@@ -92,6 +96,42 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
     DrawRegion(GuiData, &CellRect);
 }
 
+NTSTATUS
+IntSendMsgToConIme(
+    PGUI_CONSOLE_DATA pGuiData,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam,
+    PDWORD_PTR lpdwResult)
+{
+    HWND hwndConIme;
+
+    *lpdwResult = 0;
+
+    hwndConIme = pGuiData->hwndConIme;
+    if (!hwndConIme)
+        return STATUS_SUCCESS;
+
+    if (!TlsGetValue(g_dwTlsIndex))
+        goto DoPostMsg;
+
+    if (SendMessageTimeoutW(hwndConIme, uMsg, wParam, lParam, SMTO_ABORTIFHUNG,
+                            3000, lpdwResult))
+    {
+        return STATUS_SUCCESS;
+    }
+
+DoPostMsg:
+    PostMessageW(hwndConIme, uMsg, wParam, lParam);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IntSendMsgToConIme0(PGUI_CONSOLE_DATA pGuiData, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    DWORD_PTR result;
+    return IntSendMsgToConIme(pGuiData, uMsg, wParam, lParam, &result);
+}
 
 /******************************************************************************
  *                        GUI Terminal Initialization                         *
@@ -119,6 +159,9 @@ GuiConsoleInputThread(PVOID Param)
      * notification window. It is common for all the console windows
      * in a given desktop in a window station.
      */
+
+    /* Associate thread info with this thread */
+    TlsSetValue(g_dwTlsIndex, GuiInitInfo);
 
     /* Assign this console input thread to this desktop */
     DesktopConsoleThreadInfo.DesktopHandle = GuiInitInfo->Desktop; // Duplicated desktop handle
@@ -211,6 +254,25 @@ GuiConsoleInputThread(PVOID Param)
                     ShowWindowAsync(NewWindow, SW_HIDE);
                 }
 
+                /* Wait for console handle */
+                NtWaitForSingleObject(Console->InitEvents[INIT_SUCCESS], FALSE, NULL);
+
+                if (g_bCJK) /* Chinese, Japanese or Korean? */
+                {
+                    PCONSOLE_PROCESS_DATA ProcessData = ConSrvGetConsoleLeaderProcess(Console);
+                    HANDLE ConsoleHandle = ProcessData->ConsoleHandle;
+
+                    /* Send messages to Console IME window */
+                    IntSendMsgToConIme0(GuiData, CONIMEM_INIT, (WPARAM)ConsoleHandle, (LPARAM)GuiData->hWindow);
+
+                    //IntSendMsgToConIme0(GuiData, CONIMEM_SET_FOCUS, (WPARAM)ConsoleHandle, (LPARAM)0); // FIXME
+                    //IntSendMsgToConIme0(GuiData, CONIMEM_SET_SCREEN_SIZE, (WPARAM)ConsoleHandle, (LPARAM)0); // FIXME
+
+                    IntSendMsgToConIme0(GuiData, CONIMEM_SET_CODEPAGE,
+                                        (WPARAM)ConsoleHandle, MAKELPARAM(FALSE, Console->InputCodePage));
+                    IntSendMsgToConIme0(GuiData, CONIMEM_SET_CODEPAGE,
+                                        (WPARAM)ConsoleHandle, MAKELPARAM(TRUE, Console->OutputCodePage));
+                }
                 continue;
             }
 
@@ -706,7 +768,7 @@ GuiRingBell(IN OUT PFRONTEND This)
     PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Emit an error beep sound */
-    SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
+    SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0x47474747);
 }
 
 static BOOL NTAPI

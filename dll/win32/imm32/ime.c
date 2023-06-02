@@ -191,7 +191,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
         FIXME("%s: Why stub called?\n", #name); \
         return (type)0; \
     }
-#include "imetable.h"
+#include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
 // Win: LoadIME
@@ -214,7 +214,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 
     /* Populate the table by stub IME functions */
 #define DEFINE_IME_ENTRY(type, name, params, optional) pImeDpi->name = Stub##name;
-#include "imetable.h"
+#include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
     /* Populate the table by real IME functions */
@@ -227,7 +227,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
             goto Failed; \
         } \
     } while (0);
-#include "imetable.h"
+#include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
     if (Imm32InquireIme(pImeDpi))

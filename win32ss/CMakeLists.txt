@@ -14,6 +14,7 @@ add_subdirectory(gdi/gdi32)
 add_subdirectory(gdi/gdi32_vista)
 add_subdirectory(printing)
 add_subdirectory(reactx)
+add_subdirectory(user/conime)
 add_subdirectory(user/user32)
 add_subdirectory(user/winsrv)
 
