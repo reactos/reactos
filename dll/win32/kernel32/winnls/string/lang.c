@@ -2135,17 +2135,17 @@ typedef struct tagWCHAR_PAIR
 /* The table to convert Simplified Chinese to Traditional Chinese */
 static const WCHAR_PAIR s_sim2tra[] =
 {
-#define DEFINE_SIM2TRA_PAIR(from, to) { from, to },
+#define DEFINE_SIM2TRA(from, to) { from, to },
 #include "sim2tra.h"
-#undef DEFINE_SIM2TRA_PAIR
+#undef DEFINE_SIM2TRA
 };
 
 /* The table to convert Traditional Chinese to Simplified Chinese */
 static const WCHAR_PAIR s_tra2sim[] =
 {
-#define DEFINE_TRA2SIM_PAIR(from, to) { from, to },
+#define DEFINE_TRA2SIM(from, to) { from, to },
 #include "tra2sim.h"
-#undef DEFINE_TRA2SIM_PAIR
+#undef DEFINE_TRA2SIM
 };
 
 /* The comparison function to do bsearch */
