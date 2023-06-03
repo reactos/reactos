@@ -2127,6 +2127,73 @@ static int map_to_uppercase(DWORD flags, const WCHAR *src, int srclen, WCHAR *ds
     return pos;
 }
 
+typedef struct tagWCHAR_PAIR
+{
+    WCHAR from, to;
+} WCHAR_PAIR, *PWCHAR_PAIR;
+
+/* The table to convert Simplified Chinese to Traditional Chinese */
+static const WCHAR_PAIR s_sim2tra[] =
+{
+#define DEFINE_SIM2TRA_PAIR(from, to) { from, to },
+#include "sim2tra.h"
+#undef DEFINE_SIM2TRA_PAIR
+};
+
+/* The table to convert Traditional Chinese to Simplified Chinese */
+static const WCHAR_PAIR s_tra2sim[] =
+{
+#define DEFINE_TRA2SIM_PAIR(from, to) { from, to },
+#include "tra2sim.h"
+#undef DEFINE_TRA2SIM_PAIR
+};
+
+/* The comparison function to do bsearch */
+static int compare_wchar_pair(const void *x, const void *y)
+{
+    const WCHAR_PAIR *a = x;
+    const WCHAR_PAIR *b = y;
+    if (a->from < b->from)
+        return -1;
+    if (a->from > b->from)
+        return +1;
+    return 0;
+}
+
+static WCHAR find_wchar_pair(const WCHAR_PAIR *pairs, size_t count, WCHAR ch)
+{
+    PWCHAR_PAIR found = bsearch(&ch, pairs, count, sizeof(WCHAR_PAIR), compare_wchar_pair);
+    if (found)
+        return found->to;
+    return ch;
+}
+
+static int map_to_simplified_chinese(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
+{
+    int pos;
+    for (pos = 0; srclen; src++, srclen--)
+    {
+        WCHAR wch = *src;
+        if (pos < dstlen)
+            dst[pos] = find_wchar_pair(s_tra2sim, ARRAY_SIZE(s_tra2sim), wch);
+        pos++;
+    }
+    return pos;
+}
+
+static int map_to_traditional_chinese(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
+{
+    int pos;
+    for (pos = 0; srclen; src++, srclen--)
+    {
+        WCHAR wch = *src;
+        if (pos < dstlen)
+            dst[pos] = find_wchar_pair(s_sim2tra, ARRAY_SIZE(s_sim2tra), wch);
+        pos++;
+    }
+    return pos;
+}
+
 static int map_remove_ignored(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen)
 {
     int pos;
@@ -2164,7 +2231,16 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         return 0;
     }
 
-    switch (flags & ~(LCMAP_BYTEREV | LCMAP_LOWERCASE | LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING))
+    if ((flags & (LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE)) ==
+                 (LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    switch (flags & ~(LCMAP_BYTEREV | LCMAP_LOWERCASE | LCMAP_UPPERCASE |
+                      LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE |
+                      LCMAP_LINGUISTIC_CASING))
     {
     case LCMAP_HIRAGANA:
         ret = map_to_hiragana(src, srclen, dst, dstlen);
@@ -2194,12 +2270,6 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         if (dstlen && ret)
             map_to_katakana(dst, ret, dst, dstlen);
         break;
-    case LCMAP_SIMPLIFIED_CHINESE:
-        FIXME("LCMAP_SIMPLIFIED_CHINESE\n");
-        break;
-    case LCMAP_TRADITIONAL_CHINESE:
-        FIXME("LCMAP_TRADITIONAL_CHINESE\n");
-        break;
     case NORM_IGNORENONSPACE:
     case NORM_IGNORESYMBOLS:
     case NORM_IGNORENONSPACE | NORM_IGNORESYMBOLS:
@@ -2221,6 +2291,18 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         {
             ret = map_to_uppercase(flags, src, srclen, dst, dstlen);
             flags &= ~LCMAP_UPPERCASE;
+            break;
+        }
+        if (flags & LCMAP_SIMPLIFIED_CHINESE)
+        {
+            map_to_simplified_chinese(flags, src, srclen, dst, dstlen);
+            flags &= ~LCMAP_SIMPLIFIED_CHINESE;
+            break;
+        }
+        if (flags & LCMAP_TRADITIONAL_CHINESE)
+        {
+            map_to_traditional_chinese(flags, src, srclen, dst, dstlen);
+            flags &= ~LCMAP_TRADITIONAL_CHINESE;
             break;
         }
         if (flags & LCMAP_BYTEREV)
@@ -2246,6 +2328,10 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
             map_to_lowercase(flags, dst, ret, dst, dstlen);
         if (flags & LCMAP_UPPERCASE)
             map_to_uppercase(flags, dst, ret, dst, dstlen);
+        if (flags & LCMAP_SIMPLIFIED_CHINESE)
+            map_to_simplified_chinese(flags, dst, ret, dst, dstlen);
+        if (flags & LCMAP_TRADITIONAL_CHINESE)
+            map_to_traditional_chinese(flags, dst, ret, dst, dstlen);
         if (flags & LCMAP_BYTEREV)
             map_byterev(dst, min(ret, dstlen), dst);
 
