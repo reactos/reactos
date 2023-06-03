@@ -2295,13 +2295,13 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         }
         if (flags & LCMAP_SIMPLIFIED_CHINESE)
         {
-            map_to_simplified_chinese(flags, src, srclen, dst, dstlen);
+            ret = map_to_simplified_chinese(flags, src, srclen, dst, dstlen);
             flags &= ~LCMAP_SIMPLIFIED_CHINESE;
             break;
         }
         if (flags & LCMAP_TRADITIONAL_CHINESE)
         {
-            map_to_traditional_chinese(flags, src, srclen, dst, dstlen);
+            ret = map_to_traditional_chinese(flags, src, srclen, dst, dstlen);
             flags &= ~LCMAP_TRADITIONAL_CHINESE;
             break;
         }
