@@ -144,16 +144,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Thuộc tính"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "&Chiều cao:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Kích thước &tập tin :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "&Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Đơn vị", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Inch (1 inch = 2,54 cm)", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Tất cả tập tin"
     IDS_ALLPICTUREFILES "Tất cả tập tin hình ảnh"
     IDS_FILESIZE "%d byte"
-    IDS_PRINTRES "%d x %d điểm ảnh trong một mét"
     IDS_INTNUMBERS "Xin vui lòng chỉ nhập số tự nhiên khác không (0)!"
     IDS_PERCENTAGE "Giá trị phần trăm phải ở giữa 1 và 500."
     IDS_ANGLE "Giá trị của góc phải ở giữa -89 và 89."
@@ -242,4 +241,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

@@ -136,16 +136,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributuak"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Zabalera:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Altuera:", IDD_ATTRIBUTESTEXT2, 82, 42, 23, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Azken gordetze-data:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
     LTEXT "Diskoko tamaina:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Bereizmena:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT6, 80, 5, 70, 10
     LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT7, 80, 15, 70, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT8, 80, 25, 70, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 80, 25, 70, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Unitateak ", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Hazbetea", IDD_ATTRIBUTESRB1, 12, 69, 42, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 30, 10
@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Fitxategi gustiak"
     IDS_ALLPICTUREFILES "Argazki fitxategi guztiak"
     IDS_FILESIZE "%d byte-k"
-    IDS_PRINTRES "%d x %d pixel-ak metro"
     IDS_INTNUMBERS "Mezedez sartu zembaki oso bakarrik!"
     IDS_PERCENTAGE "Ehuneko  1 eta 500 tartean izan behar da."
     IDS_ANGLE "Angelu -89 eta 89 tartean izan behar da."
@@ -234,4 +233,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

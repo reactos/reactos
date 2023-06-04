@@ -146,16 +146,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributos"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Anchura:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Altura:", IDD_ATTRIBUTESTEXT2, 101, 42, 23, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 3, 5, 67, 10, SS_RIGHT
     LTEXT "Espacio en disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10, SS_RIGHT
     LTEXT "Resolución:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10, SS_RIGHT
     LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 73, 5, 80, 10
     LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 73, 15, 80, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 73, 25, 80, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 73, 25, 80, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Unidades ", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Pulgadas", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "Centímetros", IDD_ATTRIBUTESRB2, 60, 69, 51, 10
@@ -234,7 +234,6 @@ BEGIN
     IDS_ALLFILES "Todos los archivos"
     IDS_ALLPICTUREFILES "Todos los archivos de imagen"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d píxeles/m"
     IDS_INTNUMBERS "Sólo se admiten números sin decimales."
     IDS_PERCENTAGE "El porcentaje debe de estar entre 1 y 500."
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
@@ -244,4 +243,5 @@ BEGIN
     IDS_ITALIC "Cursiva"
     IDS_UNDERLINE "Subrayado"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

@@ -136,16 +136,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Attribútumok"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Szélesség:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Magasság:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Fájl dátuma:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Fájlméret:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Felbontás:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Nem elérhető", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Nem elérhető", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Nem elérhető", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Egység", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Hüvelyk", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Minden fájl"
     IDS_ALLPICTUREFILES "Minden képfájl"
     IDS_FILESIZE "%d bájt"
-    IDS_PRINTRES "%d x %d pixel per méter"
     IDS_INTNUMBERS "Kérem csak egész számokat írjon be!"
     IDS_PERCENTAGE "A százaléknak 1 és 500 között kell lennie."
     IDS_ANGLE "A szögnek -89 és 89 között kell lennie."
@@ -234,4 +233,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

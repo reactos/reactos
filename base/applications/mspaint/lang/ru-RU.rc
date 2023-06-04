@@ -136,16 +136,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Атрибуты"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Ширина:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Высота:", IDD_ATTRIBUTESTEXT2, 80, 42, 30, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Дата сохранения:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Размер на диске:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Разрешение:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "недоступно", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "недоступно", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "недоступно", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Единицы измерения", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "д&юймы", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "с&м", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -224,7 +224,6 @@ BEGIN
     IDS_ALLFILES "Все файлы"
     IDS_ALLPICTUREFILES "Все файлы изображений"
     IDS_FILESIZE "%d байт"
-    IDS_PRINTRES "%d x %d пикселей на метр"
     IDS_INTNUMBERS, "Необходимо вводить только целые числа!"
     IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
     IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
@@ -234,4 +233,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

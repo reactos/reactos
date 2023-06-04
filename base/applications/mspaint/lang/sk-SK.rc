@@ -145,16 +145,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atribúty"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Šírka:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Výška:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Dátum zmeny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 //File date
     LTEXT "Veľkosť súboru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10 //File size
     LTEXT "Rozlíšenie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Nie je k dispozícii", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Nie je k dispozícii", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Nie je k dispozícii", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Jednotky", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "palce", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -233,7 +233,6 @@ BEGIN
     IDS_ALLFILES "Všetky súbory"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bajtov"
-    IDS_PRINTRES "%d x %d pixelov na meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
@@ -243,4 +242,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

@@ -32,4 +32,6 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono);
 
 HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
 
-float PpmFromDpi(float dpi);
+float PpcmFromDpi(float dpi);
+
+#define ROUND(x) (INT)((x) + 0.5)
