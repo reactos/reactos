@@ -632,6 +632,8 @@ IntVideoPortConfigCallback(
             ConfigurationDataLength =
                 GetDeviceInfoLength(DeviceInformation[IoQueryDeviceConfigurationData]);
 
+            DPRINT1("VpControllerData\n");
+
             break;
         }
 
@@ -646,6 +648,8 @@ IntVideoPortConfigCallback(
                 GetDeviceInfoData(DeviceInformation[IoQueryDeviceConfigurationData]);
             ConfigurationDataLength =
                 GetDeviceInfoLength(DeviceInformation[IoQueryDeviceConfigurationData]);
+
+            DPRINT1("VpMonitorData\n");
 
             break;
         }
