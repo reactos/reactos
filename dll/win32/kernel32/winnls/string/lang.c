@@ -2231,16 +2231,7 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         return 0;
     }
 
-    if ((flags & (LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE)) ==
-                 (LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return 0;
-    }
-
-    switch (flags & ~(LCMAP_BYTEREV | LCMAP_LOWERCASE | LCMAP_UPPERCASE |
-                      LCMAP_SIMPLIFIED_CHINESE | LCMAP_TRADITIONAL_CHINESE |
-                      LCMAP_LINGUISTIC_CASING))
+    switch (flags & ~(LCMAP_BYTEREV | LCMAP_LOWERCASE | LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING))
     {
     case LCMAP_HIRAGANA:
         ret = map_to_hiragana(src, srclen, dst, dstlen);
@@ -2270,6 +2261,12 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         if (dstlen && ret)
             map_to_katakana(dst, ret, dst, dstlen);
         break;
+    case LCMAP_SIMPLIFIED_CHINESE:
+        ret = map_to_simplified_chinese(flags, src, srclen, dst, dstlen);
+        break;
+    case LCMAP_TRADITIONAL_CHINESE:
+        ret = map_to_traditional_chinese(flags, src, srclen, dst, dstlen);
+        break;
     case NORM_IGNORENONSPACE:
     case NORM_IGNORESYMBOLS:
     case NORM_IGNORENONSPACE | NORM_IGNORESYMBOLS:
@@ -2291,18 +2288,6 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
         {
             ret = map_to_uppercase(flags, src, srclen, dst, dstlen);
             flags &= ~LCMAP_UPPERCASE;
-            break;
-        }
-        if (flags & LCMAP_SIMPLIFIED_CHINESE)
-        {
-            ret = map_to_simplified_chinese(flags, src, srclen, dst, dstlen);
-            flags &= ~LCMAP_SIMPLIFIED_CHINESE;
-            break;
-        }
-        if (flags & LCMAP_TRADITIONAL_CHINESE)
-        {
-            ret = map_to_traditional_chinese(flags, src, srclen, dst, dstlen);
-            flags &= ~LCMAP_TRADITIONAL_CHINESE;
             break;
         }
         if (flags & LCMAP_BYTEREV)
@@ -2328,10 +2313,6 @@ static int lcmap_string(DWORD flags, const WCHAR *src, int srclen, WCHAR *dst, i
             map_to_lowercase(flags, dst, ret, dst, dstlen);
         if (flags & LCMAP_UPPERCASE)
             map_to_uppercase(flags, dst, ret, dst, dstlen);
-        if (flags & LCMAP_SIMPLIFIED_CHINESE)
-            map_to_simplified_chinese(flags, dst, ret, dst, dstlen);
-        if (flags & LCMAP_TRADITIONAL_CHINESE)
-            map_to_traditional_chinese(flags, dst, ret, dst, dstlen);
         if (flags & LCMAP_BYTEREV)
             map_byterev(dst, min(ret, dstlen), dst);
 
