@@ -28,8 +28,8 @@ DBG_DEFAULT_CHANNEL(UI);
 ULONG NvBase = 0xFD000000;
 ULONG_PTR FrameBuffer;
 ULONG FrameBufferSize;
+PCM_FRAMEBUF_DEVICE_DATA FrameBufferData = NULL;
 extern multiboot_info_t * MultibootInfoPtr;
-#define FB_SIZE_MB 4
 
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
 
@@ -99,16 +99,17 @@ XboxVideoInit(VOID)
     ULONG ScreenHeight;
     ULONG BytesPerPixel;
 
-    /* Reuse framebuffer that was set up by firmware */
+    /* Reuse the framebuffer that was set up by firmware */
     FrameBuffer = (ULONG_PTR)READ_REGISTER_ULONG(NvBase + NV2A_CRTC_FRAMEBUFFER_START);
-    /* Verify that framebuffer address is page-aligned */
+    TRACE("XBOX framebuffer at 0x%p\n", FrameBuffer);
+    /* Verify that the framebuffer address is page-aligned */
     ASSERT(FrameBuffer % PAGE_SIZE == 0);
 
-    /* Obtain framebuffer memory size from multiboot memory map */
+    /* Obtain framebuffer memory size from the multiboot memory map */
     if ((FrameBufferSize = XboxGetFramebufferSize(FrameBuffer)) == 0)
     {
         /* Fallback to Cromwell standard which reserves high 4 MB of RAM */
-        FrameBufferSize = 4 * 1024 * 1024;
+        FrameBufferSize = 4 * 1024 * 1024; // See FB_SIZE
         WARN("Could not detect framebuffer memory size, fallback to 4 MB\n");
     }
 
@@ -129,13 +130,18 @@ XboxVideoInit(VOID)
     /* Verify that screen fits framebuffer size */
     ASSERT(ScreenWidth * ScreenHeight * BytesPerPixel <= FrameBufferSize);
 
-    VidFbInitializeVideo(FrameBuffer,
-                         FrameBufferSize,
-                         ScreenWidth,
-                         ScreenHeight,
-                         ScreenWidth, // PixelsPerScanLine
-                         BytesPerPixel * 8,
-                         NULL);
+    if (!VidFbInitializeVideo(&FrameBufferData,
+                              FrameBuffer,
+                              FrameBufferSize,
+                              ScreenWidth,
+                              ScreenHeight,
+                              ScreenWidth,
+                              BytesPerPixel * 8,
+                              NULL))
+    {
+        ERR("Couldn't initialize video framebuffer\n");
+        return;
+    }
 
     VidFbClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 }

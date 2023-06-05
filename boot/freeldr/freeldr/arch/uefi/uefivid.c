@@ -17,6 +17,10 @@ extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
+ULONG_PTR VramAddress;
+ULONG VramSize;
+PCM_FRAMEBUF_DEVICE_DATA FrameBufferData = NULL;
+
 #define LOWEST_SUPPORTED_RES 1
 
 /* FUNCTIONS ******************************************************************/
@@ -51,12 +55,12 @@ static EFI_PIXEL_BITMASK EfiPixelMasks[] =
 EFI_STATUS
 UefiInitializeVideo(VOID)
 {
+    EFI_STATUS Status;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+
     EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
     EFI_PIXEL_BITMASK* pPixelBitmask;
     ULONG BitsPerPixel;
-
-    EFI_STATUS Status;
-    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
 
     Status = GlobalSystemTable->BootServices->LocateProtocol(&EfiGraphicsOutputProtocol, 0, (void**)&gop);
     if (Status != EFI_SUCCESS)
@@ -100,20 +104,27 @@ UefiInitializeVideo(VOID)
         case PixelBltOnly:
         default:
         {
-            ERR("Unsupported UFEI GOP format %lu\n", PixelFormat);
+            ERR("Unsupported UEFI GOP format %lu\n", PixelFormat);
             pPixelBitmask = NULL;
             BitsPerPixel = 0;
             break;
         }
     }
 
-    VidFbInitializeVideo((ULONG_PTR)gop->Mode->FrameBufferBase,
-                         gop->Mode->FrameBufferSize,
-                         gop->Mode->Info->HorizontalResolution,
-                         gop->Mode->Info->VerticalResolution,
-                         gop->Mode->Info->PixelsPerScanLine,
-                         BitsPerPixel,
-                         (PPIXEL_BITMASK)pPixelBitmask);
+    VramAddress = (ULONG_PTR)gop->Mode->FrameBufferBase;
+    VramSize = gop->Mode->FrameBufferSize;
+    if (!VidFbInitializeVideo(&FrameBufferData,
+                              VramAddress,
+                              VramSize,
+                              gop->Mode->Info->HorizontalResolution,
+                              gop->Mode->Info->VerticalResolution,
+                              gop->Mode->Info->PixelsPerScanLine,
+                              BitsPerPixel,
+                              (PPIXEL_BITMASK)pPixelBitmask))
+    {
+        ERR("Couldn't initialize video framebuffer\n");
+        Status = EFI_UNSUPPORTED;
+    }
     return Status;
 }
 

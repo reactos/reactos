@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Video support for linear framebuffers
  * COPYRIGHT:   Authors of uefivid.c and xboxvideo.c
- *              Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include <freeldr.h>
@@ -28,6 +28,7 @@ typedef struct _FRAMEBUFFER_INFO
     ULONG ScreenWidth;
     ULONG ScreenHeight;
 
+    /* Number of pixel elements per video memory line */
     ULONG PixelsPerScanLine; // aka. "Pitch" or "ScreenStride", but Stride is in bytes or bits...
     ULONG BitsPerPixel;      // aka. "PixelStride".
 
@@ -40,7 +41,8 @@ typedef struct _FRAMEBUFFER_INFO
     ULONG Delta;             // aka. "Pitch": actual size in bytes of a scanline.
 } FRAMEBUFFER_INFO, *PFRAMEBUFFER_INFO;
 
-FRAMEBUFFER_INFO framebufInfo;
+static FRAMEBUFFER_INFO framebufInfo = {0};
+static CM_FRAMEBUF_DEVICE_DATA FrameBufferData = {0};
 
 
 /* FUNCTIONS ******************************************************************/
@@ -95,6 +97,7 @@ VidFbPrintFramebufferInfo(VOID)
  **/
 BOOLEAN
 VidFbInitializeVideo(
+    _Out_opt_ PCM_FRAMEBUF_DEVICE_DATA* pFbData,
     _In_ ULONG_PTR BaseAddress,
     _In_ ULONG BufferSize,
     _In_ UINT32 ScreenWidth,
@@ -105,7 +108,17 @@ VidFbInitializeVideo(
 {
     PPIXEL_BITMASK BitMasks = &framebufInfo.PixelMasks;
 
+    if (pFbData)
+        *pFbData = NULL;
+
     RtlZeroMemory(&framebufInfo, sizeof(framebufInfo));
+
+    /* Verify framebuffer dimensions */
+    if ((ScreenWidth < 1) || (ScreenHeight < 1))
+    {
+        ERR("Invalid framebuffer dimensions\n");
+        return FALSE;
+    }
 
     framebufInfo.BaseAddress  = BaseAddress;
     framebufInfo.BufferSize   = BufferSize;
@@ -114,8 +127,16 @@ VidFbInitializeVideo(
     framebufInfo.PixelsPerScanLine = PixelsPerScanLine;
     framebufInfo.BitsPerPixel = BitsPerPixel;
 
-    framebufInfo.BytesPerPixel = ((BitsPerPixel + 7) & ~7) / 8; // Round up to nearest byte.
+    framebufInfo.BytesPerPixel = (BitsPerPixel + 7) / 8; // Round up to nearest byte.
     framebufInfo.Delta = (PixelsPerScanLine * framebufInfo.BytesPerPixel + 3) & ~3;
+
+    /* Verify that the framebuffer fits inside the video RAM */
+    if (!(ScreenHeight * framebufInfo.Delta <= BufferSize))
+    {
+        ERR("Framebuffer doesn't fit inside the video RAM (FB size: %lu, VRAM size: %lu)\n",
+            ScreenHeight * framebufInfo.Delta, BufferSize);
+        return FALSE;
+    }
 
     /* We currently only support 32bpp */
     if (BitsPerPixel != 32)
@@ -186,6 +207,21 @@ VidFbInitializeVideo(
     //ASSERT(BitsPerPixel == BppFromMasks);
     }
 #endif
+
+    /* Initialize the hardware device configuration data if specified */
+    if (pFbData)
+    {
+        FrameBufferData.FrameBufferOffset = 0;
+        FrameBufferData.ScreenWidth  = framebufInfo.ScreenWidth;
+        FrameBufferData.ScreenHeight = framebufInfo.ScreenHeight;
+        FrameBufferData.PixelsPerScanLine = framebufInfo.PixelsPerScanLine;
+        FrameBufferData.BitsPerPixel = framebufInfo.BitsPerPixel;
+
+        RtlCopyMemory(&FrameBufferData.PixelMasks,
+                      &framebufInfo.PixelMasks, sizeof(framebufInfo.PixelMasks));
+
+        *pFbData = &FrameBufferData;
+    }
 
     return TRUE;
 }
@@ -336,7 +372,7 @@ VidFbGetPaletteColor(
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  *              or MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Linear framebuffer based console support
- * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ * COPYRIGHT:   Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #define VGA_CHAR_SIZE 2

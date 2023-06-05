@@ -2,7 +2,7 @@
  * PROJECT:     FreeLoader
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Video support for linear framebuffers
- * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ * COPYRIGHT:   Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -50,8 +50,10 @@ PixelBitmasksToBpp(
     return CountNumberOfBits(CompoundMask); // FindHighestSetBit(CompoundMask);
 }
 
+#include <drivers/bootvid/framebuf.h>
 BOOLEAN
 VidFbInitializeVideo(
+    _Out_opt_ PCM_FRAMEBUF_DEVICE_DATA* pFbData,
     _In_ ULONG_PTR BaseAddress,
     _In_ ULONG BufferSize,
     _In_ UINT32 ScreenWidth,
@@ -115,7 +117,7 @@ VidFbGetPaletteColor(
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  *              or MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Linear framebuffer based console support
- * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ * COPYRIGHT:   Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once

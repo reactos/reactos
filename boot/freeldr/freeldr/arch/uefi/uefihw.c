@@ -8,6 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <uefildr.h>
+#include "../vidfb.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
@@ -19,6 +20,11 @@ extern EFI_HANDLE GlobalImageHandle;
 extern UCHAR PcBiosDiskCount;
 extern EFI_MEMORY_DESCRIPTOR* EfiMemoryMap;
 extern UINT32 FreeldrDescCount;
+
+/* From uefivid.c */
+extern ULONG_PTR VramAddress;
+extern ULONG VramSize;
+extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 
 BOOLEAN AcpiPresent = FALSE;
 
@@ -127,6 +133,114 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 }
 
+static VOID
+DetectDisplayController(
+    _In_ PCONFIGURATION_COMPONENT_DATA BusKey)
+{
+    PCONFIGURATION_COMPONENT_DATA ControllerKey;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_FRAMEBUF_DEVICE_DATA FramebufData;
+    ULONG Size;
+
+    if (!VramAddress || (VramSize == 0) || !FrameBufferData)
+        return;
+
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[2]) + sizeof(*FramebufData);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version  = 1;
+    PartialResourceList->Revision = 2;
+    PartialResourceList->Count = 2;
+
+    /* Set Memory */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeMemory;
+    PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    PartialDescriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+    PartialDescriptor->u.Memory.Start.QuadPart = VramAddress;
+    PartialDescriptor->u.Memory.Length = VramSize;
+
+    /* Set framebuffer-specific data */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
+    PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->Flags = 0;
+    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(*FramebufData);
+
+    /* Get pointer to framebuffer-specific data */
+    FramebufData = (PCM_FRAMEBUF_DEVICE_DATA)(PartialDescriptor + 1);
+    RtlCopyMemory(FramebufData, FrameBufferData, sizeof(*FrameBufferData));
+    FramebufData->Version  = 1;
+    FramebufData->Revision = 3;
+    FramebufData->VideoClock = 0; // FIXME: Use EDID
+
+    FldrCreateComponentKey(BusKey,
+                           ControllerClass,
+                           DisplayController,
+                           Output | ConsoleOut,
+                           0,
+                           0xFFFFFFFF,
+                           "UEFI GOP Framebuffer",
+                           PartialResourceList,
+                           Size,
+                           &ControllerKey);
+
+    // NOTE: Don't add a MonitorPeripheral for now.
+    // We should use EDID data for it.
+}
+
+static
+VOID
+DetectInternal(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+{
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCONFIGURATION_COMPONENT_DATA BusKey;
+    ULONG Size;
+
+    /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version  = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 0;
+
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0,
+                           0,
+                           0xFFFFFFFF,
+                           "UEFI Internal",
+                           PartialResourceList,
+                           Size,
+                           &BusKey);
+
+    /* Increment bus number */
+    (*BusNumber)++;
+
+    /* Detect devices that do not belong to "standard" buses */
+    DetectDisplayController(BusKey);
+
+    /* FIXME: Detect more devices */
+}
+
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(
     _In_opt_ PCSTR Options)
@@ -147,7 +261,9 @@ UefiHwDetect(
     #error Please define a system key for your architecture
 #endif
 
-    /* Detect ACPI */
+    /* Detect buses */
+    DetectInternal(SystemKey, &BusNumber);
+    // TODO: DetectPciBios
     DetectAcpiBios(SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
