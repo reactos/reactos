@@ -8,9 +8,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    interface/usetup.c
-    interface/devinst.c
-    interface/consup.c
     native/utils/keytrans.c
     native/utils/console.c
     native/fslist.c
@@ -19,6 +16,8 @@ list(APPEND SOURCE
     cabinet.c
     chkdsk.c
     cmdcons.c
+    consup.c
+    devinst.c
     drivesup.c
     filesup.c
     filequeue.c
@@ -32,6 +31,7 @@ list(APPEND SOURCE
     progress.c
     registry.c
     settings.c
+    usetup.c
     usetup.h)
 
 add_executable(usetup ${SOURCE} usetup.rc)
