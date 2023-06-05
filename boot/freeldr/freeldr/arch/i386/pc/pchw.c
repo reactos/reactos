@@ -223,7 +223,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         Ptr = GetInt1eTable();
 
         /* Set 'Identifier' value */
-        sprintf(Identifier, "FLOPPY%d", FloppyNumber + 1);
+        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "FLOPPY%d", FloppyNumber + 1);
 
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_FLOPPY_DEVICE_DATA);
@@ -333,7 +333,6 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: DiskController\\0\n");
 
     if (FloppyCount)
         DetectBiosFloppyPeripheral(ControllerKey);
@@ -414,7 +413,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
-        PCHAR Identifier;
+        PCSTR Identifier;
 
         DriveNumber = 0x80 + i;
 

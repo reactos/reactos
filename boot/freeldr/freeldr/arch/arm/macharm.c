@@ -100,7 +100,7 @@ ArmHwDetect(VOID)
 
     /* Create the root node */
     if (ArmHwDetectRan++) return RootNode;
-    FldrCreateSystemKey(&RootNode);
+    FldrCreateSystemKey(&RootNode, "");
 
     /*
      * TODO:
