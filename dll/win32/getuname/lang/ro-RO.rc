@@ -24,7 +24,7 @@ BEGIN
     12 "Pagină nouă - FF"
     13 "Retur caracter purtător - CR"
     14 "Deplasament Ext - SO"
-    15 "Deplasament int - SI"
+    15 "Deplasament Int - SI"
     16 "Întrupere interpretare digitală - DLE"
     17 "Control dispozitiv unu - DC1"
     18 "Control dispozitiv doi - DC2"
