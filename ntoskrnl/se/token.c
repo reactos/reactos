@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Security access token implementation base support routines
  * COPYRIGHT:   Copyright David Welch <welch@cwcom.net>
- *              Copyright 2021-2022 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2021-2023 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -1752,16 +1752,13 @@ PTOKEN
 NTAPI
 SepCreateSystemProcessToken(VOID)
 {
-    LUID_AND_ATTRIBUTES Privileges[25];
     ULONG GroupAttributes, OwnerAttributes;
-    SID_AND_ATTRIBUTES Groups[32];
     LARGE_INTEGER Expiration;
     SID_AND_ATTRIBUTES UserSid;
     ULONG GroupsLength;
     PSID PrimaryGroup;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PSID Owner;
-    ULONG i;
     PTOKEN Token;
     NTSTATUS Status;
 
@@ -1783,80 +1780,46 @@ SepCreateSystemProcessToken(VOID)
     Owner = SeAliasAdminsSid;
 
     /* Groups are Administrators, World, and Authenticated Users */
-    Groups[0].Sid = SeAliasAdminsSid;
-    Groups[0].Attributes = OwnerAttributes;
-    Groups[1].Sid = SeWorldSid;
-    Groups[1].Attributes = GroupAttributes;
-    Groups[2].Sid = SeAuthenticatedUsersSid;
-    Groups[2].Attributes = GroupAttributes;
+    SID_AND_ATTRIBUTES Groups[] =
+    {
+        {SeAliasAdminsSid, OwnerAttributes},
+        {SeWorldSid, GroupAttributes},
+        {SeAuthenticatedUsersSid, GroupAttributes}
+    };
     GroupsLength = sizeof(SID_AND_ATTRIBUTES) +
                    SeLengthSid(Groups[0].Sid) +
                    SeLengthSid(Groups[1].Sid) +
                    SeLengthSid(Groups[2].Sid);
-    ASSERT(GroupsLength <= sizeof(Groups));
+    ASSERT(GroupsLength <= (sizeof(Groups) * sizeof(ULONG)));
 
     /* Setup the privileges */
-    i = 0;
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeTcbPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeCreateTokenPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeTakeOwnershipPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeCreatePagefilePrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeLockMemoryPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeAssignPrimaryTokenPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeIncreaseQuotaPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeIncreaseBasePriorityPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeCreatePermanentPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeDebugPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeAuditPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeSecurityPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeSystemEnvironmentPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeChangeNotifyPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeBackupPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeRestorePrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeShutdownPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeLoadDriverPrivilege;
-
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
-    Privileges[i++].Luid = SeProfileSingleProcessPrivilege;
-
-    Privileges[i].Attributes = 0;
-    Privileges[i++].Luid = SeSystemtimePrivilege;
-    ASSERT(i == 20);
+    LUID_AND_ATTRIBUTES Privileges[] =
+    {
+        {SeTcbPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeCreateTokenPrivilege, 0},
+        {SeTakeOwnershipPrivilege, 0},
+        {SeCreatePagefilePrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeLockMemoryPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeAssignPrimaryTokenPrivilege, 0},
+        {SeIncreaseQuotaPrivilege, 0},
+        {SeIncreaseBasePriorityPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeCreatePermanentPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeDebugPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeAuditPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeSecurityPrivilege, 0},
+        {SeSystemEnvironmentPrivilege, 0},
+        {SeChangeNotifyPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeBackupPrivilege, 0},
+        {SeRestorePrivilege, 0},
+        {SeShutdownPrivilege, 0},
+        {SeLoadDriverPrivilege, 0},
+        {SeProfileSingleProcessPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeSystemtimePrivilege, 0},
+        {SeUndockPrivilege, 0},
+        {SeManageVolumePrivilege, 0},
+        {SeImpersonatePrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+        {SeCreateGlobalPrivilege, SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED},
+    };
 
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
@@ -1872,10 +1835,10 @@ SepCreateSystemProcessToken(VOID)
                             &SeSystemAuthenticationId,
                             &Expiration,
                             &UserSid,
-                            3,
+                            RTL_NUMBER_OF(Groups),
                             Groups,
                             GroupsLength,
-                            20,
+                            RTL_NUMBER_OF(Privileges),
                             Privileges,
                             Owner,
                             PrimaryGroup,
@@ -1902,7 +1865,7 @@ CODE_SEG("INIT")
 PTOKEN
 SepCreateSystemAnonymousLogonToken(VOID)
 {
-    SID_AND_ATTRIBUTES Groups[32], UserSid;
+    SID_AND_ATTRIBUTES UserSid;
     PSID PrimaryGroup;
     PTOKEN Token;
     ULONG GroupsLength;
@@ -1921,11 +1884,13 @@ SepCreateSystemAnonymousLogonToken(VOID)
     PrimaryGroup = SeAnonymousLogonSid;
 
     /* The only group for the token is the World */
-    Groups[0].Sid = SeWorldSid;
-    Groups[0].Attributes = SE_GROUP_ENABLED | SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT;
+    SID_AND_ATTRIBUTES Groups[] =
+    {
+        {SeWorldSid, SE_GROUP_ENABLED | SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT}
+    };
     GroupsLength = sizeof(SID_AND_ATTRIBUTES) +
                    SeLengthSid(Groups[0].Sid);
-    ASSERT(GroupsLength <= sizeof(Groups));
+    ASSERT(GroupsLength <= (sizeof(Groups) * sizeof(ULONG)));
 
     /* Initialise the object attributes for the token */
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
@@ -1941,7 +1906,7 @@ SepCreateSystemAnonymousLogonToken(VOID)
                             &SeAnonymousAuthenticationId,
                             &Expiration,
                             &UserSid,
-                            1,
+                            RTL_NUMBER_OF(Groups),
                             Groups,
                             GroupsLength,
                             0,
