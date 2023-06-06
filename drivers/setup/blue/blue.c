@@ -1,11 +1,8 @@
 /*
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 services/dd/blue/blue.c
- * PURPOSE:              Console (blue screen) device driver
- * PROGRAMMER:           Eric Kohl
- * UPDATE HISTORY:
- *                       ??? Created
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS kernel
+ * PURPOSE:     Driver Management Functions.
+ * PROGRAMMER:  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -15,19 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
-// ROS Internal. Please deprecate.
-NTHALAPI
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(
-    VOID
-);
-
 /* NOTES ******************************************************************/
 /*
  *  [[character][attribute]][[character][attribute]]....
  */
-
 
 /* TYPEDEFS ***************************************************************/
 
@@ -38,9 +26,9 @@ typedef struct _DEVICE_EXTENSION
     INT  CursorVisible;
     USHORT  CharAttribute;
     ULONG Mode;
-    UCHAR  ScanLines;      /* Height of a text line */
-    USHORT  Rows;           /* Number of rows        */
-    USHORT  Columns;        /* Number of columns     */
+    UCHAR  ScanLines;  /* Height of a text line */
+    USHORT  Rows;       /* Number of rows        */
+    USHORT  Columns;    /* Number of columns     */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _VGA_REGISTERS
@@ -104,7 +92,7 @@ ScrSetRegisters(const VGA_REGISTERS *Registers)
 
     /* Write sequencer registers */
     for (i = 1; i < sizeof(Registers->Sequencer); i++)
-{
+    {
         WRITE_PORT_UCHAR(SEQ, i);
         WRITE_PORT_UCHAR(SEQDATA, Registers->Sequencer[i]);
     }
@@ -139,7 +127,7 @@ ScrSetRegisters(const VGA_REGISTERS *Registers)
         WRITE_PORT_UCHAR(ATTRIB, Registers->Attribute[i]);
     }
 
-    /* Set the PEL mask. */
+    /* Set the PEL mask */
     WRITE_PORT_UCHAR(PELMASK, 0xff);
 }
 
@@ -152,7 +140,7 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
 
     ScrSetRegisters(&VidpMode3Regs);
 
-    /* Disable screen and enable palette access. */
+    /* Disable screen and enable palette access */
     READ_PORT_UCHAR(STATUS);
     WRITE_PORT_UCHAR(ATTRIB, 0x00);
 
@@ -164,66 +152,65 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
        WRITE_PORT_UCHAR(PELDATA, DefaultPalette[Index * 3 + 2] >> 2);
     }
 
-    /* Enable screen and disable palette access. */
+    /* Enable screen and disable palette access */
     READ_PORT_UCHAR(STATUS);
     WRITE_PORT_UCHAR(ATTRIB, 0x20);
 
     /* get current output position */
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-    offset = READ_PORT_UCHAR (CRTC_DATA);
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-    offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+    offset = READ_PORT_UCHAR(CRTC_DATA);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
+    offset += (READ_PORT_UCHAR(CRTC_DATA) << 8);
 
     /* switch blinking characters off */
-    READ_PORT_UCHAR (ATTRC_INPST1);
-    value = READ_PORT_UCHAR (ATTRC_WRITEREG);
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG, 0x10);
-    data  = READ_PORT_UCHAR (ATTRC_READREG);
+    READ_PORT_UCHAR(ATTRC_INPST1);
+    value = READ_PORT_UCHAR(ATTRC_WRITEREG);
+    WRITE_PORT_UCHAR(ATTRC_WRITEREG, 0x10);
+    data  = READ_PORT_UCHAR(ATTRC_READREG);
     data  = data & ~0x08;
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG, data);
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG, value);
-    READ_PORT_UCHAR (ATTRC_INPST1);
+    WRITE_PORT_UCHAR(ATTRC_WRITEREG, data);
+    WRITE_PORT_UCHAR(ATTRC_WRITEREG, value);
+    READ_PORT_UCHAR(ATTRC_INPST1);
 
     /* read screen information from crt controller */
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_COLUMNS);
-    DeviceExtension->Columns = READ_PORT_UCHAR (CRTC_DATA) + 1;
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_ROWS);
-    DeviceExtension->Rows = READ_PORT_UCHAR (CRTC_DATA);
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_OVERFLOW);
-    data = READ_PORT_UCHAR (CRTC_DATA);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_COLUMNS);
+    DeviceExtension->Columns = READ_PORT_UCHAR(CRTC_DATA) + 1;
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_ROWS);
+    DeviceExtension->Rows = READ_PORT_UCHAR(CRTC_DATA);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_OVERFLOW);
+    data = READ_PORT_UCHAR(CRTC_DATA);
     DeviceExtension->Rows |= (((data & 0x02) << 7) | ((data & 0x40) << 3));
     DeviceExtension->Rows++;
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_SCANLINES);
-    DeviceExtension->ScanLines = (READ_PORT_UCHAR (CRTC_DATA) & 0x1F) + 1;
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_SCANLINES);
+    DeviceExtension->ScanLines = (READ_PORT_UCHAR(CRTC_DATA) & 0x1F) + 1;
 
     /* show blinking cursor */
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
-    WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-    data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
-    WRITE_PORT_UCHAR (CRTC_DATA,
-                      data | ((DeviceExtension->ScanLines - 1) & 0x1F));
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORSTART);
+    WRITE_PORT_UCHAR(CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSOREND);
+    data = READ_PORT_UCHAR(CRTC_DATA) & 0xE0;
+    WRITE_PORT_UCHAR(CRTC_DATA,
+                     data | ((DeviceExtension->ScanLines - 1) & 0x1F));
 
     /* calculate number of text rows */
-    DeviceExtension->Rows =
-        DeviceExtension->Rows / DeviceExtension->ScanLines;
+    DeviceExtension->Rows = DeviceExtension->Rows / DeviceExtension->ScanLines;
 #ifdef BOCHS_30ROWS
     DeviceExtension->Rows = 30;
 #endif
 
-    DPRINT ("%d Columns  %d Rows %d Scanlines\n",
-            DeviceExtension->Columns,
-            DeviceExtension->Rows,
-            DeviceExtension->ScanLines);
+    DPRINT("%d Columns  %d Rows %d Scanlines\n",
+           DeviceExtension->Columns,
+           DeviceExtension->Rows,
+           DeviceExtension->ScanLines);
 }
 
 NTSTATUS NTAPI
-DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
 static DRIVER_DISPATCH ScrCreate;
 static NTSTATUS NTAPI
 ScrCreate(PDEVICE_OBJECT DeviceObject,
-      PIRP Irp)
+    PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
     PHYSICAL_ADDRESS BaseAddress;
@@ -242,7 +229,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        /* store dummy values here */
+        /* Store dummy values */
         DeviceExtension->Columns = 1;
         DeviceExtension->Rows = 1;
         DeviceExtension->ScanLines = 1;
@@ -259,17 +246,17 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     Status = STATUS_SUCCESS;
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest (Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
 
 static DRIVER_DISPATCH ScrWrite;
 static NTSTATUS NTAPI
 ScrWrite(PDEVICE_OBJECT DeviceObject,
-     PIRP Irp)
+    PIRP Irp)
 {
-    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
+    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
     char *pch = Irp->UserBuffer;
@@ -286,7 +273,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
         Status = STATUS_SUCCESS;
 
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest (Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
         return Status;
     }
@@ -296,37 +283,37 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     columns = DeviceExtension->Columns;
 
     _disable();
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-    offset = READ_PORT_UCHAR (CRTC_DATA)<<8;
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-    offset += READ_PORT_UCHAR (CRTC_DATA);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
+    offset = READ_PORT_UCHAR(CRTC_DATA)<<8;
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+    offset += READ_PORT_UCHAR(CRTC_DATA);
     _enable();
 
     cursory = offset / columns;
     cursorx = offset % columns;
-    if( processed == 0 )
-       {
+    if (!processed)
+    {
       /* raw output mode */
       memcpy( &vidmem[(cursorx * 2) + (cursory * columns * 2)], pch, stk->Parameters.Write.Length );
       offset += (stk->Parameters.Write.Length / 2);
-       }
+    }
     else {
-       for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
+      for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
       {
-         switch (*pch)
+        switch (*pch)
         {
         case '\b':
            if (cursorx > 0)
-              {
+           {
              cursorx--;
-              }
+           }
            else if (cursory > 0)
-              {
+           {
              cursorx = columns - 1;
              cursory--;
-              }
+           }
            vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
-           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
            break;
 
         case '\n':
@@ -341,49 +328,49 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
         case '\t':
            offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
            for (j = 0; j < offset; j++)
-              {
+           {
              vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
              cursorx++;
 
              if (cursorx >= columns)
-                {
-                   cursory++;
-                   cursorx = 0;
-                }
-              }
+             {
+                 cursory++;
+                 cursorx = 0;
+             }
+           }
            break;
 
         default:
            vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
-           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
            cursorx++;
            if (cursorx >= columns)
-              {
+           {
              cursory++;
              cursorx = 0;
-              }
+           }
            break;
         }
-         if (cursory >= rows)
+        if (cursory >= rows)
         {
            unsigned short *LinePtr;
 
-           memcpy (vidmem,
+           memcpy(vidmem,
                &vidmem[columns * 2],
                columns * (rows - 1) * 2);
 
            LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
 
            for (j = 0; j < columns; j++)
-              {
+           {
              LinePtr[j] = DeviceExtension->CharAttribute << 8;
-              }
+           }
            cursory = rows - 1;
            for (j = 0; j < columns; j++)
-              {
+           {
              vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
              vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
-              }
+           }
         }
       }
 
@@ -391,27 +378,27 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
        offset = (cursory * columns) + cursorx;
     }
     _disable();
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-    WRITE_PORT_UCHAR (CRTC_DATA, offset);
-    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+    WRITE_PORT_UCHAR(CRTC_DATA, offset);
+    WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset >>= 8;
-    WRITE_PORT_UCHAR (CRTC_DATA, offset);
+    WRITE_PORT_UCHAR(CRTC_DATA, offset);
     _enable();
 
     Status = STATUS_SUCCESS;
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest (Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
 
 static DRIVER_DISPATCH ScrIoControl;
 static NTSTATUS NTAPI
 ScrIoControl(PDEVICE_OBJECT DeviceObject,
-         PIRP Irp)
+    PIRP Irp)
 {
-  PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
+  PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
   PDEVICE_EXTENSION DeviceExtension;
   NTSTATUS Status;
 
@@ -429,10 +416,10 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           {
             /* read cursor position from crtc */
             _disable();
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-            offset = READ_PORT_UCHAR (CRTC_DATA);
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-            offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+            offset = READ_PORT_UCHAR(CRTC_DATA);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
+            offset += (READ_PORT_UCHAR(CRTC_DATA) << 8);
             _enable();
           }
           else
@@ -456,7 +443,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           pcsbi->dwMaximumWindowSize.X = columns;
           pcsbi->dwMaximumWindowSize.Y = rows;
 
-          Irp->IoStatus.Information = sizeof (CONSOLE_SCREEN_BUFFER_INFO);
+          Irp->IoStatus.Information = sizeof(CONSOLE_SCREEN_BUFFER_INFO);
           Status = STATUS_SUCCESS;
         }
         break;
@@ -473,10 +460,10 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           if (!InbvCheckDisplayOwnership())
           {
             _disable();
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-            WRITE_PORT_UCHAR (CRTC_DATA, offset);
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-            WRITE_PORT_UCHAR (CRTC_DATA, offset>>8);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+            WRITE_PORT_UCHAR(CRTC_DATA, offset);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
+            WRITE_PORT_UCHAR(CRTC_DATA, offset>>8);
             _enable();
           }
 
@@ -492,7 +479,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           pcci->dwSize = DeviceExtension->CursorSize;
           pcci->bVisible = DeviceExtension->CursorVisible;
 
-          Irp->IoStatus.Information = sizeof (CONSOLE_CURSOR_INFO);
+          Irp->IoStatus.Information = sizeof(CONSOLE_CURSOR_INFO);
           Status = STATUS_SUCCESS;
         }
         break;
@@ -520,11 +507,11 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
             data |= (UCHAR)(height - size);
 
             _disable();
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
-            WRITE_PORT_UCHAR (CRTC_DATA, data);
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-            value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
-            WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORSTART);
+            WRITE_PORT_UCHAR(CRTC_DATA, data);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSOREND);
+            value = READ_PORT_UCHAR(CRTC_DATA) & 0xE0;
+            WRITE_PORT_UCHAR(CRTC_DATA, value | (height - 1));
 
             _enable();
           }
@@ -565,13 +552,15 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
           if (!InbvCheckDisplayOwnership())
           {
+            UCHAR attr = Buf->wAttribute;
+
             vidmem = DeviceExtension->VideoMemory;
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                        (Buf->dwCoord.X * 2) + 1;
+                     (Buf->dwCoord.X * 2) + 1;
 
             for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
             {
-              vidmem[offset + (dwCount * 2)] = (char) Buf->wAttribute;
+              vidmem[offset + (dwCount * 2)] = attr;
             }
           }
 
@@ -598,7 +587,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
             for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
             {
-              *((char *) pAttr) = vidmem[offset + (dwCount * 2)];
+              *((char *)pAttr) = vidmem[offset + (dwCount * 2)];
             }
 
             Buf->dwTransfered = dwCount;
@@ -653,6 +642,8 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
           if (!InbvCheckDisplayOwnership())
           {
+            UCHAR ch = Buf->cCharacter;
+
             vidmem = DeviceExtension->VideoMemory;
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
                     (Buf->dwCoord.X * 2);
@@ -660,7 +651,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
             for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
             {
-              vidmem[offset + (dwCount * 2)] = (char) Buf->cCharacter;
+              vidmem[offset + (dwCount * 2)] = ch;
             }
           }
 
@@ -755,10 +746,10 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
                     ConsoleDraw->CursorX;
 
             _disable();
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-            WRITE_PORT_UCHAR (CRTC_DATA, Offset);
-            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-            WRITE_PORT_UCHAR (CRTC_DATA, Offset >> 8);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSLO);
+            WRITE_PORT_UCHAR(CRTC_DATA, Offset);
+            WRITE_PORT_UCHAR(CRTC_COMMAND, CRTC_CURSORPOSHI);
+            WRITE_PORT_UCHAR(CRTC_DATA, Offset >> 8);
             _enable();
           }
 
@@ -787,7 +778,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
     }
 
   Irp->IoStatus.Status = Status;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return Status;
 }
@@ -795,7 +786,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 static DRIVER_DISPATCH ScrDispatch;
 static NTSTATUS NTAPI
 ScrDispatch(PDEVICE_OBJECT DeviceObject,
-        PIRP Irp)
+    PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -811,51 +802,48 @@ ScrDispatch(PDEVICE_OBJECT DeviceObject,
             break;
     }
 
-
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest (Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
-
 
 /*
  * Module entry point
  */
 NTSTATUS NTAPI
-DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
     UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
 
-    DPRINT ("Screen Driver 0.0.6\n");
+    DPRINT("Screen Driver 0.0.6\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]  = ScrDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ]   = ScrDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScrIoControl;
 
-    Status = IoCreateDevice (DriverObject,
-                             sizeof(DEVICE_EXTENSION),
-                             &DeviceName,
-                             FILE_DEVICE_SCREEN,
-                             FILE_DEVICE_SECURE_OPEN,
-                             TRUE,
-                             &DeviceObject);
-
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(DEVICE_EXTENSION),
+                            &DeviceName,
+                            FILE_DEVICE_SCREEN,
+                            FILE_DEVICE_SECURE_OPEN,
+                            TRUE,
+                            &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    Status = IoCreateSymbolicLink (&SymlinkName, &DeviceName);
+    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
     if (NT_SUCCESS(Status))
         DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     else
-        IoDeleteDevice (DeviceObject);
+        IoDeleteDevice(DeviceObject);
     return Status;
 }
 
