@@ -1067,6 +1067,8 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
+                UCHAR attr = Buf->wAttribute;
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2 + 1;
 
@@ -1076,7 +1078,7 @@ ScrIoControl(
 
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->wAttribute;
+                    vidmem[offset + (dwCount * 2)] = attr;
                 }
                 Buf->dwTransfered = dwCount;
             }
@@ -1265,6 +1267,8 @@ ScrIoControl(
 
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
             {
+                UCHAR ch = Buf->cCharacter;
+
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.X + Buf->dwCoord.Y * DeviceExtension->Columns) * 2;
 
@@ -1274,7 +1278,7 @@ ScrIoControl(
 
                 for (dwCount = 0; dwCount < nMaxLength; dwCount++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char)Buf->cCharacter;
+                    vidmem[offset + (dwCount * 2)] = ch;
                 }
                 Buf->dwTransfered = dwCount;
             }
