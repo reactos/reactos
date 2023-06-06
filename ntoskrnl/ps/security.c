@@ -615,6 +615,7 @@ PsImpersonateClient(IN PETHREAD Thread,
 {
     PPS_IMPERSONATION_INFORMATION Impersonation, OldData;
     PTOKEN OldToken = NULL, ProcessToken = NULL;
+    BOOLEAN CopiedToken = FALSE;
     PACCESS_TOKEN NewToken, ImpersonationToken;
     PEJOB Job;
     NTSTATUS Status;
@@ -706,7 +707,13 @@ PsImpersonateClient(IN PETHREAD Thread,
                 return Status;
             }
 
-            /* Since we cannot impersonate, assign the newly copied token */
+            /*
+             * Since we cannot impersonate, assign the newly copied token.
+             * SeCopyClientToken already holds a reference to the copied token,
+             * let the code path below know that it must not reference it twice.
+             */
+            CopiedToken = TRUE;
+            ImpersonationLevel = SecurityIdentification;
             ImpersonationToken = NewToken;
         }
 
@@ -721,6 +728,11 @@ PsImpersonateClient(IN PETHREAD Thread,
             if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_NO_ADMIN) &&
                 SeTokenIsAdmin(ImpersonationToken))
             {
+                if (CopiedToken)
+                {
+                    ObDereferenceObject(ImpersonationToken);
+                }
+
                 return STATUS_ACCESS_DENIED;
             }
 
@@ -728,6 +740,11 @@ PsImpersonateClient(IN PETHREAD Thread,
             if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_RESTRICTED_TOKEN) &&
                 SeTokenIsRestricted(ImpersonationToken))
             {
+                if (CopiedToken)
+                {
+                    ObDereferenceObject(ImpersonationToken);
+                }
+
                 return STATUS_ACCESS_DENIED;
             }
 
@@ -758,7 +775,12 @@ PsImpersonateClient(IN PETHREAD Thread,
         Impersonation->CopyOnOpen = CopyOnOpen;
         Impersonation->EffectiveOnly = EffectiveOnly;
         Impersonation->Token = ImpersonationToken;
-        ObReferenceObject(ImpersonationToken);
+
+        /* Do not reference the token again if we copied it */
+        if (!CopiedToken)
+        {
+            ObReferenceObject(ImpersonationToken);
+        }
 
         /* Unlock the thread */
         PspUnlockThreadSecurityExclusive(Thread);
