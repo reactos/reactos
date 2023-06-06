@@ -2158,22 +2158,47 @@ SeTokenIsWriteRestricted(
 
 /**
  * @brief
- * Ensures that client impersonation can occur by checking if the token
- * we're going to assign as the impersonation token can be actually impersonated
- * in the first place. The routine is used primarily by PsImpersonateClient.
+ * Determines whether the server is allowed to impersonate on behalf
+ * of a client or not. For further details, see Remarks.
  *
  * @param[in] ProcessToken
- * Token from a process.
+ * A pointer to the primary access token of the server process
+ * that requests impersonation of the client target.
  *
  * @param[in] TokenToImpersonate
- * Token that we are going to impersonate.
+ * A pointer to an access token that represents a client that is to
+ * be impersonated.
  *
  * @param[in] ImpersonationLevel
- * Security impersonation level grade.
+ * The requested impersonation level.
  *
  * @return
  * Returns TRUE if the conditions checked are met for token impersonation,
  * FALSE otherwise.
+ *
+ * @remarks
+ * The server has to meet the following criteria in order to impersonate
+ * a client, that is:
+ *
+ * - The server must not impersonate a client beyond the level that
+ *   the client imposed on itself.
+ *
+ * - The server must be authenticated on the same logon session of
+ *   the target client.
+ *
+ * - IF NOT then the server's user ID has to match to that of the
+ *   target client.
+ *
+ * - The server must not be restricted in order to impersonate a
+ *   client that is not restricted.
+ *
+ * If the associated access token that represents the security properties
+ * of the server is granted the SeImpersonatePrivilege privilege the server
+ * is given immediate impersonation, regardless of the conditions above.
+ * If the client in question is associated with an anonymous token then
+ * the server is given immediate impersonation. Or if the server simply
+ * doesn't ask for impersonation but instead it wants to get the security
+ * identification of a client, the server is given immediate impersonation.
  */
 BOOLEAN
 NTAPI
@@ -2186,73 +2211,87 @@ SeTokenCanImpersonate(
     PAGED_CODE();
 
     /*
-     * SecurityAnonymous and SecurityIdentification levels do not
-     * allow impersonation.
+     * The server may want to obtain identification details of a client
+     * instead of impersonating so just give the server a pass.
      */
-    if (ImpersonationLevel == SecurityAnonymous ||
-        ImpersonationLevel == SecurityIdentification)
+    if (ImpersonationLevel < SecurityIdentification)
     {
-        return FALSE;
+        DPRINT("The server doesn't ask for impersonation\n");
+        return TRUE;
     }
 
     /* Time to lock our tokens */
     SepAcquireTokenLockShared(ProcessToken);
     SepAcquireTokenLockShared(TokenToImpersonate);
 
-    /* What kind of authentication ID does the token have? */
+    /*
+     * As the name implies, an anonymous token has invisible security
+     * identification details. By the general rule these tokens do not
+     * pose a danger in terms of power escalation so give the server a pass.
+     */
     if (RtlEqualLuid(&TokenToImpersonate->AuthenticationId,
                      &SeAnonymousAuthenticationId))
     {
-        /*
-         * OK, it looks like the token has an anonymous
-         * authentication. Is that token created by the system?
-         */
-        if (TokenToImpersonate->TokenSource.SourceName != SeSystemTokenSource.SourceName &&
-            !RtlEqualLuid(&TokenToImpersonate->TokenSource.SourceIdentifier, &SeSystemTokenSource.SourceIdentifier))
+        DPRINT("The token to impersonate has an anonymous authentication ID, allow impersonation either way\n");
+        CanImpersonate = TRUE;
+        goto Quit;
+    }
+
+    /* Allow impersonation for the process server if it's granted the impersonation privilege */
+    if ((ProcessToken->TokenFlags & TOKEN_HAS_IMPERSONATE_PRIVILEGE) != 0)
+    {
+        DPRINT("The process is granted the impersonation privilege, allow impersonation\n");
+        CanImpersonate = TRUE;
+        goto Quit;
+    }
+
+    /*
+     * Deny impersonation for the server if it wants to impersonate a client
+     * beyond what the impersonation level originally permits.
+     */
+    if (ImpersonationLevel > TokenToImpersonate->ImpersonationLevel)
+    {
+        DPRINT1("Cannot impersonate a client above the permitted impersonation level!\n");
+        CanImpersonate = FALSE;
+        goto Quit;
+    }
+
+    /* Is the server authenticated on the same client originating session? */
+    if (!RtlEqualLuid(&ProcessToken->AuthenticationId,
+                      &TokenToImpersonate->OriginatingLogonSession))
+    {
+        /* It's not, check that at least both the server and client are the same user */
+        if (!RtlEqualSid(ProcessToken->UserAndGroups[0].Sid,
+                         TokenToImpersonate->UserAndGroups[0].Sid))
         {
-            /* It isn't, we can't impersonate regular tokens */
-            DPRINT("SeTokenCanImpersonate(): Token has an anonymous authentication ID, can't impersonate!\n");
+            DPRINT1("Server and client aren't the same user!\n");
+            CanImpersonate = FALSE;
+            goto Quit;
+        }
+
+        /*
+         * Make sure the tokens haven't diverged in terms of restrictions
+         * that is one token is restricted but the other one isn't. If that
+         * would have been the case then the server would have impersonated
+         * a less restricted client thus potentially triggering an elevation,
+         * which is not what we want.
+         */
+        if (SeTokenIsRestricted(ProcessToken) !=
+            SeTokenIsRestricted(TokenToImpersonate))
+        {
+            DPRINT1("Attempting to impersonate a less restricted client token, bail out!\n");
             CanImpersonate = FALSE;
             goto Quit;
         }
     }
 
-    /* Are the SID values from both tokens equal? */
-    if (!RtlEqualSid(ProcessToken->UserAndGroups->Sid,
-                     TokenToImpersonate->UserAndGroups->Sid))
-    {
-        /* They aren't, bail out */
-        DPRINT("SeTokenCanImpersonate(): Tokens SIDs are not equal!\n");
-        CanImpersonate = FALSE;
-        goto Quit;
-    }
-
-    /*
-     * Make sure the tokens aren't diverged in terms of
-     * restrictions, that is, one token is restricted
-     * but the other one isn't.
-     */
-    if (SeTokenIsRestricted(ProcessToken) !=
-        SeTokenIsRestricted(TokenToImpersonate))
-    {
-        /*
-         * One token is restricted so we cannot
-         * continue further at this point, bail out.
-         */
-        DPRINT("SeTokenCanImpersonate(): One token is restricted, can't continue!\n");
-        CanImpersonate = FALSE;
-        goto Quit;
-    }
-
     /* If we've reached that far then we can impersonate! */
-    DPRINT("SeTokenCanImpersonate(): We can impersonate.\n");
+    DPRINT("We can impersonate\n");
     CanImpersonate = TRUE;
 
 Quit:
-    /* We're done, unlock the tokens now */
-    SepReleaseTokenLock(ProcessToken);
     SepReleaseTokenLock(TokenToImpersonate);
-
+    SepReleaseTokenLock(ProcessToken);
     return CanImpersonate;
 }
 
