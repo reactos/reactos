@@ -929,7 +929,14 @@ AddControllers(PDRIVER_OBJECT DriverObject)
     PAGED_CODE();
 
     /* Find our controllers on all ISA buses */
-    IoQueryDeviceDescription(&InterfaceType, 0, &ControllerType, 0, &PeripheralType, 0, ConfigCallback, 0);
+    IoQueryDeviceDescription(&InterfaceType,
+                             NULL,
+                             &ControllerType,
+                             NULL,
+                             &PeripheralType,
+                             NULL,
+                             ConfigCallback,
+                             NULL);
 
     /*
      * w2k breaks the return val from ConfigCallback, so we have to hack around it, rather than just

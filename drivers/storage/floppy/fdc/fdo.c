@@ -31,8 +31,6 @@ ForwardIrpAndForget(
 }
 
 
-
-
 static
 NTSTATUS
 FdcFdoStartDevice(
