@@ -2,7 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "WineMine"
+    IDS_APPNAME "Minesweeper"
     IDS_NOBODY "Nobody"
     IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END

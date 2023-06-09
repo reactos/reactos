@@ -2,7 +2,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "WineMine"
+    IDS_APPNAME "Aknakereső"
     IDS_NOBODY "Senki"
     IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END

@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "WineMine"
+    IDS_APPNAME "Saper"
     IDS_NOBODY "Anonim"
     IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
