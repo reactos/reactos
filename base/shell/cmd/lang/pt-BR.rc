@@ -72,15 +72,15 @@ Existem três maneiras de especificar as cores:\n\
 2) dois valores em decimal   (fundo p.plano)\n\
 3) dois dígitos hexadecimais (fundo p.plano)\n\n\
 As cores são:\n\
-dec  hex  nome        dec  hex  name\n\
-0    0    Preto       8    8    Cinza (preto brilhante)\n\
-1    1    Azul         9    9    Azul brilhante \n\
-2    2    Verde        10    A    Verde brilhante\n\
-3    3    Ciano         11    B    Ciano brilhante\n\
-4    4    Vermelho     12    C    Vermelho brilhante\n\
-5    5    Violeta      13    D    Violeta brilhante\n\
-6    6    Amarelo      14    E    Amarelo brilhante\n\
-7    7    Branco      15    F    Branco brilhante\n\n"
+dec  hex  nome       dec  hex  name\n\
+0    0    Preto       8   8    Cinza (preto brilhante)\n\
+1    1    Azul        9   9    Azul brilhante \n\
+2    2    Verde      10   A    Verde brilhante\n\
+3    3    Ciano      11   B    Ciano brilhante\n\
+4    4    Vermelho   12   C    Vermelho brilhante\n\
+5    5    Violeta    13   D    Violeta brilhante\n\
+6    6    Amarelo    14   E    Amarelo brilhante\n\
+7    7    Branco     15   F    Branco brilhante\n\n"
     STRING_COPY_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)\n\n"
     STRING_COPY_HELP2 "Copia um ou mais arquivos para outro local.\n\n\
 COPY [/V] [/Y | /-Y] [/A | /B] fonte [/A | /B]\n\
@@ -229,7 +229,7 @@ FOR /F [""opções""]%variavel IN (comando)DO comando [parâmetros]\n\n\
     /F Modifica o conjunto para se referir ao conteúdo dos arquivos no conjunto.\n\n\
     %variável  Especifica um parâmetro substituível.\n\
     (conjunto) Especifica um conjunto de um ou mais arquivos.\n\
-               Podem ser usados ​​curingas.\n\
+               Podem ser usados curingas.\n\
     comando    Especifica o comando a ser executado para cada arquivo.\n\
     parâmetros Especifica parâmetros ou opções para o comando especificado.\n\
     opções     As opções com suporte são: eol, skip, delims, tokens e usebackq.\n\n\
@@ -241,7 +241,7 @@ FOR /F [""opções""]%variavel IN (comando)DO comando [parâmetros]\n\n\
     STRING_FREE_HELP1 "\nVolume na unidade %s é %-11s\n\
  O número de série é %s\n\
   %16s bytes de espaço total em disco\n\
-  %16s bytes usados ​\n\
+  %16s bytes usados\n\
   %16s bytes livres\n"
     STRING_FREE_HELP2 "Apresenta informações da unidade.\n\nFREE [unidade: ...]\n"
     STRING_GOTO_HELP1 "Direciona o CMD para uma linha rotulada num programa batch.\n\n\
@@ -263,7 +263,7 @@ comando            Especifica o comando a ser executado se a condição for\n\
                    atendida.\n\
 string1==string2   Especifica uma condição verdadeira se as strings de texto\n\
                    especificadas coincidirem.\n\
-EXIST arquivo     Especifica uma condição verdadeira se o nome do arquivo\n\
+EXIST arquivo      Especifica uma condição verdadeira se o nome do arquivo\n\
                    especificado existir.\n\
 DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
                    for definida.\n"
@@ -396,12 +396,12 @@ SHIFT [DOWN] "
 SCREEN linha col [texto]\n\n\
   linha        linha para a qual move o cursor\n\
   col          coluna para a qual move o cursor "
-    STRING_SET_HELP "Apresenta, define ou remove variáveis ​​de ambiente.\n\n\
+    STRING_SET_HELP "Apresenta, define ou remove variáveis de ambiente.\n\n\
 SET [variável[=][string]]\n\n\
   variável      Especifíca o nome da variável de ambiente.\n\
   string        Especifíca a cadeia de caracteres a serem atribuídos\n\
                 à variável.\n\n\
-Digite SET sem parâmetros para apresentar as variáveis ​​de ambiente actuais.\n"
+Digite SET sem parâmetros para apresentar as variáveis de ambiente actuais.\n"
 
 STRING_START_HELP1 "Inicia um comando.\n\n\
 START [""title""] [/D caminho] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
@@ -525,7 +525,7 @@ título      Novo título\n"
     STRING_FREE_ERROR2 "sem etiqueta"
     STRING_GOTO_ERROR1 "Nenhum rótulo especificado para GOTO\n"
     STRING_GOTO_ERROR2 "Etiqueta '%s' não encontrada\n"
-    STRING_MD_ERROR "Um ​​subdiretório ou arquivo %s já existe.\n"
+    STRING_MD_ERROR "Um subdiretório ou arquivo %s já existe.\n"
     STRING_MD_ERROR2 "O caminho para a nova pasta não existe.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Erro]\n"
