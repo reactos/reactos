@@ -313,24 +313,24 @@ PiIrpQueryPnPDeviceCapabilities(
     _In_ PDEVICE_NODE DeviceNode,
     _Out_ PDEVICE_CAPABILITIES DeviceCaps)
 {
-    PAGED_CODE();
-
-    ASSERT(DeviceNode);
-
-    IO_STACK_LOCATION stack = {
+    PVOID Dummy;
+    IO_STACK_LOCATION Stack = {
         .MajorFunction = IRP_MJ_PNP,
         .MinorFunction = IRP_MN_QUERY_CAPABILITIES
     };
+
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
 
     RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
     DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);
     DeviceCaps->Version = 1;
     DeviceCaps->Address = -1;
     DeviceCaps->UINumber = -1;
-    stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
+    Stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
 
-    PVOID Dummy;
-    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, &Dummy);
+    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, &Dummy);
 }
 
 // IRP_MN_QUERY_ID (0x13)
@@ -340,6 +340,13 @@ PiIrpQueryPnPDeviceId(
     _In_ BUS_QUERY_ID_TYPE IdType,
     _Out_ PWCHAR *Id)
 {
+    NTSTATUS Status;
+    ULONG_PTR LongId;
+    IO_STACK_LOCATION Stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_ID
+    };
+
     PAGED_CODE();
 
     ASSERT(DeviceNode);
@@ -347,20 +354,14 @@ PiIrpQueryPnPDeviceId(
            IdType == BusQueryCompatibleIDs || IdType == BusQueryInstanceID ||
            IdType == BusQueryDeviceSerialNumber || IdType == BusQueryContainerID);
 
-    IO_STACK_LOCATION stack = {
-        .MajorFunction = IRP_MJ_PNP,
-        .MinorFunction = IRP_MN_QUERY_ID
-    };
-    stack.Parameters.QueryId.IdType = IdType;
+    Stack.Parameters.QueryId.IdType = IdType;
     *Id = NULL;
 
-    ULONG_PTR longId;
-    NTSTATUS status;
-    status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, (PVOID)&longId);
-    if (NT_SUCCESS(status))
+    Status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, (PVOID)&LongId);
+    if (NT_SUCCESS(Status))
     {
-        *Id = (PVOID)longId;
+        *Id = (PVOID)LongId;
     }
 
-    return status;
+    return Status;
 }
