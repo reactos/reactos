@@ -739,7 +739,7 @@ IntGetWindowProc(PWND pWnd,
    PCLS Class;
    WNDPROC gcpd, Ret = 0;
 
-   ASSERT(UserIsEnteredExclusive() == TRUE);
+   ASSERT(UserIsEnteredExclusive());
 
    Class = pWnd->pcls;
 
@@ -1695,7 +1695,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->spwndOwner = OwnerWindow;
    pWnd->fnid = 0;
    pWnd->spwndLastActive = pWnd;
-   pWnd->state2 |= WNDS2_WIN40COMPAT; // FIXME!!!
+   pWnd->state2 |= WNDS2_WIN40COMPAT;
    pWnd->pcls = Class;
    pWnd->hModule = Cs->hInstance;
    pWnd->style = Cs->style & ~WS_VISIBLE;
@@ -1897,7 +1897,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
    }
    else // Not a child
-      pWnd->IDMenu = (UINT) Cs->hMenu;
+      pWnd->IDMenu = (UINT)Cs->hMenu;
 
 
    if ( ParentWindow &&
@@ -2562,6 +2562,9 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    PWND Window = Object;
 
    ASSERT_REFS_CO(Window); // FIXME: Temp HACK?
+
+   if (!IntIsWindow(UserHMGetHandle(Window)))
+      return TRUE;
 
    hWnd = Window->head.h;
    ti = PsGetCurrentThreadWin32Thread();
@@ -3565,15 +3568,6 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
       }
 
       OldValue = *((LONG *)((PCHAR)(Window + 1) + Index));
-/*
-      if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
-      {
-         OldValue = (LONG)IntSetWindowProc( Wnd,
-                                           (WNDPROC)NewValue,
-                                            Ansi);
-         if (!OldValue) return 0;
-      }
- */
       *((LONG *)((PCHAR)(Window + 1) + Index)) = NewValue;
    }
    else
@@ -3924,7 +3918,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       default:
-         Result = (DWORD)NULL;
+         Result = 0;
          break;
    }
 
@@ -4345,7 +4339,6 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
             continue;
          }
       }
-
    }
    ExFreePoolWithTag(win_array, USERTAG_WINDOWLIST);
    TRACE("Leave ShowOwnedPopups\n");
