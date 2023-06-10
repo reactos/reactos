@@ -8,7 +8,6 @@
 #include <reactos/drivers/directx/dxeng.h>
 
 /* From ddraw.c */
-BOOL intEnableReactXDriver(HDC);
 NTSTATUS APIENTRY DxDdStartupDxGraphics(ULONG, PDRVENABLEDATA, ULONG, PDRVENABLEDATA, PULONG, PEPROCESS);
 extern DRVFN gpDxFuncs[];
 
