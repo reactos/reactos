@@ -146,9 +146,9 @@ DELAY [/m]n\n\n\
   [unidade:] [caminho] [nome do arquivo]\n\
              Especifica a unidade, diretório e/ou arquivos a  listar.\n\n\
   /A         Apresenta arquivos com os atributos especificados.\n\
-atributos    D Diretórios           R arquivos só de leitura\n\
-             H arquivos ocultos    A arquivos de arquivo\n\
-             S arquivos de sistema - Prefixo que significa não\n\
+  atributos    D  Diretórios                 R  arquivos só de leitura\n\
+               H  arquivos ocultos           A  arquivos de arquivo\n\
+               S  arquivos de sistema        -  Prefixo que significa não\n\
   /B         Usa formato simples (sem informações de título ou resumo).\n\
   /C         Apresenta o separador de milhares no tamanho dos arquivos. Isto\n\
              é o predefinido. Use /-C para desativar a exibição do separador.\n\
