@@ -739,7 +739,7 @@ IntGetWindowProc(PWND pWnd,
    PCLS Class;
    WNDPROC gcpd, Ret = 0;
 
-   ASSERT(UserIsEnteredExclusive() == TRUE);
+   ASSERT(UserIsEnteredExclusive());
 
    Class = pWnd->pcls;
 
@@ -2588,6 +2588,9 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 
    ASSERT_REFS_CO(Window); // FIXME: Temp HACK?
 
+   if (!IntIsWindow(UserHMGetHandle(Window)))
+      return TRUE;
+
    hWnd = Window->head.h;
    ti = PsGetCurrentThreadWin32Thread();
 
@@ -3599,13 +3602,6 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
 #endif
       {
          OldValue = *((LONG_PTR *)((PCHAR)(Window + 1) + Index));
-         /*
-         if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
-         {
-            OldValue = (LONG_PTR)IntSetWindowProc( Wnd, (WNDPROC)NewValue, Ansi);
-            if (!OldValue) return 0;
-         }
-         */
          *((LONG_PTR*)((PCHAR)(Window + 1) + Index)) = NewValue;
       }
 
