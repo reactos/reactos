@@ -126,11 +126,13 @@ SeclCreateProcessWithLogonW(
         }
     }
 
+    /* Initialize the startup information */
     ZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
 
     /* FIXME: Get startup info from the caller */
 
+    /* Initialize the process information */
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
     /* Create Process */
@@ -141,7 +143,7 @@ SeclCreateProcessWithLogonW(
                               NULL,  // lpThreadAttributes,
                               FALSE, // bInheritHandles,
                               pRequest->dwCreationFlags,
-                              NULL,  // lpEnvironment,
+                              pRequest->Environment,  // lpEnvironment,
                               pRequest->CurrentDirectory,
                               &StartupInfo,
                               &ProcessInfo);
