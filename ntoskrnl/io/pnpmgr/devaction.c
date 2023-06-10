@@ -940,7 +940,6 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
 
     DPRINT("IopQueryHardwareIds() query BusQueryHardwareIDs from device stack\n");
 
-     ;
     Status = PiIrpQueryPnPDeviceId(DeviceNode, BusQueryHardwareIDs, &HwId);
     if (NT_SUCCESS(Status))
     {
