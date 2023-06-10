@@ -1333,18 +1333,19 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     PHAL_BUS_HANDLER BusHandler;
     PBUS_HANDLER Handler;
     PLIST_ENTRY NextEntry;
-    ULONG ContextValue;
 
     /* Make sure we have a context */
-    if (!Context) return FALSE;
-    ASSERT((*Context) || (NextBus == TRUE));
+    if (!Context)
+        return FALSE;
 
-    /* Read the context */
-    ContextValue = *Context;
+    /* If we have data in the context, then this shouldn't be a new lookup */
+    if ((*Context != 0) && (NextBus != FALSE))
+        return FALSE;
 
     /* Find the bus handler */
-    Handler = HalpContextToBusHandler(ContextValue);
-    if (!Handler) return FALSE;
+    Handler = HalpContextToBusHandler(*Context);
+    if (!Handler)
+        return FALSE;
 
     /* Check if this is an ongoing lookup */
     if (NextBus)
@@ -1354,7 +1355,8 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
         NextEntry = &BusHandler->AllHandlers;
 
         /* Get the next one if we were already with one */
-        if (ContextValue) NextEntry = NextEntry->Flink;
+        if (*Context)
+            NextEntry = NextEntry->Flink;
 
         /* Start scanning */
         while (TRUE)
@@ -1373,7 +1375,10 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                                        BusHandler->Handler.BusNumber,
                                        BusAddress,
                                        AddressSpace,
-                                       TranslatedAddress)) break;
+                                       TranslatedAddress))
+            {
+                break;
+            }
 
             /* Try the next one */
             NextEntry = NextEntry->Flink;
@@ -1389,7 +1394,10 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                                 Handler->BusNumber,
                                 BusAddress,
                                 AddressSpace,
-                                TranslatedAddress)) return FALSE;
+                                TranslatedAddress))
+    {
+        return FALSE;
+    }
 
     /* Remember for next time */
     *Context = (ULONG_PTR)Handler;
