@@ -1595,7 +1595,9 @@ PiStartDeviceFinal(
     if (NT_SUCCESS(Status))
     {
         PiSetDeviceCapabilities(DeviceNode, &DeviceCapabilities);
-    } else {
+    }
+    else
+    {
         DPRINT("PiIrpQueryPnPDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
     }
 
