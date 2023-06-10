@@ -94,21 +94,29 @@ FormatMsgBox(
 }
 
 static void
-ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
+ErrorMsgBox(
+    HWND hParent,
+    DWORD dwMessageId,
+    ...)
 {
-	va_list args;
-	va_start(args, dwMessageId);
-	FormatMsgBox(hParent, dwMessageId, IDS_ERROR, MB_ICONERROR, args);
-	va_end(args);
+    va_list args;
+
+    va_start(args, dwMessageId);
+    FormatMsgBox(hParent, dwMessageId, IDS_ERROR, MB_ICONERROR, args);
+    va_end(args);
 }
 
 static void
-SuccessMsgBox(HWND hParent, DWORD dwMessageId, ...)
+SuccessMsgBox(
+    HWND hParent,
+    DWORD dwMessageId,
+    ...)
 {
-	va_list args;
-	va_start(args, dwMessageId);
-	FormatMsgBox(hParent, dwMessageId, IDS_SUCCESS, MB_ICONINFORMATION, args);
-	va_end(args);
+    va_list args;
+
+    va_start(args, dwMessageId);
+    FormatMsgBox(hParent, dwMessageId, IDS_SUCCESS, MB_ICONINFORMATION, args);
+    va_end(args);
 }
 
 int WINAPI
@@ -503,14 +511,14 @@ MainWnd_OnInstall(HWND hwnd)
     /* Check if the file already exists */
     if (GetFileAttributesW(szDestPath) != INVALID_FILE_ATTRIBUTES)
     {
-		ErrorMsgBox(hwnd, IDS_ERROR_ISINSTALLED);
+        ErrorMsgBox(hwnd, IDS_ERROR_ISINSTALLED);
         return 0;
     }
 
     /* Copy the font file */
     if (!CopyFileW(g_fileName, szDestPath, TRUE))
     {
-		ErrorMsgBox(hwnd, IDS_ERROR_FONTCPY);
+        ErrorMsgBox(hwnd, IDS_ERROR_FONTCPY);
         return -1;
     }
 
@@ -522,7 +530,7 @@ MainWnd_OnInstall(HWND hwnd)
                         &hKey);
     if (res != ERROR_SUCCESS)
     {
-		ErrorMsgBox(hwnd, IDS_ERROR_OPENKEY);
+        ErrorMsgBox(hwnd, IDS_ERROR_OPENKEY);
         return -1;
     }
 
@@ -535,7 +543,7 @@ MainWnd_OnInstall(HWND hwnd)
                          (DWORD)(wcslen(pszFileName) + 1) * sizeof(WCHAR));
     if (res != ERROR_SUCCESS)
     {
-		ErrorMsgBox(hwnd, IDS_ERROR_REGISTER);
+        ErrorMsgBox(hwnd, IDS_ERROR_REGISTER);
         RegCloseKey(hKey);
         return -1;
     }
@@ -547,7 +555,7 @@ MainWnd_OnInstall(HWND hwnd)
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
     /* if all of this goes correctly, message the user about success */
-	SuccessMsgBox(hwnd, IDS_COMPLETED);
+    SuccessMsgBox(hwnd, IDS_COMPLETED);
 
     return 0;
 }
