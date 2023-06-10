@@ -11,16 +11,17 @@
 #define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
 #define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
 #define USER32_CALLBACK_GETCHARSETINFO        (9)
-#define USER32_CALLBACK_COPYIMAGE             (10)
-#define USER32_CALLBACK_SETWNDICONS           (11)
-#define USER32_CALLBACK_DELIVERUSERAPC        (12)
-#define USER32_CALLBACK_DDEPOST               (13)
-#define USER32_CALLBACK_DDEGET                (14)
-#define USER32_CALLBACK_SETOBM                (15)
-#define USER32_CALLBACK_LPK                   (16)
-#define USER32_CALLBACK_UMPD                  (17)
-#define USER32_CALLBACK_IMMPROCESSKEY         (18)
-#define USER32_CALLBACK_IMMLOADLAYOUT         (19)
+#define USER32_CALLBACK_LOADIMAGE             (10)
+#define USER32_CALLBACK_COPYIMAGE             (11)
+#define USER32_CALLBACK_SETWNDICONS           (12)
+#define USER32_CALLBACK_DELIVERUSERAPC        (13)
+#define USER32_CALLBACK_DDEPOST               (14)
+#define USER32_CALLBACK_DDEGET                (15)
+#define USER32_CALLBACK_SETOBM                (16)
+#define USER32_CALLBACK_LPK                   (17)
+#define USER32_CALLBACK_UMPD                  (18)
+#define USER32_CALLBACK_IMMPROCESSKEY         (19)
+#define USER32_CALLBACK_IMMLOADLAYOUT         (20)
 #define USER32_CALLBACK_MAXIMUM               USER32_CALLBACK_IMMLOADLAYOUT
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
@@ -50,7 +51,6 @@ typedef struct _CALL_BACK_INFO
    SENDASYNCPROC CallBack;
    ULONG_PTR Context;
 } CALL_BACK_INFO, * PCALL_BACK_INFO;
-
 
 typedef struct _HOOKPROC_CALLBACK_ARGUMENTS
 {
@@ -102,6 +102,15 @@ typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
   INT_PTR Mod;
   ULONG_PTR offPfn;
 } EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
+ 
+typedef struct _LOADIMAGE_CALLBACK_ARGUMENTS
+{
+    WCHAR ImageName[MAX_PATH];
+    UINT ImageType;
+    int cxDesired;
+    int cyDesired;
+    UINT fuFlags;
+} LOADIMAGE_CALLBACK_ARGUMENTS, *PLOADIMAGE_CALLBACK_ARGUMENTS;
 
 typedef struct _LOADMENU_CALLBACK_ARGUMENTS
 {
@@ -132,6 +141,26 @@ typedef struct _GET_CHARSET_INFO
     LCID Locale;
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
+
+typedef struct _LOADCURSORS_CALLBACK_ARGUMENTS
+{
+    HCURSOR hCursorArrow;
+    HCURSOR hCursorIbeam;
+    HCURSOR hCursorWait;
+    HCURSOR hCursorCross;
+    HCURSOR hCursorUp;
+    HCURSOR hCursorIcon;
+    HCURSOR hCursorSize;
+    HCURSOR hCursorSizeNwse;
+    HCURSOR hCursorSizeNesw;
+    HCURSOR hCursorSizeWe;
+    HCURSOR hCursorSizeNs;
+    HCURSOR hCursorSizeAll;
+    HCURSOR hCursorNo;
+    HCURSOR hCursorHand;
+    HCURSOR hCursorAppStarting;
+    HCURSOR hCursorHelp;
+} LOADCURSORS_CALLBACK_ARGUMENTS, *PLOADCURSORS_CALLBACK_ARGUMENTS;
 
 typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 {
@@ -190,6 +219,8 @@ typedef struct _IMMLOADLAYOUT_CALLBACK_OUTPUT
     IMEINFOEX iiex;
 } IMMLOADLAYOUT_CALLBACK_OUTPUT, *PIMMLOADLAYOUT_CALLBACK_OUTPUT;
 
+NTSTATUS WINAPI
+User32CallLoadImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI

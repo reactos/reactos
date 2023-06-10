@@ -56,6 +56,7 @@ typedef struct _DESKTOP
 #define DT_GWL_THREADID  4
 
 extern PDESKTOP gpdeskInputDesktop;
+extern HCURSOR gDesktopCursor;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern PTHREADINFO gptiForeground;

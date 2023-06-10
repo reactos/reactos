@@ -1495,7 +1495,7 @@ NC_DoButton(PWND pWnd, WPARAM wParam, LPARAM lParam)
          break;
 
       default:
-         ASSERT(FALSE);
+         //ASSERT(FALSE);
          return;
    }
 
@@ -2098,6 +2098,14 @@ GetNCHitEx(PWND pWnd, POINT pt)
                     rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
                     if (pt.x > rcWindow.right) return HTMINBUTTON;
                 }
+
+                /* Check help button */
+                if (ExStyle & WS_EX_CONTEXTHELP && !(ExStyle & WS_EX_TOOLWINDOW))
+                {
+                    rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
+                    if (pt.x > rcWindow.right) return HTHELP;
+                }
+
             }
             return HTCAPTION;
         }

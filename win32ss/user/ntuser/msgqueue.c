@@ -95,7 +95,6 @@ UserSetCursor(
     BOOL ForceChange)
 {
     PCURICON_OBJECT OldCursor;
-    HDC hdcScreen;
     PTHREADINFO pti;
     PUSER_MESSAGE_QUEUE MessageQueue;
     PWND pWnd;
@@ -119,44 +118,44 @@ UserSetCursor(
     // Fixes the error message "Not the same cursor!".
     if (gpqCursor == NULL)
     {
-       gpqCursor = MessageQueue;
+        gpqCursor = MessageQueue;
+    }
+
+    if (!NewCursor && gpqCursor->CursorObject)
+    {
+        NewCursor = gpqCursor->CursorObject;
     }
 
     /* Update cursor if this message queue controls it */
     pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
-    if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
+    if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue && MessageQueue == gpqCursor)
     {
-       /* Get the screen DC */
-        if (!(hdcScreen = IntGetScreenDC()))
-        {
-            return NULL;
-        }
-
+        IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
         if (NewCursor)
         {
             /* Call GDI to set the new screen cursor */
             PCURICON_OBJECT CursorFrame = NewCursor;
-            if(NewCursor->CURSORF_flags & CURSORF_ACON)
+            if (NewCursor->CURSORF_flags & CURSORF_ACON)
             {
                 FIXME("Should animate the cursor, using only the first frame now.\n");
                 CursorFrame = ((PACON)NewCursor)->aspcur[0];
             }
-            GreSetPointerShape(hdcScreen,
-                               CursorFrame->hbmAlpha ? NULL : NewCursor->hbmMask,
-                               CursorFrame->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
+            GreSetPointerShape(IntGetScreenDC(),
+                               CursorFrame->hbmAlpha ? NULL : CursorFrame->hbmMask,
+                               CursorFrame->hbmAlpha ? CursorFrame->hbmAlpha : CursorFrame->hbmColor,
                                CursorFrame->xHotspot,
                                CursorFrame->yHotspot,
                                gpsi->ptCursor.x,
                                gpsi->ptCursor.y,
-                               CursorFrame->hbmAlpha ? SPS_ALPHA : 0);
+                               (NewCursor->CURSORF_flags & CURSORF_ACON) ? 
+                               SPS_ANIMATEUPDATE : (CursorFrame->hbmAlpha ? SPS_ALPHA : 0));
         }
         else /* Note: OldCursor != NewCursor so we have to hide cursor */
         {
             /* Remove the cursor */
-            GreMovePointer(hdcScreen, -1, -1);
+            GreMovePointer(IntGetScreenDC(), -1, -1);
             TRACE("Removing pointer!\n");
         }
-        IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
     }
 
     /* Return the old cursor */
@@ -680,7 +679,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                                        MessageQueue->CursorObject->yHotspot,
                                        gpsi->ptCursor.x,
                                        gpsi->ptCursor.y,
-                                       MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0);
+                                       (MessageQueue->CursorObject->CURSORF_flags & CURSORF_ACON) ? 
+                                       SPS_ANIMATEUPDATE : (MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0));
 
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);

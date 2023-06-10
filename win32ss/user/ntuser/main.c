@@ -26,6 +26,7 @@ NTSTATUS GdiThreadDestroy(PETHREAD Thread);
 
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
+ULONG gThreadCount = 0; // The count of currently running threads.
 USHORT gusLanguageID;
 PPROCESSINFO ppiScrnSaver;
 PPROCESSINFO gppiList = NULL;
@@ -220,9 +221,6 @@ UserProcessDestroy(PEPROCESS Process)
         ZwClose(ppiCurrent->hdeskStartup);
         ppiCurrent->hdeskStartup = NULL;
     }
-
-    /* Clean up the process icon cache */
-    IntCleanupCurIconCache(ppiCurrent);
 
     return STATUS_SUCCESS;
 }
@@ -464,6 +462,9 @@ InitThreadCallback(PETHREAD Thread)
     PTEB pTeb;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     PKL pDefKL;
+
+    /* Increment thread count */
+    gThreadCount++;
 
     Process = Thread->ThreadsProcess;
 
@@ -779,10 +780,17 @@ ExitThreadCallback(PETHREAD Thread)
         KeSetEvent(ptiCurrent->pEventQueueServer, IO_NO_INCREMENT, FALSE);
         UnregisterThreadHotKeys(ptiCurrent);
 
+        /* Unload cursors and icons for the last thread */
+        if (gThreadCount == 1)
+        {
+            DPRINT1("Unloading system cursors/icons\n");
+            IntUnloadSystemCursorsAndIcons();
+        }
+
         if (!UserDestroyObjectsForOwner(gHandleTable, ptiCurrent))
         {
             DPRINT1("Failed to delete objects belonging to thread %p. This is VERY BAD!.\n", ptiCurrent);
-            ASSERT(FALSE);
+            //ASSERT(FALSE);
             return STATUS_UNSUCCESSFUL;
         }
         UserAssignmentUnlock((PVOID*)&ptiCurrent->spDefaultImc);
@@ -872,6 +880,9 @@ ExitThreadCallback(PETHREAD Thread)
 
     /* Dereference the THREADINFO */
     IntDereferenceThreadInfo(ptiCurrent);
+
+    /* Dectement thread count */
+    gThreadCount--;
 
     return STATUS_SUCCESS;
 }

@@ -1138,6 +1138,7 @@ extern "C" {
 #define OCR_WAIT 32514
 #define OCR_CROSS 32515
 #define OCR_UP 32516
+#define OCR_NWPEN 32631
 #define OCR_SIZE 32640
 #define OCR_ICON 32641
 #define OCR_SIZENWSE 32642

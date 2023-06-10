@@ -82,6 +82,10 @@ IntInsertCursorIntoList(
 {
     PPROCESSINFO ppi = pcur->head.ppi;
     PCURICON_OBJECT *ppcurHead;
+
+    /* Don't cache *.ani */
+    if ((pcur->CURSORF_flags & CURSORF_ACON)) return;
+
     NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
     NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) == 0);
 
@@ -104,6 +108,7 @@ IntRemoveCursorFromList(
     PPROCESSINFO ppi = pcur->head.ppi;
     PCURICON_OBJECT *ppcurHead;
     PCURICON_OBJECT *ppcur;
+
     NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
     NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) != 0);
 
@@ -134,52 +139,98 @@ IntRemoveCursorFromList(
 }
 
 VOID
-IntLoadSystenIcons(HICON hcur, DWORD id)
+IntLoadSystemCursors(HICON hcur, DWORD id)
 {
     PCURICON_OBJECT pcur;
     int i;
     PPROCESSINFO ppi;
 
-    if (hcur)
+    pcur = UserGetCurIconObject(hcur);
+    if (!pcur)
     {
-        pcur = UserGetCurIconObject(hcur);
-        if (!pcur)
-        {
-            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
-            return;
-        }
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        return;
+    }
 
-        ppi = PsGetCurrentProcessWin32Process();
+    ppi = PsGetCurrentProcessWin32Process();
 
-        if (!(ppi->W32PF_flags & W32PF_CREATEDWINORDC))
-           return;
+    if (!(ppi->W32PF_flags & W32PF_CREATEDWINORDC))
+       return;
 
-        // Set Small Window Icon and do not link.
-        if ( id == OIC_WINLOGO+1 )
+    for (i = 0 ; i < 16; i++)
+    {
+        if (gasyscur[i].type == id)
         {
             pcur->CURSORF_flags |= CURSORF_GLOBAL;
+            UserAssignmentLock((PVOID*)&gasyscur[i].handle, pcur);
             UserReferenceObject(pcur);
-            pcur->head.ppi = NULL;
             return;
         }
+    }
+}
 
-        for (i = 0 ; i < 6; i++)
+VOID
+IntLoadSystemIcons(HICON hcur, DWORD id)
+{
+    PCURICON_OBJECT pcur;
+    int i;
+    PPROCESSINFO ppi;
+
+    pcur = UserGetCurIconObject(hcur);
+    if (!pcur)
+    {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        return;
+    }
+
+    ppi = PsGetCurrentProcessWin32Process();
+
+    if (!(ppi->W32PF_flags & W32PF_CREATEDWINORDC))
+       return;
+
+    // Set Small Window Icon and do not link.
+    if ( id == OIC_WINLOGO+1 )
+    {
+        pcur->CURSORF_flags |= CURSORF_GLOBAL;
+        UserReferenceObject(pcur);
+        gpsi->hIconSmWindows = UserHMGetHandle(pcur);
+        return;
+    }
+
+    for (i = 0 ; i < 6; i++)
+    {
+        if (gasysico[i].type == id)
         {
-            if (gasysico[i].type == id)
-            {
-                gasysico[i].handle = pcur;
-                pcur->CURSORF_flags |= CURSORF_GLOBAL;
-
-                //
-                //  The active switch between LR shared and Global public.
-                //  This is hacked around to support this while at the initial system start up.
-                //
-                pcur->head.ppi = NULL;
-
-                IntInsertCursorIntoList(pcur);
-                return;
-            }
+            pcur->CURSORF_flags |= CURSORF_GLOBAL;
+            UserAssignmentLock((PVOID*)&gasysico[i].handle, pcur);
+            UserReferenceObject(pcur);
+            return;
         }
+    }
+}
+
+VOID
+IntUnloadSystemCursorsAndIcons(VOID)
+{
+    PCURICON_OBJECT pcur;
+    int i;
+
+    /* Unload icons */
+    for (i = 0; i < 6; i++)
+    {
+        pcur = gasysico[i].handle;
+        if (!pcur) continue;
+        pcur->head.ppi = PsGetCurrentProcessWin32Process();
+        UserAssignmentUnlock((PVOID*)&gasysico[i].handle);
+    }
+
+    /* Unload cursors */
+    for (i = 0; i < 16; i++)
+    {
+        pcur = gasyscur[i].handle;
+        if (!pcur) continue;
+        pcur->head.ppi = PsGetCurrentProcessWin32Process();
+        UserAssignmentUnlock((PVOID*)&gasyscur[i].handle);
     }
 }
 
@@ -304,7 +355,7 @@ IntCreateCurIconHandle(BOOLEAN Animated)
     }
 
     NT_ASSERT(CurIcon->pcurNext == NULL);
-    UserDereferenceObject(CurIcon);
+    UserReferenceObject(CurIcon);
 
     return hCurIcon;
 }
@@ -385,20 +436,6 @@ FreeCurIconObject(
 
     /* Finally free the thing */
     FreeProcMarkObject(CurIcon);
-}
-
-VOID FASTCALL
-IntCleanupCurIconCache(PPROCESSINFO Win32Process)
-{
-    PCURICON_OBJECT CurIcon;
-
-    /* Run through the list of icon objects */
-    while (Win32Process->pCursorCache)
-    {
-        CurIcon = Win32Process->pCursorCache;
-        Win32Process->pCursorCache = CurIcon->pcurNext;
-        UserDereferenceObject(CurIcon);
-    }
 }
 
 /*
@@ -852,6 +889,47 @@ leave:
     return ret;
 }
 
+PCURICON_OBJECT
+UserFindExistingCursorIcon(
+    _In_ PCURICON_OBJECT CurIcon,
+    _In_ RTL_ATOM atomModName,
+    _In_ PUNICODE_STRING pustrRsrc,
+    _In_ FINDEXISTINGCURICONPARAM* param)
+{
+    for (; CurIcon; CurIcon = CurIcon->pcurNext)
+    {
+        /* Icon/cursor */
+        if (param->bIcon != is_icon(CurIcon))
+        {
+            continue;
+        }
+        /* See if module names match */
+        if (atomModName == CurIcon->atomModName)
+        {
+            /* They do. Now see if this is the same resource */
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(pustrRsrc->Buffer))
+            {
+                /* One is an INT resource and the other is not -> no match */
+                continue;
+            }
+
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
+            {
+                if (CurIcon->strName.Buffer == pustrRsrc->Buffer)
+                {
+                    /* INT resources match */
+                    return CurIcon;
+                }
+            }
+            else if (RtlEqualUnicodeString(pustrRsrc, &CurIcon->strName, TRUE))
+            {
+                /* Resource name strings match */
+                return CurIcon;
+            }
+        }
+    }
+    return NULL;
+}
 
 /*
  * @implemented
@@ -896,88 +974,18 @@ NtUserFindExistingCursorIcon(
     if (!NT_SUCCESS(Status))
     {
         /* The module is not in the atom table. No chance to find the cursor */
+        ERR("Not in ATOM table!\n");
         goto done;
     }
+    if (!atomModName)
+        goto done;
 
     UserEnterShared();
-    CurIcon = pProcInfo->pCursorCache;
-    while (CurIcon)
-    {
-        /* Icon/cursor */
-        if (paramSafe.bIcon != is_icon(CurIcon))
-        {
-            CurIcon = CurIcon->pcurNext;
-            continue;
-        }
-        /* See if module names match */
-        if (atomModName == CurIcon->atomModName)
-        {
-            /* They do. Now see if this is the same resource */
-            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
-            {
-                /* One is an INT resource and the other is not -> no match */
-                CurIcon = CurIcon->pcurNext;
-                continue;
-            }
-
-            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
-            {
-                if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
-                {
-                    /* INT resources match */
-                    break;
-                }
-            }
-            else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
-            {
-                /* Resource name strings match */
-                break;
-            }
-        }
-        CurIcon = CurIcon->pcurNext;
-    }
-
-    /* Now search Global Cursors or Icons. */
-    if (CurIcon == NULL)
-    {
-        CurIcon = gcurFirst;
-        while (CurIcon)
-        {
-            /* Icon/cursor */
-            if (paramSafe.bIcon != is_icon(CurIcon))
-            {
-                CurIcon = CurIcon->pcurNext;
-                continue;
-            }
-            /* See if module names match */
-            if (atomModName == CurIcon->atomModName)
-            {
-                /* They do. Now see if this is the same resource */
-                if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
-                {
-                    /* One is an INT resource and the other is not -> no match */
-                    CurIcon = CurIcon->pcurNext;
-                    continue;
-                }
-                if (IS_INTRESOURCE(CurIcon->strName.Buffer))
-                {
-                    if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
-                    {
-                        /* INT resources match */
-                        break;
-                    }
-                }
-                else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
-                {
-                    /* Resource name strings match */
-                    break;
-                }
-            }
-            CurIcon = CurIcon->pcurNext;
-        }
-    }
+    CurIcon = UserFindExistingCursorIcon(pProcInfo->pCursorCache, atomModName, &ustrRsrcSafe, &paramSafe);
+    if (!CurIcon)
+        CurIcon = UserFindExistingCursorIcon(gcurFirst, atomModName, &ustrRsrcSafe, &paramSafe);
     if (CurIcon)
-        Ret = CurIcon->head.h;
+        Ret = UserHMGetHandle(CurIcon);
     UserLeave();
 
 done:
@@ -2201,9 +2209,8 @@ NtUserSetSystemCursor(
     HCURSOR hcur,
     DWORD id)
 {
-    PCURICON_OBJECT pcur, pcurOrig = NULL;
+    PCURICON_OBJECT pcur, pcurFrame = NULL;
     int i;
-    PPROCESSINFO ppi;
     BOOL Ret = FALSE;
     UserEnterExclusive();
 
@@ -2212,41 +2219,43 @@ NtUserSetSystemCursor(
         goto Exit;
     }
 
-    if (hcur)
+    if (!hcur)
     {
-        pcur = UserGetCurIconObject(hcur);
-        if (!pcur)
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        goto Exit;
+    }
+
+    pcur = UserGetCurIconObject(hcur);
+    if (!pcur)
+    {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        goto Exit;
+    }
+
+    for (i = 0 ; i < 16; i++)
+    {
+        if (gasyscur[i].type == id)
         {
-            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
-            goto Exit;
-        }
-
-        ppi = PsGetCurrentProcessWin32Process();
-
-        for (i = 0 ; i < 16; i++)
-        {
-           if (gasyscur[i].type == id)
-           {
-              pcurOrig = gasyscur[i].handle;
-
-              if (pcurOrig) break;
-
-              if (ppi->W32PF_flags & W32PF_CREATEDWINORDC)
-              {
-                 gasyscur[i].handle = pcur;
-                 pcur->CURSORF_flags |= CURSORF_GLOBAL;
-                 pcur->head.ppi = NULL;
-                 IntInsertCursorIntoList(pcur);
-                 Ret = TRUE;
-              }
-              break;
-           }
-        }
-        if (pcurOrig)
-        {
-           FIXME("Need to copy cursor data or do something! pcurOrig %p new pcur %p\n",pcurOrig,pcur);
+            if (pcur->CURSORF_flags & CURSORF_ACON)
+            {
+                pcurFrame = ((PACON)pcur)->aspcur[0];
+                pcurFrame->CURSORF_flags |= CURSORF_GLOBAL;
+                UserAssignmentLock((PVOID)&gasyscur[i].handle, pcurFrame);
+                UserReferenceObject(pcurFrame);
+            }
+            else
+            {
+                pcur->CURSORF_flags |= CURSORF_GLOBAL;
+                pcur->CURSORF_flags &= ~CURSORF_LINKED;
+                UserAssignmentLock((PVOID)&gasyscur[i].handle, pcur);
+                IntInsertCursorIntoList(pcur);
+		    }
+            break;
         }
     }
+
+    Ret = TRUE;
+
 Exit:
     UserLeave();
     return Ret;

@@ -1479,7 +1479,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
-        TRACE("SendMessageTimeoutSingle: Invalid handle 0x%p!\n",hWnd);
+        ERR("SendMessageTimeoutSingle: Invalid handle 0x%p!\n",hWnd);
         RETURN( FALSE);
     }
 
