@@ -1786,10 +1786,10 @@ MMRESULT WINAPI midiStreamClose(HMIDISTRM hMidiStrm)
 
     midiStreamStop(hMidiStrm);
     MMSYSTEM_MidiStream_PostMessage(lpMidiStrm, WM_QUIT, 0, 0);
-    HeapFree(GetProcessHeap(), 0, lpMidiStrm);
     CloseHandle(lpMidiStrm->hEvent);
-
-    return midiOutClose((HMIDIOUT)hMidiStrm);
+    UINT close = midiOutClose((HMIDIOUT)hMidiStrm);
+    HeapFree(GetProcessHeap(), 0, hMidiStrm);
+    return close;
 }
 
 /**************************************************************************
