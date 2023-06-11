@@ -218,14 +218,13 @@ IopInitializeDevice(
 
     /* Leave, if the device already exists */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    if (DeviceInstance.Buffer != NULL)
+    if (DeviceObject != NULL)
     {
         DPRINT1("Device %wZ already exists!\n", &DeviceInstance);
+        ObDereferenceObject(DeviceObject);
         Status = STATUS_SUCCESS;
         goto done;
     }
-
-    ObDereferenceObject(DeviceObject);
 
     DPRINT("Device %wZ does not exist!\n", &DeviceInstance);
 
