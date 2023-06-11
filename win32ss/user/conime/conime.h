@@ -59,8 +59,7 @@ typedef struct tagCONSOLE_ENTRY
     DWORD dwSentence;
     WORD wInputCodePage;
     WORD wOutputCodePage;
-    WCHAR szLayoutText[128];
-    DWORD unknown1_5[64];
+    WCHAR szLayoutText[256];
     WCHAR szMode[10];
     BOOL bInComposition;
     PCONIME_COMPSTR pCompStr;
@@ -72,7 +71,7 @@ typedef struct tagCONSOLE_ENTRY
     LPVOID pLocal2;
     DWORD unknown3_5_0;
     DWORD unknown3_5_1;
-    BOOL IgnoreUpKeys;
+    DWORD dwImeProp;
     BOOL bConsoleEnabled;
     BOOL bWndEnabled;
     INT cKLs;

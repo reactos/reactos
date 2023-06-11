@@ -1176,7 +1176,7 @@ VOID IntSendConversionStatusCHS(HWND hWnd, PCONSOLE_ENTRY pEntry)
 VOID IntSendConversionStatus(HWND hWnd)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_ConsoleHandle);
-    if (pEntry && pEntry->unknown1_5[69])
+    if (pEntry && pEntry->bInComposition)
     {
         switch (LOWORD(pEntry->hKL))
         {
@@ -1210,10 +1210,11 @@ BOOL ConIme_OnSetFocus(HWND hWnd, HANDLE ConsoleHandle, HKL hKL)
     ActivateKeyboardLayout(hKL, 0);
 
     ImmAssociateContext(hWnd, pEntry->hOldIMC);
+
     if (!hKL)
     {
         IntGetLayoutText(pEntry);
-        pEntry->IgnoreUpKeys = ImmGetProperty(pEntry->hKL, IME_PROP_IGNORE_UPKEYS);
+        pEntry->dwImeProp = ImmGetProperty(pEntry->hKL, IGP_PROPERTY);
     }
 
     ImmSetActiveContextConsoleIME(hWnd, TRUE);
@@ -1382,7 +1383,7 @@ VOID ConIme_OnLangChange(HWND hWnd, HANDLE ConsoleHandle, HKL hNewKL)
     IntGetLayoutText(pEntry);
 
     ConIme_SendImeStatus(hWnd);
-    pEntry->IgnoreUpKeys = ImmGetProperty(pEntry->hKL, IGP_PROPERTY);
+    pEntry->dwImeProp = ImmGetProperty(pEntry->hKL, IGP_PROPERTY);
 
     pImeStatus = LocalAlloc(LPTR, sizeof(IME_STATUS));
     if (!pImeStatus)
