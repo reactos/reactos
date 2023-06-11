@@ -366,7 +366,7 @@ CreateGetSource(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
 {
     const char *AssignOp;
     const char *Before;
-    char After[8];
+    char After[16];
 
     MARK(Out);
     if (0 == Shift)

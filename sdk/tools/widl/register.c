@@ -308,7 +308,7 @@ void output_typelib_regscript( const typelib_t *typelib )
     const expr_t *lcid_expr = get_attrp( typelib->attrs, ATTR_LIBLCID );
     unsigned int version = get_attrv( typelib->attrs, ATTR_VERSION );
     unsigned int flags = 0;
-    char id_part[12] = "";
+    char id_part[13] = "";
 #ifndef __REACTOS__
     char *resname = typelib_name;
 #endif
