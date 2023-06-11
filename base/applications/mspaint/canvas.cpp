@@ -621,6 +621,15 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     ::GetCursorPos(&pt);
     ScreenToClient(&pt);
 
+    CRect rcClient;
+    GetClientRect(&rcClient);
+
+    if (!::PtInRect(&rcClient, pt))
+    {
+        bHandled = FALSE;
+        return 0;
+    }
+
     CANVAS_HITTEST hitSelection = SelectionHitTest(pt);
     if (hitSelection != HIT_NONE)
     {
@@ -632,6 +641,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     CRect rcImage;
     GetImageRect(rcImage);
     ImageToCanvas(rcImage);
+
     if (::PtInRect(&rcImage, pt))
     {
         switch (toolsModel.GetActiveTool())
