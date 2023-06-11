@@ -7,10 +7,9 @@
  */
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserMisc);
 
-#define NDEBUG
-#include <debug.h>
-#include <kdros.h>
+USHORT gusLanguageID;
 
 BOOL NTAPI GDI_CleanupForProcess(struct _EPROCESS *Process);
 
@@ -76,6 +75,29 @@ GdiThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
+
+BOOL
+InitializeGreCSRSS(VOID)
+{
+    /* Initialize DirectX graphics driver */
+    if (DxDdStartupDxGraphics(0, NULL, 0, NULL, NULL, gpepCSRSS) != STATUS_SUCCESS)
+    {
+        ERR("Unable to initialize DirectX graphics\n");
+        return FALSE;
+    }
+
+    /* Get global language ID */
+    gusLanguageID = UserGetLanguageID();
+
+    /* Initialize FreeType library */
+    if (!InitFontSupport())
+    {
+        ERR("Unable to initialize font support\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * @implemented
