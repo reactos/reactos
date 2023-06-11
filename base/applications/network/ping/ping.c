@@ -395,7 +395,7 @@ ResolveTarget(PCWSTR target)
             return FALSE;
         }
 
-        wcsncpy(CanonName, Target->ai_canonname, wcslen(Target->ai_canonname));
+        wcsncpy(CanonName, Target->ai_canonname, sizeof(CanonName) / sizeof(WCHAR));
     }
     else if (ResolveAddress)
     {
