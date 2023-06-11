@@ -31,8 +31,8 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
-        compiler: [gcc, clang]
-        arch: [i386, amd64]
+        compiler: [gcc]
+        arch: [i386]
         config: [Debug, Release]    
     steps:
       - name: Maximize build space
@@ -110,17 +110,8 @@ jobs:
         run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
       - name: Build
         run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
-      - name: Generate ISOs
-        run: echo 'cmake --build ${{github.workspace}}/build --target bootcd --target livecd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
       - name: Print ccache statistics
         run: ccache -s
-      - name: Upload ISOs
-        uses: actions/upload-artifact@v2
-        with:
-          name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
-          path: |
-            build/bootcd.iso
-            build/livecd.iso
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
