@@ -244,6 +244,8 @@ void PerfDataRefresh(void)
 
         if (status == STATUS_INFO_LENGTH_MISMATCH) {
             HeapFree(GetProcessHeap(), 0, pBuffer);
+            pBuffer = NULL;
+            DPRINT1("Shouldn't we return in this situation?\n");
         }
 
     } while (status == STATUS_INFO_LENGTH_MISMATCH);

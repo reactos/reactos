@@ -261,6 +261,7 @@ int SetEnv(const wchar_t *option)
 
       /* Remove the option from wide character environment. */
       free(*wenvptr);
+      *wenvptr = NULL;
       for (count = index; *wenvptr != NULL; wenvptr++, count++)
          *wenvptr = *(wenvptr + 1);
       wnewenv = realloc(_wenviron, count * sizeof(wchar_t*));
