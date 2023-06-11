@@ -206,7 +206,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    __argc = 0;
 
    len = strlen(_acmdln);
-   buffer = malloc(sizeof(char) * len);
+   buffer = malloc(sizeof(char) * len + 1);
 
    // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
    while (TRUE)

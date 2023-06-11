@@ -320,7 +320,7 @@ CopySdbToAppPatch(
     DWORD error = ERROR_SUCCESS;
     PWCHAR pTmpSysdir = NULL;
     SIZE_T destLen = wcslen(destSdbPath);
-    PWCHAR sysdirPath = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, destLen * sizeof(WCHAR));
+    PWCHAR sysdirPath = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, destLen * sizeof(WCHAR) * 2);
 
     if (sysdirPath == NULL)
     {

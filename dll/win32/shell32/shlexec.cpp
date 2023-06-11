@@ -1863,7 +1863,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         if(len-1 >= dwApplicationNameLen)
             dwApplicationNameLen = len;
 
-        wszApplicationName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwApplicationNameLen * sizeof(WCHAR));
+        wszApplicationName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwApplicationNameLen * sizeof(WCHAR) + 2);
         memcpy(wszApplicationName, sei_tmp.lpFile + 1, len * sizeof(WCHAR));
 
         if(len > 2)

@@ -4,7 +4,7 @@
  * FILE:        base/system/services/rpcserver.c
  * PURPOSE:     RPC server interface for the advapi32 calls
  * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
- *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006-2007 Hervï¿½ Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  */
 
@@ -447,7 +447,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         /* There is no +sizeof(wchar_t) because the name is less by 1 wchar */
         *RelativeName = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  ServiceNameLen * sizeof(WCHAR));
+                                  ServiceNameLen * sizeof(WCHAR) + 2);
 
         if (*RelativeName == NULL)
         {
