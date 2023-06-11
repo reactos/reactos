@@ -1348,8 +1348,6 @@ HRESULT CDefView::FillFileMenu()
             DeleteMenu(hFileMenu, i, MF_BYPOSITION);
     }
 
-    m_cidl = m_ListView.GetSelectedCount();
-
     /* In case we still have this left over, clean it up! */
     if (m_pFileMenu)
     {
