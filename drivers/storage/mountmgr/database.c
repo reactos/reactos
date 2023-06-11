@@ -970,6 +970,7 @@ ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
                     if (!NT_SUCCESS(Status))
                     {
                        FreePool(DatabaseEntry);
+                       DatabaseEntry = NULL;
                        goto FreeUniqueId;
                     }
 
@@ -1128,7 +1129,8 @@ FreeUniqueId:
 ReleaseDeviceLock:
     KeReleaseSemaphore(&DeviceExtension->DeviceLock, IO_NO_INCREMENT, 1, FALSE);
 FreeDBEntry:
-    FreePool(DatabaseEntry);
+    if (DatabaseEntry)
+        FreePool(DatabaseEntry);
 FreeVolume:
     FreePool(VolumeName.Buffer);
 CloseReparse:

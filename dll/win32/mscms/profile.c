@@ -932,7 +932,8 @@ exit:
         HeapFree( GetProcessHeap(), 0, profiles[i] );
     HeapFree( GetProcessHeap(), 0, profiles );
     HeapFree( GetProcessHeap(), 0, deviceW );
-    HeapFree( GetProcessHeap(), 0, fileW );
+    if (fileW)
+        HeapFree( GetProcessHeap(), 0, fileW );
     FindClose( find );
 
     return ret;
