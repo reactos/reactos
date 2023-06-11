@@ -490,7 +490,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 {
                     /* Build it and take over the existing symbolic link */
                     _snwprintf(LocalBuffer,
-                               30,
+                               16,
                                L"\\DosDevices\\%wc:",
                                Input->DriveLetter);
                     RtlInitUnicodeString(&DriveString, LocalBuffer);
