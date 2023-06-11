@@ -2263,6 +2263,7 @@ Return Value:
         if ( _SEH2_AbnormalTermination() ) {
 
             IoFreeMdl( Mdl );
+            Mdl = NULL;
             Irp->MdlAddress = SavedMdl;
         }
     } _SEH2_END;
@@ -2339,8 +2340,10 @@ Return Value:
 
     } _SEH2_FINALLY {
 
-        MmUnlockPages( Mdl );
-        IoFreeMdl( Mdl );
+        if (Mdl) {
+            MmUnlockPages( Mdl );
+            IoFreeMdl( Mdl );
+        }
         Irp->MdlAddress = SavedMdl;
     } _SEH2_END;
 

@@ -2479,6 +2479,7 @@ MsqDestroyMessageQueue(_In_ PTHREADINFO pti)
    {
       (void)InterlockedExchangePointer((PVOID*)&desk->ActiveMessageQueue, 0);
       IntDereferenceMessageQueue(MessageQueue);
+      DPRINT1("Are we dereferencing one too many times?\n");
    }
 
    /* clean it up */
