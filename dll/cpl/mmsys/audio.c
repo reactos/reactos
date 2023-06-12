@@ -162,7 +162,7 @@ InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 }
 
 VOID
-UpdateRegistryString(HWND hwnd, INT ctrl, LPWSTR key, LPWSTR value)
+UpdateRegistryString(HWND hwnd, INT ctrl, LPCWSTR key, LPCWSTR value)
 {
     HWND hwndCombo = GetDlgItem(hwnd, ctrl);
     INT CurSel = SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);

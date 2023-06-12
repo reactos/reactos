@@ -82,7 +82,7 @@ LPWSTR MakeFilter(LPWSTR psz)
     return psz;
 }
 
-PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, PWSTR szName)
+PLABEL_MAP FindLabel(PGLOBAL_DATA pGlobalData, PAPP_MAP pAppMap, PCWSTR szName)
 {
     PLABEL_MAP pMap = pGlobalData->pLabelMap;
 
@@ -172,7 +172,7 @@ FreeLabelMap(PGLOBAL_DATA pGlobalData)
     }
 }
 
-PAPP_MAP FindApp(PGLOBAL_DATA pGlobalData, PWSTR szName)
+PAPP_MAP FindApp(PGLOBAL_DATA pGlobalData, PCWSTR szName)
 {
     PAPP_MAP pMap = pGlobalData->pAppMap;
 
@@ -201,7 +201,7 @@ FreeAppMap(PGLOBAL_DATA pGlobalData)
     }
 }
 
-PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, PWSTR AppName, PWSTR LabelName)
+PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT pSoundScheme, PCWSTR AppName, PCWSTR LabelName)
 {
     PLABEL_CONTEXT pLabelContext;
 
@@ -236,7 +236,7 @@ PLABEL_CONTEXT FindLabelContext(PGLOBAL_DATA pGlobalData, PSOUND_SCHEME_CONTEXT 
 
 
 BOOL
-LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, PWSTR szSubKey)
+LoadEventLabel(PGLOBAL_DATA pGlobalData, HKEY hKey, PCWSTR szSubKey)
 {
     HKEY hSubKey;
     DWORD cbValue;
@@ -350,7 +350,7 @@ LoadEventLabels(PGLOBAL_DATA pGlobalData)
 
 
 BOOL
-AddSoundProfile(HWND hwndDlg, HKEY hKey, PWSTR szSubKey, BOOL SetDefault)
+AddSoundProfile(HWND hwndDlg, HKEY hKey, PCWSTR szSubKey, BOOL SetDefault)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -467,7 +467,7 @@ EnumerateSoundProfiles(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey)
 }
 
 
-PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, PWSTR szName)
+PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, PCWSTR szName)
 {
     LRESULT lCount, lIndex, lResult;
     PSOUND_SCHEME_CONTEXT pScheme;
@@ -533,7 +533,7 @@ FreeSoundProfiles(HWND hwndDlg)
 }
 
 BOOL
-ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWSTR szProfile, PWSTR szLabelName, PWSTR szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
+ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PCWSTR szProfile, PCWSTR szLabelName, PCWSTR szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
 {
     HKEY hSubKey;
     WCHAR szValue[MAX_PATH];
@@ -594,7 +594,7 @@ ImportSoundLabel(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWSTR szProf
 
 
 DWORD
-ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWSTR szLabelName, PWSTR szAppName, PAPP_MAP pAppMap)
+ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PCWSTR szLabelName, PCWSTR szAppName, PAPP_MAP pAppMap)
 {
     HKEY hSubKey;
     DWORD dwNumProfiles;
@@ -653,7 +653,7 @@ ImportSoundEntry(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWSTR szLabe
 
 
 DWORD
-ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PWSTR szAppName)
+ImportAppProfile(PGLOBAL_DATA pGlobalData, HWND hwndDlg, HKEY hKey, PCWSTR szAppName)
 {
     HKEY hSubKey;
     WCHAR szDefault[MAX_PATH];
