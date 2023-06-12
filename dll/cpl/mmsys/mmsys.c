@@ -365,7 +365,7 @@ IsSoftwareBusPnpEnumeratorInstalled()
 }
 
 DWORD
-InstallSoftwareBusPnpEnumerator(LPWSTR InfPath, LPCWSTR HardwareIdList)
+InstallSoftwareBusPnpEnumerator(LPCWSTR InfPath, LPCWSTR HardwareIdList)
 {
     HDEVINFO DeviceInfoSet = INVALID_HANDLE_VALUE;
     SP_DEVINFO_DATA DeviceInfoData;
