@@ -10,6 +10,7 @@
 
 #include "usetup.h"
 
+#define Z_SOLO
 #include <zlib.h>
 
 #define NDEBUG

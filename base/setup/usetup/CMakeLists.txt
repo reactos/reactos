@@ -8,14 +8,11 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    native/utils/keytrans.c
-    native/utils/console.c
-    native/fslist.c
-    native/console.c
     bootsup.c
     cabinet.c
     chkdsk.c
     cmdcons.c
+    console.c
     consup.c
     devinst.c
     drivesup.c
@@ -26,6 +23,7 @@ list(APPEND SOURCE
     genlist.c
     inffile.c
     inicache.c
+    keytrans.c
     mui.c
     partlist.c
     progress.c
@@ -34,13 +32,13 @@ list(APPEND SOURCE
     usetup.c
     usetup.h)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    #FIXME: Investigate Clang "illegal character encoding in string literal" warning
-    set_property(SOURCE mui.c APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-invalid-source-encoding")
+add_executable(usetup ${SOURCE} usetup.rc)
+
+if(USE_CLANG_CL)
+    add_target_compile_flags(usetup "-Wno-invalid-source-encoding")
 endif()
 
-add_executable(usetup ${SOURCE} usetup.rc)
-target_link_libraries(usetup zlib inflib ext2lib vfatlib)
+target_link_libraries(usetup zlib_solo inflib ext2lib vfatlib)
 set_module_type(usetup nativecui)
 add_importlibs(usetup ntdll)
 add_pch(usetup usetup.h SOURCE)
