@@ -2344,7 +2344,7 @@ OnCopyData(PGUI_CONSOLE_DATA GuiData, HWND hwndSender, PCOPYDATASTRUCT pCopyData
             }
             break;
 
-        case CONIME_COPYDATA_SEND_CLOSE_CAND:
+        case CONIME_COPYDATA_SEND_CAND_INFO:
             if (pCopyData->cbData && pCopyData->lpData)
             {
                 // FIXME

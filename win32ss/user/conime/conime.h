@@ -65,12 +65,15 @@ typedef struct tagCONSOLE_ENTRY
     PCONIME_COMPSTR pCompStr;
     WORD unknown2[8];
     BOOL bHasCands;
-    LPVOID apCandList[32];
-    DWORD unknown3[2];
-    DWORD adwData[34];
+    LPCANDIDATELIST apCandList[32];
+    PCONIME_SYSTEMLINE pSystemLine;
+    DWORD cbSystemLine;
+    DWORD acbCandList[32];
+    DWORD dwUnknown1;
+    DWORD dwUnknown2;
     LPVOID pLocal2;
     DWORD unknown3_5_0;
-    DWORD unknown3_5_1;
+    DWORD bSettingCandInfo;
     DWORD dwImeProp;
     BOOL bConsoleEnabled;
     BOOL bWndEnabled;
@@ -84,5 +87,5 @@ C_ASSERT(sizeof(CONSOLE_ENTRY) == 0x388);
 
 typedef struct tagUSER_DATA
 {
-    PCONSOLE_ENTRY pEntries[10];
+    PCONSOLE_ENTRY apEntries[10];
 } USER_DATA, *PUSER_DATA;

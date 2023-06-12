@@ -116,7 +116,7 @@ PCONSOLE_ENTRY IntFindConsoleEntry(HANDLE ConsoleHandle)
 
     for (iEntry = 1; iEntry < g_cEntries; ++iEntry)
     {
-        pEntry = g_pUserData->pEntries[iEntry];
+        pEntry = g_pUserData->apEntries[iEntry];
         if (pEntry && pEntry->ConsoleHandle == ConsoleHandle && !pEntry->bWndEnabled)
         {
             RtlLeaveCriticalSection(&g_csLock);
@@ -328,7 +328,7 @@ INT ConIme_OnCreate(HWND hWnd)
 VOID ConIme_OnEnd(HWND hWnd, UINT uMsg)
 {
     HIMC hIMC;
-    PVOID *ppData;
+    LPCANDIDATELIST *ppCandList;
     INT i;
     DWORD dwIndex;
     PCONSOLE_ENTRY pEntry;
@@ -340,7 +340,7 @@ VOID ConIme_OnEnd(HWND hWnd, UINT uMsg)
     /* Free the entries */
     for (dwIndex = 1; dwIndex < g_cEntries; ++dwIndex)
     {
-        pEntry = g_pUserData->pEntries[dwIndex];
+        pEntry = g_pUserData->apEntries[dwIndex];
         if (!pEntry)
             continue;
 
@@ -354,15 +354,17 @@ VOID ConIme_OnEnd(HWND hWnd, UINT uMsg)
 
         pEntry->pCompStr = LocalFree(pEntry->pCompStr);
 
-        ppData = pEntry->apCandList;
+        ppCandList = pEntry->apCandList;
         for (i = 0; i < _countof(pEntry->apCandList); ++i)
         {
-            if (ppData[i])
+            if (ppCandList[i])
             {
-                ppData[i] = LocalFree(ppData[i]);
-                pEntry->adwData[i] = 0;
+                ppCandList[i] = LocalFree(ppCandList[i]);
+                pEntry->acbCandList[i] = 0;
             }
         }
+
+        pEntry->pSystemLine = LocalFree(pEntry->pSystemLine);
 
         if (pEntry->pLocal2)
         {
@@ -404,7 +406,7 @@ LRESULT ConIme_OnEnable(HWND hWnd, WPARAM wParam, LPARAM lParam)
         RtlEnterCriticalSection(&g_csLock);
         for (i = 1; i < g_cEntries; ++i)
         {
-            pEntry = g_pUserData->pEntries[i];
+            pEntry = g_pUserData->apEntries[i];
             if (pEntry && pEntry->ConsoleHandle)
             {
                 if (!pEntry->bConsoleEnabled && !IsWindowEnabled(pEntry->hwndConsole))
@@ -523,7 +525,7 @@ VOID IntCloseCandidateCHS(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
 {
     PIME_STATUS pImeStatus;
     UINT iCand;
-    LPVOID *ppCandList;
+    LPCANDIDATELIST *ppCandList;
     COPYDATASTRUCT CopyData;
 
     pImeStatus = LocalAlloc(LPTR, sizeof(IME_STATUS));
@@ -537,7 +539,7 @@ VOID IntCloseCandidateCHS(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
         if ((dwCandidates & (1 << iCand)) && ppCandList[iCand])
         {
             ppCandList[iCand] = LocalFree(ppCandList[iCand]);
-            pEntry->adwData[iCand] = 0;
+            pEntry->acbCandList[iCand] = 0;
         }
     }
 
@@ -553,7 +555,7 @@ VOID IntCloseCandidateCHS(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
 VOID IntCloseCandidateJpnOrKor(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     UINT iCand;
-    LPVOID *ppCandList;
+    LPCANDIDATELIST *ppCandList;
     COPYDATASTRUCT CopyData;
 
     /* Clear candidate info */
@@ -563,11 +565,11 @@ VOID IntCloseCandidateJpnOrKor(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWOR
         if ((dwCandidates & (1 << iCand)) && ppCandList[iCand])
         {
             ppCandList[iCand] = LocalFree(ppCandList[iCand]);
-            pEntry->adwData[iCand] = 0;
+            pEntry->acbCandList[iCand] = 0;
         }
     }
 
-    CopyData.dwData = CONIME_COPYDATA_SEND_CLOSE_CAND;
+    CopyData.dwData = CONIME_COPYDATA_SEND_CAND_INFO;
     CopyData.cbData = 0;
     CopyData.lpData = NULL;
     IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
@@ -577,7 +579,7 @@ VOID IntCloseCandidateCHT(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
 {
     PIME_STATUS pImeStatus;
     UINT iCand;
-    LPVOID *ppCandList;
+    LPCANDIDATELIST *ppCandList;
     COPYDATASTRUCT CopyData;
 
     pImeStatus = LocalAlloc(LPTR, sizeof(IME_STATUS));
@@ -591,7 +593,7 @@ VOID IntCloseCandidateCHT(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
         if ((dwCandidates & (1 << iCand)) && ppCandList[iCand])
         {
             ppCandList[iCand] = LocalFree(ppCandList[iCand]);
-            pEntry->adwData[iCand] = 0;
+            pEntry->acbCandList[iCand] = 0;
         }
     }
 
@@ -642,30 +644,252 @@ BOOL ConIme_OnNotifyCloseCandidate(HWND hWnd, DWORD dwCandidates)
     return TRUE;
 }
 
+LPCANDIDATELIST IntGetCandListFromEntry(PCONSOLE_ENTRY pEntry, HIMC hIMC, DWORD dwIndex)
+{
+    LPCANDIDATELIST pCandList;
+    DWORD cbCandList = ImmGetCandidateListW(hIMC, dwIndex, NULL, 0);
+    if (!cbCandList)
+        return FALSE;
+
+    if (pEntry->apCandList[dwIndex] && pEntry->acbCandList[dwIndex] != cbCandList)
+    {
+        pEntry->apCandList[dwIndex] = LocalFree(pEntry->apCandList[dwIndex]);
+        pEntry->acbCandList[dwIndex] = 0;
+    }
+
+    if (!pEntry->apCandList[dwIndex])
+    {
+        pEntry->apCandList[dwIndex] = LocalAlloc(LPTR, cbCandList);
+        if (pEntry->apCandList[dwIndex] == NULL)
+            return NULL;
+
+        pEntry->acbCandList[dwIndex] = cbCandList;
+    }
+
+    pCandList = pEntry->apCandList[dwIndex];
+    ImmGetCandidateList(hIMC, dwIndex, pCandList, cbCandList);
+
+    if (pCandList->dwCount > 1 &&
+        (cbCandList <= pCandList->dwSelection ||
+         cbCandList <= pCandList->dwPageStart ||
+         cbCandList <= pCandList->dwOffset[pCandList->dwSelection] ||
+         cbCandList <= pCandList->dwOffset[pCandList->dwPageStart]))
+    {
+        return NULL;
+    }
+
+    return pCandList;
+}
+
+PCONIME_SYSTEMLINE IntAllocSystemLine(PCONSOLE_ENTRY pEntry, LPDWORD pcchSysLine)
+{
+    PCONIME_SYSTEMLINE pSystemLine;
+    DWORD cbSystemLine, cchSysLine;
+
+    *pcchSysLine = 0;
+
+    cchSysLine = pEntry->dwCoord.X;
+    if (cchSysLine > 128)
+        cchSysLine = 128;
+    if (cchSysLine < 12)
+        cchSysLine = 12;
+
+    cbSystemLine = sizeof(DWORD) + (sizeof(WCHAR) + sizeof(BYTE)) * cchSysLine;
+    if (pEntry->cbSystemLine < cbSystemLine)
+    {
+        if (pEntry->pSystemLine)
+        {
+            pEntry->pSystemLine = LocalFree(pEntry->pSystemLine);
+            pEntry->cbSystemLine = 0;
+        }
+
+        pEntry->pSystemLine = LocalAlloc(LPTR, cbSystemLine);
+        if (pEntry->pSystemLine == NULL)
+            return FALSE;
+
+        pEntry->cbSystemLine = cbSystemLine;
+    }
+
+    pSystemLine = pEntry->pSystemLine;
+    pSystemLine->dwAttrOffset = sizeof(DWORD) + sizeof(WCHAR) * cchSysLine;
+
+    *pcchSysLine = cchSysLine;
+
+    return pSystemLine;
+}
+
+DWORD
+IntGetSystemLineCHS(
+    LPCANDIDATELIST pCandList,
+    LPWSTR pszText,
+    LPBYTE pbAttrs,
+    DWORD cchSysLine,
+    PCONSOLE_ENTRY pEntry,
+    BOOL bOpen)
+{
+    return 0; /* FIXME */
+}
+
+DWORD
+IntGetSystemLineJpnOrKor(
+    LPCANDIDATELIST pCandList,
+    LPWSTR pszText,
+    LPBYTE pbAttrs,
+    DWORD cchSysLine,
+    PCONSOLE_ENTRY pEntry,
+    BOOL bOpen)
+{
+    return 0; /* FIXME */
+}
+
+DWORD
+IntGetSystemLineCHT(
+    LPCANDIDATELIST pCandList,
+    LPWSTR pszText,
+    LPBYTE pbAttrs,
+    DWORD cchSysLine,
+    PCONSOLE_ENTRY pEntry,
+    BOOL bOpen)
+{
+    return 0; /* FIXME */
+}
+
 VOID IntSendCandListCHS(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, LPARAM lParam, BOOL bOpen)
 {
-    FIXME("\n");
+    DWORD dwIndex, cchSysLine, dwPageStart, dwPageSize;
+    LPCANDIDATELIST pCandList;
+    PCONIME_SYSTEMLINE pSystemLine;
+
+    for (dwIndex = 0; dwIndex < 32; ++dwIndex)
+    {
+        if (!(lParam & (1 << dwIndex)))
+            continue;
+
+        pCandList = IntGetCandListFromEntry(pEntry, hIMC, dwIndex);
+        if (!pCandList)
+            break;
+
+        pSystemLine = IntAllocSystemLine(pEntry, &cchSysLine);
+        if (!pSystemLine)
+            break;
+
+        IntGetSystemLineCHS(pCandList,
+                            pSystemLine->szText,
+                            (LPBYTE)pSystemLine + pSystemLine->dwAttrOffset,
+                            cchSysLine,
+                            pEntry,
+                            bOpen);
+
+        dwPageStart = 0; /* FIXME */
+        dwPageSize = 1; /* FIXME */
+
+        pEntry->bSettingCandInfo = TRUE;
+
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, dwPageStart);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex, dwPageSize);
+
+        pEntry->bSettingCandInfo = FALSE;
+
+        ConIme_SendImeStatus(hWnd);
+        break;
+    }
 }
 
 VOID IntSendCandListJpnOrKor(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, LPARAM lParam, BOOL bOpen)
 {
-    FIXME("\n");
+    DWORD dwIndex, cchSysLine, dwPageStart, dwPageSize;
+    LPCANDIDATELIST pCandList;
+    PCONIME_SYSTEMLINE pSystemLine;
+    COPYDATASTRUCT CopyData;
+
+    for (dwIndex = 0; dwIndex < 32; ++dwIndex)
+    {
+        if (!(lParam & (1 << dwIndex)))
+            continue;
+
+        pCandList = IntGetCandListFromEntry(pEntry, hIMC, dwIndex);
+        if (!pCandList)
+            break;
+
+        pSystemLine = IntAllocSystemLine(pEntry, &cchSysLine);
+        if (!pSystemLine)
+            break;
+
+        IntGetSystemLineJpnOrKor(pCandList,
+                                 pSystemLine->szText,
+                                 (LPBYTE)pSystemLine + pSystemLine->dwAttrOffset,
+                                 cchSysLine,
+                                 pEntry,
+                                 bOpen);
+
+        dwPageStart = 0; /* FIXME */
+        dwPageSize = 1; /* FIXME */
+
+        pEntry->bSettingCandInfo = TRUE;
+
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, dwPageStart);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex, dwPageSize);
+
+        pEntry->bSettingCandInfo = FALSE;
+
+        CopyData.dwData = CONIME_COPYDATA_SEND_CAND_INFO;
+        CopyData.cbData = sizeof(DWORD) + cchSysLine * (sizeof(WCHAR) + sizeof(BYTE));
+        CopyData.lpData = pSystemLine;
+        IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+        break;
+    }
 }
 
 VOID IntSendCandListCHT(HWND hWnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, LPARAM lParam, BOOL bOpen)
 {
-    FIXME("\n");
+    DWORD dwIndex, cchSysLine, dwPageStart, dwPageSize;
+    LPCANDIDATELIST pCandList;
+    PCONIME_SYSTEMLINE pSystemLine;
+
+    for (dwIndex = 0; dwIndex < 32; ++dwIndex)
+    {
+        if (!(lParam & (1 << dwIndex)))
+            continue;
+
+        pCandList = IntGetCandListFromEntry(pEntry, hIMC, dwIndex);
+        if (!pCandList)
+            break;
+
+        pSystemLine = IntAllocSystemLine(pEntry, &cchSysLine);
+        if (!pSystemLine)
+            break;
+
+        IntGetSystemLineCHT(pCandList,
+                            pSystemLine->szText,
+                            (LPBYTE)pSystemLine + pSystemLine->dwAttrOffset,
+                            cchSysLine,
+                            pEntry,
+                            bOpen);
+
+        dwPageStart = 0; /* FIXME */
+        dwPageSize = 1; /* FIXME */
+
+        pEntry->bSettingCandInfo = TRUE;
+
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, dwPageStart);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex, dwPageSize);
+
+        pEntry->bSettingCandInfo = FALSE;
+
+        ConIme_SendImeStatus(hWnd);
+        break;
+    }
 }
 
-/* IMN_OPENCANDIDATE */
-BOOL ConIme_OnNotifyOpenCandidate(HWND hWnd, LPARAM lParam, BOOL bOpen)
+/* IMN_OPENCANDIDATE / IMN_CHANGECANDIDATE */
+BOOL ConIme_OnNotifyCandidate(HWND hWnd, LPARAM lParam, BOOL bOpen)
 {
     PCONSOLE_ENTRY pEntry;
     HIMC hIMC;
     LANGID wLang;
 
     pEntry = IntFindConsoleEntry(g_ConsoleHandle);
-    if (pEntry->unknown3_5_1)
+    if (pEntry->bSettingCandInfo)
         return TRUE;
 
     hIMC = ImmGetContext(hWnd);
@@ -694,12 +918,6 @@ BOOL ConIme_OnNotifyOpenCandidate(HWND hWnd, LPARAM lParam, BOOL bOpen)
     ImmReleaseContext(hWnd, hIMC);
 
     return TRUE;
-}
-
-/* IMN_CHANGECANDIDATE */
-BOOL ConIme_OnNotifyChangeCandidate(HWND hWnd, LPARAM lParam)
-{
-    return ConIme_OnNotifyOpenCandidate(hWnd, lParam, FALSE);
 }
 
 BOOL IntIsImeOpen(HIMC hIMC, PCONSOLE_ENTRY pEntry)
@@ -821,13 +1039,13 @@ BOOL ConIme_OnImeNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
             ConIme_SendImeStatus(hWnd);
             break;
         case IMN_CHANGECANDIDATE:
-            ConIme_OnNotifyChangeCandidate(hWnd, lParam);
+            ConIme_OnNotifyCandidate(hWnd, lParam, FALSE);
             break;
         case IMN_CLOSECANDIDATE:
             ConIme_OnNotifyCloseCandidate(hWnd, (DWORD)lParam);
             break;
         case IMN_OPENCANDIDATE:
-            ConIme_OnNotifyOpenCandidate(hWnd, lParam, TRUE);
+            ConIme_OnNotifyCandidate(hWnd, lParam, TRUE);
             break;
         case IMN_SETCONVERSIONMODE:
             ConIme_SendImeStatus(hWnd);
@@ -1042,13 +1260,13 @@ BOOL ConIme_Init(HWND hWnd, HANDLE ConsoleHandle, HWND hwndConsole)
                 return FALSE;
         }
 
-        pEntry = g_pUserData->pEntries[i];
+        pEntry = g_pUserData->apEntries[i];
         if (!pEntry)
         {
             pEntry = (PCONSOLE_ENTRY)LocalAlloc(LPTR, sizeof(CONSOLE_ENTRY));
             if (!pEntry)
                 return FALSE;
-            g_pUserData->pEntries[i] = pEntry;
+            g_pUserData->apEntries[i] = pEntry;
         }
 
         if (!pEntry->ConsoleHandle)
