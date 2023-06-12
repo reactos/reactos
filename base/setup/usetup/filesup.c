@@ -238,7 +238,6 @@ SetupCopyFile(
     SIZE_T SourceSectionSize = 0;
     LARGE_INTEGER ByteOffset;
 
-#ifdef __REACTOS__
     RtlInitUnicodeString(&FileName,
                          SourceFileName);
 
@@ -259,20 +258,6 @@ SetupCopyFile(
         DPRINT1("NtOpenFile failed: %x, %wZ\n", Status, &FileName);
         goto done;
     }
-#else
-    FileHandleSource = CreateFileW(SourceFileName,
-                                   GENERIC_READ,
-                                   FILE_SHARE_READ,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   0,
-                                   NULL);
-    if (FileHandleSource == INVALID_HANDLE_VALUE)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto done;
-    }
-#endif
 
     Status = NtQueryInformationFile(FileHandleSource,
                                     &IoStatusBlock,
@@ -470,7 +455,7 @@ done:
     return Status;
 }
 
-#ifdef __REACTOS__
+
 NTSTATUS
 SetupExtractFile(
     PWCHAR CabinetFileName,
@@ -548,7 +533,7 @@ SetupExtractFile(
 
     return STATUS_SUCCESS;
 }
-#endif
+
 
 BOOLEAN
 DoesFileExist(

@@ -33,8 +33,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef __REACTOS__
-
 BOOL
 WINAPI
 InfpFindFirstLineW(
@@ -81,7 +79,6 @@ InfpOpenInfFileW(
 
     return hInf;
 }
-#endif /* __REACTOS__ */
 
 
 BOOLEAN
@@ -90,54 +87,7 @@ INF_GetData(
     OUT PWCHAR *Key,
     OUT PWCHAR *Data)
 {
-#ifdef __REACTOS__
     return InfGetData(Context, Key, Data);
-#else
-    static PWCHAR pLastCallData[4] = { NULL, NULL, NULL, NULL };
-    static DWORD currentIndex = 0;
-    DWORD dwSize, i;
-    BOOL ret;
-
-    currentIndex ^= 2;
-
-    if (Key)
-        *Key = NULL;
-
-    if (Data)
-        *Data = NULL;
-
-    if (SetupGetFieldCount(Context) != 1)
-        return FALSE;
-
-    for (i = 0; i <= 1; i++)
-    {
-        ret = SetupGetStringFieldW(Context,
-                                   i,
-                                   NULL,
-                                   0,
-                                   &dwSize);
-        if (!ret)
-            return FALSE;
-
-        HeapFree(GetProcessHeap(), 0, pLastCallData[i + currentIndex]);
-        pLastCallData[i + currentIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-        ret = SetupGetStringFieldW(Context,
-                                   i,
-                                   pLastCallData[i + currentIndex],
-                                   dwSize,
-                                   NULL);
-        if (!ret)
-            return FALSE;
-    }
-
-    if (Key)
-        *Key = pLastCallData[0 + currentIndex];
-
-    if (Data)
-        *Data = pLastCallData[1 + currentIndex];
-
-    return TRUE;
-#endif /* !__REACTOS__ */
 }
 
 
@@ -147,38 +97,7 @@ INF_GetDataField(
     IN ULONG FieldIndex,
     OUT PWCHAR *Data)
 {
-#ifdef __REACTOS__
     return InfGetDataField(Context, FieldIndex, Data);
-#else
-    static PWCHAR pLastCallsData[] = { NULL, NULL, NULL };
-    static DWORD NextIndex = 0;
-    DWORD dwSize;
-    BOOL ret;
-
-    *Data = NULL;
-
-    ret = SetupGetStringFieldW(Context,
-                               FieldIndex,
-                               NULL,
-                               0,
-                               &dwSize);
-    if (!ret)
-        return FALSE;
-
-    HeapFree(GetProcessHeap(), 0, pLastCallsData[NextIndex]);
-    pLastCallsData[NextIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-    ret = SetupGetStringFieldW(Context,
-                               FieldIndex,
-                               pLastCallsData[NextIndex],
-                               dwSize,
-                               NULL);
-    if (!ret)
-        return FALSE;
-
-    *Data = pLastCallsData[NextIndex];
-    NextIndex = (NextIndex + 1) % (sizeof(pLastCallsData) / sizeof(pLastCallsData[0]));
-    return TRUE;
-#endif /* !__REACTOS__ */
 }
 
 
@@ -191,7 +110,6 @@ INF_OpenBufferedFileA(
     IN LCID LocaleId,
     OUT PUINT ErrorLine)
 {
-#ifdef __REACTOS__
     HINF hInf = NULL;
     ULONG ErrorLineUL;
     NTSTATUS Status;
@@ -206,9 +124,6 @@ INF_OpenBufferedFileA(
         return INVALID_HANDLE_VALUE;
 
     return hInf;
-#else
-    return INVALID_HANDLE_VALUE;
-#endif /* !__REACTOS__ */
 }
 
 /* EOF */

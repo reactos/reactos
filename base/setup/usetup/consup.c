@@ -46,7 +46,7 @@ CONSOLE_Init(
     VOID)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (!HOST_InitConsole())
+    if (!AllocConsole())
         return FALSE;
 
     StdInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -334,20 +334,12 @@ CONSOLE_SetInputTextXY(
         &Written);
 
     coPos.X += Length;
-    FillConsoleOutputCharacterA(
-        StdOutput,
-        '_',
-        1,
-        coPos,
-        &Written);
-
-    if (len > Length + 1)
+    if (len > Length)
     {
-        coPos.X++;
         FillConsoleOutputCharacterA(
             StdOutput,
             ' ',
-            len - Length - 1,
+            len - Length,
             coPos,
             &Written);
     }
