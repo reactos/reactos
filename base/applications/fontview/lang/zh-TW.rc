@@ -23,7 +23,7 @@ BEGIN
     IDS_ERROR_OPENKEY "Failed to open the fonts key!"
     IDS_ERROR_REGISTER "Failed to register the new font!"
     IDS_SUCCESS "Success"
-    IDS_COMPLETED "Font Installation Completed."
+    IDS_COMPLETED "Font installation completed."
     IDS_FILTER_LIST "所有支援的字型 (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 字型檔案 (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType 字型 (*.ttf)\0*.ttf\0\
