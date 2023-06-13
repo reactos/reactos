@@ -176,12 +176,12 @@ BOOL ImageModel::IsImageSaved() const
     return imageSaved;
 }
 
-BOOL ImageModel::HasUndoSteps() const
+BOOL ImageModel::CanUndo() const
 {
     return undoSteps > 0;
 }
 
-BOOL ImageModel::HasRedoSteps() const
+BOOL ImageModel::CanRedo() const
 {
     return redoSteps > 0;
 }

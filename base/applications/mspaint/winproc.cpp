@@ -431,8 +431,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.HasRedoSteps()));
+            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo()));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo()));
             EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
