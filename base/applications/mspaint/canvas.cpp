@@ -258,7 +258,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
     {
         if (bLeftButton)
         {
-            UnZoomed(pt);
+            CanvasToImage(pt);
             StartSelectionDrag(hitSelection, pt);
         }
         return 0;
@@ -741,7 +741,7 @@ VOID CCanvasWindow::finishDrawing()
     Invalidate(FALSE);
 }
 
-CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptZoomed)
+CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptImage)
 {
     if (!selectionModel.m_bShow)
         return HIT_NONE;
@@ -751,28 +751,28 @@ CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptZoomed)
     ::OffsetRect(&rcSelection, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
     ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
 
-    return getSizeBoxHitTest(ptZoomed, &rcSelection);
+    return getSizeBoxHitTest(ptImage, &rcSelection);
 }
 
-VOID CCanvasWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed)
+VOID CCanvasWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage)
 {
     m_hitSelection = hit;
-    selectionModel.m_ptHit = ptUnZoomed;
+    selectionModel.m_ptHit = ptImage;
     selectionModel.TakeOff();
 
     SetCapture();
     Invalidate(FALSE);
 }
 
-VOID CCanvasWindow::SelectionDragging(POINT ptUnZoomed)
+VOID CCanvasWindow::SelectionDragging(POINT ptImage)
 {
-    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
+    selectionModel.Dragging(m_hitSelection, ptImage);
     Invalidate(FALSE);
 }
 
-VOID CCanvasWindow::EndSelectionDrag(POINT ptUnZoomed)
+VOID CCanvasWindow::EndSelectionDrag(POINT ptImage)
 {
-    selectionModel.Dragging(m_hitSelection, ptUnZoomed);
+    selectionModel.Dragging(m_hitSelection, ptImage);
     m_hitSelection = HIT_NONE;
     Invalidate(FALSE);
 }

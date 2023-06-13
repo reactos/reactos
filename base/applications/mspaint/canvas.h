@@ -61,10 +61,10 @@ protected:
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
     VOID drawZoomFrame(INT mouseX, INT mouseY);
 
-    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
-    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
-    VOID SelectionDragging(POINT ptUnZoomed);
-    VOID EndSelectionDrag(POINT ptUnZoomed);
+    CANVAS_HITTEST SelectionHitTest(POINT ptImage);
+    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage);
+    VOID SelectionDragging(POINT ptImage);
+    VOID EndSelectionDrag(POINT ptImage);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
