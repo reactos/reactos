@@ -159,6 +159,7 @@ BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
         choosecolor.lpCustColors = custColors;
     }
 
+    choosecolor.Flags = CC_RGBINIT;
     choosecolor.rgbResult = *prgbColor;
     if (!::ChooseColor(&choosecolor))
         return FALSE;
