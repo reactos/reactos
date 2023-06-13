@@ -84,7 +84,7 @@ void ImageModel::Redo()
     NotifyImageChanged();
 }
 
-void ImageModel::RevertBackToUndo()
+void ImageModel::ResetToPreviousUndo()
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
 

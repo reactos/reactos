@@ -129,7 +129,7 @@ struct FreeSelTool : ToolBase
             POINT pt = { x, y };
             imageModel.Bound(pt);
             selectionModel.PushToPtStack(pt);
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             selectionModel.DrawFramePoly(m_hdc);
         }
     }
@@ -138,7 +138,7 @@ struct FreeSelTool : ToolBase
     {
         if (bLeftButton)
         {
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             if (selectionModel.PtStackSize() > 2)
             {
                 selectionModel.BuildMaskFromPtStack();
@@ -198,7 +198,7 @@ struct RectSelTool : ToolBase
     {
         if (bLeftButton)
         {
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             POINT pt = { x, y };
             imageModel.Bound(pt);
             selectionModel.SetRectFromPoints(start, pt);
@@ -210,7 +210,7 @@ struct RectSelTool : ToolBase
     {
         if (bLeftButton)
         {
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             if (start.x == x && start.y == y)
                 imageModel.Undo(TRUE);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
@@ -407,7 +407,7 @@ struct TextTool : ToolBase
 
     void UpdatePoint(LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         POINT pt = { x, y };
         imageModel.Bound(pt);
         selectionModel.SetRectFromPoints(start, pt);
@@ -511,7 +511,7 @@ struct LineTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             roundTo8Directions(start.x, start.y, x, y);
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
@@ -561,7 +561,7 @@ struct BezierTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
         draw(bLeftButton);
@@ -569,7 +569,7 @@ struct BezierTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         draw(bLeftButton);
         pointSP++;
         if (pointSP == 4)
@@ -587,7 +587,7 @@ struct BezierTool : ToolBase
     {
         if (pointSP)
         {
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             --pointSP;
             draw(m_bLeftButton);
         }
@@ -604,7 +604,7 @@ struct RectTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
         if (bLeftButton)
@@ -654,7 +654,7 @@ struct ShapeTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
         if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -664,7 +664,7 @@ struct ShapeTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
 
@@ -696,7 +696,7 @@ struct ShapeTool : ToolBase
     {
         if (pointSP)
         {
-            imageModel.RevertBackToUndo();
+            imageModel.ResetToPreviousUndo();
             --pointSP;
             draw(m_bLeftButton, -1, -1, TRUE);
         }
@@ -713,7 +713,7 @@ struct EllipseTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
         if (bLeftButton)
@@ -732,7 +732,7 @@ struct RRectTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.RevertBackToUndo();
+        imageModel.ResetToPreviousUndo();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
         if (bLeftButton)

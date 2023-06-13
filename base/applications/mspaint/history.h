@@ -21,7 +21,7 @@ public:
     BOOL CanUndo() const { return undoSteps > 0; }
     BOOL CanRedo() const { return redoSteps > 0; }
     void PushImageForUndo(HBITMAP hbm = NULL);
-    void RevertBackToUndo(void);
+    void ResetToPreviousUndo(void);
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ClearHistory(void);
