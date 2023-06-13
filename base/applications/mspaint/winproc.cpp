@@ -493,17 +493,39 @@ LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (wParam == VK_ESCAPE)
+    HWND hwndCapture;
+    switch (wParam)
     {
-        HWND hwndCapture = GetCapture();
-        if (hwndCapture)
-        {
-            if (canvasWindow.m_hWnd == hwndCapture ||
-                fullscreenWindow.m_hWnd == hwndCapture)
+        case VK_ESCAPE:
+            hwndCapture = GetCapture();
+            if (hwndCapture)
             {
-                SendMessage(hwndCapture, nMsg, wParam, lParam);
+                if (canvasWindow.m_hWnd == hwndCapture ||
+                    fullscreenWindow.m_hWnd == hwndCapture)
+                {
+                    SendMessage(hwndCapture, nMsg, wParam, lParam);
+                }
             }
-        }
+            else if (selectionModel.m_bShow)
+            {
+                selectionModel.Landing();
+                selectionModel.m_bShow = FALSE;
+                canvasWindow.Invalidate(FALSE);
+            }
+            break;
+
+        case VK_LEFT:
+            canvasWindow.MoveSelection(-1, 0);
+            break;
+        case VK_RIGHT:
+            canvasWindow.MoveSelection(+1, 0);
+            break;
+        case VK_UP:
+            canvasWindow.MoveSelection(0, -1);
+            break;
+        case VK_DOWN:
+            canvasWindow.MoveSelection(0, +1);
+            break;
     }
     return 0;
 }
