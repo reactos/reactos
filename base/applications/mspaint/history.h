@@ -34,8 +34,8 @@ public:
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
     void SaveImage(LPTSTR lpFileName);
     BOOL IsImageSaved() const;
-    BOOL HasUndoSteps() const;
-    BOOL HasRedoSteps() const;
+    BOOL CanUndo() const;
+    BOOL CanRedo() const;
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;

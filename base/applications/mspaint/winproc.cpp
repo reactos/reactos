@@ -431,8 +431,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.HasRedoSteps()));
+            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo()));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo()));
             EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
@@ -493,17 +493,39 @@ LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (wParam == VK_ESCAPE)
+    HWND hwndCapture;
+    switch (wParam)
     {
-        HWND hwndCapture = GetCapture();
-        if (hwndCapture)
-        {
-            if (canvasWindow.m_hWnd == hwndCapture ||
-                fullscreenWindow.m_hWnd == hwndCapture)
+        case VK_ESCAPE:
+            hwndCapture = GetCapture();
+            if (hwndCapture)
             {
-                SendMessage(hwndCapture, nMsg, wParam, lParam);
+                if (canvasWindow.m_hWnd == hwndCapture ||
+                    fullscreenWindow.m_hWnd == hwndCapture)
+                {
+                    SendMessage(hwndCapture, nMsg, wParam, lParam);
+                }
             }
-        }
+            else if (selectionModel.m_bShow)
+            {
+                selectionModel.Landing();
+                selectionModel.m_bShow = FALSE;
+                canvasWindow.Invalidate(FALSE);
+            }
+            break;
+
+        case VK_LEFT:
+            canvasWindow.MoveSelection(-1, 0);
+            break;
+        case VK_RIGHT:
+            canvasWindow.MoveSelection(+1, 0);
+            break;
+        case VK_UP:
+            canvasWindow.MoveSelection(0, -1);
+            break;
+        case VK_DOWN:
+            canvasWindow.MoveSelection(0, +1);
+            break;
     }
     return 0;
 }

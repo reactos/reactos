@@ -1,24 +1,9 @@
 /*
- *  fontview
- *
- *  fontview.c
- *
- *  Copyright (C) 2007  Timo Kreuzer <timo <dot> kreuzer <at> reactos <dot> org>
- *  Copyright (C) 2016-2017  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Main source file
+ * COPYRIGHT:   Copyright 2007 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2016-2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -321,18 +306,18 @@ MainWnd_OnCreate(HWND hwnd)
 
     /* create the display window */
     hDisplay = CreateWindowExW(
-                0,                      /* Extended style */
-                g_szFontDisplayClassName,   /* Classname */
-                L"",                /* Title text */
-                WS_CHILD | WS_VSCROLL,  /* Window style */
-                0,                      /* X-pos */
-                HEADER_SIZE,            /* Y-Pos */
-                550,                    /* Width */
-                370-HEADER_SIZE,        /* Height */
-                hwnd,                   /* Parent */
-                (HMENU)IDC_DISPLAY,     /* Identifier */
-                g_hInstance,            /* Program Instance handler */
-                NULL                    /* Window Creation data */
+                0,                        /* Extended style */
+                g_szFontDisplayClassName, /* Classname */
+                L"",                      /* Title text */
+                WS_CHILD | WS_VSCROLL,    /* Window style */
+                0,                        /* X-pos */
+                HEADER_SIZE,              /* Y-Pos */
+                550,                      /* Width */
+                370-HEADER_SIZE,          /* Height */
+                hwnd,                     /* Parent */
+                (HMENU)IDC_DISPLAY,       /* Identifier */
+                g_hInstance,              /* Program Instance handler */
+                NULL                      /* Window Creation data */
             );
 
     LoadStringW(g_hInstance, IDS_STRING, szString, MAX_STRING);
@@ -637,5 +622,3 @@ MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
-
-/* EOF */

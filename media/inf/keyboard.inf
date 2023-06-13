@@ -29,6 +29,7 @@ HKR, , UpperFilters,   0x00010000, "kbdclass"
 
 [StdMfg]
 %*PNP0303.DeviceDesc%    = PS2_Inst.NT,*PNP0303
+%*PNP030B.DeviceDesc%    = PS2_Inst.NT,*PNP030B
 %HID.KeyboardDevice%     = HID_Keyboard_Inst,,HID_DEVICE_SYSTEM_KEYBOARD
 
 ;------------------------------ HID DRIVER ------------------------------
@@ -105,7 +106,8 @@ ReactOS = "ReactOS Project"
 KeyboardClassName = "Keyboards"
 
 StdMfg = "(Standard keyboards)"
-*PNP0303.DeviceDesc = "IBM PC/AT keyboard"
+*PNP0303.DeviceDesc = "Standard 101/102-key or Microsoft Natural PS/2 keyboard"
+*PNP030B.DeviceDesc = "PC/AT Enhanced PS/2 keyboard (101/102-key)"
 LocationOverride = "plugged in to keyboard port"
 HID.KeyboardDevice = "HID-Keyboard"
 
@@ -113,7 +115,6 @@ HID.KeyboardDevice = "HID-Keyboard"
 KeyboardClassName = "鍵盤"
 
 StdMfg = "(標準鍵盤)"
-*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"
 HID.KeyboardDevice    = "HID 鍵盤"
 
 [Strings.0405]
@@ -128,7 +129,6 @@ HID.KeyboardDevice = "Klávesnice standardu HID"
 KeyboardClassName = "Tastaturen"
 
 StdMfg = "(Standard-Tastaturen)"
-*PNP0303.DeviceDesc = "IBM PC/AT Tastatur"
 LocationOverride = "eingesteckt in Tastaturanschluss"
 HID.KeyboardDevice = "HID-Tastatur"
 
@@ -136,33 +136,28 @@ HID.KeyboardDevice = "HID-Tastatur"
 KeyboardClassName = "Πληκτρολόγια"
 
 StdMfg = "(Πρότυπα πληκτρολόγια)"
-*PNP0303.DeviceDesc = "IBM PC/AT πληκτρολόγιο"
 
 [Strings.0a]
 KeyboardClassName = "Teclados"
 
 StdMfg = "(Teclado estándar)"
-*PNP0303.DeviceDesc = "Teclado IBM PC/AT"
 LocationOverride = "se conecta al puerto de teclado"
 
 [Strings.040C]
 KeyboardClassName = "Claviers"
 
 StdMfg = "(Claviers standards)"
-*PNP0303.DeviceDesc = "Clavier IBM PC/AT"
 LocationOverride = "Branché sur le port clavier"
 
 [Strings.0411]
 KeyboardClassName = "キーボード"
 
 StdMfg = "(スタンダード キーボード)"
-*PNP0303.DeviceDesc = "IBM PC/AT キーボード"
 
 [Strings.0415]
 KeyboardClassName = "Klawiatury"
 
 StdMfg = "(Klawiatury standardowe)"
-*PNP0303.DeviceDesc = "Klawiatura IBM PC/AT"
 LocationOverride = "podłaczone do portu klawiatury"
 HID.KeyboardDevice = "Klawiatura HID"
 
@@ -170,13 +165,11 @@ HID.KeyboardDevice = "Klawiatura HID"
 KeyboardClassName = "Teclados"
 
 StdMfg = "(Teclado padrão)"
-*PNP0303.DeviceDesc = "Teclado IBM PC/AT"
 
 [Strings.0418]
 KeyboardClassName = "Tastaturi"
 
 StdMfg = "(tastatură standard)"
-*PNP0303.DeviceDesc = "Tastatură IBM PC/AT"
 LocationOverride = "conectat la portul de tastatură"
 HID.KeyboardDevice = "Tastatură-dispozitiv de interfațare umană"
 
@@ -184,7 +177,8 @@ HID.KeyboardDevice = "Tastatură-dispozitiv de interfațare umană"
 KeyboardClassName = "Клавиатуры"
 
 StdMfg = "(Стандартные клавиатуры)"
-*PNP0303.DeviceDesc = "Клавиатура IBM PC/AT"
+*PNP0303.DeviceDesc = "Стандартная (101/102 клавиши) или клавиатура PS/2 Microsoft Natural"
+*PNP030B.DeviceDesc = "Расширенная клавиатура PS/2 PC/AT (101/102 клавиши)"
 LocationOverride = "подключено к порту клавиатуры"
 HID.KeyboardDevice = "Клавиатура HID"
 
@@ -192,13 +186,11 @@ HID.KeyboardDevice = "Клавиатура HID"
 KeyboardClassName = "Klávesnice"
 
 StdMfg = "(Štandardné klávesnice)"
-*PNP0303.DeviceDesc = "Klávesnica IBM PC/AT"
 
 [Strings.041f]
 KeyboardClassName = "Klavyeler"
 
 StdMfg = "(Standart Klavyeler)"
-*PNP0303.DeviceDesc = "IBM PC/AT Klavye"
 LocationOverride = "klavye girişine takılı"
 HID.KeyboardDevice = "HID Klavyeler"
 
@@ -206,7 +198,6 @@ HID.KeyboardDevice = "HID Klavyeler"
 KeyboardClassName = "Клавіатури"
 
 StdMfg = "(Стандартні клавіатури)"
-*PNP0303.DeviceDesc = "Клавіатура IBM PC/AT"
 LocationOverride = "приєднано до порту клавітури"
 HID.KeyboardDevice = "HID-Клавіатура"
 
@@ -214,23 +205,19 @@ HID.KeyboardDevice = "HID-Клавіатура"
 KeyboardClassName = "Klaviatūros"
 
 StdMfg = "(Standartinė klaviatūra)"
-*PNP0303.DeviceDesc = "IBM PC/AT klaviatūra"
 
 [Strings.0804]
 HID.KeyboardDevice = "HID 键盘"
 
 StdMfg = "(标准键盘)"
-*PNP0303.DeviceDesc = "IBM PC/AT 键盘"
 
 [Strings.0816]
 KeyboardClassName = "Teclados"
 
 StdMfg = "(Teclado padrão)"
-*PNP0303.DeviceDesc = "Teclado IBM PC/AT"
 
 [Strings.0C04]
 KeyboardClassName = "鍵盤"
 
 StdMfg = "(標準鍵盤)"
-*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"
 HID.KeyboardDevice = "HID 鍵盤"

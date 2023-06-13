@@ -357,8 +357,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
-                           0x0,
+                           0,
+                           0,
                            0xFFFFFFFF,
                            "PNP BIOS",
                            PartialResourceList,
@@ -687,14 +687,12 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
                                PeripheralClass,
                                PointerPeripheral,
                                Input,
-                               0x0,
+                               0,
                                0xFFFFFFFF,
                                Identifier,
                                PartialResourceList,
                                Size,
                                &PeripheralKey);
-
-        TRACE("Created key: PointerPeripheral\\0\n");
     }
 }
 
@@ -723,7 +721,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
     PCM_SERIAL_DEVICE_DATA SerialDeviceData;
     ULONG Irq;
     ULONG Base;
-    CHAR Buffer[80];
+    CHAR Identifier[80];
     ULONG ControllerNumber = 0;
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     ULONG i;
@@ -740,7 +738,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
         TRACE("Found COM%u port at 0x%x\n", i + 1, Base);
 
         /* Set 'Identifier' value */
-        sprintf(Buffer, "COM%ld", i + 1);
+        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "COM%ld", i + 1);
 
         /* Build full device descriptor */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -796,7 +794,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
                                Output | Input | ConsoleIn | ConsoleOut,
                                ControllerNumber,
                                0xFFFFFFFF,
-                               Buffer,
+                               Identifier,
                                PartialResourceList,
                                Size,
                                &ControllerKey);
@@ -817,7 +815,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     ULONG Irq[MAX_LPT_PORTS] = {7, 5, (ULONG) - 1};
-    CHAR Buffer[80];
+    CHAR Identifier[80];
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     PUSHORT BasePtr;
     ULONG Base;
@@ -843,7 +841,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         TRACE("Parallel port %u: %x\n", ControllerNumber, Base);
 
         /* Set 'Identifier' value */
-        sprintf(Buffer, "PARALLEL%ld", i + 1);
+        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "PARALLEL%ld", i + 1);
 
         /* Build full device descriptor */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
@@ -891,7 +889,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                                Output,
                                ControllerNumber,
                                0xFFFFFFFF,
-                               Buffer,
+                               Identifier,
                                PartialResourceList,
                                Size,
                                &ControllerKey);
@@ -1027,13 +1025,12 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                                PeripheralClass,
                                KeyboardPeripheral,
                                Input | ConsoleIn,
-                               0x0,
+                               0,
                                0xFFFFFFFF,
                                "PCAT_ENHANCED",
                                PartialResourceList,
                                Size,
                                &PeripheralKey);
-        TRACE("Created key: KeyboardPeripheral\\0\n");
     }
 }
 
@@ -1094,13 +1091,12 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            ControllerClass,
                            KeyboardController,
                            Input | ConsoleIn,
-                           0x0,
+                           0,
                            0xFFFFFFFF,
                            NULL,
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: KeyboardController\\0\n");
 
     DetectKeyboardPeripheral(ControllerKey);
 }
@@ -1254,13 +1250,12 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                ControllerClass,
                                PointerController,
                                Input,
-                               0x0,
+                               0,
                                0xFFFFFFFF,
                                NULL,
                                PartialResourceList,
                                sizeof(CM_PARTIAL_RESOURCE_LIST),
                                &ControllerKey);
-        TRACE("Created key: PointerController\\0\n");
 
         if (DetectPS2AuxDevice())
         {
@@ -1286,13 +1281,12 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                    ControllerClass,
                                    PointerPeripheral,
                                    Input,
-                                   0x0,
+                                   0,
                                    0xFFFFFFFF,
                                    "MICROSOFT PS2 MOUSE",
                                    PartialResourceList,
                                    Size,
                                    &PeripheralKey);
-            TRACE("Created key: PointerPeripheral\\0\n");
         }
     }
 }
@@ -1306,7 +1300,7 @@ BOOLEAN BiosVesaReadEdid(VOID);
 static VOID
 DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-    CHAR Buffer[80];
+    PCSTR Identifier;
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     USHORT VesaVersion;
 
@@ -1325,25 +1319,20 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 
     if (VesaVersion >= 0x0200)
-    {
-        strcpy(Buffer, "VBE Display");
-    }
+        Identifier = "VBE Display";
     else
-    {
-        strcpy(Buffer, "VGA Display");
-    }
+        Identifier = "VGA Display";
 
     FldrCreateComponentKey(BusKey,
                            ControllerClass,
                            DisplayController,
-                           0x0,
-                           0x0,
+                           Output | ConsoleOut,
+                           0,
                            0xFFFFFFFF,
-                           Buffer,
+                           Identifier,
                            NULL,
                            0,
                            &ControllerKey);
-    TRACE("Created key: DisplayController\\0\n");
 
     /* FIXME: Add display peripheral (monitor) data */
     if (VesaVersion != 0)
@@ -1354,7 +1343,6 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
             if (BiosVesaReadEdid())
             {
                 TRACE("EDID data read successfully!\n");
-
             }
         }
     }
@@ -1388,8 +1376,8 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
-                           0x0,
+                           0,
+                           0,
                            0xFFFFFFFF,
                            "ISA",
                            PartialResourceList,
@@ -1434,9 +1422,8 @@ PcHwDetect(VOID)
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    FldrCreateSystemKey(&SystemKey);
     // TODO: Discover and set the other machine types
-    FldrSetIdentifier(SystemKey, "AT/AT COMPATIBLE");
+    FldrCreateSystemKey(&SystemKey, "AT/AT COMPATIBLE");
 
     GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
     FindPciBios = PcFindPciBios;

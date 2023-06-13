@@ -11,8 +11,56 @@
 #include <freeldr.h>
 
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(HWDETECT);
 
 /* GLOBALS ********************************************************************/
+
+/* Strings corresponding to CONFIGURATION_TYPE */
+const PCSTR ArcTypes[MaximumType + 1] = // CmTypeName
+{
+    "System",
+    "CentralProcessor",
+    "FloatingPointProcessor",
+    "PrimaryICache",
+    "PrimaryDCache",
+    "SecondaryICache",
+    "SecondaryDCache",
+    "SecondaryCache",
+    "EisaAdapter",
+    "TcAdapter",
+    "ScsiAdapter",
+    "DtiAdapter",
+    "MultifunctionAdapter",
+    "DiskController",
+    "TapeController",
+    "CdRomController",
+    "WormController",
+    "SerialController",
+    "NetworkController",
+    "DisplayController",
+    "ParallelController",
+    "PointerController",
+    "KeyboardController",
+    "AudioController",
+    "OtherController",
+    "DiskPeripheral",
+    "FloppyDiskPeripheral",
+    "TapePeripheral",
+    "ModemPeripheral",
+    "MonitorPeripheral",
+    "PrinterPeripheral",
+    "PointerPeripheral",
+    "KeyboardPeripheral",
+    "TerminalPeripheral",
+    "OtherPeripheral",
+    "LinePeripheral",
+    "NetworkPeripheral",
+    "SystemMemory",
+    "DockingInformation",
+    "RealModeIrqRoutingTable",
+    "RealModePCIEnumeration",
+    "Undefined"
+};
 
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
@@ -51,12 +99,11 @@ AddReactOSArcDiskInfo(
 // ARC Component Configuration Routines
 //
 
-VOID
-NTAPI
-FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                  IN PCHAR IdentifierString)
+static VOID
+FldrSetIdentifier(
+    _In_ PCONFIGURATION_COMPONENT Component,
+    _In_ PCSTR IdentifierString)
 {
-    PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
     SIZE_T IdentifierLength;
     PCHAR Identifier;
 
@@ -74,10 +121,10 @@ FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
 }
 
 VOID
-NTAPI
-FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                         IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-                         IN ULONG Size)
+FldrSetConfigurationData(
+    _Inout_ PCONFIGURATION_COMPONENT_DATA ComponentData,
+    _In_ PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    _In_ ULONG Size)
 {
     /* Set component information */
     ComponentData->ConfigurationData = ResourceList;
@@ -85,8 +132,9 @@ FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
 }
 
 VOID
-NTAPI
-FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
+FldrCreateSystemKey(
+    _Out_ PCONFIGURATION_COMPONENT_DATA* SystemNode,
+    _In_ PCSTR IdentifierString)
 {
     PCONFIGURATION_COMPONENT Component;
 
@@ -108,14 +156,18 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     Component->Key = 0;
     Component->AffinityMask = 0xFFFFFFFF;
 
+    /* Set identifier */
+    if (IdentifierString)
+        FldrSetIdentifier(Component, IdentifierString);
+
     /* Return the node */
     *SystemNode = FldrArcHwTreeRoot;
 }
 
 static VOID
-NTAPI
-FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
-                 IN PCONFIGURATION_COMPONENT_DATA Child)
+FldrLinkToParent(
+    _In_ PCONFIGURATION_COMPONENT_DATA Parent,
+    _In_ PCONFIGURATION_COMPONENT_DATA Child)
 {
     PCONFIGURATION_COMPONENT_DATA Sibling;
 
@@ -143,17 +195,17 @@ FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
 }
 
 VOID
-NTAPI
-FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
-                       IN CONFIGURATION_CLASS Class,
-                       IN CONFIGURATION_TYPE Type,
-                       IN IDENTIFIER_FLAG Flags,
-                       IN ULONG Key,
-                       IN ULONG Affinity,
-                       IN PCHAR IdentifierString,
-                       IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-                       IN ULONG Size,
-                       OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
+FldrCreateComponentKey(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemNode,
+    _In_ CONFIGURATION_CLASS Class,
+    _In_ CONFIGURATION_TYPE Type,
+    _In_ IDENTIFIER_FLAG Flags,
+    _In_ ULONG Key,
+    _In_ ULONG Affinity,
+    _In_ PCSTR IdentifierString,
+    _In_ PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    _In_ ULONG Size,
+    _Out_ PCONFIGURATION_COMPONENT_DATA* ComponentKey)
 {
     PCONFIGURATION_COMPONENT_DATA ComponentData;
     PCONFIGURATION_COMPONENT Component;
@@ -180,11 +232,13 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
 
     /* Set identifier */
     if (IdentifierString)
-        FldrSetIdentifier(ComponentData, IdentifierString);
+        FldrSetIdentifier(Component, IdentifierString);
 
     /* Set configuration data */
     if (ResourceList)
         FldrSetConfigurationData(ComponentData, ResourceList, Size);
+
+    TRACE("Created key: %s\\%d\n", ArcTypes[min(Type, MaximumType)], Key);
 
     /* Return the child */
     *ComponentKey = ComponentData;

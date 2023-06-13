@@ -144,16 +144,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atribuudid"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "&Laius:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "&Pikkus:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Faili &kuupäev:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Faili &suurus:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "&Resolutsioon:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Ühikud", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Tollid", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Kõik failid"
     IDS_ALLPICTUREFILES "Kõik Pildifailid"
     IDS_FILESIZE "%d baiti"
-    IDS_PRINTRES "%d x %d pikslit meetri kohta"
     IDS_INTNUMBERS "Palun sisesta ainult terviklike numbreid!"
     IDS_PERCENTAGE "Protsent peab 1 ja 500 vahemikus olema."
     IDS_ANGLE "Nurk peab -89 ja 89 vahemikus olema."
@@ -242,4 +241,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

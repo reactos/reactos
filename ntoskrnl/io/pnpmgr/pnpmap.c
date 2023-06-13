@@ -14,10 +14,17 @@
 
 /* TYPES *********************************************************************/
 
+typedef struct _PNP_MAPPER_DEVICE_ID
+{
+    PCWSTR TypeName;
+    PWSTR PnPId;
+} PNP_MAPPER_DEVICE_ID, *PPNP_MAPPER_DEVICE_ID;
+
 typedef struct _PNP_DETECT_IDENTIFIER_MAP
 {
-    PWSTR DetectId;
+    PCWSTR DetectId;
     PWSTR PnPId;
+    PPNP_MAPPER_DEVICE_ID PeripheralMap;
     ULONG Counter;
 } PNP_DETECT_IDENTIFIER_MAP;
 
@@ -29,24 +36,61 @@ static UNICODE_STRING ConfigurationDataU = RTL_CONSTANT_STRING(L"Configuration D
 static UNICODE_STRING BootConfigU = RTL_CONSTANT_STRING(L"BootConfig");
 static UNICODE_STRING LogConfU = RTL_CONSTANT_STRING(L"LogConf");
 
-/* FIXME: There should be two sets of hardcoded PnP identifiers
- * for the keyboard and pointer peripherals (see CORE-18963).
- * They also can be parsed from a LegacyXlate sections of driver INF files.
- */
+/* FIXME: Trailing \0 in structures below are hacks, should be removed.
+ * Hardware identifiers also can be mapped using "LegacyXlate" sections
+ * of driver INF files. */
 
+DATA_SEG("INITDATA")
+static
+PNP_MAPPER_DEVICE_ID KeyboardMap[] =
+{
+    { L"XT_83KEY", L"*PNP0300\0" },
+    { L"PCAT_86KEY", L"*PNP0301\0" },
+    { L"PCXT_84KEY", L"*PNP0302\0" },
+    { L"XT_84KEY", L"*PNP0302\0" },
+    { L"101-KEY", L"*PNP0303\0" },
+    { L"OLI_83KEY", L"*PNP0304\0" },
+    { L"ATT_301", L"*PNP0304\0" },
+    { L"OLI_102KEY", L"*PNP0305\0" },
+    { L"OLI_86KEY", L"*PNP0306\0" },
+    { L"OLI_A101_102KEY", L"*PNP0309\0" },
+    { L"ATT_302", L"*PNP030a\0" },
+    { L"PCAT_ENHANCED", L"*PNP030b\0" },
+    { L"PC98_106KEY", L"*nEC1300\0" },
+    { L"PC98_LaptopKEY", L"*nEC1300\0" },
+    { L"PC98_N106KEY", L"*PNP0303\0" },
+    { NULL, NULL }
+};
+
+DATA_SEG("INITDATA")
+static
+PNP_MAPPER_DEVICE_ID PointerMap[] =
+{
+    { L"PS2 MOUSE", L"*PNP0F0E\0" },
+    { L"SERIAL MOUSE", L"*PNP0F0C\0" },
+    { L"MICROSOFT PS2 MOUSE", L"*PNP0F03\0" },
+    { L"LOGITECH PS2 MOUSE", L"*PNP0F12\0" },
+    { L"MICROSOFT INPORT MOUSE", L"*PNP0F02\0" },
+    { L"MICROSOFT SERIAL MOUSE", L"*PNP0F01\0" },
+    { L"MICROSOFT BALLPOINT SERIAL MOUSE", L"*PNP0F09\0" },
+    { L"LOGITECH SERIAL MOUSE", L"*PNP0F08\0" },
+    { L"MICROSOFT BUS MOUSE", L"*PNP0F00\0" },
+    { L"NEC PC-9800 BUS MOUSE", L"*nEC1F00\0" },
+    { NULL, NULL }
+};
+
+DATA_SEG("INITDATA")
 static
 PNP_DETECT_IDENTIFIER_MAP PnPMap[] =
 {
-    { L"SerialController", L"*PNP0501\0", 0 },
-    { L"KeyboardController", L"*PNP0303\0", 0 },
-#if defined(SARCH_PC98)
-    { L"PointerController", L"*nEC1F00\0", 0 },
-#else
-    { L"PointerController", L"*PNP0F13\0", 0 },
-#endif
-    { L"ParallelController", L"*PNP0400\0", 0 },
-    { L"FloppyDiskPeripheral", L"*PNP0700\0", 0 },
-    { NULL, NULL, 0 }
+    { L"SerialController", L"*PNP0501\0", NULL, 0 },
+    //{ L"KeyboardController", L"*PNP0303\0", NULL, 0 },
+    //{ L"PointerController", L"*PNP0F13\0", NULL, 0 },
+    { L"KeyboardPeripheral", NULL, KeyboardMap, 0 },
+    { L"PointerPeripheral", NULL, PointerMap, 0 },
+    { L"ParallelController", L"*PNP0400\0", NULL, 0 },
+    { L"FloppyDiskPeripheral", L"*PNP0700\0", NULL, 0 },
+    { NULL, NULL, NULL, 0 }
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -54,8 +98,30 @@ PNP_DETECT_IDENTIFIER_MAP PnPMap[] =
 static
 CODE_SEG("INIT")
 PWSTR
+IopMapPeripheralId(
+    _In_ PCUNICODE_STRING Value,
+    _In_ PPNP_MAPPER_DEVICE_ID DeviceList)
+{
+    ULONG i;
+    UNICODE_STRING CmpId;
+
+    for (i = 0; DeviceList[i].TypeName; i++)
+    {
+        RtlInitUnicodeString(&CmpId, DeviceList[i].TypeName);
+
+        if (RtlCompareUnicodeString(Value, &CmpId, FALSE) == 0)
+            break;
+    }
+
+    return DeviceList[i].PnPId;
+}
+
+static
+CODE_SEG("INIT")
+PWSTR
 IopMapDetectedDeviceId(
     _In_ PUNICODE_STRING DetectId,
+    _In_ PUNICODE_STRING Value,
     _Out_ PULONG DeviceIndex)
 {
     ULONG i;
@@ -71,6 +137,9 @@ IopMapDetectedDeviceId(
         if (RtlCompareUnicodeString(DetectId, &CmpId, FALSE) == 0)
         {
             *DeviceIndex = PnPMap[i].Counter++;
+
+            if (PnPMap[i].PeripheralMap)
+                return IopMapPeripheralId(Value, PnPMap[i].PeripheralMap);
             break;
         }
     }
@@ -370,16 +439,16 @@ IopEnumerateDetectedDevices(
                 ValueName.Length -= sizeof(WCHAR);
         }
 
-        pHardwareId = IopMapDetectedDeviceId(RelativePath, &DeviceIndex);
+        pHardwareId = IopMapDetectedDeviceId(RelativePath, &ValueName, &DeviceIndex);
         if (!pHardwareId)
         {
             /* Unknown key path */
-            DPRINT("Unknown key path '%wZ'\n", RelativePath);
+            DPRINT("Unknown key path '%wZ' value '%wZ'\n", RelativePath, &ValueName);
             goto nextdevice;
         }
 
         /* Prepare hardware id key (hardware id value without final \0) */
-        HardwareIdKey.Length = wcslen(pHardwareId) * sizeof(WCHAR);
+        HardwareIdKey.Length = (USHORT)wcslen(pHardwareId) * sizeof(WCHAR);
         HardwareIdKey.MaximumLength = HardwareIdKey.Length + sizeof(UNICODE_NULL) * 2;
         HardwareIdKey.Buffer = pHardwareId;
 

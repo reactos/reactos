@@ -3472,6 +3472,53 @@ ConvertSidToStringSidA(PSID Sid,
     return TRUE;
 }
 
+
+static
+DWORD
+GetUnicodeEnvironmentSize(
+    PVOID pEnvironment)
+{
+    INT Length, TotalLength = 0;
+    PWCHAR Ptr;
+
+    if (pEnvironment == NULL)
+        return 0;
+
+    Ptr = (PWCHAR)pEnvironment;
+    while (*Ptr != UNICODE_NULL)
+    {
+        Length = wcslen(Ptr) + 1;
+        TotalLength += Length;
+        Ptr = Ptr + Length;
+    }
+
+    return (TotalLength + 1) * sizeof(WCHAR);
+}
+
+
+static
+DWORD
+GetAnsiEnvironmentSize(
+    PVOID pEnvironment)
+{
+    INT Length, TotalLength = 0;
+    PCHAR Ptr;
+
+    if (pEnvironment == NULL)
+        return 0;
+
+    Ptr = (PCHAR)pEnvironment;
+    while (*Ptr != ANSI_NULL)
+    {
+        Length = strlen(Ptr) + 1;
+        TotalLength += Length;
+        Ptr = Ptr + Length;
+    }
+
+    return TotalLength + 1;
+}
+
+
 /*
  * @unimplemented
  */
@@ -3534,6 +3581,15 @@ CreateProcessWithLogonW(
     Request.ApplicationName = (LPWSTR)lpApplicationName;
     Request.CommandLine = (LPWSTR)lpCommandLine;
     Request.CurrentDirectory = (LPWSTR)lpCurrentDirectory;
+
+    if (dwCreationFlags & CREATE_UNICODE_ENVIRONMENT)
+        Request.dwEnvironmentSize = GetUnicodeEnvironmentSize(lpEnvironment);
+    else
+        Request.dwEnvironmentSize = GetAnsiEnvironmentSize(lpEnvironment);
+    Request.Environment = lpEnvironment;
+
+    TRACE("Request.dwEnvironmentSize %lu\n", Request.dwEnvironmentSize);
+    TRACE("Request.Environment %p\n", Request.Environment);
 
     Request.dwLogonFlags = dwLogonFlags;
     Request.dwCreationFlags = dwCreationFlags;

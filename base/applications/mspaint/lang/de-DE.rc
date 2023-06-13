@@ -144,16 +144,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Attribute"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Breite:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Höhe:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Dateidatum:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Dateigröße:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Auflösung:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Maßeinheit", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Zoll", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -232,7 +232,6 @@ BEGIN
     IDS_ALLFILES "Alle Dateien"
     IDS_ALLPICTUREFILES "Alle Bilddateien"
     IDS_FILESIZE "%d Bytes"
-    IDS_PRINTRES "%d x %d Pixel pro Meter"
     IDS_INTNUMBERS "Bitte geben Sie nur ganze Zahlen ein!"
     IDS_PERCENTAGE "Der Prozentsatz muss zwischen 1 und 500 liegen."
     IDS_ANGLE "Der Winkel muss zwischen -89 und 89 liegen."
@@ -242,4 +241,5 @@ BEGIN
     IDS_ITALIC "Italic"
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
 END

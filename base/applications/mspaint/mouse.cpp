@@ -445,7 +445,9 @@ struct TextTool : ToolBase
             RECT rc;
             textEditWindow.InvalidateEditRect();
             textEditWindow.GetEditRect(&rc);
+            ::InflateRect(&rc, -GRIP_SIZE / 2, -GRIP_SIZE / 2);
 
+            // Draw the text
             INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
             imageModel.CopyPrevious();
             Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,

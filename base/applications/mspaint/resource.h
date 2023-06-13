@@ -206,7 +206,6 @@
 #define IDS_ALLFILES        926
 #define IDS_ALLPICTUREFILES 927
 #define IDS_FILESIZE        928
-#define IDS_PRINTRES        929
 
 #define IDS_INTNUMBERS 930
 #define IDS_PERCENTAGE 931
@@ -219,3 +218,4 @@
 #define IDS_ITALIC      936
 #define IDS_UNDERLINE   937
 #define IDS_VERTICAL    938
+#define IDS_PRINTRES    939

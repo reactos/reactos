@@ -26,6 +26,7 @@ jobs:
         days-before-close: 14
         days-before-issue-close: -1
         exempt-all-assignees: true
+        exempt-draft-pr: true
         stale-pr-message: 'This PR is stale because it received no updates in the last 4 months. Without removing the stale label, or commenting on this ticket it will be closed in 2 weeks.'
         stale-issue-label: 'no-issue-activity'
         stale-pr-label: 'no-pr-activity'

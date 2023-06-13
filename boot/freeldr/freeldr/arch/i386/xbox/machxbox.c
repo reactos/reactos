@@ -157,7 +157,6 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 static VOID
 DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-    CHAR Buffer[80];
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -165,8 +164,6 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
     if (FrameBufferSize == 0)
         return;
-
-    strcpy(Buffer, "NV2A Framebuffer");
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
@@ -193,15 +190,13 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     FldrCreateComponentKey(BusKey,
                            ControllerClass,
                            DisplayController,
-                           0x0,
-                           0x0,
+                           Output | ConsoleOut,
+                           0,
                            0xFFFFFFFF,
-                           Buffer,
+                           "NV2A Framebuffer",
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-
-    TRACE("Created key: DisplayController\\0\n");
 }
 
 static
@@ -232,8 +227,8 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
-                           0x0,
+                           0,
+                           0,
                            0xFFFFFFFF,
                            "ISA",
                            PartialResourceList,
@@ -276,8 +271,7 @@ XboxHwDetect(VOID)
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    FldrCreateSystemKey(&SystemKey);
-    FldrSetIdentifier(SystemKey, "Original Xbox (PC/AT like)");
+    FldrCreateSystemKey(&SystemKey, "Original Xbox (PC/AT like)");
 
     GetHarddiskConfigurationData = XboxGetHarddiskConfigurationData;
     FindPciBios = XboxFindPciBios;

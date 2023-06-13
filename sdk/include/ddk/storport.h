@@ -2117,7 +2117,8 @@ typedef struct _PERF_CONFIGURATION_DATA
     ULONG Size;
     ULONG Flags;
     ULONG ConcurrentChannels;
-    ULONG FirstRedirectionMessageNumber, LastRedirectionMessageNumber;
+    ULONG FirstRedirectionMessageNumber;
+    ULONG LastRedirectionMessageNumber;
     ULONG DeviceNode;
     ULONG Reserved;
     PGROUP_AFFINITY MessageTargets;

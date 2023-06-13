@@ -25,7 +25,7 @@ BEGIN
     POPUP "&Bestand"
     BEGIN
         MENUITEM "&Nieuw\tCtrl+N", CMD_NEW
-        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nieuw &venster\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Openen\tCtrl+O", CMD_OPEN
         MENUITEM "O&pslaan\tCtrl+S", CMD_SAVE
         MENUITEM "Ops&laan als...", CMD_SAVE_AS
@@ -46,8 +46,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Zoeken\tCtrl+Z", CMD_SEARCH
         MENUITEM "&Volgende zoeken\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Go To...\tCtrl+G", CMD_GOTO
+        MENUITEM "Vervangen...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Ga naar...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Alles selecteren\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Tijd/&datum\tF5", CMD_TIME_DATE
@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help-onderwerpen", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Over Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -122,12 +122,12 @@ END
 DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Goto line"
+CAPTION "Ga naar regel"
 BEGIN
-    LTEXT "Line number:", 0x155, 5, 12, 41, 12
+    LTEXT "Lijn nummer:", 0x155, 5, 12, 41, 12
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 120, 30, 40, 15
+    PUSHBUTTON "Annuleer", IDCANCEL, 120, 30, 40, 15
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
@@ -138,7 +138,7 @@ BEGIN
     CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Pagina %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 50, 75, 60, 20
+    PUSHBUTTON "Annuleer", IDCANCEL, 50, 75, 60, 20
 END
 
 STRINGTABLE

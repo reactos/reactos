@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security infrastructure of NTUSER component of Win32k
- * COPYRIGHT:       Copyright 2022 George Bișoc <george.bisoc@reactos.org>
+ * COPYRIGHT:       Copyright 2022-2023 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -170,7 +170,7 @@ IntQueryUserSecurityIdentification(
     _Out_ PTOKEN_USER *User)
 {
     NTSTATUS Status;
-    PTOKEN_USER UserToken;
+    PTOKEN_USER UserToken = NULL;
     HANDLE Token;
     ULONG BufferLength;
 
@@ -196,7 +196,7 @@ IntQueryUserSecurityIdentification(
                                      NULL,
                                      0,
                                      &BufferLength);
-    if (!NT_SUCCESS(Status) && Status == STATUS_BUFFER_TOO_SMALL)
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         /*
          * Allocate some memory for the buffer
@@ -211,6 +211,12 @@ IntQueryUserSecurityIdentification(
             ZwClose(Token);
             return STATUS_NO_MEMORY;
         }
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ERR("IntQueryUserSecurityIdentification(): Failed to query the necessary length for the buffer (Status 0x%08lx)!\n", Status);
+        ZwClose(Token);
+        return Status;
     }
 
     /* Query the user now as we have plenty of space to hold it */

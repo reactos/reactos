@@ -97,7 +97,54 @@ typedef enum _CONFIGURATION_CLASS
     MaximumClass
 } CONFIGURATION_CLASS;
 
-// enum CONFIGURATION_TYPE is defined in ntddk.h
+// CONFIGURATION_TYPE is also defined in ntddk.h
+#ifndef _ARC_DDK_
+typedef enum _CONFIGURATION_TYPE
+{
+    ArcSystem,
+    CentralProcessor,
+    FloatingPointProcessor,
+    PrimaryIcache,
+    PrimaryDcache,
+    SecondaryIcache,
+    SecondaryDcache,
+    SecondaryCache,
+    EisaAdapter,
+    TcAdapter,
+    ScsiAdapter,
+    DtiAdapter,
+    MultiFunctionAdapter,
+    DiskController,
+    TapeController,
+    CdromController,
+    WormController,
+    SerialController,
+    NetworkController,
+    DisplayController,
+    ParallelController,
+    PointerController,
+    KeyboardController,
+    AudioController,
+    OtherController,
+    DiskPeripheral,
+    FloppyDiskPeripheral,
+    TapePeripheral,
+    ModemPeripheral,
+    MonitorPeripheral,
+    PrinterPeripheral,
+    PointerPeripheral,
+    KeyboardPeripheral,
+    TerminalPeripheral,
+    OtherPeripheral,
+    LinePeripheral,
+    NetworkPeripheral,
+    SystemMemory,
+    DockingInformation,
+    RealModeIrqRoutingTable,
+    RealModePCIEnumeration,
+    MaximumType
+} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
+#endif /* _ARC_DDK_ */
 
 typedef struct _CONFIGURATION_COMPONENT
 {

@@ -11,7 +11,8 @@
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), CS_DBLCLKS, COLOR_APPWORKSPACE)
+    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+                         COLOR_APPWORKSPACE)
 
     BEGIN_MSG_MAP(CCanvasWindow)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -31,6 +32,7 @@ public:
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
+        MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
     END_MSG_MAP()
 
     CCanvasWindow();
@@ -46,6 +48,7 @@ public:
     VOID CanvasToImage(POINT& pt, BOOL bZoomed = FALSE);
     VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
     VOID GetImageRect(RECT& rc);
+    VOID MoveSelection(INT xDelta, INT yDelta);
 
 protected:
     CANVAS_HITTEST m_hitSelection;
@@ -59,10 +62,10 @@ protected:
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
     VOID drawZoomFrame(INT mouseX, INT mouseY);
 
-    CANVAS_HITTEST SelectionHitTest(POINT ptZoomed);
-    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptUnZoomed);
-    VOID SelectionDragging(POINT ptUnZoomed);
-    VOID EndSelectionDrag(POINT ptUnZoomed);
+    CANVAS_HITTEST SelectionHitTest(POINT ptImage);
+    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage);
+    VOID SelectionDragging(POINT ptImage);
+    VOID EndSelectionDrag(POINT ptImage);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -81,6 +84,7 @@ protected:
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLRButtonDblClk(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
