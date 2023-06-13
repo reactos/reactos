@@ -76,7 +76,7 @@ GetDIBHeight(HBITMAP hBitmap)
     return bm.bmHeight;
 }
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC)
 {
     CImageDx img;
     img.Attach(hBitmap);
@@ -135,7 +135,7 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
     }
 
     // update image
-    imageModel.Insert(hBitmap);
+    imageModel.PushImageForUndo(hBitmap);
     imageModel.ClearHistory();
 
     // update fileSize

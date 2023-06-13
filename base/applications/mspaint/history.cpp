@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/history.cpp
  * PURPOSE:     Undo and redo functionality
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
@@ -12,97 +13,86 @@ ImageModel imageModel;
 
 /* FUNCTIONS ********************************************************/
 
-void ImageModel::NotifyDimensionsChanged()
-{
-    if (canvasWindow.IsWindow())
-        canvasWindow.SendMessage(WM_IMAGEMODELDIMENSIONSCHANGED);
-}
-
 void ImageModel::NotifyImageChanged()
 {
     if (canvasWindow.IsWindow())
-        canvasWindow.SendMessage(WM_IMAGEMODELIMAGECHANGED);
+        canvasWindow.Invalidate(FALSE);
 }
 
 ImageModel::ImageModel()
+    : hDrawingDC(::CreateCompatibleDC(NULL))
+    , currInd(0)
+    , undoSteps(0)
+    , redoSteps(0)
 {
-    currInd = 0;
-    undoSteps = 0;
-    redoSteps = 0;
+    ZeroMemory(hBms, sizeof(hBms));
+
+    hBms[0] = CreateDIBWithProperties(1, 1);
+    ::SelectObject(hDrawingDC, hBms[0]);
+
     imageSaved = TRUE;
-
-    // prepare a minimal usable bitmap
-    int imgXRes = 1;
-    int imgYRes = 1;
-
-    hDrawingDC = CreateCompatibleDC(NULL);
-    SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, paletteModel.GetFgColor()));
-    SelectObject(hDrawingDC, CreateSolidBrush(paletteModel.GetBgColor()));
-
-    hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
-    SelectObject(hDrawingDC, hBms[0]);
-    Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
-void ImageModel::CopyPrevious()
+ImageModel::~ImageModel()
 {
-    ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
-    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = CopyDIBImage(hBms[currInd]);
-    currInd = (currInd + 1) % HISTORYSIZE;
-    if (undoSteps < HISTORYSIZE - 1)
-        undoSteps++;
-    redoSteps = 0;
-    SelectObject(hDrawingDC, hBms[currInd]);
-    imageSaved = FALSE;
+    ::DeleteDC(hDrawingDC);
+
+    for (size_t i = 0; i < HISTORYSIZE; ++i)
+    {
+        if (hBms[i])
+            ::DeleteObject(hBms[i]);
+    }
 }
 
 void ImageModel::Undo(BOOL bClearRedo)
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, undoSteps);
-    if (undoSteps > 0)
-    {
-        int oldWidth = GetWidth();
-        int oldHeight = GetHeight();
-        selectionModel.m_bShow = FALSE;
-        currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
-        SelectObject(hDrawingDC, hBms[currInd]);
-        undoSteps--;
-        if (bClearRedo)
-            redoSteps = 0;
-        else if (redoSteps < HISTORYSIZE - 1)
-            redoSteps++;
-        if (GetWidth() != oldWidth || GetHeight() != oldHeight)
-            NotifyDimensionsChanged();
-        NotifyImageChanged();
-    }
+    if (!CanUndo())
+        return;
+
+    selectionModel.m_bShow = FALSE;
+
+    // Select previous item
+    currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
+    ::SelectObject(hDrawingDC, hBms[currInd]);
+
+    undoSteps--;
+    if (bClearRedo)
+        redoSteps = 0;
+    else if (redoSteps < HISTORYSIZE - 1)
+        redoSteps++;
+
+    NotifyImageChanged();
 }
 
 void ImageModel::Redo()
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, redoSteps);
-    if (redoSteps > 0)
-    {
-        int oldWidth = GetWidth();
-        int oldHeight = GetHeight();
-        selectionModel.m_bShow = FALSE;
-        currInd = (currInd + 1) % HISTORYSIZE;
-        SelectObject(hDrawingDC, hBms[currInd]);
-        redoSteps--;
-        if (undoSteps < HISTORYSIZE - 1)
-            undoSteps++;
-        if (GetWidth() != oldWidth || GetHeight() != oldHeight)
-            NotifyDimensionsChanged();
-        NotifyImageChanged();
-    }
+    if (!CanRedo())
+        return;
+
+    selectionModel.m_bShow = FALSE;
+
+    // Select next item
+    currInd = (currInd + 1) % HISTORYSIZE;
+    ::SelectObject(hDrawingDC, hBms[currInd]);
+
+    redoSteps--;
+    if (undoSteps < HISTORYSIZE - 1)
+        undoSteps++;
+
+    NotifyImageChanged();
 }
 
-void ImageModel::ResetToPrevious()
+void ImageModel::RevertImageForUndo()
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
-    DeleteObject(hBms[currInd]);
+
+    // Revert current item with previous item
+    ::DeleteObject(hBms[currInd]);
     hBms[currInd] = CopyDIBImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
-    SelectObject(hDrawingDC, hBms[currInd]);
+    ::SelectObject(hDrawingDC, hBms[currInd]);
+
     NotifyImageChanged();
 }
 
@@ -112,61 +102,61 @@ void ImageModel::ClearHistory()
     redoSteps = 0;
 }
 
-void ImageModel::Insert(HBITMAP hbm)
+void ImageModel::PushImageForUndo(HBITMAP hbm)
 {
-    int oldWidth = GetWidth();
-    int oldHeight = GetHeight();
-    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = hbm;
+    ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
+
+    // Go to the next item with an HBITMAP or current item
+    ::DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+    hBms[(currInd + 1) % HISTORYSIZE] = (hbm ? hbm : CopyDIBImage(hBms[currInd]));
     currInd = (currInd + 1) % HISTORYSIZE;
+    ::SelectObject(hDrawingDC, hBms[currInd]);
+
     if (undoSteps < HISTORYSIZE - 1)
         undoSteps++;
     redoSteps = 0;
-    SelectObject(hDrawingDC, hBms[currInd]);
-    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
-        NotifyDimensionsChanged();
+
+    imageSaved = FALSE;
     NotifyImageChanged();
 }
 
 void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 {
-    HDC hdc;
-    HPEN oldPen;
-    HBRUSH oldBrush;
-    int oldWidth = GetWidth();
-    int oldHeight = GetHeight();
-
+    // We cannot create bitmaps of size zero
     if (nWidth <= 0)
         nWidth = 1;
     if (nHeight <= 0)
         nHeight = 1;
 
-    SelectObject(hDrawingDC, hBms[currInd]);
-    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(nWidth, nHeight);
-    currInd = (currInd + 1) % HISTORYSIZE;
-    if (undoSteps < HISTORYSIZE - 1)
-        undoSteps++;
-    redoSteps = 0;
+    // Create an HBITMAP
+    HBITMAP hbmCropped = CreateDIBWithProperties(nWidth, nHeight);
+    if (!hbmCropped)
+        return;
 
-    hdc = CreateCompatibleDC(hDrawingDC);
-    SelectObject(hdc, hBms[currInd]);
+    // Select the HBITMAP by memory DC
+    HDC hdcMem = ::CreateCompatibleDC(hDrawingDC);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmCropped);
 
-    oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, paletteModel.GetBgColor()));
-    oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(paletteModel.GetBgColor()));
-    Rectangle(hdc, 0, 0, nWidth, nHeight);
-    BitBlt(hdc, -nOffsetX, -nOffsetY, GetWidth(), GetHeight(), hDrawingDC, 0, 0, SRCCOPY);
-    DeleteObject(SelectObject(hdc, oldBrush));
-    DeleteObject(SelectObject(hdc, oldPen));
-    DeleteDC(hdc);
-    SelectObject(hDrawingDC, hBms[currInd]);
+    // Fill background of the HBITMAP
+    RECT rcBack = { 0, 0, nWidth, nHeight };
+    HBRUSH hbrBack = ::CreateSolidBrush(paletteModel.GetBgColor());
+    ::FillRect(hdcMem, &rcBack, hbrBack);
+    ::DeleteObject(hbrBack);
 
-    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
-        NotifyDimensionsChanged();
+    // Copy the old content
+    ::BitBlt(hdcMem, -nOffsetX, -nOffsetY, GetWidth(), GetHeight(), hDrawingDC, 0, 0, SRCCOPY);
+
+    // Clean up
+    ::SelectObject(hdcMem, hbmOld);
+    ::DeleteDC(hdcMem);
+
+    // Push it
+    PushImageForUndo(hbmCropped);
+
     NotifyImageChanged();
 }
 
-void ImageModel::SaveImage(LPTSTR lpFileName)
+void ImageModel::SaveImage(LPCTSTR lpFileName)
 {
     SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC);
 }
@@ -174,16 +164,6 @@ void ImageModel::SaveImage(LPTSTR lpFileName)
 BOOL ImageModel::IsImageSaved() const
 {
     return imageSaved;
-}
-
-BOOL ImageModel::CanUndo() const
-{
-    return undoSteps > 0;
-}
-
-BOOL ImageModel::CanRedo() const
-{
-    return redoSteps > 0;
 }
 
 void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
@@ -195,20 +175,18 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
         HBITMAP hbm0 = CopyDIBImage(hBms[currInd], newWidth, newHeight);
-        Insert(hbm0);
+        PushImageForUndo(hbm0);
     }
     if (nSkewDegX)
     {
         HBITMAP hbm1 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegX, FALSE);
-        Insert(hbm1);
+        PushImageForUndo(hbm1);
     }
     if (nSkewDegY)
     {
         HBITMAP hbm2 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegY, TRUE);
-        Insert(hbm2);
+        PushImageForUndo(hbm2);
     }
-    if (GetWidth() != oldWidth || GetHeight() != oldHeight)
-        NotifyDimensionsChanged();
     NotifyImageChanged();
 }
 
@@ -225,14 +203,8 @@ int ImageModel::GetHeight() const
 void ImageModel::InvertColors()
 {
     RECT rect = {0, 0, GetWidth(), GetHeight()};
-    CopyPrevious();
+    PushImageForUndo();
     InvertRect(hDrawingDC, &rect);
-    NotifyImageChanged();
-}
-
-void ImageModel::Clear(COLORREF color)
-{
-    Rectangle(hDrawingDC, 0 - 1, 0 - 1, GetWidth() + 1, GetHeight() + 1);
     NotifyImageChanged();
 }
 
@@ -243,7 +215,7 @@ HDC ImageModel::GetDC()
 
 void ImageModel::FlipHorizontally()
 {
-    CopyPrevious();
+    PushImageForUndo();
     StretchBlt(hDrawingDC, GetWidth() - 1, 0, -GetWidth(), GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -251,7 +223,7 @@ void ImageModel::FlipHorizontally()
 
 void ImageModel::FlipVertically()
 {
-    CopyPrevious();
+    PushImageForUndo();
     StretchBlt(hDrawingDC, 0, GetHeight() - 1, GetWidth(), -GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -261,23 +233,21 @@ void ImageModel::RotateNTimes90Degrees(int iN)
 {
     switch (iN)
     {
-    case 1:
-    case 3:
-        DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
-        currInd = (currInd + 1) % HISTORYSIZE;
-        if (undoSteps < HISTORYSIZE - 1)
-            undoSteps++;
-        redoSteps = 0;
-        SelectObject(hDrawingDC, hBms[currInd]);
-        imageSaved = FALSE;
-        NotifyDimensionsChanged();
-        break;
-    case 2:
-        CopyPrevious();
-        StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
-                   0, 0, GetWidth(), GetHeight(), SRCCOPY);
-        break;
+        case 1:
+        case 3:
+        {
+            HBITMAP hbm = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
+            if (hbm)
+                PushImageForUndo(hbm);
+            break;
+        }
+        case 2:
+        {
+            PushImageForUndo();
+            StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(),
+                       hDrawingDC, 0, 0, GetWidth(), GetHeight(), SRCCOPY);
+            break;
+        }
     }
     NotifyImageChanged();
 }

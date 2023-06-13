@@ -20,7 +20,7 @@ int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC);
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 

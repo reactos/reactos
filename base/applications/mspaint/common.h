@@ -21,15 +21,6 @@
 #define WM_TOOLSMODELZOOMCHANGED         (WM_APP + 2)
 #define WM_PALETTEMODELCOLORCHANGED      (WM_APP + 3)
 #define WM_PALETTEMODELPALETTECHANGED    (WM_APP + 4)
-#define WM_IMAGEMODELDIMENSIONSCHANGED   (WM_APP + 5)
-#define WM_IMAGEMODELIMAGECHANGED        (WM_APP + 6)
-#define WM_SELECTIONMODELREFRESHNEEDED   (WM_APP + 7)
-
-/* width of the rectangle defined by a RECT structure */
-#define RECT_WIDTH(a)  ((a).right - (a).left)
-
-/* height of the rectangle defined by a RECT structure */
-#define RECT_HEIGHT(a)  ((a).bottom - (a).top)
 
 /* this simplifies checking and unchecking menu items */
 #define CHECKED_IF(a) ((a) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND))

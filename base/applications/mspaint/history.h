@@ -13,38 +13,37 @@
 
 class ImageModel
 {
-private:
-    void NotifyDimensionsChanged();
-    void NotifyImageChanged();
-    HDC hDrawingDC;
-public:
-    HBITMAP hBms[HISTORYSIZE];
-private:
-    int currInd;
-    int undoSteps;
-    int redoSteps;
 public:
     ImageModel();
-    void CopyPrevious(void);
+    virtual ~ImageModel();
+
+    HDC GetDC();
+    BOOL CanUndo() const { return undoSteps > 0; }
+    BOOL CanRedo() const { return redoSteps > 0; }
+    void PushImageForUndo(HBITMAP hbm = NULL);
+    void RevertImageForUndo(void);
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
-    void ResetToPrevious(void);
     void ClearHistory(void);
-    void Insert(HBITMAP hbm);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
-    void SaveImage(LPTSTR lpFileName);
+    void SaveImage(LPCTSTR lpFileName);
     BOOL IsImageSaved() const;
-    BOOL CanUndo() const;
-    BOOL CanRedo() const;
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;
     void InvertColors();
-    void Clear(COLORREF color = 0x00ffffff);
-    HDC GetDC();
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
     void DeleteSelection();
     void Bound(POINT& pt);
+
+protected:
+    HDC hDrawingDC; // The device context for this class
+    int currInd; // The current index
+    int undoSteps; // The undo-able count
+    int redoSteps; // The redo-able count
+    HBITMAP hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
+
+    void NotifyImageChanged();
 };

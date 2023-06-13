@@ -194,7 +194,7 @@ void SelectionModel::Landing()
     ClearMask();
     ClearColor();
 
-    imageModel.CopyPrevious();
+    imageModel.PushImageForUndo();
 }
 
 void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
@@ -445,7 +445,7 @@ void SelectionModel::CancelSelection()
     if (!m_bShow)
         return;
 
-    imageModel.CopyPrevious();
+    imageModel.PushImageForUndo();
     if (m_bShow)
         imageModel.Undo(TRUE);
 
