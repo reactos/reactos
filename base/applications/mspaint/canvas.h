@@ -48,6 +48,7 @@ public:
     VOID CanvasToImage(POINT& pt, BOOL bZoomed = FALSE);
     VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
     VOID GetImageRect(RECT& rc);
+    VOID MoveSelection(INT xDelta, INT yDelta);
 
 protected:
     CANVAS_HITTEST m_hitSelection;
