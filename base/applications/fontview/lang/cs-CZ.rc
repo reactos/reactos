@@ -10,7 +10,7 @@ BEGIN
     IDS_ERROR_NOMEM "K dokončení operace není dostatek paměti."
     IDS_ERROR_NOFONT "Soubor %1 není platným souborem písma."
     IDS_ERROR_NOCLASS "Inicializace okna aplikace selhala."
-    IDS_ERROR_ISINSTALLED  "This font is already installed!" 
+    IDS_ERROR_ISINSTALLED "This font is already installed!" 
     IDS_ERROR_FONTCPY "Failed to copy the font file!"
     IDS_ERROR_OPENKEY "Failed to open the fonts key!"
     IDS_ERROR_REGISTER "Failed to register the new font!"
