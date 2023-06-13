@@ -204,7 +204,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
-    imageModel.CopyPrevious();
+    imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
     canvasWindow.Invalidate(FALSE);
@@ -761,7 +761,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_IMAGEDELETEIMAGE:
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             canvasWindow.Invalidate(FALSE);
             break;
@@ -829,7 +829,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.Insert(CopyDIBImage(selectionModel.GetBitmap()));
+            imageModel.PushImageForUndo(CopyDIBImage(selectionModel.GetBitmap()));
+            imageModel.DeleteSelection();
             break;
 
         case IDM_VIEWTOOLBOX:

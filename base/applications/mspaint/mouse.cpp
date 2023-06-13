@@ -113,7 +113,7 @@ struct FreeSelTool : ToolBase
         selectionModel.Landing();
         if (bLeftButton)
         {
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             selectionModel.m_bShow = FALSE;
             selectionModel.ResetPtStack();
             POINT pt = { x, y };
@@ -187,7 +187,7 @@ struct RectSelTool : ToolBase
         selectionModel.Landing();
         if (bLeftButton)
         {
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             selectionModel.m_bShow = FALSE;
             ::SetRectEmpty(&selectionModel.m_rc);
         }
@@ -246,7 +246,7 @@ struct GenericDrawTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        imageModel.CopyPrevious();
+        imageModel.PushImageForUndo();
         draw(bLeftButton, x, y);
     }
 
@@ -293,7 +293,7 @@ struct FillTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        imageModel.CopyPrevious();
+        imageModel.PushImageForUndo();
         Fill(m_hdc, x, y, bLeftButton ? m_fg : m_bg);
     }
 };
@@ -341,7 +341,7 @@ struct ZoomTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        imageModel.CopyPrevious();
+        imageModel.PushImageForUndo();
         if (bLeftButton)
         {
             if (toolsModel.GetZoom() < MAX_ZOOM)
@@ -419,7 +419,7 @@ struct TextTool : ToolBase
         if (!textEditWindow.IsWindow())
             textEditWindow.Create(canvasWindow);
 
-        imageModel.CopyPrevious();
+        imageModel.PushImageForUndo();
         UpdatePoint(x, y);
     }
 
@@ -449,7 +449,7 @@ struct TextTool : ToolBase
 
             // Draw the text
             INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
                  textEditWindow.GetFont(), style);
 
@@ -554,7 +554,7 @@ struct BezierTool : ToolBase
 
         if (pointSP == 0)
         {
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             pointSP++;
         }
     }
@@ -642,7 +642,7 @@ struct ShapeTool : ToolBase
 
         if (pointSP == 0 && !bDoubleClick)
         {
-            imageModel.CopyPrevious();
+            imageModel.PushImageForUndo();
             draw(bLeftButton, x, y);
             pointSP++;
         }
