@@ -37,8 +37,10 @@ LRESULT CMiniatureWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     if (IsWindowVisible() && !IsIconic() && !IsZoomed())
     {
-        registrySettings.ThumbXPos = GET_X_LPARAM(lParam);
-        registrySettings.ThumbYPos = GET_Y_LPARAM(lParam);
+        CRect rc;
+        GetWindowRect(&rc);
+        registrySettings.ThumbXPos = rc.left;
+        registrySettings.ThumbYPos = rc.top;
     }
     return 0;
 }
@@ -47,8 +49,10 @@ LRESULT CMiniatureWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     if (IsWindowVisible() && !IsIconic() && !IsZoomed())
     {
-        registrySettings.ThumbWidth = GET_X_LPARAM(lParam);
-        registrySettings.ThumbHeight = GET_Y_LPARAM(lParam);
+        CRect rc;
+        GetWindowRect(&rc);
+        registrySettings.ThumbWidth = rc.Width();
+        registrySettings.ThumbHeight = rc.Height();
     }
     return 0;
 }
