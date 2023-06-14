@@ -37,7 +37,7 @@ typedef struct tagWINE_PLAYSOUND
 static WINE_PLAYSOUND *PlaySoundCurrent;
 static BOOL bPlaySoundStop;
 
-static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
+static HMMIO    get_mmioFromFile(LPCWSTR lpszName)
 {
     HMMIO       ret;
     WCHAR       buf[256];
@@ -308,37 +308,37 @@ Quit:
 
 struct playsound_data
 {
-    HANDLE	hEvent;
-    LONG	dwEventCount;
+    HANDLE  hEvent;
+    LONG    dwEventCount;
 };
 
 static void CALLBACK PlaySound_Callback(HWAVEOUT hwo, UINT uMsg,
-					DWORD_PTR dwInstance,
-					DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+                                        DWORD_PTR dwInstance,
+                                        DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
-    struct playsound_data*	s = (struct playsound_data*)dwInstance;
+    struct playsound_data*  s = (struct playsound_data*)dwInstance;
 
     switch (uMsg) {
     case WOM_OPEN:
     case WOM_CLOSE:
-	break;
+        break;
     case WOM_DONE:
-	InterlockedIncrement(&s->dwEventCount);
-	TRACE("Returning waveHdr=%lx\n", dwParam1);
-	SetEvent(s->hEvent);
-	break;
+        InterlockedIncrement(&s->dwEventCount);
+        TRACE("Returning waveHdr=%lx\n", dwParam1);
+        SetEvent(s->hEvent);
+        break;
     default:
-	ERR("Unknown uMsg=%d\n", uMsg);
+        ERR("Unknown uMsg=%d\n", uMsg);
     }
 }
 
 static void PlaySound_WaitDone(struct playsound_data* s)
 {
     for (;;) {
-	if (InterlockedDecrement(&s->dwEventCount) >= 0) break;
-	InterlockedIncrement(&s->dwEventCount);
+        if (InterlockedDecrement(&s->dwEventCount) >= 0) break;
+        InterlockedIncrement(&s->dwEventCount);
 
-	WaitForSingleObject(s->hEvent, INFINITE);
+        WaitForSingleObject(s->hEvent, INFINITE);
     }
 }
 
@@ -420,70 +420,70 @@ static WINE_PLAYSOUND* PlaySound_AllocAndGetMMIO(const void* pszSound, HMODULE h
 
 static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 {
-    BOOL		bRet = FALSE;
-    MMCKINFO		ckMainRIFF;
-    MMCKINFO        	mmckInfo;
+    BOOL                bRet = FALSE;
+    MMCKINFO            ckMainRIFF;
+    MMCKINFO            mmckInfo;
     LPWAVEFORMATEX      lpWaveFormat = NULL;
-    HWAVEOUT           hWave = 0;
-    LPWAVEHDR		waveHdr = NULL;
-    INT			count, bufsize, left, index;
-    struct playsound_data	s;
+    HWAVEOUT            hWave = 0;
+    LPWAVEHDR           waveHdr = NULL;
+    INT                 count, bufsize, left, index;
+    struct playsound_data       s;
     LONG                r;
 
     s.hEvent = 0;
 
     if (mmioDescend(wps->hmmio, &ckMainRIFF, NULL, 0))
-	goto errCleanUp;
+        goto errCleanUp;
 
     TRACE("ParentChunk ckid=%.4s fccType=%.4s cksize=%08X\n",
-	  (LPSTR)&ckMainRIFF.ckid, (LPSTR)&ckMainRIFF.fccType, ckMainRIFF.cksize);
+          (LPSTR)&ckMainRIFF.ckid, (LPSTR)&ckMainRIFF.fccType, ckMainRIFF.cksize);
 
     if ((ckMainRIFF.ckid != FOURCC_RIFF) ||
-	(ckMainRIFF.fccType != mmioFOURCC('W', 'A', 'V', 'E')))
-	goto errCleanUp;
+        (ckMainRIFF.fccType != mmioFOURCC('W', 'A', 'V', 'E')))
+        goto errCleanUp;
 
     mmckInfo.ckid = mmioFOURCC('f', 'm', 't', ' ');
     if (mmioDescend(wps->hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
-	goto errCleanUp;
+        goto errCleanUp;
 
     TRACE("Chunk Found ckid=%.4s fccType=%08x cksize=%08X\n",
-	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
+          (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     lpWaveFormat = HeapAlloc(GetProcessHeap(), 0, mmckInfo.cksize);
     if (!lpWaveFormat)
         goto errCleanUp;
     r = mmioRead(wps->hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize);
     if (r < 0 || r < sizeof(PCMWAVEFORMAT))
-	    goto errCleanUp;
+        goto errCleanUp;
 
-    TRACE("wFormatTag=%04X !\n", 	lpWaveFormat->wFormatTag);
-    TRACE("nChannels=%d\n", 		lpWaveFormat->nChannels);
-    TRACE("nSamplesPerSec=%d\n", 	lpWaveFormat->nSamplesPerSec);
-    TRACE("nAvgBytesPerSec=%d\n", 	lpWaveFormat->nAvgBytesPerSec);
-    TRACE("nBlockAlign=%d\n", 		lpWaveFormat->nBlockAlign);
-    TRACE("wBitsPerSample=%u !\n", 	lpWaveFormat->wBitsPerSample);
+    TRACE("wFormatTag=%04X !\n",    lpWaveFormat->wFormatTag);
+    TRACE("nChannels=%d\n",         lpWaveFormat->nChannels);
+    TRACE("nSamplesPerSec=%d\n",    lpWaveFormat->nSamplesPerSec);
+    TRACE("nAvgBytesPerSec=%d\n",   lpWaveFormat->nAvgBytesPerSec);
+    TRACE("nBlockAlign=%d\n",       lpWaveFormat->nBlockAlign);
+    TRACE("wBitsPerSample=%u !\n",  lpWaveFormat->wBitsPerSample);
 
     /* move to end of 'fmt ' chunk */
     mmioAscend(wps->hmmio, &mmckInfo, 0);
 
     mmckInfo.ckid = mmioFOURCC('d', 'a', 't', 'a');
     if (mmioDescend(wps->hmmio, &mmckInfo, &ckMainRIFF, MMIO_FINDCHUNK))
-	goto errCleanUp;
+        goto errCleanUp;
 
     TRACE("Chunk Found ckid=%.4s fccType=%08x cksize=%08X\n",
-	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
+          (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (!s.hEvent || bPlaySoundStop)
         goto errCleanUp;
 
     if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
-		    (DWORD_PTR)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
-	goto errCleanUp;
+                    (DWORD_PTR)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
+        goto errCleanUp;
 
     /* make it so that 3 buffers per second are needed */
     bufsize = (((lpWaveFormat->nAvgBytesPerSec / 3) - 1) / lpWaveFormat->nBlockAlign + 1) *
-	lpWaveFormat->nBlockAlign;
+        lpWaveFormat->nBlockAlign;
     waveHdr = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WAVEHDR) + 2 * bufsize);
     if (!waveHdr)
         goto errCleanUp;
@@ -494,8 +494,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     waveHdr[0].dwFlags = waveHdr[1].dwFlags = 0L;
     waveHdr[0].dwBufferLength = waveHdr[1].dwBufferLength = bufsize;
     if (waveOutPrepareHeader(hWave, &waveHdr[0], sizeof(WAVEHDR)) ||
-	waveOutPrepareHeader(hWave, &waveHdr[1], sizeof(WAVEHDR))) {
-	goto errCleanUp;
+        waveOutPrepareHeader(hWave, &waveHdr[1], sizeof(WAVEHDR))) {
+        goto errCleanUp;
     }
 
     wps->hWave = hWave;
@@ -503,21 +503,21 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     index = 0;
 
     do {
-	left = mmckInfo.cksize;
+        left = mmckInfo.cksize;
 
-	mmioSeek(wps->hmmio, mmckInfo.dwDataOffset, SEEK_SET);
-	while (left)
+        mmioSeek(wps->hmmio, mmckInfo.dwDataOffset, SEEK_SET);
+        while (left)
         {
-	    if (bPlaySoundStop)
+            if (bPlaySoundStop)
             {
-		wps->bLoop = FALSE;
-		break;
-	    }
-	    count = mmioRead(wps->hmmio, waveHdr[index].lpData, min(bufsize, left));
-	    if (count < 1) break;
-	    left -= count;
-	    waveHdr[index].dwBufferLength = count;
-	    if (waveOutWrite(hWave, &waveHdr[index], sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
+                wps->bLoop = FALSE;
+                break;
+            }
+            count = mmioRead(wps->hmmio, waveHdr[index].lpData, min(bufsize, left));
+            if (count < 1) break;
+            left -= count;
+            waveHdr[index].dwBufferLength = count;
+            if (waveOutWrite(hWave, &waveHdr[index], sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
                 index ^= 1;
                 PlaySound_WaitDone(&s);
             }
@@ -526,8 +526,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
                 wps->bLoop = FALSE;
                 break;
             }
-	}
-	bRet = TRUE;
+        }
+        bRet = TRUE;
     } while (wps->bLoop);
 
     PlaySound_WaitDone(&s); /* to balance first buffer */
@@ -589,11 +589,11 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
     WINE_PLAYSOUND*     wps = NULL;
 
     TRACE("pszSound='%p' hmod=%p fdwSound=%08X\n",
-	  pszSound, hmod, fdwSound);
+          pszSound, hmod, fdwSound);
 
     /* SND_NOWAIT is ignored in w95/2k/xp. */
     if ((fdwSound & SND_NOSTOP) && PlaySoundCurrent != NULL)
-	    return FALSE;
+        return FALSE;
 
     /* alloc internal structure, if we need to play something */
     if (pszSound && !(fdwSound & SND_PURGE))
