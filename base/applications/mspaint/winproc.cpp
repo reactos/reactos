@@ -207,7 +207,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
-    canvasWindow.Invalidate(FALSE);
+    imageModel.NotifyImageChanged();
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -510,7 +510,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 selectionModel.Landing();
                 selectionModel.m_bShow = FALSE;
-                canvasWindow.Invalidate(FALSE);
+                imageModel.NotifyImageChanged();
             }
             break;
 
@@ -656,7 +656,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 break;
             }
             imageModel.Undo();
-            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
@@ -667,7 +666,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 break;
             }
             imageModel.Redo();
-            canvasWindow.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
             if (OpenClipboard())
@@ -763,7 +761,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_IMAGEDELETEIMAGE:
             imageModel.PushImageForUndo();
             Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
-            canvasWindow.Invalidate(FALSE);
+            imageModel.NotifyImageChanged();
             break;
         case IDM_IMAGEROTATEMIRROR:
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))

@@ -36,7 +36,8 @@ public:
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
     void DeleteSelection();
-    void Bound(POINT& pt);
+    void Bound(POINT& pt) const;
+    void NotifyImageChanged();
 
 protected:
     HDC hDrawingDC; // The device context for this class
@@ -44,6 +45,4 @@ protected:
     int undoSteps; // The undo-able count
     int redoSteps; // The redo-able count
     HBITMAP hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
-
-    void NotifyImageChanged();
 };

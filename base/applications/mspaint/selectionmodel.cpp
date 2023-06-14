@@ -179,7 +179,7 @@ BOOL SelectionModel::TakeOff()
         DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
     }
 
-    canvasWindow.Invalidate(FALSE);
+    imageModel.NotifyImageChanged();
     return TRUE;
 }
 
@@ -229,7 +229,7 @@ void SelectionModel::FlipHorizontally()
     }
     ::DeleteDC(hdcMem);
 
-    NotifyRefreshNeeded();
+    imageModel.NotifyImageChanged();
 }
 
 void SelectionModel::FlipVertically()
@@ -251,7 +251,7 @@ void SelectionModel::FlipVertically()
     }
     ::DeleteDC(hdcMem);
 
-    NotifyRefreshNeeded();
+    imageModel.NotifyImageChanged();
 }
 
 void SelectionModel::RotateNTimes90Degrees(int iN)
@@ -303,7 +303,7 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     }
 
     ::DeleteDC(hdcMem);
-    NotifyRefreshNeeded();
+    imageModel.NotifyImageChanged();
 }
 
 void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
@@ -346,7 +346,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     ::DeleteDC(hDC);
 
     m_bShow = TRUE;
-    NotifyRefreshNeeded();
+    imageModel.NotifyImageChanged();
 }
 
 HBITMAP SelectionModel::GetBitmap()
@@ -417,11 +417,6 @@ void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
     m_ptHit = pt;
 }
 
-void SelectionModel::NotifyRefreshNeeded()
-{
-    canvasWindow.Invalidate(FALSE);
-}
-
 void SelectionModel::ClearMask()
 {
     if (m_hbmMask)
@@ -450,5 +445,5 @@ void SelectionModel::CancelSelection()
         imageModel.Undo(TRUE);
 
     m_bShow = FALSE;
-    canvasWindow.Invalidate(FALSE);
+    imageModel.NotifyImageChanged();
 }
