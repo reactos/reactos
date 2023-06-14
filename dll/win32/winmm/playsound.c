@@ -31,10 +31,10 @@ typedef struct tagWINE_PLAYSOUND
 {
     unsigned                    bLoop : 1;
     HMMIO                       hmmio;
-    struct tagWINE_PLAYSOUND*   lpNext;
+    HWAVEOUT                    hWave;
 } WINE_PLAYSOUND;
 
-static WINE_PLAYSOUND *PlaySoundList;
+static WINE_PLAYSOUND *PlaySoundCurrent;
 static BOOL bPlaySoundStop;
 
 static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
@@ -369,12 +369,9 @@ static BOOL PlaySound_IsString(DWORD fdwSound, const void* psz)
 
 static void     PlaySound_Free(WINE_PLAYSOUND* wps)
 {
-    WINE_PLAYSOUND**    p;
-
     EnterCriticalSection(&WINMM_cs);
-    for (p = &PlaySoundList; *p && *p != wps; p = &((*p)->lpNext));
-    if (*p) *p = (*p)->lpNext;
-    if (PlaySoundList == NULL) SetEvent(psLastEvent);
+    PlaySoundCurrent = NULL;
+    SetEvent(psLastEvent);
     LeaveCriticalSection(&WINMM_cs);
     if (wps->hmmio) mmioClose(wps->hmmio, 0);
     HeapFree(GetProcessHeap(), 0, wps);
@@ -475,7 +472,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!s.hEvent)
+    if (!s.hEvent || bPlaySoundStop)
         goto errCleanUp;
 
     if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
@@ -499,6 +496,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	goto errCleanUp;
     }
 
+    wps->hWave = hWave;
     s.dwEventCount = 1L; /* for first buffer */
     index = 0;
 
@@ -510,7 +508,6 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
         {
 	    if (bPlaySoundStop)
             {
-        waveOutReset(hWave);
 		wps->bLoop = FALSE;
 		break;
 	    }
@@ -540,7 +537,15 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 errCleanUp:
     TRACE("Done playing sound => %s!\n", bRet ? "ok" : "ko");
     HeapFree(GetProcessHeap(), 0, lpWaveFormat);
-    if (hWave)	while (waveOutClose(hWave) == WAVERR_STILLPLAYING) Sleep(100);
+    if (hWave)
+    {
+        EnterCriticalSection(&WINMM_cs);
+        /* the CS prevents a concurrent waveOutReset */
+        wps->hWave = 0;
+        LeaveCriticalSection(&WINMM_cs);
+        while (waveOutClose(hWave) == WAVERR_STILLPLAYING)
+            Sleep(100);
+    }
     CloseHandle(s.hEvent);
     HeapFree(GetProcessHeap(), 0, waveHdr);
 
@@ -585,7 +590,7 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
 	  pszSound, hmod, fdwSound);
 
     /* SND_NOWAIT is ignored in w95/2k/xp. */
-    if ((fdwSound & SND_NOSTOP) && PlaySoundList != NULL)
+    if ((fdwSound & SND_NOSTOP) && PlaySoundCurrent != NULL)
 	    return FALSE;
 
     /* alloc internal structure, if we need to play something */
@@ -599,12 +604,14 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
     /* since several threads can enter PlaySound in parallel, we're not
      * sure, at this point, that another thread didn't start a new playsound
      */
-    while (PlaySoundList != NULL)
+    while (PlaySoundCurrent != NULL)
     {
         ResetEvent(psLastEvent);
         /* FIXME: doc says we have to stop all instances of pszSound if it's non
          * NULL... as of today, we stop all playing instances */
         bPlaySoundStop = TRUE;
+        if (PlaySoundCurrent->hWave)
+            waveOutReset(PlaySoundCurrent->hWave);
 
         LeaveCriticalSection(&WINMM_cs);
         WaitForSingleObject(psLastEvent, INFINITE);
@@ -613,8 +620,7 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
         bPlaySoundStop = FALSE;
     }
 
-    if (wps) wps->lpNext = PlaySoundList;
-    PlaySoundList = wps;
+    PlaySoundCurrent = wps;
     LeaveCriticalSection(&WINMM_cs);
 
     if (!wps) return TRUE;
