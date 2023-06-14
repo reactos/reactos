@@ -116,26 +116,42 @@ Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 void
 Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
-    LONG cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-    RECT rc = { cx - radius, cy - radius, cx + radius, cy + radius };
-
+    LONG b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
+    RECT rc;
     HBRUSH hbr = ::CreateSolidBrush(color);
-    ::FillRect(hdc, &rc, hbr);
+
+    for (LONG a = 0; a <= b; a++)
+    {
+        ::SetRect(&rc, (x1 * (b - a) + x2 * a) / b - radius,
+                       (y1 * (b - a) + y2 * a) / b - radius,
+                       (x1 * (b - a) + x2 * a) / b + radius,
+                       (y1 * (b - a) + y2 * a) / b + radius);
+
+        ::FillRect(hdc, &rc, hbr);
+    }
+
     ::DeleteObject(hbr);
 }
 
 void
 Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LONG radius)
 {
-    LONG cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-    RECT rc = { cx - radius, cy - radius, cx + radius, cy + radius };
+    LONG b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
+    RECT rc;
 
-    for (LONG y = rc.top; y < rc.bottom; ++y)
+    for (LONG a = 0; a <= b; a++)
     {
-        for (LONG x = rc.left; x < rc.right; ++x)
+        ::SetRect(&rc, (x1 * (b - a) + x2 * a) / b - radius,
+                       (y1 * (b - a) + y2 * a) / b - radius,
+                       (x1 * (b - a) + x2 * a) / b + radius,
+                       (y1 * (b - a) + y2 * a) / b + radius);
+        for (LONG y = rc.top; y < rc.bottom; ++y)
         {
-            if (::GetPixel(hdc, x, y) == fg)
-                ::SetPixelV(hdc, x, y, bg);
+            for (LONG x = rc.left; x < rc.right; ++x)
+            {
+                if (::GetPixel(hdc, x, y) == fg)
+                    ::SetPixelV(hdc, x, y, bg);
+            }
         }
     }
 }
