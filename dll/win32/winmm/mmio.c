@@ -1161,7 +1161,7 @@ MMRESULT WINAPI mmioDescend(HMMIO hmmio, LPMMCKINFO lpck,
         LONG ix;
 
         ix = mmioRead(hmmio, (LPSTR)lpck, 3 * sizeof(DWORD));
-        if (ix < 2*sizeof(DWORD))
+        if (ix < 0 || ix < 2*sizeof(DWORD))
         {
             mmioSeek(hmmio, dwOldPos, SEEK_SET);
             WARN("return ChunkNotFound\n");
@@ -1263,7 +1263,7 @@ MMRESULT WINAPI mmioCreateChunk(HMMIO hmmio, MMCKINFO* lpck, UINT uFlags)
 
     ix = mmioWrite(hmmio, (LPSTR)lpck, size);
     TRACE("after mmioWrite ix = %d req = %d, errno = %d\n", ix, size, errno);
-    if (ix < size) {
+    if (ix != size) {
 	mmioSeek(hmmio, dwOldPos, SEEK_SET);
 	WARN("return CannotWrite\n");
 	return MMIOERR_CANNOTWRITE;

@@ -428,6 +428,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     LPWAVEHDR		waveHdr = NULL;
     INT			count, bufsize, left, index;
     struct playsound_data	s;
+    LONG                r;
 
     s.hEvent = 0;
 
@@ -451,8 +452,9 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     lpWaveFormat = HeapAlloc(GetProcessHeap(), 0, mmckInfo.cksize);
     if (!lpWaveFormat)
         goto errCleanUp;
-    if (mmioRead(wps->hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize) < sizeof(PCMWAVEFORMAT))
-	goto errCleanUp;
+    r = mmioRead(wps->hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize);
+    if (r < 0 || r < sizeof(PCMWAVEFORMAT))
+	    goto errCleanUp;
 
     TRACE("wFormatTag=%04X !\n", 	lpWaveFormat->wFormatTag);
     TRACE("nChannels=%d\n", 		lpWaveFormat->nChannels);
