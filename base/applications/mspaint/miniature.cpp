@@ -106,3 +106,12 @@ LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     EndPaint(&ps);
     return 0;
 }
+
+LRESULT CMiniatureWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    // Avoid too small
+    LPMINMAXINFO pInfo = (LPMINMAXINFO)lParam;
+    pInfo->ptMinTrackSize.x = 100;
+    pInfo->ptMinTrackSize.y = 75;
+    return 0;
+}
