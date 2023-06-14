@@ -455,8 +455,10 @@ SpiCreatePortConfig(
         ConfigInfo->AtdiskSecondaryClaimed = FALSE; // FIXME
 
         /* Initiator bus id is not set */
-        for (Bus = 0; Bus < 8; Bus++)
+        for (Bus = 0; Bus < RTL_NUMBER_OF(ConfigInfo->InitiatorBusId); Bus++)
+        {
             ConfigInfo->InitiatorBusId[Bus] = (CCHAR)SP_UNINITIALIZED_VALUE;
+        }
     }
 
     ConfigInfo->NumberOfPhysicalBreaks = 17;
@@ -644,7 +646,7 @@ ScsiPortGetPhysicalAddress(
     else
     {
         /* Nothing */
-        PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
+        PhysicalAddress.QuadPart = (LONGLONG)SP_UNINITIALIZED_VALUE;
     }
 
     *Length = BufferLength;
