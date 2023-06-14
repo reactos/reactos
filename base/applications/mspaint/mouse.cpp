@@ -108,7 +108,7 @@ struct FreeSelTool : ToolBase
     {
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         selectionModel.Landing();
         if (bLeftButton)
@@ -122,7 +122,7 @@ struct FreeSelTool : ToolBase
         m_bLeftButton = bLeftButton;
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         if (bLeftButton)
         {
@@ -134,7 +134,7 @@ struct FreeSelTool : ToolBase
         }
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         if (bLeftButton)
         {
@@ -155,7 +155,7 @@ struct FreeSelTool : ToolBase
         }
     }
 
-    void OnFinishDraw()
+    void OnFinishDraw() override
     {
         if (m_bLeftButton)
             canvasWindow.Invalidate(FALSE);
@@ -164,7 +164,7 @@ struct FreeSelTool : ToolBase
         ToolBase::OnFinishDraw();
     }
 
-    void OnCancelDraw()
+    void OnCancelDraw() override
     {
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
@@ -182,7 +182,7 @@ struct RectSelTool : ToolBase
     {
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         selectionModel.Landing();
         if (bLeftButton)
@@ -194,7 +194,7 @@ struct RectSelTool : ToolBase
         m_bLeftButton = bLeftButton;
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         if (bLeftButton)
         {
@@ -206,7 +206,7 @@ struct RectSelTool : ToolBase
         }
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         if (bLeftButton)
         {
@@ -218,7 +218,7 @@ struct RectSelTool : ToolBase
         }
     }
 
-    void OnFinishDraw()
+    void OnFinishDraw() override
     {
         if (m_bLeftButton)
             canvasWindow.Invalidate(FALSE);
@@ -227,7 +227,7 @@ struct RectSelTool : ToolBase
         ToolBase::OnFinishDraw();
     }
 
-    void OnCancelDraw()
+    void OnCancelDraw() override
     {
         if (m_bLeftButton)
             imageModel.Undo(TRUE);
@@ -244,23 +244,23 @@ struct GenericDrawTool : ToolBase
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y) = 0;
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
         draw(bLeftButton, x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         draw(bLeftButton, x, y);
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         draw(bLeftButton, x, y);
     }
 
-    void OnCancelDraw()
+    void OnCancelDraw() override
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(TRUE);
@@ -275,7 +275,7 @@ struct RubberTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         if (bLeftButton)
             Erase(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetRubberRadius());
@@ -291,7 +291,7 @@ struct FillTool : ToolBase
     {
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
         Fill(m_hdc, x, y, bLeftButton ? m_fg : m_bg);
@@ -320,12 +320,12 @@ struct ColorTool : ToolBase
             paletteModel.SetBgColor(rgbColor);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         fetchColor(bLeftButton, x, y);
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         fetchColor(bLeftButton, x, y);
         toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
@@ -339,7 +339,7 @@ struct ZoomTool : ToolBase
     {
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
         if (bLeftButton)
@@ -362,7 +362,7 @@ struct PenTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Line(m_hdc, last.x, last.y, x, y, rgb, 1);
@@ -377,7 +377,7 @@ struct BrushTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Brush(m_hdc, last.x, last.y, x, y, rgb, toolsModel.GetBrushStyle());
@@ -391,7 +391,7 @@ struct AirBrushTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Airbrush(m_hdc, x, y, rgb, toolsModel.GetAirBrushWidth());
@@ -414,7 +414,7 @@ struct TextTool : ToolBase
         RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         if (!textEditWindow.IsWindow())
             textEditWindow.Create(canvasWindow);
@@ -423,12 +423,12 @@ struct TextTool : ToolBase
         UpdatePoint(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         UpdatePoint(x, y);
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.Undo(TRUE);
 
@@ -494,7 +494,7 @@ struct TextTool : ToolBase
         textEditWindow.SetFocus();
     }
 
-    void OnFinishDraw()
+    void OnFinishDraw() override
     {
         toolsModel.OnButtonDown(TRUE, -1, -1, TRUE);
         toolsModel.OnButtonUp(TRUE, -1, -1);
@@ -509,7 +509,7 @@ struct LineTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -547,7 +547,7 @@ struct BezierTool : ToolBase
         m_bLeftButton = bLeftButton;
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
@@ -559,7 +559,7 @@ struct BezierTool : ToolBase
         }
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         pointStack[pointSP].x = x;
@@ -567,7 +567,7 @@ struct BezierTool : ToolBase
         draw(bLeftButton);
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         draw(bLeftButton);
@@ -576,14 +576,14 @@ struct BezierTool : ToolBase
             pointSP = 0;
     }
 
-    void OnCancelDraw()
+    void OnCancelDraw() override
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(TRUE);
         ToolBase::OnCancelDraw();
     }
 
-    void OnFinishDraw()
+    void OnFinishDraw() override
     {
         if (pointSP)
         {
@@ -602,7 +602,7 @@ struct RectTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -635,7 +635,7 @@ struct ShapeTool : ToolBase
         m_bLeftButton = bLeftButton;
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
@@ -652,7 +652,7 @@ struct ShapeTool : ToolBase
         }
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         pointStack[pointSP].x = x;
@@ -662,7 +662,7 @@ struct ShapeTool : ToolBase
         draw(bLeftButton, x, y, FALSE);
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
@@ -686,13 +686,13 @@ struct ShapeTool : ToolBase
             pointSP--;
     }
 
-    void OnCancelDraw()
+    void OnCancelDraw() override
     {
         imageModel.Undo(TRUE);
         ToolBase::OnCancelDraw();
     }
 
-    void OnFinishDraw()
+    void OnFinishDraw() override
     {
         if (pointSP)
         {
@@ -711,7 +711,7 @@ struct EllipseTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -730,7 +730,7 @@ struct RRectTool : GenericDrawTool
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
