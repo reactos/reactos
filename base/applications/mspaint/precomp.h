@@ -53,4 +53,10 @@
 #include "dialogs.h"
 #include "globalvar.h"
 
+#ifdef _DEBUG
+    void CheckHandleLeaks(void);
+#else
+    #define CheckHandleLeaks() /*empty*/
+#endif
+
 #endif /* _MSPAINT_H */

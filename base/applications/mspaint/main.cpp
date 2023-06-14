@@ -179,6 +179,17 @@ HWND CMainWindow::DoCreate()
     return Create(HWND_DESKTOP, rc, strTitle, WS_OVERLAPPEDWINDOW, WS_EX_ACCEPTFILES);
 }
 
+#ifdef _DEBUG
+void CheckHandleLeaks(void)
+{
+#if (WINVER >= 0x0500)
+    HANDLE hProcess = GetCurrentProcess();
+    ATLTRACE("Count of GDI objects: %ld\n", ::GetGuiResources(hProcess, GR_GDIOBJECTS));
+    ATLTRACE("Count of USER objects: %ld\n", ::GetGuiResources(hProcess, GR_USEROBJECTS));
+#endif
+}
+#endif
+
 // entry point
 INT WINAPI
 _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nCmdShow)
@@ -186,6 +197,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
 #ifdef _DEBUG
     // Report any memory leaks on exit
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+    // Check handle leaks
+    CheckHandleLeaks();
+    atexit(CheckHandleLeaks);
 #endif
 
     hProgInstance = hInstance;
