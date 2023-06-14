@@ -751,9 +751,6 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->Recv.Content = 0;
         FCB->Recv.BytesUsed = 0;
 
-        /* Mark us as overread to complete future reads with an error */
-        FCB->Overread = TRUE;
-
         /* Set a successful receive status to indicate a shutdown on overread */
         FCB->LastReceiveStatus = STATUS_SUCCESS;
 
