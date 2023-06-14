@@ -574,11 +574,9 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
     TRACE("pszSound='%p' hmod=%p fdwSound=%08X\n",
 	  pszSound, hmod, fdwSound);
 
-    /* FIXME? I see no difference between SND_NOWAIT and SND_NOSTOP !
-     * there could be one if several sounds can be played at once...
-     */
-    if ((fdwSound & (SND_NOWAIT | SND_NOSTOP)) && PlaySoundList != NULL)
-	return FALSE;
+    /* SND_NOWAIT is ignored in w95/2k/xp. */
+    if ((fdwSound & SND_NOSTOP) && PlaySoundList != NULL)
+	    return FALSE;
 
     /* alloc internal structure, if we need to play something */
     if (pszSound && !(fdwSound & SND_PURGE))
