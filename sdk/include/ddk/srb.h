@@ -27,13 +27,22 @@
 extern "C" {
 #endif
 
-#define SCSI_MAXIMUM_LOGICAL_UNITS        8
+/* NOTE: the current SCSI_MAXIMUM_TARGETS_PER_BUS is applicable
+ * only on scsiport miniports. For storport miniports, the max
+ * target supported is 255. */
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define SCSI_MAXIMUM_BUSES_PER_ADAPTER    255
+#endif
 #define SCSI_MAXIMUM_TARGETS_PER_BUS      128
 #define SCSI_MAXIMUM_LUNS_PER_TARGET      255
-#define SCSI_MAXIMUM_BUSES                8
 #define SCSI_MINIMUM_PHYSICAL_BREAKS      16
 #define SCSI_MAXIMUM_PHYSICAL_BREAKS      255
+
+/* These constants are for backward compatibility.
+ * They used to be the maximum supported. */
+#define SCSI_MAXIMUM_BUSES                8
 #define SCSI_MAXIMUM_TARGETS              8
+#define SCSI_MAXIMUM_LOGICAL_UNITS        8
 
 /* PORT_CONFIGURATION_INFORMATION.Dma64BitAddresses constants */
 #define SCSI_DMA64_MINIPORT_SUPPORTED            0x01
