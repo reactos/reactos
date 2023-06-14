@@ -141,8 +141,7 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
 {
     m_transpBg = bTransparent;
     NotifyToolSettingsChanged();
-    if (canvasWindow.IsWindow())
-        canvasWindow.Invalidate(FALSE);
+    imageModel.NotifyImageChanged();
 }
 
 int ToolsModel::GetZoom() const

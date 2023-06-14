@@ -78,11 +78,13 @@ void ToolBase::reset()
 void ToolBase::OnCancelDraw()
 {
     reset();
+    imageModel.NotifyImageChanged();
 }
 
 void ToolBase::OnFinishDraw()
 {
     reset();
+    imageModel.NotifyImageChanged();
 }
 
 void ToolBase::beginEvent()
@@ -151,15 +153,12 @@ struct FreeSelTool : ToolBase
                 selectionModel.ResetPtStack();
                 selectionModel.m_bShow = FALSE;
             }
-            canvasWindow.Invalidate(FALSE);
+            imageModel.NotifyImageChanged();
         }
     }
 
     void OnFinishDraw() override
     {
-        if (m_bLeftButton)
-            canvasWindow.Invalidate(FALSE);
-
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
     }
@@ -214,15 +213,12 @@ struct RectSelTool : ToolBase
             if (start.x == x && start.y == y)
                 imageModel.Undo(TRUE);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
-            canvasWindow.Invalidate(FALSE);
+            imageModel.NotifyImageChanged();
         }
     }
 
     void OnFinishDraw() override
     {
-        if (m_bLeftButton)
-            canvasWindow.Invalidate(FALSE);
-
         m_bLeftButton = FALSE;
         ToolBase::OnFinishDraw();
     }
@@ -253,11 +249,13 @@ struct GenericDrawTool : ToolBase
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
         draw(bLeftButton, x, y);
+        imageModel.NotifyImageChanged();
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         draw(bLeftButton, x, y);
+        imageModel.NotifyImageChanged();
     }
 
     void OnCancelDraw() override
@@ -574,6 +572,7 @@ struct BezierTool : ToolBase
         pointSP++;
         if (pointSP == 4)
             pointSP = 0;
+        imageModel.NotifyImageChanged();
     }
 
     void OnCancelDraw() override
@@ -649,6 +648,7 @@ struct ShapeTool : ToolBase
         else
         {
             draw(bLeftButton, x, y, bDoubleClick);
+            imageModel.NotifyImageChanged();
         }
     }
 

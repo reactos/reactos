@@ -17,6 +17,8 @@ void ImageModel::NotifyImageChanged()
 {
     if (canvasWindow.IsWindow())
         canvasWindow.Invalidate(FALSE);
+    if (miniature.IsWindow())
+        miniature.Invalidate(FALSE);
 }
 
 ImageModel::ImageModel()
@@ -264,7 +266,7 @@ void ImageModel::DeleteSelection()
     NotifyImageChanged();
 }
 
-void ImageModel::Bound(POINT& pt)
+void ImageModel::Bound(POINT& pt) const
 {
     pt.x = max(0, min(pt.x, GetWidth()));
     pt.y = max(0, min(pt.y, GetHeight()));
