@@ -335,7 +335,6 @@ static void CALLBACK PlaySound_Callback(HWAVEOUT hwo, UINT uMsg,
 static void PlaySound_WaitDone(struct playsound_data* s)
 {
     for (;;) {
-	ResetEvent(s->hEvent);
 	if (InterlockedDecrement(&s->dwEventCount) >= 0) break;
 	InterlockedIncrement(&s->dwEventCount);
 
@@ -511,17 +510,20 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	    if (count < 1) break;
 	    left -= count;
 	    waveHdr[index].dwBufferLength = count;
-	    waveHdr[index].dwFlags &= ~WHDR_DONE;
 	    if (waveOutWrite(wps->hWave, &waveHdr[index], sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
                 index ^= 1;
                 PlaySound_WaitDone(&s);
             }
-            else FIXME("Couldn't play header\n");
+            else {
+                ERR("Aborting play loop, waveOutWrite error\n");
+                wps->bLoop = FALSE;
+                break;
+            }
 	}
 	bRet = TRUE;
     } while (wps->bLoop);
 
-    PlaySound_WaitDone(&s); /* for last buffer */
+    PlaySound_WaitDone(&s); /* to balance first buffer */
     waveOutReset(wps->hWave);
 
     waveOutUnprepareHeader(wps->hWave, &waveHdr[0], sizeof(WAVEHDR));
