@@ -27,7 +27,7 @@ static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
 
     FCB->Connection = Qelt->Object;
 
-    if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+    if (FCB->RemoteAddress) ExFreePool(FCB->RemoteAddress);
     FCB->RemoteAddress =
         TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
@@ -138,7 +138,7 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
         return Irp->IoStatus.Status;
     }
 
-    Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
+    Qelt = ExAllocatePool(NonPagedPool, sizeof(*Qelt));
     if( !Qelt ) {
         Status = STATUS_NO_MEMORY;
     } else {
@@ -372,7 +372,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
             AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
-            ExFreePool( PendingConnObj );
+            ExFreePool(PendingConnObj);
 
             if( !IsListEmpty( &FCB->PendingConnections ) )
             {

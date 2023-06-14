@@ -27,7 +27,7 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
 
     for( i = 0; i < Len; i++ ) {
         if( i && !(i & 0xf) ) DbgPrint( "\n" );
-        if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
+        if( !(i & 0xf) ) DbgPrint( "%p: ", (Data + i) );
         DbgPrint( " %02x", Data[i] & 0xff );
     }
     DbgPrint("\n");
@@ -301,6 +301,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
+    FileObject->Flags |= FO_NAMED_PIPE;
     //Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
 
     Irp->IoStatus.Information = 0;
@@ -355,7 +356,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
         FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
         FCB->TdiDeviceName.Buffer =
-            ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+            ExAllocatePool(NonPagedPool, FCB->TdiDeviceName.Length);
 
         if( !FCB->TdiDeviceName.Buffer ) {
             ExFreePool(FCB);
@@ -388,8 +389,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( !NT_SUCCESS(Status) ) {
-        if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
-        ExFreePool( FCB );
+        if (FCB->TdiDeviceName.Buffer) ExFreePool(FCB->TdiDeviceName.Buffer);
+        ExFreePool(FCB);
         FileObject->FsContext = NULL;
     }
 
@@ -493,41 +494,41 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->EventSelect )
         ObDereferenceObject( FCB->EventSelect );
 
-    if( FCB->Context )
-        ExFreePool( FCB->Context );
+    if (FCB->Context)
+        ExFreePool(FCB->Context);
 
-    if( FCB->Recv.Window )
-        ExFreePool( FCB->Recv.Window );
+    if (FCB->Recv.Window)
+        ExFreePool(FCB->Recv.Window);
 
-    if( FCB->Send.Window )
-        ExFreePool( FCB->Send.Window );
+    if (FCB->Send.Window)
+        ExFreePool(FCB->Send.Window);
 
-    if( FCB->AddressFrom )
-        ExFreePool( FCB->AddressFrom );
+    if (FCB->AddressFrom)
+        ExFreePool(FCB->AddressFrom);
 
-    if( FCB->ConnectCallInfo )
-        ExFreePool( FCB->ConnectCallInfo );
+    if (FCB->ConnectCallInfo)
+        ExFreePool(FCB->ConnectCallInfo);
 
-    if( FCB->ConnectReturnInfo )
-        ExFreePool( FCB->ConnectReturnInfo );
+    if (FCB->ConnectReturnInfo)
+        ExFreePool(FCB->ConnectReturnInfo);
 
-    if( FCB->ConnectData )
-        ExFreePool( FCB->ConnectData );
+    if (FCB->ConnectData)
+        ExFreePool(FCB->ConnectData);
 
-    if( FCB->DisconnectData )
-        ExFreePool( FCB->DisconnectData );
+    if (FCB->DisconnectData)
+        ExFreePool(FCB->DisconnectData);
 
-    if( FCB->ConnectOptions )
-        ExFreePool( FCB->ConnectOptions );
+    if (FCB->ConnectOptions)
+        ExFreePool(FCB->ConnectOptions);
 
-    if( FCB->DisconnectOptions )
-        ExFreePool( FCB->DisconnectOptions );
+    if (FCB->DisconnectOptions)
+        ExFreePool(FCB->DisconnectOptions);
 
-    if( FCB->LocalAddress )
-        ExFreePool( FCB->LocalAddress );
+    if (FCB->LocalAddress)
+        ExFreePool(FCB->LocalAddress);
 
-    if( FCB->RemoteAddress )
-        ExFreePool( FCB->RemoteAddress );
+    if (FCB->RemoteAddress)
+        ExFreePool(FCB->RemoteAddress);
 
     if( FCB->Connection.Object )
     {
@@ -554,7 +555,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
     }
 
-    if( FCB->TdiDeviceName.Buffer )
+    if (FCB->TdiDeviceName.Buffer)
         ExFreePool(FCB->TdiDeviceName.Buffer);
 
     ExFreePool(FCB);
@@ -726,9 +727,6 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->Recv.Content = 0;
         FCB->Recv.BytesUsed = 0;
 
-        /* Mark us as overread to complete future reads with an error */
-        FCB->Overread = TRUE;
-
         /* Set a successful receive status to indicate a shutdown on overread */
         FCB->LastReceiveStatus = STATUS_SUCCESS;
 
@@ -829,6 +827,50 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
+NTSTATUS
+AfdQueryFsDeviceInfo(PDEVICE_OBJECT DeviceObject, PFILE_FS_DEVICE_INFORMATION Buffer, PULONG Length)
+{
+    if (*Length >= sizeof(FILE_FS_DEVICE_INFORMATION))
+    {
+        Buffer->Characteristics = 0;
+        Buffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
+
+        *Length -= sizeof(FILE_FS_DEVICE_INFORMATION);
+
+        return STATUS_SUCCESS;
+    }
+    else
+        return STATUS_INFO_LENGTH_MISMATCH;
+}
+
+static NTSTATUS NTAPI
+AfdQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    FS_INFORMATION_CLASS InfoClass;
+    PVOID Buffer;
+    ULONG Length;
+    NTSTATUS Status = STATUS_INVALID_INFO_CLASS;
+
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+    Length = IrpSp->Parameters.QueryVolume.Length;
+    InfoClass = IrpSp->Parameters.QueryVolume.FsInformationClass;
+
+    switch (InfoClass)
+    {
+    case FileFsDeviceInformation:
+        Status = AfdQueryFsDeviceInfo(DeviceObject, Buffer, &Length);
+        break;
+    default:
+        break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
+    return Status;
+}
+
 static DRIVER_DISPATCH AfdDispatch;
 static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -869,6 +911,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* read data */
     case IRP_MJ_READ:
         return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp, TRUE );
+
+    case IRP_MJ_QUERY_VOLUME_INFORMATION:
+        return AfdQueryVolumeInformation(DeviceObject, Irp, IrpSp);
 
     case IRP_MJ_DEVICE_CONTROL:
     {
@@ -1247,6 +1292,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = AfdDispatch;
     DriverObject->DriverUnload = AfdUnload;
 
     Status = IoCreateDevice(DriverObject,

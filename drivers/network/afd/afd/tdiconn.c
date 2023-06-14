@@ -71,26 +71,6 @@ UINT TaLengthOfTransportAddressByType(UINT AddressType)
     return AddrLen;
 }
 
-VOID TaCopyAddressInPlace( PTA_ADDRESS Target,
-                           PTA_ADDRESS Source ) {
-    UINT AddrLen = TaLengthOfAddress( Source );
-    RtlCopyMemory( Target, Source, AddrLen );
-}
-
-PTA_ADDRESS TaCopyAddress( PTA_ADDRESS Source ) {
-    UINT AddrLen = TaLengthOfAddress( Source );
-    PVOID Buffer;
-    if (!AddrLen)
-        return NULL;
-
-    Buffer = ExAllocatePool( NonPagedPool, AddrLen );
-
-    if (Buffer)
-       RtlCopyMemory( Buffer, Source, AddrLen );
-
-    return Buffer;
-}
-
 VOID TaCopyTransportAddressInPlace( PTRANSPORT_ADDRESS Target,
                                     PTRANSPORT_ADDRESS Source ) {
     UINT AddrLen = TaLengthOfTransportAddress( Source );
@@ -105,7 +85,7 @@ PTRANSPORT_ADDRESS TaCopyTransportAddress( PTRANSPORT_ADDRESS OtherAddress ) {
     if (!AddrLen)
         return NULL;
 
-    A = ExAllocatePool( NonPagedPool, AddrLen );
+    A = ExAllocatePool(NonPagedPool, AddrLen);
 
     if( A )
         TaCopyTransportAddressInPlace( A, OtherAddress );
@@ -211,8 +191,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
     ConnInfo = (PTDI_CONNECTION_INFORMATION)
         ExAllocatePool(NonPagedPool,
-                       sizeof(TDI_CONNECTION_INFORMATION) +
-                       TdiAddressSize);
+                       sizeof(TDI_CONNECTION_INFORMATION) + TdiAddressSize);
     if (!ConnInfo) {
         *ConnectionInfo = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -222,7 +201,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool( ConnInfo );
+        ExFreePool(ConnInfo);
         ConnInfo = NULL;
     }
 

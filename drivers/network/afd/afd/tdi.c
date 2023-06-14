@@ -776,7 +776,7 @@ NTSTATUS TdiQueryAddress(
     AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
     BufferSize = sizeof(TDIEntityID) * 20;
-    Entities   = (TDIEntityID*)ExAllocatePool(NonPagedPool, BufferSize);
+    Entities = (TDIEntityID*)ExAllocatePool(NonPagedPool, BufferSize);
     if (!Entities) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;

@@ -204,7 +204,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     /* Copy the buffer array so we don't lose it */
     UINT Lock = LockAddress ? 2 : 0;
     UINT Size = (sizeof(AFD_WSABUF) + sizeof(AFD_MAPBUF)) * (Count + Lock);
-    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size );
+    PAFD_WSABUF NewBuf = ExAllocatePool(PagedPool, Size);
     BOOLEAN LockFailed = FALSE;
     PAFD_MAPBUF MapBuf;
 
@@ -230,7 +230,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
                                     "from userland (%p %p)\n",
                                     Buf, AddressLen));
-            ExFreePool( NewBuf );
+            ExFreePool(NewBuf);
             _SEH2_YIELD(return NULL);
         } _SEH2_END;
 
@@ -265,11 +265,11 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
                     IoFreeMdl( MapBuf[i].Mdl );
                     MapBuf[i].Mdl = NULL;
-                    ExFreePool( NewBuf );
+                    ExFreePool(NewBuf);
                     return NULL;
                 }
             } else {
-                ExFreePool( NewBuf );
+                ExFreePool(NewBuf);
                 return NULL;
             }
         }
@@ -295,7 +295,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
         }
     }
 
-    ExFreePool( Buf );
+    ExFreePool(Buf);
     Buf = NULL;
 }
 
@@ -305,8 +305,8 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    PAFD_HANDLE FileObjects = ExAllocatePool
-        ( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
+    PAFD_HANDLE FileObjects = ExAllocatePool(NonPagedPool,
+        HandleCount * sizeof(AFD_HANDLE));
 
     for( i = 0; FileObjects && i < HandleCount; i++ ) {
         FileObjects[i].Status = 0;
@@ -346,7 +346,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
             ObDereferenceObject( (PVOID)HandleArray[i].Handle );
     }
 
-    ExFreePool( HandleArray );
+    ExFreePool(HandleArray);
     HandleArray = NULL;
 }
 

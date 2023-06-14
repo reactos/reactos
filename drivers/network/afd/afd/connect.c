@@ -269,13 +269,13 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
     /* Allocate the receive area and start receiving */
     if (!FCB->Recv.Window)
     {
-        FCB->Recv.Window = ExAllocatePool( PagedPool, FCB->Recv.Size );
+        FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
         if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
     }
 
     if (!FCB->Send.Window)
     {
-        FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
+        FCB->Send.Window = ExAllocatePool(PagedPool, FCB->Send.Size);
         if( !FCB->Send.Window ) return STATUS_NO_MEMORY;
     }
 
@@ -434,7 +434,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
    {
-        if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+        if (FCB->RemoteAddress) ExFreePool(FCB->RemoteAddress);
         FCB->RemoteAddress =
             TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -455,7 +455,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
     case SOCKET_STATE_CREATED:
-        if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+        if (FCB->LocalAddress) ExFreePool(FCB->LocalAddress);
         FCB->LocalAddress =
             TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
 
@@ -473,7 +473,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
-        if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+        if (FCB->RemoteAddress) ExFreePool(FCB->RemoteAddress);
         FCB->RemoteAddress =
             TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 

@@ -68,7 +68,7 @@ VOID SignalSocket(
     {
         KeCancelTimer( &Poll->Timer );
         RemoveEntryList( &Poll->ListEntry );
-        ExFreePool( Poll );
+        ExFreePool(Poll);
     }
 
     Irp->IoStatus.Status = Status;
@@ -228,7 +228,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
        PAFD_ACTIVE_POLL Poll = NULL;
 
-       Poll = ExAllocatePool( NonPagedPool, sizeof(AFD_ACTIVE_POLL) );
+       Poll = ExAllocatePool(NonPagedPool, sizeof(AFD_ACTIVE_POLL));
 
        if (Poll){
           Poll->Irp = Irp;
