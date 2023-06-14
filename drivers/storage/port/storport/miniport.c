@@ -65,7 +65,7 @@ InitializeConfiguration(
 
     PortConfig->SpecificLuExtensionSize = InitData->SpecificLuExtensionSize;
     PortConfig->SrbExtensionSize = InitData->SrbExtensionSize;
-    PortConfig->MaximumNumberOfLogicalUnits = 1;
+    PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
     PortConfig->WmiDataProvider = TRUE;
 
     PortConfig->NumberOfAccessRanges = InitData->NumberOfAccessRanges;
