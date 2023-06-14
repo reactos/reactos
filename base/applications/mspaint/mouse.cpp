@@ -366,7 +366,7 @@ struct PenTool : GenericDrawTool
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Line(m_hdc, last.x, last.y, x, y, rgb, 1);
-        SetPixel(m_hdc, x, y, rgb);
+        ::SetPixelV(m_hdc, x, y, rgb);
     }
 };
 

@@ -189,7 +189,7 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 2:
             MoveToEx(hdc, x1, y1, NULL);
             LineTo(hdc, x2, y2);
-            SetPixel(hdc, x2, y2, color);
+            ::SetPixelV(hdc, x2, y2, color);
             break;
         case 3:
             for(a = 0; a <= b; a++)

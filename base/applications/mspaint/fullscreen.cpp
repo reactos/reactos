@@ -50,12 +50,6 @@ LRESULT CFullscreenWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
-LRESULT CFullscreenWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    Invalidate(TRUE);
-    return 0;
-}
-
 LRESULT CFullscreenWindow::OnGetText(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // return caption of the main window, instead
