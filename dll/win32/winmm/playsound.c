@@ -31,7 +31,6 @@ typedef struct tagWINE_PLAYSOUND
 {
     unsigned                    bLoop : 1;
     HMMIO                       hmmio;
-    HWAVEOUT                    hWave;
     struct tagWINE_PLAYSOUND*   lpNext;
 } WINE_PLAYSOUND;
 
@@ -427,6 +426,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     MMCKINFO		ckMainRIFF;
     MMCKINFO        	mmckInfo;
     LPWAVEFORMATEX      lpWaveFormat = NULL;
+    HWAVEOUT           hWave = 0;
     LPWAVEHDR		waveHdr = NULL;
     INT			count, bufsize, left, index;
     struct playsound_data	s;
@@ -473,7 +473,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 
     s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    if (waveOutOpen(&wps->hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
+    if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
 		    (DWORD_PTR)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
 	goto errCleanUp;
 
@@ -487,8 +487,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     waveHdr[0].dwLoops = waveHdr[1].dwLoops = 0L;
     waveHdr[0].dwFlags = waveHdr[1].dwFlags = 0L;
     waveHdr[0].dwBufferLength = waveHdr[1].dwBufferLength = bufsize;
-    if (waveOutPrepareHeader(wps->hWave, &waveHdr[0], sizeof(WAVEHDR)) ||
-	waveOutPrepareHeader(wps->hWave, &waveHdr[1], sizeof(WAVEHDR))) {
+    if (waveOutPrepareHeader(hWave, &waveHdr[0], sizeof(WAVEHDR)) ||
+	waveOutPrepareHeader(hWave, &waveHdr[1], sizeof(WAVEHDR))) {
 	goto errCleanUp;
     }
 
@@ -503,6 +503,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
         {
 	    if (WaitForSingleObject(psStopEvent, 0) == WAIT_OBJECT_0)
             {
+        waveOutReset(hWave);
 		wps->bLoop = FALSE;
 		break;
 	    }
@@ -510,7 +511,7 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	    if (count < 1) break;
 	    left -= count;
 	    waveHdr[index].dwBufferLength = count;
-	    if (waveOutWrite(wps->hWave, &waveHdr[index], sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
+	    if (waveOutWrite(hWave, &waveHdr[index], sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
                 index ^= 1;
                 PlaySound_WaitDone(&s);
             }
@@ -524,17 +525,17 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     } while (wps->bLoop);
 
     PlaySound_WaitDone(&s); /* to balance first buffer */
-    waveOutReset(wps->hWave);
+    waveOutReset(hWave);
 
-    waveOutUnprepareHeader(wps->hWave, &waveHdr[0], sizeof(WAVEHDR));
-    waveOutUnprepareHeader(wps->hWave, &waveHdr[1], sizeof(WAVEHDR));
+    waveOutUnprepareHeader(hWave, &waveHdr[0], sizeof(WAVEHDR));
+    waveOutUnprepareHeader(hWave, &waveHdr[1], sizeof(WAVEHDR));
 
 errCleanUp:
     TRACE("Done playing sound => %s!\n", bRet ? "ok" : "ko");
     CloseHandle(s.hEvent);
     HeapFree(GetProcessHeap(), 0, waveHdr);
     HeapFree(GetProcessHeap(), 0, lpWaveFormat);
-    if (wps->hWave)	while (waveOutClose(wps->hWave) == WAVERR_STILLPLAYING) Sleep(100);
+    if (hWave)	while (waveOutClose(hWave) == WAVERR_STILLPLAYING) Sleep(100);
 
     PlaySound_Free(wps);
 
@@ -598,7 +599,6 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
          * NULL... as of today, we stop all playing instances */
         SetEvent(psStopEvent);
 
-        waveOutReset(PlaySoundList->hWave);
         LeaveCriticalSection(&WINMM_cs);
         WaitForSingleObject(psLastEvent, INFINITE);
         EnterCriticalSection(&WINMM_cs);
