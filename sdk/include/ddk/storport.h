@@ -20,12 +20,54 @@
  *
  */
 
+#ifdef _NTSCSI_
+  #error STORPORT.H must be included instead of SCSI.H
+#endif
+
+#ifdef _NTSRB_
+  #error STORPORT.H must be included instead of SRB.H
+#endif
+
 #ifndef _NTSTORPORT_
 #define _NTSTORPORT_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//
+// Common definitions with SRB.H
+//
+
+/* NOTE: the current SCSI_MAXIMUM_TARGETS_PER_BUS is applicable
+ * only on scsiport miniports. For storport miniports, the max
+ * target supported is 255. */
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define SCSI_MAXIMUM_BUSES_PER_ADAPTER    255
+#endif
+#define SCSI_MAXIMUM_TARGETS_PER_BUS      128
+#define SCSI_MAXIMUM_LUNS_PER_TARGET      255
+#define SCSI_MINIMUM_PHYSICAL_BREAKS      16
+#define SCSI_MAXIMUM_PHYSICAL_BREAKS      255
+
+/* These constants are for backward compatibility.
+ * They used to be the maximum supported. */
+#define SCSI_MAXIMUM_BUSES                8
+#define SCSI_MAXIMUM_TARGETS              8
+#define SCSI_MAXIMUM_LOGICAL_UNITS        8
+
+/* PORT_CONFIGURATION_INFORMATION.Dma64BitAddresses constants */
+#define SCSI_DMA64_MINIPORT_SUPPORTED            0x01
+#define SCSI_DMA64_SYSTEM_SUPPORTED              0x80
+#if (NTDDI_VERSION > NTDDI_WS03SP1)
+#define SCSI_DMA64_MINIPORT_FULL64BIT_SUPPORTED  0x02
+#endif
+
+#define SP_UNINITIALIZED_VALUE            ((ULONG) ~0)
+#define SP_UNTAGGED                       ((UCHAR) ~0)
+
+// End of common definitions with SRB.H
+
 
 #if defined(_STORPORT_)
 #define STORPORT_API
@@ -293,6 +335,7 @@ extern "C" {
 #define SP_RETURN_ERROR                     2
 #define SP_RETURN_BAD_CONFIG                3
 
+/* SCSI_REQUEST_BLOCK.Function constants */
 #define SRB_FUNCTION_EXECUTE_SCSI           0x00
 #define SRB_FUNCTION_CLAIM_DEVICE           0x01
 #define SRB_FUNCTION_IO_CONTROL             0x02
@@ -320,6 +363,7 @@ extern "C" {
 #define SRB_FUNCTION_PNP                    0x25
 #define SRB_FUNCTION_DUMP_POINTERS          0x26
 
+/* SCSI_REQUEST_BLOCK.SrbStatus constants */
 #define SRB_STATUS_PENDING                  0x00
 #define SRB_STATUS_SUCCESS                  0x01
 #define SRB_STATUS_ABORTED                  0x02
@@ -353,6 +397,7 @@ extern "C" {
 #define SRB_STATUS_AUTOSENSE_VALID          0x80
 #define SRB_STATUS(Status)                  (Status & ~(SRB_STATUS_AUTOSENSE_VALID | SRB_STATUS_QUEUE_FROZEN))
 
+/* SCSI_REQUEST_BLOCK.SrbFlags constants */
 #define SRB_FLAGS_QUEUE_ACTION_ENABLE       0x00000002
 #define SRB_FLAGS_DISABLE_DISCONNECT        0x00000004
 #define SRB_FLAGS_DISABLE_SYNCH_TRANSFER    0x00000008
