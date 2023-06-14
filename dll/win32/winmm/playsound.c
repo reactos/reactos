@@ -452,6 +452,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     lpWaveFormat = HeapAlloc(GetProcessHeap(), 0, mmckInfo.cksize);
+    if (!lpWaveFormat)
+        goto errCleanUp;
     if (mmioRead(wps->hmmio, (HPSTR)lpWaveFormat, mmckInfo.cksize) < sizeof(PCMWAVEFORMAT))
 	goto errCleanUp;
 
@@ -473,6 +475,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 	  (LPSTR)&mmckInfo.ckid, mmckInfo.fccType, mmckInfo.cksize);
 
     s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (!s.hEvent)
+        goto errCleanUp;
 
     if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
 		    (DWORD_PTR)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
@@ -482,6 +486,8 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
     bufsize = (((lpWaveFormat->nAvgBytesPerSec / 3) - 1) / lpWaveFormat->nBlockAlign + 1) *
 	lpWaveFormat->nBlockAlign;
     waveHdr = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WAVEHDR) + 2 * bufsize);
+    if (!waveHdr)
+        goto errCleanUp;
     waveHdr[0].lpData = (char*)waveHdr + 2 * sizeof(WAVEHDR);
     waveHdr[1].lpData = (char*)waveHdr + 2 * sizeof(WAVEHDR) + bufsize;
     waveHdr[0].dwUser = waveHdr[1].dwUser = 0L;
@@ -533,10 +539,10 @@ static BOOL proc_PlaySound(WINE_PLAYSOUND *wps)
 
 errCleanUp:
     TRACE("Done playing sound => %s!\n", bRet ? "ok" : "ko");
-    CloseHandle(s.hEvent);
-    HeapFree(GetProcessHeap(), 0, waveHdr);
     HeapFree(GetProcessHeap(), 0, lpWaveFormat);
     if (hWave)	while (waveOutClose(hWave) == WAVERR_STILLPLAYING) Sleep(100);
+    CloseHandle(s.hEvent);
+    HeapFree(GetProcessHeap(), 0, waveHdr);
 
     PlaySound_Free(wps);
 
@@ -611,7 +617,7 @@ static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSo
     PlaySoundList = wps;
     LeaveCriticalSection(&WINMM_cs);
 
-    if (!pszSound || (fdwSound & SND_PURGE)) return TRUE;
+    if (!wps) return TRUE;
 
     if (fdwSound & SND_ASYNC)
     {
