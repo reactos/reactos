@@ -183,7 +183,7 @@ HWND CMainWindow::DoCreate()
 void CheckHandleLeaks(void)
 {
 #if (WINVER >= 0x0500)
-    HANDLE hProcess = GetCurrentProcess();
+    HANDLE hProcess = ::GetCurrentProcess();
     ATLTRACE("Count of GDI objects: %ld\n", ::GetGuiResources(hProcess, GR_GDIOBJECTS));
     ATLTRACE("Count of USER objects: %ld\n", ::GetGuiResources(hProcess, GR_USEROBJECTS));
 #endif
