@@ -72,7 +72,7 @@ static HMMIO get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
                       L"",
                       str,
                       ARRAY_SIZE(str));
-    if (lstrlenW(str) == 0)
+    if (!*str)
         goto Next;
 
     for (ptr = str; *ptr && *ptr != L','; ptr++);
