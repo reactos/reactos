@@ -18,7 +18,7 @@ void ImageModel::NotifyImageChanged()
     if (canvasWindow.IsWindow())
         canvasWindow.Invalidate(FALSE);
     if (miniature.IsWindow())
-        miniature.Invalidate(TRUE);
+        miniature.Invalidate(FALSE);
 }
 
 ImageModel::ImageModel()
