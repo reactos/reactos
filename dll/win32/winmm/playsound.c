@@ -46,7 +46,7 @@ static HMMIO	get_mmioFromFile(LPCWSTR lpszName)
     ret = mmioOpenW((LPWSTR)lpszName, NULL,
                     MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
     if (ret != 0) return ret;
-    if (SearchPathW(NULL, lpszName, NULL, ARRAY_SIZE(buf), buf, &dummy))
+    if (SearchPathW(NULL, lpszName, L".wav", ARRAY_SIZE(buf), buf, &dummy))
     {
         return mmioOpenW(buf, NULL,
                          MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
