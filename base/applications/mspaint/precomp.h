@@ -54,9 +54,9 @@
 #include "globalvar.h"
 
 #ifdef _DEBUG
-    void CheckHandleLeaks(void);
+    DWORD CheckHandleLeaks(void);
 #else
-    #define CheckHandleLeaks() /*empty*/
+    #define CheckHandleLeaks() 0
 #endif
 
 #endif /* _MSPAINT_H */

@@ -180,11 +180,14 @@ HWND CMainWindow::DoCreate()
 }
 
 #ifdef _DEBUG
-void CheckHandleLeaks(void)
+DWORD CheckHandleLeaks(void)
 {
     HANDLE hProcess = ::GetCurrentProcess();
-    ATLTRACE("GDI objects: %ld\n", ::GetGuiResources(hProcess, GR_GDIOBJECTS));
-    ATLTRACE("USER objects: %ld\n", ::GetGuiResources(hProcess, GR_USEROBJECTS));
+    DWORD GUIObjects = ::GetGuiResources(hProcess, GR_GDIOBJECTS);
+    DWORD UserObjects = ::GetGuiResources(hProcess, GR_USEROBJECTS);
+    ATLTRACE("GDI objects: %ld\n"
+             "USER objects: %ld\n", GUIObjects, UserObjects);
+    return MAKELONG(GUIObjects, UserObjects);
 }
 #endif
 
@@ -195,10 +198,6 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
 #ifdef _DEBUG
     // Report any memory leaks on exit
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-    // Check handle leaks
-    CheckHandleLeaks();
-    atexit(CheckHandleLeaks);
 #endif
 
     hProgInstance = hInstance;
