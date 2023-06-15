@@ -132,7 +132,7 @@ GraphCtrl_Dispose(PTM_GRAPH_CONTROL inst)
         DeleteObject(inst->hbmGraph);
 
     if (inst->hdcGraph)
-        DeleteObject(inst->hdcGraph);
+        DeleteDC(inst->hdcGraph);
 }
 
 void
