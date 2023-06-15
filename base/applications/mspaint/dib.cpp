@@ -59,6 +59,26 @@ CreateColorDIB(int width, int height, COLORREF rgb)
     return ret;
 }
 
+HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight)
+{
+    if (minimalWidth <= 0)
+        minimalWidth = 1;
+    if (minimalHeight <= 0)
+        minimalHeight = 1;
+
+    BITMAP bm;
+    if (!GetObject(hbm, sizeof(bm), &bm))
+        hbm = NULL;
+
+    if (hbm && minimalWidth <= bm.bmWidth && minimalHeight <= bm.bmHeight)
+        return hbm;
+
+    if (hbm)
+        DeleteObject(hbm);
+
+    return CreateDIBWithProperties((minimalWidth * 3) / 2, (minimalHeight * 3) / 2);
+}
+
 int
 GetDIBWidth(HBITMAP hBitmap)
 {

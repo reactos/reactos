@@ -36,6 +36,7 @@ public:
     END_MSG_MAP()
 
     CCanvasWindow();
+    virtual ~CCanvasWindow();
 
     BOOL m_drawing;
 
@@ -54,6 +55,7 @@ protected:
     CANVAS_HITTEST m_hitSelection;
     CANVAS_HITTEST m_whereHit;
     POINT m_ptOrig; // The origin of drag start
+    HBITMAP m_hbmCached; // The cached buffer bitmap
     CRect m_rcNew;
 
     CANVAS_HITTEST CanvasHitTest(POINT pt);

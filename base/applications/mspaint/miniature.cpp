@@ -14,6 +14,17 @@ CMiniatureWindow miniature;
 
 /* FUNCTIONS ********************************************************/
 
+CMiniatureWindow::CMiniatureWindow()
+    : m_hbmCached(NULL)
+{
+}
+
+CMiniatureWindow::~CMiniatureWindow()
+{
+    if (m_hbmCached)
+        ::DeleteObject(m_hbmCached);
+}
+
 HWND CMiniatureWindow::DoCreate(HWND hwndParent)
 {
     if (m_hWnd)
@@ -82,7 +93,8 @@ LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
     // Use a memory bitmap to reduce flickering
     HDC hdcMem = ::CreateCompatibleDC(hDC);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, ::CreateCompatibleBitmap(hDC, rc.right, rc.bottom));
+    m_hbmCached = CachedBufferDIB(m_hbmCached, rc.right, rc.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_hbmCached);
 
     // FIXME: Consider aspect ratio
 
@@ -100,7 +112,7 @@ LRESULT CMiniatureWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     ::BitBlt(hDC, 0, 0, rc.right, rc.bottom, hdcMem, 0, 0, SRCCOPY);
 
     // Clean up
-    ::DeleteObject(::SelectObject(hdcMem, hbmOld));
+    ::SelectObject(hdcMem, hbmOld);
     ::DeleteDC(hdcMem);
 
     EndPaint(&ps);

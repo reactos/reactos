@@ -17,8 +17,15 @@ CCanvasWindow::CCanvasWindow()
     , m_hitSelection(HIT_NONE)
     , m_whereHit(HIT_NONE)
     , m_ptOrig { -1, -1 }
+    , m_hbmCached(NULL)
 {
     ::SetRectEmpty(&m_rcNew);
+}
+
+CCanvasWindow::~CCanvasWindow()
+{
+    if (m_hbmCached)
+        ::DeleteObject(m_hbmCached);
 }
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
@@ -95,8 +102,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // We use a memory bitmap to reduce flickering
     HDC hdcMem = ::CreateCompatibleDC(hDC);
-    HBITMAP hbm = ::CreateCompatibleBitmap(hDC, rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbm);
+    m_hbmCached = CachedBufferDIB(m_hbmCached, rcClient.right, rcClient.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_hbmCached);
 
     // Fill the background
     ::FillRect(hdcMem, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
@@ -164,7 +171,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
              hdcMem, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::DeleteObject(::SelectObject(hdcMem, hbmOld));
+    ::SelectObject(hdcMem, hbmOld);
     ::DeleteDC(hdcMem);
 }
 

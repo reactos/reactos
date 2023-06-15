@@ -30,6 +30,12 @@ public:
         MESSAGE_HANDLER(WM_PALETTEMODELPALETTECHANGED, OnPaletteModelPaletteChanged)
     END_MSG_MAP()
 
+    CPaletteWindow();
+    virtual ~CPaletteWindow();
+
+protected:
+    HBITMAP m_hbmCached; // Cached buffer bitmap
+
     LRESULT OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

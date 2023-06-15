@@ -10,6 +10,7 @@
 
 HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
+HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
 
 static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
 {

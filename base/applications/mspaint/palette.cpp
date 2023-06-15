@@ -21,6 +21,17 @@ CPaletteWindow paletteWindow;
 
 /* FUNCTIONS ********************************************************/
 
+CPaletteWindow::CPaletteWindow()
+    : m_hbmCached(NULL)
+{
+}
+
+CPaletteWindow::~CPaletteWindow()
+{
+    if (m_hbmCached)
+        ::DeleteObject(m_hbmCached);
+}
+
 static VOID drawColorBox(HDC hDC, LPCRECT prc, COLORREF rgbColor, UINT nBorder)
 {
     RECT rc = *prc;
@@ -76,8 +87,8 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     /* To avoid flickering, we use a memory bitmap.
        The left and top values are zeros in client rectangle */
     HDC hMemDC = ::CreateCompatibleDC(hDC);
-    HBITMAP hbm = ::CreateCompatibleBitmap(hDC, rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbm);
+    m_hbmCached = CachedBufferDIB(m_hbmCached, rcClient.right, rcClient.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, m_hbmCached);
 
     /* Fill the background (since WM_ERASEBKGND handling is disabled) */
     ::FillRect(hMemDC, &rcClient, (HBRUSH)(COLOR_3DFACE + 1));
@@ -121,7 +132,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     /* Transfer bits (hDC <-- hMemDC) */
     ::BitBlt(hDC, 0, 0, rcClient.right, rcClient.bottom, hMemDC, 0, 0, SRCCOPY);
 
-    ::DeleteObject(::SelectObject(hMemDC, hbmOld));
+    ::SelectObject(hMemDC, hbmOld);
     ::DeleteDC(hMemDC);
     EndPaint(&ps);
     return 0;

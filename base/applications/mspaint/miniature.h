@@ -24,9 +24,14 @@ public:
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
     END_MSG_MAP()
 
+    CMiniatureWindow();
+    virtual ~CMiniatureWindow();
+
     HWND DoCreate(HWND hwndParent);
 
-private:
+protected:
+    HBITMAP m_hbmCached; // Cached buffer bitmap
+
     LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
