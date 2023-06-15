@@ -930,7 +930,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     if (GreIsHandleValid(hDC))
     {
-        if (!IntGdiDeleteDC(hDC, FALSE))
+        if (!GreDeleteObject(hDC))
         {
             DPRINT1("DC_FreeDC failed\n");
             return FALSE;
