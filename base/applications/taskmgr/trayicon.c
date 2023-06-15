@@ -1,15 +1,27 @@
 /*
- * PROJECT:     ReactOS Task Manager
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Task Manager for ReactOS
- * COPYRIGHT:   Copyright (C) 1999 - 2001 Brian Palmer <brianp@reactos.org>
- *              Copyright (C) 2005 Klemens Friedl <frik85@reactos.at>
- *              Copyright (C) 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *  ReactOS Task Manager
+ *
+ *  trayicon.c
+ *
+ *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "precomp.h"
-
-#include <strsafe.h>
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {
@@ -117,13 +129,14 @@ done:
 BOOL TrayIcon_ShellAddTrayIcon(void)
 {
     NOTIFYICONDATAW nid;
-    HICON           hIcon;
+    HICON           hIcon = NULL;
     BOOL            bRetVal;
     WCHAR           szMsg[64];
 
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    ZeroMemory(&nid, sizeof(nid));
     nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
@@ -131,8 +144,9 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
 
-    LoadStringW(NULL, IDS_MSG_TRAYICONCPUUSAGE, szMsg, _countof(szMsg));
-    StringCchPrintfW(nid.szTip, _countof(nid.szTip), szMsg, PerfDataGetProcessorUsage());
+
+    LoadStringW( GetModuleHandleW(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+    wsprintfW(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIconW(NIM_ADD, &nid);
 
@@ -145,36 +159,40 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
 BOOL TrayIcon_ShellRemoveTrayIcon(void)
 {
     NOTIFYICONDATAW nid;
+    BOOL            bRetVal;
 
-    ZeroMemory(&nid, sizeof(nid));
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+
     nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = 0;
     nid.uCallbackMessage = WM_ONTRAYICON;
 
-    return Shell_NotifyIconW(NIM_DELETE, &nid);
+    bRetVal = Shell_NotifyIconW(NIM_DELETE, &nid);
+
+    return bRetVal;
 }
 
 BOOL TrayIcon_ShellUpdateTrayIcon(void)
 {
     NOTIFYICONDATAW nid;
-    HICON           hIcon;
+    HICON           hIcon = NULL;
     BOOL            bRetVal;
     WCHAR           szTemp[64];
 
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    ZeroMemory(&nid, sizeof(nid));
     nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
-
-    LoadStringW(NULL, IDS_MSG_TRAYICONCPUUSAGE, szTemp, _countof(szTemp));
-    StringCchPrintfW(nid.szTip, _countof(nid.szTip), szTemp, PerfDataGetProcessorUsage());
+    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, sizeof(szTemp)/sizeof(szTemp[0]));
+    wsprintfW(nid.szTip, szTemp, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIconW(NIM_MODIFY, &nid);
 
