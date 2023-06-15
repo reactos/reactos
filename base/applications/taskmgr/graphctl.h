@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Task Manager
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Task Manager for ReactOS
- * COPYRIGHT:   Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Graph plotting controls
+ * COPYRIGHT:   Copyright 2002 Robert Dickenson <robd@reactos.org>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 #pragma once
