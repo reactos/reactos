@@ -649,16 +649,15 @@ cleanup:
 
 void PerfDataDeallocCommandLineCache()
 {
-    PCMD_LINE_CACHE cache = global_cache;
-    PCMD_LINE_CACHE cache_old;
+    PCMD_LINE_CACHE cache, pnext;
 
-    while (cache && cache->pnext != NULL)
+    for (cache = global_cache; cache; cache = pnext)
     {
-        cache_old = cache;
-        cache = cache->pnext;
-
-        HeapFree(GetProcessHeap(), 0, cache_old);
+        pnext = cache->pnext;
+        HeapFree(GetProcessHeap(), 0, cache);
     }
+
+    global_cache = NULL;
 }
 
 ULONG PerfDataGetSessionId(ULONG Index)
