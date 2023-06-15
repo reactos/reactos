@@ -6055,7 +6055,11 @@ static void test_screen(IHTMLWindow2 *window)
     ok(hres == S_OK, "get_height failed: %08x\n", hres);
     ok(l == exl, "height = %d, expected %d\n", l, exl);
 
+#ifdef __REACTOS__
+    DeleteDC(hdc);
+#else
     DeleteObject(hdc);
+#endif
 
     SystemParametersInfoW(SPI_GETWORKAREA, 0, &work_area, 0);
 

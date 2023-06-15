@@ -179,7 +179,11 @@ HDC get_display_dc(void)
 
         hdc = CreateICW(displayW, NULL, NULL, NULL);
         if(InterlockedCompareExchangePointer((void**)&display_dc, hdc, NULL))
+#ifdef __REACTOS__
+            DeleteDC(hdc);
+#else
             DeleteObject(hdc);
+#endif
     }
 
     return display_dc;

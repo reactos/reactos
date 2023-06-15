@@ -200,7 +200,7 @@ DC_vRestoreDC(
         /* Unlock it */
         DC_UnlockDc(pdcSave);
         /* Delete the saved dc */
-        GreDeleteObject(hdcSave);
+        IntGdiDeleteDC(hdcSave, FALSE);
     }
 
     DPRINT("Leave DC_vRestoreDC()\n");

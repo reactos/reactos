@@ -918,7 +918,9 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
         if (hOffScreenBmp) {
 	    hOldBmp = SelectObject(hdc, hOffScreenBmp);
 	} else {
+#ifndef __REACTOS__
 	    DeleteObject(hdc);
+#endif
 	    hdc = hdcDst;
 	}
     } else {
@@ -1014,7 +1016,11 @@ cleanup:
 	BitBlt(hdcDst, 0, 0, rcClient.right, rcClient.bottom, hdc, 0, 0, SRCCOPY);
 	SelectObject(hdc, hOldBmp);
 	DeleteObject(hOffScreenBmp);
+#ifdef __REACTOS__
+	DeleteDC(hdc);
+#else
 	DeleteObject(hdc);
+#endif
     }
 }
 
