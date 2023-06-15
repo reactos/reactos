@@ -101,7 +101,11 @@ static void process_detach(void)
     if(mshtml_tls != TLS_OUT_OF_INDEXES)
         TlsFree(mshtml_tls);
     if(display_dc)
+#ifdef __REACTOS__
+        DeleteDC(display_dc);
+#else
         DeleteObject(display_dc);
+#endif
     if(mlang)
         IMultiLanguage2_Release(mlang);
 

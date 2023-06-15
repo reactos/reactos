@@ -94,7 +94,11 @@ public:
         if (m_hbitmap)
             DeleteObject(m_hbitmap);
         if (m_hdc)
+#ifdef __REACTOS__
+            DeleteDC(m_hdc);
+#else
             DeleteObject(m_hdc);
+#endif
         if (m_bytes)
             delete[] m_bytes;
     }

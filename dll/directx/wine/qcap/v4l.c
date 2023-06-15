@@ -555,8 +555,13 @@ static void Resize(const Capture * capBox, LPBYTE output, const BYTE *input)
             inoffset += ow;
         }
         CoTaskMemFree(myarray);
+#ifdef __REACTOS__
+        DeleteDC(dc_s);
+        DeleteDC(dc_d);
+#else
         DeleteObject(dc_s);
         DeleteObject(dc_d);
+#endif
         DeleteObject(bmp_s);
         DeleteObject(bmp_d);
     }
