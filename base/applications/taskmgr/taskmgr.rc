@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     The resource of Task Manager
+ * COPYRIGHT:   Copyright (C) 1999-2001 Brian Palmer <brianp@reactos.org>
+ */
+
 #include <windef.h>
 #include <winuser.h>
 #include <commctrl.h>
