@@ -116,6 +116,9 @@ GraphCtrl_Dispose(PTM_GRAPH_CONTROL inst)
     if (inst->PointBuffer)
         HeapFree(GetProcessHeap(), 0, inst->PointBuffer);
 
+    if (inst->hdcGraph)
+        DeleteDC(inst->hdcGraph);
+
     if (inst->hPenGrid)
         DeleteObject(inst->hPenGrid);
 
@@ -130,9 +133,6 @@ GraphCtrl_Dispose(PTM_GRAPH_CONTROL inst)
 
     if (inst->hbmGraph)
         DeleteObject(inst->hbmGraph);
-
-    if (inst->hdcGraph)
-        DeleteDC(inst->hdcGraph);
 }
 
 void
