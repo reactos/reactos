@@ -1473,6 +1473,12 @@ PnpRootPowerControl(
     Status = Irp->IoStatus.Status;
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
+    /*
+     * We must handle power IRPs based on whether it is a function driver
+     * or not from the device extension, so it cannot be NULL.
+     */
+    ASSERT(DeviceExtension);
+
     if (DeviceExtension->Common.IsFDO)
     {
         ASSERT(!DeviceExtension->Common.IsFDO);
