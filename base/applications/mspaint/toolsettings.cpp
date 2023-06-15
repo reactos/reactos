@@ -69,8 +69,7 @@ VOID CToolSettingsWindow::drawTrans(HDC hdc, LPCRECT prc)
     RECT rc[2];
     getTransRects(rc, prc);
 
-    HBRUSH hbrHigh = ::GetSysColorBrush(COLOR_HIGHLIGHT);
-    ::FillRect(hdc, &rc[toolsModel.IsBackgroundTransparent()], hbrHigh);
+    ::FillRect(hdc, &rc[toolsModel.IsBackgroundTransparent()], (HBRUSH)(COLOR_HIGHLIGHT + 1));
     ::DrawIconEx(hdc, rc[0].left, rc[0].top, m_hNontranspIcon,
                  CX_TRANS_ICON, CY_TRANS_ICON, 0, NULL, DI_NORMAL);
     ::DrawIconEx(hdc, rc[1].left, rc[1].top, m_hTranspIcon,
@@ -119,8 +118,7 @@ VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
     RECT rects[12];
     getBrushRects(rects, prc);
 
-    HBRUSH hbrHigh = ::GetSysColorBrush(COLOR_HIGHLIGHT);
-    ::FillRect(hdc, &rects[toolsModel.GetBrushStyle()], hbrHigh);
+    ::FillRect(hdc, &rects[toolsModel.GetBrushStyle()], (HBRUSH)(COLOR_HIGHLIGHT + 1));
 
     for (INT i = 0; i < 12; i++)
     {
