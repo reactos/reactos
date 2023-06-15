@@ -117,9 +117,11 @@ done:
 BOOL TrayIcon_ShellAddTrayIcon(void)
 {
     NOTIFYICONDATAW nid;
-    HICON           hIcon = TrayIcon_GetProcessorUsageIcon();
+    HICON           hIcon;
     BOOL            bRetVal;
     WCHAR           szMsg[64];
+
+    hIcon = TrayIcon_GetProcessorUsageIcon();
 
     ZeroMemory(&nid, sizeof(nid));
     nid.cbSize = sizeof(NOTIFYICONDATAW);
@@ -157,9 +159,11 @@ BOOL TrayIcon_ShellRemoveTrayIcon(void)
 BOOL TrayIcon_ShellUpdateTrayIcon(void)
 {
     NOTIFYICONDATAW nid;
-    HICON           hIcon = TrayIcon_GetProcessorUsageIcon();
+    HICON           hIcon;
     BOOL            bRetVal;
     WCHAR           szTemp[64];
+
+    hIcon = TrayIcon_GetProcessorUsageIcon();
 
     ZeroMemory(&nid, sizeof(nid));
     nid.cbSize = sizeof(NOTIFYICONDATAW);
