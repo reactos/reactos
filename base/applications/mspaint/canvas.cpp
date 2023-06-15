@@ -93,6 +93,7 @@ CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
+    DWORD before = CheckHandleLeaks();
     // We use a memory bitmap to reduce flickering
     HDC hdcMem = ::CreateCompatibleDC(hDC);
     HBITMAP hbm = ::CreateCompatibleBitmap(hDC, rcClient.right, rcClient.bottom);
@@ -166,6 +167,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     ::DeleteObject(::SelectObject(hdcMem, hbmOld));
     ::DeleteDC(hdcMem);
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 VOID CCanvasWindow::Update(HWND hwndFrom)

@@ -183,11 +183,11 @@ HWND CMainWindow::DoCreate()
 DWORD CheckHandleLeaks(void)
 {
     HANDLE hProcess = ::GetCurrentProcess();
-    DWORD GUIObjects = ::GetGuiResources(hProcess, GR_GDIOBJECTS);
+    DWORD GDIObjects = ::GetGuiResources(hProcess, GR_GDIOBJECTS);
     DWORD UserObjects = ::GetGuiResources(hProcess, GR_USEROBJECTS);
     ATLTRACE("GDI objects: %ld\n"
-             "USER objects: %ld\n", GUIObjects, UserObjects);
-    return MAKELONG(GUIObjects, UserObjects);
+             "USER objects: %ld\n", GDIObjects, UserObjects);
+    return MAKELONG(GDIObjects, UserObjects);
 }
 #endif
 

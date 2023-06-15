@@ -15,15 +15,24 @@
 void
 Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
 {
+    DWORD before = CheckHandleLeaks();
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
+    ATLASSERT(oldPen);
     MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
     DeleteObject(SelectObject(hdc, oldPen));
+    DWORD after = CheckHandleLeaks();
+    if (before != after)
+    {
+        ATLTRACE("%X, %X\n", before, after);
+        ATLASSERT(0);
+    }
 }
 
 void
 Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
+    DWORD before = CheckHandleLeaks();
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
@@ -34,11 +43,14 @@ Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int
     Rectangle(hdc, x1, y1, x2, y2);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
+    DWORD before = CheckHandleLeaks();
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
@@ -49,11 +61,14 @@ Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int
     Ellipse(hdc, x1, y1, x2, y2);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
+    DWORD before = CheckHandleLeaks();
     LOGBRUSH logbrush;
     HBRUSH oldBrush;
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
@@ -64,11 +79,14 @@ RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, in
     RoundRect(hdc, x1, y1, x2, y2, 16, 16);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thickness, int style, BOOL closed, BOOL inverted)
 {
+    DWORD before = CheckHandleLeaks();
     LOGBRUSH logbrush;
     HBRUSH oldBrush;
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
@@ -89,11 +107,14 @@ Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thic
     DeleteObject(SelectObject(hdc, oldPen));
 
     SetROP2(hdc, oldRop);
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thickness)
 {
+    DWORD before = CheckHandleLeaks();
     HPEN oldPen;
     POINT fourPoints[4];
     fourPoints[0] = p1;
@@ -103,19 +124,25 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thic
     oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
     PolyBezier(hdc, fourPoints, 4);
     DeleteObject(SelectObject(hdc, oldPen));
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 {
+    DWORD before = CheckHandleLeaks();
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
     ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
     DeleteObject(SelectObject(hdc, oldBrush));
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
+    DWORD before = CheckHandleLeaks();
     LONG b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     HBRUSH hbr = ::CreateSolidBrush(color);
 
@@ -128,6 +155,8 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
     }
 
     ::DeleteObject(hbr);
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
@@ -167,6 +196,7 @@ Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
 void
 Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
 {
+    DWORD before = CheckHandleLeaks();
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
     LONG a, b;
@@ -236,11 +266,15 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
     }
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
+    DWORD before = CheckHandleLeaks();
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, GetSysColor(COLOR_HIGHLIGHT)));
@@ -257,11 +291,15 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
     DeleteObject(SelectObject(hdc, oldPen));
 
     SetROP2(hdc, oldRop);
+
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
+    DWORD before = CheckHandleLeaks();
     INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.
 
     RECT rc;
@@ -292,6 +330,9 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
     SelectObject(hdc, hFontOld);
 
     RestoreDC(hdc, iSaveDC); // Restore
+
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
 
 BOOL
@@ -302,6 +343,8 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     HDC hTempDC1, hTempDC2;
     HBITMAP hbmTempColor, hbmTempMask;
     HGDIOBJ hbmOld1, hbmOld2;
+
+    DWORD before = CheckHandleLeaks();
 
     if (hbmMask == NULL)
     {
@@ -367,11 +410,16 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     ::DeleteDC(hTempDC2);
     ::DeleteDC(hTempDC1);
 
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
+
     return TRUE;
 }
 
 void DrawXorRect(HDC hdc, const RECT *prc)
 {
+    DWORD before = CheckHandleLeaks();
+
     HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0)));
     HGDIOBJ oldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
     INT oldRop2 = SetROP2(hdc, R2_NOTXORPEN);
@@ -379,4 +427,7 @@ void DrawXorRect(HDC hdc, const RECT *prc)
     ::SetROP2(hdc, oldRop2);
     ::SelectObject(hdc, oldBrush);
     ::DeleteObject(::SelectObject(hdc, oldPen));
+
+    DWORD after = CheckHandleLeaks();
+    ATLASSERT(before == after);
 }
