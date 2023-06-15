@@ -1,31 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  run.h
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- * run.h - definitions necessary to use Microsoft's "Run" dialog
- * Undocumented Windows call
- * use the type below to declare a function pointer
- *
- * Information taken from http://www.geocities.com/SiliconValley/4942/
- * Copyright © 1998-1999 James Holderness. All Rights Reserved.
- * jholderness@geocities.com
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Definitions necessary to use Microsoft's "Run" dialog
+ * COPYRIGHT:   Copyright (C) 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright (C) 2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #pragma once
