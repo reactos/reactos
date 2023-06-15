@@ -1628,7 +1628,8 @@ PcGetFloppyCount(VOID)
 #endif
 
 PCONFIGURATION_COMPONENT_DATA
-PcHwDetect(VOID)
+PcHwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;
