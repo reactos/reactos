@@ -129,7 +129,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Draw overlay #1 on hdcMem1
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
 
-    // Transfer the bits (hdcMem0 <-- hdcMem1)
+    // Transfer the bits with stretch (hdcMem0 <-- hdcMem1)
     ImageToCanvas(rcImage);
     ::StretchBlt(hdcMem0, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
                  hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
