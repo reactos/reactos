@@ -680,11 +680,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (selectionModel.m_bShow)
                 {
                     selectionModel.TakeOff();
-                    SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
+                    SetClipboardData(CF_BITMAP, selectionModel.CopyBitmap());
                 }
                 else
                 {
-                    SetClipboardData(CF_BITMAP, CopyDIBImage(imageModel.GetBitmap()));
+                    SetClipboardData(CF_BITMAP, imageModel.CopyBitmap());
                 }
                 CloseClipboard();
             }
@@ -737,7 +737,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             TCHAR szFileName[MAX_LONG_PATH] = _T("");
             if (GetSaveFileName(szFileName, _countof(szFileName)))
-                SaveDIBToFile(selectionModel.GetBitmap(), szFileName, imageModel.GetDC());
+            {
+                HBITMAP hbm = selectionModel.CopyBitmap();
+                SaveDIBToFile(hbm, szFileName, imageModel.GetDC());
+                ::DeleteObject(hbm);
+            }
             break;
         }
         case IDM_EDITPASTEFROM:
@@ -841,7 +845,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.PushImageForUndo(CopyDIBImage(selectionModel.GetBitmap()));
+            imageModel.PushImageForUndo(selectionModel.CopyBitmap());
             selectionModel.HideSelection();
             break;
 

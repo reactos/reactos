@@ -347,11 +347,11 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     imageModel.NotifyImageChanged();
 }
 
-HBITMAP SelectionModel::GetBitmap()
+HBITMAP SelectionModel::CopyBitmap()
 {
     if (m_hbmColor == NULL)
         GetSelectionContents(imageModel.GetDC());
-    return m_hbmColor;
+    return CopyDIBImage(m_hbmColor);
 }
 
 int SelectionModel::PtStackSize() const

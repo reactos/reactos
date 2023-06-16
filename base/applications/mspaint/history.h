@@ -31,7 +31,7 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;
-    HBITMAP GetBitmap() const;
+    HBITMAP CopyBitmap();
     void InvertColors();
     void FlipHorizontally();
     void FlipVertically();
@@ -45,4 +45,5 @@ protected:
     int undoSteps; // The undo-able count
     int redoSteps; // The redo-able count
     HBITMAP hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
+    HGDIOBJ m_hbmOld;
 };

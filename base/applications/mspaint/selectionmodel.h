@@ -39,7 +39,7 @@ public:
     void HideSelection();
     void DeleteSelection();
 
-    HBITMAP GetBitmap();
+    HBITMAP CopyBitmap();
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);

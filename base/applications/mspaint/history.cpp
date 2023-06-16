@@ -30,7 +30,7 @@ ImageModel::ImageModel()
     ZeroMemory(hBms, sizeof(hBms));
 
     hBms[0] = CreateColorDIB(1, 1, RGB(255, 255, 255));
-    ::SelectObject(hDrawingDC, hBms[0]);
+    m_hbmOld = ::SelectObject(hDrawingDC, hBms[0]);
 
     imageSaved = TRUE;
 }
@@ -260,7 +260,10 @@ void ImageModel::Bound(POINT& pt) const
     pt.y = max(0, min(pt.y, GetHeight()));
 }
 
-HBITMAP ImageModel::GetBitmap() const
+HBITMAP ImageModel::CopyBitmap()
 {
-    return hBms[currInd];
+    ::SelectObject(hDrawingDC, m_hbmOld);
+    HBITMAP ret = CopyDIBImage(hBms[currInd]);
+    m_hbmOld = ::SelectObject(hDrawingDC, hBms[currInd]);
+    return ret;
 }
