@@ -387,7 +387,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         {
             CString strCoord;
             strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
         }
     }
 
@@ -422,7 +422,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             {
                 CString strCoord;
                 strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-                SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
             default:
@@ -448,7 +448,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
                 strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
 
@@ -462,7 +462,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
                 strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
         return 0;
@@ -518,7 +518,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     // Display new size
     CString strSize;
     strSize.Format(_T("%d x %d"), cxImage, cyImage);
-    SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
     CRect rc = { 0, 0, cxImage, cyImage };
     switch (m_whereHit)
@@ -560,7 +560,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
-        SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
+        ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
         return 0;
     }
     else if (m_hitSelection != HIT_NONE && bLeftButton)
@@ -714,7 +714,7 @@ LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CCanvasWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
     return 0;
 }
 
