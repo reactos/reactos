@@ -16,11 +16,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef _DEBUG
-    #define _CRTDBG_MAP_ALLOC
-    #include <crtdbg.h>
-#endif
-
 #define WIN32_NO_STATUS
 
 #include <windef.h>
