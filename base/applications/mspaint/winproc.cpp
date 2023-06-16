@@ -673,6 +673,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
+            // FIXME: We should use CF_DIB in the future
             if (OpenClipboard())
             {
                 EmptyClipboard();
