@@ -11,7 +11,7 @@ BEGIN
     IDS_ERROR_NOFONT "Die angegebene Datei %1 ist keine gültige Schriftartendatei."
     IDS_ERROR_NOCLASS "Fehler beim Initialisieren der Fensterklasse."
     IDS_ERROR_ISINSTALLED "Die Schriftart ist schon installiert!" 
-    IDS_ERROR_FONTCPY "Kopieren der Schriftartdatei fehl geschlagen!"
+    IDS_ERROR_FONTCPY "Kopieren der Schriftartdatei fehlgeschlagen!"
     IDS_ERROR_OPENKEY "Öffnen des Schriftart Keys fehl geschlagen!"
     IDS_ERROR_REGISTER "Registrierung der neuen Schriftart fehl geschlagen!"
     IDS_SUCCESS "Erfolg"
