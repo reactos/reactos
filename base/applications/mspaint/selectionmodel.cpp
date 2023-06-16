@@ -187,10 +187,13 @@ void SelectionModel::Landing()
 
     m_bShow = FALSE;
 
-    imageModel.PushImageForUndo();
+    if (!::EqualRect(m_rc, m_rcOld) && !::IsRectEmpty(m_rc) && !::IsRectEmpty(m_rcOld))
+    {
+        imageModel.PushImageForUndo();
 
-    canvasWindow.m_drawing = FALSE;
-    toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
+        canvasWindow.m_drawing = FALSE;
+        toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
+    }
 
     HideSelection();
 }
