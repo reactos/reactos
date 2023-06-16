@@ -36,7 +36,6 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void DeleteSelection();
     void Bound(POINT& pt) const;
     void NotifyImageChanged();
 

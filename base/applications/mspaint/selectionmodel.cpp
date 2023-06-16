@@ -443,6 +443,7 @@ void SelectionModel::DeleteSelection()
         return;
 
     TakeOff();
+
     imageModel.PushImageForUndo();
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
         DrawBackgroundPoly(imageModel.GetDC(), paletteModel.GetBgColor());

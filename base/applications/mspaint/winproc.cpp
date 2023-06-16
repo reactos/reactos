@@ -710,7 +710,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    imageModel.DeleteSelection();
+                    selectionModel.DeleteSelection();
                     break;
 
                 case TOOL_TEXT:
@@ -843,7 +843,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_IMAGECROP:
             imageModel.PushImageForUndo(CopyDIBImage(selectionModel.GetBitmap()));
-            imageModel.DeleteSelection();
+            selectionModel.m_bShow = FALSE;
+            selectionModel.ClearColor();
             break;
 
         case IDM_VIEWTOOLBOX:
