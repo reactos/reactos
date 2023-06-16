@@ -13,7 +13,7 @@ BEGIN
     IDS_ERROR_ISINSTALLED "Die Schriftart ist schon installiert!" 
     IDS_ERROR_FONTCPY "Kopieren der Schriftartdatei fehlgeschlagen!"
     IDS_ERROR_OPENKEY "Öffnen des Schriftart Keys fehlgeschlagen!"
-    IDS_ERROR_REGISTER "Registrierung der neuen Schriftart fehl geschlagen!"
+    IDS_ERROR_REGISTER "Registrierung der neuen Schriftart fehlgeschlagen!"
     IDS_SUCCESS "Erfolg"
     IDS_COMPLETED "Installation der Schriftarten vollständig."
     IDS_FILTER_LIST "Alle unterstützten Schriftarten (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
