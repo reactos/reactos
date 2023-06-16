@@ -805,3 +805,9 @@ LRESULT CCanvasWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     SetBkMode((HDC)wParam, TRANSPARENT);
     return (LRESULT)GetStockObject(NULL_BRUSH);
 }
+
+LRESULT CCanvasWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    imageModel.NotifyImageChanged();
+    return 0;
+}
