@@ -307,7 +307,17 @@ PiIrpQueryPnPDeviceState(
     return status;
 }
 
-// IRP_MN_QUERY_CAPABILITIES (0x09)
+/**
+ * @brief      Query device capabilities via IRP_MN_QUERY_CAPABILITIES (0x09)
+ *
+ * @param[in]  DeviceNode
+ *     Pointer to the device node object.
+ *
+ * @param[out] DeviceCaps
+ *     Pointer to the device capabilities object which is gonna be initilized and filled out.
+ *
+ * @return     Status of the operation
+ */
 NTSTATUS
 PiIrpQueryPnPDeviceCapabilities(
     _In_ PDEVICE_NODE DeviceNode,
@@ -333,7 +343,20 @@ PiIrpQueryPnPDeviceCapabilities(
     return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, &Dummy);
 }
 
-// IRP_MN_QUERY_ID (0x13)
+/**
+ * @brief      Query device capabilities via IRP_MN_QUERY_ID (0x13)
+ *
+ * @param[in]  DeviceNode
+ *     Pointer to the device node object.
+ *
+ * @param[in]  IdType
+ *     This contains the requested id type.
+ *
+ * @param[out] Id
+ *     This parameter will contain the ID(s) of the device.
+ *
+ * @return     Status of the operation
+ */
 NTSTATUS
 PiIrpQueryPnPDeviceId(
     _In_ PDEVICE_NODE DeviceNode,
