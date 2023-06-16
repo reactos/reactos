@@ -138,7 +138,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     ::SelectObject(hdcMem1, hbm1Old);
     ::DeleteDC(hdcMem1);
 
-    // Draw the grid
+    // Draw the grid on hdcMem0
     if (g_showGrid && toolsModel.GetZoom() >= 4000)
     {
         HPEN oldPen = (HPEN) ::SelectObject(hdcMem0, ::CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
@@ -164,7 +164,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Draw overlay #2 on hdcMem0
     toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
-    // Draw new frame if any
+    // Draw new frame on hdcMem0 if any
     if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
         DrawXorRect(hdcMem0, &m_rcNew);
 
