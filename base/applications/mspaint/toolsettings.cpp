@@ -258,9 +258,9 @@ VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
 LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
 {
     /* preloading the draw transparent/nontransparent icons for later use */
-    m_hNontranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
+    m_hNontranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
                                         IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
-    m_hTranspIcon = (HICON)LoadImage(hProgInstance, MAKEINTRESOURCE(IDI_TRANSPARENT),
+    m_hTranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_TRANSPARENT),
                                      IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
     RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};

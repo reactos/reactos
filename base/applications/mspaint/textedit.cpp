@@ -61,7 +61,7 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
         SelectObject(hDC, m_hFontZoomed);
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-        szText += TEXT("x"); // This is a trick to enable the last newlines
+        szText += TEXT("x"); // This is a trick to enable the g_ptEnd newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
@@ -235,7 +235,7 @@ HWND CTextEditWindow::Create(HWND hwndParent)
     const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL |
                         WS_CHILD | WS_THICKFRAME;
     HWND hwnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
-                                 hwndParent, NULL, hProgInstance, NULL);
+                                 hwndParent, NULL, g_hinstExe, NULL);
     if (hwnd)
     {
 #undef SubclassWindow // Don't use this macro

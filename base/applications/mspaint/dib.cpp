@@ -9,10 +9,10 @@
 #include "precomp.h"
 #include <math.h>
 
-INT fileSize = 0;
+INT g_fileSize = 0;
 float g_xDpi = 96;
 float g_yDpi = 96;
-SYSTEMTIME fileTime;
+SYSTEMTIME g_fileTime;
 
 /* FUNCTIONS ********************************************************/
 
@@ -114,15 +114,15 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC)
     // update time and size
     FILETIME ft;
     FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-    FileTimeToSystemTime(&ft, &fileTime);
-    fileSize = find.nFileSizeLow;
+    FileTimeToSystemTime(&ft, &g_fileTime);
+    g_fileSize = find.nFileSizeLow;
 
     // TODO: update hRes and vRes
 
     registrySettings.SetMostRecentFile(FileName);
 
-    isAFile = TRUE;
-    imageSaved = TRUE;
+    g_isAFile = TRUE;
+    g_imageSaved = TRUE;
     return TRUE;
 }
 
@@ -150,33 +150,33 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
         g_yDpi = GetDeviceCaps(hScreenDC, LOGPIXELSY);
         ReleaseDC(NULL, hScreenDC);
 
-        ZeroMemory(&fileTime, sizeof(fileTime));
+        ZeroMemory(&g_fileTime, sizeof(g_fileTime));
     }
 
     // update image
     imageModel.PushImageForUndo(hBitmap);
     imageModel.ClearHistory();
 
-    // update fileSize
-    fileSize = dwFileSize;
+    // update g_fileSize
+    g_fileSize = dwFileSize;
 
-    // update filepathname
+    // update g_szFileName
     if (name && name[0])
-        GetFullPathName(name, _countof(filepathname), filepathname, NULL);
+        GetFullPathName(name, _countof(g_szFileName), g_szFileName, NULL);
     else
-        LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
+        LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
 
     // set title
     CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
     mainWindow.SetWindowText(strTitle);
 
     // update file info and recent
-    isAFile = isFile;
-    if (isAFile)
-        registrySettings.SetMostRecentFile(filepathname);
+    g_isAFile = isFile;
+    if (g_isAFile)
+        registrySettings.SetMostRecentFile(g_szFileName);
 
-    imageSaved = TRUE;
+    g_imageSaved = TRUE;
 
     return hBitmap;
 }
@@ -204,7 +204,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
         {
             FILETIME ft;
             FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-            FileTimeToSystemTime(&ft, &fileTime);
+            FileTimeToSystemTime(&ft, &g_fileTime);
             return SetBitmapAndInfo(NULL, name, dwFileSize, TRUE);
         }
     }
@@ -233,7 +233,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     {
         FILETIME ft;
         FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-        FileTimeToSystemTime(&ft, &fileTime);
+        FileTimeToSystemTime(&ft, &g_fileTime);
         SetBitmapAndInfo(hBitmap, name, dwFileSize, TRUE);
     }
 

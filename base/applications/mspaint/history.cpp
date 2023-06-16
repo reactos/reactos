@@ -32,7 +32,7 @@ ImageModel::ImageModel()
     m_hBms[0] = CreateColorDIB(1, 1, RGB(255, 255, 255));
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[0]);
 
-    imageSaved = TRUE;
+    g_imageSaved = TRUE;
 }
 
 ImageModel::~ImageModel()
@@ -118,7 +118,7 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
         m_undoSteps++;
     m_redoSteps = 0;
 
-    imageSaved = FALSE;
+    g_imageSaved = FALSE;
     NotifyImageChanged();
 }
 
@@ -165,7 +165,7 @@ void ImageModel::SaveImage(LPCTSTR lpFileName)
 
 BOOL ImageModel::IsImageSaved() const
 {
-    return imageSaved;
+    return g_imageSaved;
 }
 
 void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
