@@ -101,11 +101,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     TOKEN_PRIVILEGES tkp;
     HANDLE hMutex;
 
-#ifdef _DEBUG
-    // Report any memory leaks on exit
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
-
     /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
     if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS)
