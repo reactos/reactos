@@ -130,7 +130,7 @@ LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    selectionModel.m_bShow = FALSE;
+    selectionModel.HideSelection();
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
 
     // Check the toolbar button

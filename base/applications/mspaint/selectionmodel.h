@@ -36,6 +36,7 @@ public:
     BOOL TakeOff();
     void Landing();
     BOOL IsLanded() const;
+    void HideSelection();
     void DeleteSelection();
 
     HBITMAP GetBitmap();

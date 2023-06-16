@@ -508,9 +508,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             else if (selectionModel.m_bShow)
             {
-                selectionModel.Landing();
-                selectionModel.m_bShow = FALSE;
-                imageModel.NotifyImageChanged();
+                selectionModel.HideSelection();
             }
             else
             {
@@ -843,8 +841,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_IMAGECROP:
             imageModel.PushImageForUndo(CopyDIBImage(selectionModel.GetBitmap()));
-            selectionModel.m_bShow = FALSE;
-            selectionModel.ClearColor();
+            selectionModel.HideSelection();
             break;
 
         case IDM_VIEWTOOLBOX:

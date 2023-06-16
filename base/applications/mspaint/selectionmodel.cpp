@@ -179,24 +179,20 @@ BOOL SelectionModel::TakeOff()
 
 void SelectionModel::Landing()
 {
-    m_bShow = FALSE;
-
-    if (IsLanded())
+    if (IsLanded() && !m_bShow)
     {
         imageModel.NotifyImageChanged();
         return;
     }
+
+    m_bShow = FALSE;
 
     imageModel.PushImageForUndo();
 
     canvasWindow.m_drawing = FALSE;
     toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
 
-    ::SetRectEmpty(&m_rc);
-    ::SetRectEmpty(&m_rcOld);
-    ClearMask();
-    ClearColor();
-    imageModel.NotifyImageChanged();
+    HideSelection();
 }
 
 void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
@@ -437,6 +433,17 @@ void SelectionModel::ClearColor()
     }
 }
 
+void SelectionModel::HideSelection()
+{
+    m_bShow = FALSE;
+    ClearColor();
+    ClearMask();
+    ::SetRectEmpty(&m_rc);
+    ::SetRectEmpty(&m_rcOld);
+
+    imageModel.NotifyImageChanged();
+}
+
 void SelectionModel::DeleteSelection()
 {
     if (!m_bShow)
@@ -450,11 +457,5 @@ void SelectionModel::DeleteSelection()
     else
         DrawBackgroundRect(imageModel.GetDC(), paletteModel.GetBgColor());
 
-    m_bShow = FALSE;
-    ClearColor();
-    ClearMask();
-    ::SetRectEmpty(&m_rc);
-    ::SetRectEmpty(&m_rcOld);
-
-    imageModel.NotifyImageChanged();
+    HideSelection();
 }

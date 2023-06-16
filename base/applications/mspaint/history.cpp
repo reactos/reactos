@@ -52,7 +52,7 @@ void ImageModel::Undo(BOOL bClearRedo)
     if (!CanUndo())
         return;
 
-    selectionModel.m_bShow = FALSE;
+    selectionModel.HideSelection();
 
     // Select previous item
     currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
@@ -73,7 +73,7 @@ void ImageModel::Redo()
     if (!CanRedo())
         return;
 
-    selectionModel.m_bShow = FALSE;
+    selectionModel.HideSelection();
 
     // Select next item
     currInd = (currInd + 1) % HISTORYSIZE;

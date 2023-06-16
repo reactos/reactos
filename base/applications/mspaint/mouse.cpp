@@ -71,7 +71,7 @@ void ToolBase::reset()
     if (selectionModel.m_bShow)
     {
         selectionModel.Landing();
-        selectionModel.m_bShow = FALSE;
+        selectionModel.HideSelection();
     }
 }
 
@@ -146,7 +146,7 @@ struct FreeSelTool : ToolBase
         selectionModel.Landing();
         if (bLeftButton)
         {
-            selectionModel.m_bShow = FALSE;
+            selectionModel.HideSelection();
             selectionModel.ResetPtStack();
             POINT pt = { x, y };
             selectionModel.PushToPtStack(pt);
@@ -185,13 +185,13 @@ struct FreeSelTool : ToolBase
 
     void OnFinishDraw() override
     {
-        m_bLeftButton = FALSE;
+        selectionModel.Landing();
         ToolBase::OnFinishDraw();
     }
 
     void OnCancelDraw() override
     {
-        m_bLeftButton = FALSE;
+        selectionModel.HideSelection();
         ToolBase::OnCancelDraw();
     }
 };
@@ -231,8 +231,7 @@ struct RectSelTool : ToolBase
         selectionModel.Landing();
         if (bLeftButton)
         {
-            selectionModel.m_bShow = FALSE;
-            ::SetRectEmpty(&selectionModel.m_rc);
+            selectionModel.HideSelection();
         }
         m_bLeftButton = bLeftButton;
     }
@@ -262,14 +261,13 @@ struct RectSelTool : ToolBase
 
     void OnFinishDraw() override
     {
-        m_bLeftButton = FALSE;
+        selectionModel.Landing();
         ToolBase::OnFinishDraw();
     }
 
     void OnCancelDraw() override
     {
-        m_bLeftButton = FALSE;
-        selectionModel.m_bShow = FALSE;
+        selectionModel.HideSelection();
         ToolBase::OnCancelDraw();
     }
 };
@@ -317,7 +315,6 @@ struct TwoPointDrawTool : ToolBase
 
     void OnCancelDraw() override
     {
-        m_bLeftButton = FALSE;
         m_bDrawing = FALSE;
         ToolBase::OnCancelDraw();
     }
@@ -559,9 +556,7 @@ struct TextTool : ToolBase
     {
         if (textEditWindow.IsWindow())
             textEditWindow.ShowWindow(SW_HIDE);
-        ::SetRectEmpty(selectionModel.m_rc);
-        ::SetRectEmpty(selectionModel.m_rcOld);
-        selectionModel.m_bShow = FALSE;
+        selectionModel.HideSelection();
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
