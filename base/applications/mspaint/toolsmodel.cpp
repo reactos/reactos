@@ -28,8 +28,8 @@ ToolsModel::ToolsModel()
 
 ToolsModel::~ToolsModel()
 {
-    for (auto item : m_tools)
-        delete item;
+    for (size_t i = 0; i < _countof(m_tools); ++i)
+        delete m_tools[i];
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
