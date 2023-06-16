@@ -162,7 +162,7 @@ BOOL SelectionModel::IsLanded() const
 
 BOOL SelectionModel::TakeOff()
 {
-    if (m_hbmColor || ::IsRectEmpty(&m_rc))
+    if (!IsLanded() || ::IsRectEmpty(&m_rc))
         return FALSE;
 
     m_rgbBack = paletteModel.GetBgColor();
@@ -179,8 +179,13 @@ BOOL SelectionModel::TakeOff()
 
 void SelectionModel::Landing()
 {
-    if (!m_hbmColor)
+    m_bShow = FALSE;
+
+    if (IsLanded())
+    {
+        imageModel.NotifyImageChanged();
         return;
+    }
 
     imageModel.PushImageForUndo();
 
@@ -434,12 +439,10 @@ void SelectionModel::ClearColor()
 
 void SelectionModel::DeleteSelection()
 {
-    TakeOff();
-
     if (!m_bShow)
         return;
 
-    Beep(800, 800);
+    TakeOff();
     imageModel.PushImageForUndo();
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
         DrawBackgroundPoly(imageModel.GetDC(), paletteModel.GetBgColor());

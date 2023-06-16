@@ -19,6 +19,7 @@ CPaintToolBar::ToolBarWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     WNDPROC oldWndProc = (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (uMsg == WM_LBUTTONUP)
     {
+        // We have to detect clicking on toolbar even if no change of pressed button
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
         INT id = (INT)SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
         ::PostMessage(::GetParent(hwnd), WM_TOOLBARHIT, id, 0);
@@ -186,9 +187,7 @@ LRESULT CToolBox::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CToolBox::OnToolBarHit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // See also: CPaintToolBar::ToolBarWndProc
     selectionModel.Landing();
-    selectionModel.m_bShow = FALSE;
-    ::SetRectEmpty(&selectionModel.m_rc);
-    imageModel.NotifyImageChanged();
     return 0;
 }
