@@ -39,36 +39,18 @@ struct ToolBase
     static INT pointSP;
     static POINT pointStack[256];
 
-    ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL)
-    {
-    }
+    ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
+    virtual ~ToolBase() { }
 
-    virtual ~ToolBase()
-    {
-    }
-
-    virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-    }
-
-    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-    }
-
-    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-    }
+    virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) { }
+    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) { }
+    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) { }
 
     virtual void OnCancelDraw();
     virtual void OnFinishDraw();
 
-    virtual void OnDrawOverlayOnImage(HDC hdc)
-    {
-    }
-
-    virtual void OnDrawOverlayOnCanvas(HDC hdc)
-    {
-    }
+    virtual void OnDrawOverlayOnImage(HDC hdc) { }
+    virtual void OnDrawOverlayOnCanvas(HDC hdc) { }
 
     void beginEvent();
     void endEvent();
