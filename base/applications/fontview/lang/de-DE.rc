@@ -18,11 +18,11 @@ BEGIN
     IDS_COMPLETED "Installation der Schriftarten vollständig."
     IDS_FILTER_LIST "Alle unterstützten Schriftarten (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-TrueType Font Collection (*.ttc)\0*.ttc\0\
-OpenType Font (*.otf)\0*.otf\0\
-OpenType Font Collection (*.otc)\0*.otc\0\
-All Files (*.*)\0*.*\0"
+TrueType Schriftart (*.ttf)\0*.ttf\0\
+TrueType Schriftart Sammlung (*.ttc)\0*.ttc\0\
+OpenType Schriftart (*.otf)\0*.otf\0\
+OpenType Schriftart Sammlung (*.otc)\0*.otc\0\
+Alle Dateien (*.*)\0*.*\0"
     IDS_PREVIOUS "< V&orheriges"
     IDS_NEXT "&Nächstes >"
 END
