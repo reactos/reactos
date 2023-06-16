@@ -105,7 +105,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // We use a memory bitmap to reduce flickering
     HDC hdcMem0 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem0, m_ahbmCached[0]);
+    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
 
     // Fill the background on hdcMem0
     ::FillRect(hdcMem0, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
@@ -123,7 +123,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
-    HGDIOBJ hbm2Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
+    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
     BitBlt(hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
@@ -135,7 +135,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
                  hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
 
     // Clean up hdcMem1
-    ::SelectObject(hdcMem1, hbm2Old);
+    ::SelectObject(hdcMem1, hbm1Old);
     ::DeleteDC(hdcMem1);
 
     // Draw the grid
@@ -174,7 +174,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
              hdcMem0, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::SelectObject(hdcMem0, hbmOld);
+    ::SelectObject(hdcMem0, hbm0Old);
     ::DeleteDC(hdcMem0);
 }
 
