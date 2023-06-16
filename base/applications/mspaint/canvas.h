@@ -55,7 +55,8 @@ protected:
     CANVAS_HITTEST m_hitSelection;
     CANVAS_HITTEST m_whereHit;
     POINT m_ptOrig; // The origin of drag start
-    HBITMAP m_hbmCached; // The cached buffer bitmap
+    HBITMAP m_hbmCached1; // The cached buffer bitmap #1
+    HBITMAP m_hbmCached2; // The cached buffer bitmap #2
     CRect m_rcNew;
 
     CANVAS_HITTEST CanvasHitTest(POINT pt);

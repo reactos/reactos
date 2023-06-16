@@ -18,9 +18,11 @@ private:
     int m_iPtSP;
 
 public:
+    COLORREF m_rgbBack = RGB(255, 255, 255);
     BOOL m_bShow;
     CRect m_rc;    // in image pixel coordinates
     POINT m_ptHit; // in image pixel coordinates
+    CRect m_rcOld; // in image pixel coordinates
 
     SelectionModel();
     ~SelectionModel();
@@ -33,13 +35,15 @@ public:
 
     BOOL TakeOff();
     void Landing();
+    BOOL IsLanded() const;
+    void DeleteSelection();
 
     HBITMAP GetBitmap();
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
-    void DrawSelection(HDC hDCImage, LPCRECT prc, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
+    void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
     void InsertFromHBITMAP(HBITMAP hBm, INT x = 0, INT y = 0);
 
     // operation
@@ -48,7 +52,6 @@ public:
     void RotateNTimes90Degrees(int iN);
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
 
-    void CancelSelection();
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
@@ -57,5 +60,5 @@ private:
     SelectionModel(const SelectionModel&);
     SelectionModel& operator=(const SelectionModel&);
 
-    void ShiftPtStack(BOOL bPlus);
+    void ShiftPtStack(INT dx, INT dy);
 };

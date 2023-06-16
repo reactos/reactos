@@ -17,15 +17,18 @@ CCanvasWindow::CCanvasWindow()
     , m_hitSelection(HIT_NONE)
     , m_whereHit(HIT_NONE)
     , m_ptOrig { -1, -1 }
-    , m_hbmCached(NULL)
+    , m_hbmCached1(NULL)
+    , m_hbmCached2(NULL)
 {
     ::SetRectEmpty(&m_rcNew);
 }
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_hbmCached)
-        ::DeleteObject(m_hbmCached);
+    if (m_hbmCached1)
+        ::DeleteObject(m_hbmCached1);
+    if (m_hbmCached2)
+        ::DeleteObject(m_hbmCached2);
 }
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
@@ -101,78 +104,80 @@ CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // We use a memory bitmap to reduce flickering
-    HDC hdcMem = ::CreateCompatibleDC(hDC);
-    m_hbmCached = CachedBufferDIB(m_hbmCached, rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_hbmCached);
+    HDC hdcMem1 = ::CreateCompatibleDC(hDC);
+    m_hbmCached1 = CachedBufferDIB(m_hbmCached1, rcClient.right, rcClient.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem1, m_hbmCached1);
 
-    // Fill the background
-    ::FillRect(hdcMem, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
+    // Fill the background on hdcMem1
+    ::FillRect(hdcMem1, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow)
-        drawSizeBoxes(hdcMem, &rcBase, FALSE, &rcPaint);
+        drawSizeBoxes(hdcMem1, &rcBase, FALSE, &rcPaint);
 
-    // Draw the image
+    // Calculate image size
     CRect rcImage;
     GetImageRect(rcImage);
-    ImageToCanvas(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
-    StretchBlt(hdcMem, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
-               imageModel.GetDC(), 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
+
+    // hdcMem2 <-- imageModel
+    HDC hdcMem2 = ::CreateCompatibleDC(hDC);
+    m_hbmCached2 = CachedBufferDIB(m_hbmCached2, sizeImage.cx, sizeImage.cy);
+    HGDIOBJ hbm2Old = ::SelectObject(hdcMem2, m_hbmCached2);
+    BitBlt(hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy,
+           imageModel.GetDC(), 0, 0, SRCCOPY);
+
+    // Draw overlay #1 on hdcMem2
+    toolsModel.OnDrawOverlayOnImage(hdcMem2);
+
+    // hdcMem1 <-- hdcMem2
+    ImageToCanvas(rcImage);
+    ::StretchBlt(hdcMem1, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
+                 hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
+
+    // Clean up hdcMem2
+    ::SelectObject(hdcMem2, hbm2Old);
+    ::DeleteDC(hdcMem2);
 
     // Draw the grid
     if (showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        HPEN oldPen = (HPEN) SelectObject(hdcMem1, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
         for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem1, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem1, pt1.x, pt1.y);
         }
         for (INT counter = 0; counter < sizeImage.cx; counter++)
         {
             POINT pt0 = { counter, 0 }, pt1 = { counter, sizeImage.cy };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem1, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem1, pt1.x, pt1.y);
         }
-        ::DeleteObject(::SelectObject(hdcMem, oldPen));
+        ::DeleteObject(::SelectObject(hdcMem1, oldPen));
     }
 
-    // Draw selection
-    if (selectionModel.m_bShow)
-    {
-        RECT rcSelection = selectionModel.m_rc;
-        ImageToCanvas(rcSelection);
-
-        ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
-        drawSizeBoxes(hdcMem, &rcSelection, TRUE, &rcPaint);
-        ::InflateRect(&rcSelection, -GRIP_SIZE, -GRIP_SIZE);
-
-        INT iSaveDC = ::SaveDC(hdcMem);
-        ::IntersectClipRect(hdcMem, rcImage.left, rcImage.top, rcImage.right, rcImage.bottom);
-        selectionModel.DrawSelection(hdcMem, &rcSelection, paletteModel.GetBgColor(),
-                                     toolsModel.IsBackgroundTransparent());
-        ::RestoreDC(hdcMem, iSaveDC);
-    }
+    // Draw overlay #2 on hdcMem1
+    toolsModel.OnDrawOverlayOnCanvas(hdcMem1);
 
     // Draw new frame if any
     if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
-        DrawXorRect(hdcMem, &m_rcNew);
+        DrawXorRect(hdcMem1, &m_rcNew);
 
     // Transfer the bits
     ::BitBlt(hDC,
              rcPaint.left, rcPaint.top,
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
-             hdcMem, rcPaint.left, rcPaint.top, SRCCOPY);
+             hdcMem1, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::SelectObject(hdcMem, hbmOld);
-    ::DeleteDC(hdcMem);
+    ::SelectObject(hdcMem1, hbmOld);
+    ::DeleteDC(hdcMem1);
 }
 
 VOID CCanvasWindow::Update(HWND hwndFrom)

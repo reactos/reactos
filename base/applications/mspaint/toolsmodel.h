@@ -62,11 +62,22 @@ struct ToolBase
     virtual void OnCancelDraw();
     virtual void OnFinishDraw();
 
+    virtual void OnDrawOverlayOnImage(HDC hdc)
+    {
+    }
+
+    virtual void OnDrawOverlayOnCanvas(HDC hdc)
+    {
+    }
+
     void beginEvent();
     void endEvent();
     void reset();
 
     static ToolBase* createToolObject(TOOLTYPE type);
+
+protected:
+    void OnDrawSelectionOnCanvas(HDC hdc);
 };
 
 class ToolsModel
@@ -112,6 +123,8 @@ public:
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
     void OnCancelDraw();
     void OnFinishDraw();
+    void OnDrawOverlayOnImage(HDC hdc);
+    void OnDrawOverlayOnCanvas(HDC hdc);
 
     void resetTool();
     void selectAll();

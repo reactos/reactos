@@ -512,6 +512,10 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 selectionModel.m_bShow = FALSE;
                 imageModel.NotifyImageChanged();
             }
+            else
+            {
+                canvasWindow.cancelDrawing();
+            }
             break;
 
         case VK_LEFT:
@@ -640,7 +644,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            {
+                textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
+            }
             if (selectionModel.m_bShow)
             {
                 if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
@@ -671,7 +678,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (OpenClipboard())
             {
                 EmptyClipboard();
-                SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
+                if (selectionModel.m_bShow)
+                {
+                    selectionModel.TakeOff();
+                    SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
+                }
+                else
+                {
+                    SetClipboardData(CF_BITMAP, CopyDIBImage(imageModel.GetBitmap()));
+                }
                 CloseClipboard();
             }
             break;

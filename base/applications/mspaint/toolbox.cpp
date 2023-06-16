@@ -13,6 +13,19 @@ CToolBox toolBoxContainer;
 
 /* FUNCTIONS ********************************************************/
 
+LRESULT CALLBACK
+CPaintToolBar::ToolBarWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldWndProc = (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (uMsg == WM_LBUTTONUP)
+    {
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        INT id = (INT)SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+        ::PostMessage(::GetParent(hwnd), WM_TOOLBARHIT, id, 0);
+    }
+    return ::CallWindowProc(oldWndProc, hwnd, uMsg, wParam, lParam);
+}
+
 BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 {
     // NOTE: The horizontal line above the toolbar is hidden by CCS_NODIVIDER style.
@@ -49,6 +62,8 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
     SendMessage(TB_CHECKBUTTON, ID_PEN, MAKELPARAM(TRUE, 0));
     SendMessage(TB_SETMAXTEXTROWS, 0, 0);
     SendMessage(TB_SETBUTTONSIZE, 0, MAKELPARAM(CXY_TB_BUTTON, CXY_TB_BUTTON));
+
+    SetWindowLongPtr(GWLP_USERDATA, SetWindowLongPtr(GWLP_WNDPROC, (LONG_PTR)ToolBarWndProc));
     return TRUE;
 }
 
@@ -166,5 +181,14 @@ LRESULT CToolBox::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
         return 0;
 
     ::ReleaseCapture();
+    return 0;
+}
+
+LRESULT CToolBox::OnToolBarHit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    selectionModel.Landing();
+    selectionModel.m_bShow = FALSE;
+    ::SetRectEmpty(&selectionModel.m_rc);
+    imageModel.NotifyImageChanged();
     return 0;
 }

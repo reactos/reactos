@@ -29,7 +29,7 @@ ImageModel::ImageModel()
 {
     ZeroMemory(hBms, sizeof(hBms));
 
-    hBms[0] = CreateDIBWithProperties(1, 1);
+    hBms[0] = CreateColorDIB(1, 1, RGB(255, 255, 255));
     ::SelectObject(hDrawingDC, hBms[0]);
 
     imageSaved = TRUE;
@@ -259,10 +259,7 @@ void ImageModel::DeleteSelection()
     if (!selectionModel.m_bShow)
         return;
 
-    selectionModel.TakeOff();
-    selectionModel.m_bShow = FALSE;
-    selectionModel.ClearColor();
-    selectionModel.ClearMask();
+    selectionModel.DeleteSelection();
     NotifyImageChanged();
 }
 
@@ -270,4 +267,9 @@ void ImageModel::Bound(POINT& pt) const
 {
     pt.x = max(0, min(pt.x, GetWidth()));
     pt.y = max(0, min(pt.y, GetHeight()));
+}
+
+HBITMAP ImageModel::GetBitmap() const
+{
+    return hBms[currInd];
 }

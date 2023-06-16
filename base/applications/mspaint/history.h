@@ -31,6 +31,7 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;
+    HBITMAP GetBitmap() const;
     void InvertColors();
     void FlipHorizontally();
     void FlipVertically();
