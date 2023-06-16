@@ -103,79 +103,79 @@ CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // We use a memory bitmap to reduce flickering
-    HDC hdcMem1 = ::CreateCompatibleDC(hDC);
+    HDC hdcMem0 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem1, m_ahbmCached[0]);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem0, m_ahbmCached[0]);
 
-    // Fill the background on hdcMem1
-    ::FillRect(hdcMem1, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
+    // Fill the background on hdcMem0
+    ::FillRect(hdcMem0, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow)
-        drawSizeBoxes(hdcMem1, &rcBase, FALSE, &rcPaint);
+        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcPaint);
 
     // Calculate image size
     CRect rcImage;
     GetImageRect(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
-    // hdcMem2 <-- imageModel
-    HDC hdcMem2 = ::CreateCompatibleDC(hDC);
+    // hdcMem1 <-- imageModel
+    HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
-    HGDIOBJ hbm2Old = ::SelectObject(hdcMem2, m_ahbmCached[1]);
-    BitBlt(hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
+    HGDIOBJ hbm2Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
+    BitBlt(hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
 
-    // Draw overlay #1 on hdcMem2
-    toolsModel.OnDrawOverlayOnImage(hdcMem2);
+    // Draw overlay #1 on hdcMem1
+    toolsModel.OnDrawOverlayOnImage(hdcMem1);
 
-    // Transfer the bits (hdcMem1 <-- hdcMem2)
+    // Transfer the bits (hdcMem0 <-- hdcMem1)
     ImageToCanvas(rcImage);
-    ::StretchBlt(hdcMem1, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
-                 hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
+    ::StretchBlt(hdcMem0, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
+                 hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
 
-    // Clean up hdcMem2
-    ::SelectObject(hdcMem2, hbm2Old);
-    ::DeleteDC(hdcMem2);
+    // Clean up hdcMem1
+    ::SelectObject(hdcMem1, hbm2Old);
+    ::DeleteDC(hdcMem1);
 
     // Draw the grid
     if (g_showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) SelectObject(hdcMem1, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        HPEN oldPen = (HPEN) SelectObject(hdcMem0, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
         for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem1, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem1, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem0, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem0, pt1.x, pt1.y);
         }
         for (INT counter = 0; counter < sizeImage.cx; counter++)
         {
             POINT pt0 = { counter, 0 }, pt1 = { counter, sizeImage.cy };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem1, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem1, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem0, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem0, pt1.x, pt1.y);
         }
-        ::DeleteObject(::SelectObject(hdcMem1, oldPen));
+        ::DeleteObject(::SelectObject(hdcMem0, oldPen));
     }
 
-    // Draw overlay #2 on hdcMem1
-    toolsModel.OnDrawOverlayOnCanvas(hdcMem1);
+    // Draw overlay #2 on hdcMem0
+    toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
     // Draw new frame if any
     if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
-        DrawXorRect(hdcMem1, &m_rcNew);
+        DrawXorRect(hdcMem0, &m_rcNew);
 
-    // Transfer the bits (hDC <-- hdcMem1)
+    // Transfer the bits (hDC <-- hdcMem0)
     ::BitBlt(hDC,
              rcPaint.left, rcPaint.top,
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
-             hdcMem1, rcPaint.left, rcPaint.top, SRCCOPY);
+             hdcMem0, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::SelectObject(hdcMem1, hbmOld);
-    ::DeleteDC(hdcMem1);
+    ::SelectObject(hdcMem0, hbmOld);
+    ::DeleteDC(hdcMem0);
 }
 
 VOID CCanvasWindow::Update(HWND hwndFrom)
