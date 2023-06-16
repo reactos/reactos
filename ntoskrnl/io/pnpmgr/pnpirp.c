@@ -338,10 +338,8 @@ NTSTATUS
 PiIrpQueryPnPDeviceId(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ BUS_QUERY_ID_TYPE IdType,
-    _Out_ PWCHAR *Id)
+    _Out_ PZZWSTR *Id)
 {
-    NTSTATUS Status;
-    ULONG_PTR LongId;
     IO_STACK_LOCATION Stack = {
         .MajorFunction = IRP_MJ_PNP,
         .MinorFunction = IRP_MN_QUERY_ID
@@ -355,13 +353,6 @@ PiIrpQueryPnPDeviceId(
            IdType == BusQueryDeviceSerialNumber || IdType == BusQueryContainerID);
 
     Stack.Parameters.QueryId.IdType = IdType;
-    *Id = NULL;
 
-    Status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, (PVOID)&LongId);
-    if (NT_SUCCESS(Status))
-    {
-        *Id = (PVOID)LongId;
-    }
-
-    return Status;
+    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, (PVOID)Id);
 }

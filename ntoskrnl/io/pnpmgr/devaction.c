@@ -931,7 +931,7 @@ NTSTATUS
 IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                     HANDLE InstanceKey)
 {
-    PWCHAR HwId;
+    PZZWSTR HwIds;
     PWSTR Ptr;
     UNICODE_STRING ValueName;
     NTSTATUS Status;
@@ -940,10 +940,10 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
 
     DPRINT("IopQueryHardwareIds() query BusQueryHardwareIDs from device stack\n");
 
-    Status = PiIrpQueryPnPDeviceId(DeviceNode, BusQueryHardwareIDs, &HwId);
+    Status = PiIrpQueryPnPDeviceId(DeviceNode, BusQueryHardwareIDs, &HwIds);
     if (NT_SUCCESS(Status))
     {
-        IsValidID = IopValidateID(HwId, BusQueryHardwareIDs);
+        IsValidID = IopValidateID(HwIds, BusQueryHardwareIDs);
 
         if (!IsValidID)
         {
@@ -952,7 +952,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
 
         TotalLength = 0;
 
-        Ptr = (PWSTR)HwId;
+        Ptr = (PWSTR)HwIds;
         DPRINT("Hardware IDs:\n");
         while (*Ptr)
         {
@@ -970,15 +970,15 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                                &ValueName,
                                0,
                                REG_MULTI_SZ,
-                               (PVOID)HwId,
+                               (PVOID)HwIds,
                                (TotalLength + 1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
         }
 
-        if (HwId)
-            ExFreePool(HwId);
+        if (HwIds)
+            ExFreePool(HwIds);
     }
     else
     {
