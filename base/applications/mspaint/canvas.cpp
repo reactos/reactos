@@ -141,7 +141,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Draw the grid
     if (g_showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) SelectObject(hdcMem0, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        HPEN oldPen = (HPEN) ::SelectObject(hdcMem0, ::CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
         for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };
@@ -174,6 +174,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
              hdcMem0, rcPaint.left, rcPaint.top, SRCCOPY);
 
+    // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
     ::DeleteDC(hdcMem0);
 }
