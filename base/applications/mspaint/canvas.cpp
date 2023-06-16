@@ -17,18 +17,17 @@ CCanvasWindow::CCanvasWindow()
     , m_hitSelection(HIT_NONE)
     , m_whereHit(HIT_NONE)
     , m_ptOrig { -1, -1 }
-    , m_hbmCached1(NULL)
-    , m_hbmCached2(NULL)
 {
+    m_ahbmCached[0] = m_ahbmCached[1] = NULL;
     ::SetRectEmpty(&m_rcNew);
 }
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_hbmCached1)
-        ::DeleteObject(m_hbmCached1);
-    if (m_hbmCached2)
-        ::DeleteObject(m_hbmCached2);
+    if (m_ahbmCached[0])
+        ::DeleteObject(m_ahbmCached[0]);
+    if (m_ahbmCached[1])
+        ::DeleteObject(m_ahbmCached[1]);
 }
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
@@ -105,8 +104,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // We use a memory bitmap to reduce flickering
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
-    m_hbmCached1 = CachedBufferDIB(m_hbmCached1, rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem1, m_hbmCached1);
+    m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem1, m_ahbmCached[0]);
 
     // Fill the background on hdcMem1
     ::FillRect(hdcMem1, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
@@ -123,15 +122,14 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     // hdcMem2 <-- imageModel
     HDC hdcMem2 = ::CreateCompatibleDC(hDC);
-    m_hbmCached2 = CachedBufferDIB(m_hbmCached2, sizeImage.cx, sizeImage.cy);
-    HGDIOBJ hbm2Old = ::SelectObject(hdcMem2, m_hbmCached2);
-    BitBlt(hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy,
-           imageModel.GetDC(), 0, 0, SRCCOPY);
+    m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
+    HGDIOBJ hbm2Old = ::SelectObject(hdcMem2, m_ahbmCached[1]);
+    BitBlt(hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
 
     // Draw overlay #1 on hdcMem2
     toolsModel.OnDrawOverlayOnImage(hdcMem2);
 
-    // hdcMem1 <-- hdcMem2
+    // Transfer the bits (hdcMem1 <-- hdcMem2)
     ImageToCanvas(rcImage);
     ::StretchBlt(hdcMem1, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
                  hdcMem2, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
@@ -170,7 +168,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
         DrawXorRect(hdcMem1, &m_rcNew);
 
-    // Transfer the bits
+    // Transfer the bits (hDC <-- hdcMem1)
     ::BitBlt(hDC,
              rcPaint.left, rcPaint.top,
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
