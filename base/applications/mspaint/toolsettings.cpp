@@ -200,11 +200,14 @@ VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
         if (bHigh)
         {
             ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
-            Airbrush(hdc, x, y, ::GetSysColor(COLOR_HIGHLIGHTTEXT), s_AirRadius[i]);
+
+            for (int k = 0; k < 3; ++k)
+                Airbrush(hdc, x, y, ::GetSysColor(COLOR_HIGHLIGHTTEXT), s_AirRadius[i]);
         }
         else
         {
-            Airbrush(hdc, x, y, ::GetSysColor(COLOR_WINDOWTEXT), s_AirRadius[i]);
+            for (int k = 0; k < 3; ++k)
+                Airbrush(hdc, x, y, ::GetSysColor(COLOR_WINDOWTEXT), s_AirRadius[i]);
         }
     }
 }
