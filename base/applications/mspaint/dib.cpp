@@ -334,11 +334,11 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     return hbmNew;
 }
 
-typedef struct tagBITMAPINFOEX
+typedef struct tagBITMAPINFODX
 {
     BITMAPINFOHEADER bmiHeader;
     RGBQUAD          bmiColors[256];
-} BITMAPINFOEX, FAR * LPBITMAPINFOEX;
+} BITMAPINFODX, *LPBITMAPINFODX;
 
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 {
@@ -346,7 +346,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
     if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
         return NULL;
 
-    BITMAPINFOEX bmi;
+    BITMAPINFODX bmi;
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = bm.bmWidth;
