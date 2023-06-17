@@ -275,13 +275,6 @@ class CMainToolbar : public CUiWindow<CToolbar<>>
     const INT m_iToolbarHeight;
     DWORD m_dButtonsWidthMax;
 
-    WCHAR szInstallBtn[MAX_STR_LEN];
-    WCHAR szUninstallBtn[MAX_STR_LEN];
-    WCHAR szModifyBtn[MAX_STR_LEN];
-    WCHAR szSelectAll[MAX_STR_LEN];
-    WCHAR szRefreshBtn[MAX_STR_LEN];
-    WCHAR szUpdateDbBtn[MAX_STR_LEN];
-
     VOID
     AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
 
