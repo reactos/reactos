@@ -700,8 +700,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             OpenClipboard();
             if (IsClipboardFormatAvailable(CF_BITMAP))
             {
-                HBITMAP hbm = (HBITMAP)::GetClipboardData(CF_BITMAP);
-                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                InsertSelectionFromHBITMAP((HBITMAP) GetClipboardData(CF_BITMAP), m_hWnd);
             }
             CloseClipboard();
             break;
