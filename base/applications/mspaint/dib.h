@@ -36,3 +36,6 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
 float PpcmFromDpi(float dpi);
 
 #define ROUND(x) (INT)((x) + 0.5)
+
+HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap);
+HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);

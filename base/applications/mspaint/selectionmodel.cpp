@@ -207,6 +207,7 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
     m_rc.top = y;
     m_rc.right = m_rc.left + GetDIBWidth(hBm);
     m_rc.bottom = m_rc.top + GetDIBHeight(hBm);
+    ::SetRect(&m_rcOld, -1, -1, 0, 0);
 
     ClearMask();
 }

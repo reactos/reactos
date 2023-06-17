@@ -333,3 +333,57 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     DeleteDC(hDC2);
     return hbmNew;
 }
+
+HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
+{
+    BITMAP bm;
+    GetObject(hBitmap, sizeof(BITMAP), &bm);
+
+    BITMAPINFOHEADER bi;
+    ZeroMemory(&bi, sizeof(BITMAPINFOHEADER));
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = bm.bmWidth;
+    bi.biHeight = bm.bmHeight;
+    bi.biPlanes = 1;
+    bi.biBitCount = bm.bmBitsPixel;
+    bi.biCompression = BI_RGB;
+    bi.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
+
+    DWORD dwSize = sizeof(BITMAPINFOHEADER) + bm.bmWidthBytes * bm.bmHeight;
+    HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, dwSize);
+    if (hGlobal)
+    {
+        LPVOID pGlobal = GlobalLock(hGlobal);
+        if (pGlobal)
+        {
+            CopyMemory(pGlobal, &bi, sizeof(BITMAPINFOHEADER));
+            LPBYTE pBits = (LPBYTE)pGlobal + sizeof(BITMAPINFOHEADER);
+
+            HDC hDC = GetDC(NULL);
+            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+            ReleaseDC(NULL, hDC);
+
+            GlobalUnlock(hGlobal);
+        }
+        else
+        {
+            GlobalFree(hGlobal);
+            hGlobal = NULL;
+        }
+    }
+
+    return hGlobal;
+}
+
+HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
+{
+    LPBITMAPINFO pBitmapInfo = (LPBITMAPINFO)GlobalLock(hGlobal);
+    if (!pBitmapInfo)
+        return NULL;
+    LPVOID pPixels = ((LPBYTE)pBitmapInfo) + pBitmapInfo->bmiHeader.biSize;
+    HDC hDC = GetDC(NULL);
+    HBITMAP hbm = CreateDIBitmap(hDC, &(pBitmapInfo->bmiHeader), CBM_INIT, pPixels, pBitmapInfo, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hDC);
+    GlobalUnlock(hGlobal);
+    return hbm;
+}

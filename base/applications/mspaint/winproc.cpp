@@ -200,9 +200,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
         }
     }
 
-    HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
-    toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
+    toolsModel.SetActiveTool(TOOL_RECTSEL);
 
     imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
@@ -438,9 +436,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
-            OpenClipboard();
-            EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(IsClipboardFormatAvailable(CF_BITMAP)));
-            CloseClipboard();
+            EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(IsClipboardFormatAvailable(CF_DIB)));
             break;
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
@@ -673,19 +669,24 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
-            // FIXME: We should use CF_DIB in the future
             if (OpenClipboard())
             {
                 EmptyClipboard();
+
                 if (selectionModel.m_bShow)
                 {
                     selectionModel.TakeOff();
-                    SetClipboardData(CF_BITMAP, selectionModel.CopyBitmap());
+
+                    HBITMAP hbm = selectionModel.CopyBitmap();
+                    if (hbm)
+                    {
+                        HGLOBAL hGlobal = BitmapToClipboardDIB(hbm);
+                        ::SetClipboardData(CF_DIB, hGlobal);
+
+                        ::DeleteObject(hbm);
+                    }
                 }
-                else
-                {
-                    SetClipboardData(CF_BITMAP, imageModel.CopyBitmap());
-                }
+
                 CloseClipboard();
             }
             break;
@@ -697,9 +698,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITPASTE:
             OpenClipboard();
-            if (IsClipboardFormatAvailable(CF_BITMAP))
+            if (IsClipboardFormatAvailable(CF_DIB))
             {
-                InsertSelectionFromHBITMAP((HBITMAP) GetClipboardData(CF_BITMAP), m_hWnd);
+                HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
+                InsertSelectionFromHBITMAP(hbm, m_hWnd);
             }
             CloseClipboard();
             break;
