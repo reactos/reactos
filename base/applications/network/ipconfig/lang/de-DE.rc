@@ -2,6 +2,43 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_HEADER "\nReactOS-IP-Konfiguration\n\n"
+    IDS_HOSTNAME            "\tHostname. . . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tPrimäres DNS-Suffix . . . . . . . : %hs\n"
+    IDS_NODETYPE            "\tKnotentyp . . . . . . . . . . . . : "
+    IDS_IPROUTINGNO         "\tIP-Routing aktiviert. . . . . . . : Nein\n"
+    IDS_IPROUTINGYES        "\tIP-Routing aktiviert. . . . . . . : Ja\n"
+    IDS_WINSPROXYNO         "\tWINS-Proxy aktiviert. . . . . . . : Nein\n"
+    IDS_WINSPROXYYES        "\tWINS-Proxy aktiviert. . . . . . . : Ja\n"
+    IDS_DNSSUFFIXLIST       "\tDNS-Suffixliste . . . . . . . . . : %hs\n"
+    IDS_EMPTYLINE           "\t                                    %hs\n"
+    IDS_MEDIADISCONNECTED   "\tMedienstatus. . . . . . . . . . . : Es besteht keine Verbindung\n"
+    IDS_CONNECTIONDNSSUFFIX "\tVerbindungsspezifisches DNS-Suffix: %hs\n"
+    IDS_DESCRIPTION         "\tBeschreibung. . . . . . . . . . . : "
+    IDS_PHYSICALADDRESS     "\tPhysikalische Adresse . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP aktiviert. . . . . . . . . . : Nein\n"
+    IDS_DHCPYES             "\tDHCP aktiviert. . . . . . . . . . : Ja\n"
+    IDS_AUTOCONFIGNO        "\tAutokonfiguration aktiviert . . . : Nein\n"
+    IDS_AUTOCONFIGYES       "\tAutokonfiguration aktiviert . . . : Ja\n"
+    IDS_IPADDRESS           "\tIP-Adresse. . . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tSubnetzmaske. . . . . . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tStandardgateway . . . . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tDHCP-Server . . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tDNS-Server. . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tPrimärer WINS-Server. . . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tSekundärer WINS-Server. . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tLease erhalten. . . . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tLease läuft ab. . . . . . . . . . : %s\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_YES "Yes"
+    IDS_NO  "No"
+END
+
+STRINGTABLE
+BEGIN
     IDS_BCAST "Broadcast"
     IDS_P2P "Peer-to-Peer"
     IDS_MIXED "Gemischt"
@@ -11,6 +48,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_UNKNOWNADAPTER "Unknown Adapter"
     IDS_OTHER "Anderer Adapter"
     IDS_ETH "Ethernet-Adapter"
     IDS_TOKEN "Token-Ring-Adapter"
@@ -18,6 +56,7 @@ BEGIN
     IDS_PPP "PPP-Adapter"
     IDS_LOOP "Loopback-Adapter"
     IDS_SLIP "SLIP-Adapter"
+    IDS_WIFI "Wireless Network Adapter"
 END
 
 STRINGTABLE

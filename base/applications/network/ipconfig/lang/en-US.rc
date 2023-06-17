@@ -2,15 +2,53 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_BCAST "Broadcast"
-    IDS_P2P "Peer To Peer"
-    IDS_MIXED "Mixed"
-    IDS_HYBRID "Hybrid"
-    IDS_UNKNOWN "unknown"
+    IDS_HEADER "\nReactOS IP Configuration\n\n"
+    IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
+    IDS_NODETYPE            "\tNode Type . . . . . . . . . . . . : "
+    IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
+    IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
+    IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
+    IDS_WINSPROXYYES        "\tWINS Proxy enabled. . . . . . . . : Yes\n"
+    IDS_DNSSUFFIXLIST       "\tDNS Suffix Search List. . . . . . : %hs\n"
+    IDS_EMPTYLINE           "\t                                    %hs\n"
+    IDS_MEDIADISCONNECTED   "\tMedia State . . . . . . . . . . . : Media disconnected\n"
+    IDS_CONNECTIONDNSSUFFIX "\tConnection-specific DNS Suffix. . : %hs\n"
+    IDS_DESCRIPTION         "\tDescription . . . . . . . . . . . : "
+    IDS_PHYSICALADDRESS     "\tPhysical Address. . . . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP Enabled. . . . . . . . . . . : No\n"
+    IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
+    IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
+    IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
+    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tDNS Servers . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tPrimary WINS Server . . . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
 END
 
 STRINGTABLE
 BEGIN
+    IDS_YES "Yes"
+    IDS_NO  "No"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mixed"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "Unknown"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNKNOWNADAPTER "Unknown Adapter"
     IDS_OTHER "Other Type Of Adapter"
     IDS_ETH "Ethernet Adapter"
     IDS_TOKEN "Token Ring Adapter"
@@ -18,6 +56,7 @@ BEGIN
     IDS_PPP "PPP Adapter"
     IDS_LOOP "Loopback Adapter"
     IDS_SLIP "SLIP Adapter"
+    IDS_WIFI "Wireless Network Adapter"
 END
 
 STRINGTABLE

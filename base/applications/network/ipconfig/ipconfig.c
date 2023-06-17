@@ -19,6 +19,7 @@
 #include <winnls.h>
 #include <winuser.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
@@ -27,6 +28,8 @@
 #include <inaddr.h>
 #include <windns.h>
 #include <windns_undoc.h>
+#include <strsafe.h>
+#include <conutils.h>
 
 #include "resource.h"
 
@@ -120,119 +123,12 @@ GetRecordTypeName(WORD wType)
     return szType;
 }
 
-int LoadStringAndOem(HINSTANCE hInst,
-                     UINT uID,
-                     LPTSTR szNode,
-                     int byteSize)
-{
-    TCHAR *szTmp;
-    int res;
-
-    szTmp = (LPTSTR)HeapAlloc(ProcessHeap, 0, byteSize);
-    if (szTmp == NULL)
-    {
-        return 0;
-    }
-
-    res = LoadString(hInst, uID, szTmp, byteSize);
-    CharToOem(szTmp, szNode);
-    HeapFree(ProcessHeap, 0, szTmp);
-    return res;
-}
-
-LPTSTR GetNodeTypeName(UINT NodeType)
-{
-    static TCHAR szNode[14];
-
-    switch (NodeType)
-    {
-        case 1:
-            if (!LoadStringAndOem(hInstance, IDS_BCAST, szNode,  sizeof(szNode)))
-                return NULL;
-            break;
-
-        case 2:
-            if (!LoadStringAndOem(hInstance, IDS_P2P, szNode,  sizeof(szNode)))
-                return NULL;
-            break;
-
-        case 4:
-            if (!LoadStringAndOem(hInstance, IDS_MIXED, szNode,  sizeof(szNode)))
-                return NULL;
-            break;
-
-        case 8:
-            if (!LoadStringAndOem(hInstance, IDS_HYBRID, szNode,  sizeof(szNode)))
-                return NULL;
-            break;
-
-        default :
-            if (!LoadStringAndOem(hInstance, IDS_UNKNOWN, szNode,  sizeof(szNode)))
-                return NULL;
-            break;
-    }
-
-    return szNode;
-}
-
-
-LPTSTR GetInterfaceTypeName(UINT InterfaceType)
-{
-    static TCHAR szIntType[25];
-
-    switch (InterfaceType)
-    {
-        case MIB_IF_TYPE_OTHER:
-            if (!LoadStringAndOem(hInstance, IDS_OTHER, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_ETHERNET:
-            if (!LoadStringAndOem(hInstance, IDS_ETH, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_TOKENRING:
-            if (!LoadStringAndOem(hInstance, IDS_TOKEN, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_FDDI:
-            if (!LoadStringAndOem(hInstance, IDS_FDDI, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_PPP:
-            if (!LoadStringAndOem(hInstance, IDS_PPP, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_LOOPBACK:
-            if (!LoadStringAndOem(hInstance, IDS_LOOP, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        case MIB_IF_TYPE_SLIP:
-            if (!LoadStringAndOem(hInstance, IDS_SLIP, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-
-        default:
-            if (!LoadStringAndOem(hInstance, IDS_UNKNOWN, szIntType, sizeof(szIntType)))
-                return NULL;
-            break;
-    }
-
-    return szIntType;
-}
-
-
 /* print MAC address */
-PTCHAR PrintMacAddr(PBYTE Mac)
+PCHAR PrintMacAddr(PBYTE Mac)
 {
-    static TCHAR MacAddr[20];
+    static CHAR MacAddr[20];
 
-    _stprintf(MacAddr, _T("%02x-%02x-%02x-%02x-%02x-%02x"),
+    sprintf(MacAddr, "%02X-%02X-%02X-%02X-%02X-%02X",
         Mac[0], Mac[1], Mac[2], Mac[3], Mac[4],  Mac[5]);
 
     return MacAddr;
@@ -326,89 +222,87 @@ VOID DoFormatMessage(LONG ErrorCode)
     }
 }
 
-
-LPTSTR GetConnectionType(LPTSTR lpClass)
+VOID
+PrintAdapterFriendlyName(LPSTR lpClass)
 {
     HKEY hKey = NULL;
-    LPTSTR ConType = NULL;
-    LPTSTR ConTypeTmp = NULL;
-    TCHAR Path[256];
-    LPTSTR PrePath  = _T("SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
-    LPTSTR PostPath = _T("\\Connection");
+    LPSTR ConType = NULL;
+    LPSTR ConTypeTmp = NULL;
+    CHAR Path[256];
+    LPSTR PrePath  = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
+    LPSTR PostPath = "\\Connection";
     DWORD PathSize;
     DWORD dwType;
     DWORD dwDataSize;
 
     /* don't overflow the buffer */
-    PathSize = lstrlen(PrePath) + lstrlen(lpClass) + lstrlen(PostPath) + 1;
+    PathSize = strlen(PrePath) + strlen(lpClass) + strlen(PostPath) + 1;
     if (PathSize >= 255)
-        return NULL;
+        return;
 
-    wsprintf(Path, _T("%s%s%s"), PrePath, lpClass, PostPath);
+    sprintf(Path, "%s%s%s", PrePath, lpClass, PostPath);
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     Path,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                      Path,
+                      0,
+                      KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
     {
-        if (RegQueryValueEx(hKey,
-                            _T("Name"),
-                            NULL,
-                            &dwType,
-                            NULL,
-                            &dwDataSize) == ERROR_SUCCESS)
+        if (RegQueryValueExA(hKey,
+                             "Name",
+                             NULL,
+                             &dwType,
+                             NULL,
+                             &dwDataSize) == ERROR_SUCCESS)
         {
-            ConTypeTmp = (LPTSTR)HeapAlloc(ProcessHeap,
-                                           0,
-                                           dwDataSize);
-
+            ConTypeTmp = (LPSTR)HeapAlloc(ProcessHeap,
+                                          0,
+                                          dwDataSize);
             if (ConTypeTmp == NULL)
-                return NULL;
+                return;
 
-            ConType = (LPTSTR)HeapAlloc(ProcessHeap,
-                                        0,
-                                        dwDataSize);
-
+            ConType = (LPSTR)HeapAlloc(ProcessHeap,
+                                       0,
+                                       dwDataSize);
             if (ConType == NULL)
             {
                 HeapFree(ProcessHeap, 0, ConTypeTmp);
-                return NULL;
+                return;
             }
 
-            if (RegQueryValueEx(hKey,
-                                _T("Name"),
-                                NULL,
-                                &dwType,
-                                (PBYTE)ConTypeTmp,
-                                &dwDataSize) != ERROR_SUCCESS)
+            if (RegQueryValueExA(hKey,
+                                 "Name",
+                                 NULL,
+                                 &dwType,
+                                 (PBYTE)ConTypeTmp,
+                                 &dwDataSize) != ERROR_SUCCESS)
             {
-                HeapFree(ProcessHeap,
-                         0,
-                         ConType);
-
+                HeapFree(ProcessHeap, 0, ConType);
                 ConType = NULL;
             }
 
             if (ConType)
-                CharToOem(ConTypeTmp, ConType);
+                CharToOemA(ConTypeTmp, ConType);
+
+            printf("%s\n", ConType);
+
             HeapFree(ProcessHeap, 0, ConTypeTmp);
+            HeapFree(ProcessHeap, 0, ConType);
         }
     }
 
     if (hKey != NULL)
         RegCloseKey(hKey);
-
-    return ConType;
 }
 
-
-LPTSTR GetConnectionDescription(LPTSTR lpClass)
+static
+VOID
+PrintAdapterDescription(LPSTR lpClass)
 {
     HKEY hBaseKey = NULL;
     HKEY hClassKey = NULL;
-    LPTSTR lpKeyClass = NULL;
-    LPTSTR lpConDesc = NULL;
+    LPSTR lpKeyClass = NULL;
+    LPSTR lpConDesc = NULL;
     LPTSTR lpPath = NULL;
     TCHAR szPrePath[] = _T("SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002bE10318}\\");
     DWORD dwType;
@@ -421,7 +315,7 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                      KEY_READ,
                      &hBaseKey) != ERROR_SUCCESS)
     {
-        return NULL;
+        return;
     }
 
     for (i = 0; ; i++)
@@ -473,25 +367,25 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
         HeapFree(ProcessHeap, 0, lpPath);
         lpPath = NULL;
 
-        if (RegQueryValueEx(hClassKey,
-                            _T("NetCfgInstanceId"),
-                            NULL,
-                            &dwType,
-                            NULL,
-                            &dwDataSize) == ERROR_SUCCESS)
+        if (RegQueryValueExA(hClassKey,
+                             "NetCfgInstanceId",
+                             NULL,
+                             &dwType,
+                             NULL,
+                             &dwDataSize) == ERROR_SUCCESS)
         {
-            lpKeyClass = (LPTSTR)HeapAlloc(ProcessHeap,
-                                           0,
-                                           dwDataSize);
+            lpKeyClass = (LPSTR)HeapAlloc(ProcessHeap,
+                                          0,
+                                          dwDataSize);
             if (lpKeyClass == NULL)
                 goto CLEANUP;
 
-            if (RegQueryValueEx(hClassKey,
-                                _T("NetCfgInstanceId"),
-                                NULL,
-                                &dwType,
-                                (PBYTE)lpKeyClass,
-                                &dwDataSize) != ERROR_SUCCESS)
+            if (RegQueryValueExA(hClassKey,
+                                 "NetCfgInstanceId",
+                                 NULL,
+                                 &dwType,
+                                 (PBYTE)lpKeyClass,
+                                 &dwDataSize) != ERROR_SUCCESS)
             {
                 HeapFree(ProcessHeap, 0, lpKeyClass);
                 lpKeyClass = NULL;
@@ -501,39 +395,36 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
         else
             continue;
 
-        if (!lstrcmp(lpClass, lpKeyClass))
+        if (!strcmp(lpClass, lpKeyClass))
         {
             HeapFree(ProcessHeap, 0, lpKeyClass);
             lpKeyClass = NULL;
 
-            if (RegQueryValueEx(hClassKey,
-                                _T("DriverDesc"),
-                                NULL,
-                                &dwType,
-                                NULL,
-                                &dwDataSize) == ERROR_SUCCESS)
+            if (RegQueryValueExA(hClassKey,
+                                 "DriverDesc",
+                                 NULL,
+                                 &dwType,
+                                 NULL,
+                                 &dwDataSize) == ERROR_SUCCESS)
             {
-                lpConDesc = (LPTSTR)HeapAlloc(ProcessHeap,
-                                              0,
-                                              dwDataSize);
-                if (lpConDesc == NULL)
-                    goto CLEANUP;
-
-                if (RegQueryValueEx(hClassKey,
-                                    _T("DriverDesc"),
-                                    NULL,
-                                    &dwType,
-                                    (PBYTE)lpConDesc,
-                                    &dwDataSize) != ERROR_SUCCESS)
+                lpConDesc = (LPSTR)HeapAlloc(ProcessHeap,
+                                             0,
+                                             dwDataSize);
+                if (lpConDesc != NULL)
                 {
+                    if (RegQueryValueExA(hClassKey,
+                                         "DriverDesc",
+                                         NULL,
+                                         &dwType,
+                                         (PBYTE)lpConDesc,
+                                         &dwDataSize) == ERROR_SUCCESS)
+                    {
+                        printf("%s", lpConDesc);
+                    }
+
                     HeapFree(ProcessHeap, 0, lpConDesc);
                     lpConDesc = NULL;
-                    goto CLEANUP;
                 }
-            }
-            else
-            {
-                lpConDesc = NULL;
             }
 
             break;
@@ -549,10 +440,89 @@ CLEANUP:
         HeapFree(ProcessHeap, 0, lpPath);
     if (lpKeyClass != NULL)
         HeapFree(ProcessHeap, 0, lpKeyClass);
-
-    return lpConDesc;
 }
 
+static
+VOID
+PrintNodeType(UINT NodeType)
+{
+    ConResPrintf(StdOut, IDS_NODETYPE);
+
+    switch (NodeType)
+    {
+        case 1:
+            ConResPrintf(StdOut, IDS_BCAST);
+            break;
+
+        case 2:
+            ConResPrintf(StdOut, IDS_P2P);
+            break;
+
+        case 4:
+            ConResPrintf(StdOut, IDS_MIXED);
+            break;
+
+        case 8:
+            ConResPrintf(StdOut, IDS_HYBRID);
+            break;
+
+        default :
+            ConResPrintf(StdOut, IDS_UNKNOWN);
+            break;
+    }
+    printf("\n");
+}
+
+static
+VOID
+PrintAdapterTypeAndName(
+    PIP_ADAPTER_INFO pAdapterInfo)
+{
+    printf("\n");
+
+    switch (pAdapterInfo->Type)
+    {
+        case MIB_IF_TYPE_OTHER:
+            ConResPrintf(StdOut, IDS_OTHER);
+            break;
+
+        case MIB_IF_TYPE_ETHERNET:
+            ConResPrintf(StdOut, IDS_ETH);
+            break;
+
+        case MIB_IF_TYPE_TOKENRING:
+            ConResPrintf(StdOut, IDS_TOKEN);
+            break;
+
+        case MIB_IF_TYPE_FDDI:
+            ConResPrintf(StdOut, IDS_FDDI);
+            break;
+
+        case MIB_IF_TYPE_PPP:
+            ConResPrintf(StdOut, IDS_PPP);
+            break;
+
+        case MIB_IF_TYPE_LOOPBACK:
+            ConResPrintf(StdOut, IDS_LOOP);
+            break;
+
+        case MIB_IF_TYPE_SLIP:
+            ConResPrintf(StdOut, IDS_SLIP);
+            break;
+
+        case IF_TYPE_IEEE80211:
+            ConResPrintf(StdOut, IDS_WIFI);
+            break;
+
+        default:
+            ConResPrintf(StdOut, IDS_UNKNOWNADAPTER);
+            break;
+    }
+
+    printf(": ");
+    PrintAdapterFriendlyName(pAdapterInfo->AdapterName);
+    printf("\n");
+}
 
 VOID ShowInfo(BOOL bAll)
 {
@@ -628,45 +598,44 @@ VOID ShowInfo(BOOL bAll)
 
     pAdapter = pAdapterInfo;
 
-    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+    ConResPrintf(StdOut, IDS_HEADER);
+
     if (bAll)
     {
-        _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
-        _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : %s\n"), (pszDomainName != NULL) ? pszDomainName : "");
-        _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
+        ConResPrintf(StdOut, IDS_HOSTNAME, pFixedInfo->HostName);
+        ConResPrintf(StdOut, IDS_PRIMARYDNSSUFFIX, (pszDomainName != NULL) ? pszDomainName : "");
+
+        PrintNodeType(pFixedInfo->NodeType);
+
         if (pFixedInfo->EnableRouting)
-            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
+            ConResPrintf(StdOut, IDS_IPROUTINGYES);
         else
-            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : No\n"));
+            ConResPrintf(StdOut, IDS_IPROUTINGNO);
+
         if (pAdapter && pAdapter->HaveWins)
-            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
+            ConResPrintf(StdOut, IDS_WINSPROXYYES);
         else
-            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
+            ConResPrintf(StdOut, IDS_WINSPROXYNO);
+
         if (pszDomainName != NULL && pszDomainName[0] != 0)
         {
-            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pszDomainName);
-            _tprintf(_T("\t                                    %s\n"), pFixedInfo->DomainName);
+            ConResPrintf(StdOut, IDS_DNSSUFFIXLIST, pszDomainName);
+            ConResPrintf(StdOut, IDS_EMPTYLINE, pFixedInfo->DomainName);
         }
         else
         {
-            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+            ConResPrintf(StdOut, IDS_DNSSUFFIXLIST, pFixedInfo->DomainName);
         }
     }
 
     while (pAdapter)
     {
-        LPTSTR IntType, myConType;
         BOOLEAN bConnected = TRUE;
 
         mibEntry.dwIndex = pAdapter->Index;
         GetIfEntry(&mibEntry);
 
-        IntType = GetInterfaceTypeName(pAdapter->Type);
-        myConType = GetConnectionType(pAdapter->AdapterName);
-
-        _tprintf(_T("\n%s %s: \n\n"), IntType , myConType);
-
-        if (myConType != NULL) HeapFree(ProcessHeap, 0, myConType);
+        PrintAdapterTypeAndName(pAdapter);
 
         if (GetPerAdapterInfo(pAdapter->Index, pPerAdapterInfo, &ulPerAdapterInfoLength) == ERROR_BUFFER_OVERFLOW)
         {
@@ -681,35 +650,38 @@ VOID ShowInfo(BOOL bAll)
         if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
             bConnected = FALSE;
-            _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
+            ConResPrintf(StdOut, IDS_MEDIADISCONNECTED);
         }
         else
         {
-            _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
+            ConResPrintf(StdOut, IDS_CONNECTIONDNSSUFFIX, pFixedInfo->DomainName);
         }
 
         if (bAll)
         {
-            LPTSTR lpDesc = GetConnectionDescription(pAdapter->AdapterName);
-            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), lpDesc);
-            HeapFree(ProcessHeap, 0, lpDesc);
-            _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
+            ConResPrintf(StdOut, IDS_DESCRIPTION);
+            PrintAdapterDescription(pAdapter->AdapterName);
+            printf("\n");
+
+            ConResPrintf(StdOut, IDS_PHYSICALADDRESS, PrintMacAddr(pAdapter->Address));
+
             if (bConnected)
             {
                 if (pAdapter->DhcpEnabled)
                 {
-                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
+                    ConResPrintf(StdOut, IDS_DHCPYES);
+
                     if (pPerAdapterInfo != NULL)
                     {
                         if (pPerAdapterInfo->AutoconfigEnabled)
-                            _tprintf(_T("\tAutoconfiguration Enabled . . . . : Yes\n"));
+                            ConResPrintf(StdOut, IDS_AUTOCONFIGYES);
                         else
-                            _tprintf(_T("\tAutoconfiguration Enabled . . . . : No\n"));
+                            ConResPrintf(StdOut, IDS_AUTOCONFIGNO);
                     }
                 }
                 else
                 {
-                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
+                    ConResPrintf(StdOut, IDS_DHCPNO);
                 }
             }
         }
@@ -720,53 +692,52 @@ VOID ShowInfo(BOOL bAll)
             continue;
         }
 
-        _tprintf(_T("\tIP Address. . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpAddress.String);
-        _tprintf(_T("\tSubnet Mask . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpMask.String);
-        if (pAdapter->GatewayList.IpAddress.String[0] != '0')
-            _tprintf(_T("\tDefault Gateway . . . . . . . . . : %s\n"), pAdapter->GatewayList.IpAddress.String);
+        ConResPrintf(StdOut, IDS_IPADDRESS, pAdapter->IpAddressList.IpAddress.String);
+        ConResPrintf(StdOut, IDS_SUBNETMASK, pAdapter->IpAddressList.IpMask.String);
+
+        if (strcmp(pAdapter->GatewayList.IpAddress.String, "0.0.0.0"))
+            ConResPrintf(StdOut, IDS_DEFAULTGATEWAY, pAdapter->GatewayList.IpAddress.String);
         else
-            _tprintf(_T("\tDefault Gateway . . . . . . . . . :\n"));
+            ConResPrintf(StdOut, IDS_DEFAULTGATEWAY, "");
 
         if (bAll)
         {
             PIP_ADDR_STRING pIPAddr;
 
             if (pAdapter->DhcpEnabled)
-               _tprintf(_T("\tDHCP Server . . . . . . . . . . . : %s\n"), pAdapter->DhcpServer.IpAddress.String);
+                ConResPrintf(StdOut, IDS_DHCPSERVER, pAdapter->DhcpServer.IpAddress.String);
 
-            _tprintf(_T("\tDNS Servers . . . . . . . . . . . : "));
-            _tprintf(_T("%s\n"), pFixedInfo->DnsServerList.IpAddress.String);
+            ConResPrintf(StdOut, IDS_DNSSERVERS, pFixedInfo->DnsServerList.IpAddress.String);
             pIPAddr = pFixedInfo->DnsServerList.Next;
             while (pIPAddr)
             {
-                _tprintf(_T("\t\t\t\t\t    %s\n"), pIPAddr ->IpAddress.String );
+                ConResPrintf(StdOut, IDS_EMPTYLINE, pIPAddr ->IpAddress.String);
                 pIPAddr = pIPAddr->Next;
             }
 
             if (pAdapter->HaveWins)
             {
-                _tprintf(_T("\tPrimary WINS Server . . . . . . . : %s\n"), pAdapter->PrimaryWinsServer.IpAddress.String);
-                _tprintf(_T("\tSecondary WINS Server . . . . . . : %s\n"), pAdapter->SecondaryWinsServer.IpAddress.String);
+                ConResPrintf(StdOut, IDS_PRIMARYWINSSERVER, pAdapter->PrimaryWinsServer.IpAddress.String);
+                ConResPrintf(StdOut, IDS_SECONDARYWINSSERVER, pAdapter->SecondaryWinsServer.IpAddress.String);
             }
 
-            if (pAdapter->DhcpEnabled && _tcscmp(pAdapter->DhcpServer.IpAddress.String, _T("255.255.255.255")))
+            if (pAdapter->DhcpEnabled && strcmp(pAdapter->DhcpServer.IpAddress.String, "255.255.255.255"))
             {
                 PTSTR DateTimeString;
                 DateTimeString = timeToStr(pAdapter->LeaseObtained);
-                _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s\n"), DateTimeString ? DateTimeString : _T("N/A"));
+                ConResPrintf(StdOut, IDS_LEASEOBTAINED, DateTimeString ? DateTimeString : _T("N/A"));
                 if (DateTimeString)
                 {
                     HeapFree(ProcessHeap, 0, DateTimeString);
                 }
                 DateTimeString = timeToStr(pAdapter->LeaseExpires);
-                _tprintf(_T("\tLease Expires . . . . . . . . . . : %s\n"), DateTimeString ? DateTimeString : _T("N/A"));
+                ConResPrintf(StdOut, IDS_LEASEEXPIRES, DateTimeString ? DateTimeString : _T("N/A"));
                 if (DateTimeString)
                 {
                     HeapFree(ProcessHeap, 0, DateTimeString);
                 }
             }
         }
-        _tprintf(_T("\n"));
 
         HeapFree(ProcessHeap, 0, pPerAdapterInfo);
         pPerAdapterInfo = NULL;
@@ -842,9 +813,6 @@ VOID Release(LPTSTR Index)
     }
 }
 
-
-
-
 VOID Renew(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
@@ -914,7 +882,7 @@ VOID Renew(LPTSTR Index)
 VOID
 FlushDns(VOID)
 {
-    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+    ConResPrintf(StdOut, IDS_HEADER);
 
     if (DnsFlushResolverCache())
         _tprintf(_T("The DNS Resolver Cache has been deleted.\n"));
@@ -952,20 +920,20 @@ DisplayDnsRecord(
     {
         if (Status == DNS_ERROR_RCODE_NAME_ERROR)
         {
-            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t%ls\n"), pszName);
             _tprintf(_T("\t----------------------------------------\n"));
             _tprintf(_T("\tName does not exist\n\n"));
         }
         else if (Status == DNS_INFO_NO_RECORDS)
         {
-            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t%ls\n"), pszName);
             _tprintf(_T("\t----------------------------------------\n"));
             _tprintf(_T("\tNo records of type %s\n\n"), GetRecordTypeName(wType));
         }
         return;
     }
 
-    _tprintf(_T("\t%S\n"), pszName);
+    _tprintf(_T("\t%ls\n"), pszName);
     _tprintf(_T("\t----------------------------------------\n"));
 
     pThisRecord = pQueryResults;
@@ -973,7 +941,7 @@ DisplayDnsRecord(
     {
         pNextRecord = pThisRecord->pNext;
 
-        _tprintf(_T("\tRecord Name . . . . . : %S\n"), pThisRecord->pName);
+        _tprintf(_T("\tRecord Name . . . . . : %ls\n"), pThisRecord->pName);
         _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
         _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
         _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
@@ -1002,15 +970,15 @@ DisplayDnsRecord(
             case DNS_TYPE_A:
                 Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
                 RtlIpv4AddressToStringW(&Addr4, szBuffer);
-                _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
+                _tprintf(_T("\tA (Host) Record . . . : %ls\n"), szBuffer);
                 break;
 
             case DNS_TYPE_NS:
-                _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
+                _tprintf(_T("\tNS Record . . . . . . : %ls\n"), pThisRecord->Data.NS.pNameHost);
                 break;
 
             case DNS_TYPE_CNAME:
-                _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
+                _tprintf(_T("\tCNAME Record. . . . . : %ls\n"), pThisRecord->Data.CNAME.pNameHost);
                 break;
 
             case DNS_TYPE_SOA:
@@ -1018,7 +986,7 @@ DisplayDnsRecord(
                 break;
 
             case DNS_TYPE_PTR:
-                _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
+                _tprintf(_T("\tPTR Record. . . . . . : %ls\n"), pThisRecord->Data.PTR.pNameHost);
                 break;
 
             case DNS_TYPE_MX:
@@ -1028,7 +996,7 @@ DisplayDnsRecord(
             case DNS_TYPE_AAAA:
                 RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
                 RtlIpv6AddressToStringW(&Addr6, szBuffer);
-                _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
+                _tprintf(_T("\tAAAA Record . . . . . : %ls\n"), szBuffer);
                 break;
 
             case DNS_TYPE_ATMA:
@@ -1047,13 +1015,12 @@ DisplayDnsRecord(
     DnsRecordListFree((PDNS_RECORD)pQueryResults, DnsFreeRecordList);
 }
 
-
 VOID
 DisplayDns(VOID)
 {
     PDNS_CACHE_ENTRY DnsEntry = NULL, pThisEntry, pNextEntry;
 
-    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+    ConResPrintf(StdOut, IDS_HEADER);
 
     if (!DnsGetCacheDataTable(&DnsEntry))
     {
@@ -1085,40 +1052,10 @@ DisplayDns(VOID)
 
 VOID Usage(VOID)
 {
-    HRSRC hRes;
-    LPTSTR lpUsage;
-    DWORD Size;
-
-    LPTSTR lpName = (LPTSTR)MAKEINTRESOURCE((IDS_USAGE >> 4) + 1);
-
-    hRes = FindResource(hInstance,
-                        lpName,
-                        RT_STRING);
-    if (hRes != NULL)
-    {
-        if ((Size = SizeofResource(hInstance,
-                                   hRes)))
-        {
-            lpUsage = (LPTSTR)HeapAlloc(ProcessHeap,
-                                        0,
-                                        Size);
-            if (lpUsage == NULL)
-                return;
-
-            if (LoadStringAndOem(hInstance,
-                           IDS_USAGE,
-                           lpUsage,
-                           Size))
-            {
-                _tprintf(_T("%s"), lpUsage);
-            }
-
-            HeapFree(ProcessHeap, 0, lpUsage);
-        }
-    }
+    ConResPrintf(StdOut, IDS_USAGE);
 }
 
-int main(int argc, char *argv[])
+int wmain(int argc, wchar_t *argv[])
 {
     BOOL DoUsage=FALSE;
     BOOL DoAll=FALSE;
@@ -1129,6 +1066,9 @@ int main(int argc, char *argv[])
     BOOL DoDisplaydns=FALSE;
     BOOL DoShowclassid=FALSE;
     BOOL DoSetclassid=FALSE;
+
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
     hInstance = GetModuleHandle(NULL);
     ProcessHeap = GetProcessHeap();
