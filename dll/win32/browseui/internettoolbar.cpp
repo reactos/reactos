@@ -607,8 +607,24 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
 
 CInternetToolbar::CInternetToolbar()
 {
+    HKEY hKey;
+    // Sets the toolbar to locked by default if the registry key is missing.
+    fLocked = true;
+    if(RegOpenKeyEx(HKEY_CURRENT_USER,
+                    _T("Software\\Microsoft\\Internet Explorer\\Toolbar"),
+                    0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD dwLocked;
+        DWORD dwSize;
+        if(RegQueryValueEx(hKey,
+                        _T("Locked"),
+                        NULL, NULL, (LPBYTE)&dwLocked, &dwSize) == ERROR_SUCCESS)
+        {
+            fLocked = (dwLocked != 0);
+        }
+    }
+    RegCloseKey(hKey);
     fMainReBar = NULL;
-    fLocked = false;
     fMenuBandWindow = NULL;
     fNavigationWindow = NULL;
     fMenuCallback = new CComObject<CMenuCallback>();
@@ -715,9 +731,21 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
     int                                     bandCount;
     CDockSite                               *dockSite;
     HRESULT                                 hResult;
+    HKEY                                    hKey;
 
     if (locked != fLocked)
     {
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, 
+                        _T("Software\\Microsoft\\Internet Explorer\\Toolbar"), 
+                        0, NULL, REG_OPTION_NON_VOLATILE, 
+                        KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+        {
+            DWORD dwLocked = (locked ? 1 : 0);
+            RegSetValueEx(hKey, 
+                        _T("Locked"), 
+                        0, REG_DWORD, (const BYTE*)&dwLocked, sizeof(dwLocked));
+        }
+        RegCloseKey(hKey);
         fLocked = locked;
         rebarBandInfo.cbSize = sizeof(rebarBandInfo);
         rebarBandInfo.fMask = RBBIM_STYLE | RBBIM_LPARAM;
