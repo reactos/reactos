@@ -115,10 +115,10 @@ CMainToolbar::Create(HWND hwndParent)
         {4, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szRefreshBtn},
         {5, ID_RESETDB, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUpdateDbBtn}};
 
-    LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
-    LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
-    LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
-    LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
+    LoadStringW(hInst, IDS_TOOLTIP_INSTALL, szInstallBtn, _countof(szInstallBtn));
+    LoadStringW(hInst, IDS_TOOLTIP_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
+    LoadStringW(hInst, IDS_TOOLTIP_MODIFY, szModifyBtn, _countof(szModifyBtn));
+    LoadStringW(hInst, IDS_TOOLTIP_SELECT_ALL, szSelectAll, _countof(szSelectAll));
     LoadStringW(hInst, IDS_TOOLTIP_REFRESH, szRefreshBtn, _countof(szRefreshBtn));
     LoadStringW(hInst, IDS_TOOLTIP_UPDATE_DB, szUpdateDbBtn, _countof(szUpdateDbBtn));
 
