@@ -391,16 +391,3 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 
     return hGlobal;
 }
-
-HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
-{
-    LPBITMAPINFO pBitmapInfo = (LPBITMAPINFO)GlobalLock(hGlobal);
-    if (!pBitmapInfo)
-        return NULL;
-    LPVOID pPixels = ((LPBYTE)pBitmapInfo) + pBitmapInfo->bmiHeader.biSize;
-    HDC hDC = GetDC(NULL);
-    HBITMAP hbm = CreateDIBitmap(hDC, &(pBitmapInfo->bmiHeader), CBM_INIT, pPixels, pBitmapInfo, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hDC);
-    GlobalUnlock(hGlobal);
-    return hbm;
-}

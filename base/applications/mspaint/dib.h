@@ -38,4 +38,3 @@ float PpcmFromDpi(float dpi);
 #define ROUND(x) (INT)((x) + 0.5)
 
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap);
-HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);
