@@ -334,33 +334,50 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     return hbmNew;
 }
 
+typedef struct tagBITMAPINFOEX
+{
+    BITMAPINFOHEADER bmiHeader;
+    RGBQUAD          bmiColors[256];
+} BITMAPINFOEX, FAR * LPBITMAPINFOEX;
+
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 {
     BITMAP bm;
-    GetObject(hBitmap, sizeof(BITMAP), &bm);
+    if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
+        return NULL;
 
-    BITMAPINFOHEADER bi;
-    ZeroMemory(&bi, sizeof(BITMAPINFOHEADER));
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = bm.bmWidth;
-    bi.biHeight = bm.bmHeight;
-    bi.biPlanes = 1;
-    bi.biBitCount = bm.bmBitsPixel;
-    bi.biCompression = BI_RGB;
-    bi.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
+    BITMAPINFOEX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = bm.bmWidth;
+    bmi.bmiHeader.biHeight = bm.bmHeight;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
 
-    DWORD dwSize = sizeof(BITMAPINFOHEADER) + bm.bmWidthBytes * bm.bmHeight;
+    INT cColors;
+    if (bm.bmBitsPixel < 16)
+        cColors = 1 << bm.bmBitsPixel;
+    else
+        cColors = 0;
+
+    DWORD cbColors = cColors * sizeof(RGBQUAD);
+    DWORD dwSize = sizeof(BITMAPINFOHEADER) + cbColors + bmi.bmiHeader.biSizeImage;
     HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, dwSize);
     if (hGlobal)
     {
-        LPVOID pGlobal = GlobalLock(hGlobal);
-        if (pGlobal)
+        LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+        if (pb)
         {
-            CopyMemory(pGlobal, &bi, sizeof(BITMAPINFOHEADER));
-            LPBYTE pBits = (LPBYTE)pGlobal + sizeof(BITMAPINFOHEADER);
+            CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
+            pb += sizeof(BITMAPINFOHEADER);
+
+            CopyMemory(pb, bmi.bmiColors, cbColors);
+            pb += cbColors;
 
             HDC hDC = GetDC(NULL);
-            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
             ReleaseDC(NULL, hDC);
 
             GlobalUnlock(hGlobal);
