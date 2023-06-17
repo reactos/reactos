@@ -448,7 +448,7 @@ UefiSetupBlockDevices(VOID)
                         /* Now only of the root drive number is equal to this drive we found above */
                         if (InternalUefiDisk[i].UefiRootNumber == UefiBootRootIdentifier)
                         {
-                            InternalUefiDisk[i].IsThisTheBootDrive == TRUE;
+                            InternalUefiDisk[i].IsThisTheBootDrive = TRUE;
                             PublicBootArcDisk = i;
                             TRACE("Found Boot drive\n");
                         }
@@ -471,7 +471,7 @@ UefiSetBootpath(VOID)
    if (bio->Media->RemovableMedia == TRUE && bio->Media->BlockSize == 2048)
    {
         /* Boot Partition 0xFF is the magic value that indicates booting from CD-ROM (see isoboot.S) */
-        FrldrBootPartition == 0xFF;
+        FrldrBootPartition = 0xFF;
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)cdrom(%u)", PublicBootArcDisk);
    }
