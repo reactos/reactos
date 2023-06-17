@@ -17,7 +17,7 @@ typedef HWND (WINAPI *FN_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD_PTR);
 static HINSTANCE s_hHHCTRL_OCX = NULL; // HtmlHelpW needs "hhctrl.ocx"
 static FN_HtmlHelpW s_pHtmlHelpW = NULL;
 
-HWND hStatusBar = NULL;
+HWND g_hStatusBar = NULL;
 
 /* FUNCTIONS ********************************************************/
 
@@ -79,9 +79,9 @@ void CMainWindow::alignChildrenToMainWindow()
     GetClientRect(&clientRect);
     RECT rcSpace = clientRect;
 
-    if (::IsWindowVisible(hStatusBar))
+    if (::IsWindowVisible(g_hStatusBar))
     {
-        ::GetWindowRect(hStatusBar, &rc);
+        ::GetWindowRect(g_hStatusBar, &rc);
         rcSpace.bottom -= rc.bottom - rc.top;
     }
 
@@ -142,18 +142,18 @@ void CMainWindow::saveImage(BOOL overwrite)
 {
     canvasWindow.finishDrawing();
 
-    if (isAFile && overwrite)
+    if (g_isAFile && overwrite)
     {
-        imageModel.SaveImage(filepathname);
+        imageModel.SaveImage(g_szFileName);
     }
-    else if (GetSaveFileName(filepathname, _countof(filepathname)))
+    else if (GetSaveFileName(g_szFileName, _countof(g_szFileName)))
     {
-        imageModel.SaveImage(filepathname);
+        imageModel.SaveImage(g_szFileName);
 
         CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
         SetWindowText(strTitle);
-        isAFile = TRUE;
+        g_isAFile = TRUE;
     }
 }
 
@@ -168,13 +168,13 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     {
         BOOL shouldEnlarge = TRUE;
 
-        if (askBeforeEnlarging)
+        if (g_askBeforeEnlarging)
         {
             TCHAR programname[20];
             TCHAR shouldEnlargePromptText[100];
 
-            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, _countof(programname));
-            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
+            LoadString(g_hinstExe, IDS_PROGRAMNAME, programname, _countof(programname));
+            LoadString(g_hinstExe, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
 
             switch (MessageBox(shouldEnlargePromptText, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
             {
@@ -276,14 +276,14 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Loading and setting the window menu from resource
-    m_hMenu = ::LoadMenu(hProgInstance, MAKEINTRESOURCE(ID_MENU));
+    m_hMenu = ::LoadMenu(g_hinstExe, MAKEINTRESOURCE(ID_MENU));
     SetMenu(m_hMenu);
 
     // Create the status bar
     DWORD style = SBARS_SIZEGRIP | WS_CHILD | (registrySettings.ShowStatusBar ? WS_VISIBLE : 0);
-    hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
-                                  NULL, hProgInstance, NULL);
-    ::SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
+    g_hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
+                                  NULL, g_hinstExe, NULL);
+    ::SendMessage(g_hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
     // Create the tool box
     toolBoxContainer.DoCreate(m_hWnd);
@@ -305,8 +305,8 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     }
 
     // Set icon
-    SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
-    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
 
     return 0;
 }
@@ -347,7 +347,7 @@ BOOL CMainWindow::ConfirmSave()
     strProgramName.LoadString(IDS_PROGRAMNAME);
 
     CString strSavePromptText;
-    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(filepathname));
+    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(g_szFileName));
 
     switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
     {
@@ -374,7 +374,7 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 {
-    LPCTSTR dotext = PathFindExtensionW(filepathname);
+    LPCTSTR dotext = PathFindExtensionW(g_szFileName);
     BOOL isBMP = FALSE;
     if (_tcsicmp(dotext, _T(".bmp")) == 0 ||
         _tcsicmp(dotext, _T(".dib")) == 0 ||
@@ -383,9 +383,9 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         isBMP = TRUE;
     }
 
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile && isBMP));
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile && isBMP));
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile && isBMP));
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(g_isAFile && isBMP));
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(g_isAFile && isBMP));
+    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(g_isAFile && isBMP));
 
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
         RemoveMenu(hPopupMenu, IDM_FILE1 + iItem, MF_BYCOMMAND);
@@ -445,11 +445,11 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
             CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(::IsWindowVisible(paletteWindow)));
-            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
+            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(g_hStatusBar)));
             CheckMenuItem(menu, IDM_FORMATICONBAR, CHECKED_IF(::IsWindowVisible(fontsDialog)));
             EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
-            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
+            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(g_showGrid));
             CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(registrySettings.ShowThumbnail));
             break;
         case 3: /* Image menu */
@@ -474,10 +474,10 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
-    if (::IsWindow(hStatusBar))
+    if (::IsWindow(g_hStatusBar))
     {
-        ::SendMessage(hStatusBar, WM_SIZE, 0, 0);
-        ::SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+        ::SendMessage(g_hStatusBar, WM_SIZE, 0, 0);
+        ::SendMessage(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
     }
     alignChildrenToMainWindow();
     return 0;
@@ -508,9 +508,11 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             else if (selectionModel.m_bShow)
             {
-                selectionModel.Landing();
-                selectionModel.m_bShow = FALSE;
-                imageModel.NotifyImageChanged();
+                selectionModel.HideSelection();
+            }
+            else
+            {
+                canvasWindow.cancelDrawing();
             }
             break;
 
@@ -551,11 +553,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         case IDM_HELPINFO:
         {
-            HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
+            HICON paintIcon = LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON));
             TCHAR infotitle[100];
             TCHAR infotext[200];
-            LoadString(hProgInstance, IDS_INFOTITLE, infotitle, _countof(infotitle));
-            LoadString(hProgInstance, IDS_INFOTEXT, infotext, _countof(infotext));
+            LoadString(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
+            LoadString(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
             ShellAbout(m_hWnd, infotitle, infotext, paintIcon);
             DeleteObject(paintIcon);
             break;
@@ -620,13 +622,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 GlobalFree(pd.hDevNames);
             break;
         case IDM_FILEASWALLPAPERPLANE:
-            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::TILED);
+            RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::TILED);
             break;
         case IDM_FILEASWALLPAPERCENTERED:
-            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::CENTERED);
+            RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::CENTERED);
             break;
         case IDM_FILEASWALLPAPERSTRETCHED:
-            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::STRETCHED);
+            RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::STRETCHED);
             break;
         case IDM_FILE1:
         case IDM_FILE2:
@@ -640,7 +642,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            {
+                textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
+            }
             if (selectionModel.m_bShow)
             {
                 if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
@@ -668,10 +673,19 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
+            // FIXME: We should use CF_DIB in the future
             if (OpenClipboard())
             {
                 EmptyClipboard();
-                SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
+                if (selectionModel.m_bShow)
+                {
+                    selectionModel.TakeOff();
+                    SetClipboardData(CF_BITMAP, selectionModel.CopyBitmap());
+                }
+                else
+                {
+                    SetClipboardData(CF_BITMAP, imageModel.CopyBitmap());
+                }
                 CloseClipboard();
             }
             break;
@@ -695,7 +709,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    imageModel.DeleteSelection();
+                    selectionModel.DeleteSelection();
                     break;
 
                 case TOOL_TEXT:
@@ -723,7 +737,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             TCHAR szFileName[MAX_LONG_PATH] = _T("");
             if (GetSaveFileName(szFileName, _countof(szFileName)))
-                SaveDIBToFile(selectionModel.GetBitmap(), szFileName, imageModel.GetDC());
+            {
+                HBITMAP hbm = selectionModel.CopyBitmap();
+                SaveDIBToFile(hbm, szFileName, imageModel.GetDC());
+                ::DeleteObject(hbm);
+            }
             break;
         }
         case IDM_EDITPASTEFROM:
@@ -827,8 +845,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.PushImageForUndo(CopyDIBImage(selectionModel.GetBitmap()));
-            imageModel.DeleteSelection();
+            imageModel.PushImageForUndo(selectionModel.CopyBitmap());
+            selectionModel.HideSelection();
             break;
 
         case IDM_VIEWTOOLBOX:
@@ -842,8 +860,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWSTATUSBAR:
-            registrySettings.ShowStatusBar = !::IsWindowVisible(hStatusBar);
-            ::ShowWindow(hStatusBar, (registrySettings.ShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
+            registrySettings.ShowStatusBar = !::IsWindowVisible(g_hStatusBar);
+            ::ShowWindow(g_hStatusBar, (registrySettings.ShowStatusBar ? SW_SHOWNOACTIVATE : SW_HIDE));
             alignChildrenToMainWindow();
             break;
         case IDM_FORMATICONBAR:
@@ -859,7 +877,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             break;
         case IDM_VIEWSHOWGRID:
-            showGrid = !showGrid;
+            g_showGrid = !g_showGrid;
             canvasWindow.Invalidate(FALSE);
             break;
         case IDM_VIEWSHOWMINIATURE:

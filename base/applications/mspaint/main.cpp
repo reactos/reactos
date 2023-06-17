@@ -8,15 +8,13 @@
 
 #include "precomp.h"
 
-POINT start;
-POINT last;
-
-BOOL askBeforeEnlarging = FALSE;  // TODO: initialize from registry
-HINSTANCE hProgInstance = NULL;
-TCHAR filepathname[MAX_LONG_PATH] = { 0 };
-BOOL isAFile = FALSE;
-BOOL imageSaved = FALSE;
-BOOL showGrid = FALSE;
+POINT g_ptStart, g_ptEnd;
+BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
+HINSTANCE g_hinstExe = NULL;
+TCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
+BOOL g_isAFile = FALSE;
+BOOL g_imageSaved = FALSE;
+BOOL g_showGrid = FALSE;
 
 CMainWindow mainWindow;
 
@@ -81,7 +79,7 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
     {
         // The "All Files" item text
         CString strAllPictureFiles;
-        strAllPictureFiles.LoadString(hProgInstance, IDS_ALLPICTUREFILES);
+        strAllPictureFiles.LoadString(g_hinstExe, IDS_ALLPICTUREFILES);
 
         // Get the import filter
         CSimpleArray<GUID> aguidFileTypesI;
@@ -92,7 +90,7 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
         ZeroMemory(&ofn, sizeof(ofn));
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner   = m_hWnd;
-        ofn.hInstance   = hProgInstance;
+        ofn.hInstance   = g_hinstExe;
         ofn.lpstrFilter = strFilter;
         ofn.Flags       = OFN_EXPLORER | OFN_HIDEREADONLY;
         ofn.lpstrDefExt = L"png";
@@ -119,7 +117,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
         ZeroMemory(&sfn, sizeof(sfn));
         sfn.lStructSize = sizeof(sfn);
         sfn.hwndOwner   = m_hWnd;
-        sfn.hInstance   = hProgInstance;
+        sfn.hInstance   = g_hinstExe;
         sfn.lpstrFilter = strFilter;
         sfn.Flags       = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
         sfn.lpfnHook    = OFNHookProc;
@@ -170,10 +168,10 @@ BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
 
 HWND CMainWindow::DoCreate()
 {
-    ::LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
+    ::LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
 
     CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
 
     RECT& rc = registrySettings.WindowPlacement.rcNormalPosition;
     return Create(HWND_DESKTOP, rc, strTitle, WS_OVERLAPPEDWINDOW, WS_EX_ACCEPTFILES);
@@ -188,7 +186,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    hProgInstance = hInstance;
+    g_hinstExe = hInstance;
 
     // Initialize common controls library
     INITCOMMONCONTROLSEX iccx;

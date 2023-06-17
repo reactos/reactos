@@ -181,13 +181,7 @@ LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CPaletteWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    InvalidateRect(NULL, FALSE);
-    return 0;
-}
-
-LRESULT CPaletteWindow::OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    InvalidateRect(NULL, FALSE);
+    Invalidate(FALSE);
     return 0;
 }
 

@@ -20,7 +20,6 @@
 #define WM_TOOLSMODELSETTINGSCHANGED     (WM_APP + 1)
 #define WM_TOOLSMODELZOOMCHANGED         (WM_APP + 2)
 #define WM_PALETTEMODELCOLORCHANGED      (WM_APP + 3)
-#define WM_PALETTEMODELPALETTECHANGED    (WM_APP + 4)
 
 /* this simplifies checking and unchecking menu items */
 #define CHECKED_IF(a) ((a) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND))

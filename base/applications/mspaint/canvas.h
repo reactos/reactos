@@ -33,6 +33,7 @@ public:
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
         MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
+        MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
     END_MSG_MAP()
 
     CCanvasWindow();
@@ -55,7 +56,7 @@ protected:
     CANVAS_HITTEST m_hitSelection;
     CANVAS_HITTEST m_whereHit;
     POINT m_ptOrig; // The origin of drag start
-    HBITMAP m_hbmCached; // The cached buffer bitmap
+    HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
     CRect m_rcNew;
 
     CANVAS_HITTEST CanvasHitTest(POINT pt);
@@ -87,6 +88,7 @@ protected:
     LRESULT OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLRButtonDblClk(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
