@@ -753,7 +753,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 }
             }
 
-            // Last resort
+            // The last resort
             if (::IsClipboardFormatAvailable(CF_BITMAP))
             {
                 HBITMAP hbm = (HBITMAP)::GetClipboardData(CF_BITMAP);
@@ -765,11 +765,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 }
             }
 
-            // Failed
+            // Failed to paste
             {
                 CString strText;
                 strText.LoadString(IDS_CANTPASTE);
-                MessageBox(strText, NULL, MB_ICONINFORMATION);
+                MessageBox(strText, NULL, MB_ICONERROR);
             }
 
             CloseClipboard();
