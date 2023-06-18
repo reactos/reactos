@@ -158,7 +158,7 @@ Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
     {
         for (LONG dx = -r; dx <= r; dx++)
         {
-            if ((dx * dx + dy * dy <= r * r) && (rand() % 4 == 0))
+            if ((dx * dx + dy * dy <= r * r) && (rand() % r == 0))
                 ::SetPixelV(hdc, x + dx, y + dy, color);
         }
     }

@@ -1,12 +1,11 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Polish Language resource file
- * TRANSLATORS: 2007 Caemyr - Olaf Siejka to contact me https://reactos.org/ IRC: irc.freenode.net #reactos-pl;
- *    Updated by niski - Maciej Bialas (bjauy@o2.pl), July 2009
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Marcin Mikołajczak <me@m4sk.in> (September, 2017)
- *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2009 Maciej Bialas <bjauy@o2.pl>
+ *              Copyright 2017 Marcin Mikołajczak <me@m4sk.in>
+ *              Copyright 2020 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

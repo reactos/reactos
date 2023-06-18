@@ -1,8 +1,12 @@
 /*
- * PROJECT:     ReactOS Explorer-New
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Ukrainian Language File for ReactOS Explorer-New
- * TRANSLATORS: Artem Reznikov & Sakara Yevhen & Yaroslav Kibysh
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010 Sakara Yevhen <eresid@gmail.com>
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2015 Yaroslav Fedoryako <yaroslav.fedoryako@gmail.com>
+ *              Copyright 2019 Yaroslav Kibysh <yanet.prod@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

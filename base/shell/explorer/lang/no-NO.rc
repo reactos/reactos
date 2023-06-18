@@ -1,8 +1,8 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Norwegian Language resource file
- * TRANSLATORS:
+ * PURPOSE:     Norwegian resource file
+ * TRANSLATOR:  Copyright 2008-2009 Lars Martin Hambro (LMH1) <lars_martin4@hotmail.com>
  */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL

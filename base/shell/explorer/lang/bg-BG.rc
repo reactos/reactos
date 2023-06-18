@@ -1,8 +1,9 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Bulgarian Language resource file
- * TRANSLATORS:
+ * PURPOSE:     Bulgarian resource file
+ * TRANSLATORS: Copyright 2007 S. Stanev (CCTAHEB) <sstpr@narod.ru>
+ *              Copyright 2022 Nikolay Dimitrov <delphipro@gmail.com>
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT

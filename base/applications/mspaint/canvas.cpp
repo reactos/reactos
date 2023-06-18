@@ -17,15 +17,17 @@ CCanvasWindow::CCanvasWindow()
     , m_hitSelection(HIT_NONE)
     , m_whereHit(HIT_NONE)
     , m_ptOrig { -1, -1 }
-    , m_hbmCached(NULL)
 {
+    m_ahbmCached[0] = m_ahbmCached[1] = NULL;
     ::SetRectEmpty(&m_rcNew);
 }
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_hbmCached)
-        ::DeleteObject(m_hbmCached);
+    if (m_ahbmCached[0])
+        ::DeleteObject(m_ahbmCached[0]);
+    if (m_ahbmCached[1])
+        ::DeleteObject(m_ahbmCached[1]);
 }
 
 VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
@@ -101,78 +103,80 @@ CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // We use a memory bitmap to reduce flickering
-    HDC hdcMem = ::CreateCompatibleDC(hDC);
-    m_hbmCached = CachedBufferDIB(m_hbmCached, rcClient.right, rcClient.bottom);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_hbmCached);
+    HDC hdcMem0 = ::CreateCompatibleDC(hDC);
+    m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
+    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
 
-    // Fill the background
-    ::FillRect(hdcMem, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
+    // Fill the background on hdcMem0
+    ::FillRect(hdcMem0, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow)
-        drawSizeBoxes(hdcMem, &rcBase, FALSE, &rcPaint);
+        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcPaint);
 
-    // Draw the image
+    // Calculate image size
     CRect rcImage;
     GetImageRect(rcImage);
-    ImageToCanvas(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
-    StretchBlt(hdcMem, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
-               imageModel.GetDC(), 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
 
-    // Draw the grid
-    if (showGrid && toolsModel.GetZoom() >= 4000)
+    // hdcMem1 <-- imageModel
+    HDC hdcMem1 = ::CreateCompatibleDC(hDC);
+    m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
+    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
+    BitBlt(hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
+
+    // Draw overlay #1 on hdcMem1
+    toolsModel.OnDrawOverlayOnImage(hdcMem1);
+
+    // Transfer the bits with stretch (hdcMem0 <-- hdcMem1)
+    ImageToCanvas(rcImage);
+    ::StretchBlt(hdcMem0, rcImage.left, rcImage.top, rcImage.Width(), rcImage.Height(),
+                 hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, SRCCOPY);
+
+    // Clean up hdcMem1
+    ::SelectObject(hdcMem1, hbm1Old);
+    ::DeleteDC(hdcMem1);
+
+    // Draw the grid on hdcMem0
+    if (g_showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) SelectObject(hdcMem, CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        HPEN oldPen = (HPEN) ::SelectObject(hdcMem0, ::CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
         for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem0, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem0, pt1.x, pt1.y);
         }
         for (INT counter = 0; counter < sizeImage.cx; counter++)
         {
             POINT pt0 = { counter, 0 }, pt1 = { counter, sizeImage.cy };
             ImageToCanvas(pt0);
             ImageToCanvas(pt1);
-            ::MoveToEx(hdcMem, pt0.x, pt0.y, NULL);
-            ::LineTo(hdcMem, pt1.x, pt1.y);
+            ::MoveToEx(hdcMem0, pt0.x, pt0.y, NULL);
+            ::LineTo(hdcMem0, pt1.x, pt1.y);
         }
-        ::DeleteObject(::SelectObject(hdcMem, oldPen));
+        ::DeleteObject(::SelectObject(hdcMem0, oldPen));
     }
 
-    // Draw selection
-    if (selectionModel.m_bShow)
-    {
-        RECT rcSelection = selectionModel.m_rc;
-        ImageToCanvas(rcSelection);
+    // Draw overlay #2 on hdcMem0
+    toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
-        ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
-        drawSizeBoxes(hdcMem, &rcSelection, TRUE, &rcPaint);
-        ::InflateRect(&rcSelection, -GRIP_SIZE, -GRIP_SIZE);
-
-        INT iSaveDC = ::SaveDC(hdcMem);
-        ::IntersectClipRect(hdcMem, rcImage.left, rcImage.top, rcImage.right, rcImage.bottom);
-        selectionModel.DrawSelection(hdcMem, &rcSelection, paletteModel.GetBgColor(),
-                                     toolsModel.IsBackgroundTransparent());
-        ::RestoreDC(hdcMem, iSaveDC);
-    }
-
-    // Draw new frame if any
+    // Draw new frame on hdcMem0 if any
     if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
-        DrawXorRect(hdcMem, &m_rcNew);
+        DrawXorRect(hdcMem0, &m_rcNew);
 
-    // Transfer the bits
+    // Transfer the bits (hDC <-- hdcMem0)
     ::BitBlt(hDC,
              rcPaint.left, rcPaint.top,
              rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
-             hdcMem, rcPaint.left, rcPaint.top, SRCCOPY);
+             hdcMem0, rcPaint.left, rcPaint.top, SRCCOPY);
 
-    ::SelectObject(hdcMem, hbmOld);
-    ::DeleteDC(hdcMem);
+    // Clean up hdcMem0
+    ::SelectObject(hdcMem0, hbm0Old);
+    ::DeleteDC(hdcMem0);
 }
 
 VOID CCanvasWindow::Update(HWND hwndFrom)
@@ -383,15 +387,15 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         {
             CString strCoord;
             strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
         }
     }
 
     if (m_drawing)
     {
         // values displayed in statusbar
-        LONG xRel = pt.x - start.x;
-        LONG yRel = pt.y - start.y;
+        LONG xRel = pt.x - g_ptStart.x;
+        LONG yRel = pt.y - g_ptStart.y;
 
         switch (toolsModel.GetActiveTool())
         {
@@ -400,13 +404,13 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             case TOOL_RECTSEL:
             case TOOL_TEXT:
                 if (xRel < 0)
-                    xRel = (pt.x < 0) ? -start.x : xRel;
+                    xRel = (pt.x < 0) ? -g_ptStart.x : xRel;
                 else if (pt.x > imageModel.GetWidth())
-                    xRel = imageModel.GetWidth() - start.x;
+                    xRel = imageModel.GetWidth() - g_ptStart.x;
                 if (yRel < 0)
-                    yRel = (pt.y < 0) ? -start.y : yRel;
+                    yRel = (pt.y < 0) ? -g_ptStart.y : yRel;
                 else if (pt.y > imageModel.GetHeight())
-                    yRel = imageModel.GetHeight() - start.y;
+                    yRel = imageModel.GetHeight() - g_ptStart.y;
                 break;
 
             // while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14
@@ -418,7 +422,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             {
                 CString strCoord;
                 strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
             default:
@@ -444,7 +448,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
                 strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
 
@@ -458,7 +462,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
                 strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
         return 0;
@@ -514,7 +518,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     // Display new size
     CString strSize;
     strSize.Format(_T("%d x %d"), cxImage, cyImage);
-    SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
     CRect rc = { 0, 0, cxImage, cyImage };
     switch (m_whereHit)
@@ -556,7 +560,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
+        ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
         return 0;
     }
     else if (m_hitSelection != HIT_NONE && bLeftButton)
@@ -603,7 +607,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
     }
     ::SetRectEmpty(&m_rcNew);
 
-    imageSaved = FALSE;
+    g_imageSaved = FALSE;
 
     m_whereHit = HIT_NONE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
@@ -654,19 +658,19 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         switch (toolsModel.GetActiveTool())
         {
             case TOOL_FILL:
-                ::SetCursor(::LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_FILL)));
+                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_FILL)));
                 break;
             case TOOL_COLOR:
-                ::SetCursor(::LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_COLOR)));
+                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_COLOR)));
                 break;
             case TOOL_ZOOM:
-                ::SetCursor(::LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_ZOOM)));
+                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_ZOOM)));
                 break;
             case TOOL_PEN:
-                ::SetCursor(::LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_PEN)));
+                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_PEN)));
                 break;
             case TOOL_AIRBRUSH:
-                ::SetCursor(::LoadIcon(hProgInstance, MAKEINTRESOURCE(IDC_AIRBRUSH)));
+                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_AIRBRUSH)));
                 break;
             default:
                 ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
@@ -710,7 +714,7 @@ LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CCanvasWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
     return 0;
 }
 
@@ -799,4 +803,10 @@ LRESULT CCanvasWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     SetTextColor((HDC)wParam, paletteModel.GetFgColor());
     SetBkMode((HDC)wParam, TRANSPARENT);
     return (LRESULT)GetStockObject(NULL_BRUSH);
+}
+
+LRESULT CCanvasWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    imageModel.NotifyImageChanged();
+    return 0;
 }

@@ -1,8 +1,12 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     German Language resource file
- * TRANSLATORS:
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2008 Fabian Maurer <dark_shadow@gmx.at>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2016 Joachim Henze <joachim.henze@reactos.org>
+ *              Copyright 2018 Robert Naumann <gonzomdx@gmail.com>
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL

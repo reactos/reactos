@@ -18,8 +18,8 @@ public:
     virtual ~ImageModel();
 
     HDC GetDC();
-    BOOL CanUndo() const { return undoSteps > 0; }
-    BOOL CanRedo() const { return redoSteps > 0; }
+    BOOL CanUndo() const { return m_undoSteps > 0; }
+    BOOL CanRedo() const { return m_redoSteps > 0; }
     void PushImageForUndo(HBITMAP hbm = NULL);
     void ResetToPrevious(void);
     void Undo(BOOL bClearRedo = FALSE);
@@ -31,18 +31,19 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;
+    HBITMAP CopyBitmap();
     void InvertColors();
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void DeleteSelection();
     void Bound(POINT& pt) const;
     void NotifyImageChanged();
 
 protected:
-    HDC hDrawingDC; // The device context for this class
-    int currInd; // The current index
-    int undoSteps; // The undo-able count
-    int redoSteps; // The redo-able count
-    HBITMAP hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
+    HDC m_hDrawingDC; // The device context for this class
+    int m_currInd; // The current index in m_hBms
+    int m_undoSteps; // The undo-able count
+    int m_redoSteps; // The redo-able count
+    HBITMAP m_hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
+    HGDIOBJ m_hbmOld;
 };

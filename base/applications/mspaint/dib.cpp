@@ -9,10 +9,10 @@
 #include "precomp.h"
 #include <math.h>
 
-INT fileSize = 0;
+INT g_fileSize = 0;
 float g_xDpi = 96;
 float g_yDpi = 96;
-SYSTEMTIME fileTime;
+SYSTEMTIME g_fileTime;
 
 /* FUNCTIONS ********************************************************/
 
@@ -114,15 +114,15 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC)
     // update time and size
     FILETIME ft;
     FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-    FileTimeToSystemTime(&ft, &fileTime);
-    fileSize = find.nFileSizeLow;
+    FileTimeToSystemTime(&ft, &g_fileTime);
+    g_fileSize = find.nFileSizeLow;
 
     // TODO: update hRes and vRes
 
     registrySettings.SetMostRecentFile(FileName);
 
-    isAFile = TRUE;
-    imageSaved = TRUE;
+    g_isAFile = TRUE;
+    g_imageSaved = TRUE;
     return TRUE;
 }
 
@@ -150,33 +150,33 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
         g_yDpi = GetDeviceCaps(hScreenDC, LOGPIXELSY);
         ReleaseDC(NULL, hScreenDC);
 
-        ZeroMemory(&fileTime, sizeof(fileTime));
+        ZeroMemory(&g_fileTime, sizeof(g_fileTime));
     }
 
     // update image
     imageModel.PushImageForUndo(hBitmap);
     imageModel.ClearHistory();
 
-    // update fileSize
-    fileSize = dwFileSize;
+    // update g_fileSize
+    g_fileSize = dwFileSize;
 
-    // update filepathname
+    // update g_szFileName
     if (name && name[0])
-        GetFullPathName(name, _countof(filepathname), filepathname, NULL);
+        GetFullPathName(name, _countof(g_szFileName), g_szFileName, NULL);
     else
-        LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
+        LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
 
     // set title
     CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
     mainWindow.SetWindowText(strTitle);
 
     // update file info and recent
-    isAFile = isFile;
-    if (isAFile)
-        registrySettings.SetMostRecentFile(filepathname);
+    g_isAFile = isFile;
+    if (g_isAFile)
+        registrySettings.SetMostRecentFile(g_szFileName);
 
-    imageSaved = TRUE;
+    g_imageSaved = TRUE;
 
     return hBitmap;
 }
@@ -204,7 +204,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
         {
             FILETIME ft;
             FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-            FileTimeToSystemTime(&ft, &fileTime);
+            FileTimeToSystemTime(&ft, &g_fileTime);
             return SetBitmapAndInfo(NULL, name, dwFileSize, TRUE);
         }
     }
@@ -233,7 +233,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     {
         FILETIME ft;
         FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-        FileTimeToSystemTime(&ft, &fileTime);
+        FileTimeToSystemTime(&ft, &g_fileTime);
         SetBitmapAndInfo(hBitmap, name, dwFileSize, TRUE);
     }
 
@@ -332,4 +332,136 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     SelectObject(hDC2, hbm2Old);
     DeleteDC(hDC2);
     return hbmNew;
+}
+
+struct BITMAPINFODX : BITMAPINFO
+{
+    RGBQUAD bmiColorsAdditional[256 - 1];
+};
+
+HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
+{
+    BITMAP bm;
+    if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
+        return NULL;
+
+    BITMAPINFODX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = bm.bmWidth;
+    bmi.bmiHeader.biHeight = bm.bmHeight;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
+
+    INT cColors;
+    if (bm.bmBitsPixel < 16)
+        cColors = 1 << bm.bmBitsPixel;
+    else
+        cColors = 0;
+
+    HDC hDC = CreateCompatibleDC(NULL);
+
+    if (cColors)
+    {
+        HGDIOBJ hbmOld = SelectObject(hDC, hBitmap);
+        cColors = GetDIBColorTable(hDC, 0, cColors, bmi.bmiColors);
+        SelectObject(hDC, hbmOld);
+    }
+
+    DWORD cbColors = cColors * sizeof(RGBQUAD);
+    DWORD dwSize = sizeof(BITMAPINFOHEADER) + cbColors + bmi.bmiHeader.biSizeImage;
+    HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, dwSize);
+    if (hGlobal)
+    {
+        LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+        if (pb)
+        {
+            CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
+            pb += sizeof(BITMAPINFOHEADER);
+
+            CopyMemory(pb, bmi.bmiColors, cbColors);
+            pb += cbColors;
+
+            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, &bmi, DIB_RGB_COLORS);
+
+            GlobalUnlock(hGlobal);
+        }
+        else
+        {
+            GlobalFree(hGlobal);
+            hGlobal = NULL;
+        }
+    }
+
+    DeleteDC(hDC);
+
+    return hGlobal;
+}
+
+HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
+{
+    LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+    if (!pb)
+        return NULL;
+
+    LPBITMAPINFO pbmi = (LPBITMAPINFO)pb;
+    pb += pbmi->bmiHeader.biSize;
+
+    INT cColors = 0, cbColors = 0;
+    if (pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        LPBITMAPCOREINFO pbmci = (LPBITMAPCOREINFO)pbmi;
+        WORD BitCount = pbmci->bmciHeader.bcBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBTRIPLE);
+            pb += cbColors;
+        }
+    }
+    else if (pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
+    {
+        WORD BitCount = pbmi->bmiHeader.biBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBQUAD);
+            pb += cbColors;
+        }
+    }
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HBITMAP hBitmap = CreateDIBSection(hDC, pbmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    if (hBitmap)
+    {
+        SetDIBits(hDC, hBitmap, 0, labs(pbmi->bmiHeader.biHeight), pb, pbmi, DIB_RGB_COLORS);
+    }
+    DeleteDC(hDC);
+
+    GlobalUnlock(hGlobal);
+
+    return hBitmap;
+}
+
+HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
+{
+    ENHMETAHEADER header;
+    if (!GetEnhMetaFileHeader(hEMF, sizeof(header), &header))
+        return NULL;
+
+    CRect rc = *(LPRECT)&header.rclBounds;
+    INT cx = rc.Width(), cy = rc.Height();
+    HBITMAP hbm = CreateColorDIB(cx, cy, RGB(255, 255, 255));
+    if (!hbm)
+        return NULL;
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    PlayEnhMetaFile(hDC, hEMF, &rc);
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    return hbm;
 }

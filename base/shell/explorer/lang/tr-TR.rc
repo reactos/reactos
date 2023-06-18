@@ -1,10 +1,10 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Turkish Language resource file
- * TRANSLATORS: Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
-                2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
-*/
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 

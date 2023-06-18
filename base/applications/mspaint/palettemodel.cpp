@@ -106,5 +106,5 @@ void PaletteModel::NotifyColorChanged()
 void PaletteModel::NotifyPaletteChanged()
 {
     if (paletteWindow.IsWindow())
-        paletteWindow.SendMessage(WM_PALETTEMODELPALETTECHANGED);
+        paletteWindow.Invalidate(FALSE);
 }

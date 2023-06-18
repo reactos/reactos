@@ -1,8 +1,9 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Italian Language resource file
- * TRANSLATORS:
+ * PURPOSE:     Italian resource file
+ * TRANSLATORS: Copyright 2007 Paolo Devoti <devotip@tiscali.it>
+ *              Copyright 2013 Ivan Di Francesco (oswetto) <ivan.difrancesco@yahoo.it>
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL

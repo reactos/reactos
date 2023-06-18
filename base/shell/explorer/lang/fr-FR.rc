@@ -1,8 +1,9 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     French Language resource file
- * TRANSLATORS:
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2007-2018 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2013-2018 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL

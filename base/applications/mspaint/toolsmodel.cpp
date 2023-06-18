@@ -28,7 +28,7 @@ ToolsModel::ToolsModel()
 
 ToolsModel::~ToolsModel()
 {
-    for (size_t i = 0; i < TOOL_MAX + 1; ++i)
+    for (size_t i = 0; i < _countof(m_tools); ++i)
         delete m_tools[i];
 }
 
@@ -86,9 +86,6 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     OnFinishDraw();
-
-    if (m_activeTool == nActiveTool)
-        return;
 
     switch (m_activeTool)
     {
@@ -223,6 +220,16 @@ void ToolsModel::OnFinishDraw()
     m_pToolObject->beginEvent();
     m_pToolObject->OnFinishDraw();
     m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
+{
+    m_pToolObject->OnDrawOverlayOnImage(hdc);
+}
+
+void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)
+{
+    m_pToolObject->OnDrawOverlayOnCanvas(hdc);
 }
 
 void ToolsModel::resetTool()

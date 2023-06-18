@@ -23,8 +23,8 @@ HWND CFullscreenWindow::DoCreate()
 
 LRESULT CFullscreenWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
-    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
     return 0;
 }
 

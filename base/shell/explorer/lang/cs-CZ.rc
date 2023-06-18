@@ -1,8 +1,8 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Czech Language resource file
-* TRANSLATOR:   Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * PURPOSE:     Czech resource file
+ * TRANSLATOR:  Copyright 2008-2015 Radek Liška aka Black_Fox <radekliska@gmail.com>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

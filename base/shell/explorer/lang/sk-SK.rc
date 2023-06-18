@@ -1,8 +1,8 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Slovak Language resource file
- * TRANSLATORS: 2007 Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2007-2010 Mário Kačmár <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

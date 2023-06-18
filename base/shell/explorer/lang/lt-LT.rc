@@ -1,9 +1,9 @@
 /*
- * PROJECT:     Explorer for ReactOS
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Lithuanian Language resource file
- * TRANSLATORS: Vytis "CMan" Girdžijauskas (cman@cman.us)
-*/
+ * PURPOSE:     Lithuanian resource file
+ * TRANSLATOR:  Copyright 2008 Vytis Girdžijauskas <cman@cman.us>
+ */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 

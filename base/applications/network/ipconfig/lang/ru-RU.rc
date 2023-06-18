@@ -1,6 +1,49 @@
-/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
+/*
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2014-2015 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HEADER "\nReactOS IP Configuration\n\n"
+    IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
+    IDS_NODETYPE            "\tNode Type . . . . . . . . . . . . : "
+    IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
+    IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
+    IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
+    IDS_WINSPROXYYES        "\tWINS Proxy enabled. . . . . . . . : Yes\n"
+    IDS_DNSSUFFIXLIST       "\tDNS Suffix Search List. . . . . . : %hs\n"
+    IDS_EMPTYLINE           "\t                                    %hs\n"
+    IDS_MEDIADISCONNECTED   "\tMedia State . . . . . . . . . . . : Media disconnected\n"
+    IDS_CONNECTIONDNSSUFFIX "\tConnection-specific DNS Suffix. . : %hs\n"
+    IDS_DESCRIPTION         "\tDescription . . . . . . . . . . . : "
+    IDS_PHYSICALADDRESS     "\tPhysical Address. . . . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP Enabled. . . . . . . . . . . : No\n"
+    IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
+    IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
+    IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
+    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tDNS Servers . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tPrimary WINS Server . . . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_YES "Yes"
+    IDS_NO  "No"
+END
 
 STRINGTABLE
 BEGIN
@@ -13,6 +56,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_UNKNOWNADAPTER "Unknown Adapter"
     IDS_OTHER "Другой тип адаптера"
     IDS_ETH "Ethernet адаптер"
     IDS_TOKEN "Адаптер Token Ring"
@@ -20,6 +64,7 @@ BEGIN
     IDS_PPP "Адаптер PPP"
     IDS_LOOP "Адаптер замыкания на себя"
     IDS_SLIP "Адаптер SLIP"
+    IDS_WIFI "Wireless Network Adapter"
 END
 
 STRINGTABLE

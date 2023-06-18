@@ -83,16 +83,16 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
 
-    if (isAFile)
+    if (g_isAFile)
     {
         TCHAR date[100];
         TCHAR temp[100];
-        GetDateFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, date, _countof(date));
-        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, temp, _countof(temp));
+        GetDateFormat(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, date, _countof(date));
+        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, temp, _countof(temp));
         _tcscat(date, _T(" "));
         _tcscat(date, temp);
         CString strSize;
-        strSize.Format(IDS_FILESIZE, fileSize);
+        strSize.Format(IDS_FILESIZE, g_fileSize);
         SetDlgItemText(IDD_ATTRIBUTESTEXT6, date);
         SetDlgItemText(IDD_ATTRIBUTESTEXT7, strSize);
     }
@@ -240,9 +240,9 @@ LRESULT CStretchSkewDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
     CString strrcAngle;
     BOOL tr1, tr2, tr3, tr4;
 
-    strrcIntNumbers.LoadString(hProgInstance, IDS_INTNUMBERS);
-    strrcPercentage.LoadString(hProgInstance, IDS_PERCENTAGE);
-    strrcAngle.LoadString(hProgInstance, IDS_ANGLE);
+    strrcIntNumbers.LoadString(g_hinstExe, IDS_INTNUMBERS);
+    strrcPercentage.LoadString(g_hinstExe, IDS_PERCENTAGE);
+    strrcAngle.LoadString(g_hinstExe, IDS_ANGLE);
 
     percentage.x = GetDlgItemInt(IDD_STRETCHSKEWEDITHSTRETCH, &tr1, FALSE);
     percentage.y = GetDlgItemInt(IDD_STRETCHSKEWEDITVSTRETCH, &tr2, FALSE);
@@ -347,11 +347,11 @@ void CFontsDialog::InitToolbar()
     SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
     
     TBADDBITMAP AddBitmap;
-    AddBitmap.hInst = hProgInstance;
+    AddBitmap.hInst = g_hinstExe;
     AddBitmap.nID = IDB_FONTSTOOLBAR;
     SendMessage(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
 
-    HIMAGELIST himl = ImageList_LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
+    HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
                                           16, 8, RGB(255, 0, 255), IMAGE_BITMAP,
                                           LR_CREATEDIBSECTION);
     SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
@@ -511,7 +511,7 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     if (pnmhdr->code == TTN_NEEDTEXT)
     {
         LPTOOLTIPTEXT pToolTip = reinterpret_cast<LPTOOLTIPTEXT>(lParam);
-        pToolTip->hinst = hProgInstance;
+        pToolTip->hinst = g_hinstExe;
         switch (pnmhdr->idFrom)
         {
             case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD); break;

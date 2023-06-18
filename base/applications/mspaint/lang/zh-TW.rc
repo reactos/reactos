@@ -242,4 +242,5 @@ BEGIN
     IDS_UNDERLINE "底線"
     IDS_VERTICAL "垂直"
     IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
 END

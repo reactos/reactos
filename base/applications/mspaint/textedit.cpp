@@ -61,7 +61,7 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
         SelectObject(hDC, m_hFontZoomed);
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-        szText += TEXT("x"); // This is a trick to enable the last newlines
+        szText += TEXT("x"); // This is a trick to enable the g_ptEnd newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
@@ -235,7 +235,7 @@ HWND CTextEditWindow::Create(HWND hwndParent)
     const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL |
                         WS_CHILD | WS_THICKFRAME;
     HWND hwnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
-                                 hwndParent, NULL, hProgInstance, NULL);
+                                 hwndParent, NULL, g_hinstExe, NULL);
     if (hwnd)
     {
 #undef SubclassWindow // Don't use this macro
@@ -410,15 +410,9 @@ void CTextEditWindow::Reposition()
     CRect rcImage;
     canvasWindow.GetImageRect(rcImage);
 
-    if (rc.bottom > rcImage.bottom)
-        ::OffsetRect(&rc, 0, rcImage.Height());
-
-    if (rc.right > rcImage.right)
-        ::OffsetRect(&rc, rcImage.Width(), 0);
-
+    // FIXME: Smartly restrict the position and size by using WM_WINDOWPOSCHANGING
     if (rc.left < 0)
         ::OffsetRect(&rc, -rc.left, 0);
-
     if (rc.top < 0)
         ::OffsetRect(&rc, 0, -rc.top);
 
@@ -432,4 +426,25 @@ void CTextEditWindow::Reposition()
 LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
+
+LRESULT CTextEditWindow::OnCut(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    Invalidate(TRUE); // Redraw
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnPaste(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    FixEditPos(NULL);
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnClear(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    Invalidate(TRUE); // Redraw
+    return ret;
 }

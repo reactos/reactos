@@ -10,18 +10,16 @@
 
 /* VARIABLES declared in main.cpp ***********************************/
 
-extern BOOL askBeforeEnlarging;
+extern BOOL g_askBeforeEnlarging;
 
-extern POINT start;
-extern POINT last;
+extern POINT g_ptStart, g_ptEnd;
 
-extern HINSTANCE hProgInstance;
+extern HINSTANCE g_hinstExe;
 
-extern TCHAR filepathname[MAX_LONG_PATH];
-extern BOOL isAFile;
-extern BOOL imageSaved;
-
-extern BOOL showGrid;
+extern TCHAR g_szFileName[MAX_LONG_PATH];
+extern BOOL g_isAFile;
+extern BOOL g_imageSaved;
+extern BOOL g_showGrid;
 
 extern CMainWindow mainWindow;
 
@@ -40,11 +38,11 @@ extern ToolsModel toolsModel;
 extern SelectionModel selectionModel;
 extern PaletteModel paletteModel;
 
-extern HWND hStatusBar;
+extern HWND g_hStatusBar;
 extern float g_xDpi;
 extern float g_yDpi;
-extern INT fileSize;
-extern SYSTEMTIME fileTime;
+extern INT g_fileSize;
+extern SYSTEMTIME g_fileTime;
 
 extern CFullscreenWindow fullscreenWindow;
 extern CMiniatureWindow miniature;
