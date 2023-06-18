@@ -423,8 +423,9 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         (selectionModel.m_bShow &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
-    DWORD dwStart, dwEnd;
-    textEditWindow.SendMessage(EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    DWORD dwStart = 0, dwEnd = 0;
+    if (::IsWindowVisible(textEditWindow))
+        textEditWindow.SendMessage(EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
     BOOL hasTextSel = (dwStart < dwEnd);
 
     switch (lParam)
