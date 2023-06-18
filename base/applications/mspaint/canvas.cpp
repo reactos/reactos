@@ -275,7 +275,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
         else
         {
             canvasWindow.ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt);
+            mainWindow.TrackPopupMenu(pt, 0);
         }
         return 0;
     }

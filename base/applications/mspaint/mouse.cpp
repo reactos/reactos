@@ -185,7 +185,7 @@ struct FreeSelTool : ToolBase
         {
             POINT pt = { x, y };
             canvasWindow.ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt);
+            mainWindow.TrackPopupMenu(pt, 0);
         }
     }
 
@@ -266,7 +266,7 @@ struct RectSelTool : ToolBase
         else
         {
             canvasWindow.ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt);
+            mainWindow.TrackPopupMenu(pt, 0);
         }
     }
 

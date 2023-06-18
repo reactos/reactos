@@ -1009,16 +1009,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             // Create and show the fullscreen window
             fullscreenWindow.DoCreate();
             fullscreenWindow.ShowWindow(SW_SHOWMAXIMIZED);
-            ShowWindow(SW_HIDE);
             break;
     }
     return 0;
 }
 
-VOID CMainWindow::TrackPopupMenu(POINT ptScreen)
+VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
 {
     HMENU hMenu = ::LoadMenuW(g_hinstExe, MAKEINTRESOURCEW(ID_POPUPMENU));
-    HMENU hSubMenu = ::GetSubMenu(hMenu, 0);
+    HMENU hSubMenu = ::GetSubMenu(hMenu, iSubMenu);
 
     ::SetForegroundWindow(m_hWnd);
     INT_PTR id = ::TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD,
