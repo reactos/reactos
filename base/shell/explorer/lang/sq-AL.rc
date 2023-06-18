@@ -2,7 +2,7 @@
  * PROJECT:     Explorer for ReactOS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Albanian Language resource file
- * TRANSLATORS: Ardit Dani (Ard1t) (ardit.dani@gmail.com) DATE OF TR:  29-11-2013
+ * TRANSLATORS: 2013 Ardit Dani (Ard1t) (ardit.dani@gmail.com)
 */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
