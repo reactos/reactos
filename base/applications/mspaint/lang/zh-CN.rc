@@ -244,4 +244,5 @@ BEGIN
     IDS_UNDERLINE "下划线"
     IDS_VERTICAL "垂直"
     IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Sorry, I cannot paste this data."
 END

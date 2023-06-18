@@ -242,4 +242,5 @@ BEGIN
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
     IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Sorry, I cannot paste this data."
 END

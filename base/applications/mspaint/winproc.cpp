@@ -753,6 +753,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 }
             }
 
+            // Last resort
             if (::IsClipboardFormatAvailable(CF_BITMAP))
             {
                 HBITMAP hbm = (HBITMAP)::GetClipboardData(CF_BITMAP);
@@ -762,6 +763,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     CloseClipboard();
                     break;
                 }
+            }
+
+            // Failed
+            {
+                CString strText;
+                strText.LoadString(IDS_CANTPASTE);
+                MessageBox(strText, NULL, MB_ICONINFORMATION);
             }
 
             CloseClipboard();

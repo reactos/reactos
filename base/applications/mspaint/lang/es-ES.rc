@@ -244,4 +244,5 @@ BEGIN
     IDS_UNDERLINE "Subrayado"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Sorry, I cannot paste this data."
 END
