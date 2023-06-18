@@ -243,5 +243,5 @@ BEGIN
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
-    IDS_CANTPASTE "Nu s-a putut lipi din clipboard. Formatul de date este fie incorect, fie nesuportat."
+    IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
 END
