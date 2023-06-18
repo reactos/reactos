@@ -78,7 +78,7 @@ BEGIN
     POPUP "画像(&I)"
     BEGIN
         MENUITEM "回転と反転(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "伸縮/傾斜(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "伸縮と傾斜(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "切り取り(&C)", IDM_IMAGECROP
         MENUITEM "色の反転(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "画像の属性(&A)\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -104,18 +104,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "切り取り(&T)\tCtrl+X", IDM_EDITCUT
+        MENUITEM "コピー(&C)\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "貼り付け(&P)\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "選択範囲の削除(&L)\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "すべて選択(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "ファイルへコピー(&O)...", IDM_EDITCOPYTO
+        MENUITEM "ファイルから貼り付け(&F)...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "回転と反転(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "伸縮と傾斜(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "色の反転(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
