@@ -265,7 +265,6 @@ struct RectSelTool : ToolBase
         }
         else
         {
-            POINT pt = { x, y };
             canvasWindow.ClientToScreen(&pt);
             mainWindow.TrackPopupMenu(pt);
         }
