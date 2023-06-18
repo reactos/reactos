@@ -698,20 +698,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(WM_COMMAND, IDM_EDITDELETESELECTION, 0);
             break;
         case IDM_EDITPASTE:
-            OpenClipboard();
-            if (IsClipboardFormatAvailable(CF_ENHMETAFILE))
+            if (OpenClipboard())
             {
-                HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
-                HBITMAP hbm = BitmapFromHEMF(hEMF);
-                ::DeleteEnhMetaFile(hEMF);
-                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                if (IsClipboardFormatAvailable(CF_ENHMETAFILE))
+                {
+                    HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
+                    HBITMAP hbm = BitmapFromHEMF(hEMF);
+                    ::DeleteEnhMetaFile(hEMF);
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                }
+                else if (IsClipboardFormatAvailable(CF_DIB))
+                {
+                    HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                }
+                CloseClipboard();
             }
-            else if (IsClipboardFormatAvailable(CF_DIB))
-            {
-                HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
-                InsertSelectionFromHBITMAP(hbm, m_hWnd);
-            }
-            CloseClipboard();
             break;
         case IDM_EDITDELETESELECTION:
         {
