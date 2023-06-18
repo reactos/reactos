@@ -774,9 +774,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
             // Failed to paste
             {
-                CString strText;
+                CString strText, strTitle;
                 strText.LoadString(IDS_CANTPASTE);
-                MessageBox(strText, NULL, MB_ICONERROR);
+                strTitle.LoadString(IDS_PROGRAMNAME);
+                MessageBox(strText, strTitle, MB_ICONINFORMATION);
             }
 
             CloseClipboard();
