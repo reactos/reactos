@@ -547,7 +547,6 @@ struct TextTool : ToolBase
 
         // Draw the text
         INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
-        imageModel.PushImageForUndo();
         Text(hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
              textEditWindow.GetFont(), style);
     }
@@ -568,14 +567,10 @@ struct TextTool : ToolBase
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
         {
+            imageModel.PushImageForUndo();
             draw(m_hdc);
-
-            if (selectionModel.m_rc.IsRectEmpty())
-            {
-                textEditWindow.ShowWindow(SW_HIDE);
-                textEditWindow.SetWindowText(NULL);
-                return;
-            }
+            quit();
+            return;
         }
 
         if (registrySettings.ShowTextTool)
@@ -613,6 +608,7 @@ struct TextTool : ToolBase
 
     void OnFinishDraw() override
     {
+        imageModel.PushImageForUndo();
         draw(m_hdc);
         quit();
         ToolBase::OnFinishDraw();
