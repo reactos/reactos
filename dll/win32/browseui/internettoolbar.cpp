@@ -750,7 +750,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                             L"Software\\Microsoft\\Internet Explorer\\Toolbar",
                             0,
                             NULL,
-                            REG_OPTION_NON_VOLATILE, 
+                            REG_OPTION_NON_VOLATILE,
                             KEY_WRITE,
                             NULL,
                             &hKey,
@@ -758,7 +758,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
         {
             DWORD dwLocked = (locked ? 1 : 0);
             RegSetValueExW(hKey,
-                           L"Locked", 
+                           L"Locked",
                            0,
                            REG_DWORD,
                            (const BYTE*)&dwLocked,
