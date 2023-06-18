@@ -431,7 +431,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     //
     // File menu
     //
-    if (!HIWORD(lParam) && ::GetSubMenu(GetMenu(), 0) == menu)
+    if (::GetSubMenu(GetMenu(), 0) == menu)
     {
         ProcessFileMenu(menu);
     }
@@ -453,6 +453,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                               ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
                               ::IsClipboardFormatAvailable(CF_DIB) ||
                               ::IsClipboardFormatAvailable(CF_BITMAP)));
+
     //
     // View menu
     //

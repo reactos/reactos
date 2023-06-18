@@ -124,6 +124,14 @@ void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
     Rect(hDCImage, m_rcOld.left, m_rcOld.top, m_rcOld.right, m_rcOld.bottom, crBg, crBg, 0, 1);
 }
 
+void SelectionModel::DrawBackground(HDC hDCImage)
+{
+    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
+        DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
+    else
+        DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
+}
+
 void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
 {
     CRect rc = m_rc;
@@ -496,12 +504,4 @@ void SelectionModel::SwapWidthAndHeight()
     INT cy = m_rc.Height();
     m_rc.right = m_rc.left + cy;
     m_rc.bottom = m_rc.top + cx;
-}
-
-void SelectionModel::DrawBackground(HDC hDCImage)
-{
-    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-        DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
-    else
-        DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
 }
