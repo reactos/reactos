@@ -34,6 +34,7 @@ public:
     BOOL GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
     BOOL GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
     BOOL ChooseColor(IN OUT COLORREF *prgbColor);
+    VOID TrackPopupMenu(POINT ptScreen);
 
 private:
     HMENU m_hMenu;

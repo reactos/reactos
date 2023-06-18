@@ -181,6 +181,12 @@ struct FreeSelTool : ToolBase
             }
             imageModel.NotifyImageChanged();
         }
+        else
+        {
+            POINT pt = { x, y };
+            canvasWindow.ClientToScreen(&pt);
+            mainWindow.TrackPopupMenu(pt);
+        }
     }
 
     void OnFinishDraw() override
@@ -249,13 +255,19 @@ struct RectSelTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
+        POINT pt = { x, y };
         if (bLeftButton)
         {
-            POINT pt = { x, y };
             imageModel.Bound(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
             imageModel.NotifyImageChanged();
+        }
+        else
+        {
+            POINT pt = { x, y };
+            canvasWindow.ClientToScreen(&pt);
+            mainWindow.TrackPopupMenu(pt);
         }
     }
 
