@@ -244,5 +244,5 @@ BEGIN
     IDS_UNDERLINE "下划线"
     IDS_VERTICAL "垂直"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Sorry, this application cannot paste this data. The data format is either incorrect or not supported."
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
 END
