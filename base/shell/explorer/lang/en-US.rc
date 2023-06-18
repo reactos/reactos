@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     English (United States) resource file
+ * TRANSLATOR:  Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ */
+
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDM_TRAYWND MENU

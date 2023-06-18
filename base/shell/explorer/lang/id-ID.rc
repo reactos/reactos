@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATORS: Copyright 2019 Mas Ahmad Muhammad <m.charly81@gmail.com>
+ *              Copyright 2022 Wilson Simanjuntak <wilsontulus5@gmail.com>
+ */
+
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU

@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
+ *              Copyright 2009 Tomoya Kitagawa <jptomoya@yahoo.co.jp>
+ *              Copyright 2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU

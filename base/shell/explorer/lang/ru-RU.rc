@@ -1,4 +1,13 @@
-/* Russian translation by Lentin 2007-06-10 & tower 2009 jul 14 */
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007-2016 Dmitry Chapyshev (Lentin) <lentind@yandex.ru>
+ *              Copyright 2009 Igor Koshpaev <tower@reactos.org>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2014 Alexey Gorgurov <leha-bot@ya.ru>
+ *              Copyright 2016 Sergey Stopkin <stopkin.sergey@gmail.com>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 

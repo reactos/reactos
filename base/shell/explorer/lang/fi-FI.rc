@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Finnish resource file
+ * TRANSLATOR:  Copyright 2017 Lauri Ojansivu <x@xet7.org>
+ */
+
 LANGUAGE LANG_FINNISH, SUBLANG_NEUTRAL
 
 IDM_TRAYWND MENU
