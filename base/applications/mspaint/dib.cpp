@@ -380,10 +380,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
             CopyMemory(pb, &ColorTable, cbColors);
             pb += cbColors;
 
-            if (cColors)
-                GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_PAL_COLORS);
-            else
-                GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
 
             GlobalUnlock(hGlobal);
         }
