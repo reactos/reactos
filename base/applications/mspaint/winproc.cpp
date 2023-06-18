@@ -720,21 +720,48 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 textEditWindow.SendMessage(WM_PASTE);
                 break;
             }
+
             if (!OpenClipboard())
                 break;
 
-            // In many cases, EMF provides a better image than CF_DIB.
+            // In many cases, EMF provides a better image than CF_DIB
             if (::IsClipboardFormatAvailable(CF_ENHMETAFILE))
             {
                 HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
-                HBITMAP hbm = BitmapFromHEMF(hEMF);
-                ::DeleteEnhMetaFile(hEMF);
-                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                if (hEMF)
+                {
+                    HBITMAP hbm = BitmapFromHEMF(hEMF);
+                    ::DeleteEnhMetaFile(hEMF);
+                    if (hbm)
+                    {
+                        InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                        CloseClipboard();
+                        break;
+                    }
+                }
             }
-            else if (::IsClipboardFormatAvailable(CF_DIB))
+
+            // In many cases, CF_DIB provides a better image than CF_BITMAP
+            if (::IsClipboardFormatAvailable(CF_DIB))
             {
                 HBITMAP hbm = BitmapFromClipboardDIB(::GetClipboardData(CF_DIB));
-                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                if (hbm)
+                {
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                    CloseClipboard();
+                    break;
+                }
+            }
+
+            if (::IsClipboardFormatAvailable(CF_BITMAP))
+            {
+                HBITMAP hbm = (HBITMAP)::GetClipboardData(CF_BITMAP);
+                if (hbm)
+                {
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                    CloseClipboard();
+                    break;
+                }
             }
 
             CloseClipboard();
