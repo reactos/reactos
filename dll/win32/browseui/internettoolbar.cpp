@@ -745,7 +745,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
     if (locked != fLocked)
     {
         if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                            L"Software\\Microsoft\\Internet Explorer\\Toolbar", 
+                            L"Software\\Microsoft\\Internet Explorer\\Toolbar",
                             0,
                             NULL,
                             REG_OPTION_NON_VOLATILE, 
