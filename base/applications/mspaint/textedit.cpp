@@ -437,6 +437,6 @@ LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 LRESULT CTextEditWindow::OnPaste(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    Invalidate(TRUE); // Redraw
+    FixEditPos(NULL);
     return ret;
 }

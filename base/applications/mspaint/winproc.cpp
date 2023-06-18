@@ -434,7 +434,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo() || textShown));
             EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection || textShown));
             EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection || textShown));
-            EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
+            EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection || textShown));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITPASTE,
