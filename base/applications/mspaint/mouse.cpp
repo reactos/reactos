@@ -626,9 +626,11 @@ struct TextTool : ToolBase
 
     void OnFinishDraw() override
     {
-        imageModel.PushImageForUndo();
         if (textEditWindow.GetWindowTextLength() > 0)
+        {
+            imageModel.PushImageForUndo();
             draw(m_hdc);
+        }
         quit();
         ToolBase::OnFinishDraw();
     }
