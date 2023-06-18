@@ -218,7 +218,7 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
     m_rc.right = x + GetDIBWidth(hBm);
     m_rc.bottom = y + GetDIBHeight(hBm);
 
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 
     ClearMask();
 }
@@ -242,7 +242,7 @@ void SelectionModel::FlipHorizontally()
     }
     ::DeleteDC(hdcMem);
 
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 }
 
 void SelectionModel::FlipVertically()
@@ -264,7 +264,7 @@ void SelectionModel::FlipVertically()
     }
     ::DeleteDC(hdcMem);
 
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 }
 
 void SelectionModel::RotateNTimes90Degrees(int iN)
@@ -320,7 +320,7 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     }
 
     ::DeleteDC(hdcMem);
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 }
 
 void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
@@ -363,7 +363,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     ::DeleteDC(hDC);
 
     m_bShow = TRUE;
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 }
 
 HBITMAP SelectionModel::CopyBitmap()
@@ -454,12 +454,11 @@ void SelectionModel::ClearColor()
 
 void SelectionModel::HideSelection()
 {
-    m_bShow = FALSE;
+    m_bShow = m_bContentsChanged = FALSE;
     ClearColor();
     ClearMask();
     ::SetRectEmpty(&m_rc);
     ::SetRectEmpty(&m_rcOld);
-
     imageModel.NotifyImageChanged();
 }
 
@@ -489,10 +488,10 @@ void SelectionModel::InvertSelection()
     ::SelectObject(hdc, hbmOld);
     ::DeleteDC(hdc);
 
-    NotifySelContentsChanged();
+    NotifyContentsChanged();
 }
 
-void SelectionModel::NotifySelContentsChanged()
+void SelectionModel::NotifyContentsChanged()
 {
     m_bContentsChanged = TRUE;
     imageModel.NotifyImageChanged();

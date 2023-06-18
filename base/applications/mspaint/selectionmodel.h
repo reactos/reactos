@@ -59,7 +59,7 @@ public:
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
-    void NotifySelContentsChanged();
+    void NotifyContentsChanged();
 
 private:
     SelectionModel(const SelectionModel&);
