@@ -2,7 +2,7 @@
  * PROJECT:     Explorer for ReactOS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Malay Language resource file
- * TRANSLATORS: Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * TRANSLATORS: 2016 Henry Tang Ih (henrytang2@hotmail.com)
 */
 
 LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
