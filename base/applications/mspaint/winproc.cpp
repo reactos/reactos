@@ -423,6 +423,9 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         (selectionModel.m_bShow &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
+    DWORD dwStart, dwEnd;
+    textEditWindow.SendMessage(EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    BOOL hasTextSel = (dwStart < dwEnd);
 
     switch (lParam)
     {
@@ -430,17 +433,20 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo() || textShown));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo() || textShown));
-            EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection || textShown));
-            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection || textShown));
-            EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection || textShown));
+            EnableMenuItem(menu, IDM_EDITUNDO,
+                ENABLED_IF(textShown ? textEditWindow.SendMessage(EM_CANUNDO) : imageModel.CanUndo()));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(textShown ? FALSE : imageModel.CanRedo()));
+            EnableMenuItem(menu, IDM_EDITCUT, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+            EnableMenuItem(menu, IDM_EDITDELETESELECTION,
+                           ENABLED_IF(textShown ? hasTextSel : trueSelection));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITPASTE,
-                ENABLED_IF(IsClipboardFormatAvailable(CF_DIB) ||
-                           IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
-                           textShown));
+                           ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
+                                      ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+                                      ::IsClipboardFormatAvailable(CF_DIB) ||
+                                      ::IsClipboardFormatAvailable(CF_BITMAP)));
             break;
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
@@ -668,6 +674,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITREDO:
             if (textShown)
             {
+                // There is no "WM_REDO". Do nothing
                 break;
             }
             if (ToolBase::pointSP != 0) // drawing something?
