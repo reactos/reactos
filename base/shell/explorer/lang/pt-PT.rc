@@ -70,10 +70,10 @@ BEGIN
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Bloquear a barra de tarefas", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "&Ocultar automaticamente a barra de tarefas", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "&Manter barra de tarefas sobre outras janelas", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Manter a barra de tarefas sobre outras janelas", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Agrupar botões similares da barra de tarefas", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "&Exibir Inicialização Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    GROUPBOX "Area de Notificação", IDC_STATIC, 6, 114, 240, 98
+    AUTOCHECKBOX "&Mostrar Iniciação Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    GROUPBOX "Área de Notificação", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "Reló&gio", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
     AUTOCHECKBOX "Mostrar segundos", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
@@ -89,9 +89,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&Menu 'Iniciar'", IDC_TASKBARPROP_STARTMENU, 7, 135, 90, 10
-    LTEXT "Seleccione este estilo para um acesso fácil à Internet, correio electrónicoe e aos seus programas favoritos.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    LTEXT "Seleccione este estilo para um acesso fácil à Internet, correio electrónico e aos seus programas favoritos.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
-    AUTORADIOBUTTON "M&enu 'Inicar' clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 185, 90, 10
+    AUTORADIOBUTTON "M&enu 'Iniciar' clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 185, 90, 10
     LTEXT "Seleccione esta opção para utilizar o estilo e funcionalidades do menu clássico", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 195, 150, 24
     PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
@@ -121,7 +121,7 @@ BEGIN
     LTEXT            "Pode personalizar o menu Iniciar adicionando ou removendo itens.", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "A&dicionar", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "&Remover", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
-    PUSHBUTTON       "A&vancadas", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "A&vançadas", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "&Ordenar", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
     LTEXT            "Para remover os registos dos documentos, programas e Web sites acedidos recentemente, clique em Limpar.", IDC_STATIC, 49, 85, 108, 33
@@ -138,11 +138,11 @@ CAPTION "Nome de ficheiro Aviso"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON    "&Ignorar", IDIGNORE, 215, 60, 50, 14
-    PUSHBUTTON       "&Renomear", IDC_FILE_RENAME, 159, 60, 50, 14
+    PUSHBUTTON       "&Mudar o nome", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Não executar esta verificação na inicialização", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Existe uma pasta ou ficheiro no seu computador, de nome %s que poderá causar funcionamento incorrecto em algumas aplicações. Renomeando para %s, resolverá esse problema. Gostaria de o renomear agora?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Existe uma pasta ou ficheiro no seu computador, de nome %s que poderá causar funcionamento incorrecto em algumas aplicações. Alterando o nome para %s, resolverá esse problema. Gostaria de o alterar o nome agora?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -156,14 +156,14 @@ BEGIN
     LTEXT            "Items do &menu 'Iniciar':", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Documentos recentes", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "Seleccione esta opção para ter rápido acesso aos documentos abertos recentemente.  Limpando esta lista, não apaga os documentos.", IDC_STATIC, 14, 144, 224, 21
+    LTEXT            "Seleccione esta opção para ter rápido acesso aos documentos abertos recentemente.  Ao limpar esta lista, não apaga os documentos.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Listar os meus documentos mais recentes", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Apagar lista", IDC_CLEAR, 182, 168, 55, 14
 END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "General"
+CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Seleccione o tamanho do icone dos  programas ", IDC_STATIC, 7, 7, 238, 37
@@ -172,7 +172,7 @@ BEGIN
     AUTORADIOBUTTON  "Icons &grandes", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "icones &pequenos", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programas ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "O menu 'Iniciar' comtém atalhos para os programas que usa frequentemente.  limpando a lista de atalhos, não elimina os programas.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "O menu 'Iniciar' comtém atalhos para os programas que usa frequentemente.  Ao limpar a lista de atalhos, não elimina os programas.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "&Numero de programas no menu 'Iniciar':", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
@@ -197,6 +197,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barra de Tarefas e Menu Iniciar"
     IDS_RESTORE_ALL "&Mostrar janelas abertas"
-    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
-    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
+    IDS_TRAYWND_UNDO_CASCADE "Desfazer cascata"
+    IDS_TRAYWND_UNDO_TILE "Desfazer lado a lado"
 END
