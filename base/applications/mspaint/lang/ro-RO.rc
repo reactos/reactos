@@ -242,6 +242,6 @@ BEGIN
     IDS_ITALIC "Cursiv"
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
-    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Ne pare rău, această aplicație nu poate lipi aceste date. Formatul de date este fie incorect, fie nesuportat."
 END
