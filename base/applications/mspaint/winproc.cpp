@@ -670,26 +670,25 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
-            if (OpenClipboard())
+            if (!selectionModel.m_bShow || !OpenClipboard())
+                break;
+
+            EmptyClipboard();
+
+            selectionModel.TakeOff();
+
             {
-                EmptyClipboard();
-
-                if (selectionModel.m_bShow)
+                HBITMAP hbm = selectionModel.CopyBitmap();
+                if (hbm)
                 {
-                    selectionModel.TakeOff();
-
-                    HBITMAP hbm = selectionModel.CopyBitmap();
-                    if (hbm)
-                    {
-                        HGLOBAL hGlobal = BitmapToClipboardDIB(hbm);
+                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbm);
+                    if (hGlobal)
                         ::SetClipboardData(CF_DIB, hGlobal);
-
-                        ::DeleteObject(hbm);
-                    }
+                    ::DeleteObject(hbm);
                 }
-
-                CloseClipboard();
             }
+
+            CloseClipboard();
             break;
         case IDM_EDITCUT:
             /* Copy */
@@ -698,22 +697,23 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(WM_COMMAND, IDM_EDITDELETESELECTION, 0);
             break;
         case IDM_EDITPASTE:
-            if (OpenClipboard())
+            if (!OpenClipboard())
+                break;
+
+            if (::IsClipboardFormatAvailable(CF_ENHMETAFILE))
             {
-                if (IsClipboardFormatAvailable(CF_ENHMETAFILE))
-                {
-                    HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
-                    HBITMAP hbm = BitmapFromHEMF(hEMF);
-                    ::DeleteEnhMetaFile(hEMF);
-                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
-                }
-                else if (IsClipboardFormatAvailable(CF_DIB))
-                {
-                    HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
-                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
-                }
-                CloseClipboard();
+                HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
+                HBITMAP hbm = BitmapFromHEMF(hEMF);
+                ::DeleteEnhMetaFile(hEMF);
+                InsertSelectionFromHBITMAP(hbm, m_hWnd);
             }
+            else if (::IsClipboardFormatAvailable(CF_DIB))
+            {
+                HBITMAP hbm = BitmapFromClipboardDIB(::GetClipboardData(CF_DIB));
+                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+            }
+
+            CloseClipboard();
             break;
         case IDM_EDITDELETESELECTION:
         {
