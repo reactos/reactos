@@ -865,7 +865,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_IMAGEINVERTCOLORS:
         {
-            imageModel.InvertColors();
+            if (selectionModel.m_bShow)
+                selectionModel.InvertSelection();
+            else
+                imageModel.InvertColors();
             break;
         }
         case IDM_IMAGEDELETEIMAGE:

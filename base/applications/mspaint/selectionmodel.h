@@ -16,6 +16,7 @@ private:
     HBITMAP m_hbmMask;
     POINT *m_ptStack;
     int m_iPtSP;
+    BOOL m_bContentsChanged;
 
 public:
     COLORREF m_rgbBack = RGB(255, 255, 255);
@@ -42,6 +43,7 @@ public:
     HBITMAP CopyBitmap();
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
+    void DrawBackground(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
     void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
@@ -52,14 +54,17 @@ public:
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
+    void InvertSelection();
 
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
+    void NotifySelContentsChanged();
 
 private:
     SelectionModel(const SelectionModel&);
     SelectionModel& operator=(const SelectionModel&);
 
     void ShiftPtStack(INT dx, INT dy);
+    void SwapWidthAndHeight();
 };
