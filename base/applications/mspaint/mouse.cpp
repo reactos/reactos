@@ -569,8 +569,11 @@ struct TextTool : ToolBase
         {
             imageModel.PushImageForUndo();
             draw(m_hdc);
-            quit();
-            return;
+            if (::IsRectEmpty(&selectionModel.m_rc))
+            {
+                quit();
+                return;
+            }
         }
 
         if (registrySettings.ShowTextTool)
