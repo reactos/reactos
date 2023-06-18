@@ -1,4 +1,10 @@
-/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
+/*
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2014-2015 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 

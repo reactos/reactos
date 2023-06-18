@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2014 Zehnvor <sixlivezehn@googlemail.com>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE

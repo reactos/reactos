@@ -1,5 +1,11 @@
-/* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> */
+/*
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Spain) resource file
+ * TRANSLATORS: Copyright 2011 Jeisson Toscano aka JanusMagnus <jasongenie@gmail.com>
+ *              Copyright 2011 Javier Fernandez <elhoir@gmail.com>
+ *              Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
