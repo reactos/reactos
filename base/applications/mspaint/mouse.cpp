@@ -579,14 +579,14 @@ struct TextTool : ToolBase
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
         if (bTextBoxShown)
         {
-            if (textEditWindow.GetWindowTextLength() > 0 || ::IsRectEmpty(&selectionModel.m_rc))
+            if (textEditWindow.GetWindowTextLength() > 0)
             {
                 imageModel.PushImageForUndo();
                 draw(m_hdc);
-                if (::IsRectEmpty(&selectionModel.m_rc))
-                {
-                    quit();
-                }
+            }
+            if (::IsRectEmpty(&selectionModel.m_rc))
+            {
+                quit();
                 return;
             }
         }
@@ -627,7 +627,8 @@ struct TextTool : ToolBase
     void OnFinishDraw() override
     {
         imageModel.PushImageForUndo();
-        draw(m_hdc);
+        if (textEditWindow.GetWindowTextLength() > 0)
+            draw(m_hdc);
         quit();
         ToolBase::OnFinishDraw();
     }
