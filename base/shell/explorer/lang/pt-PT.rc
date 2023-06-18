@@ -161,7 +161,7 @@ BEGIN
     LTEXT            "Items do &menu 'Iniciar':", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Documentos recentes", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "Seleccione esta opção para ter rápido acesso aos documentos abertos recentemente.  Ao limpar esta lista, não apaga os documentos.", IDC_STATIC, 14, 144, 224, 21
+    LTEXT            "Seleccione esta opção para ter rápido acesso aos documentos abertos recentemente. Ao limpar esta lista, não apaga os documentos.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Listar os meus documentos mais recentes", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Apagar lista", IDC_CLEAR, 182, 168, 55, 14
 END
