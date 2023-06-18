@@ -242,5 +242,5 @@ BEGIN
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Sorry, I cannot paste this data."
+    IDS_CANTPASTE "Sorry, this application cannot paste this data. The data format you specified is either incorrect or not supported."
 END
