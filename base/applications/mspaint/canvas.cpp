@@ -96,6 +96,8 @@ VOID CCanvasWindow::GetImageRect(RECT& rc)
 
 CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 {
+    if (selectionModel.m_bShow || ::IsWindowVisible(textEditWindow))
+        return HIT_INNER;
     RECT rcBase = GetBaseRect();
     return getSizeBoxHitTest(pt, &rcBase);
 }
@@ -112,7 +114,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
-    if (!selectionModel.m_bShow)
+    if (!selectionModel.m_bShow && !::IsWindowVisible(textEditWindow))
         drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcPaint);
 
     // Calculate image size
