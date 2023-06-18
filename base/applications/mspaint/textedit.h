@@ -32,6 +32,8 @@ public:
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELZOOMCHANGED, OnToolsModelZoomChanged)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
+        MESSAGE_HANDLER(WM_MOVING, OnMoving)
+        MESSAGE_HANDLER(WM_SIZING, OnSizing)
         MESSAGE_HANDLER(WM_CHAR, OnChar)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkGnd)
@@ -56,6 +58,8 @@ public:
     LRESULT OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMoving(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSizing(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -82,5 +86,4 @@ protected:
 
     INT DoHitTest(RECT& rc, POINT pt);
     void DrawGrip(HDC hDC, RECT& rc);
-    void Reposition();
 };

@@ -18,7 +18,7 @@ private:
     int m_iPtSP;
 
 public:
-    COLORREF m_rgbBack = RGB(255, 255, 255);
+    COLORREF m_rgbBack;
     BOOL m_bShow;
     BOOL m_bContentChanged;
     CRect m_rc;    // in image pixel coordinates

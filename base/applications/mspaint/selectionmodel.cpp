@@ -18,6 +18,7 @@ SelectionModel::SelectionModel()
     , m_hbmMask(NULL)
     , m_ptStack(NULL)
     , m_iPtSP(0)
+    , m_rgbBack(RGB(255, 255, 255))
     , m_bShow(FALSE)
     , m_bContentChanged(FALSE)
 {
