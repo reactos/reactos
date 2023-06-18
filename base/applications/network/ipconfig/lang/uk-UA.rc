@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS IpConfig Network Command
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/network/ipconfig/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for IpConfig Network Command
- * TRANSLATOR: Rostislav Zabolotny
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Rostislav Zabolotny <rstzab@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

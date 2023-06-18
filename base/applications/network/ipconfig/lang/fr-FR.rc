@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2006 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *              Copyright 2009 Amine Khaldi <amine.khaldi@reactos.org>
+ *              Copyright 2009 Pierre Schweitzer <pierre@reactos.org>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE

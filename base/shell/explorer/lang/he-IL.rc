@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Hebrew resource file
+ * TRANSLATOR:  Copyright 2013 Baruch Rutman <peterooch@gmail.com>
+ */
+
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU

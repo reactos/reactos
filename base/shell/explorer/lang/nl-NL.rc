@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Dutch resource file
+ * TRANSLATORS: Copyright 2009 Jan Roeloffzen (jansssens) <jroeloffzen@hotmail.com>
+ *              Copyright 2022 Milan Raymakers <milan.raymakers@gmail.com>
+ */
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 IDM_TRAYWND MENU

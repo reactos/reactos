@@ -1,7 +1,8 @@
 /*
- * FILE:       base/applications/network/ipconfig/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATOR:  Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
