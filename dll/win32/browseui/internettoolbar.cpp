@@ -755,7 +755,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                             NULL) == ERROR_SUCCESS)
         {
             DWORD dwLocked = (locked ? 1 : 0);
-            RegSetValueExW(hKey, 
+            RegSetValueExW(hKey,
                            L"Locked", 
                            0,
                            REG_DWORD,
