@@ -334,13 +334,19 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     return hbmNew;
 }
 
+typedef struct tagBITMAPINFODX
+{
+    BITMAPINFOHEADER bmiHeader;
+    RGBQUAD bmiColors[256];
+} BITMAPINFODX, *LPBITMAPINFODX;
+
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 {
     BITMAP bm;
     if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
         return NULL;
 
-    BITMAPINFO bmi;
+    BITMAPINFODX bmi;
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = bm.bmWidth;
@@ -358,11 +364,10 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 
     HDC hDC = CreateCompatibleDC(NULL);
 
-    RGBQUAD ColorTable[256];
     if (cColors)
     {
         HGDIOBJ hbmOld = SelectObject(hDC, hBitmap);
-        cColors = GetDIBColorTable(hDC, 0, cColors, ColorTable);
+        cColors = GetDIBColorTable(hDC, 0, cColors, bmi.bmiColors);
         SelectObject(hDC, hbmOld);
     }
 
@@ -377,7 +382,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
             CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
             pb += sizeof(BITMAPINFOHEADER);
 
-            CopyMemory(pb, &ColorTable, cbColors);
+            CopyMemory(pb, bmi.bmiColors, cbColors);
             pb += cbColors;
 
             GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
