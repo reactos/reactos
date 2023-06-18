@@ -577,13 +577,16 @@ struct TextTool : ToolBase
         selectionModel.SetRectFromPoints(g_ptStart, pt);
 
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
-        if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
+        if (bTextBoxShown)
         {
-            imageModel.PushImageForUndo();
-            draw(m_hdc);
-            if (::IsRectEmpty(&selectionModel.m_rc))
+            if (textEditWindow.GetWindowTextLength() > 0 || ::IsRectEmpty(&selectionModel.m_rc))
             {
-                quit();
+                imageModel.PushImageForUndo();
+                draw(m_hdc);
+                if (::IsRectEmpty(&selectionModel.m_rc))
+                {
+                    quit();
+                }
                 return;
             }
         }
