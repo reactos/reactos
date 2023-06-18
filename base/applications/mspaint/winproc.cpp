@@ -700,6 +700,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (!OpenClipboard())
                 break;
 
+            // In many cases, EMF provides a better image than CF_DIB.
             if (::IsClipboardFormatAvailable(CF_ENHMETAFILE))
             {
                 HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
