@@ -410,12 +410,6 @@ void CTextEditWindow::Reposition()
     CRect rcImage;
     canvasWindow.GetImageRect(rcImage);
 
-    if (rc.bottom > rcImage.bottom)
-        ::OffsetRect(&rc, 0, rcImage.Height());
-
-    if (rc.right > rcImage.right)
-        ::OffsetRect(&rc, rcImage.Width(), 0);
-
     if (rc.left < 0)
         ::OffsetRect(&rc, -rc.left, 0);
 
