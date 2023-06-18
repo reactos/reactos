@@ -238,10 +238,10 @@ BEGIN
     IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
     IDS_LOADERRORTEXT "Fișierul %s nu poate fi încărcat."
     IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curent disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
+    IDS_BOLD "Îngroșat"
+    IDS_ITALIC "Cursiv"
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Sorry, this application cannot paste this data. The data format is either incorrect or not supported."
+    IDS_CANTPASTE "Ne pare rău, această aplicație nu poate lipi aceste date. Formatul de date este fie incorect, fie nesuportat."
 END
