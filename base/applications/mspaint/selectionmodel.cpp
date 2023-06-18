@@ -205,11 +205,11 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
 
     m_rc.left = x;
     m_rc.top = y;
-    m_rc.right = m_rc.left + GetDIBWidth(hBm);
-    m_rc.bottom = m_rc.top + GetDIBHeight(hBm);
+    m_rc.right = x + GetDIBWidth(hBm);
+    m_rc.bottom = y + GetDIBHeight(hBm);
 
-    // Unless two rectangles were different, the image cannot be pasted to the canvas.
-    // See SelectionModel::Landing
+    // If m_rc and m_rcOld were same, the image cannot be pasted to the canvas.
+    // See also SelectionModel::Landing
     ::SetRect(&m_rcOld, -2, -2, -1, -1); // Outside of image
 
     ClearMask();
