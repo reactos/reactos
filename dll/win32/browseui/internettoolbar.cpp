@@ -761,7 +761,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                            L"Locked",
                            0,
                            REG_DWORD,
-                           (const BYTE*)&dwLocked,
+                           (LPBYTE)&dwLocked,
                            sizeof(dwLocked));
         }
         RegCloseKey(hKey);
