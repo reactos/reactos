@@ -371,10 +371,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
         if (pb)
         {
             CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
-            pb += sizeof(BITMAPINFOHEADER);
-
-            CopyMemory(pb, bmi.bmiColors, cbColors);
-            pb += cbColors;
+            pb += sizeof(BITMAPINFOHEADER) + cbColors;
 
             HDC hDC = GetDC(NULL);
             GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
