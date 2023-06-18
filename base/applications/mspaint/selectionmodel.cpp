@@ -19,7 +19,7 @@ SelectionModel::SelectionModel()
     , m_ptStack(NULL)
     , m_iPtSP(0)
     , m_bShow(FALSE)
-    , m_bContentsChanged(FALSE)
+    , m_bContentChanged(FALSE)
 {
     ::SetRectEmpty(&m_rc);
     ::SetRectEmpty(&m_rcOld);
@@ -196,7 +196,7 @@ void SelectionModel::Landing()
 
     m_bShow = FALSE;
 
-    if (m_bContentsChanged ||
+    if (m_bContentChanged ||
         (!::EqualRect(m_rc, m_rcOld) && !::IsRectEmpty(m_rc) && !::IsRectEmpty(m_rcOld)))
     {
         imageModel.PushImageForUndo();
@@ -218,7 +218,7 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
     m_rc.right = x + GetDIBWidth(hBm);
     m_rc.bottom = y + GetDIBHeight(hBm);
 
-    NotifyContentsChanged();
+    NotifyContentChanged();
 
     ClearMask();
 }
@@ -242,7 +242,7 @@ void SelectionModel::FlipHorizontally()
     }
     ::DeleteDC(hdcMem);
 
-    NotifyContentsChanged();
+    NotifyContentChanged();
 }
 
 void SelectionModel::FlipVertically()
@@ -264,7 +264,7 @@ void SelectionModel::FlipVertically()
     }
     ::DeleteDC(hdcMem);
 
-    NotifyContentsChanged();
+    NotifyContentChanged();
 }
 
 void SelectionModel::RotateNTimes90Degrees(int iN)
@@ -320,7 +320,7 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     }
 
     ::DeleteDC(hdcMem);
-    NotifyContentsChanged();
+    NotifyContentChanged();
 }
 
 void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
@@ -363,7 +363,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     ::DeleteDC(hDC);
 
     m_bShow = TRUE;
-    NotifyContentsChanged();
+    NotifyContentChanged();
 }
 
 HBITMAP SelectionModel::CopyBitmap()
@@ -454,7 +454,7 @@ void SelectionModel::ClearColor()
 
 void SelectionModel::HideSelection()
 {
-    m_bShow = m_bContentsChanged = FALSE;
+    m_bShow = m_bContentChanged = FALSE;
     ClearColor();
     ClearMask();
     ::SetRectEmpty(&m_rc);
@@ -488,12 +488,12 @@ void SelectionModel::InvertSelection()
     ::SelectObject(hdc, hbmOld);
     ::DeleteDC(hdc);
 
-    NotifyContentsChanged();
+    NotifyContentChanged();
 }
 
-void SelectionModel::NotifyContentsChanged()
+void SelectionModel::NotifyContentChanged()
 {
-    m_bContentsChanged = TRUE;
+    m_bContentChanged = TRUE;
     imageModel.NotifyImageChanged();
 }
 

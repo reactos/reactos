@@ -20,7 +20,7 @@ private:
 public:
     COLORREF m_rgbBack = RGB(255, 255, 255);
     BOOL m_bShow;
-    BOOL m_bContentsChanged;
+    BOOL m_bContentChanged;
     CRect m_rc;    // in image pixel coordinates
     POINT m_ptHit; // in image pixel coordinates
     CRect m_rcOld; // in image pixel coordinates
@@ -59,7 +59,7 @@ public:
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
-    void NotifyContentsChanged();
+    void NotifyContentChanged();
 
 private:
     SelectionModel(const SelectionModel&);
