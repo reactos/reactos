@@ -362,6 +362,15 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
     else
         cColors = 0;
 
+    HDC hDC = CreateCompatibleDC(NULL);
+
+    if (cColors)
+    {
+        HGDIOBJ hbmOld = SelectObject(hDC, hBitmap);
+        cColors = GetDIBColorTable(hDC, 0, cColors, bmi.bmiColors);
+        SelectObject(hDC, hbmOld);
+    }
+
     DWORD cbColors = cColors * sizeof(RGBQUAD);
     DWORD dwSize = sizeof(BITMAPINFOHEADER) + cbColors + bmi.bmiHeader.biSizeImage;
     HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, dwSize);
@@ -371,11 +380,15 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
         if (pb)
         {
             CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
-            pb += sizeof(BITMAPINFOHEADER) + cbColors;
+            pb += sizeof(BITMAPINFOHEADER);
 
-            HDC hDC = GetDC(NULL);
-            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
-            ReleaseDC(NULL, hDC);
+            CopyMemory(pb, &bmi.bmiColors, cbColors);
+            pb += cbColors;
+
+            if (cColors)
+                GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_PAL_COLORS);
+            else
+                GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
 
             GlobalUnlock(hGlobal);
         }
@@ -386,5 +399,52 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
         }
     }
 
+    DeleteDC(hDC);
+
     return hGlobal;
+}
+
+HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
+{
+    LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+    if (!pb)
+        return NULL;
+
+    LPBITMAPINFO pbmi = (LPBITMAPINFO)pb;
+    pb += pbmi->bmiHeader.biSize;
+
+    INT cColors = 0, cbColors = 0;
+    if (pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        LPBITMAPCOREINFO pbmci = (LPBITMAPCOREINFO)pbmi;
+        WORD BitCount = pbmci->bmciHeader.bcBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBTRIPLE);
+            pb += cbColors;
+        }
+    }
+    else if (pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
+    {
+        WORD BitCount = pbmi->bmiHeader.biBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBQUAD);
+            pb += cbColors;
+        }
+    }
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HBITMAP hBitmap = CreateDIBSection(hDC, pbmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    if (hBitmap)
+    {
+        SetDIBits(hDC, hBitmap, 0, labs(pbmi->bmiHeader.biHeight), pb, pbmi, DIB_RGB_COLORS);
+    }
+    DeleteDC(hDC);
+
+    GlobalUnlock(hGlobal);
+
+    return hBitmap;
 }

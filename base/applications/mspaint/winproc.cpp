@@ -698,9 +698,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITPASTE:
             OpenClipboard();
-            if (IsClipboardFormatAvailable(CF_BITMAP))
+            if (IsClipboardFormatAvailable(CF_DIB))
             {
-                InsertSelectionFromHBITMAP((HBITMAP) GetClipboardData(CF_BITMAP), m_hWnd);
+                HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
+                InsertSelectionFromHBITMAP(hbm, m_hWnd);
             }
             CloseClipboard();
             break;
