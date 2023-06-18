@@ -18,8 +18,8 @@ SelectionModel::SelectionModel()
     , m_hbmMask(NULL)
     , m_ptStack(NULL)
     , m_iPtSP(0)
-    , m_bContentsChanged(FALSE)
     , m_bShow(FALSE)
+    , m_bContentsChanged(FALSE)
 {
     ::SetRectEmpty(&m_rc);
     ::SetRectEmpty(&m_rcOld);

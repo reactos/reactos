@@ -16,11 +16,11 @@ private:
     HBITMAP m_hbmMask;
     POINT *m_ptStack;
     int m_iPtSP;
-    BOOL m_bContentsChanged;
 
 public:
     COLORREF m_rgbBack = RGB(255, 255, 255);
     BOOL m_bShow;
+    BOOL m_bContentsChanged;
     CRect m_rc;    // in image pixel coordinates
     POINT m_ptHit; // in image pixel coordinates
     CRect m_rcOld; // in image pixel coordinates
