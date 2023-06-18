@@ -436,7 +436,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(IsClipboardFormatAvailable(CF_BITMAP)));
+            EnableMenuItem(menu, IDM_EDITPASTE,
+                ENABLED_IF(IsClipboardFormatAvailable(CF_DIB) || IsClipboardFormatAvailable(CF_ENHMETAFILE)));
             break;
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
@@ -698,7 +699,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITPASTE:
             OpenClipboard();
-            if (IsClipboardFormatAvailable(CF_DIB))
+            if (IsClipboardFormatAvailable(CF_ENHMETAFILE))
+            {
+                HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
+                HBITMAP hbm = BitmapFromHEMF(hEMF);
+                ::DeleteEnhMetaFile(hEMF);
+                InsertSelectionFromHBITMAP(hbm, m_hWnd);
+            }
+            else if (IsClipboardFormatAvailable(CF_DIB))
             {
                 HBITMAP hbm = BitmapFromClipboardDIB(GetClipboardData(CF_DIB));
                 InsertSelectionFromHBITMAP(hbm, m_hWnd);

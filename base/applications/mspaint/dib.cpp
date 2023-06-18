@@ -448,3 +448,24 @@ HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
 
     return hBitmap;
 }
+
+HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
+{
+    ENHMETAHEADER header;
+    if (!GetEnhMetaFileHeader(hEMF, sizeof(header), &header))
+        return NULL;
+
+    CRect rc = *(LPRECT)&header.rclBounds;
+    INT cx = rc.Width(), cy = rc.Height();
+    HBITMAP hbm = CreateColorDIB(cx, cy, RGB(255, 255, 255));
+    if (!hbm)
+        return NULL;
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    PlayEnhMetaFile(hDC, hEMF, &rc);
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    return hbm;
+}
