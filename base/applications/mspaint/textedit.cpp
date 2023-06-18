@@ -410,9 +410,9 @@ void CTextEditWindow::Reposition()
     CRect rcImage;
     canvasWindow.GetImageRect(rcImage);
 
+    // FIXME: Smartly restrict the position and size by using WM_WINDOWPOSCHANGING
     if (rc.left < 0)
         ::OffsetRect(&rc, -rc.left, 0);
-
     if (rc.top < 0)
         ::OffsetRect(&rc, 0, -rc.top);
 
