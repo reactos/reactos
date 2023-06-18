@@ -20,6 +20,7 @@ private:
 public:
     COLORREF m_rgbBack = RGB(255, 255, 255);
     BOOL m_bShow;
+    BOOL m_bContentChanged;
     CRect m_rc;    // in image pixel coordinates
     POINT m_ptHit; // in image pixel coordinates
     CRect m_rcOld; // in image pixel coordinates
@@ -42,6 +43,7 @@ public:
     HBITMAP CopyBitmap();
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
+    void DrawBackground(HDC hDCImage);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
     void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
@@ -52,14 +54,17 @@ public:
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
+    void InvertSelection();
 
     void Dragging(CANVAS_HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
+    void NotifyContentChanged();
 
 private:
     SelectionModel(const SelectionModel&);
     SelectionModel& operator=(const SelectionModel&);
 
     void ShiftPtStack(INT dx, INT dy);
+    void SwapWidthAndHeight();
 };

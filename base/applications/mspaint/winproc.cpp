@@ -424,47 +424,44 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
     DWORD dwStart = 0, dwEnd = 0;
-    if (::IsWindowVisible(textEditWindow))
+    if (textShown)
         textEditWindow.SendMessage(EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
     BOOL hasTextSel = (dwStart < dwEnd);
 
-    switch (lParam)
+    //
+    // File menu
+    //
+    if (::GetSubMenu(GetMenu(), 0) == menu)
     {
-        case 0: /* File menu */
-            ProcessFileMenu((HMENU)wParam);
-            break;
-        case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO,
-                ENABLED_IF(textShown ? textEditWindow.SendMessage(EM_CANUNDO) : imageModel.CanUndo()));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(textShown ? FALSE : imageModel.CanRedo()));
-            EnableMenuItem(menu, IDM_EDITCUT, ENABLED_IF(textShown ? hasTextSel : trueSelection));
-            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(textShown ? hasTextSel : trueSelection));
-            EnableMenuItem(menu, IDM_EDITDELETESELECTION,
-                           ENABLED_IF(textShown ? hasTextSel : trueSelection));
-            EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITPASTE,
-                           ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
-                                      ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
-                                      ::IsClipboardFormatAvailable(CF_DIB) ||
-                                      ::IsClipboardFormatAvailable(CF_BITMAP)));
-            break;
-        case 2: /* View menu */
-            CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
-            CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(::IsWindowVisible(paletteWindow)));
-            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(g_hStatusBar)));
-            CheckMenuItem(menu, IDM_FORMATICONBAR, CHECKED_IF(::IsWindowVisible(fontsDialog)));
-            EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
-
-            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(g_showGrid));
-            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(registrySettings.ShowThumbnail));
-            break;
-        case 3: /* Image menu */
-            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionModel.m_bShow));
-            CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
-            break;
+        ProcessFileMenu(menu);
     }
 
+    //
+    // Edit menu
+    //
+    EnableMenuItem(menu, IDM_EDITUNDO,
+        ENABLED_IF(textShown ? textEditWindow.SendMessage(EM_CANUNDO) : imageModel.CanUndo()));
+    EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(textShown ? FALSE : imageModel.CanRedo()));
+    EnableMenuItem(menu, IDM_EDITCUT, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+    EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+    EnableMenuItem(menu, IDM_EDITDELETESELECTION,
+                   ENABLED_IF(textShown ? hasTextSel : trueSelection));
+    EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
+    EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
+    EnableMenuItem(menu, IDM_EDITPASTE,
+                   ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
+                              ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+                              ::IsClipboardFormatAvailable(CF_DIB) ||
+                              ::IsClipboardFormatAvailable(CF_BITMAP)));
+
+    //
+    // View menu
+    //
+    CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
+    CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(::IsWindowVisible(paletteWindow)));
+    CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(g_hStatusBar)));
+    CheckMenuItem(menu, IDM_FORMATICONBAR, CHECKED_IF(::IsWindowVisible(fontsDialog)));
+    EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
     CheckMenuItem(menu, IDM_VIEWZOOM125, CHECKED_IF(toolsModel.GetZoom() == 125));
     CheckMenuItem(menu, IDM_VIEWZOOM25,  CHECKED_IF(toolsModel.GetZoom() == 250));
     CheckMenuItem(menu, IDM_VIEWZOOM50,  CHECKED_IF(toolsModel.GetZoom() == 500));
@@ -472,7 +469,19 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     CheckMenuItem(menu, IDM_VIEWZOOM200, CHECKED_IF(toolsModel.GetZoom() == 2000));
     CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(toolsModel.GetZoom() == 4000));
     CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(toolsModel.GetZoom() == 8000));
+    CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(g_showGrid));
+    CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(registrySettings.ShowThumbnail));
 
+    //
+    // Image menu
+    //
+    EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionModel.m_bShow));
+    EnableMenuItem(menu, IDM_IMAGEDELETEIMAGE, ENABLED_IF(!selectionModel.m_bShow));
+    CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
+
+    //
+    // Palette menu
+    //
     CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == PAL_MODERN));
     CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
     return 0;
@@ -858,7 +867,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_IMAGEINVERTCOLORS:
         {
-            imageModel.InvertColors();
+            if (selectionModel.m_bShow)
+                selectionModel.InvertSelection();
+            else
+                imageModel.InvertColors();
             break;
         }
         case IDM_IMAGEDELETEIMAGE:
@@ -997,8 +1009,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             // Create and show the fullscreen window
             fullscreenWindow.DoCreate();
             fullscreenWindow.ShowWindow(SW_SHOWMAXIMIZED);
-            ShowWindow(SW_HIDE);
             break;
     }
     return 0;
+}
+
+VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
+{
+    HMENU hMenu = ::LoadMenuW(g_hinstExe, MAKEINTRESOURCEW(ID_POPUPMENU));
+    HMENU hSubMenu = ::GetSubMenu(hMenu, iSubMenu);
+
+    ::SetForegroundWindow(m_hWnd);
+    INT_PTR id = ::TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD,
+                                  ptScreen.x, ptScreen.y, 0, m_hWnd, NULL);
+    PostMessage(WM_NULL);
+    if (id != 0)
+        PostMessage(WM_COMMAND, id);
+
+    ::DestroyMenu(hMenu);
 }

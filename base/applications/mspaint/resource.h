@@ -30,6 +30,7 @@
 #define IDI_VERTSKEW    538
 
 #define ID_MENU 501
+#define ID_POPUPMENU 502
 
 #define IDM_FILENEW    201
 #define IDM_FILEOPEN   202

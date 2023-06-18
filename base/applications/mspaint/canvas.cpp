@@ -272,6 +272,11 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
             CanvasToImage(pt);
             StartSelectionDrag(hitSelection, pt);
         }
+        else
+        {
+            canvasWindow.ClientToScreen(&pt);
+            mainWindow.TrackPopupMenu(pt, 0);
+        }
         return 0;
     }
 
