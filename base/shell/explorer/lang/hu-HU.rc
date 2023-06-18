@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Explorer for ReactOS
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Hungarian Language resource file
+ * TRANSLATORS:
+ */
+
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU

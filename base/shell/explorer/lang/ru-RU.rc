@@ -1,4 +1,9 @@
-/* Russian translation by Lentin 2007-06-10 & tower 2009 jul 14 */
+/*
+ * PROJECT:     Explorer for ReactOS
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian Language resource file
+ * TRANSLATORS: Lentin 2007-06-10 & tower 2009 jul 14
+*/
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 

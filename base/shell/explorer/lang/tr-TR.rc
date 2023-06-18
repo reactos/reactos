@@ -1,6 +1,9 @@
-/* TRANSLATOR:
-2013-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
-2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+/*
+ * PROJECT:     Explorer for ReactOS
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish Language resource file
+ * TRANSLATORS: Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
+                2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
 */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
