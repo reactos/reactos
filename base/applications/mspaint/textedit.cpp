@@ -433,3 +433,10 @@ LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }
+
+LRESULT CTextEditWindow::OnPaste(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    Invalidate(TRUE); // Redraw
+    return ret;
+}

@@ -422,6 +422,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     BOOL trueSelection =
         (selectionModel.m_bShow &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
 
     switch (lParam)
     {
@@ -429,15 +430,17 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo()));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo()));
-            EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
+            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo() || textShown));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo() || textShown));
+            EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection || textShown));
+            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection || textShown));
             EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITPASTE,
-                ENABLED_IF(IsClipboardFormatAvailable(CF_DIB) || IsClipboardFormatAvailable(CF_ENHMETAFILE)));
+                ENABLED_IF(IsClipboardFormatAvailable(CF_DIB) ||
+                           IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+                           textShown));
             break;
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
@@ -500,7 +503,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (canvasWindow.m_hWnd == hwndCapture ||
                     fullscreenWindow.m_hWnd == hwndCapture)
                 {
-                    SendMessage(hwndCapture, nMsg, wParam, lParam);
+                    ::SendMessage(hwndCapture, nMsg, wParam, lParam);
                 }
             }
             else if (selectionModel.m_bShow)
@@ -525,6 +528,8 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case VK_DOWN:
             canvasWindow.MoveSelection(0, +1);
             break;
+        default:
+            break;
     }
     return 0;
 }
@@ -546,6 +551,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         return 0;
     }
 
+    BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
     switch (LOWORD(wParam))
     {
         case IDM_HELPINFO:
@@ -638,7 +644,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
             {
                 textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
@@ -660,8 +666,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Undo();
             break;
         case IDM_EDITREDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
+            {
                 break;
+            }
             if (ToolBase::pointSP != 0) // drawing something?
             {
                 canvasWindow.finishDrawing();
@@ -670,6 +678,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_COPY);
+                break;
+            }
             if (!selectionModel.m_bShow || !OpenClipboard())
                 break;
 
@@ -691,12 +704,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             CloseClipboard();
             break;
         case IDM_EDITCUT:
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_CUT);
+                break;
+            }
             /* Copy */
             SendMessage(WM_COMMAND, IDM_EDITCOPY, 0);
             /* Delete selection */
             SendMessage(WM_COMMAND, IDM_EDITDELETESELECTION, 0);
             break;
         case IDM_EDITPASTE:
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_PASTE);
+                break;
+            }
             if (!OpenClipboard())
                 break;
 
@@ -718,6 +741,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITDELETESELECTION:
         {
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_CLEAR);
+                break;
+            }
             switch (toolsModel.GetActiveTool())
             {
                 case TOOL_FREESEL:
@@ -735,7 +763,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
             {
                 textEditWindow.SendMessage(EM_SETSEL, 0, -1);
                 break;
