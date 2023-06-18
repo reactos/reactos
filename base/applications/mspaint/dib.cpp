@@ -333,3 +333,135 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     DeleteDC(hDC2);
     return hbmNew;
 }
+
+struct BITMAPINFODX : BITMAPINFO
+{
+    RGBQUAD bmiColorsAdditional[256 - 1];
+};
+
+HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
+{
+    BITMAP bm;
+    if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
+        return NULL;
+
+    BITMAPINFODX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = bm.bmWidth;
+    bmi.bmiHeader.biHeight = bm.bmHeight;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
+
+    INT cColors;
+    if (bm.bmBitsPixel < 16)
+        cColors = 1 << bm.bmBitsPixel;
+    else
+        cColors = 0;
+
+    HDC hDC = CreateCompatibleDC(NULL);
+
+    if (cColors)
+    {
+        HGDIOBJ hbmOld = SelectObject(hDC, hBitmap);
+        cColors = GetDIBColorTable(hDC, 0, cColors, bmi.bmiColors);
+        SelectObject(hDC, hbmOld);
+    }
+
+    DWORD cbColors = cColors * sizeof(RGBQUAD);
+    DWORD dwSize = sizeof(BITMAPINFOHEADER) + cbColors + bmi.bmiHeader.biSizeImage;
+    HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, dwSize);
+    if (hGlobal)
+    {
+        LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+        if (pb)
+        {
+            CopyMemory(pb, &bmi, sizeof(BITMAPINFOHEADER));
+            pb += sizeof(BITMAPINFOHEADER);
+
+            CopyMemory(pb, bmi.bmiColors, cbColors);
+            pb += cbColors;
+
+            GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pb, &bmi, DIB_RGB_COLORS);
+
+            GlobalUnlock(hGlobal);
+        }
+        else
+        {
+            GlobalFree(hGlobal);
+            hGlobal = NULL;
+        }
+    }
+
+    DeleteDC(hDC);
+
+    return hGlobal;
+}
+
+HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
+{
+    LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
+    if (!pb)
+        return NULL;
+
+    LPBITMAPINFO pbmi = (LPBITMAPINFO)pb;
+    pb += pbmi->bmiHeader.biSize;
+
+    INT cColors = 0, cbColors = 0;
+    if (pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        LPBITMAPCOREINFO pbmci = (LPBITMAPCOREINFO)pbmi;
+        WORD BitCount = pbmci->bmciHeader.bcBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBTRIPLE);
+            pb += cbColors;
+        }
+    }
+    else if (pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
+    {
+        WORD BitCount = pbmi->bmiHeader.biBitCount;
+        if (BitCount < 16)
+        {
+            cColors = (1 << BitCount);
+            cbColors = cColors * sizeof(RGBQUAD);
+            pb += cbColors;
+        }
+    }
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HBITMAP hBitmap = CreateDIBSection(hDC, pbmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    if (hBitmap)
+    {
+        SetDIBits(hDC, hBitmap, 0, labs(pbmi->bmiHeader.biHeight), pb, pbmi, DIB_RGB_COLORS);
+    }
+    DeleteDC(hDC);
+
+    GlobalUnlock(hGlobal);
+
+    return hBitmap;
+}
+
+HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
+{
+    ENHMETAHEADER header;
+    if (!GetEnhMetaFileHeader(hEMF, sizeof(header), &header))
+        return NULL;
+
+    CRect rc = *(LPRECT)&header.rclBounds;
+    INT cx = rc.Width(), cy = rc.Height();
+    HBITMAP hbm = CreateColorDIB(cx, cy, RGB(255, 255, 255));
+    if (!hbm)
+        return NULL;
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    PlayEnhMetaFile(hDC, hEMF, &rc);
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    return hbm;
+}

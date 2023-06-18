@@ -242,4 +242,5 @@ BEGIN
     IDS_UNDERLINE "下線"
     IDS_VERTICAL "縦書き"
     IDS_PRINTRES "%d x %d ピクセル/cm"
+    IDS_CANTPASTE "申し訳ありませんが、このデータを貼り付けできません。データ形式が間違っているか、対応していません。"
 END

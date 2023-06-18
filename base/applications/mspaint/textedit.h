@@ -45,6 +45,9 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown);
         MESSAGE_HANDLER(EM_SETSEL, OnSetSel);
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel);
+        MESSAGE_HANDLER(WM_CUT, OnCut);
+        MESSAGE_HANDLER(WM_PASTE, OnPaste);
+        MESSAGE_HANDLER(WM_CLEAR, OnClear);
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -66,6 +69,9 @@ public:
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCut(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnPaste(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnClear(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 protected:
     HWND m_hwndParent;

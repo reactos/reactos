@@ -219,3 +219,4 @@
 #define IDS_UNDERLINE   937
 #define IDS_VERTICAL    938
 #define IDS_PRINTRES    939
+#define IDS_CANTPASTE   940

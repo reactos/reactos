@@ -200,9 +200,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
         }
     }
 
-    HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
-    toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
+    toolsModel.SetActiveTool(TOOL_RECTSEL);
 
     imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
@@ -424,6 +422,10 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     BOOL trueSelection =
         (selectionModel.m_bShow &&
          ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
+    DWORD dwStart, dwEnd;
+    textEditWindow.SendMessage(EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    BOOL hasTextSel = (dwStart < dwEnd);
 
     switch (lParam)
     {
@@ -431,16 +433,20 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             ProcessFileMenu((HMENU)wParam);
             break;
         case 1: /* Edit menu */
-            EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.CanUndo()));
-            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(imageModel.CanRedo()));
-            EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
-            EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
+            EnableMenuItem(menu, IDM_EDITUNDO,
+                ENABLED_IF(textShown ? textEditWindow.SendMessage(EM_CANUNDO) : imageModel.CanUndo()));
+            EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(textShown ? FALSE : imageModel.CanRedo()));
+            EnableMenuItem(menu, IDM_EDITCUT, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+            EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(textShown ? hasTextSel : trueSelection));
+            EnableMenuItem(menu, IDM_EDITDELETESELECTION,
+                           ENABLED_IF(textShown ? hasTextSel : trueSelection));
             EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
             EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
-            OpenClipboard();
-            EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(IsClipboardFormatAvailable(CF_BITMAP)));
-            CloseClipboard();
+            EnableMenuItem(menu, IDM_EDITPASTE,
+                           ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
+                                      ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+                                      ::IsClipboardFormatAvailable(CF_DIB) ||
+                                      ::IsClipboardFormatAvailable(CF_BITMAP)));
             break;
         case 2: /* View menu */
             CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
@@ -503,7 +509,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (canvasWindow.m_hWnd == hwndCapture ||
                     fullscreenWindow.m_hWnd == hwndCapture)
                 {
-                    SendMessage(hwndCapture, nMsg, wParam, lParam);
+                    ::SendMessage(hwndCapture, nMsg, wParam, lParam);
                 }
             }
             else if (selectionModel.m_bShow)
@@ -528,6 +534,8 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case VK_DOWN:
             canvasWindow.MoveSelection(0, +1);
             break;
+        default:
+            break;
     }
     return 0;
 }
@@ -549,6 +557,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         return 0;
     }
 
+    BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
     switch (LOWORD(wParam))
     {
         case IDM_HELPINFO:
@@ -641,7 +650,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
             {
                 textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
@@ -663,8 +672,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Undo();
             break;
         case IDM_EDITREDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
+            {
+                // There is no "WM_REDO". Do nothing
                 break;
+            }
             if (ToolBase::pointSP != 0) // drawing something?
             {
                 canvasWindow.finishDrawing();
@@ -673,38 +685,110 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
-            // FIXME: We should use CF_DIB in the future
-            if (OpenClipboard())
+            if (textShown)
             {
-                EmptyClipboard();
-                if (selectionModel.m_bShow)
-                {
-                    selectionModel.TakeOff();
-                    SetClipboardData(CF_BITMAP, selectionModel.CopyBitmap());
-                }
-                else
-                {
-                    SetClipboardData(CF_BITMAP, imageModel.CopyBitmap());
-                }
-                CloseClipboard();
+                textEditWindow.SendMessage(WM_COPY);
+                break;
             }
+            if (!selectionModel.m_bShow || !OpenClipboard())
+                break;
+
+            EmptyClipboard();
+
+            selectionModel.TakeOff();
+
+            {
+                HBITMAP hbm = selectionModel.CopyBitmap();
+                if (hbm)
+                {
+                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbm);
+                    if (hGlobal)
+                        ::SetClipboardData(CF_DIB, hGlobal);
+                    ::DeleteObject(hbm);
+                }
+            }
+
+            CloseClipboard();
             break;
         case IDM_EDITCUT:
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_CUT);
+                break;
+            }
             /* Copy */
             SendMessage(WM_COMMAND, IDM_EDITCOPY, 0);
             /* Delete selection */
             SendMessage(WM_COMMAND, IDM_EDITDELETESELECTION, 0);
             break;
         case IDM_EDITPASTE:
-            OpenClipboard();
-            if (IsClipboardFormatAvailable(CF_BITMAP))
+            if (textShown)
             {
-                InsertSelectionFromHBITMAP((HBITMAP) GetClipboardData(CF_BITMAP), m_hWnd);
+                textEditWindow.SendMessage(WM_PASTE);
+                break;
             }
+
+            if (!OpenClipboard())
+                break;
+
+            // In many cases, CF_ENHMETAFILE provides a better image than CF_DIB
+            if (::IsClipboardFormatAvailable(CF_ENHMETAFILE))
+            {
+                HENHMETAFILE hEMF = (HENHMETAFILE)::GetClipboardData(CF_ENHMETAFILE);
+                if (hEMF)
+                {
+                    HBITMAP hbm = BitmapFromHEMF(hEMF);
+                    ::DeleteEnhMetaFile(hEMF);
+                    if (hbm)
+                    {
+                        InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                        CloseClipboard();
+                        break;
+                    }
+                }
+            }
+
+            // In many cases, CF_DIB provides a better image than CF_BITMAP
+            if (::IsClipboardFormatAvailable(CF_DIB))
+            {
+                HBITMAP hbm = BitmapFromClipboardDIB(::GetClipboardData(CF_DIB));
+                if (hbm)
+                {
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                    CloseClipboard();
+                    break;
+                }
+            }
+
+            // The last resort
+            if (::IsClipboardFormatAvailable(CF_BITMAP))
+            {
+                HBITMAP hbm = (HBITMAP)::GetClipboardData(CF_BITMAP);
+                if (hbm)
+                {
+                    InsertSelectionFromHBITMAP(hbm, m_hWnd);
+                    CloseClipboard();
+                    break;
+                }
+            }
+
+            // Failed to paste
+            {
+                CString strText, strTitle;
+                strText.LoadString(IDS_CANTPASTE);
+                strTitle.LoadString(IDS_PROGRAMNAME);
+                MessageBox(strText, strTitle, MB_ICONINFORMATION);
+            }
+
             CloseClipboard();
             break;
         case IDM_EDITDELETESELECTION:
         {
+            if (textShown)
+            {
+                textEditWindow.SendMessage(WM_CLEAR);
+                break;
+            }
             switch (toolsModel.GetActiveTool())
             {
                 case TOOL_FREESEL:
@@ -722,7 +806,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+            if (textShown)
             {
                 textEditWindow.SendMessage(EM_SETSEL, 0, -1);
                 break;

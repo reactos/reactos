@@ -242,4 +242,5 @@ BEGIN
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Sorry, this application cannot paste this data. The data format is either incorrect or not supported."
 END

@@ -410,15 +410,9 @@ void CTextEditWindow::Reposition()
     CRect rcImage;
     canvasWindow.GetImageRect(rcImage);
 
-    if (rc.bottom > rcImage.bottom)
-        ::OffsetRect(&rc, 0, rcImage.Height());
-
-    if (rc.right > rcImage.right)
-        ::OffsetRect(&rc, rcImage.Width(), 0);
-
+    // FIXME: Smartly restrict the position and size by using WM_WINDOWPOSCHANGING
     if (rc.left < 0)
         ::OffsetRect(&rc, -rc.left, 0);
-
     if (rc.top < 0)
         ::OffsetRect(&rc, 0, -rc.top);
 
@@ -432,4 +426,25 @@ void CTextEditWindow::Reposition()
 LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
+
+LRESULT CTextEditWindow::OnCut(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    Invalidate(TRUE); // Redraw
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnPaste(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    FixEditPos(NULL);
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnClear(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    Invalidate(TRUE); // Redraw
+    return ret;
 }
