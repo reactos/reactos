@@ -47,7 +47,7 @@ public:
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
     void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
-    void InsertFromHBITMAP(HBITMAP hBm, INT x = 0, INT y = 0);
+    void InsertFromHBITMAP(HBITMAP hbmColor, INT x = 0, INT y = 0, HBITMAP hbmMask = NULL);
 
     // operation
     void FlipHorizontally();

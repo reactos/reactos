@@ -82,6 +82,8 @@ private:
 public:
     ToolsModel();
     ~ToolsModel();
+
+    BOOL IsSelection() const;
     int GetLineWidth() const;
     void SetLineWidth(int nLineWidth);
     int GetShapeStyle() const;

@@ -449,7 +449,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         {
             toolsModel.OnMouseMove(TRUE, pt.x, pt.y);
             Invalidate(FALSE);
-            if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
+            if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || toolsModel.IsSelection())
             {
                 CString strSize;
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))

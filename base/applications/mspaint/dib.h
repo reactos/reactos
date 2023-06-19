@@ -9,8 +9,11 @@
 #pragma once
 
 HBITMAP CreateDIBWithProperties(int width, int height);
+HBITMAP CreateMonoBitmap(int width, int height, BOOL bWhite);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
+
+HBITMAP CopyMonoImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
 
 static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
 {
@@ -31,7 +34,7 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
 
 HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono);
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono = FALSE);
 
 float PpcmFromDpi(float dpi);
 

@@ -419,9 +419,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = (HMENU)wParam;
-    BOOL trueSelection =
-        (selectionModel.m_bShow &&
-         ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL trueSelection = (selectionModel.m_bShow && toolsModel.IsSelection());
     BOOL textShown = (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow));
     DWORD dwStart = 0, dwEnd = 0;
     if (textShown)
@@ -667,8 +665,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             if (selectionModel.m_bShow)
             {
-                if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
-                    toolsModel.GetActiveTool() == TOOL_FREESEL)
+                if (toolsModel.IsSelection())
                 {
                     canvasWindow.cancelDrawing();
                     break;

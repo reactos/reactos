@@ -37,6 +37,26 @@ CreateDIBWithProperties(int width, int height)
 }
 
 HBITMAP
+CreateMonoBitmap(int width, int height, BOOL bWhite)
+{
+    HBITMAP hbm = CreateBitmap(width, height, 1, 1, NULL);
+    if (hbm == NULL)
+        return NULL;
+
+    if (bWhite)
+    {
+        HDC hdc = CreateCompatibleDC(NULL);
+        HGDIOBJ hbmOld = SelectObject(hdc, hbm);
+        RECT rc = { 0, 0, width, height };
+        FillRect(hdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, hbmOld);
+        DeleteDC(hdc);
+    }
+
+    return hbm;
+}
+
+HBITMAP
 CreateColorDIB(int width, int height, COLORREF rgb)
 {
     HBITMAP ret = CreateDIBWithProperties(width, height);
@@ -57,6 +77,34 @@ CreateColorDIB(int width, int height, COLORREF rgb)
     }
 
     return ret;
+}
+
+HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
+{
+    BITMAP bm;
+    if (!GetObject(hbm, sizeof(bm), &bm))
+        return NULL;
+
+    if (cx == 0 || cy == 0)
+    {
+        cx = bm.bmWidth;
+        cy = bm.bmHeight;
+    }
+
+    HBITMAP hbmNew = CreateBitmap(cx, cy, 1, 1, NULL);
+    if (!hbmNew)
+        return NULL;
+
+    HDC hdc1 = CreateCompatibleDC(NULL);
+    HDC hdc2 = CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = SelectObject(hdc1, hbm);
+    HGDIOBJ hbm2Old = SelectObject(hdc2, hbmNew);
+    StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+    SelectObject(hdc1, hbm1Old);
+    SelectObject(hdc1, hbm2Old);
+    DeleteDC(hdc1);
+    DeleteDC(hdc2);
+    return hbmNew;
 }
 
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight)
@@ -283,7 +331,7 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono)
     #define M_PI 3.14159265
 #endif
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
 {
     if (nDegree == 0)
         return CopyDIBImage(hbm);
@@ -301,7 +349,11 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     if (dx == 0 && dy == 0)
         return CopyDIBImage(hbm);
 
-    HBITMAP hbmNew = CreateColorDIB(cx + dx, cy + dy, RGB(255, 255, 255));
+    HBITMAP hbmNew;
+    if (bMono)
+        hbmNew = CreateMonoBitmap(cx + dx, cy + dy, FALSE);
+    else
+        hbmNew = CreateColorDIB(cx + dx, cy + dy, RGB(255, 255, 255));
     if (!hbmNew)
         return NULL;
 
@@ -329,6 +381,7 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
                 BitBlt(hDC2, delta, y, cx, 1, hDC1, 0, y, SRCCOPY);
         }
     }
+
     SelectObject(hDC2, hbm2Old);
     DeleteDC(hDC2);
     return hbmNew;

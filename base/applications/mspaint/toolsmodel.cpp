@@ -40,6 +40,11 @@ ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
     return m_tools[nTool];
 }
 
+BOOL ToolsModel::IsSelection() const
+{
+    return (GetActiveTool() == TOOL_RECTSEL || GetActiveTool() == TOOL_FREESEL);
+}
+
 int ToolsModel::GetLineWidth() const
 {
     return m_lineWidth;
