@@ -589,11 +589,17 @@ ScsiPortGetDeviceBase(
 
     /* I/O space */
     if (AddressSpace != 0)
-        return (PVOID)TranslatedAddress.u.LowPart;
+        return (PVOID)(ULONG_PTR)TranslatedAddress.u.LowPart;
 
     // FIXME
+#if 0
+    return MmMapIoSpace(TranslatedAddress,
+                        NumberOfBytes,
+                        FALSE);
+#else
     UNIMPLEMENTED;
-    return (PVOID)IoAddress.LowPart;
+    return (PVOID)(ULONG_PTR)IoAddress.LowPart;
+#endif
 }
 
 PVOID
@@ -842,7 +848,8 @@ SpiScanDevice(
     Status = ArcOpen(PartitionName, OpenReadOnly, &FileId);
     if (Status == ESUCCESS)
     {
-        ret = HALDISPATCH->HalIoReadPartitionTable((PDEVICE_OBJECT)FileId, 512, FALSE, &PartitionBuffer);
+        ret = HALDISPATCH->HalIoReadPartitionTable((PDEVICE_OBJECT)(ULONG_PTR)FileId,
+                                                   512, FALSE, &PartitionBuffer);
         if (NT_SUCCESS(ret))
         {
             for (i = 0; i < PartitionBuffer->PartitionCount; i++)
@@ -1702,7 +1709,7 @@ LoadBootDeviceDriver(VOID)
 
         while (((PIMAGE_THUNK_DATA)ThunkData)->u1.AddressOfData != 0)
         {
-            ThunkData->u1.Function = (ULONG)VaToPa((PVOID)ThunkData->u1.Function);
+            ThunkData->u1.Function = (ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function);
             ThunkData++;
         }
     }
