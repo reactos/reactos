@@ -263,4 +263,5 @@ BEGIN
     IDS_VERTICAL "縦書き"
     IDS_PRINTRES "%d x %d ピクセル/cm"
     IDS_CANTPASTE "クリップボードからの貼り付けに失敗しました。データ形式が間違っているか、未対応です。"
+    IDS_SAVEERROR "Failed to save an image file '%s'."
 END

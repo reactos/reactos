@@ -11,6 +11,7 @@ POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 HINSTANCE g_hinstExe = NULL;
 TCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
+TCHAR g_szTempFile[MAX_LONG_PATH] = { 0 };
 BOOL g_isAFile = FALSE;
 BOOL g_imageSaved = FALSE;
 BOOL g_showGrid = FALSE;
@@ -239,6 +240,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
 
     // Write back settings to registry
     registrySettings.Store();
+
+    // Delete the temporary file if any
+    if (g_szTempFile[0])
+        ::DeleteFile(g_szTempFile);
 
     // Return the value that PostQuitMessage() gave
     return (INT)msg.wParam;

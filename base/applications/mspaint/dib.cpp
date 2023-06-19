@@ -142,30 +142,38 @@ GetDIBHeight(HBITMAP hBitmap)
     return bm.bmHeight;
 }
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC)
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile, const CLSID *pclsid)
 {
     CImageDx img;
     img.Attach(hBitmap);
-    img.SaveDx(FileName, GUID_NULL, g_xDpi, g_yDpi); // TODO: error handling
+    HRESULT hr = img.SaveDx(FileName, *pclsid, g_xDpi, g_yDpi);
     img.Detach();
 
-    WIN32_FIND_DATA find;
-    HANDLE hFind = FindFirstFile(FileName, &find);
-    if (hFind == INVALID_HANDLE_VALUE)
+    if (FAILED(hr))
     {
-        ShowFileLoadError(FileName);
+        ShowFileError(FileName, IDS_SAVEERROR);
         return FALSE;
     }
-    FindClose(hFind);
+
+    WIN32_FIND_DATA find;
+    HANDLE hFind = ::FindFirstFile(FileName, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ShowFileError(FileName, IDS_SAVEERROR);
+        return FALSE;
+    }
+    ::FindClose(hFind);
+
+    if (!fIsMainFile)
+        return TRUE;
 
     // update time and size
     FILETIME ft;
-    FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
-    FileTimeToSystemTime(&ft, &g_fileTime);
+    ::FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
+    ::FileTimeToSystemTime(&ft, &g_fileTime);
     g_fileSize = find.nFileSizeLow;
 
     // TODO: update hRes and vRes
-
     registrySettings.SetMostRecentFile(FileName);
 
     g_isAFile = TRUE;
@@ -173,10 +181,10 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC)
     return TRUE;
 }
 
-void ShowFileLoadError(LPCTSTR name)
+void ShowFileError(LPCTSTR name, INT stringID)
 {
     CString strText;
-    strText.Format(IDS_LOADERRORTEXT, (LPCTSTR) name);
+    strText.Format(stringID, (LPCTSTR) name);
     CString strProgramName;
     strProgramName.LoadString(IDS_PROGRAMNAME);
     mainWindow.MessageBox(strText, strProgramName, MB_OK | MB_ICONEXCLAMATION);
@@ -236,9 +244,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         // does not exist
-        CStringW strText;
-        strText.Format(IDS_LOADERRORTEXT, name);
-        MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
+        ShowFileError(name, IDS_LOADERRORTEXT);
         return NULL;
     }
     DWORD dwFileSize = find.nFileSizeLow; // get file size
@@ -266,13 +272,9 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
         g_yDpi = 96;
 
     HBITMAP hBitmap = img.Detach();
-
-    if (hBitmap == NULL)
+    if (hBitmap == NULL) // cannot open
     {
-        // cannot open
-        CStringW strText;
-        strText.Format(IDS_LOADERRORTEXT, name);
-        MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
+        ShowFileError(name, IDS_LOADERRORTEXT);
         return NULL;
     }
 

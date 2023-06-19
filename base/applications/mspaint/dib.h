@@ -23,11 +23,11 @@ int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile, const CLSID *pclsid = &GUID_NULL);
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 
-void ShowFileLoadError(LPCTSTR name);
+void ShowFileError(LPCTSTR name, INT stringID);
 
 HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);
 

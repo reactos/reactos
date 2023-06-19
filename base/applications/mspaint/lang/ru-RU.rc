@@ -265,4 +265,5 @@ BEGIN
     IDS_VERTICAL "Вертикальный"
     IDS_PRINTRES "%d x %d точек/см"
     IDS_CANTPASTE "Не удалось вставить из буфера обмена. Формат данных либо некорректный, либо не поддерживается."
+    IDS_MAILSUBJECT "Sending an image"
 END

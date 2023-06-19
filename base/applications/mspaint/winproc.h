@@ -58,4 +58,5 @@ private:
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
     void ProcessFileMenu(HMENU hPopupMenu);
+    ULONG OpenMailerWithAttachmentW(LPCWSTR pszFileName);
 };

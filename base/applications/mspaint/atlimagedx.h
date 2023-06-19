@@ -17,6 +17,8 @@ public:
         BitmapSetResolution = NULL;
     }
 
+    using CImage::FileTypeFromExtension;
+
     BOOL GetResolution(Gdiplus::GpImage *pImage, float *pxDpi, float *pyDpi)
     {
         *pxDpi = 96;
@@ -98,10 +100,15 @@ public:
         {
             LPCWSTR pszExt = GetFileExtension(pszNameW);
             FileType = FileTypeFromExtension(pszExt);
+            if (!FileType)
+            {
+                FileType = &Gdiplus::ImageFormatPNG;
+            }
         }
 
         // get CLSID from file type
         CLSID clsid;
+
         if (!GetClsidFromFileType(&clsid, FileType))
             return E_FAIL;
 

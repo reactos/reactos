@@ -157,9 +157,9 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     NotifyImageChanged();
 }
 
-void ImageModel::SaveImage(LPCTSTR lpFileName)
+BOOL ImageModel::SaveImage(LPCTSTR lpFileName)
 {
-    SaveDIBToFile(m_hBms[m_currInd], lpFileName, m_hDrawingDC);
+    return SaveDIBToFile(m_hBms[m_currInd], lpFileName, TRUE);
 }
 
 BOOL ImageModel::IsImageSaved() const
