@@ -196,6 +196,34 @@ PiIrpQueryDeviceRelations(
     return status;
 }
 
+// IRP_MN_QUERY_CAPABILITIES (0x09)
+NTSTATUS
+PiIrpQueryPnPDeviceCapabilities(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PDEVICE_CAPABILITIES DeviceCaps)
+{
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
+    ASSERT(DeviceCaps);
+    
+    IO_STACK_LOCATION stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_CAPABILITIES,
+        .Parameters.DeviceCapabilities.Capabilities = DeviceCaps,
+    };
+
+    *DeviceCaps = (DEVICE_CAPABILITIES) {
+        .Size = sizeof(DEVICE_CAPABILITIES),
+        .Version = 1,
+        .Address = -1,
+        .UINumber = -1,
+    };
+
+    PVOID dummy;
+    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, &dummy);
+}
+
 // IRP_MN_QUERY_RESOURCES (0x0A)
 NTSTATUS
 PiIrpQueryResources(
@@ -279,6 +307,37 @@ PiIrpQueryDeviceText(
     return status;
 }
 
+// IRP_MN_QUERY_ID (0x13)
+NTSTATUS
+PiIrpQueryPnPDeviceId(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ BUS_QUERY_ID_TYPE IdType,
+    _Out_ PWSTR *Id)
+{
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
+    ASSERT(IdType == BusQueryDeviceID || IdType == BusQueryHardwareIDs ||
+           IdType == BusQueryCompatibleIDs || IdType == BusQueryInstanceID ||
+           IdType == BusQueryDeviceSerialNumber || IdType == BusQueryContainerID);
+
+    ULONG_PTR longId;
+    IO_STACK_LOCATION stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_ID,
+        .Parameters.QueryId.IdType = IdType,
+    };
+
+    NTSTATUS status;
+    status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, (PVOID)&longId);
+    if (NT_SUCCESS(status))
+    {
+        *Id = (PVOID)longId;
+    }
+
+    return status;
+}
+
 // IRP_MN_QUERY_PNP_DEVICE_STATE (0x14)
 NTSTATUS
 PiIrpQueryPnPDeviceState(
@@ -305,77 +364,4 @@ PiIrpQueryPnPDeviceState(
     }
 
     return status;
-}
-
-/**
- * @brief      Query device capabilities via IRP_MN_QUERY_CAPABILITIES (0x09)
- *
- * @param[in]  DeviceNode
- *     Pointer to the device node object.
- *
- * @param[out] DeviceCaps
- *     Pointer to the device capabilities object which is gonna be initilized and filled out.
- *
- * @return     Status of the operation
- */
-NTSTATUS
-PiIrpQueryPnPDeviceCapabilities(
-    _In_ PDEVICE_NODE DeviceNode,
-    _Out_ PDEVICE_CAPABILITIES DeviceCaps)
-{
-    PVOID Dummy;
-    IO_STACK_LOCATION Stack = {
-        .MajorFunction = IRP_MJ_PNP,
-        .MinorFunction = IRP_MN_QUERY_CAPABILITIES
-    };
-
-    PAGED_CODE();
-
-    ASSERT(DeviceNode);
-
-    RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
-    DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);
-    DeviceCaps->Version = 1;
-    DeviceCaps->Address = -1;
-    DeviceCaps->UINumber = -1;
-    Stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
-
-    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, &Dummy);
-}
-
-/**
- * @brief      Query device capabilities via IRP_MN_QUERY_ID (0x13)
- *
- * @param[in]  DeviceNode
- *     Pointer to the device node object.
- *
- * @param[in]  IdType
- *     This contains the requested id type.
- *
- * @param[out] Id
- *     This parameter will contain the ID(s) of the device.
- *
- * @return     Status of the operation
- */
-NTSTATUS
-PiIrpQueryPnPDeviceId(
-    _In_ PDEVICE_NODE DeviceNode,
-    _In_ BUS_QUERY_ID_TYPE IdType,
-    _Out_ PZZWSTR *Id)
-{
-    IO_STACK_LOCATION Stack = {
-        .MajorFunction = IRP_MJ_PNP,
-        .MinorFunction = IRP_MN_QUERY_ID
-    };
-
-    PAGED_CODE();
-
-    ASSERT(DeviceNode);
-    ASSERT(IdType == BusQueryDeviceID || IdType == BusQueryHardwareIDs ||
-           IdType == BusQueryCompatibleIDs || IdType == BusQueryInstanceID ||
-           IdType == BusQueryDeviceSerialNumber || IdType == BusQueryContainerID);
-
-    Stack.Parameters.QueryId.IdType = IdType;
-
-    return IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &Stack, (PVOID)Id);
 }
