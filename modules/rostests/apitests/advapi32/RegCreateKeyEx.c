@@ -6,7 +6,7 @@
  */
 
 /*
- * Based on code from the following:
+ * Idea based loosely on code from the following:
  * https://learn.microsoft.com/en-us/windows/win32/secauthz/creating-a-security-descriptor-for-a-new-object-in-c--
  */
 
@@ -36,26 +36,44 @@ START_TEST(RegCreateKeyEx)
     LONG ErrorCode = 0;
     HKEY hkSub = NULL;
 
-    /* If any of the test keys already exist, delete them to ensure proper testing*/
+    // If any of the test keys already exist, delete them to ensure proper testing
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"mykey", 0, KEY_ALL_ACCESS, &hkey_main) == ERROR_SUCCESS)
     {
         RegCloseKey(hkey_main);
-        RegDeleteKeyExW(HKEY_CURRENT_USER, L"mykey", KEY_ALL_ACCESS, 0);
+        ErrorCode = RegDeleteKeyW(HKEY_CURRENT_USER, L"mykey");
+        ok_dec(ErrorCode, ERROR_SUCCESS);
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            skip("'HKCU\\mykey' cannot be deleted. Terminating test\n");
+            goto Cleanup;
+        }
     }
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"mykey1", 0, KEY_ALL_ACCESS, &hkey_main) == ERROR_SUCCESS)
     {
         RegCloseKey(hkey_main);
-        RegDeleteKeyExW(HKEY_CURRENT_USER, L"mykey1", KEY_ALL_ACCESS, 0);
+        ErrorCode = RegDeleteKeyW(HKEY_CURRENT_USER, L"mykey1");
+        ok_dec(ErrorCode, ERROR_SUCCESS);
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            skip("'HKCU\\mykey1' cannot be deleted. Terminating test\n");
+            goto Cleanup;
+        }
     }
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"mykey2", 0, KEY_ALL_ACCESS, &hkey_main) == ERROR_SUCCESS)
     {
         RegCloseKey(hkey_main);
-        RegDeleteKeyExW(HKEY_CURRENT_USER, L"mykey2", KEY_ALL_ACCESS, 0);
+        ErrorCode = RegDeleteKeyW(HKEY_CURRENT_USER, L"mykey2");
+        ok_dec(ErrorCode, ERROR_SUCCESS);
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            skip("'HKCU\\mykey2' cannot be deleted. Terminating test\n");
+            goto Cleanup;
+        }
     }
 
-    /* Setup GetLastError to known value for tests */
+    // Setup GetLastError to known value for tests
     SetLastError(0xdeadbeef);
 
     // Create a well-known SID for the Everyone group.
@@ -63,9 +81,12 @@ START_TEST(RegCreateKeyEx)
            SECURITY_WORLD_RID,
            0, 0, 0, 0, 0, 0, 0,
            &pEveryoneSID);
-    ok(bRes == TRUE, "AllocateAndInitializeSid Error %ld\n", GetLastError());
-    if (bRes != TRUE)
-        goto Cleanup;
+    ok(bRes, "AllocateAndInitializeSid Error %ld\n", GetLastError());
+    if (!bRes)
+        {
+            skip("EveryoneSID not initialized. Terminating test\n");
+            goto Cleanup;
+        }
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow Everyone read access to the key.
@@ -83,9 +104,12 @@ START_TEST(RegCreateKeyEx)
         DOMAIN_ALIAS_RID_ADMINS,
         0, 0, 0, 0, 0, 0,
         &pAdminSID);
-    ok(bRes == TRUE, "AllocateAndInitializeSid Error %ld\n", GetLastError());
-    if (bRes == FALSE)
-        goto Cleanup;
+    ok(bRes, "AllocateAndInitializeSid Error %ld\n", GetLastError());
+    if (!bRes)
+        {
+            skip("AdminSID not initialized. Terminating test\n");
+            goto Cleanup;
+        }
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow the Administrators group full access to the key.
@@ -109,7 +133,7 @@ START_TEST(RegCreateKeyEx)
         goto Cleanup;
  
     bRes = InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
-    ok(bRes == TRUE, "InitializeSecurityDescriptor Error %ld\n", GetLastError());
+    ok(bRes, "InitializeSecurityDescriptor Error %ld\n", GetLastError());
     if (!bRes)
         goto Cleanup;
 
@@ -118,7 +142,7 @@ START_TEST(RegCreateKeyEx)
         TRUE,     // bDaclPresent flag
         pACL,
         FALSE);   // not a default DACL
-    ok(bRes == TRUE, "SetSecurityDescriptorDacl Error %ld\n", GetLastError());
+    ok(bRes, "SetSecurityDescriptorDacl Error %ld\n", GetLastError());
     if (!bRes)
         goto Cleanup;
 
@@ -132,35 +156,53 @@ START_TEST(RegCreateKeyEx)
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 1, "Should have created NEW key\n");
+    if (dwDisposition != 1)
+        goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
+    if (dwDisposition != 2)
+        goto Cleanup;
 
     // Use the security attributes to set the security descriptor
-    // when you create a key using sa.nLength of sa.nLength too short, but not 0.
+    // with an nlength that is too short, but not 0.
     sa.nLength = sizeof(SECURITY_ATTRIBUTES) / 2;
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey1", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 1, "Should have created NEW key\n");
+    if (dwDisposition != 1)
+        goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey1", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
+    if (dwDisposition != 2)
+        goto Cleanup;
 
     // Use the security attributes to set the security descriptor
-    // when you create a key using sa.nLength of sa.nLength too long.
+    // with an nlength that is too long.
     sa.nLength = sizeof(SECURITY_ATTRIBUTES) + 10;
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey2", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 1, "Should have created NEW key\n");
+    if (dwDisposition != 1)
+        goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey2", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
+    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
+    if (dwDisposition != 2)
+        goto Cleanup;
 
 Cleanup:
 
@@ -172,8 +214,10 @@ Cleanup:
         LocalFree(pACL);
     if (pSD)
         LocalFree(pSD);
+    if (hkSub) 
+        RegCloseKey(hkSub);
 
-    /* Delete the created subkeys */
+    // Delete the subkeys created for testing
     ErrorCode = RegDeleteKeyW(HKEY_CURRENT_USER, L"mykey");
     ok_dec(ErrorCode, ERROR_SUCCESS);
 
