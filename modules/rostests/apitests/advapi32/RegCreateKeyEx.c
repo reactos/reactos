@@ -83,10 +83,10 @@ START_TEST(RegCreateKeyEx)
            &pEveryoneSID);
     ok(bRes, "AllocateAndInitializeSid Error %ld\n", GetLastError());
     if (!bRes)
-        {
-            skip("EveryoneSID not initialized. Terminating test\n");
-            goto Cleanup;
-        }
+    {
+        skip("EveryoneSID not initialized. Terminating test\n");
+        goto Cleanup;
+    }
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow Everyone read access to the key.
@@ -106,10 +106,10 @@ START_TEST(RegCreateKeyEx)
         &pAdminSID);
     ok(bRes, "AllocateAndInitializeSid Error %ld\n", GetLastError());
     if (!bRes)
-        {
-            skip("AdminSID not initialized. Terminating test\n");
-            goto Cleanup;
-        }
+    {
+        skip("AdminSID not initialized. Terminating test\n");
+        goto Cleanup;
+    }
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow the Administrators group full access to the key.
