@@ -285,7 +285,7 @@ XboxHwDetect(
     FindPciBios = XboxFindPciBios;
 
     /* TODO: Build actual xbox's hardware configuration tree */
-    DetectPciBios(SystemKey, &BusNumber);
+    DetectPciBios(Options, SystemKey, &BusNumber);
     DetectIsaBios(Options, SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
@@ -299,6 +299,8 @@ VOID XboxHwIdle(VOID)
 
 
 /******************************************************************************/
+
+VOID NTAPI HalpInitBusHandlers(VOID);
 
 VOID
 MachInit(const char *CmdLine)
@@ -366,14 +368,18 @@ MachInit(const char *CmdLine)
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
 
-    /* Initialize our stuff */
+    /* Setup busy waiting */
+    HalpCalibrateStallExecution();
+
+    /* Initialize bus handlers */
+    HalpInitBusHandlers();
+
+    /* Initialize memory and video */
     XboxMemInit();
     XboxVideoInit();
 
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
-
-    HalpCalibrateStallExecution();
 }
 
 VOID

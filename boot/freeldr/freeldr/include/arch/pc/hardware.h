@@ -79,7 +79,11 @@ VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwpci.c */
-VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
+VOID
+DetectPciBios(
+    _In_opt_ PCSTR Options,
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Out_ PULONG BusNumber);
 
 /* i386pnp.S */
 ULONG_PTR __cdecl PnpBiosSupported(VOID);
