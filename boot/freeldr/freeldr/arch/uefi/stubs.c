@@ -25,13 +25,6 @@ StallExecutionProcessor(ULONG Microseconds)
 }
 
 VOID
-NTAPI
-KeStallExecutionProcessor(ULONG Microseconds)
-{
-    StallExecutionProcessor(Microseconds);
-}
-
-VOID
 UefiVideoGetFontsFromFirmware(PULONG RomFontPointers)
 {
 
