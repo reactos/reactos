@@ -719,29 +719,16 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
     int                                     bandCount;
     CDockSite                               *dockSite;
     HRESULT                                 hResult;
-    HKEY                                    hKey;
 
     if (locked != fLocked)
     {
-        if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                            L"Software\\Microsoft\\Internet Explorer\\Toolbar",
-                            0,
-                            NULL,
-                            REG_OPTION_NON_VOLATILE,
-                            KEY_WRITE,
-                            NULL,
-                            &hKey,
-                            NULL) == ERROR_SUCCESS)
-        {
-            DWORD dwLocked = (locked ? 1 : 0);
-            RegSetValueExW(hKey,
-                           L"Locked",
-                           0,
-                           REG_DWORD,
-                           (LPBYTE)&dwLocked,
-                           sizeof(dwLocked));
-        }
-        RegCloseKey(hKey);
+        DWORD dwLocked = locked ? 1 : 0;
+        SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar",
+                         L"Locked",
+                         REG_DWORD,
+                         &dwLocked,
+                         sizeof(DWORD),
+                         SHREGSET_FORCE_HKCU);
         fLocked = locked;
 
         rebarBandInfo.cbSize = sizeof(rebarBandInfo);
