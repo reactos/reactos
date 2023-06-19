@@ -436,6 +436,16 @@ BOOL CMainWindow::CanRedo() const
     return imageModel.CanRedo();
 }
 
+BOOL CMainWindow::CanPaste() const
+{
+    if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+        return ::IsClipboardFormatAvailable(CF_UNICODETEXT);
+
+    return (::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+            ::IsClipboardFormatAvailable(CF_DIB) ||
+            ::IsClipboardFormatAvailable(CF_BITMAP));
+}
+
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = (HMENU)wParam;
@@ -465,11 +475,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                    ENABLED_IF(textShown ? hasTextSel : trueSelection));
     EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
     EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
-    EnableMenuItem(menu, IDM_EDITPASTE,
-                   ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
-                              (::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
-                               ::IsClipboardFormatAvailable(CF_DIB) ||
-                               ::IsClipboardFormatAvailable(CF_BITMAP))));
+    EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(CanPaste()));
 
     //
     // View menu

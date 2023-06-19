@@ -37,6 +37,7 @@ public:
     VOID TrackPopupMenu(POINT ptScreen, INT iSubMenu);
     BOOL CanUndo() const;
     BOOL CanRedo() const;
+    BOOL CanPaste() const;
 
 private:
     HMENU m_hMenu;
