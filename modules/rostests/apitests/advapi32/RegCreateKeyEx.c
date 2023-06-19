@@ -151,21 +151,21 @@ START_TEST(RegCreateKeyEx)
     sa.bInheritHandle = FALSE;
 
     // Use the security attributes to set the security descriptor
-    // when you create a key using sa.nLength of 0.
+    // with an nlength that is 0.
     sa.nLength = 0;
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 1, "Should have created NEW key\n");
-    if (dwDisposition != 1)
+    ok(dwDisposition == REG_CREATED_NEW_KEY, "Should have created NEW key\n");
+    if (dwDisposition != REG_CREATED_NEW_KEY)
         goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
-    if (dwDisposition != 2)
+    ok(dwDisposition == REG_OPENED_EXISTING_KEY, "Should have opened EXISTING key\n");
+    if (dwDisposition != REG_OPENED_EXISTING_KEY)
         goto Cleanup;
 
     // Use the security attributes to set the security descriptor
@@ -174,16 +174,16 @@ START_TEST(RegCreateKeyEx)
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey1", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 1, "Should have created NEW key\n");
-    if (dwDisposition != 1)
+    ok(dwDisposition == REG_CREATED_NEW_KEY, "Should have created NEW key\n");
+    if (dwDisposition != REG_CREATED_NEW_KEY)
         goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey1", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
-    if (dwDisposition != 2)
+    ok(dwDisposition == REG_OPENED_EXISTING_KEY, "Should have opened EXISTING key\n");
+    if (dwDisposition != REG_OPENED_EXISTING_KEY)
         goto Cleanup;
 
     // Use the security attributes to set the security descriptor
@@ -192,16 +192,16 @@ START_TEST(RegCreateKeyEx)
     lRes = RegCreateKeyExW(HKEY_CURRENT_USER, L"mykey2", 0, L"", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExW returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 1, "Should have created NEW key\n");
-    if (dwDisposition != 1)
+    ok(dwDisposition == REG_CREATED_NEW_KEY, "Should have created NEW key\n");
+    if (dwDisposition != REG_CREATED_NEW_KEY)
         goto Cleanup;
 
     // Test the -A function
     lRes = RegCreateKeyExA(HKEY_CURRENT_USER, "mykey2", 0, "", 0,
             KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
     ok(lRes == ERROR_SUCCESS, "RegCreateKeyExA returned '%ld', expected 0", lRes);
-    ok(dwDisposition == 2, "Should have opened EXISTING key\n");
-    if (dwDisposition != 2)
+    ok(dwDisposition == REG_OPENED_EXISTING_KEY, "Should have opened EXISTING key\n");
+    if (dwDisposition != REG_OPENED_EXISTING_KEY)
         goto Cleanup;
 
 Cleanup:
