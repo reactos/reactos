@@ -101,7 +101,7 @@ HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
     HGDIOBJ hbm2Old = SelectObject(hdc2, hbmNew);
     StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
     SelectObject(hdc1, hbm1Old);
-    SelectObject(hdc1, hbm2Old);
+    SelectObject(hdc2, hbm2Old);
     DeleteDC(hdc1);
     DeleteDC(hdc2);
     return hbmNew;
