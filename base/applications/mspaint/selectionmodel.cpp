@@ -378,7 +378,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
         hbmOld = ::SelectObject(hDC, m_hbmColor);
         hbmColor = SkewDIB(hDC, m_hbmColor, nSkewDegY, TRUE);
         ::SelectObject(hDC, m_hbmMask);
-        hbmMask = SkewDIB(hDC, m_hbmColor, nSkewDegY, TRUE, TRUE);
+        hbmMask = SkewDIB(hDC, m_hbmMask, nSkewDegY, TRUE, TRUE);
         ::SelectObject(hDC, hbmOld);
         InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
         ::DeleteObject(hbmColor);
