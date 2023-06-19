@@ -844,7 +844,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (hbmNew)
                 {
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
-                    DeleteObject(hbmNew);
                 }
             }
             break;

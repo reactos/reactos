@@ -212,7 +212,7 @@ void SelectionModel::Landing()
 void SelectionModel::InsertFromHBITMAP(HBITMAP hbmColor, INT x, INT y, HBITMAP hbmMask)
 {
     ::DeleteObject(m_hbmColor);
-    m_hbmColor = CopyDIBImage(hbmColor);
+    m_hbmColor = hbmColor;
 
     m_rc.left = x;
     m_rc.top = y;
@@ -222,7 +222,7 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hbmColor, INT x, INT y, HBITMAP h
     if (hbmMask)
     {
         ::DeleteObject(m_hbmMask);
-        m_hbmMask = CopyMonoImage(hbmMask);
+        m_hbmMask = hbmMask;
     }
     else
     {
@@ -332,6 +332,14 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     NotifyContentChanged();
 }
 
+static void AttachHBITMAP(HBITMAP *phbm, HBITMAP hbmNew)
+{
+    if (hbmNew == NULL)
+        return;
+    ::DeleteObject(*phbm);
+    *phbm = hbmNew;
+}
+
 void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
 {
     if (nStretchPercentX == 100 && nStretchPercentY == 100 && nSkewDegX == 0 && nSkewDegY == 0)
@@ -339,53 +347,45 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
 
     TakeOff();
 
-    INT oldWidth = m_rc.Width();
-    INT oldHeight = m_rc.Height();
+    INT oldWidth = m_rc.Width(), oldHeight = m_rc.Height();
     INT newWidth = oldWidth * nStretchPercentX / 100;
     INT newHeight = oldHeight * nStretchPercentY / 100;
 
-    HBITMAP hbmColor, hbmMask;
-    HGDIOBJ hbmOld;
+    HBITMAP hbmColor = m_hbmColor, hbmMask = m_hbmMask;
 
-    if (m_hbmMask == NULL)
-        m_hbmMask = CreateMonoBitmap(newWidth, newHeight, TRUE);
+    if (hbmMask == NULL)
+        hbmMask = CreateMonoBitmap(oldWidth, oldHeight, TRUE);
 
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
-        hbmColor = CopyDIBImage(m_hbmColor, newWidth, newHeight);
-        hbmMask = CopyMonoImage(m_hbmMask, newWidth, newHeight);
-        InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
-        ::DeleteObject(hbmColor);
-        ::DeleteObject(hbmMask);
+        AttachHBITMAP(&hbmColor, CopyDIBImage(hbmColor, newWidth, newHeight));
+        AttachHBITMAP(&hbmMask, CopyMonoImage(hbmMask, newWidth, newHeight));
     }
 
+    HGDIOBJ hbmOld;
     HDC hDC = ::CreateCompatibleDC(NULL);
 
     if (nSkewDegX)
     {
-        hbmOld = ::SelectObject(hDC, m_hbmColor);
-        hbmColor = SkewDIB(hDC, m_hbmColor, nSkewDegX, FALSE);
-        ::SelectObject(hDC, m_hbmMask);
-        hbmMask = SkewDIB(hDC, m_hbmMask, nSkewDegX, FALSE, TRUE);
+        hbmOld = ::SelectObject(hDC, hbmColor);
+        AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegX, FALSE));
+        ::SelectObject(hDC, hbmMask);
+        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegX, FALSE, TRUE));
         ::SelectObject(hDC, hbmOld);
-        InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
-        ::DeleteObject(hbmColor);
-        ::DeleteObject(hbmMask);
     }
 
     if (nSkewDegY)
     {
-        hbmOld = ::SelectObject(hDC, m_hbmColor);
-        hbmColor = SkewDIB(hDC, m_hbmColor, nSkewDegY, TRUE);
-        ::SelectObject(hDC, m_hbmMask);
-        hbmMask = SkewDIB(hDC, m_hbmMask, nSkewDegY, TRUE, TRUE);
+        hbmOld = ::SelectObject(hDC, hbmColor);
+        AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegY, TRUE));
+        ::SelectObject(hDC, hbmMask);
+        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegY, TRUE, TRUE));
         ::SelectObject(hDC, hbmOld);
-        InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
-        ::DeleteObject(hbmColor);
-        ::DeleteObject(hbmMask);
     }
 
     ::DeleteDC(hDC);
+
+    InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
 
     m_bShow = TRUE;
     NotifyContentChanged();
