@@ -123,13 +123,18 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
         sfn.lpfnHook    = OFNHookProc;
         sfn.lpstrDefExt = L"png";
 
-        // Choose PNG
-        for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
+        LPWSTR pchDotExt = PathFindExtensionW(pszFile);
+        if (*pchDotExt == UNICODE_NULL)
         {
-            if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
+            // Choose PNG
+            wcscat(pszFile, L".png");
+            for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
             {
-                sfn.nFilterIndex = i + 1;
-                break;
+                if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
+                {
+                    sfn.nFilterIndex = i + 1;
+                    break;
+                }
             }
         }
     }
