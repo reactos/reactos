@@ -416,6 +416,26 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
     }
 }
 
+BOOL CMainWindow::CanUndo() const
+{
+    if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+        return (BOOL)textEditWindow.SendMessage(EM_CANUNDO);
+    if (selectionModel.m_bShow && toolsModel.IsSelection())
+        return TRUE;
+    if (ToolBase::pointSP != 0)
+        return TRUE;
+    return imageModel.CanUndo();
+}
+
+BOOL CMainWindow::CanRedo() const
+{
+    if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
+        return FALSE; // There is no "WM_REDO" in EDIT control
+    if (ToolBase::pointSP != 0)
+        return TRUE;
+    return imageModel.CanRedo();
+}
+
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = (HMENU)wParam;
@@ -437,9 +457,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     //
     // Edit menu
     //
-    EnableMenuItem(menu, IDM_EDITUNDO,
-        ENABLED_IF(textShown ? textEditWindow.SendMessage(EM_CANUNDO) : imageModel.CanUndo()));
-    EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(textShown ? FALSE : imageModel.CanRedo()));
+    EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(CanUndo()));
+    EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(CanRedo()));
     EnableMenuItem(menu, IDM_EDITCUT, ENABLED_IF(textShown ? hasTextSel : trueSelection));
     EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(textShown ? hasTextSel : trueSelection));
     EnableMenuItem(menu, IDM_EDITDELETESELECTION,
@@ -448,9 +467,9 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
     EnableMenuItem(menu, IDM_EDITPASTE,
                    ENABLED_IF(textShown ? ::IsClipboardFormatAvailable(CF_UNICODETEXT) :
-                              ::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
-                              ::IsClipboardFormatAvailable(CF_DIB) ||
-                              ::IsClipboardFormatAvailable(CF_BITMAP)));
+                              (::IsClipboardFormatAvailable(CF_ENHMETAFILE) ||
+                               ::IsClipboardFormatAvailable(CF_DIB) ||
+                               ::IsClipboardFormatAvailable(CF_BITMAP))));
 
     //
     // View menu
@@ -681,7 +700,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITREDO:
             if (textShown)
             {
-                // There is no "WM_REDO". Do nothing
+                // There is no "WM_REDO" in EDIT control
                 break;
             }
             if (ToolBase::pointSP != 0) // drawing something?
