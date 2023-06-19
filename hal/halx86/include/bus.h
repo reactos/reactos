@@ -427,17 +427,15 @@ HalpGetCmosData(
     _In_ ULONG BusNumber,
     _In_ ULONG SlotNumber,
     _Out_writes_bytes_(Length) PVOID Buffer,
-    _In_ ULONG Length
-);
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
 HalpSetCmosData(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Length
-);
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length);
 
 CODE_SEG("INIT")
 VOID
@@ -584,24 +582,22 @@ HalpNoBusData(
 ULONG
 NTAPI
 HalpcGetCmosData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
 HalpcSetCmosData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 BOOLEAN
 NTAPI
