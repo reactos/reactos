@@ -662,6 +662,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (pd.hDevNames)
                 GlobalFree(pd.hDevNames);
             break;
+        case IDM_FILESEND:
+            if (PathFileExists(g_szFileName))
+            {
+                TCHAR szCmdLine[1024];
+                wsprintf(szCmdLine, _T("mailto:?subject=%%22%s%%22&attach=%%22%s%%22"),
+                         _T("Sending an image"), g_szFileName);
+                ShellExecute(m_hWnd, NULL, szCmdLine, NULL, NULL, SW_SHOWNORMAL);
+            }
+            break;
         case IDM_FILEASWALLPAPERPLANE:
             RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::TILED);
             break;
