@@ -14,7 +14,9 @@ CTextEditWindow textEditWindow;
 
 /* FUNCTIONS ********************************************************/
 
-CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nAppIsMovingOrSizing(0)
+CTextEditWindow::CTextEditWindow()
+    : m_hFont(NULL)
+    , m_hFontZoomed(NULL)
 {
     SetRectEmpty(&m_rc);
 }
@@ -77,9 +79,7 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
-    ++m_nAppIsMovingOrSizing;
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
-    --m_nAppIsMovingOrSizing;
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
@@ -383,9 +383,7 @@ void CTextEditWindow::ValidateEditRect(LPCRECT prc OPTIONAL)
     CRect rc = m_rc;
     canvasWindow.ImageToCanvas(rc);
 
-    ++m_nAppIsMovingOrSizing;
     MoveWindow(rc.left, rc.top, rc.Width(), rc.Height(), TRUE);
-    --m_nAppIsMovingOrSizing;
 }
 
 LRESULT CTextEditWindow::OnMoving(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

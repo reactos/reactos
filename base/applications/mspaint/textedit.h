@@ -81,7 +81,6 @@ protected:
     HWND m_hwndParent;
     HFONT m_hFont;
     HFONT m_hFontZoomed;
-    LONG m_nAppIsMovingOrSizing;
     RECT m_rc;
 
     INT DoHitTest(RECT& rc, POINT pt);
