@@ -727,7 +727,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                          L"Locked",
                          REG_DWORD,
                          &dwLocked,
-                         sizeof(DWORD),
+                         sizeof(dwLocked),
                          SHREGSET_FORCE_HKCU);
         fLocked = locked;
 
