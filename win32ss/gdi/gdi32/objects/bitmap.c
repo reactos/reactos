@@ -944,17 +944,17 @@ SetDIBitsToDevice(
     else
     {
          ScanLines = min(ScanLines,
-             abs(pConvertedInfo->bmiHeader.biHeight) - StartScan);
+                         abs(pConvertedInfo->bmiHeader.biHeight) - StartScan);
     }
 
     if (YDest >= 0 && YSrc > 0 && bmiHeight <= MaxHeight)
     {
-            ScanLines += YSrc;
+        ScanLines += YSrc;
     }
 
     /* Find Format from lpbmi which is now pConvertedInfo */
     iFormat = BitmapFormat(pConvertedInfo->bmiHeader.biBitCount,
-        pConvertedInfo->bmiHeader.biCompression);
+                           pConvertedInfo->bmiHeader.biCompression);
 
     /* Get bits per pixel from the format */
     cBitsPixel = gajBitsPerFormat[iFormat];
@@ -1023,7 +1023,9 @@ SetDIBitsToDevice(
             LinesCopied = ScanLines + src_y;
         }
         else
+        {
             LinesCopied = ScanLines;
+        }
     }
 
 Exit:
