@@ -5,61 +5,10 @@
  * COPYRIGHT:   Copyright 1998 David Welch <welch@cwcom.net>
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <hal.h>
-#define NDEBUG
-#include <debug.h>
 
-/* FUNCTIONS ***************************************************************/
-
-VOID
-NTAPI
-HalpInitProcessor(
-    IN ULONG ProcessorNumber,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-}
-
-VOID
-HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-}
-
-VOID
-HalpInitPhase1(VOID)
-{
-}
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-HalpInitializePICs(IN BOOLEAN EnableInterrupts)
-{
-}
-
-PDMA_ADAPTER
-NTAPI
-HalpGetDmaAdapter(
-    IN PVOID Context,
-    IN PDEVICE_DESCRIPTION DeviceDescription,
-    OUT PULONG NumberOfMapRegisters)
-{
-    return NULL;
-}
-
-BOOLEAN
-NTAPI
-HalpBiosDisplayReset(VOID)
-{
-    return FALSE;
-}
+/* FUNCTIONS *****************************************************************/
 
 /* EOF */
