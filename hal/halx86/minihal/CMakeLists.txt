@@ -6,9 +6,7 @@ list(APPEND MINI_HAL_SOURCE
     ../legacy/bus/isabus.c
     ../legacy/bus/pcibus.c
     ../legacy/bussupp.c
-    ../generic/bios.c
     ../generic/dma.c
-    ../generic/display.c
     ../generic/drive.c
     ../generic/misc.c
     ../generic/nmi.c
@@ -25,7 +23,6 @@ if(SARCH STREQUAL "xbox")
     list(APPEND MINI_HAL_SOURCE
         ../generic/beep.c
         ../generic/cmos.c
-        ../generic/profil.c
         ../xbox/clock.c
         ../xbox/reboot.c)
 elseif(SARCH STREQUAL "pc98")
@@ -33,14 +30,12 @@ elseif(SARCH STREQUAL "pc98")
         ../pc98/beep.c
         ../pc98/clock.c
         ../pc98/cmos.c
-        ../pc98/profil.c
         ../pc98/reboot.c)
 else()
     list(APPEND MINI_HAL_SOURCE
         ../generic/beep.c
         ../generic/clock.c
         ../generic/cmos.c
-        ../generic/profil.c
         ../generic/reboot.c)
 endif()
 
