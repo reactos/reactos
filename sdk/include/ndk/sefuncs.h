@@ -13,6 +13,7 @@ Abstract:
 Author:
 
     Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
+    George Bișoc (george.bisoc@reactos.org) - Updated - 23-Apr-2023
 
 --*/
 
@@ -79,6 +80,8 @@ SeTokenImpersonationLevel(
 //
 // Native Calls
 //
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -87,40 +90,44 @@ NtAccessCheck(
     _In_ HANDLE ClientToken,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ PGENERIC_MAPPING GenericMapping,
-    _Out_ PPRIVILEGE_SET PrivilegeSet,
-    _Out_ PULONG ReturnLength,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ PULONG PrivilegeSetLength,
     _Out_ PACCESS_MASK GrantedAccess,
     _Out_ PNTSTATUS AccessStatus);
 
+_Must_inspect_result_
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckByType(
     _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
-    _In_ PSID PrincipalSelfSid,
+    _In_opt_ PSID PrincipalSelfSid,
     _In_ HANDLE ClientToken,
     _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_TYPE_LIST ObjectTypeList,
-    _In_ ULONG ObjectTypeLength,
+    _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength,
     _In_ PGENERIC_MAPPING GenericMapping,
-    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
     _Inout_ PULONG PrivilegeSetLength,
     _Out_ PACCESS_MASK GrantedAccess,
     _Out_ PNTSTATUS AccessStatus);
 
+_Must_inspect_result_
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckByTypeResultList(
     _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
-    _In_ PSID PrincipalSelfSid,
+    _In_opt_ PSID PrincipalSelfSid,
     _In_ HANDLE ClientToken,
     _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_TYPE_LIST ObjectTypeList,
-    _In_ ULONG ObjectTypeLength,
+    _In_reads_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength,
     _In_ PGENERIC_MAPPING GenericMapping,
-    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
     _Inout_ PULONG PrivilegeSetLength,
-    _Out_ PACCESS_MASK GrantedAccess,
-    _Out_ PNTSTATUS AccessStatus);
+    _Out_writes_(ObjectTypeListLength) PACCESS_MASK GrantedAccess,
+    _Out_writes_(ObjectTypeListLength) PNTSTATUS AccessStatus);
 
 _Must_inspect_result_
 __kernel_entry NTSYSCALLAPI
@@ -331,8 +338,8 @@ ZwAccessCheck(
     _In_ HANDLE ClientToken,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ PGENERIC_MAPPING GenericMapping,
-    _Out_ PPRIVILEGE_SET PrivilegeSet,
-    _Out_ PULONG ReturnLength,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
+    _Out_ PULONG PrivilegeSetLength,
     _Out_ PACCESS_MASK GrantedAccess,
     _Out_ PNTSTATUS AccessStatus);
 
