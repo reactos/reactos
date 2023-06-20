@@ -12,92 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-CODE_SEG("INIT")
-PBUS_HANDLER
-NTAPI
-HalpAllocateAndInitPciBusHandler(
-    IN ULONG PciType,
-    IN ULONG BusNo,
-    IN BOOLEAN TestAllocation
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-HalpFixupPciSupportedRanges(
-    IN ULONG BusCount
-);
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpGetChipHacks(
-    IN USHORT VendorId,
-    IN USHORT DeviceId,
-    IN UCHAR RevisionId,
-    IN PULONG HackFlags
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpGetPciBridgeConfig(
-    IN ULONG PciType,
-    IN PUCHAR BusCount
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsBridgeDevice(
-    IN PPCI_COMMON_CONFIG PciData
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsIdeDevice(
-    IN PPCI_COMMON_CONFIG PciData
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsRecognizedCard(
-    IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
-    IN PPCI_COMMON_CONFIG PciData,
-    IN ULONG Flags
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsValidPCIDevice(
-    IN PBUS_HANDLER BusHandler,
-    IN PCI_SLOT_NUMBER Slot
-);
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpMarkChipsetDecode(
-    IN BOOLEAN OverrideEnable
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-HalpRegisterInternalBusHandlers(
-    VOID
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-ShowSize(
-    IN ULONG Size
-);
-
 /* GLOBALS ********************************************************************/
 
 extern KSPIN_LOCK HalpPCIConfigLock;
@@ -105,6 +19,7 @@ ULONG HalpPciIrqMask;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 PBUS_HANDLER
 NTAPI
 HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
@@ -152,7 +67,6 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
     return Bus;
 }
 
-#ifndef _MINIHAL_
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -226,13 +140,11 @@ HalpRegisterInternalBusHandlers(VOID)
     /* No support for EISA or MCA */
     ASSERT(HalpBusType == MACHINE_TYPE_ISA);
 }
-#endif // _MINIHAL_
 
-#ifndef _MINIHAL_
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
+HalpMarkChipsetDecode(IN BOOLEAN OverrideEnable)
 {
     NTSTATUS Status;
     UNICODE_STRING KeyString;
@@ -421,8 +333,6 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
     /* Header, interrupt and address data all make sense */
     return TRUE;
 }
-
-static BOOLEAN WarningsGiven[5];
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -636,6 +546,8 @@ HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
              (PciData->SubClass == PCI_SUBCLASS_BR_CARDBUS)));
 }
 
+static BOOLEAN WarningsGiven[5];
+
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -756,9 +668,8 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
 }
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-ShowSize(ULONG x)
+static VOID
+ShowSize(IN ULONG x)
 {
     if (!x) return;
     DbgPrint(" [size=");
@@ -1015,7 +926,7 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
         }
     }
 }
-#endif
+#endif // _MINIHAL_
 
 CODE_SEG("INIT")
 VOID
@@ -1276,14 +1187,12 @@ HalpRegisterKdSupportFunctions(VOID)
     KdReleasePciDeviceforDebugging = HalpReleasePciDeviceForDebugging;
 
     /* Register memory functions */
-#ifndef _MINIHAL_
 #if (NTDDI_VERSION >= NTDDI_VISTA)
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64Vista;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddressVista;
 #else
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
-#endif
 #endif
 
     /* Register ACPI stub */

@@ -467,7 +467,8 @@ HalpInitBusHandler(VOID)
 #endif
     HalPciAssignSlotResources = HalpAssignSlotResources;
     HalPciTranslateBusAddress = HaliTranslateBusAddress; /* PCI Driver can override */
-    if (!HalFindBusAddressTranslation) HalFindBusAddressTranslation = HaliFindBusAddressTranslation;
+    if (!HalFindBusAddressTranslation)
+        HalFindBusAddressTranslation = HaliFindBusAddressTranslation;
 }
 
 /* EOF */
