@@ -19,7 +19,9 @@ ULONG HalpBusType;
 
 BOOLEAN HalpPCIConfigInitialized;
 ULONG HalpMinPciBus, HalpMaxPciBus;
+#ifndef _MINIHAL_
 KSPIN_LOCK HalpPCIConfigLock;
+#endif
 PCI_CONFIG_HANDLER PCIConfigHandler;
 
 /* PCI Operation Matrix */
@@ -127,9 +129,11 @@ HalpPCISynchronizeType1(IN PBUS_HANDLER BusHandler,
     PciCfg1->u.bits.FunctionNumber = Slot.u.bits.FunctionNumber;
     PciCfg1->u.bits.Enable = TRUE;
 
+#ifndef _MINIHAL_
     /* Acquire the lock */
     KeRaiseIrql(HIGH_LEVEL, OldIrql);
     KeAcquireSpinLockAtDpcLevel(&HalpPCIConfigLock);
+#endif
 }
 
 VOID
@@ -144,8 +148,10 @@ HalpPCIReleaseSynchronzationType1(IN PBUS_HANDLER BusHandler,
     WRITE_PORT_ULONG(((PPCIPBUSDATA)BusHandler->BusData)->Config.Type1.Address,
                      PciCfg1.u.AsULONG);
 
+#ifndef _MINIHAL_
     /* Release the lock */
     KeReleaseSpinLock(&HalpPCIConfigLock, OldIrql);
+#endif
 }
 
 TYPE1_READ(HalpPCIReadUcharType1, UCHAR)
@@ -172,9 +178,11 @@ HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
     PciCfg->u.bits.Agent = (USHORT)Slot.u.bits.DeviceNumber;
     PciCfg->u.bits.AddressBase = (USHORT)BusData->Config.Type2.Base;
 
+#ifndef _MINIHAL_
     /* Acquire the lock */
     KeRaiseIrql(HIGH_LEVEL, OldIrql);
     KeAcquireSpinLockAtDpcLevel(&HalpPCIConfigLock);
+#endif
 
     /* Setup the CSE Register */
     PciCfg2Cse.u.AsUCHAR = 0;
@@ -201,8 +209,10 @@ HalpPCIReleaseSynchronizationType2(IN PBUS_HANDLER BusHandler,
     WRITE_PORT_UCHAR(BusData->Config.Type2.CSE, PciCfg2Cse.u.AsUCHAR);
     WRITE_PORT_UCHAR(BusData->Config.Type2.Forward, 0);
 
+#ifndef _MINIHAL_
     /* Release the lock */
     KeReleaseSpinLock(&HalpPCIConfigLock, OldIrql);
+#endif
 }
 
 TYPE2_READ(HalpPCIReadUcharType2, UCHAR)
@@ -652,6 +662,7 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     /* Update the total length read */
     return Len;
 }
+
 #ifndef _MINIHAL_
 ULONG
 NTAPI
@@ -1219,8 +1230,10 @@ HalpInitializePciStubs(VOID)
         ExFreePoolWithTag(PciRegistryInfo, TAG_HAL);
     }
 
+#ifndef _MINIHAL_
     /* Initialize the PCI lock */
     KeInitializeSpinLock(&HalpPCIConfigLock);
+#endif
 
     /* Check the type of PCI bus */
     switch (PciType)
@@ -1304,4 +1317,3 @@ HalpInitializePciStubs(VOID)
 }
 
 /* EOF */
-
