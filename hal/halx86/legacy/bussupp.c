@@ -12,99 +12,16 @@
 #define NDEBUG
 #include <debug.h>
 
-CODE_SEG("INIT")
-PBUS_HANDLER
-NTAPI
-HalpAllocateAndInitPciBusHandler(
-    IN ULONG PciType,
-    IN ULONG BusNo,
-    IN BOOLEAN TestAllocation
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-HalpFixupPciSupportedRanges(
-    IN ULONG BusCount
-);
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpGetChipHacks(
-    IN USHORT VendorId,
-    IN USHORT DeviceId,
-    IN UCHAR RevisionId,
-    IN PULONG HackFlags
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpGetPciBridgeConfig(
-    IN ULONG PciType,
-    IN PUCHAR BusCount
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsBridgeDevice(
-    IN PPCI_COMMON_CONFIG PciData
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsIdeDevice(
-    IN PPCI_COMMON_CONFIG PciData
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsRecognizedCard(
-    IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
-    IN PPCI_COMMON_CONFIG PciData,
-    IN ULONG Flags
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-HalpIsValidPCIDevice(
-    IN PBUS_HANDLER BusHandler,
-    IN PCI_SLOT_NUMBER Slot
-);
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpMarkChipsetDecode(
-    IN BOOLEAN OverrideEnable
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-HalpRegisterInternalBusHandlers(
-    VOID
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-ShowSize(
-    IN ULONG Size
-);
-
 /* GLOBALS ********************************************************************/
 
+#ifndef _MINIHAL_
 extern KSPIN_LOCK HalpPCIConfigLock;
 ULONG HalpPciIrqMask;
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 PBUS_HANDLER
 NTAPI
 HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
@@ -152,9 +69,8 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
     return Bus;
 }
 
-#ifndef _MINIHAL_
 CODE_SEG("INIT")
-VOID
+static VOID
 NTAPI
 HalpRegisterInternalBusHandlers(VOID)
 {
@@ -226,13 +142,11 @@ HalpRegisterInternalBusHandlers(VOID)
     /* No support for EISA or MCA */
     ASSERT(HalpBusType == MACHINE_TYPE_ISA);
 }
-#endif // _MINIHAL_
 
-#ifndef _MINIHAL_
 CODE_SEG("INIT")
-NTSTATUS
+static NTSTATUS
 NTAPI
-HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
+HalpMarkChipsetDecode(IN BOOLEAN OverrideEnable)
 {
     NTSTATUS Status;
     UNICODE_STRING KeyString;
@@ -278,7 +192,7 @@ HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
 }
 
 CODE_SEG("INIT")
-PBUS_HANDLER
+static PBUS_HANDLER
 NTAPI
 HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
                                  IN ULONG BusNo,
@@ -363,7 +277,7 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
 }
 
 CODE_SEG("INIT")
-BOOLEAN
+static BOOLEAN
 NTAPI
 HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
                      IN PCI_SLOT_NUMBER Slot)
@@ -422,10 +336,8 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
     return TRUE;
 }
 
-static BOOLEAN WarningsGiven[5];
-
 CODE_SEG("INIT")
-NTSTATUS
+static NTSTATUS
 NTAPI
 HalpGetChipHacks(IN USHORT VendorId,
                  IN USHORT DeviceId,
@@ -489,7 +401,7 @@ HalpGetChipHacks(IN USHORT VendorId,
 }
 
 CODE_SEG("INIT")
-BOOLEAN
+static BOOLEAN
 NTAPI
 HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                      IN PPCI_COMMON_CONFIG PciData,
@@ -570,7 +482,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
 }
 
 CODE_SEG("INIT")
-BOOLEAN
+static BOOLEAN
 NTAPI
 HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
@@ -623,7 +535,7 @@ HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 }
 
 CODE_SEG("INIT")
-BOOLEAN
+static BOOLEAN
 NTAPI
 HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
@@ -636,8 +548,10 @@ HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
              (PciData->SubClass == PCI_SUBCLASS_BR_CARDBUS)));
 }
 
+static BOOLEAN WarningsGiven[5];
+
 CODE_SEG("INIT")
-BOOLEAN
+static BOOLEAN
 NTAPI
 HalpGetPciBridgeConfig(IN ULONG PciType,
                        IN PUCHAR BusCount)
@@ -691,7 +605,7 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
 }
 
 CODE_SEG("INIT")
-VOID
+static VOID
 NTAPI
 HalpFixupPciSupportedRanges(IN ULONG BusCount)
 {
@@ -756,9 +670,8 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
 }
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-ShowSize(ULONG x)
+static VOID
+ShowSize(IN ULONG x)
 {
     if (!x) return;
     DbgPrint(" [size=");
@@ -1015,7 +928,7 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
         }
     }
 }
-#endif
+#endif // !_MINIHAL_
 
 CODE_SEG("INIT")
 VOID
@@ -1253,7 +1166,7 @@ HalpInitializePciBus(VOID)
     /* Tell PnP if this hard supports correct decoding */
     HalpMarkChipsetDecode(ExtendedAddressDecoding);
     DbgPrint("====== PCI BUS DETECTION COMPLETE =======\n\n");
-#endif
+#endif // !_MINIHAL_
 }
 
 #ifndef _MINIHAL_
@@ -1276,7 +1189,6 @@ HalpRegisterKdSupportFunctions(VOID)
     KdReleasePciDeviceforDebugging = HalpReleasePciDeviceForDebugging;
 
     /* Register memory functions */
-#ifndef _MINIHAL_
 #if (NTDDI_VERSION >= NTDDI_VISTA)
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64Vista;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddressVista;
@@ -1284,12 +1196,11 @@ HalpRegisterKdSupportFunctions(VOID)
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
 #endif
-#endif
 
     /* Register ACPI stub */
     KdCheckPowerButton = HalpCheckPowerButton;
 }
-#endif // _MINIHAL_
+#endif // !_MINIHAL_
 
 NTSTATUS
 NTAPI
@@ -1467,7 +1378,7 @@ HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
     HalDereferenceBusHandler(Handler);
     return Status;
 }
-#endif // _MINIHAL_
+#endif // !_MINIHAL_
 
 /*
  * @implemented
@@ -1532,7 +1443,7 @@ HalGetBusData(IN BUS_DATA_TYPE BusDataType,
                                  0,
                                  Length);
 }
-#endif // _MINIHAL_
+#endif // !_MINIHAL_
 
 /*
  * @implemented
@@ -1664,7 +1575,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     HalDereferenceBusHandler(Handler);
     return Status;
 }
-#endif // _MINIHAL_
+#endif // !_MINIHAL_
 
 /*
  * @implemented
