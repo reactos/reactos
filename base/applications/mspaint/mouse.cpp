@@ -791,6 +791,9 @@ struct ShapeTool : ToolBase
         m_bLeftButton = bLeftButton;
         m_bClosed = FALSE;
 
+        if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
+
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
 
@@ -812,11 +815,11 @@ struct ShapeTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
-
         if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
+
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
 
         imageModel.NotifyImageChanged();
     }
