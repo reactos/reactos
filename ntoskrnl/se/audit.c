@@ -497,7 +497,7 @@ SepAccessCheckAndAuditAlarmWorker(
     _In_ ACCESS_MASK DesiredAccess,
     _In_ AUDIT_EVENT_TYPE AuditType,
     _In_ BOOLEAN HaveAuditPrivilege,
-    _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+    _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST_INTERNAL ObjectTypeList,
     _In_ ULONG ObjectTypeListLength,
     _In_ PGENERIC_MAPPING GenericMapping,
     _Out_writes_(ObjectTypeListLength) PACCESS_MASK GrantedAccessList,
@@ -641,7 +641,7 @@ SepAccessCheckAndAuditAlarm(
     ACCESS_MASK GrantedAccess, *SafeGrantedAccessList;
     NTSTATUS AccessStatus, *SafeAccessStatusList;
     PSID CapturedPrincipalSelfSid;
-    POBJECT_TYPE_LIST CapturedObjectTypeList;
+    POBJECT_TYPE_LIST_INTERNAL CapturedObjectTypeList;
     ULONG i;
     BOOLEAN LocalGenerateOnClose;
     NTSTATUS Status;

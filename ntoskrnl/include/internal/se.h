@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Internal header for the Security Manager
  * COPYRIGHT:   Copyright Eric Kohl
- *              Copyright 2022 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2022-2023 George Bișoc <george.bisoc@reactos.org>
  */
 
 #pragma once
@@ -44,6 +44,16 @@ typedef struct _ACCESS_CHECK_RIGHTS
     ACCESS_MASK GrantedAccessRights;
     ACCESS_MASK DeniedAccessRights;
 } ACCESS_CHECK_RIGHTS, *PACCESS_CHECK_RIGHTS;
+
+//
+// Internal object type list structure
+//
+typedef struct _OBJECT_TYPE_LIST_INTERNAL
+{
+    GUID ObjectTypeGuid;
+    USHORT Level;
+    ACCESS_CHECK_RIGHTS ObjectAccessRights;
+} OBJECT_TYPE_LIST_INTERNAL, *POBJECT_TYPE_LIST_INTERNAL;
 
 typedef enum _ACCESS_CHECK_RIGHT_TYPE
 {
@@ -304,6 +314,14 @@ SepDumpTokenDebugInfo(
 VOID
 SepDumpAccessRightsStats(
     _In_ PACCESS_CHECK_RIGHTS AccessRights);
+
+VOID
+SepDumpAccessAndStatusList(
+    _In_ PACCESS_MASK GrantedAccessList,
+    _In_ PNTSTATUS AccessStatusList,
+    _In_ BOOLEAN IsResultList,
+    _In_ POBJECT_TYPE_LIST_INTERNAL ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength);
 #endif // DBG
 
 //
@@ -827,16 +845,28 @@ SepReleaseSecurityQualityOfService(
 //
 // Object type list functions
 //
+PGUID
+SepGetObjectTypeGuidFromAce(
+    _In_ PACE Ace,
+    _In_ BOOLEAN IsAceDenied);
+
+BOOLEAN
+SepObjectTypeGuidInList(
+    _In_reads_(ObjectTypeListLength) POBJECT_TYPE_LIST_INTERNAL ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength,
+    _In_ PGUID ObjectTypeGuid,
+    _Out_ PULONG ObjectIndex);
+
 NTSTATUS
 SeCaptureObjectTypeList(
     _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
     _In_ ULONG ObjectTypeListLength,
     _In_ KPROCESSOR_MODE PreviousMode,
-    _Out_ POBJECT_TYPE_LIST *CapturedObjectTypeList);
+    _Out_ POBJECT_TYPE_LIST_INTERNAL *CapturedObjectTypeList);
 
 VOID
 SeReleaseObjectTypeList(
-    _In_  _Post_invalid_ POBJECT_TYPE_LIST CapturedObjectTypeList,
+    _In_  _Post_invalid_ POBJECT_TYPE_LIST_INTERNAL CapturedObjectTypeList,
     _In_ KPROCESSOR_MODE PreviousMode);
 
 //
