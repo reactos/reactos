@@ -11,7 +11,6 @@ list(APPEND MINI_HAL_SOURCE
     ../generic/misc.c
     ../generic/nmi.c
     ../generic/spinlock.c
-    ../generic/sysinfo.c
     ../generic/timer.c
     ../generic/usage.c
     ../pic/pic.c
