@@ -18,7 +18,7 @@ static LPCWSTR s_cursor_shapes[] =
 
 /* FUNCTIONS ********************************************************/
 
-BOOL setCursorOnSizeBox(CANVAS_HITTEST hit)
+BOOL setCursorOnSizeBox(HITTEST hit)
 {
     if (HIT_UPPER_LEFT <= hit && hit <= HIT_LOWER_RIGHT)
     {
@@ -28,7 +28,7 @@ BOOL setCursorOnSizeBox(CANVAS_HITTEST hit)
     return FALSE;
 }
 
-BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
+BOOL getSizeBoxRect(LPRECT prc, HITTEST hit, LPCRECT prcBase)
 {
     switch (hit)
     {
@@ -78,7 +78,7 @@ BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase)
     return TRUE;
 }
 
-CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
+HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 {
     RECT rc;
 
@@ -92,7 +92,7 @@ CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 
     for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
-        CANVAS_HITTEST hit = (CANVAS_HITTEST)i;
+        HITTEST hit = (HITTEST)i;
         getSizeBoxRect(&rc, hit, prcBase);
         if (::PtInRect(&rc, pt))
             return hit;
@@ -124,7 +124,7 @@ VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)
 
     for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
-        getSizeBoxRect(&rc, (CANVAS_HITTEST)i, prcBase);
+        getSizeBoxRect(&rc, (HITTEST)i, prcBase);
         if (!prcPaint || ::IntersectRect(&rcIntersect, &rc, prcPaint))
             ::FillRect(hdc, &rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
     }

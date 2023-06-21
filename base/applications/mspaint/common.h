@@ -27,7 +27,7 @@
 /* this simplifies enabling or graying menu items */
 #define ENABLED_IF(a) ((a) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND))
 
-enum CANVAS_HITTEST // hit
+enum HITTEST // hit
 {
     HIT_NONE = 0, // Nothing hit or outside
     HIT_UPPER_LEFT,

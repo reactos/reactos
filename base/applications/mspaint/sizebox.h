@@ -9,7 +9,7 @@
 
 #pragma once
 
-BOOL setCursorOnSizeBox(CANVAS_HITTEST hit);
-BOOL getSizeBoxRect(LPRECT prc, CANVAS_HITTEST hit, LPCRECT prcBase);
-CANVAS_HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase);
+BOOL setCursorOnSizeBox(HITTEST hit);
+BOOL getSizeBoxRect(LPRECT prc, HITTEST hit, LPCRECT prcBase);
+HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase);
 VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame = FALSE, LPCRECT prcPaint = NULL);

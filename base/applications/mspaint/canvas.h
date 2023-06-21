@@ -53,20 +53,20 @@ public:
     VOID MoveSelection(INT xDelta, INT yDelta);
 
 protected:
-    CANVAS_HITTEST m_hitSelection;
-    CANVAS_HITTEST m_whereHit;
+    HITTEST m_hitSelection;
+    HITTEST m_hitCanvasSizeBox;
     POINT m_ptOrig; // The origin of drag start
     HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
-    CRect m_rcNew;
+    CRect m_rcNew; // Resizing rectagle
 
-    CANVAS_HITTEST CanvasHitTest(POINT pt);
+    HITTEST CanvasHitTest(POINT pt);
     RECT GetBaseRect();
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
     VOID drawZoomFrame(INT mouseX, INT mouseY);
 
-    CANVAS_HITTEST SelectionHitTest(POINT ptImage);
-    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage);
+    HITTEST SelectionHitTest(POINT ptImage);
+    VOID StartSelectionDrag(HITTEST hit, POINT ptImage);
     VOID SelectionDragging(POINT ptImage);
     VOID EndSelectionDrag(POINT ptImage);
 

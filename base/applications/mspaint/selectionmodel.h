@@ -56,7 +56,7 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
     void InvertSelection();
 
-    void Dragging(CANVAS_HITTEST hit, POINT pt);
+    void Dragging(HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
     void NotifyContentChanged();
