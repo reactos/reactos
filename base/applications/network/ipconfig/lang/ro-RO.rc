@@ -3,45 +3,46 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATOR:  Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ * TRANSLATOR:  Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nReactOS IP Configuration\n\n"
-    IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
-    IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tNode Type . . . . . . . . . . . . : "
-    IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
-    IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
-    IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
-    IDS_WINSPROXYYES        "\tWINS Proxy enabled. . . . . . . . : Yes\n"
-    IDS_DNSSUFFIXLIST       "\tDNS Suffix Search List. . . . . . : %hs\n"
+    IDS_HEADER "\nConfigurația IP ReactOS IP\n\n"
+    IDS_HOSTNAME            "\tNumele gazdei . . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tSufixul primar DNS. . . . . . . . : %hs\n"
+    IDS_NODETYPE            "\tTipul nodului . . . . . . . . . . . . : "
+    IDS_IPROUTINGNO         "\tRutarea IP activată. . . . . . . . : Nu\n"
+    IDS_IPROUTINGYES        "\tRutarea IP activată. . . . . . . . : Da\n"
+    IDS_WINSPROXYNO         "\tProxy-ul WINS activat. . . . . . . . : Nu\n"
+    IDS_WINSPROXYYES        "\tProxy-ul WINS activat. . . . . . . . : Da\n"
+    IDS_DNSSUFFIXLIST       "\tLista de căutare a sufixului DNS. . . . . . : %hs\n"
     IDS_EMPTYLINE           "\t                                    %hs\n"
-    IDS_MEDIADISCONNECTED   "\tMedia State . . . . . . . . . . . : Media disconnected\n"
-    IDS_CONNECTIONDNSSUFFIX "\tConnection-specific DNS Suffix. . : %hs\n"
-    IDS_DESCRIPTION         "\tDescription . . . . . . . . . . . : "
-    IDS_PHYSICALADDRESS     "\tPhysical Address. . . . . . . . . : %hs\n"
-    IDS_DHCPNO              "\tDHCP Enabled. . . . . . . . . . . : No\n"
-    IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
-    IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
-    IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
-    IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
-    IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
-    IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
-    IDS_DNSSERVERS          "\tDNS Servers . . . . . . . . . . . : %hs\n"
-    IDS_PRIMARYWINSSERVER   "\tPrimary WINS Server . . . . . . . : %hs\n"
-    IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
-    IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
-    IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
+    IDS_MEDIADISCONNECTED   "\tStadiul media . . . . . . . . . . . : Media deconectată\n"
+    IDS_CONNECTIONDNSSUFFIX "\tSufixul DNS specific conexiunii. . : %hs\n"
+    IDS_DESCRIPTION         "\tDescriere . . . . . . . . . . . : "
+    IDS_PHYSICALADDRESS     "\tAdresă fizică. . . . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP activat. . . . . . . . . . . : Nu\n"
+    IDS_DHCPYES             "\tDHCP activat. . . . . . . . . . . : Da\n"
+    IDS_AUTOCONFIGNO        "\tAutoconfigurare activată . . . . : Nu\n"
+    IDS_AUTOCONFIGYES       "\tAutoconfiguraare activată . . . . : Da\n"
+    IDS_IPADDRESS           "\tAdresa IP. . . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tMasca subrețelei . . . . . . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tPoarta de acces implicită . . . . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tServerul DHCP . . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tServerele DNS . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tServer WINS primar . . . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tServer WINS secundar . . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tÎnchirerea obținută. . . . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tÎnchirerea expiră . . . . . . . . . . : %s\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Yes"
-    IDS_NO  "No"
+    IDS_YES "Da"
+    IDS_NO  "Nu"
 END
 
 STRINGTABLE
@@ -55,7 +56,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
+    IDS_UNKNOWNADAPTER "Adaptor necunoscut"
     IDS_OTHER "alt tip de adaptor"
     IDS_ETH "adaptor Ethernet"
     IDS_TOKEN "adaptor Token Ring"
