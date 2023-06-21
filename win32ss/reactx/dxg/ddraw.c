@@ -563,7 +563,7 @@ DxDdReenableDirectDrawObject(
         gpEngFuncs.DxEngGetDCState(hDC, 2) != 1 &&
         !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_OpenRefs)) &&
         !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_disable)) &&
-        !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_dd_nCount)) &&
+        !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_dd_locks)) &&
         gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_DitherFmt) >= BMF_8BPP)
     {
         // reset acceleration and suspend flags

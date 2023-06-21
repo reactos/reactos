@@ -57,7 +57,7 @@ typedef enum _DXEGSHDEVDATA
   DxEGShDevData_DrvFuncs,
   DxEGShDevData_dhpdev,
   DxEGShDevData_eddg,
-  DxEGShDevData_dd_nCount,
+  DxEGShDevData_dd_locks,
   DxEGShDevData_dd_flags,
   DxEGShDevData_disable,
   DxEGShDevData_metadev,
