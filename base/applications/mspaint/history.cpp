@@ -254,7 +254,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     NotifyImageChanged();
 }
 
-void ImageModel::Bound(POINT& pt) const
+void ImageModel::Clamp(POINT& pt) const
 {
     pt.x = max(0, min(pt.x, GetWidth()));
     pt.y = max(0, min(pt.y, GetHeight()));

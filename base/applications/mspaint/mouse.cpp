@@ -159,7 +159,7 @@ struct FreeSelTool : ToolBase
         if (bLeftButton)
         {
             POINT pt = { x, y };
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.PushToPtStack(pt);
             imageModel.NotifyImageChanged();
         }
@@ -247,7 +247,7 @@ struct RectSelTool : ToolBase
         if (bLeftButton)
         {
             POINT pt = { x, y };
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             imageModel.NotifyImageChanged();
         }
@@ -258,7 +258,7 @@ struct RectSelTool : ToolBase
         POINT pt = { x, y };
         if (bLeftButton)
         {
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
             imageModel.NotifyImageChanged();
@@ -528,7 +528,7 @@ struct TextTool : ToolBase
     void UpdatePoint(LONG x, LONG y)
     {
         POINT pt = { x, y };
-        imageModel.Bound(pt);
+        imageModel.Clamp(pt);
         selectionModel.SetRectFromPoints(g_ptStart, pt);
         imageModel.NotifyImageChanged();
     }
@@ -572,7 +572,7 @@ struct TextTool : ToolBase
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         POINT pt = { x, y };
-        imageModel.Bound(pt);
+        imageModel.Clamp(pt);
         selectionModel.SetRectFromPoints(g_ptStart, pt);
 
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);

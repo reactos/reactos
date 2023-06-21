@@ -36,7 +36,7 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void Bound(POINT& pt) const;
+    void Clamp(POINT& pt) const;
     void NotifyImageChanged();
 
 protected:
