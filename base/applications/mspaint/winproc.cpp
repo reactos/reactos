@@ -422,7 +422,7 @@ BOOL CMainWindow::CanUndo() const
         return (BOOL)textEditWindow.SendMessage(EM_CANUNDO);
     if (selectionModel.m_bShow && toolsModel.IsSelection())
         return TRUE;
-    if (ToolBase::pointSP != 0)
+    if (ToolBase::s_pointSP != 0)
         return TRUE;
     return imageModel.CanUndo();
 }
@@ -431,7 +431,7 @@ BOOL CMainWindow::CanRedo() const
 {
     if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
         return FALSE; // There is no "WM_REDO" in EDIT control
-    if (ToolBase::pointSP != 0)
+    if (ToolBase::s_pointSP != 0)
         return TRUE;
     return imageModel.CanRedo();
 }
@@ -696,7 +696,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
                 }
             }
-            if (ToolBase::pointSP != 0) // drawing something?
+            if (ToolBase::s_pointSP != 0) // drawing something?
             {
                 canvasWindow.cancelDrawing();
                 break;
@@ -709,7 +709,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 // There is no "WM_REDO" in EDIT control
                 break;
             }
-            if (ToolBase::pointSP != 0) // drawing something?
+            if (ToolBase::s_pointSP != 0) // drawing something?
             {
                 canvasWindow.finishDrawing();
                 break;
