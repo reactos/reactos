@@ -32,7 +32,8 @@ extern ULONG FrameBufferSize;
 extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 
 static BOOLEAN
-XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
+XboxFindPciBios(
+    _Out_ PPCI_REGISTRY_INFO BusData)
 {
     /* We emulate PCI BIOS here, there are 2 known working PCI buses on an original Xbox */
     BusData->NoBuses = 2;
