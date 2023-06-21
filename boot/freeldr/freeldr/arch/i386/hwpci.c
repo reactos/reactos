@@ -75,12 +75,12 @@ GetPciIrqRoutingTable(VOID)
     return NULL;
 }
 
-
 BOOLEAN
-PcFindPciBios(PPCI_REGISTRY_INFO BusData)
+PcFindPciBios(
+    _Out_ PPCI_REGISTRY_INFO BusData)
 {
-    REGS  RegsIn;
-    REGS  RegsOut;
+    REGS RegsIn;
+    REGS RegsOut;
 
     RegsIn.b.ah = 0xB1; /* Subfunction B1h */
     RegsIn.b.al = 0x01; /* PCI BIOS present */
@@ -111,10 +111,10 @@ PcFindPciBios(PPCI_REGISTRY_INFO BusData)
     return FALSE;
 }
 
-
 static
 VOID
-DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
+DetectPciIrqRoutingTable(
+    _In_ PCONFIGURATION_COMPONENT_DATA BusKey)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -123,57 +123,58 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
     ULONG Size;
 
     Table = GetPciIrqRoutingTable();
-    if (Table != NULL)
+    if (!Table)
+        return;
+
+    TRACE("Table size: %u\n", Table->TableSize);
+
+    /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
+           2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
     {
-        TRACE("Table size: %u\n", Table->TableSize);
-
-        /* Set 'Configuration Data' value */
-        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
-               2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
-        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-        if (PartialResourceList == NULL)
-        {
-            ERR("Failed to allocate resource descriptor\n");
-            return;
-        }
-
-        /* Initialize resource descriptor */
-        RtlZeroMemory(PartialResourceList, Size);
-        PartialResourceList->Version = 1;
-        PartialResourceList->Revision = 1;
-        PartialResourceList->Count = 2;
-
-        PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
-        PartialDescriptor->Type = CmResourceTypeBusNumber;
-        PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        PartialDescriptor->u.BusNumber.Start = 0;
-        PartialDescriptor->u.BusNumber.Length = 1;
-
-        PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
-        PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
-        PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-        PartialDescriptor->u.DeviceSpecificData.DataSize = Table->TableSize;
-
-        memcpy(&PartialResourceList->PartialDescriptors[2],
-               Table,
-               Table->TableSize);
-
-        FldrCreateComponentKey(BusKey,
-                               PeripheralClass,
-                               RealModeIrqRoutingTable,
-                               0,
-                               0,
-                               0xFFFFFFFF,
-                               "PCI Real-mode IRQ Routing Table",
-                               PartialResourceList,
-                               Size,
-                               &TableKey);
+        ERR("Failed to allocate resource descriptor\n");
+        return;
     }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 2;
+
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeBusNumber;
+    PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    PartialDescriptor->u.BusNumber.Start = 0;
+    PartialDescriptor->u.BusNumber.Length = 1;
+
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
+    PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->u.DeviceSpecificData.DataSize = Table->TableSize;
+
+    memcpy(&PartialResourceList->PartialDescriptors[2],
+           Table,
+           Table->TableSize);
+
+    FldrCreateComponentKey(BusKey,
+                           PeripheralClass,
+                           RealModeIrqRoutingTable,
+                           0,
+                           0,
+                           0xFFFFFFFF,
+                           "PCI Real-mode IRQ Routing Table",
+                           PartialResourceList,
+                           Size,
+                           &TableKey);
 }
 
-
 VOID
-DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+DetectPciBios(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Out_ PULONG BusNumber)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -184,101 +185,101 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     ULONG i;
 
     /* Report the PCI BIOS */
-    if (FindPciBios(&BusData))
+    if (!FindPciBios(&BusData))
+        return;
+
+    /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
     {
-        /* Set 'Configuration Data' value */
-        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
-        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-        if (PartialResourceList == NULL)
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0,
+                           0,
+                           0xFFFFFFFF,
+                           "PCI BIOS",
+                           PartialResourceList,
+                           Size,
+                           &BiosKey);
+
+    /* Increment bus number */
+    (*BusNumber)++;
+
+    DetectPciIrqRoutingTable(BiosKey);
+
+    /* Report PCI buses */
+    for (i = 0; i < (ULONG)BusData.NoBuses; i++)
+    {
+        /* Check if this is the first bus */
+        if (i == 0)
         {
-            ERR("Failed to allocate resource descriptor\n");
-            return;
+            /* Set 'Configuration Data' value */
+            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
+                                PartialDescriptors) +
+                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
+                   sizeof(PCI_REGISTRY_INFO);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+            if (!PartialResourceList)
+            {
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
+                    i, (ULONG)BusData.NoBuses);
+                return;
+            }
+
+            /* Initialize resource descriptor */
+            RtlZeroMemory(PartialResourceList, Size);
+            PartialResourceList->Version = 1;
+            PartialResourceList->Revision = 1;
+            PartialResourceList->Count = 1;
+            PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+            PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+            PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+            PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(PCI_REGISTRY_INFO);
+            memcpy(&PartialResourceList->PartialDescriptors[1],
+                   &BusData,
+                   sizeof(PCI_REGISTRY_INFO));
+        }
+        else
+        {
+            /* Set 'Configuration Data' value */
+            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
+                                PartialDescriptors);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+            if (!PartialResourceList)
+            {
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
+                    i, (ULONG)BusData.NoBuses);
+                return;
+            }
+
+            /* Initialize resource descriptor */
+            RtlZeroMemory(PartialResourceList, Size);
         }
 
-        /* Initialize resource descriptor */
-        RtlZeroMemory(PartialResourceList, Size);
-
-        /* Create new bus key */
+        /* Create the bus key */
         FldrCreateComponentKey(SystemKey,
                                AdapterClass,
                                MultiFunctionAdapter,
                                0,
                                0,
                                0xFFFFFFFF,
-                               "PCI BIOS",
+                               "PCI",
                                PartialResourceList,
                                Size,
-                               &BiosKey);
+                               &BusKey);
 
         /* Increment bus number */
         (*BusNumber)++;
-
-        DetectPciIrqRoutingTable(BiosKey);
-
-        /* Report PCI buses */
-        for (i = 0; i < (ULONG)BusData.NoBuses; i++)
-        {
-            /* Check if this is the first bus */
-            if (i == 0)
-            {
-                /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors) +
-                       sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
-                       sizeof(PCI_REGISTRY_INFO);
-                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-                if (!PartialResourceList)
-                {
-                    ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
-                        i, (ULONG)BusData.NoBuses);
-                    return;
-                }
-
-                /* Initialize resource descriptor */
-                RtlZeroMemory(PartialResourceList, Size);
-                PartialResourceList->Version = 1;
-                PartialResourceList->Revision = 1;
-                PartialResourceList->Count = 1;
-                PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
-                PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
-                PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-                PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(PCI_REGISTRY_INFO);
-                memcpy(&PartialResourceList->PartialDescriptors[1],
-                       &BusData,
-                       sizeof(PCI_REGISTRY_INFO));
-            }
-            else
-            {
-                /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors);
-                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-                if (!PartialResourceList)
-                {
-                    ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
-                        i, (ULONG)BusData.NoBuses);
-                    return;
-                }
-
-                /* Initialize resource descriptor */
-                RtlZeroMemory(PartialResourceList, Size);
-            }
-
-            /* Create the bus key */
-            FldrCreateComponentKey(SystemKey,
-                                   AdapterClass,
-                                   MultiFunctionAdapter,
-                                   0,
-                                   0,
-                                   0xFFFFFFFF,
-                                   "PCI",
-                                   PartialResourceList,
-                                   Size,
-                                   &BusKey);
-
-            /* Increment bus number */
-            (*BusNumber)++;
-        }
     }
 }
 
