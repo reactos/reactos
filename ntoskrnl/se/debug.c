@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Security subsystem debug routines support
- * COPYRIGHT:   Copyright 2022 George Bișoc <george.bisoc@reactos.org>
+ * COPYRIGHT:   Copyright 2022-2023 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -341,6 +341,42 @@ SepDumpAccessRightsStats(
     DbgPrint("Remaining access rights -> 0x%08lx\n", AccessRights->RemainingAccessRights);
     DbgPrint("Granted access rights -> 0x%08lx\n", AccessRights->GrantedAccessRights);
     DbgPrint("Denied access rights -> 0x%08lx\n", AccessRights->DeniedAccessRights);
+#endif
+}
+
+/**
+ * @brief
+ * Dumps access and status values of each object type
+ * in the result list.
+ */
+VOID
+SepDumpAccessAndStatusList(
+    _In_ PACCESS_MASK GrantedAccessList,
+    _In_ PNTSTATUS AccessStatusList,
+    _In_ BOOLEAN IsResultList,
+    _In_ POBJECT_TYPE_LIST_INTERNAL ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength)
+{
+#ifndef NDEBUG
+    ULONG ResultListIndex;
+    ULONG ObjectTypeIndex;
+    ULONG ResultListLength;
+
+    DbgPrint("================== ACCESS & STATUS OBJECT TYPE LIST STATISTICS ==================\n");
+    ResultListLength = IsResultList ? ObjectTypeListLength : 1;
+    for (ResultListIndex = 0; ResultListIndex < ResultListLength; ResultListIndex++)
+    {
+        DbgPrint("Result Index #%lu, Granted access rights -> 0x%08lx, Access status -> 0x%08lx\n",
+            ResultListIndex, GrantedAccessList[ResultListIndex], AccessStatusList[ResultListIndex]);
+    }
+
+    for (ObjectTypeIndex = 0; ObjectTypeIndex < ObjectTypeListLength; ObjectTypeIndex++)
+    {
+        DbgPrint("================== #%lu OBJECT ACCESS RIGHTS ==================\n", ObjectTypeIndex);
+        DbgPrint("Remaining access rights -> 0x%08lx\n", ObjectTypeList[ObjectTypeIndex].ObjectAccessRights.RemainingAccessRights);
+        DbgPrint("Granted access rights -> 0x%08lx\n", ObjectTypeList[ObjectTypeIndex].ObjectAccessRights.GrantedAccessRights);
+        DbgPrint("Denied access rights -> 0x%08lx\n", ObjectTypeList[ObjectTypeIndex].ObjectAccessRights.DeniedAccessRights);
+    }
 #endif
 }
 
