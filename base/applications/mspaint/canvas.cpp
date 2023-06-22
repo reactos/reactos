@@ -19,7 +19,7 @@ CCanvasWindow::CCanvasWindow()
     , m_ptOrig { -1, -1 }
 {
     m_ahbmCached[0] = m_ahbmCached[1] = NULL;
-    ::SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcResizing);
 }
 
 CCanvasWindow::~CCanvasWindow()
@@ -167,8 +167,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
     // Draw new frame on hdcMem0 if any
-    if (m_hitCanvasSizeBox != HIT_NONE && !::IsRectEmpty(&m_rcNew))
-        DrawXorRect(hdcMem0, &m_rcNew);
+    if (m_hitCanvasSizeBox != HIT_NONE && !::IsRectEmpty(&m_rcResizing))
+        DrawXorRect(hdcMem0, &m_rcResizing);
 
     // Transfer the bits (hDC <-- hdcMem0)
     ::BitBlt(hDC,
@@ -550,7 +550,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             break;
     }
     ImageToCanvas(rc);
-    m_rcNew = rc; // Resizing rectagle
+    m_rcResizing = rc; // Resizing rectagle
     Invalidate(TRUE);
 
     return 0;
@@ -613,7 +613,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
         default:
             break;
     }
-    ::SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcResizing);
 
     g_imageSaved = FALSE;
 
@@ -699,7 +699,7 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         // Cancel dragging
         ::ReleaseCapture();
         m_hitCanvasSizeBox = HIT_NONE;
-        ::SetRectEmpty(&m_rcNew);
+        ::SetRectEmpty(&m_rcResizing);
         Invalidate(TRUE);
     }
 
@@ -710,7 +710,7 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     // Cancel dragging
     m_hitCanvasSizeBox = HIT_NONE;
-    ::SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcResizing);
     Invalidate(TRUE);
     return 0;
 }
