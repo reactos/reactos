@@ -571,13 +571,12 @@ HaliReferenceHandlerForConfigSpace(
 ULONG
 NTAPI
 HalpNoBusData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_ PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
