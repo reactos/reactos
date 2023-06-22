@@ -527,30 +527,30 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     strSize.Format(_T("%d x %d"), cxImage, cyImage);
     ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
-    // Dragging now... Fix the new position...
-    CRect rc = { 0, 0, cxImage, cyImage };
+    // Dragging now... Fix the position...
+    CRect rcResizing = { 0, 0, cxImage, cyImage };
     switch (m_hitCanvasSizeBox)
     {
         case HIT_UPPER_LEFT:
-            ::OffsetRect(&rc, cxDelta, cyDelta);
+            ::OffsetRect(&rcResizing, cxDelta, cyDelta);
             break;
         case HIT_UPPER_CENTER:
-            ::OffsetRect(&rc, 0, cyDelta);
+            ::OffsetRect(&rcResizing, 0, cyDelta);
             break;
         case HIT_UPPER_RIGHT:
-            ::OffsetRect(&rc, 0, cyDelta);
+            ::OffsetRect(&rcResizing, 0, cyDelta);
             break;
         case HIT_MIDDLE_LEFT:
-            ::OffsetRect(&rc, cxDelta, 0);
+            ::OffsetRect(&rcResizing, cxDelta, 0);
             break;
         case HIT_LOWER_LEFT:
-            ::OffsetRect(&rc, cxDelta, 0);
+            ::OffsetRect(&rcResizing, cxDelta, 0);
             break;
         default:
             break;
     }
-    ImageToCanvas(rc);
-    m_rcResizing = rc; // Resizing rectagle
+    ImageToCanvas(rcResizing);
+    m_rcResizing = rcResizing;
     Invalidate(TRUE);
 
     return 0;
