@@ -68,6 +68,29 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_DNSNAME              "\t%ls\n"
+    IDS_DNSLINE              "\t----------------------------------------\n"
+    IDS_DNSRECORDNAME        "\tRecord Name . . . . . : %ls\n"
+    IDS_DNSRECORDTYPE        "\tRecord Type . . . . . : %hu\n"
+    IDS_DNSRECORDTTL         "\tTime To Live. . . . . : %lu\n"
+    IDS_DNSRECORDLENGTH      "\tData Length . . . . . : %hu\n"
+    IDS_DNSSECTIONQUESTION   "\tSection . . . . . . . : Question\n"
+    IDS_DNSSECTIONANSWER     "\tSection . . . . . . . : Answer\n"
+    IDS_DNSSECTIONAUTHORITY  "\tSection . . . . . . . : Authority\n"
+    IDS_DNSSECTIONADDITIONAL "\tSection . . . . . . . : Additional\n"
+    IDS_DNSTYPEA             "\tA (Host) Record . . . : %ls\n"
+    IDS_DNSTYPENS            "\tNS Record . . . . . . : %ls\n"
+    IDS_DNSTYPECNAME         "\tCNAME Record. . . . . : %ls\n"
+    IDS_DNSTYPESOA           "\tSOA Record. . . . . . : \n"
+    IDS_DNSTYPEPTR           "\tPTR Record. . . . . . : %ls\n"
+    IDS_DNSTYPEMX            "\tMX Record . . . . . . : \n"
+    IDS_DNSTYPEAAAA          "\tAAAA Record . . . . . : %ls\n"
+    IDS_DNSTYPEATMA          "\tATMA Record . . . . . : \n"
+    IDS_DNSTYPESRV           "\tSRV Record. . . . . . : \n"
+END
+
+STRINGTABLE
+BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
     "\nUTILIZARE:\n\
