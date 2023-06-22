@@ -22,6 +22,8 @@
 #include <lm.h>
 #include <ndk/rtlfuncs.h>
 
+#include <strsafe.h>
+
 #include <conutils.h>
 
 #include <net_msg.h>
@@ -82,6 +84,7 @@ INT cmdHelp(INT argc, WCHAR **argv);
 INT cmdHelpMsg(INT argc, WCHAR **argv);
 INT cmdLocalGroup(INT argc, WCHAR **argv);
 INT cmdPause(INT argc, WCHAR **argv);
+INT cmdSession(INT argc, WCHAR **argv);
 INT cmdShare(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStatistics(INT argc, WCHAR **argv);
