@@ -240,7 +240,7 @@ VOID ShowIpStatistics(VOID)
     PMIB_IPSTATS pIpStats;
     DWORD dwRetVal;
 
-    pIpStats = (MIB_IPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
+    pIpStats = (MIB_IPSTATS*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
 
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
@@ -276,7 +276,7 @@ VOID ShowIcmpStatistics(VOID)
     PMIB_ICMP pIcmpStats;
     DWORD dwRetVal;
 
-    pIcmpStats = (MIB_ICMP*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
+    pIcmpStats = (MIB_ICMP*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
 
     if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
     {
@@ -315,7 +315,6 @@ VOID ShowIcmpStatistics(VOID)
     }
 
     HeapFree(GetProcessHeap(), 0, pIcmpStats);
-
 }
 
 VOID ShowTcpStatistics(VOID)
@@ -366,12 +365,12 @@ VOID ShowEthernetStatistics(VOID)
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
 
-    pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
+    pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
 
     if (GetIfTable(pIfTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, pIfTable);
-        pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, dwSize);
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
@@ -415,12 +414,12 @@ BOOL ShowTcpTable(VOID)
      * calls: */
     do
     {
-        tcpTable = (PMIB_TCPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        tcpTable = (PMIB_TCPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
         error = GetExtendedTcpTable(tcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if ( error != NO_ERROR )
+        if (error != NO_ERROR)
             HeapFree(GetProcessHeap(), 0, tcpTable);
     }
-    while  ( error == ERROR_INSUFFICIENT_BUFFER );
+    while (error == ERROR_INSUFFICIENT_BUFFER);
 
     if (error != NO_ERROR)
     {
@@ -490,7 +489,7 @@ BOOL ShowUdpTable(VOID)
         DoFormatMessage(error);
         return FALSE;
     }
-    udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    udpTable = (PMIB_UDPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
@@ -540,7 +539,7 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
     }
     /* Try to translate to a name */
     if ((pServent = getservbyport(Port, Proto)))
-        strcpy(Name, pServent->s_name );
+        strcpy(Name, pServent->s_name);
     else
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
