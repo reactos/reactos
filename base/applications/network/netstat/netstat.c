@@ -1,16 +1,13 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
 /*
  * TODO:
- * sort function return values.
  * implement -b, -t and -v
  * clean up GetIpHostName
- * command line parser needs more work
  */
 
 #include <stdio.h>
@@ -103,6 +100,8 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     case L'p':
                         bDoShowProtoCons = TRUE;
+                        if(i+1 >= argc)
+                            goto StopParsingAndShowUsageHelp;
                         Proto = argv[i+1];
                         if (!_wcsicmp(L"IP", Proto))
                             Protocol = IP;
@@ -113,10 +112,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         else if (!_wcsicmp(L"UDP", Proto))
                             Protocol = UDP;
                         else
-                        {
-                            ConResPuts(StdErr, IDS_USAGE);
-                            return FALSE;
-                        }
+                            goto StopParsingAndShowUsageHelp;
                         break;
                     case L'r':
                         bDoShowRouteTable = TRUE;
@@ -133,7 +129,8 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         ConPuts(StdErr, L"'v' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoDispSeqComp = TRUE;
                         break;
-                    default :
+                    default:
+StopParsingAndShowUsageHelp:
                         ConResPuts(StdErr, IDS_USAGE);
                         return FALSE;
                 }
@@ -146,11 +143,6 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
             else
                 return FALSE;
         }
-//        else
-//        {
-//            ConResPrintf(StdErr, IDS_USAGE);
-//            return FALSE;
-//        }
     }
 
     return TRUE;
@@ -511,7 +503,6 @@ BOOL ShowUdpTable(VOID)
     /* Dump the UDP table */
     for (i = 0; i < udpTable->dwNumEntries; i++)
     {
-
         /* I've split this up so it's easier to follow */
         GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
         GetPortName(udpTable->table[i].dwLocalPort, "udp", HostPort, sizeof(HostPort));
