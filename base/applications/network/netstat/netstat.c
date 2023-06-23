@@ -602,10 +602,8 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], INT NameLen)
 }
 
 /*
- *
  * Parse command line parameters and set any options
- * Run display output, looping over set intervals if a number is given
- *
+ * Run display output, looping over set interval if a number is given
  */
 int wmain(int argc, wchar_t *argv[])
 {
