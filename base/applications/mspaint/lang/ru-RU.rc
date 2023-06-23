@@ -81,7 +81,7 @@ BEGIN
     POPUP "&Рисунок"
     BEGIN
         MENUITEM "&Отразить/повернуть...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Растянуть/Наклонить...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Растянуть/наклонить...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Обре&зать", IDM_IMAGECROP
         MENUITEM "О&братить цвета\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Атрибуты...\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -92,8 +92,8 @@ BEGIN
     BEGIN
         MENUITEM "&Изменить палитру...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Модернизированный вид", IDM_COLORSMODERNPALETTE
-        MENUITEM "Старый вид", IDM_COLORSOLDPALETTE
+        MENUITEM "Современная", IDM_COLORSMODERNPALETTE
+        MENUITEM "Старая", IDM_COLORSOLDPALETTE
     END
     POPUP "&Справка"
     BEGIN
@@ -107,18 +107,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Вырезать\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Копировать\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Вст&авить\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "О&чистить выделение\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Выделить в&се\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Копироват&ь в файл...", IDM_EDITCOPYTO
+        MENUITEM "Вставить из &файла...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Отразить/повернуть...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Растянуть/наклонить...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "О&братить цвета\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -175,7 +175,7 @@ BEGIN
     LTEXT "Разрешение:", IDD_ATTRIBUTESTEXT5, 10, 25, 64, 10
     LTEXT "недоступно", IDD_ATTRIBUTESTEXT6, 77, 5, 90, 10
     LTEXT "недоступно", IDD_ATTRIBUTESTEXT7, 77, 15, 90, 10
-    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 77, 25, 90, 10 /* This unit must match IDS_PRINTRES */
+    LTEXT "точек/см", IDD_ATTRIBUTESTEXT8, 77, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Единицы измерения", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "д&юймы", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "с&м", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -216,7 +216,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "Fonts"
+CAPTION "Шрифты"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg"
@@ -258,11 +258,11 @@ BEGIN
     IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
     IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
     IDS_LOADERRORTEXT, "Невозможно загрузить файл %s."
-    IDS_ENLARGEPROMPTTEXT "Изображения в буфере обмена больше растрового изображения.\nХотите увеличить точечный рисунок?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
-    IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_ENLARGEPROMPTTEXT "Изображение в буфере обмена больше точечного рисунка.\nХотите увеличить точечный рисунок?"
+    IDS_BOLD "Жирный"
+    IDS_ITALIC "Курсив"
+    IDS_UNDERLINE "Подчёркнутый"
+    IDS_VERTICAL "Вертикальный"
+    IDS_PRINTRES "%d x %d точек/см"
+    IDS_CANTPASTE "Не удалось вставить из буфера обмена. Формат данных либо некорректный, либо не поддерживается."
 END
