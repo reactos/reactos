@@ -100,7 +100,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     case L'p':
                         bDoShowProtoCons = TRUE;
-                        if(i+1 >= argc)
+                        if (i+1 >= argc)
                             goto StopParsingAndShowUsageHelp;
                         Proto = argv[i+1];
                         if (!_wcsicmp(L"IP", Proto))
