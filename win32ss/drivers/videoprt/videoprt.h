@@ -237,6 +237,10 @@ IntVideoPortFilterResourceRequirements(
    IN PIO_STACK_LOCATION IrpStack,
    IN PIRP Irp);
 
+VOID
+IntVideoPortReleaseResources(
+    _In_ PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension);
+
 NTSTATUS NTAPI
 IntVideoPortMapPhysicalMemory(
    IN HANDLE Process,

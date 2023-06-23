@@ -190,6 +190,31 @@ IntVideoPortFilterResourceRequirements(
     return STATUS_SUCCESS;
 }
 
+VOID
+IntVideoPortReleaseResources(
+    _In_ PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    BOOLEAN ConflictDetected;
+    // An empty CM_RESOURCE_LIST
+    UCHAR EmptyResourceList[FIELD_OFFSET(CM_RESOURCE_LIST, List)] = {0};
+
+    Status = IoReportResourceForDetection(
+                DeviceExtension->DriverObject,
+                NULL, 0, /* Driver List */
+                DeviceExtension->PhysicalDeviceObject,
+                (PCM_RESOURCE_LIST)EmptyResourceList,
+                sizeof(EmptyResourceList),
+                &ConflictDetected);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("VideoPortReleaseResources IoReportResource failed with 0x%08lx ; ConflictDetected: %s\n",
+                Status, ConflictDetected ? "TRUE" : "FALSE");
+    }
+    /* Ignore the returned status however... */
+}
+
 NTSTATUS NTAPI
 IntVideoPortMapPhysicalMemory(
    IN HANDLE Process,
@@ -844,20 +869,31 @@ VideoPortVerifyAccessRanges(
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     BOOLEAN ConflictDetected;
-    ULONG i;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-    PCM_RESOURCE_LIST ResourceList;
     ULONG ResourceListSize;
+    PCM_RESOURCE_LIST ResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    ULONG i;
     NTSTATUS Status;
 
     TRACE_(VIDEOPRT, "VideoPortVerifyAccessRanges\n");
 
+    /* Verify parameters */
+    if (NumAccessRanges && !AccessRanges)
+        return ERROR_INVALID_PARAMETER;
+
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+    if (NumAccessRanges == 0)
+    {
+        /* Release the resources and do nothing more for now... */
+        IntVideoPortReleaseResources(DeviceExtension);
+        return NO_ERROR;
+    }
 
     /* Create the resource list */
     ResourceListSize = sizeof(CM_RESOURCE_LIST)
         + (NumAccessRanges - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
+    ResourceList = ExAllocatePoolWithTag(PagedPool, ResourceListSize, TAG_VIDEO_PORT);
     if (!ResourceList)
     {
         WARN_(VIDEOPRT, "ExAllocatePool() failed\n");
@@ -904,7 +940,8 @@ VideoPortVerifyAccessRanges(
                 DeviceExtension->PhysicalDeviceObject,
                 ResourceList, ResourceListSize,
                 &ConflictDetected);
-    ExFreePool(ResourceList);
+
+    ExFreePoolWithTag(ResourceList, TAG_VIDEO_PORT);
 
     if (!NT_SUCCESS(Status) || ConflictDetected)
         return ERROR_INVALID_PARAMETER;
