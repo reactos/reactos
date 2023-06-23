@@ -59,9 +59,19 @@ VOID DoFormatMessage(DWORD ErrorCode)
 }
 
 /*
- *
+ * Display table header
+ */
+VOID DisplayTableHeader(VOID)
+{
+    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
+    if (bDoShowProcessId)
+        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
+    else
+        ConPuts(StdOut, L"\n");
+}
+
+/*
  * Parse command line parameters and set any options
- *
  */
 BOOL ParseCmdline(int argc, wchar_t* argv[])
 {
@@ -101,7 +111,12 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                     case L'p':
                         bDoShowProtoCons = TRUE;
                         if (i+1 >= argc)
-                            goto StopParsingAndShowUsageHelp;
+                        {
+                            ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
+                            DisplayTableHeader();
+                            return TRUE;
+                        }
+
                         Proto = argv[i+1];
                         if (!_wcsicmp(L"IP", Proto))
                             Protocol = IP;
@@ -146,18 +161,6 @@ StopParsingAndShowUsageHelp:
     }
 
     return TRUE;
-}
-
-/*
- * Display table header
- */
-VOID DisplayTableHeader(VOID)
-{
-    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
-    if (bDoShowProcessId)
-        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
-    else
-        ConPuts(StdOut, L"\n");
 }
 
 /*
