@@ -409,7 +409,7 @@ BOOL ShowTcpTable(VOID)
     CHAR PID[64];
 
     /* Get the table of TCP endpoints */
-    dwSize = sizeof (MIB_TCPTABLE_OWNER_PID);
+    dwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
     /* Should also work when we get new connections between 2 GetTcpTable()
      * calls: */
     do
