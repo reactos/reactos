@@ -1,3 +1,14 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2009 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2013 Yaroslav Denisov (jperm) <jaroslaff111@mail.ru>
+ *              Copyright 2013 Alexey Gorgurov <leha-bot@ya.ru>
+ *              Copyright 2016 Alexey Shaltsin (BinaryTree) <lexa2011_98@mail.ru>
+ *              Copyright 2016 Sergey Stopkin <stopkin.sergey@gmail.com>
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 //IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ru-RU.bmp"

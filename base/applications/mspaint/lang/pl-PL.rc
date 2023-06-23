@@ -1,10 +1,10 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/pl-PL.rc
- * PURPOSE:    Polish Language resource file
- * TRANSLATOR: Caemyr - Olaf Siejka (May, 2009), Use ReactOS forum PM or IRC to contact me
- * UTF-8 conversion by Caemyr (May, 2011)
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2009 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017 Adam Słaboń <asaillen456esx@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

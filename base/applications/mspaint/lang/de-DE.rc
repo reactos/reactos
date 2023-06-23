@@ -1,9 +1,8 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/de-DE.rc
- * PURPOSE:    German Language resource file (reference language file)
- * TRANSLATOR: Benedikt Freisen
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATOR:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL

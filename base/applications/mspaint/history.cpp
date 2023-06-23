@@ -1,10 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/history.cpp
- * PURPOSE:     Undo and redo functionality
- * PROGRAMMERS: Benedikt Freisen
- *              Katayama Hirofumi MZ
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Undo and redo functionality
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"

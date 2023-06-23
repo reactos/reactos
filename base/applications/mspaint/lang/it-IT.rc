@@ -1,9 +1,9 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/it-IT.rc
- * PURPOSE:    Italian Language resource file
- * TRANSLATOR: Gabriel Ilardi
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Italian resource file
+ * TRANSLATORS: Copyright 2009 Gabriel Ilardi <gabrielilardi@hotmail.it>
+ *              Copyright 2009-2010 Paolo Devoti <devotip@tiscali.it>
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL

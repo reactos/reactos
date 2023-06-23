@@ -1,9 +1,9 @@
 /*
- * PROJECT:  PAINT for ReactOS
- * LICENSE:  LGPL
- * Превод на Български/ Bulgarian translation
- * https://reactos.org/wiki/Bulgarian_translation
- * LOCATION: base/applications/mspaint/lang
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Bulgarian resource file
+ * TRANSLATORS: Copyright 2009-2012 S. Stanev (CCTAHEB) <sstpr@narod.ru>
+ *              Copyright 2022 Nikolay Dimitrov <delphipro@gmail.com>
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT

@@ -1,9 +1,10 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Paint
- * TRANSLATORS: Artem Reznikov, Sakara Yevhen, igor Paliychuk
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2009 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2009 Sakara Yevhen <eresid@gmail.com>
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Hungarian resource file
+ * TRANSLATORS: Copyright 2009 Gábor Balogh (xxxx00) <xxxx_0000@freemail.hu>
+ *              Copyright 2020 Tibor Lajos Füzi <tibor.fuzi@gmail.com>
+ */
+
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 //IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-hu-HU.bmp"

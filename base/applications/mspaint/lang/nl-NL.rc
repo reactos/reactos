@@ -1,9 +1,8 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/nl-NL.rc
- * PURPOSE:    Dutch Language resource file
- * TRANSLATOR: Wouter De Vlieger
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Dutch resource file
+ * TRANSLATOR:  Copyright 2009 Wouter De Vlieger (reFly) <wouterdevlieger@gmail.com>
  */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL

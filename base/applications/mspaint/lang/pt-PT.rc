@@ -1,9 +1,9 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/pt-PT.rc
- * PURPOSE:    Portuguese Language resource file
- * TRANSLATOR: Manuel D V Silva
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2009 Manuel D V Silva (mds) <manueldulcidio@gmail.com>
+ *              Copyright 2023 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE

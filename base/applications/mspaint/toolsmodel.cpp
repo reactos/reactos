@@ -1,9 +1,8 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/toolsmodel.cpp
- * PURPOSE:     Keep track of tool parameters, notify listeners
- * PROGRAMMERS: Benedikt Freisen
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Keep track of tool parameters, notify listeners
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 #include "precomp.h"

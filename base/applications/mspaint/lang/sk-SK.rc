@@ -1,10 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/sk-SK.rc
- * PURPOSE:     Slovak Language resource file
- * TRANSLATORS: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * LastChanged: 21-10-2009
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2009 Mário Kačmár aka Kario <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

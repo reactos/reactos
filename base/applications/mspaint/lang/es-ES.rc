@@ -1,11 +1,11 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/es-ES.rc
- * PURPOSE:     Spanish Language resource file
- * TRANSLATORS: Gabriel Ilardi
- *              Ismael Ferreras Morezuelas
- *              Catalin Gabriel Draghita
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Spanish (Spain) resource file
+ * TRANSLATORS: Copyright 2009 Gabriel Ilardi <gabrielilardi@hotmail.it>
+ *              Copyright 2009 Javier Remacha <remialdo@gmail.com>
+ *              Copyright 2014-2016 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2020 Catalin Gabriel Draghita <catalingabriel.reactos@outlook.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL

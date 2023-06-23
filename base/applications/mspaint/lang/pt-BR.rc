@@ -1,9 +1,9 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/pt-BR.rc
- * PURPOSE:    Portuguese Brazilian Language resource file
- * TRANSLATOR: Wagner Leandro Bueno Angelo
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Brazilian) resource file
+ * TRANSLATORS: Copyright 2009 Wagner Leandro Bueno Angelo <wagner.snake@gmail.com>
+ *              Copyright 2011 Matheus Macabu <mkbu95@gmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN

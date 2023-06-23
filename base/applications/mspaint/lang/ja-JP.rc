@@ -1,9 +1,10 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/ja-JP.rc
- * PURPOSE:     Japanese Language resource file
- * TRANSLATORS: pcds90net, Tomoya Kitagawa, Katayama Hirofumi MZ
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
+ *              Copyright 2009-2010 Tomoya Kitagawa <jptomoya@yahoo.co.jp>
+ *              Copyright 2020-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT

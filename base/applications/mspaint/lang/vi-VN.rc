@@ -1,9 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/vi-VN.rc
- * PURPOSE:     VN-Vietnamese Language resource file
- * TRANSLATORS: first times touched from en-US.rc file by Dummynosrev (Nguyễn Thanh Sơn)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Vietnamese (Vietnam) resource file
+ * TRANSLATOR:  Copyright 2018 Nguyễn Thanh Sơn <dummynosrev@gmail.com>
  */
 
 LANGUAGE LANG_VIETNAMESE, SUBLANG_VIETNAMESE_VIETNAM

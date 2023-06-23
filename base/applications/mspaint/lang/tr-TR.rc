@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Paint
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/tr-TR.rc
- * PURPOSE:    Turkish Resource file for ReactOS Paint
- * TRANSLATOR: 2013-2014, 2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2016, 2019 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

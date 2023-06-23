@@ -1,9 +1,9 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/en-US.rc
- * PURPOSE:     US-English Language resource file
- * TRANSLATORS: first times touched from en-GB.rc file by Mario Kacmar
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     English (United States) resource file
+ * TRANSLATORS: Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *              Copyright 2009 Mário Kačmár aka Kario <kario@szm.sk>
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

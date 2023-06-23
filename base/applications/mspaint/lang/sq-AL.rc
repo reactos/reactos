@@ -1,9 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/sq-AL.rc
- * PURPOSE:     AL-Albanian Language resource file
- * TRANSLATORS: Ardit Dani
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Albanian resource file
+ * TRANSLATOR:  Copyright 2013 Ardit Dani (ard1t) <ardit.dani@gmail.com>
  */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL

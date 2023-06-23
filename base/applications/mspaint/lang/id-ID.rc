@@ -1,9 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/id-ID.rc
- * PURPOSE:     Indonesian Language resource file
- * TRANSLATORS: Mas Ahmad Muhammad
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATOR:  Copyright 2019 Mas Ahmad Muhammad <m.charly81@gmail.com>
  */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT

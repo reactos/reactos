@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2010-2014 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2020 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 //IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-fr-FR.bmp"
