@@ -1251,9 +1251,9 @@ VPAPI
 VP_STATUS
 NTAPI
 VideoPortVerifyAccessRanges(
-  IN PVOID HwDeviceExtension,
-  IN ULONG NumAccessRanges,
-  IN PVIDEO_ACCESS_RANGE AccessRanges);
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ ULONG NumAccessRanges,
+    _In_reads_opt_(NumAccessRanges) PVIDEO_ACCESS_RANGE AccessRanges);
 
 VPAPI
 VOID
