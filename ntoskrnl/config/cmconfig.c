@@ -37,8 +37,14 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     /* Get the component */
     Component = &CurrentEntry->ComponentEntry;
 
-    /* Set system class components to ARC system type */
-    if (Component->Class == SystemClass) Component->Type = ArcSystem;
+    /*
+     * Normalize the system class component to ARC system type.
+     * The NT OS loader already sets the component type to
+     * ArcSystem for ARC-compatible systems, but sets it to
+     * MaximumType for non-ARC-compatible ones.
+     */
+    if (Component->Class == SystemClass)
+        Component->Type = ArcSystem;
 
     /* Create a key for the component */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -53,7 +59,8 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                          NULL,
                          0,
                          &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Check if this is anything but a system class component */
     if (Component->Class != SystemClass)
@@ -61,7 +68,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         /* Build the sub-component string */
         RtlIntegerToChar(DeviceIndexTable[Component->Type]++,
                          10,
-                         12,
+                         _countof(TempBuffer),
                          TempBuffer);
         RtlInitAnsiString(&TempString, TempBuffer);
 
@@ -228,7 +235,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                 /* EISA */
                 case EisaAdapter:
                 {
-                    /* Fixup information */
+                    /* Adjust information */
                     Interface = Eisa;
                     Bus = CmpTypeCount[EisaAdapter]++;
                     break;
@@ -237,13 +244,13 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                 /* Turbo-channel */
                 case TcAdapter:
                 {
-                    /* Fixup information */
+                    /* Adjust information */
                     Interface = TurboChannel;
                     Bus = CmpTypeCount[TurboChannel]++;
                     break;
                 }
 
-                /* ISA, PCI, etc busses */
+                /* ISA, PCI, etc. buses */
                 case MultiFunctionAdapter:
                 {
                     /* Check if we have an  identifier */
@@ -261,7 +268,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                             }
                         }
 
-                        /* Fix up information */
+                        /* Adjust information */
                         Interface = CmpMultifunctionTypes[i].InterfaceType;
                         Bus = CmpMultifunctionTypes[i].Count++;
                     }
@@ -271,7 +278,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                 /* SCSI Bus */
                 case ScsiAdapter:
                 {
-                    /* Fix up */
+                    /* Adjust information */
                     Interface = Internal;
                     Bus = CmpTypeCount[ScsiAdapter]++;
                     break;
@@ -296,7 +303,8 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                                            Interface,
                                            Bus,
                                            DeviceIndexTable);
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status))
+            return Status;
 
         /* Check for children */
         if (CurrentEntry->Child)
@@ -355,7 +363,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return Status;
     NtClose(KeyHandle);
 
-    /* Nobody should've created this key yet! */
+    /* Nobody should have created this key yet! */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Setup the key name */
@@ -378,7 +386,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Nobody should've created this key yet! */
+    /* Nobody should have created this key yet! */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Allocate the configuration data buffer */
