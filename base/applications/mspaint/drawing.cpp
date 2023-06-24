@@ -326,7 +326,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     hTempDC1 = ::CreateCompatibleDC(hdcDest);
     hTempDC2 = ::CreateCompatibleDC(hdcDest);
     hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
-    hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+    hbmTempColor = CreateColorDIB(nWidth, nHeight, WHITE);
 
     // hbmTempMask <-- hbmMask (stretched)
     hbmOld1 = ::SelectObject(hTempDC1, hbmMask);
@@ -371,7 +371,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
 
 void DrawXorRect(HDC hdc, const RECT *prc)
 {
-    HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0)));
+    HGDIOBJ oldPen = ::SelectObject(hdc, ::CreatePen(PS_SOLID, 0, BLACK));
     HGDIOBJ oldBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
     INT oldRop2 = SetROP2(hdc, R2_NOTXORPEN);
     ::Rectangle(hdc, prc->left, prc->top, prc->right, prc->bottom);

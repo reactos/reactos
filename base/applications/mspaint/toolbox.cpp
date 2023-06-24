@@ -40,7 +40,7 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
     HBITMAP hbmIcons = (HBITMAP)::LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_TOOLBARICONS),
                                             IMAGE_BITMAP, 256, 16, 0);
-    ImageList_AddMasked(hImageList, hbmIcons, RGB(255, 0, 255));
+    ImageList_AddMasked(hImageList, hbmIcons, PINK);
     ::DeleteObject(hbmIcons);
 
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);

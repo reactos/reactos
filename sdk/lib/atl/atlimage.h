@@ -1030,7 +1030,7 @@ protected:
         GUID guid;
     };
 
-    const GUID *FileTypeFromExtension(LPCWSTR pszExt) const
+    static const GUID *FileTypeFromExtension(LPCWSTR pszExt)
     {
         static const EXTENSION_ENTRY table[] =
         {

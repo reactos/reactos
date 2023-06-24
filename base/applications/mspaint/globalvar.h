@@ -15,8 +15,8 @@ extern POINT g_ptStart, g_ptEnd;
 
 extern HINSTANCE g_hinstExe;
 
-extern TCHAR g_szFileName[MAX_LONG_PATH];
-extern TCHAR g_szTempFile[MAX_LONG_PATH];
+extern WCHAR g_szFileName[MAX_LONG_PATH];
+extern WCHAR g_szTempFile[MAX_LONG_PATH];
 extern BOOL g_isAFile;
 extern BOOL g_imageSaved;
 extern BOOL g_showGrid;

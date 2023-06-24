@@ -142,7 +142,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Draw the grid on hdcMem0
     if (g_showGrid && toolsModel.GetZoom() >= 4000)
     {
-        HPEN oldPen = (HPEN) ::SelectObject(hdcMem0, ::CreatePen(PS_SOLID, 1, RGB(160, 160, 160)));
+        HPEN oldPen = (HPEN) ::SelectObject(hdcMem0, ::CreatePen(PS_SOLID, 1, GRAY));
         for (INT counter = 0; counter < sizeImage.cy; counter++)
         {
             POINT pt0 = { 0, counter }, pt1 = { sizeImage.cx, counter };

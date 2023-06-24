@@ -417,7 +417,7 @@ struct ColorTool : ToolBase
         if (0 <= x && x < imageModel.GetWidth() && 0 <= y && y < imageModel.GetHeight())
             rgbColor = GetPixel(m_hdc, x, y);
         else
-            rgbColor = RGB(255, 255, 255); // Outside is white
+            rgbColor = WHITE; // Outside is white
 
         if (bLeftButton)
             paletteModel.SetFgColor(rgbColor);

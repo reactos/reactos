@@ -6,19 +6,206 @@
  */
 
 #include "precomp.h"
+#include <mapi.h>
+#include <mapicode.h>
 
 POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 HINSTANCE g_hinstExe = NULL;
-TCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
-TCHAR g_szTempFile[MAX_LONG_PATH] = { 0 };
+WCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
+WCHAR g_szTempFile[MAX_LONG_PATH] = { 0 };
 BOOL g_isAFile = FALSE;
-BOOL g_imageSaved = FALSE;
+BOOL g_imageSaved = TRUE;
 BOOL g_showGrid = FALSE;
 
 CMainWindow mainWindow;
 
 /* FUNCTIONS ********************************************************/
+
+void ShowError(INT stringID, ...)
+{
+    va_list va;
+    va_start(va, stringID);
+
+    CStringW strFormat, strText;
+    strFormat.LoadString(stringID);
+    strText.FormatV(strFormat, va);
+
+    CStringW strProgramName;
+    strProgramName.LoadString(IDS_PROGRAMNAME);
+
+    mainWindow.MessageBox(strText, strProgramName, MB_ICONERROR);
+    va_end(va);
+}
+
+BOOL SetFileInfo(LPCWSTR FileName, BOOL isAFile)
+{
+    isAFile = (isAFile && FileName && FileName[0]);
+
+    if (isAFile)
+    {
+        WIN32_FIND_DATAW find;
+        HANDLE hFind = ::FindFirstFileW(FileName, &find);
+        if (hFind == INVALID_HANDLE_VALUE)
+            return FALSE;
+        ::FindClose(hFind);
+
+        // Get local file time
+        FILETIME ft;
+        ::FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
+        ::FileTimeToSystemTime(&ft, &g_fileTime);
+
+        // update g_fileSize
+        g_fileSize = find.nFileSizeLow;
+
+        // Be careful in case of FileName == g_szFileName
+        CStringW strFileName = FileName;
+        ::GetFullPathNameW(strFileName, _countof(g_szFileName), g_szFileName, NULL);
+    }
+    else
+    {
+        g_fileSize = 0;
+        ZeroMemory(&g_fileTime, sizeof(g_fileTime));
+
+        ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
+
+        HDC hScreenDC = ::GetDC(NULL);
+        g_xDpi = ::GetDeviceCaps(hScreenDC, LOGPIXELSX);
+        g_yDpi = ::GetDeviceCaps(hScreenDC, LOGPIXELSY);
+        ::ReleaseDC(NULL, hScreenDC);
+    }
+
+    // set title
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileNameW(g_szFileName));
+    mainWindow.SetWindowText(strTitle);
+
+    // update recent
+    if (isAFile)
+        registrySettings.SetMostRecentFile(g_szFileName);
+
+    g_isAFile = isAFile;
+    g_imageSaved = TRUE;
+    return TRUE;
+}
+
+BOOL SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR lpFileName, BOOL isAFile)
+{
+    if (hBitmap == NULL)
+    {
+        hBitmap = CreateColorDIB(registrySettings.BMPWidth, registrySettings.BMPHeight, WHITE);
+        if (hBitmap == NULL)
+            return FALSE;
+    }
+
+    imageModel.PushImageForUndo(hBitmap);
+    imageModel.ClearHistory();
+
+    return SetFileInfo(lpFileName, isAFile);
+}
+
+typedef ULONG (WINAPI *FN_MAPIOpenMailer)(LHANDLE, ULONG_PTR, lpMapiMessage, FLAGS, ULONG);
+typedef ULONG (WINAPI *FN_MAPIOpenMailerW)(LHANDLE, ULONG_PTR, lpMapiMessageW, FLAGS, ULONG);
+
+BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
+{
+    CStringW strFileTitle;
+    if (PathFileExistsW(pszPathName) && imageModel.IsImageSaved())
+    {
+        strFileTitle = PathFindFileNameW(pszPathName);
+    }
+    else // Not existing or not saved
+    {
+        // Delete the temporary file if any
+        if (g_szTempFile[0])
+        {
+            ::DeleteFileW(g_szTempFile);
+            g_szTempFile[0] = UNICODE_NULL;
+        }
+
+        // Get the name of a temporary file
+        WCHAR szTempDir[MAX_PATH];
+        ::GetTempPathW(_countof(szTempDir), szTempDir);
+        if (!::GetTempFileNameW(szTempDir, L"afx", 0, g_szTempFile))
+            return FALSE; // Failure
+
+        const GUID *FileType = &Gdiplus::ImageFormatPNG;
+        if (PathFileExistsW(g_szFileName))
+        {
+            FileType = CImageDx::FileTypeFromExtension(PathFindExtensionW(g_szFileName));
+            strFileTitle = PathFindFileNameW(g_szFileName);
+        }
+        else
+        {
+            strFileTitle.LoadString(IDS_DEFAULTFILENAME);
+            strFileTitle += L".png";
+        }
+
+        // Save it to the temporary file
+        HBITMAP hbm = imageModel.CopyBitmap();
+        BOOL ret = ::SaveDIBToFile(hbm, g_szTempFile, g_xDpi, g_yDpi, FileType);
+        ::DeleteObject(hbm);
+        if (!ret)
+        {
+            g_szTempFile[0] = UNICODE_NULL;
+            return FALSE; // Failure
+        }
+
+        // Use the temporary file 
+        pszPathName = g_szTempFile;
+    }
+
+    // Load "mapi32.dll"
+    HINSTANCE hMAPI = LoadLibraryW(L"mapi32.dll");
+    if (!hMAPI)
+        return FALSE; // Failure
+
+    // Attachment
+    MapiFileDescW attachmentW = { 0 };
+    attachmentW.nPosition = (ULONG)-1;
+    attachmentW.lpszPathName = (LPWSTR)pszPathName;
+    attachmentW.lpszFileName = (LPWSTR)(LPCWSTR)strFileTitle;
+
+    // Message with attachment
+    MapiMessageW messageW = { 0 };
+    messageW.lpszSubject = NULL;
+    messageW.nFileCount = 1;
+    messageW.lpFiles = &attachmentW;
+
+    // First, try to open the mailer by the function of Unicode version
+    FN_MAPIOpenMailerW pMAPIOpenMailerW = (FN_MAPIOpenMailerW)::GetProcAddress(hMAPI, "MAPIOpenMailerW");
+    if (pMAPIOpenMailerW)
+    {
+        pMAPIOpenMailerW(0, (ULONG_PTR)hWnd, &messageW, MAPI_DIALOG | MAPI_LOGON_UI, 0);
+        ::FreeLibrary(hMAPI);
+        return TRUE; // MAPIOpenMailerW will show an error message on failure
+    }
+
+    // Convert to ANSI strings
+    CStringA szPathNameA(pszPathName), szFileTitleA(strFileTitle);
+
+    MapiFileDesc attachment = { 0 };
+    attachment.nPosition = (ULONG)-1;
+    attachment.lpszPathName = (LPSTR)(LPCSTR)szPathNameA;
+    attachment.lpszFileName = (LPSTR)(LPCSTR)szFileTitleA;
+
+    MapiMessage message = { 0 };
+    message.lpszSubject = NULL;
+    message.nFileCount = 1;
+    message.lpFiles = &attachment;
+
+    // Try again but in ANSI version
+    FN_MAPIOpenMailer pMAPIOpenMailer = (FN_MAPIOpenMailer)::GetProcAddress(hMAPI, "MAPIOpenMailer");
+    if (pMAPIOpenMailer)
+    {
+        pMAPIOpenMailer(0, (ULONG_PTR)hWnd, &message, MAPI_DIALOG | MAPI_LOGON_UI, 0);
+        ::FreeLibrary(hMAPI);
+        return TRUE; // MAPIOpenMailer will show an error message on failure
+    }
+
+    ::FreeLibrary(hMAPI);
+    return FALSE; // Failure
+}
 
 // get file name extension from filter string
 static BOOL
@@ -210,10 +397,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
     }
 
     // Initialize imageModel
-    imageModel.Crop(registrySettings.BMPWidth, registrySettings.BMPHeight);
     if (__argc >= 2)
-        DoLoadImageFile(mainWindow, __targv[1], TRUE);
-    imageModel.ClearHistory();
+        imageModel.LoadImage(__targv[1]);
+    else
+        SetBitmapAndInfo(NULL, NULL, FALSE);
 
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
@@ -243,7 +430,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
 
     // Delete the temporary file if any
     if (g_szTempFile[0])
-        ::DeleteFile(g_szTempFile);
+        ::DeleteFileW(g_szTempFile);
 
     // Return the value that PostQuitMessage() gave
     return (INT)msg.wParam;

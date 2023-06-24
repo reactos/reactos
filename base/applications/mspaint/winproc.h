@@ -8,6 +8,11 @@
 
 #pragma once
 
+void ShowError(INT stringID, ...);
+BOOL SetFileInfo(LPCWSTR FileName, BOOL isAFile);
+BOOL SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR lpFileName, BOOL isAFile);
+BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
+
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
@@ -58,5 +63,4 @@ private:
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
     void ProcessFileMenu(HMENU hPopupMenu);
-    ULONG OpenMailerWithAttachmentW(LPCWSTR pszFileName);
 };

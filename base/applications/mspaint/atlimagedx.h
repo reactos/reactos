@@ -101,14 +101,11 @@ public:
             LPCWSTR pszExt = GetFileExtension(pszNameW);
             FileType = FileTypeFromExtension(pszExt);
             if (!FileType)
-            {
                 FileType = &Gdiplus::ImageFormatPNG;
-            }
         }
 
         // get CLSID from file type
         CLSID clsid;
-
         if (!GetClsidFromFileType(&clsid, FileType))
             return E_FAIL;
 

@@ -9,8 +9,6 @@
  */
 
 #include "precomp.h"
-#include <mapi.h>
-#include <mapicode.h>
 #include <assert.h>
 
 typedef HWND (WINAPI *FN_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD_PTR);
@@ -141,21 +139,8 @@ void CMainWindow::alignChildrenToMainWindow()
 
 void CMainWindow::saveImage(BOOL overwrite)
 {
-    canvasWindow.finishDrawing();
-
-    if (g_isAFile && overwrite)
-    {
+    if ((g_isAFile && overwrite) || GetSaveFileName(g_szFileName, _countof(g_szFileName)))
         imageModel.SaveImage(g_szFileName);
-    }
-    else if (GetSaveFileName(g_szFileName, _countof(g_szFileName)))
-    {
-        imageModel.SaveImage(g_szFileName);
-
-        CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
-        SetWindowText(strTitle);
-        g_isAFile = TRUE;
-    }
 }
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
@@ -267,7 +252,8 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     DragQueryFile(hDrop, 0, droppedfile, _countof(droppedfile));
     DragFinish(hDrop);
 
-    ConfirmSave() && DoLoadImageFile(m_hWnd, droppedfile, TRUE);
+    if (ConfirmSave())
+        imageModel.LoadImage(droppedfile);
 
     return 0;
 }
@@ -582,120 +568,6 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
-typedef ULONG (WINAPI *FN_MAPISendMail)(LHANDLE, ULONG_PTR, lpMapiMessage, FLAGS, ULONG);
-typedef ULONG (WINAPI *FN_MAPISendMailW)(LHANDLE, ULONG_PTR, lpMapiMessageW, FLAGS, ULONG);
-
-ULONG CMainWindow::OpenMailerWithAttachmentW(LPCWSTR pszPathName)
-{
-    CStringW strFileTitle;
-    if (PathFileExistsW(pszPathName) && imageModel.IsImageSaved())
-    {
-        strFileTitle = PathFindFileNameW(pszPathName);
-    }
-    else // Not existing
-    {
-        // Delete the temporary file if any
-        if (g_szTempFile[0])
-        {
-            ::DeleteFileW(g_szTempFile);
-            g_szTempFile[0] = UNICODE_NULL;
-        }
-
-        // Get the name of a temporary file
-        WCHAR szTempDir[MAX_PATH];
-        ::GetTempPathW(_countof(szTempDir), szTempDir);
-        if (!::GetTempFileNameW(szTempDir, L"afx", 0, g_szTempFile))
-            return MAPI_E_FAILURE;
-
-        // Get the file type if already saved
-        const GUID *FileType = &GUID_NULL;
-        if (imageModel.IsImageSaved())
-        {
-            CImageDx img;
-            FileType = img.FileTypeFromExtension(PathFindExtensionW(g_szFileName));
-        }
-
-        // Save it to the temporary file
-        HBITMAP hbm = imageModel.CopyBitmap();
-        BOOL ret = ::SaveDIBToFile(hbm, g_szTempFile, FALSE, FileType);
-        ::DeleteObject(hbm);
-
-        if (!ret)
-        {
-            g_szTempFile[0] = UNICODE_NULL;
-            return MAPI_E_FAILURE; // Failure
-        }
-
-        // Use the temporary file 
-        pszPathName = g_szTempFile;
-
-        // Set the file title
-        if (imageModel.IsImageSaved())
-        {
-            strFileTitle = PathFindFileNameW(g_szFileName);
-        }
-        else
-        {
-            strFileTitle.LoadString(IDS_DEFAULTFILENAME);
-            strFileTitle += L".png";
-        }
-    }
-
-    // Load "mapi32.dll"
-    HINSTANCE hMAPI = LoadLibraryW(L"mapi32.dll");
-    if (!hMAPI)
-        return MAPI_E_NOT_SUPPORTED;
-
-    // Attachment
-    MapiFileDescW attachmentW = { 0 };
-    attachmentW.nPosition = (ULONG)-1;
-    attachmentW.lpszPathName = (LPWSTR)pszPathName;
-    attachmentW.lpszFileName = (LPWSTR)(LPCWSTR)strFileTitle;
-
-    // Message with attachment
-    MapiMessageW messageW = { 0 };
-    messageW.lpszSubject = NULL;
-    messageW.nFileCount = 1;
-    messageW.lpFiles = &attachmentW;
-
-    // First, try to open the mailer by the function of Unicode version
-    FN_MAPISendMailW pMAPISendMailW = (FN_MAPISendMailW)::GetProcAddress(hMAPI, "MAPISendMailW");
-    if (pMAPISendMailW)
-    {
-        ULONG result = pMAPISendMailW(0, (ULONG_PTR)m_hWnd, &messageW, MAPI_DIALOG | MAPI_LOGON_UI, 0);
-        ::FreeLibrary(hMAPI);
-        return result;
-    }
-
-    // Convert to ANSI strings
-    char szPathNameA[MAX_PATH];
-    char szFileTitleA[MAX_PATH];
-    ::WideCharToMultiByte(CP_ACP, 0, pszPathName, -1, szPathNameA, _countof(szPathNameA), NULL, NULL);
-    ::WideCharToMultiByte(CP_ACP, 0, strFileTitle, -1, szFileTitleA, _countof(szFileTitleA), NULL, NULL);
-
-    MapiFileDesc attachment = { 0 };
-    attachment.nPosition = (ULONG)-1;
-    attachment.lpszPathName = szPathNameA;
-    attachment.lpszFileName = szFileTitleA;
-
-    MapiMessage message = { 0 };
-    message.lpszSubject = NULL;
-    message.nFileCount = 1;
-    message.lpFiles = &attachment;
-
-    // Try again but in ANSI version
-    FN_MAPISendMail pMAPISendMail = (FN_MAPISendMail)::GetProcAddress(hMAPI, "MAPISendMail");
-    if (pMAPISendMail)
-    {
-        ULONG result = pMAPISendMail(0, (ULONG_PTR)m_hWnd, &message, MAPI_DIALOG | MAPI_LOGON_UI, 0);
-        ::FreeLibrary(hMAPI);
-        return result;
-    }
-
-    ::FreeLibrary(hMAPI);
-    return MAPI_E_NOT_SUPPORTED;
-}
-
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Disable commands while dragging mouse
@@ -727,16 +599,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILENEW:
             if (ConfirmSave())
-            {
-                SetBitmapAndInfo(NULL, NULL, 0, FALSE);
-            }
+                SetBitmapAndInfo(NULL, NULL, FALSE);
             break;
         case IDM_FILEOPEN:
             {
                 TCHAR szFileName[MAX_LONG_PATH] = _T("");
                 if (ConfirmSave() && GetOpenFileName(szFileName, _countof(szFileName)))
                 {
-                    DoLoadImageFile(m_hWnd, szFileName, TRUE);
+                    imageModel.LoadImage(szFileName);
                 }
                 break;
             }
@@ -780,7 +650,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILESEND:
             canvasWindow.finishDrawing();
-            OpenMailerWithAttachmentW(g_szFileName);
+            if (!OpenMailer(m_hWnd, g_szFileName))
+                ShowError(IDS_CANTSENDMAIL);
             break;
         case IDM_FILEASWALLPAPERPLANE:
             RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::TILED);
@@ -798,7 +669,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             INT iFile = LOWORD(wParam) - IDM_FILE1;
             if (ConfirmSave())
-                DoLoadImageFile(m_hWnd, registrySettings.strFiles[iFile], TRUE);
+                imageModel.LoadImage(registrySettings.strFiles[iFile]);
             break;
         }
         case IDM_EDITUNDO:
@@ -974,7 +845,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbm = selectionModel.CopyBitmap();
-                SaveDIBToFile(hbm, szFileName, FALSE);
+                if (!SaveDIBToFile(hbm, szFileName, g_xDpi, g_yDpi))
+                    ShowError(IDS_SAVEERROR, szFileName);
                 ::DeleteObject(hbm);
             }
             break;
@@ -984,11 +856,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             TCHAR szFileName[MAX_LONG_PATH] = _T("");
             if (GetOpenFileName(szFileName, _countof(szFileName)))
             {
-                HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
+                HBITMAP hbmNew = LoadDIBFromFile(szFileName);
                 if (hbmNew)
-                {
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
-                }
+                else
+                    ShowError(IDS_LOADERRORTEXT, szFileName);
             }
             break;
         }

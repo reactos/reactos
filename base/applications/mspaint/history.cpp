@@ -28,7 +28,7 @@ ImageModel::ImageModel()
 {
     ZeroMemory(m_hBms, sizeof(m_hBms));
 
-    m_hBms[0] = CreateColorDIB(1, 1, RGB(255, 255, 255));
+    m_hBms[0] = CreateColorDIB(1, 1, WHITE);
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[0]);
 
     g_imageSaved = TRUE;
@@ -157,9 +157,29 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     NotifyImageChanged();
 }
 
-BOOL ImageModel::SaveImage(LPCTSTR lpFileName)
+BOOL ImageModel::LoadImage(LPCWSTR lpFileName)
 {
-    return SaveDIBToFile(m_hBms[m_currInd], lpFileName, TRUE);
+    BOOL isAFile;
+    HBITMAP hBitmap = LoadDIBFromFile(lpFileName, &g_xDpi, &g_yDpi, &isAFile);
+    if (!hBitmap || !SetBitmapAndInfo(hBitmap, lpFileName, isAFile))
+    {
+        ShowError(IDS_LOADERRORTEXT, lpFileName);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL ImageModel::SaveImage(LPCWSTR lpFileName)
+{
+    if (!SaveDIBToFile(m_hBms[m_currInd], lpFileName, g_xDpi, g_yDpi) ||
+        !SetFileInfo(lpFileName, TRUE))
+    {
+        ShowError(IDS_SAVEERROR, lpFileName);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOL ImageModel::IsImageSaved() const

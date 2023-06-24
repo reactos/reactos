@@ -13,6 +13,12 @@
 #define MIN_ZOOM    125
 #define MAX_ZOOM    8000
 
+#define ROUND(x) ((int)((x) + 0.5))
+#define WHITE    RGB(255, 255, 255)
+#define BLACK    RGB(0, 0, 0)
+#define GRAY     RGB(160, 160, 160)
+#define PINK     RGB(255, 0, 255)
+
 #define MAX_LONG_PATH 512
 
 #define WM_TOOLSMODELTOOLCHANGED         (WM_APP + 0)

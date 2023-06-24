@@ -17,7 +17,7 @@ SelectionModel::SelectionModel()
     , m_hbmMask(NULL)
     , m_ptStack(NULL)
     , m_iPtSP(0)
-    , m_rgbBack(RGB(255, 255, 255))
+    , m_rgbBack(WHITE)
     , m_bShow(FALSE)
     , m_bContentChanged(FALSE)
 {
@@ -157,7 +157,7 @@ void SelectionModel::GetSelectionContents(HDC hDCImage)
     ClearColor();
 
     HDC hMemDC = ::CreateCompatibleDC(NULL);
-    m_hbmColor = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
+    m_hbmColor = CreateColorDIB(m_rc.Width(), m_rc.Height(), WHITE);
     HGDIOBJ hbmOld = ::SelectObject(hMemDC, m_hbmColor);
     ::BitBlt(hMemDC, 0, 0, m_rc.Width(), m_rc.Height(), hDCImage, m_rc.left, m_rc.top, SRCCOPY);
     ::SelectObject(hMemDC, hbmOld);

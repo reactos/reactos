@@ -351,8 +351,7 @@ void CFontsDialog::InitToolbar()
     SendMessage(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
 
     HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
-                                          16, 8, RGB(255, 0, 255), IMAGE_BITMAP,
-                                          LR_CREATEDIBSECTION);
+                                          16, 8, PINK, IMAGE_BITMAP, LR_CREATEDIBSECTION);
     SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
     TBBUTTON buttons[] =
