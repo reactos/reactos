@@ -416,7 +416,7 @@ void SelectionModel::SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
     m_rc.bottom = max(ptFrom.y, ptTo.y);
 }
 
-void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
+void SelectionModel::Dragging(HITTEST hit, POINT pt)
 {
     switch (hit)
     {
