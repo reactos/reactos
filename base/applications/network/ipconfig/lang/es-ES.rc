@@ -56,15 +56,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "Otro tipo de adaptador"
-    IDS_ETH   "Adaptador Ethernet"
-    IDS_TOKEN "Adaptador de red en anillo"
-    IDS_FDDI  "Adaptador FDDI"
-    IDS_PPP   "Adaptador PPP"
-    IDS_LOOP  "Adaptador de bucle invertido"
-    IDS_SLIP  "Adaptador SLIP"
-    IDS_WIFI  "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\nOtro tipo de adaptador: %ls\n"
+    IDS_ETH   "\nAdaptador Ethernet: %ls\n"
+    IDS_TOKEN "\nAdaptador de red en anillo: %ls\n"
+    IDS_FDDI  "\nAdaptador FDDI: %ls\n"
+    IDS_PPP   "\nAdaptador PPP: %ls\n"
+    IDS_LOOP  "\nAdaptador de bucle invertido: %ls\n"
+    IDS_SLIP  "\nAdaptador SLIP: %ls\n"
+    IDS_WIFI  "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE

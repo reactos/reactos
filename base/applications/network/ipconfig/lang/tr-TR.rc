@@ -56,15 +56,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "Diğer Bağdaştırıcı"
-    IDS_ETH "Ethernet Bağdaştırıcısı"
-    IDS_TOKEN "Simgeli Halka Bağdaştırıcısı"
-    IDS_FDDI "FDDI Bağdaştırıcısı"
-    IDS_PPP "PPP Bağdaştırıcısı"
-    IDS_LOOP "Geri Döngü Bağdaştırıcısı"
-    IDS_SLIP "SLIP Bağdaştırıcısı"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\nDiğer Bağdaştırıcı: %ls\n"
+    IDS_ETH "\nEthernet Bağdaştırıcısı: %ls\n"
+    IDS_TOKEN "\nSimgeli Halka Bağdaştırıcısı: %ls\n"
+    IDS_FDDI "\nFDDI Bağdaştırıcısı: %ls\n"
+    IDS_PPP "\nPPP Bağdaştırıcısı: %ls\n"
+    IDS_LOOP "\nGeri Döngü Bağdaştırıcısı: %ls\n"
+    IDS_SLIP "\nSLIP Bağdaştırıcısı: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE

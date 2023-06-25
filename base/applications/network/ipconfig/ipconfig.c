@@ -222,11 +222,12 @@ VOID DoFormatMessage(LONG ErrorCode)
 }
 
 VOID
-PrintAdapterFriendlyName(LPSTR lpClass)
+GetAdapterFriendlyName(
+    _In_ LPSTR lpClass,
+    _In_ DWORD cchFriendlyNameLength,
+    _Out_ PWSTR pszFriendlyName)
 {
     HKEY hKey = NULL;
-    LPSTR ConType = NULL;
-    LPSTR ConTypeTmp = NULL;
     CHAR Path[256];
     LPSTR PrePath  = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
     LPSTR PostPath = "\\Connection";
@@ -247,47 +248,13 @@ PrintAdapterFriendlyName(LPSTR lpClass)
                       KEY_READ,
                       &hKey) == ERROR_SUCCESS)
     {
-        if (RegQueryValueExA(hKey,
-                             "Name",
-                             NULL,
-                             &dwType,
-                             NULL,
-                             &dwDataSize) == ERROR_SUCCESS)
-        {
-            ConTypeTmp = (LPSTR)HeapAlloc(ProcessHeap,
-                                          0,
-                                          dwDataSize);
-            if (ConTypeTmp == NULL)
-                return;
-
-            ConType = (LPSTR)HeapAlloc(ProcessHeap,
-                                       0,
-                                       dwDataSize);
-            if (ConType == NULL)
-            {
-                HeapFree(ProcessHeap, 0, ConTypeTmp);
-                return;
-            }
-
-            if (RegQueryValueExA(hKey,
-                                 "Name",
-                                 NULL,
-                                 &dwType,
-                                 (PBYTE)ConTypeTmp,
-                                 &dwDataSize) != ERROR_SUCCESS)
-            {
-                HeapFree(ProcessHeap, 0, ConType);
-                ConType = NULL;
-            }
-
-            if (ConType)
-                CharToOemA(ConTypeTmp, ConType);
-
-            printf("%s\n", ConType);
-
-            HeapFree(ProcessHeap, 0, ConTypeTmp);
-            HeapFree(ProcessHeap, 0, ConType);
-        }
+        dwDataSize = cchFriendlyNameLength * sizeof(WCHAR);
+        RegQueryValueExW(hKey,
+                         L"Name",
+                         NULL,
+                         &dwType,
+                         (PBYTE)pszFriendlyName,
+                         &dwDataSize);
     }
 
     if (hKey != NULL)
@@ -477,50 +444,48 @@ VOID
 PrintAdapterTypeAndName(
     PIP_ADAPTER_INFO pAdapterInfo)
 {
-    printf("\n");
+    WCHAR szFriendlyName[MAX_PATH];
+
+    GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
     switch (pAdapterInfo->Type)
     {
         case MIB_IF_TYPE_OTHER:
-            ConResPrintf(StdOut, IDS_OTHER);
+            ConResPrintf(StdOut, IDS_OTHER, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_ETHERNET:
-            ConResPrintf(StdOut, IDS_ETH);
+            ConResPrintf(StdOut, IDS_ETH, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_TOKENRING:
-            ConResPrintf(StdOut, IDS_TOKEN);
+            ConResPrintf(StdOut, IDS_TOKEN, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_FDDI:
-            ConResPrintf(StdOut, IDS_FDDI);
+            ConResPrintf(StdOut, IDS_FDDI, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_PPP:
-            ConResPrintf(StdOut, IDS_PPP);
+            ConResPrintf(StdOut, IDS_PPP, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_LOOPBACK:
-            ConResPrintf(StdOut, IDS_LOOP);
+            ConResPrintf(StdOut, IDS_LOOP, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_SLIP:
-            ConResPrintf(StdOut, IDS_SLIP);
+            ConResPrintf(StdOut, IDS_SLIP, szFriendlyName);
             break;
 
         case IF_TYPE_IEEE80211:
-            ConResPrintf(StdOut, IDS_WIFI);
+            ConResPrintf(StdOut, IDS_WIFI, szFriendlyName);
             break;
 
         default:
-            ConResPrintf(StdOut, IDS_UNKNOWNADAPTER);
+            ConResPrintf(StdOut, IDS_UNKNOWNADAPTER, szFriendlyName);
             break;
     }
-
-    printf(": ");
-    PrintAdapterFriendlyName(pAdapterInfo->AdapterName);
-    printf("\n");
 }
 
 VOID ShowInfo(BOOL bAll)

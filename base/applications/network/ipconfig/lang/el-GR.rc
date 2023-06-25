@@ -55,15 +55,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "Άλλος τύπος προσαρμογέα"
-    IDS_ETH "Προσαρμογέας Ethernet"
-    IDS_TOKEN "Προσαρμογέας Token Ring"
-    IDS_FDDI "Προσαρμογέας FDDI"
-    IDS_PPP "Προσαρμογέας PPP"
-    IDS_LOOP "Προσαρμογέας Loopback"
-    IDS_SLIP "Προσαρμογέας SLIP"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\nΆλλος τύπος προσαρμογέα: %ls\n"
+    IDS_ETH "\nΠροσαρμογέας Ethernet: %ls\n"
+    IDS_TOKEN "\nΠροσαρμογέας Token Ring: %ls\n"
+    IDS_FDDI "\nΠροσαρμογέας FDDI: %ls\n"
+    IDS_PPP "\nΠροσαρμογέας PPP: %ls\n"
+    IDS_LOOP "\nΠροσαρμογέας Loopback: %ls\n"
+    IDS_SLIP "\nΠροσαρμογέας SLIP: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE

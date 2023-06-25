@@ -57,15 +57,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "inny rodzaj karty"
-    IDS_ETH "karta Ethernet"
-    IDS_TOKEN "karta Token Ring"
-    IDS_FDDI "karta FDDI"
-    IDS_PPP "karta PPP"
-    IDS_LOOP "karta Loopback"
-    IDS_SLIP "karta SLIP"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\ninny rodzaj karty: %ls\n"
+    IDS_ETH "\nkarta Ethernet: %ls\n"
+    IDS_TOKEN "\nkarta Token Ring: %ls\n"
+    IDS_FDDI "\nkarta FDDI: %ls\n"
+    IDS_PPP "\nkarta PPP: %ls\n"
+    IDS_LOOP "\nkarta Loopback: %ls\n"
+    IDS_SLIP "\nkarta SLIP: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE

@@ -56,15 +56,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "其他類型的配接器"
-    IDS_ETH "乙太網配接器"
-    IDS_TOKEN "權杖環配接器"
-    IDS_FDDI "FDDI 配接器"
-    IDS_PPP "PPP 配接器"
-    IDS_LOOP "本地環回配接器"
-    IDS_SLIP "SLIP 配接器"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\n其他類型的配接器: %ls\n"
+    IDS_ETH "\n乙太網配接器: %ls\n"
+    IDS_TOKEN "\n權杖環配接器: %ls\n"
+    IDS_FDDI "\nFDDI 配接器: %ls\n"
+    IDS_PPP "\nPPP 配接器: %ls\n"
+    IDS_LOOP "\n本地環回配接器: %ls\n"
+    IDS_SLIP "\nSLIP 配接器: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE

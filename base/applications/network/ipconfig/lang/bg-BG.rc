@@ -55,15 +55,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "Друг вид карта"
-    IDS_ETH "Карта Ethernet"
-    IDS_TOKEN "Карта Token Ring"
-    IDS_FDDI "Карта FDDI"
-    IDS_PPP "Карта PPP"
-    IDS_LOOP "Карта Loopback"
-    IDS_SLIP "Карта SLIP"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\nДруг вид карта: %ls\n"
+    IDS_ETH "\nКарта Ethernet: %ls\n"
+    IDS_TOKEN "\nКарта Token Ring: %ls\n"
+    IDS_FDDI "\nКарта FDDI: %ls\n"
+    IDS_PPP "\nКарта PPP: %ls\n"
+    IDS_LOOP "\nКарта Loopback: %ls\n"
+    IDS_SLIP "\nКарта SLIP: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
 END
 
 STRINGTABLE
