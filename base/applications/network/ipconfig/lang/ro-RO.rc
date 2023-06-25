@@ -76,7 +76,7 @@ BEGIN
     IDS_DNSLINE              "\t----------------------------------------\n"
     IDS_DNSRECORDNAME        "\tNume de înregistrare. . : %ls\n"
     IDS_DNSRECORDTYPE        "\tTipul de înregistrare. .: %hu\n"
-    IDS_DNSRECORDTTL         "\tTimpul de trăit (TTL). .: %lu\n"
+    IDS_DNSRECORDTTL         "\tValabilitate (TTL). . . : %lu\n"
     IDS_DNSRECORDLENGTH      "\tLungimea datelor. . . . : %hu\n"
     IDS_DNSSECTIONQUESTION   "\tSecțiune. . . . . . . . : Întrebare\n"
     IDS_DNSSECTIONANSWER     "\tSecțiune. . . . . . . . : Răspuns\n"
