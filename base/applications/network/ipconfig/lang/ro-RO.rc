@@ -18,9 +18,9 @@ BEGIN
     IDS_IPROUTINGYES        "\tRutarea IP activată . . . . . . . : Da\n"
     IDS_WINSPROXYNO         "\tProxy-ul WINS activat . . . . . . : Nu\n"
     IDS_WINSPROXYYES        "\tProxy-ul WINS activat . . . . . . : Da\n"
-    IDS_DNSSUFFIXLIST       "\tLista de căutare a sufixului DNS  : %hs\n"
+    IDS_DNSSUFFIXLIST       "\tLista de căutare a sufixului DNS. : %hs\n"
     IDS_EMPTYLINE           "\t                                    %hs\n"
-    IDS_MEDIADISCONNECTED   "\tStarea media . . . . . . . . . .  : Media deconectată\n"
+    IDS_MEDIADISCONNECTED   "\tStarea media. . . . . . . . . . . : Media deconectată\n"
     IDS_CONNECTIONDNSSUFFIX "\tSufixul DNS specific conexiunii . : %hs\n"
     IDS_DESCRIPTION         "\tDescriere . . . . . . . . . . . . : "
     IDS_PHYSICALADDRESS     "\tAdresă fizică . . . . . . . . . . : %hs\n"
@@ -56,7 +56,6 @@ END
 
 STRINGTABLE
 BEGIN
-
     IDS_UNKNOWNADAPTER "Adaptor necunoscut: %ls\n"
     IDS_OTHER "\nAlt tip de adaptor: %ls\n"
     IDS_ETH "\nAdaptor Ethernet: %ls\n"
@@ -66,8 +65,6 @@ BEGIN
     IDS_LOOP "\nAdaptor Loopback: %ls\n"
     IDS_SLIP "\nAdaptor SLIP: %ls\n"
     IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
-
-
 END
 
 STRINGTABLE
@@ -75,7 +72,7 @@ BEGIN
     IDS_DNSNAME              "\t%ls\n"
     IDS_DNSLINE              "\t----------------------------------------\n"
     IDS_DNSRECORDNAME        "\tNume de înregistrare. . : %ls\n"
-    IDS_DNSRECORDTYPE        "\tTipul de înregistrare. .: %hu\n"
+    IDS_DNSRECORDTYPE        "\tTipul de înregistrare . : %hu\n"
     IDS_DNSRECORDTTL         "\tValabilitate (TTL). . . : %lu\n"
     IDS_DNSRECORDLENGTH      "\tLungimea datelor. . . . : %hu\n"
     IDS_DNSSECTIONQUESTION   "\tSecțiune. . . . . . . . : Întrebare\n"
@@ -84,13 +81,13 @@ BEGIN
     IDS_DNSSECTIONADDITIONAL "\tSecțiune. . . . . . . . : Suplimentar\n"
     IDS_DNSTYPEA             "\tÎnregistrarea (gazdei) A: %ls\n"
     IDS_DNSTYPENS            "\tÎnregistrarea NS. . . . : %ls\n"
-    IDS_DNSTYPECNAME         "\tÎnregistrarea CNAME. . .: %ls\n"
-    IDS_DNSTYPESOA           "\tÎnregistrarea SOA. . . .: \n"
-    IDS_DNSTYPEPTR           "\tÎnregistrarea PTR. . . .: %ls\n"
+    IDS_DNSTYPECNAME         "\tÎnregistrarea CNAME . . : %ls\n"
+    IDS_DNSTYPESOA           "\tÎnregistrarea SOA . . . : \n"
+    IDS_DNSTYPEPTR           "\tÎnregistrarea PTR . . . : %ls\n"
     IDS_DNSTYPEMX            "\tÎnregistrarea MX. . . . : \n"
     IDS_DNSTYPEAAAA          "\tÎnregistrarea AAAA. . . : %ls\n"
     IDS_DNSTYPEATMA          "\tÎnregistrarea ATMA. . . : \n"
-    IDS_DNSTYPESRV           "\tÎnregistrarea SRV. . . .: \n"
+    IDS_DNSTYPESRV           "\tÎnregistrarea SRV . . . : \n"
 END
 
 STRINGTABLE
