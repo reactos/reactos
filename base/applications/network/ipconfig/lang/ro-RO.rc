@@ -20,14 +20,14 @@ BEGIN
     IDS_WINSPROXYYES        "\tProxy-ul WINS activat . . . . . . : Da\n"
     IDS_DNSSUFFIXLIST       "\tLista de căutare a sufixului DNS  : %hs\n"
     IDS_EMPTYLINE           "\t                                    %hs\n"
-    IDS_MEDIADISCONNECTED   "\tStadiul media . . . . . . . . . . : Media deconectată\n"
+    IDS_MEDIADISCONNECTED   "\tStarea media . . . . . . . . . .  : Media deconectată\n"
     IDS_CONNECTIONDNSSUFFIX "\tSufixul DNS specific conexiunii . : %hs\n"
     IDS_DESCRIPTION         "\tDescriere . . . . . . . . . . . . : "
     IDS_PHYSICALADDRESS     "\tAdresă fizică . . . . . . . . . . : %hs\n"
     IDS_DHCPNO              "\tDHCP activat. . . . . . . . . . . : Nu\n"
     IDS_DHCPYES             "\tDHCP activat. . . . . . . . . . . : Da\n"
     IDS_AUTOCONFIGNO        "\tAutoconfigurare activată. . . . . : Nu\n"
-    IDS_AUTOCONFIGYES       "\tAutoconfiguraare activată . . . . : Da\n"
+    IDS_AUTOCONFIGYES       "\tAutoconfigurare activată. . . . . : Da\n"
     IDS_IPADDRESS           "\tAdresa IP . . . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tMasca subrețelei. . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tPoarta de acces implicită . . . . : %hs\n"
@@ -35,8 +35,8 @@ BEGIN
     IDS_DNSSERVERS          "\tServerele DNS . . . . . . . . . . : %hs\n"
     IDS_PRIMARYWINSSERVER   "\tServer WINS primar. . . . . . . . : %hs\n"
     IDS_SECONDARYWINSSERVER "\tServer WINS secundar. . . . . . . : %hs\n"
-    IDS_LEASEOBTAINED       "\tÎnchirerea obținută . . . . . . . : %s\n"
-    IDS_LEASEEXPIRES        "\tÎnchirerea expiră . . . . . . . . : %s\n"
+    IDS_LEASEOBTAINED       "\tAtribuire obținută. . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tAtribuire expiră. . . . . . . . . : %s\n"
 END
 
 STRINGTABLE
