@@ -38,26 +38,9 @@ typedef struct _PNPROOT_DEVICE
     ULONG ResourceListSize;
 } PNPROOT_DEVICE, *PPNPROOT_DEVICE;
 
-typedef enum
-{
-    dsStopped,
-    dsStarted,
-    dsPaused,
-    dsRemoved,
-    dsSurpriseRemoved
-} PNPROOT_DEVICE_STATE;
-
-typedef struct _PNPROOT_COMMON_DEVICE_EXTENSION
-{
-    // Wether this device extension is for an FDO or PDO
-    BOOLEAN IsFDO;
-} PNPROOT_COMMON_DEVICE_EXTENSION, *PPNPROOT_COMMON_DEVICE_EXTENSION;
-
 /* Physical Device Object device extension for a child device */
 typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 {
-    // Common device data
-    PNPROOT_COMMON_DEVICE_EXTENSION Common;
     // Informations about the device
     PPNPROOT_DEVICE DeviceInfo;
 } PNPROOT_PDO_DEVICE_EXTENSION, *PPNPROOT_PDO_DEVICE_EXTENSION;
@@ -65,12 +48,6 @@ typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 /* Physical Device Object device extension for the Root bus device object */
 typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
 {
-    // Common device data
-    PNPROOT_COMMON_DEVICE_EXTENSION Common;
-    // Lower device object
-    PDEVICE_OBJECT Ldo;
-    // Current state of the driver
-    PNPROOT_DEVICE_STATE State;
     // Namespace device list
     LIST_ENTRY DeviceListHead;
     // Number of (not removed) devices in device list
@@ -85,7 +62,7 @@ typedef struct _BUFFER
     PULONG Length;
 } BUFFER, *PBUFFER;
 
-static PDEVICE_OBJECT PnpRootDeviceObject = NULL;
+static PNPROOT_FDO_DEVICE_EXTENSION PnpRootDOExtension;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -130,7 +107,7 @@ NTSTATUS
 PnpRootRegisterDevice(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension = PnpRootDeviceObject->DeviceExtension;
+    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension = &PnpRootDOExtension;
     PPNPROOT_DEVICE Device;
     PDEVICE_NODE DeviceNode;
     PWSTR InstancePath;
@@ -202,7 +179,7 @@ PnpRootCreateDevice(
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     OBJECT_ATTRIBUTES ObjectAttributes;
 
-    DeviceExtension = PnpRootDeviceObject->DeviceExtension;
+    DeviceExtension = &PnpRootDOExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
     DPRINT("Creating a PnP root device for service '%wZ'\n", ServiceName);
@@ -341,7 +318,7 @@ tryagain:
 
     /* Initialize a device object */
     Status = IoCreateDevice(
-        DriverObject ? DriverObject : PnpRootDeviceObject->DriverObject,
+        DriverObject ? DriverObject : IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
         sizeof(PNPROOT_PDO_DEVICE_EXTENSION),
         NULL,
         FILE_DEVICE_CONTROLLER,
@@ -357,7 +334,6 @@ tryagain:
 
     PdoDeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)Device->Pdo->DeviceExtension;
     RtlZeroMemory(PdoDeviceExtension, sizeof(PNPROOT_PDO_DEVICE_EXTENSION));
-    PdoDeviceExtension->Common.IsFDO = FALSE;
     PdoDeviceExtension->DeviceInfo = Device;
 
     Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
@@ -679,7 +655,7 @@ EnumerateDevices(
 
     DPRINT("EnumerateDevices(FDO %p)\n", DeviceObject);
 
-    DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = &PnpRootDOExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
     /* Should hold most key names, but we reallocate below if it's too small */
@@ -909,7 +885,7 @@ PnpRootQueryDeviceRelations(
         return Status;
     }
 
-    DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = &PnpRootDOExtension;
 
     Size = FIELD_OFFSET(DEVICE_RELATIONS, Objects) + sizeof(PDEVICE_OBJECT) * DeviceExtension->DeviceListCount;
     if (OtherRelations)
@@ -963,7 +939,6 @@ PnpRootQueryDeviceRelations(
 
             PdoDeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)Device->Pdo->DeviceExtension;
             RtlZeroMemory(PdoDeviceExtension, sizeof(PNPROOT_PDO_DEVICE_EXTENSION));
-            PdoDeviceExtension->Common.IsFDO = FALSE;
             PdoDeviceExtension->DeviceInfo = Device;
 
             Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
@@ -1010,11 +985,9 @@ PnpRootFdoPnpControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
 
-    DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Status = Irp->IoStatus.Status;
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -1025,29 +998,9 @@ PnpRootFdoPnpControl(
             Status = PnpRootQueryDeviceRelations(DeviceObject, Irp);
             break;
 
-        case IRP_MN_START_DEVICE:
-            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-            if (!IoForwardIrpSynchronously(DeviceExtension->Ldo, Irp))
-                Status = STATUS_UNSUCCESSFUL;
-            else
-            {
-                Status = Irp->IoStatus.Status;
-                if (NT_SUCCESS(Status))
-                    DeviceExtension->State = dsStarted;
-            }
-
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
-
-         case IRP_MN_STOP_DEVICE:
-             DPRINT("IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
-             /* Root device cannot be stopped */
-             Irp->IoStatus.Status = Status = STATUS_INVALID_DEVICE_REQUEST;
-             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-             return Status;
-
         default:
+            // The root device object can receive only IRP_MN_QUERY_DEVICE_RELATIONS
+            ASSERT(FALSE);
             DPRINT("IRP_MJ_PNP / Unknown minor function 0x%lx\n", IrpSp->MinorFunction);
             break;
     }
@@ -1330,7 +1283,7 @@ PnpRootPdoPnpControl(
     NTSTATUS Status;
 
     DeviceExtension = DeviceObject->DeviceExtension;
-    FdoDeviceExtension = PnpRootDeviceObject->DeviceExtension;
+    FdoDeviceExtension = &PnpRootDOExtension;
     Status = Irp->IoStatus.Status;
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -1439,12 +1392,9 @@ PnpRootPnpControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PPNPROOT_COMMON_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
-    DeviceExtension = (PPNPROOT_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    if (DeviceExtension->IsFDO)
+    if (IopRootDeviceNode == IopGetDeviceNode(DeviceObject))
         Status = PnpRootFdoPnpControl(DeviceObject, Irp);
     else
         Status = PnpRootPdoPnpControl(DeviceObject, Irp);
@@ -1465,42 +1415,29 @@ PnpRootPowerControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status = Irp->IoStatus.Status;
 
-    DeviceExtension = DeviceObject->DeviceExtension;
-    Status = Irp->IoStatus.Status;
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /*
-     * We must handle power IRPs based on whether it is a function driver
-     * or not from the device extension, so it cannot be NULL.
-     */
-    ASSERT(DeviceExtension);
-
-    if (DeviceExtension->Common.IsFDO)
+    switch (IrpSp->MinorFunction)
     {
-        ASSERT(!DeviceExtension->Common.IsFDO);
-        PoStartNextPowerIrp(Irp);
-        IoCopyCurrentIrpStackLocationToNext(Irp);
-        Status = PoCallDriver(DeviceExtension->Ldo, Irp);
+        case IRP_MN_QUERY_POWER:
+        case IRP_MN_SET_POWER:
+            Status = STATUS_SUCCESS;
+            break;
     }
-    else
-    {
-        switch (IrpSp->MinorFunction)
-        {
-            case IRP_MN_QUERY_POWER:
-            case IRP_MN_SET_POWER:
-                Status = STATUS_SUCCESS;
-                break;
-        }
-        Irp->IoStatus.Status = Status;
-        PoStartNextPowerIrp(Irp);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    Irp->IoStatus.Status = Status;
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
+}
+
+VOID
+PnpRootInitializeDevExtension(VOID)
+{
+    PnpRootDOExtension.DeviceListCount = 0;
+    InitializeListHead(&PnpRootDOExtension.DeviceListHead);
+    KeInitializeGuardedMutex(&PnpRootDOExtension.DeviceListLock);
 }
 
 NTSTATUS
@@ -1509,56 +1446,8 @@ PnpRootAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status;
-
-    DPRINT("PnpRootAddDevice(DriverObject %p, Pdo %p)\n", DriverObject, PhysicalDeviceObject);
-
-    if (!PhysicalDeviceObject)
-    {
-        DPRINT("PhysicalDeviceObject 0x%p\n", PhysicalDeviceObject);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    Status = IoCreateDevice(
-        DriverObject,
-        sizeof(PNPROOT_FDO_DEVICE_EXTENSION),
-        NULL,
-        FILE_DEVICE_BUS_EXTENDER,
-        FILE_DEVICE_SECURE_OPEN,
-        TRUE,
-        &PnpRootDeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-    DPRINT("Created FDO %p\n", PnpRootDeviceObject);
-
-    DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)PnpRootDeviceObject->DeviceExtension;
-    RtlZeroMemory(DeviceExtension, sizeof(PNPROOT_FDO_DEVICE_EXTENSION));
-
-    DeviceExtension->Common.IsFDO = TRUE;
-    DeviceExtension->State = dsStopped;
-    InitializeListHead(&DeviceExtension->DeviceListHead);
-    DeviceExtension->DeviceListCount = 0;
-    KeInitializeGuardedMutex(&DeviceExtension->DeviceListLock);
-
-    Status = IoAttachDeviceToDeviceStackSafe(
-        PnpRootDeviceObject,
-        PhysicalDeviceObject,
-        &DeviceExtension->Ldo);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    PnpRootDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
-    DPRINT("Done AddDevice()\n");
-
+    // AddDevice must never be called for the root driver
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 

@@ -1075,6 +1075,9 @@ NTSTATUS
 PnpRootRegisterDevice(
     IN PDEVICE_OBJECT DeviceObject);
 
+VOID
+PnpRootInitializeDevExtension(VOID);
+
 //
 // Driver Routines
 //

@@ -14,12 +14,6 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef struct _IOPNP_DEVICE_EXTENSION
-{
-    PWCHAR CompatibleIdList;
-    ULONG CompatibleIdListSize;
-} IOPNP_DEVICE_EXTENSION, *PIOPNP_DEVICE_EXTENSION;
-
 PUNICODE_STRING PiInitGroupOrderTable;
 USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
@@ -412,7 +406,7 @@ IopInitializePlugPlayServices(VOID)
 
     /* Create the root PDO */
     Status = IoCreateDevice(IopRootDriverObject,
-                            sizeof(IOPNP_DEVICE_EXTENSION),
+                            0,
                             NULL,
                             FILE_DEVICE_CONTROLLER,
                             0,
@@ -441,9 +435,7 @@ IopInitializePlugPlayServices(VOID)
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    /* Call the add device routine */
-    IopRootDriverObject->DriverExtension->AddDevice(IopRootDriverObject,
-                                                    IopRootDeviceNode->PhysicalDeviceObject);
+    PnpRootInitializeDevExtension();
 
     PiSetDevNodeState(IopRootDeviceNode, DeviceNodeStarted);
 
@@ -457,7 +449,7 @@ IopInitializePlugPlayServices(VOID)
     ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
 
     /* Initialize PnP root relations (this is a syncronous operation) */
-    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
+    PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 
     /* Launch the firmware mapper */
     Status = IopUpdateRootKey();
@@ -467,7 +459,7 @@ IopInitializePlugPlayServices(VOID)
     NtClose(KeyHandle);
 
     /* Initialize PnP root relations (this is a syncronous operation) */
-    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
+    PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 
     /* We made it */
     return STATUS_SUCCESS;
