@@ -30,7 +30,7 @@ COMMAND cmds[] =
     {L"helpmsg",    cmdHelpMsg},
     {L"localgroup", cmdLocalGroup},
     {L"pause",      cmdPause},
-    {L"session",    unimplemented},
+    {L"session",    cmdSession},
     {L"share",      cmdShare},
     {L"start",      cmdStart},
     {L"statistics", cmdStatistics},

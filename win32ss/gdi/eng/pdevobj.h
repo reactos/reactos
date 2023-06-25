@@ -101,7 +101,7 @@ typedef struct _PDEVOBJ
 //  RFONT *                   prfntInactive;
 //  ULONG                     cInactive;
 //  BYTE                      ajbo[0x5C];
-//  ULONG                     cDirectDrawDisableLocks;
+    ULONG                     cDirectDrawDisableLocks;
 //  PVOID                     TypeOneInfo;
     PVOID                     pvGammaRamp;    /* Gamma ramp pointer. */
     PVOID                     RemoteTypeOne;
@@ -140,7 +140,6 @@ typedef struct _PDEVOBJ
     };
 
     /* ros specific */
-    ULONG         DxDd_nCount;
     GDIPOINTER    Pointer;
     /* Stuff to keep track of software cursors; win32k gdi part */
     UINT SafetyRemoveLevel; /* at what level was the cursor removed?

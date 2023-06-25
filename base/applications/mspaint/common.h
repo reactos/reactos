@@ -1,11 +1,10 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/common.h
- * PURPOSE:     Commonly used functions and definitions
- * PROGRAMMERS: Benedikt Freisen
- *              Stanislav Motylkov
- *              Katayama Hirofumi MZ
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Commonly used functions and definitions
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2018 Stanislav Motylkov <x86corez@gmail.com>
+ *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -27,7 +26,7 @@
 /* this simplifies enabling or graying menu items */
 #define ENABLED_IF(a) ((a) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND))
 
-enum CANVAS_HITTEST // hit
+enum HITTEST // hit
 {
     HIT_NONE = 0, // Nothing hit or outside
     HIT_UPPER_LEFT,

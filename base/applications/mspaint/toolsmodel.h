@@ -1,9 +1,8 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/toolsmodel.h
- * PURPOSE:     Keep track of tool parameters, notify listeners
- * PROGRAMMERS: Benedikt Freisen
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Keep track of tool parameters, notify listeners
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 #pragma once
@@ -36,8 +35,8 @@ struct ToolBase
     TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
-    static INT pointSP;
-    static POINT pointStack[256];
+    static INT s_pointSP;
+    static POINT s_pointStack[256];
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
     virtual ~ToolBase() { }

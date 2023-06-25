@@ -1,18 +1,17 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/mouse.cpp
- * PURPOSE:     Things which should not be in the mouse event handler itself
- * PROGRAMMERS: Benedikt Freisen
- *              Katayama Hirofumi MZ
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Things which should not be in the mouse event handler itself
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
 
-INT ToolBase::pointSP = 0;
-POINT ToolBase::pointStack[256] = { { 0 } };
+INT ToolBase::s_pointSP = 0;
+POINT ToolBase::s_pointStack[256] = { { 0 } };
 
 /* FUNCTIONS ********************************************************/
 
@@ -65,7 +64,7 @@ void updateLast(LONG x, LONG y)
 
 void ToolBase::reset()
 {
-    pointSP = 0;
+    s_pointSP = 0;
     g_ptStart.x = g_ptStart.y = g_ptEnd.x = g_ptEnd.y = -1;
     selectionModel.ResetPtStack();
     if (selectionModel.m_bShow)
@@ -159,7 +158,7 @@ struct FreeSelTool : ToolBase
         if (bLeftButton)
         {
             POINT pt = { x, y };
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.PushToPtStack(pt);
             imageModel.NotifyImageChanged();
         }
@@ -247,7 +246,7 @@ struct RectSelTool : ToolBase
         if (bLeftButton)
         {
             POINT pt = { x, y };
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             imageModel.NotifyImageChanged();
         }
@@ -258,7 +257,7 @@ struct RectSelTool : ToolBase
         POINT pt = { x, y };
         if (bLeftButton)
         {
-            imageModel.Bound(pt);
+            imageModel.Clamp(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
             imageModel.NotifyImageChanged();
@@ -528,7 +527,7 @@ struct TextTool : ToolBase
     void UpdatePoint(LONG x, LONG y)
     {
         POINT pt = { x, y };
-        imageModel.Bound(pt);
+        imageModel.Clamp(pt);
         selectionModel.SetRectFromPoints(g_ptStart, pt);
         imageModel.NotifyImageChanged();
     }
@@ -572,7 +571,7 @@ struct TextTool : ToolBase
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
         POINT pt = { x, y };
-        imageModel.Bound(pt);
+        imageModel.Clamp(pt);
         selectionModel.SetRectFromPoints(g_ptStart, pt);
 
         BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
@@ -675,17 +674,17 @@ struct BezierTool : ToolBase
             return;
 
         COLORREF rgb = (m_bLeftButton ? m_fg : m_bg);
-        switch (pointSP)
+        switch (s_pointSP)
         {
             case 1:
-                Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, rgb,
+                Line(hdc, s_pointStack[0].x, s_pointStack[0].y, s_pointStack[1].x, s_pointStack[1].y, rgb,
                      toolsModel.GetLineWidth());
                 break;
             case 2:
-                Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], rgb, toolsModel.GetLineWidth());
+                Bezier(hdc, s_pointStack[0], s_pointStack[2], s_pointStack[2], s_pointStack[1], rgb, toolsModel.GetLineWidth());
                 break;
             case 3:
-                Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], rgb, toolsModel.GetLineWidth());
+                Bezier(hdc, s_pointStack[0], s_pointStack[2], s_pointStack[3], s_pointStack[1], rgb, toolsModel.GetLineWidth());
                 break;
         }
     }
@@ -697,15 +696,15 @@ struct BezierTool : ToolBase
         if (!m_bDrawing)
         {
             m_bDrawing = TRUE;
-            pointStack[pointSP].x = pointStack[pointSP + 1].x = x;
-            pointStack[pointSP].y = pointStack[pointSP + 1].y = y;
-            ++pointSP;
+            s_pointStack[s_pointSP].x = s_pointStack[s_pointSP + 1].x = x;
+            s_pointStack[s_pointSP].y = s_pointStack[s_pointSP + 1].y = y;
+            ++s_pointSP;
         }
         else
         {
-            ++pointSP;
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
+            ++s_pointSP;
+            s_pointStack[s_pointSP].x = x;
+            s_pointStack[s_pointSP].y = y;
         }
 
         imageModel.NotifyImageChanged();
@@ -713,16 +712,16 @@ struct BezierTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
+        s_pointStack[s_pointSP].x = x;
+        s_pointStack[s_pointSP].y = y;
         imageModel.NotifyImageChanged();
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
-        if (pointSP >= 3)
+        s_pointStack[s_pointSP].x = x;
+        s_pointStack[s_pointSP].y = y;
+        if (s_pointSP >= 3)
         {
             OnFinishDraw();
             return;
@@ -777,13 +776,13 @@ struct ShapeTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
-        if (pointSP <= 0)
+        if (s_pointSP <= 0)
             return;
 
         if (m_bLeftButton)
-            Poly(hdc, pointStack, pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, s_pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
         else
-            Poly(hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, s_pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -791,20 +790,23 @@ struct ShapeTool : ToolBase
         m_bLeftButton = bLeftButton;
         m_bClosed = FALSE;
 
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
+        if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
-        if (pointSP && bDoubleClick)
+        s_pointStack[s_pointSP].x = x;
+        s_pointStack[s_pointSP].y = y;
+
+        if (s_pointSP && bDoubleClick)
         {
             OnFinishDraw();
             return;
         }
 
-        if (pointSP == 0)
+        if (s_pointSP == 0)
         {
-            pointSP++;
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
+            s_pointSP++;
+            s_pointStack[s_pointSP].x = x;
+            s_pointStack[s_pointSP].y = y;
         }
 
         imageModel.NotifyImageChanged();
@@ -812,35 +814,35 @@ struct ShapeTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
     {
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
+        if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
-        if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-            roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
+        s_pointStack[s_pointSP].x = x;
+        s_pointStack[s_pointSP].y = y;
 
         imageModel.NotifyImageChanged();
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
-        if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-            roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
+        if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
         m_bClosed = FALSE;
-        if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
+        if (nearlyEqualPoints(x, y, s_pointStack[0].x, s_pointStack[0].y))
         {
             OnFinishDraw();
             return;
         }
         else
         {
-            pointSP++;
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
+            s_pointSP++;
+            s_pointStack[s_pointSP].x = x;
+            s_pointStack[s_pointSP].y = y;
         }
 
-        if (pointSP == _countof(pointStack))
-            pointSP--;
+        if (s_pointSP == _countof(s_pointStack))
+            s_pointSP--;
 
         imageModel.NotifyImageChanged();
     }
@@ -852,9 +854,9 @@ struct ShapeTool : ToolBase
 
     void OnFinishDraw() override
     {
-        if (pointSP)
+        if (s_pointSP)
         {
-            --pointSP;
+            --s_pointSP;
             m_bClosed = TRUE;
 
             imageModel.PushImageForUndo();
@@ -862,7 +864,7 @@ struct ShapeTool : ToolBase
         }
 
         m_bClosed = FALSE;
-        pointSP = 0;
+        s_pointSP = 0;
 
         ToolBase::OnFinishDraw();
     }

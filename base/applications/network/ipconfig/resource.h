@@ -48,4 +48,24 @@
 #define IDS_SLIP  152
 #define IDS_WIFI  153
 
-#define IDS_USAGE 160
+#define IDS_DNSNAME              160
+#define IDS_DNSLINE              161
+#define IDS_DNSRECORDNAME        162
+#define IDS_DNSRECORDTYPE        163
+#define IDS_DNSRECORDTTL         164
+#define IDS_DNSRECORDLENGTH      165
+#define IDS_DNSSECTIONQUESTION   166
+#define IDS_DNSSECTIONANSWER     167
+#define IDS_DNSSECTIONAUTHORITY  168
+#define IDS_DNSSECTIONADDITIONAL 169
+#define IDS_DNSTYPEA             170
+#define IDS_DNSTYPENS            171
+#define IDS_DNSTYPECNAME         172
+#define IDS_DNSTYPESOA           173
+#define IDS_DNSTYPEPTR           174
+#define IDS_DNSTYPEMX            175
+#define IDS_DNSTYPEAAAA          176
+#define IDS_DNSTYPEATMA          177
+#define IDS_DNSTYPESRV           178
+
+#define IDS_USAGE 180

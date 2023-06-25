@@ -1,10 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/selectionmodel.cpp
- * PURPOSE:     Keep track of selection parameters, notify listeners
- * PROGRAMMERS: Benedikt Freisen
- *              Katayama Hirofumi MZ
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Keep track of selection parameters, notify listeners
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -417,7 +416,7 @@ void SelectionModel::SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
     m_rc.bottom = max(ptFrom.y, ptTo.y);
 }
 
-void SelectionModel::Dragging(CANVAS_HITTEST hit, POINT pt)
+void SelectionModel::Dragging(HITTEST hit, POINT pt)
 {
     switch (hit)
     {

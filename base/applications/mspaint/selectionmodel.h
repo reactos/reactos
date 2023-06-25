@@ -1,10 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/selectionmodel.h
- * PURPOSE:     Keep track of selection parameters, notify listeners
- * PROGRAMMERS: Benedikt Freisen
- *              Katayama Hirofumi MZ
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Keep track of selection parameters, notify listeners
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2019-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -56,7 +55,7 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY);
     void InvertSelection();
 
-    void Dragging(CANVAS_HITTEST hit, POINT pt);
+    void Dragging(HITTEST hit, POINT pt);
     void ClearMask();
     void ClearColor();
     void NotifyContentChanged();

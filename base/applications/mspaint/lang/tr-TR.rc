@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Paint
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/tr-TR.rc
- * PURPOSE:    Turkish Resource file for ReactOS Paint
- * TRANSLATOR: 2013-2014, 2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2016, 2019 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -163,9 +163,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Öznitelikler"
 BEGIN
-    LTEXT "&En:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "&En:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    LTEXT "&Boy:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "&Boy:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Dosya Tarihi:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Dosya Boyutu:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
@@ -179,10 +179,10 @@ BEGIN
     AUTORADIOBUTTON "&Piksel", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Renk", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Siyah ve Beyaz", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "&Renkli", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "&Renkli", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "Tamam", IDOK, 170, 8, 48, 14
     PUSHBUTTON "İptal", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Varsayılan", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "&Varsayılan", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150

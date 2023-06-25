@@ -222,11 +222,12 @@ VOID DoFormatMessage(LONG ErrorCode)
 }
 
 VOID
-PrintAdapterFriendlyName(LPSTR lpClass)
+GetAdapterFriendlyName(
+    _In_ LPSTR lpClass,
+    _In_ DWORD cchFriendlyNameLength,
+    _Out_ PWSTR pszFriendlyName)
 {
     HKEY hKey = NULL;
-    LPSTR ConType = NULL;
-    LPSTR ConTypeTmp = NULL;
     CHAR Path[256];
     LPSTR PrePath  = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
     LPSTR PostPath = "\\Connection";
@@ -247,47 +248,13 @@ PrintAdapterFriendlyName(LPSTR lpClass)
                       KEY_READ,
                       &hKey) == ERROR_SUCCESS)
     {
-        if (RegQueryValueExA(hKey,
-                             "Name",
-                             NULL,
-                             &dwType,
-                             NULL,
-                             &dwDataSize) == ERROR_SUCCESS)
-        {
-            ConTypeTmp = (LPSTR)HeapAlloc(ProcessHeap,
-                                          0,
-                                          dwDataSize);
-            if (ConTypeTmp == NULL)
-                return;
-
-            ConType = (LPSTR)HeapAlloc(ProcessHeap,
-                                       0,
-                                       dwDataSize);
-            if (ConType == NULL)
-            {
-                HeapFree(ProcessHeap, 0, ConTypeTmp);
-                return;
-            }
-
-            if (RegQueryValueExA(hKey,
-                                 "Name",
-                                 NULL,
-                                 &dwType,
-                                 (PBYTE)ConTypeTmp,
-                                 &dwDataSize) != ERROR_SUCCESS)
-            {
-                HeapFree(ProcessHeap, 0, ConType);
-                ConType = NULL;
-            }
-
-            if (ConType)
-                CharToOemA(ConTypeTmp, ConType);
-
-            printf("%s\n", ConType);
-
-            HeapFree(ProcessHeap, 0, ConTypeTmp);
-            HeapFree(ProcessHeap, 0, ConType);
-        }
+        dwDataSize = cchFriendlyNameLength * sizeof(WCHAR);
+        RegQueryValueExW(hKey,
+                         L"Name",
+                         NULL,
+                         &dwType,
+                         (PBYTE)pszFriendlyName,
+                         &dwDataSize);
     }
 
     if (hKey != NULL)
@@ -477,50 +444,48 @@ VOID
 PrintAdapterTypeAndName(
     PIP_ADAPTER_INFO pAdapterInfo)
 {
-    printf("\n");
+    WCHAR szFriendlyName[MAX_PATH];
+
+    GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
     switch (pAdapterInfo->Type)
     {
         case MIB_IF_TYPE_OTHER:
-            ConResPrintf(StdOut, IDS_OTHER);
+            ConResPrintf(StdOut, IDS_OTHER, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_ETHERNET:
-            ConResPrintf(StdOut, IDS_ETH);
+            ConResPrintf(StdOut, IDS_ETH, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_TOKENRING:
-            ConResPrintf(StdOut, IDS_TOKEN);
+            ConResPrintf(StdOut, IDS_TOKEN, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_FDDI:
-            ConResPrintf(StdOut, IDS_FDDI);
+            ConResPrintf(StdOut, IDS_FDDI, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_PPP:
-            ConResPrintf(StdOut, IDS_PPP);
+            ConResPrintf(StdOut, IDS_PPP, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_LOOPBACK:
-            ConResPrintf(StdOut, IDS_LOOP);
+            ConResPrintf(StdOut, IDS_LOOP, szFriendlyName);
             break;
 
         case MIB_IF_TYPE_SLIP:
-            ConResPrintf(StdOut, IDS_SLIP);
+            ConResPrintf(StdOut, IDS_SLIP, szFriendlyName);
             break;
 
         case IF_TYPE_IEEE80211:
-            ConResPrintf(StdOut, IDS_WIFI);
+            ConResPrintf(StdOut, IDS_WIFI, szFriendlyName);
             break;
 
         default:
-            ConResPrintf(StdOut, IDS_UNKNOWNADAPTER);
+            ConResPrintf(StdOut, IDS_UNKNOWNADAPTER, szFriendlyName);
             break;
     }
-
-    printf(": ");
-    PrintAdapterFriendlyName(pAdapterInfo->AdapterName);
-    printf("\n");
 }
 
 VOID ShowInfo(BOOL bAll)
@@ -908,6 +873,9 @@ DisplayDnsRecord(
     IN6_ADDR Addr6;
     DNS_STATUS Status;
 
+    ConResPrintf(StdOut, IDS_DNSNAME, pszName);
+    ConResPrintf(StdOut, IDS_DNSLINE);
+
     pQueryResults = NULL;
     Status = DnsQuery_W(pszName,
                         wType,
@@ -919,48 +887,41 @@ DisplayDnsRecord(
     {
         if (Status == DNS_ERROR_RCODE_NAME_ERROR)
         {
-            _tprintf(_T("\t%ls\n"), pszName);
-            _tprintf(_T("\t----------------------------------------\n"));
             _tprintf(_T("\tName does not exist\n\n"));
         }
         else if (Status == DNS_INFO_NO_RECORDS)
         {
-            _tprintf(_T("\t%ls\n"), pszName);
-            _tprintf(_T("\t----------------------------------------\n"));
             _tprintf(_T("\tNo records of type %s\n\n"), GetRecordTypeName(wType));
         }
         return;
     }
-
-    _tprintf(_T("\t%ls\n"), pszName);
-    _tprintf(_T("\t----------------------------------------\n"));
 
     pThisRecord = pQueryResults;
     while (pThisRecord != NULL)
     {
         pNextRecord = pThisRecord->pNext;
 
-        _tprintf(_T("\tRecord Name . . . . . : %ls\n"), pThisRecord->pName);
-        _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
-        _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
-        _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
+        ConResPrintf(StdOut, IDS_DNSRECORDNAME, pThisRecord->pName);
+        ConResPrintf(StdOut, IDS_DNSRECORDTYPE, pThisRecord->wType);
+        ConResPrintf(StdOut, IDS_DNSRECORDTTL, pThisRecord->dwTtl);
+        ConResPrintf(StdOut, IDS_DNSRECORDLENGTH, pThisRecord->wDataLength);
 
         switch (pThisRecord->Flags.S.Section)
         {
             case DnsSectionQuestion:
-                _tprintf(_T("\tSection . . . . . . . : Question\n"));
+                ConResPrintf(StdOut, IDS_DNSSECTIONQUESTION);
                 break;
 
             case DnsSectionAnswer:
-                _tprintf(_T("\tSection . . . . . . . : Answer\n"));
+                ConResPrintf(StdOut, IDS_DNSSECTIONANSWER);
                 break;
 
             case DnsSectionAuthority:
-                _tprintf(_T("\tSection . . . . . . . : Authority\n"));
+                ConResPrintf(StdOut, IDS_DNSSECTIONAUTHORITY);
                 break;
 
             case DnsSectionAdditional:
-                _tprintf(_T("\tSection . . . . . . . : Additional\n"));
+                ConResPrintf(StdOut, IDS_DNSSECTIONADDITIONAL);
                 break;
         }
 
@@ -969,41 +930,41 @@ DisplayDnsRecord(
             case DNS_TYPE_A:
                 Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
                 RtlIpv4AddressToStringW(&Addr4, szBuffer);
-                _tprintf(_T("\tA (Host) Record . . . : %ls\n"), szBuffer);
+                ConResPrintf(StdOut, IDS_DNSTYPEA, szBuffer);
                 break;
 
             case DNS_TYPE_NS:
-                _tprintf(_T("\tNS Record . . . . . . : %ls\n"), pThisRecord->Data.NS.pNameHost);
+                ConResPrintf(StdOut, IDS_DNSTYPENS, pThisRecord->Data.NS.pNameHost);
                 break;
 
             case DNS_TYPE_CNAME:
-                _tprintf(_T("\tCNAME Record. . . . . : %ls\n"), pThisRecord->Data.CNAME.pNameHost);
+                ConResPrintf(StdOut, IDS_DNSTYPECNAME, pThisRecord->Data.CNAME.pNameHost);
                 break;
 
             case DNS_TYPE_SOA:
-                _tprintf(_T("\tSOA Record. . . . . . : \n"));
+                ConResPrintf(StdOut, IDS_DNSTYPESOA);
                 break;
 
             case DNS_TYPE_PTR:
-                _tprintf(_T("\tPTR Record. . . . . . : %ls\n"), pThisRecord->Data.PTR.pNameHost);
+                ConResPrintf(StdOut, IDS_DNSTYPEPTR, pThisRecord->Data.PTR.pNameHost);
                 break;
 
             case DNS_TYPE_MX:
-                _tprintf(_T("\tMX Record . . . . . . : \n"));
+                ConResPrintf(StdOut, IDS_DNSTYPEMX);
                 break;
 
             case DNS_TYPE_AAAA:
                 RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
                 RtlIpv6AddressToStringW(&Addr6, szBuffer);
-                _tprintf(_T("\tAAAA Record . . . . . : %ls\n"), szBuffer);
+                ConResPrintf(StdOut, IDS_DNSTYPEAAAA, szBuffer);
                 break;
 
             case DNS_TYPE_ATMA:
-                _tprintf(_T("\tATMA Record . . . . . : \n"));
+                ConResPrintf(StdOut, IDS_DNSTYPEATMA);
                 break;
 
             case DNS_TYPE_SRV:
-                _tprintf(_T("\tSRV Record. . . . . . : \n"));
+                ConResPrintf(StdOut, IDS_DNSTYPESRV);
                 break;
         }
         _tprintf(_T("\n\n"));

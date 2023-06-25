@@ -1,9 +1,8 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/canvas.cpp
- * PURPOSE:     Providing the canvas window class
- * PROGRAMMERS: Benedikt Freisen
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Providing the canvas window class
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 #include "precomp.h"
@@ -15,11 +14,11 @@ CCanvasWindow canvasWindow;
 CCanvasWindow::CCanvasWindow()
     : m_drawing(FALSE)
     , m_hitSelection(HIT_NONE)
-    , m_whereHit(HIT_NONE)
+    , m_hitCanvasSizeBox(HIT_NONE)
     , m_ptOrig { -1, -1 }
 {
     m_ahbmCached[0] = m_ahbmCached[1] = NULL;
-    ::SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcResizing);
 }
 
 CCanvasWindow::~CCanvasWindow()
@@ -94,7 +93,7 @@ VOID CCanvasWindow::GetImageRect(RECT& rc)
     ::SetRect(&rc, 0, 0, imageModel.GetWidth(), imageModel.GetHeight());
 }
 
-CANVAS_HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
+HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 {
     if (selectionModel.m_bShow || ::IsWindowVisible(textEditWindow))
         return HIT_INNER;
@@ -167,8 +166,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
     // Draw new frame on hdcMem0 if any
-    if (m_whereHit != HIT_NONE && !::IsRectEmpty(&m_rcNew))
-        DrawXorRect(hdcMem0, &m_rcNew);
+    if (m_hitCanvasSizeBox != HIT_NONE && !::IsRectEmpty(&m_rcResizing))
+        DrawXorRect(hdcMem0, &m_rcResizing);
 
     // Transfer the bits (hDC <-- hdcMem0)
     ::BitBlt(hDC,
@@ -266,7 +265,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-    CANVAS_HITTEST hitSelection = SelectionHitTest(pt);
+    HITTEST hitSelection = SelectionHitTest(pt);
     if (hitSelection != HIT_NONE)
     {
         if (bLeftButton)
@@ -282,7 +281,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
         return 0;
     }
 
-    CANVAS_HITTEST hit = CanvasHitTest(pt);
+    HITTEST hit = CanvasHitTest(pt);
     if (hit == HIT_NONE || hit == HIT_BORDER)
     {
         switch (toolsModel.GetActiveTool())
@@ -321,7 +320,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
 
     if (bLeftButton)
     {
-        m_whereHit = hit;
+        m_hitCanvasSizeBox = hit;
         UnZoomed(pt);
         m_ptOrig = pt;
         SetCapture();
@@ -475,14 +474,14 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    if (m_whereHit == HIT_NONE || ::GetCapture() != m_hWnd)
+    if (m_hitCanvasSizeBox == HIT_NONE || ::GetCapture() != m_hWnd)
         return 0;
 
     // Dragging now... Calculate the new size
     INT cxImage = imageModel.GetWidth(), cyImage = imageModel.GetHeight();
     INT cxDelta = pt.x - m_ptOrig.x;
     INT cyDelta = pt.y - m_ptOrig.y;
-    switch (m_whereHit)
+    switch (m_hitCanvasSizeBox)
     {
         case HIT_UPPER_LEFT:
             cxImage -= cxDelta;
@@ -527,29 +526,30 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     strSize.Format(_T("%d x %d"), cxImage, cyImage);
     ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
-    CRect rc = { 0, 0, cxImage, cyImage };
-    switch (m_whereHit)
+    // Dragging now... Fix the position...
+    CRect rcResizing = { 0, 0, cxImage, cyImage };
+    switch (m_hitCanvasSizeBox)
     {
         case HIT_UPPER_LEFT:
-            ::OffsetRect(&rc, cxDelta, cyDelta);
+            ::OffsetRect(&rcResizing, cxDelta, cyDelta);
             break;
         case HIT_UPPER_CENTER:
-            ::OffsetRect(&rc, 0, cyDelta);
+            ::OffsetRect(&rcResizing, 0, cyDelta);
             break;
         case HIT_UPPER_RIGHT:
-            ::OffsetRect(&rc, 0, cyDelta);
+            ::OffsetRect(&rcResizing, 0, cyDelta);
             break;
         case HIT_MIDDLE_LEFT:
-            ::OffsetRect(&rc, cxDelta, 0);
+            ::OffsetRect(&rcResizing, cxDelta, 0);
             break;
         case HIT_LOWER_LEFT:
-            ::OffsetRect(&rc, cxDelta, 0);
+            ::OffsetRect(&rcResizing, cxDelta, 0);
             break;
         default:
             break;
     }
-    ImageToCanvas(rc);
-    m_rcNew = rc;
+    ImageToCanvas(rcResizing);
+    m_rcResizing = rcResizing;
     Invalidate(TRUE);
 
     return 0;
@@ -576,14 +576,14 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
         return 0;
     }
 
-    if (m_whereHit == HIT_NONE || !bLeftButton)
+    if (m_hitCanvasSizeBox == HIT_NONE || !bLeftButton)
         return 0;
 
     // Resize the image
     INT cxImage = imageModel.GetWidth(), cyImage = imageModel.GetHeight();
     INT cxDelta = pt.x - m_ptOrig.x;
     INT cyDelta = pt.y - m_ptOrig.y;
-    switch (m_whereHit)
+    switch (m_hitCanvasSizeBox)
     {
         case HIT_UPPER_LEFT:
             imageModel.Crop(cxImage - cxDelta, cyImage - cyDelta, cxDelta, cyDelta);
@@ -612,11 +612,11 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
         default:
             break;
     }
-    ::SetRectEmpty(&m_rcNew);
+    ::SetRectEmpty(&m_rcResizing);
 
     g_imageSaved = FALSE;
 
-    m_whereHit = HIT_NONE;
+    m_hitCanvasSizeBox = HIT_NONE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
     Update(NULL);
     Invalidate(TRUE);
@@ -648,7 +648,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    CANVAS_HITTEST hitSelection = SelectionHitTest(pt);
+    HITTEST hitSelection = SelectionHitTest(pt);
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
@@ -697,8 +697,8 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     {
         // Cancel dragging
         ::ReleaseCapture();
-        m_whereHit = HIT_NONE;
-        ::SetRectEmpty(&m_rcNew);
+        m_hitCanvasSizeBox = HIT_NONE;
+        ::SetRectEmpty(&m_rcResizing);
         Invalidate(TRUE);
     }
 
@@ -708,8 +708,8 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Cancel dragging
-    m_whereHit = HIT_NONE;
-    ::SetRectEmpty(&m_rcNew);
+    m_hitCanvasSizeBox = HIT_NONE;
+    ::SetRectEmpty(&m_rcResizing);
     Invalidate(TRUE);
     return 0;
 }
@@ -759,7 +759,7 @@ VOID CCanvasWindow::finishDrawing()
     Invalidate(FALSE);
 }
 
-CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptImage)
+HITTEST CCanvasWindow::SelectionHitTest(POINT ptImage)
 {
     if (!selectionModel.m_bShow)
         return HIT_NONE;
@@ -772,7 +772,7 @@ CANVAS_HITTEST CCanvasWindow::SelectionHitTest(POINT ptImage)
     return getSizeBoxHitTest(ptImage, &rcSelection);
 }
 
-VOID CCanvasWindow::StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage)
+VOID CCanvasWindow::StartSelectionDrag(HITTEST hit, POINT ptImage)
 {
     m_hitSelection = hit;
     selectionModel.m_ptHit = ptImage;

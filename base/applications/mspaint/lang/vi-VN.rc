@@ -1,9 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/vi-VN.rc
- * PURPOSE:     VN-Vietnamese Language resource file
- * TRANSLATORS: first times touched from en-US.rc file by Dummynosrev (Nguyễn Thanh Sơn)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Vietnamese (Vietnam) resource file
+ * TRANSLATOR:  Copyright 2018 Nguyễn Thanh Sơn <dummynosrev@gmail.com>
  */
 
 LANGUAGE LANG_VIETNAMESE, SUBLANG_VIETNAMESE_VIETNAM
@@ -163,26 +162,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Thuộc tính"
 BEGIN
-    LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    LTEXT "&Chiều cao:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 42, 38, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 50, 40, 35, 12
+    LTEXT "C&hiều cao:", IDD_ATTRIBUTESTEXT2, 90, 42, 38, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Kích thước &tập tin :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "&Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
+    LTEXT "Ngày tạo tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 64, 10
+    LTEXT "Kích thước tập tin:", IDD_ATTRIBUTESTEXT4, 10, 15, 64, 10
+    LTEXT "Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 64, 10
+    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 77, 5, 90, 10
+    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT7, 77, 15, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 77, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Đơn vị", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "&Inch (1 inch = 2,54 cm)", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "&Inch (= 2,54 cm)", IDD_ATTRIBUTESRB1, 12, 69, 66, 10, WS_GROUP
+    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 82, 69, 25, 10
     AUTORADIOBUTTON "&Điểm ảnh", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Màu sắc", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Đen trắng", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Màu &sắc", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Màu &sắc", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "Đồng ý", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Hủy", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Mặc định", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "Mặc đị&nh", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150

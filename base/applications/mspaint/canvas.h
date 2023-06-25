@@ -1,9 +1,8 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/canvas.h
- * PURPOSE:     Providing the canvas window class
- * PROGRAMMERS: Benedikt Freisen
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Providing the canvas window class
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 #pragma once
@@ -53,20 +52,20 @@ public:
     VOID MoveSelection(INT xDelta, INT yDelta);
 
 protected:
-    CANVAS_HITTEST m_hitSelection;
-    CANVAS_HITTEST m_whereHit;
+    HITTEST m_hitSelection;
+    HITTEST m_hitCanvasSizeBox;
     POINT m_ptOrig; // The origin of drag start
     HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
-    CRect m_rcNew;
+    CRect m_rcResizing; // Resizing rectagle
 
-    CANVAS_HITTEST CanvasHitTest(POINT pt);
+    HITTEST CanvasHitTest(POINT pt);
     RECT GetBaseRect();
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
     VOID drawZoomFrame(INT mouseX, INT mouseY);
 
-    CANVAS_HITTEST SelectionHitTest(POINT ptImage);
-    VOID StartSelectionDrag(CANVAS_HITTEST hit, POINT ptImage);
+    HITTEST SelectionHitTest(POINT ptImage);
+    VOID StartSelectionDrag(HITTEST hit, POINT ptImage);
     VOID SelectionDragging(POINT ptImage);
     VOID EndSelectionDrag(POINT ptImage);
 

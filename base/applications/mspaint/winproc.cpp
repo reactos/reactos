@@ -1,12 +1,11 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/winproc.cpp
- * PURPOSE:     Window procedure of the main window and all children apart from
- *              hPalWin, hToolSettings and hSelection
- * PROGRAMMERS: Benedikt Freisen
- *              Katayama Hirofumi MZ
- *              Stanislav Motylkov
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    Window procedure of the main window and all children apart from
+ *             hPalWin, hToolSettings and hSelection
+ * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2017-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2018 Stanislav Motylkov <x86corez@gmail.com>
  */
 
 #include "precomp.h"
@@ -422,7 +421,7 @@ BOOL CMainWindow::CanUndo() const
         return (BOOL)textEditWindow.SendMessage(EM_CANUNDO);
     if (selectionModel.m_bShow && toolsModel.IsSelection())
         return TRUE;
-    if (ToolBase::pointSP != 0)
+    if (ToolBase::s_pointSP != 0)
         return TRUE;
     return imageModel.CanUndo();
 }
@@ -431,7 +430,7 @@ BOOL CMainWindow::CanRedo() const
 {
     if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
         return FALSE; // There is no "WM_REDO" in EDIT control
-    if (ToolBase::pointSP != 0)
+    if (ToolBase::s_pointSP != 0)
         return TRUE;
     return imageModel.CanRedo();
 }
@@ -696,7 +695,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
                 }
             }
-            if (ToolBase::pointSP != 0) // drawing something?
+            if (ToolBase::s_pointSP != 0) // drawing something?
             {
                 canvasWindow.cancelDrawing();
                 break;
@@ -709,7 +708,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 // There is no "WM_REDO" in EDIT control
                 break;
             }
-            if (ToolBase::pointSP != 0) // drawing something?
+            if (ToolBase::s_pointSP != 0) // drawing something?
             {
                 canvasWindow.finishDrawing();
                 break;

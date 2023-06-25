@@ -55,15 +55,38 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Unknown Adapter"
-    IDS_OTHER "Other Type Of Adapter"
-    IDS_ETH "Ethernet Adapter"
-    IDS_TOKEN "Token Ring Adapter"
-    IDS_FDDI "FDDI Adapter"
-    IDS_PPP "PPP Adapter"
-    IDS_LOOP "Loopback Adapter"
-    IDS_SLIP "SLIP Adapter"
-    IDS_WIFI "Wireless Network Adapter"
+    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n"
+    IDS_OTHER "\nOther Type Of Adapter: %ls\n"
+    IDS_ETH "\nEthernet Adapter: %ls\n"
+    IDS_TOKEN "\nToken Ring Adapter: %ls\n"
+    IDS_FDDI "\nFDDI Adapter: %ls\n"
+    IDS_PPP "\nPPP Adapter: %ls\n"
+    IDS_LOOP "\nLoopback Adapter: %ls\n"
+    IDS_SLIP "\nSLIP Adapter: %ls\n"
+    IDS_WIFI "\nWireless Network Adapter: %ls\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DNSNAME              "\t%ls\n"
+    IDS_DNSLINE              "\t----------------------------------------\n"
+    IDS_DNSRECORDNAME        "\tRecord Name . . . . . : %ls\n"
+    IDS_DNSRECORDTYPE        "\tRecord Type . . . . . : %hu\n"
+    IDS_DNSRECORDTTL         "\tTime To Live. . . . . : %lu\n"
+    IDS_DNSRECORDLENGTH      "\tData Length . . . . . : %hu\n"
+    IDS_DNSSECTIONQUESTION   "\tSection . . . . . . . : Question\n"
+    IDS_DNSSECTIONANSWER     "\tSection . . . . . . . : Answer\n"
+    IDS_DNSSECTIONAUTHORITY  "\tSection . . . . . . . : Authority\n"
+    IDS_DNSSECTIONADDITIONAL "\tSection . . . . . . . : Additional\n"
+    IDS_DNSTYPEA             "\tA (Host) Record . . . : %ls\n"
+    IDS_DNSTYPENS            "\tNS Record . . . . . . : %ls\n"
+    IDS_DNSTYPECNAME         "\tCNAME Record. . . . . : %ls\n"
+    IDS_DNSTYPESOA           "\tSOA Record. . . . . . : \n"
+    IDS_DNSTYPEPTR           "\tPTR Record. . . . . . : %ls\n"
+    IDS_DNSTYPEMX            "\tMX Record . . . . . . : \n"
+    IDS_DNSTYPEAAAA          "\tAAAA Record . . . . . : %ls\n"
+    IDS_DNSTYPEATMA          "\tATMA Record . . . . . : \n"
+    IDS_DNSTYPESRV           "\tSRV Record. . . . . . : \n"
 END
 
 STRINGTABLE

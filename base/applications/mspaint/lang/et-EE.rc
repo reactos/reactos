@@ -1,9 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/mspaint/lang/et-EE.rc
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Estonian resource file
+ * TRANSLATOR:  Copyright 2018 Joann Mõndresku <joannmondresku@gmail.com>
  */
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
@@ -163,13 +162,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atribuudid"
 BEGIN
-    LTEXT "&Laius:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "&Laius:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    LTEXT "&Pikkus:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "&Pikkus:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Faili &kuupäev:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Faili &suurus:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "&Resolutsioon:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Faili kuupäev:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Faili suurus:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Resolutsioon:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
     LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
@@ -179,10 +178,10 @@ BEGIN
     AUTORADIOBUTTON "Piksl&id", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Värvid", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Mustvalge", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "&Värvid", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "&Värvid", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Tühista", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Vaikimisi", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "V&aikimisi", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150

@@ -56,15 +56,41 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Adaptor necunoscut"
-    IDS_OTHER "alt tip de adaptor"
-    IDS_ETH "adaptor Ethernet"
-    IDS_TOKEN "adaptor Token Ring"
-    IDS_FDDI "adaptor FDDI"
-    IDS_PPP "adaptor PPP"
-    IDS_LOOP "adaptor Loopback"
-    IDS_SLIP "adaptor SLIP"
-    IDS_WIFI "Wireless Network Adapter"
+
+    IDS_UNKNOWNADAPTER "Adaptor necunoscut: %ls\n"
+    IDS_OTHER "\nAlt tip de adaptor: %ls\n"
+    IDS_ETH "\nAdaptor Ethernet: %ls\n"
+    IDS_TOKEN "\nAdaptor Token Ring: %ls\n"
+    IDS_FDDI "\nAdaptor FDDI: %ls\n"
+    IDS_PPP "\nAdaptor PPP: %ls\n"
+    IDS_LOOP "\nAdaptor Loopback: %ls\n"
+    IDS_SLIP "\nAdaptor SLIP: %ls\n"
+    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
+
+
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DNSNAME              "\t%ls\n"
+    IDS_DNSLINE              "\t----------------------------------------\n"
+    IDS_DNSRECORDNAME        "\tNume de înregistrare. . : %ls\n"
+    IDS_DNSRECORDTYPE        "\tTipul de înregistrare. .: %hu\n"
+    IDS_DNSRECORDTTL         "\tTimpul de trăit (TTL). .: %lu\n"
+    IDS_DNSRECORDLENGTH      "\tLungimea datelor. . . . : %hu\n"
+    IDS_DNSSECTIONQUESTION   "\tSecțiune. . . . . . . . : Întrebare\n"
+    IDS_DNSSECTIONANSWER     "\tSecțiune. . . . . . . . : Răspuns\n"
+    IDS_DNSSECTIONAUTHORITY  "\tSecțiune. . . . . . . . : Autoritate\n"
+    IDS_DNSSECTIONADDITIONAL "\tSecțiune. . . . . . . . : Suplimentar\n"
+    IDS_DNSTYPEA             "\tÎnregistrarea (gazdei) A: %ls\n"
+    IDS_DNSTYPENS            "\tÎnregistrarea NS. . . . : %ls\n"
+    IDS_DNSTYPECNAME         "\tÎnregistrarea CNAME. . .: %ls\n"
+    IDS_DNSTYPESOA           "\tÎnregistrarea SOA. . . .: \n"
+    IDS_DNSTYPEPTR           "\tÎnregistrarea PTR. . . .: %ls\n"
+    IDS_DNSTYPEMX            "\tÎnregistrarea MX. . . . : \n"
+    IDS_DNSTYPEAAAA          "\tÎnregistrarea AAAA. . . : %ls\n"
+    IDS_DNSTYPEATMA          "\tÎnregistrarea ATMA. . . : \n"
+    IDS_DNSTYPESRV           "\tÎnregistrarea SRV. . . .: \n"
 END
 
 STRINGTABLE
