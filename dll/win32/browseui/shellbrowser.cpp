@@ -709,7 +709,10 @@ CShellBrowser::CShellBrowser()
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
-    fStatusBarVisible = true;
+    fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
+                                             L"StatusBarOther",
+                                             FALSE,
+                                             FALSE);
     fCurrentMenuBar = NULL;
     fHistoryObject = NULL;
     fHistoryStream = NULL;
@@ -788,8 +791,6 @@ HRESULT CShellBrowser::Initialize()
     fStatusBar = CreateWindow(STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
                     SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
                     _AtlBaseModule.GetModuleInstance(), 0);
-    fStatusBarVisible = true;
-
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
@@ -3663,6 +3664,15 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
         ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
         RepositionBars();
     }
+    
+    DWORD dwStatusBarVisible = fStatusBarVisible;
+    SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
+                         L"StatusBarOther",
+                         REG_DWORD,
+                         &dwStatusBarVisible,
+                         sizeof(dwStatusBarVisible),
+                         SHREGSET_FORCE_HKCU);
+    
     return 0;
 }
 
