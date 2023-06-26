@@ -40,12 +40,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Yes"
-    IDS_NO  "No"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "Vysielací"
     IDS_P2P "Rovný s rovným"
     IDS_MIXED "Zmiešaný"

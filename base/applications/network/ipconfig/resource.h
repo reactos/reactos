@@ -29,9 +29,6 @@
 #define IDS_LEASEOBTAINED       126
 #define IDS_LEASEEXPIRES        127
 
-#define IDS_YES 138
-#define IDS_NO 139
-
 #define IDS_UNKNOWN 141
 #define IDS_BCAST   142
 #define IDS_P2P     143

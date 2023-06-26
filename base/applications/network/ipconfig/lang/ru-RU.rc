@@ -41,12 +41,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "да"
-    IDS_NO  "нет"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "Широковещательный"
     IDS_P2P "Одноранговый"
     IDS_MIXED "Смешанный"

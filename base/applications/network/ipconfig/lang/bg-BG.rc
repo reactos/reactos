@@ -40,12 +40,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Yes"
-    IDS_NO  "No"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "Разпръскване"
     IDS_P2P "Равен с равен (P2P)"
     IDS_MIXED "Смесен"

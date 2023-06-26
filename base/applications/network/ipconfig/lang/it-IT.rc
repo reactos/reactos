@@ -40,12 +40,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Yes"
-    IDS_NO  "No"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "Broadcast"
     IDS_P2P "Peer To Peer"
     IDS_MIXED "Misto"
