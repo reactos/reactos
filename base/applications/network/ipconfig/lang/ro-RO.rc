@@ -45,15 +45,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "Adaptor necunoscut: %ls\n"
-    IDS_OTHER "\nAlt tip de adaptor: %ls\n"
-    IDS_ETH "\nAdaptor Ethernet: %ls\n"
-    IDS_TOKEN "\nAdaptor Token Ring: %ls\n"
-    IDS_FDDI "\nAdaptor FDDI: %ls\n"
-    IDS_PPP "\nAdaptor PPP: %ls\n"
-    IDS_LOOP "\nAdaptor Loopback: %ls\n"
-    IDS_SLIP "\nAdaptor SLIP: %ls\n"
-    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
     IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n"
     IDS_OTHER "\nAlt tip de adaptor: %ls\n"
     IDS_ETH "\nAdaptor Ethernet: %ls\n"
